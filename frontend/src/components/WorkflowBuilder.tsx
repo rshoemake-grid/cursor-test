@@ -1,6 +1,7 @@
-import { useCallback, useEffect } from 'react'
+import React, { useCallback, useEffect } from 'react'
 import {
   ReactFlow,
+  ReactFlowProvider,
   MiniMap,
   Controls,
   Background,
@@ -36,6 +37,7 @@ export default function WorkflowBuilder({ workflowId, onExecutionStart }: Workfl
 
   const [nodes, setNodes, onNodesChange] = useNodesState(storeNodes)
   const [edges, setEdges, onEdgesChange] = useEdgesState(storeEdges)
+  const [selectedNodeId, setSelectedNodeId] = React.useState<string | null>(null)
 
   // Sync with store
   useEffect(() => {
@@ -103,15 +105,23 @@ export default function WorkflowBuilder({ workflowId, onExecutionStart }: Workfl
     [addNode]
   )
 
-  return (
-    <div className="h-full flex">
-      {/* Left Panel - Node Palette */}
-      <NodePanel />
+  const onNodeClick = useCallback(
+    (_event: React.MouseEvent, node: any) => {
+      setSelectedNodeId(node.id)
+    },
+    []
+  )
 
-      {/* Main Canvas */}
-      <div className="flex-1 relative">
-        <Toolbar onExecutionStart={onExecutionStart} />
-        
+  return (
+    <ReactFlowProvider>
+      <div className="h-full flex">
+        {/* Left Panel - Node Palette */}
+        <NodePanel />
+
+        {/* Main Canvas */}
+        <div className="flex-1 relative">
+          <Toolbar onExecutionStart={onExecutionStart} />
+          
         <ReactFlow
           nodes={nodes}
           edges={edges}
@@ -120,36 +130,38 @@ export default function WorkflowBuilder({ workflowId, onExecutionStart }: Workfl
           onConnect={onConnect}
           onDrop={onDrop}
           onDragOver={onDragOver}
+          onNodeClick={onNodeClick}
           nodeTypes={nodeTypes}
           fitView
           className="bg-gray-50"
         >
-          <Controls />
-          <MiniMap
-            nodeColor={(node) => {
-              switch (node.type) {
-                case 'agent':
-                  return '#3b82f6'
-                case 'condition':
-                  return '#a855f7'
-                case 'loop':
-                  return '#22c55e'
-                case 'start':
-                  return '#0ea5e9'
-                case 'end':
-                  return '#6b7280'
-                default:
-                  return '#94a3b8'
-              }
-            }}
-          />
-          <Background variant={BackgroundVariant.Dots} gap={12} size={1} />
-        </ReactFlow>
-      </div>
+            <Controls />
+            <MiniMap
+              nodeColor={(node) => {
+                switch (node.type) {
+                  case 'agent':
+                    return '#3b82f6'
+                  case 'condition':
+                    return '#a855f7'
+                  case 'loop':
+                    return '#22c55e'
+                  case 'start':
+                    return '#0ea5e9'
+                  case 'end':
+                    return '#6b7280'
+                  default:
+                    return '#94a3b8'
+                }
+              }}
+            />
+            <Background variant={BackgroundVariant.Dots} gap={12} size={1} />
+          </ReactFlow>
+        </div>
 
       {/* Right Panel - Properties */}
-      <PropertyPanel />
+      <PropertyPanel selectedNodeId={selectedNodeId} setSelectedNodeId={setSelectedNodeId} />
     </div>
+    </ReactFlowProvider>
   )
 }
 
