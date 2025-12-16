@@ -61,12 +61,8 @@ class WorkflowExecutorV3:
             if self.workflow.nodes:
                 await self._log("INFO", None, f"Nodes: {[f'{n.id}:{n.type.value}' for n in self.workflow.nodes]}")
             else:
-                await self._log("ERROR", None, "No nodes found in workflow!")
-                self.execution_state.status = ExecutionStatus.FAILED
-                self.execution_state.error = "Workflow contains no nodes"
-                self.execution_state.completed_at = datetime.utcnow()
-                await self._broadcast_error("Workflow contains no nodes")
-                return self.execution_state
+                await self._log("WARNING", None, "No nodes found in workflow!")
+                return
             
             # Execute with parallel support
             await self._execute_graph(adjacency, in_degree)
