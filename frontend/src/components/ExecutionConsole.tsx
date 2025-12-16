@@ -41,6 +41,8 @@ export default function ExecutionConsole({
   const [height, setHeight] = useState(300)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const isResizing = useRef(false)
+  const startY = useRef(0)
+  const startHeight = useRef(0)
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
@@ -53,7 +55,10 @@ export default function ExecutionConsole({
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
       if (isResizing.current) {
-        const newHeight = window.innerHeight - e.clientY
+        // Calculate delta from starting position
+        const delta = startY.current - e.clientY
+        const newHeight = startHeight.current + delta
+        // Clamp between min (200px) and max (600px)
         setHeight(Math.max(200, Math.min(600, newHeight)))
       }
     }
@@ -73,8 +78,10 @@ export default function ExecutionConsole({
     }
   }, [])
 
-  const handleMouseDown = () => {
+  const handleMouseDown = (e: React.MouseEvent) => {
     isResizing.current = true
+    startY.current = e.clientY
+    startHeight.current = height
     document.body.style.cursor = 'ns-resize'
     document.body.style.userSelect = 'none'
   }
