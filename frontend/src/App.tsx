@@ -1,6 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { useState, useEffect } from 'react'
-import WorkflowBuilder from './components/WorkflowBuilder'
+import WorkflowTabs from './components/WorkflowTabs'
 import WorkflowList from './components/WorkflowList'
 import ExecutionViewer from './components/ExecutionViewer'
 import AuthPage from './pages/AuthPage'
@@ -132,8 +132,8 @@ function MainApp() {
       {/* Main Content */}
       <main className="flex-1 overflow-hidden">
         {currentView === 'builder' && (
-          <WorkflowBuilder
-            workflowId={selectedWorkflowId}
+          <WorkflowTabs
+            initialWorkflowId={selectedWorkflowId}
             onExecutionStart={(execId) => {
               // Keep user on builder view - execution console is at bottom
               setExecutionId(execId)

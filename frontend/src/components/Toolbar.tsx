@@ -1,13 +1,14 @@
 import { useState } from 'react'
-import { Save, Play, FilePlus, FileDown } from 'lucide-react'
+import { Save, Play, FileDown } from 'lucide-react'
 import { useWorkflowStore } from '../store/workflowStore'
 import { api } from '../api/client'
 
 interface ToolbarProps {
   onExecutionStart?: (executionId: string) => void
+  onWorkflowSaved?: (workflowId: string, name: string) => void
 }
 
-export default function Toolbar({ onExecutionStart }: ToolbarProps) {
+export default function Toolbar({ onExecutionStart, onWorkflowSaved }: ToolbarProps) {
   const {
     workflowId,
     workflowName,
@@ -33,12 +34,18 @@ export default function Toolbar({ onExecutionStart }: ToolbarProps) {
         // Update existing
         await api.updateWorkflow(workflowId, workflowDef)
         alert('Workflow updated successfully!')
+        if (onWorkflowSaved) {
+          onWorkflowSaved(workflowId, workflowDef.name)
+        }
         return workflowId
       } else {
         // Create new
         const created = await api.createWorkflow(workflowDef)
         setWorkflowId(created.id!)
         alert('Workflow created successfully!')
+        if (onWorkflowSaved) {
+          onWorkflowSaved(created.id!, workflowDef.name)
+        }
         return created.id!
       }
     } catch (error: any) {
@@ -96,12 +103,6 @@ export default function Toolbar({ onExecutionStart }: ToolbarProps) {
     }
   }
 
-  const handleNew = () => {
-    if (confirm('Create a new workflow? Any unsaved changes will be lost.')) {
-      clearWorkflow()
-    }
-  }
-
   const handleExport = () => {
     const workflowDef = toWorkflowDefinition()
     const blob = new Blob([JSON.stringify(workflowDef, null, 2)], { type: 'application/json' })
@@ -136,15 +137,6 @@ export default function Toolbar({ onExecutionStart }: ToolbarProps) {
             </div>
 
             <div className="flex gap-2">
-              <button
-                onClick={handleNew}
-                className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg flex items-center gap-2 transition-colors"
-                title="New workflow"
-              >
-                <FilePlus className="w-4 h-4" />
-                New
-              </button>
-
               <button
                 onClick={handleSave}
                 disabled={isSaving}

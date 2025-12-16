@@ -22,8 +22,12 @@ import { useWorkflowStore } from '../store/workflowStore'
 import { api } from '../api/client'
 
 interface WorkflowBuilderProps {
+  tabId: string
   workflowId: string | null
   onExecutionStart?: (executionId: string) => void
+  onWorkflowSaved?: (workflowId: string, name: string) => void
+  onWorkflowModified?: () => void
+  onWorkflowLoaded?: (workflowId: string, name: string) => void
 }
 
 interface Execution {
@@ -42,7 +46,14 @@ interface WorkflowTab {
   activeExecutionId: string | null
 }
 
-export default function WorkflowBuilder({ workflowId, onExecutionStart }: WorkflowBuilderProps) {
+export default function WorkflowBuilder({ 
+  tabId,
+  workflowId, 
+  onExecutionStart,
+  onWorkflowSaved,
+  onWorkflowModified,
+  onWorkflowLoaded
+}: WorkflowBuilderProps) {
   const {
     nodes: storeNodes,
     edges: storeEdges,
@@ -88,7 +99,12 @@ export default function WorkflowBuilder({ workflowId, onExecutionStart }: Workfl
       api.getWorkflow(workflowId).then((workflow) => {
         loadWorkflow(workflow)
         
-        // Create or activate workflow tab
+        // Notify parent that workflow was loaded
+        if (onWorkflowLoaded) {
+          onWorkflowLoaded(workflowId, workflow.name)
+        }
+        
+        // Create or activate workflow tab (for console)
         setWorkflowTabs(prev => {
           const existingTab = prev.find(tab => tab.workflowId === workflowId)
           if (existingTab) {
@@ -105,7 +121,7 @@ export default function WorkflowBuilder({ workflowId, onExecutionStart }: Workfl
         })
       })
     }
-  }, [workflowId, loadWorkflow])
+  }, [workflowId, loadWorkflow, onWorkflowLoaded])
 
   // Ensure current workflow has a tab
   useEffect(() => {
@@ -288,7 +304,10 @@ export default function WorkflowBuilder({ workflowId, onExecutionStart }: Workfl
 
         {/* Main Canvas */}
         <div className="flex-1 relative">
-          <Toolbar onExecutionStart={handleExecutionStart} />
+          <Toolbar 
+            onExecutionStart={handleExecutionStart}
+            onWorkflowSaved={onWorkflowSaved}
+          />
           
         <ReactFlow
           nodes={nodes}
