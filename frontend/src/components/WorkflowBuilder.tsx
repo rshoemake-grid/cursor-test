@@ -58,6 +58,12 @@ export default function WorkflowBuilder({ workflowId, onExecutionStart }: Workfl
   const [edges, setEdges, onEdgesChange] = useEdgesState(storeEdges)
   const [selectedNodeId, setSelectedNodeId] = React.useState<string | null>(null)
   const [workflowTabs, setWorkflowTabs] = useState<WorkflowTab[]>([])
+  const workflowTabsRef = useRef<WorkflowTab[]>([])
+  
+  // Keep ref in sync with state
+  useEffect(() => {
+    workflowTabsRef.current = workflowTabs
+  }, [workflowTabs])
 
   // Sync with store
   useEffect(() => {
@@ -128,7 +134,9 @@ export default function WorkflowBuilder({ workflowId, onExecutionStart }: Workfl
   // Poll for execution updates
   useEffect(() => {
     const interval = setInterval(async () => {
-      const allExecutions = workflowTabs.flatMap(tab => tab.executions)
+      // Use ref to access current state without triggering effect re-run
+      const currentTabs = workflowTabsRef.current
+      const allExecutions = currentTabs.flatMap(tab => tab.executions)
       const runningExecutions = allExecutions.filter(e => e.status === 'running')
       
       if (runningExecutions.length === 0) return
@@ -166,7 +174,7 @@ export default function WorkflowBuilder({ workflowId, onExecutionStart }: Workfl
     }, 2000) // Poll every 2 seconds
 
     return () => clearInterval(interval)
-  }, [workflowTabs])
+  }, []) // ✅ Empty dependency array - interval runs consistently
 
   // Handle execution start
   const handleExecutionStart = useCallback((executionId: string) => {
