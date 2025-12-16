@@ -26,18 +26,28 @@ interface WorkflowBuilderProps {
   onExecutionStart?: (executionId: string) => void
 }
 
-interface ExecutionTab {
+interface Execution {
   id: string
   status: 'running' | 'completed' | 'failed'
   startedAt: Date
+  completedAt?: Date
   nodes: Record<string, any>
-  logs: Array<{ timestamp: string; message: string; level: string }>
+  logs: Array<{ timestamp: string; message: string; level: string; node_id?: string }>
+}
+
+interface WorkflowTab {
+  workflowId: string
+  workflowName: string
+  executions: Execution[]
+  activeExecutionId: string | null
 }
 
 export default function WorkflowBuilder({ workflowId, onExecutionStart }: WorkflowBuilderProps) {
   const {
     nodes: storeNodes,
     edges: storeEdges,
+    workflowId: storeWorkflowId,
+    workflowName,
     setNodes: setStoreNodes,
     setEdges: setStoreEdges,
     addNode,
@@ -47,7 +57,7 @@ export default function WorkflowBuilder({ workflowId, onExecutionStart }: Workfl
   const [nodes, setNodes, onNodesChange] = useNodesState(storeNodes)
   const [edges, setEdges, onEdgesChange] = useEdgesState(storeEdges)
   const [selectedNodeId, setSelectedNodeId] = React.useState<string | null>(null)
-  const [activeExecutions, setActiveExecutions] = useState<ExecutionTab[]>([])
+  const [workflowTabs, setWorkflowTabs] = useState<WorkflowTab[]>([])
 
   // Sync with store
   useEffect(() => {
@@ -66,22 +76,66 @@ export default function WorkflowBuilder({ workflowId, onExecutionStart }: Workfl
     setStoreEdges(edges)
   }, [edges, setStoreEdges])
 
-  // Load workflow if ID provided
+  // Load workflow if ID provided and create/activate tab
   useEffect(() => {
     if (workflowId) {
       api.getWorkflow(workflowId).then((workflow) => {
         loadWorkflow(workflow)
+        
+        // Create or activate workflow tab
+        setWorkflowTabs(prev => {
+          const existingTab = prev.find(tab => tab.workflowId === workflowId)
+          if (existingTab) {
+            // Tab already exists, just return current state
+            return prev
+          }
+          // Create new tab
+          return [...prev, {
+            workflowId: workflowId,
+            workflowName: workflow.name,
+            executions: [],
+            activeExecutionId: null
+          }]
+        })
       })
     }
   }, [workflowId, loadWorkflow])
 
+  // Ensure current workflow has a tab
+  useEffect(() => {
+    if (storeWorkflowId && workflowName) {
+      setWorkflowTabs(prev => {
+        const existingTab = prev.find(tab => tab.workflowId === storeWorkflowId)
+        if (existingTab) {
+          // Update name if changed
+          return prev.map(tab => 
+            tab.workflowId === storeWorkflowId 
+              ? { ...tab, workflowName } 
+              : tab
+          )
+        }
+        // Create new tab for current workflow
+        return [...prev, {
+          workflowId: storeWorkflowId,
+          workflowName: workflowName,
+          executions: [],
+          activeExecutionId: null
+        }]
+      })
+    }
+  }, [storeWorkflowId, workflowName])
+
   // Poll for execution updates
   useEffect(() => {
     const interval = setInterval(async () => {
-      if (activeExecutions.length === 0) return
+      const allExecutions = workflowTabs.flatMap(tab => tab.executions)
+      const runningExecutions = allExecutions.filter(e => e.status === 'running')
+      
+      if (runningExecutions.length === 0) return
 
-      const updatedExecutions = await Promise.all(
-        activeExecutions.map(async (exec) => {
+      // Update all running executions
+      const updates = await Promise.all(
+        runningExecutions.map(async (exec) => {
           try {
             const execution = await api.getExecution(exec.id)
             return {
@@ -90,43 +144,85 @@ export default function WorkflowBuilder({ workflowId, onExecutionStart }: Workfl
                       execution.status === 'failed' ? 'failed' as const :
                       'running' as const,
               startedAt: exec.startedAt,
+              completedAt: execution.completed_at ? new Date(execution.completed_at) : undefined,
               nodes: execution.node_states || {},
               logs: execution.logs || []
             }
           } catch (error) {
             console.error('Failed to fetch execution:', error)
-            return exec
+            return null
           }
         })
       )
 
-      setActiveExecutions(updatedExecutions)
+      // Apply updates to workflow tabs
+      setWorkflowTabs(prev => prev.map(tab => ({
+        ...tab,
+        executions: tab.executions.map(exec => {
+          const update = updates.find(u => u && u.id === exec.id)
+          return update || exec
+        })
+      })))
     }, 2000) // Poll every 2 seconds
 
     return () => clearInterval(interval)
-  }, [activeExecutions])
+  }, [workflowTabs])
 
   // Handle execution start
   const handleExecutionStart = useCallback((executionId: string) => {
-    // Add new execution to the console
-    const newExecution: ExecutionTab = {
+    const currentWorkflowId = storeWorkflowId || 'unsaved'
+    const currentWorkflowName = workflowName || 'Unsaved Workflow'
+    
+    // Add new execution to the current workflow's tab
+    const newExecution: Execution = {
       id: executionId,
       status: 'running',
       startedAt: new Date(),
       nodes: {},
       logs: []
     }
-    setActiveExecutions(prev => [newExecution, ...prev])
+    
+    setWorkflowTabs(prev => {
+      const existingTab = prev.find(tab => tab.workflowId === currentWorkflowId)
+      if (existingTab) {
+        // Add to existing tab
+        return prev.map(tab => 
+          tab.workflowId === currentWorkflowId
+            ? { 
+                ...tab, 
+                executions: [newExecution, ...tab.executions],
+                activeExecutionId: executionId
+              }
+            : tab
+        )
+      }
+      // Create new tab with this execution
+      return [...prev, {
+        workflowId: currentWorkflowId,
+        workflowName: currentWorkflowName,
+        executions: [newExecution],
+        activeExecutionId: executionId
+      }]
+    })
 
     // Also call parent callback if provided
     if (onExecutionStart) {
       onExecutionStart(executionId)
     }
-  }, [onExecutionStart])
+  }, [storeWorkflowId, workflowName, onExecutionStart])
 
-  // Handle closing execution tabs
-  const handleCloseExecution = useCallback((executionId: string) => {
-    setActiveExecutions(prev => prev.filter(e => e.id !== executionId))
+  // Handle closing workflow tabs
+  const handleCloseWorkflow = useCallback((workflowId: string) => {
+    setWorkflowTabs(prev => prev.filter(tab => tab.workflowId !== workflowId))
+  }, [])
+
+  // Handle clearing executions for a workflow
+  const handleClearExecutions = useCallback((workflowId: string) => {
+    setWorkflowTabs(prev => prev.map(tab => 
+      tab.workflowId === workflowId
+        ? { ...tab, executions: [], activeExecutionId: null }
+        : tab
+    ))
   }, [])
 
   const onConnect = useCallback(
@@ -228,8 +324,10 @@ export default function WorkflowBuilder({ workflowId, onExecutionStart }: Workfl
 
       {/* Bottom Panel - Execution Console */}
       <ExecutionConsole 
-        executions={activeExecutions}
-        onClose={handleCloseExecution}
+        workflowTabs={workflowTabs}
+        activeWorkflowId={storeWorkflowId || null}
+        onCloseWorkflow={handleCloseWorkflow}
+        onClearExecutions={handleClearExecutions}
       />
     </ReactFlowProvider>
   )

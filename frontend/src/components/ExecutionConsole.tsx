@@ -1,39 +1,83 @@
-import React, { useState, useEffect, useRef } from 'react'
-import { X, ChevronDown, ChevronUp, Terminal, Clock, CheckCircle, XCircle, Loader } from 'lucide-react'
+import { useState, useRef, useEffect } from 'react'
+import { X, ChevronDown, ChevronUp, Loader, CheckCircle, XCircle, Clock, Trash2 } from 'lucide-react'
 
-interface ExecutionTab {
+interface ExecutionLog {
+  timestamp: string
+  message: string
+  level: string
+  node_id?: string
+}
+
+interface Execution {
   id: string
   status: 'running' | 'completed' | 'failed'
   startedAt: Date
+  completedAt?: Date
   nodes: Record<string, any>
-  logs: Array<{ timestamp: string; message: string; level: string }>
+  logs: ExecutionLog[]
+}
+
+interface WorkflowTab {
+  workflowId: string
+  workflowName: string
+  executions: Execution[]
+  activeExecutionId: string | null
 }
 
 interface ExecutionConsoleProps {
-  executions: ExecutionTab[]
-  onClose: (id: string) => void
+  workflowTabs: WorkflowTab[]
+  activeWorkflowId: string | null
+  onCloseWorkflow: (workflowId: string) => void
+  onClearExecutions: (workflowId: string) => void
 }
 
-export default function ExecutionConsole({ executions, onClose }: ExecutionConsoleProps) {
+export default function ExecutionConsole({ 
+  workflowTabs, 
+  activeWorkflowId,
+  onCloseWorkflow,
+  onClearExecutions
+}: ExecutionConsoleProps) {
   const [isExpanded, setIsExpanded] = useState(true)
-  const [activeTab, setActiveTab] = useState<string | null>(executions[0]?.id || null)
   const [height, setHeight] = useState(300)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const isResizing = useRef(false)
 
+  // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
-    // Auto-select newest execution
-    if (executions.length > 0 && !activeTab) {
-      setActiveTab(executions[0].id)
+    if (isExpanded) {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
     }
-  }, [executions, activeTab])
+  }, [workflowTabs, activeWorkflowId, isExpanded])
 
+  // Handle resizing
   useEffect(() => {
-    // Auto-scroll to bottom when new messages arrive
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [executions, activeTab])
+    const handleMouseMove = (e: MouseEvent) => {
+      if (isResizing.current) {
+        const newHeight = window.innerHeight - e.clientY
+        setHeight(Math.max(200, Math.min(600, newHeight)))
+      }
+    }
 
-  const activeExecution = executions.find(e => e.id === activeTab)
+    const handleMouseUp = () => {
+      isResizing.current = false
+      document.body.style.cursor = 'default'
+      document.body.style.userSelect = 'auto'
+    }
+
+    document.addEventListener('mousemove', handleMouseMove)
+    document.addEventListener('mouseup', handleMouseUp)
+
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove)
+      document.removeEventListener('mouseup', handleMouseUp)
+    }
+  }, [])
+
+  const handleMouseDown = () => {
+    isResizing.current = true
+    document.body.style.cursor = 'ns-resize'
+    document.body.style.userSelect = 'none'
+  }
 
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -52,213 +96,210 @@ export default function ExecutionConsole({ executions, onClose }: ExecutionConso
     return date.toLocaleTimeString('en-US', { hour12: false })
   }
 
+  const activeTab = workflowTabs.find(tab => tab.workflowId === activeWorkflowId)
+  const activeExecution = activeTab?.executions.find(e => e.id === activeTab.activeExecutionId) || activeTab?.executions[0]
+
+  // Always show the console bar
   return (
     <div 
       className="fixed bottom-0 left-0 right-0 bg-gray-900 text-gray-100 shadow-2xl border-t-2 border-gray-700 z-50"
-      style={{ height: isExpanded ? `${height}px` : '40px' }}
+      style={{ height: isExpanded ? `${height}px` : 'auto' }}
     >
-      {/* Header with tabs */}
-      <div className="bg-gray-800 border-b border-gray-700 flex items-center justify-between px-2 h-10">
-        <div className="flex items-center gap-1 overflow-x-auto flex-1">
-          <Terminal className="w-4 h-4 text-green-400 mx-2" />
-          
-          {executions.length === 0 ? (
-            <span className="text-gray-500 text-sm font-mono">
-              Execution Console - Run a workflow to see live output
-            </span>
+      {/* Resize Handle */}
+      {isExpanded && (
+        <div
+          className="absolute top-0 left-0 right-0 h-1 cursor-ns-resize hover:bg-blue-500 transition-colors"
+          onMouseDown={handleMouseDown}
+        />
+      )}
+
+      {/* Header Bar */}
+      <div className="px-4 py-2 border-b border-gray-800 flex items-center justify-between bg-gray-800">
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+            <span className="font-semibold text-sm">Workflow Executions</span>
+          </div>
+
+          {/* Workflow Tabs */}
+          {workflowTabs.length > 0 ? (
+            <div className="flex items-center gap-1">
+              {workflowTabs.map(tab => {
+                const hasRunning = tab.executions.some(e => e.status === 'running')
+                const isActive = tab.workflowId === activeWorkflowId
+                
+                return (
+                  <button
+                    key={tab.workflowId}
+                    onClick={() => {
+                      // Parent component should handle switching active workflow
+                    }}
+                    className={`px-3 py-1 rounded text-xs flex items-center gap-2 transition-colors ${
+                      isActive
+                        ? 'bg-gray-700 text-white'
+                        : 'bg-gray-900 text-gray-400 hover:bg-gray-700 hover:text-gray-200'
+                    }`}
+                  >
+                    {hasRunning && <Loader className="w-3 h-3 animate-spin" />}
+                    <span className="font-medium">{tab.workflowName}</span>
+                    <span className="text-gray-500">({tab.executions.length})</span>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        onCloseWorkflow(tab.workflowId)
+                      }}
+                      className="hover:text-red-400 ml-1"
+                      title="Close workflow tab"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </button>
+                )
+              })}
+            </div>
           ) : (
-            executions.map((execution) => (
-              <button
-                key={execution.id}
-                onClick={() => setActiveTab(execution.id)}
-                className={`
-                  flex items-center gap-2 px-3 py-1 rounded-t text-sm font-mono
-                  ${activeTab === execution.id 
-                    ? 'bg-gray-900 text-white' 
-                    : 'bg-gray-700 text-gray-300 hover:bg-gray-600'}
-                `}
-              >
-                {getStatusIcon(execution.status)}
-                <span className="truncate max-w-[120px]">{execution.id.slice(0, 8)}</span>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    onClose(execution.id)
-                  }}
-                  className="ml-1 hover:bg-gray-800 rounded p-0.5"
-                >
-                  <X className="w-3 h-3" />
-                </button>
-              </button>
-            ))
+            <span className="text-sm text-gray-400">No workflows loaded</span>
           )}
         </div>
 
         <div className="flex items-center gap-2">
+          {activeTab && activeTab.executions.length > 0 && (
+            <button
+              onClick={() => onClearExecutions(activeTab.workflowId)}
+              className="px-2 py-1 text-xs text-gray-400 hover:text-red-400 flex items-center gap-1"
+              title="Clear execution history"
+            >
+              <Trash2 className="w-3 h-3" />
+              Clear
+            </button>
+          )}
           <button
             onClick={() => setIsExpanded(!isExpanded)}
-            className="p-1 hover:bg-gray-700 rounded"
+            className="text-gray-400 hover:text-white transition-colors"
           >
             {isExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronUp className="w-4 h-4" />}
           </button>
         </div>
       </div>
 
-      {/* Console content */}
+      {/* Console Content */}
       {isExpanded && (
-        <div className="h-[calc(100%-40px)] overflow-y-auto p-4 font-mono text-sm">
-          {!activeExecution || executions.length === 0 ? (
-            <div className="flex items-center justify-center h-full text-gray-500">
-              <div className="text-center">
-                <Terminal className="w-12 h-12 mx-auto mb-3 text-gray-600" />
-                <p className="text-lg font-semibold mb-2">No Active Executions</p>
-                <p className="text-sm">
-                  Click the <span className="text-green-400">Execute</span> button to run a workflow
-                </p>
-                <p className="text-xs mt-2 text-gray-600">
-                  Executions will appear here in real-time
-                </p>
-              </div>
+        <div className="overflow-auto" style={{ height: `${height - 48}px` }}>
+          {!activeTab || activeTab.executions.length === 0 ? (
+            <div className="flex flex-col items-center justify-center h-full text-gray-500">
+              <Clock className="w-12 h-12 mb-4 opacity-50" />
+              <p className="text-lg font-medium">No Executions Yet</p>
+              <p className="text-sm mt-2">
+                {activeTab 
+                  ? 'Click the Execute button to run this workflow'
+                  : 'Load a workflow to see execution history'}
+              </p>
             </div>
           ) : (
-            <>
-
-          {/* Execution header */}
-          <div className="mb-4 pb-3 border-b border-gray-700">
-            <div className="flex items-center gap-3 mb-2">
-              {getStatusIcon(activeExecution.status)}
-              <span className="text-white font-semibold">
-                Execution: {activeExecution.id}
-              </span>
-              <span className="text-gray-400 text-xs">
-                Started: {formatTime(activeExecution.startedAt)}
-              </span>
-            </div>
-            
-            {activeExecution.status === 'running' && (
-              <div className="flex items-center gap-2 text-blue-400 text-xs">
-                <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse"></div>
-                <span>LIVE - Updating in real-time</span>
-              </div>
-            )}
-          </div>
-
-          {/* Conversation stream */}
-          <div className="space-y-3">
-            {Object.entries(activeExecution.nodes).map(([nodeId, nodeState]: [string, any]) => (
-              <div key={nodeId} className="border-l-2 border-gray-700 pl-4">
-                {/* Node header */}
-                <div className="flex items-center gap-2 mb-2">
-                  {getStatusIcon(nodeState.status)}
-                  <span className="text-cyan-400 font-semibold">{nodeId}</span>
-                  <span className="text-gray-500 text-xs">({nodeState.status})</span>
-                </div>
-
-                {/* Input */}
-                {nodeState.input && (
-                  <div className="mb-2">
-                    <div className="text-yellow-400 text-xs mb-1">→ INPUT:</div>
-                    <div className="bg-gray-800 rounded px-3 py-2 text-xs text-gray-300">
-                      {typeof nodeState.input === 'string' 
-                        ? nodeState.input 
-                        : JSON.stringify(nodeState.input, null, 2)}
-                    </div>
+            <div className="p-4">
+              {/* Execution Selector */}
+              {activeTab.executions.length > 1 && (
+                <div className="mb-4 pb-4 border-b border-gray-700">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-xs text-gray-400 font-medium">Execution History:</span>
+                    {activeTab.executions.map((exec, idx) => {
+                      const isActiveExec = exec.id === activeExecution?.id
+                      return (
+                        <button
+                          key={exec.id}
+                          onClick={() => {
+                            // Would need to add handler to switch active execution
+                          }}
+                          className={`px-2 py-1 rounded text-xs flex items-center gap-1 ${
+                            isActiveExec
+                              ? 'bg-blue-600 text-white'
+                              : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+                          }`}
+                          title={`Started: ${formatTime(exec.startedAt)}`}
+                        >
+                          {getStatusIcon(exec.status)}
+                          <span>#{activeTab.executions.length - idx}</span>
+                          <span className="text-gray-500">{exec.id.slice(0, 8)}</span>
+                        </button>
+                      )
+                    })}
                   </div>
-                )}
+                </div>
+              )}
 
-                {/* Output/Response */}
-                {nodeState.output && (
-                  <div className="mb-2">
-                    <div className="text-green-400 text-xs mb-1 flex items-center gap-2">
-                      ← OUTPUT:
-                      {nodeState.status === 'completed' && (
-                        <span className="text-green-500">✓</span>
+              {/* Active Execution Details */}
+              {activeExecution && (
+                <>
+                  {/* Execution Header */}
+                  <div className="mb-4 p-3 bg-gray-800 rounded border border-gray-700">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        {getStatusIcon(activeExecution.status)}
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm font-semibold">Execution {activeExecution.id.slice(0, 8)}</span>
+                            <span className={`text-xs px-2 py-0.5 rounded ${
+                              activeExecution.status === 'running' ? 'bg-blue-600' :
+                              activeExecution.status === 'completed' ? 'bg-green-600' :
+                              'bg-red-600'
+                            }`}>
+                              {activeExecution.status.toUpperCase()}
+                            </span>
+                          </div>
+                          <div className="text-xs text-gray-400 mt-1">
+                            Started: {formatTime(activeExecution.startedAt)}
+                            {activeExecution.completedAt && ` • Completed: ${formatTime(activeExecution.completedAt)}`}
+                          </div>
+                        </div>
+                      </div>
+                      {activeExecution.status === 'running' && (
+                        <div className="text-xs text-blue-400 flex items-center gap-2">
+                          <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+                          LIVE - Updating in real-time
+                        </div>
                       )}
                     </div>
-                    <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded px-3 py-2 text-sm text-gray-100 border border-gray-700">
-                      {typeof nodeState.output === 'string' 
-                        ? nodeState.output 
-                        : JSON.stringify(nodeState.output, null, 2)}
-                    </div>
                   </div>
-                )}
 
-                {/* Error */}
-                {nodeState.error && (
-                  <div className="mb-2">
-                    <div className="text-red-400 text-xs mb-1">✗ ERROR:</div>
-                    <div className="bg-red-900 bg-opacity-20 border border-red-800 rounded px-3 py-2 text-xs text-red-300">
-                      {nodeState.error}
-                    </div>
+                  {/* Execution Logs */}
+                  <div className="space-y-1 font-mono text-xs">
+                    {activeExecution.logs.length === 0 ? (
+                      <div className="text-gray-500 text-center py-8">
+                        <Loader className="w-6 h-6 animate-spin mx-auto mb-2" />
+                        <p>Waiting for execution logs...</p>
+                      </div>
+                    ) : (
+                      activeExecution.logs.map((log, idx) => (
+                        <div
+                          key={idx}
+                          className={`py-1 px-2 rounded ${
+                            log.level === 'ERROR' ? 'bg-red-900 bg-opacity-20 text-red-300' :
+                            log.level === 'WARNING' ? 'bg-yellow-900 bg-opacity-20 text-yellow-300' :
+                            'text-gray-300'
+                          }`}
+                        >
+                          <span className="text-gray-500">[{new Date(log.timestamp).toLocaleTimeString()}]</span>
+                          <span className={`ml-2 font-semibold ${
+                            log.level === 'ERROR' ? 'text-red-400' :
+                            log.level === 'WARNING' ? 'text-yellow-400' :
+                            log.level === 'INFO' ? 'text-blue-400' :
+                            'text-gray-400'
+                          }`}>
+                            {log.level}
+                          </span>
+                          {log.node_id && <span className="ml-2 text-purple-400">[{log.node_id}]</span>}
+                          <span className="ml-2">{log.message}</span>
+                        </div>
+                      ))
+                    )}
+                    <div ref={messagesEndRef} />
                   </div>
-                )}
-
-                {/* Running indicator */}
-                {nodeState.status === 'running' && !nodeState.output && (
-                  <div className="text-blue-400 text-xs flex items-center gap-2">
-                    <Loader className="w-3 h-3 animate-spin" />
-                    <span>Processing...</span>
-                  </div>
-                )}
-              </div>
-            ))}
-
-            {/* Logs */}
-            {activeExecution.logs && activeExecution.logs.length > 0 && (
-              <div className="mt-4 pt-4 border-t border-gray-700">
-                <div className="text-gray-500 text-xs mb-2">EXECUTION LOG:</div>
-                {activeExecution.logs.map((log, idx) => (
-                  <div key={idx} className="text-xs text-gray-400 font-mono">
-                    <span className="text-gray-600">[{log.timestamp}]</span>
-                    <span className={`ml-2 ${
-                      log.level === 'ERROR' ? 'text-red-400' : 
-                      log.level === 'WARN' ? 'text-yellow-400' : 
-                      'text-gray-400'
-                    }`}>
-                      {log.level}
-                    </span>
-                    <span className="ml-2">{log.message}</span>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            <div ref={messagesEndRef} />
-          </div>
-            </>
+                </>
+              )}
+            </div>
           )}
         </div>
-      )}
-
-      {/* Resize handle */}
-      {isExpanded && (
-        <div
-          className="absolute top-0 left-0 right-0 h-1 cursor-ns-resize hover:bg-blue-500 transition-colors"
-          onMouseDown={(e) => {
-            isResizing.current = true
-            const startY = e.clientY
-            const startHeight = height
-
-            const handleMouseMove = (e: MouseEvent) => {
-              if (isResizing.current) {
-                const delta = startY - e.clientY
-                const newHeight = Math.max(200, Math.min(800, startHeight + delta))
-                setHeight(newHeight)
-              }
-            }
-
-            const handleMouseUp = () => {
-              isResizing.current = false
-              document.removeEventListener('mousemove', handleMouseMove)
-              document.removeEventListener('mouseup', handleMouseUp)
-            }
-
-            document.addEventListener('mousemove', handleMouseMove)
-            document.addEventListener('mouseup', handleMouseUp)
-          }}
-        />
       )}
     </div>
   )
 }
-
