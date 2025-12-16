@@ -1,15 +1,35 @@
-import { useState } from 'react'
+import { BrowserRouter as Router, Routes, Route, Link, useNavigate, useSearchParams } from 'react-router-dom'
+import { useState, useEffect } from 'react'
 import WorkflowBuilder from './components/WorkflowBuilder'
 import WorkflowList from './components/WorkflowList'
 import ExecutionViewer from './components/ExecutionViewer'
-import { Play, List, Eye } from 'lucide-react'
+import AuthPage from './pages/AuthPage'
+import MarketplacePage from './pages/MarketplacePage'
+import SettingsPage from './pages/SettingsPage'
+import { AuthProvider, useAuth } from './contexts/AuthContext'
+import { Play, List, Eye, Store, User, LogOut, LogIn, Settings } from 'lucide-react'
 
 type View = 'builder' | 'list' | 'execution'
 
-function App() {
+function MainApp() {
   const [currentView, setCurrentView] = useState<View>('builder')
   const [selectedWorkflowId, setSelectedWorkflowId] = useState<string | null>(null)
   const [executionId, setExecutionId] = useState<string | null>(null)
+  
+  const { user, logout, isAuthenticated } = useAuth()
+  const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+
+  // Load workflow from URL query parameter (from marketplace)
+  useEffect(() => {
+    const workflowId = searchParams.get('workflow')
+    if (workflowId) {
+      setSelectedWorkflowId(workflowId)
+      setCurrentView('builder')
+      // Clear the query parameter after loading
+      navigate('/', { replace: true })
+    }
+  }, [searchParams, navigate])
 
   return (
     <div className="flex flex-col h-screen bg-gray-50">
@@ -24,12 +44,12 @@ function App() {
               <h1 className="text-2xl font-bold text-gray-900">
                 Agentic Workflow Builder
               </h1>
-              <p className="text-sm text-gray-600">Phase 2: Visual Editor + Advanced Control Flow</p>
+              <p className="text-sm text-gray-600">Phase 4: Collaboration & Marketplace</p>
             </div>
           </div>
           
           {/* Navigation */}
-          <nav className="flex gap-2">
+          <nav className="flex items-center gap-2">
             <button
               onClick={() => setCurrentView('builder')}
               className={`px-4 py-2 rounded-lg flex items-center gap-2 transition-colors ${
@@ -65,6 +85,46 @@ function App() {
                 Execution
               </button>
             )}
+            <Link
+              to="/marketplace"
+              className="px-4 py-2 rounded-lg flex items-center gap-2 text-gray-600 hover:bg-gray-100 transition-colors"
+            >
+              <Store className="w-4 h-4" />
+              Marketplace
+            </Link>
+            <Link
+              to="/settings"
+              className="px-4 py-2 rounded-lg flex items-center gap-2 text-gray-600 hover:bg-gray-100 transition-colors"
+            >
+              <Settings className="w-4 h-4" />
+              Settings
+            </Link>
+
+            <div className="ml-4 pl-4 border-l border-gray-300 flex items-center gap-2">
+              {isAuthenticated ? (
+                <>
+                  <div className="flex items-center gap-2 px-3 py-2 bg-gray-100 rounded-lg">
+                    <User className="w-4 h-4 text-gray-600" />
+                    <span className="text-sm font-medium text-gray-700">{user?.username}</span>
+                  </div>
+                  <button
+                    onClick={logout}
+                    className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                    title="Logout"
+                  >
+                    <LogOut className="w-4 h-4" />
+                  </button>
+                </>
+              ) : (
+                <Link
+                  to="/auth"
+                  className="px-4 py-2 bg-primary-600 text-white rounded-lg flex items-center gap-2 hover:bg-primary-700 transition-colors"
+                >
+                  <LogIn className="w-4 h-4" />
+                  Sign In
+                </Link>
+              )}
+            </div>
           </nav>
         </div>
       </header>
@@ -75,8 +135,9 @@ function App() {
           <WorkflowBuilder
             workflowId={selectedWorkflowId}
             onExecutionStart={(execId) => {
+              // Keep user on builder view - execution console is at bottom
               setExecutionId(execId)
-              setCurrentView('execution')
+              // Don't change view - user stays on builder
             }}
           />
         )}
@@ -93,6 +154,21 @@ function App() {
         )}
       </main>
     </div>
+  )
+}
+
+function App() {
+  return (
+    <Router>
+      <AuthProvider>
+        <Routes>
+          <Route path="/" element={<MainApp />} />
+          <Route path="/auth" element={<AuthPage />} />
+          <Route path="/marketplace" element={<MarketplacePage />} />
+          <Route path="/settings" element={<SettingsPage />} />
+        </Routes>
+      </AuthProvider>
+    </Router>
   )
 }
 

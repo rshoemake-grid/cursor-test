@@ -44,20 +44,26 @@ const nodeToWorkflowNode = (node: Node): WorkflowNode => ({
 })
 
 // Convert WorkflowNode to our node format
-const workflowNodeToNode = (wfNode: WorkflowNode): Node => ({
-  id: wfNode.id,
-  type: wfNode.type,
-  position: wfNode.position,
-  data: {
-    label: wfNode.name,
-    name: wfNode.name,
-    description: wfNode.description,
-    agent_config: wfNode.agent_config,
-    condition_config: wfNode.condition_config,
-    loop_config: wfNode.loop_config,
-    inputs: wfNode.inputs,
-  },
-})
+const workflowNodeToNode = (wfNode: WorkflowNode): Node => {
+  // Handle both flattened and nested data structures
+  const nodeData = (wfNode as any).data || {}
+  
+  return {
+    id: wfNode.id,
+    type: wfNode.type,
+    position: wfNode.position || { x: 0, y: 0 },
+    data: {
+      // Prefer data from nested 'data' object, fallback to flattened structure
+      label: nodeData.label || nodeData.name || wfNode.name || wfNode.type,
+      name: nodeData.name || wfNode.name || wfNode.type,
+      description: nodeData.description || wfNode.description,
+      agent_config: nodeData.agent_config || wfNode.agent_config,
+      condition_config: nodeData.condition_config || wfNode.condition_config,
+      loop_config: nodeData.loop_config || wfNode.loop_config,
+      inputs: nodeData.inputs || wfNode.inputs || [],
+    },
+  }
+}
 
 export const useWorkflowStore = create<WorkflowStore>((set, get) => ({
   workflowId: null,

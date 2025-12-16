@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import {
   ReactFlow,
   ReactFlowProvider,
@@ -17,12 +17,21 @@ import { nodeTypes } from './nodes'
 import NodePanel from './NodePanel'
 import PropertyPanel from './PropertyPanel'
 import Toolbar from './Toolbar'
+import ExecutionConsole from './ExecutionConsole'
 import { useWorkflowStore } from '../store/workflowStore'
 import { api } from '../api/client'
 
 interface WorkflowBuilderProps {
   workflowId: string | null
   onExecutionStart?: (executionId: string) => void
+}
+
+interface ExecutionTab {
+  id: string
+  status: 'running' | 'completed' | 'failed'
+  startedAt: Date
+  nodes: Record<string, any>
+  logs: Array<{ timestamp: string; message: string; level: string }>
 }
 
 export default function WorkflowBuilder({ workflowId, onExecutionStart }: WorkflowBuilderProps) {
@@ -38,6 +47,7 @@ export default function WorkflowBuilder({ workflowId, onExecutionStart }: Workfl
   const [nodes, setNodes, onNodesChange] = useNodesState(storeNodes)
   const [edges, setEdges, onEdgesChange] = useEdgesState(storeEdges)
   const [selectedNodeId, setSelectedNodeId] = React.useState<string | null>(null)
+  const [activeExecutions, setActiveExecutions] = useState<ExecutionTab[]>([])
 
   // Sync with store
   useEffect(() => {
@@ -64,6 +74,60 @@ export default function WorkflowBuilder({ workflowId, onExecutionStart }: Workfl
       })
     }
   }, [workflowId, loadWorkflow])
+
+  // Poll for execution updates
+  useEffect(() => {
+    const interval = setInterval(async () => {
+      if (activeExecutions.length === 0) return
+
+      const updatedExecutions = await Promise.all(
+        activeExecutions.map(async (exec) => {
+          try {
+            const execution = await api.getExecution(exec.id)
+            return {
+              id: exec.id,
+              status: execution.status === 'completed' ? 'completed' as const :
+                      execution.status === 'failed' ? 'failed' as const :
+                      'running' as const,
+              startedAt: exec.startedAt,
+              nodes: execution.node_states || {},
+              logs: execution.logs || []
+            }
+          } catch (error) {
+            console.error('Failed to fetch execution:', error)
+            return exec
+          }
+        })
+      )
+
+      setActiveExecutions(updatedExecutions)
+    }, 2000) // Poll every 2 seconds
+
+    return () => clearInterval(interval)
+  }, [activeExecutions])
+
+  // Handle execution start
+  const handleExecutionStart = useCallback((executionId: string) => {
+    // Add new execution to the console
+    const newExecution: ExecutionTab = {
+      id: executionId,
+      status: 'running',
+      startedAt: new Date(),
+      nodes: {},
+      logs: []
+    }
+    setActiveExecutions(prev => [newExecution, ...prev])
+
+    // Also call parent callback if provided
+    if (onExecutionStart) {
+      onExecutionStart(executionId)
+    }
+  }, [onExecutionStart])
+
+  // Handle closing execution tabs
+  const handleCloseExecution = useCallback((executionId: string) => {
+    setActiveExecutions(prev => prev.filter(e => e.id !== executionId))
+  }, [])
 
   const onConnect = useCallback(
     (connection: Connection) => {
@@ -120,7 +184,7 @@ export default function WorkflowBuilder({ workflowId, onExecutionStart }: Workfl
 
         {/* Main Canvas */}
         <div className="flex-1 relative">
-          <Toolbar onExecutionStart={onExecutionStart} />
+          <Toolbar onExecutionStart={handleExecutionStart} />
           
         <ReactFlow
           nodes={nodes}
@@ -161,6 +225,12 @@ export default function WorkflowBuilder({ workflowId, onExecutionStart }: Workfl
       {/* Right Panel - Properties */}
       <PropertyPanel selectedNodeId={selectedNodeId} setSelectedNodeId={setSelectedNodeId} />
     </div>
+
+      {/* Bottom Panel - Execution Console */}
+      <ExecutionConsole 
+        executions={activeExecutions}
+        onClose={handleCloseExecution}
+      />
     </ReactFlowProvider>
   )
 }

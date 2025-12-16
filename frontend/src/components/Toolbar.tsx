@@ -24,7 +24,7 @@ export default function Toolbar({ onExecutionStart }: ToolbarProps) {
   const [showInputs, setShowInputs] = useState(false)
   const [executionInputs, setExecutionInputs] = useState<string>('{}')
 
-  const handleSave = async () => {
+  const handleSave = async (): Promise<string | null> => {
     setIsSaving(true)
     try {
       const workflowDef = toWorkflowDefinition()
@@ -33,23 +33,37 @@ export default function Toolbar({ onExecutionStart }: ToolbarProps) {
         // Update existing
         await api.updateWorkflow(workflowId, workflowDef)
         alert('Workflow updated successfully!')
+        return workflowId
       } else {
         // Create new
         const created = await api.createWorkflow(workflowDef)
         setWorkflowId(created.id!)
         alert('Workflow created successfully!')
+        return created.id!
       }
     } catch (error: any) {
       alert('Failed to save workflow: ' + error.message)
+      return null
     } finally {
       setIsSaving(false)
     }
   }
 
   const handleExecute = async () => {
-    if (!workflowId) {
-      alert('Please save the workflow first')
-      return
+    let currentWorkflowId = workflowId
+    
+    if (!currentWorkflowId) {
+      // Auto-save if not saved yet
+      const confirm = window.confirm('Workflow needs to be saved before execution. Save now?')
+      if (confirm) {
+        currentWorkflowId = await handleSave()
+        if (!currentWorkflowId) {
+          alert('Failed to save workflow. Cannot execute.')
+          return
+        }
+      } else {
+        return
+      }
     }
 
     setShowInputs(true)
@@ -59,14 +73,23 @@ export default function Toolbar({ onExecutionStart }: ToolbarProps) {
     setIsExecuting(true)
     try {
       const inputs = JSON.parse(executionInputs)
+      console.log('Executing workflow:', workflowId, 'with inputs:', inputs)
+      
       const execution = await api.executeWorkflow(workflowId!, inputs)
+      console.log('Execution started:', execution)
       
       setShowInputs(false)
+      setExecutionInputs('{}') // Reset inputs
+      
       if (onExecutionStart) {
         onExecutionStart(execution.execution_id)
       }
-      alert(`Execution started: ${execution.execution_id}`)
+      
+      // Show success message
+      const message = `✅ Execution started!\n\nExecution ID: ${execution.execution_id.slice(0, 8)}...\n\nCheck the console at the bottom of the screen to watch it run.`
+      alert(message)
     } catch (error: any) {
+      console.error('Execution failed:', error)
       alert('Failed to execute workflow: ' + error.message)
     } finally {
       setIsExecuting(false)

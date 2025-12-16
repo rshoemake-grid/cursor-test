@@ -1,6 +1,6 @@
-from typing import Dict, Type
+from typing import Dict, Type, Optional, Any
 from .base import BaseAgent
-from .llm_agent import LLMAgent
+from .unified_llm_agent import UnifiedLLMAgent
 from .condition_agent import ConditionAgent
 from .loop_agent import LoopAgent
 from ..models.schemas import Node, NodeType
@@ -10,20 +10,24 @@ class AgentRegistry:
     """Registry for agent types"""
     
     _agents: Dict[NodeType, Type[BaseAgent]] = {
-        NodeType.AGENT: LLMAgent,
+        NodeType.AGENT: UnifiedLLMAgent,
         NodeType.CONDITION: ConditionAgent,
         NodeType.LOOP: LoopAgent,
     }
     
     @classmethod
-    def get_agent(cls, node: Node) -> BaseAgent:
+    def get_agent(cls, node: Node, llm_config: Optional[Dict[str, Any]] = None) -> BaseAgent:
         """Get an agent instance for a node"""
         agent_class = cls._agents.get(node.type)
         
         if not agent_class:
             raise ValueError(f"No agent registered for node type: {node.type}")
         
-        return agent_class(node)
+        # Pass llm_config to UnifiedLLMAgent, others don't need it
+        if node.type == NodeType.AGENT and llm_config:
+            return agent_class(node, llm_config=llm_config)
+        else:
+            return agent_class(node)
     
     @classmethod
     def register_agent(cls, node_type: NodeType, agent_class: Type[BaseAgent]):

@@ -27,12 +27,13 @@ class WorkflowExecutorV3:
     - Tool calling
     """
     
-    def __init__(self, workflow: WorkflowDefinition, stream_updates: bool = False):
+    def __init__(self, workflow: WorkflowDefinition, stream_updates: bool = False, llm_config: Optional[Dict[str, Any]] = None):
         self.workflow = workflow
         self.execution_id = str(uuid.uuid4())
         self.execution_state: Optional[ExecutionState] = None
         self.loop_states: Dict[str, Dict[str, Any]] = {}
         self.stream_updates = stream_updates
+        self.llm_config = llm_config
         
     async def execute(self, inputs: Dict[str, Any]) -> ExecutionState:
         """
@@ -54,6 +55,14 @@ class WorkflowExecutorV3:
         try:
             # Build adjacency map
             adjacency, in_degree = self._build_graph()
+            
+            # Debug logging
+            await self._log("INFO", None, f"Workflow has {len(self.workflow.nodes)} nodes and {len(self.workflow.edges)} edges")
+            if self.workflow.nodes:
+                await self._log("INFO", None, f"Nodes: {[f'{n.id}:{n.type.value}' for n in self.workflow.nodes]}")
+            else:
+                await self._log("WARNING", None, "No nodes found in workflow!")
+                return
             
             # Execute with parallel support
             await self._execute_graph(adjacency, in_degree)
@@ -107,9 +116,14 @@ class WorkflowExecutorV3:
             elif self.workflow.nodes:
                 start_nodes = [self.workflow.nodes[0].id]
         
+        await self._log("INFO", None, f"Start nodes: {start_nodes}")
+        await self._log("INFO", None, f"In-degree map: {in_degree}")
+        
         queue = start_nodes.copy()
         
         while queue or in_progress:
+            await self._log("INFO", None, f"Queue: {queue}, In Progress: {in_progress}, Completed: {completed}")
+            
             # Collect nodes that can be executed in parallel
             parallel_batch = []
             
@@ -118,6 +132,7 @@ class WorkflowExecutorV3:
                 
                 # Skip START and END nodes in execution
                 if node.type in [NodeType.START, NodeType.END]:
+                    await self._log("INFO", None, f"Skipping {node.type.value} node: {node_id}")
                     queue.remove(node_id)
                     completed.add(node_id)
                     
@@ -125,18 +140,30 @@ class WorkflowExecutorV3:
                         dependencies = [n for n, neighbors in adjacency.items() if neighbor_id in neighbors]
                         if all(dep in completed for dep in dependencies):
                             if neighbor_id not in queue and neighbor_id not in in_progress:
+                                await self._log("INFO", None, f"Adding neighbor {neighbor_id} to queue")
                                 queue.append(neighbor_id)
                     continue
                 
                 # Check if dependencies are met
                 dependencies = [n for n, neighbors in adjacency.items() if node_id in neighbors]
+                await self._log("INFO", None, f"Node {node_id} dependencies: {dependencies}, all met: {all(dep in completed for dep in dependencies)}")
                 if all(dep in completed for dep in dependencies):
+                    await self._log("INFO", None, f"Adding node {node_id} to parallel batch")
                     parallel_batch.append(node)
                     queue.remove(node_id)
                     in_progress.add(node_id)
             
-            if not parallel_batch and not in_progress:
+            await self._log("INFO", None, f"Parallel batch: {[n.id for n in parallel_batch]}, Queue after: {queue}, In progress: {in_progress}")
+            
+            # Only break if there's nothing to do
+            if not parallel_batch and not in_progress and not queue:
+                await self._log("INFO", None, f"Breaking: no parallel batch, no in progress, and queue is empty")
                 break
+            
+            # If queue still has items but parallel_batch is empty, continue to next iteration
+            if not parallel_batch and queue:
+                await self._log("INFO", None, f"Queue has items but parallel batch empty - continuing to next iteration")
+                continue
             
             # Execute parallel batch
             if parallel_batch:
@@ -201,7 +228,7 @@ class WorkflowExecutorV3:
             
             # Execute based on node type
             if node.type in [NodeType.AGENT, NodeType.CONDITION, NodeType.LOOP]:
-                agent = AgentRegistry.get_agent(node)
+                agent = AgentRegistry.get_agent(node, llm_config=self.llm_config)
                 output = await agent.execute(node_inputs)
             elif node.type == NodeType.TOOL:
                 output = node_inputs

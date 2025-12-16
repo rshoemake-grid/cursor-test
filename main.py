@@ -5,6 +5,13 @@ from contextlib import asynccontextmanager
 
 from backend.api import router
 from backend.api.websocket_routes import router as ws_router
+from backend.api.auth_routes import router as auth_router
+from backend.api.template_routes import router as template_router
+from backend.api.sharing_routes import router as sharing_router
+from backend.api.marketplace_routes import router as marketplace_router
+from backend.api.debug_routes import router as debug_router
+from backend.api.import_export_routes import router as import_export_router
+from backend.api.settings_routes import router as settings_router
 from backend.database import init_db
 
 
@@ -22,8 +29,8 @@ async def lifespan(app: FastAPI):
 # Create FastAPI app
 app = FastAPI(
     title="Agentic Workflow Engine",
-    description="API for building and executing agentic workflows",
-    version="1.0.0",
+    description="API for building and executing agentic workflows with collaboration features",
+    version="2.0.0 (Phase 4)",
     lifespan=lifespan
 )
 
@@ -37,8 +44,17 @@ app.add_middleware(
 )
 
 # Include API routes
-app.include_router(router, prefix="/api")
-app.include_router(ws_router, prefix="/api")
+app.include_router(router, prefix="/api")  # Main workflow routes (add /api prefix)
+app.include_router(ws_router, prefix="/api")  # WebSocket routes
+
+# Phase 4: Authentication & Collaboration routes (already have /api in their prefix)
+app.include_router(auth_router)
+app.include_router(template_router)
+app.include_router(sharing_router)
+app.include_router(marketplace_router)
+app.include_router(debug_router)
+app.include_router(import_export_router)
+app.include_router(settings_router)
 
 
 @app.get("/")

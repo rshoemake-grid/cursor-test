@@ -10,13 +10,17 @@ interface ExecutionViewerProps {
 export default function ExecutionViewer({ executionId }: ExecutionViewerProps) {
   const [execution, setExecution] = useState<ExecutionState | null>(null)
   const [loading, setLoading] = useState(true)
+  const [isPolling, setIsPolling] = useState(false)
 
   useEffect(() => {
     loadExecution()
     // Poll for updates every 2 seconds if still running
     const interval = setInterval(() => {
       if (execution?.status === 'running' || execution?.status === 'pending') {
+        setIsPolling(true)
         loadExecution()
+      } else {
+        setIsPolling(false)
       }
     }, 2000)
 
@@ -27,8 +31,9 @@ export default function ExecutionViewer({ executionId }: ExecutionViewerProps) {
     try {
       const data = await api.getExecution(executionId)
       setExecution(data)
+      setIsPolling(data.status === 'running' || data.status === 'pending')
     } catch (error: any) {
-      alert('Failed to load execution: ' + error.message)
+      console.error('Failed to load execution:', error)
     } finally {
       setLoading(false)
     }
@@ -79,6 +84,25 @@ export default function ExecutionViewer({ executionId }: ExecutionViewerProps) {
   return (
     <div className="h-full overflow-y-auto p-6">
       <div className="max-w-5xl mx-auto">
+        {/* Real-time monitoring banner */}
+        {isPolling && (execution.status === 'running' || execution.status === 'pending') && (
+          <div className="bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg shadow-lg p-4 mb-6 animate-pulse">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Clock className="w-6 h-6 animate-spin" />
+                <div>
+                  <div className="font-semibold text-lg">Workflow Running...</div>
+                  <div className="text-sm text-blue-100">Monitoring in real-time • Updates every 2 seconds</div>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+                <span className="text-sm font-medium">LIVE</span>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Header */}
         <div className="bg-white rounded-lg shadow-md p-6 mb-6">
           <div className="flex items-center justify-between mb-4">
@@ -125,7 +149,28 @@ export default function ExecutionViewer({ executionId }: ExecutionViewerProps) {
 
         {/* Node States */}
         <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Node Execution</h3>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold text-gray-900">Node Execution</h3>
+            {execution.node_states && Object.keys(execution.node_states).length > 0 && (
+              <div className="text-sm text-gray-600">
+                {Object.values(execution.node_states).filter((n: any) => n.status === 'completed').length} / {Object.keys(execution.node_states).length} nodes completed
+              </div>
+            )}
+          </div>
+
+          {/* Progress bar */}
+          {execution.node_states && Object.keys(execution.node_states).length > 0 && (
+            <div className="mb-4">
+              <div className="w-full bg-gray-200 rounded-full h-2">
+                <div 
+                  className="bg-blue-600 h-2 rounded-full transition-all duration-500"
+                  style={{ 
+                    width: `${(Object.values(execution.node_states).filter((n: any) => n.status === 'completed').length / Object.keys(execution.node_states).length) * 100}%` 
+                  }}
+                ></div>
+              </div>
+            </div>
+          )}
           
           <div className="space-y-3">
             {Object.entries(execution.node_states).map(([nodeId, nodeState]: [string, NodeState]) => (
@@ -153,13 +198,20 @@ export default function ExecutionViewer({ executionId }: ExecutionViewerProps) {
                 )}
 
                 {nodeState.output && (
-                  <div className="mt-2">
-                    <p className="text-xs font-medium text-gray-600 mb-1">Output:</p>
-                    <pre className="text-xs bg-gray-50 p-2 rounded overflow-x-auto max-h-40">
-                      {typeof nodeState.output === 'string'
-                        ? nodeState.output
-                        : JSON.stringify(nodeState.output, null, 2)}
-                    </pre>
+                  <div className="mt-3">
+                    <p className="text-xs font-medium text-gray-600 mb-2 flex items-center gap-2">
+                      <span>Agent Response:</span>
+                      {nodeState.status === 'completed' && (
+                        <span className="text-green-600">✓</span>
+                      )}
+                    </p>
+                    <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-4">
+                      <div className="text-sm text-gray-800 whitespace-pre-wrap leading-relaxed">
+                        {typeof nodeState.output === 'string'
+                          ? nodeState.output
+                          : JSON.stringify(nodeState.output, null, 2)}
+                      </div>
+                    </div>
                   </div>
                 )}
 
