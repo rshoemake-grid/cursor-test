@@ -15,7 +15,7 @@ export default function NodePanel() {
   }
 
   return (
-    <div className="w-64 bg-white border-r border-gray-200 p-4">
+    <div className="w-64 h-full bg-white border-r border-gray-200 p-4 overflow-y-auto">
       <h3 className="text-lg font-semibold text-gray-900 mb-4">Node Palette</h3>
       <p className="text-sm text-gray-600 mb-4">Drag nodes onto the canvas</p>
       

@@ -345,72 +345,75 @@ export default function WorkflowBuilder({
   return (
     <ReactFlowProvider>
       <div className="h-full flex">
-        {/* Left Panel - Node Palette */}
+        {/* Left Panel - Node Palette (Full Height) */}
         <NodePanel />
 
-        {/* Main Canvas */}
-        <div className="flex-1 relative">
-          <Toolbar 
-            workflowId={localWorkflowId}
-            workflowName={localWorkflowName}
-            workflowDescription={localWorkflowDescription}
-            nodes={nodes}
-            edges={edges}
-            variables={variables}
-            onExecutionStart={handleExecutionStart}
-            onWorkflowSaved={onWorkflowSaved}
-            onWorkflowNameChange={setLocalWorkflowName}
-            onWorkflowDescriptionChange={setLocalWorkflowDescription}
-            onWorkflowIdChange={setLocalWorkflowId}
-          />
-          
-        <ReactFlow
-          nodes={nodes}
-          edges={edges}
-          onNodesChange={onNodesChange}
-          onEdgesChange={onEdgesChange}
-          onConnect={onConnect}
-          onDrop={onDrop}
-          onDragOver={onDragOver}
-          onNodeClick={onNodeClick}
-          nodeTypes={nodeTypes}
-          fitView
-          className="bg-gray-50"
-        >
-            <Controls />
-            <MiniMap
-              nodeColor={(node) => {
-                switch (node.type) {
-                  case 'agent':
-                    return '#3b82f6'
-                  case 'condition':
-                    return '#a855f7'
-                  case 'loop':
-                    return '#22c55e'
-                  case 'start':
-                    return '#0ea5e9'
-                  case 'end':
-                    return '#6b7280'
-                  default:
-                    return '#94a3b8'
-                }
-              }}
+        {/* Middle Section - Workflow Canvas + Console */}
+        <div className="flex-1 flex flex-col">
+          {/* Top: Canvas Area */}
+          <div className="flex-1 relative">
+            <Toolbar 
+              workflowId={localWorkflowId}
+              workflowName={localWorkflowName}
+              workflowDescription={localWorkflowDescription}
+              nodes={nodes}
+              edges={edges}
+              variables={variables}
+              onExecutionStart={handleExecutionStart}
+              onWorkflowSaved={onWorkflowSaved}
+              onWorkflowNameChange={setLocalWorkflowName}
+              onWorkflowDescriptionChange={setLocalWorkflowDescription}
+              onWorkflowIdChange={setLocalWorkflowId}
             />
-            <Background variant={BackgroundVariant.Dots} gap={12} size={1} />
-          </ReactFlow>
+            
+            <ReactFlow
+              nodes={nodes}
+              edges={edges}
+              onNodesChange={onNodesChange}
+              onEdgesChange={onEdgesChange}
+              onConnect={onConnect}
+              onDrop={onDrop}
+              onDragOver={onDragOver}
+              onNodeClick={onNodeClick}
+              nodeTypes={nodeTypes}
+              fitView
+              className="bg-gray-50"
+            >
+              <Controls />
+              <MiniMap
+                nodeColor={(node) => {
+                  switch (node.type) {
+                    case 'agent':
+                      return '#3b82f6'
+                    case 'condition':
+                      return '#a855f7'
+                    case 'loop':
+                      return '#22c55e'
+                    case 'start':
+                      return '#0ea5e9'
+                    case 'end':
+                      return '#6b7280'
+                    default:
+                      return '#94a3b8'
+                  }
+                }}
+              />
+              <Background variant={BackgroundVariant.Dots} gap={12} size={1} />
+            </ReactFlow>
+          </div>
+
+          {/* Bottom: Execution Console (Only under workflow canvas) */}
+          <ExecutionConsole 
+            workflowTabs={workflowTabs}
+            activeWorkflowId={localWorkflowId || null}
+            onCloseWorkflow={handleCloseWorkflow}
+            onClearExecutions={handleClearExecutions}
+          />
         </div>
 
-      {/* Right Panel - Properties */}
-      <PropertyPanel selectedNodeId={selectedNodeId} setSelectedNodeId={setSelectedNodeId} />
-    </div>
-
-      {/* Bottom Panel - Execution Console */}
-      <ExecutionConsole 
-        workflowTabs={workflowTabs}
-        activeWorkflowId={localWorkflowId || null}
-        onCloseWorkflow={handleCloseWorkflow}
-        onClearExecutions={handleClearExecutions}
-      />
+        {/* Right Panel - Properties (Full Height) */}
+        <PropertyPanel selectedNodeId={selectedNodeId} setSelectedNodeId={setSelectedNodeId} />
+      </div>
     </ReactFlowProvider>
   )
 }

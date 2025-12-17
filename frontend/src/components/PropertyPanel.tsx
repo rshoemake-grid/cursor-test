@@ -17,7 +17,7 @@ export default function PropertyPanel({ selectedNodeId, setSelectedNodeId }: Pro
 
   if (!selectedNode) {
     return (
-      <div className="w-80 bg-white border-l border-gray-200 p-4">
+      <div className="w-80 h-full bg-white border-l border-gray-200 p-4">
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Properties</h3>
         <p className="text-sm text-gray-500">Select a node to edit its properties</p>
       </div>
@@ -81,7 +81,7 @@ export default function PropertyPanel({ selectedNodeId, setSelectedNodeId }: Pro
   }
 
   return (
-    <div className="w-80 bg-white border-l border-gray-200 p-4 overflow-y-auto">
+    <div className="w-80 h-full bg-white border-l border-gray-200 p-4 overflow-y-auto">
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-lg font-semibold text-gray-900">Properties</h3>
         <button
