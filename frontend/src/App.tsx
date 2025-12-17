@@ -1,5 +1,5 @@
 import { BrowserRouter as Router, Routes, Route, Link, useNavigate, useSearchParams } from 'react-router-dom'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import WorkflowTabs from './components/WorkflowTabs'
 import WorkflowList from './components/WorkflowList'
 import ExecutionViewer from './components/ExecutionViewer'
@@ -20,12 +20,15 @@ function MainApp() {
   const { user, logout, isAuthenticated } = useAuth()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
+  const processedWorkflowFromUrl = useRef<string | null>(null)
 
   // Load workflow from URL query parameter (from marketplace)
   useEffect(() => {
     const workflowId = searchParams.get('workflow')
-    if (workflowId) {
+    if (workflowId && workflowId !== processedWorkflowFromUrl.current) {
       console.log(`[App] Loading workflow ${workflowId} from URL`)
+      processedWorkflowFromUrl.current = workflowId
+      
       setSelectedWorkflowId(workflowId)
       setWorkflowLoadKey(prev => {
         const newKey = prev + 1
@@ -33,8 +36,14 @@ function MainApp() {
         return newKey
       })
       setCurrentView('builder')
+      
       // Clear the query parameter after loading
       navigate('/', { replace: true })
+      
+      // Reset processed ref after a delay to allow same workflow to be opened again
+      setTimeout(() => {
+        processedWorkflowFromUrl.current = null
+      }, 100)
     }
   }, [searchParams, navigate])
 

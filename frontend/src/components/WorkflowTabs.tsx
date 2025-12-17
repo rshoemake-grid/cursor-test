@@ -16,16 +16,23 @@ interface WorkflowTabsProps {
 }
 
 export default function WorkflowTabs({ initialWorkflowId, workflowLoadKey, onExecutionStart }: WorkflowTabsProps) {
-  const [tabs, setTabs] = useState<WorkflowTabData[]>([
+  const initialTabs: WorkflowTabData[] = [
     {
       id: 'workflow-1',
       name: 'Untitled Workflow',
       workflowId: null,
       isUnsaved: true
     }
-  ])
+  ]
+  const [tabs, setTabs] = useState<WorkflowTabData[]>(initialTabs)
   const [activeTabId, setActiveTabId] = useState<string>('workflow-1')
   const processedKeys = useRef<Set<string>>(new Set()) // Track processed workflowId+loadKey combinations
+  const tabsRef = useRef<WorkflowTabData[]>(initialTabs) // Keep ref in sync with tabs state
+
+  // Sync tabsRef with tabs state
+  useEffect(() => {
+    tabsRef.current = tabs
+  }, [tabs])
 
   // Handle initial workflow from marketplace - ALWAYS create new tab
   // workflowLoadKey increments each time, ensuring new tab even for same workflowId
@@ -37,8 +44,9 @@ export default function WorkflowTabs({ initialWorkflowId, workflowLoadKey, onExe
       // Only process if we haven't seen this exact combination before
       if (!processedKeys.current.has(uniqueKey)) {
         console.log(`[WorkflowTabs] Creating new tab for workflow ${initialWorkflowId}, loadKey: ${workflowLoadKey}, uniqueKey: ${uniqueKey}`)
+        console.log(`[WorkflowTabs] Current tabs count: ${tabsRef.current.length}`)
         
-        // Mark this combination as processed
+        // Mark this combination as processed IMMEDIATELY to prevent duplicates
         processedKeys.current.add(uniqueKey)
         
         // Always create a new tab, even if workflow is already open in another tab
@@ -52,8 +60,15 @@ export default function WorkflowTabs({ initialWorkflowId, workflowLoadKey, onExe
         
         console.log(`[WorkflowTabs] Adding new tab: ${newId}`)
         setTabs(prev => {
+          // Double-check we're not adding a duplicate
+          const existingTab = prev.find(t => t.id === newId)
+          if (existingTab) {
+            console.log(`[WorkflowTabs] WARNING: Tab ${newId} already exists! Skipping.`)
+            return prev
+          }
           const newTabs = [...prev, newTab]
           console.log(`[WorkflowTabs] Total tabs: ${prev.length} → ${newTabs.length}`)
+          tabsRef.current = newTabs // Update ref immediately
           return newTabs
         })
         setActiveTabId(newId)
