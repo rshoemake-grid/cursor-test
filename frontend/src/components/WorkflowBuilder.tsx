@@ -53,6 +53,8 @@ export default function WorkflowBuilder({
   onWorkflowModified,
   onWorkflowLoaded
 }: WorkflowBuilderProps) {
+  console.log(`[WorkflowBuilder ${tabId}] Rendering with workflowId:`, workflowId)
+  
   // Local state for this tab - NOT using global store
   const [nodes, setNodes, onNodesChangeBase] = useNodesState([])
   const [edges, setEdges, onEdgesChangeBase] = useEdgesState([])
@@ -343,6 +345,8 @@ export default function WorkflowBuilder({
     []
   )
 
+  console.log(`[WorkflowBuilder ${tabId}] Rendering UI with ${nodes.length} nodes, ${edges.length} edges`)
+  
   return (
     <ReactFlowProvider>
       <div className="h-full flex">
