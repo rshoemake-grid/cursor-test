@@ -14,6 +14,7 @@ type View = 'builder' | 'list' | 'execution'
 function MainApp() {
   const [currentView, setCurrentView] = useState<View>('builder')
   const [selectedWorkflowId, setSelectedWorkflowId] = useState<string | null>(null)
+  const [workflowLoadKey, setWorkflowLoadKey] = useState<number>(0) // Counter to force new tab creation
   const [executionId, setExecutionId] = useState<string | null>(null)
   
   const { user, logout, isAuthenticated } = useAuth()
@@ -25,14 +26,10 @@ function MainApp() {
     const workflowId = searchParams.get('workflow')
     if (workflowId) {
       setSelectedWorkflowId(workflowId)
+      setWorkflowLoadKey(prev => prev + 1) // Increment counter to force new tab
       setCurrentView('builder')
       // Clear the query parameter after loading
       navigate('/', { replace: true })
-      // Clear selectedWorkflowId after processing to allow re-opening same workflow
-      // This ensures each "Use Template" click creates a new tab
-      setTimeout(() => {
-        setSelectedWorkflowId(null)
-      }, 1000)
     }
   }, [searchParams, navigate])
 
@@ -139,6 +136,7 @@ function MainApp() {
         {currentView === 'builder' && (
           <WorkflowTabs
             initialWorkflowId={selectedWorkflowId}
+            workflowLoadKey={workflowLoadKey}
             onExecutionStart={(execId) => {
               // Keep user on builder view - execution console is at bottom
               setExecutionId(execId)

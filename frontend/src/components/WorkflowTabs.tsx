@@ -11,10 +11,11 @@ interface WorkflowTabData {
 
 interface WorkflowTabsProps {
   initialWorkflowId?: string | null
+  workflowLoadKey?: number // Counter to force new tab creation
   onExecutionStart?: (executionId: string) => void
 }
 
-export default function WorkflowTabs({ initialWorkflowId, onExecutionStart }: WorkflowTabsProps) {
+export default function WorkflowTabs({ initialWorkflowId, workflowLoadKey, onExecutionStart }: WorkflowTabsProps) {
   const [tabs, setTabs] = useState<WorkflowTabData[]>([
     {
       id: 'workflow-1',
@@ -24,13 +25,14 @@ export default function WorkflowTabs({ initialWorkflowId, onExecutionStart }: Wo
     }
   ])
   const [activeTabId, setActiveTabId] = useState<string>('workflow-1')
-  const lastProcessedWorkflowId = useRef<string | null>(null)
+  const lastProcessedKey = useRef<number>(0)
 
   // Handle initial workflow from marketplace - ALWAYS create new tab
+  // workflowLoadKey increments each time, ensuring new tab even for same workflowId
   useEffect(() => {
-    if (initialWorkflowId && initialWorkflowId !== lastProcessedWorkflowId.current) {
-      // Track this workflow ID to avoid duplicate tabs on re-render
-      lastProcessedWorkflowId.current = initialWorkflowId
+    if (initialWorkflowId && workflowLoadKey && workflowLoadKey !== lastProcessedKey.current) {
+      // Track this load key to avoid duplicate tabs on re-render
+      lastProcessedKey.current = workflowLoadKey
       
       // Always create a new tab, even if workflow is already open in another tab
       const newId = `workflow-${Date.now()}`
@@ -42,13 +44,8 @@ export default function WorkflowTabs({ initialWorkflowId, onExecutionStart }: Wo
       }
       setTabs(prev => [...prev, newTab])
       setActiveTabId(newId)
-      
-      // Reset after processing to allow same workflow to be opened again later
-      setTimeout(() => {
-        lastProcessedWorkflowId.current = null
-      }, 500)
     }
-  }, [initialWorkflowId])
+  }, [initialWorkflowId, workflowLoadKey])
 
   const handleNewWorkflow = useCallback(() => {
     const newId = `workflow-${Date.now()}`
