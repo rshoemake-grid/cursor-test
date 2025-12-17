@@ -17,7 +17,6 @@ import { nodeTypes } from './nodes'
 import NodePanel from './NodePanel'
 import PropertyPanel from './PropertyPanel'
 import Toolbar from './Toolbar'
-import ExecutionConsole from './ExecutionConsole'
 import { api } from '../api/client'
 
 interface WorkflowBuilderProps {
@@ -27,22 +26,6 @@ interface WorkflowBuilderProps {
   onWorkflowSaved?: (workflowId: string, name: string) => void
   onWorkflowModified?: () => void
   onWorkflowLoaded?: (workflowId: string, name: string) => void
-}
-
-interface Execution {
-  id: string
-  status: 'running' | 'completed' | 'failed'
-  startedAt: Date
-  completedAt?: Date
-  nodes: Record<string, any>
-  logs: Array<{ timestamp: string; message: string; level: string; node_id?: string }>
-}
-
-interface WorkflowTab {
-  workflowId: string
-  workflowName: string
-  executions: Execution[]
-  activeExecutionId: string | null
 }
 
 export default function WorkflowBuilder({ 
@@ -61,14 +44,7 @@ export default function WorkflowBuilder({
   const [localWorkflowName, setLocalWorkflowName] = useState<string>('Untitled Workflow')
   const [localWorkflowDescription, setLocalWorkflowDescription] = useState<string>('')
   const [variables, setVariables] = useState<Record<string, any>>({})
-  const [workflowTabs, setWorkflowTabs] = useState<WorkflowTab[]>([])
-  const workflowTabsRef = useRef<WorkflowTab[]>([])
   const isLoadingRef = useRef<boolean>(false)
-  
-  // Keep ref in sync with state
-  useEffect(() => {
-    workflowTabsRef.current = workflowTabs
-  }, [workflowTabs])
 
   // Track modifications
   const notifyModified = useCallback(() => {
@@ -141,22 +117,6 @@ export default function WorkflowBuilder({
         if (onWorkflowLoaded) {
           onWorkflowLoaded(workflowId, workflow.name)
         }
-        
-        // Create or activate workflow tab (for console)
-        setWorkflowTabs(prev => {
-          const existingTab = prev.find(tab => tab.workflowId === workflowId)
-          if (existingTab) {
-            // Tab already exists, just return current state
-            return prev
-          }
-          // Create new tab
-          return [...prev, {
-            workflowId: workflowId,
-            workflowName: workflow.name,
-            executions: [],
-            activeExecutionId: null
-          }]
-        })
       }).catch(err => {
         console.error("Failed to load workflow:", err)
         isLoadingRef.current = false
@@ -167,131 +127,13 @@ export default function WorkflowBuilder({
     }
   }, [workflowId, onWorkflowLoaded, workflowNodeToNode, setNodes, setEdges])
 
-  // Ensure current workflow has a tab (for console)
-  useEffect(() => {
-    if (localWorkflowId && localWorkflowName) {
-      setWorkflowTabs(prev => {
-        const existingTab = prev.find(tab => tab.workflowId === localWorkflowId)
-        if (existingTab) {
-          // Update name if changed
-          return prev.map(tab => 
-            tab.workflowId === localWorkflowId 
-              ? { ...tab, workflowName: localWorkflowName } 
-              : tab
-          )
-        }
-        // Create new tab for current workflow
-        return [...prev, {
-          workflowId: localWorkflowId,
-          workflowName: localWorkflowName,
-          executions: [],
-          activeExecutionId: null
-        }]
-      })
-    }
-  }, [localWorkflowId, localWorkflowName])
-
-  // Poll for execution updates
-  useEffect(() => {
-    const interval = setInterval(async () => {
-      // Use ref to access current state without triggering effect re-run
-      const currentTabs = workflowTabsRef.current
-      const allExecutions = currentTabs.flatMap(tab => tab.executions)
-      const runningExecutions = allExecutions.filter(e => e.status === 'running')
-      
-      if (runningExecutions.length === 0) return
-
-      // Update all running executions
-      const updates = await Promise.all(
-        runningExecutions.map(async (exec) => {
-          try {
-            const execution = await api.getExecution(exec.id)
-            return {
-              id: exec.id,
-              status: execution.status === 'completed' ? 'completed' as const :
-                      execution.status === 'failed' ? 'failed' as const :
-                      'running' as const,
-              startedAt: exec.startedAt,
-              completedAt: execution.completed_at ? new Date(execution.completed_at) : undefined,
-              nodes: execution.node_states || {},
-              logs: execution.logs || []
-            }
-          } catch (error) {
-            console.error('Failed to fetch execution:', error)
-            return null
-          }
-        })
-      )
-
-      // Apply updates to workflow tabs
-      setWorkflowTabs(prev => prev.map(tab => ({
-        ...tab,
-        executions: tab.executions.map(exec => {
-          const update = updates.find(u => u && u.id === exec.id)
-          return update || exec
-        })
-      })))
-    }, 2000) // Poll every 2 seconds
-
-    return () => clearInterval(interval)
-  }, []) // ✅ Empty dependency array - interval runs consistently
-
-  // Handle execution start
+  // Handle execution start - just call parent callback
   const handleExecutionStart = useCallback((executionId: string) => {
-    const currentWorkflowId = localWorkflowId || `unsaved-${tabId}`
-    const currentWorkflowName = localWorkflowName || 'Unsaved Workflow'
-    
-    // Add new execution to the current workflow's tab
-    const newExecution: Execution = {
-      id: executionId,
-      status: 'running',
-      startedAt: new Date(),
-      nodes: {},
-      logs: []
-    }
-    
-    setWorkflowTabs(prev => {
-      const existingTab = prev.find(tab => tab.workflowId === currentWorkflowId)
-      if (existingTab) {
-        // Add to existing tab
-        return prev.map(tab => 
-          tab.workflowId === currentWorkflowId
-            ? { 
-                ...tab, 
-                executions: [newExecution, ...tab.executions],
-                activeExecutionId: executionId
-              }
-            : tab
-        )
-      }
-      // Create new tab with this execution
-      return [...prev, {
-        workflowId: currentWorkflowId,
-        workflowName: currentWorkflowName,
-        executions: [newExecution],
-        activeExecutionId: executionId
-      }]
-    })
-
-    // Also call parent callback if provided
+    // Parent (WorkflowTabs) handles execution tracking
     if (onExecutionStart) {
       onExecutionStart(executionId)
     }
-  }, [localWorkflowId, localWorkflowName, tabId, onExecutionStart])
-
-  // Handle closing workflow tabs
-  const handleCloseWorkflow = useCallback((workflowId: string) => {
-    setWorkflowTabs(prev => prev.filter(tab => tab.workflowId !== workflowId))
-  }, [])
-
-  // Handle clearing executions for a workflow
-  const handleClearExecutions = useCallback((workflowId: string) => {
-    setWorkflowTabs(prev => prev.map(tab => 
-      tab.workflowId === workflowId
-        ? { ...tab, executions: [], activeExecutionId: null }
-        : tab
-    ))
-  }, [])
+  }, [onExecutionStart])
 
   const onConnect = useCallback(
     (connection: Connection) => {
@@ -348,10 +190,10 @@ export default function WorkflowBuilder({
         {/* Left Panel - Node Palette (Full Height) */}
         <NodePanel />
 
-        {/* Middle Section - Workflow Canvas + Console */}
-        <div className="flex-1 flex flex-col overflow-hidden">
-          {/* Top: Canvas Area */}
-          <div className="flex-1 relative">
+        {/* Middle Section - Workflow Canvas */}
+        <div className="flex-1 overflow-hidden">
+          {/* Canvas Area */}
+          <div className="h-full relative">
             <Toolbar 
               workflowId={localWorkflowId}
               workflowName={localWorkflowName}
@@ -403,14 +245,6 @@ export default function WorkflowBuilder({
               </ReactFlow>
             </div>
           </div>
-
-          {/* Bottom: Execution Console (Only under workflow canvas) */}
-          <ExecutionConsole 
-            workflowTabs={workflowTabs}
-            activeWorkflowId={localWorkflowId || null}
-            onCloseWorkflow={handleCloseWorkflow}
-            onClearExecutions={handleClearExecutions}
-          />
         </div>
 
         {/* Right Panel - Properties (Full Height) */}
