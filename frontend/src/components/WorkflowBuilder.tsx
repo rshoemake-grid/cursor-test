@@ -53,8 +53,6 @@ export default function WorkflowBuilder({
   onWorkflowModified,
   onWorkflowLoaded
 }: WorkflowBuilderProps) {
-  console.log(`[WorkflowBuilder ${tabId}] Rendering with workflowId:`, workflowId)
-  
   // Local state for this tab - NOT using global store
   const [nodes, setNodes, onNodesChangeBase] = useNodesState([])
   const [edges, setEdges, onEdgesChangeBase] = useEdgesState([])
@@ -74,10 +72,9 @@ export default function WorkflowBuilder({
 
   // Track modifications
   const notifyModified = useCallback(() => {
-    // Temporarily disabled to isolate UI issues
-    // if (onWorkflowModified && !isLoadingRef.current) {
-    //   onWorkflowModified()
-    // }
+    if (onWorkflowModified && !isLoadingRef.current) {
+      onWorkflowModified()
+    }
   }, [onWorkflowModified])
 
   // Wrap React Flow change handlers to notify modifications
@@ -345,8 +342,6 @@ export default function WorkflowBuilder({
     []
   )
 
-  console.log(`[WorkflowBuilder ${tabId}] Rendering UI with ${nodes.length} nodes, ${edges.length} edges`)
-  
   return (
     <ReactFlowProvider>
       <div className="h-full flex">
@@ -412,7 +407,7 @@ export default function WorkflowBuilder({
       {/* Bottom Panel - Execution Console */}
       <ExecutionConsole 
         workflowTabs={workflowTabs}
-        activeWorkflowId={storeWorkflowId || null}
+        activeWorkflowId={localWorkflowId || null}
         onCloseWorkflow={handleCloseWorkflow}
         onClearExecutions={handleClearExecutions}
       />
