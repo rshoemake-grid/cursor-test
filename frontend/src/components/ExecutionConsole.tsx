@@ -109,8 +109,8 @@ export default function ExecutionConsole({
   // Always show the console bar
   return (
     <div 
-      className="fixed bottom-0 left-0 right-0 bg-gray-900 text-gray-100 shadow-2xl border-t-2 border-gray-700 z-50"
-      style={{ height: isExpanded ? `${height}px` : 'auto' }}
+      className="relative w-full bg-gray-900 text-gray-100 shadow-2xl border-t-2 border-gray-700 flex-shrink-0"
+      style={{ height: isExpanded ? `${height}px` : 'auto', minHeight: '60px' }}
     >
       {/* Resize Handle */}
       {isExpanded && (
