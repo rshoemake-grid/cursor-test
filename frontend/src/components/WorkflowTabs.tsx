@@ -11,7 +11,7 @@ interface WorkflowTabData {
 
 interface WorkflowTabsProps {
   initialWorkflowId?: string | null
-  workflowLoadKey?: number // Counter to force new tab creation
+  workflowLoadKey?: number // Counter to force new tab creation (required when initialWorkflowId is set)
   onExecutionStart?: (executionId: string) => void
 }
 
@@ -25,25 +25,42 @@ export default function WorkflowTabs({ initialWorkflowId, workflowLoadKey, onExe
     }
   ])
   const [activeTabId, setActiveTabId] = useState<string>('workflow-1')
-  const lastProcessedKey = useRef<number>(0)
+  const processedKeys = useRef<Set<string>>(new Set()) // Track processed workflowId+loadKey combinations
 
   // Handle initial workflow from marketplace - ALWAYS create new tab
   // workflowLoadKey increments each time, ensuring new tab even for same workflowId
   useEffect(() => {
-    if (initialWorkflowId && workflowLoadKey && workflowLoadKey !== lastProcessedKey.current) {
-      // Track this load key to avoid duplicate tabs on re-render
-      lastProcessedKey.current = workflowLoadKey
+    if (initialWorkflowId && workflowLoadKey !== undefined) {
+      // Create unique key from workflowId + loadKey
+      const uniqueKey = `${initialWorkflowId}-${workflowLoadKey}`
       
-      // Always create a new tab, even if workflow is already open in another tab
-      const newId = `workflow-${Date.now()}`
-      const newTab: WorkflowTabData = {
-        id: newId,
-        name: 'Loading...',
-        workflowId: initialWorkflowId,
-        isUnsaved: false
+      // Only process if we haven't seen this exact combination before
+      if (!processedKeys.current.has(uniqueKey)) {
+        console.log(`[WorkflowTabs] Creating new tab for workflow ${initialWorkflowId}, loadKey: ${workflowLoadKey}, uniqueKey: ${uniqueKey}`)
+        
+        // Mark this combination as processed
+        processedKeys.current.add(uniqueKey)
+        
+        // Always create a new tab, even if workflow is already open in another tab
+        const newId = `workflow-${Date.now()}`
+        const newTab: WorkflowTabData = {
+          id: newId,
+          name: 'Loading...',
+          workflowId: initialWorkflowId,
+          isUnsaved: false
+        }
+        
+        console.log(`[WorkflowTabs] Adding new tab: ${newId}`)
+        setTabs(prev => {
+          const newTabs = [...prev, newTab]
+          console.log(`[WorkflowTabs] Total tabs: ${prev.length} → ${newTabs.length}`)
+          return newTabs
+        })
+        setActiveTabId(newId)
+        console.log(`[WorkflowTabs] Set active tab to: ${newId}`)
+      } else {
+        console.log(`[WorkflowTabs] Skipping - already processed: ${uniqueKey}`)
       }
-      setTabs(prev => [...prev, newTab])
-      setActiveTabId(newId)
     }
   }, [initialWorkflowId, workflowLoadKey])
 

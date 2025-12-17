@@ -25,8 +25,13 @@ function MainApp() {
   useEffect(() => {
     const workflowId = searchParams.get('workflow')
     if (workflowId) {
+      console.log(`[App] Loading workflow ${workflowId} from URL`)
       setSelectedWorkflowId(workflowId)
-      setWorkflowLoadKey(prev => prev + 1) // Increment counter to force new tab
+      setWorkflowLoadKey(prev => {
+        const newKey = prev + 1
+        console.log(`[App] Incrementing workflowLoadKey: ${prev} → ${newKey}`)
+        return newKey
+      })
       setCurrentView('builder')
       // Clear the query parameter after loading
       navigate('/', { replace: true })
