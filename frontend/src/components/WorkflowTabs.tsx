@@ -15,24 +15,40 @@ interface WorkflowTabsProps {
   onExecutionStart?: (executionId: string) => void
 }
 
-export default function WorkflowTabs({ initialWorkflowId, workflowLoadKey, onExecutionStart }: WorkflowTabsProps) {
-  const initialTabs: WorkflowTabData[] = [
-    {
-      id: 'workflow-1',
-      name: 'Untitled Workflow',
-      workflowId: null,
-      isUnsaved: true
-    }
-  ]
-  const [tabs, setTabs] = useState<WorkflowTabData[]>(initialTabs)
-  const [activeTabId, setActiveTabId] = useState<string>('workflow-1')
-  const processedKeys = useRef<Set<string>>(new Set()) // Track processed workflowId+loadKey combinations
-  const tabsRef = useRef<WorkflowTabData[]>(initialTabs) // Keep ref in sync with tabs state
+// Module-level storage for tabs to persist across remounts
+let globalTabs: WorkflowTabData[] = [
+  {
+    id: 'workflow-1',
+    name: 'Untitled Workflow',
+    workflowId: null,
+    isUnsaved: true
+  }
+]
 
-  // Sync tabsRef with tabs state
+export default function WorkflowTabs({ initialWorkflowId, workflowLoadKey, onExecutionStart }: WorkflowTabsProps) {
+  // Initialize from global tabs (persists across remounts)
+  const [tabs, setTabs] = useState<WorkflowTabData[]>(() => {
+    console.log(`[WorkflowTabs] Initializing tabs from global: ${globalTabs.length} tabs`)
+    return [...globalTabs] // Create a copy
+  })
+  const [activeTabId, setActiveTabId] = useState<string>(tabs[0]?.id || 'workflow-1')
+  const processedKeys = useRef<Set<string>>(new Set()) // Track processed workflowId+loadKey combinations
+  const tabsRef = useRef<WorkflowTabData[]>(tabs) // Keep ref in sync with tabs state
+
+  // Sync tabsRef and globalTabs with tabs state
   useEffect(() => {
+    console.log(`[WorkflowTabs] Syncing tabsRef and globalTabs: ${tabs.length} tabs`)
     tabsRef.current = tabs
+    globalTabs = [...tabs] // Update global storage
   }, [tabs])
+  
+  // Log when component mounts/remounts
+  useEffect(() => {
+    console.log(`[WorkflowTabs] Component mounted/updated. Current tabs: ${tabs.length}, Global tabs: ${globalTabs.length}`)
+    return () => {
+      console.log(`[WorkflowTabs] Component unmounting. Tabs: ${tabs.length}`)
+    }
+  }, [])
 
   // Handle initial workflow from marketplace - ALWAYS create new tab
   // workflowLoadKey increments each time, ensuring new tab even for same workflowId
@@ -44,7 +60,7 @@ export default function WorkflowTabs({ initialWorkflowId, workflowLoadKey, onExe
       // Only process if we haven't seen this exact combination before
       if (!processedKeys.current.has(uniqueKey)) {
         console.log(`[WorkflowTabs] Creating new tab for workflow ${initialWorkflowId}, loadKey: ${workflowLoadKey}, uniqueKey: ${uniqueKey}`)
-        console.log(`[WorkflowTabs] Current tabs count: ${tabsRef.current.length}`)
+        console.log(`[WorkflowTabs] Current tabs count (from global): ${globalTabs.length}`)
         
         // Mark this combination as processed IMMEDIATELY to prevent duplicates
         processedKeys.current.add(uniqueKey)
@@ -60,14 +76,18 @@ export default function WorkflowTabs({ initialWorkflowId, workflowLoadKey, onExe
         
         console.log(`[WorkflowTabs] Adding new tab: ${newId}`)
         setTabs(prev => {
+          // Use globalTabs as source of truth if prev seems stale
+          const currentTabs = prev.length === 1 && globalTabs.length > 1 ? globalTabs : prev
+          
           // Double-check we're not adding a duplicate
-          const existingTab = prev.find(t => t.id === newId)
+          const existingTab = currentTabs.find(t => t.id === newId)
           if (existingTab) {
             console.log(`[WorkflowTabs] WARNING: Tab ${newId} already exists! Skipping.`)
-            return prev
+            return currentTabs
           }
-          const newTabs = [...prev, newTab]
-          console.log(`[WorkflowTabs] Total tabs: ${prev.length} → ${newTabs.length}`)
+          const newTabs = [...currentTabs, newTab]
+          console.log(`[WorkflowTabs] Total tabs: ${currentTabs.length} → ${newTabs.length}`)
+          globalTabs = [...newTabs] // Update global storage immediately
           tabsRef.current = newTabs // Update ref immediately
           return newTabs
         })
