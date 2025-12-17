@@ -344,12 +344,12 @@ export default function WorkflowBuilder({
 
   return (
     <ReactFlowProvider>
-      <div className="h-full flex">
+      <div className="flex-1 flex overflow-hidden">
         {/* Left Panel - Node Palette (Full Height) */}
         <NodePanel />
 
         {/* Middle Section - Workflow Canvas + Console */}
-        <div className="flex-1 flex flex-col">
+        <div className="flex-1 flex flex-col overflow-hidden">
           {/* Top: Canvas Area */}
           <div className="flex-1 relative">
             <Toolbar 
@@ -366,19 +366,20 @@ export default function WorkflowBuilder({
               onWorkflowIdChange={setLocalWorkflowId}
             />
             
-            <ReactFlow
-              nodes={nodes}
-              edges={edges}
-              onNodesChange={onNodesChange}
-              onEdgesChange={onEdgesChange}
-              onConnect={onConnect}
-              onDrop={onDrop}
-              onDragOver={onDragOver}
-              onNodeClick={onNodeClick}
-              nodeTypes={nodeTypes}
-              fitView
-              className="bg-gray-50"
-            >
+            <div className="absolute inset-0">
+              <ReactFlow
+                nodes={nodes}
+                edges={edges}
+                onNodesChange={onNodesChange}
+                onEdgesChange={onEdgesChange}
+                onConnect={onConnect}
+                onDrop={onDrop}
+                onDragOver={onDragOver}
+                onNodeClick={onNodeClick}
+                nodeTypes={nodeTypes}
+                fitView
+                className="bg-gray-50"
+              >
               <Controls />
               <MiniMap
                 nodeColor={(node) => {
@@ -399,7 +400,8 @@ export default function WorkflowBuilder({
                 }}
               />
               <Background variant={BackgroundVariant.Dots} gap={12} size={1} />
-            </ReactFlow>
+              </ReactFlow>
+            </div>
           </div>
 
           {/* Bottom: Execution Console (Only under workflow canvas) */}

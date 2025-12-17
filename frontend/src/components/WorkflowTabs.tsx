@@ -155,7 +155,7 @@ export default function WorkflowTabs({ initialWorkflowId, onExecutionStart }: Wo
 
       {/* Active Workflow Content */}
       {activeTab && (
-        <div className="flex-1 relative">
+        <div className="flex-1 flex flex-col overflow-hidden">
           <WorkflowBuilder
             key={activeTab.id}
             tabId={activeTab.id}
