@@ -54,8 +54,8 @@ export default function WorkflowBuilder({
   onWorkflowLoaded
 }: WorkflowBuilderProps) {
   // Local state for this tab - NOT using global store
-  const [nodes, setNodes, onNodesChange] = useNodesState([])
-  const [edges, setEdges, onEdgesChange] = useEdgesState([])
+  const [nodes, setNodes, onNodesChangeBase] = useNodesState([])
+  const [edges, setEdges, onEdgesChangeBase] = useEdgesState([])
   const [selectedNodeId, setSelectedNodeId] = React.useState<string | null>(null)
   const [localWorkflowId, setLocalWorkflowId] = useState<string | null>(workflowId)
   const [localWorkflowName, setLocalWorkflowName] = useState<string>('Untitled Workflow')
@@ -63,6 +63,7 @@ export default function WorkflowBuilder({
   const [variables, setVariables] = useState<Record<string, any>>({})
   const [workflowTabs, setWorkflowTabs] = useState<WorkflowTab[]>([])
   const workflowTabsRef = useRef<WorkflowTab[]>([])
+  const isLoadingRef = useRef<boolean>(false)
   
   // Keep ref in sync with state
   useEffect(() => {
@@ -71,17 +72,21 @@ export default function WorkflowBuilder({
 
   // Track modifications
   const notifyModified = useCallback(() => {
-    if (onWorkflowModified) {
+    if (onWorkflowModified && !isLoadingRef.current) {
       onWorkflowModified()
     }
   }, [onWorkflowModified])
 
-  // Notify when nodes/edges change
-  useEffect(() => {
-    if (nodes.length > 0 || edges.length > 0) {
-      notifyModified()
-    }
-  }, [nodes, edges, notifyModified])
+  // Wrap React Flow change handlers to notify modifications
+  const onNodesChange = useCallback((changes: any) => {
+    onNodesChangeBase(changes)
+    notifyModified()
+  }, [onNodesChangeBase, notifyModified])
+
+  const onEdgesChange = useCallback((changes: any) => {
+    onEdgesChangeBase(changes)
+    notifyModified()
+  }, [onEdgesChangeBase, notifyModified])
 
   // Helper to convert WorkflowNode to React Flow Node
   const workflowNodeToNode = useCallback((wfNode: any) => {
@@ -105,6 +110,7 @@ export default function WorkflowBuilder({
   // Load workflow if ID provided and create/activate tab
   useEffect(() => {
     if (workflowId) {
+      isLoadingRef.current = true // Prevent marking as modified during load
       api.getWorkflow(workflowId).then((workflow) => {
         // Set local state for this tab
         setLocalWorkflowId(workflow.id!)
@@ -113,6 +119,11 @@ export default function WorkflowBuilder({
         setVariables(workflow.variables || {})
         setNodes(workflow.nodes.map(workflowNodeToNode))
         setEdges(workflow.edges as any[])
+        
+        // Allow modifications after load completes
+        setTimeout(() => {
+          isLoadingRef.current = false
+        }, 100)
         
         // Notify parent that workflow was loaded
         if (onWorkflowLoaded) {
