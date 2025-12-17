@@ -64,7 +64,9 @@ export default function MarketplacePage() {
       if (response.ok) {
         const workflow = await response.json();
         console.log('Created workflow from template:', workflow);
-        navigate(`/?workflow=${workflow.id}`);
+        // Navigate to builder with workflow ID and timestamp to ensure new tab is always created
+        // The timestamp makes each navigation unique, even for the same workflow
+        navigate(`/?workflow=${workflow.id}&_new=${Date.now()}`);
       } else {
         console.error('Failed to use template:', await response.text());
       }

@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback, useEffect, useRef } from 'react'
 import { X, Plus } from 'lucide-react'
 import WorkflowBuilder from './WorkflowBuilder'
 
@@ -24,28 +24,31 @@ export default function WorkflowTabs({ initialWorkflowId, onExecutionStart }: Wo
     }
   ])
   const [activeTabId, setActiveTabId] = useState<string>('workflow-1')
+  const lastProcessedWorkflowId = useRef<string | null>(null)
 
-  // Handle initial workflow from marketplace
+  // Handle initial workflow from marketplace - ALWAYS create new tab
   useEffect(() => {
-    if (initialWorkflowId) {
-      // Check if workflow is already open
-      const existingTab = tabs.find(t => t.workflowId === initialWorkflowId)
-      if (existingTab) {
-        setActiveTabId(existingTab.id)
-      } else {
-        // Create new tab for this workflow
-        const newId = `workflow-${Date.now()}`
-        const newTab: WorkflowTabData = {
-          id: newId,
-          name: 'Loading...',
-          workflowId: initialWorkflowId,
-          isUnsaved: false
-        }
-        setTabs(prev => [...prev, newTab])
-        setActiveTabId(newId)
+    if (initialWorkflowId && initialWorkflowId !== lastProcessedWorkflowId.current) {
+      // Track this workflow ID to avoid duplicate tabs on re-render
+      lastProcessedWorkflowId.current = initialWorkflowId
+      
+      // Always create a new tab, even if workflow is already open in another tab
+      const newId = `workflow-${Date.now()}`
+      const newTab: WorkflowTabData = {
+        id: newId,
+        name: 'Loading...',
+        workflowId: initialWorkflowId,
+        isUnsaved: false
       }
+      setTabs(prev => [...prev, newTab])
+      setActiveTabId(newId)
+      
+      // Reset after processing to allow same workflow to be opened again later
+      setTimeout(() => {
+        lastProcessedWorkflowId.current = null
+      }, 500)
     }
-  }, [initialWorkflowId]) // Note: tabs intentionally not in deps to avoid re-triggering
+  }, [initialWorkflowId])
 
   const handleNewWorkflow = useCallback(() => {
     const newId = `workflow-${Date.now()}`

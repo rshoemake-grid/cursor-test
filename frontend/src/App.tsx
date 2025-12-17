@@ -28,6 +28,11 @@ function MainApp() {
       setCurrentView('builder')
       // Clear the query parameter after loading
       navigate('/', { replace: true })
+      // Clear selectedWorkflowId after processing to allow re-opening same workflow
+      // This ensures each "Use Template" click creates a new tab
+      setTimeout(() => {
+        setSelectedWorkflowId(null)
+      }, 1000)
     }
   }, [searchParams, navigate])
 
