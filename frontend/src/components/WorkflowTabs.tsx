@@ -214,49 +214,78 @@ export default function WorkflowTabs({ initialWorkflowId, workflowLoadKey, onExe
     ))
   }, [])
 
+  // Poll for execution updates - use ref to avoid dependency issues
+  const tabsRef = useRef<WorkflowTabData[]>(tabs)
+  
+  // Keep ref in sync with tabs
+  useEffect(() => {
+    tabsRef.current = tabs
+    globalTabs = [...tabs] // Also update global storage
+  }, [tabs])
+
   // Poll for execution updates
   useEffect(() => {
     const interval = setInterval(async () => {
-      const runningExecutions = tabs.flatMap(tab => 
+      // Use ref to get current tabs without causing effect re-run
+      const currentTabs = tabsRef.current
+      const runningExecutions = currentTabs.flatMap(tab => 
         tab.executions.filter(e => e.status === 'running')
       )
       
       if (runningExecutions.length === 0) return
+
+      console.log(`[WorkflowTabs] Polling ${runningExecutions.length} running execution(s)...`)
 
       // Update all running executions
       const updates = await Promise.all(
         runningExecutions.map(async (exec) => {
           try {
             const execution = await api.getExecution(exec.id)
+            const newStatus = execution.status === 'completed' ? 'completed' as const :
+                             execution.status === 'failed' ? 'failed' as const :
+                             execution.status === 'paused' ? 'running' as const : // Keep as running if paused
+                             'running' as const
+            
+            if (exec.status !== newStatus) {
+              console.log(`[WorkflowTabs] Execution ${exec.id} status changed: ${exec.status} → ${newStatus}`)
+            }
+            
             return {
               id: exec.id,
-              status: execution.status === 'completed' ? 'completed' as const :
-                      execution.status === 'failed' ? 'failed' as const :
-                      'running' as const,
+              status: newStatus,
               startedAt: exec.startedAt,
               completedAt: execution.completed_at ? new Date(execution.completed_at) : undefined,
               nodes: execution.node_states || {},
               logs: execution.logs || []
             }
           } catch (error) {
-            console.error('Failed to fetch execution:', error)
+            console.error(`[WorkflowTabs] Failed to fetch execution ${exec.id}:`, error)
             return null
           }
         })
       )
 
       // Apply updates to tabs
-      setTabs(prev => prev.map(tab => ({
-        ...tab,
-        executions: tab.executions.map(exec => {
-          const update = updates.find(u => u && u.id === exec.id)
-          return update || exec
-        })
-      })))
+      setTabs(prev => {
+        const updated = prev.map(tab => ({
+          ...tab,
+          executions: tab.executions.map(exec => {
+            const update = updates.find(u => u && u.id === exec.id)
+            if (update) {
+              console.log(`[WorkflowTabs] Updating execution ${exec.id} in tab ${tab.id}: ${exec.status} → ${update.status}`)
+            }
+            return update || exec
+          })
+        }))
+        
+        // Update global storage
+        globalTabs = [...updated]
+        return updated
+      })
     }, 2000) // Poll every 2 seconds
 
     return () => clearInterval(interval)
-  }, [tabs])
+  }, []) // Empty dependency array - interval runs consistently
 
   const activeTab = tabs.find(t => t.id === activeTabId)
 
