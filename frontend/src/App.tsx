@@ -21,6 +21,7 @@ function MainApp() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const processedWorkflowFromUrl = useRef<string | null>(null)
+  const workflowLoadKeyRef = useRef<number>(0) // Persistent counter that doesn't reset
 
   // Load workflow from URL query parameter (from marketplace)
   useEffect(() => {
@@ -29,12 +30,13 @@ function MainApp() {
       console.log(`[App] Loading workflow ${workflowId} from URL`)
       processedWorkflowFromUrl.current = workflowId
       
+      // Increment persistent counter
+      workflowLoadKeyRef.current += 1
+      const newKey = workflowLoadKeyRef.current
+      console.log(`[App] Incrementing workflowLoadKey: ${newKey - 1} → ${newKey}`)
+      
       setSelectedWorkflowId(workflowId)
-      setWorkflowLoadKey(prev => {
-        const newKey = prev + 1
-        console.log(`[App] Incrementing workflowLoadKey: ${prev} → ${newKey}`)
-        return newKey
-      })
+      setWorkflowLoadKey(newKey) // Update state to trigger WorkflowTabs effect
       setCurrentView('builder')
       
       // Clear the query parameter after loading
@@ -43,7 +45,7 @@ function MainApp() {
       // Reset processed ref after a delay to allow same workflow to be opened again
       setTimeout(() => {
         processedWorkflowFromUrl.current = null
-      }, 100)
+      }, 500)
     }
   }, [searchParams, navigate])
 
