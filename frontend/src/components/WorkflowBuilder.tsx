@@ -72,20 +72,33 @@ export default function WorkflowBuilder({
 
   // Track modifications
   const notifyModified = useCallback(() => {
-    if (onWorkflowModified && !isLoadingRef.current) {
-      onWorkflowModified()
-    }
+    // Temporarily disabled to isolate UI issues
+    // if (onWorkflowModified && !isLoadingRef.current) {
+    //   onWorkflowModified()
+    // }
   }, [onWorkflowModified])
 
   // Wrap React Flow change handlers to notify modifications
   const onNodesChange = useCallback((changes: any) => {
     onNodesChangeBase(changes)
-    notifyModified()
+    // Only notify on actual modifications (not selection or dimensions)
+    const hasActualChange = changes.some((change: any) => 
+      change.type === 'add' || change.type === 'remove' || change.type === 'reset'
+    )
+    if (hasActualChange) {
+      notifyModified()
+    }
   }, [onNodesChangeBase, notifyModified])
 
   const onEdgesChange = useCallback((changes: any) => {
     onEdgesChangeBase(changes)
-    notifyModified()
+    // Only notify on actual modifications (not selection)
+    const hasActualChange = changes.some((change: any) => 
+      change.type === 'add' || change.type === 'remove' || change.type === 'reset'
+    )
+    if (hasActualChange) {
+      notifyModified()
+    }
   }, [onEdgesChangeBase, notifyModified])
 
   // Helper to convert WorkflowNode to React Flow Node
@@ -145,7 +158,13 @@ export default function WorkflowBuilder({
             activeExecutionId: null
           }]
         })
+      }).catch(err => {
+        console.error("Failed to load workflow:", err)
+        isLoadingRef.current = false
       })
+    } else {
+      // New workflow - make sure loading flag is off
+      isLoadingRef.current = false
     }
   }, [workflowId, onWorkflowLoaded, workflowNodeToNode, setNodes, setEdges])
 
