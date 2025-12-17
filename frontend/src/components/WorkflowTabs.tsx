@@ -1,7 +1,6 @@
 import { useState, useCallback, useEffect, useRef } from 'react'
 import { X, Plus } from 'lucide-react'
 import WorkflowBuilder from './WorkflowBuilder'
-import ExecutionConsole from './ExecutionConsole'
 import { api } from '../api/client'
 
 interface Execution {
@@ -313,20 +312,10 @@ export default function WorkflowTabs({ initialWorkflowId, workflowLoadKey, onExe
       {/* Active Workflow Content */}
       {activeTab && (
         <div className="flex-1 flex flex-col overflow-hidden">
-          <div className="flex-1 overflow-hidden">
-            <WorkflowBuilder
-              key={activeTab.id}
-              tabId={activeTab.id}
-              workflowId={activeTab.workflowId}
-              onExecutionStart={handleExecutionStart}
-              onWorkflowSaved={(workflowId, name) => handleWorkflowSaved(activeTab.id, workflowId, name)}
-              onWorkflowModified={() => handleWorkflowModified(activeTab.id)}
-              onWorkflowLoaded={(workflowId, name) => handleLoadWorkflow(activeTab.id, workflowId, name)}
-            />
-          </div>
-          
-          {/* Execution Console - Persists across tab switches */}
-          <ExecutionConsole 
+          <WorkflowBuilder
+            key={activeTab.id}
+            tabId={activeTab.id}
+            workflowId={activeTab.workflowId}
             workflowTabs={tabs
               .filter(tab => tab.workflowId !== null)
               .map(tab => ({
@@ -335,7 +324,10 @@ export default function WorkflowTabs({ initialWorkflowId, workflowLoadKey, onExe
                 executions: tab.executions,
                 activeExecutionId: tab.activeExecutionId
               }))}
-            activeWorkflowId={activeTab.workflowId || null}
+            onExecutionStart={handleExecutionStart}
+            onWorkflowSaved={(workflowId, name) => handleWorkflowSaved(activeTab.id, workflowId, name)}
+            onWorkflowModified={() => handleWorkflowModified(activeTab.id)}
+            onWorkflowLoaded={(workflowId, name) => handleLoadWorkflow(activeTab.id, workflowId, name)}
             onCloseWorkflow={handleCloseWorkflow}
             onClearExecutions={handleClearExecutions}
           />

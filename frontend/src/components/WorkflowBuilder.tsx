@@ -17,24 +17,46 @@ import { nodeTypes } from './nodes'
 import NodePanel from './NodePanel'
 import PropertyPanel from './PropertyPanel'
 import Toolbar from './Toolbar'
+import ExecutionConsole from './ExecutionConsole'
 import { api } from '../api/client'
+
+interface Execution {
+  id: string
+  status: string
+  startedAt: Date
+  nodes: Record<string, any>
+  logs: any[]
+}
+
+interface WorkflowTab {
+  workflowId: string
+  workflowName: string
+  executions: Execution[]
+  activeExecutionId: string | null
+}
 
 interface WorkflowBuilderProps {
   tabId: string
   workflowId: string | null
+  workflowTabs?: WorkflowTab[] // Execution data from parent
   onExecutionStart?: (executionId: string) => void
   onWorkflowSaved?: (workflowId: string, name: string) => void
   onWorkflowModified?: () => void
   onWorkflowLoaded?: (workflowId: string, name: string) => void
+  onCloseWorkflow?: (workflowId: string) => void
+  onClearExecutions?: (workflowId: string) => void
 }
 
 export default function WorkflowBuilder({ 
   tabId,
-  workflowId, 
+  workflowId,
+  workflowTabs = [],
   onExecutionStart,
   onWorkflowSaved,
   onWorkflowModified,
-  onWorkflowLoaded
+  onWorkflowLoaded,
+  onCloseWorkflow,
+  onClearExecutions
 }: WorkflowBuilderProps) {
   // Local state for this tab - NOT using global store
   const [nodes, setNodes, onNodesChangeBase] = useNodesState([])
@@ -190,10 +212,10 @@ export default function WorkflowBuilder({
         {/* Left Panel - Node Palette (Full Height) */}
         <NodePanel />
 
-        {/* Middle Section - Workflow Canvas */}
-        <div className="flex-1 overflow-hidden">
+        {/* Middle Section - Workflow Canvas + Console */}
+        <div className="flex-1 flex flex-col overflow-hidden">
           {/* Canvas Area */}
-          <div className="h-full relative">
+          <div className="flex-1 relative">
             <Toolbar 
               workflowId={localWorkflowId}
               workflowName={localWorkflowName}
@@ -245,6 +267,14 @@ export default function WorkflowBuilder({
               </ReactFlow>
             </div>
           </div>
+
+          {/* Bottom: Execution Console (Only under workflow canvas) */}
+          <ExecutionConsole 
+            workflowTabs={workflowTabs}
+            activeWorkflowId={localWorkflowId || null}
+            onCloseWorkflow={onCloseWorkflow || (() => {})}
+            onClearExecutions={onClearExecutions || (() => {})}
+          />
         </div>
 
         {/* Right Panel - Properties (Full Height) */}
