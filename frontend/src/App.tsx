@@ -11,6 +11,9 @@ import { Play, List, Eye, Store, User, LogOut, LogIn, Settings } from 'lucide-re
 
 type View = 'builder' | 'list' | 'execution'
 
+// Module-level counter that persists across component remounts
+let globalWorkflowLoadKey = 0
+
 function MainApp() {
   const [currentView, setCurrentView] = useState<View>('builder')
   const [selectedWorkflowId, setSelectedWorkflowId] = useState<string | null>(null)
@@ -21,7 +24,6 @@ function MainApp() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const processedWorkflowFromUrl = useRef<string | null>(null)
-  const workflowLoadKeyRef = useRef<number>(0) // Persistent counter that doesn't reset
 
   // Load workflow from URL query parameter (from marketplace)
   useEffect(() => {
@@ -30,10 +32,10 @@ function MainApp() {
       console.log(`[App] Loading workflow ${workflowId} from URL`)
       processedWorkflowFromUrl.current = workflowId
       
-      // Increment persistent counter
-      workflowLoadKeyRef.current += 1
-      const newKey = workflowLoadKeyRef.current
-      console.log(`[App] Incrementing workflowLoadKey: ${newKey - 1} → ${newKey}`)
+      // Increment module-level counter (persists across remounts)
+      globalWorkflowLoadKey += 1
+      const newKey = globalWorkflowLoadKey
+      console.log(`[App] Incrementing workflowLoadKey: ${newKey - 1} → ${newKey} (global: ${globalWorkflowLoadKey})`)
       
       setSelectedWorkflowId(workflowId)
       setWorkflowLoadKey(newKey) // Update state to trigger WorkflowTabs effect
