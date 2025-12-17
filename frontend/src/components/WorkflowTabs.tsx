@@ -41,7 +41,6 @@ let globalTabs: WorkflowTabData[] = [
 export default function WorkflowTabs({ initialWorkflowId, workflowLoadKey, onExecutionStart }: WorkflowTabsProps) {
   // Initialize from global tabs (persists across remounts)
   const [tabs, setTabs] = useState<WorkflowTabData[]>(() => {
-    console.log(`[WorkflowTabs] Initializing tabs from global: ${globalTabs.length} tabs`)
     return [...globalTabs] // Create a copy
   })
   const [activeTabId, setActiveTabId] = useState<string>(tabs[0]?.id || 'workflow-1')
@@ -50,18 +49,10 @@ export default function WorkflowTabs({ initialWorkflowId, workflowLoadKey, onExe
 
   // Sync tabsRef and globalTabs with tabs state
   useEffect(() => {
-    console.log(`[WorkflowTabs] Syncing tabsRef and globalTabs: ${tabs.length} tabs`)
     tabsRef.current = tabs
     globalTabs = [...tabs] // Update global storage
   }, [tabs])
   
-  // Log when component mounts/remounts
-  useEffect(() => {
-    console.log(`[WorkflowTabs] Component mounted/updated. Current tabs: ${tabs.length}, Global tabs: ${globalTabs.length}`)
-    return () => {
-      console.log(`[WorkflowTabs] Component unmounting. Tabs: ${tabs.length}`)
-    }
-  }, [])
 
   // Handle initial workflow from marketplace - ALWAYS create new tab
   // workflowLoadKey increments each time, ensuring new tab even for same workflowId
@@ -72,9 +63,6 @@ export default function WorkflowTabs({ initialWorkflowId, workflowLoadKey, onExe
       
       // Only process if we haven't seen this exact combination before
       if (!processedKeys.current.has(uniqueKey)) {
-        console.log(`[WorkflowTabs] Creating new tab for workflow ${initialWorkflowId}, loadKey: ${workflowLoadKey}, uniqueKey: ${uniqueKey}`)
-        console.log(`[WorkflowTabs] Current tabs count (from global): ${globalTabs.length}`)
-        
         // Mark this combination as processed IMMEDIATELY to prevent duplicates
         processedKeys.current.add(uniqueKey)
         
@@ -89,7 +77,6 @@ export default function WorkflowTabs({ initialWorkflowId, workflowLoadKey, onExe
           activeExecutionId: null
         }
         
-        console.log(`[WorkflowTabs] Adding new tab: ${newId}`)
         setTabs(prev => {
           // Use globalTabs as source of truth if prev seems stale
           const currentTabs = prev.length === 1 && globalTabs.length > 1 ? globalTabs : prev
@@ -97,19 +84,14 @@ export default function WorkflowTabs({ initialWorkflowId, workflowLoadKey, onExe
           // Double-check we're not adding a duplicate
           const existingTab = currentTabs.find(t => t.id === newId)
           if (existingTab) {
-            console.log(`[WorkflowTabs] WARNING: Tab ${newId} already exists! Skipping.`)
             return currentTabs
           }
           const newTabs = [...currentTabs, newTab]
-          console.log(`[WorkflowTabs] Total tabs: ${currentTabs.length} → ${newTabs.length}`)
           globalTabs = [...newTabs] // Update global storage immediately
           tabsRef.current = newTabs // Update ref immediately
           return newTabs
         })
         setActiveTabId(newId)
-        console.log(`[WorkflowTabs] Set active tab to: ${newId}`)
-      } else {
-        console.log(`[WorkflowTabs] Skipping - already processed: ${uniqueKey}`)
       }
     }
   }, [initialWorkflowId, workflowLoadKey])
@@ -262,9 +244,6 @@ export default function WorkflowTabs({ initialWorkflowId, workflowLoadKey, onExe
           ...tab,
           executions: tab.executions.map(exec => {
             const update = updates.find(u => u && u.id === exec.id)
-            if (update) {
-              console.log(`[WorkflowTabs] Updating execution ${exec.id} in tab ${tab.id}: ${exec.status} → ${update.status}`)
-            }
             return update || exec
           })
         }))
@@ -306,13 +285,21 @@ export default function WorkflowTabs({ initialWorkflowId, workflowLoadKey, onExe
                 {tab.name}
               </span>
               {tabs.length > 1 && (
-                <button
+                <div
                   onClick={(e) => handleCloseTab(tab.id, e)}
-                  className="opacity-0 group-hover:opacity-100 hover:bg-gray-300 rounded p-0.5 transition-opacity"
+                  className="opacity-0 group-hover:opacity-100 hover:bg-gray-300 rounded p-0.5 transition-opacity cursor-pointer"
                   title="Close tab"
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault()
+                      handleCloseTab(tab.id, e as any)
+                    }
+                  }}
                 >
                   <X className="w-3 h-3" />
-                </button>
+                </div>
               )}
             </button>
           ))}

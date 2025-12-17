@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Save, Play, FileDown } from 'lucide-react'
 import { api } from '../api/client'
 
@@ -34,6 +34,24 @@ export default function Toolbar({
   const [isExecuting, setIsExecuting] = useState(false)
   const [showInputs, setShowInputs] = useState(false)
   const [executionInputs, setExecutionInputs] = useState<string>('{}')
+  
+  // Local state for workflow name and description to prevent flickering
+  const [localWorkflowName, setLocalWorkflowName] = useState(workflowName)
+  const [localWorkflowDescription, setLocalWorkflowDescription] = useState(workflowDescription)
+  const nameInputRef = useRef<HTMLInputElement>(null)
+  const descriptionInputRef = useRef<HTMLInputElement>(null)
+  
+  // Sync local state with props only when workflowId changes (different workflow selected)
+  useEffect(() => {
+    // Only sync if input is not currently focused (user is not typing)
+    if (document.activeElement !== nameInputRef.current) {
+      setLocalWorkflowName(workflowName)
+    }
+    if (document.activeElement !== descriptionInputRef.current) {
+      setLocalWorkflowDescription(workflowDescription)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [workflowId]) // Only depend on workflowId, not the name/description props
 
   // Helper to convert nodes to workflow format
   const nodeToWorkflowNode = (node: any) => ({
@@ -44,6 +62,7 @@ export default function Toolbar({
     agent_config: node.data.agent_config,
     condition_config: node.data.condition_config,
     loop_config: node.data.loop_config,
+    input_config: node.data.input_config,
     inputs: node.data.inputs || [],
     position: node.position,
   })
@@ -51,10 +70,10 @@ export default function Toolbar({
   const handleSave = async (): Promise<string | null> => {
     setIsSaving(true)
     try {
-      // Build workflow definition from props
+      // Build workflow definition using local state (most up-to-date)
       const workflowDef = {
-        name: workflowName,
-        description: workflowDescription,
+        name: localWorkflowName,
+        description: localWorkflowDescription,
         nodes: nodes.map(nodeToWorkflowNode),
         edges: edges,
         variables: variables,
@@ -158,16 +177,26 @@ export default function Toolbar({
           <div className="flex items-center gap-4">
             <div className="flex-1">
               <input
+                ref={nameInputRef}
                 type="text"
-                value={workflowName}
-                onChange={(e) => onWorkflowNameChange(e.target.value)}
+                value={localWorkflowName}
+                onChange={(e) => {
+                  const newValue = e.target.value
+                  setLocalWorkflowName(newValue)
+                  onWorkflowNameChange(newValue)
+                }}
                 className="w-full text-lg font-semibold border-none focus:ring-0 p-0"
                 placeholder="Workflow name"
               />
               <input
+                ref={descriptionInputRef}
                 type="text"
-                value={workflowDescription}
-                onChange={(e) => onWorkflowDescriptionChange(e.target.value)}
+                value={localWorkflowDescription}
+                onChange={(e) => {
+                  const newValue = e.target.value
+                  setLocalWorkflowDescription(newValue)
+                  onWorkflowDescriptionChange(newValue)
+                }}
                 className="w-full text-sm text-gray-600 border-none focus:ring-0 p-0 mt-1"
                 placeholder="Description (optional)"
               />

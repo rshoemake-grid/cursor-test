@@ -12,6 +12,10 @@ class NodeType(str, Enum):
     LOOP = "loop"
     START = "start"
     END = "end"
+    GCP_BUCKET = "gcp_bucket"
+    AWS_S3 = "aws_s3"
+    GCP_PUBSUB = "gcp_pubsub"
+    LOCAL_FILESYSTEM = "local_filesystem"
 
 
 class ExecutionStatus(str, Enum):
@@ -66,6 +70,7 @@ class Node(BaseModel):
     agent_config: Optional[AgentConfig] = None
     condition_config: Optional[ConditionConfig] = None
     loop_config: Optional[LoopConfig] = None
+    input_config: Optional[Dict[str, Any]] = None  # Configuration for input source nodes (GCP Bucket, AWS S3, etc.)
     inputs: List[InputMapping] = Field(default_factory=list)
     position: Dict[str, float] = Field(default_factory=dict)
     data: Optional[Dict[str, Any]] = Field(default_factory=dict)  # React Flow data object

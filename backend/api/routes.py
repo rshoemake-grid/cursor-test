@@ -233,7 +233,7 @@ async def execute_workflow(
         if "data" in node_data and node_data["data"]:
             data_obj = node_data["data"]
             # Merge data object fields into top level if not already present
-            for key in ["name", "description", "agent_config", "condition_config", "loop_config", "inputs"]:
+            for key in ["name", "description", "agent_config", "condition_config", "loop_config", "inputs", "input_config"]:
                 if key not in node_data or node_data[key] is None:
                     if key in data_obj:
                         node_data[key] = data_obj[key]

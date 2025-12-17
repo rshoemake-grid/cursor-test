@@ -8,7 +8,9 @@ import {
   useNodesState,
   useEdgesState,
   addEdge,
+  applyNodeChanges,
   type Connection,
+  type NodeChange,
   BackgroundVariant,
 } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
@@ -67,6 +69,8 @@ export default function WorkflowBuilder({
   const [localWorkflowDescription, setLocalWorkflowDescription] = useState<string>('')
   const [variables, setVariables] = useState<Record<string, any>>({})
   const isLoadingRef = useRef<boolean>(false)
+  const isDraggingRef = useRef<boolean>(false)
+  const lastLoadedWorkflowIdRef = useRef<string | null>(null)
 
   // Track modifications
   const notifyModified = useCallback(() => {
@@ -77,15 +81,35 @@ export default function WorkflowBuilder({
 
   // Wrap React Flow change handlers to notify modifications
   const onNodesChange = useCallback((changes: any) => {
+    // Handle selection changes - sync our state with React Flow's selection
+    const selectChange = changes.find((c: any) => c.type === 'select')
+    if (selectChange) {
+      if (selectChange.selected) {
+        setSelectedNodeId(selectChange.id)
+      } else {
+        // Check if any node is still selected by looking at current nodes
+        const stillSelected = nodes.find((n: any) => n.selected && n.id !== selectChange.id)
+        if (!stillSelected) {
+          setSelectedNodeId(null)
+        }
+      }
+    }
+    
+    // Pass all changes to base handler - this handles position changes, etc.
     onNodesChangeBase(changes)
-    // Only notify on actual modifications (not selection or dimensions)
+    
+    // Notify on actual modifications (position changes, add, remove, etc.)
     const hasActualChange = changes.some((change: any) => 
-      change.type === 'add' || change.type === 'remove' || change.type === 'reset'
+      change.type === 'position' || 
+      change.type === 'dimensions' ||
+      change.type === 'add' || 
+      change.type === 'remove' || 
+      change.type === 'reset'
     )
     if (hasActualChange) {
       notifyModified()
     }
-  }, [onNodesChangeBase, notifyModified])
+  }, [onNodesChangeBase, notifyModified, nodes])
 
   const onEdgesChange = useCallback((changes: any) => {
     onEdgesChangeBase(changes)
@@ -99,19 +123,25 @@ export default function WorkflowBuilder({
   }, [onEdgesChangeBase, notifyModified])
 
   // Helper to convert WorkflowNode to React Flow Node
+  // Handles both flattened (top-level) and nested (data object) structures
   const workflowNodeToNode = useCallback((wfNode: any) => {
     const data = wfNode.data || {}
+    // Merge top-level fields with data object fields, preferring data object
     return {
       id: wfNode.id,
       type: wfNode.type,
       position: wfNode.position || { x: 0, y: 0 },
+      draggable: true,
+      selected: false, // Explicitly set selected state
       data: {
         label: data.label || data.name || wfNode.name || wfNode.type,
         name: data.name || wfNode.name || wfNode.type,
-        description: data.description || wfNode.description,
-        agent_config: data.agent_config || wfNode.agent_config,
-        condition_config: data.condition_config || wfNode.condition_config,
-        loop_config: data.loop_config || wfNode.loop_config,
+        description: data.description ?? wfNode.description ?? '',
+        // Merge configs - prefer data object, fallback to top-level
+        agent_config: data.agent_config || wfNode.agent_config || {},
+        condition_config: data.condition_config || wfNode.condition_config || {},
+        loop_config: data.loop_config || wfNode.loop_config || {},
+        input_config: data.input_config || wfNode.input_config || {},
         inputs: data.inputs || wfNode.inputs || [],
       },
     }
@@ -119,6 +149,11 @@ export default function WorkflowBuilder({
 
   // Load workflow if ID provided and create/activate tab
   useEffect(() => {
+    // Don't reload if we already have this workflow loaded (prevents reload after save)
+    if (workflowId && workflowId === lastLoadedWorkflowIdRef.current) {
+      return
+    }
+    
     if (workflowId) {
       isLoadingRef.current = true // Prevent marking as modified during load
       api.getWorkflow(workflowId).then((workflow) => {
@@ -127,8 +162,31 @@ export default function WorkflowBuilder({
         setLocalWorkflowName(workflow.name)
         setLocalWorkflowDescription(workflow.description || '')
         setVariables(workflow.variables || {})
-        setNodes(workflow.nodes.map(workflowNodeToNode))
+        const convertedNodes = workflow.nodes.map(workflowNodeToNode)
+        // Ensure all nodes have required React Flow properties
+        const initializedNodes = convertedNodes.map(node => ({
+          ...node,
+          draggable: true,
+          selected: false,
+          // Ensure data object exists and has all fields
+          data: {
+            ...node.data,
+            // Ensure configs are objects, not null/undefined
+            agent_config: node.data.agent_config || {},
+            condition_config: node.data.condition_config || {},
+            loop_config: node.data.loop_config || {},
+            input_config: node.data.input_config || {},
+            inputs: node.data.inputs || [],
+          }
+        }))
+        setNodes(initializedNodes)
         setEdges(workflow.edges as any[])
+        
+        // Track that we've loaded this workflow
+        lastLoadedWorkflowIdRef.current = workflowId
+        
+        // Clear any selected node when loading new workflow
+        setSelectedNodeId(null)
         
         // Allow modifications after load completes
         setTimeout(() => {
@@ -144,7 +202,8 @@ export default function WorkflowBuilder({
         isLoadingRef.current = false
       })
     } else {
-      // New workflow - make sure loading flag is off
+      // New workflow - reset tracking and make sure loading flag is off
+      lastLoadedWorkflowIdRef.current = null
       isLoadingRef.current = false
     }
   }, [workflowId, onWorkflowLoaded, workflowNodeToNode, setNodes, setEdges])
@@ -185,6 +244,7 @@ export default function WorkflowBuilder({
         id: `${type}-${Date.now()}`,
         type,
         position,
+        draggable: true,
         data: {
           label: `${type.charAt(0).toUpperCase() + type.slice(1)} Node`,
           name: `${type.charAt(0).toUpperCase() + type.slice(1)} Node`,
@@ -200,11 +260,33 @@ export default function WorkflowBuilder({
   )
 
   const onNodeClick = useCallback(
-    (_event: React.MouseEvent, node: any) => {
+    (event: React.MouseEvent, node: any) => {
+      // Don't handle clicks during drag operations
+      if (isDraggingRef.current) {
+        return
+      }
+      
+      // Don't prevent default - let React Flow handle dragging
+      // Only stop propagation to prevent pane click
+      event.stopPropagation()
+      
+      // Set our local selectedNodeId state
       setSelectedNodeId(node.id)
+      
+      // Update node selection - but preserve all node properties including position
+      setNodes((nds) => 
+        nds.map((n) => ({
+          ...n, // Preserve all properties including position
+          selected: n.id === node.id
+        }))
+      )
     },
-    []
+    [setNodes]
   )
+
+  const onPaneClick = useCallback(() => {
+    setSelectedNodeId(null)
+  }, [])
 
   return (
     <ReactFlowProvider>
@@ -240,7 +322,15 @@ export default function WorkflowBuilder({
                 onDrop={onDrop}
                 onDragOver={onDragOver}
                 onNodeClick={onNodeClick}
+                onPaneClick={onPaneClick}
                 nodeTypes={nodeTypes}
+                nodesDraggable={true}
+                nodesConnectable={true}
+                panOnDrag={true} // Allow panning - React Flow will prioritize node dragging when clicking on nodes
+                panOnScroll={true}
+                zoomOnScroll={true}
+                zoomOnPinch={true}
+                selectionOnDrag={false}
                 fitView
                 className="bg-gray-50"
               >
@@ -258,6 +348,14 @@ export default function WorkflowBuilder({
                       return '#0ea5e9'
                     case 'end':
                       return '#6b7280'
+                    case 'gcp_bucket':
+                      return '#f97316'
+                    case 'aws_s3':
+                      return '#eab308'
+                    case 'gcp_pubsub':
+                      return '#a855f7'
+                    case 'local_filesystem':
+                      return '#22c55e'
                     default:
                       return '#94a3b8'
                   }
@@ -278,7 +376,11 @@ export default function WorkflowBuilder({
         </div>
 
         {/* Right Panel - Properties (Full Height) */}
-        <PropertyPanel selectedNodeId={selectedNodeId} setSelectedNodeId={setSelectedNodeId} />
+        <PropertyPanel 
+          selectedNodeId={selectedNodeId} 
+          setSelectedNodeId={setSelectedNodeId}
+          nodes={nodes}
+        />
       </div>
     </ReactFlowProvider>
   )

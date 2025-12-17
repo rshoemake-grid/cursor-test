@@ -13,6 +13,7 @@ from ..models.schemas import (
 )
 from ..agents import AgentRegistry
 from ..websocket.manager import manager as ws_manager
+from ..inputs import read_from_input_source, write_to_input_source
 
 
 class WorkflowExecutorV3:
@@ -224,20 +225,88 @@ class WorkflowExecutorV3:
         await self._broadcast_node_update(node.id, node_state)
         
         try:
-            # Prepare inputs for this node
-            node_inputs = self._prepare_node_inputs(node)
-            node_state.input = node_inputs
-            
-            await self._log("INFO", node.id, f"Node inputs: {list(node_inputs.keys())}")
-            
             # Execute based on node type
-            if node.type in [NodeType.AGENT, NodeType.CONDITION, NodeType.LOOP]:
-                agent = AgentRegistry.get_agent(node, llm_config=self.llm_config)
-                output = await agent.execute(node_inputs)
-            elif node.type == NodeType.TOOL:
-                output = node_inputs
+            if node.type in ['gcp_bucket', 'aws_s3', 'gcp_pubsub', 'local_filesystem']:
+                # Handle storage nodes - can read or write based on mode and inputs
+                # Get input_config from node data
+                input_config = {}
+                if hasattr(node, 'data') and node.data:
+                    input_config = node.data.get('input_config', {})
+                elif hasattr(node, 'input_config'):
+                    input_config = node.input_config or {}
+                
+                mode = input_config.get('mode', 'read')
+                
+                # Check if node has inputs (connected from other nodes) - if so, it's a write operation
+                node_has_inputs = len(node.inputs) > 0
+                
+                if mode == 'write' or node_has_inputs:
+                    # Write mode: get data from inputs
+                    node_inputs = self._prepare_node_inputs(node)
+                    node_state.input = node_inputs
+                    
+                    # Extract data to write (use first input value or combine all)
+                    data_to_write = None
+                    if node_inputs:
+                        # If there's a single input, use it directly
+                        input_values = list(node_inputs.values())
+                        if len(input_values) == 1:
+                            data_to_write = input_values[0]
+                        else:
+                            # Multiple inputs - combine into dict
+                            data_to_write = node_inputs
+                    else:
+                        # No inputs but in write mode - use empty dict
+                        data_to_write = {}
+                    
+                    await self._log("INFO", node.id, f"Writing to {node.type} storage (mode: {mode})")
+                    
+                    # Write to storage (synchronous operation wrapped in executor)
+                    loop = asyncio.get_event_loop()
+                    write_result = await loop.run_in_executor(
+                        None,
+                        write_to_input_source,
+                        node.type,
+                        input_config,
+                        data_to_write
+                    )
+                    
+                    output = write_result
+                    await self._log("INFO", node.id, f"Wrote data to {node.type}: {write_result.get('status', 'success')}")
+                else:
+                    # Read mode: read from storage
+                    await self._log("INFO", node.id, f"Reading from {node.type} storage")
+                    
+                    # Read from input source (synchronous operation wrapped in executor)
+                    loop = asyncio.get_event_loop()
+                    output = await loop.run_in_executor(
+                        None,
+                        read_from_input_source,
+                        node.type,
+                        input_config
+                    )
+                    
+                    # Wrap output in a standard format for downstream nodes
+                    if not isinstance(output, dict):
+                        output = {'data': output, 'source': node.type}
+                    
+                    node_state.input = {}  # Read operations don't have inputs
+                    await self._log("INFO", node.id, f"Read {len(str(output))} bytes from {node.type}")
             else:
-                output = node_inputs
+                # Prepare inputs for this node (not needed for input sources)
+                node_inputs = self._prepare_node_inputs(node)
+                node_state.input = node_inputs
+                
+                await self._log("INFO", node.id, f"Node inputs: {list(node_inputs.keys())}")
+                
+                # Execute based on node type
+                if node.type in [NodeType.AGENT, NodeType.CONDITION, NodeType.LOOP]:
+                    agent = AgentRegistry.get_agent(node, llm_config=self.llm_config)
+                    output = await agent.execute(node_inputs)
+                elif node.type == NodeType.TOOL:
+                    output = node_inputs
+                else:
+                    output = node_inputs
             
             # Update node state
             node_state.status = ExecutionStatus.COMPLETED

@@ -150,16 +150,25 @@ export default function ExecutionConsole({
                     {hasRunning && <Loader className="w-3 h-3 animate-spin" />}
                     <span className="font-medium">{tab.workflowName}</span>
                     <span className="text-gray-500">({tab.executions.length})</span>
-                    <button
+                    <div
                       onClick={(e) => {
                         e.stopPropagation()
                         onCloseWorkflow(tab.workflowId)
                       }}
-                      className="hover:text-red-400 ml-1"
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault()
+                          e.stopPropagation()
+                          onCloseWorkflow(tab.workflowId)
+                        }
+                      }}
+                      role="button"
+                      tabIndex={0}
+                      className="hover:text-red-400 ml-1 cursor-pointer"
                       title="Close workflow tab"
                     >
                       <X className="w-3 h-3" />
-                    </button>
+                    </div>
                   </button>
                 )
               })}

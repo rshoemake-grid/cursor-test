@@ -5,7 +5,7 @@ export default function ConditionNode({ data, selected }: NodeProps) {
   return (
     <div
       className={`px-4 py-3 shadow-lg rounded-lg bg-white border-2 min-w-[180px] ${
-        selected ? 'border-primary-500' : 'border-gray-300'
+        selected ? 'border-primary-500 border-4 shadow-xl ring-2 ring-primary-200' : 'border-gray-300'
       }`}
     >
       <Handle type="target" position={Position.Top} className="w-3 h-3" />

@@ -5,7 +5,7 @@ export default function StartNode({ selected }: NodeProps) {
   return (
     <div
       className={`px-4 py-3 shadow-lg rounded-lg bg-gradient-to-br from-primary-500 to-primary-600 border-2 ${
-        selected ? 'border-primary-700' : 'border-primary-600'
+        selected ? 'border-primary-700 border-4 shadow-xl ring-2 ring-primary-200' : 'border-primary-600'
       }`}
     >
       <div className="flex items-center gap-2">

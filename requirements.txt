@@ -17,3 +17,8 @@ python-jose[cryptography]==3.3.0
 python-multipart==0.0.9
 greenlet==3.0.3
 
+# Optional dependencies for input sources (install only if needed)
+# google-cloud-storage==2.18.2  # For GCP Bucket input source
+# google-cloud-pubsub==2.24.1   # For GCP Pub/Sub input source
+# boto3==1.35.0                  # For AWS S3 input source
+
