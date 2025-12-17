@@ -18,7 +18,6 @@ import NodePanel from './NodePanel'
 import PropertyPanel from './PropertyPanel'
 import Toolbar from './Toolbar'
 import ExecutionConsole from './ExecutionConsole'
-import { useWorkflowStore } from '../store/workflowStore'
 import { api } from '../api/client'
 
 interface WorkflowBuilderProps {
@@ -54,20 +53,14 @@ export default function WorkflowBuilder({
   onWorkflowModified,
   onWorkflowLoaded
 }: WorkflowBuilderProps) {
-  const {
-    nodes: storeNodes,
-    edges: storeEdges,
-    workflowId: storeWorkflowId,
-    workflowName,
-    setNodes: setStoreNodes,
-    setEdges: setStoreEdges,
-    addNode,
-    loadWorkflow,
-  } = useWorkflowStore()
-
-  const [nodes, setNodes, onNodesChange] = useNodesState(storeNodes)
-  const [edges, setEdges, onEdgesChange] = useEdgesState(storeEdges)
+  // Local state for this tab - NOT using global store
+  const [nodes, setNodes, onNodesChange] = useNodesState([])
+  const [edges, setEdges, onEdgesChange] = useEdgesState([])
   const [selectedNodeId, setSelectedNodeId] = React.useState<string | null>(null)
+  const [localWorkflowId, setLocalWorkflowId] = useState<string | null>(workflowId)
+  const [localWorkflowName, setLocalWorkflowName] = useState<string>('Untitled Workflow')
+  const [localWorkflowDescription, setLocalWorkflowDescription] = useState<string>('')
+  const [variables, setVariables] = useState<Record<string, any>>({})
   const [workflowTabs, setWorkflowTabs] = useState<WorkflowTab[]>([])
   const workflowTabsRef = useRef<WorkflowTab[]>([])
   
@@ -76,28 +69,50 @@ export default function WorkflowBuilder({
     workflowTabsRef.current = workflowTabs
   }, [workflowTabs])
 
-  // Sync with store
-  useEffect(() => {
-    setNodes(storeNodes)
-  }, [storeNodes, setNodes])
+  // Track modifications
+  const notifyModified = useCallback(() => {
+    if (onWorkflowModified) {
+      onWorkflowModified()
+    }
+  }, [onWorkflowModified])
 
+  // Notify when nodes/edges change
   useEffect(() => {
-    setEdges(storeEdges)
-  }, [storeEdges, setEdges])
+    if (nodes.length > 0 || edges.length > 0) {
+      notifyModified()
+    }
+  }, [nodes, edges, notifyModified])
 
-  useEffect(() => {
-    setStoreNodes(nodes)
-  }, [nodes, setStoreNodes])
-
-  useEffect(() => {
-    setStoreEdges(edges)
-  }, [edges, setStoreEdges])
+  // Helper to convert WorkflowNode to React Flow Node
+  const workflowNodeToNode = useCallback((wfNode: any) => {
+    const data = wfNode.data || {}
+    return {
+      id: wfNode.id,
+      type: wfNode.type,
+      position: wfNode.position || { x: 0, y: 0 },
+      data: {
+        label: data.label || data.name || wfNode.name || wfNode.type,
+        name: data.name || wfNode.name || wfNode.type,
+        description: data.description || wfNode.description,
+        agent_config: data.agent_config || wfNode.agent_config,
+        condition_config: data.condition_config || wfNode.condition_config,
+        loop_config: data.loop_config || wfNode.loop_config,
+        inputs: data.inputs || wfNode.inputs || [],
+      },
+    }
+  }, [])
 
   // Load workflow if ID provided and create/activate tab
   useEffect(() => {
     if (workflowId) {
       api.getWorkflow(workflowId).then((workflow) => {
-        loadWorkflow(workflow)
+        // Set local state for this tab
+        setLocalWorkflowId(workflow.id!)
+        setLocalWorkflowName(workflow.name)
+        setLocalWorkflowDescription(workflow.description || '')
+        setVariables(workflow.variables || {})
+        setNodes(workflow.nodes.map(workflowNodeToNode))
+        setEdges(workflow.edges as any[])
         
         // Notify parent that workflow was loaded
         if (onWorkflowLoaded) {
@@ -121,31 +136,31 @@ export default function WorkflowBuilder({
         })
       })
     }
-  }, [workflowId, loadWorkflow, onWorkflowLoaded])
+  }, [workflowId, onWorkflowLoaded, workflowNodeToNode, setNodes, setEdges])
 
-  // Ensure current workflow has a tab
+  // Ensure current workflow has a tab (for console)
   useEffect(() => {
-    if (storeWorkflowId && workflowName) {
+    if (localWorkflowId && localWorkflowName) {
       setWorkflowTabs(prev => {
-        const existingTab = prev.find(tab => tab.workflowId === storeWorkflowId)
+        const existingTab = prev.find(tab => tab.workflowId === localWorkflowId)
         if (existingTab) {
           // Update name if changed
           return prev.map(tab => 
-            tab.workflowId === storeWorkflowId 
-              ? { ...tab, workflowName } 
+            tab.workflowId === localWorkflowId 
+              ? { ...tab, workflowName: localWorkflowName } 
               : tab
           )
         }
         // Create new tab for current workflow
         return [...prev, {
-          workflowId: storeWorkflowId,
-          workflowName: workflowName,
+          workflowId: localWorkflowId,
+          workflowName: localWorkflowName,
           executions: [],
           activeExecutionId: null
         }]
       })
     }
-  }, [storeWorkflowId, workflowName])
+  }, [localWorkflowId, localWorkflowName])
 
   // Poll for execution updates
   useEffect(() => {
@@ -194,8 +209,8 @@ export default function WorkflowBuilder({
 
   // Handle execution start
   const handleExecutionStart = useCallback((executionId: string) => {
-    const currentWorkflowId = storeWorkflowId || 'unsaved'
-    const currentWorkflowName = workflowName || 'Unsaved Workflow'
+    const currentWorkflowId = localWorkflowId || `unsaved-${tabId}`
+    const currentWorkflowName = localWorkflowName || 'Unsaved Workflow'
     
     // Add new execution to the current workflow's tab
     const newExecution: Execution = {
@@ -233,7 +248,7 @@ export default function WorkflowBuilder({
     if (onExecutionStart) {
       onExecutionStart(executionId)
     }
-  }, [storeWorkflowId, workflowName, onExecutionStart])
+  }, [localWorkflowId, localWorkflowName, tabId, onExecutionStart])
 
   // Handle closing workflow tabs
   const handleCloseWorkflow = useCallback((workflowId: string) => {
@@ -284,9 +299,11 @@ export default function WorkflowBuilder({
         },
       }
 
-      addNode(newNode)
+      // Add to local nodes state
+      setNodes((nds) => [...nds, newNode])
+      notifyModified()
     },
-    [addNode]
+    [setNodes, notifyModified]
   )
 
   const onNodeClick = useCallback(
@@ -305,8 +322,17 @@ export default function WorkflowBuilder({
         {/* Main Canvas */}
         <div className="flex-1 relative">
           <Toolbar 
+            workflowId={localWorkflowId}
+            workflowName={localWorkflowName}
+            workflowDescription={localWorkflowDescription}
+            nodes={nodes}
+            edges={edges}
+            variables={variables}
             onExecutionStart={handleExecutionStart}
             onWorkflowSaved={onWorkflowSaved}
+            onWorkflowNameChange={setLocalWorkflowName}
+            onWorkflowDescriptionChange={setLocalWorkflowDescription}
+            onWorkflowIdChange={setLocalWorkflowId}
           />
           
         <ReactFlow

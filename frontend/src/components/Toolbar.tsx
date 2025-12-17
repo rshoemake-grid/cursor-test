@@ -1,34 +1,64 @@
 import { useState } from 'react'
 import { Save, Play, FileDown } from 'lucide-react'
-import { useWorkflowStore } from '../store/workflowStore'
 import { api } from '../api/client'
 
 interface ToolbarProps {
+  workflowId: string | null
+  workflowName: string
+  workflowDescription: string
+  nodes: any[]
+  edges: any[]
+  variables: Record<string, any>
   onExecutionStart?: (executionId: string) => void
   onWorkflowSaved?: (workflowId: string, name: string) => void
+  onWorkflowNameChange: (name: string) => void
+  onWorkflowDescriptionChange: (description: string) => void
+  onWorkflowIdChange: (id: string) => void
 }
 
-export default function Toolbar({ onExecutionStart, onWorkflowSaved }: ToolbarProps) {
-  const {
-    workflowId,
-    workflowName,
-    workflowDescription,
-    setWorkflowName,
-    setWorkflowDescription,
-    setWorkflowId,
-    toWorkflowDefinition,
-    clearWorkflow,
-  } = useWorkflowStore()
+export default function Toolbar({ 
+  workflowId,
+  workflowName,
+  workflowDescription,
+  nodes,
+  edges,
+  variables,
+  onExecutionStart, 
+  onWorkflowSaved,
+  onWorkflowNameChange,
+  onWorkflowDescriptionChange,
+  onWorkflowIdChange
+}: ToolbarProps) {
 
   const [isSaving, setIsSaving] = useState(false)
   const [isExecuting, setIsExecuting] = useState(false)
   const [showInputs, setShowInputs] = useState(false)
   const [executionInputs, setExecutionInputs] = useState<string>('{}')
 
+  // Helper to convert nodes to workflow format
+  const nodeToWorkflowNode = (node: any) => ({
+    id: node.id,
+    type: node.type,
+    name: node.data.name || node.data.label,
+    description: node.data.description,
+    agent_config: node.data.agent_config,
+    condition_config: node.data.condition_config,
+    loop_config: node.data.loop_config,
+    inputs: node.data.inputs || [],
+    position: node.position,
+  })
+
   const handleSave = async (): Promise<string | null> => {
     setIsSaving(true)
     try {
-      const workflowDef = toWorkflowDefinition()
+      // Build workflow definition from props
+      const workflowDef = {
+        name: workflowName,
+        description: workflowDescription,
+        nodes: nodes.map(nodeToWorkflowNode),
+        edges: edges,
+        variables: variables,
+      }
       
       if (workflowId) {
         // Update existing
@@ -41,7 +71,7 @@ export default function Toolbar({ onExecutionStart, onWorkflowSaved }: ToolbarPr
       } else {
         // Create new
         const created = await api.createWorkflow(workflowDef)
-        setWorkflowId(created.id!)
+        onWorkflowIdChange(created.id!)
         alert('Workflow created successfully!')
         if (onWorkflowSaved) {
           onWorkflowSaved(created.id!, workflowDef.name)
@@ -104,7 +134,14 @@ export default function Toolbar({ onExecutionStart, onWorkflowSaved }: ToolbarPr
   }
 
   const handleExport = () => {
-    const workflowDef = toWorkflowDefinition()
+    // Build workflow definition from props
+    const workflowDef = {
+      name: workflowName,
+      description: workflowDescription,
+      nodes: nodes.map(nodeToWorkflowNode),
+      edges: edges,
+      variables: variables,
+    }
     const blob = new Blob([JSON.stringify(workflowDef, null, 2)], { type: 'application/json' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
@@ -123,14 +160,14 @@ export default function Toolbar({ onExecutionStart, onWorkflowSaved }: ToolbarPr
               <input
                 type="text"
                 value={workflowName}
-                onChange={(e) => setWorkflowName(e.target.value)}
+                onChange={(e) => onWorkflowNameChange(e.target.value)}
                 className="w-full text-lg font-semibold border-none focus:ring-0 p-0"
                 placeholder="Workflow name"
               />
               <input
                 type="text"
                 value={workflowDescription}
-                onChange={(e) => setWorkflowDescription(e.target.value)}
+                onChange={(e) => onWorkflowDescriptionChange(e.target.value)}
                 className="w-full text-sm text-gray-600 border-none focus:ring-0 p-0 mt-1"
                 placeholder="Description (optional)"
               />
