@@ -214,15 +214,6 @@ export default function WorkflowTabs({ initialWorkflowId, workflowLoadKey, onExe
     ))
   }, [])
 
-  // Poll for execution updates - use ref to avoid dependency issues
-  const tabsRef = useRef<WorkflowTabData[]>(tabs)
-  
-  // Keep ref in sync with tabs
-  useEffect(() => {
-    tabsRef.current = tabs
-    globalTabs = [...tabs] // Also update global storage
-  }, [tabs])
-
   // Poll for execution updates
   useEffect(() => {
     const interval = setInterval(async () => {
