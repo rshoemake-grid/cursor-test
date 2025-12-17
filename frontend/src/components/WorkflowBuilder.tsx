@@ -344,12 +344,12 @@ export default function WorkflowBuilder({
 
   return (
     <ReactFlowProvider>
-      <div className="flex-1 flex overflow-hidden border-4 border-red-500">
+      <div className="flex-1 flex overflow-hidden">
         {/* Left Panel - Node Palette (Full Height) */}
         <NodePanel />
 
         {/* Middle Section - Workflow Canvas + Console */}
-        <div className="flex-1 flex flex-col overflow-hidden border-4 border-blue-500">
+        <div className="flex-1 flex flex-col overflow-hidden">
           {/* Top: Canvas Area */}
           <div className="flex-1 relative">
             <Toolbar 
