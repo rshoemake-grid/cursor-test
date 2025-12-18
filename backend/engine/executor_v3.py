@@ -247,12 +247,34 @@ class WorkflowExecutorV3:
             # Execute based on node type
             if node.type in ['gcp_bucket', 'aws_s3', 'gcp_pubsub', 'local_filesystem']:
                 # Handle storage nodes - can read or write based on mode and inputs
-                # Get input_config from node data
+                # Get input_config from node data - prioritize data.input_config, fallback to top-level
                 input_config = {}
-                if hasattr(node, 'data') and node.data:
-                    input_config = node.data.get('input_config', {})
-                elif hasattr(node, 'input_config'):
-                    input_config = node.input_config or {}
+                
+                # First check node.data.input_config (UI stores it here)
+                if hasattr(node, 'data') and node.data and isinstance(node.data, dict):
+                    data_input_config = node.data.get('input_config')
+                    if data_input_config and isinstance(data_input_config, dict):
+                        input_config = data_input_config.copy()
+                
+                # Then check top-level input_config (may be set during reconstruction)
+                if hasattr(node, 'input_config') and node.input_config:
+                    top_input_config = node.input_config if isinstance(node.input_config, dict) else {}
+                    # Merge: top-level values override data values, but only if they're not empty
+                    for key, value in top_input_config.items():
+                        if value and (not isinstance(value, str) or value.strip()):
+                            input_config[key] = value
+                        elif key not in input_config:
+                            input_config[key] = value
+                
+                # Ensure input_config is a dict
+                if not isinstance(input_config, dict):
+                    input_config = {}
+                
+                # Resolve variables in input_config (e.g., ${file_path} -> actual value)
+                input_config = self._resolve_config_variables(input_config)
+                
+                # Debug logging
+                await self._log("DEBUG", node.id, f"Resolved input_config for {node.type}: {input_config}")
                 
                 mode = input_config.get('mode', 'read')
                 
@@ -262,6 +284,21 @@ class WorkflowExecutorV3:
                 if mode == 'write' or node_has_inputs:
                     # Write mode: get data from inputs
                     node_inputs = self._prepare_node_inputs(node)
+                    
+                    # If no explicit inputs, try to get from previous node (for write nodes)
+                    if not node_inputs:
+                        previous_node_output = self._get_previous_node_output(node)
+                        if previous_node_output is not None:
+                            # Auto-populate inputs with previous node's output
+                            if isinstance(previous_node_output, dict):
+                                node_inputs = previous_node_output
+                            else:
+                                # Wrap single value in dict
+                                node_inputs = {
+                                    'data': previous_node_output,
+                                    'output': previous_node_output
+                                }
+                    
                     node_state.input = node_inputs
                     
                     # Extract data to write (use first input value or combine all)
@@ -277,6 +314,7 @@ class WorkflowExecutorV3:
                     else:
                         # No inputs but in write mode - use empty dict
                         data_to_write = {}
+                        await self._log("WARNING", node.id, "No data to write - write node has no inputs and no previous node output")
                     
                     await self._log("INFO", node.id, f"Writing to {node.type} storage (mode: {mode})")
                     
@@ -314,6 +352,23 @@ class WorkflowExecutorV3:
             else:
                 # Prepare inputs for this node (not needed for input sources)
                 node_inputs = self._prepare_node_inputs(node)
+                
+                # For loop and condition nodes, if no explicit inputs, try to get from previous node
+                if node.type in [NodeType.LOOP, NodeType.CONDITION] and not node_inputs:
+                    # Find the previous node in the execution graph
+                    previous_node_output = self._get_previous_node_output(node)
+                    if previous_node_output is not None:
+                        # Auto-populate inputs with previous node's output
+                        if isinstance(previous_node_output, dict):
+                            node_inputs = previous_node_output
+                        else:
+                            # Wrap single value in dict with common keys
+                            node_inputs = {
+                                'data': previous_node_output,
+                                'output': previous_node_output,
+                                'items': previous_node_output if isinstance(previous_node_output, (list, tuple)) else [previous_node_output]
+                            }
+                
                 node_state.input = node_inputs
                 
                 await self._log("INFO", node.id, f"Node inputs: {list(node_inputs.keys())}")
@@ -377,6 +432,58 @@ class WorkflowExecutorV3:
                     )
         
         return inputs
+    
+    def _get_previous_node_output(self, node: Node) -> Any:
+        """Get output from the previous node in the execution graph"""
+        # Find edges that point to this node
+        incoming_edges = [e for e in self.workflow.edges if e.target == node.id]
+        
+        if not incoming_edges:
+            return None
+        
+        # Get the first source node's output
+        source_node_id = incoming_edges[0].source
+        source_state = self.execution_state.node_states.get(source_node_id)
+        
+        if source_state and source_state.output is not None:
+            return source_state.output
+        
+        return None
+    
+    def _resolve_config_variables(self, config: Dict[str, Any]) -> Dict[str, Any]:
+        """Resolve variable references in config (e.g., ${variable_name})"""
+        import re
+        resolved_config = {}
+        
+        for key, value in config.items():
+            # Handle None or empty values
+            if value is None or (isinstance(value, str) and (not value or value.strip() == '')):
+                # If value is empty/None, check if there's a workflow variable with the same name
+                if key in self.execution_state.variables:
+                    resolved_value = self.execution_state.variables[key]
+                    resolved_config[key] = str(resolved_value) if resolved_value is not None else ''
+                else:
+                    resolved_config[key] = value if value is not None else ''
+            elif isinstance(value, str):
+                # Check for variable references like ${variable_name}
+                pattern = r'\$\{([^}]+)\}'
+                matches = re.findall(pattern, value)
+                
+                if matches:
+                    # Replace variables
+                    resolved_value = value
+                    for var_name in matches:
+                        if var_name in self.execution_state.variables:
+                            var_value = str(self.execution_state.variables[var_name])
+                            resolved_value = resolved_value.replace(f"${{{var_name}}}", var_value)
+                        # If variable not found, keep the placeholder (will fail validation with better error)
+                    resolved_config[key] = resolved_value
+                else:
+                    resolved_config[key] = value
+            else:
+                resolved_config[key] = value
+        
+        return resolved_config
     
     async def _log(self, level: str, node_id: Optional[str], message: str):
         """Add a log entry and broadcast it"""

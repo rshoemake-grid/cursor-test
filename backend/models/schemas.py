@@ -1,7 +1,7 @@
 from datetime import datetime
 from enum import Enum
 from typing import Any, Dict, List, Optional
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 
 class NodeType(str, Enum):
@@ -45,12 +45,20 @@ class InputMapping(BaseModel):
 
 class ConditionConfig(BaseModel):
     """Configuration for a condition node"""
-    condition_type: str = "equals"  # equals, contains, greater_than, less_than, custom
-    field: str
-    value: str
+    condition_type: Optional[str] = "equals"  # equals, contains, greater_than, less_than, custom
+    field: Optional[str] = None  # Required only when condition_config is actually used
+    value: Optional[str] = None  # Required only when condition_config is actually used
     true_branch: Optional[str] = None
     false_branch: Optional[str] = None
     custom_expression: Optional[str] = None
+    
+    @model_validator(mode='before')
+    @classmethod
+    def validate_empty_dict(cls, v):
+        """Allow empty dict to be converted to None"""
+        if isinstance(v, dict) and len(v) == 0:
+            return None
+        return v
 
 
 class LoopConfig(BaseModel):
@@ -74,6 +82,17 @@ class Node(BaseModel):
     inputs: List[InputMapping] = Field(default_factory=list)
     position: Dict[str, float] = Field(default_factory=dict)
     data: Optional[Dict[str, Any]] = Field(default_factory=dict)  # React Flow data object
+    
+    @model_validator(mode='before')
+    @classmethod
+    def validate_configs(cls, v):
+        """Convert empty config dicts to None before validation"""
+        if isinstance(v, dict):
+            # Convert empty config dicts to None
+            for config_key in ['agent_config', 'condition_config', 'loop_config', 'input_config']:
+                if config_key in v and isinstance(v[config_key], dict) and len(v[config_key]) == 0:
+                    v[config_key] = None
+        return v
 
 
 class Edge(BaseModel):

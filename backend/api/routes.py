@@ -194,7 +194,10 @@ async def update_workflow(
     current_user: Optional[UserDB] = Depends(get_optional_user)
 ):
     """Update an existing workflow"""
+    import traceback
     try:
+        # Debug: Log incoming workflow data
+        print(f"Updating workflow {workflow_id} with {len(workflow.nodes)} nodes and {len(workflow.edges)} edges")
         # Get existing workflow
         result = await db.execute(
             select(WorkflowDB).where(WorkflowDB.id == workflow_id)
@@ -223,8 +226,29 @@ async def update_workflow(
         # Update workflow
         db_workflow.name = workflow.name
         db_workflow.description = workflow.description
+        
+        # Serialize nodes with error handling
+        try:
+            nodes_data = []
+            for i, node in enumerate(workflow.nodes):
+                try:
+                    node_dict = node.model_dump(mode='json', exclude_none=False)
+                    nodes_data.append(node_dict)
+                except Exception as node_error:
+                    import traceback
+                    print(f"Error serializing node {i} (id: {getattr(node, 'id', 'unknown')}): {node_error}")
+                    print(traceback.format_exc())
+                    raise ValueError(f"Invalid node at index {i}: {str(node_error)}")
+        except ValueError:
+            raise
+        except Exception as e:
+            import traceback
+            print(f"Error processing nodes: {e}")
+            print(traceback.format_exc())
+            raise ValueError(f"Error processing nodes: {str(e)}")
+        
         db_workflow.definition = {
-            "nodes": [node.model_dump() for node in workflow.nodes],
+            "nodes": nodes_data,
             "edges": processed_edges,
             "variables": workflow.variables
         }
@@ -238,10 +262,14 @@ async def update_workflow(
         response_edges = [Edge(**e) for e in processed_edges]
     except HTTPException:
         raise
+    except ValueError as ve:
+        # Re-raise ValueError as 422
+        raise HTTPException(status_code=422, detail=str(ve))
     except Exception as e:
         import traceback
+        error_trace = traceback.format_exc()
         print(f"Error updating workflow: {e}")
-        print(traceback.format_exc())
+        print(error_trace)
         raise HTTPException(status_code=422, detail=f"Validation error: {str(e)}")
     
     return WorkflowResponse(
@@ -314,9 +342,27 @@ async def execute_workflow(
                 if key not in node_data or node_data[key] is None:
                     if key in data_obj:
                         node_data[key] = data_obj[key]
+                elif key == "input_config" and isinstance(node_data[key], dict) and isinstance(data_obj.get(key), dict):
+                    # For input_config, merge data.input_config into top-level if data.input_config has values
+                    data_input_config = data_obj.get(key, {})
+                    top_input_config = node_data[key] or {}
+                    # If top-level is empty but data has values, use data
+                    if (not top_input_config or all(not v or (isinstance(v, str) and not v.strip()) for v in top_input_config.values())):
+                        if data_input_config:
+                            node_data[key] = data_input_config
+                    # Otherwise merge: data values override empty top-level values
+                    else:
+                        merged = {**top_input_config}
+                        for k, v in data_input_config.items():
+                            if k not in merged or not merged[k] or (isinstance(merged[k], str) and not merged[k].strip()):
+                                merged[k] = v
+                        node_data[key] = merged
         
         # Debug logging
-        print(f"Reconstructing node {node_data.get('id')}: has agent_config={node_data.get('agent_config') is not None}")
+        node_id = node_data.get('id')
+        has_input_config = node_data.get('input_config') is not None
+        input_config_value = node_data.get('input_config')
+        print(f"Reconstructing node {node_id}: has input_config={has_input_config}, input_config={input_config_value}")
         
         return Node(**node_data)
     

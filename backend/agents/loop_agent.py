@@ -31,13 +31,24 @@ class LoopAgent(BaseAgent):
     
     async def _execute_for_each(self, inputs: Dict[str, Any]) -> Dict[str, Any]:
         """Execute for-each loop"""
+        # If items_source is not set, try to auto-detect from inputs
         if not self.config.items_source:
-            raise ValueError("for_each loop requires items_source")
-        
-        items = inputs.get(self.config.items_source)
+            # Try common keys first
+            for key in ['data', 'output', 'items', 'results']:
+                if key in inputs:
+                    items = inputs[key]
+                    break
+            else:
+                # Use the first input value if available
+                if inputs:
+                    items = list(inputs.values())[0]
+                else:
+                    raise ValueError("for_each loop requires items_source or inputs from previous node")
+        else:
+            items = inputs.get(self.config.items_source)
         
         if items is None:
-            raise ValueError(f"Items source '{self.config.items_source}' not found in inputs")
+            raise ValueError(f"Items source '{self.config.items_source if self.config.items_source else 'auto-detected'}' not found in inputs. Available keys: {list(inputs.keys())}")
         
         if not isinstance(items, (list, tuple)):
             # Try to convert to list

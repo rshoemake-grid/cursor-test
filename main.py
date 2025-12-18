@@ -1,7 +1,10 @@
 import uvicorn
-from fastapi import FastAPI
+from fastapi import FastAPI, Request, status
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import JSONResponse
 from contextlib import asynccontextmanager
+import traceback
 
 from backend.api import router
 from backend.api.websocket_routes import router as ws_router
@@ -43,6 +46,41 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Add exception handler for validation errors
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    """Handle Pydantic validation errors with detailed logging"""
+    import json
+    errors = exc.errors()
+    error_details = []
+    for error in errors:
+        error_details.append({
+            "loc": error.get("loc"),
+            "msg": error.get("msg"),
+            "type": error.get("type"),
+            "input": str(error.get("input", ""))[:200]  # Truncate long inputs
+        })
+    
+    print(f"Validation error on {request.method} {request.url.path}:")
+    print(json.dumps(error_details, indent=2))
+    
+    # Try to get request body if available
+    try:
+        body = await request.body()
+        if body:
+            body_str = body.decode('utf-8')[:1000]  # First 1000 chars
+            print(f"Request body preview: {body_str}")
+    except:
+        pass
+    
+    return JSONResponse(
+        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+        content={
+            "detail": error_details,
+            "message": "Validation error - check detail field for specifics"
+        }
+    )
 
 # Include API routes
 app.include_router(router, prefix="/api")  # Main workflow routes (add /api prefix)

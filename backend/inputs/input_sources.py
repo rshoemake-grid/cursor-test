@@ -323,10 +323,12 @@ class LocalFileSystemHandler(InputSourceHandler):
         file_pattern = config.get('file_pattern', '')
         encoding = config.get('encoding', 'utf-8')
         
-        if not file_path:
-            raise ValueError("file_path is required for Local File System input")
+        if not file_path or file_path.strip() == '':
+            raise ValueError("file_path is required for Local File System input. Please configure the file_path in the node's input_config or pass it as an execution input (e.g., {'file_path': '/path/to/file'}) before executing the workflow.")
         
-        path = Path(file_path)
+        # Expand user path (~) and resolve absolute path
+        file_path = os.path.expanduser(file_path)
+        path = Path(file_path).resolve()
         
         if path.is_file():
             # Read single file
@@ -342,45 +344,78 @@ class LocalFileSystemHandler(InputSourceHandler):
         elif path.is_dir():
             # Read directory with optional pattern
             if file_pattern:
+                # Handle pattern matching
                 pattern = str(path / file_pattern)
                 files = glob.glob(pattern, recursive=True)
+                if not files:
+                    # Try without the directory prefix if pattern already includes it
+                    files = glob.glob(file_pattern, recursive=True)
             else:
                 files = [str(p) for p in path.iterdir() if p.is_file()]
+            
+            if not files:
+                raise FileNotFoundError(f"No files found in directory {file_path}" + (f" matching pattern '{file_pattern}'" if file_pattern else ""))
             
             # Read all matching files
             results = []
             for file in files:
-                with open(file, 'r', encoding=encoding) as f:
-                    content = f.read()
-                    try:
-                        results.append(json.loads(content))
-                    except json.JSONDecodeError:
-                        results.append(content)
+                try:
+                    with open(file, 'r', encoding=encoding) as f:
+                        content = f.read()
+                        try:
+                            results.append(json.loads(content))
+                        except json.JSONDecodeError:
+                            results.append(content)
+                except Exception as e:
+                    raise IOError(f"Error reading file {file}: {str(e)}")
             
             return results
         
         else:
-            raise FileNotFoundError(f"Path {file_path} does not exist")
+            # Provide helpful error message
+            if not path.exists():
+                raise FileNotFoundError(
+                    f"Path {file_path} does not exist. "
+                    f"Resolved to: {path}. "
+                    f"Please check that the path exists on the server where the workflow is executing."
+                )
+            else:
+                raise ValueError(f"Path {file_path} exists but is neither a file nor a directory")
     
     @staticmethod
     def write(config: Dict[str, Any], data: Any) -> Any:
         """Write data to local file system"""
         file_path = config.get('file_path')
+        file_pattern = config.get('file_pattern', '')
         encoding = config.get('encoding', 'utf-8')
         
-        if not file_path:
-            raise ValueError("file_path is required for Local File System write")
+        if not file_path or file_path.strip() == '':
+            raise ValueError("file_path is required for Local File System write. Please configure the file_path in the node's input_config or pass it as an execution input (e.g., {'file_path': '/path/to/file'}) before executing the workflow.")
         
-        path = Path(file_path)
+        # Expand user path (~) and resolve absolute path
+        file_path = os.path.expanduser(file_path)
+        path = Path(file_path).resolve()
+        
+        # If path is a directory and file_pattern is provided, combine them
+        if path.is_dir() and file_pattern:
+            path = path / file_pattern
+        elif path.is_dir():
+            # If it's a directory without a pattern, use a default filename
+            raise ValueError(f"file_path '{file_path}' is a directory. Please provide a file_pattern or use a full file path.")
         
         # Create parent directory if it doesn't exist
         path.parent.mkdir(parents=True, exist_ok=True)
         
         # Convert data to string (JSON if dict/list, otherwise string)
-        if isinstance(data, (dict, list)):
+        if data is None:
+            content = ""
+        elif isinstance(data, (dict, list)):
             content = json.dumps(data, indent=2)
         else:
             content = str(data)
+        
+        # Log what we're writing for debugging
+        print(f"Writing to {path}: {len(content)} characters, data type: {type(data)}")
         
         # Write to file
         with open(path, 'w', encoding=encoding) as f:

@@ -25,6 +25,20 @@ class UnifiedLLMAgent(BaseAgent):
                 "No LLM configuration found. Please configure an LLM provider in Settings "
                 "or set OPENAI_API_KEY environment variable."
             )
+        
+        # Validate API key is not a placeholder
+        api_key = self.llm_config.get("api_key", "")
+        if api_key:
+            api_key_lower = api_key.lower()
+            if (api_key == "your-api-key-here" or 
+                "your-api" in api_key_lower or 
+                api_key.startswith("your-api") or
+                "*****here" in api_key or
+                api_key == "your-api*****here"):
+                raise ValueError(
+                    "Invalid API key detected. Please go to Settings, add an LLM provider with a valid API key, "
+                    "enable it, and click 'Sync Now'. The API key cannot be a placeholder."
+                )
     
     def _get_fallback_config(self) -> Optional[Dict[str, Any]]:
         """Fallback to environment variables if no config provided"""
