@@ -85,13 +85,23 @@ class WorkflowExecutor:
         Determine the order of node execution based on edges.
         For Phase 1, this implements simple sequential execution.
         """
-        # Build adjacency map
+        # Build adjacency map, filtering out edges to deleted nodes
+        # Create set of valid node IDs for quick lookup
+        valid_node_ids = {node.id for node in self.workflow.nodes}
+        
         adjacency: Dict[str, List[str]] = {node.id: [] for node in self.workflow.nodes}
         in_degree: Dict[str, int] = {node.id: 0 for node in self.workflow.nodes}
         
+        # Only process edges that connect existing nodes
         for edge in self.workflow.edges:
-            adjacency[edge.source].append(edge.target)
-            in_degree[edge.target] += 1
+            # Skip edges that reference deleted nodes
+            if edge.source not in valid_node_ids or edge.target not in valid_node_ids:
+                continue
+            
+            # Only add edge if both nodes exist
+            if edge.source in adjacency and edge.target in in_degree:
+                adjacency[edge.source].append(edge.target)
+                in_degree[edge.target] += 1
         
         # Find start nodes (nodes with no incoming edges)
         start_nodes = [node_id for node_id, degree in in_degree.items() if degree == 0]

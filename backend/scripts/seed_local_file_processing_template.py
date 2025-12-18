@@ -1,4 +1,4 @@
-"""Seed script to add the PUBSUB Processing template to the marketplace"""
+"""Seed script to add the Local File Processing template to the marketplace"""
 import asyncio
 import sys
 import os
@@ -23,8 +23,8 @@ engine = create_async_engine(DATABASE_URL, echo=True, future=True)
 AsyncSessionLocal = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 
 
-async def seed_file_processing_template():
-    """Create the PUBSUB Processing template in the database"""
+async def seed_local_file_processing_template():
+    """Create the Local File Processing template in the database"""
     
     # Initialize database tables
     async with engine.begin() as conn:
@@ -44,26 +44,24 @@ async def seed_file_processing_template():
                 }
             },
             {
-                "id": "gcp_bucket-read",
-                "type": "gcp_bucket",
-                "name": "Read File from Bucket",
-                "description": "Read file from source GCP bucket",
+                "id": "local_filesystem-read",
+                "type": "local_filesystem",
+                "name": "Read File",
+                "description": "Read file from local filesystem",
                 "position": {"x": 400, "y": 100},
                 "input_config": {
                     "mode": "read",
-                    "bucket_name": "",
-                    "object_path": "",
-                    "credentials": ""
+                    "file_path": "",
+                    "encoding": "utf-8"
                 },
                 "data": {
-                    "label": "Read File from Bucket",
-                    "name": "Read File from Bucket",
-                    "description": "Read file from source GCP bucket",
+                    "label": "Read File",
+                    "name": "Read File",
+                    "description": "Read file from local filesystem",
                     "input_config": {
                         "mode": "read",
-                        "bucket_name": "",
-                        "object_path": "",
-                        "credentials": ""
+                        "file_path": "",
+                        "encoding": "utf-8"
                     }
                 }
             },
@@ -154,26 +152,24 @@ async def seed_file_processing_template():
                 }
             },
             {
-                "id": "gcp_bucket-write",
-                "type": "gcp_bucket",
-                "name": "Write to Bucket",
-                "description": "Write processed file to destination bucket",
+                "id": "local_filesystem-write",
+                "type": "local_filesystem",
+                "name": "Write File",
+                "description": "Write processed file to local filesystem",
                 "position": {"x": 1600, "y": 100},
                 "input_config": {
                     "mode": "write",
-                    "bucket_name": "",
-                    "object_path": "",
-                    "credentials": ""
+                    "file_path": "",
+                    "encoding": "utf-8"
                 },
                 "data": {
-                    "label": "Write to Bucket",
-                    "name": "Write to Bucket",
-                    "description": "Write processed file to destination bucket",
+                    "label": "Write File",
+                    "name": "Write File",
+                    "description": "Write processed file to local filesystem",
                     "input_config": {
                         "mode": "write",
-                        "bucket_name": "",
-                        "object_path": "",
-                        "credentials": ""
+                        "file_path": "",
+                        "encoding": "utf-8"
                     }
                 }
             },
@@ -192,11 +188,11 @@ async def seed_file_processing_template():
             {
                 "id": "e-start-read",
                 "source": "start-1",
-                "target": "gcp_bucket-read"
+                "target": "local_filesystem-read"
             },
             {
                 "id": "e-read-loop",
-                "source": "gcp_bucket-read",
+                "source": "local_filesystem-read",
                 "target": "loop-1"
             },
             {
@@ -217,18 +213,18 @@ async def seed_file_processing_template():
                 "sourceHandle": "false"
             },
             {
-                "id": "e-generate-write-bucket",
+                "id": "e-generate-write-file",
                 "source": "agent-generate",
-                "target": "gcp_bucket-write"
+                "target": "local_filesystem-write"
             },
             {
-                "id": "e-write-write-bucket",
+                "id": "e-write-write-file",
                 "source": "agent-write",
-                "target": "gcp_bucket-write"
+                "target": "local_filesystem-write"
             },
             {
-                "id": "e-write-bucket-end",
-                "source": "gcp_bucket-write",
+                "id": "e-write-file-end",
+                "source": "local_filesystem-write",
                 "target": "end-1"
             }
         ],
@@ -240,22 +236,22 @@ async def seed_file_processing_template():
             # Check if template already exists
             result = await session.execute(
                 select(WorkflowTemplateDB).where(
-                    WorkflowTemplateDB.name == "PUBSUB Processing Workflow"
+                    WorkflowTemplateDB.name == "Local File Processing Workflow"
                 )
             )
             existing = result.scalar_one_or_none()
             
             if existing:
-                print("Template 'PUBSUB Processing Workflow' already exists. Skipping.")
+                print("Template 'Local File Processing Workflow' already exists. Skipping.")
                 return
             
             # Create new template
             template = WorkflowTemplateDB(
                 id=str(uuid.uuid4()),
-                name="PUBSUB Processing Workflow",
-                description="Process file line by line, generate missing data, and write to destination bucket",
+                name="Local File Processing Workflow",
+                description="Process local file line by line, generate missing data, and write to output file",
                 category="automation",
-                tags=["gcp", "pubsub", "data-generation", "automation"],
+                tags=["local-filesystem", "file-processing", "data-generation", "automation"],
                 definition=template_definition,
                 is_official=True,
                 difficulty="intermediate",
@@ -276,5 +272,5 @@ async def seed_file_processing_template():
 
 
 if __name__ == "__main__":
-    asyncio.run(seed_file_processing_template())
+    asyncio.run(seed_local_file_processing_template())
 

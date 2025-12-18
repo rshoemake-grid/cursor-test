@@ -27,44 +27,68 @@ async def create_workflow(
     current_user: Optional[UserDB] = Depends(get_optional_user)
 ):
     """Create a new workflow (optionally authenticated)"""
-    workflow_id = str(uuid.uuid4())
-    now = datetime.utcnow()
-    
-    # Create workflow definition
-    workflow_def = WorkflowDefinition(
-        id=workflow_id,
-        name=workflow.name,
-        description=workflow.description,
-        nodes=workflow.nodes,
-        edges=workflow.edges,
-        variables=workflow.variables,
-        created_at=now,
-        updated_at=now
-    )
-    
-    # Save to database with Phase 4 fields
-    db_workflow = WorkflowDB(
-        id=workflow_id,
-        name=workflow.name,
-        description=workflow.description,
-        definition={
-            "nodes": [node.model_dump() for node in workflow.nodes],
-            "edges": [edge.model_dump() for edge in workflow.edges],
-            "variables": workflow.variables
-        },
-        # Phase 4 fields (optional)
-        owner_id=current_user.id if current_user else None,
-        is_public=False,
-        is_template=False,
-        category=None,
-        tags=[],
-        created_at=now,
-        updated_at=now
-    )
-    
-    db.add(db_workflow)
-    await db.commit()
-    await db.refresh(db_workflow)
+    try:
+        workflow_id = str(uuid.uuid4())
+        now = datetime.utcnow()
+        
+        # Validate and process edges - ensure all have IDs
+        processed_edges = []
+        for i, edge in enumerate(workflow.edges):
+            if not hasattr(edge, 'id') or not edge.id:
+                # Generate ID if missing
+                edge_id = f"e-{edge.source}-{edge.target}-{i}"
+                edge_dict = edge.model_dump() if hasattr(edge, 'model_dump') else dict(edge)
+                edge_dict['id'] = edge_id
+                processed_edges.append(edge_dict)
+            else:
+                processed_edges.append(edge.model_dump() if hasattr(edge, 'model_dump') else dict(edge))
+        
+        # Create workflow definition
+        workflow_def = WorkflowDefinition(
+            id=workflow_id,
+            name=workflow.name,
+            description=workflow.description,
+            nodes=workflow.nodes,
+            edges=workflow.edges,
+            variables=workflow.variables,
+            created_at=now,
+            updated_at=now
+        )
+        
+        # Save to database with Phase 4 fields
+        db_workflow = WorkflowDB(
+            id=workflow_id,
+            name=workflow.name,
+            description=workflow.description,
+            definition={
+                "nodes": [node.model_dump() for node in workflow.nodes],
+                "edges": processed_edges,
+                "variables": workflow.variables
+            },
+            # Phase 4 fields (optional)
+            owner_id=current_user.id if current_user else None,
+            is_public=False,
+            is_template=False,
+            category=None,
+            tags=[],
+            created_at=now,
+            updated_at=now
+        )
+        
+        db.add(db_workflow)
+        await db.commit()
+        await db.refresh(db_workflow)
+        
+        # Convert processed edges back to Edge objects for response
+        from ..models.schemas import Edge
+        response_edges = [Edge(**e) for e in processed_edges]
+    except HTTPException:
+        raise
+    except Exception as e:
+        import traceback
+        print(f"Error creating workflow: {e}")
+        print(traceback.format_exc())
+        raise HTTPException(status_code=422, detail=f"Validation error: {str(e)}")
     
     return WorkflowResponse(
         id=db_workflow.id,
@@ -72,7 +96,7 @@ async def create_workflow(
         description=db_workflow.description,
         version=db_workflow.version,
         nodes=workflow.nodes,
-        edges=workflow.edges,
+        edges=response_edges if 'response_edges' in locals() else workflow.edges,
         variables=workflow.variables,
         created_at=db_workflow.created_at,
         updated_at=db_workflow.updated_at
@@ -106,31 +130,60 @@ async def list_workflows(db: AsyncSession = Depends(get_db)):
 @router.get("/workflows/{workflow_id}", response_model=WorkflowResponse)
 async def get_workflow(workflow_id: str, db: AsyncSession = Depends(get_db)):
     """Get a specific workflow"""
-    result = await db.execute(
-        select(WorkflowDB).where(WorkflowDB.id == workflow_id)
-    )
-    workflow = result.scalar_one_or_none()
-    
-    if not workflow:
-        raise HTTPException(status_code=404, detail="Workflow not found")
-    
-    from ..models.schemas import Node, Edge
-    
-    definition = workflow.definition
-    nodes = [Node(**node_data) for node_data in definition.get("nodes", [])]
-    edges = [Edge(**edge_data) for edge_data in definition.get("edges", [])]
-    
-    return WorkflowResponse(
-        id=workflow.id,
-        name=workflow.name,
-        description=workflow.description,
-        version=workflow.version,
-        nodes=nodes,
-        edges=edges,
-        variables=definition.get("variables", {}),
-        created_at=workflow.created_at,
-        updated_at=workflow.updated_at
-    )
+    try:
+        result = await db.execute(
+            select(WorkflowDB).where(WorkflowDB.id == workflow_id)
+        )
+        workflow = result.scalar_one_or_none()
+        
+        if not workflow:
+            raise HTTPException(status_code=404, detail="Workflow not found")
+        
+        from ..models.schemas import Node, Edge
+        
+        definition = workflow.definition
+        
+        # Reconstruct nodes with error handling
+        nodes = []
+        for i, node_data in enumerate(definition.get("nodes", [])):
+            try:
+                nodes.append(Node(**node_data))
+            except Exception as e:
+                print(f"Error reconstructing node {i}: {e}")
+                print(f"Node data: {node_data}")
+                raise HTTPException(status_code=422, detail=f"Invalid node data at index {i}: {str(e)}")
+        
+        # Reconstruct edges with error handling - ensure all have IDs
+        edges = []
+        for i, edge_data in enumerate(definition.get("edges", [])):
+            try:
+                # Ensure edge has an ID
+                if "id" not in edge_data or not edge_data["id"]:
+                    edge_data["id"] = f"e-{edge_data.get('source', 'unknown')}-{edge_data.get('target', 'unknown')}-{i}"
+                edges.append(Edge(**edge_data))
+            except Exception as e:
+                print(f"Error reconstructing edge {i}: {e}")
+                print(f"Edge data: {edge_data}")
+                raise HTTPException(status_code=422, detail=f"Invalid edge data at index {i}: {str(e)}")
+        
+        return WorkflowResponse(
+            id=workflow.id,
+            name=workflow.name,
+            description=workflow.description,
+            version=workflow.version,
+            nodes=nodes,
+            edges=edges,
+            variables=definition.get("variables", {}),
+            created_at=workflow.created_at,
+            updated_at=workflow.updated_at
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        import traceback
+        print(f"Error getting workflow: {e}")
+        print(traceback.format_exc())
+        raise HTTPException(status_code=422, detail=f"Error loading workflow: {str(e)}")
 
 
 @router.put("/workflows/{workflow_id}", response_model=WorkflowResponse)
@@ -141,31 +194,55 @@ async def update_workflow(
     current_user: Optional[UserDB] = Depends(get_optional_user)
 ):
     """Update an existing workflow"""
-    # Get existing workflow
-    result = await db.execute(
-        select(WorkflowDB).where(WorkflowDB.id == workflow_id)
-    )
-    db_workflow = result.scalar_one_or_none()
-    
-    if not db_workflow:
-        raise HTTPException(status_code=404, detail="Workflow not found")
-    
-    # Check permissions (if user is authenticated, they must own the workflow)
-    if current_user and db_workflow.owner_id and db_workflow.owner_id != current_user.id:
-        raise HTTPException(status_code=403, detail="Not authorized to update this workflow")
-    
-    # Update workflow
-    db_workflow.name = workflow.name
-    db_workflow.description = workflow.description
-    db_workflow.definition = {
-        "nodes": [node.model_dump() for node in workflow.nodes],
-        "edges": [edge.model_dump() for edge in workflow.edges],
-        "variables": workflow.variables
-    }
-    db_workflow.updated_at = datetime.utcnow()
-    
-    await db.commit()
-    await db.refresh(db_workflow)
+    try:
+        # Get existing workflow
+        result = await db.execute(
+            select(WorkflowDB).where(WorkflowDB.id == workflow_id)
+        )
+        db_workflow = result.scalar_one_or_none()
+        
+        if not db_workflow:
+            raise HTTPException(status_code=404, detail="Workflow not found")
+        
+        # Check permissions (if user is authenticated, they must own the workflow)
+        if current_user and db_workflow.owner_id and db_workflow.owner_id != current_user.id:
+            raise HTTPException(status_code=403, detail="Not authorized to update this workflow")
+        
+        # Validate and process edges - ensure all have IDs
+        processed_edges = []
+        for i, edge in enumerate(workflow.edges):
+            if not hasattr(edge, 'id') or not edge.id:
+                # Generate ID if missing
+                edge_id = f"e-{edge.source}-{edge.target}-{i}"
+                edge_dict = edge.model_dump() if hasattr(edge, 'model_dump') else dict(edge)
+                edge_dict['id'] = edge_id
+                processed_edges.append(edge_dict)
+            else:
+                processed_edges.append(edge.model_dump() if hasattr(edge, 'model_dump') else dict(edge))
+        
+        # Update workflow
+        db_workflow.name = workflow.name
+        db_workflow.description = workflow.description
+        db_workflow.definition = {
+            "nodes": [node.model_dump() for node in workflow.nodes],
+            "edges": processed_edges,
+            "variables": workflow.variables
+        }
+        db_workflow.updated_at = datetime.utcnow()
+        
+        await db.commit()
+        await db.refresh(db_workflow)
+        
+        # Convert processed edges back to Edge objects for response
+        from ..models.schemas import Edge
+        response_edges = [Edge(**e) for e in processed_edges]
+    except HTTPException:
+        raise
+    except Exception as e:
+        import traceback
+        print(f"Error updating workflow: {e}")
+        print(traceback.format_exc())
+        raise HTTPException(status_code=422, detail=f"Validation error: {str(e)}")
     
     return WorkflowResponse(
         id=db_workflow.id,
@@ -173,7 +250,7 @@ async def update_workflow(
         description=db_workflow.description,
         version=db_workflow.version,
         nodes=workflow.nodes,
-        edges=workflow.edges,
+        edges=response_edges if 'response_edges' in locals() else workflow.edges,
         variables=workflow.variables,
         created_at=db_workflow.created_at,
         updated_at=db_workflow.updated_at

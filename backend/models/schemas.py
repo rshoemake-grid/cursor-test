@@ -78,10 +78,15 @@ class Node(BaseModel):
 
 class Edge(BaseModel):
     """An edge connecting two nodes"""
-    id: str
+    id: Optional[str] = None  # Optional - will be auto-generated if missing
     source: str
     target: str
     label: Optional[str] = None
+    
+    def model_post_init(self, __context: Any) -> None:
+        """Auto-generate ID if missing"""
+        if not self.id:
+            self.id = f"e-{self.source}-{self.target}"
 
 
 class WorkflowDefinition(BaseModel):

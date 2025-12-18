@@ -59,6 +59,12 @@ class WorkflowExecutorV3:
             
             # Debug logging
             await self._log("INFO", None, f"Workflow has {len(self.workflow.nodes)} nodes and {len(self.workflow.edges)} edges")
+            
+            # Log if any edges were filtered out due to deleted nodes
+            valid_node_ids = {node.id for node in self.workflow.nodes}
+            invalid_edges = [e for e in self.workflow.edges if e.source not in valid_node_ids or e.target not in valid_node_ids]
+            if invalid_edges:
+                await self._log("WARNING", None, f"Filtered out {len(invalid_edges)} edges referencing deleted nodes: {[(e.source, e.target) for e in invalid_edges]}")
             if self.workflow.nodes:
                 await self._log("INFO", None, f"Nodes: {[f'{n.id}:{n.type.value}' for n in self.workflow.nodes]}")
             else:
@@ -95,13 +101,26 @@ class WorkflowExecutorV3:
         return self.execution_state
     
     def _build_graph(self):
-        """Build adjacency map and in-degree map"""
+        """Build adjacency map and in-degree map, filtering out edges to deleted nodes"""
+        # Create set of valid node IDs for quick lookup
+        valid_node_ids = {node.id for node in self.workflow.nodes}
+        
+        # Initialize adjacency and in-degree maps only for existing nodes
         adjacency: Dict[str, List[str]] = {node.id: [] for node in self.workflow.nodes}
         in_degree: Dict[str, int] = {node.id: 0 for node in self.workflow.nodes}
         
+        # Only process edges that connect existing nodes
         for edge in self.workflow.edges:
-            adjacency[edge.source].append(edge.target)
-            in_degree[edge.target] += 1
+            # Skip edges that reference deleted nodes
+            if edge.source not in valid_node_ids:
+                continue
+            if edge.target not in valid_node_ids:
+                continue
+            
+            # Only add edge if both nodes exist
+            if edge.source in adjacency and edge.target in in_degree:
+                adjacency[edge.source].append(edge.target)
+                in_degree[edge.target] += 1
         
         return adjacency, in_degree
     
