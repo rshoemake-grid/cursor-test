@@ -12,6 +12,7 @@ from backend.api.marketplace_routes import router as marketplace_router
 from backend.api.debug_routes import router as debug_router
 from backend.api.import_export_routes import router as import_export_router
 from backend.api.settings_routes import router as settings_router
+from backend.api.workflow_chat_routes import router as workflow_chat_router
 from backend.database import init_db
 
 
@@ -55,6 +56,7 @@ app.include_router(marketplace_router)
 app.include_router(debug_router)
 app.include_router(import_export_router)
 app.include_router(settings_router)
+app.include_router(workflow_chat_router)
 
 
 @app.get("/")

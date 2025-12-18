@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
-import { X, ChevronDown, ChevronUp, Loader, CheckCircle, XCircle, Clock, Trash2 } from 'lucide-react'
+import { X, ChevronDown, ChevronUp, Loader, CheckCircle, XCircle, Clock, Trash2, MessageSquare, Terminal } from 'lucide-react'
+import WorkflowChat from './WorkflowChat'
 
 interface ExecutionLog {
   timestamp: string
@@ -29,16 +30,19 @@ interface ExecutionConsoleProps {
   activeWorkflowId: string | null
   onCloseWorkflow: (workflowId: string) => void
   onClearExecutions: (workflowId: string) => void
+  onWorkflowUpdate?: (changes: any) => void
 }
 
 export default function ExecutionConsole({ 
   workflowTabs, 
   activeWorkflowId,
   onCloseWorkflow,
-  onClearExecutions
+  onClearExecutions,
+  onWorkflowUpdate
 }: ExecutionConsoleProps) {
   const [isExpanded, setIsExpanded] = useState(false)
   const [height, setHeight] = useState(300)
+  const [consoleTab, setConsoleTab] = useState<'executions' | 'chat'>('executions')
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const isResizing = useRef(false)
   const startY = useRef(0)
@@ -103,8 +107,8 @@ export default function ExecutionConsole({
     return date.toLocaleTimeString('en-US', { hour12: false })
   }
 
-  const activeTab = workflowTabs.find(tab => tab.workflowId === activeWorkflowId)
-  const activeExecution = activeTab?.executions.find(e => e.id === activeTab.activeExecutionId) || activeTab?.executions[0]
+  const activeWorkflowTab = workflowTabs.find(tab => tab.workflowId === activeWorkflowId)
+  const activeExecution = activeWorkflowTab?.executions.find(e => e.id === activeWorkflowTab.activeExecutionId) || activeWorkflowTab?.executions[0]
 
   // Always show the console bar
   return (
@@ -125,7 +129,36 @@ export default function ExecutionConsole({
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
             <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
-            <span className="font-semibold text-sm">Workflow Executions</span>
+            <span className="font-semibold text-sm">Console</span>
+          </div>
+
+          {/* Tab Switcher */}
+          <div className="flex items-center gap-1 bg-gray-900 rounded-lg p-1">
+            <button
+              onClick={() => setConsoleTab('executions')}
+              className={`px-3 py-1 rounded text-xs flex items-center gap-2 transition-colors ${
+                consoleTab === 'executions'
+                  ? 'bg-gray-700 text-white'
+                  : 'text-gray-400 hover:text-gray-200'
+              }`}
+            >
+              <Terminal className="w-3 h-3" />
+              Executions
+            </button>
+            <button
+              onClick={() => {
+                setConsoleTab('chat')
+                setIsExpanded(true)
+              }}
+              className={`px-3 py-1 rounded text-xs flex items-center gap-2 transition-colors ${
+                consoleTab === 'chat'
+                  ? 'bg-gray-700 text-white'
+                  : 'text-gray-400 hover:text-gray-200'
+              }`}
+            >
+              <MessageSquare className="w-3 h-3" />
+              Chat
+            </button>
           </div>
 
           {/* Workflow Tabs */}
@@ -179,9 +212,9 @@ export default function ExecutionConsole({
         </div>
 
         <div className="flex items-center gap-2">
-          {activeTab && activeTab.executions.length > 0 && (
+          {consoleTab === 'executions' && activeWorkflowTab && activeWorkflowTab.executions.length > 0 && (
             <button
-              onClick={() => onClearExecutions(activeTab.workflowId)}
+              onClick={() => onClearExecutions(activeWorkflowTab.workflowId)}
               className="px-2 py-1 text-xs text-gray-400 hover:text-red-400 flex items-center gap-1"
               title="Clear execution history"
             >
@@ -200,25 +233,30 @@ export default function ExecutionConsole({
 
       {/* Console Content */}
       {isExpanded && (
-        <div className="overflow-auto" style={{ height: `${height - 48}px` }}>
-          {!activeTab || activeTab.executions.length === 0 ? (
+        <div className="overflow-hidden" style={{ height: `${height - 48}px` }}>
+          {consoleTab === 'chat' ? (
+            <WorkflowChat 
+              workflowId={activeWorkflowId}
+              onWorkflowUpdate={onWorkflowUpdate}
+            />
+          ) : !activeWorkflowTab || activeWorkflowTab.executions.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full text-gray-500">
               <Clock className="w-12 h-12 mb-4 opacity-50" />
               <p className="text-lg font-medium">No Executions Yet</p>
               <p className="text-sm mt-2">
-                {activeTab 
+                {activeWorkflowTab 
                   ? 'Click the Execute button to run this workflow'
                   : 'Load a workflow to see execution history'}
               </p>
             </div>
           ) : (
-            <div className="p-4">
+            <div className="overflow-auto p-4" style={{ height: `${height - 48}px` }}>
               {/* Execution Selector */}
-              {activeTab.executions.length > 1 && (
+              {activeWorkflowTab.executions.length > 1 && (
                 <div className="mb-4 pb-4 border-b border-gray-700">
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className="text-xs text-gray-400 font-medium">Execution History:</span>
-                    {activeTab.executions.map((exec, idx) => {
+                    {activeWorkflowTab.executions.map((exec, idx) => {
                       const isActiveExec = exec.id === activeExecution?.id
                       return (
                         <button
@@ -234,7 +272,7 @@ export default function ExecutionConsole({
                           title={`Started: ${formatTime(exec.startedAt)}`}
                         >
                           {getStatusIcon(exec.status)}
-                          <span>#{activeTab.executions.length - idx}</span>
+                          <span>#{activeWorkflowTab.executions.length - idx}</span>
                           <span className="text-gray-500">{exec.id.slice(0, 8)}</span>
                         </button>
                       )

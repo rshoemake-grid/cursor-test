@@ -66,6 +66,19 @@ export default function WorkflowBuilder({
   const [edges, setEdges, onEdgesChangeBase] = useEdgesState([])
   const [selectedNodeId, setSelectedNodeId] = React.useState<string | null>(null)
   const [localWorkflowId, setLocalWorkflowId] = useState<string | null>(workflowId)
+  
+  // Refs to access current nodes/edges in callbacks
+  const nodesRef = React.useRef(nodes)
+  const edgesRef = React.useRef(edges)
+  
+  // Keep refs in sync with state
+  React.useEffect(() => {
+    nodesRef.current = nodes
+  }, [nodes])
+  
+  React.useEffect(() => {
+    edgesRef.current = edges
+  }, [edges])
   const [localWorkflowName, setLocalWorkflowName] = useState<string>('Untitled Workflow')
   const [localWorkflowDescription, setLocalWorkflowDescription] = useState<string>('')
   const [variables, setVariables] = useState<Record<string, any>>({})
@@ -217,6 +230,123 @@ export default function WorkflowBuilder({
       onExecutionStart(executionId)
     }
   }, [onExecutionStart])
+
+  // Handle workflow updates from chat
+  const handleWorkflowUpdate = useCallback((changes: any) => {
+    if (!changes) return
+
+    // Apply node additions first (edges need nodes to exist)
+    if (changes.nodes_to_add && changes.nodes_to_add.length > 0) {
+      setNodes((nds) => {
+        const newNodes = [...nds, ...changes.nodes_to_add.map((n: any) => ({
+          ...n,
+          draggable: true,
+          selected: false
+        }))]
+        return newNodes
+      })
+      notifyModified()
+    }
+
+    // Apply node updates
+    if (changes.nodes_to_update && changes.nodes_to_update.length > 0) {
+      setNodes((nds) =>
+        nds.map((node) => {
+          const update = changes.nodes_to_update.find((u: any) => u.node_id === node.id)
+          if (update) {
+            return {
+              ...node,
+              data: {
+                ...node.data,
+                ...update.updates,
+              },
+            }
+          }
+          return node
+        })
+      )
+      notifyModified()
+    }
+
+    // Apply node deletions
+    if (changes.nodes_to_delete && changes.nodes_to_delete.length > 0) {
+      setNodes((nds) => nds.filter((node) => !changes.nodes_to_delete.includes(node.id)))
+      // Also remove edges connected to deleted nodes
+      setEdges((eds) =>
+        eds.filter(
+          (edge) =>
+            !changes.nodes_to_delete.includes(edge.source) &&
+            !changes.nodes_to_delete.includes(edge.target)
+        )
+      )
+      notifyModified()
+    }
+
+    // Apply edge additions - use refs to access current state
+    if (changes.edges_to_add && changes.edges_to_add.length > 0) {
+      // Process edges after a brief delay to ensure nodes are updated
+      setTimeout(() => {
+        const currentNodes = nodesRef.current
+        const currentEdges = edgesRef.current
+        const nodeIds = new Set(currentNodes.map(n => n.id))
+        
+        console.log('Adding edges:', changes.edges_to_add)
+        console.log('Current nodes:', Array.from(nodeIds))
+        console.log('Current edges:', currentEdges.map(e => `${e.source} -> ${e.target}`))
+        
+        let updatedEdges = [...currentEdges]
+        
+        for (const edgeToAdd of changes.edges_to_add) {
+          // Validate that both source and target nodes exist
+          if (!nodeIds.has(edgeToAdd.source)) {
+            console.warn(`Cannot connect edge: source node "${edgeToAdd.source}" does not exist. Available nodes:`, Array.from(nodeIds))
+            continue
+          }
+          if (!nodeIds.has(edgeToAdd.target)) {
+            console.warn(`Cannot connect edge: target node "${edgeToAdd.target}" does not exist. Available nodes:`, Array.from(nodeIds))
+            continue
+          }
+          
+          // Check if edge already exists
+          const edgeExists = updatedEdges.some(
+            e => e.source === edgeToAdd.source && e.target === edgeToAdd.target
+          )
+          if (edgeExists) {
+            console.warn(`Edge from "${edgeToAdd.source}" to "${edgeToAdd.target}" already exists`)
+            continue
+          }
+          
+          // Convert to React Flow Connection format and use addEdge helper
+          const connection: Connection = {
+            source: edgeToAdd.source,
+            target: edgeToAdd.target,
+            sourceHandle: edgeToAdd.sourceHandle || null,
+            targetHandle: edgeToAdd.targetHandle || null,
+          }
+          console.log('Adding connection:', connection)
+          // Use addEdge to properly format the edge - it returns the updated array
+          updatedEdges = addEdge(connection, updatedEdges)
+          console.log('Updated edges count:', updatedEdges.length)
+        }
+        
+        setEdges(updatedEdges)
+        notifyModified()
+      }, 50) // Small delay to ensure nodes are updated
+    }
+
+    // Apply edge deletions
+    if (changes.edges_to_delete && changes.edges_to_delete.length > 0) {
+      setEdges((eds) =>
+        eds.filter(
+          (edge) =>
+            !changes.edges_to_delete.some(
+              (del: any) => del.source === edge.source && del.target === edge.target
+            )
+        )
+      )
+      notifyModified()
+    }
+  }, [setNodes, setEdges, notifyModified])
 
 
   const onConnect = useCallback(
@@ -408,6 +538,7 @@ export default function WorkflowBuilder({
             activeWorkflowId={localWorkflowId || null}
             onCloseWorkflow={onCloseWorkflow || (() => {})}
             onClearExecutions={onClearExecutions || (() => {})}
+            onWorkflowUpdate={handleWorkflowUpdate}
           />
         </div>
 
