@@ -37,7 +37,7 @@ export default function ExecutionConsole({
   onCloseWorkflow,
   onClearExecutions
 }: ExecutionConsoleProps) {
-  const [isExpanded, setIsExpanded] = useState(true)
+  const [isExpanded, setIsExpanded] = useState(false)
   const [height, setHeight] = useState(300)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const isResizing = useRef(false)

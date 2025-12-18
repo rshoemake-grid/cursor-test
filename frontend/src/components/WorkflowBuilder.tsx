@@ -20,6 +20,7 @@ import NodePanel from './NodePanel'
 import PropertyPanel from './PropertyPanel'
 import Toolbar from './Toolbar'
 import ExecutionConsole from './ExecutionConsole'
+import ContextMenu from './NodeContextMenu'
 import { api } from '../api/client'
 
 interface Execution {
@@ -71,6 +72,7 @@ export default function WorkflowBuilder({
   const isLoadingRef = useRef<boolean>(false)
   const isDraggingRef = useRef<boolean>(false)
   const lastLoadedWorkflowIdRef = useRef<string | null>(null)
+  const [contextMenu, setContextMenu] = useState<{ nodeId?: string; edgeId?: string; x: number; y: number } | null>(null)
 
   // Track modifications
   const notifyModified = useCallback(() => {
@@ -216,6 +218,7 @@ export default function WorkflowBuilder({
     }
   }, [onExecutionStart])
 
+
   const onConnect = useCallback(
     (connection: Connection) => {
       setEdges((eds) => addEdge(connection, eds))
@@ -286,7 +289,38 @@ export default function WorkflowBuilder({
 
   const onPaneClick = useCallback(() => {
     setSelectedNodeId(null)
+    setContextMenu(null) // Close context menu when clicking on pane
   }, [])
+
+  const onNodeContextMenu = useCallback(
+    (event: React.MouseEvent, node: any) => {
+      event.preventDefault()
+      event.stopPropagation()
+      
+      // Get the position relative to the viewport
+      setContextMenu({
+        nodeId: node.id,
+        x: event.clientX,
+        y: event.clientY,
+      })
+    },
+    []
+  )
+
+  const onEdgeContextMenu = useCallback(
+    (event: React.MouseEvent, edge: any) => {
+      event.preventDefault()
+      event.stopPropagation()
+      
+      // Get the position relative to the viewport
+      setContextMenu({
+        edgeId: edge.id,
+        x: event.clientX,
+        y: event.clientY,
+      })
+    },
+    []
+  )
 
   return (
     <ReactFlowProvider>
@@ -322,6 +356,8 @@ export default function WorkflowBuilder({
                 onDrop={onDrop}
                 onDragOver={onDragOver}
                 onNodeClick={onNodeClick}
+                onNodeContextMenu={onNodeContextMenu}
+                onEdgeContextMenu={onEdgeContextMenu}
                 onPaneClick={onPaneClick}
                 nodeTypes={nodeTypes}
                 nodesDraggable={true}
@@ -382,6 +418,31 @@ export default function WorkflowBuilder({
           nodes={nodes}
         />
       </div>
+      
+      {/* Context Menu */}
+      {contextMenu && (
+        <>
+          {/* Backdrop to close menu when clicking outside */}
+          <div
+            className="fixed inset-0 z-40"
+            onClick={() => setContextMenu(null)}
+          />
+          <ContextMenu
+            nodeId={contextMenu.nodeId}
+            edgeId={contextMenu.edgeId}
+            x={contextMenu.x}
+            y={contextMenu.y}
+            onClose={() => setContextMenu(null)}
+            onDelete={() => {
+              // Clear selection if deleted node was selected
+              if (contextMenu.nodeId && selectedNodeId === contextMenu.nodeId) {
+                setSelectedNodeId(null)
+              }
+              notifyModified()
+            }}
+          />
+        </>
+      )}
     </ReactFlowProvider>
   )
 }
