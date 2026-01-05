@@ -11,7 +11,9 @@ echo ""
 # Check if backend dependencies are installed
 if [ ! -d "venv" ] && [ ! -f "requirements.txt" ]; then
     echo "⚠️  Python dependencies not found. Please run:"
-    echo "   pip install -r requirements.txt"
+    PYTHON_CMD=$(command -v python3 || command -v python || echo "python3")
+    PIP_CMD=$(command -v pip3 || command -v pip || echo "pip3")
+    echo "   $PIP_CMD install -r requirements.txt"
     exit 1
 fi
 
@@ -51,7 +53,9 @@ trap cleanup EXIT INT TERM
 
 # Start backend in background
 echo "▶️  Starting backend on http://localhost:8000"
-python main.py > backend.log 2>&1 &
+# Use python3 if available, otherwise fall back to python
+PYTHON_CMD=$(command -v python3 || command -v python || echo "python3")
+$PYTHON_CMD main.py > backend.log 2>&1 &
 BACKEND_PID=$!
 
 # Wait for backend to be ready

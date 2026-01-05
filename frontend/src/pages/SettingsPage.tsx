@@ -38,6 +38,31 @@ const PROVIDER_TEMPLATES = {
       'claude-3-haiku-20240307'
     ]
   },
+  gemini: {
+    name: 'Google Gemini',
+    type: 'gemini' as const,
+    baseUrl: 'https://generativelanguage.googleapis.com/v1beta',
+    defaultModel: 'gemini-2.5-flash',
+    models: [
+      // Gemini 3.0 models
+      'gemini-3-pro-preview',
+      'gemini-3-flash-preview',
+      'gemini-3-pro-image-preview',
+      // Gemini 2.5 models
+      'gemini-2.5-pro',
+      'gemini-2.5-flash',
+      'gemini-2.5-flash-lite',
+      'gemini-2.5-flash-image',
+      'gemini-2.5-flash-preview-09-2025',
+      // Gemini 2.0 models
+      'gemini-2.0-flash',
+      'gemini-2.0-flash-lite',
+      // Gemini 1.5 models (legacy)
+      'gemini-1.5-pro',
+      'gemini-1.5-flash',
+      'gemini-1.5-flash-8b'
+    ]
+  },
   custom: {
     name: 'Custom Provider',
     type: 'custom' as const,

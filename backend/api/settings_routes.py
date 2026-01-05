@@ -81,6 +81,8 @@ async def test_llm_connection(test_request: LLMTestRequest):
             return await _test_openai(test_request)
         elif test_request.type == "anthropic":
             return await _test_anthropic(test_request)
+        elif test_request.type == "gemini":
+            return await _test_gemini(test_request)
         elif test_request.type == "custom":
             return await _test_custom(test_request)
         else:
@@ -156,6 +158,48 @@ async def _test_anthropic(test_request: LLMTestRequest):
             return {"status": "success", "message": "Connected successfully"}
         else:
             return {"status": "error", "message": f"API returned status {response.status_code}: {response.text}"}
+
+
+async def _test_gemini(test_request: LLMTestRequest):
+    """Test Google Gemini API connection"""
+    base_url = test_request.base_url or "https://generativelanguage.googleapis.com/v1beta"
+    
+    try:
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            response = await client.post(
+                f"{base_url}/models/{test_request.model}:generateContent?key={test_request.api_key}",
+                headers={
+                    "Content-Type": "application/json"
+                },
+                json={
+                    "contents": [{
+                        "parts": [{"text": "Hello"}]
+                    }],
+                    "generationConfig": {
+                        "maxOutputTokens": 5
+                    }
+                }
+            )
+            
+            if response.status_code == 200:
+                return {"status": "success", "message": "Connected successfully! ✓"}
+            elif response.status_code == 400:
+                error_data = response.json() if response.text else {}
+                error_msg = error_data.get("error", {}).get("message", response.text[:200])
+                return {"status": "error", "message": f"API error: {error_msg}"}
+            elif response.status_code == 401:
+                return {"status": "error", "message": "Invalid API key (401 Unauthorized)"}
+            elif response.status_code == 429:
+                return {"status": "error", "message": "Rate limit exceeded (429)"}
+            else:
+                error_text = response.text[:200]  # Limit error text
+                return {"status": "error", "message": f"API error {response.status_code}: {error_text}"}
+    except httpx.ConnectError as e:
+        return {"status": "error", "message": f"Cannot connect to {base_url}: {str(e)}"} 
+    except httpx.TimeoutException:
+        return {"status": "error", "message": "Connection timed out after 30 seconds"}
+    except Exception as e:
+        return {"status": "error", "message": f"Error: {str(e)}"}
 
 
 async def _test_custom(test_request: LLMTestRequest):

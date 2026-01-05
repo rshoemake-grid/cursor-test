@@ -60,6 +60,15 @@ class UnifiedLLMAgent(BaseAgent):
                 "model": "claude-3-5-sonnet-20241022"
             }
         
+        gemini_key = os.getenv("GEMINI_API_KEY")
+        if gemini_key:
+            return {
+                "type": "gemini",
+                "api_key": gemini_key,
+                "base_url": "https://generativelanguage.googleapis.com/v1beta",
+                "model": "gemini-2.5-flash"
+            }
+        
         return None
     
     async def execute(self, inputs: Dict[str, Any]) -> Any:
@@ -78,6 +87,8 @@ class UnifiedLLMAgent(BaseAgent):
             return await self._execute_openai(user_message, model)
         elif provider_type == "anthropic":
             return await self._execute_anthropic(user_message, model)
+        elif provider_type == "gemini":
+            return await self._execute_gemini(user_message, model)
         elif provider_type == "custom":
             return await self._execute_custom(user_message, model)
         else:
@@ -163,6 +174,62 @@ class UnifiedLLMAgent(BaseAgent):
             
             data = response.json()
             return data["content"][0]["text"]
+    
+    async def _execute_gemini(self, user_message: str, model: str) -> str:
+        """Execute using Google Gemini API"""
+        base_url = self.llm_config.get("base_url", "https://generativelanguage.googleapis.com/v1beta")
+        api_key = self.llm_config["api_key"]
+        
+        # Gemini API format
+        contents = [{
+            "parts": [{"text": user_message}]
+        }]
+        
+        request_data = {
+            "contents": contents
+        }
+        
+        # Add system instruction if provided
+        if self.config.system_prompt:
+            request_data["systemInstruction"] = {
+                "parts": [{"text": self.config.system_prompt}]
+            }
+        
+        # Add generation config
+        generation_config = {}
+        if self.config.temperature:
+            generation_config["temperature"] = self.config.temperature
+        if self.config.max_tokens:
+            generation_config["maxOutputTokens"] = self.config.max_tokens
+        
+        if generation_config:
+            request_data["generationConfig"] = generation_config
+        
+        async with httpx.AsyncClient(timeout=120.0) as client:
+            response = await client.post(
+                f"{base_url}/models/{model}:generateContent?key={api_key}",
+                headers={
+                    "Content-Type": "application/json"
+                },
+                json=request_data
+            )
+            
+            if response.status_code != 200:
+                raise RuntimeError(
+                    f"Gemini API request failed with status {response.status_code}: {response.text}"
+                )
+            
+            data = response.json()
+            
+            # Extract text from Gemini response
+            if "candidates" in data and len(data["candidates"]) > 0:
+                candidate = data["candidates"][0]
+                if "content" in candidate and "parts" in candidate["content"]:
+                    parts = candidate["content"]["parts"]
+                    if len(parts) > 0 and "text" in parts[0]:
+                        return parts[0]["text"]
+            
+            raise RuntimeError(f"Unexpected Gemini API response format: {data}")
     
     async def _execute_custom(self, user_message: str, model: str) -> str:
         """Execute using custom OpenAI-compatible API"""
