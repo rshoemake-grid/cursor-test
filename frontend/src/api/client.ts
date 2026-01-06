@@ -29,6 +29,13 @@ export const api = {
     await axios.delete(`${API_BASE_URL}/workflows/${id}`)
   },
 
+  async bulkDeleteWorkflows(ids: string[]): Promise<{ message: string; deleted_count: number; failed_ids?: string[] }> {
+    const response = await axios.post(`${API_BASE_URL}/workflows/bulk-delete`, {
+      workflow_ids: ids
+    })
+    return response.data
+  },
+
   // Executions
   async executeWorkflow(
     workflowId: string,

@@ -4,6 +4,7 @@ from typing import List, Optional
 from fastapi import APIRouter, HTTPException, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
+from pydantic import BaseModel
 
 from ..models.schemas import (
     WorkflowCreate,
@@ -307,6 +308,59 @@ async def delete_workflow(
     
     await db.delete(db_workflow)
     await db.commit()
+
+
+class BulkDeleteRequest(BaseModel):
+    workflow_ids: List[str]
+
+
+@router.post("/workflows/bulk-delete", status_code=200)
+async def bulk_delete_workflows(
+    request: BulkDeleteRequest,
+    db: AsyncSession = Depends(get_db),
+    current_user: Optional[UserDB] = Depends(get_optional_user)
+):
+    """Delete multiple workflows"""
+    if not request.workflow_ids:
+        raise HTTPException(status_code=400, detail="No workflow IDs provided")
+    
+    # Get all workflows
+    result = await db.execute(
+        select(WorkflowDB).where(WorkflowDB.id.in_(request.workflow_ids))
+    )
+    workflows = result.scalars().all()
+    
+    if len(workflows) != len(request.workflow_ids):
+        found_ids = {w.id for w in workflows}
+        missing_ids = set(request.workflow_ids) - found_ids
+        raise HTTPException(status_code=404, detail=f"Workflows not found: {list(missing_ids)}")
+    
+    # Check permissions for all workflows
+    deleted_count = 0
+    failed_ids = []
+    
+    for workflow in workflows:
+        # Check permissions (if user is authenticated, they must own the workflow)
+        if current_user and workflow.owner_id and workflow.owner_id != current_user.id:
+            failed_ids.append(workflow.id)
+            continue
+        
+        await db.delete(workflow)
+        deleted_count += 1
+    
+    await db.commit()
+    
+    if failed_ids:
+        return {
+            "message": f"Deleted {deleted_count} workflow(s). {len(failed_ids)} workflow(s) could not be deleted due to permissions.",
+            "deleted_count": deleted_count,
+            "failed_ids": failed_ids
+        }
+    
+    return {
+        "message": f"Successfully deleted {deleted_count} workflow(s)",
+        "deleted_count": deleted_count
+    }
 
 
 @router.post("/workflows/{workflow_id}/execute", response_model=ExecutionResponse)
