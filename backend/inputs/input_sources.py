@@ -4,6 +4,7 @@ Supports GCP Buckets, AWS S3, GCP Pub/Sub, and Local File System.
 """
 import json
 import os
+import mimetypes
 from typing import Dict, Any, Optional, List
 from pathlib import Path
 import glob
@@ -414,14 +415,30 @@ class LocalFileSystemHandler(InputSourceHandler):
         else:
             content = str(data)
         
+        # Detect mimetype from file extension
+        mimetype, _ = mimetypes.guess_type(str(path))
+        if not mimetype:
+            # Fallback for common extensions not in mimetypes
+            ext = path.suffix.lower()
+            if ext == '.jsonl':
+                mimetype = 'application/x-ndjson'  # Newline-delimited JSON
+            elif ext == '.json':
+                mimetype = 'application/json'
+            elif ext == '.txt':
+                mimetype = 'text/plain'
+            elif ext == '.csv':
+                mimetype = 'text/csv'
+            else:
+                mimetype = 'application/octet-stream'
+        
         # Log what we're writing for debugging
-        print(f"Writing to {path}: {len(content)} characters, data type: {type(data)}")
+        print(f"Writing to {path}: {len(content)} characters, data type: {type(data)}, mimetype: {mimetype}")
         
         # Write to file
         with open(path, 'w', encoding=encoding) as f:
             f.write(content)
         
-        return {"status": "success", "file_path": file_path}
+        return {"status": "success", "file_path": str(path), "mimetype": mimetype}
 
 
 # Registry of input source handlers
