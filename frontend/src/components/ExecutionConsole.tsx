@@ -31,6 +31,7 @@ interface ExecutionConsoleProps {
   onCloseWorkflow: (workflowId: string) => void
   onClearExecutions: (workflowId: string) => void
   onWorkflowUpdate?: (changes: any) => void
+  onNodeStateUpdate?: (states: Record<string, { status: string; error?: string }>) => void
 }
 
 export default function ExecutionConsole({ 
@@ -109,6 +110,23 @@ export default function ExecutionConsole({
 
   const activeWorkflowTab = workflowTabs.find(tab => tab.workflowId === activeWorkflowId)
   const activeExecution = activeWorkflowTab?.executions.find(e => e.id === activeWorkflowTab.activeExecutionId) || activeWorkflowTab?.executions[0]
+  
+  // Update node states when execution changes
+  useEffect(() => {
+    if (activeExecution && activeExecution.nodes && onNodeStateUpdate) {
+      const nodeStates: Record<string, { status: string; error?: string }> = {}
+      Object.entries(activeExecution.nodes).forEach(([nodeId, nodeState]: [string, any]) => {
+        nodeStates[nodeId] = {
+          status: nodeState.status || 'pending',
+          error: nodeState.error
+        }
+      })
+      onNodeStateUpdate(nodeStates)
+    } else if (!activeExecution && onNodeStateUpdate) {
+      // Clear node states when no active execution
+      onNodeStateUpdate({})
+    }
+  }, [activeExecution, onNodeStateUpdate])
 
   // Always show the console bar
   return (

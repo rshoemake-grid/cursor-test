@@ -9,10 +9,17 @@ const getFilename = (path: string): string => {
 }
 
 export default function AWSS3Node({ data, selected }: NodeProps) {
+  const executionStatus = (data as any).executionStatus
+  const hasError = executionStatus === 'failed'
+  
   return (
     <div
       className={`px-4 py-3 shadow-lg rounded-lg bg-white border-2 min-w-[200px] ${
-        selected ? 'border-yellow-500 border-4 shadow-xl ring-2 ring-yellow-200' : 'border-yellow-300'
+        hasError 
+          ? 'border-red-500 border-4 shadow-xl ring-2 ring-red-200' 
+          : selected 
+            ? 'border-yellow-500 border-4 shadow-xl ring-2 ring-yellow-200' 
+            : 'border-yellow-300'
       }`}
     >
       <div className="flex items-center gap-2 mb-2">

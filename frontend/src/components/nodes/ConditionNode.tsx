@@ -2,10 +2,17 @@ import { Handle, Position, type NodeProps } from '@xyflow/react'
 import { GitBranch } from 'lucide-react'
 
 export default function ConditionNode({ data, selected }: NodeProps) {
+  const executionStatus = (data as any).executionStatus
+  const hasError = executionStatus === 'failed'
+  
   return (
     <div
       className={`px-4 py-3 shadow-lg rounded-lg bg-white border-2 min-w-[180px] ${
-        selected ? 'border-primary-500 border-4 shadow-xl ring-2 ring-primary-200' : 'border-gray-300'
+        hasError 
+          ? 'border-red-500 border-4 shadow-xl ring-2 ring-red-200' 
+          : selected 
+            ? 'border-primary-500 border-4 shadow-xl ring-2 ring-primary-200' 
+            : 'border-gray-300'
       }`}
     >
       <Handle type="target" position={Position.Top} className="w-3 h-3" />

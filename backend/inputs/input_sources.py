@@ -331,6 +331,10 @@ class LocalFileSystemHandler(InputSourceHandler):
         file_path = os.path.expanduser(file_path)
         path = Path(file_path).resolve()
         
+        # Check if file exists
+        if not path.exists():
+            raise FileNotFoundError(f"File not found: {file_path}. Please check that the file exists and the path is correct.")
+        
         if path.is_file():
             # Read single file
             with open(path, 'r', encoding=encoding) as f:

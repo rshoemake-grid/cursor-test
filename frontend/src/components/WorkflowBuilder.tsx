@@ -67,6 +67,7 @@ export default function WorkflowBuilder({
   const [edges, setEdges, onEdgesChangeBase] = useEdgesState([])
   const [selectedNodeId, setSelectedNodeId] = React.useState<string | null>(null)
   const [localWorkflowId, setLocalWorkflowId] = useState<string | null>(workflowId)
+  const [nodeExecutionStates, setNodeExecutionStates] = useState<Record<string, { status: string; error?: string }>>({})
   
   // Component to handle keyboard shortcuts (must be inside ReactFlowProvider)
   const KeyboardHandler = () => {
@@ -190,6 +191,7 @@ export default function WorkflowBuilder({
   // Handles both flattened (top-level) and nested (data object) structures
   const workflowNodeToNode = useCallback((wfNode: any) => {
     const data = wfNode.data || {}
+    const nodeExecutionState = nodeExecutionStates[wfNode.id]
     // Merge top-level fields with data object fields, preferring data object
     return {
       id: wfNode.id,
@@ -207,9 +209,12 @@ export default function WorkflowBuilder({
         loop_config: data.loop_config || wfNode.loop_config || {},
         input_config: data.input_config || wfNode.input_config || {},
         inputs: data.inputs || wfNode.inputs || [],
+        // Add execution state for visual feedback
+        executionStatus: nodeExecutionState?.status,
+        executionError: nodeExecutionState?.error,
       },
     }
-  }, [])
+  }, [nodeExecutionStates])
 
   // Load workflow if ID provided and create/activate tab
   useEffect(() => {
