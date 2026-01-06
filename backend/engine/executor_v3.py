@@ -347,7 +347,19 @@ class WorkflowExecutorV3:
                     
                     # Extract data to write
                     data_to_write = None
+                    # Check if node_inputs is not empty (empty dict {} is falsy, but we want to check for actual content)
+                    has_content = False
                     if node_inputs:
+                        if isinstance(node_inputs, dict):
+                            # Check if dict has any non-empty values
+                            has_content = any(
+                                v is not None and v != '' and v != {} 
+                                for v in node_inputs.values()
+                            )
+                        else:
+                            has_content = True
+                    
+                    if has_content:
                         await self._log("DEBUG", node.id, f"Node inputs keys: {list(node_inputs.keys()) if isinstance(node_inputs, dict) else 'not a dict'}")
                         
                         # If node_inputs came from a read node, it might be wrapped in {'data': ..., 'source': ...}
@@ -358,34 +370,52 @@ class WorkflowExecutorV3:
                             if len(node_inputs) == 2 and 'source' in node_inputs:
                                 # This is a wrapped read node output - extract the 'data' field
                                 data_to_write = node_inputs['data']
-                                await self._log("DEBUG", node.id, f"Extracted 'data' field from wrapped read node output (type: {type(data_to_write)})")
+                                await self._log("DEBUG", node.id, f"Extracted 'data' field from wrapped read node output (type: {type(data_to_write)}, length: {len(str(data_to_write)) if data_to_write else 0})")
                             elif len(node_inputs) == 1 and 'data' in node_inputs:
                                 # Single 'data' key - use it
                                 data_to_write = node_inputs['data']
-                                await self._log("DEBUG", node.id, f"Using 'data' field from single-key dict (type: {type(data_to_write)})")
+                                await self._log("DEBUG", node.id, f"Using 'data' field from single-key dict (type: {type(data_to_write)}, length: {len(str(data_to_write)) if data_to_write else 0})")
                             else:
-                                # Multiple keys but not a wrapped output - use entire dict
-                                data_to_write = node_inputs
-                                await self._log("DEBUG", node.id, f"Using entire dict as data (keys: {list(node_inputs.keys())})")
+                                # Multiple keys but not a wrapped output - check if 'data' has content
+                                if 'data' in node_inputs and node_inputs['data'] not in (None, '', {}):
+                                    data_to_write = node_inputs['data']
+                                    await self._log("DEBUG", node.id, f"Extracted 'data' from multi-key dict (type: {type(data_to_write)})")
+                                else:
+                                    # Use entire dict but filter out empty values
+                                    filtered_dict = {k: v for k, v in node_inputs.items() if v not in (None, '', {})}
+                                    if filtered_dict:
+                                        data_to_write = filtered_dict
+                                        await self._log("DEBUG", node.id, f"Using filtered dict as data (keys: {list(filtered_dict.keys())})")
+                                    else:
+                                        data_to_write = None
+                                        await self._log("WARNING", node.id, "All values in node_inputs are empty")
                         else:
                             # If there's a single input value, use it directly
                             if isinstance(node_inputs, dict):
-                                input_values = list(node_inputs.values())
+                                input_values = [v for v in node_inputs.values() if v not in (None, '', {})]
                                 if len(input_values) == 1:
                                     data_to_write = input_values[0]
-                                    await self._log("DEBUG", node.id, f"Using single input value (type: {type(data_to_write)})")
+                                    await self._log("DEBUG", node.id, f"Using single non-empty input value (type: {type(data_to_write)})")
+                                elif len(input_values) > 1:
+                                    # Multiple non-empty inputs - use the entire dict
+                                    data_to_write = {k: v for k, v in node_inputs.items() if v not in (None, '', {})}
+                                    await self._log("DEBUG", node.id, f"Using filtered dict with multiple values (keys: {list(data_to_write.keys()) if isinstance(data_to_write, dict) else 'not dict'})")
                                 else:
-                                    # Multiple inputs - use the entire dict
-                                    data_to_write = node_inputs
-                                    await self._log("DEBUG", node.id, f"Using entire dict with multiple values (keys: {list(node_inputs.keys())})")
+                                    data_to_write = None
+                                    await self._log("WARNING", node.id, "All input values are empty")
                             else:
                                 # Not a dict - use directly
                                 data_to_write = node_inputs
                                 await self._log("DEBUG", node.id, f"Using non-dict input directly (type: {type(data_to_write)})")
                     else:
-                        # No inputs but in write mode - use empty dict
-                        data_to_write = {}
-                        await self._log("WARNING", node.id, "No data to write - write node has no inputs and no previous node output")
+                        # No inputs or all inputs are empty
+                        data_to_write = None
+                        await self._log("WARNING", node.id, "No data to write - write node has no inputs or all inputs are empty")
+                    
+                    # Don't write if data_to_write is None or empty
+                    if data_to_write is None or data_to_write == {} or data_to_write == '':
+                        await self._log("ERROR", node.id, f"Cannot write - data_to_write is empty (value: {data_to_write})")
+                        raise ValueError(f"Write node {node.id} has no data to write. Please ensure the previous node produces output data.")
                     
                     await self._log("DEBUG", node.id, f"Final data_to_write type: {type(data_to_write)}, length: {len(str(data_to_write)) if data_to_write else 0}")
                     
