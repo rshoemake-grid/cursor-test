@@ -28,9 +28,9 @@ export default function ConditionNode({ data, selected }: NodeProps) {
         <div className="text-xs text-gray-500 mb-2">{data.description}</div>
       )}
       
-      {data.condition_config && (
+      {(data.condition_config as any)?.condition_type && (
         <div className="text-xs text-gray-600 bg-gray-50 px-2 py-1 rounded">
-          {data.condition_config.condition_type}: {data.condition_config.field}
+          {(data.condition_config as any).condition_type}: {(data.condition_config as any).field}
         </div>
       )}
       

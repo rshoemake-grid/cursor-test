@@ -39,7 +39,8 @@ export default function ExecutionConsole({
   activeWorkflowId,
   onCloseWorkflow,
   onClearExecutions,
-  onWorkflowUpdate
+  onWorkflowUpdate,
+  onNodeStateUpdate
 }: ExecutionConsoleProps) {
   const [isExpanded, setIsExpanded] = useState(false)
   const [height, setHeight] = useState(300)

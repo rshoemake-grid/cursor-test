@@ -28,9 +28,9 @@ export default function AgentNode({ data, selected }: NodeProps) {
         <div className="text-xs text-gray-500 mb-2">{data.description}</div>
       )}
       
-      {data.agent_config && (
+      {(data.agent_config as any)?.model && (
         <div className="text-xs text-gray-600 bg-gray-50 px-2 py-1 rounded">
-          {data.agent_config.model}
+          {(data.agent_config as any).model}
         </div>
       )}
       

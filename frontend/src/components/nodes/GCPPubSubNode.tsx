@@ -26,21 +26,21 @@ export default function GCPPubSubNode({ data, selected }: NodeProps) {
         <div className="text-xs text-gray-500 mb-2">{data.description}</div>
       )}
       
-      {data.input_config?.topic_name && (
+      {(data.input_config as any)?.topic_name && (
         <div className="text-xs text-gray-600 bg-gray-50 px-2 py-1 rounded mb-1">
-          Topic: {data.input_config.topic_name}
+          Topic: {(data.input_config as any).topic_name}
         </div>
       )}
       
-      {data.input_config?.subscription_name && (
+      {(data.input_config as any)?.subscription_name && (
         <div className="text-xs text-gray-600 bg-gray-50 px-2 py-1 rounded mb-1">
-          Subscription: {data.input_config.subscription_name}
+          Subscription: {(data.input_config as any).subscription_name}
         </div>
       )}
       
-      {data.input_config?.mode && (
+      {(data.input_config as any)?.mode && (
         <div className="text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded">
-          Mode: {data.input_config.mode === 'write' ? 'Publish' : 'Subscribe'}
+          Mode: {(data.input_config as any).mode === 'write' ? 'Publish' : 'Subscribe'}
         </div>
       )}
       

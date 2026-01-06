@@ -35,21 +35,21 @@ export default function LocalFileSystemNode({ data, selected }: NodeProps) {
         <div className="text-xs text-gray-500 mb-2">{data.description}</div>
       )}
       
-      {data.input_config?.file_path && (
+      {(data.input_config as any)?.file_path && (
         <div className="text-xs text-gray-600 bg-gray-50 px-2 py-1 rounded mb-1">
-          File: {getFilename(data.input_config.file_path)}
+          File: {getFilename((data.input_config as any).file_path)}
         </div>
       )}
       
-      {data.input_config?.file_pattern && (
+      {(data.input_config as any)?.file_pattern && (
         <div className="text-xs text-gray-600 bg-gray-50 px-2 py-1 rounded mb-1">
-          Pattern: {data.input_config.file_pattern}
+          Pattern: {(data.input_config as any).file_pattern}
         </div>
       )}
       
-      {data.input_config?.mode && (
+      {(data.input_config as any)?.mode && (
         <div className="text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded">
-          Mode: {data.input_config.mode === 'write' ? 'Write' : 'Read'}
+          Mode: {(data.input_config as any).mode === 'write' ? 'Write' : 'Read'}
         </div>
       )}
       

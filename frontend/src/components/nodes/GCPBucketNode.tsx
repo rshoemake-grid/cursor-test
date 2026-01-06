@@ -33,21 +33,21 @@ export default function GCPBucketNode({ data, selected }: NodeProps) {
         <div className="text-xs text-gray-500 mb-2">{data.description}</div>
       )}
       
-      {data.input_config?.bucket_name && (
+      {(data.input_config as any)?.bucket_name && (
         <div className="text-xs text-gray-600 bg-gray-50 px-2 py-1 rounded mb-1">
-          Bucket: {data.input_config.bucket_name}
+          Bucket: {(data.input_config as any).bucket_name}
         </div>
       )}
       
-      {data.input_config?.object_path && (
+      {(data.input_config as any)?.object_path && (
         <div className="text-xs text-gray-600 bg-gray-50 px-2 py-1 rounded mb-1">
-          File: {getFilename(data.input_config.object_path)}
+          File: {getFilename((data.input_config as any).object_path)}
         </div>
       )}
       
-      {data.input_config?.mode && (
+      {(data.input_config as any)?.mode && (
         <div className="text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded">
-          Mode: {data.input_config.mode === 'write' ? 'Write' : 'Read'}
+          Mode: {(data.input_config as any).mode === 'write' ? 'Write' : 'Read'}
         </div>
       )}
       

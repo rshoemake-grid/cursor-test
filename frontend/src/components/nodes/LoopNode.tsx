@@ -28,10 +28,10 @@ export default function LoopNode({ data, selected }: NodeProps) {
         <div className="text-xs text-gray-500 mb-2">{data.description}</div>
       )}
       
-      {data.loop_config && (
+      {(data.loop_config as any)?.loop_type && (
         <div className="text-xs text-gray-600 bg-gray-50 px-2 py-1 rounded">
-          {data.loop_config.loop_type}
-          {data.loop_config.max_iterations && ` (max: ${data.loop_config.max_iterations})`}
+          {(data.loop_config as any).loop_type}
+          {(data.loop_config as any).max_iterations && ` (max: ${(data.loop_config as any).max_iterations})`}
         </div>
       )}
       
