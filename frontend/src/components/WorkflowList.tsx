@@ -148,13 +148,21 @@ export default function WorkflowList({ onSelectWorkflow }: WorkflowListProps) {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pb-6">
         {workflows.map((workflow) => {
           const isSelected = workflow.id && selectedIds.has(workflow.id)
+          const hasSelection = selectedIds.size > 0
           return (
             <div
               key={workflow.id}
-              className={`bg-white rounded-lg shadow-md p-4 hover:shadow-lg transition-shadow cursor-pointer border-2 ${
+              className={`bg-white rounded-lg shadow-md p-4 hover:shadow-lg transition-shadow border-2 ${
                 isSelected ? 'border-primary-500 bg-primary-50' : 'border-transparent'
-              }`}
-              onClick={() => workflow.id && onSelectWorkflow(workflow.id)}
+              } ${hasSelection ? '' : 'cursor-pointer'}`}
+              onClick={(e) => {
+                // Only navigate if clicking on the card itself, not on interactive elements
+                // If any workflows are selected, don't navigate (selection mode)
+                if (!hasSelection && e.target === e.currentTarget || 
+                    (e.target as HTMLElement).closest('.workflow-content')) {
+                  workflow.id && onSelectWorkflow(workflow.id)
+                }
+              }}
             >
               <div className="flex items-start justify-between mb-3">
                 <div className="flex items-start gap-3 flex-1">
@@ -163,7 +171,8 @@ export default function WorkflowList({ onSelectWorkflow }: WorkflowListProps) {
                       e.stopPropagation()
                       workflow.id && handleToggleSelect(workflow.id)
                     }}
-                    className="mt-1"
+                    className="mt-1 flex-shrink-0"
+                    title={isSelected ? 'Deselect workflow' : 'Select workflow'}
                   >
                     {isSelected ? (
                       <CheckSquare className="w-5 h-5 text-primary-600" />
@@ -171,7 +180,12 @@ export default function WorkflowList({ onSelectWorkflow }: WorkflowListProps) {
                       <Square className="w-5 h-5 text-gray-400" />
                     )}
                   </button>
-                  <div className="flex-1">
+                  <div className="flex-1 workflow-content" onClick={(e) => {
+                    // Prevent navigation when clicking on content if in selection mode
+                    if (hasSelection) {
+                      e.stopPropagation()
+                    }
+                  }}>
                     <h3 className="font-semibold text-gray-900">{workflow.name}</h3>
                     {workflow.description && (
                       <p className="text-sm text-gray-600 mt-1">{workflow.description}</p>
@@ -183,14 +197,22 @@ export default function WorkflowList({ onSelectWorkflow }: WorkflowListProps) {
                     e.stopPropagation()
                     workflow.id && handleDelete(workflow.id)
                   }}
-                  className="text-red-600 hover:bg-red-50 p-1 rounded"
+                  className="text-red-600 hover:bg-red-50 p-1 rounded flex-shrink-0"
                   title="Delete workflow"
                 >
                   <Trash2 className="w-4 h-4" />
                 </button>
               </div>
 
-              <div className="flex items-center gap-4 text-sm text-gray-500">
+              <div 
+                className="flex items-center gap-4 text-sm text-gray-500 workflow-content"
+                onClick={(e) => {
+                  // Prevent navigation when clicking on metadata if in selection mode
+                  if (hasSelection) {
+                    e.stopPropagation()
+                  }
+                }}
+              >
                 <div className="flex items-center gap-1">
                   <Play className="w-4 h-4" />
                   {workflow.nodes?.length || 0} nodes
