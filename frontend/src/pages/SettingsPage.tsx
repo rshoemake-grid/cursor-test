@@ -54,13 +54,8 @@ const PROVIDER_TEMPLATES = {
       'gemini-2.5-flash-lite',
       'gemini-2.5-flash-image',
       'gemini-2.5-flash-preview-09-2025',
-      // Gemini 2.0 models
-      'gemini-2.0-flash',
-      'gemini-2.0-flash-lite',
-      // Gemini 1.5 models (legacy)
-      'gemini-1.5-pro',
-      'gemini-1.5-flash',
-      'gemini-1.5-flash-8b'
+      // Gemini 1.5 models (legacy - non-flash only)
+      'gemini-1.5-pro'
     ]
   },
   custom: {
