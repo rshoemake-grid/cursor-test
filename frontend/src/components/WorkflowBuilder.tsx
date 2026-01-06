@@ -194,8 +194,84 @@ export default function WorkflowBuilder({
             inputs: node.data.inputs || [],
           }
         }))
+        console.log('Loaded nodes:', initializedNodes.map(n => ({ id: n.id, type: n.type, position: n.position })))
+        console.log('Looking for agent-generate:', initializedNodes.find(n => n.id === 'agent-generate'))
+        
+        // Debug: log raw edges from API
+        const conditionEdgesRaw = (workflow.edges || []).filter((e: any) => e.source === 'condition-1')
+        console.log('Raw condition edges from API:', JSON.stringify(conditionEdgesRaw, null, 2))
+        conditionEdgesRaw.forEach((e: any) => {
+          console.log(`  Edge ${e.id}:`, JSON.stringify({
+            id: e.id,
+            source: e.source,
+            target: e.target,
+            sourceHandle: e.sourceHandle,
+            source_handle: e.source_handle,
+            allKeys: Object.keys(e),
+            fullEdge: e
+          }, null, 2))
+        })
+        
+        // Ensure edges preserve sourceHandle and targetHandle properties
+        const formattedEdges = (workflow.edges || []).map((edge: any) => {
+          // Get sourceHandle from either camelCase or snake_case - ensure it's a string, not boolean
+          let sourceHandle = edge.sourceHandle || edge.source_handle || null
+          let targetHandle = edge.targetHandle || edge.target_handle || null
+          
+          // Convert boolean to string if needed (React Flow expects strings)
+          if (sourceHandle === true) sourceHandle = "true"
+          if (sourceHandle === false) sourceHandle = "false"
+          if (targetHandle === true) targetHandle = "true"
+          if (targetHandle === false) targetHandle = "false"
+          
+          // Generate unique ID that includes sourceHandle to differentiate edges from same source
+          const edgeId = edge.id || (sourceHandle 
+            ? `${edge.source}-${sourceHandle}-${edge.target}` 
+            : `${edge.source}-${edge.target}`)
+          
+          // Create edge object with sourceHandle/targetHandle set explicitly
+          const formattedEdge: any = {
+            id: edgeId,
+            source: edge.source,
+            target: edge.target,
+          }
+          
+          // Only add sourceHandle/targetHandle if they have values
+          if (sourceHandle) {
+            formattedEdge.sourceHandle = String(sourceHandle)
+          }
+          if (targetHandle) {
+            formattedEdge.targetHandle = String(targetHandle)
+          }
+          
+          // Preserve other edge properties (but don't overwrite sourceHandle/targetHandle)
+          Object.keys(edge).forEach(key => {
+            if (key !== 'sourceHandle' && key !== 'source_handle' && key !== 'targetHandle' && key !== 'target_handle') {
+              formattedEdge[key] = edge[key]
+            }
+          })
+          
+          return formattedEdge
+        })
+        
+        const conditionEdges = formattedEdges.filter(e => e.source === 'condition-1')
+        console.log('Formatted condition edges:', JSON.stringify(conditionEdges, null, 2))
+        console.log('Edge details (formatted):', conditionEdges.map(e => ({
+          id: e.id,
+          source: e.source,
+          target: e.target,
+          sourceHandle: e.sourceHandle,
+          targetHandle: e.targetHandle,
+          hasSourceHandle: 'sourceHandle' in e,
+          sourceHandleType: typeof e.sourceHandle,
+          fullEdge: e
+        })))
+        
+        // Set nodes first, then edges after a brief delay to ensure nodes are rendered
         setNodes(initializedNodes)
-        setEdges(workflow.edges as any[])
+        setTimeout(() => {
+          setEdges(formattedEdges)
+        }, 50)
         
         // Track that we've loaded this workflow
         lastLoadedWorkflowIdRef.current = workflowId

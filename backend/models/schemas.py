@@ -101,6 +101,23 @@ class Edge(BaseModel):
     source: str
     target: str
     label: Optional[str] = None
+    sourceHandle: Optional[str] = None  # Handle ID for source node (e.g., "true", "false" for condition nodes)
+    targetHandle: Optional[str] = None  # Handle ID for target node
+    source_handle: Optional[str] = None  # Alternative snake_case name (for compatibility)
+    target_handle: Optional[str] = None  # Alternative snake_case name (for compatibility)
+    
+    @model_validator(mode='before')
+    @classmethod
+    def normalize_handles(cls, v):
+        """Normalize handle fields - prefer camelCase, fallback to snake_case"""
+        if isinstance(v, dict):
+            # If source_handle exists but sourceHandle doesn't, copy it
+            if 'source_handle' in v and v['source_handle'] and 'sourceHandle' not in v:
+                v['sourceHandle'] = v['source_handle']
+            # If target_handle exists but targetHandle doesn't, copy it
+            if 'target_handle' in v and v['target_handle'] and 'targetHandle' not in v:
+                v['targetHandle'] = v['target_handle']
+        return v
     
     def model_post_init(self, __context: Any) -> None:
         """Auto-generate ID if missing"""

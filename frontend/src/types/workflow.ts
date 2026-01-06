@@ -49,6 +49,10 @@ export interface WorkflowEdge {
   target: string
   label?: string
   condition?: 'true' | 'false' | 'default'
+  sourceHandle?: string | null
+  targetHandle?: string | null
+  source_handle?: string | null  // Backend might use snake_case
+  target_handle?: string | null   // Backend might use snake_case
 }
 
 export interface WorkflowDefinition {

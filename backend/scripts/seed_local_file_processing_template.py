@@ -242,7 +242,11 @@ async def seed_local_file_processing_template():
             existing = result.scalar_one_or_none()
             
             if existing:
-                print("Template 'Local File Processing Workflow' already exists. Skipping.")
+                print(f"Template 'Local File Processing Workflow' already exists (ID: {existing.id}). Updating...")
+                # Update existing template with correct edge connections
+                existing.definition = template_definition
+                await session.commit()
+                print(f"Successfully updated template: {existing.name}")
                 return
             
             # Create new template

@@ -220,13 +220,22 @@ async def use_template(
     # Parse definition
     definition = workflow.definition
     
+    # Ensure edges preserve sourceHandle and targetHandle
+    edges = definition.get("edges", [])
+    # Log condition edges for debugging
+    condition_edges = [e for e in edges if e.get("source") == "condition-1"]
+    if condition_edges:
+        print(f"Template edges for condition-1: {condition_edges}")
+        for edge in condition_edges:
+            print(f"  Edge {edge.get('id')}: sourceHandle={edge.get('sourceHandle')}, type={type(edge.get('sourceHandle'))}")
+    
     return WorkflowResponse(
         id=workflow.id,
         name=workflow.name,
         description=workflow.description,
         version=workflow.version,
         nodes=definition.get("nodes", []),
-        edges=definition.get("edges", []),
+        edges=edges,
         variables=definition.get("variables", {}),
         created_at=workflow.created_at,
         updated_at=workflow.updated_at
