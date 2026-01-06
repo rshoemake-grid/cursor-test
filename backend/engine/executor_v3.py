@@ -439,19 +439,35 @@ class WorkflowExecutorV3:
                     
                     # Read from input source (synchronous operation wrapped in executor)
                     loop = asyncio.get_event_loop()
-                    output = await loop.run_in_executor(
+                    raw_output = await loop.run_in_executor(
                         None,
                         read_from_input_source,
                         node.type,
                         input_config
                     )
                     
+                    await self._log("DEBUG", node.id, f"Raw read output type: {type(raw_output)}, value preview: {str(raw_output)[:200] if raw_output else 'None'}")
+                    
                     # Wrap output in a standard format for downstream nodes
-                    if not isinstance(output, dict):
-                        output = {'data': output, 'source': node.type}
+                    if raw_output is None:
+                        await self._log("WARNING", node.id, "Read operation returned None")
+                        output = {'data': None, 'source': node.type}
+                    elif isinstance(raw_output, dict):
+                        # If it's already a dict, check if it's empty
+                        if raw_output == {}:
+                            await self._log("WARNING", node.id, "Read operation returned empty dict")
+                            output = {'data': '', 'source': node.type}
+                        else:
+                            # Wrap existing dict in our standard format
+                            output = {'data': raw_output, 'source': node.type}
+                    else:
+                        # Wrap non-dict output
+                        output = {'data': raw_output, 'source': node.type}
                     
                     node_state.input = {}  # Read operations don't have inputs
-                    await self._log("INFO", node.id, f"Read {len(str(output))} bytes from {node.type}")
+                    output_preview = str(output.get('data', ''))[:100] if isinstance(output, dict) else str(output)[:100]
+                    await self._log("INFO", node.id, f"Read {len(str(output.get('data', ''))) if isinstance(output, dict) and output.get('data') else 0} bytes from {node.type}, wrapped output keys: {list(output.keys()) if isinstance(output, dict) else 'not a dict'}")
+                    await self._log("DEBUG", node.id, f"Wrapped output preview: {output_preview}")
             else:
                 # Prepare inputs for this node (not needed for input sources)
                 node_inputs = self._prepare_node_inputs(node)
