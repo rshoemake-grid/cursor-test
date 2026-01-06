@@ -208,6 +208,7 @@ class WorkflowExecutorV3:
                         return
                     
                     completed.add(node.id)
+                    await self._log("INFO", None, f"Node {node.id} completed, checking neighbors in adjacency[{node.id}]: {adjacency.get(node.id, [])}")
                     
                     # Handle conditional branching
                     if node.type == NodeType.CONDITION and node_state.output:
@@ -218,13 +219,21 @@ class WorkflowExecutorV3:
                                 edge_condition = getattr(edge, 'condition', 'default')
                                 if edge_condition == branch or edge_condition == 'default':
                                     if edge.target not in queue and edge.target not in in_progress:
+                                        await self._log("INFO", None, f"Adding conditional neighbor {edge.target} to queue")
                                         queue.append(edge.target)
                     else:
-                        for neighbor_id in adjacency[node.id]:
-                            dependencies = [n for n, neighbors in adjacency.items() if neighbor_id in neighbors]
+                        neighbors = adjacency.get(node.id, [])
+                        await self._log("INFO", None, f"Node {node.id} has {len(neighbors)} neighbors: {neighbors}")
+                        for neighbor_id in neighbors:
+                            dependencies = [n for n, neighbors_list in adjacency.items() if neighbor_id in neighbors_list]
+                            await self._log("INFO", None, f"Neighbor {neighbor_id} dependencies: {dependencies}, completed: {completed}, all met: {all(dep in completed for dep in dependencies)}")
                             if all(dep in completed for dep in dependencies):
                                 if neighbor_id not in queue and neighbor_id not in in_progress:
+                                    await self._log("INFO", None, f"Adding neighbor {neighbor_id} to queue")
                                     queue.append(neighbor_id)
+                            else:
+                                missing_deps = [dep for dep in dependencies if dep not in completed]
+                                await self._log("INFO", None, f"Neighbor {neighbor_id} not ready - missing dependencies: {missing_deps}")
             
             await asyncio.sleep(0.01)
     
