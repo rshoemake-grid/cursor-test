@@ -230,7 +230,7 @@ class WorkflowExecutorV3:
     
     async def _execute_node(self, node: Node):
         """Execute a single node with WebSocket updates"""
-        await self._log("INFO", node.id, f"Executing node: {node.name}")
+        await self._log("INFO", node.id, f"Executing node: {node.name} (type: {node.type})")
         
         # Initialize node state
         node_state = NodeState(
@@ -278,11 +278,17 @@ class WorkflowExecutorV3:
                 await self._log("DEBUG", node.id, f"Resolved input_config for {node.type}: {input_config}")
                 
                 mode = input_config.get('mode', 'read')
+                await self._log("DEBUG", node.id, f"Mode: {mode}, node.inputs count: {len(node.inputs)}")
                 
                 # Check if node has inputs (connected from other nodes) - if so, it's a write operation
                 node_has_inputs = len(node.inputs) > 0
                 
-                if mode == 'write' or node_has_inputs:
+                # Also check if there are incoming edges (connected from other nodes)
+                incoming_edges = [e for e in self.workflow.edges if e.target == node.id]
+                has_incoming_edges = len(incoming_edges) > 0
+                await self._log("DEBUG", node.id, f"Incoming edges: {len(incoming_edges)}, node_has_inputs: {node_has_inputs}, will_write: {mode == 'write' or node_has_inputs or has_incoming_edges}")
+                
+                if mode == 'write' or node_has_inputs or has_incoming_edges:
                     # Write mode: get data from inputs
                     node_inputs = self._prepare_node_inputs(node)
                     
