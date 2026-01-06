@@ -123,6 +123,13 @@ class WorkflowExecutorV3:
                 adjacency[edge.source].append(edge.target)
                 in_degree[edge.target] += 1
         
+        # Debug logging
+        print(f"🔍 Built adjacency map:")
+        for source_id, targets in adjacency.items():
+            if targets:
+                print(f"   {source_id} -> {targets}")
+        print(f"🔍 In-degree map: {in_degree}")
+        
         return adjacency, in_degree
     
     async def _execute_graph(self, adjacency: Dict[str, List[str]], in_degree: Dict[str, int]):
