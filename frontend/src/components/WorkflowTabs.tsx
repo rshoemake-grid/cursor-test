@@ -184,8 +184,38 @@ export default function WorkflowTabs({ initialWorkflowId, workflowLoadKey, onExe
 
   // Handle closing workflow executions
   const handleCloseWorkflow = useCallback((workflowId: string) => {
-    // This is handled by handleCloseTab, but keeping for ExecutionConsole compatibility
-  }, [])
+    // Find the tab by workflowId and close it
+    const tabToClose = tabs.find(t => t.workflowId === workflowId)
+    if (!tabToClose) return
+    
+    // Check for unsaved changes
+    if (tabToClose.isUnsaved) {
+      const confirm = window.confirm('This workflow has unsaved changes. Close anyway?')
+      if (!confirm) return
+    }
+    
+    setTabs(prev => {
+      const filtered = prev.filter(t => t.id !== tabToClose.id)
+      // If closing active tab, switch to the last tab
+      if (tabToClose.id === activeTabId && filtered.length > 0) {
+        setActiveTabId(filtered[filtered.length - 1].id)
+      } else if (filtered.length === 0) {
+        // If no tabs left, create a new untitled tab
+        const newId = `workflow-${Date.now()}`
+        const newTab: WorkflowTabData = {
+          id: newId,
+          name: 'Untitled Workflow',
+          workflowId: null,
+          isUnsaved: true,
+          executions: [],
+          activeExecutionId: null
+        }
+        setActiveTabId(newId)
+        return [newTab]
+      }
+      return filtered
+    })
+  }, [tabs, activeTabId])
 
   // Handle clearing executions for a workflow
   const handleClearExecutions = useCallback((workflowId: string) => {
