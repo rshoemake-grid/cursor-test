@@ -42,12 +42,25 @@ class WorkflowExecutorV3:
         Execute the workflow with given inputs
         Broadcasts updates via WebSocket if stream_updates is True
         """
+        # Filter out empty execution inputs - ignore empty {} or empty values
+        filtered_inputs = {}
+        if inputs:
+            for key, value in inputs.items():
+                # Only include non-empty values
+                if value is not None and value != '' and value != {}:
+                    # If it's a dict, only include if it has at least one non-empty value
+                    if isinstance(value, dict):
+                        if any(v is not None and v != '' and v != {} for v in value.values()):
+                            filtered_inputs[key] = value
+                    else:
+                        filtered_inputs[key] = value
+        
         # Initialize execution state
         self.execution_state = ExecutionState(
             execution_id=self.execution_id,
             workflow_id=self.workflow.id or "unknown",
             status=ExecutionStatus.RUNNING,
-            variables={**self.workflow.variables, **inputs},
+            variables={**self.workflow.variables, **filtered_inputs},
             started_at=datetime.utcnow()
         )
         
@@ -519,9 +532,14 @@ class WorkflowExecutorV3:
             # Handle None or empty values
             if value is None or (isinstance(value, str) and (not value or value.strip() == '')):
                 # If value is empty/None, check if there's a workflow variable with the same name
+                # But ignore empty {} from execution inputs
                 if key in self.execution_state.variables:
                     resolved_value = self.execution_state.variables[key]
-                    resolved_config[key] = str(resolved_value) if resolved_value is not None else ''
+                    # Ignore empty dicts from execution inputs
+                    if resolved_value == {}:
+                        resolved_config[key] = value if value is not None else ''
+                    else:
+                        resolved_config[key] = str(resolved_value) if resolved_value is not None else ''
                 else:
                     resolved_config[key] = value if value is not None else ''
             elif isinstance(value, str):
