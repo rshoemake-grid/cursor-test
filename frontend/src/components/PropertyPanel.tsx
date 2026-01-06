@@ -1,11 +1,12 @@
 import { useReactFlow } from '@xyflow/react'
-import { X, Plus, Trash2 } from 'lucide-react'
+import { X, Plus, Trash2, Save, Check } from 'lucide-react'
 import { useState, useEffect, useRef, useMemo } from 'react'
 
 interface PropertyPanelProps {
   selectedNodeId: string | null
   setSelectedNodeId: (id: string | null) => void
   nodes?: any[] // Pass nodes as prop for better reactivity
+  onSave?: () => void // Optional callback when save is clicked
 }
 
 
@@ -20,10 +21,11 @@ interface LLMProvider {
   enabled: boolean
 }
 
-export default function PropertyPanel({ selectedNodeId, setSelectedNodeId, nodes: nodesProp }: PropertyPanelProps) {
+export default function PropertyPanel({ selectedNodeId, setSelectedNodeId, nodes: nodesProp, onSave }: PropertyPanelProps) {
   const { setNodes, deleteElements, getNodes } = useReactFlow()
   const [showAddInput, setShowAddInput] = useState(false)
   const [availableModels, setAvailableModels] = useState<Array<{ value: string; label: string; provider: string }>>([])
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle')
   
   // Get nodes directly from React Flow store for stability, fallback to prop
   const nodes = useMemo(() => {
@@ -424,6 +426,29 @@ export default function PropertyPanel({ selectedNodeId, setSelectedNodeId, nodes
     setSelectedNodeId(null)
   }
 
+  const handleSave = async () => {
+    if (!selectedNode) return
+    
+    setSaveStatus('saving')
+    
+    // Call optional save callback if provided
+    if (onSave) {
+      try {
+        await onSave()
+      } catch (error) {
+        console.error('Save failed:', error)
+        setSaveStatus('idle')
+        return
+      }
+    }
+    
+    // Show saved feedback
+    setSaveStatus('saved')
+    setTimeout(() => {
+      setSaveStatus('idle')
+    }, 2000)
+  }
+
   const handleAddInput = (inputName: string, sourceNode: string, sourceField: string) => {
     if (!selectedNode) return
     
@@ -458,13 +483,44 @@ export default function PropertyPanel({ selectedNodeId, setSelectedNodeId, nodes
     <div className="w-80 h-full bg-white border-l border-gray-200 p-4 overflow-y-auto">
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-lg font-semibold text-gray-900">Properties</h3>
-        <button
-          onClick={handleDelete}
-          className="p-1 text-red-600 hover:bg-red-50 rounded"
-          title="Delete node"
-        >
-          <X className="w-4 h-4" />
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={handleSave}
+            disabled={saveStatus === 'saving'}
+            className={`px-3 py-1.5 text-sm rounded-lg flex items-center gap-2 transition-colors ${
+              saveStatus === 'saved'
+                ? 'bg-green-100 text-green-700'
+                : saveStatus === 'saving'
+                ? 'bg-gray-100 text-gray-500 cursor-not-allowed'
+                : 'bg-primary-600 text-white hover:bg-primary-700'
+            }`}
+            title="Save changes"
+          >
+            {saveStatus === 'saved' ? (
+              <>
+                <Check className="w-4 h-4" />
+                Saved
+              </>
+            ) : saveStatus === 'saving' ? (
+              <>
+                <Save className="w-4 h-4 animate-pulse" />
+                Saving...
+              </>
+            ) : (
+              <>
+                <Save className="w-4 h-4" />
+                Save
+              </>
+            )}
+          </button>
+          <button
+            onClick={handleDelete}
+            className="p-1 text-red-600 hover:bg-red-50 rounded"
+            title="Delete node"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
       </div>
 
       <div className="space-y-4">
