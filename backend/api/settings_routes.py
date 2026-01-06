@@ -258,3 +258,29 @@ def get_active_llm_config(user_id: Optional[str] = None) -> Optional[Dict[str, A
     print(f"   ❌ No enabled provider with API key found")
     return None
 
+
+def get_provider_for_model(model_name: str, user_id: Optional[str] = None) -> Optional[Dict[str, Any]]:
+    """Find the provider that owns the given model name"""
+    uid = user_id if user_id else "anonymous"
+    
+    if uid not in _settings_store:
+        return None
+    
+    settings = _settings_store[uid]
+    
+    # Search through all enabled providers to find one that has this model
+    for provider in settings.providers:
+        if provider.enabled and provider.apiKey and provider.models:
+            # Check if this provider has the model
+            if model_name in provider.models:
+                print(f"✅ Found provider '{provider.name}' for model '{model_name}'")
+                return {
+                    "type": provider.type,
+                    "api_key": provider.apiKey,
+                    "base_url": provider.baseUrl,
+                    "model": model_name
+                }
+    
+    print(f"⚠️ No provider found for model '{model_name}'")
+    return None
+

@@ -71,6 +71,12 @@ class UnifiedLLMAgent(BaseAgent):
         
         return None
     
+    def _find_provider_for_model(self, model_name: str, user_id: Optional[str] = None) -> Optional[Dict[str, Any]]:
+        """Find the provider that owns the given model name"""
+        # Import here to avoid circular dependency
+        from ..api.settings_routes import get_provider_for_model
+        return get_provider_for_model(model_name, user_id)
+    
     async def execute(self, inputs: Dict[str, Any]) -> Any:
         """Execute the LLM agent with configured provider"""
         self.validate_inputs(inputs)
@@ -81,7 +87,23 @@ class UnifiedLLMAgent(BaseAgent):
         # Use model from agent config if specified, otherwise from LLM config
         model = self.config.model or self.llm_config["model"]
         
-        provider_type = self.llm_config["type"]
+        # Try to find the provider that owns this model
+        # This ensures we use the correct API for the selected model
+        model_provider_config = self._find_provider_for_model(model)
+        
+        if model_provider_config:
+            # Use the provider that owns this model
+            provider_type = model_provider_config["type"]
+            # Update llm_config to use the correct provider's config
+            self.llm_config = {
+                **self.llm_config,
+                **model_provider_config
+            }
+            print(f"✅ Found provider for model '{model}': {provider_type}")
+        else:
+            # Fall back to the default provider from llm_config
+            provider_type = self.llm_config["type"]
+            print(f"⚠️ No provider found for model '{model}', using default provider: {provider_type}")
         
         if provider_type == "openai":
             return await self._execute_openai(user_message, model)
