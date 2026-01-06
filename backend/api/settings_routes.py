@@ -229,19 +229,45 @@ async def _test_custom(test_request: LLMTestRequest):
 
 
 def _is_valid_api_key(api_key: str) -> bool:
-    """Check if API key is not a placeholder"""
+    """Check if API key is not a placeholder - only flag obvious placeholders"""
     if not api_key:
         return False
     
-    api_key_lower = api_key.lower()
-    # Check for common placeholder patterns
-    if (api_key == "your-api-key-here" or 
-        "your-api" in api_key_lower or 
-        api_key.startswith("your-api") or
-        "*****here" in api_key or
-        api_key == "your-api*****here"):
+    # Trim whitespace
+    api_key = api_key.strip()
+    if not api_key:
         return False
     
+    # If it's very short, it's likely a placeholder
+    if len(api_key) < 10:
+        return False
+    
+    api_key_lower = api_key.lower()
+    
+    # Only flag exact placeholder matches - be very conservative
+    exact_placeholders = [
+        "your-api-key-here",
+        "your-api*****here",
+        "sk-your-api-key-here",
+        "sk-your-api*****here",
+        "your-api-key",
+        "api-key-here"
+    ]
+    
+    # Check exact matches (case-insensitive)
+    if api_key_lower in [p.lower() for p in exact_placeholders]:
+        return False
+    
+    # Check if it's exactly a placeholder pattern (very short and contains placeholder text)
+    # Only flag if it's clearly a placeholder, not if it's a real key that happens to contain these words
+    if len(api_key) < 25 and ("your-api-key-here" in api_key_lower or "your-api*****here" in api_key_lower):
+        return False
+    
+    # Check for masked placeholder pattern (short key with asterisks and "here")
+    if len(api_key) < 30 and "*****here" in api_key:
+        return False
+    
+    # If we get here, assume it's valid (connection test will catch real issues)
     return True
 
 
@@ -266,11 +292,12 @@ def get_active_llm_config(user_id: Optional[str] = None) -> Optional[Dict[str, A
         if provider.enabled and provider.apiKey and _is_valid_api_key(provider.apiKey):
             config = {
                 "type": provider.type,
-                "api_key": provider.apiKey,
+                "api_key": provider.apiKey.strip(),  # Trim whitespace
                 "base_url": provider.baseUrl,
                 "model": provider.defaultModel
             }
-            print(f"   ✅ Using provider {provider.name} with key: {provider.apiKey[:10]}...")
+            api_key_preview = provider.apiKey[:10] + "..." if len(provider.apiKey) > 10 else provider.apiKey
+            print(f"   ✅ Using provider {provider.name} with key: {api_key_preview}")
             return config
     
     print(f"   ❌ No enabled provider with valid API key found")
@@ -298,10 +325,11 @@ def get_provider_for_model(model_name: str, user_id: Optional[str] = None) -> Op
         if provider.enabled and provider.apiKey and _is_valid_api_key(provider.apiKey) and provider.models:
             # Check if this provider has the model
             if model_name in provider.models:
-                print(f"✅ Found provider '{provider.name}' for model '{model_name}'")
+                api_key_preview = provider.apiKey[:10] + "..." if len(provider.apiKey) > 10 else provider.apiKey
+                print(f"✅ Found provider '{provider.name}' for model '{model_name}' (key: {api_key_preview})")
                 return {
                     "type": provider.type,
-                    "api_key": provider.apiKey,
+                    "api_key": provider.apiKey.strip(),  # Trim whitespace
                     "base_url": provider.baseUrl,
                     "model": model_name
                 }

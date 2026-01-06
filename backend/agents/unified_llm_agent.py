@@ -117,11 +117,18 @@ class UnifiedLLMAgent(BaseAgent):
                     "Please go to Settings, add a valid API key for this provider, enable it, and click 'Sync Now'."
                 )
             
+            # Debug logging
+            api_key_preview = api_key[:15] + "..." if len(api_key) > 15 else api_key
+            print(f"🔑 Using API key from provider '{provider_type}' for model '{model}': {api_key_preview} (length: {len(api_key)})")
+            
             # Validate API key (should already be filtered, but double-check)
             try:
                 self._validate_api_key(api_key)
             except ValueError as e:
-                # Provide more helpful error message
+                # Provide more helpful error message with debug info
+                print(f"❌ API key validation failed for provider '{provider_type}': {str(e)}")
+                print(f"   Key preview: {api_key_preview}")
+                print(f"   Key length: {len(api_key)}")
                 raise ValueError(
                     f"Provider '{provider_type}' for model '{model}' has an invalid API key. "
                     "Please go to Settings, update the API key for this provider with a valid key, enable it, and click 'Sync Now'."
