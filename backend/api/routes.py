@@ -1,4 +1,5 @@
 import uuid
+import json
 from datetime import datetime
 from typing import List, Optional
 from fastapi import APIRouter, HTTPException, Depends
@@ -420,7 +421,30 @@ async def execute_workflow(
         
         return Node(**node_data)
     
-    nodes = [reconstruct_node(node_data) for node_data in definition.get("nodes", [])]
+    # Log all nodes in definition before reconstruction
+    all_node_data = definition.get("nodes", [])
+    print(f"🔍 Found {len(all_node_data)} nodes in workflow definition:")
+    for i, node_data in enumerate(all_node_data):
+        node_id = node_data.get('id', f'unknown-{i}')
+        node_type = node_data.get('type', 'unknown')
+        print(f"   Node {i}: id={node_id}, type={node_type}")
+    
+    # Reconstruct nodes with error handling
+    nodes = []
+    for i, node_data in enumerate(all_node_data):
+        try:
+            node = reconstruct_node(node_data)
+            nodes.append(node)
+            print(f"✅ Successfully reconstructed node {i}: {node.id} ({node.type})")
+        except Exception as e:
+            print(f"❌ Error reconstructing node {i} (id={node_data.get('id', 'unknown')}): {e}")
+            print(f"   Node data: {json.dumps(node_data, indent=2, default=str)}")
+            import traceback
+            traceback.print_exc()
+            # Don't skip - raise the error so we know what's wrong
+            raise HTTPException(status_code=422, detail=f"Invalid node data at index {i} (id={node_data.get('id', 'unknown')}): {str(e)}")
+    
+    print(f"✅ Successfully reconstructed {len(nodes)} nodes")
     edges = [Edge(**edge_data) for edge_data in definition.get("edges", [])]
     
     workflow_def = WorkflowDefinition(
