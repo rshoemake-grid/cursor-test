@@ -41,7 +41,7 @@ export default function Toolbar({
   const nameInputRef = useRef<HTMLInputElement>(null)
   const descriptionInputRef = useRef<HTMLInputElement>(null)
   
-  // Sync local state with props only when workflowId changes (different workflow selected)
+  // Sync local state with props when workflowId or workflowName/Description changes
   useEffect(() => {
     // Only sync if input is not currently focused (user is not typing)
     if (document.activeElement !== nameInputRef.current) {
@@ -50,8 +50,7 @@ export default function Toolbar({
     if (document.activeElement !== descriptionInputRef.current) {
       setLocalWorkflowDescription(workflowDescription)
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [workflowId]) // Only depend on workflowId, not the name/description props
+  }, [workflowId, workflowName, workflowDescription]) // Sync when workflow changes or name/description updates
 
   // Helper to convert nodes to workflow format
   const nodeToWorkflowNode = (node: any) => ({
