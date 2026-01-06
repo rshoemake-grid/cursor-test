@@ -26,19 +26,11 @@ class UnifiedLLMAgent(BaseAgent):
                 "or set OPENAI_API_KEY environment variable."
             )
         
-        # Validate API key is not a placeholder
+        # Validate API key is not a placeholder (initial validation)
+        # Note: We'll re-validate in execute() when we may switch to model-specific provider
         api_key = self.llm_config.get("api_key", "")
         if api_key:
-            api_key_lower = api_key.lower()
-            if (api_key == "your-api-key-here" or 
-                "your-api" in api_key_lower or 
-                api_key.startswith("your-api") or
-                "*****here" in api_key or
-                api_key == "your-api*****here"):
-                raise ValueError(
-                    "Invalid API key detected. Please go to Settings, add an LLM provider with a valid API key, "
-                    "enable it, and click 'Sync Now'. The API key cannot be a placeholder."
-                )
+            self._validate_api_key(api_key)
     
     def _get_fallback_config(self) -> Optional[Dict[str, Any]]:
         """Fallback to environment variables if no config provided"""
@@ -77,6 +69,25 @@ class UnifiedLLMAgent(BaseAgent):
         from ..api.settings_routes import get_provider_for_model
         return get_provider_for_model(model_name, user_id)
     
+    def _validate_api_key(self, api_key: str) -> None:
+        """Validate that API key is not a placeholder"""
+        if not api_key:
+            raise ValueError(
+                "API key is empty. Please go to Settings, add an LLM provider with a valid API key, "
+                "enable it, and click 'Sync Now'."
+            )
+        
+        api_key_lower = api_key.lower()
+        if (api_key == "your-api-key-here" or 
+            "your-api" in api_key_lower or 
+            api_key.startswith("your-api") or
+            "*****here" in api_key or
+            api_key == "your-api*****here"):
+            raise ValueError(
+                "Invalid API key detected. Please go to Settings, add an LLM provider with a valid API key, "
+                "enable it, and click 'Sync Now'. The API key cannot be a placeholder."
+            )
+    
     async def execute(self, inputs: Dict[str, Any]) -> Any:
         """Execute the LLM agent with configured provider"""
         self.validate_inputs(inputs)
@@ -94,6 +105,17 @@ class UnifiedLLMAgent(BaseAgent):
         if model_provider_config:
             # Use the provider that owns this model
             provider_type = model_provider_config["type"]
+            
+            # Validate the API key from the model-specific provider
+            api_key = model_provider_config.get("api_key", "")
+            if not api_key:
+                raise ValueError(
+                    f"Provider '{provider_type}' for model '{model}' has no API key configured. "
+                    "Please go to Settings, add a valid API key for this provider, enable it, and click 'Sync Now'."
+                )
+            
+            self._validate_api_key(api_key)
+            
             # Update llm_config to use the correct provider's config
             self.llm_config = {
                 **self.llm_config,
@@ -103,6 +125,16 @@ class UnifiedLLMAgent(BaseAgent):
         else:
             # Fall back to the default provider from llm_config
             provider_type = self.llm_config["type"]
+            
+            # Validate the API key from the default provider
+            api_key = self.llm_config.get("api_key", "")
+            if not api_key:
+                raise ValueError(
+                    f"Default provider '{provider_type}' has no API key configured. "
+                    "Please go to Settings, add a valid API key for this provider, enable it, and click 'Sync Now'."
+                )
+            
+            self._validate_api_key(api_key)
             print(f"⚠️ No provider found for model '{model}', using default provider: {provider_type}")
         
         if provider_type == "openai":

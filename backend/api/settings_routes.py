@@ -264,12 +264,18 @@ def get_provider_for_model(model_name: str, user_id: Optional[str] = None) -> Op
     uid = user_id if user_id else "anonymous"
     
     if uid not in _settings_store:
+        print(f"⚠️ No settings found for user '{uid}'")
         return None
     
     settings = _settings_store[uid]
     
+    print(f"🔍 Searching for provider for model '{model_name}' (user: {uid})")
+    print(f"   Available providers: {[p.name for p in settings.providers]}")
+    
     # Search through all enabled providers to find one that has this model
     for provider in settings.providers:
+        print(f"   Checking provider '{provider.name}': enabled={provider.enabled}, has_key={bool(provider.apiKey)}, models={len(provider.models) if provider.models else 0}")
+        
         if provider.enabled and provider.apiKey and provider.models:
             # Check if this provider has the model
             if model_name in provider.models:
