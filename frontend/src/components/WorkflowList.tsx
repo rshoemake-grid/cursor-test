@@ -189,20 +189,21 @@ export default function WorkflowList({ onSelectWorkflow }: WorkflowListProps) {
                 </button>
               </div>
 
-            <div className="flex items-center gap-4 text-sm text-gray-500">
-              <div className="flex items-center gap-1">
-                <Play className="w-4 h-4" />
-                {workflow.nodes?.length || 0} nodes
-              </div>
-              {workflow.created_at && (
+              <div className="flex items-center gap-4 text-sm text-gray-500">
                 <div className="flex items-center gap-1">
-                  <Calendar className="w-4 h-4" />
-                  {new Date(workflow.created_at).toLocaleDateString()}
+                  <Play className="w-4 h-4" />
+                  {workflow.nodes?.length || 0} nodes
                 </div>
-              )}
+                {workflow.created_at && (
+                  <div className="flex items-center gap-1">
+                    <Calendar className="w-4 h-4" />
+                    {new Date(workflow.created_at).toLocaleDateString()}
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
-        ))}
+          )
+        })}
       </div>
     </div>
   )
