@@ -111,40 +111,41 @@ export default function WorkflowList({ onSelectWorkflow }: WorkflowListProps) {
   }
 
   return (
-    <div className="p-6">
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-bold text-gray-900">My Workflows</h2>
-        {selectedIds.size > 0 && (
-          <div className="flex items-center gap-3">
-            <span className="text-sm text-gray-600">{selectedIds.size} selected</span>
+    <div className="h-full overflow-y-auto">
+      <div className="p-6">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-2xl font-bold text-gray-900">My Workflows</h2>
+          {selectedIds.size > 0 && (
+            <div className="flex items-center gap-3">
+              <span className="text-sm text-gray-600">{selectedIds.size} selected</span>
+              <button
+                onClick={handleBulkDelete}
+                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 flex items-center gap-2"
+              >
+                <Trash2 className="w-4 h-4" />
+                Delete Selected ({selectedIds.size})
+              </button>
+            </div>
+          )}
+        </div>
+
+        {workflows.length > 0 && (
+          <div className="mb-4 flex items-center gap-2">
             <button
-              onClick={handleBulkDelete}
-              className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 flex items-center gap-2"
+              onClick={handleSelectAll}
+              className="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-lg"
             >
-              <Trash2 className="w-4 h-4" />
-              Delete Selected ({selectedIds.size})
+              {selectedIds.size === workflows.length ? (
+                <CheckSquare className="w-5 h-5 text-primary-600" />
+              ) : (
+                <Square className="w-5 h-5 text-gray-400" />
+              )}
+              <span>{selectedIds.size === workflows.length ? 'Deselect All' : 'Select All'}</span>
             </button>
           </div>
         )}
-      </div>
-
-      {workflows.length > 0 && (
-        <div className="mb-4 flex items-center gap-2">
-          <button
-            onClick={handleSelectAll}
-            className="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-lg"
-          >
-            {selectedIds.size === workflows.length ? (
-              <CheckSquare className="w-5 h-5 text-primary-600" />
-            ) : (
-              <Square className="w-5 h-5 text-gray-400" />
-            )}
-            <span>{selectedIds.size === workflows.length ? 'Deselect All' : 'Select All'}</span>
-          </button>
-        </div>
-      )}
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pb-6">
         {workflows.map((workflow) => {
           const isSelected = workflow.id && selectedIds.has(workflow.id)
           return (
@@ -204,6 +205,7 @@ export default function WorkflowList({ onSelectWorkflow }: WorkflowListProps) {
             </div>
           )
         })}
+        </div>
       </div>
     </div>
   )
