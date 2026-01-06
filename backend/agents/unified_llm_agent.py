@@ -11,7 +11,7 @@ from ..models.schemas import Node
 class UnifiedLLMAgent(BaseAgent):
     """Agent that uses configured LLM provider for processing"""
     
-    def __init__(self, node: Node, llm_config: Optional[Dict[str, Any]] = None):
+    def __init__(self, node: Node, llm_config: Optional[Dict[str, Any]] = None, user_id: Optional[str] = None):
         super().__init__(node)
         
         if not node.agent_config:
@@ -19,6 +19,7 @@ class UnifiedLLMAgent(BaseAgent):
         
         self.config = node.agent_config
         self.llm_config = llm_config or self._get_fallback_config()
+        self.user_id = user_id
         
         if not self.llm_config:
             raise ValueError(
@@ -67,7 +68,9 @@ class UnifiedLLMAgent(BaseAgent):
         """Find the provider that owns the given model name"""
         # Import here to avoid circular dependency
         from ..api.settings_routes import get_provider_for_model
-        return get_provider_for_model(model_name, user_id)
+        # Use instance user_id if provided, otherwise use passed user_id
+        lookup_user_id = self.user_id if hasattr(self, 'user_id') and self.user_id else user_id
+        return get_provider_for_model(model_name, lookup_user_id)
     
     def _validate_api_key(self, api_key: str) -> None:
         """Validate that API key is not a placeholder"""
@@ -100,7 +103,7 @@ class UnifiedLLMAgent(BaseAgent):
         
         # Try to find the provider that owns this model
         # This ensures we use the correct API for the selected model
-        model_provider_config = self._find_provider_for_model(model)
+        model_provider_config = self._find_provider_for_model(model, self.user_id)
         
         if model_provider_config:
             # Use the provider that owns this model

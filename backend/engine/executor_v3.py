@@ -28,13 +28,14 @@ class WorkflowExecutorV3:
     - Tool calling
     """
     
-    def __init__(self, workflow: WorkflowDefinition, stream_updates: bool = False, llm_config: Optional[Dict[str, Any]] = None):
+    def __init__(self, workflow: WorkflowDefinition, stream_updates: bool = False, llm_config: Optional[Dict[str, Any]] = None, user_id: Optional[str] = None):
         self.workflow = workflow
         self.execution_id = str(uuid.uuid4())
         self.execution_state: Optional[ExecutionState] = None
         self.loop_states: Dict[str, Dict[str, Any]] = {}
         self.stream_updates = stream_updates
         self.llm_config = llm_config
+        self.user_id = user_id
         
     async def execute(self, inputs: Dict[str, Any]) -> ExecutionState:
         """
@@ -375,7 +376,7 @@ class WorkflowExecutorV3:
                 
                 # Execute based on node type
                 if node.type in [NodeType.AGENT, NodeType.CONDITION, NodeType.LOOP]:
-                    agent = AgentRegistry.get_agent(node, llm_config=self.llm_config)
+                    agent = AgentRegistry.get_agent(node, llm_config=self.llm_config, user_id=self.user_id)
                     output = await agent.execute(node_inputs)
                 elif node.type == NodeType.TOOL:
                     output = node_inputs

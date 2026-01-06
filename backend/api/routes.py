@@ -383,10 +383,11 @@ async def execute_workflow(
     
     # Get LLM configuration from settings
     from .settings_routes import get_active_llm_config
-    llm_config = get_active_llm_config(current_user.id if current_user else None)
+    user_id = current_user.id if current_user else None
+    llm_config = get_active_llm_config(user_id)
     
     # Execute workflow with WebSocket streaming enabled
-    executor = WorkflowExecutor(workflow_def, stream_updates=True, llm_config=llm_config)
+    executor = WorkflowExecutor(workflow_def, stream_updates=True, llm_config=llm_config, user_id=user_id)
     inputs = execution_request.inputs if execution_request else {}
     execution_state = await executor.execute(inputs)
     
