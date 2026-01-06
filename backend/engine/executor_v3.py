@@ -299,12 +299,17 @@ class WorkflowExecutorV3:
                 # Check if node has inputs (connected from other nodes) - if so, it's a write operation
                 node_has_inputs = len(node.inputs) > 0
                 
-                # Also check if there are incoming edges (connected from other nodes)
+                # Check if there are incoming edges from data-producing nodes (not START/END)
                 incoming_edges = [e for e in self.workflow.edges if e.target == node.id]
-                has_incoming_edges = len(incoming_edges) > 0
-                await self._log("DEBUG", node.id, f"Incoming edges: {len(incoming_edges)}, node_has_inputs: {node_has_inputs}, will_write: {mode == 'write' or node_has_inputs or has_incoming_edges}")
+                # Filter out edges from START/END nodes - they don't produce data
+                data_producing_edges = [
+                    e for e in incoming_edges 
+                    if e.source not in [n.id for n in self.workflow.nodes if n.type in [NodeType.START, NodeType.END]]
+                ]
+                has_data_producing_inputs = len(data_producing_edges) > 0
+                await self._log("DEBUG", node.id, f"Incoming edges: {len(incoming_edges)} (from data-producing nodes: {len(data_producing_edges)}), node_has_inputs: {node_has_inputs}, will_write: {mode == 'write' or node_has_inputs or has_data_producing_inputs}")
                 
-                if mode == 'write' or node_has_inputs or has_incoming_edges:
+                if mode == 'write' or node_has_inputs or has_data_producing_inputs:
                     # Write mode: get data from inputs
                     node_inputs = self._prepare_node_inputs(node)
                     
