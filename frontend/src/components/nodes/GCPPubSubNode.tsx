@@ -19,11 +19,11 @@ export default function GCPPubSubNode({ data, selected }: NodeProps) {
         <div className="p-1.5 bg-purple-100 rounded">
           <Radio className="w-4 h-4 text-purple-600" />
         </div>
-        <div className="font-semibold text-sm text-gray-900">{data.label || 'GCP Pub/Sub'}</div>
+        <div className="font-semibold text-sm text-gray-900">{String(data.label || 'GCP Pub/Sub')}</div>
       </div>
       
       {data.description && (
-        <div className="text-xs text-gray-500 mb-2">{data.description}</div>
+        <div className="text-xs text-gray-500 mb-2">{String(data.description)}</div>
       )}
       
       {(data.input_config as any)?.topic_name && (

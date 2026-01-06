@@ -21,11 +21,11 @@ export default function AgentNode({ data, selected }: NodeProps) {
         <div className="p-1.5 bg-blue-100 rounded">
           <Bot className="w-4 h-4 text-blue-600" />
         </div>
-        <div className="font-semibold text-sm text-gray-900">{data.label}</div>
+        <div className="font-semibold text-sm text-gray-900">{String(data.label || '')}</div>
       </div>
       
       {data.description && (
-        <div className="text-xs text-gray-500 mb-2">{data.description}</div>
+        <div className="text-xs text-gray-500 mb-2">{String(data.description)}</div>
       )}
       
       {(data.agent_config as any)?.model && (

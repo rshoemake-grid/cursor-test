@@ -8,11 +8,11 @@ import {
   useNodesState,
   useEdgesState,
   addEdge,
-  applyNodeChanges,
   type Connection,
-  type NodeChange,
   BackgroundVariant,
   useReactFlow,
+  type Node,
+  type Edge,
 } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
 
@@ -26,8 +26,9 @@ import { api } from '../api/client'
 
 interface Execution {
   id: string
-  status: string
+  status: 'running' | 'completed' | 'failed'
   startedAt: Date
+  completedAt?: Date
   nodes: Record<string, any>
   logs: any[]
 }
@@ -63,8 +64,8 @@ export default function WorkflowBuilder({
   onClearExecutions
 }: WorkflowBuilderProps) {
   // Local state for this tab - NOT using global store
-  const [nodes, setNodes, onNodesChangeBase] = useNodesState([])
-  const [edges, setEdges, onEdgesChangeBase] = useEdgesState([])
+  const [nodes, setNodes, onNodesChangeBase] = useNodesState([] as Node[])
+  const [edges, setEdges, onEdgesChangeBase] = useEdgesState([] as Edge[])
   const [selectedNodeId, setSelectedNodeId] = React.useState<string | null>(null)
   const [localWorkflowId, setLocalWorkflowId] = useState<string | null>(workflowId)
   const [nodeExecutionStates, setNodeExecutionStates] = useState<Record<string, { status: string; error?: string }>>({})
@@ -609,7 +610,7 @@ export default function WorkflowBuilder({
             <div className="absolute inset-0">
               <KeyboardHandler />
               <ReactFlow
-                nodes={nodes.map(node => {
+                nodes={nodes.map((node: any) => {
                   // Update nodes with current execution state
                   const nodeExecutionState = nodeExecutionStates[node.id]
                   return {

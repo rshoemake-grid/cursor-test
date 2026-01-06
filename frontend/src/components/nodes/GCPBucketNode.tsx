@@ -26,11 +26,11 @@ export default function GCPBucketNode({ data, selected }: NodeProps) {
         <div className="p-1.5 bg-orange-100 rounded">
           <Database className="w-4 h-4 text-orange-600" />
         </div>
-        <div className="font-semibold text-sm text-gray-900">{data.label || 'GCP Bucket'}</div>
+        <div className="font-semibold text-sm text-gray-900">{String(data.label || 'GCP Bucket')}</div>
       </div>
       
       {data.description && (
-        <div className="text-xs text-gray-500 mb-2">{data.description}</div>
+        <div className="text-xs text-gray-500 mb-2">{String(data.description)}</div>
       )}
       
       {(data.input_config as any)?.bucket_name && (

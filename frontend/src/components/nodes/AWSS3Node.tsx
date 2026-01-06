@@ -26,11 +26,11 @@ export default function AWSS3Node({ data, selected }: NodeProps) {
         <div className="p-1.5 bg-yellow-100 rounded">
           <Database className="w-4 h-4 text-yellow-600" />
         </div>
-        <div className="font-semibold text-sm text-gray-900">{data.label || 'AWS S3'}</div>
+        <div className="font-semibold text-sm text-gray-900">{String(data.label || 'AWS S3')}</div>
       </div>
       
       {data.description && (
-        <div className="text-xs text-gray-500 mb-2">{data.description}</div>
+        <div className="text-xs text-gray-500 mb-2">{String(data.description)}</div>
       )}
       
       {(data.input_config as any)?.bucket_name && (
