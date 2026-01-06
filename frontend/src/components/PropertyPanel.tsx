@@ -9,9 +9,21 @@ interface PropertyPanelProps {
 }
 
 
+interface LLMProvider {
+  id: string
+  name: string
+  type: string
+  apiKey: string
+  baseUrl?: string
+  defaultModel: string
+  models: string[]
+  enabled: boolean
+}
+
 export default function PropertyPanel({ selectedNodeId, setSelectedNodeId, nodes: nodesProp }: PropertyPanelProps) {
   const { setNodes, deleteElements, getNodes } = useReactFlow()
   const [showAddInput, setShowAddInput] = useState(false)
+  const [availableModels, setAvailableModels] = useState<Array<{ value: string; label: string; provider: string }>>([])
   
   // Get nodes directly from React Flow store for stability, fallback to prop
   const nodes = useMemo(() => {
@@ -253,6 +265,77 @@ export default function PropertyPanel({ selectedNodeId, setSelectedNodeId, nodes
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedNodeId]) // Only depend on selectedNodeId, not the node data
+
+  // Load available models from configured providers
+  useEffect(() => {
+    const loadModels = async () => {
+      try {
+        // Try to load from backend first
+        const response = await fetch('/api/settings/llm')
+        if (response.ok) {
+          const data = await response.json()
+          if (data.providers && data.providers.length > 0) {
+            const models: Array<{ value: string; label: string; provider: string }> = []
+            data.providers.forEach((provider: LLMProvider) => {
+              if (provider.enabled && provider.models && provider.models.length > 0) {
+                provider.models.forEach((model) => {
+                  models.push({
+                    value: model,
+                    label: `${model} (${provider.name})`,
+                    provider: provider.name
+                  })
+                })
+              }
+            })
+            setAvailableModels(models)
+            return
+          }
+        }
+      } catch (e) {
+        console.log('Could not load from backend, trying localStorage')
+      }
+      
+      // Fallback to localStorage
+      const saved = localStorage.getItem('llm_providers')
+      if (saved) {
+        try {
+          const providers: LLMProvider[] = JSON.parse(saved)
+          const models: Array<{ value: string; label: string; provider: string }> = []
+          providers.forEach((provider) => {
+            if (provider.enabled && provider.models && provider.models.length > 0) {
+              provider.models.forEach((model) => {
+                models.push({
+                  value: model,
+                  label: `${model} (${provider.name})`,
+                  provider: provider.name
+                })
+              })
+            }
+          })
+          setAvailableModels(models)
+        } catch (e) {
+          console.error('Failed to load providers:', e)
+          // Fallback to default GPT models if no providers found
+          setAvailableModels([
+            { value: 'gpt-4o-mini', label: 'GPT-4o Mini (OpenAI)', provider: 'OpenAI' },
+            { value: 'gpt-4o', label: 'GPT-4o (OpenAI)', provider: 'OpenAI' },
+            { value: 'gpt-4', label: 'GPT-4 (OpenAI)', provider: 'OpenAI' },
+            { value: 'gpt-3.5-turbo', label: 'GPT-3.5 Turbo (OpenAI)', provider: 'OpenAI' }
+          ])
+        }
+      } else {
+        // Fallback to default GPT models if no providers found
+        setAvailableModels([
+          { value: 'gpt-4o-mini', label: 'GPT-4o Mini (OpenAI)', provider: 'OpenAI' },
+          { value: 'gpt-4o', label: 'GPT-4o (OpenAI)', provider: 'OpenAI' },
+          { value: 'gpt-4', label: 'GPT-4 (OpenAI)', provider: 'OpenAI' },
+          { value: 'gpt-3.5-turbo', label: 'GPT-3.5 Turbo (OpenAI)', provider: 'OpenAI' }
+        ])
+      }
+    }
+    
+    loadModels()
+  }, [])
 
 
   if (!selectedNode) {
@@ -568,7 +651,7 @@ export default function PropertyPanel({ selectedNodeId, setSelectedNodeId, nodes
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Model</label>
               <select
-                value={selectedNode.data.agent_config?.model || 'gpt-4o-mini'}
+                value={selectedNode.data.agent_config?.model || (availableModels.length > 0 ? availableModels[0].value : 'gpt-4o-mini')}
                 onChange={(e) =>
                   handleUpdate('agent_config', {
                     ...selectedNode.data.agent_config,
@@ -577,13 +660,25 @@ export default function PropertyPanel({ selectedNodeId, setSelectedNodeId, nodes
                 }
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
               >
-                <option value="gpt-4o-mini">GPT-4o Mini (Fast & Cheap)</option>
-                <option value="gpt-4o">GPT-4o (Better Quality)</option>
-                <option value="gpt-4">GPT-4 (Best Quality)</option>
-                <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
+                {availableModels.length > 0 ? (
+                  availableModels.map((model) => (
+                    <option key={model.value} value={model.value}>
+                      {model.label}
+                    </option>
+                  ))
+                ) : (
+                  <>
+                    <option value="gpt-4o-mini">GPT-4o Mini (OpenAI)</option>
+                    <option value="gpt-4o">GPT-4o (OpenAI)</option>
+                    <option value="gpt-4">GPT-4 (OpenAI)</option>
+                    <option value="gpt-3.5-turbo">GPT-3.5 Turbo (OpenAI)</option>
+                  </>
+                )}
               </select>
               <p className="text-xs text-gray-500 mt-1">
-                This agent will call the OpenAI API with this model
+                {availableModels.length > 0 
+                  ? `This agent will use the configured LLM provider with the selected model`
+                  : 'This agent will call the OpenAI API with this model. Configure providers in Settings.'}
               </p>
             </div>
 
