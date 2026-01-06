@@ -15,7 +15,7 @@ chromadb==0.4.22
 passlib[bcrypt]==1.7.4
 python-jose[cryptography]==3.3.0
 python-multipart==0.0.9
-greenlet==3.0.3
+greenlet>=3.1.0
 
 # Optional dependencies for input sources (install only if needed)
 google-cloud-storage
