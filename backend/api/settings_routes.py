@@ -18,7 +18,7 @@ router = APIRouter(prefix="/api/settings", tags=["settings"])
 class LLMProvider(BaseModel):
     id: str
     name: str
-    type: str  # 'openai', 'anthropic', 'custom'
+    type: str  # 'openai', 'anthropic', 'gemini', 'custom'
     apiKey: str
     baseUrl: Optional[str] = None
     defaultModel: str

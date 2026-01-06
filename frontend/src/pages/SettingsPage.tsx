@@ -370,6 +370,7 @@ export default function SettingsPage() {
                 >
                   <option value="openai">OpenAI (GPT-4, GPT-3.5, etc.)</option>
                   <option value="anthropic">Anthropic (Claude)</option>
+                  <option value="gemini">Google Gemini</option>
                   <option value="custom">Custom Provider</option>
                 </select>
               </div>
