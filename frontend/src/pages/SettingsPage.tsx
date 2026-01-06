@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
-import { Save, Plus, Trash2, CheckCircle, XCircle, Loader } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+import { Save, Plus, Trash2, CheckCircle, XCircle, Loader, ArrowLeft } from 'lucide-react'
 
 interface LLMProvider {
   id: string
@@ -66,6 +67,7 @@ const PROVIDER_TEMPLATES = {
 }
 
 export default function SettingsPage() {
+  const navigate = useNavigate()
   const [providers, setProviders] = useState<LLMProvider[]>([])
   const [showAddProvider, setShowAddProvider] = useState(false)
   const [selectedTemplate, setSelectedTemplate] = useState<keyof typeof PROVIDER_TEMPLATES>('openai')
@@ -215,6 +217,13 @@ export default function SettingsPage() {
     <div className="h-full overflow-auto bg-gray-50 p-8">
       <div className="max-w-4xl mx-auto">
         <div className="mb-8">
+          <button
+            onClick={() => navigate('/')}
+            className="mb-4 flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
+          >
+            <ArrowLeft className="w-5 h-5" />
+            <span>Back to Main</span>
+          </button>
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Settings</h1>
           <p className="text-gray-600">Configure LLM providers and API keys for your agentic workflows</p>
         </div>
