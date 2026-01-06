@@ -575,6 +575,9 @@ export default function WorkflowBuilder({
                 selectionOnDrag={false}
                 fitView
                 className="bg-gray-50"
+                defaultEdgeOptions={{
+                  style: { strokeWidth: 3 },
+                }}
               >
               <Controls />
               <MiniMap
