@@ -609,7 +609,18 @@ export default function WorkflowBuilder({
             <div className="absolute inset-0">
               <KeyboardHandler />
               <ReactFlow
-                nodes={nodes}
+                nodes={nodes.map(node => {
+                  // Update nodes with current execution state
+                  const nodeExecutionState = nodeExecutionStates[node.id]
+                  return {
+                    ...node,
+                    data: {
+                      ...node.data,
+                      executionStatus: nodeExecutionState?.status,
+                      executionError: nodeExecutionState?.error,
+                    }
+                  }
+                })}
                 edges={edges}
                 onNodesChange={onNodesChange}
                 onEdgesChange={onEdgesChange}
