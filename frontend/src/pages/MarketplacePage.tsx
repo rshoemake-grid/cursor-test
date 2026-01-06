@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { Download, Heart, TrendingUp, Clock, Star } from 'lucide-react';
+import { Download, Heart, TrendingUp, Clock, Star, ArrowLeft } from 'lucide-react';
 
 interface Template {
   id: string;
@@ -89,6 +89,13 @@ export default function MarketplacePage() {
       {/* Header */}
       <div className="bg-white border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 py-6">
+          <button
+            onClick={() => navigate('/')}
+            className="mb-4 flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
+          >
+            <ArrowLeft className="w-5 h-5" />
+            <span>Back to Main</span>
+          </button>
           <div className="flex items-center justify-between mb-4">
             <div>
               <h1 className="text-3xl font-bold text-gray-900">Workflow Marketplace</h1>
