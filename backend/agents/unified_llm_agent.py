@@ -117,7 +117,15 @@ class UnifiedLLMAgent(BaseAgent):
                     "Please go to Settings, add a valid API key for this provider, enable it, and click 'Sync Now'."
                 )
             
-            self._validate_api_key(api_key)
+            # Validate API key (should already be filtered, but double-check)
+            try:
+                self._validate_api_key(api_key)
+            except ValueError as e:
+                # Provide more helpful error message
+                raise ValueError(
+                    f"Provider '{provider_type}' for model '{model}' has an invalid API key. "
+                    "Please go to Settings, update the API key for this provider with a valid key, enable it, and click 'Sync Now'."
+                ) from e
             
             # Update llm_config to use the correct provider's config
             self.llm_config = {
@@ -127,6 +135,12 @@ class UnifiedLLMAgent(BaseAgent):
             print(f"✅ Found provider for model '{model}': {provider_type}")
         else:
             # Fall back to the default provider from llm_config
+            if not self.llm_config:
+                raise ValueError(
+                    f"No provider found for model '{model}' and no default provider configured. "
+                    "Please go to Settings, add an LLM provider with a valid API key for this model, enable it, and click 'Sync Now'."
+                )
+            
             provider_type = self.llm_config["type"]
             
             # Validate the API key from the default provider
@@ -137,7 +151,16 @@ class UnifiedLLMAgent(BaseAgent):
                     "Please go to Settings, add a valid API key for this provider, enable it, and click 'Sync Now'."
                 )
             
-            self._validate_api_key(api_key)
+            # Validate API key (should already be filtered, but double-check)
+            try:
+                self._validate_api_key(api_key)
+            except ValueError as e:
+                # Provide more helpful error message
+                raise ValueError(
+                    f"Default provider '{provider_type}' has an invalid API key. "
+                    "Please go to Settings, update the API key for this provider with a valid key, enable it, and click 'Sync Now'."
+                ) from e
+            
             print(f"⚠️ No provider found for model '{model}', using default provider: {provider_type}")
         
         if provider_type == "openai":

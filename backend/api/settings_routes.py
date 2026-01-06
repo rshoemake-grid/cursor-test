@@ -228,6 +228,23 @@ async def _test_custom(test_request: LLMTestRequest):
             return {"status": "error", "message": f"API returned status {response.status_code}: {response.text}"}
 
 
+def _is_valid_api_key(api_key: str) -> bool:
+    """Check if API key is not a placeholder"""
+    if not api_key:
+        return False
+    
+    api_key_lower = api_key.lower()
+    # Check for common placeholder patterns
+    if (api_key == "your-api-key-here" or 
+        "your-api" in api_key_lower or 
+        api_key.startswith("your-api") or
+        "*****here" in api_key or
+        api_key == "your-api*****here"):
+        return False
+    
+    return True
+
+
 def get_active_llm_config(user_id: Optional[str] = None) -> Optional[Dict[str, Any]]:
     """Get the first enabled LLM provider for a user"""
     uid = user_id if user_id else "anonymous"
@@ -244,8 +261,9 @@ def get_active_llm_config(user_id: Optional[str] = None) -> Optional[Dict[str, A
     print(f"   Found settings with {len(settings.providers)} providers")
     
     for provider in settings.providers:
-        print(f"   - Checking {provider.name}: enabled={provider.enabled}, has_key={len(provider.apiKey) > 0}")
-        if provider.enabled and provider.apiKey:
+        print(f"   - Checking {provider.name}: enabled={provider.enabled}, has_key={len(provider.apiKey) > 0}, valid_key={_is_valid_api_key(provider.apiKey) if provider.apiKey else False}")
+        # Check that provider is enabled, has an API key, and the API key is not a placeholder
+        if provider.enabled and provider.apiKey and _is_valid_api_key(provider.apiKey):
             config = {
                 "type": provider.type,
                 "api_key": provider.apiKey,
@@ -255,7 +273,7 @@ def get_active_llm_config(user_id: Optional[str] = None) -> Optional[Dict[str, A
             print(f"   ✅ Using provider {provider.name} with key: {provider.apiKey[:10]}...")
             return config
     
-    print(f"   ❌ No enabled provider with API key found")
+    print(f"   ❌ No enabled provider with valid API key found")
     return None
 
 
@@ -274,9 +292,10 @@ def get_provider_for_model(model_name: str, user_id: Optional[str] = None) -> Op
     
     # Search through all enabled providers to find one that has this model
     for provider in settings.providers:
-        print(f"   Checking provider '{provider.name}': enabled={provider.enabled}, has_key={bool(provider.apiKey)}, models={len(provider.models) if provider.models else 0}")
+        print(f"   Checking provider '{provider.name}': enabled={provider.enabled}, has_key={bool(provider.apiKey)}, valid_key={_is_valid_api_key(provider.apiKey) if provider.apiKey else False}, models={len(provider.models) if provider.models else 0}")
         
-        if provider.enabled and provider.apiKey and provider.models:
+        # Check that provider is enabled, has a valid (non-placeholder) API key, and has models
+        if provider.enabled and provider.apiKey and _is_valid_api_key(provider.apiKey) and provider.models:
             # Check if this provider has the model
             if model_name in provider.models:
                 print(f"✅ Found provider '{provider.name}' for model '{model_name}'")
