@@ -12,6 +12,7 @@ import {
   type Connection,
   type NodeChange,
   BackgroundVariant,
+  useReactFlow,
 } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
 
@@ -66,6 +67,54 @@ export default function WorkflowBuilder({
   const [edges, setEdges, onEdgesChangeBase] = useEdgesState([])
   const [selectedNodeId, setSelectedNodeId] = React.useState<string | null>(null)
   const [localWorkflowId, setLocalWorkflowId] = useState<string | null>(workflowId)
+  
+  // Component to handle keyboard shortcuts (must be inside ReactFlowProvider)
+  const KeyboardHandler = () => {
+    const { deleteElements, getNodes, getEdges } = useReactFlow()
+    
+    useEffect(() => {
+      const handleKeyDown = (event: KeyboardEvent) => {
+        // Check if Delete or Backspace is pressed
+        if (event.key === 'Delete' || event.key === 'Backspace') {
+          // Don't delete if user is typing in an input field
+          const target = event.target as HTMLElement
+          if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) {
+            return
+          }
+          
+          // Get selected nodes and edges
+          const selectedNodes = getNodes().filter(node => node.selected)
+          const selectedEdges = getEdges().filter(edge => edge.selected)
+          
+          // Delete selected items
+          if (selectedNodes.length > 0 || selectedEdges.length > 0) {
+            event.preventDefault()
+            event.stopPropagation()
+            
+            deleteElements({
+              nodes: selectedNodes,
+              edges: selectedEdges
+            })
+            
+            // Clear selection if deleted node was selected
+            const currentSelectedId = selectedNodeId
+            if (selectedNodes.some(node => node.id === currentSelectedId)) {
+              setSelectedNodeId(null)
+            }
+            
+            notifyModified()
+          }
+        }
+      }
+      
+      window.addEventListener('keydown', handleKeyDown)
+      return () => {
+        window.removeEventListener('keydown', handleKeyDown)
+      }
+    }, [deleteElements, getNodes, getEdges, selectedNodeId, setSelectedNodeId, notifyModified])
+    
+    return null
+  }
   
   // Refs to access current nodes/edges in callbacks
   const nodesRef = React.useRef(nodes)
@@ -553,6 +602,7 @@ export default function WorkflowBuilder({
             />
             
             <div className="absolute inset-0">
+              <KeyboardHandler />
               <ReactFlow
                 nodes={nodes}
                 edges={edges}
