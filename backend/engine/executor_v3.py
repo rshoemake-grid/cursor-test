@@ -532,6 +532,20 @@ class WorkflowExecutorV3:
                             # For loop nodes, check if output has 'items' field and extract it
                             if node.type == NodeType.LOOP and 'items' in previous_node_output:
                                 node_inputs = {'data': previous_node_output.get('items'), 'items': previous_node_output.get('items')}
+                            # For agent nodes after loop, extract 'items' array from loop output
+                            elif node.type == NodeType.AGENT and 'items' in previous_node_output:
+                                # Loop outputs {'items': [...]}, agent needs the items array
+                                items = previous_node_output.get('items', [])
+                                # Pass first item or all items depending on context
+                                if items and len(items) > 0:
+                                    # For now, pass first item as 'data' and all items as 'items'
+                                    node_inputs = {
+                                        'data': items[0] if len(items) == 1 else items,
+                                        'items': items,
+                                        'item': items[0] if items else None,
+                                    }
+                                else:
+                                    node_inputs = previous_node_output
                             else:
                                 node_inputs = previous_node_output
                         else:
