@@ -725,11 +725,12 @@ export default function WorkflowBuilder({
                 nodeTypes={nodeTypes}
                 nodesDraggable={true}
                 nodesConnectable={true}
-                panOnDrag={true} // Allow panning - React Flow will prioritize node dragging when clicking on nodes
+                panOnDrag={[1, 2]} // Allow panning with middle mouse button or with two fingers
                 panOnScroll={true}
                 zoomOnScroll={true}
                 zoomOnPinch={true}
-                selectionOnDrag={false}
+                selectionOnDrag={true} // Enable box selection by dragging on canvas
+                selectNodesOnDrag={false} // Don't select nodes when dragging them individually
                 fitView
                 className="bg-gray-50"
                 defaultEdgeOptions={{
