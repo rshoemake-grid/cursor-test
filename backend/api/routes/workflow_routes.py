@@ -1,0 +1,269 @@
+"""
+Workflow CRUD routes.
+Handles creation, reading, updating, and deletion of workflows.
+"""
+import json
+from typing import List, Optional
+from fastapi import APIRouter, HTTPException, Depends
+from pydantic import BaseModel
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from ...models.schemas import WorkflowCreate, WorkflowResponse, Edge, Node
+from ...database.models import UserDB
+from ...auth import get_optional_user
+from ...utils.logger import get_logger
+from ...dependencies import get_workflow_service
+from ...services.workflow_service import WorkflowService
+from ...database import get_db
+from ...exceptions import WorkflowNotFoundError, WorkflowValidationError
+
+logger = get_logger(__name__)
+
+router = APIRouter()
+
+
+def reconstruct_nodes(nodes_data: List[dict]) -> List[Node]:
+    """Reconstruct Node objects from dictionary data"""
+    from ...models.schemas import Node, NodeType, AgentConfig, ConditionConfig, LoopConfig
+    
+    nodes = []
+    all_node_data = nodes_data if isinstance(nodes_data, list) else []
+    
+    logger.debug(f"Found {len(all_node_data)} nodes in workflow definition")
+    
+    for i, node_data in enumerate(all_node_data):
+        node_id = node_data.get('id', f'unknown-{i}')
+        node_type = node_data.get('type', 'unknown')
+        logger.debug(f"Node {i}: id={node_id}, type={node_type}")
+        
+        # Handle config extraction from data object if needed
+        node_id = node_data.get('id', f'unknown-{i}')
+        if node_data.get('type') == 'loop' and not node_data.get('loop_config'):
+            logger.warning(f"Loop node {node_id} missing loop_config after reconstruction")
+            if "data" in node_data and node_data.get("data"):
+                data_obj = node_data.get("data") if isinstance(node_data.get("data"), dict) else {}
+                data_loop_config = data_obj.get('loop_config')
+                logger.debug(f"Data object has loop_config: {data_loop_config is not None}")
+                if data_loop_config:
+                    logger.debug(f"Extracting loop_config from data object...")
+                    node_data['loop_config'] = data_loop_config
+        
+        if node_data.get('type') == 'condition' and not node_data.get('condition_config'):
+            logger.warning(f"Condition node {node_id} missing condition_config after reconstruction")
+            if "data" in node_data and node_data.get("data"):
+                data_obj = node_data.get("data") if isinstance(node_data.get("data"), dict) else {}
+                data_condition_config = data_obj.get('condition_config')
+                if data_condition_config:
+                    node_data['condition_config'] = data_condition_config
+        
+        if node_data.get('type') == 'agent' and not node_data.get('agent_config'):
+            logger.warning(f"Agent node {node_id} missing agent_config after reconstruction")
+            if "data" in node_data and node_data.get("data"):
+                data_obj = node_data.get("data") if isinstance(node_data.get("data"), dict) else {}
+                data_agent_config = data_obj.get('agent_config')
+                if data_agent_config:
+                    node_data['agent_config'] = data_agent_config
+        
+        try:
+            node = Node(**node_data)
+            logger.debug(f"Successfully reconstructed node {i}: {node.id} ({node.type})")
+            nodes.append(node)
+        except Exception as e:
+            logger.error(f"Error reconstructing node {i} (id={node_data.get('id', 'unknown')}): {e}, node data: {json.dumps(node_data, indent=2, default=str)}", exc_info=True)
+            raise HTTPException(status_code=422, detail=f"Invalid node data at index {i}: {str(e)}")
+    
+    logger.info(f"Successfully reconstructed {len(nodes)} nodes")
+    return nodes
+
+
+@router.post("/workflows", response_model=WorkflowResponse)
+async def create_workflow(
+    workflow: WorkflowCreate,
+    db: AsyncSession = Depends(get_db),
+    current_user: Optional[UserDB] = Depends(get_optional_user)
+):
+    """Create a new workflow (optionally authenticated)"""
+    try:
+        workflow_service = get_workflow_service(db)
+        user_id = current_user.id if current_user else None
+        db_workflow = await workflow_service.create_workflow(workflow, user_id=user_id)
+        
+        # Convert processed edges back to Edge objects for response
+        processed_edges = db_workflow.definition.get("edges", [])
+        response_edges = [Edge(**e) for e in processed_edges]
+    except WorkflowValidationError as e:
+        raise HTTPException(status_code=422, detail=str(e))
+    except Exception as e:
+        logger.error(f"Unexpected error creating workflow: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
+    
+    return WorkflowResponse(
+        id=db_workflow.id,
+        name=db_workflow.name,
+        description=db_workflow.description,
+        version=db_workflow.version,
+        nodes=reconstruct_nodes(db_workflow.definition.get("nodes", [])),
+        edges=response_edges,
+        variables=db_workflow.definition.get("variables", {}),
+        created_at=db_workflow.created_at,
+        updated_at=db_workflow.updated_at
+    )
+
+
+@router.get("/workflows", response_model=List[WorkflowResponse])
+async def list_workflows(
+    db: AsyncSession = Depends(get_db),
+    current_user: Optional[UserDB] = Depends(get_optional_user)
+):
+    """List all workflows"""
+    try:
+        workflow_service = get_workflow_service(db)
+        user_id = current_user.id if current_user else None
+        workflows = await workflow_service.list_workflows(user_id=user_id, include_public=True)
+        
+        return [
+            WorkflowResponse(
+                id=w.id,
+                name=w.name,
+                description=w.description,
+                version=w.version,
+                nodes=reconstruct_nodes(w.definition.get("nodes", [])),
+                edges=[Edge(**e) for e in w.definition.get("edges", [])],
+                variables=w.definition.get("variables", {}),
+                created_at=w.created_at,
+                updated_at=w.updated_at
+            )
+            for w in workflows
+        ]
+    except Exception as e:
+        logger.error(f"Error listing workflows: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Error loading workflows: {str(e)}")
+
+
+@router.get("/workflows/{workflow_id}", response_model=WorkflowResponse)
+async def get_workflow(
+    workflow_id: str,
+    db: AsyncSession = Depends(get_db)
+):
+    """Get a workflow by ID"""
+    try:
+        workflow_service = get_workflow_service(db)
+        workflow = await workflow_service.get_workflow(workflow_id)
+        
+        return WorkflowResponse(
+            id=workflow.id,
+            name=workflow.name,
+            description=workflow.description,
+            version=workflow.version,
+            nodes=reconstruct_nodes(workflow.definition.get("nodes", [])),
+            edges=[Edge(**e) for e in workflow.definition.get("edges", [])],
+            variables=workflow.definition.get("variables", {}),
+            created_at=workflow.created_at,
+            updated_at=workflow.updated_at
+        )
+    except WorkflowNotFoundError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except Exception as e:
+        logger.error(f"Error getting workflow: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Error loading workflow: {str(e)}")
+
+
+@router.put("/workflows/{workflow_id}", response_model=WorkflowResponse)
+async def update_workflow(
+    workflow_id: str,
+    workflow: WorkflowCreate,
+    db: AsyncSession = Depends(get_db),
+    current_user: Optional[UserDB] = Depends(get_optional_user)
+):
+    """Update an existing workflow"""
+    try:
+        workflow_service = get_workflow_service(db)
+        user_id = current_user.id if current_user else None
+        updated_workflow = await workflow_service.update_workflow(workflow_id, workflow, user_id=user_id)
+        
+        return WorkflowResponse(
+            id=updated_workflow.id,
+            name=updated_workflow.name,
+            description=updated_workflow.description,
+            version=updated_workflow.version,
+            nodes=reconstruct_nodes(updated_workflow.definition.get("nodes", [])),
+            edges=[Edge(**e) for e in updated_workflow.definition.get("edges", [])],
+            variables=updated_workflow.definition.get("variables", {}),
+            created_at=updated_workflow.created_at,
+            updated_at=updated_workflow.updated_at
+        )
+    except WorkflowNotFoundError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except WorkflowValidationError as e:
+        raise HTTPException(status_code=422, detail=str(e))
+    except Exception as e:
+        logger.error(f"Unexpected error updating workflow: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Error updating workflow: {str(e)}")
+
+
+@router.delete("/workflows/{workflow_id}", status_code=204)
+async def delete_workflow(
+    workflow_id: str,
+    db: AsyncSession = Depends(get_db),
+    current_user: Optional[UserDB] = Depends(get_optional_user)
+):
+    """Delete a workflow"""
+    try:
+        workflow_service = get_workflow_service(db)
+        user_id = current_user.id if current_user else None
+        deleted = await workflow_service.delete_workflow(workflow_id, user_id=user_id)
+        
+        if not deleted:
+            raise HTTPException(status_code=404, detail=f"Workflow {workflow_id} not found")
+    except WorkflowNotFoundError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except Exception as e:
+        logger.error(f"Error deleting workflow: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Error deleting workflow: {str(e)}")
+
+
+class BulkDeleteRequest(BaseModel):
+    """Request model for bulk delete"""
+    workflow_ids: List[str]
+
+
+@router.post("/workflows/bulk-delete", status_code=200)
+async def bulk_delete_workflows(
+    request: BulkDeleteRequest,
+    db: AsyncSession = Depends(get_db),
+    current_user: Optional[UserDB] = Depends(get_optional_user)
+):
+    """Delete multiple workflows"""
+    if not request.workflow_ids:
+        raise HTTPException(status_code=400, detail="No workflow IDs provided")
+    
+    workflow_service = get_workflow_service(db)
+    user_id = current_user.id if current_user else None
+    deleted_count = 0
+    failed_ids = []
+    
+    for workflow_id in request.workflow_ids:
+        try:
+            deleted = await workflow_service.delete_workflow(workflow_id, user_id=user_id)
+            if deleted:
+                deleted_count += 1
+            else:
+                failed_ids.append(workflow_id)
+        except WorkflowNotFoundError:
+            failed_ids.append(workflow_id)
+        except Exception as e:
+            logger.error(f"Error deleting workflow {workflow_id}: {e}", exc_info=True)
+            failed_ids.append(workflow_id)
+    
+    if failed_ids:
+        return {
+            "message": f"Deleted {deleted_count} workflow(s). {len(failed_ids)} workflow(s) could not be deleted.",
+            "deleted_count": deleted_count,
+            "failed_ids": failed_ids
+        }
+    
+    return {
+        "message": f"Successfully deleted {deleted_count} workflow(s)",
+        "deleted_count": deleted_count
+    }
+

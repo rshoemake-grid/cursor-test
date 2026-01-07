@@ -18,7 +18,7 @@ from ..models.schemas import (
 from ..database import get_db, WorkflowDB, ExecutionDB
 from ..database.db import AsyncSessionLocal
 from ..database.models import UserDB
-from ..engine.executor_v3 import WorkflowExecutorV3 as WorkflowExecutor
+from ..engine import WorkflowExecutor  # Now v3 is the default export
 from ..auth import get_optional_user
 from ..utils.logger import get_logger
 
