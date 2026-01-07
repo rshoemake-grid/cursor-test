@@ -14,13 +14,26 @@ class LoopAgent(BaseAgent):
         if not loop_config and hasattr(node, 'data') and node.data:
             loop_config = node.data.get('loop_config') if isinstance(node.data, dict) else None
         
+        # If still not found, provide defaults
         if not loop_config:
-            raise ValueError(f"Node {node.id} requires loop_config. Please configure the loop settings in the node properties.")
-        
-        # Convert dict to LoopConfig if needed
-        if isinstance(loop_config, dict):
+            print(f"⚠️  WARNING: Loop node {node.id} has no loop_config, using defaults")
             from ..models.schemas import LoopConfig
-            loop_config = LoopConfig(**loop_config)
+            loop_config = LoopConfig(
+                loop_type="for_each",
+                max_iterations=10
+            )
+        # Convert dict to LoopConfig if needed
+        elif isinstance(loop_config, dict):
+            from ..models.schemas import LoopConfig
+            # Only create LoopConfig if dict has content
+            if len(loop_config) > 0:
+                loop_config = LoopConfig(**loop_config)
+            else:
+                # Empty dict, use defaults
+                loop_config = LoopConfig(
+                    loop_type="for_each",
+                    max_iterations=10
+                )
         
         self.config = loop_config
         
