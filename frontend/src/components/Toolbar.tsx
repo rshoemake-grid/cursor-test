@@ -167,46 +167,24 @@ export default function Toolbar({
         showSuccess('✅ Execution starting...\n\nCheck the console at the bottom of the screen to watch it run.', 6000)
         
         // Start execution API call - fire and forget
-        const executionPromise = api.executeWorkflow(workflowId!, inputs)
-        
-        // Handle execution start callback when API responds with real execution ID
-        executionPromise.then((execution) => {
-          console.log('Execution started:', execution)
-          
-          // Update execution ID from temp to real
-          if (onExecutionStart && execution.execution_id !== tempExecutionId) {
-            // Call again with real execution ID - this will update the execution
-            onExecutionStart(execution.execution_id)
-          }
-        }).catch((error: any) => {
-          console.error('Execution failed:', error)
-          setIsExecuting(false)
-          
-          // Show non-blocking error notification
-          const errorNotification = document.createElement('div')
-          errorNotification.style.cssText = `
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background: #ef4444;
-            color: white;
-            padding: 16px 24px;
-            border-radius: 8px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            z-index: 10000;
-            max-width: 400px;
-            font-family: system-ui, -apple-system, sans-serif;
-          `
-          errorNotification.textContent = `Failed to execute workflow: ${error.message}`
-          document.body.appendChild(errorNotification)
-          
-          // Auto-remove after 5 seconds
-          setTimeout(() => {
-            errorNotification.style.transition = 'opacity 0.3s'
-            errorNotification.style.opacity = '0'
-            setTimeout(() => errorNotification.remove(), 300)
-          }, 5000)
-        })
+        api.executeWorkflow(workflowId!, inputs)
+          .then((execution) => {
+            console.log('Execution started:', execution)
+            
+            // Update execution ID from temp to real
+            if (onExecutionStart && execution.execution_id && execution.execution_id !== tempExecutionId) {
+              // Call again with real execution ID - this will update the execution
+              onExecutionStart(execution.execution_id)
+            }
+          })
+          .catch((error: any) => {
+            console.error('Execution failed:', error)
+            setIsExecuting(false)
+            showError(`Failed to execute workflow: ${error.response?.data?.detail || error.message || 'Unknown error'}`)
+            
+            // Remove the temp execution if it exists
+            // The execution console will handle cleanup
+          })
       } catch (error: any) {
         console.error('Execution setup failed:', error)
         setIsExecuting(false)

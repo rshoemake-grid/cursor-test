@@ -111,16 +111,28 @@ export default function WorkflowTabs({ initialWorkflowId, workflowLoadKey, onExe
     setActiveTabId(newId)
   }, [])
 
-  const handleCloseTab = useCallback(async (tabId: string, e: React.MouseEvent) => {
+  const handleCloseTab = useCallback((tabId: string, e: React.MouseEvent) => {
     e.stopPropagation()
     
     const tabToClose = tabs.find(t => t.id === tabId)
     if (tabToClose?.isUnsaved) {
-      const confirmed = await showConfirm(
+      showConfirm(
         'This workflow has unsaved changes. Close anyway?',
         { title: 'Unsaved Changes', confirmText: 'Close', cancelText: 'Cancel', type: 'warning' }
-      )
-      if (!confirmed) return
+      ).then((confirmed) => {
+        if (!confirmed) return
+        setTabs(prev => {
+          const filtered = prev.filter(t => t.id !== tabId)
+          // If closing active tab, switch to the last tab
+          if (tabId === activeTabId && filtered.length > 0) {
+            setActiveTabId(filtered[filtered.length - 1].id)
+          } else if (tabId === activeTabId) {
+            setActiveTabId(null)
+          }
+          return filtered
+        })
+      })
+      return
     }
 
     setTabs(prev => {
@@ -225,18 +237,30 @@ export default function WorkflowTabs({ initialWorkflowId, workflowLoadKey, onExe
   }, [tabs, activeTabId, onExecutionStart])
 
   // Handle closing workflow executions
-  const handleCloseWorkflow = useCallback(async (workflowId: string) => {
+  const handleCloseWorkflow = useCallback((workflowId: string) => {
     // Find the tab by workflowId and close it
     const tabToClose = tabs.find(t => t.workflowId === workflowId)
     if (!tabToClose) return
     
     // Check for unsaved changes
     if (tabToClose.isUnsaved) {
-      const confirmed = await showConfirm(
+      showConfirm(
         'This workflow has unsaved changes. Close anyway?',
         { title: 'Unsaved Changes', confirmText: 'Close', cancelText: 'Cancel', type: 'warning' }
-      )
-      if (!confirmed) return
+      ).then((confirmed) => {
+        if (!confirmed) return
+        setTabs(prev => {
+          const filtered = prev.filter(t => t.id !== tabToClose.id)
+          // If closing active tab, switch to the last tab
+          if (tabToClose.id === activeTabId && filtered.length > 0) {
+            setActiveTabId(filtered[filtered.length - 1].id)
+          } else if (tabToClose.id === activeTabId) {
+            setActiveTabId(null)
+          }
+          return filtered
+        })
+      })
+      return
     }
     
     setTabs(prev => {
