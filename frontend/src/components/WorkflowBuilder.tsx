@@ -511,40 +511,24 @@ export default function WorkflowBuilder({
       const type = event.dataTransfer.getData('application/reactflow')
       if (!type) return
 
-      // Get the React Flow wrapper element to calculate position
-      const reactFlowWrapper = (event.currentTarget as HTMLElement).closest('.react-flow')
-      if (!reactFlowWrapper) return
-
-      const reactFlowBounds = reactFlowWrapper.getBoundingClientRect()
-      
-      // Get the viewport transform from React Flow's internal state
-      // We need to account for zoom and pan - get it from the DOM
-      const viewport = reactFlowWrapper.querySelector('.react-flow__viewport')
-      if (!viewport) return
-
-      const transform = (viewport as HTMLElement).style.transform
-      // Parse transform: translate(xpx, ypx) scale(z)
-      const translateMatch = transform.match(/translate\(([^)]+)\)/)
-      const scaleMatch = transform.match(/scale\(([^)]+)\)/)
-      
-      let translateX = 0
-      let translateY = 0
-      let scale = 1
-      
-      if (translateMatch) {
-        const coords = translateMatch[1].split(',').map(v => parseFloat(v.trim()))
-        translateX = coords[0] || 0
-        translateY = coords[1] || 0
-      }
-      
-      if (scaleMatch) {
-        scale = parseFloat(scaleMatch[1]) || 1
-      }
-
-      // Calculate position relative to flow coordinates
-      const position = {
-        x: (event.clientX - reactFlowBounds.left - translateX) / scale,
-        y: (event.clientY - reactFlowBounds.top - translateY) / scale,
+      // Use React Flow's screenToFlowPosition to convert mouse coordinates
+      // This accounts for zoom, pan, and viewport position
+      let position
+      if (reactFlowInstanceRef.current?.screenToFlowPosition) {
+        position = reactFlowInstanceRef.current.screenToFlowPosition({
+          x: event.clientX,
+          y: event.clientY,
+        })
+      } else {
+        // Fallback: calculate relative to React Flow container
+        const reactFlowWrapper = (event.currentTarget as HTMLElement).closest('.react-flow')
+        if (!reactFlowWrapper) return
+        
+        const reactFlowBounds = reactFlowWrapper.getBoundingClientRect()
+        position = {
+          x: event.clientX - reactFlowBounds.left,
+          y: event.clientY - reactFlowBounds.top,
+        }
       }
 
       const newNode = {
