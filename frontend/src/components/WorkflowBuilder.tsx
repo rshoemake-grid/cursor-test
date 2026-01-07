@@ -204,22 +204,28 @@ export default function WorkflowBuilder({
 
   // Wrap React Flow change handlers to notify modifications
   const onNodesChange = useCallback((changes: any) => {
-    // Handle selection changes - sync our state with React Flow's selection
-    const selectChange = changes.find((c: any) => c.type === 'select')
-    if (selectChange) {
-      if (selectChange.selected) {
-        setSelectedNodeId(selectChange.id)
-      } else {
-        // Check if any node is still selected by looking at current nodes
-        const stillSelected = nodes.find((n: any) => n.selected && n.id !== selectChange.id)
-        if (!stillSelected) {
-          setSelectedNodeId(null)
-        }
-      }
-    }
-    
     // Pass all changes to base handler - this handles position changes, etc.
     onNodesChangeBase(changes)
+    
+    // Track selection changes and update selectedNodeIds
+    const reactFlowInstance = reactFlowInstanceRef.current
+    if (reactFlowInstance) {
+      const allSelectedNodes = reactFlowInstance.getNodes().filter((n: Node) => n.selected)
+      const allSelectedIds = new Set(allSelectedNodes.map((n: Node) => n.id))
+      setSelectedNodeIds(allSelectedIds)
+      
+      // Update selectedNodeId based on selection count
+      if (allSelectedIds.size === 0) {
+        setSelectedNodeId(null)
+      } else if (allSelectedIds.size === 1) {
+        // Single selection - set the selected node ID
+        const singleId = Array.from(allSelectedIds)[0]
+        setSelectedNodeId(singleId)
+      } else {
+        // Multiple selection - clear selectedNodeId to disable properties panel
+        setSelectedNodeId(null)
+      }
+    }
     
     // Notify on actual modifications (position changes, add, remove, etc.)
     const hasActualChange = changes.some((change: any) => 
@@ -232,7 +238,7 @@ export default function WorkflowBuilder({
     if (hasActualChange) {
       notifyModified()
     }
-  }, [onNodesChangeBase, notifyModified, nodes])
+  }, [onNodesChangeBase, notifyModified])
 
   const onEdgesChange = useCallback((changes: any) => {
     onEdgesChangeBase(changes)
