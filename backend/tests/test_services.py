@@ -107,9 +107,26 @@ async def test_workflow_service_list(db_session, sample_workflow_data):
         )
         await service.create_workflow(workflow_create, user_id=None)
     
-    # List anonymous workflows (without user_id, should only return anonymous workflows)
-    anonymous_workflows = await service.list_workflows(user_id=None)
-    assert len(anonymous_workflows) == 2
+    # Create a public workflow (owned by a user but marked as public)
+    public_workflow_create = WorkflowCreate(
+        name="Public Workflow",
+        description="",
+        nodes=[],
+        edges=[],
+        variables={}
+    )
+    public_workflow = await service.create_workflow(public_workflow_create, user_id="other-user")
+    # Mark it as public (need to update it)
+    from backend.database.models import WorkflowDB
+    from sqlalchemy import select
+    result = await db_session.execute(select(WorkflowDB).where(WorkflowDB.id == public_workflow.id))
+    db_workflow = result.scalar_one()
+    db_workflow.is_public = True
+    await db_session.commit()
+    
+    # List workflows (without user_id, should return anonymous + public workflows)
+    workflows = await service.list_workflows(user_id=None)
+    assert len(workflows) == 3  # 2 anonymous + 1 public
 
 
 @pytest.mark.asyncio

@@ -52,4 +52,18 @@ class WorkflowRepository(BaseRepository[WorkflowDB]):
             query = query.limit(limit)
         result = await self.db.execute(query)
         return list(result.scalars().all())
+    
+    async def get_anonymous_and_public_workflows(self, limit: Optional[int] = None) -> List[WorkflowDB]:
+        """Get workflows that are either anonymous (no owner) or public"""
+        from sqlalchemy import or_
+        query = select(WorkflowDB).where(
+            or_(
+                WorkflowDB.owner_id == None,
+                WorkflowDB.is_public == True
+            )
+        )
+        if limit:
+            query = query.limit(limit)
+        result = await self.db.execute(query)
+        return list(result.scalars().all())
 

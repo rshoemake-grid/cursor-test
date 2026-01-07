@@ -134,8 +134,8 @@ class WorkflowService:
             # Authenticated user: return their workflows
             return await self.repository.get_by_owner(user_id, limit=limit)
         else:
-            # Unauthenticated user: only return anonymous workflows (owner_id = None)
-            return await self.repository.get_anonymous_workflows(limit=limit)
+            # Unauthenticated user: return anonymous workflows (owner_id = None) and public workflows
+            return await self.repository.get_anonymous_and_public_workflows(limit=limit)
     
     async def update_workflow(
         self,
