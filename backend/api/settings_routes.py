@@ -329,17 +329,31 @@ def _is_valid_api_key(api_key: str) -> bool:
 
 
 def get_active_llm_config(user_id: Optional[str] = None) -> Optional[Dict[str, Any]]:
-    """Get the first enabled LLM provider for a user"""
+    """Get the first enabled LLM provider for a user
+    
+    Falls back to "anonymous" settings if user-specific settings not found.
+    This allows users who saved settings while not logged in to still use them.
+    """
     uid = user_id if user_id else "anonymous"
     
     logger.debug(f"Getting LLM config for user: {uid}, cache keys: {list(_settings_cache.keys())}")
     
-    if uid not in _settings_cache:
-        logger.warning(f"User {uid} not found in cache - settings need to be loaded from database via API")
+    # Try user-specific settings first
+    settings = None
+    if uid in _settings_cache:
+        settings = _settings_cache[uid]
+        logger.debug(f"Found user-specific settings with {len(settings.providers)} providers")
+    elif user_id and "anonymous" in _settings_cache:
+        # Fallback to anonymous settings if user is logged in but has no user-specific settings
+        logger.info(f"User {uid} not found in cache, falling back to anonymous settings")
+        settings = _settings_cache["anonymous"]
+        logger.debug(f"Using anonymous settings with {len(settings.providers)} providers")
+    else:
+        logger.warning(f"User {uid} not found in cache and no anonymous fallback - settings need to be loaded from database via API")
         return None
     
-    settings = _settings_cache[uid]
-    logger.debug(f"Found settings with {len(settings.providers)} providers")
+    if not settings:
+        return None
     
     for provider in settings.providers:
         logger.debug(f"Checking provider {provider.name}: enabled={provider.enabled}, has_key={len(provider.apiKey) > 0}")
