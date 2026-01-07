@@ -147,6 +147,50 @@ export default function WorkflowBuilder({
   const [variables, setVariables] = useState<Record<string, any>>({})
   const isLoadingRef = useRef<boolean>(false)
   const isDraggingRef = useRef<boolean>(false)
+  
+  // Helper to convert nodes to workflow format
+  const nodeToWorkflowNode = useCallback((node: any) => ({
+    id: node.id,
+    type: node.type,
+    name: node.data.name || node.data.label,
+    description: node.data.description,
+    agent_config: node.data.agent_config,
+    condition_config: node.data.condition_config,
+    loop_config: node.data.loop_config,
+    input_config: node.data.input_config,
+    inputs: node.data.inputs || [],
+    position: node.position,
+  }), [])
+  
+  // Function to save the workflow (can be called from PropertyPanel)
+  const handleSaveWorkflow = useCallback(async (): Promise<void> => {
+    try {
+      const workflowDef = {
+        name: localWorkflowName,
+        description: localWorkflowDescription,
+        nodes: nodes.map(nodeToWorkflowNode),
+        edges: edges,
+        variables: variables,
+      }
+      
+      if (localWorkflowId) {
+        // Update existing
+        await api.updateWorkflow(localWorkflowId, workflowDef)
+        if (onWorkflowSaved) {
+          onWorkflowSaved(localWorkflowId, workflowDef.name)
+        }
+      } else {
+        // Create new
+        const created = await api.createWorkflow(workflowDef)
+        setLocalWorkflowId(created.id!)
+        if (onWorkflowSaved) {
+          onWorkflowSaved(created.id!, workflowDef.name)
+        }
+      }
+    } catch (error: any) {
+      throw new Error('Failed to save workflow: ' + error.message)
+    }
+  }, [localWorkflowId, localWorkflowName, localWorkflowDescription, nodes, edges, variables, nodeToWorkflowNode, onWorkflowSaved])
   const lastLoadedWorkflowIdRef = useRef<string | null>(null)
   const [contextMenu, setContextMenu] = useState<{ nodeId?: string; edgeId?: string; x: number; y: number } | null>(null)
 
@@ -722,6 +766,7 @@ export default function WorkflowBuilder({
           selectedNodeId={selectedNodeId} 
           setSelectedNodeId={setSelectedNodeId}
           nodes={nodes}
+          onSaveWorkflow={handleSaveWorkflow}
         />
       </div>
       

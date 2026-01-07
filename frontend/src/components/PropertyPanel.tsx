@@ -7,6 +7,7 @@ interface PropertyPanelProps {
   setSelectedNodeId: (id: string | null) => void
   nodes?: any[] // Pass nodes as prop for better reactivity
   onSave?: () => void // Optional callback when save is clicked
+  onSaveWorkflow?: () => Promise<void> // Callback to save the entire workflow
 }
 
 
@@ -21,7 +22,7 @@ interface LLMProvider {
   enabled: boolean
 }
 
-export default function PropertyPanel({ selectedNodeId, setSelectedNodeId, nodes: nodesProp, onSave }: PropertyPanelProps) {
+export default function PropertyPanel({ selectedNodeId, setSelectedNodeId, nodes: nodesProp, onSave, onSaveWorkflow }: PropertyPanelProps) {
   const { setNodes, deleteElements, getNodes } = useReactFlow()
   const [showAddInput, setShowAddInput] = useState(false)
   const [availableModels, setAvailableModels] = useState<Array<{ value: string; label: string; provider: string }>>([])
@@ -439,22 +440,27 @@ export default function PropertyPanel({ selectedNodeId, setSelectedNodeId, nodes
     
     setSaveStatus('saving')
     
-    // Call optional save callback if provided
-    if (onSave) {
-      try {
-        await onSave()
-      } catch (error) {
-        console.error('Save failed:', error)
-        setSaveStatus('idle')
-        return
+    try {
+      // Save the workflow first (if callback provided)
+      if (onSaveWorkflow) {
+        await onSaveWorkflow()
       }
-    }
-    
-    // Show saved feedback
-    setSaveStatus('saved')
-    setTimeout(() => {
+      
+      // Call optional save callback if provided
+      if (onSave) {
+        await onSave()
+      }
+      
+      // Show saved feedback
+      setSaveStatus('saved')
+      setTimeout(() => {
+        setSaveStatus('idle')
+      }, 2000)
+    } catch (error) {
+      console.error('Save failed:', error)
       setSaveStatus('idle')
-    }, 2000)
+      alert('Failed to save workflow: ' + (error instanceof Error ? error.message : 'Unknown error'))
+    }
   }
 
   const handleAddInput = (inputName: string, sourceNode: string, sourceField: string) => {
