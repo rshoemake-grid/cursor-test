@@ -71,14 +71,20 @@ export default function WorkflowBuilder({
   const [nodeExecutionStates, setNodeExecutionStates] = useState<Record<string, { status: string; error?: string }>>({})
   const reactFlowInstanceRef = useRef<any>(null)
   
+  // Component to capture React Flow instance for coordinate conversion
+  const ReactFlowInstanceCapture = () => {
+    const reactFlowInstance = useReactFlow()
+    
+    useEffect(() => {
+      reactFlowInstanceRef.current = reactFlowInstance
+    }, [reactFlowInstance])
+    
+    return null
+  }
+  
   // Component to handle keyboard shortcuts (must be inside ReactFlowProvider)
   const KeyboardHandler = () => {
     const { deleteElements, getNodes, getEdges } = useReactFlow()
-    
-    // Store React Flow instance for use in onDrop
-    useEffect(() => {
-      reactFlowInstanceRef.current = { deleteElements, getNodes, getEdges, screenToFlowPosition: useReactFlow().screenToFlowPosition }
-    }, [])
     
     useEffect(() => {
       const handleKeyDown = (event: KeyboardEvent) => {
