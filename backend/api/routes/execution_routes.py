@@ -109,6 +109,13 @@ async def execute_workflow(
         # Get LLM config for execution
         try:
             llm_config = get_active_llm_config(user_id)
+            if not llm_config:
+                raise HTTPException(
+                    status_code=400, 
+                    detail="No LLM provider configured. Please configure an LLM provider in Settings before executing workflows."
+                )
+        except HTTPException:
+            raise
         except Exception as e:
             logger.error(f"Error getting LLM config: {e}", exc_info=True)
             raise HTTPException(status_code=500, detail=f"Failed to get LLM configuration: {str(e)}")
