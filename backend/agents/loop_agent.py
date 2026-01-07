@@ -9,10 +9,20 @@ class LoopAgent(BaseAgent):
     def __init__(self, node: Node):
         super().__init__(node)
         
-        if not node.loop_config:
-            raise ValueError(f"Node {node.id} requires loop_config")
+        # Check both top-level and data object for loop_config
+        loop_config = node.loop_config
+        if not loop_config and hasattr(node, 'data') and node.data:
+            loop_config = node.data.get('loop_config') if isinstance(node.data, dict) else None
         
-        self.config = node.loop_config
+        if not loop_config:
+            raise ValueError(f"Node {node.id} requires loop_config. Please configure the loop settings in the node properties.")
+        
+        # Convert dict to LoopConfig if needed
+        if isinstance(loop_config, dict):
+            from ..models.schemas import LoopConfig
+            loop_config = LoopConfig(**loop_config)
+        
+        self.config = loop_config
         
     async def execute(self, inputs: Dict[str, Any]) -> Dict[str, Any]:
         """Initialize loop state and return iteration information"""

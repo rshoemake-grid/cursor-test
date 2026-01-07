@@ -394,9 +394,15 @@ async def execute_workflow(
             data_obj = node_data["data"]
             # Merge data object fields into top level if not already present
             for key in ["name", "description", "agent_config", "condition_config", "loop_config", "inputs", "input_config"]:
-                if key not in node_data or node_data[key] is None:
-                    if key in data_obj:
-                        node_data[key] = data_obj[key]
+                # Check if top-level is None or empty dict/list
+                top_level_value = node_data.get(key)
+                is_empty = top_level_value is None or (isinstance(top_level_value, dict) and len(top_level_value) == 0) or (isinstance(top_level_value, list) and len(top_level_value) == 0)
+                
+                if is_empty and key in data_obj:
+                    data_value = data_obj[key]
+                    # Only use data value if it's not empty
+                    if data_value is not None and not (isinstance(data_value, dict) and len(data_value) == 0) and not (isinstance(data_value, list) and len(data_value) == 0):
+                        node_data[key] = data_value
                 elif key == "input_config" and isinstance(node_data[key], dict) and isinstance(data_obj.get(key), dict):
                     # For input_config, merge data.input_config into top-level if data.input_config has values
                     data_input_config = data_obj.get(key, {})
