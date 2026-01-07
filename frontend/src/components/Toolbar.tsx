@@ -126,29 +126,115 @@ export default function Toolbar({
 
   const handleConfirmExecute = async () => {
     setIsExecuting(true)
-    try {
-      const inputs = JSON.parse(executionInputs)
-      console.log('Executing workflow:', workflowId, 'with inputs:', inputs)
-      
-      const execution = await api.executeWorkflow(workflowId!, inputs)
-      console.log('Execution started:', execution)
-      
-      setShowInputs(false)
-      setExecutionInputs('{}') // Reset inputs
-      
-      if (onExecutionStart) {
-        onExecutionStart(execution.execution_id)
+    
+    // Use setTimeout to ensure UI updates happen immediately and execution runs in background
+    setTimeout(async () => {
+      try {
+        const inputs = JSON.parse(executionInputs)
+        console.log('Executing workflow:', workflowId, 'with inputs:', inputs)
+        
+        // Start execution without waiting - fire and forget
+        const executionPromise = api.executeWorkflow(workflowId!, inputs)
+        
+        // Update UI immediately without waiting for API response
+        setShowInputs(false)
+        setExecutionInputs('{}') // Reset inputs
+        setIsExecuting(false)
+        
+        // Handle execution start callback immediately
+        executionPromise.then((execution) => {
+          console.log('Execution started:', execution)
+          
+          if (onExecutionStart) {
+            onExecutionStart(execution.execution_id)
+          }
+          
+          // Show non-blocking success notification
+          const message = `✅ Execution started!\n\nExecution ID: ${execution.execution_id.slice(0, 8)}...\n\nCheck the console at the bottom of the screen to watch it run.`
+          // Use a non-blocking notification instead of alert
+          const notification = document.createElement('div')
+          notification.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #10b981;
+            color: white;
+            padding: 16px 24px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            z-index: 10000;
+            max-width: 400px;
+            white-space: pre-line;
+            font-family: system-ui, -apple-system, sans-serif;
+          `
+          notification.textContent = message
+          document.body.appendChild(notification)
+          
+          // Auto-remove after 5 seconds
+          setTimeout(() => {
+            notification.style.transition = 'opacity 0.3s'
+            notification.style.opacity = '0'
+            setTimeout(() => notification.remove(), 300)
+          }, 5000)
+        }).catch((error: any) => {
+          console.error('Execution failed:', error)
+          setIsExecuting(false)
+          
+          // Show non-blocking error notification
+          const errorNotification = document.createElement('div')
+          errorNotification.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #ef4444;
+            color: white;
+            padding: 16px 24px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            z-index: 10000;
+            max-width: 400px;
+            font-family: system-ui, -apple-system, sans-serif;
+          `
+          errorNotification.textContent = `Failed to execute workflow: ${error.message}`
+          document.body.appendChild(errorNotification)
+          
+          // Auto-remove after 5 seconds
+          setTimeout(() => {
+            errorNotification.style.transition = 'opacity 0.3s'
+            errorNotification.style.opacity = '0'
+            setTimeout(() => errorNotification.remove(), 300)
+          }, 5000)
+        })
+      } catch (error: any) {
+        console.error('Execution setup failed:', error)
+        setIsExecuting(false)
+        
+        // Show non-blocking error notification
+        const errorNotification = document.createElement('div')
+        errorNotification.style.cssText = `
+          position: fixed;
+          top: 20px;
+          right: 20px;
+          background: #ef4444;
+          color: white;
+          padding: 16px 24px;
+          border-radius: 8px;
+          box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+          z-index: 10000;
+          max-width: 400px;
+          font-family: system-ui, -apple-system, sans-serif;
+        `
+        errorNotification.textContent = `Failed to execute workflow: ${error.message}`
+        document.body.appendChild(errorNotification)
+        
+        // Auto-remove after 5 seconds
+        setTimeout(() => {
+          errorNotification.style.transition = 'opacity 0.3s'
+          errorNotification.style.opacity = '0'
+          setTimeout(() => errorNotification.remove(), 300)
+        }, 5000)
       }
-      
-      // Show success message
-      const message = `✅ Execution started!\n\nExecution ID: ${execution.execution_id.slice(0, 8)}...\n\nCheck the console at the bottom of the screen to watch it run.`
-      alert(message)
-    } catch (error: any) {
-      console.error('Execution failed:', error)
-      alert('Failed to execute workflow: ' + error.message)
-    } finally {
-      setIsExecuting(false)
-    }
+    }, 0) // Use setTimeout with 0ms to defer to next event loop tick
   }
 
   const handleExport = () => {
