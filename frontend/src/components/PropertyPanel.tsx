@@ -895,12 +895,15 @@ export default function PropertyPanel({ selectedNodeId, setSelectedNodeId, nodes
               <label className="block text-sm font-medium text-gray-700 mb-1">Loop Type</label>
               <select
                 value={selectedNode.data.loop_config?.loop_type || 'for_each'}
-                onChange={(e) =>
+                onChange={(e) => {
+                  const currentLoopConfig = selectedNode.data.loop_config || {}
                   handleUpdate('loop_config', {
-                    ...selectedNode.data.loop_config,
                     loop_type: e.target.value,
+                    max_iterations: currentLoopConfig.max_iterations ?? 10,
+                    items_source: currentLoopConfig.items_source,
+                    condition: currentLoopConfig.condition,
                   })
-                }
+                }}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg"
               >
                 <option value="for_each">For Each</option>
@@ -916,7 +919,7 @@ export default function PropertyPanel({ selectedNodeId, setSelectedNodeId, nodes
                 type="number"
                 value={loopMaxIterationsValue}
                 onChange={(e) => {
-                  const newValue = parseInt(e.target.value)
+                  const newValue = parseInt(e.target.value) || 0
                   setLoopMaxIterationsValue(newValue)
                   handleConfigUpdate('loop_config', 'max_iterations', newValue)
                 }}
