@@ -37,11 +37,9 @@ class UnifiedLLMAgent(BaseAgent):
                 "or set OPENAI_API_KEY environment variable."
             )
         
-        # Validate API key is not a placeholder (initial validation)
-        # Note: We'll re-validate in execute() when we may switch to model-specific provider
-        api_key = self.llm_config.get("api_key", "")
-        if api_key:
-            self._validate_api_key(api_key)
+        # Don't validate API key here - we'll validate it in execute() after determining
+        # which provider to use for the specific model. The default llm_config might not
+        # be the correct provider for the model being used.
     
     def _get_fallback_config(self) -> Optional[Dict[str, Any]]:
         """Fallback to environment variables if no config provided"""
