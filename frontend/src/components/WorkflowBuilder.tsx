@@ -648,6 +648,7 @@ export default function WorkflowBuilder({
               >
               <Controls />
               <MiniMap
+                className="border-2 border-gray-300 rounded-lg shadow-lg"
                 nodeColor={(node) => {
                   switch (node.type) {
                     case 'agent':
