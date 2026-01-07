@@ -422,7 +422,15 @@ export default function PropertyPanel({ selectedNodeId, setSelectedNodeId, nodes
 
   const handleDelete = () => {
     if (!selectedNode) return
-    deleteElements({ nodes: [{ id: selectedNode.id }] })
+    // Require confirmation before deleting
+    if (window.confirm(`Are you sure you want to delete "${selectedNode.data.name || selectedNode.data.label || selectedNode.id}"?`)) {
+      deleteElements({ nodes: [{ id: selectedNode.id }] })
+      setSelectedNodeId(null)
+    }
+  }
+
+  const handleClose = () => {
+    // Just close the panel (deselect node) without deleting
     setSelectedNodeId(null)
   }
 
@@ -514,11 +522,18 @@ export default function PropertyPanel({ selectedNodeId, setSelectedNodeId, nodes
             )}
           </button>
           <button
+            onClick={handleClose}
+            className="p-1 text-gray-600 hover:bg-gray-100 rounded"
+            title="Close properties panel"
+          >
+            <X className="w-4 h-4" />
+          </button>
+          <button
             onClick={handleDelete}
             className="p-1 text-red-600 hover:bg-red-50 rounded"
             title="Delete node"
           >
-            <X className="w-4 h-4" />
+            <Trash2 className="w-4 h-4" />
           </button>
         </div>
       </div>
