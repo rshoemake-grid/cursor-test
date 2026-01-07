@@ -3,6 +3,7 @@ import { X, Plus, Trash2, Save, Check } from 'lucide-react'
 import { useState, useEffect, useRef, useMemo } from 'react'
 import { showError } from '../utils/notifications'
 import { showConfirm } from '../utils/confirm'
+import { api } from '../api/client'
 
 interface PropertyPanelProps {
   selectedNodeId: string | null
@@ -309,29 +310,26 @@ export default function PropertyPanel({ selectedNodeId, setSelectedNodeId, selec
   useEffect(() => {
     const loadModels = async () => {
       try {
-        // Try to load from backend first
-        const response = await fetch('/api/settings/llm')
-        if (response.ok) {
-          const data = await response.json()
-          if (data.providers && data.providers.length > 0) {
-            const models: Array<{ value: string; label: string; provider: string }> = []
-            data.providers.forEach((provider: LLMProvider) => {
-              if (provider.enabled && provider.models && provider.models.length > 0) {
-                provider.models.forEach((model) => {
-                  models.push({
-                    value: model,
-                    label: `${model} (${provider.name})`,
-                    provider: provider.name
-                  })
+        // Try to load from backend first using authenticated API client
+        const data = await api.getLLMSettings()
+        if (data.providers && data.providers.length > 0) {
+          const models: Array<{ value: string; label: string; provider: string }> = []
+          data.providers.forEach((provider: LLMProvider) => {
+            if (provider.enabled && provider.models && provider.models.length > 0) {
+              provider.models.forEach((model) => {
+                models.push({
+                  value: model,
+                  label: `${model} (${provider.name})`,
+                  provider: provider.name
                 })
-              }
-            })
-            setAvailableModels(models)
-            return
-          }
+              })
+            }
+          })
+          setAvailableModels(models)
+          return
         }
       } catch (e) {
-        console.log('Could not load from backend, trying localStorage')
+        console.log('Could not load from backend, trying localStorage', e)
       }
       
       // Fallback to localStorage

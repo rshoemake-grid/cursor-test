@@ -76,5 +76,19 @@ export const api = {
     const response = await axiosInstance.get(`/executions/${executionId}`)
     return response.data
   },
+
+  // Settings
+  async getLLMSettings(): Promise<any> {
+    try {
+      const response = await axiosInstance.get('/settings/llm')
+      return response.data
+    } catch (error: any) {
+      // Return empty settings if not authenticated or error
+      if (error.response?.status === 401) {
+        return { providers: [] }
+      }
+      throw error
+    }
+  },
 }
 
