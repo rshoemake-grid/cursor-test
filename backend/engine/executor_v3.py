@@ -583,9 +583,20 @@ class WorkflowExecutorV3:
             
         except Exception as e:
             node_state.status = ExecutionStatus.FAILED
-            node_state.error = str(e)
             node_state.completed_at = datetime.utcnow()
-            await self._log("ERROR", node.id, f"Node failed: {str(e)}")
+            
+            # Get error message, handling empty or None cases
+            error_msg = str(e) if e else "Unknown error"
+            if not error_msg or error_msg.strip() == "":
+                error_msg = f"{type(e).__name__}: {repr(e)}"
+            node_state.error = error_msg
+            
+            await self._log("ERROR", node.id, f"Node failed: {error_msg}")
+            
+            # Also log the exception type and full traceback for debugging
+            import traceback
+            traceback_str = traceback.format_exc()
+            await self._log("DEBUG", node.id, f"Exception type: {type(e).__name__}, Full traceback:\n{traceback_str}")
             
             # Broadcast node failed
             await self._broadcast_node_update(node.id, node_state)
