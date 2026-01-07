@@ -522,14 +522,18 @@ class WorkflowExecutorV3:
                 # Prepare inputs for this node (not needed for input sources)
                 node_inputs = self._prepare_node_inputs(node)
                 
-                # For loop and condition nodes, if no explicit inputs, try to get from previous node
-                if node.type in [NodeType.LOOP, NodeType.CONDITION] and not node_inputs:
+                # For loop, condition, and agent nodes, if no explicit inputs, try to get from previous node
+                if node.type in [NodeType.LOOP, NodeType.CONDITION, NodeType.AGENT] and not node_inputs:
                     # Find the previous node in the execution graph
                     previous_node_output = self._get_previous_node_output(node)
                     if previous_node_output is not None:
                         # Auto-populate inputs with previous node's output
                         if isinstance(previous_node_output, dict):
-                            node_inputs = previous_node_output
+                            # For loop nodes, check if output has 'items' field and extract it
+                            if node.type == NodeType.LOOP and 'items' in previous_node_output:
+                                node_inputs = {'data': previous_node_output.get('items'), 'items': previous_node_output.get('items')}
+                            else:
+                                node_inputs = previous_node_output
                         else:
                             # Wrap single value in dict with common keys
                             node_inputs = {
@@ -537,6 +541,7 @@ class WorkflowExecutorV3:
                                 'output': previous_node_output,
                                 'items': previous_node_output if isinstance(previous_node_output, (list, tuple)) else [previous_node_output]
                             }
+                        await self._log("DEBUG", node.id, f"Auto-populated inputs from previous node: {list(node_inputs.keys())}")
                 
                 node_state.input = node_inputs
                 

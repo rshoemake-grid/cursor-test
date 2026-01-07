@@ -76,7 +76,34 @@ class LoopAgent(BaseAgent):
         if not isinstance(items, (list, tuple)):
             # Try to convert to list
             if isinstance(items, str):
-                items = items.split(',')
+                # Try to parse as JSON first (could be JSON array or JSONL)
+                import json
+                try:
+                    # Try parsing as JSON
+                    parsed = json.loads(items)
+                    if isinstance(parsed, list):
+                        items = parsed
+                    else:
+                        # Single JSON object, wrap in list
+                        items = [parsed]
+                except (json.JSONDecodeError, ValueError):
+                    # Not valid JSON, try JSONL (newline-separated JSON)
+                    try:
+                        lines = [line.strip() for line in items.split('\n') if line.strip()]
+                        parsed_lines = []
+                        for line in lines:
+                            try:
+                                parsed_lines.append(json.loads(line))
+                            except json.JSONDecodeError:
+                                pass
+                        if parsed_lines:
+                            items = parsed_lines
+                        else:
+                            # Fallback: split by comma (for simple CSV-like data)
+                            items = [item.strip() for item in items.split(',') if item.strip()]
+                    except:
+                        # Last resort: split by comma
+                        items = [item.strip() for item in items.split(',') if item.strip()]
             else:
                 items = [items]
         
