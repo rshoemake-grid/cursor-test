@@ -109,6 +109,14 @@ async def execute_workflow(
         # Get LLM config for execution
         try:
             llm_config = get_active_llm_config(user_id)
+            
+            # If not found in cache, try loading from database
+            if not llm_config:
+                from ...api.settings_routes import load_settings_into_cache
+                logger.info("LLM config not found in cache, loading from database...")
+                await load_settings_into_cache(db)
+                llm_config = get_active_llm_config(user_id)
+            
             if not llm_config:
                 raise HTTPException(
                     status_code=400, 
