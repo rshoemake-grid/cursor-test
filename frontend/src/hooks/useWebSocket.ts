@@ -44,6 +44,12 @@ export function useWebSocket({
       return
     }
 
+    // Don't connect to temporary execution IDs (they don't exist in backend)
+    if (executionId.startsWith('pending-')) {
+      console.log(`[WebSocket] Skipping connection to temporary execution ID: ${executionId}`)
+      return
+    }
+
     // Close existing connection if any
     if (wsRef.current) {
       wsRef.current.close()
