@@ -14,10 +14,20 @@ class UnifiedLLMAgent(BaseAgent):
     def __init__(self, node: Node, llm_config: Optional[Dict[str, Any]] = None, user_id: Optional[str] = None):
         super().__init__(node)
         
-        if not node.agent_config:
-            raise ValueError(f"Node {node.id} requires agent_config")
+        # Check both top-level and data object for agent_config
+        agent_config = node.agent_config
+        if not agent_config and hasattr(node, 'data') and node.data:
+            agent_config = node.data.get('agent_config') if isinstance(node.data, dict) else None
         
-        self.config = node.agent_config
+        if not agent_config:
+            raise ValueError(f"Node {node.id} requires agent_config. Please configure the agent settings in the node properties.")
+        
+        # Convert dict to AgentConfig if needed
+        if isinstance(agent_config, dict):
+            from ..models.schemas import AgentConfig
+            agent_config = AgentConfig(**agent_config)
+        
+        self.config = agent_config
         self.llm_config = llm_config or self._get_fallback_config()
         self.user_id = user_id
         

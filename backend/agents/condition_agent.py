@@ -9,10 +9,20 @@ class ConditionAgent(BaseAgent):
     def __init__(self, node: Node):
         super().__init__(node)
         
-        if not node.condition_config:
-            raise ValueError(f"Node {node.id} requires condition_config")
+        # Check both top-level and data object for condition_config
+        condition_config = node.condition_config
+        if not condition_config and hasattr(node, 'data') and node.data:
+            condition_config = node.data.get('condition_config') if isinstance(node.data, dict) else None
         
-        self.config = node.condition_config
+        if not condition_config:
+            raise ValueError(f"Node {node.id} requires condition_config. Please configure the condition settings in the node properties.")
+        
+        # Convert dict to ConditionConfig if needed
+        if isinstance(condition_config, dict):
+            from ..models.schemas import ConditionConfig
+            condition_config = ConditionConfig(**condition_config)
+        
+        self.config = condition_config
         
     async def execute(self, inputs: Dict[str, Any]) -> Dict[str, Any]:
         """Evaluate the condition and return branch information"""
