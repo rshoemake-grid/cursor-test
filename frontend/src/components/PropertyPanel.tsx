@@ -162,7 +162,7 @@ export default function PropertyPanel({ selectedNodeId, setSelectedNodeId, nodes
       setMaxTokensValue('')
       setConditionFieldValue('')
       setConditionValueValue('')
-      setLoopMaxIterationsValue(10)
+      setLoopMaxIterationsValue(0)
       setBucketNameValue('')
       setObjectPathValue('')
       setGcpCredentialsValue('')
@@ -217,7 +217,7 @@ export default function PropertyPanel({ selectedNodeId, setSelectedNodeId, nodes
       if (selectedNode && selectedNode.type === 'loop' && (!nodeData.loop_config || Object.keys(nodeData.loop_config).length === 0)) {
         const defaultLoopConfig = {
           loop_type: 'for_each',
-          max_iterations: 10,
+          max_iterations: 0,
         }
         // Update the node with default config
         setNodes((nodes) =>
@@ -256,7 +256,7 @@ export default function PropertyPanel({ selectedNodeId, setSelectedNodeId, nodes
         setConditionValueValue(conditionConfig.value || '')
       }
       if (document.activeElement !== loopMaxIterationsRef.current) {
-        setLoopMaxIterationsValue(loopConfig.max_iterations || 10)
+        setLoopMaxIterationsValue(loopConfig.max_iterations ?? 0)
       }
       
       // Input config fields
@@ -932,7 +932,7 @@ export default function PropertyPanel({ selectedNodeId, setSelectedNodeId, nodes
                   const currentLoopConfig = selectedNode.data.loop_config || {}
                   handleUpdate('loop_config', {
                     loop_type: e.target.value,
-                    max_iterations: currentLoopConfig.max_iterations ?? 10,
+                    max_iterations: currentLoopConfig.max_iterations ?? 0,
                     items_source: currentLoopConfig.items_source,
                     condition: currentLoopConfig.condition,
                   })

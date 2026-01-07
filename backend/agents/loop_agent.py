@@ -20,7 +20,7 @@ class LoopAgent(BaseAgent):
             from ..models.schemas import LoopConfig
             loop_config = LoopConfig(
                 loop_type="for_each",
-                max_iterations=10
+                max_iterations=0
             )
         # Convert dict to LoopConfig if needed
         elif isinstance(loop_config, dict):
@@ -32,7 +32,7 @@ class LoopAgent(BaseAgent):
                 # Empty dict, use defaults
                 loop_config = LoopConfig(
                     loop_type="for_each",
-                    max_iterations=10
+                    max_iterations=0
                 )
         
         self.config = loop_config

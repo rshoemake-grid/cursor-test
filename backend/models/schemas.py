@@ -66,7 +66,7 @@ class LoopConfig(BaseModel):
     loop_type: str = "for_each"  # for_each, while, until
     items_source: Optional[str] = None
     condition: Optional[str] = None
-    max_iterations: Optional[int] = 10  # None or 0 means unlimited
+    max_iterations: Optional[int] = 0  # None or 0 means unlimited
 
 
 class Node(BaseModel):
