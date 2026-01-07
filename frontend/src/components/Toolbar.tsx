@@ -70,6 +70,11 @@ export default function Toolbar({
   })
 
   const handleSave = async (): Promise<string | null> => {
+    if (!isAuthenticated) {
+      showError('Please log in to save workflows.')
+      return null
+    }
+    
     setIsSaving(true)
     try {
       // Build workflow definition using local state (most up-to-date)
@@ -283,8 +288,9 @@ export default function Toolbar({
             <div className="flex gap-2">
               <button
                 onClick={handleSave}
-                disabled={isSaving}
+                disabled={isSaving || !isAuthenticated}
                 className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 flex items-center gap-2 transition-colors disabled:opacity-50"
+                title={!isAuthenticated ? 'Please log in to save workflows' : ''}
               >
                 <Save className="w-4 h-4" />
                 {isSaving ? 'Saving...' : workflowId ? 'Update' : 'Save'}
