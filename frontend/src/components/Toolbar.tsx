@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { Save, Play, FileDown } from 'lucide-react'
 import { api } from '../api/client'
 import { showSuccess, showError } from '../utils/notifications'
+import { useAuth } from '../contexts/AuthContext'
 
 interface ToolbarProps {
   workflowId: string | null
@@ -31,6 +32,7 @@ export default function Toolbar({
   onWorkflowIdChange
 }: ToolbarProps) {
 
+  const { isAuthenticated } = useAuth()
   const [isSaving, setIsSaving] = useState(false)
   const [isExecuting, setIsExecuting] = useState(false)
   const [showInputs, setShowInputs] = useState(false)
@@ -106,6 +108,11 @@ export default function Toolbar({
   }
 
   const handleExecute = async () => {
+    if (!isAuthenticated) {
+      showError('Please log in to execute workflows.')
+      return
+    }
+    
     let currentWorkflowId = workflowId
     
     if (!currentWorkflowId) {
@@ -285,8 +292,9 @@ export default function Toolbar({
 
               <button
                 onClick={handleExecute}
-                disabled={!workflowId}
+                disabled={!workflowId || !isAuthenticated}
                 className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center gap-2 transition-colors disabled:opacity-50"
+                title={!isAuthenticated ? 'Please log in to execute workflows' : !workflowId ? 'Save workflow before executing' : 'Execute workflow'}
               >
                 <Play className="w-4 h-4" />
                 Execute
@@ -328,8 +336,9 @@ export default function Toolbar({
               </button>
               <button
                 onClick={handleConfirmExecute}
-                disabled={isExecuting}
+                disabled={isExecuting || !isAuthenticated}
                 className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50"
+                title={!isAuthenticated ? 'Please log in to execute workflows' : ''}
               >
                 {isExecuting ? 'Executing...' : 'Execute'}
               </button>
