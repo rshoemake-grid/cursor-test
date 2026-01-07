@@ -50,6 +50,9 @@ interface WorkflowBuilderProps {
   onWorkflowLoaded?: (workflowId: string, name: string) => void
   onCloseWorkflow?: (workflowId: string) => void
   onClearExecutions?: (workflowId: string) => void
+  onExecutionLogUpdate?: (workflowId: string, executionId: string, log: any) => void
+  onExecutionStatusUpdate?: (workflowId: string, executionId: string, status: 'running' | 'completed' | 'failed') => void
+  onExecutionNodeUpdate?: (workflowId: string, executionId: string, nodeId: string, nodeState: any) => void
 }
 
 export default function WorkflowBuilder({ 
@@ -779,6 +782,9 @@ export default function WorkflowBuilder({
             activeWorkflowId={localWorkflowId || null}
             onCloseWorkflow={onCloseWorkflow || (() => {})}
             onClearExecutions={onClearExecutions || (() => {})}
+            onExecutionLogUpdate={onExecutionLogUpdate}
+            onExecutionStatusUpdate={onExecutionStatusUpdate}
+            onExecutionNodeUpdate={onExecutionNodeUpdate}
             onWorkflowUpdate={handleWorkflowUpdate}
           />
         </div>
