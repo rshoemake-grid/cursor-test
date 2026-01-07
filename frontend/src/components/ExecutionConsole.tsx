@@ -199,8 +199,10 @@ export default function ExecutionConsole({
                         : 'bg-gray-900 text-gray-400 hover:bg-gray-700 hover:text-gray-200'
                     }`}
                   >
-                    {hasRunning && <Loader className="w-3 h-3 animate-spin" />}
-                    <span className="font-medium">{tab.workflowName}</span>
+                    <span className="font-medium flex items-center gap-1.5">
+                      {hasRunning && <Loader className="w-3 h-3 animate-spin flex-shrink-0" />}
+                      {tab.workflowName}
+                    </span>
                     <span className="text-gray-500">({tab.executions.length})</span>
                     <div
                       onClick={(e) => {
