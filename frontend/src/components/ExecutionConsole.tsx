@@ -119,6 +119,77 @@ export default function ExecutionConsole({
   const activeWorkflowTab = workflowTabs.find(tab => tab.workflowId === activeWorkflowId)
   const activeExecution = activeWorkflowTab?.executions.find(e => e.id === activeWorkflowTab.activeExecutionId) || activeWorkflowTab?.executions[0]
   
+  // WebSocket connection for real-time log streaming
+  const { isConnected } = useWebSocket({
+    executionId: activeExecution?.id || null,
+    onLog: (log) => {
+      if (!activeExecution || !activeWorkflowTab || !onExecutionLogUpdate || !log) return
+      
+      // Add log to execution in real-time via callback
+      onExecutionLogUpdate(activeWorkflowTab.workflowId, activeExecution.id, {
+        timestamp: log.timestamp || new Date().toISOString(),
+        message: log.message,
+        level: log.level,
+        node_id: log.node_id
+      })
+    },
+    onStatus: (status) => {
+      if (!activeExecution || !activeWorkflowTab || !onExecutionStatusUpdate) return
+      
+      // Update execution status
+      onExecutionStatusUpdate(
+        activeWorkflowTab.workflowId,
+        activeExecution.id,
+        status as 'running' | 'completed' | 'failed'
+      )
+    },
+    onNodeUpdate: (nodeId, nodeState) => {
+      if (!activeExecution || !activeWorkflowTab || !onExecutionNodeUpdate) return
+      
+      // Update node states for visualization
+      if (onNodeStateUpdate) {
+        const nodeStates: Record<string, { status: string; error?: string }> = {}
+        Object.entries(activeExecution.nodes || {}).forEach(([nId, nState]: [string, any]) => {
+          nodeStates[nId] = {
+            status: nState.status || 'pending',
+            error: nState.error
+          }
+        })
+        // Add/update the node that was just updated
+        nodeStates[nodeId] = {
+          status: nodeState.status || 'pending',
+          error: nodeState.error
+        }
+        onNodeStateUpdate(nodeStates)
+      }
+      
+      // Update execution's node states via callback
+      onExecutionNodeUpdate(activeWorkflowTab.workflowId, activeExecution.id, nodeId, nodeState)
+    },
+    onCompletion: (result) => {
+      if (!activeExecution || !activeWorkflowTab || !onExecutionStatusUpdate) return
+      
+      onExecutionStatusUpdate(activeWorkflowTab.workflowId, activeExecution.id, 'completed')
+    },
+    onError: (error) => {
+      if (!activeExecution || !activeWorkflowTab) return
+      
+      // Add error log
+      if (onExecutionLogUpdate) {
+        onExecutionLogUpdate(activeWorkflowTab.workflowId, activeExecution.id, {
+          timestamp: new Date().toISOString(),
+          message: `Error: ${error}`,
+          level: 'ERROR'
+        })
+      }
+      
+      // Update status to failed
+      if (onExecutionStatusUpdate) {
+        onExecutionStatusUpdate(activeWorkflowTab.workflowId, activeExecution.id, 'failed')
+      }
+    }
+  })
+  
   // Update node states when execution changes
   useEffect(() => {
     if (activeExecution && activeExecution.nodes && onNodeStateUpdate) {
@@ -135,6 +206,13 @@ export default function ExecutionConsole({
       onNodeStateUpdate({})
     }
   }, [activeExecution, onNodeStateUpdate])
+  
+  // Auto-scroll when new logs arrive
+  useEffect(() => {
+    if (isExpanded && activeExecution && activeExecution.logs.length > 0) {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+    }
+  }, [activeExecution?.logs, isExpanded])
 
   // Always show the console bar
   return (
