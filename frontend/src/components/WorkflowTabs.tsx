@@ -368,7 +368,7 @@ export default function WorkflowTabs({ initialWorkflowId, workflowLoadKey, onExe
       // Use ref to get current tabs without causing effect re-run
       const currentTabs = tabsRef.current
       const runningExecutions = currentTabs.flatMap(tab => 
-        tab.executions.filter(e => e.status === 'running')
+        tab.executions.filter(e => e.status === 'running' && !e.id.startsWith('pending-'))
       )
       
       if (runningExecutions.length === 0) return
