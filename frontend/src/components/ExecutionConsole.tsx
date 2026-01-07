@@ -443,7 +443,8 @@ export default function ExecutionConsole({
             <div className="flex items-center gap-1 ml-2 pl-2 border-l border-gray-700">
               {executionTabs.map(execTab => {
                 const isActive = execTab.executionId === activeExecutionTabId
-                const isRunning = execTab.status === 'running'
+                const isCompleted = execTab.status === 'completed' || execTab.status === 'failed'
+                const isRunning = execTab.status === 'running' || !isCompleted
                 
                 return (
                   <div
@@ -464,7 +465,7 @@ export default function ExecutionConsole({
                       title={`${execTab.workflowName} - ${formatTime(execTab.startedAt)}`}
                     >
                       {isRunning && <Loader className="w-3 h-3 animate-spin flex-shrink-0" />}
-                      {!isRunning && getStatusIcon(execTab.status)}
+                      {isCompleted && getStatusIcon(execTab.status)}
                       <span className="font-medium">
                         {execTab.executionId.slice(0, 8)}
                       </span>

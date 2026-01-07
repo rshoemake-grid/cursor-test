@@ -4,7 +4,9 @@ Supports GCP Buckets, AWS S3, GCP Pub/Sub, and Local File System.
 """
 import json
 import os
+import io
 import mimetypes
+import time
 from typing import Dict, Any, Optional, List
 from pathlib import Path
 import glob
@@ -337,9 +339,145 @@ class LocalFileSystemHandler(InputSourceHandler):
         
         if path.is_file():
             # Check for read mode
-            read_mode = config.get('read_mode', 'full')  # 'full', 'lines', or 'batch'
+            read_mode = config.get('read_mode', 'full')  # 'full', 'lines', 'batch', or 'tail'
             
-            if read_mode == 'lines':
+            if read_mode == 'tail':
+                # Tail mode: read from end of file (useful for files being written to)
+                num_lines = config.get('tail_lines', 10)  # Number of lines to read from end
+                follow = config.get('tail_follow', False)  # Follow file like tail -f
+                wait_timeout = config.get('tail_wait_timeout', 5.0)  # Seconds to wait for new content
+                parse_json = config.get('parse_json_lines', True)  # Auto-parse JSON lines
+                
+                lines = []
+                
+                # Read last N lines from file
+                # Use a buffer approach to efficiently read from end
+                with open(path, 'r', encoding=encoding) as f:
+                    # Seek to end
+                    f.seek(0, io.SEEK_END)
+                    file_size = f.tell()
+                    
+                    if file_size == 0:
+                        # Empty file
+                        return {
+                            'lines': [],
+                            'total_lines': 0,
+                            'file_path': str(path),
+                            'read_mode': 'tail',
+                            'tail_lines': num_lines,
+                            'follow': follow
+                        }
+                    
+                    # Read backwards in chunks to find last N lines
+                    chunk_size = min(8192, file_size)
+                    position = file_size
+                    buffer = ''
+                    lines_found = []
+                    
+                    while position > 0 and len(lines_found) < num_lines:
+                        # Read chunk
+                        read_size = min(chunk_size, position)
+                        position -= read_size
+                        f.seek(position)
+                        chunk = f.read(read_size) + buffer
+                        
+                        # Split into lines
+                        chunk_lines = chunk.split('\n')
+                        buffer = chunk_lines[0]  # First part might be incomplete
+                        
+                        # Add complete lines (in reverse order)
+                        for line in reversed(chunk_lines[1:]):
+                            if line.strip():  # Skip empty lines
+                                lines_found.insert(0, line)
+                                if len(lines_found) >= num_lines:
+                                    break
+                    
+                    # Add remaining buffer if we have space
+                    if buffer.strip() and len(lines_found) < num_lines:
+                        lines_found.insert(0, buffer)
+                    
+                    # Process lines (parse JSON if configured)
+                    for idx, line in enumerate(lines_found[-num_lines:]):  # Take last N lines
+                        line = line.rstrip('\n\r')
+                        if parse_json:
+                            try:
+                                parsed = json.loads(line)
+                                lines.append({
+                                    'line_number': len(lines_found) - num_lines + idx + 1,
+                                    'content': parsed,
+                                    'raw': line
+                                })
+                            except json.JSONDecodeError:
+                                lines.append({
+                                    'line_number': len(lines_found) - num_lines + idx + 1,
+                                    'content': line,
+                                    'raw': line
+                                })
+                        else:
+                            lines.append({
+                                'line_number': len(lines_found) - num_lines + idx + 1,
+                                'content': line,
+                                'raw': line
+                            })
+                
+                # If follow mode, wait for new content
+                if follow:
+                    initial_size = file_size
+                    start_time = time.time()
+                    
+                    while time.time() - start_time < wait_timeout:
+                        time.sleep(0.5)  # Check every 500ms
+                        current_size = path.stat().st_size
+                        
+                        if current_size > initial_size:
+                            # New content available, read it
+                            with open(path, 'r', encoding=encoding) as f:
+                                f.seek(initial_size)
+                                new_content = f.read()
+                                
+                                # Parse new lines
+                                for new_line in new_content.split('\n'):
+                                    new_line = new_line.rstrip('\n\r')
+                                    if new_line:
+                                        if parse_json:
+                                            try:
+                                                parsed = json.loads(new_line)
+                                                lines.append({
+                                                    'line_number': len(lines) + 1,
+                                                    'content': parsed,
+                                                    'raw': new_line,
+                                                    'is_new': True
+                                                })
+                                            except json.JSONDecodeError:
+                                                lines.append({
+                                                    'line_number': len(lines) + 1,
+                                                    'content': new_line,
+                                                    'raw': new_line,
+                                                    'is_new': True
+                                                })
+                                        else:
+                                            lines.append({
+                                                'line_number': len(lines) + 1,
+                                                'content': new_line,
+                                                'raw': new_line,
+                                                'is_new': True
+                                            })
+                            
+                            # Update initial size for next iteration
+                            initial_size = current_size
+                            start_time = time.time()  # Reset timeout when new content arrives
+                
+                return {
+                    'lines': lines,
+                    'total_lines': len(lines),
+                    'file_path': str(path),
+                    'read_mode': 'tail',
+                    'tail_lines': num_lines,
+                    'follow': follow,
+                    'file_size': file_size
+                }
+            
+            elif read_mode == 'lines':
                 # Read file line by line (memory efficient for large files)
                 skip_empty = config.get('skip_empty_lines', True)
                 parse_json = config.get('parse_json_lines', True)  # Auto-parse JSON lines
