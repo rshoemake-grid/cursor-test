@@ -14,7 +14,7 @@ export default function AWSS3Node({ data, selected }: NodeProps) {
   
   return (
     <div
-      className={`px-4 py-3 shadow-lg rounded-lg bg-white border-2 min-w-[200px] ${
+      className={`px-4 py-3 shadow-lg rounded-lg bg-white border-2 min-w-[200px] max-w-[200px] ${
         hasError 
           ? 'border-red-500 border-4 shadow-xl ring-2 ring-red-200' 
           : selected 
@@ -23,30 +23,30 @@ export default function AWSS3Node({ data, selected }: NodeProps) {
       }`}
     >
       <div className="flex items-center gap-2 mb-2">
-        <div className="p-1.5 bg-yellow-100 rounded">
+        <div className="p-1.5 bg-yellow-100 rounded flex-shrink-0">
           <Database className="w-4 h-4 text-yellow-600" />
         </div>
-        <div className="font-semibold text-sm text-gray-900">{String(data.label || 'AWS S3')}</div>
+        <div className="font-semibold text-sm text-gray-900 truncate flex-1 min-w-0">{String(data.label || 'AWS S3')}</div>
       </div>
       
       {data.description && (
-        <div className="text-xs text-gray-500 mb-2">{String(data.description)}</div>
+        <div className="text-xs text-gray-500 mb-2 line-clamp-2 overflow-hidden">{String(data.description)}</div>
       )}
       
       {(data.input_config as any)?.bucket_name && (
-        <div className="text-xs text-gray-600 bg-gray-50 px-2 py-1 rounded mb-1">
+        <div className="text-xs text-gray-600 bg-gray-50 px-2 py-1 rounded mb-1 truncate">
           Bucket: {(data.input_config as any).bucket_name}
         </div>
       )}
       
       {(data.input_config as any)?.object_key && (
-        <div className="text-xs text-gray-600 bg-gray-50 px-2 py-1 rounded mb-1">
+        <div className="text-xs text-gray-600 bg-gray-50 px-2 py-1 rounded mb-1 truncate">
           File: {getFilename((data.input_config as any).object_key)}
         </div>
       )}
       
       {(data.input_config as any)?.mode && (
-        <div className="text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded">
+        <div className="text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded truncate">
           Mode: {(data.input_config as any).mode === 'write' ? 'Write' : 'Read'}
         </div>
       )}
