@@ -96,12 +96,15 @@ async def execute_workflow(
     from ...dependencies import get_workflow_service
     
     try:
+        logger.info(f"Starting workflow execution request for workflow_id={workflow_id}")
         workflow_service = get_workflow_service(db)
         
         # Get workflow
         try:
             workflow_db = await workflow_service.get_workflow(workflow_id)
+            logger.debug(f"Retrieved workflow: {workflow_db.name} (id={workflow_db.id})")
         except WorkflowNotFoundError as e:
+            logger.warning(f"Workflow not found: {workflow_id}")
             raise HTTPException(status_code=404, detail=str(e))
         
         user_id = current_user.id if current_user else None
