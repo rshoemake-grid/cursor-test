@@ -205,19 +205,21 @@ export default function ExecutionConsole({
                     <div
                       onClick={(e) => {
                         e.stopPropagation()
-                        onCloseWorkflow(tab.workflowId)
+                        // Clear executions for this workflow, not close the workflow
+                        onClearExecutions(tab.workflowId)
                       }}
                       onKeyDown={(e) => {
                         if (e.key === 'Enter' || e.key === ' ') {
                           e.preventDefault()
                           e.stopPropagation()
-                          onCloseWorkflow(tab.workflowId)
+                          // Clear executions for this workflow, not close the workflow
+                          onClearExecutions(tab.workflowId)
                         }
                       }}
                       role="button"
                       tabIndex={0}
                       className="hover:text-red-400 ml-1 cursor-pointer"
-                      title="Close workflow tab"
+                      title="Clear execution history"
                     >
                       <X className="w-3 h-3" />
                     </div>
