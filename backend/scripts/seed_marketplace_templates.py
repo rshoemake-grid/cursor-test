@@ -120,7 +120,7 @@ SAMPLE_TEMPLATES = [
     {
         "name": "Code Review Assistant",
         "description": "Review code snippets and provide feedback on style, bugs, and improvements.",
-        "category": TemplateCategory.DEVELOPMENT,
+        "category": TemplateCategory.AUTOMATION,
         "tags": ["code", "review", "development"],
         "difficulty": TemplateDifficulty.INTERMEDIATE,
         "estimated_time": "5 minutes",

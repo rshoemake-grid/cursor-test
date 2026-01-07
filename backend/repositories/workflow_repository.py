@@ -44,4 +44,12 @@ class WorkflowRepository(BaseRepository[WorkflowDB]):
             query = query.limit(limit)
         result = await self.db.execute(query)
         return list(result.scalars().all())
+    
+    async def get_anonymous_workflows(self, limit: Optional[int] = None) -> List[WorkflowDB]:
+        """Get workflows with no owner (anonymous workflows)"""
+        query = select(WorkflowDB).where(WorkflowDB.owner_id == None)
+        if limit:
+            query = query.limit(limit)
+        result = await self.db.execute(query)
+        return list(result.scalars().all())
 

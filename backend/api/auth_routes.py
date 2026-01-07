@@ -145,8 +145,14 @@ async def login_json(
             detail="Inactive user"
         )
     
-    # Create access token
-    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    # Create access token with longer expiration if "remember me" is checked
+    if user_data.remember_me:
+        # 30 days for "remember me"
+        access_token_expires = timedelta(days=30)
+    else:
+        # Default expiration (usually 15 minutes or 1 day)
+        access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    
     access_token = create_access_token(
         data={"sub": user.username},
         expires_delta=access_token_expires

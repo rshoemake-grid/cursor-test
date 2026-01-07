@@ -3,6 +3,8 @@ import { api } from '../api/client'
 import type { WorkflowDefinition } from '../types/workflow'
 import { Play, Trash2, Calendar, CheckSquare, Square, ArrowLeft } from 'lucide-react'
 import { showError, showSuccess, showWarning } from '../utils/notifications'
+import { useAuth } from '../contexts/AuthContext'
+import { useNavigate } from 'react-router-dom'
 
 interface WorkflowListProps {
   onSelectWorkflow: (id: string) => void
@@ -13,6 +15,8 @@ export default function WorkflowList({ onSelectWorkflow, onBack }: WorkflowListP
   const [workflows, setWorkflows] = useState<WorkflowDefinition[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
+  const { isAuthenticated } = useAuth()
+  const navigate = useNavigate()
 
   useEffect(() => {
     loadWorkflows()
@@ -106,8 +110,23 @@ export default function WorkflowList({ onSelectWorkflow, onBack }: WorkflowListP
     return (
       <div className="flex items-center justify-center h-full">
         <div className="text-center">
-          <p className="text-gray-500 mb-4">No workflows yet</p>
-          <p className="text-sm text-gray-400">Create your first workflow in the Builder</p>
+          {!isAuthenticated ? (
+            <>
+              <p className="text-gray-500 mb-2">Showing anonymous workflows only</p>
+              <p className="text-sm text-gray-400 mb-4">Log in to see your workflows</p>
+              <button
+                onClick={() => navigate('/auth')}
+                className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
+              >
+                Log In
+              </button>
+            </>
+          ) : (
+            <>
+              <p className="text-gray-500 mb-4">No workflows yet</p>
+              <p className="text-sm text-gray-400">Create your first workflow in the Builder</p>
+            </>
+          )}
         </div>
       </div>
     )
@@ -127,7 +146,14 @@ export default function WorkflowList({ onSelectWorkflow, onBack }: WorkflowListP
                 <ArrowLeft className="w-5 h-5" />
               </button>
             )}
-            <h2 className="text-2xl font-bold text-gray-900">My Workflows</h2>
+            <div>
+              <h2 className="text-2xl font-bold text-gray-900">My Workflows</h2>
+              {!isAuthenticated && (
+                <p className="text-sm text-gray-500 mt-1">
+                  Showing anonymous workflows only. <button onClick={() => navigate('/auth')} className="text-primary-600 hover:text-primary-700 underline">Log in</button> to see your workflows.
+                </p>
+              )}
+            </div>
           </div>
           {selectedIds.size > 0 && (
             <div className="flex items-center gap-3">

@@ -8,6 +8,7 @@ export default function AuthPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
+  const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -21,7 +22,7 @@ export default function AuthPage() {
 
     try {
       if (isLogin) {
-        await login(username, password);
+        await login(username, password, rememberMe);
       } else {
         await register(username, email, password, fullName);
       }
@@ -111,6 +112,21 @@ export default function AuthPage() {
               placeholder="••••••••"
             />
           </div>
+
+          {isLogin && (
+            <div className="flex items-center">
+              <input
+                type="checkbox"
+                id="rememberMe"
+                checked={rememberMe}
+                onChange={(e) => setRememberMe(e.target.checked)}
+                className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+              />
+              <label htmlFor="rememberMe" className="ml-2 block text-sm text-gray-700">
+                Keep me logged in
+              </label>
+            </div>
+          )}
 
           <button
             type="submit"
