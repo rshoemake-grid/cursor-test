@@ -57,9 +57,10 @@ class LoopAgent(BaseAgent):
             else:
                 items = [items]
         
-        # Limit iterations
-        max_items = min(len(items), self.config.max_iterations)
-        items = items[:max_items]
+        # Limit iterations (if max_iterations is None or 0, process all items)
+        if self.config.max_iterations and self.config.max_iterations > 0:
+            max_items = min(len(items), self.config.max_iterations)
+            items = items[:max_items]
         
         return {
             "loop_type": "for_each",
