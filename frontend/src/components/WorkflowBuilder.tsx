@@ -67,6 +67,7 @@ export default function WorkflowBuilder({
   const [nodes, setNodes, onNodesChangeBase] = useNodesState([] as Node[])
   const [edges, setEdges, onEdgesChangeBase] = useEdgesState([] as Edge[])
   const [selectedNodeId, setSelectedNodeId] = React.useState<string | null>(null)
+  const [selectedNodeIds, setSelectedNodeIds] = React.useState<Set<string>>(new Set())
   const [localWorkflowId, setLocalWorkflowId] = useState<string | null>(workflowId)
   const [nodeExecutionStates, setNodeExecutionStates] = useState<Record<string, { status: string; error?: string }>>({})
   const reactFlowInstanceRef = useRef<any>(null)
@@ -601,20 +602,31 @@ export default function WorkflowBuilder({
         return
       }
       
-      // Don't prevent default - let React Flow handle dragging
+      // Don't prevent default - let React Flow handle dragging and multi-select
       // Only stop propagation to prevent pane click
       event.stopPropagation()
       
-      // Set our local selectedNodeId state
-      setSelectedNodeId(node.id)
+      // Check if shift/cmd/ctrl is held for multi-select
+      const isMultiSelect = event.shiftKey || event.metaKey || event.ctrlKey
       
-      // Update node selection - but preserve all node properties including position
-      setNodes((nds) => 
-        nds.map((n) => ({
-          ...n, // Preserve all properties including position
-          selected: n.id === node.id
-        }))
-      )
+      if (isMultiSelect) {
+        // Toggle selection for this node
+        setNodes((nds) => 
+          nds.map((n) => ({
+            ...n,
+            selected: n.id === node.id ? !n.selected : n.selected
+          }))
+        )
+      } else {
+        // Single select - clear all others and select this one
+        setNodes((nds) => 
+          nds.map((n) => ({
+            ...n,
+            selected: n.id === node.id
+          }))
+        )
+        setSelectedNodeId(node.id)
+      }
     },
     [setNodes]
   )
@@ -765,6 +777,7 @@ export default function WorkflowBuilder({
         <PropertyPanel 
           selectedNodeId={selectedNodeId} 
           setSelectedNodeId={setSelectedNodeId}
+          selectedNodeIds={selectedNodeIds}
           nodes={nodes}
           onSaveWorkflow={handleSaveWorkflow}
         />

@@ -5,6 +5,7 @@ import { useState, useEffect, useRef, useMemo } from 'react'
 interface PropertyPanelProps {
   selectedNodeId: string | null
   setSelectedNodeId: (id: string | null) => void
+  selectedNodeIds?: Set<string> // Multiple selected node IDs
   nodes?: any[] // Pass nodes as prop for better reactivity
   onSave?: () => void // Optional callback when save is clicked
   onSaveWorkflow?: () => Promise<void> // Callback to save the entire workflow
@@ -22,7 +23,7 @@ interface LLMProvider {
   enabled: boolean
 }
 
-export default function PropertyPanel({ selectedNodeId, setSelectedNodeId, nodes: nodesProp, onSave, onSaveWorkflow }: PropertyPanelProps) {
+export default function PropertyPanel({ selectedNodeId, setSelectedNodeId, selectedNodeIds, nodes: nodesProp, onSave, onSaveWorkflow }: PropertyPanelProps) {
   const { setNodes, deleteElements, getNodes } = useReactFlow()
   const [showAddInput, setShowAddInput] = useState(false)
   const [availableModels, setAvailableModels] = useState<Array<{ value: string; label: string; provider: string }>>([])
@@ -374,11 +375,22 @@ export default function PropertyPanel({ selectedNodeId, setSelectedNodeId, nodes
   }, [])
 
 
-  if (!selectedNode) {
+  // Check if multiple nodes are selected
+  const multipleSelected = selectedNodeIds && selectedNodeIds.size > 1
+  
+  if (!selectedNode || multipleSelected) {
     return (
       <div className="w-80 h-full bg-white border-l border-gray-200 p-4 overflow-y-auto">
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Properties</h3>
-        <p className="text-sm text-gray-500 mb-2">Select a node to edit its properties</p>
+        {multipleSelected ? (
+          <div className="text-sm text-gray-500 mb-2">
+            <p className="mb-2">Multiple nodes selected ({selectedNodeIds?.size})</p>
+            <p className="text-xs text-gray-400">Select a single node to edit its properties</p>
+            <p className="text-xs text-gray-400 mt-2">You can drag selected nodes together to move them</p>
+          </div>
+        ) : (
+          <p className="text-sm text-gray-500 mb-2">Select a node to edit its properties</p>
+        )}
       </div>
     )
   }
