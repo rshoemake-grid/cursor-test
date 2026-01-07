@@ -398,8 +398,12 @@ export default function WorkflowTabs({ initialWorkflowId, workflowLoadKey, onExe
               nodes: execution.node_states || {},
               logs: execution.logs || []
             }
-          } catch (error) {
-            console.error(`[WorkflowTabs] Failed to fetch execution ${exec.id}:`, error)
+          } catch (error: any) {
+            // If execution not found (404), it might be a temp execution that failed
+            // Don't log errors for pending executions
+            if (!exec.id.startsWith('pending-')) {
+              console.error(`[WorkflowTabs] Failed to fetch execution ${exec.id}:`, error)
+            }
             return null
           }
         })
