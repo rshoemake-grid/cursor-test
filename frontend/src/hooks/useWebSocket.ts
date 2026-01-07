@@ -82,8 +82,8 @@ export function useWebSocket({
               break
             case 'node_update':
               if (message.node_state && onNodeUpdate) {
-                // Extract node_id from message if available
-                const nodeId = (message as any).node_id || message.node_state.node_id
+                // Extract node_id from message - backend sends it as top-level field
+                const nodeId = (message as any).node_id || message.node_state.node_id || message.node_state.node_id
                 if (nodeId) {
                   onNodeUpdate(nodeId, message.node_state)
                 }
