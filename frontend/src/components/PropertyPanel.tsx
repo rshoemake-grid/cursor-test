@@ -200,8 +200,41 @@ export default function PropertyPanel({ selectedNodeId, setSelectedNodeId, nodes
       const nodeDescription = nodeData.description || ''
       const agentConfig = nodeData.agent_config || {}
       const conditionConfig = nodeData.condition_config || {}
-      const loopConfig = nodeData.loop_config || {}
+      let loopConfig = nodeData.loop_config || {}
       const inputConfig = nodeData.input_config || {}
+      
+      // Initialize loop_config with defaults if it's missing or empty for Loop nodes
+      const selectedNode = nodes.find((n) => n.id === selectedNodeId) || 
+                          (() => {
+                            try {
+                              const flowNodes = getNodes()
+                              return flowNodes.find((n) => n.id === selectedNodeId)
+                            } catch {
+                              return null
+                            }
+                          })()
+      
+      if (selectedNode && selectedNode.type === 'loop' && (!nodeData.loop_config || Object.keys(nodeData.loop_config).length === 0)) {
+        const defaultLoopConfig = {
+          loop_type: 'for_each',
+          max_iterations: 10,
+        }
+        // Update the node with default config
+        setNodes((nodes) =>
+          nodes.map((node) =>
+            node.id === selectedNodeId
+              ? {
+                  ...node,
+                  data: {
+                    ...node.data,
+                    loop_config: defaultLoopConfig,
+                  },
+                }
+              : node
+          )
+        )
+        loopConfig = defaultLoopConfig
+      }
       
       // Only sync if the input is not currently focused (user is not typing)
       if (document.activeElement !== nameInputRef.current) {
