@@ -98,6 +98,19 @@ class WorkflowTemplateDB(Base):
     is_official = Column(Boolean, default=False)
     difficulty = Column(String, default="beginner")  # beginner, intermediate, advanced
     estimated_time = Column(String, nullable=True)  # "5 minutes", "1 hour", etc.
+    
+    # Marketplace stats
+    uses_count = Column(Integer, default=0)
+    likes_count = Column(Integer, default=0)
+    rating = Column(Integer, default=0)  # 0-5 stars
+    
+    # Preview images
+    thumbnail_url = Column(String, nullable=True)
+    preview_image_url = Column(String, nullable=True)
+    
+    # Timestamps
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
 
 class SettingsDB(Base):
