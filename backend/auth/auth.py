@@ -26,15 +26,18 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/token", auto_error=Fals
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """Verify a password against its hash"""
+    # Try bcrypt directly first (more reliable with version issues)
+    try:
+        import bcrypt
+        return bcrypt.checkpw(plain_password.encode('utf-8'), hashed_password.encode('utf-8'))
+    except Exception:
+        pass
+    
+    # Fallback to passlib if bcrypt fails
     try:
         return pwd_context.verify(plain_password, hashed_password)
     except Exception:
-        # Fallback to bcrypt directly if passlib has issues
-        try:
-            import bcrypt
-            return bcrypt.checkpw(plain_password.encode('utf-8'), hashed_password.encode('utf-8'))
-        except Exception:
-            return False
+        return False
 
 
 def get_password_hash(password: str) -> str:
