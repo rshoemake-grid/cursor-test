@@ -2,6 +2,7 @@ import { useReactFlow } from '@xyflow/react'
 import { X, Plus, Trash2, Save, Check } from 'lucide-react'
 import { useState, useEffect, useRef, useMemo } from 'react'
 import { showError } from '../utils/notifications'
+import { showConfirm } from '../utils/confirm'
 
 interface PropertyPanelProps {
   selectedNodeId: string | null
