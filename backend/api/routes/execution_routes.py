@@ -247,9 +247,18 @@ async def get_execution(
     if not execution:
         raise HTTPException(status_code=404, detail=f"Execution {execution_id} not found")
     
+    # Extract state data if available
+    state_data = execution.state if execution.state else {}
+    
     return ExecutionResponse(
         execution_id=execution.id,
         workflow_id=execution.workflow_id,
-        status=execution.status
+        status=execution.status,
+        current_node=state_data.get('current_node'),
+        result=state_data.get('result'),
+        error=state_data.get('error'),
+        started_at=execution.started_at if execution.started_at else datetime.utcnow(),
+        completed_at=execution.completed_at,
+        logs=state_data.get('logs', [])
     )
 
