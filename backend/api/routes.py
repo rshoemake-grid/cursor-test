@@ -427,16 +427,34 @@ async def execute_workflow(
         has_condition_config = node_data.get('condition_config') is not None
         has_agent_config = node_data.get('agent_config') is not None
         
-        # Log config presence for debugging
+        # Log config presence for debugging and try to extract from data object
         if node_type == 'loop' and not has_loop_config:
             print(f"⚠️  WARNING: Loop node {node_id} missing loop_config after reconstruction")
+            print(f"   Top-level loop_config: {node_data.get('loop_config')}")
             if "data" in node_data and node_data.get("data"):
-                data_loop_config = node_data["data"].get("loop_config")
+                data_obj = node_data["data"]
+                data_loop_config = data_obj.get("loop_config")
                 print(f"   Data object has loop_config: {data_loop_config is not None}")
+                print(f"   Data loop_config value: {data_loop_config}")
+                print(f"   Data object keys: {list(data_obj.keys())}")
+                # Try to extract it manually if it exists
+                if data_loop_config and isinstance(data_loop_config, dict) and len(data_loop_config) > 0:
+                    print(f"   Extracting loop_config from data object...")
+                    node_data['loop_config'] = data_loop_config
         elif node_type == 'condition' and not has_condition_config:
             print(f"⚠️  WARNING: Condition node {node_id} missing condition_config after reconstruction")
+            if "data" in node_data and node_data.get("data"):
+                data_obj = node_data["data"]
+                data_condition_config = data_obj.get("condition_config")
+                if data_condition_config and isinstance(data_condition_config, dict) and len(data_condition_config) > 0:
+                    node_data['condition_config'] = data_condition_config
         elif node_type == 'agent' and not has_agent_config:
             print(f"⚠️  WARNING: Agent node {node_id} missing agent_config after reconstruction")
+            if "data" in node_data and node_data.get("data"):
+                data_obj = node_data["data"]
+                data_agent_config = data_obj.get("agent_config")
+                if data_agent_config and isinstance(data_agent_config, dict) and len(data_agent_config) > 0:
+                    node_data['agent_config'] = data_agent_config
         
         return Node(**node_data)
     
