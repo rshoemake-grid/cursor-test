@@ -69,10 +69,16 @@ export default function WorkflowBuilder({
   const [selectedNodeId, setSelectedNodeId] = React.useState<string | null>(null)
   const [localWorkflowId, setLocalWorkflowId] = useState<string | null>(workflowId)
   const [nodeExecutionStates, setNodeExecutionStates] = useState<Record<string, { status: string; error?: string }>>({})
+  const reactFlowInstanceRef = useRef<any>(null)
   
   // Component to handle keyboard shortcuts (must be inside ReactFlowProvider)
   const KeyboardHandler = () => {
     const { deleteElements, getNodes, getEdges } = useReactFlow()
+    
+    // Store React Flow instance for use in onDrop
+    useEffect(() => {
+      reactFlowInstanceRef.current = { deleteElements, getNodes, getEdges, screenToFlowPosition: useReactFlow().screenToFlowPosition }
+    }, [])
     
     useEffect(() => {
       const handleKeyDown = (event: KeyboardEvent) => {
@@ -492,6 +498,45 @@ export default function WorkflowBuilder({
     event.dataTransfer.dropEffect = 'move'
   }, [])
 
+  // Component to handle drop with proper coordinate conversion
+  const DropHandler = () => {
+    const { screenToFlowPosition } = useReactFlow()
+    
+    const handleDrop = useCallback(
+      (event: React.DragEvent) => {
+        event.preventDefault()
+
+        const type = event.dataTransfer.getData('application/reactflow')
+        if (!type) return
+
+        // Convert screen coordinates to flow coordinates (accounts for zoom and pan)
+        const position = screenToFlowPosition({
+          x: event.clientX,
+          y: event.clientY,
+        })
+
+        const newNode = {
+          id: `${type}-${Date.now()}`,
+          type,
+          position,
+          draggable: true,
+          data: {
+            label: `${type.charAt(0).toUpperCase() + type.slice(1)} Node`,
+            name: `${type.charAt(0).toUpperCase() + type.slice(1)} Node`,
+            inputs: [],
+          },
+        }
+
+        // Add to local nodes state
+        setNodes((nds) => [...nds, newNode])
+        notifyModified()
+      },
+      [screenToFlowPosition, setNodes, notifyModified]
+    )
+
+    return null
+  }
+
   const onDrop = useCallback(
     (event: React.DragEvent) => {
       event.preventDefault()
@@ -499,9 +544,40 @@ export default function WorkflowBuilder({
       const type = event.dataTransfer.getData('application/reactflow')
       if (!type) return
 
+      // Get the React Flow wrapper element to calculate position
+      const reactFlowWrapper = (event.currentTarget as HTMLElement).closest('.react-flow')
+      if (!reactFlowWrapper) return
+
+      const reactFlowBounds = reactFlowWrapper.getBoundingClientRect()
+      
+      // Get the viewport transform from React Flow's internal state
+      // We need to account for zoom and pan - get it from the DOM
+      const viewport = reactFlowWrapper.querySelector('.react-flow__viewport')
+      if (!viewport) return
+
+      const transform = (viewport as HTMLElement).style.transform
+      // Parse transform: translate(xpx, ypx) scale(z)
+      const translateMatch = transform.match(/translate\(([^)]+)\)/)
+      const scaleMatch = transform.match(/scale\(([^)]+)\)/)
+      
+      let translateX = 0
+      let translateY = 0
+      let scale = 1
+      
+      if (translateMatch) {
+        const coords = translateMatch[1].split(',').map(v => parseFloat(v.trim()))
+        translateX = coords[0] || 0
+        translateY = coords[1] || 0
+      }
+      
+      if (scaleMatch) {
+        scale = parseFloat(scaleMatch[1]) || 1
+      }
+
+      // Calculate position relative to flow coordinates
       const position = {
-        x: event.clientX - 250,
-        y: event.clientY - 150,
+        x: (event.clientX - reactFlowBounds.left - translateX) / scale,
+        y: (event.clientY - reactFlowBounds.top - translateY) / scale,
       }
 
       const newNode = {
@@ -609,6 +685,7 @@ export default function WorkflowBuilder({
             
             <div className="absolute inset-0">
               <KeyboardHandler />
+              <ReactFlowInstanceCapture />
               <ReactFlow
                 nodes={nodes.map((node: any) => {
                   // Update nodes with current execution state
