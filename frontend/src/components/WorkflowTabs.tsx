@@ -226,7 +226,69 @@ export default function WorkflowTabs({ initialWorkflowId, workflowLoadKey, onExe
     ))
   }, [])
 
-  // Poll for execution updates
+  // Handle real-time log updates from WebSocket
+  const handleExecutionLogUpdate = useCallback((workflowId: string, executionId: string, log: any) => {
+    setTabs(prev => prev.map(tab => 
+      tab.workflowId === workflowId
+        ? {
+            ...tab,
+            executions: tab.executions.map(exec =>
+              exec.id === executionId
+                ? {
+                    ...exec,
+                    logs: [...exec.logs, log]
+                  }
+                : exec
+            )
+          }
+        : tab
+    ))
+  }, [])
+
+  // Handle execution status updates from WebSocket
+  const handleExecutionStatusUpdate = useCallback((workflowId: string, executionId: string, status: 'running' | 'completed' | 'failed') => {
+    setTabs(prev => prev.map(tab => 
+      tab.workflowId === workflowId
+        ? {
+            ...tab,
+            executions: tab.executions.map(exec =>
+              exec.id === executionId
+                ? {
+                    ...exec,
+                    status,
+                    completedAt: (status === 'completed' || status === 'failed') ? new Date() : exec.completedAt
+                  }
+                : exec
+            )
+          }
+        : tab
+    ))
+  }, [])
+
+  // Handle node state updates from WebSocket
+  const handleExecutionNodeUpdate = useCallback((workflowId: string, executionId: string, nodeId: string, nodeState: any) => {
+    setTabs(prev => prev.map(tab => 
+      tab.workflowId === workflowId
+        ? {
+            ...tab,
+            executions: tab.executions.map(exec =>
+              exec.id === executionId
+                ? {
+                    ...exec,
+                    nodes: {
+                      ...exec.nodes,
+                      [nodeId]: nodeState
+                    }
+                  }
+                : exec
+            )
+          }
+        : tab
+    ))
+  }, [])
+
+  // Poll for execution updates (fallback when WebSocket not available)
+  // Reduced frequency since WebSocket handles real-time updates
   useEffect(() => {
     const interval = setInterval(async () => {
       // Use ref to get current tabs without causing effect re-run
@@ -237,7 +299,8 @@ export default function WorkflowTabs({ initialWorkflowId, workflowLoadKey, onExe
       
       if (runningExecutions.length === 0) return
 
-      console.log(`[WorkflowTabs] Polling ${runningExecutions.length} running execution(s)...`)
+      // Only poll occasionally as fallback - WebSocket handles real-time updates
+      console.log(`[WorkflowTabs] Polling ${runningExecutions.length} running execution(s) (fallback)...`)
 
       // Update all running executions
       const updates = await Promise.all(

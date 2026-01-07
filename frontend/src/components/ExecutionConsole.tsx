@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { X, ChevronDown, ChevronUp, Loader, CheckCircle, XCircle, Clock, Trash2, MessageSquare, Terminal } from 'lucide-react'
 import WorkflowChat from './WorkflowChat'
+import { useWebSocket } from '../hooks/useWebSocket'
 
 interface ExecutionLog {
   timestamp: string
@@ -32,6 +33,9 @@ interface ExecutionConsoleProps {
   onClearExecutions: (workflowId: string) => void
   onWorkflowUpdate?: (changes: any) => void
   onNodeStateUpdate?: (states: Record<string, { status: string; error?: string }>) => void
+  onExecutionLogUpdate?: (workflowId: string, executionId: string, log: ExecutionLog) => void
+  onExecutionStatusUpdate?: (workflowId: string, executionId: string, status: 'running' | 'completed' | 'failed') => void
+  onExecutionNodeUpdate?: (workflowId: string, executionId: string, nodeId: string, nodeState: any) => void
 }
 
 export default function ExecutionConsole({ 
@@ -40,7 +44,10 @@ export default function ExecutionConsole({
   onCloseWorkflow,
   onClearExecutions,
   onWorkflowUpdate,
-  onNodeStateUpdate
+  onNodeStateUpdate,
+  onExecutionLogUpdate,
+  onExecutionStatusUpdate,
+  onExecutionNodeUpdate
 }: ExecutionConsoleProps) {
   const [isExpanded, setIsExpanded] = useState(false)
   const [height, setHeight] = useState(300)

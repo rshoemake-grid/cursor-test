@@ -61,7 +61,10 @@ export default function WorkflowBuilder({
   onWorkflowModified,
   onWorkflowLoaded,
   onCloseWorkflow,
-  onClearExecutions
+  onClearExecutions,
+  onExecutionLogUpdate,
+  onExecutionStatusUpdate,
+  onExecutionNodeUpdate
 }: WorkflowBuilderProps) {
   // Local state for this tab - NOT using global store
   const [nodes, setNodes, onNodesChangeBase] = useNodesState([] as Node[])
