@@ -127,22 +127,32 @@ async def login_json(
     db: AsyncSession = Depends(get_db)
 ):
     """Login with JSON body (alternative to OAuth2 form)"""
+    from ..utils.logger import get_logger
+    logger = get_logger(__name__)
+    
+    logger.info(f"Login attempt for username: {user_data.username}")
+    
     # Get user
     result = await db.execute(
         select(UserDB).where(UserDB.username == user_data.username)
     )
     user = result.scalar_one_or_none()
     
-    # Verify credentials
     if not user:
+        logger.warning(f"Login failed: User '{user_data.username}' not found")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect username or password"
         )
     
+    logger.debug(f"User found: {user.username}, email: {user.email}, active: {user.is_active}")
+    
     # Verify password with better error handling
     password_valid = verify_password(user_data.password, user.hashed_password)
+    logger.debug(f"Password verification result: {password_valid}")
+    
     if not password_valid:
+        logger.warning(f"Login failed: Invalid password for user '{user_data.username}'")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect username or password"
