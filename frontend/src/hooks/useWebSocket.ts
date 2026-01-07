@@ -145,7 +145,26 @@ export function useWebSocket({
   }, [executionId, onLog, onStatus, onNodeUpdate, onCompletion, onError])
 
   useEffect(() => {
+    // Clear any pending reconnection attempts when execution ID changes
+    if (reconnectTimeoutRef.current) {
+      clearTimeout(reconnectTimeoutRef.current)
+      reconnectTimeoutRef.current = null
+    }
+    
+    // Reset reconnect attempts when execution ID changes
+    reconnectAttempts.current = 0
+    
     if (executionId) {
+      // Don't connect to temporary execution IDs
+      if (executionId.startsWith('pending-')) {
+        // Close any existing connection
+        if (wsRef.current) {
+          wsRef.current.close()
+          wsRef.current = null
+        }
+        setIsConnected(false)
+        return
+      }
       connect()
     } else {
       // Close connection if no execution ID
@@ -159,6 +178,7 @@ export function useWebSocket({
     return () => {
       if (reconnectTimeoutRef.current) {
         clearTimeout(reconnectTimeoutRef.current)
+        reconnectTimeoutRef.current = null
       }
       if (wsRef.current) {
         wsRef.current.close()
