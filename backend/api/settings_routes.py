@@ -333,6 +333,7 @@ def get_active_llm_config(user_id: Optional[str] = None) -> Optional[Dict[str, A
     
     Falls back to "anonymous" settings if user-specific settings not found.
     This allows users who saved settings while not logged in to still use them.
+    Also tries to load from database if cache is empty.
     """
     uid = user_id if user_id else "anonymous"
     
@@ -348,11 +349,48 @@ def get_active_llm_config(user_id: Optional[str] = None) -> Optional[Dict[str, A
         logger.info(f"User {uid} not found in cache, falling back to anonymous settings")
         settings = _settings_cache["anonymous"]
         logger.debug(f"Using anonymous settings with {len(settings.providers)} providers")
-    else:
-        logger.warning(f"User {uid} not found in cache and no anonymous fallback - settings need to be loaded from database via API")
-        return None
+    elif not _settings_cache:
+        # Cache is empty - try to load from database synchronously (fallback)
+        logger.warning(f"Settings cache is empty, attempting to load from database")
+        try:
+            import asyncio
+            from ..database.db import AsyncSessionLocal
+            from sqlalchemy import select
+            
+            # Try to load settings from database
+            loop = None
+            try:
+                loop = asyncio.get_event_loop()
+            except RuntimeError:
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
+            
+            async def load_from_db():
+                async with AsyncSessionLocal() as db:
+                    result = await db.execute(select(SettingsDB))
+                    all_settings = result.scalars().all()
+                    for settings_db in all_settings:
+                        if settings_db.settings_data:
+                            settings_obj = LLMSettings(**settings_db.settings_data)
+                            _settings_cache[settings_db.user_id] = settings_obj
+                            logger.info(f"Loaded settings for user: {settings_db.user_id} from database")
+            
+            if loop.is_running():
+                # Can't run async code in sync context if loop is running
+                logger.warning("Cannot load settings from database synchronously - event loop is running")
+            else:
+                loop.run_until_complete(load_from_db())
+                
+                # Try again after loading
+                if uid in _settings_cache:
+                    settings = _settings_cache[uid]
+                elif user_id and "anonymous" in _settings_cache:
+                    settings = _settings_cache["anonymous"]
+        except Exception as e:
+            logger.error(f"Failed to load settings from database: {e}", exc_info=True)
     
     if not settings:
+        logger.warning(f"User {uid} not found in cache and no anonymous fallback - settings need to be loaded from database via API")
         return None
     
     for provider in settings.providers:
