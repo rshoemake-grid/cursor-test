@@ -106,46 +106,62 @@ async def execute_workflow(
         
         user_id = current_user.id if current_user else None
         
+        logger.info(f"Executing workflow {workflow_id} for user_id: {user_id}, authenticated: {current_user is not None}")
+        
         # Get LLM config for execution
         try:
             llm_config = get_active_llm_config(user_id)
+            logger.debug(f"Initial LLM config lookup result: {llm_config is not None}")
             
             # If not found in cache, try loading from database
             if not llm_config:
                 from ...api.settings_routes import load_settings_into_cache
-                logger.info("LLM config not found in cache, loading from database...")
+                logger.info(f"LLM config not found in cache for user_id={user_id}, loading from database...")
                 await load_settings_into_cache(db)
                 llm_config = get_active_llm_config(user_id)
+                logger.debug(f"After loading from DB, LLM config result: {llm_config is not None}")
             
             if not llm_config:
+                error_msg = f"No LLM provider configured for user_id={user_id}. Please configure an LLM provider in Settings before executing workflows."
+                logger.warning(error_msg)
                 raise HTTPException(
                     status_code=400, 
-                    detail="No LLM provider configured. Please configure an LLM provider in Settings before executing workflows."
+                    detail=error_msg
                 )
+            
+            logger.info(f"Using LLM config: type={llm_config.get('type')}, model={llm_config.get('model')}")
         except HTTPException:
             raise
         except Exception as e:
-            logger.error(f"Error getting LLM config: {e}", exc_info=True)
+            logger.error(f"Error getting LLM config for user_id={user_id}: {e}", exc_info=True)
             raise HTTPException(status_code=500, detail=f"Failed to get LLM configuration: {str(e)}")
         
         # Reconstruct workflow definition
         try:
-            workflow_def = reconstruct_workflow_definition({
+            logger.debug(f"Reconstructing workflow definition for workflow_id={workflow_id}")
+            workflow_def_dict = {
                 "id": workflow_db.id,
                 "name": workflow_db.name,
                 "description": workflow_db.description,
                 **workflow_db.definition
-            })
+            }
+            logger.debug(f"Workflow definition keys: {list(workflow_def_dict.keys())}")
+            workflow_def = reconstruct_workflow_definition(workflow_def_dict)
+            logger.info(f"Successfully reconstructed workflow definition with {len(workflow_def.nodes)} nodes")
+        except HTTPException:
+            raise
         except Exception as e:
-            logger.error(f"Error reconstructing workflow definition: {e}", exc_info=True)
+            logger.error(f"Error reconstructing workflow definition for workflow_id={workflow_id}: {e}", exc_info=True)
             raise HTTPException(status_code=422, detail=f"Invalid workflow definition: {str(e)}")
         
         # Create executor to get execution_id immediately
         try:
+            logger.debug(f"Creating WorkflowExecutor with llm_config type={llm_config.get('type')}")
             executor = WorkflowExecutor(workflow_def, stream_updates=True, llm_config=llm_config, user_id=user_id)
             execution_id = executor.execution_id
+            logger.info(f"Created executor with execution_id={execution_id}")
         except Exception as e:
-            logger.error(f"Error creating executor: {e}", exc_info=True)
+            logger.error(f"Error creating executor for workflow_id={workflow_id}: {e}", exc_info=True)
             raise HTTPException(status_code=500, detail=f"Failed to create workflow executor: {str(e)}")
         
         inputs = execution_request.inputs if execution_request else {}
