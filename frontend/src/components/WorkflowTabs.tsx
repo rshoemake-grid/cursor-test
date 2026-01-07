@@ -430,6 +430,9 @@ export default function WorkflowTabs({ initialWorkflowId, workflowLoadKey, onExe
             onWorkflowLoaded={(workflowId, name) => handleLoadWorkflow(activeTab.id, workflowId, name)}
             onCloseWorkflow={handleCloseWorkflow}
             onClearExecutions={handleClearExecutions}
+            onExecutionLogUpdate={handleExecutionLogUpdate}
+            onExecutionStatusUpdate={handleExecutionStatusUpdate}
+            onExecutionNodeUpdate={handleExecutionNodeUpdate}
           />
         </div>
       )}
