@@ -95,86 +95,106 @@ async def execute_workflow(
     from ...api.settings_routes import get_active_llm_config
     from ...dependencies import get_workflow_service
     
-    workflow_service = get_workflow_service(db)
-    
-    # Get workflow
     try:
-        workflow_db = await workflow_service.get_workflow(workflow_id)
-    except WorkflowNotFoundError as e:
-        raise HTTPException(status_code=404, detail=str(e))
-    
-    user_id = current_user.id if current_user else None
-    
-    # Get LLM config for execution
-    llm_config = get_active_llm_config(user_id)
-    
-    # Reconstruct workflow definition
-    try:
-        workflow_def = reconstruct_workflow_definition({
-            "id": workflow_db.id,
-            "name": workflow_db.name,
-            "description": workflow_db.description,
-            **workflow_db.definition
-        })
-    except Exception as e:
-        logger.error(f"Error reconstructing workflow definition: {e}", exc_info=True)
-        raise HTTPException(status_code=422, detail=f"Invalid workflow definition: {str(e)}")
-    
-    # Create executor to get execution_id immediately
-    executor = WorkflowExecutor(workflow_def, stream_updates=True, llm_config=llm_config, user_id=user_id)
-    execution_id = executor.execution_id
-    inputs = execution_request.inputs if execution_request else {}
-    
-    # Create initial execution record in database (status: running)
-    db_execution = ExecutionDB(
-        id=execution_id,
-        workflow_id=workflow_id,
-        user_id=user_id,
-        status='running',
-        state={},
-        started_at=datetime.utcnow(),
-        completed_at=None
-    )
-    db.add(db_execution)
-    await db.commit()
-    
-    # Define background task to run execution and update database
-    async def run_execution():
+        workflow_service = get_workflow_service(db)
+        
+        # Get workflow
         try:
-            execution_state = await executor.execute(inputs)
-            
-            # Update execution in database
-            async with AsyncSessionLocal() as db_session:
-                result = await db_session.execute(
-                    select(ExecutionDB).where(ExecutionDB.id == execution_id)
-                )
-                db_exec = result.scalar_one_or_none()
-                if db_exec:
-                    db_exec.status = execution_state.status.value
-                    db_exec.state = execution_state.model_dump(mode='json')
-                    db_exec.completed_at = execution_state.completed_at
-                    await db_session.commit()
+            workflow_db = await workflow_service.get_workflow(workflow_id)
+        except WorkflowNotFoundError as e:
+            raise HTTPException(status_code=404, detail=str(e))
+        
+        user_id = current_user.id if current_user else None
+        
+        # Get LLM config for execution
+        try:
+            llm_config = get_active_llm_config(user_id)
         except Exception as e:
-            # Update execution status to failed
-            async with AsyncSessionLocal() as db_session:
-                result = await db_session.execute(
-                    select(ExecutionDB).where(ExecutionDB.id == execution_id)
-                )
-                db_exec = result.scalar_one_or_none()
-                if db_exec:
-                    db_exec.status = 'failed'
-                    db_exec.completed_at = datetime.utcnow()
-                    await db_session.commit()
-            logger.error(f"Execution {execution_id} failed: {e}", exc_info=True)
-    
-    # Start execution in background
-    asyncio.create_task(run_execution())
-    
-    return ExecutionResponse(
-        execution_id=execution_id,
-        workflow_id=workflow_id,
-        status="running"
-    )
+            logger.error(f"Error getting LLM config: {e}", exc_info=True)
+            raise HTTPException(status_code=500, detail=f"Failed to get LLM configuration: {str(e)}")
+        
+        # Reconstruct workflow definition
+        try:
+            workflow_def = reconstruct_workflow_definition({
+                "id": workflow_db.id,
+                "name": workflow_db.name,
+                "description": workflow_db.description,
+                **workflow_db.definition
+            })
+        except Exception as e:
+            logger.error(f"Error reconstructing workflow definition: {e}", exc_info=True)
+            raise HTTPException(status_code=422, detail=f"Invalid workflow definition: {str(e)}")
+        
+        # Create executor to get execution_id immediately
+        try:
+            executor = WorkflowExecutor(workflow_def, stream_updates=True, llm_config=llm_config, user_id=user_id)
+            execution_id = executor.execution_id
+        except Exception as e:
+            logger.error(f"Error creating executor: {e}", exc_info=True)
+            raise HTTPException(status_code=500, detail=f"Failed to create workflow executor: {str(e)}")
+        
+        inputs = execution_request.inputs if execution_request else {}
+        
+        # Create initial execution record in database (status: running)
+        try:
+            db_execution = ExecutionDB(
+                id=execution_id,
+                workflow_id=workflow_id,
+                user_id=user_id,
+                status='running',
+                state={},
+                started_at=datetime.utcnow(),
+                completed_at=None
+            )
+            db.add(db_execution)
+            await db.commit()
+        except Exception as e:
+            logger.error(f"Error creating execution record: {e}", exc_info=True)
+            raise HTTPException(status_code=500, detail=f"Failed to create execution record: {str(e)}")
+        
+        # Define background task to run execution and update database
+        async def run_execution():
+            try:
+                execution_state = await executor.execute(inputs)
+                
+                # Update execution in database
+                async with AsyncSessionLocal() as db_session:
+                    result = await db_session.execute(
+                        select(ExecutionDB).where(ExecutionDB.id == execution_id)
+                    )
+                    db_exec = result.scalar_one_or_none()
+                    if db_exec:
+                        db_exec.status = execution_state.status.value
+                        db_exec.state = execution_state.model_dump(mode='json')
+                        db_exec.completed_at = execution_state.completed_at
+                        await db_session.commit()
+            except Exception as e:
+                # Update execution status to failed
+                async with AsyncSessionLocal() as db_session:
+                    result = await db_session.execute(
+                        select(ExecutionDB).where(ExecutionDB.id == execution_id)
+                    )
+                    db_exec = result.scalar_one_or_none()
+                    if db_exec:
+                        db_exec.status = 'failed'
+                        db_exec.completed_at = datetime.utcnow()
+                        await db_session.commit()
+                logger.error(f"Execution {execution_id} failed: {e}", exc_info=True)
+        
+        # Start execution in background
+        asyncio.create_task(run_execution())
+        
+        return ExecutionResponse(
+            execution_id=execution_id,
+            workflow_id=workflow_id,
+            status="running"
+        )
+    except HTTPException:
+        # Re-raise HTTP exceptions (404, 422, etc.)
+        raise
+    except Exception as e:
+        logger.error(f"Unexpected error executing workflow: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
 
 
 @router.get("/executions/{execution_id}", response_model=ExecutionResponse)
