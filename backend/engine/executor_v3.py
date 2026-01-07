@@ -448,10 +448,44 @@ class WorkflowExecutorV3:
                     
                     await self._log("DEBUG", node.id, f"Raw read output type: {type(raw_output)}, value preview: {str(raw_output)[:200] if raw_output else 'None'}")
                     
-                    # Wrap output in a standard format for downstream nodes
-                    if raw_output is None:
-                        await self._log("WARNING", node.id, "Read operation returned None")
-                        output = {'data': None, 'source': node.type}
+                    # Handle structured output from lines/batch read modes
+                    if isinstance(raw_output, dict) and 'read_mode' in raw_output:
+                        read_mode = raw_output.get('read_mode')
+                        if read_mode == 'lines':
+                            # Lines mode: extract lines array for Loop node
+                            lines = raw_output.get('lines', [])
+                            total_lines = raw_output.get('total_lines', len(lines))
+                            await self._log("INFO", node.id, f"Read {total_lines} lines from file (read_mode: lines)")
+                            # Return structured output with lines accessible for Loop node
+                            output = {
+                                'data': lines,  # For Loop node to iterate over
+                                'lines': lines,  # Alternative key
+                                'items': lines,  # Another alternative for Loop
+                                'total_lines': total_lines,
+                                'file_path': raw_output.get('file_path'),
+                                'read_mode': 'lines',
+                                'source': node.type
+                            }
+                        elif read_mode == 'batch':
+                            # Batch mode: return batches for batch processing
+                            batches = raw_output.get('batches', [])
+                            total_batches = raw_output.get('total_batches', len(batches))
+                            total_lines = raw_output.get('total_lines', 0)
+                            await self._log("INFO", node.id, f"Read {total_lines} lines in {total_batches} batches (read_mode: batch)")
+                            output = {
+                                'data': batches,  # For Loop node to iterate over batches
+                                'batches': batches,
+                                'items': batches,  # Alternative for Loop
+                                'total_batches': total_batches,
+                                'total_lines': total_lines,
+                                'batch_size': raw_output.get('batch_size'),
+                                'file_path': raw_output.get('file_path'),
+                                'read_mode': 'batch',
+                                'source': node.type
+                            }
+                        else:
+                            # Unknown read mode, wrap as-is
+                            output = {'data': raw_output, 'source': node.type}
                     elif isinstance(raw_output, dict):
                         # If it's already a dict, check if it's empty
                         if raw_output == {}:
@@ -460,13 +494,29 @@ class WorkflowExecutorV3:
                         else:
                             # Wrap existing dict in our standard format
                             output = {'data': raw_output, 'source': node.type}
+                    elif raw_output is None:
+                        await self._log("WARNING", node.id, "Read operation returned None")
+                        output = {'data': None, 'source': node.type}
                     else:
                         # Wrap non-dict output
                         output = {'data': raw_output, 'source': node.type}
                     
                     node_state.input = {}  # Read operations don't have inputs
                     output_preview = str(output.get('data', ''))[:100] if isinstance(output, dict) else str(output)[:100]
-                    await self._log("INFO", node.id, f"Read {len(str(output.get('data', ''))) if isinstance(output, dict) and output.get('data') else 0} bytes from {node.type}, wrapped output keys: {list(output.keys()) if isinstance(output, dict) else 'not a dict'}")
+                    
+                    # Enhanced logging for lines/batch modes
+                    if isinstance(output, dict) and 'read_mode' in output:
+                        read_mode = output.get('read_mode')
+                        if read_mode == 'lines':
+                            line_count = output.get('total_lines', 0)
+                            await self._log("INFO", node.id, f"Read {line_count} lines from {output.get('file_path', 'file')}, ready for Loop node iteration")
+                        elif read_mode == 'batch':
+                            batch_count = output.get('total_batches', 0)
+                            line_count = output.get('total_lines', 0)
+                            await self._log("INFO", node.id, f"Read {line_count} lines in {batch_count} batches, ready for batch processing")
+                    else:
+                        await self._log("INFO", node.id, f"Read {len(str(output.get('data', ''))) if isinstance(output, dict) and output.get('data') else 0} bytes from {node.type}, wrapped output keys: {list(output.keys()) if isinstance(output, dict) else 'not a dict'}")
+                    
                     await self._log("DEBUG", node.id, f"Wrapped output preview: {output_preview}")
             else:
                 # Prepare inputs for this node (not needed for input sources)

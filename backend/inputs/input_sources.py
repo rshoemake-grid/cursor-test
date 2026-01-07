@@ -337,22 +337,140 @@ class LocalFileSystemHandler(InputSourceHandler):
         
         if path.is_file():
             # Check for read mode
-            read_mode = config.get('read_mode', 'full')  # 'full' or 'lines'
+            read_mode = config.get('read_mode', 'full')  # 'full', 'lines', or 'batch'
             
             if read_mode == 'lines':
                 # Read file line by line (memory efficient for large files)
+                skip_empty = config.get('skip_empty_lines', True)
+                parse_json = config.get('parse_json_lines', True)  # Auto-parse JSON lines
+                max_lines = config.get('max_lines')  # Optional limit
+                
                 lines = []
+                line_count = 0
                 with open(path, 'r', encoding=encoding) as f:
                     for line in f:
                         line = line.rstrip('\n\r')  # Remove trailing newline
-                        if line:  # Skip empty lines, or remove this check to include them
-                            # Try to parse each line as JSON (e.g., JSONL format)
+                        
+                        # Skip empty lines if configured
+                        if skip_empty and not line:
+                            continue
+                        
+                        # Apply max_lines limit if set
+                        if max_lines and line_count >= max_lines:
+                            break
+                        
+                        # Try to parse each line as JSON (e.g., JSONL format)
+                        if parse_json:
                             try:
-                                lines.append(json.loads(line))
+                                parsed = json.loads(line)
+                                lines.append({
+                                    'line_number': line_count + 1,
+                                    'content': parsed,
+                                    'raw': line
+                                })
                             except json.JSONDecodeError:
                                 # If not JSON, keep as string
-                                lines.append(line)
-                return lines
+                                lines.append({
+                                    'line_number': line_count + 1,
+                                    'content': line,
+                                    'raw': line
+                                })
+                        else:
+                            lines.append({
+                                'line_number': line_count + 1,
+                                'content': line,
+                                'raw': line
+                            })
+                        
+                        line_count += 1
+                
+                # Return with metadata
+                return {
+                    'lines': lines,
+                    'total_lines': line_count,
+                    'file_path': str(path),
+                    'read_mode': 'lines'
+                }
+            
+            elif read_mode == 'batch':
+                # Read file in batches (for very large files)
+                batch_size = config.get('batch_size', 1000)
+                skip_empty = config.get('skip_empty_lines', True)
+                parse_json = config.get('parse_json_lines', True)
+                start_line = config.get('start_line', 0)  # Resume from line number
+                
+                batches = []
+                current_batch = []
+                line_count = 0
+                batch_number = 0
+                
+                with open(path, 'r', encoding=encoding) as f:
+                    # Skip to start_line if resuming
+                    for _ in range(start_line):
+                        try:
+                            next(f)
+                        except StopIteration:
+                            break
+                    
+                    for line in f:
+                        line = line.rstrip('\n\r')
+                        
+                        # Skip empty lines if configured
+                        if skip_empty and not line:
+                            continue
+                        
+                        # Parse JSON if configured
+                        if parse_json:
+                            try:
+                                parsed = json.loads(line)
+                                current_batch.append({
+                                    'line_number': start_line + line_count + 1,
+                                    'content': parsed,
+                                    'raw': line
+                                })
+                            except json.JSONDecodeError:
+                                current_batch.append({
+                                    'line_number': start_line + line_count + 1,
+                                    'content': line,
+                                    'raw': line
+                                })
+                        else:
+                            current_batch.append({
+                                'line_number': start_line + line_count + 1,
+                                'content': line,
+                                'raw': line
+                            })
+                        
+                        line_count += 1
+                        
+                        # Yield batch when full
+                        if len(current_batch) >= batch_size:
+                            batches.append({
+                                'batch_number': batch_number,
+                                'start_line': start_line + (batch_number * batch_size),
+                                'end_line': start_line + line_count,
+                                'lines': current_batch
+                            })
+                            batch_number += 1
+                            current_batch = []
+                
+                # Add final batch if any remaining lines
+                if current_batch:
+                    batches.append({
+                        'batch_number': batch_number,
+                        'start_line': start_line + (batch_number * batch_size),
+                        'end_line': start_line + line_count,
+                        'lines': current_batch
+                    })
+                
+                return {
+                    'batches': batches,
+                    'total_batches': len(batches),
+                    'total_lines': line_count,
+                    'batch_size': batch_size,
+                    'file_path': str(path),
+                    'read_mode': 'batch'
+                }
             else:
                 # Read entire file (default behavior)
                 with open(path, 'r', encoding=encoding) as f:
