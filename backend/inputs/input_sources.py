@@ -336,15 +336,33 @@ class LocalFileSystemHandler(InputSourceHandler):
             raise FileNotFoundError(f"File not found: {file_path}. Please check that the file exists and the path is correct.")
         
         if path.is_file():
-            # Read single file
-            with open(path, 'r', encoding=encoding) as f:
-                content = f.read()
+            # Check for read mode
+            read_mode = config.get('read_mode', 'full')  # 'full' or 'lines'
             
-            # Try to parse as JSON, otherwise return as text
-            try:
-                return json.loads(content)
-            except json.JSONDecodeError:
-                return content
+            if read_mode == 'lines':
+                # Read file line by line (memory efficient for large files)
+                lines = []
+                with open(path, 'r', encoding=encoding) as f:
+                    for line in f:
+                        line = line.rstrip('\n\r')  # Remove trailing newline
+                        if line:  # Skip empty lines, or remove this check to include them
+                            # Try to parse each line as JSON (e.g., JSONL format)
+                            try:
+                                lines.append(json.loads(line))
+                            except json.JSONDecodeError:
+                                # If not JSON, keep as string
+                                lines.append(line)
+                return lines
+            else:
+                # Read entire file (default behavior)
+                with open(path, 'r', encoding=encoding) as f:
+                    content = f.read()
+                
+                # Try to parse as JSON, otherwise return as text
+                try:
+                    return json.loads(content)
+                except json.JSONDecodeError:
+                    return content
         
         elif path.is_dir():
             # Read directory with optional pattern
