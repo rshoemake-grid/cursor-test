@@ -218,10 +218,12 @@ async def execute_workflow(
         # Start execution in background
         asyncio.create_task(run_execution())
         
+        started_at = datetime.utcnow()
         return ExecutionResponse(
             execution_id=execution_id,
             workflow_id=workflow_id,
-            status="running"
+            status=ExecutionStatus.RUNNING,
+            started_at=started_at
         )
     except HTTPException:
         # Re-raise HTTP exceptions (404, 422, etc.)
