@@ -219,11 +219,16 @@ export default function WorkflowTabs({ initialWorkflowId, workflowLoadKey, onExe
 
   // Handle clearing executions for a workflow
   const handleClearExecutions = useCallback((workflowId: string) => {
-    setTabs(prev => prev.map(tab => 
-      tab.workflowId === workflowId
-        ? { ...tab, executions: [], activeExecutionId: null }
-        : tab
-    ))
+    console.log('handleClearExecutions called for workflowId:', workflowId)
+    setTabs(prev => {
+      const updated = prev.map(tab => 
+        tab.workflowId === workflowId
+          ? { ...tab, executions: [], activeExecutionId: null }
+          : tab
+      )
+      console.log('Updated tabs:', updated)
+      return updated
+    })
   }, [])
 
   // Handle real-time log updates from WebSocket

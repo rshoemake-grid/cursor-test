@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { Save, Play, FileDown } from 'lucide-react'
 import { api } from '../api/client'
+import { showSuccess, showError } from '../utils/notifications'
 
 interface ToolbarProps {
   workflowId: string | null
@@ -81,7 +82,7 @@ export default function Toolbar({
       if (workflowId) {
         // Update existing
         await api.updateWorkflow(workflowId, workflowDef)
-        alert('Workflow updated successfully!')
+        showSuccess('Workflow updated successfully!')
         if (onWorkflowSaved) {
           onWorkflowSaved(workflowId, workflowDef.name)
         }
@@ -90,14 +91,14 @@ export default function Toolbar({
         // Create new
         const created = await api.createWorkflow(workflowDef)
         onWorkflowIdChange(created.id!)
-        alert('Workflow created successfully!')
+        showSuccess('Workflow created successfully!')
         if (onWorkflowSaved) {
           onWorkflowSaved(created.id!, workflowDef.name)
         }
         return created.id!
       }
     } catch (error: any) {
-      alert('Failed to save workflow: ' + error.message)
+      showError('Failed to save workflow: ' + error.message)
       return null
     } finally {
       setIsSaving(false)
@@ -113,7 +114,7 @@ export default function Toolbar({
       if (confirm) {
         currentWorkflowId = await handleSave()
         if (!currentWorkflowId) {
-          alert('Failed to save workflow. Cannot execute.')
+          showError('Failed to save workflow. Cannot execute.')
           return
         }
       } else {
@@ -151,31 +152,7 @@ export default function Toolbar({
           
           // Show non-blocking success notification
           const message = `✅ Execution started!\n\nExecution ID: ${execution.execution_id.slice(0, 8)}...\n\nCheck the console at the bottom of the screen to watch it run.`
-          // Use a non-blocking notification instead of alert
-          const notification = document.createElement('div')
-          notification.style.cssText = `
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background: #10b981;
-            color: white;
-            padding: 16px 24px;
-            border-radius: 8px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            z-index: 10000;
-            max-width: 400px;
-            white-space: pre-line;
-            font-family: system-ui, -apple-system, sans-serif;
-          `
-          notification.textContent = message
-          document.body.appendChild(notification)
-          
-          // Auto-remove after 5 seconds
-          setTimeout(() => {
-            notification.style.transition = 'opacity 0.3s'
-            notification.style.opacity = '0'
-            setTimeout(() => notification.remove(), 300)
-          }, 5000)
+          showSuccess(message, 6000)
         }).catch((error: any) => {
           console.error('Execution failed:', error)
           setIsExecuting(false)

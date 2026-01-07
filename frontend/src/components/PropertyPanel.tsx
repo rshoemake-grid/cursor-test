@@ -1,6 +1,7 @@
 import { useReactFlow } from '@xyflow/react'
 import { X, Plus, Trash2, Save, Check } from 'lucide-react'
 import { useState, useEffect, useRef, useMemo } from 'react'
+import { showError } from '../utils/notifications'
 
 interface PropertyPanelProps {
   selectedNodeId: string | null
@@ -504,7 +505,7 @@ export default function PropertyPanel({ selectedNodeId, setSelectedNodeId, selec
     } catch (error) {
       console.error('Save failed:', error)
       setSaveStatus('idle')
-      alert('Failed to save workflow: ' + (error instanceof Error ? error.message : 'Unknown error'))
+      showError('Failed to save workflow: ' + (error instanceof Error ? error.message : 'Unknown error'))
     }
   }
 

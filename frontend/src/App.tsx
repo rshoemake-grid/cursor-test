@@ -168,6 +168,7 @@ function MainApp() {
               setSelectedWorkflowId(id)
               setCurrentView('builder')
             }}
+            onBack={() => setCurrentView('builder')}
           />
         )}
         {currentView === 'execution' && executionId && (

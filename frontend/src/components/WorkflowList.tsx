@@ -1,13 +1,15 @@
 import { useEffect, useState } from 'react'
 import { api } from '../api/client'
 import type { WorkflowDefinition } from '../types/workflow'
-import { Play, Trash2, Calendar, CheckSquare, Square } from 'lucide-react'
+import { Play, Trash2, Calendar, CheckSquare, Square, ArrowLeft } from 'lucide-react'
+import { showError, showSuccess, showWarning } from '../utils/notifications'
 
 interface WorkflowListProps {
   onSelectWorkflow: (id: string) => void
+  onBack?: () => void
 }
 
-export default function WorkflowList({ onSelectWorkflow }: WorkflowListProps) {
+export default function WorkflowList({ onSelectWorkflow, onBack }: WorkflowListProps) {
   const [workflows, setWorkflows] = useState<WorkflowDefinition[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
@@ -22,7 +24,7 @@ export default function WorkflowList({ onSelectWorkflow }: WorkflowListProps) {
       const data = await api.getWorkflows()
       setWorkflows(data)
     } catch (error: any) {
-      alert('Failed to load workflows: ' + error.message)
+      showError('Failed to load workflows: ' + error.message)
     } finally {
       setLoading(false)
     }
@@ -39,8 +41,9 @@ export default function WorkflowList({ onSelectWorkflow }: WorkflowListProps) {
         next.delete(id)
         return next
       })
+      showSuccess('Workflow deleted successfully')
     } catch (error: any) {
-      alert('Failed to delete workflow: ' + error.message)
+      showError('Failed to delete workflow: ' + error.message)
     }
   }
 
@@ -66,7 +69,7 @@ export default function WorkflowList({ onSelectWorkflow }: WorkflowListProps) {
 
   const handleBulkDelete = async () => {
     if (selectedIds.size === 0) {
-      alert('Please select at least one workflow to delete')
+      showWarning('Please select at least one workflow to delete')
       return
     }
 
@@ -82,12 +85,12 @@ export default function WorkflowList({ onSelectWorkflow }: WorkflowListProps) {
       setSelectedIds(new Set())
       
       if (result.failed_ids && result.failed_ids.length > 0) {
-        alert(`${result.message}\nFailed IDs: ${result.failed_ids.join(', ')}`)
+        showError(`${result.message}\nFailed IDs: ${result.failed_ids.join(', ')}`)
       } else {
-        alert(`Successfully deleted ${result.deleted_count} workflow(s)`)
+        showSuccess(`Successfully deleted ${result.deleted_count} workflow(s)`)
       }
     } catch (error: any) {
-      alert('Failed to delete workflows: ' + error.message)
+      showError('Failed to delete workflows: ' + error.message)
     }
   }
 
@@ -114,7 +117,18 @@ export default function WorkflowList({ onSelectWorkflow }: WorkflowListProps) {
     <div className="h-full overflow-y-auto">
       <div className="p-6">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold text-gray-900">My Workflows</h2>
+          <div className="flex items-center gap-4">
+            {onBack && (
+              <button
+                onClick={onBack}
+                className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                title="Back to builder"
+              >
+                <ArrowLeft className="w-5 h-5" />
+              </button>
+            )}
+            <h2 className="text-2xl font-bold text-gray-900">My Workflows</h2>
+          </div>
           {selectedIds.size > 0 && (
             <div className="flex items-center gap-3">
               <span className="text-sm text-gray-600">{selectedIds.size} selected</span>

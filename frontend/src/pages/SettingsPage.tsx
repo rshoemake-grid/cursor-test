@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { showSuccess, showError } from '../utils/notifications'
 import { useNavigate } from 'react-router-dom'
 import { Save, Plus, Trash2, CheckCircle, XCircle, Loader, ArrowLeft } from 'lucide-react'
 
@@ -204,12 +205,12 @@ export default function SettingsPage() {
         body: JSON.stringify({ providers })
       })
       if (response.ok) {
-        alert('✅ Settings synced to backend successfully!')
+        showSuccess('Settings synced to backend successfully!')
       } else {
-        alert('❌ Failed to sync settings')
+        showError('Failed to sync settings')
       }
     } catch (error) {
-      alert('❌ Error syncing settings: ' + error)
+      showError('Error syncing settings: ' + error)
     }
   }
 

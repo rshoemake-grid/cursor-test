@@ -52,6 +52,8 @@ export default function ExecutionConsole({
   const [isExpanded, setIsExpanded] = useState(false)
   const [height, setHeight] = useState(300)
   const [consoleTab, setConsoleTab] = useState<'executions' | 'chat'>('executions')
+  const [executionTabs, setExecutionTabs] = useState<Array<{ executionId: string; workflowId: string; workflowName: string; status: string; startedAt: Date }>>([])
+  const [activeExecutionTabId, setActiveExecutionTabId] = useState<string | null>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const isResizing = useRef(false)
   const startY = useRef(0)
@@ -119,14 +121,53 @@ export default function ExecutionConsole({
   const activeWorkflowTab = workflowTabs.find(tab => tab.workflowId === activeWorkflowId)
   const activeExecution = activeWorkflowTab?.executions.find(e => e.id === activeWorkflowTab.activeExecutionId) || activeWorkflowTab?.executions[0]
   
+  // Get active execution from execution tabs if one is selected
+  const activeExecutionTab = executionTabs.find(tab => tab.executionId === activeExecutionTabId)
+  const displayedExecution = activeExecutionTab 
+    ? activeWorkflowTab?.executions.find(e => e.id === activeExecutionTab.executionId)
+    : activeExecution
+  
+  // Create execution tab when execution starts and update status
+  useEffect(() => {
+    // Check all workflow tabs for executions
+    workflowTabs.forEach(workflowTab => {
+      workflowTab.executions.forEach(execution => {
+        const existingTab = executionTabs.find(tab => tab.executionId === execution.id)
+        
+        if (!existingTab) {
+          // Create new tab for any execution (running, completed, or failed)
+          // This ensures tabs are created even if execution completes quickly
+          setExecutionTabs(prev => [...prev, {
+            executionId: execution.id,
+            workflowId: workflowTab.workflowId,
+            workflowName: workflowTab.workflowName,
+            status: execution.status,
+            startedAt: execution.startedAt
+          }])
+          // Auto-select the new execution tab if it's running or if no tab is selected
+          if (!activeExecutionTabId && (execution.status === 'running' || executionTabs.length === 0)) {
+            setActiveExecutionTabId(execution.id)
+          }
+        } else if (existingTab.status !== execution.status) {
+          // Update tab status when execution status changes
+          setExecutionTabs(prev => prev.map(t => 
+            t.executionId === execution.id 
+              ? { ...t, status: execution.status }
+              : t
+          ))
+        }
+      })
+    })
+  }, [workflowTabs])
+  
   // WebSocket connection for real-time log streaming
   const { isConnected } = useWebSocket({
-    executionId: activeExecution?.id || null,
+    executionId: displayedExecution?.id || null,
     onLog: (log) => {
-      if (!activeExecution || !activeWorkflowTab || !onExecutionLogUpdate || !log) return
+      if (!displayedExecution || !activeWorkflowTab || !onExecutionLogUpdate || !log) return
       
       // Add log to execution in real-time via callback
-      onExecutionLogUpdate(activeWorkflowTab.workflowId, activeExecution.id, {
+      onExecutionLogUpdate(activeWorkflowTab.workflowId, displayedExecution.id, {
         timestamp: log.timestamp || new Date().toISOString(),
         message: log.message,
         level: log.level,
@@ -134,22 +175,22 @@ export default function ExecutionConsole({
       })
     },
     onStatus: (status) => {
-      if (!activeExecution || !activeWorkflowTab || !onExecutionStatusUpdate) return
+      if (!displayedExecution || !activeWorkflowTab || !onExecutionStatusUpdate) return
       
       // Update execution status
       onExecutionStatusUpdate(
         activeWorkflowTab.workflowId,
-        activeExecution.id,
+        displayedExecution.id,
         status as 'running' | 'completed' | 'failed'
       )
     },
     onNodeUpdate: (nodeId, nodeState) => {
-      if (!activeExecution || !activeWorkflowTab || !onExecutionNodeUpdate) return
+      if (!displayedExecution || !activeWorkflowTab || !onExecutionNodeUpdate) return
       
       // Update node states for visualization
       if (onNodeStateUpdate) {
         const nodeStates: Record<string, { status: string; error?: string }> = {}
-        Object.entries(activeExecution.nodes || {}).forEach(([nId, nState]: [string, any]) => {
+        Object.entries(displayedExecution.nodes || {}).forEach(([nId, nState]: [string, any]) => {
           nodeStates[nId] = {
             status: nState.status || 'pending',
             error: nState.error
@@ -164,19 +205,19 @@ export default function ExecutionConsole({
       }
       
       // Update execution's node states via callback
-      onExecutionNodeUpdate(activeWorkflowTab.workflowId, activeExecution.id, nodeId, nodeState)
+      onExecutionNodeUpdate(activeWorkflowTab.workflowId, displayedExecution.id, nodeId, nodeState)
     },
     onCompletion: (result) => {
-      if (!activeExecution || !activeWorkflowTab || !onExecutionStatusUpdate) return
+      if (!displayedExecution || !activeWorkflowTab || !onExecutionStatusUpdate) return
       
-      onExecutionStatusUpdate(activeWorkflowTab.workflowId, activeExecution.id, 'completed')
+      onExecutionStatusUpdate(activeWorkflowTab.workflowId, displayedExecution.id, 'completed')
     },
     onError: (error) => {
-      if (!activeExecution || !activeWorkflowTab) return
+      if (!displayedExecution || !activeWorkflowTab) return
       
       // Add error log
       if (onExecutionLogUpdate) {
-        onExecutionLogUpdate(activeWorkflowTab.workflowId, activeExecution.id, {
+        onExecutionLogUpdate(activeWorkflowTab.workflowId, displayedExecution.id, {
           timestamp: new Date().toISOString(),
           message: `Error: ${error}`,
           level: 'ERROR'
@@ -185,16 +226,16 @@ export default function ExecutionConsole({
       
       // Update status to failed
       if (onExecutionStatusUpdate) {
-        onExecutionStatusUpdate(activeWorkflowTab.workflowId, activeExecution.id, 'failed')
+        onExecutionStatusUpdate(activeWorkflowTab.workflowId, displayedExecution.id, 'failed')
       }
     }
   })
   
   // Update node states when execution changes
   useEffect(() => {
-    if (activeExecution && activeExecution.nodes && onNodeStateUpdate) {
+    if (displayedExecution && displayedExecution.nodes && onNodeStateUpdate) {
       const nodeStates: Record<string, { status: string; error?: string }> = {}
-      Object.entries(activeExecution.nodes).forEach(([nodeId, nodeState]: [string, any]) => {
+      Object.entries(displayedExecution.nodes).forEach(([nodeId, nodeState]: [string, any]) => {
         nodeStates[nodeId] = {
           status: nodeState.status || 'pending',
           error: nodeState.error
@@ -209,7 +250,7 @@ export default function ExecutionConsole({
   
   // Auto-scroll when new logs arrive
   useEffect(() => {
-    if (isExpanded && activeExecution && activeExecution.logs.length > 0) {
+    if (isExpanded && displayedExecution && displayedExecution.logs.length > 0) {
       messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
     }
   }, [activeExecution?.logs, isExpanded])
@@ -273,11 +314,8 @@ export default function ExecutionConsole({
                 const isActive = tab.workflowId === activeWorkflowId
                 
                 return (
-                  <button
+                  <div
                     key={tab.workflowId}
-                    onClick={() => {
-                      // Parent component should handle switching active workflow
-                    }}
                     className={`px-3 py-1 rounded text-xs flex items-center gap-2 transition-colors ${
                       isActive
                         ? 'bg-gray-700 text-white'
@@ -289,33 +327,98 @@ export default function ExecutionConsole({
                       {tab.workflowName}
                     </span>
                     <span className="text-gray-500">({tab.executions.length})</span>
-                    <div
+                    <button
                       onClick={(e) => {
+                        e.preventDefault()
                         e.stopPropagation()
+                        console.log('X button clicked for workflow:', tab.workflowId)
                         // Clear executions for this workflow, not close the workflow
-                        onClearExecutions(tab.workflowId)
+                        if (onClearExecutions && tab.workflowId) {
+                          onClearExecutions(tab.workflowId)
+                        }
                       }}
                       onKeyDown={(e) => {
                         if (e.key === 'Enter' || e.key === ' ') {
                           e.preventDefault()
                           e.stopPropagation()
+                          console.log('X button key pressed for workflow:', tab.workflowId)
                           // Clear executions for this workflow, not close the workflow
-                          onClearExecutions(tab.workflowId)
+                          if (onClearExecutions && tab.workflowId) {
+                            onClearExecutions(tab.workflowId)
+                          }
                         }
                       }}
-                      role="button"
-                      tabIndex={0}
-                      className="hover:text-red-400 ml-1 cursor-pointer"
+                      type="button"
+                      className="hover:text-red-400 ml-1 cursor-pointer flex-shrink-0 bg-transparent border-0 p-0 m-0"
                       title="Clear execution history"
+                      aria-label="Clear execution history"
                     >
                       <X className="w-3 h-3" />
-                    </div>
-                  </button>
+                    </button>
+                  </div>
                 )
               })}
             </div>
           ) : (
             <span className="text-sm text-gray-400">No workflows loaded</span>
+          )}
+
+          {/* Execution Tabs */}
+          {consoleTab === 'executions' && executionTabs.length > 0 && (
+            <div className="flex items-center gap-1 ml-2 pl-2 border-l border-gray-700">
+              {executionTabs.map(execTab => {
+                const isActive = execTab.executionId === activeExecutionTabId
+                const isRunning = execTab.status === 'running'
+                
+                return (
+                  <div
+                    key={execTab.executionId}
+                    className={`px-3 py-1 rounded text-xs flex items-center gap-2 transition-colors ${
+                      isActive
+                        ? 'bg-blue-600 text-white'
+                        : 'bg-gray-900 text-gray-400 hover:bg-gray-700 hover:text-gray-200'
+                    }`}
+                  >
+                    <button
+                      onClick={() => {
+                        setActiveExecutionTabId(execTab.executionId)
+                        setIsExpanded(true)
+                      }}
+                      className="flex items-center gap-2 flex-1"
+                      title={`${execTab.workflowName} - ${formatTime(execTab.startedAt)}`}
+                    >
+                      {isRunning && <Loader className="w-3 h-3 animate-spin flex-shrink-0" />}
+                      {!isRunning && getStatusIcon(execTab.status)}
+                      <span className="font-medium">
+                        {execTab.executionId.slice(0, 8)}
+                      </span>
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.preventDefault()
+                        e.stopPropagation()
+                        const executionIdToClose = execTab.executionId
+                        setExecutionTabs(prev => {
+                          const filtered = prev.filter(t => t.executionId !== executionIdToClose)
+                          // If closing the active tab, switch to another one
+                          if (activeExecutionTabId === executionIdToClose) {
+                            const remaining = filtered
+                            setActiveExecutionTabId(remaining.length > 0 ? remaining[0].executionId : null)
+                          }
+                          return filtered
+                        })
+                      }}
+                      type="button"
+                      className="hover:text-red-400 ml-1 cursor-pointer flex-shrink-0 bg-transparent border-0 p-0 m-0"
+                      title="Close execution tab"
+                      aria-label="Close execution tab"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </div>
+                )
+              })}
+            </div>
           )}
         </div>
 
@@ -347,7 +450,7 @@ export default function ExecutionConsole({
               workflowId={activeWorkflowId}
               onWorkflowUpdate={onWorkflowUpdate}
             />
-          ) : !activeWorkflowTab || activeWorkflowTab.executions.length === 0 ? (
+          ) : !displayedExecution ? (
             <div className="flex flex-col items-center justify-center h-full text-gray-500">
               <Clock className="w-12 h-12 mb-4 opacity-50" />
               <p className="text-lg font-medium">No Executions Yet</p>
@@ -359,62 +462,32 @@ export default function ExecutionConsole({
             </div>
           ) : (
             <div className="overflow-auto p-4" style={{ height: `${height - 48}px` }}>
-              {/* Execution Selector */}
-              {activeWorkflowTab.executions.length > 1 && (
-                <div className="mb-4 pb-4 border-b border-gray-700">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-xs text-gray-400 font-medium">Execution History:</span>
-                    {activeWorkflowTab.executions.map((exec, idx) => {
-                      const isActiveExec = exec.id === activeExecution?.id
-                      return (
-                        <button
-                          key={exec.id}
-                          onClick={() => {
-                            // Would need to add handler to switch active execution
-                          }}
-                          className={`px-2 py-1 rounded text-xs flex items-center gap-1 ${
-                            isActiveExec
-                              ? 'bg-blue-600 text-white'
-                              : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
-                          }`}
-                          title={`Started: ${formatTime(exec.startedAt)}`}
-                        >
-                          {getStatusIcon(exec.status)}
-                          <span>#{activeWorkflowTab.executions.length - idx}</span>
-                          <span className="text-gray-500">{exec.id.slice(0, 8)}</span>
-                        </button>
-                      )
-                    })}
-                  </div>
-                </div>
-              )}
-
               {/* Active Execution Details */}
-              {activeExecution && (
+              {displayedExecution && (
                 <>
                   {/* Execution Header */}
                   <div className="mb-4 p-3 bg-gray-800 rounded border border-gray-700">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
-                        {getStatusIcon(activeExecution.status)}
+                        {getStatusIcon(displayedExecution.status)}
                         <div>
                           <div className="flex items-center gap-2">
-                            <span className="text-sm font-semibold">Execution {activeExecution.id.slice(0, 8)}</span>
+                            <span className="text-sm font-semibold">Execution {displayedExecution.id.slice(0, 8)}</span>
                             <span className={`text-xs px-2 py-0.5 rounded ${
-                              activeExecution.status === 'running' ? 'bg-blue-600' :
-                              activeExecution.status === 'completed' ? 'bg-green-600' :
+                              displayedExecution.status === 'running' ? 'bg-blue-600' :
+                              displayedExecution.status === 'completed' ? 'bg-green-600' :
                               'bg-red-600'
                             }`}>
-                              {activeExecution.status.toUpperCase()}
+                              {displayedExecution.status.toUpperCase()}
                             </span>
                           </div>
                           <div className="text-xs text-gray-400 mt-1">
-                            Started: {formatTime(activeExecution.startedAt)}
-                            {activeExecution.completedAt && ` • Completed: ${formatTime(activeExecution.completedAt)}`}
+                            Started: {formatTime(displayedExecution.startedAt)}
+                            {displayedExecution.completedAt && ` • Completed: ${formatTime(displayedExecution.completedAt)}`}
                           </div>
                         </div>
                       </div>
-                      {activeExecution.status === 'running' && (
+                      {displayedExecution.status === 'running' && (
                         <div className="text-xs text-blue-400 flex items-center gap-2">
                           <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
                           LIVE - Updating in real-time
@@ -425,13 +498,13 @@ export default function ExecutionConsole({
 
                   {/* Execution Logs */}
                   <div className="space-y-1 font-mono text-xs">
-                    {activeExecution.logs.length === 0 ? (
+                    {displayedExecution.logs.length === 0 ? (
                       <div className="text-gray-500 text-center py-8">
                         <Loader className="w-6 h-6 animate-spin mx-auto mb-2" />
                         <p>Waiting for execution logs...</p>
                       </div>
                     ) : (
-                      activeExecution.logs.map((log, idx) => (
+                      displayedExecution.logs.map((log, idx) => (
                         <div
                           key={idx}
                           className={`py-1 px-2 rounded ${

@@ -245,7 +245,8 @@ class UnifiedLLMAgent(BaseAgent):
             "content": user_message
         })
         
-        async with httpx.AsyncClient(timeout=120.0) as client:
+        # Use 5 minute timeout for LLM requests (some models can take longer)
+        async with httpx.AsyncClient(timeout=300.0) as client:
             response = await client.post(
                 f"{base_url}/chat/completions",
                 headers={
@@ -290,7 +291,8 @@ class UnifiedLLMAgent(BaseAgent):
         if self.config.system_prompt:
             request_data["system"] = self.config.system_prompt
         
-        async with httpx.AsyncClient(timeout=120.0) as client:
+        # Use 5 minute timeout for LLM requests (some models can take longer)
+        async with httpx.AsyncClient(timeout=300.0) as client:
             response = await client.post(
                 f"{base_url}/messages",
                 headers={
@@ -339,7 +341,8 @@ class UnifiedLLMAgent(BaseAgent):
         if generation_config:
             request_data["generationConfig"] = generation_config
         
-        async with httpx.AsyncClient(timeout=120.0) as client:
+        # Use 5 minute timeout for LLM requests (some models can take longer)
+        async with httpx.AsyncClient(timeout=300.0) as client:
             response = await client.post(
                 f"{base_url}/models/{model}:generateContent?key={api_key}",
                 headers={
@@ -385,7 +388,8 @@ class UnifiedLLMAgent(BaseAgent):
             "content": user_message
         })
         
-        async with httpx.AsyncClient(timeout=120.0) as client:
+        # Use 5 minute timeout for LLM requests (some models can take longer)
+        async with httpx.AsyncClient(timeout=300.0) as client:
             response = await client.post(
                 f"{base_url}/chat/completions",
                 headers={
