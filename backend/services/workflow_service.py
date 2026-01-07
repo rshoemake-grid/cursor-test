@@ -131,10 +131,11 @@ class WorkflowService:
             List of workflows
         """
         if user_id:
+            # Authenticated user: return their workflows
             return await self.repository.get_by_owner(user_id, limit=limit)
-        elif include_public:
-            return await self.repository.get_public_workflows(limit=limit)
         else:
+            # Unauthenticated user: return all workflows (public + unowned)
+            # This allows anonymous users to see their saved workflows
             return await self.repository.get_all(limit=limit)
     
     async def update_workflow(
