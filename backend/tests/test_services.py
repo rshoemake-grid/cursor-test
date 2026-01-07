@@ -96,9 +96,20 @@ async def test_workflow_service_list(db_session, sample_workflow_data):
     workflows = await service.list_workflows(user_id=user_id)
     assert len(workflows) == 3
     
-    # List all workflows (without user_id and include_public=False, uses get_all)
-    all_workflows = await service.list_workflows(user_id=None, include_public=False)
-    assert len(all_workflows) >= 3
+    # Create anonymous workflows (no owner)
+    for i in range(2):
+        workflow_create = WorkflowCreate(
+            name=f"Anonymous Workflow {i}",
+            description="",
+            nodes=[],
+            edges=[],
+            variables={}
+        )
+        await service.create_workflow(workflow_create, user_id=None)
+    
+    # List anonymous workflows (without user_id, should only return anonymous workflows)
+    anonymous_workflows = await service.list_workflows(user_id=None)
+    assert len(anonymous_workflows) == 2
 
 
 @pytest.mark.asyncio
