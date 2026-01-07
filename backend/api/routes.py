@@ -421,9 +421,22 @@ async def execute_workflow(
         
         # Debug logging
         node_id = node_data.get('id')
+        node_type = node_data.get('type')
         has_input_config = node_data.get('input_config') is not None
-        input_config_value = node_data.get('input_config')
-        print(f"Reconstructing node {node_id}: has input_config={has_input_config}, input_config={input_config_value}")
+        has_loop_config = node_data.get('loop_config') is not None
+        has_condition_config = node_data.get('condition_config') is not None
+        has_agent_config = node_data.get('agent_config') is not None
+        
+        # Log config presence for debugging
+        if node_type == 'loop' and not has_loop_config:
+            print(f"⚠️  WARNING: Loop node {node_id} missing loop_config after reconstruction")
+            if "data" in node_data and node_data.get("data"):
+                data_loop_config = node_data["data"].get("loop_config")
+                print(f"   Data object has loop_config: {data_loop_config is not None}")
+        elif node_type == 'condition' and not has_condition_config:
+            print(f"⚠️  WARNING: Condition node {node_id} missing condition_config after reconstruction")
+        elif node_type == 'agent' and not has_agent_config:
+            print(f"⚠️  WARNING: Agent node {node_id} missing agent_config after reconstruction")
         
         return Node(**node_data)
     
