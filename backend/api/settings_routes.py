@@ -68,8 +68,18 @@ async def save_llm_settings(
     db: AsyncSession = Depends(get_db),
     current_user: Optional[UserDB] = Depends(get_optional_user)
 ):
-    """Save LLM provider settings to database"""
-    user_id = current_user.id if current_user else "anonymous"
+    """Save LLM provider settings to database
+    
+    Settings are user-specific and can only be saved by the authenticated user.
+    Unauthenticated users save to "anonymous" settings.
+    """
+    if not current_user:
+        raise HTTPException(
+            status_code=401,
+            detail="Authentication required to save settings"
+        )
+    
+    user_id = current_user.id
     
     # Save to database
     result = await db.execute(
@@ -107,8 +117,17 @@ async def get_llm_settings(
     db: AsyncSession = Depends(get_db),
     current_user: Optional[UserDB] = Depends(get_optional_user)
 ):
-    """Get LLM provider settings from database"""
-    user_id = current_user.id if current_user else "anonymous"
+    """Get LLM provider settings from database
+    
+    Users can only view their own settings. Unauthenticated users cannot view settings.
+    """
+    if not current_user:
+        raise HTTPException(
+            status_code=401,
+            detail="Authentication required to view settings"
+        )
+    
+    user_id = current_user.id
     
     # Check cache first
     if user_id in _settings_cache:
