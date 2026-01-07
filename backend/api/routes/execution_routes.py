@@ -9,7 +9,7 @@ from fastapi import APIRouter, HTTPException, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
-from ...models.schemas import ExecutionRequest, ExecutionResponse, WorkflowDefinition
+from ...models.schemas import ExecutionRequest, ExecutionResponse, WorkflowDefinition, ExecutionStatus
 from ...database import get_db, WorkflowDB, ExecutionDB
 from ...database.db import AsyncSessionLocal
 from ...database.models import UserDB
