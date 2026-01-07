@@ -4,6 +4,8 @@ import WorkflowTabs from './components/WorkflowTabs'
 import WorkflowList from './components/WorkflowList'
 import ExecutionViewer from './components/ExecutionViewer'
 import AuthPage from './pages/AuthPage'
+import ForgotPasswordPage from './pages/ForgotPasswordPage'
+import ResetPasswordPage from './pages/ResetPasswordPage'
 import MarketplacePage from './pages/MarketplacePage'
 import SettingsPage from './pages/SettingsPage'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
@@ -186,6 +188,8 @@ function App() {
         <Routes>
           <Route path="/" element={<MainApp />} />
           <Route path="/auth" element={<AuthPage />} />
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+          <Route path="/reset-password" element={<ResetPasswordPage />} />
           <Route path="/marketplace" element={<MarketplacePage />} />
           <Route path="/settings" element={<SettingsPage />} />
         </Routes>

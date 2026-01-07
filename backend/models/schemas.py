@@ -233,6 +233,17 @@ class UserLogin(BaseModel):
     remember_me: bool = False
 
 
+class PasswordResetRequest(BaseModel):
+    """Schema for requesting password reset"""
+    email: str
+
+
+class PasswordReset(BaseModel):
+    """Schema for resetting password"""
+    token: str
+    new_password: str
+
+
 class UserResponse(BaseModel):
     """Response schema for user data"""
     id: str

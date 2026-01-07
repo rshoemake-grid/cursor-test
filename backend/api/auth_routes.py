@@ -1,14 +1,15 @@
 """Authentication API routes for Phase 4"""
-from datetime import timedelta
+from datetime import datetime, timedelta
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 import uuid
+import secrets
 
 from backend.database.db import get_db
-from backend.database.models import UserDB
-from backend.models.schemas import UserCreate, UserResponse, Token, UserLogin
+from backend.database.models import UserDB, PasswordResetTokenDB
+from backend.models.schemas import UserCreate, UserResponse, Token, UserLogin, PasswordResetRequest, PasswordReset
 from backend.auth import (
     get_password_hash,
     verify_password,
@@ -171,6 +172,107 @@ async def login_json(
             created_at=user.created_at
         )
     )
+
+
+@router.post("/forgot-password", status_code=status.HTTP_200_OK)
+async def forgot_password(
+    request: PasswordResetRequest,
+    db: AsyncSession = Depends(get_db)
+):
+    """Request password reset - generates a reset token"""
+    # Find user by email
+    result = await db.execute(
+        select(UserDB).where(UserDB.email == request.email)
+    )
+    user = result.scalar_one_or_none()
+    
+    # Always return success (don't reveal if email exists)
+    if not user:
+        return {"message": "If an account with that email exists, a password reset link has been sent."}
+    
+    # Generate secure token
+    reset_token = secrets.token_urlsafe(32)
+    
+    # Create reset token record (expires in 1 hour)
+    expires_at = datetime.utcnow() + timedelta(hours=1)
+    reset_token_db = PasswordResetTokenDB(
+        id=str(uuid.uuid4()),
+        user_id=user.id,
+        token=reset_token,
+        expires_at=expires_at,
+        used=False
+    )
+    
+    db.add(reset_token_db)
+    await db.commit()
+    
+    # TODO: Send email with reset link
+    # For now, we'll return the token in development (remove in production!)
+    # In production, send email with link like: /reset-password?token=reset_token
+    import os
+    if os.getenv("ENVIRONMENT") != "production":
+        return {
+            "message": "Password reset token generated. In production, this would be sent via email.",
+            "token": reset_token,  # Remove this in production!
+            "reset_url": f"/reset-password?token={reset_token}"
+        }
+    
+    return {"message": "If an account with that email exists, a password reset link has been sent."}
+
+
+@router.post("/reset-password", status_code=status.HTTP_200_OK)
+async def reset_password(
+    reset_data: PasswordReset,
+    db: AsyncSession = Depends(get_db)
+):
+    """Reset password using reset token"""
+    # Find reset token
+    result = await db.execute(
+        select(PasswordResetTokenDB).where(PasswordResetTokenDB.token == reset_data.token)
+    )
+    reset_token_db = result.scalar_one_or_none()
+    
+    if not reset_token_db:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid or expired reset token"
+        )
+    
+    # Check if token is expired
+    if datetime.utcnow() > reset_token_db.expires_at:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Reset token has expired"
+        )
+    
+    # Check if token has already been used
+    if reset_token_db.used:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Reset token has already been used"
+        )
+    
+    # Get user
+    result = await db.execute(
+        select(UserDB).where(UserDB.id == reset_token_db.user_id)
+    )
+    user = result.scalar_one_or_none()
+    
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found"
+        )
+    
+    # Update password
+    user.hashed_password = get_password_hash(reset_data.new_password)
+    
+    # Mark token as used
+    reset_token_db.used = True
+    
+    await db.commit()
+    
+    return {"message": "Password has been reset successfully"}
 
 
 @router.get("/me", response_model=UserResponse)
