@@ -134,25 +134,34 @@ export default function Toolbar({
         const inputs = JSON.parse(executionInputs)
         console.log('Executing workflow:', workflowId, 'with inputs:', inputs)
         
-        // Start execution without waiting - fire and forget
-        const executionPromise = api.executeWorkflow(workflowId!, inputs)
-        
         // Update UI immediately without waiting for API response
         setShowInputs(false)
         setExecutionInputs('{}') // Reset inputs
         setIsExecuting(false)
         
-        // Handle execution start callback immediately
+        // Generate temporary execution ID for immediate UI feedback
+        const tempExecutionId = `pending-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+        
+        // Create execution entry immediately (optimistic update)
+        if (onExecutionStart) {
+          onExecutionStart(tempExecutionId)
+        }
+        
+        // Show notification immediately
+        showSuccess('✅ Execution starting...\n\nCheck the console at the bottom of the screen to watch it run.', 6000)
+        
+        // Start execution API call - fire and forget
+        const executionPromise = api.executeWorkflow(workflowId!, inputs)
+        
+        // Handle execution start callback when API responds with real execution ID
         executionPromise.then((execution) => {
           console.log('Execution started:', execution)
           
-          if (onExecutionStart) {
+          // Update execution ID from temp to real
+          if (onExecutionStart && execution.execution_id !== tempExecutionId) {
+            // Call again with real execution ID - this will update the execution
             onExecutionStart(execution.execution_id)
           }
-          
-          // Show non-blocking success notification
-          const message = `✅ Execution started!\n\nExecution ID: ${execution.execution_id.slice(0, 8)}...\n\nCheck the console at the bottom of the screen to watch it run.`
-          showSuccess(message, 6000)
         }).catch((error: any) => {
           console.error('Execution failed:', error)
           setIsExecuting(false)

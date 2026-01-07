@@ -98,6 +98,15 @@ class WorkflowTemplateDB(Base):
     is_official = Column(Boolean, default=False)
     difficulty = Column(String, default="beginner")  # beginner, intermediate, advanced
     estimated_time = Column(String, nullable=True)  # "5 minutes", "1 hour", etc.
+
+
+class SettingsDB(Base):
+    """Database model for user settings (LLM providers, etc.)"""
+    __tablename__ = "settings"
+    
+    user_id = Column(String, primary_key=True, index=True)  # "anonymous" for unauthenticated users
+    settings_data = Column(JSON, nullable=False)  # Stores LLMSettings as JSON
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
     # Usage stats
     uses_count = Column(Integer, default=0)

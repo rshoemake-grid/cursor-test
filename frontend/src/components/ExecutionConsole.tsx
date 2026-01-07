@@ -54,6 +54,7 @@ export default function ExecutionConsole({
   const [consoleTab, setConsoleTab] = useState<'executions' | 'chat'>('executions')
   const [executionTabs, setExecutionTabs] = useState<Array<{ executionId: string; workflowId: string; workflowName: string; status: string; startedAt: Date }>>([])
   const [activeExecutionTabId, setActiveExecutionTabId] = useState<string | null>(null)
+  const seenExecutionIds = useRef<Set<string>>(new Set()) // Track which executions we've already seen
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const isResizing = useRef(false)
   const startY = useRef(0)
@@ -124,19 +125,81 @@ export default function ExecutionConsole({
   // Get active execution from execution tabs if one is selected
   const activeExecutionTab = executionTabs.find(tab => tab.executionId === activeExecutionTabId)
   const displayedExecution = activeExecutionTab 
-    ? activeWorkflowTab?.executions.find(e => e.id === activeExecutionTab.executionId)
+    ? (() => {
+        // Find the workflow tab that contains this execution
+        const workflowTabForExecution = workflowTabs.find(tab => tab.workflowId === activeExecutionTab.workflowId)
+        if (!workflowTabForExecution) {
+          console.warn('Workflow tab not found for execution:', activeExecutionTab.workflowId)
+          return undefined
+        }
+        // Find the execution in that workflow tab - try both the execution tab ID and all execution IDs
+        let exec = workflowTabForExecution.executions.find(e => e.id === activeExecutionTab.executionId)
+        if (!exec) {
+          // If not found, maybe the execution ID changed (pending -> real). Try to find by matching workflow and timing
+          console.log('Execution not found with ID:', activeExecutionTab.executionId, 'Available executions:', workflowTabForExecution.executions.map(e => e.id))
+          // Try to find execution that matches the workflow and is close in time
+          exec = workflowTabForExecution.executions.find(e => 
+            Math.abs(e.startedAt.getTime() - activeExecutionTab.startedAt.getTime()) < 10000 // Within 10 seconds
+          )
+        }
+        return exec
+      })()
     : activeExecution
   
-  // Create execution tab when execution starts and update status
+  // Track initial execution IDs when component mounts or workflow changes
+  const initialExecutionIds = useRef<Set<string>>(new Set())
+  const hasInitialized = useRef(false)
+  
+  // Initialize: mark all existing executions as "initial" (don't create tabs for them)
   useEffect(() => {
-    // Check all workflow tabs for executions
+    if (!hasInitialized.current) {
+      // Collect all execution IDs that exist when component first renders
+      workflowTabs.forEach(workflowTab => {
+        workflowTab.executions.forEach(execution => {
+          initialExecutionIds.current.add(execution.id)
+          seenExecutionIds.current.add(execution.id)
+        })
+      })
+      hasInitialized.current = true
+    }
+  }, []) // Only run once on mount
+  
+  // Create execution tab only when a NEW execution starts (not for existing executions on workflow load)
+  useEffect(() => {
     workflowTabs.forEach(workflowTab => {
       workflowTab.executions.forEach(execution => {
+        // Check if there's a tab with this execution ID
         const existingTab = executionTabs.find(tab => tab.executionId === execution.id)
         
-        if (!existingTab) {
-          // Create new tab for any execution (running, completed, or failed)
-          // This ensures tabs are created even if execution completes quickly
+        // Also check if there's a pending tab that should be updated to this execution ID
+        // (happens when pending execution ID is replaced with real ID)
+        const pendingTab = !execution.id.startsWith('pending-') 
+          ? executionTabs.find(tab => 
+              tab.executionId.startsWith('pending-') && 
+              tab.workflowId === workflowTab.workflowId &&
+              Math.abs(tab.startedAt.getTime() - execution.startedAt.getTime()) < 5000 // Within 5 seconds
+            )
+          : null
+        
+        if (pendingTab && !existingTab) {
+          // Update pending tab to use real execution ID
+          setExecutionTabs(prev => prev.map(t => 
+            t.executionId === pendingTab.executionId
+              ? {
+                  ...t,
+                  executionId: execution.id,
+                  status: execution.status
+                }
+              : t
+          ))
+          // Update activeExecutionTabId if it was pointing to the pending tab
+          if (activeExecutionTabId === pendingTab.executionId) {
+            setActiveExecutionTabId(execution.id)
+          }
+          seenExecutionIds.current.add(execution.id)
+        } else if (!existingTab && !initialExecutionIds.current.has(execution.id)) {
+          // This is a NEW execution (not in initial set) - create a tab for it
+          seenExecutionIds.current.add(execution.id)
           setExecutionTabs(prev => [...prev, {
             executionId: execution.id,
             workflowId: workflowTab.workflowId,
@@ -147,8 +210,10 @@ export default function ExecutionConsole({
           // Auto-select the new execution tab if it's running or if no tab is selected
           if (!activeExecutionTabId && (execution.status === 'running' || executionTabs.length === 0)) {
             setActiveExecutionTabId(execution.id)
+            // Auto-expand console when new execution starts
+            setIsExpanded(true)
           }
-        } else if (existingTab.status !== execution.status) {
+        } else if (existingTab && existingTab.status !== execution.status) {
           // Update tab status when execution status changes
           setExecutionTabs(prev => prev.map(t => 
             t.executionId === execution.id 
@@ -160,14 +225,19 @@ export default function ExecutionConsole({
     })
   }, [workflowTabs])
   
+  // Find the workflow tab for the displayed execution
+  const displayedExecutionWorkflowTab = displayedExecution && activeExecutionTab
+    ? workflowTabs.find(tab => tab.workflowId === activeExecutionTab.workflowId)
+    : activeWorkflowTab
+
   // WebSocket connection for real-time log streaming
   const { isConnected } = useWebSocket({
     executionId: displayedExecution?.id || null,
     onLog: (log) => {
-      if (!displayedExecution || !activeWorkflowTab || !onExecutionLogUpdate || !log) return
+      if (!displayedExecution || !displayedExecutionWorkflowTab || !onExecutionLogUpdate || !log) return
       
       // Add log to execution in real-time via callback
-      onExecutionLogUpdate(activeWorkflowTab.workflowId, displayedExecution.id, {
+      onExecutionLogUpdate(displayedExecutionWorkflowTab.workflowId, displayedExecution.id, {
         timestamp: log.timestamp || new Date().toISOString(),
         message: log.message,
         level: log.level,
@@ -175,17 +245,17 @@ export default function ExecutionConsole({
       })
     },
     onStatus: (status) => {
-      if (!displayedExecution || !activeWorkflowTab || !onExecutionStatusUpdate) return
+      if (!displayedExecution || !displayedExecutionWorkflowTab || !onExecutionStatusUpdate) return
       
       // Update execution status
       onExecutionStatusUpdate(
-        activeWorkflowTab.workflowId,
+        displayedExecutionWorkflowTab.workflowId,
         displayedExecution.id,
         status as 'running' | 'completed' | 'failed'
       )
     },
     onNodeUpdate: (nodeId, nodeState) => {
-      if (!displayedExecution || !activeWorkflowTab || !onExecutionNodeUpdate) return
+      if (!displayedExecution || !displayedExecutionWorkflowTab || !onExecutionNodeUpdate) return
       
       // Update node states for visualization
       if (onNodeStateUpdate) {
@@ -205,19 +275,19 @@ export default function ExecutionConsole({
       }
       
       // Update execution's node states via callback
-      onExecutionNodeUpdate(activeWorkflowTab.workflowId, displayedExecution.id, nodeId, nodeState)
+      onExecutionNodeUpdate(displayedExecutionWorkflowTab.workflowId, displayedExecution.id, nodeId, nodeState)
     },
     onCompletion: (result) => {
-      if (!displayedExecution || !activeWorkflowTab || !onExecutionStatusUpdate) return
+      if (!displayedExecution || !displayedExecutionWorkflowTab || !onExecutionStatusUpdate) return
       
-      onExecutionStatusUpdate(activeWorkflowTab.workflowId, displayedExecution.id, 'completed')
+      onExecutionStatusUpdate(displayedExecutionWorkflowTab.workflowId, displayedExecution.id, 'completed')
     },
     onError: (error) => {
-      if (!displayedExecution || !activeWorkflowTab) return
+      if (!displayedExecution || !displayedExecutionWorkflowTab) return
       
       // Add error log
       if (onExecutionLogUpdate) {
-        onExecutionLogUpdate(activeWorkflowTab.workflowId, displayedExecution.id, {
+        onExecutionLogUpdate(displayedExecutionWorkflowTab.workflowId, displayedExecution.id, {
           timestamp: new Date().toISOString(),
           message: `Error: ${error}`,
           level: 'ERROR'
@@ -226,11 +296,16 @@ export default function ExecutionConsole({
       
       // Update status to failed
       if (onExecutionStatusUpdate) {
-        onExecutionStatusUpdate(activeWorkflowTab.workflowId, displayedExecution.id, 'failed')
+        onExecutionStatusUpdate(displayedExecutionWorkflowTab.workflowId, displayedExecution.id, 'failed')
       }
     }
   })
   
+  // Debug: Log when displayedExecution changes
+  useEffect(() => {
+    console.log('Displayed execution changed:', displayedExecution?.id, 'Active tab ID:', activeExecutionTabId)
+  }, [displayedExecution?.id, activeExecutionTabId])
+
   // Update node states when execution changes
   useEffect(() => {
     if (displayedExecution && displayedExecution.nodes && onNodeStateUpdate) {
@@ -242,11 +317,11 @@ export default function ExecutionConsole({
         }
       })
       onNodeStateUpdate(nodeStates)
-    } else if (!activeExecution && onNodeStateUpdate) {
+    } else if (!displayedExecution && onNodeStateUpdate) {
       // Clear node states when no active execution
       onNodeStateUpdate({})
     }
-  }, [activeExecution, onNodeStateUpdate])
+  }, [displayedExecution, onNodeStateUpdate])
   
   // Auto-scroll when new logs arrive
   useEffect(() => {
@@ -381,6 +456,7 @@ export default function ExecutionConsole({
                   >
                     <button
                       onClick={() => {
+                        console.log('Clicking execution tab:', execTab.executionId)
                         setActiveExecutionTabId(execTab.executionId)
                         setIsExpanded(true)
                       }}
@@ -506,7 +582,7 @@ export default function ExecutionConsole({
                     ) : (
                       displayedExecution.logs.map((log, idx) => (
                         <div
-                          key={idx}
+                          key={`${displayedExecution.id}-${idx}-${log.timestamp}`}
                           className={`py-1 px-2 rounded ${
                             log.level === 'ERROR' ? 'bg-red-900 bg-opacity-20 text-red-300' :
                             log.level === 'WARNING' ? 'bg-yellow-900 bg-opacity-20 text-yellow-300' :

@@ -158,23 +158,61 @@ export default function WorkflowTabs({ initialWorkflowId, workflowLoadKey, onExe
     const activeTab = tabs.find(t => t.id === activeTabId)
     if (!activeTab) return
 
-    const newExecution: Execution = {
-      id: executionId,
-      status: 'running',
-      startedAt: new Date(),
-      nodes: {},
-      logs: []
-    }
-
-    setTabs(prev => prev.map(tab => 
-      tab.id === activeTabId
-        ? { 
-            ...tab, 
-            executions: [newExecution, ...tab.executions],
+    setTabs(prev => prev.map(tab => {
+      if (tab.id !== activeTabId) return tab
+      
+      // If this is a real execution ID (not pending), try to replace the oldest pending execution
+      // This ensures we replace them in creation order, even if API responses come back out of order
+      if (!executionId.startsWith('pending-')) {
+        // Find all pending executions
+        const pendingExecutions = tab.executions
+          .map((exec, idx) => ({ exec, idx }))
+          .filter(({ exec }) => exec.id.startsWith('pending-'))
+        
+        if (pendingExecutions.length > 0) {
+          // Replace the oldest pending execution (last in array since new ones are prepended)
+          const oldestPending = pendingExecutions[pendingExecutions.length - 1]
+          
+          return {
+            ...tab,
+            executions: tab.executions.map((exec, idx) =>
+              idx === oldestPending.idx
+                ? {
+                    ...exec,
+                    id: executionId
+                  }
+                : exec
+            ),
             activeExecutionId: executionId
           }
-        : tab
-    ))
+        }
+      }
+      
+      // Check if execution already exists (might have been created by a previous call)
+      const existingExecution = tab.executions.find(exec => exec.id === executionId)
+      if (existingExecution) {
+        // Execution already exists, just update activeExecutionId
+        return {
+          ...tab,
+          activeExecutionId: executionId
+        }
+      }
+      
+      // Create new execution (either pending or real)
+      const newExecution: Execution = {
+        id: executionId,
+        status: 'running',
+        startedAt: new Date(),
+        nodes: {},
+        logs: []
+      }
+      
+      return {
+        ...tab,
+        executions: [newExecution, ...tab.executions],
+        activeExecutionId: executionId
+      }
+    }))
 
     // Also call parent callback if provided
     if (onExecutionStart) {

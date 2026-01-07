@@ -14,9 +14,10 @@ from backend.api.sharing_routes import router as sharing_router
 from backend.api.marketplace_routes import router as marketplace_router
 from backend.api.debug_routes import router as debug_router
 from backend.api.import_export_routes import router as import_export_router
-from backend.api.settings_routes import router as settings_router
+from backend.api.settings_routes import router as settings_router, load_settings_into_cache
 from backend.api.workflow_chat_routes import router as workflow_chat_router
 from backend.database import init_db
+from backend.database.db import AsyncSessionLocal
 
 
 @asynccontextmanager
@@ -25,6 +26,11 @@ async def lifespan(app: FastAPI):
     # Startup: Initialize database
     await init_db()
     print("Database initialized")
+    
+    # Load settings into cache
+    async with AsyncSessionLocal() as db:
+        await load_settings_into_cache(db)
+    
     yield
     # Shutdown: cleanup if needed
     print("Shutting down")

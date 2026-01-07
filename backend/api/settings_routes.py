@@ -7,7 +7,7 @@ from typing import List, Optional, Dict, Any
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from ..database import get_db
-from ..database.models import UserDB
+from ..database.models import UserDB, SettingsDB
 from ..auth.auth import get_optional_user
 import json
 import httpx
@@ -37,18 +37,60 @@ class LLMTestRequest(BaseModel):
     model: str
 
 
-# In-memory storage (could be moved to database)
-_settings_store: Dict[str, LLMSettings] = {}
+# In-memory cache (for quick access, backed by database)
+_settings_cache: Dict[str, LLMSettings] = {}
+
+
+async def load_settings_into_cache(db: AsyncSession):
+    """Load all settings from database into cache (called on server startup)"""
+    try:
+        result = await db.execute(select(SettingsDB))
+        all_settings = result.scalars().all()
+        
+        for settings_db in all_settings:
+            if settings_db.settings_data:
+                settings = LLMSettings(**settings_db.settings_data)
+                _settings_cache[settings_db.user_id] = settings
+                print(f"✅ Loaded settings for user: {settings_db.user_id} ({len(settings.providers)} providers)")
+        
+        print(f"📦 Loaded {len(_settings_cache)} user settings into cache")
+    except Exception as e:
+        print(f"⚠️ Failed to load settings into cache: {e}")
+        import traceback
+        traceback.print_exc()
 
 
 @router.post("/llm")
 async def save_llm_settings(
     settings: LLMSettings,
+    db: AsyncSession = Depends(get_db),
     current_user: Optional[UserDB] = Depends(get_optional_user)
 ):
-    """Save LLM provider settings"""
+    """Save LLM provider settings to database"""
     user_id = current_user.id if current_user else "anonymous"
-    _settings_store[user_id] = settings
+    
+    # Save to database
+    result = await db.execute(
+        select(SettingsDB).where(SettingsDB.user_id == user_id)
+    )
+    settings_db = result.scalar_one_or_none()
+    
+    if settings_db:
+        # Update existing settings
+        settings_db.settings_data = settings.model_dump(mode='json')
+        settings_db.updated_at = datetime.utcnow()
+    else:
+        # Create new settings record
+        settings_db = SettingsDB(
+            user_id=user_id,
+            settings_data=settings.model_dump(mode='json')
+        )
+        db.add(settings_db)
+    
+    await db.commit()
+    
+    # Update cache
+    _settings_cache[user_id] = settings
     
     # Debug logging
     print(f"💾 Saving LLM settings for user: {user_id}")
@@ -61,16 +103,30 @@ async def save_llm_settings(
 
 @router.get("/llm", response_model=LLMSettings)
 async def get_llm_settings(
+    db: AsyncSession = Depends(get_db),
     current_user: Optional[UserDB] = Depends(get_optional_user)
 ):
-    """Get LLM provider settings"""
+    """Get LLM provider settings from database"""
     user_id = current_user.id if current_user else "anonymous"
     
-    if user_id not in _settings_store:
-        # Return empty settings
-        return LLMSettings(providers=[])
+    # Check cache first
+    if user_id in _settings_cache:
+        return _settings_cache[user_id]
     
-    return _settings_store[user_id]
+    # Load from database
+    result = await db.execute(
+        select(SettingsDB).where(SettingsDB.user_id == user_id)
+    )
+    settings_db = result.scalar_one_or_none()
+    
+    if settings_db and settings_db.settings_data:
+        settings = LLMSettings(**settings_db.settings_data)
+        # Update cache
+        _settings_cache[user_id] = settings
+        return settings
+    
+    # Return empty settings if not found
+    return LLMSettings(providers=[])
 
 
 @router.post("/llm/test")
@@ -277,13 +333,13 @@ def get_active_llm_config(user_id: Optional[str] = None) -> Optional[Dict[str, A
     
     # Debug logging
     print(f"🔍 Getting LLM config for user: {uid}")
-    print(f"   Settings store keys: {list(_settings_store.keys())}")
+    print(f"   Settings cache keys: {list(_settings_cache.keys())}")
     
-    if uid not in _settings_store:
-        print(f"   ❌ User {uid} not found in settings store!")
+    if uid not in _settings_cache:
+        print(f"   ⚠️ User {uid} not found in cache - settings need to be loaded from database via API")
         return None
     
-    settings = _settings_store[uid]
+    settings = _settings_cache[uid]
     print(f"   Found settings with {len(settings.providers)} providers")
     
     for provider in settings.providers:
@@ -308,11 +364,11 @@ def get_provider_for_model(model_name: str, user_id: Optional[str] = None) -> Op
     """Find the provider that owns the given model name"""
     uid = user_id if user_id else "anonymous"
     
-    if uid not in _settings_store:
-        print(f"⚠️ No settings found for user '{uid}'")
+    if uid not in _settings_cache:
+        print(f"⚠️ No settings found in cache for user '{uid}' - settings need to be loaded from database via API")
         return None
     
-    settings = _settings_store[uid]
+    settings = _settings_cache[uid]
     
     print(f"🔍 Searching for provider for model '{model_name}' (user: {uid})")
     print(f"   Available providers: {[p.name for p in settings.providers]}")

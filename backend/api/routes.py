@@ -2,7 +2,8 @@ import uuid
 import json
 from datetime import datetime
 from typing import List, Optional
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, BackgroundTasks
+import asyncio
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from pydantic import BaseModel
@@ -15,6 +16,7 @@ from ..models.schemas import (
     ExecutionResponse
 )
 from ..database import get_db, WorkflowDB, ExecutionDB
+from ..database.db import AsyncSessionLocal
 from ..database.models import UserDB
 from ..engine.executor_v3 import WorkflowExecutorV3 as WorkflowExecutor
 from ..auth import get_optional_user
@@ -501,35 +503,70 @@ async def execute_workflow(
     user_id = current_user.id if current_user else None
     llm_config = get_active_llm_config(user_id)
     
-    # Execute workflow with WebSocket streaming enabled
+    # Create executor to get execution_id immediately
     executor = WorkflowExecutor(workflow_def, stream_updates=True, llm_config=llm_config, user_id=user_id)
+    execution_id = executor.execution_id
     inputs = execution_request.inputs if execution_request else {}
-    execution_state = await executor.execute(inputs)
     
-    # Save execution to database (with optional user_id)
+    # Create initial execution record in database (status: running)
     db_execution = ExecutionDB(
-        id=execution_state.execution_id,
+        id=execution_id,
         workflow_id=workflow_id,
-        user_id=current_user.id if current_user else None,
-        status=execution_state.status.value,
-        state=execution_state.model_dump(mode='json'),
-        started_at=execution_state.started_at,
-        completed_at=execution_state.completed_at
+        user_id=user_id,
+        status='running',
+        state={},
+        started_at=datetime.utcnow(),
+        completed_at=None
     )
-    
     db.add(db_execution)
     await db.commit()
     
+    # Define background task to run execution and update database
+    async def run_execution():
+        try:
+            execution_state = await executor.execute(inputs)
+            
+            # Update execution in database
+            async with AsyncSessionLocal() as db_session:
+                result = await db_session.execute(
+                    select(ExecutionDB).where(ExecutionDB.id == execution_id)
+                )
+                db_exec = result.scalar_one_or_none()
+                if db_exec:
+                    db_exec.status = execution_state.status.value
+                    db_exec.state = execution_state.model_dump(mode='json')
+                    db_exec.completed_at = execution_state.completed_at
+                    await db_session.commit()
+        except Exception as e:
+            # Update execution status to failed
+            async with AsyncSessionLocal() as db_session:
+                result = await db_session.execute(
+                    select(ExecutionDB).where(ExecutionDB.id == execution_id)
+                )
+                db_exec = result.scalar_one_or_none()
+                if db_exec:
+                    db_exec.status = 'failed'
+                    db_exec.completed_at = datetime.utcnow()
+                    await db_session.commit()
+            print(f"Execution {execution_id} failed: {e}")
+            import traceback
+            traceback.print_exc()
+    
+    # Start execution in background
+    asyncio.create_task(run_execution())
+    
+    # Return immediately with execution_id
+    from ..models.schemas import ExecutionStatus
     return ExecutionResponse(
-        execution_id=execution_state.execution_id,
-        workflow_id=execution_state.workflow_id,
-        status=execution_state.status,
-        current_node=execution_state.current_node,
-        result=execution_state.result,
-        error=execution_state.error,
-        started_at=execution_state.started_at,
-        completed_at=execution_state.completed_at,
-        logs=execution_state.logs
+        execution_id=execution_id,
+        workflow_id=workflow_id,
+        status=ExecutionStatus.RUNNING,
+        current_node=None,
+        result=None,
+        error=None,
+        started_at=datetime.utcnow(),
+        completed_at=None,
+        logs=[]
     )
 
 
