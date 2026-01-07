@@ -498,45 +498,6 @@ export default function WorkflowBuilder({
     event.dataTransfer.dropEffect = 'move'
   }, [])
 
-  // Component to handle drop with proper coordinate conversion
-  const DropHandler = () => {
-    const { screenToFlowPosition } = useReactFlow()
-    
-    const handleDrop = useCallback(
-      (event: React.DragEvent) => {
-        event.preventDefault()
-
-        const type = event.dataTransfer.getData('application/reactflow')
-        if (!type) return
-
-        // Convert screen coordinates to flow coordinates (accounts for zoom and pan)
-        const position = screenToFlowPosition({
-          x: event.clientX,
-          y: event.clientY,
-        })
-
-        const newNode = {
-          id: `${type}-${Date.now()}`,
-          type,
-          position,
-          draggable: true,
-          data: {
-            label: `${type.charAt(0).toUpperCase() + type.slice(1)} Node`,
-            name: `${type.charAt(0).toUpperCase() + type.slice(1)} Node`,
-            inputs: [],
-          },
-        }
-
-        // Add to local nodes state
-        setNodes((nds) => [...nds, newNode])
-        notifyModified()
-      },
-      [screenToFlowPosition, setNodes, notifyModified]
-    )
-
-    return null
-  }
-
   const onDrop = useCallback(
     (event: React.DragEvent) => {
       event.preventDefault()
