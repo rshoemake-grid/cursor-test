@@ -1,15 +1,12 @@
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
 from sqlalchemy.orm import declarative_base
-import os
-from dotenv import load_dotenv
+from ..config import settings
 
-load_dotenv()
-
-DATABASE_URL = os.getenv("DATABASE_URL", "sqlite+aiosqlite:///./workflows.db")
+DATABASE_URL = settings.database_url
 
 engine = create_async_engine(
     DATABASE_URL,
-    echo=True,
+    echo=settings.log_level.upper() == "DEBUG",  # Only echo SQL in DEBUG mode
     future=True
 )
 

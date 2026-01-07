@@ -6,11 +6,15 @@ from pydantic import BaseModel
 from typing import List, Optional, Dict, Any
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
+from datetime import datetime
 from ..database import get_db
 from ..database.models import UserDB, SettingsDB
 from ..auth.auth import get_optional_user
+from ..utils.logger import get_logger
 import json
 import httpx
+
+logger = get_logger(__name__)
 
 router = APIRouter(prefix="/api/settings", tags=["settings"])
 
@@ -51,13 +55,11 @@ async def load_settings_into_cache(db: AsyncSession):
             if settings_db.settings_data:
                 settings = LLMSettings(**settings_db.settings_data)
                 _settings_cache[settings_db.user_id] = settings
-                print(f"✅ Loaded settings for user: {settings_db.user_id} ({len(settings.providers)} providers)")
+                logger.info(f"Loaded settings for user: {settings_db.user_id} ({len(settings.providers)} providers)")
         
-        print(f"📦 Loaded {len(_settings_cache)} user settings into cache")
+        logger.info(f"Loaded {len(_settings_cache)} user settings into cache")
     except Exception as e:
-        print(f"⚠️ Failed to load settings into cache: {e}")
-        import traceback
-        traceback.print_exc()
+        logger.error(f"Failed to load settings into cache: {e}", exc_info=True)
 
 
 @router.post("/llm")
@@ -92,11 +94,10 @@ async def save_llm_settings(
     # Update cache
     _settings_cache[user_id] = settings
     
-    # Debug logging
-    print(f"💾 Saving LLM settings for user: {user_id}")
-    print(f"   Providers count: {len(settings.providers)}")
+    # Log settings save
+    logger.info(f"Saving LLM settings for user: {user_id}, providers count: {len(settings.providers)}")
     for p in settings.providers:
-        print(f"   - {p.name}: enabled={p.enabled}, has_key={len(p.apiKey) > 0}, key_preview={p.apiKey[:10]}...")
+        logger.debug(f"Provider {p.name}: enabled={p.enabled}, has_key={len(p.apiKey) > 0}")
     
     return {"status": "success", "message": "Settings saved successfully"}
 
@@ -331,19 +332,17 @@ def get_active_llm_config(user_id: Optional[str] = None) -> Optional[Dict[str, A
     """Get the first enabled LLM provider for a user"""
     uid = user_id if user_id else "anonymous"
     
-    # Debug logging
-    print(f"🔍 Getting LLM config for user: {uid}")
-    print(f"   Settings cache keys: {list(_settings_cache.keys())}")
+    logger.debug(f"Getting LLM config for user: {uid}, cache keys: {list(_settings_cache.keys())}")
     
     if uid not in _settings_cache:
-        print(f"   ⚠️ User {uid} not found in cache - settings need to be loaded from database via API")
+        logger.warning(f"User {uid} not found in cache - settings need to be loaded from database via API")
         return None
     
     settings = _settings_cache[uid]
-    print(f"   Found settings with {len(settings.providers)} providers")
+    logger.debug(f"Found settings with {len(settings.providers)} providers")
     
     for provider in settings.providers:
-        print(f"   - Checking {provider.name}: enabled={provider.enabled}, has_key={len(provider.apiKey) > 0}, valid_key={_is_valid_api_key(provider.apiKey) if provider.apiKey else False}")
+        logger.debug(f"Checking provider {provider.name}: enabled={provider.enabled}, has_key={len(provider.apiKey) > 0}")
         # Check that provider is enabled, has an API key, and the API key is not a placeholder
         if provider.enabled and provider.apiKey and _is_valid_api_key(provider.apiKey):
             config = {
@@ -352,11 +351,10 @@ def get_active_llm_config(user_id: Optional[str] = None) -> Optional[Dict[str, A
                 "base_url": provider.baseUrl,
                 "model": provider.defaultModel
             }
-            api_key_preview = provider.apiKey[:10] + "..." if len(provider.apiKey) > 10 else provider.apiKey
-            print(f"   ✅ Using provider {provider.name} with key: {api_key_preview}")
+            logger.info(f"Using provider {provider.name} for user {uid}")
             return config
     
-    print(f"   ❌ No enabled provider with valid API key found")
+    logger.warning(f"No enabled provider with valid API key found for user {uid}")
     return None
 
 
@@ -365,24 +363,22 @@ def get_provider_for_model(model_name: str, user_id: Optional[str] = None) -> Op
     uid = user_id if user_id else "anonymous"
     
     if uid not in _settings_cache:
-        print(f"⚠️ No settings found in cache for user '{uid}' - settings need to be loaded from database via API")
+        logger.warning(f"No settings found in cache for user '{uid}' - settings need to be loaded from database via API")
         return None
     
     settings = _settings_cache[uid]
     
-    print(f"🔍 Searching for provider for model '{model_name}' (user: {uid})")
-    print(f"   Available providers: {[p.name for p in settings.providers]}")
+    logger.debug(f"Searching for provider for model '{model_name}' (user: {uid}), available providers: {[p.name for p in settings.providers]}")
     
     # Search through all enabled providers to find one that has this model
     for provider in settings.providers:
-        print(f"   Checking provider '{provider.name}': enabled={provider.enabled}, has_key={bool(provider.apiKey)}, valid_key={_is_valid_api_key(provider.apiKey) if provider.apiKey else False}, models={len(provider.models) if provider.models else 0}")
+        logger.debug(f"Checking provider '{provider.name}': enabled={provider.enabled}, has_key={bool(provider.apiKey)}, models={len(provider.models) if provider.models else 0}")
         
         # Check that provider is enabled, has a valid (non-placeholder) API key, and has models
         if provider.enabled and provider.apiKey and _is_valid_api_key(provider.apiKey) and provider.models:
             # Check if this provider has the model
             if model_name in provider.models:
-                api_key_preview = provider.apiKey[:10] + "..." if len(provider.apiKey) > 10 else provider.apiKey
-                print(f"✅ Found provider '{provider.name}' for model '{model_name}' (key: {api_key_preview})")
+                logger.info(f"Found provider '{provider.name}' for model '{model_name}'")
                 return {
                     "type": provider.type,
                     "api_key": provider.apiKey.strip(),  # Trim whitespace
@@ -390,6 +386,6 @@ def get_provider_for_model(model_name: str, user_id: Optional[str] = None) -> Op
                     "model": model_name
                 }
     
-    print(f"⚠️ No provider found for model '{model_name}'")
+    logger.warning(f"No provider found for model '{model_name}'")
     return None
 

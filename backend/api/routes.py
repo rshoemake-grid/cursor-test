@@ -20,6 +20,9 @@ from ..database.db import AsyncSessionLocal
 from ..database.models import UserDB
 from ..engine.executor_v3 import WorkflowExecutorV3 as WorkflowExecutor
 from ..auth import get_optional_user
+from ..utils.logger import get_logger
+
+logger = get_logger(__name__)
 
 router = APIRouter()
 
@@ -90,8 +93,7 @@ async def create_workflow(
         raise
     except Exception as e:
         import traceback
-        print(f"Error creating workflow: {e}")
-        print(traceback.format_exc())
+        logger.error(f"Error creating workflow: {e}", exc_info=True)
         raise HTTPException(status_code=422, detail=f"Validation error: {str(e)}")
     
     return WorkflowResponse(
@@ -153,8 +155,7 @@ async def get_workflow(workflow_id: str, db: AsyncSession = Depends(get_db)):
             try:
                 nodes.append(Node(**node_data))
             except Exception as e:
-                print(f"Error reconstructing node {i}: {e}")
-                print(f"Node data: {node_data}")
+                logger.error(f"Error reconstructing node {i}: {e}, node data: {node_data}", exc_info=True)
                 raise HTTPException(status_code=422, detail=f"Invalid node data at index {i}: {str(e)}")
         
         # Reconstruct edges with error handling - ensure all have IDs
@@ -166,8 +167,7 @@ async def get_workflow(workflow_id: str, db: AsyncSession = Depends(get_db)):
                     edge_data["id"] = f"e-{edge_data.get('source', 'unknown')}-{edge_data.get('target', 'unknown')}-{i}"
                 edges.append(Edge(**edge_data))
             except Exception as e:
-                print(f"Error reconstructing edge {i}: {e}")
-                print(f"Edge data: {edge_data}")
+                logger.error(f"Error reconstructing edge {i}: {e}, edge data: {edge_data}", exc_info=True)
                 raise HTTPException(status_code=422, detail=f"Invalid edge data at index {i}: {str(e)}")
         
         return WorkflowResponse(
@@ -185,8 +185,7 @@ async def get_workflow(workflow_id: str, db: AsyncSession = Depends(get_db)):
         raise
     except Exception as e:
         import traceback
-        print(f"Error getting workflow: {e}")
-        print(traceback.format_exc())
+        logger.error(f"Error getting workflow: {e}", exc_info=True)
         raise HTTPException(status_code=422, detail=f"Error loading workflow: {str(e)}")
 
 
@@ -201,7 +200,7 @@ async def update_workflow(
     import traceback
     try:
         # Debug: Log incoming workflow data
-        print(f"Updating workflow {workflow_id} with {len(workflow.nodes)} nodes and {len(workflow.edges)} edges")
+        logger.info(f"Updating workflow {workflow_id} with {len(workflow.nodes)} nodes and {len(workflow.edges)} edges")
         # Get existing workflow
         result = await db.execute(
             select(WorkflowDB).where(WorkflowDB.id == workflow_id)
@@ -240,15 +239,13 @@ async def update_workflow(
                     nodes_data.append(node_dict)
                 except Exception as node_error:
                     import traceback
-                    print(f"Error serializing node {i} (id: {getattr(node, 'id', 'unknown')}): {node_error}")
-                    print(traceback.format_exc())
+                    logger.error(f"Error serializing node {i} (id: {getattr(node, 'id', 'unknown')}): {node_error}", exc_info=True)
                     raise ValueError(f"Invalid node at index {i}: {str(node_error)}")
         except ValueError:
             raise
         except Exception as e:
             import traceback
-            print(f"Error processing nodes: {e}")
-            print(traceback.format_exc())
+            logger.error(f"Error processing nodes: {e}", exc_info=True)
             raise ValueError(f"Error processing nodes: {str(e)}")
         
         db_workflow.definition = {
@@ -272,8 +269,7 @@ async def update_workflow(
     except Exception as e:
         import traceback
         error_trace = traceback.format_exc()
-        print(f"Error updating workflow: {e}")
-        print(error_trace)
+        logger.error(f"Error updating workflow: {e}", exc_info=True)
         raise HTTPException(status_code=422, detail=f"Validation error: {str(e)}")
     
     return WorkflowResponse(
@@ -431,27 +427,24 @@ async def execute_workflow(
         
         # Log config presence for debugging and try to extract from data object
         if node_type == 'loop' and not has_loop_config:
-            print(f"⚠️  WARNING: Loop node {node_id} missing loop_config after reconstruction")
-            print(f"   Top-level loop_config: {node_data.get('loop_config')}")
+            logger.warning(f"Loop node {node_id} missing loop_config after reconstruction, top-level: {node_data.get('loop_config')}")
             if "data" in node_data and node_data.get("data"):
                 data_obj = node_data["data"]
                 data_loop_config = data_obj.get("loop_config")
-                print(f"   Data object has loop_config: {data_loop_config is not None}")
-                print(f"   Data loop_config value: {data_loop_config}")
-                print(f"   Data object keys: {list(data_obj.keys())}")
+                logger.debug(f"Data object has loop_config: {data_loop_config is not None}, value: {data_loop_config}, keys: {list(data_obj.keys())}")
                 # Try to extract it manually if it exists
                 if data_loop_config and isinstance(data_loop_config, dict) and len(data_loop_config) > 0:
-                    print(f"   Extracting loop_config from data object...")
+                    logger.debug(f"Extracting loop_config from data object")
                     node_data['loop_config'] = data_loop_config
         elif node_type == 'condition' and not has_condition_config:
-            print(f"⚠️  WARNING: Condition node {node_id} missing condition_config after reconstruction")
+            logger.warning(f"Condition node {node_id} missing condition_config after reconstruction")
             if "data" in node_data and node_data.get("data"):
                 data_obj = node_data["data"]
                 data_condition_config = data_obj.get("condition_config")
                 if data_condition_config and isinstance(data_condition_config, dict) and len(data_condition_config) > 0:
                     node_data['condition_config'] = data_condition_config
         elif node_type == 'agent' and not has_agent_config:
-            print(f"⚠️  WARNING: Agent node {node_id} missing agent_config after reconstruction")
+            logger.warning(f"Agent node {node_id} missing agent_config after reconstruction")
             if "data" in node_data and node_data.get("data"):
                 data_obj = node_data["data"]
                 data_agent_config = data_obj.get("agent_config")
@@ -462,11 +455,11 @@ async def execute_workflow(
     
     # Log all nodes in definition before reconstruction
     all_node_data = definition.get("nodes", [])
-    print(f"🔍 Found {len(all_node_data)} nodes in workflow definition:")
+    logger.debug(f"Found {len(all_node_data)} nodes in workflow definition")
     for i, node_data in enumerate(all_node_data):
         node_id = node_data.get('id', f'unknown-{i}')
         node_type = node_data.get('type', 'unknown')
-        print(f"   Node {i}: id={node_id}, type={node_type}")
+        logger.debug(f"Node {i}: id={node_id}, type={node_type}")
     
     # Reconstruct nodes with error handling
     nodes = []
@@ -474,16 +467,15 @@ async def execute_workflow(
         try:
             node = reconstruct_node(node_data)
             nodes.append(node)
-            print(f"✅ Successfully reconstructed node {i}: {node.id} ({node.type})")
+            logger.debug(f"Successfully reconstructed node {i}: {node.id} ({node.type})")
         except Exception as e:
-            print(f"❌ Error reconstructing node {i} (id={node_data.get('id', 'unknown')}): {e}")
-            print(f"   Node data: {json.dumps(node_data, indent=2, default=str)}")
+            logger.error(f"Error reconstructing node {i} (id={node_data.get('id', 'unknown')}): {e}, node data: {json.dumps(node_data, indent=2, default=str)}", exc_info=True)
             import traceback
             traceback.print_exc()
             # Don't skip - raise the error so we know what's wrong
             raise HTTPException(status_code=422, detail=f"Invalid node data at index {i} (id={node_data.get('id', 'unknown')}): {str(e)}")
     
-    print(f"✅ Successfully reconstructed {len(nodes)} nodes")
+    logger.info(f"Successfully reconstructed {len(nodes)} nodes")
     edges = [Edge(**edge_data) for edge_data in definition.get("edges", [])]
     
     workflow_def = WorkflowDefinition(
@@ -548,9 +540,7 @@ async def execute_workflow(
                     db_exec.status = 'failed'
                     db_exec.completed_at = datetime.utcnow()
                     await db_session.commit()
-            print(f"Execution {execution_id} failed: {e}")
-            import traceback
-            traceback.print_exc()
+            logger.error(f"Execution {execution_id} failed: {e}", exc_info=True)
     
     # Start execution in background
     asyncio.create_task(run_execution())

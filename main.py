@@ -18,6 +18,11 @@ from backend.api.settings_routes import router as settings_router, load_settings
 from backend.api.workflow_chat_routes import router as workflow_chat_router
 from backend.database import init_db
 from backend.database.db import AsyncSessionLocal
+from backend.config import settings
+from backend.utils.logger import setup_logging, get_logger
+
+# Set up logging
+logger = get_logger(__name__)
 
 
 @asynccontextmanager
@@ -25,15 +30,16 @@ async def lifespan(app: FastAPI):
     """Lifespan event handler"""
     # Startup: Initialize database
     await init_db()
-    print("Database initialized")
+    logger.info("Database initialized")
     
     # Load settings into cache
     async with AsyncSessionLocal() as db:
         await load_settings_into_cache(db)
     
+    logger.info("Application startup complete")
     yield
     # Shutdown: cleanup if needed
-    print("Shutting down")
+    logger.info("Application shutting down")
 
 
 # Create FastAPI app
@@ -47,8 +53,8 @@ app = FastAPI(
 # Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
+    allow_origins=settings.cors_origins,
+    allow_credentials=settings.cors_allow_credentials,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -68,17 +74,16 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
             "input": str(error.get("input", ""))[:200]  # Truncate long inputs
         })
     
-    print(f"Validation error on {request.method} {request.url.path}:")
-    print(json.dumps(error_details, indent=2))
+    logger.warning(f"Validation error on {request.method} {request.url.path}: {json.dumps(error_details, indent=2)}")
     
     # Try to get request body if available
     try:
         body = await request.body()
         if body:
             body_str = body.decode('utf-8')[:1000]  # First 1000 chars
-            print(f"Request body preview: {body_str}")
-    except:
-        pass
+            logger.debug(f"Request body preview: {body_str}")
+    except Exception as e:
+        logger.debug(f"Could not read request body: {e}")
     
     return JSONResponse(
         status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
@@ -122,8 +127,9 @@ async def health():
 if __name__ == "__main__":
     uvicorn.run(
         "main:app",
-        host="0.0.0.0",
-        port=8000,
-        reload=True
+        host=settings.host,
+        port=settings.port,
+        reload=settings.reload,
+        log_level=settings.log_level.lower()
     )
 
