@@ -121,6 +121,12 @@ export function useWebSocket({
         setIsConnected(false)
         wsRef.current = null
 
+        // Don't reconnect to temporary execution IDs
+        if (executionId && executionId.startsWith('pending-')) {
+          console.log(`[WebSocket] Skipping reconnect for temporary execution ID: ${executionId}`)
+          return
+        }
+
         // Attempt to reconnect if execution might still be running
         if (reconnectAttempts.current < maxReconnectAttempts && executionId) {
           reconnectAttempts.current++
