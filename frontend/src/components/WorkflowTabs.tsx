@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect, useRef } from 'react'
 import { X, Plus } from 'lucide-react'
 import WorkflowBuilder from './WorkflowBuilder'
 import { api } from '../api/client'
+import { showConfirm } from '../utils/confirm'
 
 interface Execution {
   id: string
@@ -110,13 +111,16 @@ export default function WorkflowTabs({ initialWorkflowId, workflowLoadKey, onExe
     setActiveTabId(newId)
   }, [])
 
-  const handleCloseTab = useCallback((tabId: string, e: React.MouseEvent) => {
+  const handleCloseTab = useCallback(async (tabId: string, e: React.MouseEvent) => {
     e.stopPropagation()
     
     const tabToClose = tabs.find(t => t.id === tabId)
     if (tabToClose?.isUnsaved) {
-      const confirm = window.confirm('This workflow has unsaved changes. Close anyway?')
-      if (!confirm) return
+      const confirmed = await showConfirm(
+        'This workflow has unsaved changes. Close anyway?',
+        { title: 'Unsaved Changes', confirmText: 'Close', cancelText: 'Cancel', type: 'warning' }
+      )
+      if (!confirmed) return
     }
 
     setTabs(prev => {
@@ -221,15 +225,18 @@ export default function WorkflowTabs({ initialWorkflowId, workflowLoadKey, onExe
   }, [tabs, activeTabId, onExecutionStart])
 
   // Handle closing workflow executions
-  const handleCloseWorkflow = useCallback((workflowId: string) => {
+  const handleCloseWorkflow = useCallback(async (workflowId: string) => {
     // Find the tab by workflowId and close it
     const tabToClose = tabs.find(t => t.workflowId === workflowId)
     if (!tabToClose) return
     
     // Check for unsaved changes
     if (tabToClose.isUnsaved) {
-      const confirm = window.confirm('This workflow has unsaved changes. Close anyway?')
-      if (!confirm) return
+      const confirmed = await showConfirm(
+        'This workflow has unsaved changes. Close anyway?',
+        { title: 'Unsaved Changes', confirmText: 'Close', cancelText: 'Cancel', type: 'warning' }
+      )
+      if (!confirmed) return
     }
     
     setTabs(prev => {

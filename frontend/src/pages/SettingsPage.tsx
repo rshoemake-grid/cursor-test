@@ -143,8 +143,12 @@ export default function SettingsPage() {
     saveProviders(providers.map(p => p.id === id ? { ...p, ...updates } : p))
   }
 
-  const handleDeleteProvider = (id: string) => {
-    if (confirm('Delete this provider?')) {
+  const handleDeleteProvider = async (id: string) => {
+    const confirmed = await showConfirm(
+      'Delete this provider?',
+      { title: 'Delete Provider', confirmText: 'Delete', cancelText: 'Cancel', type: 'danger' }
+    )
+    if (confirmed) {
       saveProviders(providers.filter(p => p.id !== id))
     }
   }

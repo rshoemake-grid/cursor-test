@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { Save, Play, FileDown } from 'lucide-react'
 import { api } from '../api/client'
 import { showSuccess, showError } from '../utils/notifications'
+import { showConfirm } from '../utils/confirm'
 import { useAuth } from '../contexts/AuthContext'
 
 interface ToolbarProps {
@@ -122,8 +123,11 @@ export default function Toolbar({
     
     if (!currentWorkflowId) {
       // Auto-save if not saved yet
-      const confirm = window.confirm('Workflow needs to be saved before execution. Save now?')
-      if (confirm) {
+      const confirmed = await showConfirm(
+        'Workflow needs to be saved before execution. Save now?',
+        { title: 'Save Workflow', confirmText: 'Save', cancelText: 'Cancel' }
+      )
+      if (confirmed) {
         currentWorkflowId = await handleSave()
         if (!currentWorkflowId) {
           showError('Failed to save workflow. Cannot execute.')

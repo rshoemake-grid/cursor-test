@@ -3,6 +3,7 @@ import { api } from '../api/client'
 import type { WorkflowDefinition } from '../types/workflow'
 import { Play, Trash2, Calendar, CheckSquare, Square, ArrowLeft } from 'lucide-react'
 import { showError, showSuccess, showWarning } from '../utils/notifications'
+import { showConfirm } from '../utils/confirm'
 import { useAuth } from '../contexts/AuthContext'
 import { useNavigate } from 'react-router-dom'
 
@@ -35,7 +36,11 @@ export default function WorkflowList({ onSelectWorkflow, onBack }: WorkflowListP
   }
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this workflow?')) return
+    const confirmed = await showConfirm(
+      'Are you sure you want to delete this workflow?',
+      { title: 'Delete Workflow', confirmText: 'Delete', cancelText: 'Cancel', type: 'danger' }
+    )
+    if (!confirmed) return
 
     try {
       await api.deleteWorkflow(id)
@@ -78,7 +83,11 @@ export default function WorkflowList({ onSelectWorkflow, onBack }: WorkflowListP
     }
 
     const count = selectedIds.size
-    if (!confirm(`Are you sure you want to delete ${count} workflow(s)?`)) return
+    const confirmed = await showConfirm(
+      `Are you sure you want to delete ${count} workflow(s)?`,
+      { title: 'Delete Workflows', confirmText: 'Delete', cancelText: 'Cancel', type: 'danger' }
+    )
+    if (!confirmed) return
 
     try {
       const ids = Array.from(selectedIds)

@@ -467,10 +467,14 @@ export default function PropertyPanel({ selectedNodeId, setSelectedNodeId, selec
     )
   }
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (!selectedNode) return
     // Require confirmation before deleting
-    if (window.confirm(`Are you sure you want to delete "${selectedNode.data.name || selectedNode.data.label || selectedNode.id}"?`)) {
+    const confirmed = await showConfirm(
+      `Are you sure you want to delete "${selectedNode.data.name || selectedNode.data.label || selectedNode.id}"?`,
+      { title: 'Delete Node', confirmText: 'Delete', cancelText: 'Cancel', type: 'danger' }
+    )
+    if (confirmed) {
       deleteElements({ nodes: [{ id: selectedNode.id }] })
       setSelectedNodeId(null)
     }
