@@ -134,7 +134,15 @@ async def login_json(
     user = result.scalar_one_or_none()
     
     # Verify credentials
-    if not user or not verify_password(user_data.password, user.hashed_password):
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect username or password"
+        )
+    
+    # Verify password with better error handling
+    password_valid = verify_password(user_data.password, user.hashed_password)
+    if not password_valid:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect username or password"
