@@ -23,7 +23,7 @@ export default function MarketplacePage() {
   const [category, setCategory] = useState<string>('');
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState('popular');
-  const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(null);
+  const [selectedTemplateIds, setSelectedTemplateIds] = useState<Set<string>>(new Set());
   
   const { token } = useAuth();
   const navigate = useNavigate();
@@ -103,13 +103,22 @@ export default function MarketplacePage() {
               <p className="text-gray-600 mt-1">Discover and use pre-built workflow templates</p>
             </div>
             <div className="flex items-center gap-3">
-              {selectedTemplateId && (
+              {selectedTemplateIds.size > 0 && (
                 <button
-                  onClick={() => useTemplate(selectedTemplateId)}
+                  onClick={async () => {
+                    // Load all selected workflows
+                    for (const templateId of selectedTemplateIds) {
+                      await useTemplate(templateId);
+                      // Small delay between loads to avoid race conditions
+                      await new Promise(resolve => setTimeout(resolve, 100));
+                    }
+                    // Clear selection after loading
+                    setSelectedTemplateIds(new Set());
+                  }}
                   className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors flex items-center gap-2"
                 >
                   <Download className="w-4 h-4" />
-                  Load Workflow
+                  Load {selectedTemplateIds.size} Workflow{selectedTemplateIds.size > 1 ? 's' : ''}
                 </button>
               )}
               <button
@@ -180,12 +189,29 @@ export default function MarketplacePage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {templates.map((template) => (
+            {templates.map((template) => {
+              const isSelected = selectedTemplateIds.has(template.id);
+              return (
               <div 
                 key={template.id} 
-                onClick={() => setSelectedTemplateId(template.id)}
+                onClick={(e) => {
+                  // Don't toggle selection if clicking on the checkbox itself
+                  if ((e.target as HTMLElement).closest('input[type="checkbox"]')) {
+                    return;
+                  }
+                  // Toggle selection
+                  setSelectedTemplateIds(prev => {
+                    const newSet = new Set(prev);
+                    if (newSet.has(template.id)) {
+                      newSet.delete(template.id);
+                    } else {
+                      newSet.add(template.id);
+                    }
+                    return newSet;
+                  });
+                }}
                 className={`bg-white rounded-lg shadow-md hover:shadow-lg transition-all overflow-hidden cursor-pointer border-2 ${
-                  selectedTemplateId === template.id 
+                  isSelected 
                     ? 'border-primary-500 ring-2 ring-primary-200' 
                     : 'border-transparent'
                 }`}
@@ -193,9 +219,29 @@ export default function MarketplacePage() {
                 {/* Header */}
                 <div className="p-6">
                   <div className="flex items-start justify-between mb-3">
-                    <h3 className="text-xl font-semibold text-gray-900 flex-1">
-                      {template.name}
-                    </h3>
+                    <div className="flex items-start gap-3 flex-1">
+                      <input
+                        type="checkbox"
+                        checked={isSelected}
+                        onChange={(e) => {
+                          e.stopPropagation();
+                          setSelectedTemplateIds(prev => {
+                            const newSet = new Set(prev);
+                            if (e.target.checked) {
+                              newSet.add(template.id);
+                            } else {
+                              newSet.delete(template.id);
+                            }
+                            return newSet;
+                          });
+                        }}
+                        className="mt-1 w-5 h-5 text-primary-600 border-gray-300 rounded focus:ring-primary-500 cursor-pointer"
+                        onClick={(e) => e.stopPropagation()}
+                      />
+                      <h3 className="text-xl font-semibold text-gray-900 flex-1">
+                        {template.name}
+                      </h3>
+                    </div>
                     {template.is_official && (
                       <span className="ml-2 px-2 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded">
                         Official
@@ -241,17 +287,18 @@ export default function MarketplacePage() {
                 {/* Footer */}
                 <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">
                   <div className={`text-sm text-center py-2 px-4 rounded-lg ${
-                    selectedTemplateId === template.id 
+                    isSelected 
                       ? 'bg-primary-100 text-primary-700 font-medium' 
                       : 'text-gray-500'
                   }`}>
-                    {selectedTemplateId === template.id 
-                      ? 'Selected - Click "Load Workflow" above to use' 
-                      : 'Click to select'}
+                    {isSelected 
+                      ? 'Selected - Click "Load Workflow(s)" above to use' 
+                      : 'Click card or checkbox to select'}
                   </div>
                 </div>
               </div>
-            ))}
+            );
+            })}
           </div>
         )}
       </div>
