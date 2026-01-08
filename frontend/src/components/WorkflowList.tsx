@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { api } from '../api/client'
 import type { WorkflowDefinition } from '../types/workflow'
-import { Play, Trash2, Calendar, CheckSquare, Square, ArrowLeft } from 'lucide-react'
+import { Play, Trash2, Calendar, CheckSquare, Square, ArrowLeft, Copy } from 'lucide-react'
 import { showError, showSuccess, showWarning } from '../utils/notifications'
 import { showConfirm } from '../utils/confirm'
 import { useAuth } from '../contexts/AuthContext'
@@ -53,6 +53,17 @@ export default function WorkflowList({ onSelectWorkflow, onBack }: WorkflowListP
       showSuccess('Workflow deleted successfully')
     } catch (error: any) {
       showError('Failed to delete workflow: ' + error.message)
+    }
+  }
+
+  const handleDuplicate = async (id: string) => {
+    try {
+      const duplicated = await api.duplicateWorkflow(id)
+      // Reload workflows to show the new duplicate
+      await loadWorkflows()
+      showSuccess(`Workflow duplicated as "${duplicated.name}"`)
+    } catch (error: any) {
+      showError('Failed to duplicate workflow: ' + error.message)
     }
   }
 
@@ -241,16 +252,28 @@ export default function WorkflowList({ onSelectWorkflow, onBack }: WorkflowListP
                     )}
                   </div>
                 </div>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    workflow.id && handleDelete(workflow.id)
-                  }}
-                  className="text-red-600 hover:bg-red-50 p-1 rounded flex-shrink-0"
-                  title="Delete workflow"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
+                <div className="flex items-center gap-1 flex-shrink-0">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      workflow.id && handleDuplicate(workflow.id)
+                    }}
+                    className="text-blue-600 hover:bg-blue-50 p-1 rounded"
+                    title="Duplicate workflow"
+                  >
+                    <Copy className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      workflow.id && handleDelete(workflow.id)
+                    }}
+                    className="text-red-600 hover:bg-red-50 p-1 rounded"
+                    title="Delete workflow"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
               </div>
 
               <div 

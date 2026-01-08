@@ -60,6 +60,18 @@ export const api = {
     return response.data
   },
 
+  async duplicateWorkflow(id: string): Promise<WorkflowDefinition> {
+    // Get the workflow first
+    const workflow = await this.getWorkflow(id)
+    // Create a new workflow with "-copy" appended to the name
+    const duplicated = {
+      ...workflow,
+      id: undefined, // Remove ID so it creates a new one
+      name: `${workflow.name}-copy`,
+    }
+    return await this.createWorkflow(duplicated)
+  },
+
   // Executions
   async executeWorkflow(
     workflowId: string,
