@@ -689,7 +689,9 @@ class LocalFileSystemHandler(InputSourceHandler):
             raise ValueError(f"file_path '{file_path}' is a directory. Please provide a file_pattern or use a full file path.")
         
         # If overwrite is False and file exists, increment the filename
-        if not overwrite and path.exists():
+        file_exists = path.exists()
+        print(f"File path: {path}, exists: {file_exists}, overwrite: {overwrite}")
+        if not overwrite and file_exists:
             # Split path into stem and suffix (e.g., "image.jpg" -> stem="image", suffix=".jpg")
             stem = path.stem
             suffix = path.suffix
@@ -709,6 +711,8 @@ class LocalFileSystemHandler(InputSourceHandler):
                 # Safety check to prevent infinite loop
                 if counter > 10000:
                     raise ValueError(f"Could not find available filename after 10000 attempts. Please clean up files or enable overwrite.")
+        elif overwrite and file_exists:
+            print(f"Overwrite enabled: will overwrite existing file {path}")
         
         # Create parent directory if it doesn't exist
         path.parent.mkdir(parents=True, exist_ok=True)
