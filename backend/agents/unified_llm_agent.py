@@ -467,14 +467,22 @@ class UnifiedLLMAgent(BaseAgent):
                     for part in parts:
                         if "text" in part and part["text"]:
                             text_parts.append(part["text"])
+                        elif "inlineData" in part:
+                            # Image data - convert to base64 data URL (REST API uses camelCase)
+                            inline_data = part["inlineData"]
+                            mime_type = inline_data.get("mimeType", "image/jpeg")  # Default to JPEG
+                            image_data = inline_data.get("data", "")
+                            if image_data:
+                                image_parts.append(f"data:{mime_type};base64,{image_data}")
+                                print(f"✅ Extracted image from Gemini response: {len(image_data)} chars of base64 data, mime_type: {mime_type}")
                         elif "inline_data" in part:
-                            # Image data - convert to base64 data URL
+                            # Fallback for snake_case (if API returns it)
                             inline_data = part["inline_data"]
                             mime_type = inline_data.get("mime_type", "image/jpeg")  # Default to JPEG
                             image_data = inline_data.get("data", "")
                             if image_data:
                                 image_parts.append(f"data:{mime_type};base64,{image_data}")
-                                print(f"✅ Extracted image from Gemini response: {len(image_data)} chars of base64 data, mime_type: {mime_type}")
+                                print(f"✅ Extracted image from Gemini response (snake_case): {len(image_data)} chars of base64 data, mime_type: {mime_type}")
                     
                     # If we have images, return them (prefer images over text for image generation models)
                     if image_parts:
