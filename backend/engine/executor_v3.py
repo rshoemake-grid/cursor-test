@@ -115,7 +115,20 @@ class WorkflowExecutorV3:
         return self.execution_state
     
     def _build_graph(self):
-        """Build adjacency map and in-degree map, filtering out edges to deleted nodes"""
+        """Build adjacency map and in-degree map, filtering out edges to deleted nodes and invalid nodes"""
+        # Filter out nodes that don't have required configuration
+        valid_nodes = []
+        for node in self.workflow.nodes:
+            # Skip condition nodes without field configuration
+            if node.type == NodeType.CONDITION:
+                if not node.condition_config or not node.condition_config.field:
+                    logger.warning(f"Skipping condition node {node.id} - missing required field configuration")
+                    continue
+            valid_nodes.append(node)
+        
+        # Update workflow nodes to only include valid nodes
+        self.workflow.nodes = valid_nodes
+        
         # Create set of valid node IDs for quick lookup
         valid_node_ids = {node.id for node in self.workflow.nodes}
         
@@ -123,18 +136,25 @@ class WorkflowExecutorV3:
         adjacency: Dict[str, List[str]] = {node.id: [] for node in self.workflow.nodes}
         in_degree: Dict[str, int] = {node.id: 0 for node in self.workflow.nodes}
         
-        # Only process edges that connect existing nodes
+        # Filter edges to only include those between valid nodes
+        valid_edges = []
         for edge in self.workflow.edges:
-            # Skip edges that reference deleted nodes
+            # Skip edges that reference invalid nodes
             if edge.source not in valid_node_ids:
+                logger.warning(f"Skipping edge {edge.id} - source node {edge.source} is invalid or missing")
                 continue
             if edge.target not in valid_node_ids:
+                logger.warning(f"Skipping edge {edge.id} - target node {edge.target} is invalid or missing")
                 continue
             
             # Only add edge if both nodes exist
             if edge.source in adjacency and edge.target in in_degree:
                 adjacency[edge.source].append(edge.target)
                 in_degree[edge.target] += 1
+                valid_edges.append(edge)
+        
+        # Update workflow edges to only include valid edges
+        self.workflow.edges = valid_edges
         
         # Debug logging
         print(f"🔍 Built adjacency map:")
