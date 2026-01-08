@@ -7,6 +7,7 @@ import os
 import io
 import mimetypes
 import time
+import base64
 from typing import Dict, Any, Optional, List
 from pathlib import Path
 import glob
@@ -685,7 +686,115 @@ class LocalFileSystemHandler(InputSourceHandler):
         # Create parent directory if it doesn't exist
         path.parent.mkdir(parents=True, exist_ok=True)
         
-        # Convert data to string (JSON if dict/list, otherwise string)
+        # Detect if data is an image (base64, URL, or binary)
+        is_image = False
+        image_data = None
+        detected_mimetype = None
+        
+        # Check if data is a base64-encoded image
+        if isinstance(data, str):
+            # Check for data URL format: data:image/png;base64,...
+            if data.startswith('data:image/'):
+                # Extract base64 data and mimetype
+                try:
+                    header, base64_data = data.split(',', 1)
+                    mimetype_part = header.split(';')[0]  # data:image/png
+                    detected_mimetype = mimetype_part.split(':')[1]  # image/png
+                    image_data = base64.b64decode(base64_data)
+                    is_image = True
+                except Exception as e:
+                    print(f"Warning: Failed to decode base64 image data: {e}")
+            
+            # Check if it's a long base64 string (might be image without data URL prefix)
+            elif len(data) > 1000 and all(c in 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=\n\r' for c in data[:1000]):
+                # Might be base64 image - try to decode
+                try:
+                    decoded = base64.b64decode(data)
+                    # Check if decoded data looks like an image (PNG/JPEG magic bytes)
+                    if decoded[:4] == b'\x89PNG' or decoded[:2] == b'\xff\xd8':
+                        image_data = decoded
+                        is_image = True
+                        detected_mimetype = 'image/png' if decoded[:4] == b'\x89PNG' else 'image/jpeg'
+                except Exception:
+                    pass
+        
+        # Check if data is binary (bytes)
+        elif isinstance(data, bytes):
+            # Check if it's an image by magic bytes
+            if data[:4] == b'\x89PNG':
+                is_image = True
+                image_data = data
+                detected_mimetype = 'image/png'
+            elif data[:2] == b'\xff\xd8':
+                is_image = True
+                image_data = data
+                detected_mimetype = 'image/jpeg'
+            elif data[:4] == b'GIF8':
+                is_image = True
+                image_data = data
+                detected_mimetype = 'image/gif'
+            elif data[:8] == b'\x89\x50\x4E\x47\x0D\x0A\x1A\x0A':  # PNG alternative
+                is_image = True
+                image_data = data
+                detected_mimetype = 'image/png'
+        
+        # Check if data is a dict with image information
+        elif isinstance(data, dict):
+            # Check for common image keys
+            if 'image' in data:
+                image_value = data['image']
+                if isinstance(image_value, str) and image_value.startswith('data:image/'):
+                    try:
+                        header, base64_data = image_value.split(',', 1)
+                        mimetype_part = header.split(';')[0]
+                        detected_mimetype = mimetype_part.split(':')[1]
+                        image_data = base64.b64decode(base64_data)
+                        is_image = True
+                    except Exception:
+                        pass
+                elif isinstance(image_value, bytes):
+                    image_data = image_value
+                    is_image = True
+            elif 'image_data' in data:
+                image_value = data['image_data']
+                if isinstance(image_value, str):
+                    try:
+                        image_data = base64.b64decode(image_value)
+                        is_image = True
+                    except Exception:
+                        pass
+                elif isinstance(image_value, bytes):
+                    image_data = image_value
+                    is_image = True
+        
+        # If it's an image, write binary data
+        if is_image and image_data:
+            # Detect mimetype from file extension if not already detected
+            if not detected_mimetype:
+                detected_mimetype, _ = mimetypes.guess_type(str(path))
+                if not detected_mimetype:
+                    ext = path.suffix.lower()
+                    if ext in ['.png']:
+                        detected_mimetype = 'image/png'
+                    elif ext in ['.jpg', '.jpeg']:
+                        detected_mimetype = 'image/jpeg'
+                    elif ext == '.gif':
+                        detected_mimetype = 'image/gif'
+                    elif ext == '.webp':
+                        detected_mimetype = 'image/webp'
+                    else:
+                        detected_mimetype = 'image/png'  # Default to PNG
+            
+            # Log what we're writing
+            print(f"Writing image to {path}: {len(image_data)} bytes, mimetype: {detected_mimetype}")
+            
+            # Write binary data
+            with open(path, 'wb') as f:
+                f.write(image_data)
+            
+            return {"status": "success", "file_path": str(path), "mimetype": detected_mimetype, "type": "image"}
+        
+        # Otherwise, convert to string (JSON if dict/list, otherwise string)
         if data is None:
             content = ""
         elif isinstance(data, (dict, list)):

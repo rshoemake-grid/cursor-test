@@ -228,8 +228,8 @@ class UnifiedLLMAgent(BaseAgent):
         else:
             raise ValueError(f"Unknown provider type: {provider_type}")
     
-    async def _execute_openai(self, user_message: str, model: str) -> str:
-        """Execute using OpenAI API"""
+    async def _execute_openai(self, user_message: Any, model: str) -> Any:
+        """Execute using OpenAI API - supports text and vision models"""
         base_url = self.llm_config.get("base_url", "https://api.openai.com/v1")
         api_key = self.llm_config["api_key"]
         
@@ -240,10 +240,19 @@ class UnifiedLLMAgent(BaseAgent):
                 "content": self.config.system_prompt
             })
         
-        messages.append({
-            "role": "user",
-            "content": user_message
-        })
+        # Handle vision models (content is a list) vs text models (content is string)
+        if isinstance(user_message, list):
+            # Vision model - content is a list of text and image objects
+            messages.append({
+                "role": "user",
+                "content": user_message
+            })
+        else:
+            # Text model - content is a string
+            messages.append({
+                "role": "user",
+                "content": user_message
+            })
         
         # Use 5 minute timeout for LLM requests (some models can take longer)
         async with httpx.AsyncClient(timeout=300.0) as client:
@@ -267,17 +276,30 @@ class UnifiedLLMAgent(BaseAgent):
                 )
             
             data = response.json()
-            return data["choices"][0]["message"]["content"]
+            content = data["choices"][0]["message"]["content"]
+            
+            # Check if response contains image generation (for future DALL-E support)
+            # For now, return text content as-is
+            # If content is None, check for image_url or other image formats
+            if content is None:
+                # Check if there's image data in the response
+                message = data["choices"][0]["message"]
+                if "image" in message:
+                    return message["image"]
+                # Return empty string if no content
+                return ""
+            
+            return content
     
-    async def _execute_anthropic(self, user_message: str, model: str) -> str:
-        """Execute using Anthropic API"""
+    async def _execute_anthropic(self, user_message: Any, model: str) -> Any:
+        """Execute using Anthropic API - supports text and vision models"""
         base_url = self.llm_config.get("base_url", "https://api.anthropic.com/v1")
         api_key = self.llm_config["api_key"]
         
-        # Anthropic API format
+        # Anthropic API format - supports vision models with content array
         messages = [{
             "role": "user",
-            "content": user_message
+            "content": user_message if isinstance(user_message, list) else user_message
         }]
         
         request_data = {
@@ -410,15 +432,112 @@ class UnifiedLLMAgent(BaseAgent):
                 )
             
             data = response.json()
-            return data["choices"][0]["message"]["content"]
+            content = data["choices"][0]["message"]["content"]
+            
+            # Check if response contains image generation (for future DALL-E support)
+            # For now, return text content as-is
+            # If content is None, check for image_url or other image formats
+            if content is None:
+                # Check if there's image data in the response
+                message = data["choices"][0]["message"]
+                if "image" in message:
+                    return message["image"]
+                # Return empty string if no content
+                return ""
+            
+            return content
     
-    def _build_user_message(self, inputs: Dict[str, Any]) -> str:
-        """Build user message from inputs"""
+    def _build_user_message(self, inputs: Dict[str, Any]) -> Any:
+        """Build user message from inputs - can return string or list for vision models"""
+        import base64
+        
+        # Check if any input contains image data
+        has_images = False
+        image_content = []
+        text_parts = []
+        
+        for key, value in inputs.items():
+            # Check if value is an image (base64, URL, or binary)
+            is_image = False
+            image_data = None
+            
+            if isinstance(value, str):
+                # Check for data URL format: data:image/png;base64,...
+                if value.startswith('data:image/'):
+                    is_image = True
+                    image_data = value
+                # Check if it's a URL to an image
+                elif value.startswith(('http://', 'https://')) and any(ext in value.lower() for ext in ['.png', '.jpg', '.jpeg', '.gif', '.webp']):
+                    is_image = True
+                    image_data = value
+            elif isinstance(value, bytes):
+                # Binary image data - convert to base64
+                try:
+                    # Check if it's an image by magic bytes
+                    if value[:4] == b'\x89PNG' or value[:2] == b'\xff\xd8' or value[:4] == b'GIF8':
+                        mimetype = 'image/png' if value[:4] == b'\x89PNG' else ('image/jpeg' if value[:2] == b'\xff\xd8' else 'image/gif')
+                        base64_data = base64.b64encode(value).decode('utf-8')
+                        image_data = f"data:{mimetype};base64,{base64_data}"
+                        is_image = True
+                except Exception:
+                    pass
+            elif isinstance(value, dict):
+                # Check for image keys in dict
+                if 'image' in value:
+                    image_value = value['image']
+                    if isinstance(image_value, str) and image_value.startswith('data:image/'):
+                        is_image = True
+                        image_data = image_value
+                    elif isinstance(image_value, bytes):
+                        try:
+                            mimetype = 'image/png' if image_value[:4] == b'\x89PNG' else ('image/jpeg' if image_value[:2] == b'\xff\xd8' else 'image/gif')
+                            base64_data = base64.b64encode(image_value).decode('utf-8')
+                            image_data = f"data:{mimetype};base64,{base64_data}"
+                            is_image = True
+                        except Exception:
+                            pass
+                elif 'image_data' in value:
+                    image_value = value['image_data']
+                    if isinstance(image_value, str):
+                        try:
+                            # Try to decode and re-encode as data URL
+                            decoded = base64.b64decode(image_value)
+                            mimetype = 'image/png' if decoded[:4] == b'\x89PNG' else ('image/jpeg' if decoded[:2] == b'\xff\xd8' else 'image/gif')
+                            image_data = f"data:{mimetype};base64,{image_value}"
+                            is_image = True
+                        except Exception:
+                            pass
+            
+            if is_image and image_data:
+                has_images = True
+                image_content.append({
+                    "type": "image_url",
+                    "image_url": {
+                        "url": image_data
+                    }
+                })
+                # Add text description if key is descriptive
+                if key not in ['data', 'output', 'image', 'image_data']:
+                    text_parts.append(f"{key}:")
+            else:
+                # Regular text input
+                text_parts.append(f"{key}: {value}")
+        
+        # If we have images, return structured content for vision models
+        if has_images:
+            content = []
+            if text_parts:
+                content.append({
+                    "type": "text",
+                    "text": "\n".join(text_parts) if text_parts else "Process this image"
+                })
+            content.extend(image_content)
+            return content
+        
+        # Otherwise, return plain text message
         if len(inputs) == 1:
-            # Single input - use its value directly
             return str(list(inputs.values())[0])
         else:
-            # Multiple inputs - format as key-value pairs
             parts = []
             for key, value in inputs.items():
                 parts.append(f"{key}: {value}")
