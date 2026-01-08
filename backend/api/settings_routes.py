@@ -436,22 +436,30 @@ def get_provider_for_model(model_name: str, user_id: Optional[str] = None) -> Op
     
     logger.debug(f"Searching for provider for model '{model_name}' (user: {uid}), available providers: {[p.name for p in settings.providers]}")
     
+    # Normalize model name for comparison (lowercase, strip whitespace)
+    normalized_model_name = model_name.lower().strip()
+    
     # Search through all enabled providers to find one that has this model
     for provider in settings.providers:
         logger.debug(f"Checking provider '{provider.name}': enabled={provider.enabled}, has_key={bool(provider.apiKey)}, models={len(provider.models) if provider.models else 0}")
         
         # Check that provider is enabled, has a valid (non-placeholder) API key, and has models
         if provider.enabled and provider.apiKey and _is_valid_api_key(provider.apiKey) and provider.models:
-            # Check if this provider has the model
-            if model_name in provider.models:
-                logger.info(f"Found provider '{provider.name}' for model '{model_name}'")
+            # Check if this provider has the model (case-insensitive match)
+            normalized_provider_models = [m.lower().strip() for m in provider.models]
+            if normalized_model_name in normalized_provider_models:
+                # Find the original model name (preserve case from provider)
+                original_model_name = next((m for m in provider.models if m.lower().strip() == normalized_model_name), model_name)
+                logger.info(f"Found provider '{provider.name}' for model '{model_name}' (matched: {original_model_name})")
                 return {
                     "type": provider.type,
                     "api_key": provider.apiKey.strip(),  # Trim whitespace
                     "base_url": provider.baseUrl,
-                    "model": model_name
+                    "model": original_model_name  # Use original model name from provider
                 }
+            else:
+                logger.debug(f"  Model '{model_name}' not in provider '{provider.name}' models: {provider.models}")
     
-    logger.warning(f"No provider found for model '{model_name}'")
+    logger.warning(f"No provider found for model '{model_name}' (searched: {normalized_model_name})")
     return None
 

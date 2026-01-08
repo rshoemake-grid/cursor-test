@@ -148,6 +148,12 @@ class UnifiedLLMAgent(BaseAgent):
         # Use model from agent config if specified, otherwise from LLM config
         model = self.config.model or self.llm_config["model"]
         
+        # Debug logging
+        print(f"🔍 Agent node '{self.node_id}': Looking for provider for model '{model}'")
+        print(f"   Agent config model: {self.config.model}")
+        print(f"   LLM config model: {self.llm_config.get('model')}")
+        print(f"   User ID: {self.user_id}")
+        
         # Try to find the provider that owns this model
         # This ensures we use the correct API for the selected model
         model_provider_config = self._find_provider_for_model(model, self.user_id)
