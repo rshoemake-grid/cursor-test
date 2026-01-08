@@ -14,6 +14,9 @@ from ..models.schemas import (
 from ..agents import AgentRegistry
 from ..websocket.manager import manager as ws_manager
 from ..inputs import read_from_input_source, write_to_input_source
+from ..utils.logger import get_logger
+
+logger = get_logger(__name__)
 
 
 class WorkflowExecutorV3:
