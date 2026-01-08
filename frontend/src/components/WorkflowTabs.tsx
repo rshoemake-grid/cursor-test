@@ -519,7 +519,7 @@ export default function WorkflowTabs({ initialWorkflowId, workflowLoadKey, onExe
       {tabs.length === 0 && (
         <div className="flex-1 flex items-center justify-center bg-gray-50">
           <div className="text-center">
-            <p className="text-gray-500 mb-4">No workflows open</p>
+            <p className="text-gray-500 mb-4">No executions</p>
             <button
               onClick={handleNewWorkflow}
               className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 flex items-center gap-2 mx-auto"
