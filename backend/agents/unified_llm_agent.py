@@ -470,15 +470,17 @@ class UnifiedLLMAgent(BaseAgent):
                         elif "inline_data" in part:
                             # Image data - convert to base64 data URL
                             inline_data = part["inline_data"]
-                            mime_type = inline_data.get("mime_type", "image/png")
+                            mime_type = inline_data.get("mime_type", "image/jpeg")  # Default to JPEG
                             image_data = inline_data.get("data", "")
                             if image_data:
                                 image_parts.append(f"data:{mime_type};base64,{image_data}")
+                                print(f"✅ Extracted image from Gemini response: {len(image_data)} chars of base64 data, mime_type: {mime_type}")
                     
                     # If we have images, return them (prefer images over text for image generation models)
                     if image_parts:
                         if len(image_parts) == 1:
                             # Single image - return as base64 data URL
+                            print(f"✅ Returning single image as base64 data URL")
                             return image_parts[0]
                         else:
                             # Multiple images - return as dict with images array
@@ -486,7 +488,12 @@ class UnifiedLLMAgent(BaseAgent):
                                 "images": image_parts,
                                 "text": "\n".join(text_parts) if text_parts else None
                             }
+                            print(f"✅ Returning {len(image_parts)} images with text")
                             return result
+                    
+                    # Log if we expected images but didn't get any
+                    if is_image_model and not image_parts:
+                        print(f"⚠️ Image generation model '{model}' returned text but no images. Text parts: {len(text_parts)}, Parts structure: {[list(p.keys()) for p in parts]}")
                     
                     # Otherwise return text
                     if text_parts:

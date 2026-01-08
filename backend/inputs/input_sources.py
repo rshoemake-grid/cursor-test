@@ -783,7 +783,7 @@ class LocalFileSystemHandler(InputSourceHandler):
                     elif ext == '.webp':
                         detected_mimetype = 'image/webp'
                     else:
-                        detected_mimetype = 'image/png'  # Default to PNG
+                        detected_mimetype = 'image/jpeg'  # Default to JPEG
             
             # Log what we're writing
             print(f"Writing image to {path}: {len(image_data)} bytes, mimetype: {detected_mimetype}")
