@@ -56,13 +56,47 @@ export default function ExecutionConsole({
   const [activeExecutionTabId, setActiveExecutionTabId] = useState<string | null>(null)
   const seenExecutionIds = useRef<Set<string>>(new Set()) // Track which executions we've already seen
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const scrollContainerRef = useRef<HTMLDivElement>(null)
   const isResizing = useRef(false)
   const startY = useRef(0)
   const startHeight = useRef(0)
+  const shouldAutoScroll = useRef(true) // Track if we should auto-scroll
 
-  // Auto-scroll to bottom when new messages arrive
+  // Check if user is near the bottom of the scroll container
+  const isNearBottom = () => {
+    if (!scrollContainerRef.current) return true
+    const container = scrollContainerRef.current
+    const threshold = 100 // pixels from bottom
+    return container.scrollHeight - container.scrollTop - container.clientHeight < threshold
+  }
+
+  // Reset auto-scroll when switching executions
   useEffect(() => {
-    if (isExpanded) {
+    shouldAutoScroll.current = true
+    // Scroll to bottom when switching to a new execution
+    if (isExpanded && scrollContainerRef.current) {
+      setTimeout(() => {
+        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+      }, 100)
+    }
+  }, [activeExecutionTabId, isExpanded])
+
+  // Handle scroll events to detect manual scrolling
+  useEffect(() => {
+    const container = scrollContainerRef.current
+    if (!container) return
+
+    const handleScroll = () => {
+      shouldAutoScroll.current = isNearBottom()
+    }
+
+    container.addEventListener('scroll', handleScroll)
+    return () => container.removeEventListener('scroll', handleScroll)
+  }, [isExpanded, activeExecutionTabId])
+
+  // Auto-scroll to bottom when new messages arrive (only if user is at bottom)
+  useEffect(() => {
+    if (isExpanded && shouldAutoScroll.current) {
       messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
     }
   }, [workflowTabs, activeWorkflowId, isExpanded])
@@ -323,12 +357,12 @@ export default function ExecutionConsole({
     }
   }, [displayedExecution, onNodeStateUpdate])
   
-  // Auto-scroll when new logs arrive
+  // Auto-scroll when new logs arrive (only if user is at bottom)
   useEffect(() => {
-    if (isExpanded && displayedExecution && displayedExecution.logs.length > 0) {
+    if (isExpanded && displayedExecution && displayedExecution.logs.length > 0 && shouldAutoScroll.current) {
       messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
     }
-  }, [activeExecution?.logs, isExpanded])
+  }, [displayedExecution?.logs, isExpanded])
 
   // Always show the console bar
   return (
@@ -481,7 +515,7 @@ export default function ExecutionConsole({
               </p>
             </div>
           ) : (
-            <div className="overflow-auto p-4" style={{ height: `${height - 48}px` }}>
+            <div ref={scrollContainerRef} className="overflow-auto p-4" style={{ height: `${height - 48}px` }}>
               {/* Active Execution Details */}
               {displayedExecution && (
                 <>
