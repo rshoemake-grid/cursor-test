@@ -426,6 +426,11 @@ class UnifiedLLMAgent(BaseAgent):
         if self.config.max_tokens:
             generation_config["maxOutputTokens"] = self.config.max_tokens
         
+        # For image generation models, request both text and image outputs
+        is_image_model = "flash-image" in model.lower() or "pro-image" in model.lower()
+        if is_image_model:
+            generation_config["responseModalities"] = ["TEXT", "IMAGE"]
+        
         if generation_config:
             request_data["generationConfig"] = generation_config
         
