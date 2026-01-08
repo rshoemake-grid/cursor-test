@@ -358,11 +358,19 @@ class WorkflowExecutorV3:
                             if isinstance(previous_node_output, dict):
                                 node_inputs = previous_node_output
                             else:
-                                # Wrap single value in dict
-                                node_inputs = {
-                                    'data': previous_node_output,
-                                    'output': previous_node_output
-                                }
+                                # Wrap single value in dict - handle base64 image strings
+                                # Check if it's a base64 data URL (image from agent)
+                                if isinstance(previous_node_output, str) and previous_node_output.startswith('data:image/'):
+                                    node_inputs = {
+                                        'data': previous_node_output,
+                                        'output': previous_node_output,
+                                        'image': previous_node_output  # Also add as 'image' key for clarity
+                                    }
+                                else:
+                                    node_inputs = {
+                                        'data': previous_node_output,
+                                        'output': previous_node_output
+                                    }
                         else:
                             await self._log("WARNING", node.id, "No previous node output found - write node has no inputs configured")
                     
