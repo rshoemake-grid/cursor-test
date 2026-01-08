@@ -34,26 +34,28 @@ export default function ConditionNode({ data, selected }: NodeProps) {
         </div>
       )}
       
-      <div className="relative flex items-center justify-between mt-2 pt-2 border-t border-gray-200">
-        <div className="flex flex-col items-center flex-1">
-          <Handle
-            type="source"
-            position={Position.Bottom}
-            id="true"
-            style={{ left: '50%', transform: 'translateX(-50%)' }}
-            className="w-3 h-3 !bg-green-500 !border-green-600"
-          />
-          <span className="text-xs font-medium text-green-600 mt-1">True</span>
-        </div>
-        <div className="flex flex-col items-center flex-1">
-          <Handle
-            type="source"
-            position={Position.Bottom}
-            id="false"
-            style={{ left: '50%', transform: 'translateX(-50%)' }}
-            className="w-3 h-3 !bg-red-500 !border-red-600"
-          />
-          <span className="text-xs font-medium text-red-600 mt-1">False</span>
+      <div className="relative mt-2 pt-2 border-t border-gray-200">
+        <div className="flex items-end justify-between">
+          <div className="flex flex-col items-center flex-1 relative">
+            <Handle
+              type="source"
+              position={Position.Bottom}
+              id="true"
+              style={{ left: '25%' }}
+              className="w-3 h-3 !bg-green-500 !border-green-600"
+            />
+            <span className="text-xs font-medium text-green-600 mt-1">True</span>
+          </div>
+          <div className="flex flex-col items-center flex-1 relative">
+            <Handle
+              type="source"
+              position={Position.Bottom}
+              id="false"
+              style={{ left: '75%' }}
+              className="w-3 h-3 !bg-red-500 !border-red-600"
+            />
+            <span className="text-xs font-medium text-red-600 mt-1">False</span>
+          </div>
         </div>
       </div>
     </div>
