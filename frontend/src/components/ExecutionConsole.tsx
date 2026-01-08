@@ -364,6 +364,11 @@ export default function ExecutionConsole({
     }
   }, [displayedExecution?.logs, isExpanded])
 
+  // Hide console if there are no workflow tabs
+  if (workflowTabs.length === 0) {
+    return null
+  }
+
   // Always show the console bar
   return (
     <div 
