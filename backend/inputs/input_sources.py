@@ -669,6 +669,7 @@ class LocalFileSystemHandler(InputSourceHandler):
         file_pattern = config.get('file_pattern', '')
         encoding = config.get('encoding', 'utf-8')
         overwrite = config.get('overwrite', True)  # Default to True for backward compatibility
+        print(f"LocalFileSystemHandler.write: overwrite={overwrite}, config keys: {list(config.keys())}")
         
         if not file_path or file_path.strip() == '':
             raise ValueError("file_path is required for Local File System write. Please configure the file_path in the node's input_config or pass it as an execution input (e.g., {'file_path': '/path/to/file'}) before executing the workflow.")
