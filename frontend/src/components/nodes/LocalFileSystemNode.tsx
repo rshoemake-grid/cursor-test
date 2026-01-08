@@ -50,6 +50,9 @@ export default function LocalFileSystemNode({ data, selected }: NodeProps) {
       {(data.input_config as any)?.mode && (
         <div className="text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded truncate">
           Mode: {(data.input_config as any).mode === 'write' ? 'Write' : 'Read'}
+          {(data.input_config as any).mode === 'write' && (data.input_config as any).overwrite === false && (
+            <span className="ml-1">(Auto-increment)</span>
+          )}
         </div>
       )}
       

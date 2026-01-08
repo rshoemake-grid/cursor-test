@@ -668,6 +668,7 @@ class LocalFileSystemHandler(InputSourceHandler):
         file_path = config.get('file_path')
         file_pattern = config.get('file_pattern', '')
         encoding = config.get('encoding', 'utf-8')
+        overwrite = config.get('overwrite', True)  # Default to True for backward compatibility
         
         if not file_path or file_path.strip() == '':
             raise ValueError("file_path is required for Local File System write. Please configure the file_path in the node's input_config or pass it as an execution input (e.g., {'file_path': '/path/to/file'}) before executing the workflow.")
@@ -682,6 +683,28 @@ class LocalFileSystemHandler(InputSourceHandler):
         elif path.is_dir():
             # If it's a directory without a pattern, use a default filename
             raise ValueError(f"file_path '{file_path}' is a directory. Please provide a file_pattern or use a full file path.")
+        
+        # If overwrite is False and file exists, increment the filename
+        if not overwrite and path.exists():
+            # Split path into stem and suffix (e.g., "image.jpg" -> stem="image", suffix=".jpg")
+            stem = path.stem
+            suffix = path.suffix
+            parent = path.parent
+            
+            # Try to find the next available number
+            counter = 1
+            while True:
+                # Create new filename with counter (e.g., "image_1.jpg")
+                new_name = f"{stem}_{counter}{suffix}"
+                new_path = parent / new_name
+                if not new_path.exists():
+                    path = new_path
+                    print(f"File exists, using incremented filename: {path}")
+                    break
+                counter += 1
+                # Safety check to prevent infinite loop
+                if counter > 10000:
+                    raise ValueError(f"Could not find available filename after 10000 attempts. Please clean up files or enable overwrite.")
         
         # Create parent directory if it doesn't exist
         path.parent.mkdir(parents=True, exist_ok=True)

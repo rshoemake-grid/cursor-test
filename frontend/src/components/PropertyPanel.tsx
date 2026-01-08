@@ -153,6 +153,7 @@ export default function PropertyPanel({ selectedNodeId, setSelectedNodeId, selec
   const [filePathValue, setFilePathValue] = useState('')
   const [filePatternValue, setFilePatternValue] = useState('')
   const [modeValue, setModeValue] = useState('read')
+  const [overwriteValue, setOverwriteValue] = useState(true)
   
   // Sync all local state with node data only when a different node is selected
   // This prevents flickering while typing
