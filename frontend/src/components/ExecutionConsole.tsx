@@ -447,6 +447,8 @@ export default function ExecutionConsole({
                         e.preventDefault()
                         e.stopPropagation()
                         const executionIdToClose = execTab.executionId
+                        // Mark this execution as closed so it doesn't get recreated
+                        closedExecutionIds.current.add(executionIdToClose)
                         setExecutionTabs(prev => {
                           const filtered = prev.filter(t => t.executionId !== executionIdToClose)
                           // If closing the active tab, switch to another one
