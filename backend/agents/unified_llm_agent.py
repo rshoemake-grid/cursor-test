@@ -333,14 +333,50 @@ class UnifiedLLMAgent(BaseAgent):
             data = response.json()
             return data["content"][0]["text"]
     
-    async def _execute_gemini(self, user_message: str, model: str) -> str:
-        """Execute using Google Gemini API"""
+    async def _execute_gemini(self, user_message: Any, model: str) -> Any:
+        """Execute using Google Gemini API - supports text and vision models"""
+        import base64
+        
         base_url = self.llm_config.get("base_url", "https://generativelanguage.googleapis.com/v1beta")
         api_key = self.llm_config["api_key"]
         
-        # Gemini API format
+        # Gemini API format - supports vision models
+        parts = []
+        
+        if isinstance(user_message, list):
+            # Vision model - process content array
+            for item in user_message:
+                if item.get("type") == "text":
+                    parts.append({"text": item.get("text", "")})
+                elif item.get("type") == "image_url":
+                    image_url = item.get("image_url", {}).get("url", "")
+                    if image_url.startswith("data:image/"):
+                        # Extract base64 data
+                        try:
+                            header, base64_data = image_url.split(",", 1)
+                            mimetype = header.split(";")[0].split(":")[1]
+                            parts.append({
+                                "inline_data": {
+                                    "mime_type": mimetype,
+                                    "data": base64_data
+                                }
+                            })
+                        except Exception:
+                            pass
+                    elif image_url.startswith(("http://", "https://")):
+                        # URL to image - Gemini can handle URLs directly
+                        parts.append({
+                            "file_data": {
+                                "file_uri": image_url,
+                                "mime_type": "image/png"  # Default, could be detected from URL
+                            }
+                        })
+        else:
+            # Text model
+            parts.append({"text": str(user_message)})
+        
         contents = [{
-            "parts": [{"text": user_message}]
+            "parts": parts
         }]
         
         request_data = {
@@ -390,8 +426,8 @@ class UnifiedLLMAgent(BaseAgent):
             
             raise RuntimeError(f"Unexpected Gemini API response format: {data}")
     
-    async def _execute_custom(self, user_message: str, model: str) -> str:
-        """Execute using custom OpenAI-compatible API"""
+    async def _execute_custom(self, user_message: Any, model: str) -> Any:
+        """Execute using custom OpenAI-compatible API - supports text and vision models"""
         base_url = self.llm_config.get("base_url")
         if not base_url:
             raise ValueError("base_url is required for custom providers")
@@ -405,10 +441,19 @@ class UnifiedLLMAgent(BaseAgent):
                 "content": self.config.system_prompt
             })
         
-        messages.append({
-            "role": "user",
-            "content": user_message
-        })
+        # Handle vision models (content is a list) vs text models (content is string)
+        if isinstance(user_message, list):
+            # Vision model - content is a list of text and image objects
+            messages.append({
+                "role": "user",
+                "content": user_message
+            })
+        else:
+            # Text model - content is a string
+            messages.append({
+                "role": "user",
+                "content": user_message
+            })
         
         # Use 5 minute timeout for LLM requests (some models can take longer)
         async with httpx.AsyncClient(timeout=300.0) as client:
