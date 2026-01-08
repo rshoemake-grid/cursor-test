@@ -29,25 +29,33 @@ export default function ConditionNode({ data, selected }: NodeProps) {
       )}
       
       {(data.condition_config as any)?.condition_type && (
-        <div className="text-xs text-gray-600 bg-gray-50 px-2 py-1 rounded truncate">
+        <div className="text-xs text-gray-600 bg-gray-50 px-2 py-1 rounded truncate mb-2">
           {(data.condition_config as any).condition_type}: {(data.condition_config as any).field}
         </div>
       )}
       
-      <Handle
-        type="source"
-        position={Position.Bottom}
-        id="true"
-        style={{ left: '33%' }}
-        className="w-3 h-3"
-      />
-      <Handle
-        type="source"
-        position={Position.Bottom}
-        id="false"
-        style={{ left: '66%' }}
-        className="w-3 h-3"
-      />
+      <div className="relative flex items-center justify-between mt-2 pt-2 border-t border-gray-200">
+        <div className="flex flex-col items-center flex-1">
+          <Handle
+            type="source"
+            position={Position.Bottom}
+            id="true"
+            style={{ left: '50%', transform: 'translateX(-50%)' }}
+            className="w-3 h-3 !bg-green-500 !border-green-600"
+          />
+          <span className="text-xs font-medium text-green-600 mt-1">True</span>
+        </div>
+        <div className="flex flex-col items-center flex-1">
+          <Handle
+            type="source"
+            position={Position.Bottom}
+            id="false"
+            style={{ left: '50%', transform: 'translateX(-50%)' }}
+            className="w-3 h-3 !bg-red-500 !border-red-600"
+          />
+          <span className="text-xs font-medium text-red-600 mt-1">False</span>
+        </div>
+      </div>
     </div>
   )
 }
