@@ -55,6 +55,7 @@ export default function ExecutionConsole({
   const [executionTabs, setExecutionTabs] = useState<Array<{ executionId: string; workflowId: string; workflowName: string; status: string; startedAt: Date }>>([])
   const [activeExecutionTabId, setActiveExecutionTabId] = useState<string | null>(null)
   const seenExecutionIds = useRef<Set<string>>(new Set()) // Track which executions we've already seen
+  const closedExecutionIds = useRef<Set<string>>(new Set()) // Track which execution tabs user has explicitly closed
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const scrollContainerRef = useRef<HTMLDivElement>(null)
   const isResizing = useRef(false)
@@ -231,8 +232,8 @@ export default function ExecutionConsole({
             setActiveExecutionTabId(execution.id)
           }
           seenExecutionIds.current.add(execution.id)
-        } else if (!existingTab && !initialExecutionIds.current.has(execution.id)) {
-          // This is a NEW execution (not in initial set) - create a tab for it
+        } else if (!existingTab && !initialExecutionIds.current.has(execution.id) && !closedExecutionIds.current.has(execution.id)) {
+          // This is a NEW execution (not in initial set and not explicitly closed) - create a tab for it
           seenExecutionIds.current.add(execution.id)
           setExecutionTabs(prev => [...prev, {
             executionId: execution.id,
