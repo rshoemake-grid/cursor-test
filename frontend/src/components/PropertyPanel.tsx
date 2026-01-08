@@ -460,6 +460,7 @@ export default function PropertyPanel({ selectedNodeId, setSelectedNodeId, selec
       else if (field === 'subscription_name') setSubscriptionNameValue(value)
       else if (field === 'file_path') setFilePathValue(value)
       else if (field === 'file_pattern') setFilePatternValue(value)
+      else if (field === 'overwrite') setOverwriteValue(value)
     }
     
     // Update the node state
