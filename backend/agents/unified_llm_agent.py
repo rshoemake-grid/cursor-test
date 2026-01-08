@@ -194,14 +194,38 @@ class UnifiedLLMAgent(BaseAgent):
             }
             print(f"✅ Found provider for model '{model}': {provider_type}")
         else:
+            # Model not found in any provider - check if model name suggests a specific provider
+            model_lower = model.lower()
+            suggested_provider = None
+            
+            if 'gemini' in model_lower:
+                suggested_provider = 'gemini'
+            elif 'claude' in model_lower or 'anthropic' in model_lower:
+                suggested_provider = 'anthropic'
+            elif 'gpt' in model_lower or 'openai' in model_lower:
+                suggested_provider = 'openai'
+            
             # Fall back to the default provider from llm_config
             if not self.llm_config:
-                raise ValueError(
-                    f"No provider found for model '{model}' and no default provider configured. "
-                    "Please go to Settings, add an LLM provider with a valid API key for this model, enable it, and click 'Sync Now'."
-                )
+                error_msg = f"No provider found for model '{model}' and no default provider configured."
+                if suggested_provider:
+                    error_msg += f" This model appears to be a {suggested_provider} model. Please go to Settings, add a {suggested_provider} provider with model '{model}' in its models list, enable it, and click 'Sync Now'."
+                else:
+                    error_msg += " Please go to Settings, add an LLM provider with a valid API key for this model, enable it, and click 'Sync Now'."
+                raise ValueError(error_msg)
             
             provider_type = self.llm_config["type"]
+            
+            # If we have a model-specific provider suggestion, warn if using different provider
+            if suggested_provider and provider_type != suggested_provider:
+                print(f"⚠️ WARNING: Model '{model}' suggests {suggested_provider} provider, but using {provider_type} provider")
+                print(f"   This may cause errors. Please configure a {suggested_provider} provider with model '{model}' in Settings.")
+                raise ValueError(
+                    f"Model '{model}' not found in any enabled provider. "
+                    f"This model appears to be a {suggested_provider} model, but no {suggested_provider} provider "
+                    f"with this model is configured. Please go to Settings, add a {suggested_provider} provider "
+                    f"with model '{model}' in its models list, enable it, and click 'Sync Now'."
+                )
             
             # Validate the API key from the default provider
             api_key = self.llm_config.get("api_key", "")
