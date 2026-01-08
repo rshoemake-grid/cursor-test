@@ -381,66 +381,9 @@ export default function ExecutionConsole({
             </button>
           </div>
 
-          {/* Workflow Tabs */}
-          {workflowTabs.length > 0 ? (
-            <div className="flex items-center gap-1">
-              {workflowTabs.map(tab => {
-                const hasRunning = tab.executions.some(e => e.status === 'running')
-                const isActive = tab.workflowId === activeWorkflowId
-                
-                return (
-                  <div
-                    key={tab.workflowId}
-                    className={`px-3 py-1 rounded text-xs flex items-center gap-2 transition-colors ${
-                      isActive
-                        ? 'bg-gray-700 text-white'
-                        : 'bg-gray-900 text-gray-400 hover:bg-gray-700 hover:text-gray-200'
-                    }`}
-                  >
-                    <span className="font-medium flex items-center gap-1.5">
-                      {hasRunning && <Loader className="w-3 h-3 animate-spin flex-shrink-0" />}
-                      {tab.workflowName}
-                    </span>
-                    <span className="text-gray-500">({tab.executions.length})</span>
-                    <button
-                      onClick={(e) => {
-                        e.preventDefault()
-                        e.stopPropagation()
-                        console.log('X button clicked for workflow:', tab.workflowId)
-                        // Clear executions for this workflow, not close the workflow
-                        if (onClearExecutions && tab.workflowId) {
-                          onClearExecutions(tab.workflowId)
-                        }
-                      }}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter' || e.key === ' ') {
-                          e.preventDefault()
-                          e.stopPropagation()
-                          console.log('X button key pressed for workflow:', tab.workflowId)
-                          // Clear executions for this workflow, not close the workflow
-                          if (onClearExecutions && tab.workflowId) {
-                            onClearExecutions(tab.workflowId)
-                          }
-                        }
-                      }}
-                      type="button"
-                      className="hover:text-red-400 ml-1 cursor-pointer flex-shrink-0 bg-transparent border-0 p-0 m-0"
-                      title="Clear execution history"
-                      aria-label="Clear execution history"
-                    >
-                      <X className="w-3 h-3" />
-                    </button>
-                  </div>
-                )
-              })}
-            </div>
-          ) : (
-            <span className="text-sm text-gray-400">No workflows loaded</span>
-          )}
-
           {/* Execution Tabs */}
           {consoleTab === 'executions' && executionTabs.length > 0 && (
-            <div className="flex items-center gap-1 ml-2 pl-2 border-l border-gray-700">
+            <div className="flex items-center gap-1">
               {executionTabs.map(execTab => {
                 const isActive = execTab.executionId === activeExecutionTabId
                 const isCompleted = execTab.status === 'completed' || execTab.status === 'failed'
