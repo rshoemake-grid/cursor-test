@@ -76,6 +76,32 @@ export default function MarketplacePage() {
     }
   };
 
+  const handleCardClick = (e: React.MouseEvent, templateId: string) => {
+    // Prevent any default behavior
+    e.preventDefault();
+    e.stopPropagation();
+    
+    // Don't toggle selection if clicking on interactive elements
+    const target = e.target as HTMLElement;
+    if (target.closest('input[type="checkbox"]') || 
+        target.closest('button') || 
+        target.tagName === 'BUTTON' ||
+        target.tagName === 'INPUT') {
+      return;
+    }
+    
+    // Toggle selection
+    setSelectedTemplateIds(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(templateId)) {
+        newSet.delete(templateId);
+      } else {
+        newSet.add(templateId);
+      }
+      return newSet;
+    });
+  };
+
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
       case 'beginner': return 'bg-green-100 text-green-800';
@@ -194,22 +220,7 @@ export default function MarketplacePage() {
               return (
               <div 
                 key={template.id} 
-                onClick={(e) => {
-                  // Don't toggle selection if clicking on the checkbox itself
-                  if ((e.target as HTMLElement).closest('input[type="checkbox"]')) {
-                    return;
-                  }
-                  // Toggle selection
-                  setSelectedTemplateIds(prev => {
-                    const newSet = new Set(prev);
-                    if (newSet.has(template.id)) {
-                      newSet.delete(template.id);
-                    } else {
-                      newSet.add(template.id);
-                    }
-                    return newSet;
-                  });
-                }}
+                onClick={(e) => handleCardClick(e, template.id)}
                 className={`bg-white rounded-lg shadow-md hover:shadow-lg transition-all overflow-hidden cursor-pointer border-2 ${
                   isSelected 
                     ? 'border-primary-500 ring-2 ring-primary-200' 
