@@ -896,9 +896,15 @@ export default function PropertyPanel({ selectedNodeId, setSelectedNodeId, selec
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg"
               >
                 <option value="equals">Equals</option>
+                <option value="not_equals">Not Equals</option>
                 <option value="contains">Contains</option>
+                <option value="not_contains">Not Contains</option>
                 <option value="greater_than">Greater Than</option>
+                <option value="not_greater_than">Not Greater Than</option>
                 <option value="less_than">Less Than</option>
+                <option value="not_less_than">Not Less Than</option>
+                <option value="empty">Empty</option>
+                <option value="not_empty">Not Empty</option>
                 <option value="custom">Custom</option>
               </select>
             </div>

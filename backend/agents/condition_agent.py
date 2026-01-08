@@ -226,12 +226,24 @@ class ConditionAgent(BaseAgent):
         if condition_type == "equals":
             return field_str == compare_value
         
+        elif condition_type == "not_equals":
+            return field_str != compare_value
+        
         elif condition_type == "contains":
             return compare_value.lower() in field_str.lower()
+        
+        elif condition_type == "not_contains":
+            return compare_value.lower() not in field_str.lower()
         
         elif condition_type == "greater_than":
             try:
                 return float(field_value) > float(compare_value)
+            except (ValueError, TypeError):
+                return False
+        
+        elif condition_type == "not_greater_than":
+            try:
+                return float(field_value) <= float(compare_value)
             except (ValueError, TypeError):
                 return False
         
@@ -241,7 +253,13 @@ class ConditionAgent(BaseAgent):
             except (ValueError, TypeError):
                 return False
         
-        elif condition_type == "is_empty":
+        elif condition_type == "not_less_than":
+            try:
+                return float(field_value) >= float(compare_value)
+            except (ValueError, TypeError):
+                return False
+        
+        elif condition_type == "empty" or condition_type == "is_empty":
             # Check if field is empty
             if field_value is None:
                 return True
@@ -249,7 +267,7 @@ class ConditionAgent(BaseAgent):
                 return len(field_value) == 0
             return False
         
-        elif condition_type == "is_not_empty":
+        elif condition_type == "is_not_empty" or condition_type == "not_empty":
             # Check if field is not empty
             if field_value is None:
                 return False

@@ -45,7 +45,7 @@ class InputMapping(BaseModel):
 
 class ConditionConfig(BaseModel):
     """Configuration for a condition node"""
-    condition_type: Optional[str] = "equals"  # equals, contains, greater_than, less_than, custom
+    condition_type: Optional[str] = "equals"  # equals, not_equals, contains, not_contains, greater_than, not_greater_than, less_than, not_less_than, empty, not_empty, custom
     field: Optional[str] = None  # Required only when condition_config is actually used
     value: Optional[str] = None  # Required only when condition_config is actually used
     true_branch: Optional[str] = None
