@@ -394,17 +394,6 @@ export default function ExecutionConsole({
           {/* Tab Switcher */}
           <div className="flex items-center gap-1 bg-gray-900 rounded-lg p-1">
             <button
-              onClick={() => setConsoleTab('executions')}
-              className={`px-3 py-1 rounded text-xs flex items-center gap-2 transition-colors ${
-                consoleTab === 'executions'
-                  ? 'bg-gray-700 text-white'
-                  : 'text-gray-400 hover:text-gray-200'
-              }`}
-            >
-              <Terminal className="w-3 h-3" />
-              Executions
-            </button>
-            <button
               onClick={() => {
                 setConsoleTab('chat')
                 setIsExpanded(true)
@@ -421,7 +410,7 @@ export default function ExecutionConsole({
           </div>
 
           {/* Execution Tabs */}
-          {consoleTab === 'executions' && executionTabs.length > 0 && (
+          {executionTabs.length > 0 && (
             <div className="flex items-center gap-1">
               {executionTabs.map(execTab => {
                 const isActive = execTab.executionId === activeExecutionTabId
@@ -482,7 +471,7 @@ export default function ExecutionConsole({
         </div>
 
         <div className="flex items-center gap-2">
-          {consoleTab === 'executions' && activeWorkflowTab && activeWorkflowTab.executions.length > 0 && (
+          {activeWorkflowTab && activeWorkflowTab.executions.length > 0 && (
             <button
               onClick={() => onClearExecutions(activeWorkflowTab.workflowId)}
               className="px-2 py-1 text-xs text-gray-400 hover:text-red-400 flex items-center gap-1"
