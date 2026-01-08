@@ -446,13 +446,49 @@ class UnifiedLLMAgent(BaseAgent):
             
             data = response.json()
             
-            # Extract text from Gemini response
+            # Extract content from Gemini response - handle both text and image outputs
             if "candidates" in data and len(data["candidates"]) > 0:
                 candidate = data["candidates"][0]
                 if "content" in candidate and "parts" in candidate["content"]:
                     parts = candidate["content"]["parts"]
-                    if len(parts) > 0 and "text" in parts[0]:
-                        return parts[0]["text"]
+                    
+                    # Check if this is an image generation model
+                    is_image_model = "flash-image" in model.lower() or "pro-image" in model.lower()
+                    
+                    # Collect text and images
+                    text_parts = []
+                    image_parts = []
+                    
+                    for part in parts:
+                        if "text" in part and part["text"]:
+                            text_parts.append(part["text"])
+                        elif "inline_data" in part:
+                            # Image data - convert to base64 data URL
+                            inline_data = part["inline_data"]
+                            mime_type = inline_data.get("mime_type", "image/png")
+                            image_data = inline_data.get("data", "")
+                            if image_data:
+                                image_parts.append(f"data:{mime_type};base64,{image_data}")
+                    
+                    # If we have images, return them (prefer images over text for image generation models)
+                    if image_parts:
+                        if len(image_parts) == 1:
+                            # Single image - return as base64 data URL
+                            return image_parts[0]
+                        else:
+                            # Multiple images - return as dict with images array
+                            result = {
+                                "images": image_parts,
+                                "text": "\n".join(text_parts) if text_parts else None
+                            }
+                            return result
+                    
+                    # Otherwise return text
+                    if text_parts:
+                        return "\n".join(text_parts)
+                    
+                    # If no text or images, return empty string
+                    return ""
             
             raise RuntimeError(f"Unexpected Gemini API response format: {data}")
     
