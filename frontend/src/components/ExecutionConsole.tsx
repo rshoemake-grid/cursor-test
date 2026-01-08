@@ -387,12 +387,13 @@ export default function ExecutionConsole({
       {/* Header Bar */}
       <div className="px-4 py-2 border-b border-gray-800 flex items-center justify-between bg-gray-800">
         <div className="flex items-center gap-4">
+          {/* Console Label - Always visible */}
           <div className="flex items-center gap-2">
             <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
             <span className="font-semibold text-sm">Console</span>
           </div>
 
-          {/* Tab Switcher */}
+          {/* Chat Tab */}
           <div className="flex items-center gap-1 bg-gray-900 rounded-lg p-1">
             <button
               onClick={() => {
