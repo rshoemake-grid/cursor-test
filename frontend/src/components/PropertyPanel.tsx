@@ -154,6 +154,7 @@ export default function PropertyPanel({ selectedNodeId, setSelectedNodeId, selec
   const [filePatternValue, setFilePatternValue] = useState('')
   const [modeValue, setModeValue] = useState('read')
   const [overwriteValue, setOverwriteValue] = useState(true)
+  const [overwriteValue, setOverwriteValue] = useState(true)
   
   // Sync all local state with node data only when a different node is selected
   // This prevents flickering while typing
@@ -181,6 +182,7 @@ export default function PropertyPanel({ selectedNodeId, setSelectedNodeId, selec
       setFilePathValue('')
       setFilePatternValue('')
       setModeValue('read')
+      setOverwriteValue(true)
       return
     }
     
@@ -303,6 +305,7 @@ export default function PropertyPanel({ selectedNodeId, setSelectedNodeId, selec
       }
       // Mode is not an input field, so always sync
       setModeValue(inputConfig.mode || 'read')
+      setOverwriteValue(inputConfig.overwrite !== undefined ? inputConfig.overwrite : true)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedNodeId]) // Only depend on selectedNodeId, not the node data
@@ -1318,6 +1321,26 @@ export default function PropertyPanel({ selectedNodeId, setSelectedNodeId, selec
                 <option value="latin1">Latin-1</option>
               </select>
             </div>
+            {modeValue === 'write' && (
+              <div className="mt-3">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={overwriteValue}
+                    onChange={(e) => {
+                      const newValue = e.target.checked
+                      setOverwriteValue(newValue)
+                      handleConfigUpdate('input_config', 'overwrite', newValue)
+                    }}
+                    className="w-4 h-4 text-green-600 border-gray-300 rounded focus:ring-green-500"
+                  />
+                  <span className="text-sm font-medium text-gray-700">Overwrite existing file</span>
+                </label>
+                <p className="text-xs text-gray-500 mt-1 ml-6">
+                  If unchecked, file number will be incremented (e.g., file.jpg, file_1.jpg, file_2.jpg)
+                </p>
+              </div>
+            )}
           </div>
         )}
       </div>
