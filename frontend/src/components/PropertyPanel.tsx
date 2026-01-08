@@ -925,21 +925,24 @@ export default function PropertyPanel({ selectedNodeId, setSelectedNodeId, selec
               />
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Value</label>
-              <input
-                ref={conditionValueRef}
-                type="text"
-                value={conditionValueValue}
-                onChange={(e) => {
-                  const newValue = e.target.value
-                  setConditionValueValue(newValue)
-                  handleConfigUpdate('condition_config', 'value', newValue)
-                }}
-                placeholder="Value to compare"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-              />
-            </div>
+            {(selectedNode.data.condition_config?.condition_type !== 'empty' && 
+              selectedNode.data.condition_config?.condition_type !== 'not_empty') && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Value</label>
+                <input
+                  ref={conditionValueRef}
+                  type="text"
+                  value={conditionValueValue}
+                  onChange={(e) => {
+                    const newValue = e.target.value
+                    setConditionValueValue(newValue)
+                    handleConfigUpdate('condition_config', 'value', newValue)
+                  }}
+                  placeholder="Value to compare"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                />
+              </div>
+            )}
           </>
         )}
 
