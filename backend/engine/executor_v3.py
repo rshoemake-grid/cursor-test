@@ -423,21 +423,34 @@ class WorkflowExecutorV3:
                         else:
                             # If there's a single input value, use it directly
                             if isinstance(node_inputs, dict):
-                                input_values = [v for v in node_inputs.values() if v not in (None, '', {})]
+                                # Filter out empty values, but keep base64 image strings
+                                input_values = []
+                                for v in node_inputs.values():
+                                    # Keep non-empty values, including base64 image strings
+                                    if v not in (None, '', {}) or (isinstance(v, str) and v.startswith('data:image/')):
+                                        input_values.append(v)
+                                
                                 if len(input_values) == 1:
                                     data_to_write = input_values[0]
-                                    await self._log("DEBUG", node.id, f"Using single non-empty input value (type: {type(data_to_write)})")
+                                    await self._log("DEBUG", node.id, f"Using single non-empty input value (type: {type(data_to_write)}, is_image: {isinstance(data_to_write, str) and data_to_write.startswith('data:image/')})")
                                 elif len(input_values) > 1:
-                                    # Multiple non-empty inputs - use the entire dict
-                                    data_to_write = {k: v for k, v in node_inputs.items() if v not in (None, '', {})}
-                                    await self._log("DEBUG", node.id, f"Using filtered dict with multiple values (keys: {list(data_to_write.keys()) if isinstance(data_to_write, dict) else 'not dict'})")
+                                    # Multiple non-empty inputs - check if one is an image
+                                    # Prefer image data if present
+                                    image_value = next((v for v in input_values if isinstance(v, str) and v.startswith('data:image/')), None)
+                                    if image_value:
+                                        data_to_write = image_value
+                                        await self._log("DEBUG", node.id, f"Found image in multiple inputs, using image data")
+                                    else:
+                                        # Use the entire dict but filter out empty values
+                                        data_to_write = {k: v for k, v in node_inputs.items() if v not in (None, '', {}) or (isinstance(v, str) and v.startswith('data:image/'))}
+                                        await self._log("DEBUG", node.id, f"Using filtered dict with multiple values (keys: {list(data_to_write.keys()) if isinstance(data_to_write, dict) else 'not dict'})")
                                 else:
                                     data_to_write = None
                                     await self._log("WARNING", node.id, "All input values are empty")
                             else:
-                                # Not a dict - use directly
+                                # Not a dict - use directly (could be a base64 image string)
                                 data_to_write = node_inputs
-                                await self._log("DEBUG", node.id, f"Using non-dict input directly (type: {type(data_to_write)})")
+                                await self._log("DEBUG", node.id, f"Using non-dict input directly (type: {type(data_to_write)}, is_image: {isinstance(data_to_write, str) and data_to_write.startswith('data:image/')})")
                     else:
                         # No inputs or all inputs are empty
                         data_to_write = None
