@@ -612,6 +612,54 @@ class LocalFileSystemHandler(InputSourceHandler):
                 }
             else:
                 # Read entire file (default behavior)
+                # First check if file is an image by extension or magic bytes
+                is_image = False
+                image_extensions = {'.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp', '.svg', '.ico', '.heic', '.heif'}
+                if path.suffix.lower() in image_extensions:
+                    is_image = True
+                else:
+                    # Check magic bytes to detect image files
+                    try:
+                        with open(path, 'rb') as f:
+                            magic_bytes = f.read(8)
+                            # PNG: \x89PNG\r\n\x1a\n
+                            # JPEG: \xff\xd8\xff
+                            # GIF: GIF87a or GIF89a
+                            # WebP: RIFF....WEBP
+                            if (magic_bytes[:4] == b'\x89PNG' or 
+                                magic_bytes[:3] == b'\xff\xd8\xff' or
+                                magic_bytes[:4] == b'GIF8' or
+                                (magic_bytes[:4] == b'RIFF' and b'WEBP' in magic_bytes)):
+                                is_image = True
+                    except Exception:
+                        pass
+                
+                # If it's an image, read as binary and convert to base64 data URL
+                if is_image:
+                    import base64
+                    with open(path, 'rb') as f:
+                        image_data = f.read()
+                    
+                    # Detect MIME type
+                    mimetype, _ = mimetypes.guess_type(str(path))
+                    if not mimetype:
+                        ext = path.suffix.lower()
+                        if ext in ['.jpg', '.jpeg']:
+                            mimetype = 'image/jpeg'
+                        elif ext == '.png':
+                            mimetype = 'image/png'
+                        elif ext == '.gif':
+                            mimetype = 'image/gif'
+                        elif ext == '.webp':
+                            mimetype = 'image/webp'
+                        else:
+                            mimetype = 'image/jpeg'  # Default
+                    
+                    # Convert to base64 data URL
+                    base64_data = base64.b64encode(image_data).decode('utf-8')
+                    return f"data:{mimetype};base64,{base64_data}"
+                
+                # Otherwise, read as text
                 with open(path, 'r', encoding=encoding) as f:
                     content = f.read()
                 
