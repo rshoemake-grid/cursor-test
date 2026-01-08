@@ -26,6 +26,13 @@ class ConditionAgent(BaseAgent):
         
     async def execute(self, inputs: Dict[str, Any]) -> Dict[str, Any]:
         """Evaluate the condition and return branch information"""
+        
+        # Validate that condition config has required fields
+        if not self.config.field:
+            raise ValueError(
+                f"Condition node {self.node.id} requires 'field' to be set in condition_config. "
+                f"Please configure the condition field in the node properties."
+            )
         self.validate_inputs(inputs)
         
         # Get the field value to evaluate - support dot notation for nested access
