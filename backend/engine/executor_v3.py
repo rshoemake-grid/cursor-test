@@ -382,13 +382,14 @@ class WorkflowExecutorV3:
                     has_content = False
                     if node_inputs:
                         if isinstance(node_inputs, dict):
-                            # Check if dict has any non-empty values
+                            # Check if dict has any non-empty values (including base64 image strings)
                             has_content = any(
-                                v is not None and v != '' and v != {} 
+                                (v is not None and v != '' and v != {}) or (isinstance(v, str) and v.startswith('data:image/'))
                                 for v in node_inputs.values()
                             )
                         else:
-                            has_content = True
+                            # Non-dict input (could be a base64 image string)
+                            has_content = node_inputs not in (None, '', {}) or (isinstance(node_inputs, str) and node_inputs.startswith('data:image/'))
                     
                     if has_content:
                         await self._log("DEBUG", node.id, f"Node inputs keys: {list(node_inputs.keys()) if isinstance(node_inputs, dict) else 'not a dict'}")
