@@ -23,6 +23,7 @@ export default function MarketplacePage() {
   const [category, setCategory] = useState<string>('');
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState('popular');
+  const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(null);
   
   const { token } = useAuth();
   const navigate = useNavigate();
@@ -101,12 +102,23 @@ export default function MarketplacePage() {
               <h1 className="text-3xl font-bold text-gray-900">Workflow Marketplace</h1>
               <p className="text-gray-600 mt-1">Discover and use pre-built workflow templates</p>
             </div>
-            <button
-              onClick={() => navigate('/')}
-              className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
-            >
-              My Workflows
-            </button>
+            <div className="flex items-center gap-3">
+              {selectedTemplateId && (
+                <button
+                  onClick={() => useTemplate(selectedTemplateId)}
+                  className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors flex items-center gap-2"
+                >
+                  <Download className="w-4 h-4" />
+                  Load Workflow
+                </button>
+              )}
+              <button
+                onClick={() => navigate('/')}
+                className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300"
+              >
+                My Workflows
+              </button>
+            </div>
           </div>
 
           {/* Search and Filters */}
@@ -169,7 +181,15 @@ export default function MarketplacePage() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {templates.map((template) => (
-              <div key={template.id} className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow overflow-hidden">
+              <div 
+                key={template.id} 
+                onClick={() => setSelectedTemplateId(template.id)}
+                className={`bg-white rounded-lg shadow-md hover:shadow-lg transition-all overflow-hidden cursor-pointer border-2 ${
+                  selectedTemplateId === template.id 
+                    ? 'border-primary-500 ring-2 ring-primary-200' 
+                    : 'border-transparent'
+                }`}
+              >
                 {/* Header */}
                 <div className="p-6">
                   <div className="flex items-start justify-between mb-3">
@@ -220,13 +240,15 @@ export default function MarketplacePage() {
 
                 {/* Footer */}
                 <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">
-                  <button
-                    onClick={() => useTemplate(template.id)}
-                    className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
-                  >
-                    <Download className="w-4 h-4" />
-                    Use This Template
-                  </button>
+                  <div className={`text-sm text-center py-2 px-4 rounded-lg ${
+                    selectedTemplateId === template.id 
+                      ? 'bg-primary-100 text-primary-700 font-medium' 
+                      : 'text-gray-500'
+                  }`}>
+                    {selectedTemplateId === template.id 
+                      ? 'Selected - Click "Load Workflow" above to use' 
+                      : 'Click to select'}
+                  </div>
                 </div>
               </div>
             ))}
