@@ -56,14 +56,42 @@ export default function WorkflowList({ onSelectWorkflow, onBack }: WorkflowListP
     }
   }
 
-  const handleDuplicate = async (id: string) => {
+  const handleBulkDuplicate = async () => {
+    if (selectedIds.size === 0) {
+      showWarning('Please select at least one workflow to duplicate')
+      return
+    }
+
+    const count = selectedIds.size
+    const confirmed = await showConfirm(
+      `Duplicate ${count} workflow(s)? Each will be created with "-copy" appended to the name.`,
+      { title: 'Duplicate Workflows', confirmText: 'Duplicate', cancelText: 'Cancel' }
+    )
+    if (!confirmed) return
+
     try {
-      const duplicated = await api.duplicateWorkflow(id)
-      // Reload workflows to show the new duplicate
+      const ids = Array.from(selectedIds)
+      const duplicatedNames: string[] = []
+      
+      // Duplicate each selected workflow
+      for (const id of ids) {
+        try {
+          const duplicated = await api.duplicateWorkflow(id)
+          duplicatedNames.push(duplicated.name)
+        } catch (error: any) {
+          showError(`Failed to duplicate workflow ${id}: ${error.message}`)
+        }
+      }
+      
+      // Reload workflows to show the new duplicates
       await loadWorkflows()
-      showSuccess(`Workflow duplicated as "${duplicated.name}"`)
+      setSelectedIds(new Set())
+      
+      if (duplicatedNames.length > 0) {
+        showSuccess(`Successfully duplicated ${duplicatedNames.length} workflow(s)`)
+      }
     } catch (error: any) {
-      showError('Failed to duplicate workflow: ' + error.message)
+      showError('Failed to duplicate workflows: ' + error.message)
     }
   }
 
@@ -179,6 +207,13 @@ export default function WorkflowList({ onSelectWorkflow, onBack }: WorkflowListP
             <div className="flex items-center gap-3">
               <span className="text-sm text-gray-600">{selectedIds.size} selected</span>
               <button
+                onClick={handleBulkDuplicate}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2"
+              >
+                <Copy className="w-4 h-4" />
+                Duplicate Selected ({selectedIds.size})
+              </button>
+              <button
                 onClick={handleBulkDelete}
                 className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 flex items-center gap-2"
               >
@@ -252,28 +287,16 @@ export default function WorkflowList({ onSelectWorkflow, onBack }: WorkflowListP
                     )}
                   </div>
                 </div>
-                <div className="flex items-center gap-1 flex-shrink-0">
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      workflow.id && handleDuplicate(workflow.id)
-                    }}
-                    className="text-blue-600 hover:bg-blue-50 p-1 rounded"
-                    title="Duplicate workflow"
-                  >
-                    <Copy className="w-4 h-4" />
-                  </button>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      workflow.id && handleDelete(workflow.id)
-                    }}
-                    className="text-red-600 hover:bg-red-50 p-1 rounded"
-                    title="Delete workflow"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                </div>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    workflow.id && handleDelete(workflow.id)
+                  }}
+                  className="text-red-600 hover:bg-red-50 p-1 rounded flex-shrink-0"
+                  title="Delete workflow"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
               </div>
 
               <div 
