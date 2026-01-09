@@ -3,6 +3,7 @@ Unified LLM Agent - Supports OpenAI, Anthropic, and Custom providers
 """
 from typing import Any, Dict, Optional
 import os
+import asyncio
 import httpx
 from .base import BaseAgent
 from ..models.schemas import Node
