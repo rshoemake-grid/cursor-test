@@ -154,6 +154,8 @@ class UnifiedLLMAgent(BaseAgent):
         print(f"   Agent config model: {self.config.model}")
         print(f"   LLM config model: {self.llm_config.get('model')}")
         print(f"   User ID: {self.user_id}")
+        print(f"   Input keys: {list(inputs.keys())}")
+        print(f"   User message type: {type(user_message)}, is_list: {isinstance(user_message, list)}")
         
         # Try to find the provider that owns this model
         # This ensures we use the correct API for the selected model
@@ -248,16 +250,29 @@ class UnifiedLLMAgent(BaseAgent):
             
             print(f"⚠️ No provider found for model '{model}', using default provider: {provider_type}")
         
-        if provider_type == "openai":
-            return await self._execute_openai(user_message, model)
-        elif provider_type == "anthropic":
-            return await self._execute_anthropic(user_message, model)
-        elif provider_type == "gemini":
-            return await self._execute_gemini(user_message, model)
-        elif provider_type == "custom":
-            return await self._execute_custom(user_message, model)
-        else:
-            raise ValueError(f"Unknown provider type: {provider_type}")
+        # Execute based on provider type and ensure we never return None
+        try:
+            if provider_type == "openai":
+                result = await self._execute_openai(user_message, model)
+            elif provider_type == "anthropic":
+                result = await self._execute_anthropic(user_message, model)
+            elif provider_type == "gemini":
+                result = await self._execute_gemini(user_message, model)
+            elif provider_type == "custom":
+                result = await self._execute_custom(user_message, model)
+            else:
+                raise ValueError(f"Unknown provider type: {provider_type}")
+            
+            # Ensure result is never None
+            if result is None:
+                print(f"⚠️ Provider '{provider_type}' returned None, converting to empty string")
+                return ""
+            
+            print(f"✅ Agent execution completed, result type: {type(result)}, length: {len(str(result)) if result else 0}")
+            return result
+        except Exception as e:
+            print(f"❌ Agent execution failed: {type(e).__name__}: {str(e)}")
+            raise
     
     async def _execute_openai(self, user_message: Any, model: str) -> Any:
         """Execute using OpenAI API - supports text and vision models"""
