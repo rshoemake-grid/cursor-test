@@ -571,8 +571,18 @@ class UnifiedLLMAgent(BaseAgent):
                     # This ensures downstream nodes receive a value
                     print(f"⚠️ Gemini returned no content (no text or images), returning empty string")
                     return ""
+            else:
+                # No candidates in response - check for errors first
+                if "error" in data:
+                    error_msg = data["error"].get("message", "Unknown error")
+                    raise RuntimeError(f"Gemini API error: {error_msg}")
+                # No candidates and no error - return empty string instead of None
+                print(f"⚠️ Gemini API response has no candidates. Response keys: {list(data.keys())}")
+                return ""
             
-            raise RuntimeError(f"Unexpected Gemini API response format: {data}")
+            # Fallback - should never reach here, but ensure we never return None
+            print(f"⚠️ Unexpected Gemini API response format: {data}")
+            return ""
     
     async def _execute_custom(self, user_message: Any, model: str) -> Any:
         """Execute using custom OpenAI-compatible API - supports text and vision models"""
