@@ -717,6 +717,9 @@ class UnifiedLLMAgent(BaseAgent):
                                     logger.error(error_msg)
                                     raise RuntimeError(error_msg)
                             
+                            # Update base64_size after potential resize
+                            base64_size = len(base64_data)
+                            
                             # Also check base64 size directly as a final safety check
                             # Very large base64 strings will definitely exceed the limit
                             if base64_size > 4_000_000:  # ~4MB base64 ≈ 1M tokens
@@ -729,15 +732,17 @@ class UnifiedLLMAgent(BaseAgent):
                                     raise RuntimeError(error_msg)
                             
                             # Add image to parts (using resized base64_data if resize occurred)
+                            # IMPORTANT: base64_data has been updated by resize logic if needs_resize was True
                             parts.append({
                                 "inline_data": {
                                     "mime_type": mimetype,
-                                    "data": base64_data
+                                    "data": base64_data  # This is the resized data if resize occurred
                                 }
                             })
-                            logger.debug(f"   Added inline_data part: mime_type={mimetype}, data_length={len(base64_data)}")
                             if needs_resize:
-                                logger.info(f"   Using resized image data: {len(base64_data):,} chars")
+                                logger.info(f"   Added RESIZED image to parts: mime_type={mimetype}, data_length={len(base64_data):,} chars")
+                            else:
+                                logger.debug(f"   Added inline_data part: mime_type={mimetype}, data_length={len(base64_data)}")
                         except RuntimeError:
                             # Re-raise size validation errors
                             raise
