@@ -584,14 +584,31 @@ class UnifiedLLMAgent(BaseAgent):
                                 # Actually, we want much smaller. Let's target ~2,000px max
                                 max_dimension = 2000  # ~2,000 pixels per side = ~4 tiles per side = ~1,361 tokens
                                 
-                                logger.info(f"   PIL_AVAILABLE: {PIL_AVAILABLE}")
-                                if PIL_AVAILABLE:
-                                    # Resize image to fit within token limit
+                                logger.warning(f"   ===== RESIZE NEEDED! ===== PIL_AVAILABLE: {PIL_AVAILABLE}")
+                                if not PIL_AVAILABLE:
+                                    logger.error(f"   PIL/Pillow is NOT available! Cannot resize image.")
+                                    error_msg = (
+                                        f"Image is too large and PIL/Pillow is not available for automatic resizing. "
+                                        f"Please install Pillow (pip install Pillow) or resize the image manually to approximately 2000x2000 pixels or smaller."
+                                    )
+                                    logger.error(error_msg)
+                                    raise RuntimeError(error_msg)
+                                
+                                # PIL is available, proceed with resize
+                                logger.info(f"   Starting image resize process...")
+                                if estimated_tokens is not None:
                                     logger.warning(
-                                        f"Image is too large ({width}x{height} pixels ≈ {estimated_tokens:,} tokens, "
+                                        f"   Image is too large ({width}x{height} pixels ≈ {estimated_tokens:,} tokens, "
                                         f"total with text ≈ {total_estimated_tokens:,} tokens, limit is 1,048,576). "
                                         f"Resizing to fit within limit (target: ~{max_dimension}x{max_dimension} pixels)."
                                     )
+                                else:
+                                    logger.warning(
+                                        f"   Image appears too large (base64_size={base64_size:,} chars). "
+                                        f"Resizing to fit within limit (target: ~{max_dimension}x{max_dimension} pixels)."
+                                    )
+                                
+                                if PIL_AVAILABLE:
                                     
                                     try:
                                         # Use already decoded image if available, otherwise decode
