@@ -505,21 +505,21 @@ class UnifiedLLMAgent(BaseAgent):
             request_data["systemInstruction"] = {
                 "parts": [{"text": self.config.system_prompt}]
             }
-            logger.debug(f"Gemini system instruction: {self.config.system_prompt}")
+            logger.info(f"Gemini system instruction: {self.config.system_prompt}")
         
-        # Log the user message parts that will be sent
-        logger.debug(f"Gemini user message parts ({len(parts)} total):")
+        # Log the user message parts that will be sent (use INFO so it shows in execution logs)
+        logger.info(f"Gemini user message parts ({len(parts)} total):")
         for i, part in enumerate(parts):
             if "text" in part:
                 text_preview = part["text"][:500] + "..." if len(part["text"]) > 500 else part["text"]
-                logger.debug(f"   Part {i}: text ({len(part['text'])} chars) - {text_preview}")
+                logger.info(f"   Part {i}: text ({len(part['text'])} chars) - {text_preview}")
             elif "inline_data" in part:
                 inline_data = part["inline_data"]
                 data_length = len(inline_data.get("data", ""))
-                logger.debug(f"   Part {i}: inline_data (mime_type={inline_data.get('mime_type')}, data_length={data_length} chars)")
+                logger.info(f"   Part {i}: inline_data (mime_type={inline_data.get('mime_type')}, data_length={data_length} chars)")
             elif "file_data" in part:
                 file_data = part["file_data"]
-                logger.debug(f"   Part {i}: file_data (file_uri={file_data.get('file_uri', '')[:100]}...)")
+                logger.info(f"   Part {i}: file_data (file_uri={file_data.get('file_uri', '')[:100]}...)")
         
         # Add generation config
         generation_config = {}
