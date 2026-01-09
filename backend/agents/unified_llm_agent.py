@@ -524,37 +524,41 @@ class UnifiedLLMAgent(BaseAgent):
                             
                             # Calculate token count if we have dimensions
                             needs_resize = False
+                            estimated_tokens = None
+                            total_estimated_tokens = None
+                            text_tokens = 0
+                            
+                            # Estimate text content tokens (rough estimate: ~4 chars per token)
+                            if self.config.system_prompt:
+                                text_tokens += len(self.config.system_prompt) // 4
+                            # Estimate tokens from text parts in user message
+                            for part in parts:
+                                if "text" in part:
+                                    text_tokens += len(part["text"]) // 4
+                            
                             if width and height:
                                 tiles_per_width = (width + 511) // 512  # Round up
                                 tiles_per_height = (height + 511) // 512  # Round up
                                 total_tiles = tiles_per_width * tiles_per_height
                                 estimated_tokens = total_tiles * 85 + 85
                                 
-                                logger.info(f"   Image dimensions: {width}x{height} pixels, {total_tiles} tiles, ~{estimated_tokens:,} tokens")
-                                
-                                # Estimate text content tokens (rough estimate: ~4 chars per token)
-                                text_tokens = 0
-                                if self.config.system_prompt:
-                                    text_tokens += len(self.config.system_prompt) // 4
-                                # Estimate tokens from text parts in user message
-                                for part in parts:
-                                    if "text" in part:
-                                        text_tokens += len(part["text"]) // 4
-                                
                                 # Total estimated tokens including text
                                 total_estimated_tokens = estimated_tokens + text_tokens
                                 
+                                logger.info(f"   Image dimensions: {width}x{height} pixels, {total_tiles} tiles, ~{estimated_tokens:,} tokens")
                                 logger.info(f"   Estimated tokens: image={estimated_tokens:,}, text={text_tokens:,}, total={total_estimated_tokens:,}")
                                 
                                 # Check if image is too large and resize if needed
                                 # Be very aggressive - resize if image alone exceeds 300k, or total exceeds 600k
                                 if estimated_tokens > 300_000 or total_estimated_tokens > 600_000:
                                     needs_resize = True
+                                    logger.warning(f"   Image exceeds token limits - resize needed!")
                             else:
                                 # If we can't parse dimensions, check base64 size as fallback
                                 # Very large base64 strings likely mean large images
-                                if base64_size > 2_000_000:  # ~2MB base64
-                                    logger.warning(f"   Cannot parse image dimensions, but base64 size ({base64_size:,} chars) suggests large image. Attempting resize...")
+                                logger.warning(f"   Could not parse image dimensions (width={width}, height={height})")
+                                if base64_size > 1_000_000:  # Lower threshold: ~1MB base64
+                                    logger.warning(f"   Base64 size ({base64_size:,} chars) suggests large image. Attempting resize...")
                                     needs_resize = True
                                     # Estimate dimensions from base64 size
                                     estimated_original_size = int(base64_size * 0.75)
@@ -565,6 +569,12 @@ class UnifiedLLMAgent(BaseAgent):
                                     estimated_dimension = int((estimated_pixels) ** 0.5)
                                     width = estimated_dimension
                                     height = estimated_dimension
+                                    # Estimate tokens for logging
+                                    tiles_per_side = (estimated_dimension + 511) // 512
+                                    estimated_tiles = tiles_per_side * tiles_per_side
+                                    estimated_tokens = estimated_tiles * 85 + 85
+                                    total_estimated_tokens = estimated_tokens + text_tokens
+                                    logger.info(f"   Estimated dimensions: ~{width}x{height} pixels, ~{estimated_tokens:,} tokens")
                             
                             if needs_resize:
                                 # Calculate target dimensions to stay under limit
