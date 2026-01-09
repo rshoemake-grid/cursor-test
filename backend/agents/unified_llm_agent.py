@@ -808,18 +808,27 @@ class UnifiedLLMAgent(BaseAgent):
         if has_images:
             content = []
             if text_parts:
-                text_content = "\n".join(text_parts)
+                # Combine all text parts (prompt + input data) with double newline to separate prompt from data
+                text_content = "\n\n".join(text_parts)
                 content.append({
                     "type": "text",
                     "text": text_content
                 })
-                logger.debug(f"Built vision message: {len(image_content)} images, text length: {len(text_content)}")
+                logger.info(f"Built vision message: {len(image_content)} images, text length: {len(text_content)} (includes prompt: {bool(self.config.system_prompt)})")
             else:
-                content.append({
-                    "type": "text",
-                    "text": "Process this image"
-                })
-                logger.debug(f"Built vision message: {len(image_content)} images, no text (using default)")
+                # If no text parts but we have a system prompt, use it
+                if self.config.system_prompt:
+                    content.append({
+                        "type": "text",
+                        "text": self.config.system_prompt
+                    })
+                    logger.info(f"Built vision message: {len(image_content)} images, using system prompt only")
+                else:
+                    content.append({
+                        "type": "text",
+                        "text": "Process this image"
+                    })
+                    logger.debug(f"Built vision message: {len(image_content)} images, no text (using default)")
             content.extend(image_content)
             return content
         
