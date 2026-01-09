@@ -649,6 +649,18 @@ class UnifiedLLMAgent(BaseAgent):
                     # For other errors, don't retry
                     if response.status_code != 200:
                         error_text = response.text[:500] if response.text else "No error message"
+                        # Try to parse JSON error response to extract user-friendly message
+                        try:
+                            error_data = response.json()
+                            if "error" in error_data and isinstance(error_data["error"], dict):
+                                error_message = error_data["error"].get("message", error_text)
+                                error_code = error_data["error"].get("code", response.status_code)
+                                raise RuntimeError(
+                                    f"Gemini API error ({error_code}): {error_message}"
+                                )
+                        except (ValueError, KeyError, TypeError):
+                            # If JSON parsing fails, use the raw error text
+                            pass
                         raise RuntimeError(
                             f"Gemini API request failed with status {response.status_code}: {error_text}"
                         )
