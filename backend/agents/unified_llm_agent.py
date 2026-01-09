@@ -552,10 +552,11 @@ class UnifiedLLMAgent(BaseAgent):
                                 logger.info(f"   Estimated tokens: image={estimated_tokens:,}, text={text_tokens:,}, total={total_estimated_tokens:,}")
                                 
                                 # Check if image is too large and resize if needed
-                                # Be very aggressive - resize if image alone exceeds 300k, or total exceeds 600k
-                                if estimated_tokens > 300_000 or total_estimated_tokens > 600_000:
+                                # Be VERY aggressive - resize if image alone exceeds 200k, or total exceeds 400k
+                                # This ensures we stay well under the 1M token limit
+                                if estimated_tokens > 200_000 or total_estimated_tokens > 400_000:
                                     needs_resize = True
-                                    logger.warning(f"   Image exceeds token limits - resize needed!")
+                                    logger.warning(f"   Image exceeds token limits (image={estimated_tokens:,}, total={total_estimated_tokens:,}) - resize needed!")
                             else:
                                 # If we can't parse dimensions, check base64 size as fallback
                                 # Very large base64 strings likely mean large images
