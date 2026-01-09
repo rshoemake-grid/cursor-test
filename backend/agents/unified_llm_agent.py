@@ -506,6 +506,11 @@ class UnifiedLLMAgent(BaseAgent):
             # Debug: Log response structure
             print(f"🔍 Gemini API response structure: candidates={len(data.get('candidates', []))}, keys={list(data.keys())}")
             
+            # Check for error in response
+            if "error" in data:
+                error_msg = data["error"].get("message", "Unknown error")
+                raise RuntimeError(f"Gemini API error: {error_msg}")
+            
             # Extract content from Gemini response - handle both text and image outputs
             if "candidates" in data and len(data["candidates"]) > 0:
                 candidate = data["candidates"][0]
