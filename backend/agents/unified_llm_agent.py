@@ -628,7 +628,9 @@ class UnifiedLLMAgent(BaseAgent):
                 # Check for finish reason - might indicate why no content
                 finish_reason = candidate.get("finishReason", "")
                 if finish_reason:
-                    logger.debug(f"   Finish reason: {finish_reason}")
+                    logger.info(f"   Gemini finish reason: {finish_reason}")
+                else:
+                    logger.info(f"   Gemini finish reason: (not provided)")
                 
                 if "content" in candidate and "parts" in candidate["content"]:
                     parts = candidate["content"]["parts"]
