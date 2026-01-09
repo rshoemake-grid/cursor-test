@@ -453,6 +453,12 @@ class UnifiedLLMAgent(BaseAgent):
     async def _execute_gemini(self, user_message: Any, model: str) -> Any:
         """Execute using Google Gemini API - supports text and vision models"""
         import base64
+        try:
+            from PIL import Image
+            import io
+            PIL_AVAILABLE = True
+        except ImportError:
+            PIL_AVAILABLE = False
         
         base_url = self.llm_config.get("base_url", "https://generativelanguage.googleapis.com/v1beta")
         api_key = self.llm_config["api_key"]
@@ -524,14 +530,77 @@ class UnifiedLLMAgent(BaseAgent):
                                 
                                 logger.info(f"   Image dimensions: {width}x{height} pixels, {total_tiles} tiles, ~{estimated_tokens:,} tokens")
                                 
-                                # Check if image is too large
+                                # Check if image is too large and resize if needed
                                 if estimated_tokens > 1_000_000:  # Leave some margin below 1,048,576
-                                    error_msg = (
-                                        f"Image is too large ({width}x{height} pixels ≈ {estimated_tokens:,} tokens, limit is 1,048,576). "
-                                        f"Please resize the image to approximately 5000x5000 pixels or smaller before sending."
-                                    )
-                                    logger.error(error_msg)
-                                    raise RuntimeError(error_msg)
+                                    # Calculate target dimensions to stay under limit
+                                    # Target: ~900,000 tokens max (safe margin)
+                                    max_tiles = (900_000 - 85) // 85  # ~10,588 tiles
+                                    max_dimension = int((max_tiles ** 0.5) * 512)  # ~5,200 pixels per side
+                                    
+                                    if PIL_AVAILABLE:
+                                        # Resize image to fit within token limit
+                                        logger.warning(
+                                            f"Image is too large ({width}x{height} pixels ≈ {estimated_tokens:,} tokens, limit is 1,048,576). "
+                                            f"Resizing to fit within limit (target: ~{max_dimension}x{max_dimension} pixels)."
+                                        )
+                                        
+                                        try:
+                                            # Decode image
+                                            decoded = base64.b64decode(base64_data)
+                                            img = Image.open(io.BytesIO(decoded))
+                                            
+                                            # Calculate new dimensions maintaining aspect ratio
+                                            if width > height:
+                                                new_width = max_dimension
+                                                new_height = int(height * (max_dimension / width))
+                                            else:
+                                                new_height = max_dimension
+                                                new_width = int(width * (max_dimension / height))
+                                            
+                                            # Resize image with high-quality resampling
+                                            img_resized = img.resize((new_width, new_height), Image.Resampling.LANCZOS)
+                                            
+                                            # Convert back to base64
+                                            output_buffer = io.BytesIO()
+                                            if mimetype == "image/png":
+                                                img_resized.save(output_buffer, format='PNG', optimize=True)
+                                            elif mimetype in ["image/jpeg", "image/jpg"]:
+                                                img_resized.save(output_buffer, format='JPEG', quality=85, optimize=True)
+                                            else:
+                                                # Default to PNG for other formats
+                                                img_resized.save(output_buffer, format='PNG', optimize=True)
+                                                mimetype = "image/png"
+                                            
+                                            # Update base64 data
+                                            base64_data = base64.b64encode(output_buffer.getvalue()).decode('utf-8')
+                                            
+                                            # Recalculate token count
+                                            new_tiles_per_width = (new_width + 511) // 512
+                                            new_tiles_per_height = (new_height + 511) // 512
+                                            new_total_tiles = new_tiles_per_width * new_tiles_per_height
+                                            new_estimated_tokens = new_total_tiles * 85 + 85
+                                            
+                                            logger.info(f"   Resized image to {new_width}x{new_height} pixels, {new_total_tiles} tiles, ~{new_estimated_tokens:,} tokens")
+                                            
+                                            # Update dimensions for logging
+                                            width = new_width
+                                            height = new_height
+                                            
+                                        except Exception as e:
+                                            logger.error(f"   Failed to resize image: {e}")
+                                            error_msg = (
+                                                f"Image is too large ({width}x{height} pixels ≈ {estimated_tokens:,} tokens, limit is 1,048,576) "
+                                                f"and automatic resizing failed. Please resize the image manually to approximately 5000x5000 pixels or smaller."
+                                            )
+                                            raise RuntimeError(error_msg)
+                                    else:
+                                        # PIL not available, raise error
+                                        error_msg = (
+                                            f"Image is too large ({width}x{height} pixels ≈ {estimated_tokens:,} tokens, limit is 1,048,576). "
+                                            f"Please install Pillow (pip install Pillow) to enable automatic resizing, or resize the image manually to approximately 5000x5000 pixels or smaller."
+                                        )
+                                        logger.error(error_msg)
+                                        raise RuntimeError(error_msg)
                             else:
                                 # Fallback: estimate from base64 size
                                 # Base64 increases size by ~33%, so original size ≈ base64_size * 0.75
