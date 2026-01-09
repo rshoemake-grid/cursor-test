@@ -550,8 +550,15 @@ class UnifiedLLMAgent(BaseAgent):
                                 if estimated_tokens > 300_000 or total_estimated_tokens > 600_000:
                                     # Calculate target dimensions to stay under limit
                                     # Target: ~200,000 tokens for image (leaves ~800k for text/prompt/other)
-                                    max_tiles = (200_000 - 85) // 85  # ~2,352 tiles
-                                    max_dimension = int((max_tiles ** 0.5) * 512)  # ~2,400 pixels per side
+                                    # Formula: tokens = (tiles_per_width * tiles_per_height * 85) + 85
+                                    # For square-ish images: tiles_per_side ≈ sqrt((tokens - 85) / 85)
+                                    # max_dimension = tiles_per_side * 512
+                                    target_tokens = 200_000
+                                    max_tiles_total = (target_tokens - 85) // 85  # ~2,352 tiles total
+                                    tiles_per_side = int((max_tiles_total ** 0.5))  # ~48 tiles per side
+                                    max_dimension = tiles_per_side * 512  # ~24,576 pixels - WRONG!
+                                    # Actually, we want much smaller. Let's target ~2,000px max
+                                    max_dimension = 2000  # ~2,000 pixels per side = ~4 tiles per side = ~1,361 tokens
                                     
                                     if PIL_AVAILABLE:
                                         # Resize image to fit within token limit
