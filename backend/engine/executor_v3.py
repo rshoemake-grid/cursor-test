@@ -610,17 +610,9 @@ class WorkflowExecutorV3:
                 
                 # Execute based on node type
                 if node.type in [NodeType.AGENT, NodeType.CONDITION, NodeType.LOOP]:
-                    # Create log callback to forward agent logs to execution logs
-                    # Use fire-and-forget to prevent blocking - don't await the log call
-                    async def agent_log_callback(level: str, node_id: str, message: str):
-                        try:
-                            # Create task to run log in background without blocking
-                            asyncio.create_task(self._log(level, node_id, message))
-                        except Exception as e:
-                            # Don't let logging failures break execution
-                            logger.error(f"Failed to forward agent log: {e}")
-                    
-                    agent = AgentRegistry.get_agent(node, llm_config=self.llm_config, user_id=self.user_id, log_callback=agent_log_callback)
+                    # Temporarily disable log callback to prevent hanging - use regular logger instead
+                    # TODO: Re-enable callback once we can ensure it doesn't block
+                    agent = AgentRegistry.get_agent(node, llm_config=self.llm_config, user_id=self.user_id, log_callback=None)
                     
                     # Log input data for debugging
                     await self._log("DEBUG", node.id, f"Agent received inputs: {list(node_inputs.keys())}")
