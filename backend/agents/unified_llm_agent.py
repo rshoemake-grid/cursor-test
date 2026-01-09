@@ -457,8 +457,10 @@ class UnifiedLLMAgent(BaseAgent):
             from PIL import Image
             import io
             PIL_AVAILABLE = True
-        except ImportError:
+            logger.debug("PIL/Pillow is available for image resizing")
+        except ImportError as e:
             PIL_AVAILABLE = False
+            logger.warning(f"PIL/Pillow is NOT available for image resizing: {e}. Install with: pip install Pillow")
         
         base_url = self.llm_config.get("base_url", "https://generativelanguage.googleapis.com/v1beta")
         api_key = self.llm_config["api_key"]
