@@ -156,6 +156,10 @@ export default function ExecutionConsole({
 
   const activeWorkflowTab = workflowTabs.find(tab => tab.workflowId === activeWorkflowId)
   const activeExecution = activeWorkflowTab?.executions.find(e => e.id === activeWorkflowTab.activeExecutionId) || activeWorkflowTab?.executions[0]
+  // Ensure logs array is initialized for activeExecution
+  const activeExecutionWithLogs = activeExecution && (!activeExecution.logs || !Array.isArray(activeExecution.logs))
+    ? { ...activeExecution, logs: [] }
+    : activeExecution
   
   // Get active execution from execution tabs if one is selected
   const activeExecutionTab = executionTabs.find(tab => tab.executionId === activeExecutionTabId)
@@ -183,7 +187,7 @@ export default function ExecutionConsole({
         }
         return exec
       })()
-    : activeExecution
+    : activeExecutionWithLogs
   
   // Track initial execution IDs when component mounts or workflow changes
   const initialExecutionIds = useRef<Set<string>>(new Set())
