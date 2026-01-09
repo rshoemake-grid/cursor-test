@@ -50,15 +50,13 @@ const PROVIDER_TEMPLATES = {
       // Gemini 3.0 models
       'gemini-3-pro-preview',
       'gemini-3-flash-preview',
-      'gemini-3-pro-image-preview',
+      'gemini-3-pro-image-preview', // Nano Banana Pro
       // Gemini 2.5 models
       'gemini-2.5-pro',
       'gemini-2.5-flash',
       'gemini-2.5-flash-lite',
-      'gemini-2.5-flash-image',
-      'gemini-2.5-flash-preview-09-2025',
-      // Image generation models
-      'nano-banana'
+      'gemini-2.5-flash-image', // Nano Banana
+      'gemini-2.5-flash-preview-09-2025'
     ]
   },
   custom: {
