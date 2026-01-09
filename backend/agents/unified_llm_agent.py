@@ -727,6 +727,12 @@ class UnifiedLLMAgent(BaseAgent):
         
         logger.debug(f"_build_user_message: inputs keys={list(inputs.keys())}")
         
+        # Add system prompt as user instruction if provided (some models don't support system prompts)
+        # For vision models, we'll add it as text in the user message
+        if self.config.system_prompt:
+            text_parts.append(self.config.system_prompt)
+            logger.debug(f"   Added system prompt to user message: {len(self.config.system_prompt)} chars")
+        
         for key, value in inputs.items():
             # Check if value is an image (base64, URL, or binary)
             is_image = False
