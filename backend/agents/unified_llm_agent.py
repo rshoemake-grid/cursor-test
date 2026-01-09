@@ -486,48 +486,89 @@ class UnifiedLLMAgent(BaseAgent):
                             # - Each tile = 85 tokens
                             # - Base image = 85 tokens
                             # Max tokens = 1,048,576
-                            # So max tiles = (1,048,576 - 85) / 85 ≈ 12,336 tiles
-                            # Max dimensions ≈ sqrt(12,336) * 512 ≈ 5,600 pixels per side
                             
-                            # Estimate image size from base64 data
-                            # Base64 increases size by ~33%, so original size ≈ base64_size * 0.75
                             base64_size = len(base64_data)
-                            estimated_original_size = int(base64_size * 0.75)
                             
-                            # For JPEG: rough estimate: width * height * 3 bytes (RGB) ≈ file_size
-                            # For PNG: can be larger, but let's use a conservative estimate
-                            # Assume average compression ratio of 10:1 for JPEG, 3:1 for PNG
-                            if mimetype == "image/jpeg":
-                                estimated_pixels = estimated_original_size * 10  # JPEG compression
+                            # Try to get actual image dimensions from headers
+                            width = None
+                            height = None
+                            try:
+                                decoded = base64.b64decode(base64_data)
+                                
+                                # Parse PNG dimensions (bytes 16-23 after PNG signature)
+                                if mimetype == "image/png" and decoded[:8] == b'\x89PNG\r\n\x1a\n':
+                                    if len(decoded) >= 24:
+                                        width = int.from_bytes(decoded[16:20], 'big')
+                                        height = int.from_bytes(decoded[20:24], 'big')
+                                
+                                # Parse JPEG dimensions (more complex, need to find SOF marker)
+                                elif mimetype in ["image/jpeg", "image/jpg"] and decoded[:2] == b'\xff\xd8':
+                                    # JPEG dimensions are in SOF (Start of Frame) markers
+                                    # Look for SOF0-SOF15 markers (0xFFC0-0xFFCF)
+                                    pos = 2
+                                    while pos < len(decoded) - 8:
+                                        if decoded[pos] == 0xFF and decoded[pos+1] >= 0xC0 and decoded[pos+1] <= 0xCF:
+                                            height = int.from_bytes(decoded[pos+5:pos+7], 'big')
+                                            width = int.from_bytes(decoded[pos+7:pos+9], 'big')
+                                            break
+                                        pos += 1
+                            except Exception as e:
+                                logger.debug(f"   Could not parse image dimensions: {e}")
+                            
+                            # Calculate token count if we have dimensions
+                            if width and height:
+                                tiles_per_width = (width + 511) // 512  # Round up
+                                tiles_per_height = (height + 511) // 512  # Round up
+                                total_tiles = tiles_per_width * tiles_per_height
+                                estimated_tokens = total_tiles * 85 + 85
+                                
+                                logger.info(f"   Image dimensions: {width}x{height} pixels, {total_tiles} tiles, ~{estimated_tokens:,} tokens")
+                                
+                                # Check if image is too large
+                                if estimated_tokens > 1_000_000:  # Leave some margin below 1,048,576
+                                    error_msg = (
+                                        f"Image is too large ({width}x{height} pixels ≈ {estimated_tokens:,} tokens, limit is 1,048,576). "
+                                        f"Please resize the image to approximately 5000x5000 pixels or smaller before sending."
+                                    )
+                                    logger.error(error_msg)
+                                    raise RuntimeError(error_msg)
                             else:
-                                estimated_pixels = estimated_original_size * 3  # PNG compression
+                                # Fallback: estimate from base64 size
+                                # Base64 increases size by ~33%, so original size ≈ base64_size * 0.75
+                                estimated_original_size = int(base64_size * 0.75)
+                                
+                                # Conservative estimate: assume high-quality image
+                                # For JPEG: assume 2 bytes per pixel (compressed)
+                                # For PNG: assume 4 bytes per pixel (RGBA, compressed)
+                                if mimetype == "image/jpeg":
+                                    estimated_pixels = estimated_original_size * 2
+                                else:
+                                    estimated_pixels = estimated_original_size
+                                
+                                # Estimate dimensions (assume square-ish image)
+                                estimated_dimension = int((estimated_pixels) ** 0.5)
+                                
+                                # Estimate token count
+                                tiles_per_side = (estimated_dimension + 511) // 512
+                                estimated_tiles = tiles_per_side * tiles_per_side
+                                estimated_tokens = estimated_tiles * 85 + 85
+                                
+                                logger.info(f"   Image size estimate: ~{estimated_dimension}x{estimated_dimension} pixels, ~{estimated_tokens:,} tokens")
+                                
+                                # Check if image is too large (conservative check)
+                                if estimated_tokens > 800_000:  # More conservative since we're estimating
+                                    error_msg = (
+                                        f"Image appears to be too large (estimated ~{estimated_dimension}x{estimated_dimension} pixels ≈ {estimated_tokens:,} tokens, limit is 1,048,576). "
+                                        f"Please resize or compress the image before sending."
+                                    )
+                                    logger.error(error_msg)
+                                    raise RuntimeError(error_msg)
                             
-                            # Estimate dimensions (assume square-ish image)
-                            estimated_dimension = int((estimated_pixels) ** 0.5)
-                            
-                            # Estimate token count
-                            tiles_per_side = (estimated_dimension + 511) // 512  # Round up
-                            estimated_tiles = tiles_per_side * tiles_per_side
-                            estimated_tokens = estimated_tiles * 85 + 85
-                            
-                            logger.info(f"   Image size estimate: {estimated_dimension}x{estimated_dimension} pixels, ~{estimated_tokens:,} tokens")
-                            
-                            # Check if image is too large
-                            if estimated_tokens > 1_000_000:  # Leave some margin below 1,048,576
+                            # Also check base64 size directly as a final safety check
+                            # Very large base64 strings will definitely exceed the limit
+                            if base64_size > 4_000_000:  # ~4MB base64 ≈ 1M tokens
                                 error_msg = (
-                                    f"Image is too large (estimated {estimated_tokens:,} tokens, limit is 1,048,576). "
-                                    f"Estimated dimensions: ~{estimated_dimension}x{estimated_dimension} pixels. "
-                                    f"Please resize the image to approximately 5000x5000 pixels or smaller before sending."
-                                )
-                                logger.error(error_msg)
-                                raise RuntimeError(error_msg)
-                            
-                            # Also check base64 size directly as a fallback
-                            # Base64 data itself contributes to token count (roughly 1 token per 4 base64 chars)
-                            base64_tokens = base64_size // 4
-                            if base64_tokens > 1_000_000:
-                                error_msg = (
-                                    f"Image base64 data is too large ({base64_size:,} chars ≈ {base64_tokens:,} tokens, limit is 1,048,576). "
+                                    f"Image base64 data is too large ({base64_size:,} chars). "
                                     f"Please compress or resize the image before sending."
                                 )
                                 logger.error(error_msg)
