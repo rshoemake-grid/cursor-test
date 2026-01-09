@@ -146,6 +146,25 @@ class UnifiedLLMAgent(BaseAgent):
         """Execute the LLM agent with configured provider"""
         self.validate_inputs(inputs)
         
+        # Debug logging - log input data
+        logger.debug(f"Agent node '{self.node_id}' received inputs:")
+        for key, value in inputs.items():
+            if isinstance(value, str):
+                # For strings, show preview (first 200 chars) and total length
+                preview = value[:200] + "..." if len(value) > 200 else value
+                logger.debug(f"   {key}: (str, length={len(value)}) {preview}")
+            elif isinstance(value, dict):
+                # For dicts, show keys and size
+                logger.debug(f"   {key}: (dict, keys={list(value.keys())}, size={len(str(value))} chars)")
+            elif isinstance(value, (list, tuple)):
+                # For lists, show length and type of items
+                logger.debug(f"   {key}: ({type(value).__name__}, length={len(value)}, item_types={[type(item).__name__ for item in value[:3]]})")
+            else:
+                # For other types, show type and string representation (limited)
+                value_str = str(value)
+                preview = value_str[:200] + "..." if len(value_str) > 200 else value_str
+                logger.debug(f"   {key}: ({type(value).__name__}) {preview}")
+        
         # Build the prompt from inputs
         user_message = self._build_user_message(inputs)
         
