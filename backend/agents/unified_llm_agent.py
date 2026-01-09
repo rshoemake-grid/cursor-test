@@ -715,6 +715,8 @@ class UnifiedLLMAgent(BaseAgent):
         image_content = []
         text_parts = []
         
+        print(f"🔍 _build_user_message: inputs keys={list(inputs.keys())}")
+        
         for key, value in inputs.items():
             # Check if value is an image (base64, URL, or binary)
             is_image = False
