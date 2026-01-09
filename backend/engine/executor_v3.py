@@ -625,10 +625,22 @@ class WorkflowExecutorV3:
                             preview = value_str[:200] + "..." if len(value_str) > 200 else value_str
                             await self._log("DEBUG", node.id, f"   {key}: ({type(value).__name__}) {preview}")
                     
+                    # Log agent configuration for debugging
+                    if hasattr(agent, 'config'):
+                        agent_config = agent.config
+                        if hasattr(agent_config, 'system_prompt') and agent_config.system_prompt:
+                            await self._log("INFO", node.id, f"Agent system prompt: {agent_config.system_prompt[:200]}...")
+                        else:
+                            await self._log("INFO", node.id, "Agent has no system prompt configured")
+                        if hasattr(agent_config, 'model'):
+                            await self._log("INFO", node.id, f"Agent model: {agent_config.model}")
+                    
                     try:
                         output = await agent.execute(node_inputs)
                     except Exception as agent_error:
+                        import traceback
                         await self._log("ERROR", node.id, f"Agent execution raised exception: {type(agent_error).__name__}: {str(agent_error)}")
+                        await self._log("DEBUG", node.id, f"Exception traceback: {traceback.format_exc()}")
                         raise
                     
                     # Ensure output is never None - convert to empty string if needed
