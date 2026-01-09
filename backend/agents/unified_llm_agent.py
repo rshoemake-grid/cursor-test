@@ -385,6 +385,24 @@ class UnifiedLLMAgent(BaseAgent):
         # Add system prompt if provided
         if self.config.system_prompt:
             request_data["system"] = self.config.system_prompt
+            logger.debug(f"Anthropic system prompt: {self.config.system_prompt}")
+        
+        # Log user message
+        if isinstance(user_message, list):
+            logger.debug(f"Anthropic user message (vision): {len(user_message)} items")
+            for i, item in enumerate(user_message):
+                if isinstance(item, dict):
+                    if item.get("type") == "text":
+                        text_preview = item.get("text", "")[:200] + "..." if len(item.get("text", "")) > 200 else item.get("text", "")
+                        logger.debug(f"   Item {i}: text ({len(item.get('text', ''))} chars) - {text_preview}")
+                    elif item.get("type") == "image_url":
+                        image_url = item.get("image_url", {}).get("url", "")
+                        logger.debug(f"   Item {i}: image_url ({len(image_url)} chars) - {image_url[:100]}...")
+                else:
+                    logger.debug(f"   Item {i}: {type(item).__name__} - {str(item)[:200]}")
+        else:
+            user_preview = str(user_message)[:500] + "..." if len(str(user_message)) > 500 else str(user_message)
+            logger.debug(f"Anthropic user message (text, {len(str(user_message))} chars): {user_preview}")
         
         # Use 5 minute timeout for LLM requests (some models can take longer)
         async with httpx.AsyncClient(timeout=300.0) as client:
