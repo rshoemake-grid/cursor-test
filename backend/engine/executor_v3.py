@@ -611,10 +611,11 @@ class WorkflowExecutorV3:
                 # Execute based on node type
                 if node.type in [NodeType.AGENT, NodeType.CONDITION, NodeType.LOOP]:
                     # Create log callback to forward agent logs to execution logs
-                    # Wrap in try-except to prevent callback failures from blocking execution
+                    # Use fire-and-forget to prevent blocking - don't await the log call
                     async def agent_log_callback(level: str, node_id: str, message: str):
                         try:
-                            await self._log(level, node_id, message)
+                            # Create task to run log in background without blocking
+                            asyncio.create_task(self._log(level, node_id, message))
                         except Exception as e:
                             # Don't let logging failures break execution
                             logger.error(f"Failed to forward agent log: {e}")

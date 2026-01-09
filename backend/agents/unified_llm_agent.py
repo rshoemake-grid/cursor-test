@@ -274,10 +274,11 @@ class UnifiedLLMAgent(BaseAgent):
         
         # Execute based on provider type and ensure we never return None
         try:
-            # Forward key logs to execution logs if callback available
+            # Forward key logs to execution logs if callback available (non-blocking)
             if self.log_callback:
                 try:
-                    await self.log_callback("INFO", self.node_id, f"Executing with provider '{provider_type}' and model '{model}'")
+                    # Don't await - let it run in background
+                    asyncio.create_task(self.log_callback("INFO", self.node_id, f"Executing with provider '{provider_type}' and model '{model}'"))
                 except Exception:
                     pass  # Don't let callback failures break execution
             logger.info(f"Executing with provider '{provider_type}' and model '{model}'")
@@ -289,7 +290,8 @@ class UnifiedLLMAgent(BaseAgent):
             elif provider_type == "gemini":
                 if self.log_callback:
                     try:
-                        await self.log_callback("INFO", self.node_id, f"Calling Gemini API with model '{model}'")
+                        # Don't await - let it run in background
+                        asyncio.create_task(self.log_callback("INFO", self.node_id, f"Calling Gemini API with model '{model}'"))
                     except Exception:
                         pass  # Don't let callback failures break execution
                 logger.info(f"Calling Gemini API with model '{model}'")
@@ -519,7 +521,7 @@ class UnifiedLLMAgent(BaseAgent):
             }
             if self.log_callback:
                 try:
-                    await self.log_callback("INFO", self.node_id, f"Gemini system instruction: {self.config.system_prompt}")
+                    asyncio.create_task(self.log_callback("INFO", self.node_id, f"Gemini system instruction: {self.config.system_prompt}"))
                 except Exception:
                     pass  # Don't let callback failures break execution
             logger.info(f"Gemini system instruction: {self.config.system_prompt}")
@@ -527,7 +529,7 @@ class UnifiedLLMAgent(BaseAgent):
         # Log the user message parts that will be sent (use INFO so it shows in execution logs)
         if self.log_callback:
             try:
-                await self.log_callback("INFO", self.node_id, f"Gemini user message parts ({len(parts)} total):")
+                asyncio.create_task(self.log_callback("INFO", self.node_id, f"Gemini user message parts ({len(parts)} total):"))
             except Exception:
                 pass  # Don't let callback failures break execution
         logger.info(f"Gemini user message parts ({len(parts)} total):")
@@ -536,7 +538,7 @@ class UnifiedLLMAgent(BaseAgent):
                 text_preview = part["text"][:500] + "..." if len(part["text"]) > 500 else part["text"]
                 if self.log_callback:
                     try:
-                        await self.log_callback("INFO", self.node_id, f"   Part {i}: text ({len(part['text'])} chars) - {text_preview}")
+                        asyncio.create_task(self.log_callback("INFO", self.node_id, f"   Part {i}: text ({len(part['text'])} chars) - {text_preview}"))
                     except Exception:
                         pass  # Don't let callback failures break execution
                 logger.info(f"   Part {i}: text ({len(part['text'])} chars) - {text_preview}")
@@ -545,7 +547,7 @@ class UnifiedLLMAgent(BaseAgent):
                 data_length = len(inline_data.get("data", ""))
                 if self.log_callback:
                     try:
-                        await self.log_callback("INFO", self.node_id, f"   Part {i}: inline_data (mime_type={inline_data.get('mime_type')}, data_length={data_length} chars)")
+                        asyncio.create_task(self.log_callback("INFO", self.node_id, f"   Part {i}: inline_data (mime_type={inline_data.get('mime_type')}, data_length={data_length} chars)"))
                     except Exception:
                         pass  # Don't let callback failures break execution
                 logger.info(f"   Part {i}: inline_data (mime_type={inline_data.get('mime_type')}, data_length={data_length} chars)")
@@ -553,7 +555,7 @@ class UnifiedLLMAgent(BaseAgent):
                 file_data = part["file_data"]
                 if self.log_callback:
                     try:
-                        await self.log_callback("INFO", self.node_id, f"   Part {i}: file_data (file_uri={file_data.get('file_uri', '')[:100]}...)")
+                        asyncio.create_task(self.log_callback("INFO", self.node_id, f"   Part {i}: file_data (file_uri={file_data.get('file_uri', '')[:100]}...)"))
                     except Exception:
                         pass  # Don't let callback failures break execution
                 logger.info(f"   Part {i}: file_data (file_uri={file_data.get('file_uri', '')[:100]}...)")
@@ -644,7 +646,7 @@ class UnifiedLLMAgent(BaseAgent):
             # Log response structure - use INFO so it shows in execution logs
             if self.log_callback:
                 try:
-                    await self.log_callback("INFO", self.node_id, f"Gemini API response structure: candidates={len(data.get('candidates', []))}, keys={list(data.keys())}")
+                    asyncio.create_task(self.log_callback("INFO", self.node_id, f"Gemini API response structure: candidates={len(data.get('candidates', []))}, keys={list(data.keys())}"))
                 except Exception:
                     pass  # Don't let callback failures break execution
             logger.info(f"Gemini API response structure: candidates={len(data.get('candidates', []))}, keys={list(data.keys())}")
@@ -672,14 +674,14 @@ class UnifiedLLMAgent(BaseAgent):
                 if finish_reason:
                     if self.log_callback:
                         try:
-                            await self.log_callback("INFO", self.node_id, f"   Gemini finish reason: {finish_reason}")
+                            asyncio.create_task(self.log_callback("INFO", self.node_id, f"   Gemini finish reason: {finish_reason}"))
                         except Exception:
                             pass  # Don't let callback failures break execution
                     logger.info(f"   Gemini finish reason: {finish_reason}")
                 else:
                     if self.log_callback:
                         try:
-                            await self.log_callback("INFO", self.node_id, f"   Gemini finish reason: (not provided)")
+                            asyncio.create_task(self.log_callback("INFO", self.node_id, f"   Gemini finish reason: (not provided)"))
                         except Exception:
                             pass  # Don't let callback failures break execution
                     logger.info(f"   Gemini finish reason: (not provided)")
