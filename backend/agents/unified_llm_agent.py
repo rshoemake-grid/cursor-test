@@ -752,18 +752,23 @@ class UnifiedLLMAgent(BaseAgent):
                     # This ensures downstream nodes receive a value
                     logger.error(f"Gemini returned no content (no text or images). Parts: {len(parts)}, Finish reason: {finish_reason}")
                     logger.error(f"   This usually means the API call succeeded but returned empty content. Check the model configuration and prompt.")
+                    logger.error(f"   Part structures: {[list(p.keys()) for p in parts]}")
+                    logger.error(f"   Full parts data: {parts}")
                     return ""
                 else:
                     logger.error(f"Candidate has no 'content' or 'parts'. Candidate keys: {list(candidate.keys())}")
+                    logger.error(f"   Full candidate data: {candidate}")
                     return ""
             else:
                 # No candidates in response - check for errors first
                 if "error" in data:
                     error_msg = data["error"].get("message", "Unknown error")
-                    logger.error(f"Gemini API error: {error_msg}")
+                    error_details = data["error"].get("details", [])
+                    logger.error(f"Gemini API error: {error_msg}, details: {error_details}")
                     raise RuntimeError(f"Gemini API error: {error_msg}")
                 # No candidates and no error - return empty string instead of None
-                logger.error(f"Gemini API response has no candidates. Response keys: {list(data.keys())}, Full response: {data}")
+                logger.error(f"Gemini API response has no candidates. Response keys: {list(data.keys())}")
+                logger.error(f"   Full response data: {data}")
                 return ""
             
             # Fallback - should never reach here, but ensure we never return None
