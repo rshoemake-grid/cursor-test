@@ -479,6 +479,60 @@ class UnifiedLLMAgent(BaseAgent):
                         try:
                             header, base64_data = image_url.split(",", 1)
                             mimetype = header.split(";")[0].split(":")[1]
+                            
+                            # Check image size and estimate token count
+                            # Gemini counts tokens based on image dimensions:
+                            # - Images are divided into 512x512 pixel tiles
+                            # - Each tile = 85 tokens
+                            # - Base image = 85 tokens
+                            # Max tokens = 1,048,576
+                            # So max tiles = (1,048,576 - 85) / 85 ≈ 12,336 tiles
+                            # Max dimensions ≈ sqrt(12,336) * 512 ≈ 5,600 pixels per side
+                            
+                            # Estimate image size from base64 data
+                            # Base64 increases size by ~33%, so original size ≈ base64_size * 0.75
+                            base64_size = len(base64_data)
+                            estimated_original_size = int(base64_size * 0.75)
+                            
+                            # For JPEG: rough estimate: width * height * 3 bytes (RGB) ≈ file_size
+                            # For PNG: can be larger, but let's use a conservative estimate
+                            # Assume average compression ratio of 10:1 for JPEG, 3:1 for PNG
+                            if mimetype == "image/jpeg":
+                                estimated_pixels = estimated_original_size * 10  # JPEG compression
+                            else:
+                                estimated_pixels = estimated_original_size * 3  # PNG compression
+                            
+                            # Estimate dimensions (assume square-ish image)
+                            estimated_dimension = int((estimated_pixels) ** 0.5)
+                            
+                            # Estimate token count
+                            tiles_per_side = (estimated_dimension + 511) // 512  # Round up
+                            estimated_tiles = tiles_per_side * tiles_per_side
+                            estimated_tokens = estimated_tiles * 85 + 85
+                            
+                            logger.info(f"   Image size estimate: {estimated_dimension}x{estimated_dimension} pixels, ~{estimated_tokens:,} tokens")
+                            
+                            # Check if image is too large
+                            if estimated_tokens > 1_000_000:  # Leave some margin below 1,048,576
+                                error_msg = (
+                                    f"Image is too large (estimated {estimated_tokens:,} tokens, limit is 1,048,576). "
+                                    f"Estimated dimensions: ~{estimated_dimension}x{estimated_dimension} pixels. "
+                                    f"Please resize the image to approximately 5000x5000 pixels or smaller before sending."
+                                )
+                                logger.error(error_msg)
+                                raise RuntimeError(error_msg)
+                            
+                            # Also check base64 size directly as a fallback
+                            # Base64 data itself contributes to token count (roughly 1 token per 4 base64 chars)
+                            base64_tokens = base64_size // 4
+                            if base64_tokens > 1_000_000:
+                                error_msg = (
+                                    f"Image base64 data is too large ({base64_size:,} chars ≈ {base64_tokens:,} tokens, limit is 1,048,576). "
+                                    f"Please compress or resize the image before sending."
+                                )
+                                logger.error(error_msg)
+                                raise RuntimeError(error_msg)
+                            
                             parts.append({
                                 "inline_data": {
                                     "mime_type": mimetype,
@@ -486,6 +540,9 @@ class UnifiedLLMAgent(BaseAgent):
                                 }
                             })
                             logger.debug(f"   Added inline_data part: mime_type={mimetype}, data_length={len(base64_data)}")
+                        except RuntimeError:
+                            # Re-raise size validation errors
+                            raise
                         except Exception as e:
                             logger.warning(f"   Failed to parse data URL: {e}")
                             pass
