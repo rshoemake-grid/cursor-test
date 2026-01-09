@@ -611,14 +611,33 @@ class WorkflowExecutorV3:
                 # Execute based on node type
                 if node.type in [NodeType.AGENT, NodeType.CONDITION, NodeType.LOOP]:
                     agent = AgentRegistry.get_agent(node, llm_config=self.llm_config, user_id=self.user_id)
-                    output = await agent.execute(node_inputs)
+                    
+                    # Log input data for debugging
+                    await self._log("DEBUG", node.id, f"Agent received inputs: {list(node_inputs.keys())}")
+                    for key, value in node_inputs.items():
+                        if isinstance(value, str):
+                            preview = value[:200] + "..." if len(value) > 200 else value
+                            await self._log("DEBUG", node.id, f"   {key}: (str, length={len(value)}) {preview}")
+                        elif isinstance(value, dict):
+                            await self._log("DEBUG", node.id, f"   {key}: (dict, keys={list(value.keys())}, size={len(str(value))} chars)")
+                        else:
+                            value_str = str(value)
+                            preview = value_str[:200] + "..." if len(value_str) > 200 else value_str
+                            await self._log("DEBUG", node.id, f"   {key}: ({type(value).__name__}) {preview}")
+                    
+                    try:
+                        output = await agent.execute(node_inputs)
+                    except Exception as agent_error:
+                        await self._log("ERROR", node.id, f"Agent execution raised exception: {type(agent_error).__name__}: {str(agent_error)}")
+                        raise
+                    
                     # Ensure output is never None - convert to empty string if needed
                     if output is None:
                         await self._log("WARNING", node.id, f"Agent returned None, converting to empty string. Inputs were: {list(node_inputs.keys())}")
                         output = ""
                     # Also ensure empty string is not treated as None downstream
                     if output == "":
-                        await self._log("DEBUG", node.id, f"Agent returned empty string - this may cause downstream nodes to fail")
+                        await self._log("WARNING", node.id, f"Agent returned empty string - this may cause downstream nodes to fail. Input keys: {list(node_inputs.keys())}")
                 elif node.type == NodeType.TOOL:
                     output = node_inputs
                 else:
