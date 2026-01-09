@@ -701,20 +701,19 @@ class UnifiedLLMAgent(BaseAgent):
                                             total_estimated_tokens = new_total_estimated_tokens_2
                                     
                                     except Exception as e:
-                                        logger.error(f"   Failed to resize image: {e}", exc_info=True)
+                                        logger.error(f"   FAILED to resize image: {e}", exc_info=True)
                                         error_msg = (
-                                            f"Image is too large ({width}x{height} pixels ≈ {estimated_tokens:,} tokens, limit is 1,048,576) "
-                                            f"and automatic resizing failed: {str(e)}. Please resize the image manually to approximately 2400x2400 pixels or smaller."
+                                            f"Image is too large and automatic resizing failed: {str(e)}. "
+                                            f"Please resize the image manually to approximately 2000x2000 pixels or smaller."
                                         )
                                         raise RuntimeError(error_msg)
-                                else:
-                                    # PIL not available, raise error
-                                    error_msg = (
-                                        f"Image is too large ({width}x{height} pixels ≈ {estimated_tokens:,} tokens, limit is 1,048,576). "
-                                        f"PIL/Pillow is not available for automatic resizing. Please install Pillow (pip install Pillow) or resize the image manually to approximately 2400x2400 pixels or smaller."
-                                    )
-                                    logger.error(error_msg)
-                                    raise RuntimeError(error_msg)
+                                
+                                # Log successful resize completion
+                                new_base64_size = len(base64_data)
+                                size_reduction = original_base64_size - new_base64_size
+                                size_reduction_pct = (size_reduction / original_base64_size * 100) if original_base64_size > 0 else 0
+                                logger.warning(f"   ✓✓✓ Resize completed successfully! Size: {original_base64_size:,} → {new_base64_size:,} chars ({size_reduction_pct:.1f}% reduction)")
+                                base64_size = new_base64_size  # Update for final check
                             else:
                                 # Fallback: estimate from base64 size
                                 # Base64 increases size by ~33%, so original size ≈ base64_size * 0.75
