@@ -496,6 +496,7 @@ class UnifiedLLMAgent(BaseAgent):
                             # Max tokens = 1,048,576
                             
                             base64_size = len(base64_data)
+                            original_base64_size = base64_size  # Store original size for comparison
                             
                             # Try to get actual image dimensions from headers
                             width = None
