@@ -519,7 +519,7 @@ class UnifiedLLMAgent(BaseAgent):
                         # If we can't parse the error, use exponential backoff
                         if attempt < max_retries - 1:
                             retry_delay = 2.0 * (2 ** attempt)
-                            print(f"⚠️ Rate limit exceeded (429), retrying in {retry_delay:.1f}s (attempt {attempt + 1}/{max_retries})...")
+                            logger.warning(f"Rate limit exceeded (429), retrying in {retry_delay:.1f}s (attempt {attempt + 1}/{max_retries})...")
                             await asyncio.sleep(retry_delay)
                             continue
                         else:
