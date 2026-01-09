@@ -673,138 +673,138 @@ class UnifiedLLMAgent(BaseAgent):
                 error_msg += f". Response status: {response.status_code}, Response text: {response.text[:500] if response.text else 'empty'}"
             logger.error(error_msg)
             return ""
+        
+        # Log response structure - use INFO so it shows in execution logs
+        if self.log_callback:
+            try:
+                asyncio.create_task(self.log_callback("INFO", self.node_id, f"Gemini API response structure: candidates={len(data.get('candidates', []))}, keys={list(data.keys())}"))
+            except Exception:
+                pass  # Don't let callback failures break execution
+        logger.info(f"Gemini API response structure: candidates={len(data.get('candidates', []))}, keys={list(data.keys())}")
+        if "candidates" in data and len(data["candidates"]) > 0:
+            candidate = data["candidates"][0]
+            logger.debug(f"   Candidate keys: {list(candidate.keys())}")
+            if "content" in candidate:
+                logger.debug(f"   Content keys: {list(candidate['content'].keys())}")
+                if "parts" in candidate["content"]:
+                    logger.debug(f"   Parts count: {len(candidate['content']['parts'])}, Part keys: {[list(p.keys()) for p in candidate['content']['parts']]}")
+        
+        # Check for error in response
+        if "error" in data:
+            error_msg = data["error"].get("message", "Unknown error")
+            error_details = data["error"].get("details", [])
+            logger.error(f"Gemini API error: {error_msg}, details: {error_details}")
+            raise RuntimeError(f"Gemini API error: {error_msg}")
+        
+        # Extract content from Gemini response - handle both text and image outputs
+        if "candidates" in data and len(data["candidates"]) > 0:
+            candidate = data["candidates"][0]
             
-            # Log response structure - use INFO so it shows in execution logs
-            if self.log_callback:
-                try:
-                    asyncio.create_task(self.log_callback("INFO", self.node_id, f"Gemini API response structure: candidates={len(data.get('candidates', []))}, keys={list(data.keys())}"))
-                except Exception:
-                    pass  # Don't let callback failures break execution
-            logger.info(f"Gemini API response structure: candidates={len(data.get('candidates', []))}, keys={list(data.keys())}")
-            if "candidates" in data and len(data["candidates"]) > 0:
-                candidate = data["candidates"][0]
-                logger.debug(f"   Candidate keys: {list(candidate.keys())}")
-                if "content" in candidate:
-                    logger.debug(f"   Content keys: {list(candidate['content'].keys())}")
-                    if "parts" in candidate["content"]:
-                        logger.debug(f"   Parts count: {len(candidate['content']['parts'])}, Part keys: {[list(p.keys()) for p in candidate['content']['parts']]}")
+            # Check for finish reason - might indicate why no content
+            finish_reason = candidate.get("finishReason", "")
+            if finish_reason:
+                if self.log_callback:
+                    try:
+                        asyncio.create_task(self.log_callback("INFO", self.node_id, f"   Gemini finish reason: {finish_reason}"))
+                    except Exception:
+                        pass  # Don't let callback failures break execution
+                logger.info(f"   Gemini finish reason: {finish_reason}")
+            else:
+                if self.log_callback:
+                    try:
+                        asyncio.create_task(self.log_callback("INFO", self.node_id, f"   Gemini finish reason: (not provided)"))
+                    except Exception:
+                        pass  # Don't let callback failures break execution
+                logger.info(f"   Gemini finish reason: (not provided)")
             
-            # Check for error in response
+            if "content" in candidate and "parts" in candidate["content"]:
+                parts = candidate["content"]["parts"]
+                
+                # Check if this is an image generation model
+                is_image_model = "flash-image" in model.lower() or "pro-image" in model.lower() or "nano-banana" in model.lower() or "banana" in model.lower()
+                
+                # Collect text and images
+                text_parts = []
+                image_parts = []
+                
+                for i, part in enumerate(parts):
+                    logger.debug(f"   Part {i}: keys={list(part.keys())}")
+                    if "text" in part and part["text"]:
+                        text_parts.append(part["text"])
+                        logger.debug(f"   Found text part: {len(part['text'])} chars")
+                    elif "inlineData" in part:
+                        # Image data - convert to base64 data URL (REST API uses camelCase)
+                        inline_data = part["inlineData"]
+                        mime_type = inline_data.get("mimeType", "image/jpeg")  # Default to JPEG
+                        image_data = inline_data.get("data", "")
+                        if image_data:
+                            image_parts.append(f"data:{mime_type};base64,{image_data}")
+                            logger.info(f"Extracted image from Gemini response: {len(image_data)} chars of base64 data, mime_type: {mime_type}")
+                        else:
+                            logger.warning(f"inlineData found but 'data' field is empty")
+                    elif "inline_data" in part:
+                        # Fallback for snake_case (if API returns it)
+                        inline_data = part["inline_data"]
+                        mime_type = inline_data.get("mime_type", "image/jpeg")  # Default to JPEG
+                        image_data = inline_data.get("data", "")
+                        if image_data:
+                            image_parts.append(f"data:{mime_type};base64,{image_data}")
+                            logger.info(f"Extracted image from Gemini response (snake_case): {len(image_data)} chars of base64 data, mime_type: {mime_type}")
+                        else:
+                            logger.warning(f"inline_data found but 'data' field is empty")
+                    else:
+                        logger.warning(f"Part {i} has unknown structure: {part}")
+                
+                # If we have images, return them (prefer images over text for image generation models)
+                if image_parts:
+                    if len(image_parts) == 1:
+                        # Single image - return as base64 data URL
+                        logger.info(f"Returning single image as base64 data URL")
+                        return image_parts[0]
+                    else:
+                        # Multiple images - return as dict with images array
+                        result = {
+                            "images": image_parts,
+                            "text": "\n".join(text_parts) if text_parts else None
+                        }
+                        logger.info(f"Returning {len(image_parts)} images with text")
+                        return result
+                
+                # Log if we expected images but didn't get any
+                if is_image_model and not image_parts:
+                    logger.warning(f"Image generation model '{model}' returned text but no images. Text parts: {len(text_parts)}, Parts structure: {[list(p.keys()) for p in parts]}")
+                
+                # Otherwise return text
+                if text_parts:
+                    logger.debug(f"Returning text: {len(text_parts)} parts, total length: {sum(len(t) for t in text_parts)}")
+                    return "\n".join(text_parts)
+                
+                # If no text or images, return empty string (not None)
+                # This ensures downstream nodes receive a value
+                logger.error(f"Gemini returned no content (no text or images). Parts: {len(parts)}, Finish reason: {finish_reason}")
+                logger.error(f"   This usually means the API call succeeded but returned empty content. Check the model configuration and prompt.")
+                logger.error(f"   Part structures: {[list(p.keys()) for p in parts]}")
+                logger.error(f"   Full parts data: {parts}")
+                return ""
+            else:
+                logger.error(f"Candidate has no 'content' or 'parts'. Candidate keys: {list(candidate.keys())}")
+                logger.error(f"   Full candidate data: {candidate}")
+                return ""
+        else:
+            # No candidates in response - check for errors first
             if "error" in data:
                 error_msg = data["error"].get("message", "Unknown error")
                 error_details = data["error"].get("details", [])
                 logger.error(f"Gemini API error: {error_msg}, details: {error_details}")
                 raise RuntimeError(f"Gemini API error: {error_msg}")
-            
-            # Extract content from Gemini response - handle both text and image outputs
-            if "candidates" in data and len(data["candidates"]) > 0:
-                candidate = data["candidates"][0]
-                
-                # Check for finish reason - might indicate why no content
-                finish_reason = candidate.get("finishReason", "")
-                if finish_reason:
-                    if self.log_callback:
-                        try:
-                            asyncio.create_task(self.log_callback("INFO", self.node_id, f"   Gemini finish reason: {finish_reason}"))
-                        except Exception:
-                            pass  # Don't let callback failures break execution
-                    logger.info(f"   Gemini finish reason: {finish_reason}")
-                else:
-                    if self.log_callback:
-                        try:
-                            asyncio.create_task(self.log_callback("INFO", self.node_id, f"   Gemini finish reason: (not provided)"))
-                        except Exception:
-                            pass  # Don't let callback failures break execution
-                    logger.info(f"   Gemini finish reason: (not provided)")
-                
-                if "content" in candidate and "parts" in candidate["content"]:
-                    parts = candidate["content"]["parts"]
-                    
-                    # Check if this is an image generation model
-                    is_image_model = "flash-image" in model.lower() or "pro-image" in model.lower() or "nano-banana" in model.lower() or "banana" in model.lower()
-                    
-                    # Collect text and images
-                    text_parts = []
-                    image_parts = []
-                    
-                    for i, part in enumerate(parts):
-                        logger.debug(f"   Part {i}: keys={list(part.keys())}")
-                        if "text" in part and part["text"]:
-                            text_parts.append(part["text"])
-                            logger.debug(f"   Found text part: {len(part['text'])} chars")
-                        elif "inlineData" in part:
-                            # Image data - convert to base64 data URL (REST API uses camelCase)
-                            inline_data = part["inlineData"]
-                            mime_type = inline_data.get("mimeType", "image/jpeg")  # Default to JPEG
-                            image_data = inline_data.get("data", "")
-                            if image_data:
-                                image_parts.append(f"data:{mime_type};base64,{image_data}")
-                                logger.info(f"Extracted image from Gemini response: {len(image_data)} chars of base64 data, mime_type: {mime_type}")
-                            else:
-                                logger.warning(f"inlineData found but 'data' field is empty")
-                        elif "inline_data" in part:
-                            # Fallback for snake_case (if API returns it)
-                            inline_data = part["inline_data"]
-                            mime_type = inline_data.get("mime_type", "image/jpeg")  # Default to JPEG
-                            image_data = inline_data.get("data", "")
-                            if image_data:
-                                image_parts.append(f"data:{mime_type};base64,{image_data}")
-                                logger.info(f"Extracted image from Gemini response (snake_case): {len(image_data)} chars of base64 data, mime_type: {mime_type}")
-                            else:
-                                logger.warning(f"inline_data found but 'data' field is empty")
-                        else:
-                            logger.warning(f"Part {i} has unknown structure: {part}")
-                    
-                    # If we have images, return them (prefer images over text for image generation models)
-                    if image_parts:
-                        if len(image_parts) == 1:
-                            # Single image - return as base64 data URL
-                            logger.info(f"Returning single image as base64 data URL")
-                            return image_parts[0]
-                        else:
-                            # Multiple images - return as dict with images array
-                            result = {
-                                "images": image_parts,
-                                "text": "\n".join(text_parts) if text_parts else None
-                            }
-                            logger.info(f"Returning {len(image_parts)} images with text")
-                            return result
-                    
-                    # Log if we expected images but didn't get any
-                    if is_image_model and not image_parts:
-                        logger.warning(f"Image generation model '{model}' returned text but no images. Text parts: {len(text_parts)}, Parts structure: {[list(p.keys()) for p in parts]}")
-                    
-                    # Otherwise return text
-                    if text_parts:
-                        logger.debug(f"Returning text: {len(text_parts)} parts, total length: {sum(len(t) for t in text_parts)}")
-                        return "\n".join(text_parts)
-                    
-                    # If no text or images, return empty string (not None)
-                    # This ensures downstream nodes receive a value
-                    logger.error(f"Gemini returned no content (no text or images). Parts: {len(parts)}, Finish reason: {finish_reason}")
-                    logger.error(f"   This usually means the API call succeeded but returned empty content. Check the model configuration and prompt.")
-                    logger.error(f"   Part structures: {[list(p.keys()) for p in parts]}")
-                    logger.error(f"   Full parts data: {parts}")
-                    return ""
-                else:
-                    logger.error(f"Candidate has no 'content' or 'parts'. Candidate keys: {list(candidate.keys())}")
-                    logger.error(f"   Full candidate data: {candidate}")
-                    return ""
-            else:
-                # No candidates in response - check for errors first
-                if "error" in data:
-                    error_msg = data["error"].get("message", "Unknown error")
-                    error_details = data["error"].get("details", [])
-                    logger.error(f"Gemini API error: {error_msg}, details: {error_details}")
-                    raise RuntimeError(f"Gemini API error: {error_msg}")
-                # No candidates and no error - return empty string instead of None
-                logger.error(f"Gemini API response has no candidates. Response keys: {list(data.keys())}")
-                logger.error(f"   Full response data: {data}")
-                return ""
-            
-            # Fallback - should never reach here, but ensure we never return None
-            logger.error(f"Unexpected Gemini API response format: {data}")
+            # No candidates and no error - return empty string instead of None
+            logger.error(f"Gemini API response has no candidates. Response keys: {list(data.keys())}")
+            logger.error(f"   Full response data: {data}")
             return ""
+        
+        # Fallback - should never reach here, but ensure we never return None
+        logger.error(f"Unexpected Gemini API response format: {data}")
+        return ""
     
     async def _execute_custom(self, user_message: Any, model: str) -> Any:
         """Execute using custom OpenAI-compatible API - supports text and vision models"""
