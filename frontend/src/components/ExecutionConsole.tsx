@@ -177,6 +177,10 @@ export default function ExecutionConsole({
             Math.abs(e.startedAt.getTime() - activeExecutionTab.startedAt.getTime()) < 10000 // Within 10 seconds
           )
         }
+        // Ensure logs array is initialized
+        if (exec && (!exec.logs || !Array.isArray(exec.logs))) {
+          exec = { ...exec, logs: [] }
+        }
         return exec
       })()
     : activeExecution
