@@ -781,8 +781,12 @@ class UnifiedLLMAgent(BaseAgent):
                 if key not in ['data', 'output', 'image', 'image_data']:
                     text_parts.append(f"{key}:")
             else:
-                # Regular text input
+                # Regular text input - skip 'source' key when we have images (it's metadata)
+                if has_images and key == 'source':
+                    print(f"   Skipping 'source' key (metadata) when images present")
+                    continue
                 text_parts.append(f"{key}: {value}")
+                print(f"   Added text from key '{key}': {str(value)[:50]}...")
         
         # If we have images, return structured content for vision models
         if has_images:
