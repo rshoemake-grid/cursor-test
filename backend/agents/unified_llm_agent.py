@@ -523,6 +523,7 @@ class UnifiedLLMAgent(BaseAgent):
                                 logger.debug(f"   Could not parse image dimensions: {e}")
                             
                             # Calculate token count if we have dimensions
+                            needs_resize = False
                             if width and height:
                                 tiles_per_width = (width + 511) // 512  # Round up
                                 tiles_per_height = (height + 511) // 512  # Round up
@@ -548,6 +549,24 @@ class UnifiedLLMAgent(BaseAgent):
                                 # Check if image is too large and resize if needed
                                 # Be very aggressive - resize if image alone exceeds 300k, or total exceeds 600k
                                 if estimated_tokens > 300_000 or total_estimated_tokens > 600_000:
+                                    needs_resize = True
+                            else:
+                                # If we can't parse dimensions, check base64 size as fallback
+                                # Very large base64 strings likely mean large images
+                                if base64_size > 2_000_000:  # ~2MB base64
+                                    logger.warning(f"   Cannot parse image dimensions, but base64 size ({base64_size:,} chars) suggests large image. Attempting resize...")
+                                    needs_resize = True
+                                    # Estimate dimensions from base64 size
+                                    estimated_original_size = int(base64_size * 0.75)
+                                    if mimetype == "image/jpeg":
+                                        estimated_pixels = estimated_original_size * 2
+                                    else:
+                                        estimated_pixels = estimated_original_size
+                                    estimated_dimension = int((estimated_pixels) ** 0.5)
+                                    width = estimated_dimension
+                                    height = estimated_dimension
+                            
+                            if needs_resize:
                                     # Calculate target dimensions to stay under limit
                                     # Target: ~200,000 tokens for image (leaves ~800k for text/prompt/other)
                                     # Formula: tokens = (tiles_per_width * tiles_per_height * 85) + 85
@@ -708,13 +727,15 @@ class UnifiedLLMAgent(BaseAgent):
                             # Also check base64 size directly as a final safety check
                             # Very large base64 strings will definitely exceed the limit
                             if base64_size > 4_000_000:  # ~4MB base64 ≈ 1M tokens
-                                error_msg = (
-                                    f"Image base64 data is too large ({base64_size:,} chars). "
-                                    f"Please compress or resize the image before sending."
-                                )
-                                logger.error(error_msg)
-                                raise RuntimeError(error_msg)
+                                if not needs_resize:  # Only error if we haven't already resized
+                                    error_msg = (
+                                        f"Image base64 data is too large ({base64_size:,} chars). "
+                                        f"Please compress or resize the image before sending."
+                                    )
+                                    logger.error(error_msg)
+                                    raise RuntimeError(error_msg)
                             
+                            # Add image to parts (using resized base64_data if resize occurred)
                             parts.append({
                                 "inline_data": {
                                     "mime_type": mimetype,
@@ -722,6 +743,8 @@ class UnifiedLLMAgent(BaseAgent):
                                 }
                             })
                             logger.debug(f"   Added inline_data part: mime_type={mimetype}, data_length={len(base64_data)}")
+                            if needs_resize:
+                                logger.info(f"   Using resized image data: {len(base64_data):,} chars")
                         except RuntimeError:
                             # Re-raise size validation errors
                             raise
