@@ -579,6 +579,7 @@ class UnifiedLLMAgent(BaseAgent):
                                     # Actually, we want much smaller. Let's target ~2,000px max
                                     max_dimension = 2000  # ~2,000 pixels per side = ~4 tiles per side = ~1,361 tokens
                                     
+                                    logger.info(f"   PIL_AVAILABLE: {PIL_AVAILABLE}")
                                     if PIL_AVAILABLE:
                                         # Resize image to fit within token limit
                                         logger.warning(
