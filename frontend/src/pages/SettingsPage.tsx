@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { showSuccess, showError } from '../utils/notifications'
 import { showConfirm } from '../utils/confirm'
 import { useNavigate } from 'react-router-dom'
-import { Save, Plus, Trash2, CheckCircle, XCircle, Loader, ArrowLeft } from 'lucide-react'
+import { Save, Plus, Trash2, CheckCircle, XCircle, Loader, ArrowLeft, Eye, EyeOff } from 'lucide-react'
 
 interface LLMProvider {
   id: string
@@ -75,6 +75,7 @@ export default function SettingsPage() {
   const [selectedTemplate, setSelectedTemplate] = useState<keyof typeof PROVIDER_TEMPLATES>('openai')
   const [testingProvider, setTestingProvider] = useState<string | null>(null)
   const [testResults, setTestResults] = useState<Record<string, TestResult>>({})
+  const [showApiKeys, setShowApiKeys] = useState<Record<string, boolean>>({})
 
   // Load providers from backend on mount
   useEffect(() => {
@@ -266,13 +267,27 @@ export default function SettingsPage() {
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     API Key
                   </label>
-                  <input
-                    type="password"
-                    value={provider.apiKey}
-                    onChange={(e) => handleUpdateProvider(provider.id, { apiKey: e.target.value })}
-                    placeholder="sk-..."
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                  />
+                  <div className="relative">
+                    <input
+                      type={showApiKeys[provider.id] ? "text" : "password"}
+                      value={provider.apiKey}
+                      onChange={(e) => handleUpdateProvider(provider.id, { apiKey: e.target.value })}
+                      placeholder="sk-..."
+                      className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowApiKeys(prev => ({ ...prev, [provider.id]: !prev[provider.id] }))}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-gray-500 hover:text-gray-700 focus:outline-none"
+                      title={showApiKeys[provider.id] ? "Hide API key" : "Show API key"}
+                    >
+                      {showApiKeys[provider.id] ? (
+                        <EyeOff className="w-5 h-5" />
+                      ) : (
+                        <Eye className="w-5 h-5" />
+                      )}
+                    </button>
+                  </div>
                 </div>
 
                 {/* Base URL */}
