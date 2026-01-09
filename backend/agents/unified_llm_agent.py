@@ -1,7 +1,7 @@
 """
 Unified LLM Agent - Supports OpenAI, Anthropic, and Custom providers
 """
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, Callable, Awaitable
 import os
 import asyncio
 import httpx
