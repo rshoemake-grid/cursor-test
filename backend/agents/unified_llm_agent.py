@@ -574,110 +574,109 @@ class UnifiedLLMAgent(BaseAgent):
                                 
                                 logger.info(f"   PIL_AVAILABLE: {PIL_AVAILABLE}")
                                 if PIL_AVAILABLE:
-                                        # Resize image to fit within token limit
-                                        logger.warning(
-                                            f"Image is too large ({width}x{height} pixels ≈ {estimated_tokens:,} tokens, "
-                                            f"total with text ≈ {total_estimated_tokens:,} tokens, limit is 1,048,576). "
-                                            f"Resizing to fit within limit (target: ~{max_dimension}x{max_dimension} pixels)."
-                                        )
+                                    # Resize image to fit within token limit
+                                    logger.warning(
+                                        f"Image is too large ({width}x{height} pixels ≈ {estimated_tokens:,} tokens, "
+                                        f"total with text ≈ {total_estimated_tokens:,} tokens, limit is 1,048,576). "
+                                        f"Resizing to fit within limit (target: ~{max_dimension}x{max_dimension} pixels)."
+                                    )
+                                    
+                                    try:
+                                        # Use already decoded image if available, otherwise decode
+                                        if decoded is None:
+                                            decoded = base64.b64decode(base64_data)
+                                        img = Image.open(io.BytesIO(decoded))
                                         
-                                        try:
-                                            # Use already decoded image if available, otherwise decode
-                                            if decoded is None:
-                                                decoded = base64.b64decode(base64_data)
-                                            img = Image.open(io.BytesIO(decoded))
+                                        # Calculate new dimensions maintaining aspect ratio
+                                        if width > height:
+                                            new_width = max_dimension
+                                            new_height = int(height * (max_dimension / width))
+                                        else:
+                                            new_height = max_dimension
+                                            new_width = int(width * (max_dimension / height))
+                                        
+                                        # Resize image with high-quality resampling
+                                        img_resized = img.resize((new_width, new_height), Image.Resampling.LANCZOS)
+                                        
+                                        # Convert back to base64
+                                        output_buffer = io.BytesIO()
+                                        if mimetype == "image/png":
+                                            img_resized.save(output_buffer, format='PNG', optimize=True)
+                                        elif mimetype in ["image/jpeg", "image/jpg"]:
+                                            img_resized.save(output_buffer, format='JPEG', quality=85, optimize=True)
+                                        else:
+                                            # Default to PNG for other formats
+                                            img_resized.save(output_buffer, format='PNG', optimize=True)
+                                            mimetype = "image/png"
+                                        
+                                        # Update base64 data
+                                        base64_data = base64.b64encode(output_buffer.getvalue()).decode('utf-8')
+                                        
+                                        # Recalculate token count
+                                        new_tiles_per_width = (new_width + 511) // 512
+                                        new_tiles_per_height = (new_height + 511) // 512
+                                        new_total_tiles = new_tiles_per_width * new_tiles_per_height
+                                        new_estimated_tokens = new_total_tiles * 85 + 85
+                                        
+                                        # Recalculate total with new image tokens
+                                        new_total_estimated_tokens = new_estimated_tokens + text_tokens
+                                        
+                                        logger.info(f"   Resized image to {new_width}x{new_height} pixels, {new_total_tiles} tiles, ~{new_estimated_tokens:,} tokens")
+                                        logger.info(f"   New total estimated tokens: image={new_estimated_tokens:,}, text={text_tokens:,}, total={new_total_estimated_tokens:,}")
+                                        
+                                        # Update dimensions and token counts
+                                        width = new_width
+                                        height = new_height
+                                        estimated_tokens = new_estimated_tokens
+                                        total_estimated_tokens = new_total_estimated_tokens
+                                        
+                                        # Double-check: if still too large, resize again more aggressively
+                                        if new_total_estimated_tokens > 900_000:
+                                            logger.warning(f"   Resized image still too large ({new_total_estimated_tokens:,} tokens). Resizing again more aggressively...")
+                                            # Even smaller target: ~1,500px max dimension
+                                            max_dimension_2 = 1500  # ~1,500 pixels per side = ~3 tiles per side = ~850 tokens
                                             
-                                            # Calculate new dimensions maintaining aspect ratio
                                             if width > height:
-                                                new_width = max_dimension
-                                                new_height = int(height * (max_dimension / width))
+                                                new_width_2 = max_dimension_2
+                                                new_height_2 = int(height * (max_dimension_2 / width))
                                             else:
-                                                new_height = max_dimension
-                                                new_width = int(width * (max_dimension / height))
+                                                new_height_2 = max_dimension_2
+                                                new_width_2 = int(width * (max_dimension_2 / height))
                                             
-                                            # Resize image with high-quality resampling
-                                            img_resized = img.resize((new_width, new_height), Image.Resampling.LANCZOS)
+                                            img_resized_2 = img_resized.resize((new_width_2, new_height_2), Image.Resampling.LANCZOS)
                                             
-                                            # Convert back to base64
-                                            output_buffer = io.BytesIO()
+                                            output_buffer_2 = io.BytesIO()
                                             if mimetype == "image/png":
-                                                img_resized.save(output_buffer, format='PNG', optimize=True)
+                                                img_resized_2.save(output_buffer_2, format='PNG', optimize=True)
                                             elif mimetype in ["image/jpeg", "image/jpg"]:
-                                                img_resized.save(output_buffer, format='JPEG', quality=85, optimize=True)
+                                                img_resized_2.save(output_buffer_2, format='JPEG', quality=80, optimize=True)
                                             else:
-                                                # Default to PNG for other formats
-                                                img_resized.save(output_buffer, format='PNG', optimize=True)
+                                                img_resized_2.save(output_buffer_2, format='PNG', optimize=True)
                                                 mimetype = "image/png"
                                             
-                                            # Update base64 data
-                                            base64_data = base64.b64encode(output_buffer.getvalue()).decode('utf-8')
+                                            base64_data = base64.b64encode(output_buffer_2.getvalue()).decode('utf-8')
                                             
-                                            # Recalculate token count
-                                            new_tiles_per_width = (new_width + 511) // 512
-                                            new_tiles_per_height = (new_height + 511) // 512
-                                            new_total_tiles = new_tiles_per_width * new_tiles_per_height
-                                            new_estimated_tokens = new_total_tiles * 85 + 85
+                                            new_tiles_per_width_2 = (new_width_2 + 511) // 512
+                                            new_tiles_per_height_2 = (new_height_2 + 511) // 512
+                                            new_total_tiles_2 = new_tiles_per_width_2 * new_tiles_per_height_2
+                                            new_estimated_tokens_2 = new_total_tiles_2 * 85 + 85
+                                            new_total_estimated_tokens_2 = new_estimated_tokens_2 + text_tokens
                                             
-                                            # Recalculate total with new image tokens
-                                            new_total_estimated_tokens = new_estimated_tokens + text_tokens
+                                            logger.info(f"   Second resize to {new_width_2}x{new_height_2} pixels, {new_total_tiles_2} tiles, ~{new_estimated_tokens_2:,} tokens")
+                                            logger.info(f"   Final total estimated tokens: image={new_estimated_tokens_2:,}, text={text_tokens:,}, total={new_total_estimated_tokens_2:,}")
                                             
-                                            logger.info(f"   Resized image to {new_width}x{new_height} pixels, {new_total_tiles} tiles, ~{new_estimated_tokens:,} tokens")
-                                            logger.info(f"   New total estimated tokens: image={new_estimated_tokens:,}, text={text_tokens:,}, total={new_total_estimated_tokens:,}")
-                                            
-                                            # Update dimensions and token counts
-                                            width = new_width
-                                            height = new_height
-                                            estimated_tokens = new_estimated_tokens
-                                            total_estimated_tokens = new_total_estimated_tokens
-                                            
-                                            # Double-check: if still too large, resize again more aggressively
-                                            if new_total_estimated_tokens > 900_000:
-                                                logger.warning(f"   Resized image still too large ({new_total_estimated_tokens:,} tokens). Resizing again more aggressively...")
-                                                # Even smaller target: ~150k tokens for image
-                                                max_tiles_2 = (150_000 - 85) // 85  # ~1,764 tiles
-                                                max_dimension_2 = int((max_tiles_2 ** 0.5) * 512)  # ~2,100 pixels per side
-                                                
-                                                if width > height:
-                                                    new_width_2 = max_dimension_2
-                                                    new_height_2 = int(height * (max_dimension_2 / width))
-                                                else:
-                                                    new_height_2 = max_dimension_2
-                                                    new_width_2 = int(width * (max_dimension_2 / height))
-                                                
-                                                img_resized_2 = img_resized.resize((new_width_2, new_height_2), Image.Resampling.LANCZOS)
-                                                
-                                                output_buffer_2 = io.BytesIO()
-                                                if mimetype == "image/png":
-                                                    img_resized_2.save(output_buffer_2, format='PNG', optimize=True)
-                                                elif mimetype in ["image/jpeg", "image/jpg"]:
-                                                    img_resized_2.save(output_buffer_2, format='JPEG', quality=80, optimize=True)
-                                                else:
-                                                    img_resized_2.save(output_buffer_2, format='PNG', optimize=True)
-                                                    mimetype = "image/png"
-                                                
-                                                base64_data = base64.b64encode(output_buffer_2.getvalue()).decode('utf-8')
-                                                
-                                                new_tiles_per_width_2 = (new_width_2 + 511) // 512
-                                                new_tiles_per_height_2 = (new_height_2 + 511) // 512
-                                                new_total_tiles_2 = new_tiles_per_width_2 * new_tiles_per_height_2
-                                                new_estimated_tokens_2 = new_total_tiles_2 * 85 + 85
-                                                new_total_estimated_tokens_2 = new_estimated_tokens_2 + text_tokens
-                                                
-                                                logger.info(f"   Second resize to {new_width_2}x{new_height_2} pixels, {new_total_tiles_2} tiles, ~{new_estimated_tokens_2:,} tokens")
-                                                logger.info(f"   Final total estimated tokens: image={new_estimated_tokens_2:,}, text={text_tokens:,}, total={new_total_estimated_tokens_2:,}")
-                                                
-                                                width = new_width_2
-                                                height = new_height_2
-                                                estimated_tokens = new_estimated_tokens_2
-                                                total_estimated_tokens = new_total_estimated_tokens_2
-                                            
-                                        except Exception as e:
-                                            logger.error(f"   Failed to resize image: {e}", exc_info=True)
-                                            error_msg = (
-                                                f"Image is too large ({width}x{height} pixels ≈ {estimated_tokens:,} tokens, limit is 1,048,576) "
-                                                f"and automatic resizing failed: {str(e)}. Please resize the image manually to approximately 2400x2400 pixels or smaller."
-                                            )
-                                            raise RuntimeError(error_msg)
+                                            width = new_width_2
+                                            height = new_height_2
+                                            estimated_tokens = new_estimated_tokens_2
+                                            total_estimated_tokens = new_total_estimated_tokens_2
+                                    
+                                    except Exception as e:
+                                        logger.error(f"   Failed to resize image: {e}", exc_info=True)
+                                        error_msg = (
+                                            f"Image is too large ({width}x{height} pixels ≈ {estimated_tokens:,} tokens, limit is 1,048,576) "
+                                            f"and automatic resizing failed: {str(e)}. Please resize the image manually to approximately 2400x2400 pixels or smaller."
+                                        )
+                                        raise RuntimeError(error_msg)
                                 else:
                                     # PIL not available, raise error
                                     error_msg = (
