@@ -152,13 +152,13 @@ class UnifiedLLMAgent(BaseAgent):
         # Use model from agent config if specified, otherwise from LLM config
         model = self.config.model or self.llm_config["model"]
         
-        # Debug logging
-        logger.debug(f"Agent node '{self.node_id}': Looking for provider for model '{model}'")
+        # Debug logging - use INFO for key points so they show in execution logs
+        logger.info(f"Agent node '{self.node_id}': Looking for provider for model '{model}'")
         logger.debug(f"   Agent config model: {self.config.model}")
         logger.debug(f"   LLM config model: {self.llm_config.get('model')}")
         logger.debug(f"   User ID: {self.user_id}")
-        logger.debug(f"   Input keys: {list(inputs.keys())}")
-        logger.debug(f"   User message type: {type(user_message)}, is_list: {isinstance(user_message, list)}")
+        logger.info(f"   Input keys: {list(inputs.keys())}")
+        logger.info(f"   User message type: {type(user_message)}, is_list: {isinstance(user_message, list)}")
         
         # Try to find the provider that owns this model
         # This ensures we use the correct API for the selected model
@@ -255,11 +255,13 @@ class UnifiedLLMAgent(BaseAgent):
         
         # Execute based on provider type and ensure we never return None
         try:
+            logger.info(f"Executing with provider '{provider_type}' and model '{model}'")
             if provider_type == "openai":
                 result = await self._execute_openai(user_message, model)
             elif provider_type == "anthropic":
                 result = await self._execute_anthropic(user_message, model)
             elif provider_type == "gemini":
+                logger.info(f"Calling Gemini API with model '{model}'")
                 result = await self._execute_gemini(user_message, model)
             elif provider_type == "custom":
                 result = await self._execute_custom(user_message, model)
@@ -271,10 +273,13 @@ class UnifiedLLMAgent(BaseAgent):
                 logger.warning(f"Provider '{provider_type}' returned None, converting to empty string")
                 return ""
             
-            logger.debug(f"Agent execution completed, result type: {type(result)}, length: {len(str(result)) if result else 0}")
+            result_length = len(str(result)) if result else 0
+            logger.info(f"Agent execution completed, result type: {type(result)}, length: {result_length}")
+            if result == "":
+                logger.warning(f"Agent returned empty string - this may indicate an issue with the API call or response parsing")
             return result
         except Exception as e:
-            logger.error(f"Agent execution failed: {type(e).__name__}: {str(e)}")
+            logger.error(f"Agent execution failed: {type(e).__name__}: {str(e)}", exc_info=True)
             raise
     
     async def _execute_openai(self, user_message: Any, model: str) -> Any:
@@ -392,7 +397,7 @@ class UnifiedLLMAgent(BaseAgent):
         # Gemini API format - supports vision models
         parts = []
         
-        logger.debug(f"Building Gemini request: user_message type={type(user_message)}, is_list={isinstance(user_message, list)}")
+        logger.info(f"Building Gemini request: user_message type={type(user_message)}, is_list={isinstance(user_message, list)}")
         
         if isinstance(user_message, list):
             # Vision model - process content array
@@ -535,8 +540,8 @@ class UnifiedLLMAgent(BaseAgent):
             
             data = response.json()
             
-            # Debug: Log response structure
-            logger.debug(f"Gemini API response structure: candidates={len(data.get('candidates', []))}, keys={list(data.keys())}")
+            # Log response structure - use INFO so it shows in execution logs
+            logger.info(f"Gemini API response structure: candidates={len(data.get('candidates', []))}, keys={list(data.keys())}")
             if "candidates" in data and len(data["candidates"]) > 0:
                 candidate = data["candidates"][0]
                 logger.debug(f"   Candidate keys: {list(candidate.keys())}")
@@ -625,22 +630,24 @@ class UnifiedLLMAgent(BaseAgent):
                     
                     # If no text or images, return empty string (not None)
                     # This ensures downstream nodes receive a value
-                    logger.warning(f"Gemini returned no content (no text or images). Parts: {len(parts)}, Finish reason: {finish_reason}")
+                    logger.error(f"Gemini returned no content (no text or images). Parts: {len(parts)}, Finish reason: {finish_reason}")
+                    logger.error(f"   This usually means the API call succeeded but returned empty content. Check the model configuration and prompt.")
                     return ""
                 else:
-                    logger.warning(f"Candidate has no 'content' or 'parts'. Candidate keys: {list(candidate.keys())}")
+                    logger.error(f"Candidate has no 'content' or 'parts'. Candidate keys: {list(candidate.keys())}")
                     return ""
             else:
                 # No candidates in response - check for errors first
                 if "error" in data:
                     error_msg = data["error"].get("message", "Unknown error")
+                    logger.error(f"Gemini API error: {error_msg}")
                     raise RuntimeError(f"Gemini API error: {error_msg}")
                 # No candidates and no error - return empty string instead of None
-                logger.warning(f"Gemini API response has no candidates. Response keys: {list(data.keys())}, Full response: {data}")
+                logger.error(f"Gemini API response has no candidates. Response keys: {list(data.keys())}, Full response: {data}")
                 return ""
             
             # Fallback - should never reach here, but ensure we never return None
-            logger.warning(f"Unexpected Gemini API response format: {data}")
+            logger.error(f"Unexpected Gemini API response format: {data}")
             return ""
     
     async def _execute_custom(self, user_message: Any, model: str) -> Any:
