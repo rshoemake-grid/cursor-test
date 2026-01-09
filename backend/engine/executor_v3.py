@@ -352,9 +352,10 @@ class WorkflowExecutorV3:
                     # If no explicit inputs, try to get from previous node (for write nodes)
                     if not node_inputs:
                         previous_node_output = self._get_previous_node_output(node)
-                        await self._log("DEBUG", node.id, f"Previous node output: {type(previous_node_output)}, value: {str(previous_node_output)[:100] if previous_node_output else 'None'}")
+                        await self._log("DEBUG", node.id, f"Previous node output: {type(previous_node_output)}, value: {str(previous_node_output)[:100] if previous_node_output is not None else 'None'}")
                         if previous_node_output is not None:
                             # Auto-populate inputs with previous node's output
+                            # Note: Empty string is valid output (even if empty), so we wrap it
                             if isinstance(previous_node_output, dict):
                                 node_inputs = previous_node_output
                             else:
@@ -367,6 +368,7 @@ class WorkflowExecutorV3:
                                         'image': previous_node_output  # Also add as 'image' key for clarity
                                     }
                                 else:
+                                    # Wrap value (including empty string) in dict
                                     node_inputs = {
                                         'data': previous_node_output,
                                         'output': previous_node_output
@@ -612,8 +614,11 @@ class WorkflowExecutorV3:
                     output = await agent.execute(node_inputs)
                     # Ensure output is never None - convert to empty string if needed
                     if output is None:
-                        await self._log("WARNING", node.id, "Agent returned None, converting to empty string")
+                        await self._log("WARNING", node.id, f"Agent returned None, converting to empty string. Inputs were: {list(node_inputs.keys())}")
                         output = ""
+                    # Also ensure empty string is not treated as None downstream
+                    if output == "":
+                        await self._log("DEBUG", node.id, f"Agent returned empty string - this may cause downstream nodes to fail")
                 elif node.type == NodeType.TOOL:
                     output = node_inputs
                 else:
@@ -694,6 +699,7 @@ class WorkflowExecutorV3:
         source_state = self.execution_state.node_states.get(source_node_id)
         
         if source_state and source_state.output is not None:
+            # Empty string is a valid output (even if empty), return it
             return source_state.output
         
         return None
