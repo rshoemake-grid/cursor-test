@@ -610,6 +610,10 @@ class WorkflowExecutorV3:
                 if node.type in [NodeType.AGENT, NodeType.CONDITION, NodeType.LOOP]:
                     agent = AgentRegistry.get_agent(node, llm_config=self.llm_config, user_id=self.user_id)
                     output = await agent.execute(node_inputs)
+                    # Ensure output is never None - convert to empty string if needed
+                    if output is None:
+                        await self._log("WARNING", node.id, "Agent returned None, converting to empty string")
+                        output = ""
                 elif node.type == NodeType.TOOL:
                     output = node_inputs
                 else:

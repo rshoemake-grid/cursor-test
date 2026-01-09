@@ -503,6 +503,9 @@ class UnifiedLLMAgent(BaseAgent):
             
             data = response.json()
             
+            # Debug: Log response structure
+            print(f"🔍 Gemini API response structure: candidates={len(data.get('candidates', []))}, keys={list(data.keys())}")
+            
             # Extract content from Gemini response - handle both text and image outputs
             if "candidates" in data and len(data["candidates"]) > 0:
                 candidate = data["candidates"][0]
@@ -559,7 +562,9 @@ class UnifiedLLMAgent(BaseAgent):
                     if text_parts:
                         return "\n".join(text_parts)
                     
-                    # If no text or images, return empty string
+                    # If no text or images, return empty string (not None)
+                    # This ensures downstream nodes receive a value
+                    print(f"⚠️ Gemini returned no content (no text or images), returning empty string")
                     return ""
             
             raise RuntimeError(f"Unexpected Gemini API response format: {data}")
