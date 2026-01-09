@@ -1,15 +1,16 @@
 from abc import ABC, abstractmethod
-from typing import Any, Dict
+from typing import Any, Dict, Optional, Callable, Awaitable
 from ..models.schemas import Node
 
 
 class BaseAgent(ABC):
     """Base class for all agents"""
     
-    def __init__(self, node: Node):
+    def __init__(self, node: Node, log_callback: Optional[Callable[[str, str, str], Awaitable[None]]] = None):
         self.node = node
         self.node_id = node.id
         self.name = node.name
+        self.log_callback = log_callback  # Optional callback to forward logs to execution logs
         
     @abstractmethod
     async def execute(self, inputs: Dict[str, Any]) -> Any:

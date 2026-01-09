@@ -1,4 +1,4 @@
-from typing import Dict, Type, Optional, Any
+from typing import Dict, Type, Optional, Any, Callable, Awaitable
 from .base import BaseAgent
 from .unified_llm_agent import UnifiedLLMAgent
 from .condition_agent import ConditionAgent
@@ -16,18 +16,18 @@ class AgentRegistry:
     }
     
     @classmethod
-    def get_agent(cls, node: Node, llm_config: Optional[Dict[str, Any]] = None, user_id: Optional[str] = None) -> BaseAgent:
+    def get_agent(cls, node: Node, llm_config: Optional[Dict[str, Any]] = None, user_id: Optional[str] = None, log_callback: Optional[Callable[[str, str, str], Awaitable[None]]] = None) -> BaseAgent:
         """Get an agent instance for a node"""
         agent_class = cls._agents.get(node.type)
         
         if not agent_class:
             raise ValueError(f"No agent registered for node type: {node.type}")
         
-        # Pass llm_config and user_id to UnifiedLLMAgent, others don't need it
+        # Pass llm_config, user_id, and log_callback to UnifiedLLMAgent, others don't need it
         if node.type == NodeType.AGENT and llm_config:
-            return agent_class(node, llm_config=llm_config, user_id=user_id)
+            return agent_class(node, llm_config=llm_config, user_id=user_id, log_callback=log_callback)
         else:
-            return agent_class(node)
+            return agent_class(node, log_callback=log_callback)
     
     @classmethod
     def register_agent(cls, node_type: NodeType, agent_class: Type[BaseAgent]):

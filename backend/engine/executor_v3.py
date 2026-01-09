@@ -610,7 +610,11 @@ class WorkflowExecutorV3:
                 
                 # Execute based on node type
                 if node.type in [NodeType.AGENT, NodeType.CONDITION, NodeType.LOOP]:
-                    agent = AgentRegistry.get_agent(node, llm_config=self.llm_config, user_id=self.user_id)
+                    # Create log callback to forward agent logs to execution logs
+                    async def agent_log_callback(level: str, node_id: str, message: str):
+                        await self._log(level, node_id, message)
+                    
+                    agent = AgentRegistry.get_agent(node, llm_config=self.llm_config, user_id=self.user_id, log_callback=agent_log_callback)
                     
                     # Log input data for debugging
                     await self._log("DEBUG", node.id, f"Agent received inputs: {list(node_inputs.keys())}")

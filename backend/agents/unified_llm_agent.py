@@ -15,8 +15,8 @@ logger = get_logger(__name__)
 class UnifiedLLMAgent(BaseAgent):
     """Agent that uses configured LLM provider for processing"""
     
-    def __init__(self, node: Node, llm_config: Optional[Dict[str, Any]] = None, user_id: Optional[str] = None):
-        super().__init__(node)
+    def __init__(self, node: Node, llm_config: Optional[Dict[str, Any]] = None, user_id: Optional[str] = None, log_callback: Optional[Callable[[str, str, str], Awaitable[None]]] = None):
+        super().__init__(node, log_callback=log_callback)
         
         # Check both top-level and data object for agent_config
         agent_config = node.agent_config
@@ -274,12 +274,18 @@ class UnifiedLLMAgent(BaseAgent):
         
         # Execute based on provider type and ensure we never return None
         try:
+            # Forward key logs to execution logs if callback available
+            if self.log_callback:
+                await self.log_callback("INFO", self.node_id, f"Executing with provider '{provider_type}' and model '{model}'")
             logger.info(f"Executing with provider '{provider_type}' and model '{model}'")
+            
             if provider_type == "openai":
                 result = await self._execute_openai(user_message, model)
             elif provider_type == "anthropic":
                 result = await self._execute_anthropic(user_message, model)
             elif provider_type == "gemini":
+                if self.log_callback:
+                    await self.log_callback("INFO", self.node_id, f"Calling Gemini API with model '{model}'")
                 logger.info(f"Calling Gemini API with model '{model}'")
                 result = await self._execute_gemini(user_message, model)
             elif provider_type == "custom":
@@ -505,20 +511,30 @@ class UnifiedLLMAgent(BaseAgent):
             request_data["systemInstruction"] = {
                 "parts": [{"text": self.config.system_prompt}]
             }
+            if self.log_callback:
+                await self.log_callback("INFO", self.node_id, f"Gemini system instruction: {self.config.system_prompt}")
             logger.info(f"Gemini system instruction: {self.config.system_prompt}")
         
         # Log the user message parts that will be sent (use INFO so it shows in execution logs)
+        if self.log_callback:
+            await self.log_callback("INFO", self.node_id, f"Gemini user message parts ({len(parts)} total):")
         logger.info(f"Gemini user message parts ({len(parts)} total):")
         for i, part in enumerate(parts):
             if "text" in part:
                 text_preview = part["text"][:500] + "..." if len(part["text"]) > 500 else part["text"]
+                if self.log_callback:
+                    await self.log_callback("INFO", self.node_id, f"   Part {i}: text ({len(part['text'])} chars) - {text_preview}")
                 logger.info(f"   Part {i}: text ({len(part['text'])} chars) - {text_preview}")
             elif "inline_data" in part:
                 inline_data = part["inline_data"]
                 data_length = len(inline_data.get("data", ""))
+                if self.log_callback:
+                    await self.log_callback("INFO", self.node_id, f"   Part {i}: inline_data (mime_type={inline_data.get('mime_type')}, data_length={data_length} chars)")
                 logger.info(f"   Part {i}: inline_data (mime_type={inline_data.get('mime_type')}, data_length={data_length} chars)")
             elif "file_data" in part:
                 file_data = part["file_data"]
+                if self.log_callback:
+                    await self.log_callback("INFO", self.node_id, f"   Part {i}: file_data (file_uri={file_data.get('file_uri', '')[:100]}...)")
                 logger.info(f"   Part {i}: file_data (file_uri={file_data.get('file_uri', '')[:100]}...)")
         
         # Add generation config
@@ -605,6 +621,8 @@ class UnifiedLLMAgent(BaseAgent):
             data = response.json()
             
             # Log response structure - use INFO so it shows in execution logs
+            if self.log_callback:
+                await self.log_callback("INFO", self.node_id, f"Gemini API response structure: candidates={len(data.get('candidates', []))}, keys={list(data.keys())}")
             logger.info(f"Gemini API response structure: candidates={len(data.get('candidates', []))}, keys={list(data.keys())}")
             if "candidates" in data and len(data["candidates"]) > 0:
                 candidate = data["candidates"][0]
@@ -628,8 +646,12 @@ class UnifiedLLMAgent(BaseAgent):
                 # Check for finish reason - might indicate why no content
                 finish_reason = candidate.get("finishReason", "")
                 if finish_reason:
+                    if self.log_callback:
+                        await self.log_callback("INFO", self.node_id, f"   Gemini finish reason: {finish_reason}")
                     logger.info(f"   Gemini finish reason: {finish_reason}")
                 else:
+                    if self.log_callback:
+                        await self.log_callback("INFO", self.node_id, f"   Gemini finish reason: (not provided)")
                     logger.info(f"   Gemini finish reason: (not provided)")
                 
                 if "content" in candidate and "parts" in candidate["content"]:

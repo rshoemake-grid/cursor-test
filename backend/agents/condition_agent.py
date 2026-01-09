@@ -6,8 +6,8 @@ from ..models.schemas import Node
 class ConditionAgent(BaseAgent):
     """Agent that evaluates conditions and returns branch information"""
     
-    def __init__(self, node: Node):
-        super().__init__(node)
+    def __init__(self, node: Node, log_callback=None):
+        super().__init__(node, log_callback=log_callback)
         
         # Check both top-level and data object for condition_config
         condition_config = node.condition_config

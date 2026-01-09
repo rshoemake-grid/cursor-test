@@ -6,8 +6,8 @@ from ..models.schemas import Node
 class LoopAgent(BaseAgent):
     """Agent that manages loop iterations"""
     
-    def __init__(self, node: Node):
-        super().__init__(node)
+    def __init__(self, node: Node, log_callback=None):
+        super().__init__(node, log_callback=log_callback)
         
         # Check both top-level and data object for loop_config
         loop_config = node.loop_config
