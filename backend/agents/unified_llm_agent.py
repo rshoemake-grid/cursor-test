@@ -531,11 +531,11 @@ class UnifiedLLMAgent(BaseAgent):
                                 logger.info(f"   Image dimensions: {width}x{height} pixels, {total_tiles} tiles, ~{estimated_tokens:,} tokens")
                                 
                                 # Check if image is too large and resize if needed
-                                if estimated_tokens > 800_000:  # Leave larger margin below 1,048,576
+                                if estimated_tokens > 600_000:  # Leave larger margin below 1,048,576
                                     # Calculate target dimensions to stay under limit
-                                    # Target: ~700,000 tokens max (safe margin for text + other content)
-                                    max_tiles = (700_000 - 85) // 85  # ~8,234 tiles
-                                    max_dimension = int((max_tiles ** 0.5) * 512)  # ~4,600 pixels per side
+                                    # Target: ~500,000 tokens max (safe margin for text + prompt + other content)
+                                    max_tiles = (500_000 - 85) // 85  # ~5,881 tiles
+                                    max_dimension = int((max_tiles ** 0.5) * 512)  # ~3,900 pixels per side
                                     
                                     if PIL_AVAILABLE:
                                         # Resize image to fit within token limit
