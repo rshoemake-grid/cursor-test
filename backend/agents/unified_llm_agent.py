@@ -598,24 +598,71 @@ class UnifiedLLMAgent(BaseAgent):
                                             new_total_tiles = new_tiles_per_width * new_tiles_per_height
                                             new_estimated_tokens = new_total_tiles * 85 + 85
                                             
-                                            logger.info(f"   Resized image to {new_width}x{new_height} pixels, {new_total_tiles} tiles, ~{new_estimated_tokens:,} tokens")
+                                            # Recalculate total with new image tokens
+                                            new_total_estimated_tokens = new_estimated_tokens + text_tokens
                                             
-                                            # Update dimensions for logging
+                                            logger.info(f"   Resized image to {new_width}x{new_height} pixels, {new_total_tiles} tiles, ~{new_estimated_tokens:,} tokens")
+                                            logger.info(f"   New total estimated tokens: image={new_estimated_tokens:,}, text={text_tokens:,}, total={new_total_estimated_tokens:,}")
+                                            
+                                            # Update dimensions and token counts
                                             width = new_width
                                             height = new_height
+                                            estimated_tokens = new_estimated_tokens
+                                            total_estimated_tokens = new_total_estimated_tokens
+                                            
+                                            # Double-check: if still too large, resize again more aggressively
+                                            if new_total_estimated_tokens > 900_000:
+                                                logger.warning(f"   Resized image still too large ({new_total_estimated_tokens:,} tokens). Resizing again more aggressively...")
+                                                # Even smaller target: ~150k tokens for image
+                                                max_tiles_2 = (150_000 - 85) // 85  # ~1,764 tiles
+                                                max_dimension_2 = int((max_tiles_2 ** 0.5) * 512)  # ~2,100 pixels per side
+                                                
+                                                if width > height:
+                                                    new_width_2 = max_dimension_2
+                                                    new_height_2 = int(height * (max_dimension_2 / width))
+                                                else:
+                                                    new_height_2 = max_dimension_2
+                                                    new_width_2 = int(width * (max_dimension_2 / height))
+                                                
+                                                img_resized_2 = img_resized.resize((new_width_2, new_height_2), Image.Resampling.LANCZOS)
+                                                
+                                                output_buffer_2 = io.BytesIO()
+                                                if mimetype == "image/png":
+                                                    img_resized_2.save(output_buffer_2, format='PNG', optimize=True)
+                                                elif mimetype in ["image/jpeg", "image/jpg"]:
+                                                    img_resized_2.save(output_buffer_2, format='JPEG', quality=80, optimize=True)
+                                                else:
+                                                    img_resized_2.save(output_buffer_2, format='PNG', optimize=True)
+                                                    mimetype = "image/png"
+                                                
+                                                base64_data = base64.b64encode(output_buffer_2.getvalue()).decode('utf-8')
+                                                
+                                                new_tiles_per_width_2 = (new_width_2 + 511) // 512
+                                                new_tiles_per_height_2 = (new_height_2 + 511) // 512
+                                                new_total_tiles_2 = new_tiles_per_width_2 * new_tiles_per_height_2
+                                                new_estimated_tokens_2 = new_total_tiles_2 * 85 + 85
+                                                new_total_estimated_tokens_2 = new_estimated_tokens_2 + text_tokens
+                                                
+                                                logger.info(f"   Second resize to {new_width_2}x{new_height_2} pixels, {new_total_tiles_2} tiles, ~{new_estimated_tokens_2:,} tokens")
+                                                logger.info(f"   Final total estimated tokens: image={new_estimated_tokens_2:,}, text={text_tokens:,}, total={new_total_estimated_tokens_2:,}")
+                                                
+                                                width = new_width_2
+                                                height = new_height_2
+                                                estimated_tokens = new_estimated_tokens_2
+                                                total_estimated_tokens = new_total_estimated_tokens_2
                                             
                                         except Exception as e:
-                                            logger.error(f"   Failed to resize image: {e}")
+                                            logger.error(f"   Failed to resize image: {e}", exc_info=True)
                                             error_msg = (
                                                 f"Image is too large ({width}x{height} pixels ≈ {estimated_tokens:,} tokens, limit is 1,048,576) "
-                                                f"and automatic resizing failed. Please resize the image manually to approximately 5000x5000 pixels or smaller."
+                                                f"and automatic resizing failed: {str(e)}. Please resize the image manually to approximately 2400x2400 pixels or smaller."
                                             )
                                             raise RuntimeError(error_msg)
                                     else:
                                         # PIL not available, raise error
                                         error_msg = (
                                             f"Image is too large ({width}x{height} pixels ≈ {estimated_tokens:,} tokens, limit is 1,048,576). "
-                                            f"Please install Pillow (pip install Pillow) to enable automatic resizing, or resize the image manually to approximately 5000x5000 pixels or smaller."
+                                            f"PIL/Pillow is not available for automatic resizing. Please install Pillow (pip install Pillow) or resize the image manually to approximately 2400x2400 pixels or smaller."
                                         )
                                         logger.error(error_msg)
                                         raise RuntimeError(error_msg)
