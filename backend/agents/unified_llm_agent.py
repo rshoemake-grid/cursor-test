@@ -498,6 +498,7 @@ class UnifiedLLMAgent(BaseAgent):
                             # Try to get actual image dimensions from headers
                             width = None
                             height = None
+                            decoded = None
                             try:
                                 decoded = base64.b64decode(base64_data)
                                 
@@ -530,23 +531,40 @@ class UnifiedLLMAgent(BaseAgent):
                                 
                                 logger.info(f"   Image dimensions: {width}x{height} pixels, {total_tiles} tiles, ~{estimated_tokens:,} tokens")
                                 
+                                # Estimate text content tokens (rough estimate: ~4 chars per token)
+                                text_tokens = 0
+                                if self.config.system_prompt:
+                                    text_tokens += len(self.config.system_prompt) // 4
+                                # Estimate tokens from text parts in user message
+                                for part in parts:
+                                    if "text" in part:
+                                        text_tokens += len(part["text"]) // 4
+                                
+                                # Total estimated tokens including text
+                                total_estimated_tokens = estimated_tokens + text_tokens
+                                
+                                logger.info(f"   Estimated tokens: image={estimated_tokens:,}, text={text_tokens:,}, total={total_estimated_tokens:,}")
+                                
                                 # Check if image is too large and resize if needed
-                                if estimated_tokens > 600_000:  # Leave larger margin below 1,048,576
+                                # Be more aggressive - resize if image alone exceeds 400k, or total exceeds 800k
+                                if estimated_tokens > 400_000 or total_estimated_tokens > 800_000:
                                     # Calculate target dimensions to stay under limit
-                                    # Target: ~500,000 tokens max (safe margin for text + prompt + other content)
-                                    max_tiles = (500_000 - 85) // 85  # ~5,881 tiles
-                                    max_dimension = int((max_tiles ** 0.5) * 512)  # ~3,900 pixels per side
+                                    # Target: ~300,000 tokens for image (leaves ~700k for text/prompt/other)
+                                    max_tiles = (300_000 - 85) // 85  # ~3,528 tiles
+                                    max_dimension = int((max_tiles ** 0.5) * 512)  # ~3,000 pixels per side
                                     
                                     if PIL_AVAILABLE:
                                         # Resize image to fit within token limit
                                         logger.warning(
-                                            f"Image is too large ({width}x{height} pixels ≈ {estimated_tokens:,} tokens, limit is 1,048,576). "
+                                            f"Image is too large ({width}x{height} pixels ≈ {estimated_tokens:,} tokens, "
+                                            f"total with text ≈ {total_estimated_tokens:,} tokens, limit is 1,048,576). "
                                             f"Resizing to fit within limit (target: ~{max_dimension}x{max_dimension} pixels)."
                                         )
                                         
                                         try:
-                                            # Decode image
-                                            decoded = base64.b64decode(base64_data)
+                                            # Use already decoded image if available, otherwise decode
+                                            if decoded is None:
+                                                decoded = base64.b64decode(base64_data)
                                             img = Image.open(io.BytesIO(decoded))
                                             
                                             # Calculate new dimensions maintaining aspect ratio
