@@ -7,6 +7,9 @@ import asyncio
 import httpx
 from .base import BaseAgent
 from ..models.schemas import Node
+from ..utils.logger import get_logger
+
+logger = get_logger(__name__)
 
 
 class UnifiedLLMAgent(BaseAgent):
@@ -150,12 +153,12 @@ class UnifiedLLMAgent(BaseAgent):
         model = self.config.model or self.llm_config["model"]
         
         # Debug logging
-        print(f"🔍 Agent node '{self.node_id}': Looking for provider for model '{model}'")
-        print(f"   Agent config model: {self.config.model}")
-        print(f"   LLM config model: {self.llm_config.get('model')}")
-        print(f"   User ID: {self.user_id}")
-        print(f"   Input keys: {list(inputs.keys())}")
-        print(f"   User message type: {type(user_message)}, is_list: {isinstance(user_message, list)}")
+        logger.debug(f"Agent node '{self.node_id}': Looking for provider for model '{model}'")
+        logger.debug(f"   Agent config model: {self.config.model}")
+        logger.debug(f"   LLM config model: {self.llm_config.get('model')}")
+        logger.debug(f"   User ID: {self.user_id}")
+        logger.debug(f"   Input keys: {list(inputs.keys())}")
+        logger.debug(f"   User message type: {type(user_message)}, is_list: {isinstance(user_message, list)}")
         
         # Try to find the provider that owns this model
         # This ensures we use the correct API for the selected model
@@ -175,16 +178,16 @@ class UnifiedLLMAgent(BaseAgent):
             
             # Debug logging
             api_key_preview = api_key[:15] + "..." if len(api_key) > 15 else api_key
-            print(f"🔑 Using API key from provider '{provider_type}' for model '{model}': {api_key_preview} (length: {len(api_key)})")
+            logger.debug(f"Using API key from provider '{provider_type}' for model '{model}': {api_key_preview} (length: {len(api_key)})")
             
             # Validate API key (should already be filtered, but double-check)
             try:
                 self._validate_api_key(api_key)
             except ValueError as e:
                 # Provide more helpful error message with debug info
-                print(f"❌ API key validation failed for provider '{provider_type}': {str(e)}")
-                print(f"   Key preview: {api_key_preview}")
-                print(f"   Key length: {len(api_key)}")
+                logger.error(f"API key validation failed for provider '{provider_type}': {str(e)}")
+                logger.debug(f"   Key preview: {api_key_preview}")
+                logger.debug(f"   Key length: {len(api_key)}")
                 raise ValueError(
                     f"Provider '{provider_type}' for model '{model}' has an invalid API key. "
                     "Please go to Settings, update the API key for this provider with a valid key, enable it, and click 'Sync Now'."
@@ -195,7 +198,7 @@ class UnifiedLLMAgent(BaseAgent):
                 **self.llm_config,
                 **model_provider_config
             }
-            print(f"✅ Found provider for model '{model}': {provider_type}")
+            logger.debug(f"Found provider for model '{model}': {provider_type}")
         else:
             # Model not found in any provider - check if model name suggests a specific provider
             model_lower = model.lower()
@@ -221,8 +224,8 @@ class UnifiedLLMAgent(BaseAgent):
             
             # If we have a model-specific provider suggestion, warn if using different provider
             if suggested_provider and provider_type != suggested_provider:
-                print(f"⚠️ WARNING: Model '{model}' suggests {suggested_provider} provider, but using {provider_type} provider")
-                print(f"   This may cause errors. Please configure a {suggested_provider} provider with model '{model}' in Settings.")
+                logger.warning(f"Model '{model}' suggests {suggested_provider} provider, but using {provider_type} provider")
+                logger.warning(f"   This may cause errors. Please configure a {suggested_provider} provider with model '{model}' in Settings.")
                 raise ValueError(
                     f"Model '{model}' not found in any enabled provider. "
                     f"This model appears to be a {suggested_provider} model, but no {suggested_provider} provider "
@@ -248,7 +251,7 @@ class UnifiedLLMAgent(BaseAgent):
                     "Please go to Settings, update the API key for this provider with a valid key, enable it, and click 'Sync Now'."
                 ) from e
             
-            print(f"⚠️ No provider found for model '{model}', using default provider: {provider_type}")
+            logger.warning(f"No provider found for model '{model}', using default provider: {provider_type}")
         
         # Execute based on provider type and ensure we never return None
         try:
@@ -265,13 +268,13 @@ class UnifiedLLMAgent(BaseAgent):
             
             # Ensure result is never None
             if result is None:
-                print(f"⚠️ Provider '{provider_type}' returned None, converting to empty string")
+                logger.warning(f"Provider '{provider_type}' returned None, converting to empty string")
                 return ""
             
-            print(f"✅ Agent execution completed, result type: {type(result)}, length: {len(str(result)) if result else 0}")
+            logger.debug(f"Agent execution completed, result type: {type(result)}, length: {len(str(result)) if result else 0}")
             return result
         except Exception as e:
-            print(f"❌ Agent execution failed: {type(e).__name__}: {str(e)}")
+            logger.error(f"Agent execution failed: {type(e).__name__}: {str(e)}")
             raise
     
     async def _execute_openai(self, user_message: Any, model: str) -> Any:
@@ -389,20 +392,20 @@ class UnifiedLLMAgent(BaseAgent):
         # Gemini API format - supports vision models
         parts = []
         
-        print(f"🔍 Building Gemini request: user_message type={type(user_message)}, is_list={isinstance(user_message, list)}")
+        logger.debug(f"Building Gemini request: user_message type={type(user_message)}, is_list={isinstance(user_message, list)}")
         
         if isinstance(user_message, list):
             # Vision model - process content array
-            print(f"   Processing {len(user_message)} items in user_message list")
+            logger.debug(f"   Processing {len(user_message)} items in user_message list")
             for i, item in enumerate(user_message):
-                print(f"   Item {i}: type={item.get('type')}, keys={list(item.keys())}")
+                logger.debug(f"   Item {i}: type={item.get('type')}, keys={list(item.keys())}")
                 if item.get("type") == "text":
                     text_content = item.get("text", "")
                     parts.append({"text": text_content})
-                    print(f"   Added text part: {len(text_content)} chars")
+                    logger.debug(f"   Added text part: {len(text_content)} chars")
                 elif item.get("type") == "image_url":
                     image_url = item.get("image_url", {}).get("url", "")
-                    print(f"   Processing image_url: {image_url[:50]}...")
+                    logger.debug(f"   Processing image_url: {image_url[:50]}...")
                     if image_url.startswith("data:image/"):
                         # Extract base64 data
                         try:
@@ -414,9 +417,9 @@ class UnifiedLLMAgent(BaseAgent):
                                     "data": base64_data
                                 }
                             })
-                            print(f"   Added inline_data part: mime_type={mimetype}, data_length={len(base64_data)}")
+                            logger.debug(f"   Added inline_data part: mime_type={mimetype}, data_length={len(base64_data)}")
                         except Exception as e:
-                            print(f"   ⚠️ Failed to parse data URL: {e}")
+                            logger.warning(f"   Failed to parse data URL: {e}")
                             pass
                     elif image_url.startswith(("http://", "https://")):
                         # URL to image - Gemini can handle URLs directly
@@ -426,14 +429,14 @@ class UnifiedLLMAgent(BaseAgent):
                                 "mime_type": "image/png"  # Default, could be detected from URL
                             }
                         })
-                        print(f"   Added file_data part: uri={image_url}")
+                        logger.debug(f"   Added file_data part: uri={image_url}")
         else:
             # Text model
             text_content = str(user_message)
             parts.append({"text": text_content})
-            print(f"   Added text part (non-list): {len(text_content)} chars")
+            logger.debug(f"   Added text part (non-list): {len(text_content)} chars")
         
-        print(f"   Total parts: {len(parts)}, Part types: {[list(p.keys()) for p in parts]}")
+        logger.debug(f"   Total parts: {len(parts)}, Part types: {[list(p.keys()) for p in parts]}")
         
         contents = [{
             "parts": parts
@@ -503,7 +506,7 @@ class UnifiedLLMAgent(BaseAgent):
                             retry_delay = 2.0 * (2 ** attempt)
                         
                         if attempt < max_retries - 1:
-                            print(f"⚠️ Rate limit exceeded (429), retrying in {retry_delay:.1f}s (attempt {attempt + 1}/{max_retries})...")
+                            logger.warning(f"Rate limit exceeded (429), retrying in {retry_delay:.1f}s (attempt {attempt + 1}/{max_retries})...")
                             await asyncio.sleep(retry_delay)
                             continue
                         else:
@@ -532,21 +535,21 @@ class UnifiedLLMAgent(BaseAgent):
             
             data = response.json()
             
-            # Debug: Log response structure - use print so it shows in console
-            print(f"🔍 Gemini API response structure: candidates={len(data.get('candidates', []))}, keys={list(data.keys())}")
+            # Debug: Log response structure
+            logger.debug(f"Gemini API response structure: candidates={len(data.get('candidates', []))}, keys={list(data.keys())}")
             if "candidates" in data and len(data["candidates"]) > 0:
                 candidate = data["candidates"][0]
-                print(f"   Candidate keys: {list(candidate.keys())}")
+                logger.debug(f"   Candidate keys: {list(candidate.keys())}")
                 if "content" in candidate:
-                    print(f"   Content keys: {list(candidate['content'].keys())}")
+                    logger.debug(f"   Content keys: {list(candidate['content'].keys())}")
                     if "parts" in candidate["content"]:
-                        print(f"   Parts count: {len(candidate['content']['parts'])}, Part keys: {[list(p.keys()) for p in candidate['content']['parts']]}")
+                        logger.debug(f"   Parts count: {len(candidate['content']['parts'])}, Part keys: {[list(p.keys()) for p in candidate['content']['parts']]}")
             
             # Check for error in response
             if "error" in data:
                 error_msg = data["error"].get("message", "Unknown error")
                 error_details = data["error"].get("details", [])
-                print(f"❌ Gemini API error: {error_msg}, details: {error_details}")
+                logger.error(f"Gemini API error: {error_msg}, details: {error_details}")
                 raise RuntimeError(f"Gemini API error: {error_msg}")
             
             # Extract content from Gemini response - handle both text and image outputs
@@ -556,7 +559,7 @@ class UnifiedLLMAgent(BaseAgent):
                 # Check for finish reason - might indicate why no content
                 finish_reason = candidate.get("finishReason", "")
                 if finish_reason:
-                    print(f"   Finish reason: {finish_reason}")
+                    logger.debug(f"   Finish reason: {finish_reason}")
                 
                 if "content" in candidate and "parts" in candidate["content"]:
                     parts = candidate["content"]["parts"]
@@ -569,10 +572,10 @@ class UnifiedLLMAgent(BaseAgent):
                     image_parts = []
                     
                     for i, part in enumerate(parts):
-                        print(f"   Part {i}: keys={list(part.keys())}")
+                        logger.debug(f"   Part {i}: keys={list(part.keys())}")
                         if "text" in part and part["text"]:
                             text_parts.append(part["text"])
-                            print(f"   Found text part: {len(part['text'])} chars")
+                            logger.debug(f"   Found text part: {len(part['text'])} chars")
                         elif "inlineData" in part:
                             # Image data - convert to base64 data URL (REST API uses camelCase)
                             inline_data = part["inlineData"]
@@ -580,9 +583,9 @@ class UnifiedLLMAgent(BaseAgent):
                             image_data = inline_data.get("data", "")
                             if image_data:
                                 image_parts.append(f"data:{mime_type};base64,{image_data}")
-                                print(f"✅ Extracted image from Gemini response: {len(image_data)} chars of base64 data, mime_type: {mime_type}")
+                                logger.info(f"Extracted image from Gemini response: {len(image_data)} chars of base64 data, mime_type: {mime_type}")
                             else:
-                                print(f"⚠️ inlineData found but 'data' field is empty")
+                                logger.warning(f"inlineData found but 'data' field is empty")
                         elif "inline_data" in part:
                             # Fallback for snake_case (if API returns it)
                             inline_data = part["inline_data"]
@@ -590,17 +593,17 @@ class UnifiedLLMAgent(BaseAgent):
                             image_data = inline_data.get("data", "")
                             if image_data:
                                 image_parts.append(f"data:{mime_type};base64,{image_data}")
-                                print(f"✅ Extracted image from Gemini response (snake_case): {len(image_data)} chars of base64 data, mime_type: {mime_type}")
+                                logger.info(f"Extracted image from Gemini response (snake_case): {len(image_data)} chars of base64 data, mime_type: {mime_type}")
                             else:
-                                print(f"⚠️ inline_data found but 'data' field is empty")
+                                logger.warning(f"inline_data found but 'data' field is empty")
                         else:
-                            print(f"⚠️ Part {i} has unknown structure: {part}")
+                            logger.warning(f"Part {i} has unknown structure: {part}")
                     
                     # If we have images, return them (prefer images over text for image generation models)
                     if image_parts:
                         if len(image_parts) == 1:
                             # Single image - return as base64 data URL
-                            print(f"✅ Returning single image as base64 data URL")
+                            logger.info(f"Returning single image as base64 data URL")
                             return image_parts[0]
                         else:
                             # Multiple images - return as dict with images array
@@ -608,24 +611,24 @@ class UnifiedLLMAgent(BaseAgent):
                                 "images": image_parts,
                                 "text": "\n".join(text_parts) if text_parts else None
                             }
-                            print(f"✅ Returning {len(image_parts)} images with text")
+                            logger.info(f"Returning {len(image_parts)} images with text")
                             return result
                     
                     # Log if we expected images but didn't get any
                     if is_image_model and not image_parts:
-                        print(f"⚠️ Image generation model '{model}' returned text but no images. Text parts: {len(text_parts)}, Parts structure: {[list(p.keys()) for p in parts]}")
+                        logger.warning(f"Image generation model '{model}' returned text but no images. Text parts: {len(text_parts)}, Parts structure: {[list(p.keys()) for p in parts]}")
                     
                     # Otherwise return text
                     if text_parts:
-                        print(f"✅ Returning text: {len(text_parts)} parts, total length: {sum(len(t) for t in text_parts)}")
+                        logger.debug(f"Returning text: {len(text_parts)} parts, total length: {sum(len(t) for t in text_parts)}")
                         return "\n".join(text_parts)
                     
                     # If no text or images, return empty string (not None)
                     # This ensures downstream nodes receive a value
-                    print(f"⚠️ Gemini returned no content (no text or images). Parts: {len(parts)}, Finish reason: {finish_reason}")
+                    logger.warning(f"Gemini returned no content (no text or images). Parts: {len(parts)}, Finish reason: {finish_reason}")
                     return ""
                 else:
-                    print(f"⚠️ Candidate has no 'content' or 'parts'. Candidate keys: {list(candidate.keys())}")
+                    logger.warning(f"Candidate has no 'content' or 'parts'. Candidate keys: {list(candidate.keys())}")
                     return ""
             else:
                 # No candidates in response - check for errors first
@@ -633,11 +636,11 @@ class UnifiedLLMAgent(BaseAgent):
                     error_msg = data["error"].get("message", "Unknown error")
                     raise RuntimeError(f"Gemini API error: {error_msg}")
                 # No candidates and no error - return empty string instead of None
-                print(f"⚠️ Gemini API response has no candidates. Response keys: {list(data.keys())}, Full response: {data}")
+                logger.warning(f"Gemini API response has no candidates. Response keys: {list(data.keys())}, Full response: {data}")
                 return ""
             
             # Fallback - should never reach here, but ensure we never return None
-            print(f"⚠️ Unexpected Gemini API response format: {data}")
+            logger.warning(f"Unexpected Gemini API response format: {data}")
             return ""
     
     async def _execute_custom(self, user_message: Any, model: str) -> Any:
@@ -715,7 +718,7 @@ class UnifiedLLMAgent(BaseAgent):
         image_content = []
         text_parts = []
         
-        print(f"🔍 _build_user_message: inputs keys={list(inputs.keys())}")
+        logger.debug(f"_build_user_message: inputs keys={list(inputs.keys())}")
         
         for key, value in inputs.items():
             # Check if value is an image (base64, URL, or binary)
@@ -783,10 +786,10 @@ class UnifiedLLMAgent(BaseAgent):
             else:
                 # Regular text input - skip 'source' key when we have images (it's metadata)
                 if has_images and key == 'source':
-                    print(f"   Skipping 'source' key (metadata) when images present")
+                    logger.debug(f"   Skipping 'source' key (metadata) when images present")
                     continue
                 text_parts.append(f"{key}: {value}")
-                print(f"   Added text from key '{key}': {str(value)[:50]}...")
+                logger.debug(f"   Added text from key '{key}': {str(value)[:50]}...")
         
         # If we have images, return structured content for vision models
         if has_images:
