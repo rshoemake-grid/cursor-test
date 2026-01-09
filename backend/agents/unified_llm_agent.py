@@ -579,70 +579,100 @@ class UnifiedLLMAgent(BaseAgent):
         # Use 5 minute timeout for LLM requests (some models can take longer)
         max_retries = 3
         retry_delay = 2.0  # Start with 2 seconds
+        response = None
+        data = None
         
         for attempt in range(max_retries):
-            async with httpx.AsyncClient(timeout=300.0) as client:
-                response = await client.post(
-                    f"{base_url}/models/{model}:generateContent?key={api_key}",
-                    headers={
-                        "Content-Type": "application/json"
-                    },
-                    json=request_data
-                )
-                
-                if response.status_code == 200:
-                    break  # Success, exit retry loop
-                
-                # Handle rate limiting (429) with retry
-                if response.status_code == 429:
-                    try:
-                        error_data = response.json()
-                        retry_info = None
-                        # Try to extract retry delay from error response
-                        if "error" in error_data and "details" in error_data["error"]:
-                            for detail in error_data["error"]["details"]:
-                                if detail.get("@type") == "type.googleapis.com/google.rpc.RetryInfo":
-                                    retry_info = detail.get("retryDelay")
-                                    if retry_info:
-                                        # Parse retry delay (format: "2s" or "2.826725159s")
-                                        delay_str = retry_info.replace("s", "")
-                                        try:
-                                            retry_delay = float(delay_str)
-                                        except ValueError:
-                                            retry_delay = 2.0
-                        else:
-                            # Fallback: use exponential backoff
-                            retry_delay = 2.0 * (2 ** attempt)
-                        
-                        if attempt < max_retries - 1:
-                            logger.warning(f"Rate limit exceeded (429), retrying in {retry_delay:.1f}s (attempt {attempt + 1}/{max_retries})...")
-                            await asyncio.sleep(retry_delay)
-                            continue
-                        else:
-                            # Last attempt failed
-                            raise RuntimeError(
-                                f"Gemini API rate limit exceeded after {max_retries} attempts. "
-                                f"Please wait and try again later. Error: {response.text}"
-                            )
-                    except (ValueError, KeyError) as e:
-                        # If we can't parse the error, use exponential backoff
-                        if attempt < max_retries - 1:
-                            retry_delay = 2.0 * (2 ** attempt)
-                            logger.warning(f"Rate limit exceeded (429), retrying in {retry_delay:.1f}s (attempt {attempt + 1}/{max_retries})...")
-                            await asyncio.sleep(retry_delay)
-                            continue
-                        else:
-                            raise RuntimeError(
-                                f"Gemini API request failed with status {response.status_code}: {response.text}"
-                            )
-                
-                # For other errors, don't retry
-                if response.status_code != 200:
-                    raise RuntimeError(
-                        f"Gemini API request failed with status {response.status_code}: {response.text}"
+            try:
+                async with httpx.AsyncClient(timeout=300.0) as client:
+                    response = await client.post(
+                        f"{base_url}/models/{model}:generateContent?key={api_key}",
+                        headers={
+                            "Content-Type": "application/json"
+                        },
+                        json=request_data
                     )
-            
-            data = response.json()
+                    
+                    if response.status_code == 200:
+                        # Success - parse response immediately while response object is still valid
+                        try:
+                            data = response.json()
+                            break  # Success, exit retry loop
+                        except Exception as e:
+                            logger.error(f"Failed to parse Gemini API response as JSON: {e}")
+                            logger.error(f"Response status: {response.status_code}, Response text: {response.text[:500]}")
+                            raise RuntimeError(f"Failed to parse Gemini API response: {e}")
+                    
+                    # Handle rate limiting (429) with retry
+                    if response.status_code == 429:
+                        try:
+                            error_data = response.json()
+                            retry_info = None
+                            # Try to extract retry delay from error response
+                            if "error" in error_data and "details" in error_data["error"]:
+                                for detail in error_data["error"]["details"]:
+                                    if detail.get("@type") == "type.googleapis.com/google.rpc.RetryInfo":
+                                        retry_info = detail.get("retryDelay")
+                                        if retry_info:
+                                            # Parse retry delay (format: "2s" or "2.826725159s")
+                                            delay_str = retry_info.replace("s", "")
+                                            try:
+                                                retry_delay = float(delay_str)
+                                            except ValueError:
+                                                retry_delay = 2.0
+                            else:
+                                # Fallback: use exponential backoff
+                                retry_delay = 2.0 * (2 ** attempt)
+                            
+                            if attempt < max_retries - 1:
+                                logger.warning(f"Rate limit exceeded (429), retrying in {retry_delay:.1f}s (attempt {attempt + 1}/{max_retries})...")
+                                await asyncio.sleep(retry_delay)
+                                continue
+                            else:
+                                # Last attempt failed
+                                raise RuntimeError(
+                                    f"Gemini API rate limit exceeded after {max_retries} attempts. "
+                                    f"Please wait and try again later. Error: {response.text}"
+                                )
+                        except (ValueError, KeyError) as e:
+                            # If we can't parse the error, use exponential backoff
+                            if attempt < max_retries - 1:
+                                retry_delay = 2.0 * (2 ** attempt)
+                                logger.warning(f"Rate limit exceeded (429), retrying in {retry_delay:.1f}s (attempt {attempt + 1}/{max_retries})...")
+                                await asyncio.sleep(retry_delay)
+                                continue
+                            else:
+                                raise RuntimeError(
+                                    f"Gemini API request failed with status {response.status_code}: {response.text}"
+                                )
+                    
+                    # For other errors, don't retry
+                    if response.status_code != 200:
+                        error_text = response.text[:500] if response.text else "No error message"
+                        raise RuntimeError(
+                            f"Gemini API request failed with status {response.status_code}: {error_text}"
+                        )
+            except RuntimeError:
+                # Re-raise RuntimeErrors (these are our intentional errors)
+                raise
+            except Exception as e:
+                # For other exceptions, log and retry if we have attempts left
+                if attempt < max_retries - 1:
+                    logger.warning(f"Gemini API request exception (attempt {attempt + 1}/{max_retries}): {type(e).__name__}: {str(e)}")
+                    await asyncio.sleep(retry_delay)
+                    continue
+                else:
+                    # Last attempt failed
+                    logger.error(f"Gemini API request failed after {max_retries} attempts: {type(e).__name__}: {str(e)}")
+                    raise RuntimeError(f"Gemini API request failed: {type(e).__name__}: {str(e)}")
+        
+        # Ensure we have data before proceeding
+        if data is None:
+            error_msg = f"Gemini API request completed but no data received"
+            if response:
+                error_msg += f". Response status: {response.status_code}, Response text: {response.text[:500] if response.text else 'empty'}"
+            logger.error(error_msg)
+            return ""
             
             # Log response structure - use INFO so it shows in execution logs
             if self.log_callback:
