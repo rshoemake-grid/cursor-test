@@ -678,14 +678,14 @@ class UnifiedLLMAgent(BaseAgent):
                                                 f"and automatic resizing failed: {str(e)}. Please resize the image manually to approximately 2400x2400 pixels or smaller."
                                             )
                                             raise RuntimeError(error_msg)
-                                    else:
-                                        # PIL not available, raise error
-                                        error_msg = (
-                                            f"Image is too large ({width}x{height} pixels ≈ {estimated_tokens:,} tokens, limit is 1,048,576). "
-                                            f"PIL/Pillow is not available for automatic resizing. Please install Pillow (pip install Pillow) or resize the image manually to approximately 2400x2400 pixels or smaller."
-                                        )
-                                        logger.error(error_msg)
-                                        raise RuntimeError(error_msg)
+                                else:
+                                    # PIL not available, raise error
+                                    error_msg = (
+                                        f"Image is too large ({width}x{height} pixels ≈ {estimated_tokens:,} tokens, limit is 1,048,576). "
+                                        f"PIL/Pillow is not available for automatic resizing. Please install Pillow (pip install Pillow) or resize the image manually to approximately 2400x2400 pixels or smaller."
+                                    )
+                                    logger.error(error_msg)
+                                    raise RuntimeError(error_msg)
                             else:
                                 # Fallback: estimate from base64 size
                                 # Base64 increases size by ~33%, so original size ≈ base64_size * 0.75
