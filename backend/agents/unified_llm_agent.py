@@ -824,11 +824,27 @@ class UnifiedLLMAgent(BaseAgent):
             return content
         
         # Otherwise, return plain text message
+        # Combine prompt with input data
         if len(inputs) == 1:
-            return str(list(inputs.values())[0])
+            input_value = str(list(inputs.values())[0])
+            if text_parts:
+                # We have a prompt, combine it with the input (prompt first, then data)
+                text_result = "\n\n".join(text_parts)
+            else:
+                text_result = input_value
+            logger.info(f"Built text message (single input): length={len(text_result)} (includes prompt: {bool(self.config.system_prompt)})")
+            return text_result
         else:
-            parts = []
-            for key, value in inputs.items():
-                parts.append(f"{key}: {value}")
-            return "\n".join(parts)
+            # Multiple inputs - combine prompt with all inputs
+            if text_parts:
+                # text_parts already contains the prompt and input data
+                text_result = "\n\n".join(text_parts)
+            else:
+                # No prompt, just format inputs
+                parts = []
+                for key, value in inputs.items():
+                    parts.append(f"{key}: {value}")
+                text_result = "\n".join(parts)
+            logger.info(f"Built text message (multiple inputs): length={len(text_result)} (includes prompt: {bool(self.config.system_prompt)})")
+            return text_result
 
