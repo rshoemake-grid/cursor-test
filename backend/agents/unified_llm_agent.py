@@ -795,10 +795,18 @@ class UnifiedLLMAgent(BaseAgent):
         if has_images:
             content = []
             if text_parts:
+                text_content = "\n".join(text_parts)
                 content.append({
                     "type": "text",
-                    "text": "\n".join(text_parts) if text_parts else "Process this image"
+                    "text": text_content
                 })
+                logger.debug(f"Built vision message: {len(image_content)} images, text length: {len(text_content)}")
+            else:
+                content.append({
+                    "type": "text",
+                    "text": "Process this image"
+                })
+                logger.debug(f"Built vision message: {len(image_content)} images, no text (using default)")
             content.extend(image_content)
             return content
         
