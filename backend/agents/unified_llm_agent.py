@@ -389,13 +389,20 @@ class UnifiedLLMAgent(BaseAgent):
         # Gemini API format - supports vision models
         parts = []
         
+        print(f"🔍 Building Gemini request: user_message type={type(user_message)}, is_list={isinstance(user_message, list)}")
+        
         if isinstance(user_message, list):
             # Vision model - process content array
-            for item in user_message:
+            print(f"   Processing {len(user_message)} items in user_message list")
+            for i, item in enumerate(user_message):
+                print(f"   Item {i}: type={item.get('type')}, keys={list(item.keys())}")
                 if item.get("type") == "text":
-                    parts.append({"text": item.get("text", "")})
+                    text_content = item.get("text", "")
+                    parts.append({"text": text_content})
+                    print(f"   Added text part: {len(text_content)} chars")
                 elif item.get("type") == "image_url":
                     image_url = item.get("image_url", {}).get("url", "")
+                    print(f"   Processing image_url: {image_url[:50]}...")
                     if image_url.startswith("data:image/"):
                         # Extract base64 data
                         try:
@@ -407,7 +414,9 @@ class UnifiedLLMAgent(BaseAgent):
                                     "data": base64_data
                                 }
                             })
-                        except Exception:
+                            print(f"   Added inline_data part: mime_type={mimetype}, data_length={len(base64_data)}")
+                        except Exception as e:
+                            print(f"   ⚠️ Failed to parse data URL: {e}")
                             pass
                     elif image_url.startswith(("http://", "https://")):
                         # URL to image - Gemini can handle URLs directly
@@ -417,9 +426,14 @@ class UnifiedLLMAgent(BaseAgent):
                                 "mime_type": "image/png"  # Default, could be detected from URL
                             }
                         })
+                        print(f"   Added file_data part: uri={image_url}")
         else:
             # Text model
-            parts.append({"text": str(user_message)})
+            text_content = str(user_message)
+            parts.append({"text": text_content})
+            print(f"   Added text part (non-list): {len(text_content)} chars")
+        
+        print(f"   Total parts: {len(parts)}, Part types: {[list(p.keys()) for p in parts]}")
         
         contents = [{
             "parts": parts
