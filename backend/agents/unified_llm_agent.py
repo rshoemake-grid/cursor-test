@@ -276,7 +276,10 @@ class UnifiedLLMAgent(BaseAgent):
         try:
             # Forward key logs to execution logs if callback available
             if self.log_callback:
-                await self.log_callback("INFO", self.node_id, f"Executing with provider '{provider_type}' and model '{model}'")
+                try:
+                    await self.log_callback("INFO", self.node_id, f"Executing with provider '{provider_type}' and model '{model}'")
+                except Exception:
+                    pass  # Don't let callback failures break execution
             logger.info(f"Executing with provider '{provider_type}' and model '{model}'")
             
             if provider_type == "openai":
@@ -285,7 +288,10 @@ class UnifiedLLMAgent(BaseAgent):
                 result = await self._execute_anthropic(user_message, model)
             elif provider_type == "gemini":
                 if self.log_callback:
-                    await self.log_callback("INFO", self.node_id, f"Calling Gemini API with model '{model}'")
+                    try:
+                        await self.log_callback("INFO", self.node_id, f"Calling Gemini API with model '{model}'")
+                    except Exception:
+                        pass  # Don't let callback failures break execution
                 logger.info(f"Calling Gemini API with model '{model}'")
                 result = await self._execute_gemini(user_message, model)
             elif provider_type == "custom":
@@ -512,29 +518,44 @@ class UnifiedLLMAgent(BaseAgent):
                 "parts": [{"text": self.config.system_prompt}]
             }
             if self.log_callback:
-                await self.log_callback("INFO", self.node_id, f"Gemini system instruction: {self.config.system_prompt}")
+                try:
+                    await self.log_callback("INFO", self.node_id, f"Gemini system instruction: {self.config.system_prompt}")
+                except Exception:
+                    pass  # Don't let callback failures break execution
             logger.info(f"Gemini system instruction: {self.config.system_prompt}")
         
         # Log the user message parts that will be sent (use INFO so it shows in execution logs)
         if self.log_callback:
-            await self.log_callback("INFO", self.node_id, f"Gemini user message parts ({len(parts)} total):")
+            try:
+                await self.log_callback("INFO", self.node_id, f"Gemini user message parts ({len(parts)} total):")
+            except Exception:
+                pass  # Don't let callback failures break execution
         logger.info(f"Gemini user message parts ({len(parts)} total):")
         for i, part in enumerate(parts):
             if "text" in part:
                 text_preview = part["text"][:500] + "..." if len(part["text"]) > 500 else part["text"]
                 if self.log_callback:
-                    await self.log_callback("INFO", self.node_id, f"   Part {i}: text ({len(part['text'])} chars) - {text_preview}")
+                    try:
+                        await self.log_callback("INFO", self.node_id, f"   Part {i}: text ({len(part['text'])} chars) - {text_preview}")
+                    except Exception:
+                        pass  # Don't let callback failures break execution
                 logger.info(f"   Part {i}: text ({len(part['text'])} chars) - {text_preview}")
             elif "inline_data" in part:
                 inline_data = part["inline_data"]
                 data_length = len(inline_data.get("data", ""))
                 if self.log_callback:
-                    await self.log_callback("INFO", self.node_id, f"   Part {i}: inline_data (mime_type={inline_data.get('mime_type')}, data_length={data_length} chars)")
+                    try:
+                        await self.log_callback("INFO", self.node_id, f"   Part {i}: inline_data (mime_type={inline_data.get('mime_type')}, data_length={data_length} chars)")
+                    except Exception:
+                        pass  # Don't let callback failures break execution
                 logger.info(f"   Part {i}: inline_data (mime_type={inline_data.get('mime_type')}, data_length={data_length} chars)")
             elif "file_data" in part:
                 file_data = part["file_data"]
                 if self.log_callback:
-                    await self.log_callback("INFO", self.node_id, f"   Part {i}: file_data (file_uri={file_data.get('file_uri', '')[:100]}...)")
+                    try:
+                        await self.log_callback("INFO", self.node_id, f"   Part {i}: file_data (file_uri={file_data.get('file_uri', '')[:100]}...)")
+                    except Exception:
+                        pass  # Don't let callback failures break execution
                 logger.info(f"   Part {i}: file_data (file_uri={file_data.get('file_uri', '')[:100]}...)")
         
         # Add generation config
@@ -622,7 +643,10 @@ class UnifiedLLMAgent(BaseAgent):
             
             # Log response structure - use INFO so it shows in execution logs
             if self.log_callback:
-                await self.log_callback("INFO", self.node_id, f"Gemini API response structure: candidates={len(data.get('candidates', []))}, keys={list(data.keys())}")
+                try:
+                    await self.log_callback("INFO", self.node_id, f"Gemini API response structure: candidates={len(data.get('candidates', []))}, keys={list(data.keys())}")
+                except Exception:
+                    pass  # Don't let callback failures break execution
             logger.info(f"Gemini API response structure: candidates={len(data.get('candidates', []))}, keys={list(data.keys())}")
             if "candidates" in data and len(data["candidates"]) > 0:
                 candidate = data["candidates"][0]
@@ -647,11 +671,17 @@ class UnifiedLLMAgent(BaseAgent):
                 finish_reason = candidate.get("finishReason", "")
                 if finish_reason:
                     if self.log_callback:
-                        await self.log_callback("INFO", self.node_id, f"   Gemini finish reason: {finish_reason}")
+                        try:
+                            await self.log_callback("INFO", self.node_id, f"   Gemini finish reason: {finish_reason}")
+                        except Exception:
+                            pass  # Don't let callback failures break execution
                     logger.info(f"   Gemini finish reason: {finish_reason}")
                 else:
                     if self.log_callback:
-                        await self.log_callback("INFO", self.node_id, f"   Gemini finish reason: (not provided)")
+                        try:
+                            await self.log_callback("INFO", self.node_id, f"   Gemini finish reason: (not provided)")
+                        except Exception:
+                            pass  # Don't let callback failures break execution
                     logger.info(f"   Gemini finish reason: (not provided)")
                 
                 if "content" in candidate and "parts" in candidate["content"]:

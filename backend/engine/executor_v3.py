@@ -611,8 +611,13 @@ class WorkflowExecutorV3:
                 # Execute based on node type
                 if node.type in [NodeType.AGENT, NodeType.CONDITION, NodeType.LOOP]:
                     # Create log callback to forward agent logs to execution logs
+                    # Wrap in try-except to prevent callback failures from blocking execution
                     async def agent_log_callback(level: str, node_id: str, message: str):
-                        await self._log(level, node_id, message)
+                        try:
+                            await self._log(level, node_id, message)
+                        except Exception as e:
+                            # Don't let logging failures break execution
+                            logger.error(f"Failed to forward agent log: {e}")
                     
                     agent = AgentRegistry.get_agent(node, llm_config=self.llm_config, user_id=self.user_id, log_callback=agent_log_callback)
                     
