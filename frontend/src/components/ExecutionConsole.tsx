@@ -550,10 +550,14 @@ export default function ExecutionConsole({
 
                   {/* Execution Logs */}
                   <div className="space-y-1 font-mono text-xs">
-                    {displayedExecution.logs.length === 0 ? (
+                    {(!displayedExecution.logs || displayedExecution.logs.length === 0) ? (
                       <div className="text-gray-500 text-center py-8">
                         <Loader className="w-6 h-6 animate-spin mx-auto mb-2" />
                         <p>Waiting for execution logs...</p>
+                        <p className="text-xs mt-2 text-gray-600">
+                          Execution ID: {displayedExecution.id.slice(0, 8)}...
+                          {displayedExecution.logs ? ` (${displayedExecution.logs.length} logs)` : ' (logs not initialized)'}
+                        </p>
                       </div>
                     ) : (
                       displayedExecution.logs.map((log, idx) => (
