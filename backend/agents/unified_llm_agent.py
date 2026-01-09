@@ -690,7 +690,7 @@ class UnifiedLLMAgent(BaseAgent):
                     parts = candidate["content"]["parts"]
                     
                     # Check if this is an image generation model
-                    is_image_model = "flash-image" in model.lower() or "pro-image" in model.lower()
+                    is_image_model = "flash-image" in model.lower() or "pro-image" in model.lower() or "nano-banana" in model.lower() or "banana" in model.lower()
                     
                     # Collect text and images
                     text_parts = []

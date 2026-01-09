@@ -56,7 +56,9 @@ const PROVIDER_TEMPLATES = {
       'gemini-2.5-flash',
       'gemini-2.5-flash-lite',
       'gemini-2.5-flash-image',
-      'gemini-2.5-flash-preview-09-2025'
+      'gemini-2.5-flash-preview-09-2025',
+      // Image generation models
+      'nano-banana'
     ]
   },
   custom: {
