@@ -312,6 +312,7 @@ class UnifiedLLMAgent(BaseAgent):
                 "role": "system",
                 "content": self.config.system_prompt
             })
+            logger.debug(f"OpenAI system prompt: {self.config.system_prompt}")
         
         # Handle vision models (content is a list) vs text models (content is string)
         if isinstance(user_message, list):
@@ -320,12 +321,23 @@ class UnifiedLLMAgent(BaseAgent):
                 "role": "user",
                 "content": user_message
             })
+            # Log user message structure
+            logger.debug(f"OpenAI user message (vision): {len(user_message)} items")
+            for i, item in enumerate(user_message):
+                if item.get("type") == "text":
+                    text_preview = item.get("text", "")[:200] + "..." if len(item.get("text", "")) > 200 else item.get("text", "")
+                    logger.debug(f"   Item {i}: text ({len(item.get('text', ''))} chars) - {text_preview}")
+                elif item.get("type") == "image_url":
+                    image_url = item.get("image_url", {}).get("url", "")
+                    logger.debug(f"   Item {i}: image_url ({len(image_url)} chars) - {image_url[:100]}...")
         else:
             # Text model - content is a string
             messages.append({
                 "role": "user",
                 "content": user_message
             })
+            user_preview = user_message[:500] + "..." if len(user_message) > 500 else user_message
+            logger.debug(f"OpenAI user message (text, {len(user_message)} chars): {user_preview}")
         
         # Use 5 minute timeout for LLM requests (some models can take longer)
         async with httpx.AsyncClient(timeout=300.0) as client:
@@ -716,6 +728,7 @@ class UnifiedLLMAgent(BaseAgent):
                 "role": "system",
                 "content": self.config.system_prompt
             })
+            logger.debug(f"Custom API system prompt: {self.config.system_prompt}")
         
         # Handle vision models (content is a list) vs text models (content is string)
         if isinstance(user_message, list):
@@ -724,12 +737,22 @@ class UnifiedLLMAgent(BaseAgent):
                 "role": "user",
                 "content": user_message
             })
+            logger.debug(f"Custom API user message (vision): {len(user_message)} items")
+            for i, item in enumerate(user_message):
+                if item.get("type") == "text":
+                    text_preview = item.get("text", "")[:200] + "..." if len(item.get("text", "")) > 200 else item.get("text", "")
+                    logger.debug(f"   Item {i}: text ({len(item.get('text', ''))} chars) - {text_preview}")
+                elif item.get("type") == "image_url":
+                    image_url = item.get("image_url", {}).get("url", "")
+                    logger.debug(f"   Item {i}: image_url ({len(image_url)} chars) - {image_url[:100]}...")
         else:
             # Text model - content is a string
             messages.append({
                 "role": "user",
                 "content": user_message
             })
+            user_preview = user_message[:500] + "..." if len(user_message) > 500 else user_message
+            logger.debug(f"Custom API user message (text, {len(user_message)} chars): {user_preview}")
         
         # Use 5 minute timeout for LLM requests (some models can take longer)
         async with httpx.AsyncClient(timeout=300.0) as client:
