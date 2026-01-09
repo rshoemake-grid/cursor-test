@@ -567,20 +567,13 @@ class UnifiedLLMAgent(BaseAgent):
                                     height = estimated_dimension
                             
                             if needs_resize:
-                                    # Calculate target dimensions to stay under limit
-                                    # Target: ~200,000 tokens for image (leaves ~800k for text/prompt/other)
-                                    # Formula: tokens = (tiles_per_width * tiles_per_height * 85) + 85
-                                    # For square-ish images: tiles_per_side ≈ sqrt((tokens - 85) / 85)
-                                    # max_dimension = tiles_per_side * 512
-                                    target_tokens = 200_000
-                                    max_tiles_total = (target_tokens - 85) // 85  # ~2,352 tiles total
-                                    tiles_per_side = int((max_tiles_total ** 0.5))  # ~48 tiles per side
-                                    max_dimension = tiles_per_side * 512  # ~24,576 pixels - WRONG!
-                                    # Actually, we want much smaller. Let's target ~2,000px max
-                                    max_dimension = 2000  # ~2,000 pixels per side = ~4 tiles per side = ~1,361 tokens
-                                    
-                                    logger.info(f"   PIL_AVAILABLE: {PIL_AVAILABLE}")
-                                    if PIL_AVAILABLE:
+                                # Calculate target dimensions to stay under limit
+                                # Target: ~200,000 tokens for image (leaves ~800k for text/prompt/other)
+                                # Actually, we want much smaller. Let's target ~2,000px max
+                                max_dimension = 2000  # ~2,000 pixels per side = ~4 tiles per side = ~1,361 tokens
+                                
+                                logger.info(f"   PIL_AVAILABLE: {PIL_AVAILABLE}")
+                                if PIL_AVAILABLE:
                                         # Resize image to fit within token limit
                                         logger.warning(
                                             f"Image is too large ({width}x{height} pixels ≈ {estimated_tokens:,} tokens, "
