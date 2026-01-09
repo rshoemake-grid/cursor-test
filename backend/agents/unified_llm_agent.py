@@ -518,17 +518,32 @@ class UnifiedLLMAgent(BaseAgent):
             
             data = response.json()
             
-            # Debug: Log response structure
+            # Debug: Log response structure - use print so it shows in console
             print(f"🔍 Gemini API response structure: candidates={len(data.get('candidates', []))}, keys={list(data.keys())}")
+            if "candidates" in data and len(data["candidates"]) > 0:
+                candidate = data["candidates"][0]
+                print(f"   Candidate keys: {list(candidate.keys())}")
+                if "content" in candidate:
+                    print(f"   Content keys: {list(candidate['content'].keys())}")
+                    if "parts" in candidate["content"]:
+                        print(f"   Parts count: {len(candidate['content']['parts'])}, Part keys: {[list(p.keys()) for p in candidate['content']['parts']]}")
             
             # Check for error in response
             if "error" in data:
                 error_msg = data["error"].get("message", "Unknown error")
+                error_details = data["error"].get("details", [])
+                print(f"❌ Gemini API error: {error_msg}, details: {error_details}")
                 raise RuntimeError(f"Gemini API error: {error_msg}")
             
             # Extract content from Gemini response - handle both text and image outputs
             if "candidates" in data and len(data["candidates"]) > 0:
                 candidate = data["candidates"][0]
+                
+                # Check for finish reason - might indicate why no content
+                finish_reason = candidate.get("finishReason", "")
+                if finish_reason:
+                    print(f"   Finish reason: {finish_reason}")
+                
                 if "content" in candidate and "parts" in candidate["content"]:
                     parts = candidate["content"]["parts"]
                     
@@ -539,9 +554,11 @@ class UnifiedLLMAgent(BaseAgent):
                     text_parts = []
                     image_parts = []
                     
-                    for part in parts:
+                    for i, part in enumerate(parts):
+                        print(f"   Part {i}: keys={list(part.keys())}")
                         if "text" in part and part["text"]:
                             text_parts.append(part["text"])
+                            print(f"   Found text part: {len(part['text'])} chars")
                         elif "inlineData" in part:
                             # Image data - convert to base64 data URL (REST API uses camelCase)
                             inline_data = part["inlineData"]
@@ -550,6 +567,8 @@ class UnifiedLLMAgent(BaseAgent):
                             if image_data:
                                 image_parts.append(f"data:{mime_type};base64,{image_data}")
                                 print(f"✅ Extracted image from Gemini response: {len(image_data)} chars of base64 data, mime_type: {mime_type}")
+                            else:
+                                print(f"⚠️ inlineData found but 'data' field is empty")
                         elif "inline_data" in part:
                             # Fallback for snake_case (if API returns it)
                             inline_data = part["inline_data"]
@@ -558,6 +577,10 @@ class UnifiedLLMAgent(BaseAgent):
                             if image_data:
                                 image_parts.append(f"data:{mime_type};base64,{image_data}")
                                 print(f"✅ Extracted image from Gemini response (snake_case): {len(image_data)} chars of base64 data, mime_type: {mime_type}")
+                            else:
+                                print(f"⚠️ inline_data found but 'data' field is empty")
+                        else:
+                            print(f"⚠️ Part {i} has unknown structure: {part}")
                     
                     # If we have images, return them (prefer images over text for image generation models)
                     if image_parts:
@@ -580,11 +603,15 @@ class UnifiedLLMAgent(BaseAgent):
                     
                     # Otherwise return text
                     if text_parts:
+                        print(f"✅ Returning text: {len(text_parts)} parts, total length: {sum(len(t) for t in text_parts)}")
                         return "\n".join(text_parts)
                     
                     # If no text or images, return empty string (not None)
                     # This ensures downstream nodes receive a value
-                    print(f"⚠️ Gemini returned no content (no text or images), returning empty string")
+                    print(f"⚠️ Gemini returned no content (no text or images). Parts: {len(parts)}, Finish reason: {finish_reason}")
+                    return ""
+                else:
+                    print(f"⚠️ Candidate has no 'content' or 'parts'. Candidate keys: {list(candidate.keys())}")
                     return ""
             else:
                 # No candidates in response - check for errors first
@@ -592,7 +619,7 @@ class UnifiedLLMAgent(BaseAgent):
                     error_msg = data["error"].get("message", "Unknown error")
                     raise RuntimeError(f"Gemini API error: {error_msg}")
                 # No candidates and no error - return empty string instead of None
-                print(f"⚠️ Gemini API response has no candidates. Response keys: {list(data.keys())}")
+                print(f"⚠️ Gemini API response has no candidates. Response keys: {list(data.keys())}, Full response: {data}")
                 return ""
             
             # Fallback - should never reach here, but ensure we never return None
