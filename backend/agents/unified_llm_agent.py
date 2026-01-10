@@ -468,6 +468,10 @@ class UnifiedLLMAgent(BaseAgent):
         # Gemini API format - supports vision models
         parts = []
         
+        # Track total tokens across ALL images and text for accurate estimation
+        total_image_tokens = 0
+        total_text_tokens = 0
+        
         logger.info(f"Building Gemini request: user_message type={type(user_message)}, is_list={isinstance(user_message, list)}")
         
         if isinstance(user_message, list):
@@ -529,15 +533,21 @@ class UnifiedLLMAgent(BaseAgent):
                             needs_resize = False
                             estimated_tokens = None
                             total_estimated_tokens = None
-                            text_tokens = 0
                             
+                            # Calculate text tokens ONCE (only count new text, not already counted)
                             # Estimate text content tokens (rough estimate: ~4 chars per token)
+                            current_text_tokens = 0
                             if self.config.system_prompt:
-                                text_tokens += len(self.config.system_prompt) // 4
-                            # Estimate tokens from text parts in user message
+                                current_text_tokens += len(self.config.system_prompt) // 4
+                            # Estimate tokens from text parts already in parts array
                             for part in parts:
                                 if "text" in part:
-                                    text_tokens += len(part["text"]) // 4
+                                    current_text_tokens += len(part["text"]) // 4
+                            
+                            # Update total_text_tokens (only count new text)
+                            new_text_tokens = current_text_tokens - total_text_tokens
+                            total_text_tokens = current_text_tokens
+                            text_tokens = current_text_tokens  # For this image's calculation
                             
                             if width and height:
                                 tiles_per_width = (width + 511) // 512  # Round up
@@ -545,19 +555,19 @@ class UnifiedLLMAgent(BaseAgent):
                                 total_tiles = tiles_per_width * tiles_per_height
                                 estimated_tokens = total_tiles * 85 + 85
                                 
-                                # Total estimated tokens including text
-                                total_estimated_tokens = estimated_tokens + text_tokens
+                                # Calculate total tokens including THIS image + all previous images + all text
+                                total_with_this_image = total_image_tokens + estimated_tokens + total_text_tokens
                                 
                                 logger.info(f"   Image dimensions: {width}x{height} pixels, {total_tiles} tiles, ~{estimated_tokens:,} tokens")
-                                logger.info(f"   Estimated tokens: image={estimated_tokens:,}, text={text_tokens:,}, total={total_estimated_tokens:,}")
+                                logger.info(f"   Estimated tokens: image={estimated_tokens:,}, text={total_text_tokens:,}, total_with_this_image={total_with_this_image:,}, total_image_tokens_so_far={total_image_tokens:,}")
                                 
                                 # Check if image is too large and resize if needed
                                 # Be EXTREMELY aggressive - resize if image alone exceeds 50k, or total exceeds 100k
                                 # Also resize if base64 size is large (safety check)
                                 # This ensures we stay well under the 1M token limit
-                                if estimated_tokens > 50_000 or total_estimated_tokens > 100_000 or base64_size > 1_000_000:
+                                if estimated_tokens > 50_000 or total_with_this_image > 100_000 or base64_size > 1_000_000:
                                     needs_resize = True
-                                    logger.warning(f"   Image exceeds token limits (image={estimated_tokens:,}, total={total_estimated_tokens:,}, base64={base64_size:,}) - resize needed!")
+                                    logger.warning(f"   Image exceeds token limits (image={estimated_tokens:,}, total_with_this_image={total_with_this_image:,}, base64={base64_size:,}) - resize needed!")
                             else:
                                 # If we can't parse dimensions, check base64 size as fallback
                                 # Very large base64 strings likely mean large images
@@ -656,21 +666,20 @@ class UnifiedLLMAgent(BaseAgent):
                                         new_total_tiles = new_tiles_per_width * new_tiles_per_height
                                         new_estimated_tokens = new_total_tiles * 85 + 85
                                         
-                                        # Recalculate total with new image tokens
-                                        new_total_estimated_tokens = new_estimated_tokens + text_tokens
+                                        # Recalculate total with new image tokens (including all previous images + text)
+                                        new_total_with_this_image = total_image_tokens + new_estimated_tokens + total_text_tokens
                                         
                                         logger.info(f"   Resized image to {new_width}x{new_height} pixels, {new_total_tiles} tiles, ~{new_estimated_tokens:,} tokens")
-                                        logger.info(f"   New total estimated tokens: image={new_estimated_tokens:,}, text={text_tokens:,}, total={new_total_estimated_tokens:,}")
+                                        logger.info(f"   New total estimated tokens: image={new_estimated_tokens:,}, text={total_text_tokens:,}, total_with_this_image={new_total_with_this_image:,}, total_image_tokens_so_far={total_image_tokens:,}")
                                         
                                         # Update dimensions and token counts
                                         width = new_width
                                         height = new_height
                                         estimated_tokens = new_estimated_tokens
-                                        total_estimated_tokens = new_total_estimated_tokens
                                         
                                         # Double-check: if still too large, resize again more aggressively
-                                        if new_total_estimated_tokens > 500_000:
-                                            logger.warning(f"   Resized image still too large ({new_total_estimated_tokens:,} tokens). Resizing again more aggressively...")
+                                        if new_total_with_this_image > 500_000:
+                                            logger.warning(f"   Resized image still too large ({new_total_with_this_image:,} tokens). Resizing again more aggressively...")
                                             # Even smaller target: ~600px max dimension
                                             max_dimension_2 = 600  # ~600 pixels per side = ~2 tiles per side = ~425 tokens
                                             
@@ -701,15 +710,14 @@ class UnifiedLLMAgent(BaseAgent):
                                             new_tiles_per_height_2 = (new_height_2 + 511) // 512
                                             new_total_tiles_2 = new_tiles_per_width_2 * new_tiles_per_height_2
                                             new_estimated_tokens_2 = new_total_tiles_2 * 85 + 85
-                                            new_total_estimated_tokens_2 = new_estimated_tokens_2 + text_tokens
+                                            new_total_with_this_image_2 = total_image_tokens + new_estimated_tokens_2 + total_text_tokens
                                             
                                             logger.info(f"   Second resize to {new_width_2}x{new_height_2} pixels, {new_total_tiles_2} tiles, ~{new_estimated_tokens_2:,} tokens")
-                                            logger.info(f"   Final total estimated tokens: image={new_estimated_tokens_2:,}, text={text_tokens:,}, total={new_total_estimated_tokens_2:,}")
+                                            logger.info(f"   Final total estimated tokens: image={new_estimated_tokens_2:,}, text={total_text_tokens:,}, total_with_this_image={new_total_with_this_image_2:,}, total_image_tokens_so_far={total_image_tokens:,}")
                                             
                                             width = new_width_2
                                             height = new_height_2
                                             estimated_tokens = new_estimated_tokens_2
-                                            total_estimated_tokens = new_total_estimated_tokens_2
                                     
                                     except Exception as e:
                                         logger.error(f"   FAILED to resize image: {e}", exc_info=True)
