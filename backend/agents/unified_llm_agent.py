@@ -493,11 +493,13 @@ class UnifiedLLMAgent(BaseAgent):
                             mimetype = header.split(";")[0].split(":")[1]
                             
                             # Check image size and estimate token count
-                            # Gemini counts tokens based on image dimensions:
-                            # - Images are divided into 512x512 pixel tiles
-                            # - Each tile = 85 tokens
-                            # - Base image = 85 tokens
+                            # Gemini 2.0+ counts tokens based on image dimensions:
+                            # - Images with BOTH dimensions <=384 pixels: 258 tokens
+                            # - Larger images: tiled into 768x768 pixel tiles
+                            # - Each 768x768 tile = 258 tokens
+                            # - NO base tokens added for tiled images
                             # Max tokens = 1,048,576
+                            # Reference: https://ai.google.dev/gemini-api/docs/tokens
                             
                             base64_size = len(base64_data)
                             original_base64_size = base64_size  # Store original size for comparison
@@ -556,10 +558,16 @@ class UnifiedLLMAgent(BaseAgent):
                             text_tokens = current_text_tokens  # For this image's calculation
                             
                             if width and height:
-                                tiles_per_width = (width + 511) // 512  # Round up
-                                tiles_per_height = (height + 511) // 512  # Round up
-                                total_tiles = tiles_per_width * tiles_per_height
-                                estimated_tokens = total_tiles * 85 + 85
+                                # Gemini 2.0+ token calculation
+                                if width <= 384 and height <= 384:
+                                    # Small images: fixed 258 tokens
+                                    estimated_tokens = 258
+                                else:
+                                    # Larger images: tiled into 768x768 tiles, 258 tokens per tile
+                                    tiles_per_width = (width + 767) // 768  # Round up for 768x768 tiles
+                                    tiles_per_height = (height + 767) // 768  # Round up for 768x768 tiles
+                                    total_tiles = tiles_per_width * tiles_per_height
+                                    estimated_tokens = total_tiles * 258  # 258 tokens per tile, NO base tokens
                                 
                                 # Calculate total tokens including THIS image + all previous images + all text
                                 total_with_this_image = total_image_tokens + estimated_tokens + total_text_tokens
@@ -591,10 +599,13 @@ class UnifiedLLMAgent(BaseAgent):
                                     estimated_dimension = int((estimated_pixels) ** 0.5)
                                     width = estimated_dimension
                                     height = estimated_dimension
-                                    # Estimate tokens for logging
-                                    tiles_per_side = (estimated_dimension + 511) // 512
-                                    estimated_tiles = tiles_per_side * tiles_per_side
-                                    estimated_tokens = estimated_tiles * 85 + 85
+                                    # Estimate tokens for logging (Gemini 2.0+ formula)
+                                    if estimated_dimension <= 384:
+                                        estimated_tokens = 258
+                                    else:
+                                        tiles_per_side = (estimated_dimension + 767) // 768  # 768x768 tiles
+                                        estimated_tiles = tiles_per_side * tiles_per_side
+                                        estimated_tokens = estimated_tiles * 258  # 258 tokens per tile
                                     total_estimated_tokens = estimated_tokens + text_tokens
                                     logger.info(f"   Estimated dimensions: ~{width}x{height} pixels, ~{estimated_tokens:,} tokens")
                             
@@ -667,11 +678,14 @@ class UnifiedLLMAgent(BaseAgent):
                                         logger.warning(f"   ===== FIRST RESIZE COMPLETE ===== new_base64_size: {len(resized_base64):,} chars (was {old_base64_size:,})")
                                         base64_data = resized_base64  # Update the variable that will be used in parts array
                                         
-                                        # Recalculate token count
-                                        new_tiles_per_width = (new_width + 511) // 512
-                                        new_tiles_per_height = (new_height + 511) // 512
-                                        new_total_tiles = new_tiles_per_width * new_tiles_per_height
-                                        new_estimated_tokens = new_total_tiles * 85 + 85
+                                        # Recalculate token count (Gemini 2.0+ formula)
+                                        if new_width <= 384 and new_height <= 384:
+                                            new_estimated_tokens = 258
+                                        else:
+                                            new_tiles_per_width = (new_width + 767) // 768  # 768x768 tiles
+                                            new_tiles_per_height = (new_height + 767) // 768
+                                            new_total_tiles = new_tiles_per_width * new_tiles_per_height
+                                            new_estimated_tokens = new_total_tiles * 258  # 258 tokens per tile
                                         
                                         # Recalculate total with new image tokens (including all previous images + text)
                                         new_total_with_this_image = total_image_tokens + new_estimated_tokens + total_text_tokens
@@ -713,10 +727,10 @@ class UnifiedLLMAgent(BaseAgent):
                                             logger.warning(f"   ===== SECOND RESIZE COMPLETE ===== new_base64_size: {len(resized_base64_2):,} chars (was {old_base64_size_2:,})")
                                             base64_data = resized_base64_2  # Update the variable that will be used in parts array
                                             
-                                            new_tiles_per_width_2 = (new_width_2 + 511) // 512
-                                            new_tiles_per_height_2 = (new_height_2 + 511) // 512
+                                            new_tiles_per_width_2 = (new_width_2 + 767) // 768  # 768x768 tiles
+                                            new_tiles_per_height_2 = (new_height_2 + 767) // 768
                                             new_total_tiles_2 = new_tiles_per_width_2 * new_tiles_per_height_2
-                                            new_estimated_tokens_2 = new_total_tiles_2 * 85 + 85
+                                            new_estimated_tokens_2 = new_total_tiles_2 * 258  # 258 tokens per tile
                                             new_total_with_this_image_2 = total_image_tokens + new_estimated_tokens_2 + total_text_tokens
                                             
                                             logger.info(f"   Second resize to {new_width_2}x{new_height_2} pixels, {new_total_tiles_2} tiles, ~{new_estimated_tokens_2:,} tokens")
@@ -756,10 +770,13 @@ class UnifiedLLMAgent(BaseAgent):
                                 # Estimate dimensions (assume square-ish image)
                                 estimated_dimension = int((estimated_pixels) ** 0.5)
                                 
-                                # Estimate token count
-                                tiles_per_side = (estimated_dimension + 511) // 512
-                                estimated_tiles = tiles_per_side * tiles_per_side
-                                estimated_tokens = estimated_tiles * 85 + 85
+                                # Estimate token count (Gemini 2.0+ formula)
+                                if estimated_dimension <= 384:
+                                    estimated_tokens = 258
+                                else:
+                                    tiles_per_side = (estimated_dimension + 767) // 768  # 768x768 tiles
+                                    estimated_tiles = tiles_per_side * tiles_per_side
+                                    estimated_tokens = estimated_tiles * 258  # 258 tokens per tile
                                 
                                 logger.info(f"   Image size estimate: ~{estimated_dimension}x{estimated_dimension} pixels, ~{estimated_tokens:,} tokens")
                                 
@@ -812,10 +829,10 @@ class UnifiedLLMAgent(BaseAgent):
                                 }
                             })
                             # Update total_image_tokens with this image's final token count
-                            # NOTE: We're using dimension-based estimate, but Gemini might count base64 too!
+                            # NOTE: Using correct Gemini 2.0+ formula: 768x768 tiles, 258 tokens per tile
                             if estimated_tokens is not None:
                                 total_image_tokens += estimated_tokens
-                                logger.warning(f"   ⚠⚠⚠ Image token estimate: {estimated_tokens:,} (dimension-based), but base64 might add {base64_tokens_estimate:,} more tokens!")
+                                logger.warning(f"   ✓ Image token estimate: {estimated_tokens:,} (using Gemini 2.0+ formula: 768x768 tiles, 258 tokens/tile)")
                             else:
                                 logger.warning(f"   ⚠⚠⚠ Cannot update total_image_tokens - estimated_tokens is None!")
                             
