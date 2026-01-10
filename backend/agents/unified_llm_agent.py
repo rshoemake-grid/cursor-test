@@ -807,7 +807,10 @@ class UnifiedLLMAgent(BaseAgent):
                                 logger.warning(f"   ⚠⚠⚠ Cannot update total_image_tokens - estimated_tokens is None!")
                             
                             logger.warning(f"   ✓ Image added to parts array. Current parts count: {len(parts)}")
-                            logger.warning(f"   ✓ Updated total_image_tokens: {total_image_tokens:,} (added {estimated_tokens:,} tokens from this image)")
+                            if estimated_tokens is not None:
+                                logger.warning(f"   ✓ Updated total_image_tokens: {total_image_tokens:,} (added {estimated_tokens:,} tokens from this image)")
+                            else:
+                                logger.warning(f"   ⚠⚠⚠ Cannot log token update - estimated_tokens is None!")
                             if needs_resize:
                                 logger.warning(f"   ✓✓✓ Added RESIZED image to parts: mime_type={mimetype}, data_length={final_base64_size_before_add:,} chars (original was {original_base64_size:,} chars)")
                             else:
