@@ -799,7 +799,11 @@ class UnifiedLLMAgent(BaseAgent):
                                     "data": base64_data  # This is the resized data if resize occurred
                                 }
                             })
+                            # Update total_image_tokens with this image's final token count
+                            total_image_tokens += estimated_tokens
+                            
                             logger.warning(f"   ✓ Image added to parts array. Current parts count: {len(parts)}")
+                            logger.warning(f"   ✓ Updated total_image_tokens: {total_image_tokens:,} (added {estimated_tokens:,} tokens from this image)")
                             if needs_resize:
                                 logger.warning(f"   ✓✓✓ Added RESIZED image to parts: mime_type={mimetype}, data_length={final_base64_size_before_add:,} chars (original was {original_base64_size:,} chars)")
                             else:
