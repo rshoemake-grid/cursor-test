@@ -663,10 +663,10 @@ class UnifiedLLMAgent(BaseAgent):
                                         total_estimated_tokens = new_total_estimated_tokens
                                         
                                         # Double-check: if still too large, resize again more aggressively
-                                        if new_total_estimated_tokens > 600_000:
+                                        if new_total_estimated_tokens > 500_000:
                                             logger.warning(f"   Resized image still too large ({new_total_estimated_tokens:,} tokens). Resizing again more aggressively...")
-                                            # Even smaller target: ~800px max dimension
-                                            max_dimension_2 = 800  # ~800 pixels per side = ~2 tiles per side = ~425 tokens
+                                            # Even smaller target: ~600px max dimension
+                                            max_dimension_2 = 600  # ~600 pixels per side = ~2 tiles per side = ~425 tokens
                                             
                                             if width > height:
                                                 new_width_2 = max_dimension_2
