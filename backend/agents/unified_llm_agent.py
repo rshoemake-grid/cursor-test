@@ -1241,6 +1241,7 @@ class UnifiedLLMAgent(BaseAgent):
         has_images = False
         image_content = []
         text_parts = []
+        seen_images = set()  # Track seen images to prevent duplicates
         
         logger.debug(f"_build_user_message: inputs keys={list(inputs.keys())}")
         
@@ -1303,14 +1304,20 @@ class UnifiedLLMAgent(BaseAgent):
                             pass
             
             if is_image and image_data:
-                has_images = True
-                image_content.append({
-                    "type": "image_url",
-                    "image_url": {
-                        "url": image_data
-                    }
-                })
-                # Add text description if key is descriptive
+                # Deduplicate: only add image if we haven't seen this exact image data before
+                if image_data not in seen_images:
+                    has_images = True
+                    seen_images.add(image_data)
+                    image_content.append({
+                        "type": "image_url",
+                        "image_url": {
+                            "url": image_data
+                        }
+                    })
+                    logger.debug(f"   Added image from key '{key}' (first occurrence)")
+                else:
+                    logger.debug(f"   Skipping duplicate image from key '{key}' (already added)")
+                # Add text description if key is descriptive (even if image was duplicate)
                 if key not in ['data', 'output', 'image', 'image_data']:
                     text_parts.append(f"{key}:")
             else:
