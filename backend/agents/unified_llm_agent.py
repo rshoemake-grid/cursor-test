@@ -582,9 +582,9 @@ class UnifiedLLMAgent(BaseAgent):
                             
                             if needs_resize:
                                 # Calculate target dimensions to stay under limit
-                                # Target: ~200,000 tokens for image (leaves ~800k for text/prompt/other)
-                                # Actually, we want much smaller. Let's target ~2,000px max
-                                max_dimension = 2000  # ~2,000 pixels per side = ~4 tiles per side = ~1,361 tokens
+                                # Target: ~100,000 tokens for image (leaves ~900k for text/prompt/other)
+                                # Be very conservative - target ~1,500px max
+                                max_dimension = 1500  # ~1,500 pixels per side = ~3 tiles per side = ~850 tokens
                                 
                                 logger.warning(f"   ===== RESIZE NEEDED! ===== PIL_AVAILABLE: {PIL_AVAILABLE}")
                                 if not PIL_AVAILABLE:
@@ -662,10 +662,10 @@ class UnifiedLLMAgent(BaseAgent):
                                         total_estimated_tokens = new_total_estimated_tokens
                                         
                                         # Double-check: if still too large, resize again more aggressively
-                                        if new_total_estimated_tokens > 900_000:
+                                        if new_total_estimated_tokens > 800_000:
                                             logger.warning(f"   Resized image still too large ({new_total_estimated_tokens:,} tokens). Resizing again more aggressively...")
-                                            # Even smaller target: ~1,500px max dimension
-                                            max_dimension_2 = 1500  # ~1,500 pixels per side = ~3 tiles per side = ~850 tokens
+                                            # Even smaller target: ~1,200px max dimension
+                                            max_dimension_2 = 1200  # ~1,200 pixels per side = ~3 tiles per side = ~850 tokens
                                             
                                             if width > height:
                                                 new_width_2 = max_dimension_2
@@ -747,15 +747,17 @@ class UnifiedLLMAgent(BaseAgent):
                                     logger.error(error_msg)
                                     raise RuntimeError(error_msg)
                             
-                            # Update base64_size after potential resize
-                            base64_size = len(base64_data)
+                            # Update base64_size after potential resize (if resize happened, it was updated in resize block)
+                            if not needs_resize:
+                                base64_size = len(base64_data)  # Only update if no resize happened
                             
                             # Also check base64 size directly as a final safety check
                             # Very large base64 strings will definitely exceed the limit
-                            if base64_size > 4_000_000:  # ~4MB base64 ≈ 1M tokens
+                            final_base64_size = len(base64_data)
+                            if final_base64_size > 3_000_000:  # ~3MB base64 ≈ 750k tokens (more conservative)
                                 if not needs_resize:  # Only error if we haven't already resized
                                     error_msg = (
-                                        f"Image base64 data is too large ({base64_size:,} chars). "
+                                        f"Image base64 data is too large ({final_base64_size:,} chars). "
                                         f"Please compress or resize the image before sending."
                                     )
                                     logger.error(error_msg)
@@ -770,9 +772,9 @@ class UnifiedLLMAgent(BaseAgent):
                                 }
                             })
                             if needs_resize:
-                                logger.info(f"   Added RESIZED image to parts: mime_type={mimetype}, data_length={len(base64_data):,} chars")
+                                logger.warning(f"   ✓✓✓ Added RESIZED image to parts: mime_type={mimetype}, data_length={final_base64_size:,} chars (original was {original_base64_size:,} chars)")
                             else:
-                                logger.debug(f"   Added inline_data part: mime_type={mimetype}, data_length={len(base64_data)}")
+                                logger.debug(f"   Added inline_data part: mime_type={mimetype}, data_length={final_base64_size}")
                         except RuntimeError:
                             # Re-raise size validation errors
                             raise
