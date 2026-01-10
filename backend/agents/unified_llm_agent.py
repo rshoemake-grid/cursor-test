@@ -583,9 +583,9 @@ class UnifiedLLMAgent(BaseAgent):
                             
                             if needs_resize:
                                 # Calculate target dimensions to stay under limit
-                                # Target: ~50,000 tokens for image (leaves ~950k for text/prompt/other)
-                                # Be extremely conservative - target ~1,000px max
-                                max_dimension = 1000  # ~1,000 pixels per side = ~2 tiles per side = ~425 tokens
+                                # Target: ~25,000 tokens for image (leaves ~975k for text/prompt/other)
+                                # Be extremely conservative - target ~800px max
+                                max_dimension = 800  # ~800 pixels per side = ~2 tiles per side = ~425 tokens
                                 
                                 logger.warning(f"   ===== RESIZE NEEDED! ===== PIL_AVAILABLE: {PIL_AVAILABLE}")
                                 if not PIL_AVAILABLE:
@@ -755,7 +755,7 @@ class UnifiedLLMAgent(BaseAgent):
                             # Also check base64 size directly as a final safety check
                             # Very large base64 strings will definitely exceed the limit
                             final_base64_size = len(base64_data)
-                            if final_base64_size > 3_000_000:  # ~3MB base64 ≈ 750k tokens (more conservative)
+                            if final_base64_size > 2_000_000:  # ~2MB base64 ≈ 500k tokens (very conservative)
                                 if not needs_resize:  # Only error if we haven't already resized
                                     error_msg = (
                                         f"Image base64 data is too large ({final_base64_size:,} chars). "
@@ -763,6 +763,9 @@ class UnifiedLLMAgent(BaseAgent):
                                     )
                                     logger.error(error_msg)
                                     raise RuntimeError(error_msg)
+                                else:
+                                    # If we resized but it's still too large, log a warning
+                                    logger.warning(f"   WARNING: Resized image base64 size ({final_base64_size:,} chars) is still very large!")
                             
                             # Add image to parts (using resized base64_data if resize occurred)
                             # IMPORTANT: base64_data has been updated by resize logic if needs_resize was True
