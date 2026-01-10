@@ -599,7 +599,7 @@ class UnifiedLLMAgent(BaseAgent):
                                 max_dimension = 800  # ~800 pixels per side = ~2 tiles per side = ~425 tokens
                                 
                                 logger.warning(f"   ===== RESIZE NEEDED! ===== PIL_AVAILABLE: {PIL_AVAILABLE}, original_base64_size: {original_base64_size:,} chars")
-                                logger.warning(f"   ===== RESIZE TRIGGERED ===== estimated_tokens: {estimated_tokens}, total_estimated_tokens: {total_estimated_tokens}, base64_size: {base64_size:,}")
+                                logger.warning(f"   ===== RESIZE TRIGGERED ===== estimated_tokens: {estimated_tokens}, total_estimated_tokens: {total_estimated_tokens if total_estimated_tokens is not None else 'None'}, base64_size: {base64_size:,}")
                                 logger.warning(f"   ===== RESIZE CONFIG ===== max_dimension: 800px, PIL_AVAILABLE: {PIL_AVAILABLE}")
                                 if not PIL_AVAILABLE:
                                     logger.error(f"   PIL/Pillow is NOT available! Cannot resize image.")
@@ -613,9 +613,10 @@ class UnifiedLLMAgent(BaseAgent):
                                 # PIL is available, proceed with resize
                                 logger.info(f"   Starting image resize process...")
                                 if estimated_tokens is not None:
+                                    total_tokens_str = f"{total_estimated_tokens:,}" if total_estimated_tokens is not None else "unknown"
                                     logger.warning(
                                         f"   Image is too large ({width}x{height} pixels ≈ {estimated_tokens:,} tokens, "
-                                        f"total with text ≈ {total_estimated_tokens:,} tokens, limit is 1,048,576). "
+                                        f"total with text ≈ {total_tokens_str} tokens, limit is 1,048,576). "
                                         f"Resizing to fit within limit (target: ~{max_dimension}x{max_dimension} pixels)."
                                     )
                                 else:
@@ -800,7 +801,10 @@ class UnifiedLLMAgent(BaseAgent):
                                 }
                             })
                             # Update total_image_tokens with this image's final token count
-                            total_image_tokens += estimated_tokens
+                            if estimated_tokens is not None:
+                                total_image_tokens += estimated_tokens
+                            else:
+                                logger.warning(f"   ⚠⚠⚠ Cannot update total_image_tokens - estimated_tokens is None!")
                             
                             logger.warning(f"   ✓ Image added to parts array. Current parts count: {len(parts)}")
                             logger.warning(f"   ✓ Updated total_image_tokens: {total_image_tokens:,} (added {estimated_tokens:,} tokens from this image)")
