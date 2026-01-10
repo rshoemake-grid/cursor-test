@@ -588,7 +588,9 @@ class UnifiedLLMAgent(BaseAgent):
                                 # Be extremely conservative - target ~800px max
                                 max_dimension = 800  # ~800 pixels per side = ~2 tiles per side = ~425 tokens
                                 
-                                logger.warning(f"   ===== RESIZE NEEDED! ===== PIL_AVAILABLE: {PIL_AVAILABLE}")
+                                logger.warning(f"   ===== RESIZE NEEDED! ===== PIL_AVAILABLE: {PIL_AVAILABLE}, original_base64_size: {original_base64_size:,} chars")
+                                logger.warning(f"   ===== RESIZE TRIGGERED ===== estimated_tokens: {estimated_tokens}, total_estimated_tokens: {total_estimated_tokens}, base64_size: {base64_size:,}")
+                                logger.warning(f"   ===== RESIZE CONFIG ===== max_dimension: 800px, PIL_AVAILABLE: {PIL_AVAILABLE}")
                                 if not PIL_AVAILABLE:
                                     logger.error(f"   PIL/Pillow is NOT available! Cannot resize image.")
                                     error_msg = (
@@ -643,7 +645,10 @@ class UnifiedLLMAgent(BaseAgent):
                                             mimetype = "image/png"
                                         
                                         # Update base64 data
-                                        base64_data = base64.b64encode(output_buffer.getvalue()).decode('utf-8')
+                                        resized_base64 = base64.b64encode(output_buffer.getvalue()).decode('utf-8')
+                                        old_base64_size = len(base64_data)
+                                        logger.warning(f"   ===== FIRST RESIZE COMPLETE ===== new_base64_size: {len(resized_base64):,} chars (was {old_base64_size:,})")
+                                        base64_data = resized_base64  # Update the variable that will be used in parts array
                                         
                                         # Recalculate token count
                                         new_tiles_per_width = (new_width + 511) // 512
@@ -687,7 +692,10 @@ class UnifiedLLMAgent(BaseAgent):
                                                 img_resized_2.save(output_buffer_2, format='PNG', optimize=True)
                                                 mimetype = "image/png"
                                             
-                                            base64_data = base64.b64encode(output_buffer_2.getvalue()).decode('utf-8')
+                                            resized_base64_2 = base64.b64encode(output_buffer_2.getvalue()).decode('utf-8')
+                                            old_base64_size_2 = len(base64_data)
+                                            logger.warning(f"   ===== SECOND RESIZE COMPLETE ===== new_base64_size: {len(resized_base64_2):,} chars (was {old_base64_size_2:,})")
+                                            base64_data = resized_base64_2  # Update the variable that will be used in parts array
                                             
                                             new_tiles_per_width_2 = (new_width_2 + 511) // 512
                                             new_tiles_per_height_2 = (new_height_2 + 511) // 512
@@ -770,12 +778,20 @@ class UnifiedLLMAgent(BaseAgent):
                             
                             # Add image to parts (using resized base64_data if resize occurred)
                             # IMPORTANT: base64_data has been updated by resize logic if needs_resize was True
+                            final_base64_size_before_add = len(base64_data)
+                            logger.warning(f"   ===== ADDING IMAGE TO PARTS ===== needs_resize={needs_resize}, final_base64_size={final_base64_size_before_add:,} chars")
+                            if needs_resize:
+                                logger.warning(f"   ✓✓✓ Using RESIZED image data (size: {final_base64_size_before_add:,} chars)")
+                            else:
+                                logger.warning(f"   ⚠⚠⚠ Using ORIGINAL image data (size: {final_base64_size_before_add:,} chars) - NO RESIZE!")
+                            
                             parts.append({
                                 "inline_data": {
                                     "mime_type": mimetype,
                                     "data": base64_data  # This is the resized data if resize occurred
                                 }
                             })
+                            logger.warning(f"   ✓ Image added to parts array. Current parts count: {len(parts)}")
                             if needs_resize:
                                 logger.warning(f"   ✓✓✓ Added RESIZED image to parts: mime_type={mimetype}, data_length={final_base64_size:,} chars (original was {original_base64_size:,} chars)")
                             else:
@@ -802,6 +818,17 @@ class UnifiedLLMAgent(BaseAgent):
             logger.debug(f"   Added text part (non-list): {len(text_content)} chars")
         
         logger.debug(f"   Total parts: {len(parts)}, Part types: {[list(p.keys()) for p in parts]}")
+        
+        # Log final parts array before sending
+        total_base64_size = 0
+        for i, part in enumerate(parts):
+            if "inline_data" in part:
+                part_base64_size = len(part["inline_data"].get("data", ""))
+                total_base64_size += part_base64_size
+                logger.warning(f"   ===== PART {i} (image) ===== base64_size: {part_base64_size:,} chars")
+            elif "text" in part:
+                logger.debug(f"   Part {i} (text): {len(part['text'])} chars")
+        logger.warning(f"   ===== FINAL PARTS SUMMARY ===== Total parts: {len(parts)}, Total image base64 size: {total_base64_size:,} chars")
         
         contents = [{
             "parts": parts
