@@ -793,9 +793,9 @@ class UnifiedLLMAgent(BaseAgent):
                             })
                             logger.warning(f"   ✓ Image added to parts array. Current parts count: {len(parts)}")
                             if needs_resize:
-                                logger.warning(f"   ✓✓✓ Added RESIZED image to parts: mime_type={mimetype}, data_length={final_base64_size:,} chars (original was {original_base64_size:,} chars)")
+                                logger.warning(f"   ✓✓✓ Added RESIZED image to parts: mime_type={mimetype}, data_length={final_base64_size_before_add:,} chars (original was {original_base64_size:,} chars)")
                             else:
-                                logger.debug(f"   Added inline_data part: mime_type={mimetype}, data_length={final_base64_size}")
+                                logger.warning(f"   ⚠⚠⚠ Added ORIGINAL image to parts: mime_type={mimetype}, data_length={final_base64_size_before_add:,} chars - NO RESIZE!")
                         except RuntimeError:
                             # Re-raise size validation errors
                             raise
