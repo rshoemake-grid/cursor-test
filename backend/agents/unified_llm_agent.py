@@ -548,7 +548,7 @@ class UnifiedLLMAgent(BaseAgent):
                                     text_parts_len += part_len
                                     current_text_tokens += part_len // 4
                             
-                            logger.debug(f"   Text token calculation: system_prompt={system_prompt_len:,} chars, text_parts={text_parts_len:,} chars, total_text_tokens={current_text_tokens:,}")
+                            logger.warning(f"   ===== TEXT TOKEN CALCULATION ===== system_prompt={system_prompt_len:,} chars, text_parts={text_parts_len:,} chars, total_text_tokens={current_text_tokens:,}")
                             
                             # Update total_text_tokens (only count new text)
                             new_text_tokens = current_text_tokens - total_text_tokens
