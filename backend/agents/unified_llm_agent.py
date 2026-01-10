@@ -562,8 +562,8 @@ class UnifiedLLMAgent(BaseAgent):
                                 # If we can't parse dimensions, check base64 size as fallback
                                 # Very large base64 strings likely mean large images
                                 logger.warning(f"   Could not parse image dimensions (width={width}, height={height})")
-                                # Be very aggressive - resize if base64 is larger than 500KB
-                                if base64_size > 500_000:  # ~500KB base64
+                                # Be extremely aggressive - resize if base64 is larger than 300KB
+                                if base64_size > 300_000:  # ~300KB base64
                                     logger.warning(f"   Base64 size ({base64_size:,} chars) suggests large image. Attempting resize...")
                                     needs_resize = True
                                     # Estimate dimensions from base64 size (conservative estimate)
