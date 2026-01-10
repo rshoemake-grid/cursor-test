@@ -840,7 +840,9 @@ class UnifiedLLMAgent(BaseAgent):
                 logger.warning(f"   ===== PART {i} (image) ===== base64_size: {part_base64_size:,} chars")
             elif "text" in part:
                 logger.debug(f"   Part {i} (text): {len(part['text'])} chars")
+        final_total_tokens = total_image_tokens + total_text_tokens
         logger.warning(f"   ===== FINAL PARTS SUMMARY ===== Total parts: {len(parts)}, Total image base64 size: {total_base64_size:,} chars")
+        logger.warning(f"   ===== FINAL TOKEN ESTIMATE ===== Total image tokens: {total_image_tokens:,}, Total text tokens: {total_text_tokens:,}, GRAND TOTAL: {final_total_tokens:,} tokens (limit: 1,048,576)")
         
         contents = [{
             "parts": parts
