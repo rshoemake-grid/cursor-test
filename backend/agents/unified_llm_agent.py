@@ -812,11 +812,10 @@ class UnifiedLLMAgent(BaseAgent):
                             # IMPORTANT: base64_data has been updated by resize logic if needs_resize was True
                             final_base64_size_before_add = len(base64_data)
                             
-                            # WARNING: Gemini may count base64 data as tokens, not just image dimensions!
-                            # Estimate tokens from base64 size as well (conservative: base64 chars / 4)
-                            base64_tokens_estimate = final_base64_size_before_add // 4
+                            # NOTE: According to Gemini docs, "An image's display or file size does not affect its token count"
+                            # Base64 size does NOT count as tokens - only dimensions matter!
                             logger.warning(f"   ===== ADDING IMAGE TO PARTS ===== needs_resize={needs_resize}, final_base64_size={final_base64_size_before_add:,} chars")
-                            logger.warning(f"   ⚠⚠⚠ BASE64 TOKEN ESTIMATE: {base64_tokens_estimate:,} tokens (if Gemini counts base64 as text tokens)")
+                            logger.info(f"   ℹ️ Base64 size does NOT count as tokens (only dimensions matter per Gemini docs)")
                             if needs_resize:
                                 logger.warning(f"   ✓✓✓ Using RESIZED image data (size: {final_base64_size_before_add:,} chars)")
                             else:
