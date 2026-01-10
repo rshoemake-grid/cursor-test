@@ -537,12 +537,18 @@ class UnifiedLLMAgent(BaseAgent):
                             # Calculate text tokens ONCE (only count new text, not already counted)
                             # Estimate text content tokens (rough estimate: ~4 chars per token)
                             current_text_tokens = 0
+                            system_prompt_len = len(self.config.system_prompt) if self.config.system_prompt else 0
                             if self.config.system_prompt:
-                                current_text_tokens += len(self.config.system_prompt) // 4
+                                current_text_tokens += system_prompt_len // 4
                             # Estimate tokens from text parts already in parts array
+                            text_parts_len = 0
                             for part in parts:
                                 if "text" in part:
-                                    current_text_tokens += len(part["text"]) // 4
+                                    part_len = len(part["text"])
+                                    text_parts_len += part_len
+                                    current_text_tokens += part_len // 4
+                            
+                            logger.debug(f"   Text token calculation: system_prompt={system_prompt_len:,} chars, text_parts={text_parts_len:,} chars, total_text_tokens={current_text_tokens:,}")
                             
                             # Update total_text_tokens (only count new text)
                             new_text_tokens = current_text_tokens - total_text_tokens
