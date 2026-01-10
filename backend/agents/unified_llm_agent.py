@@ -819,8 +819,12 @@ class UnifiedLLMAgent(BaseAgent):
                             # Re-raise size validation errors
                             raise
                         except Exception as e:
-                            logger.warning(f"   Failed to parse data URL: {e}")
-                            pass
+                            logger.error(f"   Failed to parse data URL: {e}", exc_info=True)
+                            logger.error(f"   Image URL preview: {image_url[:100] if image_url else 'None'}...")
+                            logger.error(f"   This image will NOT be added to the request - this may cause issues!")
+                            # Don't pass - we need to know if images are being skipped
+                            # Re-raise to make it clear something went wrong
+                            raise RuntimeError(f"Failed to parse image data URL: {e}. Image URL preview: {image_url[:100] if image_url else 'None'}...")
                     elif image_url.startswith(("http://", "https://")):
                         # URL to image - Gemini can handle URLs directly
                         parts.append({
