@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState, useRef } from 'react'
+import React, { useCallback, useEffect, useState, useRef, forwardRef, useImperativeHandle } from 'react'
 import {
   ReactFlow,
   ReactFlowProvider,
@@ -19,10 +19,12 @@ import '@xyflow/react/dist/style.css'
 import { nodeTypes } from './nodes'
 import NodePanel from './NodePanel'
 import PropertyPanel from './PropertyPanel'
-import Toolbar from './Toolbar'
 import ExecutionConsole from './ExecutionConsole'
 import ContextMenu from './NodeContextMenu'
 import { api } from '../api/client'
+import { showSuccess, showError } from '../utils/notifications'
+import { showConfirm } from '../utils/confirm'
+import { useAuth } from '../contexts/AuthContext'
 
 interface Execution {
   id: string
@@ -43,6 +45,7 @@ interface WorkflowTab {
 interface WorkflowBuilderProps {
   tabId: string
   workflowId: string | null
+  tabName: string
   workflowTabs?: WorkflowTab[] // Execution data from parent
   onExecutionStart?: (executionId: string) => void
   onWorkflowSaved?: (workflowId: string, name: string) => void
@@ -55,9 +58,24 @@ interface WorkflowBuilderProps {
   onExecutionNodeUpdate?: (workflowId: string, executionId: string, nodeId: string, nodeState: any) => void
 }
 
-export default function WorkflowBuilder({ 
+interface TabDraft {
+  nodes: Node[]
+  edges: Edge[]
+  workflowId: string | null
+  workflowName: string
+  workflowDescription: string
+}
+
+export interface WorkflowBuilderHandle {
+  saveWorkflow: () => Promise<string | null>
+  executeWorkflow: () => void
+  exportWorkflow: () => void
+}
+
+const WorkflowBuilder = forwardRef<WorkflowBuilderHandle, WorkflowBuilderProps>(function WorkflowBuilder({ 
   tabId,
   workflowId,
+  tabName,
   workflowTabs = [],
   onExecutionStart,
   onWorkflowSaved,
@@ -68,7 +86,7 @@ export default function WorkflowBuilder({
   onExecutionLogUpdate,
   onExecutionStatusUpdate,
   onExecutionNodeUpdate
-}: WorkflowBuilderProps) {
+}: WorkflowBuilderProps, ref) {
   // Local state for this tab - NOT using global store
   const [nodes, setNodes, onNodesChangeBase] = useNodesState([] as Node[])
   const [edges, setEdges, onEdgesChangeBase] = useEdgesState([] as Edge[])
@@ -151,9 +169,57 @@ export default function WorkflowBuilder({
   }, [edges])
   const [localWorkflowName, setLocalWorkflowName] = useState<string>('Untitled Workflow')
   const [localWorkflowDescription, setLocalWorkflowDescription] = useState<string>('')
+  const tabNameRef = useRef<string>(tabName)
   const [variables, setVariables] = useState<Record<string, any>>({})
   const isLoadingRef = useRef<boolean>(false)
   const isDraggingRef = useRef<boolean>(false)
+  const { isAuthenticated } = useAuth()
+  const [isSaving, setIsSaving] = useState(false)
+  const [isExecuting, setIsExecuting] = useState(false)
+  const [showInputs, setShowInputs] = useState(false)
+  const [executionInputs, setExecutionInputs] = useState<string>('{}')
+  const workflowIdRef = useRef<string | null>(workflowId)
+  const tabDraftsRef = useRef<Record<string, TabDraft>>({})
+  
+  useEffect(() => {
+    if (tabName !== tabNameRef.current) {
+      tabNameRef.current = tabName
+      setLocalWorkflowName(tabName)
+    }
+  }, [tabName])
+
+  useEffect(() => {
+    const draft = tabDraftsRef.current[tabId]
+    if (draft) {
+      setNodes(draft.nodes)
+      setEdges(draft.edges)
+      setLocalWorkflowId(draft.workflowId)
+      setLocalWorkflowName(draft.workflowName)
+      setLocalWorkflowDescription(draft.workflowDescription)
+    } else if (!workflowId) {
+      setNodes([])
+      setEdges([])
+      setLocalWorkflowId(null)
+      setLocalWorkflowName('Untitled Workflow')
+      setLocalWorkflowDescription('')
+    }
+  }, [tabId, workflowId])
+
+  useEffect(() => {
+    return () => {
+      tabDraftsRef.current[tabId] = {
+        nodes,
+        edges,
+        workflowId: localWorkflowId,
+        workflowName: localWorkflowName,
+        workflowDescription: localWorkflowDescription,
+      }
+    }
+  }, [tabId, nodes, edges, localWorkflowId, localWorkflowName, localWorkflowDescription])
+
+  useEffect(() => {
+    workflowIdRef.current = localWorkflowId
+  }, [localWorkflowId])
   
   // Helper to convert nodes to workflow format
   const nodeToWorkflowNode = useCallback((node: any) => ({
@@ -169,35 +235,80 @@ export default function WorkflowBuilder({
     position: node.position,
   }), [])
   
-  // Function to save the workflow (can be called from PropertyPanel)
-  const handleSaveWorkflow = useCallback(async (): Promise<void> => {
+  // Function to save the workflow (can be called from PropertyPanel or toolbar buttons)
+  const saveWorkflow = useCallback(async (): Promise<string | null> => {
+    if (!isAuthenticated) {
+      showError('Please log in to save workflows.')
+      return null
+    }
+
+    if (isSaving) {
+      return localWorkflowId ?? null
+    }
+
+    const workflowDef = {
+      name: localWorkflowName,
+      description: localWorkflowDescription,
+      nodes: nodes.map(nodeToWorkflowNode),
+      edges: edges,
+      variables: variables,
+    }
+
+    setIsSaving(true)
     try {
-      const workflowDef = {
-        name: localWorkflowName,
-        description: localWorkflowDescription,
-        nodes: nodes.map(nodeToWorkflowNode),
-        edges: edges,
-        variables: variables,
-      }
-      
       if (localWorkflowId) {
-        // Update existing
         await api.updateWorkflow(localWorkflowId, workflowDef)
+        showSuccess('Workflow updated successfully!')
         if (onWorkflowSaved) {
           onWorkflowSaved(localWorkflowId, workflowDef.name)
         }
+        return localWorkflowId
       } else {
-        // Create new
         const created = await api.createWorkflow(workflowDef)
         setLocalWorkflowId(created.id!)
+        showSuccess('Workflow created successfully!')
         if (onWorkflowSaved) {
           onWorkflowSaved(created.id!, workflowDef.name)
         }
+        return created.id!
       }
     } catch (error: any) {
-      throw new Error('Failed to save workflow: ' + error.message)
+      showError('Failed to save workflow: ' + (error.message || 'Unknown error'))
+      console.error('Failed to save workflow:', error)
+      throw new Error('Failed to save workflow: ' + (error.message || 'Unknown error'))
+    } finally {
+      setIsSaving(false)
     }
-  }, [localWorkflowId, localWorkflowName, localWorkflowDescription, nodes, edges, variables, nodeToWorkflowNode, onWorkflowSaved])
+  }, [
+    isAuthenticated,
+    isSaving,
+    localWorkflowId,
+    localWorkflowName,
+    localWorkflowDescription,
+    nodes,
+    edges,
+    variables,
+    nodeToWorkflowNode,
+    onWorkflowSaved,
+  ])
+
+  const exportWorkflow = useCallback(() => {
+    const workflowDef = {
+      name: localWorkflowName,
+      description: localWorkflowDescription,
+      nodes: nodes.map(nodeToWorkflowNode),
+      edges: edges,
+      variables: variables,
+    }
+    const filename = (localWorkflowName.trim() || 'workflow').replace(/\s+/g, '-')
+    const blob = new Blob([JSON.stringify(workflowDef, null, 2)], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `${filename}.json`
+    a.click()
+    URL.revokeObjectURL(url)
+  }, [localWorkflowName, localWorkflowDescription, nodes, edges, variables, nodeToWorkflowNode])
   const lastLoadedWorkflowIdRef = useRef<string | null>(null)
   const [contextMenu, setContextMenu] = useState<{ nodeId?: string; edgeId?: string; x: number; y: number } | null>(null)
 
@@ -207,6 +318,111 @@ export default function WorkflowBuilder({
       onWorkflowModified()
     }
   }, [onWorkflowModified])
+
+  const executeWorkflow = useCallback(async () => {
+    if (!isAuthenticated) {
+      showError('Please log in to execute workflows.')
+      return
+    }
+
+    let currentWorkflowId = localWorkflowId
+    if (!currentWorkflowId) {
+      const confirmed = await showConfirm(
+        'Workflow needs to be saved before execution. Save now?',
+        { title: 'Save Workflow', confirmText: 'Save', cancelText: 'Cancel' }
+      )
+      if (!confirmed) {
+        return
+      }
+      try {
+        const savedId = await saveWorkflow()
+        if (!savedId) {
+          showError('Failed to save workflow. Cannot execute.')
+          return
+        }
+        currentWorkflowId = savedId
+      } catch (error: any) {
+        showError('Failed to save workflow. Cannot execute.')
+        return
+      }
+    }
+
+    setExecutionInputs('{}')
+    setShowInputs(true)
+  }, [isAuthenticated, localWorkflowId, saveWorkflow])
+
+  const handleConfirmExecute = useCallback(async () => {
+    setIsExecuting(true)
+    setTimeout(async () => {
+      try {
+        const inputs = JSON.parse(executionInputs)
+        setShowInputs(false)
+        setExecutionInputs('{}')
+        setIsExecuting(false)
+
+        const tempExecutionId = `pending-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+
+        if (onExecutionStart) {
+          onExecutionStart(tempExecutionId)
+        }
+
+        showSuccess('✅ Execution starting...\n\nCheck the console at the bottom of the screen to watch it run.', 6000)
+
+        const workflowIdToExecute = workflowIdRef.current
+        if (!workflowIdToExecute) {
+          showError('Workflow must be saved before executing.')
+          setIsExecuting(false)
+          return
+        }
+
+        api.executeWorkflow(workflowIdToExecute, inputs)
+          .then((execution) => {
+            if (execution.execution_id && execution.execution_id !== tempExecutionId) {
+              if (onExecutionStart) {
+                onExecutionStart(execution.execution_id)
+              }
+            }
+          })
+          .catch((error: any) => {
+            console.error('Execution failed:', error)
+            setIsExecuting(false)
+            const errorMessage = error.response?.data?.detail || error.message || 'Unknown error'
+            showError(`Failed to execute workflow: ${errorMessage}`)
+          })
+      } catch (error: any) {
+        console.error('Execution setup failed:', error)
+        setIsExecuting(false)
+        const errorNotification = document.createElement('div')
+        errorNotification.style.cssText = `
+          position: fixed;
+          top: 20px;
+          right: 20px;
+          background: #ef4444;
+          color: white;
+          padding: 16px 24px;
+          border-radius: 8px;
+          box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+          z-index: 10000;
+          max-width: 400px;
+          font-family: system-ui, -apple-system, sans-serif;
+        `
+        errorNotification.textContent = `Failed to execute workflow: ${error.message}`
+        document.body.appendChild(errorNotification)
+
+        setTimeout(() => {
+          errorNotification.style.transition = 'opacity 0.3s'
+          errorNotification.style.opacity = '0'
+          setTimeout(() => errorNotification.remove(), 300)
+        }, 5000)
+      }
+    }, 0)
+  }, [executionInputs, localWorkflowId, onExecutionStart])
+
+  useImperativeHandle(ref, () => ({
+    saveWorkflow,
+    executeWorkflow,
+    exportWorkflow,
+  }), [saveWorkflow, executeWorkflow, exportWorkflow])
 
   // Wrap React Flow change handlers to notify modifications
   const onNodesChange = useCallback((changes: any) => {
@@ -688,20 +904,6 @@ export default function WorkflowBuilder({
         <div className="flex-1 flex flex-col overflow-hidden">
           {/* Canvas Area */}
           <div className="flex-1 relative">
-            <Toolbar 
-              workflowId={localWorkflowId}
-              workflowName={localWorkflowName}
-              workflowDescription={localWorkflowDescription}
-              nodes={nodes}
-              edges={edges}
-              variables={variables}
-              onExecutionStart={handleExecutionStart}
-              onWorkflowSaved={onWorkflowSaved}
-              onWorkflowNameChange={setLocalWorkflowName}
-              onWorkflowDescriptionChange={setLocalWorkflowDescription}
-              onWorkflowIdChange={setLocalWorkflowId}
-            />
-            
             <div className="absolute inset-0">
               <KeyboardHandler />
               <ReactFlowInstanceCapture />
@@ -795,7 +997,7 @@ export default function WorkflowBuilder({
           setSelectedNodeId={setSelectedNodeId}
           selectedNodeIds={selectedNodeIds}
           nodes={nodes}
-          onSaveWorkflow={handleSaveWorkflow}
+          onSaveWorkflow={saveWorkflow}
         />
       </div>
       
@@ -825,5 +1027,6 @@ export default function WorkflowBuilder({
       )}
     </ReactFlowProvider>
   )
-}
+})
 
+export default WorkflowBuilder

@@ -1,8 +1,9 @@
-import { useState, useCallback, useEffect, useRef } from 'react'
+import { useState, useCallback, useEffect, useRef, MouseEvent, KeyboardEvent } from 'react'
 import { X, Plus } from 'lucide-react'
-import WorkflowBuilder from './WorkflowBuilder'
+import WorkflowBuilder, { WorkflowBuilderHandle } from './WorkflowBuilder'
 import { api } from '../api/client'
 import { showConfirm } from '../utils/confirm'
+import { showError } from '../utils/notifications'
 
 interface Execution {
   id: string
@@ -47,12 +48,24 @@ export default function WorkflowTabs({ initialWorkflowId, workflowLoadKey, onExe
   const [activeTabId, setActiveTabId] = useState<string>(tabs[0]?.id || 'workflow-1')
   const processedKeys = useRef<Set<string>>(new Set()) // Track processed workflowId+loadKey combinations
   const tabsRef = useRef<WorkflowTabData[]>(tabs) // Keep ref in sync with tabs state
+  const builderRef = useRef<WorkflowBuilderHandle | null>(null)
+  const [editingTabId, setEditingTabId] = useState<string | null>(null)
+  const [editingName, setEditingName] = useState('')
+  const editingInputRef = useRef<HTMLInputElement | null>(null)
+  const renameInFlightRef = useRef(false)
 
   // Sync tabsRef and globalTabs with tabs state
   useEffect(() => {
     tabsRef.current = tabs
     globalTabs = [...tabs] // Update global storage
   }, [tabs])
+
+  useEffect(() => {
+    if (editingTabId && editingInputRef.current) {
+      editingInputRef.current.focus()
+      editingInputRef.current.select()
+    }
+  }, [editingTabId])
   
 
   // Handle initial workflow from marketplace - ALWAYS create new tab
@@ -430,6 +443,60 @@ export default function WorkflowTabs({ initialWorkflowId, workflowLoadKey, onExe
 
   const activeTab = tabs.find(t => t.id === activeTabId)
 
+  const startEditingTabName = useCallback((tab: WorkflowTabData, event: MouseEvent<HTMLButtonElement>) => {
+    event.stopPropagation()
+    setEditingTabId(tab.id)
+    setEditingName(tab.name)
+  }, [])
+
+  const commitTabRename = useCallback(async (tabId: string, requestedName: string) => {
+    if (renameInFlightRef.current) return
+
+    const tab = tabs.find(t => t.id === tabId)
+    if (!tab) {
+      setEditingTabId(null)
+      setEditingName('')
+      return
+    }
+
+    const trimmedName = requestedName.trim()
+    if (trimmedName === '') {
+      showError('Workflow name cannot be empty.')
+      return
+    }
+
+    if (trimmedName === tab.name) {
+      setEditingTabId(null)
+      setEditingName('')
+      return
+    }
+
+    renameInFlightRef.current = true
+    setEditingTabId(null)
+    setEditingName('')
+
+    const previousName = tab.name
+    setTabs(prev => prev.map(t => t.id === tabId ? { ...t, name: trimmedName } : t))
+
+    try {
+      if (tab.workflowId) {
+        await api.updateWorkflow(tab.workflowId, { name: trimmedName })
+      }
+    } catch (error: any) {
+      const detail = error?.response?.data?.detail ?? error?.message ?? 'Unknown error'
+      showError(`Failed to rename workflow: ${detail}`)
+      setTabs(prev => prev.map(t => t.id === tabId ? { ...t, name: previousName } : t))
+    } finally {
+      renameInFlightRef.current = false
+    }
+  }, [tabs])
+
+  const handleInputBlur = useCallback((tabId: string) => {
+    if (renameInFlightRef.current) return
+    if (editingTabId !== tabId) return
+    void commitTabRename(tabId, editingName)
+  }, [commitTabRename, editingName, editingTabId])
+
   return (
     <div className="flex flex-col h-full">
       {/* Tab Bar */}
@@ -440,6 +507,7 @@ export default function WorkflowTabs({ initialWorkflowId, workflowLoadKey, onExe
             <button
               key={tab.id}
               onClick={() => setActiveTabId(tab.id)}
+              onDoubleClick={(event) => startEditingTabName(tab, event)}
               className={`
                 flex items-center gap-2 px-4 py-2 border-r border-gray-300 
                 transition-colors relative group
@@ -453,7 +521,27 @@ export default function WorkflowTabs({ initialWorkflowId, workflowLoadKey, onExe
                 <div className="w-2 h-2 bg-blue-500 rounded-full" title="Unsaved changes" />
               )}
               <span className="text-sm whitespace-nowrap">
-                {tab.name}
+                {editingTabId === tab.id ? (
+                  <input
+                    ref={editingInputRef}
+                    value={editingName}
+                    onChange={(event) => setEditingName(event.target.value)}
+                    onBlur={() => handleInputBlur(tab.id)}
+                    onKeyDown={(event: KeyboardEvent<HTMLInputElement>) => {
+                      if (event.key === 'Enter') {
+                        event.preventDefault()
+                        void commitTabRename(tab.id, editingName)
+                      } else if (event.key === 'Escape') {
+                        setEditingTabId(null)
+                        setEditingName('')
+                      }
+                    }}
+                    onClick={(event) => event.stopPropagation()}
+                    className="w-full text-sm bg-transparent border-b border-blue-400 focus:border-blue-500 focus:outline-none"
+                  />
+                ) : (
+                  tab.name
+                )}
               </span>
               {tabs.length > 1 && (
                 <div
@@ -476,24 +564,47 @@ export default function WorkflowTabs({ initialWorkflowId, workflowLoadKey, onExe
           ))}
         </div>
 
-        {/* New Workflow Button */}
-        <button
-          onClick={handleNewWorkflow}
-          className="flex items-center gap-2 px-4 py-2 text-gray-600 hover:bg-gray-200 transition-colors ml-2"
-          title="New workflow"
-        >
-          <Plus className="w-4 h-4" />
-          <span className="text-sm font-medium">New</span>
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => void builderRef.current?.saveWorkflow()}
+            className="px-3 py-1 rounded-lg border border-gray-300 bg-white text-gray-700 text-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+            title="Save workflow"
+          >
+            Save
+          </button>
+          <button
+            onClick={() => builderRef.current?.executeWorkflow()}
+            className="px-3 py-1 rounded-lg bg-green-600 text-white text-sm hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors"
+            title="Execute workflow"
+          >
+            Execute
+          </button>
+          <button
+            onClick={() => builderRef.current?.exportWorkflow()}
+            className="px-3 py-1 rounded-lg border border-gray-300 bg-white text-gray-700 text-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+            title="Export workflow"
+          >
+            Export
+          </button>
+          <button
+            onClick={handleNewWorkflow}
+            className="flex items-center gap-2 px-4 py-2 text-gray-600 hover:bg-gray-200 transition-colors"
+            title="New workflow"
+          >
+            <Plus className="w-4 h-4" />
+            <span className="text-sm font-medium">New</span>
+          </button>
+        </div>
       </div>
 
       {/* Active Workflow Content */}
       {activeTab && (
         <div className="flex-1 flex flex-col overflow-hidden">
           <WorkflowBuilder
-            key={activeTab.id}
+            ref={builderRef}
             tabId={activeTab.id}
             workflowId={activeTab.workflowId}
+            tabName={activeTab.name}
             workflowTabs={tabs
               .filter(tab => tab.workflowId !== null)
               .map(tab => ({

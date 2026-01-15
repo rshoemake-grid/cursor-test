@@ -11,7 +11,7 @@ interface PropertyPanelProps {
   selectedNodeIds?: Set<string> // Multiple selected node IDs
   nodes?: any[] // Pass nodes as prop for better reactivity
   onSave?: () => void // Optional callback when save is clicked
-  onSaveWorkflow?: () => Promise<void> // Callback to save the entire workflow
+  onSaveWorkflow?: () => Promise<string | null> // Callback to save the entire workflow
 }
 
 
