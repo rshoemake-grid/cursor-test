@@ -3,7 +3,7 @@ import { X, Plus } from 'lucide-react'
 import WorkflowBuilder, { WorkflowBuilderHandle } from './WorkflowBuilder'
 import { api } from '../api/client'
 import { showConfirm } from '../utils/confirm'
-import { showError } from '../utils/notifications'
+import { showError, showSuccess } from '../utils/notifications'
 
 interface Execution {
   id: string
@@ -28,17 +28,51 @@ interface WorkflowTabsProps {
   onExecutionStart?: (executionId: string) => void
 }
 
-// Module-level storage for tabs to persist across remounts
-let globalTabs: WorkflowTabData[] = [
-  {
-    id: 'workflow-1',
-    name: 'Untitled Workflow',
-    workflowId: null,
-    isUnsaved: true,
-    executions: [],
-    activeExecutionId: null
+const WORKFLOW_TABS_STORAGE_KEY = 'workflowTabs'
+
+const loadTabsFromStorage = (): WorkflowTabData[] => {
+  if (typeof window === 'undefined') {
+    return []
   }
-]
+
+  try {
+    const raw = window.localStorage.getItem(WORKFLOW_TABS_STORAGE_KEY)
+    if (!raw) {
+      return []
+    }
+    const parsed = JSON.parse(raw)
+    if (Array.isArray(parsed)) {
+      return parsed
+    }
+  } catch {
+    // ignore parse errors
+  }
+  return []
+}
+
+const emptyTabState: WorkflowTabData = {
+  id: 'workflow-1',
+  name: 'Untitled Workflow',
+  workflowId: null,
+  isUnsaved: true,
+  executions: [],
+  activeExecutionId: null
+}
+
+// Module-level storage for tabs to persist across remounts
+const storedTabs = loadTabsFromStorage()
+let globalTabs: WorkflowTabData[] = storedTabs.length > 0 ? storedTabs : [emptyTabState]
+
+const saveTabsToStorage = (tabs: WorkflowTabData[]) => {
+  if (typeof window === 'undefined') {
+    return
+  }
+  try {
+    window.localStorage.setItem(WORKFLOW_TABS_STORAGE_KEY, JSON.stringify(tabs))
+  } catch {
+    // ignore quota errors
+  }
+}
 
 export default function WorkflowTabs({ initialWorkflowId, workflowLoadKey, onExecutionStart }: WorkflowTabsProps) {
   // Initialize from global tabs (persists across remounts)
@@ -53,12 +87,22 @@ export default function WorkflowTabs({ initialWorkflowId, workflowLoadKey, onExe
   const [editingName, setEditingName] = useState('')
   const editingInputRef = useRef<HTMLInputElement | null>(null)
   const renameInFlightRef = useRef(false)
+  const [storageToastShown, setStorageToastShown] = useState(false)
+  const isInitialStoragePresent = storedTabs.length > 0
 
   // Sync tabsRef and globalTabs with tabs state
   useEffect(() => {
     tabsRef.current = tabs
     globalTabs = [...tabs] // Update global storage
+    saveTabsToStorage(tabs)
   }, [tabs])
+
+  useEffect(() => {
+    if (isInitialStoragePresent && !storageToastShown) {
+      showSuccess('Restored open workflow tabs from your previous session.')
+      setStorageToastShown(true)
+    }
+  }, [isInitialStoragePresent, storageToastShown])
 
   useEffect(() => {
     if (editingTabId && editingInputRef.current) {
@@ -605,6 +649,7 @@ export default function WorkflowTabs({ initialWorkflowId, workflowLoadKey, onExe
             tabId={activeTab.id}
             workflowId={activeTab.workflowId}
             tabName={activeTab.name}
+            tabIsUnsaved={activeTab.isUnsaved}
             workflowTabs={tabs
               .filter(tab => tab.workflowId !== null)
               .map(tab => ({

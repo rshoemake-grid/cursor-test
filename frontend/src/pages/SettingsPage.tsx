@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { showSuccess, showError } from '../utils/notifications'
 import { showConfirm } from '../utils/confirm'
 import { useNavigate } from 'react-router-dom'
+import { useAuth } from '../contexts/AuthContext'
 import { Save, Plus, Trash2, CheckCircle, XCircle, Loader, ArrowLeft, Eye, EyeOff } from 'lucide-react'
 
 interface LLMProvider {
@@ -69,6 +70,7 @@ const PROVIDER_TEMPLATES = {
 }
 
 export default function SettingsPage() {
+  const { isAuthenticated } = useAuth()
   const navigate = useNavigate()
   const [providers, setProviders] = useState<LLMProvider[]>([])
   const [showAddProvider, setShowAddProvider] = useState(false)
@@ -80,6 +82,22 @@ export default function SettingsPage() {
   // Load providers from backend on mount
   useEffect(() => {
     const loadProviders = async () => {
+      const fallbackToLocal = () => {
+        const saved = localStorage.getItem('llm_providers')
+        if (saved) {
+          try {
+            setProviders(JSON.parse(saved))
+          } catch (e) {
+            console.error('Failed to load providers:', e)
+          }
+        }
+      }
+
+      if (!isAuthenticated) {
+        fallbackToLocal()
+        return
+      }
+
       try {
         const response = await fetch('/api/settings/llm')
         if (response.ok) {
@@ -93,20 +111,12 @@ export default function SettingsPage() {
       } catch (e) {
         console.log('Could not load from backend, trying localStorage')
       }
-      
-      // Fallback to localStorage
-      const saved = localStorage.getItem('llm_providers')
-      if (saved) {
-        try {
-          setProviders(JSON.parse(saved))
-        } catch (e) {
-          console.error('Failed to load providers:', e)
-        }
-      }
+
+      fallbackToLocal()
     }
     
     loadProviders()
-  }, [])
+  }, [isAuthenticated])
 
   const saveProviders = async (newProviders: LLMProvider[]) => {
     setProviders(newProviders)

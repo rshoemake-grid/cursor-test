@@ -10,6 +10,7 @@ import MarketplacePage from './pages/MarketplacePage'
 import SettingsPage from './pages/SettingsPage'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
 import { Play, List, Eye, Store, User, LogOut, LogIn, Settings } from 'lucide-react'
+import { showConfirm } from './utils/confirm'
 
 type View = 'builder' | 'list' | 'execution'
 
@@ -26,6 +27,7 @@ function MainApp() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const processedWorkflowFromUrl = useRef<string | null>(null)
+  const [isLogoutPending, setIsLogoutPending] = useState(false)
 
   // Load workflow from URL query parameter (from marketplace)
   useEffect(() => {
@@ -122,31 +124,42 @@ function MainApp() {
               Settings
             </Link>
 
-            <div className="ml-4 pl-4 border-l border-gray-300 flex items-center gap-2">
-              {isAuthenticated ? (
-                <>
-                  <div className="flex items-center gap-2 px-3 py-2 bg-gray-100 rounded-lg">
-                    <User className="w-4 h-4 text-gray-600" />
-                    <span className="text-sm font-medium text-gray-700">{user?.username}</span>
-                  </div>
-                  <button
-                    onClick={logout}
-                    className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
-                    title="Logout"
-                  >
-                    <LogOut className="w-4 h-4" />
-                  </button>
-                </>
-              ) : (
-                <Link
-                  to="/auth"
-                  className="px-4 py-2 bg-primary-600 text-white rounded-lg flex items-center gap-2 hover:bg-primary-700 transition-colors"
+          <div className="ml-4 pl-4 border-l border-gray-300 flex items-center gap-2">
+            {isAuthenticated ? (
+              <>
+                <div className="flex items-center gap-2 px-3 py-2 bg-gray-100 rounded-lg">
+                  <User className="w-4 h-4 text-gray-600" />
+                  <span className="text-sm font-medium text-gray-700">{user?.username}</span>
+                </div>
+                <button
+                  onClick={async () => {
+                    if (isLogoutPending) return
+                    setIsLogoutPending(true)
+                    const confirmed = await showConfirm(
+                      'Do you really want to log out? Any unsaved workflows will remain in draft but may be lost if you close the tab.',
+                      { title: 'Confirm Logout', confirmText: 'Log out', cancelText: 'Cancel', type: 'danger' }
+                    )
+                    setIsLogoutPending(false)
+                    if (confirmed) {
+                      logout()
+                    }
+                  }}
+                  className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                  title="Logout"
                 >
-                  <LogIn className="w-4 h-4" />
-                  Sign In
-                </Link>
-              )}
-            </div>
+                  <LogOut className="w-4 h-4" />
+                </button>
+              </>
+            ) : (
+              <Link
+                to="/auth"
+                className="px-4 py-2 bg-primary-600 text-white rounded-lg flex items-center gap-2 hover:bg-primary-700 transition-colors"
+              >
+                <LogIn className="w-4 h-4" />
+                Sign In
+              </Link>
+            )}
+          </div>
           </nav>
         </div>
       </header>

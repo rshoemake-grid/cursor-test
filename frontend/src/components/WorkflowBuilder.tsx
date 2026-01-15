@@ -56,6 +56,7 @@ interface WorkflowBuilderProps {
   onExecutionLogUpdate?: (workflowId: string, executionId: string, log: any) => void
   onExecutionStatusUpdate?: (workflowId: string, executionId: string, status: 'running' | 'completed' | 'failed') => void
   onExecutionNodeUpdate?: (workflowId: string, executionId: string, nodeId: string, nodeState: any) => void
+  tabIsUnsaved: boolean
 }
 
 interface TabDraft {
@@ -64,6 +65,38 @@ interface TabDraft {
   workflowId: string | null
   workflowName: string
   workflowDescription: string
+  isUnsaved: boolean
+}
+
+const DRAFT_STORAGE_KEY = 'workflowBuilderDrafts'
+
+const loadDraftsFromStorage = (): Record<string, TabDraft> => {
+  if (typeof window === 'undefined') {
+    return {}
+  }
+
+  try {
+    const raw = window.localStorage.getItem(DRAFT_STORAGE_KEY)
+    if (!raw) {
+      return {}
+    }
+    const parsed = JSON.parse(raw)
+    return typeof parsed === 'object' && parsed !== null ? parsed : {}
+  } catch {
+    return {}
+  }
+}
+
+const saveDraftsToStorage = (drafts: Record<string, TabDraft>) => {
+  if (typeof window === 'undefined') {
+    return
+  }
+
+  try {
+    window.localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(drafts))
+  } catch {
+    // Ignore write failures (e.g., storage quota)
+  }
 }
 
 export interface WorkflowBuilderHandle {
@@ -76,6 +109,7 @@ const WorkflowBuilder = forwardRef<WorkflowBuilderHandle, WorkflowBuilderProps>(
   tabId,
   workflowId,
   tabName,
+  tabIsUnsaved,
   workflowTabs = [],
   onExecutionStart,
   onWorkflowSaved,
@@ -179,7 +213,7 @@ const WorkflowBuilder = forwardRef<WorkflowBuilderHandle, WorkflowBuilderProps>(
   const [showInputs, setShowInputs] = useState(false)
   const [executionInputs, setExecutionInputs] = useState<string>('{}')
   const workflowIdRef = useRef<string | null>(workflowId)
-  const tabDraftsRef = useRef<Record<string, TabDraft>>({})
+  const tabDraftsRef = useRef<Record<string, TabDraft>>(loadDraftsFromStorage())
   
   useEffect(() => {
     if (tabName !== tabNameRef.current) {
@@ -188,10 +222,26 @@ const WorkflowBuilder = forwardRef<WorkflowBuilderHandle, WorkflowBuilderProps>(
     }
   }, [tabName])
 
+  const normalizeNodeForStorage = useCallback((node: Node) => ({
+    ...node,
+    data: {
+      ...node.data,
+      agent_config: node.data?.agent_config ?? node.agent_config ?? {},
+      condition_config: node.data?.condition_config ?? node.condition_config ?? {},
+      loop_config: node.data?.loop_config ?? node.loop_config ?? {},
+      input_config: node.data?.input_config ?? node.input_config ?? {},
+    },
+  }), [])
+
   useEffect(() => {
     const draft = tabDraftsRef.current[tabId]
-    if (draft) {
-      setNodes(draft.nodes)
+    const matchesCurrentWorkflow = draft && (
+      (!workflowId && !draft.workflowId) ||
+      (workflowId && draft.workflowId === workflowId)
+    )
+
+    if (matchesCurrentWorkflow) {
+      setNodes(draft.nodes.map(normalizeNodeForStorage))
       setEdges(draft.edges)
       setLocalWorkflowId(draft.workflowId)
       setLocalWorkflowName(draft.workflowName)
@@ -206,16 +256,16 @@ const WorkflowBuilder = forwardRef<WorkflowBuilderHandle, WorkflowBuilderProps>(
   }, [tabId, workflowId])
 
   useEffect(() => {
-    return () => {
-      tabDraftsRef.current[tabId] = {
-        nodes,
-        edges,
-        workflowId: localWorkflowId,
-        workflowName: localWorkflowName,
-        workflowDescription: localWorkflowDescription,
-      }
+    tabDraftsRef.current[tabId] = {
+      nodes: nodes.map(normalizeNodeForStorage),
+      edges,
+      workflowId: localWorkflowId,
+      workflowName: localWorkflowName,
+      workflowDescription: localWorkflowDescription,
+      isUnsaved: tabIsUnsaved
     }
-  }, [tabId, nodes, edges, localWorkflowId, localWorkflowName, localWorkflowDescription])
+    saveDraftsToStorage(tabDraftsRef.current)
+  }, [tabId, nodes, edges, localWorkflowId, localWorkflowName, localWorkflowDescription, tabIsUnsaved, normalizeNodeForStorage])
 
   useEffect(() => {
     workflowIdRef.current = localWorkflowId
@@ -510,6 +560,9 @@ const WorkflowBuilder = forwardRef<WorkflowBuilderHandle, WorkflowBuilderProps>(
     }
     
     if (workflowId) {
+      if (tabIsUnsaved) {
+        return
+      }
       isLoadingRef.current = true // Prevent marking as modified during load
       api.getWorkflow(workflowId).then((workflow) => {
         // Set local state for this tab
@@ -637,7 +690,7 @@ const WorkflowBuilder = forwardRef<WorkflowBuilderHandle, WorkflowBuilderProps>(
       lastLoadedWorkflowIdRef.current = null
       isLoadingRef.current = false
     }
-  }, [workflowId, onWorkflowLoaded, workflowNodeToNode, setNodes, setEdges])
+  }, [workflowId, onWorkflowLoaded, workflowNodeToNode, setNodes, setEdges, tabIsUnsaved])
 
   // Handle execution start - just call parent callback
   const handleExecutionStart = useCallback((executionId: string) => {

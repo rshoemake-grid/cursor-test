@@ -31,7 +31,8 @@ export default function PropertyPanel({ selectedNodeId, setSelectedNodeId, selec
   const [showAddInput, setShowAddInput] = useState(false)
   const [availableModels, setAvailableModels] = useState<Array<{ value: string; label: string; provider: string }>>([])
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle')
-  
+  const [panelOpen, setPanelOpen] = useState(true)
+
   // Get nodes directly from React Flow store for stability, fallback to prop
   const nodes = useMemo(() => {
     try {
@@ -130,6 +131,12 @@ export default function PropertyPanel({ selectedNodeId, setSelectedNodeId, selec
     
     return found
   }, [selectedNodeId, getNodes, nodes])
+
+  useEffect(() => {
+    if (selectedNode) {
+      setPanelOpen(true)
+    }
+  }, [selectedNode])
   
   
   // Local state for all config fields
@@ -381,6 +388,20 @@ export default function PropertyPanel({ selectedNodeId, setSelectedNodeId, selec
   // Check if multiple nodes are selected
   const multipleSelected = selectedNodeIds && selectedNodeIds.size > 1
   
+  if (!panelOpen) {
+    return (
+      <div className="fixed right-0 top-1/2 -translate-y-1/2 z-10">
+        <button
+          onClick={() => setPanelOpen(true)}
+          className="px-3 py-2 text-xs bg-white border border-gray-300 rounded-l-full shadow hover:bg-gray-100 focus:outline-none"
+          title="Reopen properties panel"
+        >
+          Properties
+        </button>
+      </div>
+    )
+  }
+
   if (!selectedNode || multipleSelected) {
     return (
       <div className="w-80 h-full bg-white border-l border-gray-200 p-4 overflow-y-auto">
@@ -486,6 +507,7 @@ export default function PropertyPanel({ selectedNodeId, setSelectedNodeId, selec
   const handleClose = () => {
     // Just close the panel (deselect node) without deleting
     setSelectedNodeId(null)
+    setPanelOpen(false)
   }
 
   const handleSave = async () => {
@@ -547,7 +569,14 @@ export default function PropertyPanel({ selectedNodeId, setSelectedNodeId, selec
   }
 
   return (
-    <div className="w-80 h-full bg-white border-l border-gray-200 p-4 overflow-y-auto">
+    <div className="relative w-80 h-full bg-white border-l border-gray-200 p-4 overflow-y-auto">
+      <button
+        onClick={handleClose}
+        className="absolute top-3 right-3 p-1 text-gray-500 hover:bg-gray-100 rounded-full transition-colors"
+        title="Close properties panel"
+      >
+        <X className="w-4 h-4" />
+      </button>
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-lg font-semibold text-gray-900">Properties</h3>
         <div className="flex items-center gap-2">
@@ -579,13 +608,6 @@ export default function PropertyPanel({ selectedNodeId, setSelectedNodeId, selec
                 Save
               </>
             )}
-          </button>
-          <button
-            onClick={handleClose}
-            className="p-1 text-gray-600 hover:bg-gray-100 rounded"
-            title="Close properties panel"
-          >
-            <X className="w-4 h-4" />
           </button>
           <button
             onClick={handleDelete}
