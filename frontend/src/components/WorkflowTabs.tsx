@@ -5,7 +5,6 @@ import WorkflowBuilder, { WorkflowBuilderHandle } from './WorkflowBuilder'
 import { api } from '../api/client'
 import { showConfirm } from '../utils/confirm'
 import { showError, showSuccess } from '../utils/notifications'
-import { useAuth } from '../contexts/AuthContext'
 
 interface Execution {
   id: string
