@@ -285,6 +285,13 @@ class TemplateDifficulty(str, Enum):
     ADVANCED = "advanced"
 
 
+class WorkflowPublishRequest(BaseModel):
+    category: TemplateCategory
+    tags: List[str] = Field(default_factory=list)
+    difficulty: TemplateDifficulty = TemplateDifficulty.BEGINNER
+    estimated_time: Optional[str] = None
+
+
 class WorkflowTemplateCreate(BaseModel):
     """Schema for creating a workflow template"""
     name: str

@@ -133,9 +133,7 @@ export default function PropertyPanel({ selectedNodeId, setSelectedNodeId, selec
   }, [selectedNodeId, getNodes, nodes])
 
   useEffect(() => {
-    if (selectedNode) {
-      setPanelOpen(true)
-    }
+    setPanelOpen(Boolean(selectedNode))
   }, [selectedNode])
   
   
@@ -388,6 +386,10 @@ export default function PropertyPanel({ selectedNodeId, setSelectedNodeId, selec
   // Check if multiple nodes are selected
   const multipleSelected = selectedNodeIds && selectedNodeIds.size > 1
   
+  if (!selectedNode) {
+    return null
+  }
+
   if (!panelOpen) {
     return (
       <div className="fixed right-0 top-1/2 -translate-y-1/2 z-10">
@@ -402,19 +404,15 @@ export default function PropertyPanel({ selectedNodeId, setSelectedNodeId, selec
     )
   }
 
-  if (!selectedNode || multipleSelected) {
+  if (multipleSelected) {
     return (
       <div className="w-80 h-full bg-white border-l border-gray-200 p-4 overflow-y-auto">
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Properties</h3>
-        {multipleSelected ? (
-          <div className="text-sm text-gray-500 mb-2">
-            <p className="mb-2">Multiple nodes selected ({selectedNodeIds?.size})</p>
-            <p className="text-xs text-gray-400">Select a single node to edit its properties</p>
-            <p className="text-xs text-gray-400 mt-2">You can drag selected nodes together to move them</p>
-          </div>
-        ) : (
-          <p className="text-sm text-gray-500 mb-2">Select a node to edit its properties</p>
-        )}
+        <div className="text-sm text-gray-500 mb-2">
+          <p className="mb-2">Multiple nodes selected ({selectedNodeIds?.size})</p>
+          <p className="text-xs text-gray-400">Select a single node to edit its properties</p>
+          <p className="text-xs text-gray-400 mt-2">You can drag selected nodes together to move them</p>
+        </div>
       </div>
     )
   }

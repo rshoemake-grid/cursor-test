@@ -1,9 +1,11 @@
 import { useState, useCallback, useEffect, useRef, MouseEvent, KeyboardEvent } from 'react'
 import { X, Plus } from 'lucide-react'
+import { useAuth } from '../contexts/AuthContext'
 import WorkflowBuilder, { WorkflowBuilderHandle } from './WorkflowBuilder'
 import { api } from '../api/client'
 import { showConfirm } from '../utils/confirm'
 import { showError, showSuccess } from '../utils/notifications'
+import { useAuth } from '../contexts/AuthContext'
 
 interface Execution {
   id: string
@@ -87,6 +89,28 @@ export default function WorkflowTabs({ initialWorkflowId, workflowLoadKey, onExe
   const [editingName, setEditingName] = useState('')
   const editingInputRef = useRef<HTMLInputElement | null>(null)
   const renameInFlightRef = useRef(false)
+  const { token } = useAuth()
+  const templateCategories = [
+    'content_creation',
+    'data_analysis',
+    'customer_service',
+    'research',
+    'automation',
+    'education',
+    'marketing',
+    'other'
+  ]
+  const templateDifficulties = ['beginner', 'intermediate', 'advanced']
+  const [showPublishModal, setShowPublishModal] = useState(false)
+  const [publishForm, setPublishForm] = useState({
+    name: '',
+    description: '',
+    category: 'automation',
+    tags: '',
+    difficulty: 'beginner',
+    estimated_time: ''
+  })
+  const [isPublishing, setIsPublishing] = useState(false)
   const [storageToastShown, setStorageToastShown] = useState(false)
   const isInitialStoragePresent = storedTabs.length > 0
 
@@ -541,6 +565,64 @@ export default function WorkflowTabs({ initialWorkflowId, workflowLoadKey, onExe
     void commitTabRename(tabId, editingName)
   }, [commitTabRename, editingName, editingTabId])
 
+  const openPublishModal = useCallback(() => {
+    if (!activeTab) {
+      showError('Select a workflow tab before publishing.')
+      return
+    }
+    setPublishForm({
+      name: activeTab.name,
+      description: '',
+      category: 'automation',
+      tags: '',
+      difficulty: 'beginner',
+      estimated_time: ''
+    })
+    setShowPublishModal(true)
+  }, [activeTab])
+
+  const handlePublishFormChange = (field: keyof typeof publishForm, value: string) => {
+    setPublishForm(prev => ({ ...prev, [field]: value }))
+  }
+
+  const handlePublish = async (event: React.FormEvent) => {
+    event.preventDefault()
+    if (!activeTab || !activeTab.workflowId) {
+      showError('Save the workflow before publishing to the marketplace.')
+      return
+    }
+
+    setIsPublishing(true)
+    try {
+      const tagsArray = publishForm.tags.split(',').map(tag => tag.trim()).filter(Boolean)
+      const response = await fetch(`http://localhost:8000/api/workflows/${activeTab.workflowId}/publish`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {})
+        },
+        body: JSON.stringify({
+          category: publishForm.category,
+          tags: tagsArray,
+          difficulty: publishForm.difficulty,
+          estimated_time: publishForm.estimated_time || undefined
+        })
+      })
+
+      if (response.ok) {
+        const published = await response.json()
+        showSuccess(`Published "${published.name}" to the marketplace.`)
+        setShowPublishModal(false)
+      } else {
+        const errorText = await response.text()
+        showError(`Failed to publish: ${errorText}`)
+      }
+    } catch (error: any) {
+      showError('Failed to publish workflow: ' + (error.message || 'Unknown error'))
+    } finally {
+      setIsPublishing(false)
+    }
+  }
   return (
     <div className="flex flex-col h-full">
       {/* Tab Bar */}
@@ -624,6 +706,13 @@ export default function WorkflowTabs({ initialWorkflowId, workflowLoadKey, onExe
             Execute
           </button>
           <button
+            onClick={openPublishModal}
+            className="px-3 py-1 rounded-lg bg-blue-600 text-white text-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+            title="Publish workflow"
+          >
+            Publish
+          </button>
+          <button
             onClick={() => builderRef.current?.exportWorkflow()}
             className="px-3 py-1 rounded-lg border border-gray-300 bg-white text-gray-700 text-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
             title="Export workflow"
@@ -684,6 +773,115 @@ export default function WorkflowTabs({ initialWorkflowId, workflowLoadKey, onExe
               New Workflow
             </button>
           </div>
+        </div>
+      )}
+
+      {showPublishModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+          <form
+            onSubmit={handlePublish}
+            className="bg-white rounded-xl shadow-lg max-w-md w-full p-6 space-y-4"
+          >
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-gray-900">Publish to Marketplace</h3>
+              <button
+                type="button"
+                onClick={() => setShowPublishModal(false)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Workflow Name</label>
+              <input
+                type="text"
+                value={publishForm.name}
+                onChange={(e) => handlePublishFormChange('name', e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Description (optional)</label>
+              <textarea
+                value={publishForm.description}
+                onChange={(e) => handlePublishFormChange('description', e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+                rows={3}
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
+              <select
+                value={publishForm.category}
+                onChange={(e) => handlePublishFormChange('category', e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+              >
+                {templateCategories.map(category => (
+                  <option key={category} value={category}>{category.replace('_', ' ')}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="flex gap-4">
+              <div className="flex-1">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Difficulty</label>
+                <select
+                  value={publishForm.difficulty}
+                  onChange={(e) => handlePublishFormChange('difficulty', e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+                >
+                  {templateDifficulties.map(diff => (
+                    <option key={diff} value={diff}>
+                      {diff.charAt(0).toUpperCase() + diff.slice(1)}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="flex-1">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Estimated Time</label>
+                <input
+                  type="text"
+                  value={publishForm.estimated_time}
+                  onChange={(e) => handlePublishFormChange('estimated_time', e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+                  placeholder="e.g. 30 minutes"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Tags (comma separated)</label>
+              <input
+                type="text"
+                value={publishForm.tags}
+                onChange={(e) => handlePublishFormChange('tags', e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+                placeholder="automation, ai, ... "
+              />
+            </div>
+
+            <div className="flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setShowPublishModal(false)}
+                className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={isPublishing}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-60 flex items-center gap-2"
+              >
+                {isPublishing ? 'Publishing...' : 'Publish'}
+              </button>
+            </div>
+          </form>
         </div>
       )}
     </div>

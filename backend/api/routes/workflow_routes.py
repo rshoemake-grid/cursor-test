@@ -8,9 +8,17 @@ from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from ...models.schemas import WorkflowCreate, WorkflowResponse, Edge, Node
-from ...database.models import UserDB
-from ...auth import get_optional_user
+from ...models.schemas import (
+    WorkflowCreate,
+    WorkflowResponse,
+    Edge,
+    Node,
+    WorkflowPublishRequest,
+    WorkflowTemplateResponse
+)
+from ...database.models import UserDB, WorkflowTemplateDB
+from ...auth import get_optional_user, get_current_active_user
+from uuid import uuid4
 from ...utils.logger import get_logger
 from ...dependencies import get_workflow_service
 from ...services.workflow_service import WorkflowService
@@ -220,6 +228,54 @@ async def delete_workflow(
     except Exception as e:
         logger.error(f"Error deleting workflow: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Error deleting workflow: {str(e)}")
+
+
+@router.post("/workflows/{workflow_id}/publish", response_model=WorkflowTemplateResponse, status_code=201)
+async def publish_workflow(
+    workflow_id: str,
+    publish_request: WorkflowPublishRequest,
+    current_user: UserDB = Depends(get_current_active_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """Publish a workflow as a marketplace template"""
+    workflow_service = get_workflow_service(db)
+    workflow = await workflow_service.get_workflow(workflow_id)
+    
+    template = WorkflowTemplateDB(
+        id=str(uuid4()),
+        name=workflow.name,
+        description=workflow.description,
+        category=publish_request.category.value,
+        tags=publish_request.tags,
+        definition=workflow.definition,
+        author_id=current_user.id,
+        is_official=current_user.is_admin,
+        difficulty=publish_request.difficulty.value,
+        estimated_time=publish_request.estimated_time
+    )
+
+    db.add(template)
+    await db.commit()
+    await db.refresh(template)
+
+    return WorkflowTemplateResponse(
+        id=template.id,
+        name=template.name,
+        description=template.description,
+        category=template.category,
+        tags=template.tags,
+        difficulty=template.difficulty,
+        estimated_time=template.estimated_time,
+        is_official=template.is_official,
+        uses_count=template.uses_count,
+        likes_count=template.likes_count,
+        rating=template.rating,
+        author_id=template.author_id,
+        thumbnail_url=template.thumbnail_url,
+        preview_image_url=template.preview_image_url,
+        created_at=template.created_at,
+        updated_at=template.updated_at
+    )
 
 
 class BulkDeleteRequest(BaseModel):
