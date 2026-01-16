@@ -30,6 +30,7 @@ interface WorkflowTabsProps {
 }
 
 const WORKFLOW_TABS_STORAGE_KEY = 'workflowTabs'
+const ACTIVE_TAB_STORAGE_KEY = 'activeWorkflowTabId'
 
 const loadTabsFromStorage = (): WorkflowTabData[] => {
   if (typeof window === 'undefined') {
@@ -49,6 +50,40 @@ const loadTabsFromStorage = (): WorkflowTabData[] => {
     // ignore parse errors
   }
   return []
+}
+
+const loadActiveTabFromStorage = (tabs: WorkflowTabData[]): string | null => {
+  if (typeof window === 'undefined') {
+    return null
+  }
+  try {
+    const saved = localStorage.getItem(ACTIVE_TAB_STORAGE_KEY)
+    if (saved) {
+      // Verify the saved tab ID still exists in tabs
+      const tabExists = tabs.some(tab => tab.id === saved)
+      if (tabExists) {
+        return saved
+      }
+    }
+  } catch {
+    // ignore parse errors
+  }
+  return null
+}
+
+const saveActiveTabToStorage = (activeTabId: string | null) => {
+  if (typeof window === 'undefined') {
+    return
+  }
+  try {
+    if (activeTabId) {
+      localStorage.setItem(ACTIVE_TAB_STORAGE_KEY, activeTabId)
+    } else {
+      localStorage.removeItem(ACTIVE_TAB_STORAGE_KEY)
+    }
+  } catch {
+    // ignore quota errors
+  }
 }
 
 const emptyTabState: WorkflowTabData = {
@@ -80,7 +115,39 @@ export default function WorkflowTabs({ initialWorkflowId, workflowLoadKey, onExe
   const [tabs, setTabs] = useState<WorkflowTabData[]>(() => {
     return [...globalTabs] // Create a copy
   })
-  const [activeTabId, setActiveTabId] = useState<string>(tabs[0]?.id || 'workflow-1')
+  
+  // Load active tab from storage, fallback to first tab
+  const initialActiveTabId = loadActiveTabFromStorage(tabs) || tabs[0]?.id || 'workflow-1'
+  const [activeTabId, setActiveTabId] = useState<string>(initialActiveTabId)
+  
+  // Save active tab to storage whenever it changes
+  useEffect(() => {
+    saveActiveTabToStorage(activeTabId)
+  }, [activeTabId])
+  
+  // Validate that activeTabId still exists in tabs, reset if not
+  useEffect(() => {
+    if (activeTabId && !tabs.some(tab => tab.id === activeTabId)) {
+      // Active tab no longer exists, switch to first tab or create new one
+      if (tabs.length > 0) {
+        setActiveTabId(tabs[0].id)
+      } else {
+        // No tabs left, create a new one
+        const newId = `workflow-${Date.now()}`
+        const newTab: WorkflowTabData = {
+          id: newId,
+          name: 'Untitled Workflow',
+          workflowId: null,
+          isUnsaved: true,
+          executions: [],
+          activeExecutionId: null
+        }
+        setTabs([newTab])
+        setActiveTabId(newId)
+      }
+    }
+  }, [tabs, activeTabId])
+  
   const processedKeys = useRef<Set<string>>(new Set()) // Track processed workflowId+loadKey combinations
   const tabsRef = useRef<WorkflowTabData[]>(tabs) // Keep ref in sync with tabs state
   const builderRef = useRef<WorkflowBuilderHandle | null>(null)
