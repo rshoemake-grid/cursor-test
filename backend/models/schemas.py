@@ -318,6 +318,7 @@ class WorkflowTemplateResponse(BaseModel):
     likes_count: int
     rating: int
     author_id: Optional[str] = None
+    author_name: Optional[str] = None
     thumbnail_url: Optional[str] = None
     preview_image_url: Optional[str] = None
     created_at: datetime

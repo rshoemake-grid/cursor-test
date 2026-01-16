@@ -57,6 +57,7 @@ async def create_template(
         likes_count=template.likes_count,
         rating=template.rating,
         author_id=template.author_id,
+        author_name=current_user.username,
         thumbnail_url=template.thumbnail_url,
         preview_image_url=template.preview_image_url,
         created_at=template.created_at,
@@ -75,7 +76,10 @@ async def list_templates(
     db: AsyncSession = Depends(get_db)
 ):
     """List workflow templates with filtering"""
-    query = select(WorkflowTemplateDB)
+    # Select both WorkflowTemplateDB and UserDB.username
+    query = select(WorkflowTemplateDB, UserDB.username).join(
+        UserDB, WorkflowTemplateDB.author_id == UserDB.id, isouter=True
+    )
     
     # Apply filters
     filters = []
@@ -106,28 +110,29 @@ async def list_templates(
     query = query.limit(limit).offset(offset)
     
     result = await db.execute(query)
-    templates = result.scalars().all()
+    templates = result.all()
     
     return [
         WorkflowTemplateResponse(
-            id=t.id,
-            name=t.name,
-            description=t.description,
-            category=t.category,
-            tags=t.tags,
-            difficulty=t.difficulty,
-            estimated_time=t.estimated_time,
-            is_official=t.is_official,
-            uses_count=t.uses_count,
-            likes_count=t.likes_count,
-            rating=t.rating,
-            author_id=t.author_id,
-            thumbnail_url=t.thumbnail_url,
-            preview_image_url=t.preview_image_url,
-            created_at=t.created_at,
-            updated_at=t.updated_at
+            id=template.id,
+            name=template.name,
+            description=template.description,
+            category=template.category,
+            tags=template.tags,
+            difficulty=template.difficulty,
+            estimated_time=template.estimated_time,
+            is_official=template.is_official,
+            uses_count=template.uses_count,
+            likes_count=template.likes_count,
+            rating=template.rating,
+            author_id=template.author_id,
+            author_name=author_username,
+            thumbnail_url=template.thumbnail_url,
+            preview_image_url=template.preview_image_url,
+            created_at=template.created_at,
+            updated_at=template.updated_at
         )
-        for t in templates
+        for template, author_username in templates
     ]
 
 
@@ -157,6 +162,14 @@ async def get_template(
     if not template:
         raise HTTPException(status_code=404, detail="Template not found")
     
+    # Get author username if author_id exists
+    author_username = None
+    if template.author_id:
+        author_result = await db.execute(
+            select(UserDB.username).where(UserDB.id == template.author_id)
+        )
+        author_username = author_result.scalar_one_or_none()
+    
     return WorkflowTemplateResponse(
         id=template.id,
         name=template.name,
@@ -170,6 +183,7 @@ async def get_template(
         likes_count=template.likes_count,
         rating=template.rating,
         author_id=template.author_id,
+        author_name=author_username,
         thumbnail_url=template.thumbnail_url,
         preview_image_url=template.preview_image_url,
         created_at=template.created_at,

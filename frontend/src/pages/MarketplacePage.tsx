@@ -19,6 +19,7 @@ interface Template {
   likes_count: number;
   rating: number;
   author_id?: string | null;
+  author_name?: string | null;
 }
 
 export default function MarketplacePage() {
@@ -329,6 +330,12 @@ export default function MarketplacePage() {
                       <Clock className="w-4 h-4" />
                       <span>{template.estimated_time}</span>
                     </div>
+                    {template.author_name && (
+                      <div className="flex items-center gap-1 text-gray-600">
+                        <span className="font-medium">By:</span>
+                        <span>{template.author_name}</span>
+                      </div>
+                    )}
                   </div>
 
                   {/* Difficulty */}
