@@ -66,10 +66,17 @@ export default function ExecutionConsole({
       {/* Header Bar */}
       <div className="px-4 py-2 border-b border-gray-800 flex items-center justify-between bg-gray-800">
         <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2">
+          <button
+            onClick={() => {
+              if (!isExpanded) {
+                setIsExpanded(true)
+              }
+            }}
+            className="flex items-center gap-2 hover:opacity-80 transition-opacity cursor-pointer"
+          >
             <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
             <span className="font-semibold text-sm">Chat</span>
-          </div>
+          </button>
         </div>
 
         <div className="flex items-center gap-2">
