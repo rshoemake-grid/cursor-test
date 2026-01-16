@@ -291,10 +291,11 @@ export default function SettingsPage() {
         )}
 
         {activeTab === 'llm' && (
-        <div className="space-y-6">
-            {providers.map(provider => (
-            <div key={provider.id} className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-              <div className="flex items-start justify-between mb-4">
+          <>
+            <div className="space-y-6">
+              {providers.map(provider => (
+                <div key={provider.id} className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                  <div className="flex items-start justify-between mb-4">
                 <div className="flex items-center gap-3">
                   <input
                     type="checkbox"
@@ -417,82 +418,151 @@ export default function SettingsPage() {
                   )}
                 </div>
               </div>
+                  </div>
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
 
-        {/* Add Provider Button */}
-        {!showAddProvider && (
-          <button
-            onClick={() => setShowAddProvider(true)}
-            className="mt-6 w-full py-3 border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-primary-500 hover:text-primary-600 flex items-center justify-center gap-2"
-          >
-            <Plus className="w-5 h-5" />
-            Add LLM Provider
-          </button>
-        )}
+            {!showAddProvider && (
+              <button
+                onClick={() => setShowAddProvider(true)}
+                className="mt-6 w-full py-3 border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-primary-500 hover:text-primary-600 flex items-center justify-center gap-2"
+              >
+                <Plus className="w-5 h-5" />
+                Add LLM Provider
+              </button>
+            )}
 
-        {/* Add Provider Form */}
-        {showAddProvider && (
-          <div className="mt-6 bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Add New Provider</h3>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Select Provider Type
-                </label>
-                <select
-                  value={selectedTemplate}
-                  onChange={(e) => setSelectedTemplate(e.target.value as keyof typeof PROVIDER_TEMPLATES)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                >
-                  <option value="openai">OpenAI (GPT-4, GPT-3.5, etc.)</option>
-                  <option value="anthropic">Anthropic (Claude)</option>
-                  <option value="gemini">Google Gemini</option>
-                  <option value="custom">Custom Provider</option>
-                </select>
+            {showAddProvider && (
+              <div className="mt-6 bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Add New Provider</h3>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Select Provider Type
+                    </label>
+                    <select
+                      value={selectedTemplate}
+                      onChange={(e) => setSelectedTemplate(e.target.value as keyof typeof PROVIDER_TEMPLATES)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                    >
+                      <option value="openai">OpenAI (GPT-4, GPT-3.5, etc.)</option>
+                      <option value="anthropic">Anthropic (Claude)</option>
+                      <option value="gemini">Google Gemini</option>
+                      <option value="custom">Custom Provider</option>
+                    </select>
+                  </div>
+                  <div className="flex gap-3">
+                    <button
+                      onClick={handleAddProvider}
+                      className="flex-1 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
+                    >
+                      Add Provider
+                    </button>
+                    <button
+                      onClick={() => setShowAddProvider(false)}
+                      className="flex-1 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
               </div>
-              <div className="flex gap-3">
+            )}
+
+            <div className="mt-8 pt-6 border-t border-gray-200">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3 text-sm">
+                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                  <p className="text-gray-600">
+                    <strong>Auto-sync enabled:</strong> Settings are automatically saved when you make changes.
+                  </p>
+                </div>
                 <button
-                  onClick={handleAddProvider}
-                  className="flex-1 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
+                  onClick={handleManualSync}
+                  className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 flex items-center gap-2"
                 >
-                  Add Provider
-                </button>
-                <button
-                  onClick={() => setShowAddProvider(false)}
-                  className="flex-1 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200"
-                >
-                  Cancel
+                  <Save className="w-4 h-4" />
+                  Sync Now
                 </button>
               </div>
-            </div>
-          </div>
-        )}
-
-        {/* Sync Settings */}
-        <div className="mt-8 pt-6 border-t border-gray-200">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3 text-sm">
-              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-              <p className="text-gray-600">
-                <strong>Auto-sync enabled:</strong> Settings are automatically saved when you make changes.
+              <p className="mt-3 text-sm text-gray-500">
+                Click "Sync Now" to manually sync your settings to the backend server.
               </p>
             </div>
-            <button
-              onClick={handleManualSync}
-              className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 flex items-center gap-2"
-            >
-              <Save className="w-4 h-4" />
-              Sync Now
-            </button>
-          </div>
-          <p className="mt-3 text-sm text-gray-500">
-            Click "Sync Now" to manually sync your settings to the backend server.
-          </p>
-        </div>
-      </div>
-    </div>
-  )
-}
+          </>
+        )}
+
+            {/* Add Provider Button */}
+            {!showAddProvider && (
+              <button
+                onClick={() => setShowAddProvider(true)}
+                className="mt-6 w-full py-3 border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-primary-500 hover:text-primary-600 flex items-center justify-center gap-2"
+              >
+                <Plus className="w-5 h-5" />
+                Add LLM Provider
+              </button>
+            )}
+
+            {/* Add Provider Form */}
+            {showAddProvider && (
+              <div className="mt-6 bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-4">Add New Provider</h3>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Select Provider Type
+                    </label>
+                    <select
+                      value={selectedTemplate}
+                      onChange={(e) => setSelectedTemplate(e.target.value as keyof typeof PROVIDER_TEMPLATES)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                    >
+                      <option value="openai">OpenAI (GPT-4, GPT-3.5, etc.)</option>
+                      <option value="anthropic">Anthropic (Claude)</option>
+                      <option value="gemini">Google Gemini</option>
+                      <option value="custom">Custom Provider</option>
+                    </select>
+                  </div>
+                  <div className="flex gap-3">
+                    <button
+                      onClick={handleAddProvider}
+                      className="flex-1 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
+                    >
+                      Add Provider
+                    </button>
+                    <button
+                      onClick={() => setShowAddProvider(false)}
+                      className="flex-1 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Sync Settings */}
+            <div className="mt-8 pt-6 border-t border-gray-200">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3 text-sm">
+                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                  <p className="text-gray-600">
+                    <strong>Auto-sync enabled:</strong> Settings are automatically saved when you make changes.
+                  </p>
+                </div>
+                <button
+                  onClick={handleManualSync}
+                  className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 flex items-center gap-2"
+                >
+                  <Save className="w-4 h-4" />
+                  Sync Now
+                </button>
+              </div>
+              <p className="mt-3 text-sm text-gray-500">
+                Click "Sync Now" to manually sync your settings to the backend server.
+              </p>
+            </div>
+          </>
+        )}
 
