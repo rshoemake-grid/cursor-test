@@ -19,7 +19,6 @@ import '@xyflow/react/dist/style.css'
 import { nodeTypes } from './nodes'
 import NodePanel from './NodePanel'
 import PropertyPanel from './PropertyPanel'
-import ExecutionConsole from './ExecutionConsole'
 import ContextMenu from './NodeContextMenu'
 import { api } from '../api/client'
 import { showSuccess, showError } from '../utils/notifications'
@@ -1031,17 +1030,6 @@ const WorkflowBuilder = forwardRef<WorkflowBuilderHandle, WorkflowBuilderProps>(
             </div>
           </div>
 
-          {/* Bottom: Execution Console (Only under workflow canvas) */}
-          <ExecutionConsole 
-            workflowTabs={workflowTabs}
-            activeWorkflowId={localWorkflowId || null}
-            onCloseWorkflow={onCloseWorkflow || (() => {})}
-            onClearExecutions={onClearExecutions || (() => {})}
-            onExecutionLogUpdate={onExecutionLogUpdate}
-            onExecutionStatusUpdate={onExecutionStatusUpdate}
-            onExecutionNodeUpdate={onExecutionNodeUpdate}
-            onWorkflowUpdate={handleWorkflowUpdate}
-          />
         </div>
 
         {/* Right Panel - Properties (Full Height) */}
