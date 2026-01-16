@@ -40,29 +40,40 @@ def reconstruct_workflow_definition(definition: dict) -> WorkflowDefinition:
         logger.debug(f"Node {i}: id={node_id}, type={node_type}")
         
         # Handle config extraction from data object if needed
-        if node_data.get('type') == 'loop' and not node_data.get('loop_config'):
-            logger.warning(f"Loop node {node_id} missing loop_config after reconstruction")
-            if "data" in node_data and node_data.get("data"):
-                data_obj = node_data.get("data") if isinstance(node_data.get("data"), dict) else {}
+        # Extract configs from data object first, then check if still missing
+        if "data" in node_data and node_data.get("data") and isinstance(node_data.get("data"), dict):
+            data_obj = node_data.get("data")
+            
+            # Extract loop_config from data if missing at top level
+            if node_data.get('type') == 'loop' and not node_data.get('loop_config'):
                 data_loop_config = data_obj.get('loop_config')
                 if data_loop_config:
+                    logger.debug(f"Extracting loop_config from data object for node {node_id}")
                     node_data['loop_config'] = data_loop_config
-        
-        if node_data.get('type') == 'condition' and not node_data.get('condition_config'):
-            logger.warning(f"Condition node {node_id} missing condition_config after reconstruction")
-            if "data" in node_data and node_data.get("data"):
-                data_obj = node_data.get("data") if isinstance(node_data.get("data"), dict) else {}
+            
+            # Extract condition_config from data if missing at top level
+            if node_data.get('type') == 'condition' and not node_data.get('condition_config'):
                 data_condition_config = data_obj.get('condition_config')
                 if data_condition_config:
+                    logger.debug(f"Extracting condition_config from data object for node {node_id}")
                     node_data['condition_config'] = data_condition_config
-        
-        if node_data.get('type') == 'agent' and not node_data.get('agent_config'):
-            logger.warning(f"Agent node {node_id} missing agent_config after reconstruction")
-            if "data" in node_data and node_data.get("data"):
-                data_obj = node_data.get("data") if isinstance(node_data.get("data"), dict) else {}
+            
+            # Extract agent_config from data if missing at top level
+            if node_data.get('type') == 'agent' and not node_data.get('agent_config'):
                 data_agent_config = data_obj.get('agent_config')
                 if data_agent_config:
+                    logger.debug(f"Extracting agent_config from data object for node {node_id}")
                     node_data['agent_config'] = data_agent_config
+        
+        # Warn only if config is still missing after extraction attempt
+        if node_data.get('type') == 'loop' and not node_data.get('loop_config'):
+            logger.warning(f"Loop node {node_id} missing loop_config after extraction attempt")
+        
+        if node_data.get('type') == 'condition' and not node_data.get('condition_config'):
+            logger.warning(f"Condition node {node_id} missing condition_config after extraction attempt")
+        
+        if node_data.get('type') == 'agent' and not node_data.get('agent_config'):
+            logger.warning(f"Agent node {node_id} missing agent_config after extraction attempt")
         
         try:
             node = Node(**node_data)
