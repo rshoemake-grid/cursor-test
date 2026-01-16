@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { api } from '../api/client'
 import type { WorkflowDefinition } from '../types/workflow'
-import { Play, Trash2, Calendar, CheckSquare, Square, ArrowLeft, Copy } from 'lucide-react'
+import { Play, Trash2, Calendar, CheckSquare, Square, ArrowLeft, Copy, Upload, X } from 'lucide-react'
 import { showError, showSuccess, showWarning } from '../utils/notifications'
 import { showConfirm } from '../utils/confirm'
 import { useAuth } from '../contexts/AuthContext'
@@ -18,6 +18,27 @@ export default function WorkflowList({ onSelectWorkflow, onBack }: WorkflowListP
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   const { isAuthenticated } = useAuth()
   const navigate = useNavigate()
+  const [showPublishModal, setShowPublishModal] = useState(false)
+  const [publishingWorkflowId, setPublishingWorkflowId] = useState<string | null>(null)
+  const [publishForm, setPublishForm] = useState({
+    category: 'automation',
+    tags: '',
+    difficulty: 'beginner',
+    estimated_time: ''
+  })
+  const [isPublishing, setIsPublishing] = useState(false)
+
+  const templateCategories = [
+    'content_creation',
+    'data_analysis',
+    'customer_service',
+    'research',
+    'automation',
+    'education',
+    'marketing',
+    'other'
+  ]
+  const templateDifficulties = ['beginner', 'intermediate', 'advanced']
 
   useEffect(() => {
     loadWorkflows()
@@ -112,6 +133,52 @@ export default function WorkflowList({ onSelectWorkflow, onBack }: WorkflowListP
       setSelectedIds(new Set())
     } else {
       setSelectedIds(new Set(workflows.map(w => w.id).filter(Boolean) as string[]))
+    }
+  }
+
+  const openPublishModal = (workflowId: string) => {
+    if (!isAuthenticated) {
+      showError('Please log in to publish workflows to the marketplace.')
+      return
+    }
+    setPublishingWorkflowId(workflowId)
+    setPublishForm({
+      category: 'automation',
+      tags: '',
+      difficulty: 'beginner',
+      estimated_time: ''
+    })
+    setShowPublishModal(true)
+  }
+
+  const handlePublishFormChange = (field: keyof typeof publishForm, value: string) => {
+    setPublishForm(prev => ({ ...prev, [field]: value }))
+  }
+
+  const handlePublish = async (event: React.FormEvent) => {
+    event.preventDefault()
+    if (!publishingWorkflowId) {
+      showError('No workflow selected for publishing.')
+      return
+    }
+
+    setIsPublishing(true)
+    try {
+      const tagsArray = publishForm.tags.split(',').map(tag => tag.trim()).filter(Boolean)
+      const published = await api.publishWorkflow(publishingWorkflowId, {
+        category: publishForm.category,
+        tags: tagsArray,
+        difficulty: publishForm.difficulty,
+        estimated_time: publishForm.estimated_time || undefined
+      })
+      showSuccess(`Published "${published.name}" to the marketplace.`)
+      setShowPublishModal(false)
+      setPublishingWorkflowId(null)
+    } catch (error: any) {
+      const detail = error?.response?.data?.detail ?? error?.message ?? 'Unknown error'
+      showError(`Failed to publish workflow: ${detail}`)
+    } finally {
+      setIsPublishing(false)
     }
   }
 
@@ -287,16 +354,30 @@ export default function WorkflowList({ onSelectWorkflow, onBack }: WorkflowListP
                     )}
                   </div>
                 </div>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    workflow.id && handleDelete(workflow.id)
-                  }}
-                  className="text-red-600 hover:bg-red-50 p-1 rounded flex-shrink-0"
-                  title="Delete workflow"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
+                <div className="flex items-center gap-1 flex-shrink-0">
+                  {isAuthenticated && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        workflow.id && openPublishModal(workflow.id)
+                      }}
+                      className="text-blue-600 hover:bg-blue-50 p-1 rounded"
+                      title="Publish to marketplace"
+                    >
+                      <Upload className="w-4 h-4" />
+                    </button>
+                  )}
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      workflow.id && handleDelete(workflow.id)
+                    }}
+                    className="text-red-600 hover:bg-red-50 p-1 rounded"
+                    title="Delete workflow"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
               </div>
 
               <div 
@@ -324,6 +405,101 @@ export default function WorkflowList({ onSelectWorkflow, onBack }: WorkflowListP
         })}
         </div>
       </div>
+
+      {/* Publish Modal */}
+      {showPublishModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+          <form
+            onSubmit={handlePublish}
+            className="bg-white rounded-xl shadow-lg max-w-md w-full p-6 space-y-4"
+          >
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-gray-900">Publish to Marketplace</h3>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowPublishModal(false)
+                  setPublishingWorkflowId(null)
+                }}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
+              <select
+                value={publishForm.category}
+                onChange={(e) => handlePublishFormChange('category', e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+              >
+                {templateCategories.map(category => (
+                  <option key={category} value={category}>{category.replace('_', ' ')}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="flex gap-4">
+              <div className="flex-1">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Difficulty</label>
+                <select
+                  value={publishForm.difficulty}
+                  onChange={(e) => handlePublishFormChange('difficulty', e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+                >
+                  {templateDifficulties.map(diff => (
+                    <option key={diff} value={diff}>
+                      {diff.charAt(0).toUpperCase() + diff.slice(1)}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="flex-1">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Estimated Time</label>
+                <input
+                  type="text"
+                  value={publishForm.estimated_time}
+                  onChange={(e) => handlePublishFormChange('estimated_time', e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+                  placeholder="e.g. 30 minutes"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Tags (comma separated)</label>
+              <input
+                type="text"
+                value={publishForm.tags}
+                onChange={(e) => handlePublishFormChange('tags', e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+                placeholder="automation, ai, ..."
+              />
+            </div>
+
+            <div className="flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowPublishModal(false)
+                  setPublishingWorkflowId(null)
+                }}
+                className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={isPublishing}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-60 flex items-center gap-2"
+              >
+                {isPublishing ? 'Publishing...' : 'Publish'}
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
     </div>
   )
 }

@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { Download, Heart, TrendingUp, Clock, Star, ArrowLeft } from 'lucide-react';
+import { Download, Heart, TrendingUp, Clock, Star, ArrowLeft, Trash2 } from 'lucide-react';
+import { showError, showSuccess } from '../utils/notifications';
+import { showConfirm } from '../utils/confirm';
+import { api } from '../api/client';
 
 interface Template {
   id: string;
@@ -15,6 +18,7 @@ interface Template {
   uses_count: number;
   likes_count: number;
   rating: number;
+  author_id?: string | null;
 }
 
 export default function MarketplacePage() {
@@ -25,7 +29,7 @@ export default function MarketplacePage() {
   const [sortBy, setSortBy] = useState('popular');
   const [selectedTemplateIds, setSelectedTemplateIds] = useState<Set<string>>(new Set());
   
-  const { token } = useAuth();
+  const { token, user } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -73,6 +77,24 @@ export default function MarketplacePage() {
       }
     } catch (error) {
       console.error('Failed to use template:', error);
+    }
+  };
+
+  const deleteTemplate = async (templateId: string, templateName: string) => {
+    const confirmed = await showConfirm(
+      `Are you sure you want to delete "${templateName}" from the marketplace?`,
+      { title: 'Delete Template', confirmText: 'Delete', cancelText: 'Cancel', type: 'danger' }
+    );
+    if (!confirmed) return;
+
+    try {
+      await api.deleteTemplate(templateId);
+      showSuccess('Template deleted successfully');
+      // Remove from list
+      setTemplates(templates.filter(t => t.id !== templateId));
+    } catch (error: any) {
+      const detail = error?.response?.data?.detail ?? error?.message ?? 'Unknown error';
+      showError(`Failed to delete template: ${detail}`);
     }
   };
 
@@ -182,15 +204,21 @@ export default function MarketplacePage() {
               <option value="marketing">Marketing</option>
             </select>
 
-            <select
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
-            >
-              <option value="popular">Most Popular</option>
-              <option value="recent">Most Recent</option>
-              <option value="rating">Highest Rated</option>
-            </select>
+            <div className="flex items-center gap-2">
+              <label htmlFor="sort-select" className="text-sm font-medium text-gray-700 whitespace-nowrap">
+                Sort:
+              </label>
+              <select
+                id="sort-select"
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+                className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+              >
+                <option value="popular">Most Popular</option>
+                <option value="recent">Most Recent</option>
+                <option value="rating">Highest Rated</option>
+              </select>
+            </div>
 
             <button
               onClick={fetchTemplates}
@@ -253,11 +281,25 @@ export default function MarketplacePage() {
                         {template.name}
                       </h3>
                     </div>
-                    {template.is_official && (
-                      <span className="ml-2 px-2 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded">
-                        Official
-                      </span>
-                    )}
+                    <div className="flex items-center gap-2">
+                      {template.is_official && (
+                        <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded">
+                          Official
+                        </span>
+                      )}
+                      {user && template.author_id === user.id && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            deleteTemplate(template.id, template.name);
+                          }}
+                          className="text-red-600 hover:bg-red-50 p-1 rounded"
+                          title="Delete template"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      )}
+                    </div>
                   </div>
 
                   <p className="text-gray-600 text-sm mb-4 line-clamp-2">

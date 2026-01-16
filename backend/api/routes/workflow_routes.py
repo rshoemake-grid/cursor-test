@@ -77,8 +77,14 @@ def reconstruct_nodes(nodes_data: List[dict]) -> List[Node]:
             logger.debug(f"Successfully reconstructed node {i}: {node.id} ({node.type})")
             nodes.append(node)
         except Exception as e:
-            logger.error(f"Error reconstructing node {i} (id={node_data.get('id', 'unknown')}): {e}, node data: {json.dumps(node_data, indent=2, default=str)}", exc_info=True)
-            raise HTTPException(status_code=422, detail=f"Invalid node data at index {i}: {str(e)}")
+            from pydantic import ValidationError
+            node_id = node_data.get('id', f'unknown-{i}')
+            node_type = node_data.get('type', 'unknown')
+            error_detail = str(e)
+            if isinstance(e, ValidationError):
+                error_detail = f"Validation error: {e.errors()}"
+            logger.error(f"Error reconstructing node {i} (id={node_id}, type={node_type}): {error_detail}, node data: {json.dumps(node_data, indent=2, default=str)}", exc_info=True)
+            raise HTTPException(status_code=422, detail=f"Invalid node data at index {i} (id={node_id}, type={node_type}): {error_detail}")
     
     logger.info(f"Successfully reconstructed {len(nodes)} nodes")
     return nodes
@@ -158,17 +164,40 @@ async def get_workflow(
         workflow_service = get_workflow_service(db)
         workflow = await workflow_service.get_workflow(workflow_id)
         
+        # Validate workflow definition exists
+        if not workflow.definition or not isinstance(workflow.definition, dict):
+            logger.error(f"Workflow {workflow_id} has invalid definition: {workflow.definition}")
+            raise HTTPException(status_code=422, detail="Workflow definition is invalid or missing")
+        
+        # Reconstruct nodes with error handling
+        try:
+            nodes = reconstruct_nodes(workflow.definition.get("nodes", []))
+        except HTTPException:
+            raise  # Re-raise HTTPException (422) from reconstruct_nodes
+        except Exception as e:
+            logger.error(f"Error reconstructing nodes: {e}", exc_info=True)
+            raise HTTPException(status_code=422, detail=f"Invalid node data: {str(e)}")
+        
+        # Reconstruct edges with error handling
+        try:
+            edges = [Edge(**e) for e in workflow.definition.get("edges", [])]
+        except Exception as e:
+            logger.error(f"Error reconstructing edges: {e}", exc_info=True)
+            raise HTTPException(status_code=422, detail=f"Invalid edge data: {str(e)}")
+        
         return WorkflowResponse(
             id=workflow.id,
             name=workflow.name,
             description=workflow.description,
             version=workflow.version,
-            nodes=reconstruct_nodes(workflow.definition.get("nodes", [])),
-            edges=[Edge(**e) for e in workflow.definition.get("edges", [])],
+            nodes=nodes,
+            edges=edges,
             variables=workflow.definition.get("variables", {}),
             created_at=workflow.created_at,
             updated_at=workflow.updated_at
         )
+    except HTTPException:
+        raise  # Re-raise HTTPException (422, 404, etc.)
     except WorkflowNotFoundError as e:
         raise HTTPException(status_code=404, detail=str(e))
     except Exception as e:

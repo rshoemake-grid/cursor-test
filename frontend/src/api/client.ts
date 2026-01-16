@@ -72,6 +72,24 @@ export const api = {
     return await this.createWorkflow(duplicated)
   },
 
+  async publishWorkflow(
+    workflowId: string,
+    publishData: {
+      category: string
+      tags: string[]
+      difficulty: string
+      estimated_time?: string
+    }
+  ): Promise<any> {
+    const response = await axiosInstance.post(`/workflows/${workflowId}/publish`, publishData)
+    return response.data
+  },
+
+  // Templates
+  async deleteTemplate(templateId: string): Promise<void> {
+    await axiosInstance.delete(`/templates/${templateId}`)
+  },
+
   // Executions
   async executeWorkflow(
     workflowId: string,

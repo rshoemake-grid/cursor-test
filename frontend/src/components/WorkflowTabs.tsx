@@ -547,7 +547,16 @@ export default function WorkflowTabs({ initialWorkflowId, workflowLoadKey, onExe
 
     try {
       if (tab.workflowId) {
-        await api.updateWorkflow(tab.workflowId, { name: trimmedName })
+        // Fetch current workflow to get all required fields
+        const currentWorkflow = await api.getWorkflow(tab.workflowId)
+        // Update with new name but keep all existing data
+        await api.updateWorkflow(tab.workflowId, {
+          name: trimmedName,
+          description: currentWorkflow.description,
+          nodes: currentWorkflow.nodes,
+          edges: currentWorkflow.edges,
+          variables: currentWorkflow.variables || {},
+        })
       }
     } catch (error: any) {
       const detail = error?.response?.data?.detail ?? error?.message ?? 'Unknown error'
