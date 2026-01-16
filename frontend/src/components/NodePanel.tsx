@@ -48,7 +48,7 @@ export default function NodePanel() {
       </div>
 
       <div className="mt-6 space-y-2">
-        <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Input Sources</div>
+        <div className="text-xs font-semibold text-gray-700 uppercase tracking-wide mb-2">Input Sources</div>
         {inputSourceTemplates.map((template) => {
           const Icon = template.icon
           return (
@@ -62,7 +62,7 @@ export default function NodePanel() {
                 <Icon className={`w-4 h-4 ${template.color}`} />
                 <span className="font-medium text-sm text-gray-900">{template.label}</span>
               </div>
-              <p className="text-xs text-gray-500">{template.description}</p>
+              <p className="text-xs text-gray-600">{template.description}</p>
             </div>
           )
         })}
