@@ -704,14 +704,23 @@ const WorkflowBuilder = forwardRef<WorkflowBuilderHandle, WorkflowBuilderProps>(
   const handleWorkflowUpdate = useCallback((changes: any) => {
     if (!changes) return
 
+    console.log('Received workflow changes:', changes)
+
     // Apply node additions first (edges need nodes to exist)
     if (changes.nodes_to_add && changes.nodes_to_add.length > 0) {
+      console.log('Adding nodes:', changes.nodes_to_add)
       setNodes((nds) => {
-        const newNodes = [...nds, ...changes.nodes_to_add.map((n: any) => ({
-          ...n,
-          draggable: true,
-          selected: false
-        }))]
+        // Convert backend node format to React Flow format
+        const convertedNodes = changes.nodes_to_add.map((n: any) => {
+          const converted = workflowNodeToNode(n)
+          return {
+            ...converted,
+            draggable: true,
+            selected: false
+          }
+        })
+        const newNodes = [...nds, ...convertedNodes]
+        console.log('New nodes after addition:', newNodes.map(n => ({ id: n.id, type: n.type })))
         return newNodes
       })
       notifyModified()
@@ -815,7 +824,7 @@ const WorkflowBuilder = forwardRef<WorkflowBuilderHandle, WorkflowBuilderProps>(
       )
       notifyModified()
     }
-  }, [setNodes, setEdges, notifyModified])
+  }, [setNodes, setEdges, notifyModified, workflowNodeToNode])
 
 
   const onConnect = useCallback(

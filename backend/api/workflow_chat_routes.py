@@ -14,6 +14,9 @@ from backend.database.db import get_db
 from backend.database.models import WorkflowDB, UserDB
 from backend.models.schemas import Node, Edge, NodeType
 from backend.auth import get_optional_user
+from backend.utils.logger import get_logger
+
+logger = get_logger(__name__)
 
 router = APIRouter(prefix="/api/workflow-chat", tags=["Workflow Chat"])
 
@@ -295,10 +298,36 @@ async def chat_with_workflow(
         user_id = current_user.id if current_user else None
         
         # Get LLM config to determine model
-        from .settings_routes import get_active_llm_config
+        from .settings_routes import get_active_llm_config, get_user_settings, LLMSettings
         llm_config = get_active_llm_config(user_id)
         model = llm_config.get("model", "gpt-4") if llm_config else "gpt-4"
-        iteration_limit = llm_config.get("iteration_limit", 10) if llm_config else 10
+        
+        # Get iteration_limit from user settings - try cache first, then database
+        user_settings = get_user_settings(user_id)
+        
+        # If not in cache, try loading directly from database
+        if not user_settings:
+            uid = user_id if user_id else "anonymous"
+            logger.debug(f"Settings not in cache for {uid}, querying database directly")
+            try:
+                from sqlalchemy import select
+                from ..database.models import SettingsDB
+                result = await db.execute(
+                    select(SettingsDB).where(SettingsDB.user_id == uid)
+                )
+                settings_db = result.scalar_one_or_none()
+                if settings_db and settings_db.settings_data:
+                    user_settings = LLMSettings(**settings_db.settings_data)
+                    # Update cache for future use
+                    from .settings_routes import _settings_cache
+                    _settings_cache[uid] = user_settings
+                    logger.info(f"Loaded settings from database for {uid}, iteration_limit: {user_settings.iteration_limit}")
+            except Exception as e:
+                logger.error(f"Failed to load settings from database: {e}", exc_info=True)
+        
+        iteration_limit = user_settings.iteration_limit if user_settings else 10
+        
+        logger.info(f"Chat agent using iteration_limit: {iteration_limit} for user: {user_id or 'anonymous'}")
         
         client = get_llm_client(user_id)
         
@@ -344,6 +373,15 @@ After making changes to the workflow, use the save_workflow tool to persist them
         
         # Initialize workflow changes accumulator
         workflow_changes = {
+            "nodes_to_add": [],
+            "nodes_to_update": [],
+            "nodes_to_delete": [],
+            "edges_to_add": [],
+            "edges_to_delete": []
+        }
+        
+        # Track changes that were saved (so we can return them even after clearing)
+        saved_changes = {
             "nodes_to_add": [],
             "nodes_to_update": [],
             "nodes_to_delete": [],
@@ -613,6 +651,13 @@ After making changes to the workflow, use the save_workflow tool to persist them
                                 })
                             })
                             
+                            # Save the changes before clearing (so we can return them in response)
+                            saved_changes["nodes_to_add"].extend(workflow_changes["nodes_to_add"])
+                            saved_changes["nodes_to_update"].extend(workflow_changes["nodes_to_update"])
+                            saved_changes["nodes_to_delete"].extend(workflow_changes["nodes_to_delete"])
+                            saved_changes["edges_to_add"].extend(workflow_changes["edges_to_add"])
+                            saved_changes["edges_to_delete"].extend(workflow_changes["edges_to_delete"])
+                            
                             # Clear workflow changes since they're now saved
                             workflow_changes["nodes_to_add"].clear()
                             workflow_changes["nodes_to_update"].clear()
@@ -668,14 +713,23 @@ After making changes to the workflow, use the save_workflow tool to persist them
         if assistant_message is None:
             assistant_message = "I've completed the requested changes to the workflow."
         
+        # Combine unsaved changes with saved changes for the response
+        all_changes = {
+            "nodes_to_add": workflow_changes["nodes_to_add"] + saved_changes["nodes_to_add"],
+            "nodes_to_update": workflow_changes["nodes_to_update"] + saved_changes["nodes_to_update"],
+            "nodes_to_delete": workflow_changes["nodes_to_delete"] + saved_changes["nodes_to_delete"],
+            "edges_to_add": workflow_changes["edges_to_add"] + saved_changes["edges_to_add"],
+            "edges_to_delete": workflow_changes["edges_to_delete"] + saved_changes["edges_to_delete"]
+        }
+        
         return ChatResponse(
             message=assistant_message,
-            workflow_changes=workflow_changes if any([
-                workflow_changes["nodes_to_add"],
-                workflow_changes["nodes_to_update"],
-                workflow_changes["nodes_to_delete"],
-                workflow_changes["edges_to_add"],
-                workflow_changes["edges_to_delete"]
+            workflow_changes=all_changes if any([
+                all_changes["nodes_to_add"],
+                all_changes["nodes_to_update"],
+                all_changes["nodes_to_delete"],
+                all_changes["edges_to_add"],
+                all_changes["edges_to_delete"]
             ]) else None,
             workflow_id=request.workflow_id
         )

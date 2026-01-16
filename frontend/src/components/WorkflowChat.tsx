@@ -13,33 +13,52 @@ interface WorkflowChatProps {
 }
 
 export default function WorkflowChat({ workflowId, onWorkflowUpdate }: WorkflowChatProps) {
-  const [messages, setMessages] = useState<ChatMessage[]>([
-    {
+  // Load conversation history from localStorage on mount or workflow change
+  const loadConversationHistory = (workflowId: string | null): ChatMessage[] => {
+    const storageKey = workflowId ? `chat_history_${workflowId}` : 'chat_history_new_workflow'
+    const saved = localStorage.getItem(storageKey)
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved)
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return parsed
+        }
+      } catch (e) {
+        console.error('Failed to load conversation history:', e)
+      }
+    }
+    
+    // Return default greeting if no history found
+    return [{
       role: 'assistant',
       content: workflowId 
         ? "Hello! I can help you create or modify this workflow. What would you like to do?"
         : "Hello! I can help you create a new workflow. What would you like to build?"
-    }
-  ])
+    }]
+  }
+
+  const [messages, setMessages] = useState<ChatMessage[]>(() => loadConversationHistory(workflowId))
   const [input, setInput] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
+
+  // Save conversation history to localStorage whenever messages change
+  useEffect(() => {
+    if (messages.length > 0) {
+      const storageKey = workflowId ? `chat_history_${workflowId}` : 'chat_history_new_workflow'
+      localStorage.setItem(storageKey, JSON.stringify(messages))
+    }
+  }, [messages, workflowId])
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
 
   useEffect(() => {
-    // Reset chat when workflow changes
-    setMessages([
-      {
-        role: 'assistant',
-        content: workflowId 
-          ? "Hello! I can help you create or modify this workflow. What would you like to do?"
-          : "Hello! I can help you create a new workflow. What would you like to build?"
-      }
-    ])
+    // Load conversation history when workflow changes
+    const history = loadConversationHistory(workflowId)
+    setMessages(history)
   }, [workflowId])
 
   const handleSend = async () => {

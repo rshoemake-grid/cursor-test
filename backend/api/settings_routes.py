@@ -106,7 +106,7 @@ async def save_llm_settings(
     _settings_cache[user_id] = settings
     
     # Log settings save
-    logger.info(f"Saving LLM settings for user: {user_id}, providers count: {len(settings.providers)}")
+    logger.info(f"Saving LLM settings for user: {user_id}, providers count: {len(settings.providers)}, iteration_limit: {settings.iteration_limit}")
     for p in settings.providers:
         logger.debug(f"Provider {p.name}: enabled={p.enabled}, has_key={len(p.apiKey) > 0}")
     
@@ -462,5 +462,67 @@ def get_provider_for_model(model_name: str, user_id: Optional[str] = None) -> Op
                 logger.debug(f"  Model '{model_name}' not in provider '{provider.name}' models: {provider.models}")
     
     logger.warning(f"No provider found for model '{model_name}' (searched: {normalized_model_name})")
+    return None
+
+
+def get_user_settings(user_id: Optional[str] = None) -> Optional[LLMSettings]:
+    """Get full LLM settings (including iteration_limit) for a user
+    
+    Args:
+        user_id: User ID, or None for anonymous user
+        
+    Returns:
+        LLMSettings object if found, None otherwise
+    """
+    uid = user_id if user_id else "anonymous"
+    
+    # Try cache first
+    if uid in _settings_cache:
+        return _settings_cache[uid]
+    elif user_id and "anonymous" in _settings_cache:
+        # Fallback to anonymous settings if user not found
+        return _settings_cache["anonymous"]
+    
+    # If cache is empty, try to load from database
+    if not _settings_cache:
+        logger.warning(f"Settings cache is empty, attempting to load from database for user: {uid}")
+        try:
+            import asyncio
+            from ..database.db import AsyncSessionLocal
+            from sqlalchemy import select
+            
+            # Try to load settings from database
+            loop = None
+            try:
+                loop = asyncio.get_event_loop()
+            except RuntimeError:
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
+            
+            async def load_from_db():
+                async with AsyncSessionLocal() as db:
+                    result = await db.execute(select(SettingsDB))
+                    all_settings = result.scalars().all()
+                    for settings_db in all_settings:
+                        if settings_db.settings_data:
+                            settings_obj = LLMSettings(**settings_db.settings_data)
+                            _settings_cache[settings_db.user_id] = settings_obj
+                            logger.info(f"Loaded settings for user: {settings_db.user_id} from database (iteration_limit: {settings_obj.iteration_limit})")
+            
+            if loop.is_running():
+                # Can't run async code in sync context if loop is running
+                logger.warning("Cannot load settings from database synchronously - event loop is running")
+            else:
+                loop.run_until_complete(load_from_db())
+                
+                # Try again after loading
+                if uid in _settings_cache:
+                    return _settings_cache[uid]
+                elif user_id and "anonymous" in _settings_cache:
+                    return _settings_cache["anonymous"]
+        except Exception as e:
+            logger.error(f"Failed to load settings from database: {e}", exc_info=True)
+    
+    logger.warning(f"User {uid} not found in cache and no anonymous fallback")
     return None
 

@@ -95,9 +95,12 @@ export default function SettingsPage() {
             if (typeof parsed.iteration_limit === 'number') {
               setIterationLimit(parsed.iteration_limit)
             }
+            setSettingsLoaded(true)
           } catch (e) {
             console.error('Failed to load providers:', e)
           }
+        } else {
+          setSettingsLoaded(true)
         }
       }
 
@@ -114,15 +117,19 @@ export default function SettingsPage() {
       const response = await fetch('/api/settings/llm', { headers })
         if (response.ok) {
           const data = await response.json()
-          if (data.providers && data.providers.length > 0) {
+          // Always load providers (even if empty) and iteration limit
+          if (data.providers) {
             setProviders(data.providers)
-            setIterationLimit(data.iteration_limit ?? 10)
-            localStorage.setItem('llm_settings', JSON.stringify({
-              providers: data.providers,
-              iteration_limit: data.iteration_limit ?? 10
-            }))
-            return
           }
+          if (typeof data.iteration_limit === 'number') {
+            setIterationLimit(data.iteration_limit)
+          }
+          localStorage.setItem('llm_settings', JSON.stringify({
+            providers: data.providers || [],
+            iteration_limit: data.iteration_limit ?? 10
+          }))
+          setSettingsLoaded(true)
+          return
         }
       } catch (e) {
         console.log('Could not load from backend, trying localStorage')
@@ -133,6 +140,42 @@ export default function SettingsPage() {
     
     loadProviders()
   }, [isAuthenticated])
+
+  // Track if settings have been loaded to prevent saving on initial mount
+  const [settingsLoaded, setSettingsLoaded] = useState(false)
+
+  // Auto-save iteration limit when it changes (after initial load)
+  useEffect(() => {
+    if (!isAuthenticated || !token || !settingsLoaded) return
+    
+    // Debounce: only save after user stops typing (500ms delay)
+    const timeoutId = setTimeout(() => {
+      const saveIterationLimit = async () => {
+        try {
+          const headers: HeadersInit = { 'Content-Type': 'application/json' }
+          if (token) {
+            headers['Authorization'] = `Bearer ${token}`
+          }
+          await fetch('/api/settings/llm', {
+            method: 'POST',
+            headers,
+            body: JSON.stringify({ providers, iteration_limit: iterationLimit })
+          })
+          // Update localStorage as well
+          localStorage.setItem('llm_settings', JSON.stringify({
+            providers,
+            iteration_limit: iterationLimit
+          }))
+          console.log('Iteration limit auto-saved to backend')
+        } catch (error) {
+          console.error('Failed to auto-save iteration limit:', error)
+        }
+      }
+      saveIterationLimit()
+    }, 500)
+
+    return () => clearTimeout(timeoutId)
+  }, [iterationLimit, isAuthenticated, token, providers, settingsLoaded])
 
   const saveProviders = async (newProviders: LLMProvider[]) => {
     setProviders(newProviders)
