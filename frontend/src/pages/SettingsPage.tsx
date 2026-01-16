@@ -79,6 +79,7 @@ export default function SettingsPage() {
   const [testResults, setTestResults] = useState<Record<string, TestResult>>({})
   const [showApiKeys, setShowApiKeys] = useState<Record<string, boolean>>({})
   const [iterationLimit, setIterationLimit] = useState(10)
+  const [defaultModel, setDefaultModel] = useState<string>('')
   const [activeTab, setActiveTab] = useState<'llm' | 'workflow'>('llm')
 
   // Load providers from backend on mount
@@ -94,6 +95,9 @@ export default function SettingsPage() {
             }
             if (typeof parsed.iteration_limit === 'number') {
               setIterationLimit(parsed.iteration_limit)
+            }
+            if (parsed.default_model) {
+              setDefaultModel(parsed.default_model)
             }
             setSettingsLoaded(true)
           } catch (e) {
@@ -124,9 +128,13 @@ export default function SettingsPage() {
           if (typeof data.iteration_limit === 'number') {
             setIterationLimit(data.iteration_limit)
           }
+          if (data.default_model) {
+            setDefaultModel(data.default_model)
+          }
           localStorage.setItem('llm_settings', JSON.stringify({
             providers: data.providers || [],
-            iteration_limit: data.iteration_limit ?? 10
+            iteration_limit: data.iteration_limit ?? 10,
+            default_model: data.default_model || ''
           }))
           setSettingsLoaded(true)
           return
@@ -144,13 +152,13 @@ export default function SettingsPage() {
   // Track if settings have been loaded to prevent saving on initial mount
   const [settingsLoaded, setSettingsLoaded] = useState(false)
 
-  // Auto-save iteration limit when it changes (after initial load)
+  // Auto-save iteration limit and default model when they change (after initial load)
   useEffect(() => {
     if (!isAuthenticated || !token || !settingsLoaded) return
     
     // Debounce: only save after user stops typing (500ms delay)
     const timeoutId = setTimeout(() => {
-      const saveIterationLimit = async () => {
+      const saveSettings = async () => {
         try {
           const headers: HeadersInit = { 'Content-Type': 'application/json' }
           if (token) {
@@ -159,29 +167,31 @@ export default function SettingsPage() {
           await fetch('/api/settings/llm', {
             method: 'POST',
             headers,
-            body: JSON.stringify({ providers, iteration_limit: iterationLimit })
+            body: JSON.stringify({ providers, iteration_limit: iterationLimit, default_model: defaultModel })
           })
           // Update localStorage as well
           localStorage.setItem('llm_settings', JSON.stringify({
             providers,
-            iteration_limit: iterationLimit
+            iteration_limit: iterationLimit,
+            default_model: defaultModel
           }))
-          console.log('Iteration limit auto-saved to backend')
+          console.log('Settings auto-saved to backend')
         } catch (error) {
-          console.error('Failed to auto-save iteration limit:', error)
+          console.error('Failed to auto-save settings:', error)
         }
       }
-      saveIterationLimit()
+      saveSettings()
     }, 500)
 
     return () => clearTimeout(timeoutId)
-  }, [iterationLimit, isAuthenticated, token, providers, settingsLoaded])
+  }, [iterationLimit, defaultModel, isAuthenticated, token, providers, settingsLoaded])
 
   const saveProviders = async (newProviders: LLMProvider[]) => {
     setProviders(newProviders)
     localStorage.setItem('llm_settings', JSON.stringify({
       providers: newProviders,
-      iteration_limit: iterationLimit
+      iteration_limit: iterationLimit,
+      default_model: defaultModel
     }))
     
     // Auto-save to backend
@@ -193,7 +203,7 @@ export default function SettingsPage() {
       await fetch('/api/settings/llm', {
         method: 'POST',
         headers,
-        body: JSON.stringify({ providers: newProviders, iteration_limit: iterationLimit })
+        body: JSON.stringify({ providers: newProviders, iteration_limit: iterationLimit, default_model: defaultModel })
       })
       console.log('Settings auto-synced to backend')
     } catch (error) {
@@ -293,7 +303,7 @@ export default function SettingsPage() {
       const response = await fetch('/api/settings/llm', {
         method: 'POST',
         headers,
-        body: JSON.stringify({ providers, iteration_limit: iterationLimit })
+        body: JSON.stringify({ providers, iteration_limit: iterationLimit, default_model: defaultModel })
       })
       if (response.ok) {
         showSuccess('Settings synced to backend successfully!')
@@ -352,18 +362,52 @@ export default function SettingsPage() {
           </div>
           <div className="flex-1 space-y-6">
             {activeTab === 'workflow' && (
-              <div className="bg-white rounded-lg border border-gray-200 p-5 flex flex-col gap-3">
-                <label className="text-sm font-medium text-gray-700">Iteration limit</label>
-                <input
-                  type="number"
-                  min={1}
-                  value={iterationLimit}
-                  onChange={(e) => setIterationLimit(Math.max(1, Number(e.target.value) || 1))}
-                  className="w-24 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
-                />
-                <p className="text-xs text-gray-500">
-                  Number of tool-LLM cycles allowed when using “Chat with LLM”.
-                </p>
+              <div className="space-y-6">
+                <div className="bg-white rounded-lg border border-gray-200 p-5 flex flex-col gap-3">
+                  <label className="text-sm font-medium text-gray-700">Iteration limit</label>
+                  <input
+                    type="number"
+                    min={1}
+                    value={iterationLimit}
+                    onChange={(e) => setIterationLimit(Math.max(1, Number(e.target.value) || 1))}
+                    className="w-24 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+                  />
+                  <p className="text-xs text-gray-500">
+                    Number of tool-LLM cycles allowed when using "Chat with LLM".
+                  </p>
+                </div>
+                
+                <div className="bg-white rounded-lg border border-gray-200 p-5 flex flex-col gap-3">
+                  <label className="text-sm font-medium text-gray-700">Default Model</label>
+                  <select
+                    value={defaultModel}
+                    onChange={(e) => setDefaultModel(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  >
+                    <option value="">Select a model...</option>
+                    {providers
+                      .filter(p => p.enabled && p.models && p.models.length > 0)
+                      .flatMap(provider => 
+                        provider.models.map(model => ({
+                          value: model,
+                          label: `${model} (${provider.name})`
+                        }))
+                      )
+                      .map(({ value, label }) => (
+                        <option key={value} value={value}>
+                          {label}
+                        </option>
+                      ))}
+                  </select>
+                  <p className="text-xs text-gray-500">
+                    Select the default model to use for workflow generation. Only models from enabled providers are shown.
+                  </p>
+                  {defaultModel && (
+                    <p className="text-xs text-green-600">
+                      ✓ Using: {defaultModel}
+                    </p>
+                  )}
+                </div>
               </div>
             )}
 

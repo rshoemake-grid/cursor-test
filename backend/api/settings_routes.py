@@ -33,6 +33,7 @@ class LLMProvider(BaseModel):
 class LLMSettings(BaseModel):
     providers: List[LLMProvider]
     iteration_limit: int = 10
+    default_model: Optional[str] = None  # Selected model for workflow generation
 
 
 class LLMTestRequest(BaseModel):
@@ -106,7 +107,7 @@ async def save_llm_settings(
     _settings_cache[user_id] = settings
     
     # Log settings save
-    logger.info(f"Saving LLM settings for user: {user_id}, providers count: {len(settings.providers)}, iteration_limit: {settings.iteration_limit}")
+    logger.info(f"Saving LLM settings for user: {user_id}, providers count: {len(settings.providers)}, iteration_limit: {settings.iteration_limit}, default_model: {settings.default_model}")
     for p in settings.providers:
         logger.debug(f"Provider {p.name}: enabled={p.enabled}, has_key={len(p.apiKey) > 0}")
     
@@ -408,6 +409,26 @@ def get_active_llm_config(user_id: Optional[str] = None) -> Optional[Dict[str, A
         logger.warning(f"User {uid} not found in cache and no anonymous fallback - settings need to be loaded from database via API")
         return None
     
+    # If default_model is set, try to find provider that has that model
+    if settings.default_model:
+        for provider in settings.providers:
+            if provider.enabled and provider.apiKey and _is_valid_api_key(provider.apiKey):
+                # Check if this provider has the selected model
+                normalized_selected = settings.default_model.lower().strip()
+                normalized_provider_models = [m.lower().strip() for m in provider.models]
+                if normalized_selected in normalized_provider_models:
+                    # Find the original model name (preserve case from provider)
+                    original_model_name = next((m for m in provider.models if m.lower().strip() == normalized_selected), settings.default_model)
+                    config = {
+                        "type": provider.type,
+                        "api_key": provider.apiKey.strip(),
+                        "base_url": provider.baseUrl,
+                        "model": original_model_name
+                    }
+                    logger.info(f"Using provider {provider.name} with selected model {original_model_name} for user {uid}")
+                    return config
+    
+    # Fallback to first enabled provider's defaultModel
     for provider in settings.providers:
         logger.debug(f"Checking provider {provider.name}: enabled={provider.enabled}, has_key={len(provider.apiKey) > 0}")
         # Check that provider is enabled, has an API key, and the API key is not a placeholder
@@ -418,7 +439,7 @@ def get_active_llm_config(user_id: Optional[str] = None) -> Optional[Dict[str, A
                 "base_url": provider.baseUrl,
                 "model": provider.defaultModel
             }
-            logger.info(f"Using provider {provider.name} for user {uid}")
+            logger.info(f"Using provider {provider.name} with default model {provider.defaultModel} for user {uid}")
             return config
     
     logger.warning(f"No enabled provider with valid API key found for user {uid}")
