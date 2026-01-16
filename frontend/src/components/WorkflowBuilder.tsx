@@ -700,11 +700,8 @@ const WorkflowBuilder = forwardRef<WorkflowBuilderHandle, WorkflowBuilderProps>(
     }
   }, [onExecutionStart])
 
-  // Handle workflow updates from chat
-  const handleWorkflowUpdate = useCallback((changes: any) => {
-    if (!changes) return
-
-    console.log('Received workflow changes:', changes)
+  // Helper function to apply workflow changes locally
+  const applyLocalChanges = useCallback((changes: any) => {
 
     // Apply node additions first (edges need nodes to exist)
     if (changes.nodes_to_add && changes.nodes_to_add.length > 0) {
@@ -748,7 +745,13 @@ const WorkflowBuilder = forwardRef<WorkflowBuilderHandle, WorkflowBuilderProps>(
 
     // Apply node deletions
     if (changes.nodes_to_delete && changes.nodes_to_delete.length > 0) {
-      setNodes((nds) => nds.filter((node) => !changes.nodes_to_delete.includes(node.id)))
+      console.log('Deleting nodes:', changes.nodes_to_delete)
+      setNodes((nds) => {
+        console.log('Current node IDs before deletion:', nds.map(n => n.id))
+        const filtered = nds.filter((node) => !changes.nodes_to_delete.includes(node.id))
+        console.log('Nodes after deletion:', filtered.map(n => n.id))
+        return filtered
+      })
       // Also remove edges connected to deleted nodes
       setEdges((eds) =>
         eds.filter(
@@ -826,6 +829,51 @@ const WorkflowBuilder = forwardRef<WorkflowBuilderHandle, WorkflowBuilderProps>(
     }
   }, [setNodes, setEdges, notifyModified, workflowNodeToNode])
 
+  // Handle workflow updates from chat
+  const handleWorkflowUpdate = useCallback((changes: any) => {
+    if (!changes) return
+
+    console.log('Received workflow changes:', changes)
+    
+    // If there are deletions and we have a workflowId, reload from database
+    // The chat agent saves deletions to the database, so we need to reload to ensure UI matches
+    const hasDeletions = changes.nodes_to_delete && changes.nodes_to_delete.length > 0
+    
+    if (hasDeletions && localWorkflowId) {
+      // Reload workflow from database to ensure UI matches saved state
+      console.log('Reloading workflow from database after deletions:', changes.nodes_to_delete)
+      // Small delay to ensure backend has finished saving
+      setTimeout(() => {
+        api.getWorkflow(localWorkflowId).then((workflow) => {
+          const convertedNodes = workflow.nodes.map(workflowNodeToNode)
+          const initializedNodes = convertedNodes.map(node => ({
+            ...node,
+            draggable: true,
+            selected: false,
+            data: {
+              ...node.data,
+              agent_config: node.data.agent_config || {},
+              condition_config: node.data.condition_config || {},
+              loop_config: node.data.loop_config || {},
+              input_config: node.data.input_config || {},
+              inputs: node.data.inputs || [],
+            }
+          }))
+          setNodes(initializedNodes)
+          setEdges(workflow.edges || [])
+          console.log('Reloaded workflow after deletion, nodes:', initializedNodes.map(n => n.id))
+          console.log('Expected deleted nodes:', changes.nodes_to_delete)
+        }).catch(err => {
+          console.error('Failed to reload workflow after deletion:', err)
+          // Fall back to applying changes locally
+          applyLocalChanges(changes)
+        })
+      }, 200) // Small delay to ensure backend save is complete
+      return
+    }
+    
+    applyLocalChanges(changes)
+  }, [localWorkflowId, workflowNodeToNode, setNodes, setEdges, applyLocalChanges])
 
   const onConnect = useCallback(
     (connection: Connection) => {

@@ -111,6 +111,8 @@ export default function WorkflowChat({ workflowId, onWorkflowUpdate }: WorkflowC
 
       // Apply workflow changes if any
       if (data.workflow_changes && onWorkflowUpdate) {
+        console.log('Received workflow changes:', data.workflow_changes)
+        console.log('Nodes to delete:', data.workflow_changes.nodes_to_delete)
         onWorkflowUpdate(data.workflow_changes)
       }
 
