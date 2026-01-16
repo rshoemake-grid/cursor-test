@@ -1030,6 +1030,11 @@ const WorkflowBuilder = forwardRef<WorkflowBuilderHandle, WorkflowBuilderProps>(
             </div>
           </div>
 
+          {/* Bottom: Chat Console */}
+          <ExecutionConsole 
+            activeWorkflowId={localWorkflowId || null}
+            onWorkflowUpdate={handleWorkflowUpdate}
+          />
         </div>
 
         {/* Right Panel - Properties (Full Height) */}
