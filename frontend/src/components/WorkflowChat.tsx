@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { Send, Loader, Bot, User } from 'lucide-react'
 import { api } from '../api/client'
+import { useAuth } from '../contexts/AuthContext'
 
 interface ChatMessage {
   role: 'user' | 'assistant'
@@ -13,6 +14,7 @@ interface WorkflowChatProps {
 }
 
 export default function WorkflowChat({ workflowId, onWorkflowUpdate }: WorkflowChatProps) {
+  const { token } = useAuth()
   // Load conversation history from localStorage on mount or workflow change
   const loadConversationHistory = (workflowId: string | null): ChatMessage[] => {
     const storageKey = workflowId ? `chat_history_${workflowId}` : 'chat_history_new_workflow'
@@ -74,11 +76,16 @@ export default function WorkflowChat({ workflowId, onWorkflowUpdate }: WorkflowC
     setIsLoading(true)
 
     try {
+      const headers: HeadersInit = {
+        'Content-Type': 'application/json',
+      }
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`
+      }
+      
       const response = await fetch('http://localhost:8000/api/workflow-chat/chat', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers,
         body: JSON.stringify({
           workflow_id: workflowId,
           message: userMessage.content,

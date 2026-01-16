@@ -302,32 +302,46 @@ async def chat_with_workflow(
         llm_config = get_active_llm_config(user_id)
         model = llm_config.get("model", "gpt-4") if llm_config else "gpt-4"
         
-        # Get iteration_limit from user settings - try cache first, then database
-        user_settings = get_user_settings(user_id)
+        # Always query database directly to get latest iteration_limit (cache might be stale)
+        uid = user_id if user_id else "anonymous"
+        iteration_limit = 10  # default
+        user_settings = None
         
-        # If not in cache, try loading directly from database
-        if not user_settings:
-            uid = user_id if user_id else "anonymous"
-            logger.debug(f"Settings not in cache for {uid}, querying database directly")
-            try:
-                from sqlalchemy import select
-                from ..database.models import SettingsDB
-                result = await db.execute(
-                    select(SettingsDB).where(SettingsDB.user_id == uid)
-                )
-                settings_db = result.scalar_one_or_none()
-                if settings_db and settings_db.settings_data:
-                    user_settings = LLMSettings(**settings_db.settings_data)
-                    # Update cache for future use
-                    from .settings_routes import _settings_cache
-                    _settings_cache[uid] = user_settings
-                    logger.info(f"Loaded settings from database for {uid}, iteration_limit: {user_settings.iteration_limit}")
-            except Exception as e:
-                logger.error(f"Failed to load settings from database: {e}", exc_info=True)
-        
-        iteration_limit = user_settings.iteration_limit if user_settings else 10
+        try:
+            from sqlalchemy import select
+            from ..database.models import SettingsDB
+            result = await db.execute(
+                select(SettingsDB).where(SettingsDB.user_id == uid)
+            )
+            settings_db = result.scalar_one_or_none()
+            if settings_db and settings_db.settings_data:
+                logger.debug(f"Found settings_db for {uid}, settings_data keys: {list(settings_db.settings_data.keys())}")
+                logger.debug(f"Raw iteration_limit in settings_data: {settings_db.settings_data.get('iteration_limit', 'NOT FOUND')}")
+                print(f"🔍 DEBUG: Found settings_db for {uid}, settings_data keys: {list(settings_db.settings_data.keys())}")
+                print(f"🔍 DEBUG: Raw iteration_limit in settings_data: {settings_db.settings_data.get('iteration_limit', 'NOT FOUND')}")
+                user_settings = LLMSettings(**settings_db.settings_data)
+                iteration_limit = user_settings.iteration_limit
+                logger.info(f"Loaded settings from database for {uid}, iteration_limit: {iteration_limit} (type: {type(iteration_limit).__name__})")
+                print(f"✅ Loaded settings from database for {uid}, iteration_limit: {iteration_limit} (type: {type(iteration_limit).__name__})")
+                # Update cache for future use
+                from .settings_routes import _settings_cache
+                _settings_cache[uid] = user_settings
+            else:
+                # Try cache as fallback
+                user_settings = get_user_settings(user_id)
+                if user_settings:
+                    iteration_limit = user_settings.iteration_limit
+                    logger.debug(f"Using cached settings for {uid}, iteration_limit: {iteration_limit}")
+        except Exception as e:
+            logger.error(f"Failed to load settings from database: {e}", exc_info=True)
+            # Fallback to cache
+            user_settings = get_user_settings(user_id)
+            if user_settings:
+                iteration_limit = user_settings.iteration_limit
+                logger.warning(f"Using cached settings as fallback for {uid}, iteration_limit: {iteration_limit}")
         
         logger.info(f"Chat agent using iteration_limit: {iteration_limit} for user: {user_id or 'anonymous'}")
+        print(f"🚀 Chat agent using iteration_limit: {iteration_limit} for user: {user_id or 'anonymous'}")
         
         client = get_llm_client(user_id)
         
@@ -391,6 +405,8 @@ After making changes to the workflow, use the save_workflow tool to persist them
         
         # Loop until LLM completes (no more tool calls)
         max_iterations = iteration_limit  # Safety limit
+        logger.info(f"Starting chat agent loop with max_iterations: {max_iterations} (from iteration_limit: {iteration_limit})")
+        print(f"🔄 Starting chat agent loop with max_iterations: {max_iterations} (from iteration_limit: {iteration_limit})")
         iteration = 0
         assistant_message = None
         
