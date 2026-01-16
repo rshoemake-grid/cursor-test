@@ -341,10 +341,11 @@ export default function PropertyPanel({ selectedNodeId, setSelectedNodeId, selec
       }
       
       // Fallback to localStorage
-      const saved = localStorage.getItem('llm_providers')
+      const saved = localStorage.getItem('llm_settings')
       if (saved) {
         try {
-          const providers: LLMProvider[] = JSON.parse(saved)
+          const parsed = JSON.parse(saved)
+          const providers: LLMProvider[] = parsed.providers || []
           const models: Array<{ value: string; label: string; provider: string }> = []
           providers.forEach((provider) => {
             if (provider.enabled && provider.models && provider.models.length > 0) {
@@ -357,26 +358,22 @@ export default function PropertyPanel({ selectedNodeId, setSelectedNodeId, selec
               })
             }
           })
-          setAvailableModels(models)
+          if (models.length > 0) {
+            setAvailableModels(models)
+            return
+          }
         } catch (e) {
           console.error('Failed to load providers:', e)
-          // Fallback to default GPT models if no providers found
-          setAvailableModels([
-            { value: 'gpt-4o-mini', label: 'GPT-4o Mini (OpenAI)', provider: 'OpenAI' },
-            { value: 'gpt-4o', label: 'GPT-4o (OpenAI)', provider: 'OpenAI' },
-            { value: 'gpt-4', label: 'GPT-4 (OpenAI)', provider: 'OpenAI' },
-            { value: 'gpt-3.5-turbo', label: 'GPT-3.5 Turbo (OpenAI)', provider: 'OpenAI' }
-          ])
         }
-      } else {
-        // Fallback to default GPT models if no providers found
-        setAvailableModels([
-          { value: 'gpt-4o-mini', label: 'GPT-4o Mini (OpenAI)', provider: 'OpenAI' },
-          { value: 'gpt-4o', label: 'GPT-4o (OpenAI)', provider: 'OpenAI' },
-          { value: 'gpt-4', label: 'GPT-4 (OpenAI)', provider: 'OpenAI' },
-          { value: 'gpt-3.5-turbo', label: 'GPT-3.5 Turbo (OpenAI)', provider: 'OpenAI' }
-        ])
       }
+
+      // Fallback to default GPT models if no providers found
+      setAvailableModels([
+        { value: 'gpt-4o-mini', label: 'GPT-4o Mini (OpenAI)', provider: 'OpenAI' },
+        { value: 'gpt-4o', label: 'GPT-4o (OpenAI)', provider: 'OpenAI' },
+        { value: 'gpt-4', label: 'GPT-4 (OpenAI)', provider: 'OpenAI' },
+        { value: 'gpt-3.5-turbo', label: 'GPT-3.5 Turbo (OpenAI)', provider: 'OpenAI' }
+      ])
     }
     
     loadModels()

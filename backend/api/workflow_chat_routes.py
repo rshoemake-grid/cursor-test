@@ -298,6 +298,7 @@ async def chat_with_workflow(
         from .settings_routes import get_active_llm_config
         llm_config = get_active_llm_config(user_id)
         model = llm_config.get("model", "gpt-4") if llm_config else "gpt-4"
+        iteration_limit = llm_config.get("iteration_limit", 10) if llm_config else 10
         
         client = get_llm_client(user_id)
         
@@ -351,7 +352,7 @@ After making changes to the workflow, use the save_workflow tool to persist them
         }
         
         # Loop until LLM completes (no more tool calls)
-        max_iterations = 10  # Safety limit
+        max_iterations = iteration_limit  # Safety limit
         iteration = 0
         assistant_message = None
         

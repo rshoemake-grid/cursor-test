@@ -78,15 +78,22 @@ export default function SettingsPage() {
   const [testingProvider, setTestingProvider] = useState<string | null>(null)
   const [testResults, setTestResults] = useState<Record<string, TestResult>>({})
   const [showApiKeys, setShowApiKeys] = useState<Record<string, boolean>>({})
+  const [iterationLimit, setIterationLimit] = useState(10)
 
   // Load providers from backend on mount
   useEffect(() => {
     const loadProviders = async () => {
       const fallbackToLocal = () => {
-        const saved = localStorage.getItem('llm_providers')
+        const saved = localStorage.getItem('llm_settings')
         if (saved) {
           try {
-            setProviders(JSON.parse(saved))
+            const parsed = JSON.parse(saved)
+            if (parsed.providers) {
+              setProviders(parsed.providers)
+            }
+            if (typeof parsed.iteration_limit === 'number') {
+              setIterationLimit(parsed.iteration_limit)
+            }
           } catch (e) {
             console.error('Failed to load providers:', e)
           }
@@ -104,7 +111,11 @@ export default function SettingsPage() {
           const data = await response.json()
           if (data.providers && data.providers.length > 0) {
             setProviders(data.providers)
-            localStorage.setItem('llm_providers', JSON.stringify(data.providers))
+            setIterationLimit(data.iteration_limit ?? 10)
+            localStorage.setItem('llm_settings', JSON.stringify({
+              providers: data.providers,
+              iteration_limit: data.iteration_limit ?? 10
+            }))
             return
           }
         }
@@ -120,14 +131,17 @@ export default function SettingsPage() {
 
   const saveProviders = async (newProviders: LLMProvider[]) => {
     setProviders(newProviders)
-    localStorage.setItem('llm_providers', JSON.stringify(newProviders))
+    localStorage.setItem('llm_settings', JSON.stringify({
+      providers: newProviders,
+      iteration_limit: iterationLimit
+    }))
     
     // Auto-save to backend
     try {
       await fetch('/api/settings/llm', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ providers: newProviders })
+        body: JSON.stringify({ providers: newProviders, iteration_limit: iterationLimit })
       })
       console.log('Settings auto-synced to backend')
     } catch (error) {
@@ -215,10 +229,10 @@ export default function SettingsPage() {
 
   const handleManualSync = async () => {
     try {
-      const response = await fetch('/api/settings/llm', {
+    const response = await fetch('/api/settings/llm', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ providers })
+      body: JSON.stringify({ providers, iteration_limit: iterationLimit })
       })
       if (response.ok) {
         showSuccess('Settings synced to backend successfully!')
@@ -243,6 +257,20 @@ export default function SettingsPage() {
           </button>
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Settings</h1>
           <p className="text-gray-600">Configure LLM providers and API keys for your agentic workflows</p>
+        </div>
+
+        <div className="mb-6 bg-white rounded-lg border border-gray-200 p-4 flex items-center gap-4">
+          <label className="text-sm font-medium text-gray-700">Chat iteration limit</label>
+          <input
+            type="number"
+            min={1}
+            value={iterationLimit}
+            onChange={(e) => setIterationLimit(Math.max(1, Number(e.target.value) || 1))}
+            className="w-24 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+          />
+          <p className="text-xs text-gray-500">
+            Number of tool-LLM cycles allowed when using the “Chat with LLM” feature.
+          </p>
         </div>
 
         {/* Providers List */}

@@ -32,6 +32,7 @@ class LLMProvider(BaseModel):
 
 class LLMSettings(BaseModel):
     providers: List[LLMProvider]
+    iteration_limit: int = 10
 
 
 class LLMTestRequest(BaseModel):
