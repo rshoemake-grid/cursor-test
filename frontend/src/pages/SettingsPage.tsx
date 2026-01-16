@@ -291,8 +291,8 @@ export default function SettingsPage() {
         )}
 
         {activeTab === 'llm' && (
-          <div className="space-y-6">
-          {providers.map(provider => (
+        <div className="space-y-6">
+            {providers.map(provider => (
             <div key={provider.id} className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
               <div className="flex items-start justify-between mb-4">
                 <div className="flex items-center gap-3">
