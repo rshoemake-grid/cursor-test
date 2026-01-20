@@ -230,10 +230,13 @@ async def test_condition_agent_nested_field_access(condition_node_nested):
 
 @pytest.mark.asyncio
 async def test_condition_agent_missing_field_raises_error(condition_node):
-    """Test that missing field raises error"""
+    """Test that missing field raises error when auto-detection fails"""
     agent = ConditionAgent(condition_node)
-    inputs = {"other_field": "value"}
+    # Use multiple inputs so auto-detection doesn't kick in
+    inputs = {"other_field": "value", "another_field": "value2"}
     
+    # The agent will try auto-detection but should eventually raise error
+    # if field is truly not found and can't be auto-detected
     with pytest.raises(ValueError) as exc_info:
         await agent.execute(inputs)
     
