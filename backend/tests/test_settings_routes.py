@@ -44,9 +44,16 @@ async def test_save_llm_settings_requires_auth(db_session: AsyncSession):
 async def test_save_and_get_llm_settings(db_session: AsyncSession, test_user: UserDB):
     """Test saving and retrieving LLM settings"""
     from main import app
-    from backend.auth.auth import create_access_token
+    from backend.auth.auth import create_access_token, get_optional_user
     
-    app.dependency_overrides[get_db] = lambda: db_session
+    async def override_get_db():
+        yield db_session
+    
+    async def override_get_user():
+        return test_user
+    
+    app.dependency_overrides[get_db] = override_get_db
+    app.dependency_overrides[get_optional_user] = override_get_user
     token = create_access_token(data={"sub": test_user.id})
     
     settings_data = {
@@ -104,9 +111,16 @@ async def test_get_llm_settings_requires_auth(db_session: AsyncSession):
 async def test_get_llm_settings_empty(db_session: AsyncSession, test_user: UserDB):
     """Test getting settings when none exist"""
     from main import app
-    from backend.auth.auth import create_access_token
+    from backend.auth.auth import create_access_token, get_optional_user
     
-    app.dependency_overrides[get_db] = lambda: db_session
+    async def override_get_db():
+        yield db_session
+    
+    async def override_get_user():
+        return test_user
+    
+    app.dependency_overrides[get_db] = override_get_db
+    app.dependency_overrides[get_optional_user] = override_get_user
     token = create_access_token(data={"sub": test_user.id})
     
     try:
@@ -134,11 +148,20 @@ async def test_test_llm_connection_openai():
         "model": "gpt-4"
     }
     
-    with patch("httpx.AsyncClient.post") as mock_post:
-        mock_response = AsyncMock()
-        mock_response.status_code = 200
-        mock_response.json.return_value = {"choices": [{"message": {"content": "Hello"}}]}
-        mock_post.return_value = mock_response
+    mock_response = AsyncMock()
+    mock_response.status_code = 200
+    mock_response.json = AsyncMock(return_value={"choices": [{"message": {"content": "Hello"}}]})
+    mock_response.text = '{"choices": [{"message": {"content": "Hello"}}]}'
+    
+    async def mock_post(*args, **kwargs):
+        return mock_response
+    
+    with patch("backend.api.settings_routes.httpx.AsyncClient") as mock_client_class:
+        mock_client = AsyncMock()
+        mock_client.__aenter__ = AsyncMock(return_value=mock_client)
+        mock_client.__aexit__ = AsyncMock(return_value=None)
+        mock_client.post = AsyncMock(return_value=mock_response)
+        mock_client_class.return_value = mock_client
         
         async with AsyncClient(app=app, base_url="http://test") as client:
             response = await client.post("/api/settings/llm/test", json=test_request)
@@ -159,11 +182,17 @@ async def test_test_llm_connection_anthropic():
         "model": "claude-3-5-sonnet-20241022"
     }
     
-    with patch("httpx.AsyncClient.post") as mock_post:
-        mock_response = AsyncMock()
-        mock_response.status_code = 200
-        mock_response.json.return_value = {"content": [{"text": "Hello"}]}
-        mock_post.return_value = mock_response
+    mock_response = AsyncMock()
+    mock_response.status_code = 200
+    mock_response.json = AsyncMock(return_value={"content": [{"text": "Hello"}]})
+    mock_response.text = '{"content": [{"text": "Hello"}]}'
+    
+    with patch("backend.api.settings_routes.httpx.AsyncClient") as mock_client_class:
+        mock_client = AsyncMock()
+        mock_client.__aenter__ = AsyncMock(return_value=mock_client)
+        mock_client.__aexit__ = AsyncMock(return_value=None)
+        mock_client.post = AsyncMock(return_value=mock_response)
+        mock_client_class.return_value = mock_client
         
         async with AsyncClient(app=app, base_url="http://test") as client:
             response = await client.post("/api/settings/llm/test", json=test_request)

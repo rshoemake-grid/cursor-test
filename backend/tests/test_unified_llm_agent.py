@@ -118,16 +118,19 @@ async def test_unified_llm_agent_execute_openai(mock_node, mock_llm_config):
     """Test UnifiedLLMAgent execution with OpenAI"""
     agent = UnifiedLLMAgent(mock_node, llm_config=mock_llm_config)
     
-    # Mock OpenAI client
-    mock_response = AsyncMock()
-    mock_response.choices = [Mock()]
-    mock_response.choices[0].message = Mock()
-    mock_response.choices[0].message.content = "Test response"
+    # Mock httpx response
+    mock_http_response = Mock()
+    mock_http_response.status_code = 200
+    mock_http_response.json.return_value = {
+        "choices": [{"message": {"content": "Test response"}}]
+    }
     
-    with patch("backend.agents.unified_llm_agent.AsyncOpenAI") as mock_openai:
+    with patch("backend.agents.unified_llm_agent.httpx.AsyncClient") as mock_client_class:
         mock_client = AsyncMock()
-        mock_client.chat.completions.create = AsyncMock(return_value=mock_response)
-        mock_openai.return_value = mock_client
+        mock_client.__aenter__ = AsyncMock(return_value=mock_client)
+        mock_client.__aexit__ = AsyncMock(return_value=None)
+        mock_client.post = AsyncMock(return_value=mock_http_response)
+        mock_client_class.return_value = mock_client
         
         result = await agent.execute({"input": "Hello"})
         assert result == "Test response"
@@ -149,25 +152,33 @@ async def test_unified_llm_agent_execute_anthropic(mock_node):
     
     llm_config = {
         "type": "anthropic",
-        "api_key": "test-key",
+        "api_key": "sk-test-key-123456789012345678901234567890",  # Valid length
         "base_url": "https://api.anthropic.com/v1",
         "model": "claude-3-5-sonnet-20241022"
     }
     
     agent = UnifiedLLMAgent(node, llm_config=llm_config)
     
-    # Mock Anthropic client
-    mock_response = AsyncMock()
-    mock_response.content = [Mock()]
-    mock_response.content[0].text = "Test response"
+    # Mock httpx response for Anthropic
+    mock_http_response = Mock()
+    mock_http_response.status_code = 200
+    mock_http_response.json.return_value = {
+        "content": [{"text": "Test response"}]
+    }
     
-    with patch("backend.agents.unified_llm_agent.AsyncAnthropic") as mock_anthropic:
+    with patch("backend.agents.unified_llm_agent.httpx.AsyncClient") as mock_client_class:
         mock_client = AsyncMock()
-        mock_client.messages.create = AsyncMock(return_value=mock_response)
-        mock_anthropic.return_value = mock_client
+        mock_client.__aenter__ = AsyncMock(return_value=mock_client)
+        mock_client.__aexit__ = AsyncMock(return_value=None)
+        mock_client.post = AsyncMock(return_value=mock_http_response)
+        mock_client_class.return_value = mock_client
         
-        result = await agent.execute({"input": "Hello"})
-        assert result == "Test response"
+        # Mock get_provider_for_model to return None (use default)
+        with patch("backend.api.settings_routes.get_provider_for_model") as mock_get_provider:
+            mock_get_provider.return_value = None
+            
+            result = await agent.execute({"input": "Hello"})
+            assert result == "Test response"
 
 
 @pytest.mark.asyncio
@@ -175,9 +186,9 @@ async def test_unified_llm_agent_find_provider_for_model(mock_node, mock_llm_con
     """Test finding provider for a model"""
     agent = UnifiedLLMAgent(mock_node, llm_config=mock_llm_config)
     
-    with patch("backend.agents.unified_llm_agent.get_provider_for_model") as mock_get_provider:
+    with patch("backend.api.settings_routes.get_provider_for_model") as mock_get_provider:
         mock_get_provider.return_value = mock_llm_config
-        result = agent._find_provider_for_model("gpt-4")
+        result = agent._find_provider_for_model("gpt-4", None)
         assert result == mock_llm_config
 
 

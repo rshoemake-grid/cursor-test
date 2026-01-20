@@ -162,10 +162,10 @@ async def test_execute_with_agent_node(agent_workflow):
     executor = WorkflowExecutorV3(agent_workflow)
     
     # Mock agent execution
-    with patch("backend.engine.executor_v3.AgentRegistry") as mock_registry:
+    with patch("backend.engine.executor_v3.AgentRegistry.get_agent") as mock_get_agent:
         mock_agent = AsyncMock()
         mock_agent.execute = AsyncMock(return_value="Agent output")
-        mock_registry.create_agent.return_value = mock_agent
+        mock_get_agent.return_value = mock_agent
         
         result = await executor.execute({"input": "test"})
         
@@ -212,10 +212,10 @@ async def test_execute_with_condition_node():
     
     executor = WorkflowExecutorV3(workflow)
     
-    with patch("backend.engine.executor_v3.AgentRegistry") as mock_registry:
+    with patch("backend.engine.executor_v3.AgentRegistry.get_agent") as mock_get_agent:
         mock_condition = AsyncMock()
-        mock_condition.evaluate = AsyncMock(return_value=True)
-        mock_registry.create_agent.return_value = mock_condition
+        mock_condition.execute = AsyncMock(return_value={"branch": "true"})
+        mock_get_agent.return_value = mock_condition
         
         result = await executor.execute({"value": "test"})
         assert result.status == ExecutionStatus.COMPLETED
@@ -225,6 +225,17 @@ async def test_execute_with_condition_node():
 async def test_broadcast_status(simple_workflow):
     """Test broadcasting status updates"""
     executor = WorkflowExecutorV3(simple_workflow, stream_updates=True)
+    executor.execution_id = "test-execution-1"
+    
+    # Initialize execution state
+    from backend.models.schemas import ExecutionState, ExecutionStatus
+    from datetime import datetime
+    executor.execution_state = ExecutionState(
+        execution_id=executor.execution_id,
+        workflow_id=simple_workflow.id or "test-workflow",
+        status=ExecutionStatus.RUNNING,
+        started_at=datetime.utcnow()
+    )
     
     with patch("backend.engine.executor_v3.ws_manager") as mock_manager:
         mock_manager.broadcast_status = AsyncMock()

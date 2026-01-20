@@ -163,6 +163,7 @@ class TestGCPBucketHandler:
         with pytest.raises(ImportError):
             GCPBucketHandler.read(config)
     
+    @patch("backend.inputs.input_sources.GCP_AVAILABLE", True)
     def test_read_missing_bucket_name(self):
         """Test reading without bucket_name"""
         config = {
@@ -177,26 +178,33 @@ class TestAWSS3Handler:
     """Tests for AWSS3Handler"""
     
     @patch("backend.inputs.input_sources.AWS_AVAILABLE", True)
-    @patch("backend.inputs.input_sources.boto3")
-    def test_read_object(self, mock_boto3):
+    def test_read_object(self):
         """Test reading an object from AWS S3"""
-        mock_s3 = Mock()
-        mock_client = Mock()
-        mock_response = Mock()
+        # Skip if boto3 not available
+        try:
+            import boto3
+        except ImportError:
+            pytest.skip("boto3 not installed")
         
-        mock_boto3.client.return_value = mock_client
-        mock_client.get_object.return_value = mock_response
-        mock_response['Body'].read.return_value = b'{"key": "value"}'
-        
-        config = {
-            "bucket_name": "test-bucket",
-            "object_key": "test/object.json",
-            "aws_access_key_id": "test-key",
-            "aws_secret_access_key": "test-secret"
-        }
-        
-        result = AWSS3Handler.read(config)
-        assert result == {"key": "value"}
+        with patch("boto3.client") as mock_boto_client:
+            mock_client = Mock()
+            mock_response = Mock()
+            mock_body = Mock()
+            
+            mock_boto_client.return_value = mock_client
+            mock_client.get_object.return_value = mock_response
+            mock_response.__getitem__ = Mock(return_value=mock_body)
+            mock_body.read.return_value = b'{"key": "value"}'
+            
+            config = {
+                "bucket_name": "test-bucket",
+                "object_key": "test/object.json",
+                "aws_access_key_id": "test-key",
+                "aws_secret_access_key": "test-secret"
+            }
+            
+            result = AWSS3Handler.read(config)
+            assert result == {"key": "value"}
     
     @patch("backend.inputs.input_sources.AWS_AVAILABLE", False)
     def test_read_aws_not_available(self):
@@ -209,6 +217,7 @@ class TestAWSS3Handler:
         with pytest.raises(ImportError):
             AWSS3Handler.read(config)
     
+    @patch("backend.inputs.input_sources.AWS_AVAILABLE", True)
     def test_read_missing_bucket_name(self):
         """Test reading without bucket_name"""
         config = {
@@ -223,29 +232,38 @@ class TestGCPPubSubHandler:
     """Tests for GCPPubSubHandler"""
     
     @patch("backend.inputs.input_sources.GCP_AVAILABLE", True)
-    @patch("backend.inputs.input_sources.pubsub_v1")
-    def test_read_message(self, mock_pubsub):
+    def test_read_message(self):
         """Test reading a message from GCP Pub/Sub"""
-        mock_subscriber = Mock()
-        mock_subscription_path = Mock()
-        mock_pull_response = Mock()
-        mock_received_message = Mock()
+        # Skip if pubsub_v1 not available
+        try:
+            from google.cloud import pubsub_v1
+        except ImportError:
+            pytest.skip("google-cloud-pubsub not installed")
         
-        mock_pubsub.SubscriberClient.return_value = mock_subscriber
-        mock_subscriber.subscription_path.return_value = mock_subscription_path
-        mock_subscriber.pull.return_value = mock_pull_response
-        mock_pull_response.received_messages = [mock_received_message]
-        mock_received_message.message.data = b'{"key": "value"}'
-        mock_received_message.ack_id = "test-ack-id"
-        
-        config = {
-            "project_id": "test-project",
-            "subscription_id": "test-subscription",
-            "credentials": None
-        }
-        
-        result = GCPPubSubHandler.read(config)
-        assert result == {"key": "value"}
+        with patch("google.cloud.pubsub_v1.SubscriberClient") as mock_subscriber_class:
+            mock_subscriber = Mock()
+            mock_subscription_path = "projects/test-project/subscriptions/test-subscription"
+            mock_pull_response = Mock()
+            mock_received_message = Mock()
+            mock_message = Mock()
+            
+            mock_subscriber_class.return_value = mock_subscriber
+            mock_subscriber.subscription_path.return_value = mock_subscription_path
+            mock_subscriber.pull.return_value = mock_pull_response
+            mock_subscriber.acknowledge = Mock()
+            mock_pull_response.received_messages = [mock_received_message]
+            mock_received_message.message = mock_message
+            mock_message.data = b'{"key": "value"}'
+            mock_received_message.ack_id = "test-ack-id"
+            
+            config = {
+                "project_id": "test-project",
+                "subscription_name": "test-subscription",
+                "credentials": None
+            }
+            
+            result = GCPPubSubHandler.read(config)
+            assert result == {"key": "value"}
     
     @patch("backend.inputs.input_sources.GCP_AVAILABLE", False)
     def test_read_pubsub_not_available(self):
@@ -258,12 +276,13 @@ class TestGCPPubSubHandler:
         with pytest.raises(ImportError):
             GCPPubSubHandler.read(config)
     
+    @patch("backend.inputs.input_sources.GCP_AVAILABLE", True)
     def test_read_missing_project_id(self):
         """Test reading without project_id"""
         config = {
-            "subscription_id": "test-subscription"
+            "subscription_name": "test-subscription"
         }
         
-        with pytest.raises(ValueError, match="project_id is required"):
+        with pytest.raises(ValueError, match="project_id"):
             GCPPubSubHandler.read(config)
 

@@ -39,7 +39,7 @@ async def test_template(db_session: AsyncSession, test_user: UserDB):
         author_id=test_user.id,
         is_official=False,
         difficulty=TemplateDifficulty.BEGINNER,
-        estimated_time=5
+        estimated_time="5 minutes"
     )
     db_session.add(template)
     await db_session.commit()
@@ -51,7 +51,10 @@ async def test_list_templates_empty(db_session: AsyncSession):
     """Test listing templates when none exist"""
     from main import app
     
-    app.dependency_overrides[get_db] = lambda: db_session
+    async def override_get_db():
+        yield db_session
+    
+    app.dependency_overrides[get_db] = override_get_db
     
     try:
         async with AsyncClient(app=app, base_url="http://test") as client:
@@ -67,7 +70,10 @@ async def test_list_templates_with_data(db_session: AsyncSession, test_template:
     """Test listing templates with data"""
     from main import app
     
-    app.dependency_overrides[get_db] = lambda: db_session
+    async def override_get_db():
+        yield db_session
+    
+    app.dependency_overrides[get_db] = override_get_db
     
     try:
         async with AsyncClient(app=app, base_url="http://test") as client:
@@ -86,7 +92,10 @@ async def test_list_templates_filter_by_category(db_session: AsyncSession, test_
     """Test filtering templates by category"""
     from main import app
     
-    app.dependency_overrides[get_db] = lambda: db_session
+    async def override_get_db():
+        yield db_session
+    
+    app.dependency_overrides[get_db] = override_get_db
     
     try:
         async with AsyncClient(app=app, base_url="http://test") as client:
@@ -107,7 +116,10 @@ async def test_list_templates_search(db_session: AsyncSession, test_template: Wo
     """Test searching templates"""
     from main import app
     
-    app.dependency_overrides[get_db] = lambda: db_session
+    async def override_get_db():
+        yield db_session
+    
+    app.dependency_overrides[get_db] = override_get_db
     
     try:
         async with AsyncClient(app=app, base_url="http://test") as client:
@@ -128,7 +140,10 @@ async def test_get_template(db_session: AsyncSession, test_template: WorkflowTem
     """Test getting a specific template"""
     from main import app
     
-    app.dependency_overrides[get_db] = lambda: db_session
+    async def override_get_db():
+        yield db_session
+    
+    app.dependency_overrides[get_db] = override_get_db
     
     try:
         async with AsyncClient(app=app, base_url="http://test") as client:
@@ -147,7 +162,10 @@ async def test_get_template_not_found(db_session: AsyncSession):
     """Test getting a non-existent template"""
     from main import app
     
-    app.dependency_overrides[get_db] = lambda: db_session
+    async def override_get_db():
+        yield db_session
+    
+    app.dependency_overrides[get_db] = override_get_db
     
     try:
         async with AsyncClient(app=app, base_url="http://test") as client:
