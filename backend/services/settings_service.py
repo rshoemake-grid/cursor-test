@@ -13,12 +13,6 @@ from ..utils.logger import get_logger
 
 logger = get_logger(__name__)
 
-# Import at runtime to avoid circular dependency
-def _get_llm_settings_type():
-    """Lazy import to avoid circular dependency"""
-    from ..api.settings_routes import LLMSettings
-    return LLMSettings
-
 
 class ISettingsService(ABC):
     """Interface for settings service operations"""
@@ -83,37 +77,8 @@ class SettingsService(ISettingsService):
     
     def _is_valid_api_key(self, api_key: str) -> bool:
         """Check if API key is not a placeholder"""
-        if not api_key:
-            return False
-        
-        api_key = api_key.strip()
-        if not api_key:
-            return False
-        
-        if len(api_key) < 10:
-            return False
-        
-        api_key_lower = api_key.lower()
-        
-        exact_placeholders = [
-            "your-api-key-here",
-            "your-api*****here",
-            "sk-your-api-key-here",
-            "sk-your-api*****here",
-            "your-api-key",
-            "api-key-here"
-        ]
-        
-        if api_key_lower in [p.lower() for p in exact_placeholders]:
-            return False
-        
-        if len(api_key) < 25 and ("your-api-key-here" in api_key_lower or "your-api*****here" in api_key_lower):
-            return False
-        
-        if len(api_key) < 30 and "*****here" in api_key:
-            return False
-        
-        return True
+        from ..utils.settings_utils import is_valid_api_key
+        return is_valid_api_key(api_key)
     
     def get_active_llm_config(self, user_id: Optional[str] = None) -> Optional[Dict[str, Any]]:
         """Get the first enabled LLM provider for a user"""
