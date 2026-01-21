@@ -59,7 +59,7 @@ async def test_test_llm_connection_openai(db_session: AsyncSession, test_user: U
                 response = await client.post(
                     "/api/settings/llm/test",
                     json={
-                        "provider_type": "openai",
+                        "type": "openai",
                         "api_key": "sk-test-key-123456789012345678901234567890",
                         "model": "gpt-4",
                         "base_url": None
@@ -106,7 +106,7 @@ async def test_test_llm_connection_anthropic(db_session: AsyncSession, test_user
                 response = await client.post(
                     "/api/settings/llm/test",
                     json={
-                        "provider_type": "anthropic",
+                        "type": "anthropic",
                         "api_key": "sk-test-key-123456789012345678901234567890",
                         "model": "claude-3-5-sonnet-20241022",
                         "base_url": None
@@ -153,7 +153,7 @@ async def test_test_llm_connection_error(db_session: AsyncSession, test_user: Us
                 response = await client.post(
                     "/api/settings/llm/test",
                     json={
-                        "provider_type": "openai",
+                        "type": "openai",
                         "api_key": "invalid-key",
                         "model": "gpt-4",
                         "base_url": None
@@ -181,9 +181,9 @@ async def test_get_user_settings(db_session: AsyncSession, test_user: UserDB):
                 "type": "openai",
                 "apiKey": "sk-test-key-123456789012345678901234567890",
                 "defaultModel": "gpt-4",
-                "enabled": True
-            }],
-            "iteration_limit": 10
+                "enabled": True,
+                "models": ["gpt-4"]
+            }]
         }
     )
     db_session.add(settings)
