@@ -716,13 +716,13 @@ class WorkflowExecutorV3:
                         f"from node '{input_mapping.source_node}' but it's not available"
                     )
             else:
+                # No source_node specified - try workflow variables first
                 if input_mapping.source_field in self.execution_state.variables:
                     inputs[input_mapping.name] = self.execution_state.variables[input_mapping.source_field]
                 else:
-                    raise ValueError(
-                        f"Node {node.id} requires input '{input_mapping.name}' "
-                        f"from workflow variable '{input_mapping.source_field}' but it's not available"
-                    )
+                    # Variable not found - return empty dict to let fallback logic use previous node output
+                    # This allows InputMapping without source_node to work when there's an incoming edge
+                    pass
         
         return inputs
     

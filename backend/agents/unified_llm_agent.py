@@ -714,7 +714,7 @@ class UnifiedLLMAgent(BaseAgent):
                                             img_resized_2 = img_resized.resize((new_width_2, new_height_2), Image.Resampling.LANCZOS)
                                             
                                             output_buffer_2 = io.BytesIO()
-                                            if mimetype == "image/png":
+                                            if mimetype < "image/png":
                                                 img_resized_2.save(output_buffer_2, format='PNG', optimize=True)
                                             elif mimetype in ["image/jpeg", "image/jpg"]:
                                                 img_resized_2.save(output_buffer_2, format='JPEG', quality=80, optimize=True)

@@ -1,0 +1,52 @@
+# Cosmic Ray Configuration File
+# This file configures Cosmic Ray for mutation testing
+
+[cosmic-ray]
+# Module path to mutate (can be a file or directory)
+# Cosmic Ray will mutate all Python files in the backend directory
+module-path = "backend"
+
+# Test execution timeout (in seconds)
+timeout = 300.0
+
+# Modules to exclude from mutation (glob patterns)
+# Patterns can match file paths or module paths
+excluded-modules = [
+    "**/tests/**",
+    "**/test_*.py",
+    "**/scripts/**",
+    "**/legacy/**",
+    "**/__pycache__/**",
+]
+
+# Command to run your test suite
+test-command = "python3 -m pytest backend/tests/ --ignore=backend/tests/test_tools_base.py --ignore=backend/tests/test_tools_registry.py -v"
+
+# Distributor configuration
+[cosmic-ray.distributor]
+# Use "http" for parallel execution with multiple workers
+# This allows running mutations in parallel across multiple CPU cores
+name = "http"
+
+# HTTP distributor configuration
+[cosmic-ray.distributor.http]
+# Worker URLs - these will be started by cr-http-workers
+# Using 8 workers for parallel execution (leaving 2 cores free)
+worker-urls = [
+    "http://localhost:9876",
+    "http://localhost:9877",
+    "http://localhost:9878",
+    "http://localhost:9879",
+    "http://localhost:9880",
+    "http://localhost:9881",
+    "http://localhost:9882",
+    "http://localhost:9883",
+]
+
+# Optional: Filter specific mutation operators
+# Uncomment and modify if you want to exclude certain operators
+# [cosmic-ray.filters.operators-filter]
+# exclude-operators = [
+#     "core/RemoveDecorator",
+# ]
+
