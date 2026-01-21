@@ -11,10 +11,12 @@ import traceback
 from openai import AsyncOpenAI
 
 from backend.database.db import get_db
-from backend.database.models import WorkflowDB, UserDB
+from backend.database.models import WorkflowDB, UserDB, SettingsDB
 from backend.models.schemas import Node, Edge, NodeType
 from backend.auth import get_optional_user
 from backend.utils.logger import get_logger
+from backend.dependencies import SettingsServiceDep, LLMClientFactoryDep
+from backend.api.settings_routes import LLMSettings
 
 logger = get_logger(__name__)
 
@@ -38,48 +40,7 @@ class ChatResponse(BaseModel):
     workflow_id: Optional[str] = None
 
 
-def get_llm_client(user_id: Optional[str] = None):
-    """Get OpenAI client - checks settings store first, then environment variable"""
-    from .settings_routes import get_active_llm_config
-    
-    # Try to get LLM config from settings
-    llm_config = get_active_llm_config(user_id)
-    
-    api_key = None
-    base_url = "https://api.openai.com/v1"
-    model = "gpt-4"
-    
-    if llm_config:
-        # Use settings configuration
-        api_key = llm_config.get("api_key")
-        base_url = llm_config.get("base_url", "https://api.openai.com/v1")
-        model = llm_config.get("model", "gpt-4")
-        print(f"✅ Using LLM config from settings: model={model}, base_url={base_url}, has_key={bool(api_key)}")
-    else:
-        print(f"⚠️ No LLM config found in settings store for user: {user_id or 'anonymous'}")
-    
-    # Fallback to environment variable
-    if not api_key:
-        api_key = os.getenv("OPENAI_API_KEY")
-        if api_key:
-            print(f"⚠️ Using API key from environment variable")
-    
-    if not api_key:
-        raise ValueError("OpenAI API key not configured. Please go to Settings, add an LLM provider with a valid API key, enable it, and click 'Sync Now'.")
-    
-    # Check if API key is still the placeholder
-    api_key_lower = api_key.lower()
-    if (api_key == "your-api-key-here" or 
-        "your-api" in api_key_lower or 
-        api_key.startswith("your-api") or
-        "*****here" in api_key or
-        api_key == "your-api*****here"):
-        raise ValueError("Invalid API key detected. Please go to Settings, add an LLM provider with a valid API key, enable it, and click 'Sync Now'.")
-    
-    try:
-        return AsyncOpenAI(api_key=api_key, base_url=base_url)
-    except Exception as e:
-        raise ValueError(f"Failed to initialize OpenAI client: {str(e)}")
+# get_llm_client function removed - now using LLMClientFactory via dependency injection
 
 
 def get_workflow_tools(workflow_id: Optional[str] = None) -> List[Dict[str, Any]]:
@@ -290,16 +251,17 @@ async def get_workflow_context(db: AsyncSession, workflow_id: Optional[str]) -> 
 async def chat_with_workflow(
     request: ChatRequest,
     db: AsyncSession = Depends(get_db),
-    current_user: Optional[UserDB] = Depends(get_optional_user)
+    current_user: Optional[UserDB] = Depends(get_optional_user),
+    settings_service: SettingsServiceDep = ...,
+    llm_client_factory: LLMClientFactoryDep = ...
 ):
     """Chat with LLM to create or update workflows"""
     try:
         # Initialize client inside try block - use user's settings if available
         user_id = current_user.id if current_user else None
         
-        # Get LLM config to determine model
-        from .settings_routes import get_active_llm_config, get_user_settings, LLMSettings
-        llm_config = get_active_llm_config(user_id)
+        # Get LLM config to determine model (for logging)
+        llm_config = settings_service.get_active_llm_config(user_id)
         model = llm_config.get("model", "gpt-4") if llm_config else "gpt-4"
         
         # Always query database directly to get latest iteration_limit (cache might be stale)
@@ -308,8 +270,6 @@ async def chat_with_workflow(
         user_settings = None
         
         try:
-            from sqlalchemy import select
-            from ..database.models import SettingsDB
             result = await db.execute(
                 select(SettingsDB).where(SettingsDB.user_id == uid)
             )
@@ -327,15 +287,15 @@ async def chat_with_workflow(
                 from .settings_routes import _settings_cache
                 _settings_cache[uid] = user_settings
             else:
-                # Try cache as fallback
-                user_settings = get_user_settings(user_id)
+                # Try cache as fallback using SettingsService
+                user_settings = settings_service.get_user_settings(user_id)
                 if user_settings:
                     iteration_limit = user_settings.iteration_limit
                     logger.debug(f"Using cached settings for {uid}, iteration_limit: {iteration_limit}")
         except Exception as e:
             logger.error(f"Failed to load settings from database: {e}", exc_info=True)
-            # Fallback to cache
-            user_settings = get_user_settings(user_id)
+            # Fallback to cache using SettingsService
+            user_settings = settings_service.get_user_settings(user_id)
             if user_settings:
                 iteration_limit = user_settings.iteration_limit
                 logger.warning(f"Using cached settings as fallback for {uid}, iteration_limit: {iteration_limit}")
@@ -343,7 +303,8 @@ async def chat_with_workflow(
         logger.info(f"Chat agent using iteration_limit: {iteration_limit} for user: {user_id or 'anonymous'}")
         print(f"🚀 Chat agent using iteration_limit: {iteration_limit} for user: {user_id or 'anonymous'}")
         
-        client = get_llm_client(user_id)
+        # Use LLMClientFactory to create client
+        client = llm_client_factory.create_client(user_id)
         
         # Get workflow context
         workflow_context = await get_workflow_context(db, request.workflow_id)

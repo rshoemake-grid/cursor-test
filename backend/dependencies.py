@@ -8,6 +8,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from .database import get_db
 from .services.workflow_service import WorkflowService
+from .services.settings_service import ISettingsService, SettingsService
+from .services.llm_client_factory import ILLMClientFactory, LLMClientFactory
 from .repositories.workflow_repository import WorkflowRepository
 from .repositories.execution_repository import ExecutionRepository
 
@@ -23,6 +25,24 @@ def get_workflow_service(db: DatabaseSession) -> WorkflowService:
 
 
 WorkflowServiceDep = Annotated[WorkflowService, Depends(get_workflow_service)]
+
+
+def get_settings_service() -> ISettingsService:
+    """Get settings service instance (uses global cache)"""
+    return SettingsService()
+
+
+SettingsServiceDep = Annotated[ISettingsService, Depends(get_settings_service)]
+
+
+def get_llm_client_factory(
+    settings_service: SettingsServiceDep
+) -> ILLMClientFactory:
+    """Get LLM client factory instance"""
+    return LLMClientFactory(settings_service)
+
+
+LLMClientFactoryDep = Annotated[ILLMClientFactory, Depends(get_llm_client_factory)]
 
 
 # Repository dependencies (for direct repository access if needed)

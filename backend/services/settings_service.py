@@ -3,13 +3,21 @@ Settings Service - SOLID Principles Refactoring
 Extracts settings management logic from routes into a service layer
 """
 from abc import ABC, abstractmethod
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, TYPE_CHECKING
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from ..api.settings_routes import LLMSettings, LLMProvider
+if TYPE_CHECKING:
+    from ..api.settings_routes import LLMSettings, LLMProvider
+
 from ..utils.logger import get_logger
 
 logger = get_logger(__name__)
+
+# Import at runtime to avoid circular dependency
+def _get_llm_settings_type():
+    """Lazy import to avoid circular dependency"""
+    from ..api.settings_routes import LLMSettings
+    return LLMSettings
 
 
 class ISettingsService(ABC):
@@ -29,7 +37,7 @@ class ISettingsService(ABC):
         pass
     
     @abstractmethod
-    def get_user_settings(self, user_id: Optional[str] = None) -> Optional[LLMSettings]:
+    def get_user_settings(self, user_id: Optional[str] = None) -> Optional[Any]:  # LLMSettings
         """
         Get full LLM settings (including iteration_limit) for a user
         
@@ -59,7 +67,7 @@ class ISettingsService(ABC):
 class SettingsService(ISettingsService):
     """Implementation of settings service"""
     
-    def __init__(self, cache: Optional[Dict[str, LLMSettings]] = None):
+    def __init__(self, cache: Optional[Dict[str, Any]] = None):
         """
         Initialize settings service
         
@@ -68,7 +76,7 @@ class SettingsService(ISettingsService):
         """
         self._cache = cache if cache is not None else self._get_global_cache()
     
-    def _get_global_cache(self) -> Dict[str, LLMSettings]:
+    def _get_global_cache(self) -> Dict[str, Any]:
         """Get reference to global settings cache"""
         from ..api.settings_routes import _settings_cache
         return _settings_cache
@@ -155,7 +163,7 @@ class SettingsService(ISettingsService):
         logger.warning(f"No enabled provider with valid API key found for user {uid}")
         return None
     
-    def get_user_settings(self, user_id: Optional[str] = None) -> Optional[LLMSettings]:
+    def get_user_settings(self, user_id: Optional[str] = None) -> Optional[Any]:  # LLMSettings
         """Get full LLM settings (including iteration_limit) for a user"""
         uid = user_id if user_id else "anonymous"
         

@@ -16,7 +16,8 @@ from ...database.models import UserDB
 from ...engine import WorkflowExecutor
 from ...auth import get_optional_user
 from ...utils.logger import get_logger
-from ...dependencies import WorkflowServiceDep
+from ...dependencies import WorkflowServiceDep, SettingsServiceDep
+from ...services.settings_service import ISettingsService
 from ...exceptions import WorkflowNotFoundError
 
 logger = get_logger(__name__)
@@ -98,12 +99,12 @@ def reconstruct_workflow_definition(definition: dict) -> WorkflowDefinition:
 @router.post("/workflows/{workflow_id}/execute", response_model=ExecutionResponse)
 async def execute_workflow(
     workflow_id: str,
-    execution_request: ExecutionRequest = None,
     db: AsyncSession = Depends(get_db),
-    current_user: Optional[UserDB] = Depends(get_optional_user)
+    current_user: Optional[UserDB] = Depends(get_optional_user),
+    settings_service: SettingsServiceDep = ...,
+    execution_request: ExecutionRequest = None
 ):
     """Execute a workflow (optionally authenticated)"""
-    from ...api.settings_routes import get_active_llm_config
     from ...dependencies import get_workflow_service
     
     try:
@@ -122,9 +123,9 @@ async def execute_workflow(
         
         logger.info(f"Executing workflow {workflow_id} for user_id: {user_id}, authenticated: {current_user is not None}")
         
-        # Get LLM config for execution
+        # Get LLM config for execution using SettingsService
         try:
-            llm_config = get_active_llm_config(user_id)
+            llm_config = settings_service.get_active_llm_config(user_id)
             logger.debug(f"Initial LLM config lookup result: {llm_config is not None}")
             
             # If not found in cache, try loading from database
@@ -132,7 +133,7 @@ async def execute_workflow(
                 from ...api.settings_routes import load_settings_into_cache
                 logger.info(f"LLM config not found in cache for user_id={user_id}, loading from database...")
                 await load_settings_into_cache(db)
-                llm_config = get_active_llm_config(user_id)
+                llm_config = settings_service.get_active_llm_config(user_id)
                 logger.debug(f"After loading from DB, LLM config result: {llm_config is not None}")
             
             if not llm_config:
