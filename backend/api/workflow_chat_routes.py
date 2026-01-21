@@ -542,7 +542,6 @@ After making changes to the workflow, use the save_workflow tool to persist them
                         
                         try:
                             # Get current workflow from database
-                            from sqlalchemy import select
                             from datetime import datetime
                             result = await db.execute(
                                 select(WorkflowDB).where(WorkflowDB.id == request.workflow_id)

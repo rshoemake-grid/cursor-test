@@ -11,6 +11,30 @@ from backend.database.db import get_db
 from backend.auth import get_optional_user, create_access_token
 
 
+def setup_dependency_mocks(app, mock_client):
+    """Helper function to set up dependency injection mocks"""
+    from backend.services.settings_service import ISettingsService
+    from backend.services.llm_client_factory import ILLMClientFactory
+    from backend.dependencies import get_settings_service, get_llm_client_factory
+    
+    mock_settings_service = Mock(spec=ISettingsService)
+    mock_settings_service.get_active_llm_config.return_value = {
+        "type": "openai",
+        "api_key": "sk-test-key-123456789012345678901234567890",
+        "base_url": "https://api.openai.com/v1",
+        "model": "gpt-4"
+    }
+    mock_settings_service.get_user_settings.return_value = Mock(iteration_limit=10)
+    
+    mock_llm_client_factory = Mock(spec=ILLMClientFactory)
+    mock_llm_client_factory.create_client = Mock(return_value=mock_client)
+    
+    app.dependency_overrides[get_settings_service] = lambda: mock_settings_service
+    app.dependency_overrides[get_llm_client_factory] = lambda: mock_llm_client_factory
+    
+    return mock_settings_service, mock_llm_client_factory
+
+
 @pytest.fixture
 async def test_user(db_session: AsyncSession):
     """Create a test user"""
@@ -113,9 +137,11 @@ async def test_chat_connect_nodes(db_session: AsyncSession, test_user: UserDB, t
     mock_response2.choices = [Mock()]
     mock_response2.choices[0].message = mock_message_final
     
+    mock_client = AsyncMock()
+    mock_client.chat.completions.create = AsyncMock(side_effect=[mock_response1, mock_response2])
+    setup_dependency_mocks(app, mock_client)
+    
     with patch("backend.api.workflow_chat_routes.AsyncOpenAI") as mock_openai_class:
-        mock_client = AsyncMock()
-        mock_client.chat.completions.create = AsyncMock(side_effect=[mock_response1, mock_response2])
         mock_openai_class.return_value = mock_client
         
         try:
@@ -176,9 +202,11 @@ async def test_chat_disconnect_nodes(db_session: AsyncSession, test_user: UserDB
     mock_response2.choices = [Mock()]
     mock_response2.choices[0].message = mock_message_final
     
+    mock_client = AsyncMock()
+    mock_client.chat.completions.create = AsyncMock(side_effect=[mock_response1, mock_response2])
+    setup_dependency_mocks(app, mock_client)
+    
     with patch("backend.api.workflow_chat_routes.AsyncOpenAI") as mock_openai_class:
-        mock_client = AsyncMock()
-        mock_client.chat.completions.create = AsyncMock(side_effect=[mock_response1, mock_response2])
         mock_openai_class.return_value = mock_client
         
         try:
@@ -235,9 +263,11 @@ async def test_chat_get_workflow_info(db_session: AsyncSession, test_user: UserD
     mock_response2.choices = [Mock()]
     mock_response2.choices[0].message = mock_message_final
     
+    mock_client = AsyncMock()
+    mock_client.chat.completions.create = AsyncMock(side_effect=[mock_response1, mock_response2])
+    setup_dependency_mocks(app, mock_client)
+    
     with patch("backend.api.workflow_chat_routes.AsyncOpenAI") as mock_openai_class:
-        mock_client = AsyncMock()
-        mock_client.chat.completions.create = AsyncMock(side_effect=[mock_response1, mock_response2])
         mock_openai_class.return_value = mock_client
         
         try:
@@ -302,9 +332,11 @@ async def test_chat_add_node_with_config(db_session: AsyncSession, test_user: Us
     mock_response2.choices = [Mock()]
     mock_response2.choices[0].message = mock_message_final
     
+    mock_client = AsyncMock()
+    mock_client.chat.completions.create = AsyncMock(side_effect=[mock_response1, mock_response2])
+    setup_dependency_mocks(app, mock_client)
+    
     with patch("backend.api.workflow_chat_routes.AsyncOpenAI") as mock_openai_class:
-        mock_client = AsyncMock()
-        mock_client.chat.completions.create = AsyncMock(side_effect=[mock_response1, mock_response2])
         mock_openai_class.return_value = mock_client
         
         try:

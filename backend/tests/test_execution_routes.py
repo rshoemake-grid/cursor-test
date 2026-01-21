@@ -3,7 +3,7 @@ import pytest
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 import uuid
-from unittest.mock import patch, AsyncMock
+from unittest.mock import patch, AsyncMock, Mock
 from datetime import datetime
 
 from backend.database.models import WorkflowDB, ExecutionDB, UserDB, SettingsDB
@@ -155,28 +155,31 @@ async def test_execute_workflow_success(db_session: AsyncSession, test_workflow:
         mock_executor.execute = AsyncMock(return_value=execution_state)
         mock_executor_class.return_value = mock_executor
         
-        # Also need to mock get_active_llm_config
-        with patch("backend.api.settings_routes.get_active_llm_config") as mock_get_config:
-            mock_get_config.return_value = {
-                "type": "openai",
-                "api_key": "sk-test-key-123456789012345678901234567890",
-                "base_url": "https://api.openai.com/v1",
-                "model": "gpt-4"
-            }
-            
-            try:
-                async with AsyncClient(app=app, base_url="http://test") as client:
-                    # ExecutionRequest is optional, can send empty body or just inputs
-                    response = await client.post(
-                        f"/api/workflows/{test_workflow.id}/execute",
-                        json={"inputs": {"test": "value"}, "workflow_id": test_workflow.id}
-                    )
-                    assert response.status_code == 200
-                    data = response.json()
-                    assert "execution_id" in data
-                    assert data["status"] == "running"
-            finally:
-                app.dependency_overrides.clear()
+        # Mock SettingsService dependency
+        from backend.services.settings_service import ISettingsService
+        mock_settings_service = Mock(spec=ISettingsService)
+        mock_settings_service.get_active_llm_config.return_value = {
+            "type": "openai",
+            "api_key": "sk-test-key-123456789012345678901234567890",
+            "base_url": "https://api.openai.com/v1",
+            "model": "gpt-4"
+        }
+        from backend.dependencies import get_settings_service
+        app.dependency_overrides[get_settings_service] = lambda: mock_settings_service
+        
+        try:
+            async with AsyncClient(app=app, base_url="http://test") as client:
+                # ExecutionRequest is optional, can send empty body or just inputs
+                response = await client.post(
+                    f"/api/workflows/{test_workflow.id}/execute",
+                    json={"inputs": {"test": "value"}, "workflow_id": test_workflow.id}
+                )
+                assert response.status_code == 200
+                data = response.json()
+                assert "execution_id" in data
+                assert data["status"] == "running"
+        finally:
+            app.dependency_overrides.clear()
 
 
 @pytest.mark.asyncio
@@ -260,25 +263,29 @@ async def test_execute_workflow_invalid_definition(db_session: AsyncSession, tes
     
     app.dependency_overrides[get_db] = override_get_db
     
-    # Mock get_active_llm_config
-    with patch("backend.api.settings_routes.get_active_llm_config") as mock_get_config:
-        mock_get_config.return_value = {
-            "type": "openai",
-            "api_key": "sk-test-key-123456789012345678901234567890",
-            "base_url": "https://api.openai.com/v1",
-            "model": "gpt-4"
-        }
-        
-        try:
-            async with AsyncClient(app=app, base_url="http://test") as client:
-                response = await client.post(
-                    f"/api/workflows/{workflow.id}/execute",
-                    json={"workflow_id": workflow.id, "inputs": {}}
-                )
-                # Invalid definition might be caught during reconstruction or execution
-                # The executor might handle it gracefully, so check for any error status
-                # or if it succeeds, that's also acceptable (executor handles invalid definitions)
-                assert response.status_code in [200, 422, 500]
-        finally:
-            app.dependency_overrides.clear()
+    # Mock SettingsService dependency
+    from backend.services.settings_service import ISettingsService
+    from backend.dependencies import get_settings_service
+    
+    mock_settings_service = Mock(spec=ISettingsService)
+    mock_settings_service.get_active_llm_config.return_value = {
+        "type": "openai",
+        "api_key": "sk-test-key-123456789012345678901234567890",
+        "base_url": "https://api.openai.com/v1",
+        "model": "gpt-4"
+    }
+    app.dependency_overrides[get_settings_service] = lambda: mock_settings_service
+    
+    try:
+        async with AsyncClient(app=app, base_url="http://test") as client:
+            response = await client.post(
+                f"/api/workflows/{workflow.id}/execute",
+                json={"workflow_id": workflow.id, "inputs": {}}
+            )
+            # Invalid definition might be caught during reconstruction or execution
+            # The executor might handle it gracefully, so check for any error status
+            # or if it succeeds, that's also acceptable (executor handles invalid definitions)
+            assert response.status_code in [200, 422, 500]
+    finally:
+        app.dependency_overrides.clear()
 

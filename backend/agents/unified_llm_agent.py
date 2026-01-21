@@ -94,7 +94,22 @@ class UnifiedLLMAgent(BaseAgent):
                 "enable it, and click 'Sync Now'."
             )
         
-        # Use shared utility for validation
+        # Trim whitespace
+        api_key = api_key.strip()
+        if not api_key:
+            raise ValueError(
+                "API key is empty. Please go to Settings, add an LLM provider with a valid API key, "
+                "enable it, and click 'Sync Now'."
+            )
+        
+        # If it's very short, it's likely a placeholder
+        if len(api_key) < 10:
+            raise ValueError(
+                "API key appears to be a placeholder (too short). Please go to Settings, add a valid API key, "
+                "enable it, and click 'Sync Now'."
+            )
+        
+        # Use shared utility for additional validation
         if not is_valid_api_key(api_key):
             raise ValueError(
                 "Invalid API key detected. Please go to Settings, add an LLM provider with a valid API key, "
