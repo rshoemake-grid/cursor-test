@@ -86,50 +86,16 @@ class UnifiedLLMAgent(BaseAgent):
     
     def _validate_api_key(self, api_key: str) -> None:
         """Validate that API key is not a placeholder - only flag obvious placeholders"""
+        from ..utils.settings_utils import is_valid_api_key
+        
         if not api_key:
             raise ValueError(
                 "API key is empty. Please go to Settings, add an LLM provider with a valid API key, "
                 "enable it, and click 'Sync Now'."
             )
         
-        # Trim whitespace
-        api_key = api_key.strip()
-        if not api_key:
-            raise ValueError(
-                "API key is empty. Please go to Settings, add an LLM provider with a valid API key, "
-                "enable it, and click 'Sync Now'."
-            )
-        
-        # If it's very short, it's likely a placeholder
-        if len(api_key) < 10:
-            raise ValueError(
-                "API key appears to be a placeholder (too short). Please go to Settings, add a valid API key, "
-                "enable it, and click 'Sync Now'."
-            )
-        
-        api_key_lower = api_key.lower()
-        
-        # Only flag exact placeholder matches - be very conservative
-        # Since connection test works, we know the key is valid, so only reject obvious placeholders
-        exact_placeholders = [
-            "your-api-key-here",
-            "your-api*****here",
-            "sk-your-api-key-here",
-            "sk-your-api*****here",
-            "your-api-key",
-            "api-key-here"
-        ]
-        
-        # Check exact matches (case-insensitive)
-        if api_key_lower in [p.lower() for p in exact_placeholders]:
-            raise ValueError(
-                "Invalid API key detected. Please go to Settings, add an LLM provider with a valid API key, "
-                "enable it, and click 'Sync Now'. The API key cannot be a placeholder."
-            )
-        
-        # Check if it's exactly a placeholder pattern (very short and contains placeholder text)
-        # Only flag if it's clearly a placeholder, not if it's a real key that happens to contain these words
-        if len(api_key) < 25 and ("your-api-key-here" in api_key_lower or "your-api*****here" in api_key_lower):
+        # Use shared utility for validation
+        if not is_valid_api_key(api_key):
             raise ValueError(
                 "Invalid API key detected. Please go to Settings, add an LLM provider with a valid API key, "
                 "enable it, and click 'Sync Now'. The API key cannot be a placeholder."

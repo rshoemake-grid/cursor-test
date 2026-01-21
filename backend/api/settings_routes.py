@@ -366,85 +366,27 @@ def get_active_llm_config(user_id: Optional[str] = None) -> Optional[Dict[str, A
         except Exception as e:
             logger.error(f"Failed to load settings from database: {e}", exc_info=True)
     
-    if not settings:
-        logger.warning(f"User {uid} not found in cache and no anonymous fallback - settings need to be loaded from database via API")
-        return None
-    
-    # If default_model is set, try to find provider that has that model
-    if settings.default_model:
-        for provider in settings.providers:
-            if provider.enabled and provider.apiKey and _is_valid_api_key(provider.apiKey):
-                # Check if this provider has the selected model
-                normalized_selected = settings.default_model.lower().strip()
-                normalized_provider_models = [m.lower().strip() for m in provider.models]
-                if normalized_selected in normalized_provider_models:
-                    # Find the original model name (preserve case from provider)
-                    original_model_name = next((m for m in provider.models if m.lower().strip() == normalized_selected), settings.default_model)
-                    config = {
-                        "type": provider.type,
-                        "api_key": provider.apiKey.strip(),
-                        "base_url": provider.baseUrl,
-                        "model": original_model_name
-                    }
-                    logger.info(f"Using provider {provider.name} with selected model {original_model_name} for user {uid}")
-                    return config
-    
-    # Fallback to first enabled provider's defaultModel
-    for provider in settings.providers:
-        logger.debug(f"Checking provider {provider.name}: enabled={provider.enabled}, has_key={len(provider.apiKey) > 0}")
-        # Check that provider is enabled, has an API key, and the API key is not a placeholder
-        if provider.enabled and provider.apiKey and _is_valid_api_key(provider.apiKey):
-            config = {
-                "type": provider.type,
-                "api_key": provider.apiKey.strip(),  # Trim whitespace
-                "base_url": provider.baseUrl,
-                "model": provider.defaultModel
-            }
-            logger.info(f"Using provider {provider.name} with default model {provider.defaultModel} for user {uid}")
-            return config
-    
-    logger.warning(f"No enabled provider with valid API key found for user {uid}")
-    return None
+    # Delegate to SettingsService for the core logic
+    from ..services.settings_service import SettingsService
+    service = SettingsService()
+    return service.get_active_llm_config(user_id)
 
 
 def get_provider_for_model(model_name: str, user_id: Optional[str] = None) -> Optional[Dict[str, Any]]:
-    """Find the provider that owns the given model name"""
+    """Find the provider that owns the given model name
+    
+    Note: This function delegates to SettingsService for the core logic.
+    """
     uid = user_id if user_id else "anonymous"
     
     if uid not in _settings_cache:
         logger.warning(f"No settings found in cache for user '{uid}' - settings need to be loaded from database via API")
         return None
     
-    settings = _settings_cache[uid]
-    
-    logger.debug(f"Searching for provider for model '{model_name}' (user: {uid}), available providers: {[p.name for p in settings.providers]}")
-    
-    # Normalize model name for comparison (lowercase, strip whitespace)
-    normalized_model_name = model_name.lower().strip()
-    
-    # Search through all enabled providers to find one that has this model
-    for provider in settings.providers:
-        logger.debug(f"Checking provider '{provider.name}': enabled={provider.enabled}, has_key={bool(provider.apiKey)}, models={len(provider.models) if provider.models else 0}")
-        
-        # Check that provider is enabled, has a valid (non-placeholder) API key, and has models
-        if provider.enabled and provider.apiKey and _is_valid_api_key(provider.apiKey) and provider.models:
-            # Check if this provider has the model (case-insensitive match)
-            normalized_provider_models = [m.lower().strip() for m in provider.models]
-            if normalized_model_name in normalized_provider_models:
-                # Find the original model name (preserve case from provider)
-                original_model_name = next((m for m in provider.models if m.lower().strip() == normalized_model_name), model_name)
-                logger.info(f"Found provider '{provider.name}' for model '{model_name}' (matched: {original_model_name})")
-                return {
-                    "type": provider.type,
-                    "api_key": provider.apiKey.strip(),  # Trim whitespace
-                    "base_url": provider.baseUrl,
-                    "model": original_model_name  # Use original model name from provider
-                }
-            else:
-                logger.debug(f"  Model '{model_name}' not in provider '{provider.name}' models: {provider.models}")
-    
-    logger.warning(f"No provider found for model '{model_name}' (searched: {normalized_model_name})")
-    return None
+    # Delegate to SettingsService for the core logic
+    from ..services.settings_service import SettingsService
+    service = SettingsService()
+    return service.get_provider_for_model(model_name, user_id)
 
 
 def get_user_settings(user_id: Optional[str] = None) -> Optional[LLMSettings]:
@@ -455,17 +397,13 @@ def get_user_settings(user_id: Optional[str] = None) -> Optional[LLMSettings]:
         
     Returns:
         LLMSettings object if found, None otherwise
+        
+    Note: This function delegates to SettingsService for the core logic, but includes
+    additional logic to load from database if cache is empty (for backward compatibility).
     """
     uid = user_id if user_id else "anonymous"
     
-    # Try cache first
-    if uid in _settings_cache:
-        return _settings_cache[uid]
-    elif user_id and "anonymous" in _settings_cache:
-        # Fallback to anonymous settings if user not found
-        return _settings_cache["anonymous"]
-    
-    # If cache is empty, try to load from database
+    # If cache is empty, try to load from database (fallback for backward compatibility)
     if not _settings_cache:
         logger.warning(f"Settings cache is empty, attempting to load from database for user: {uid}")
         try:
@@ -496,15 +434,11 @@ def get_user_settings(user_id: Optional[str] = None) -> Optional[LLMSettings]:
                 logger.warning("Cannot load settings from database synchronously - event loop is running")
             else:
                 loop.run_until_complete(load_from_db())
-                
-                # Try again after loading
-                if uid in _settings_cache:
-                    return _settings_cache[uid]
-                elif user_id and "anonymous" in _settings_cache:
-                    return _settings_cache["anonymous"]
         except Exception as e:
             logger.error(f"Failed to load settings from database: {e}", exc_info=True)
     
-    logger.warning(f"User {uid} not found in cache and no anonymous fallback")
-    return None
+    # Delegate to SettingsService for the core logic
+    from ..services.settings_service import SettingsService
+    service = SettingsService()
+    return service.get_user_settings(user_id)
 

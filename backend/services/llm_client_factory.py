@@ -50,20 +50,8 @@ class LLMClientFactory(ILLMClientFactory):
     
     def _is_placeholder_api_key(self, api_key: str) -> bool:
         """Check if API key is a placeholder"""
-        if not api_key:
-            return True
-        
-        api_key_lower = api_key.lower()
-        placeholders = [
-            "your-api-key-here",
-            "your-api*****here",
-            "sk-your-api-key-here",
-            "sk-your-api*****here",
-        ]
-        
-        return api_key_lower in [p.lower() for p in placeholders] or (
-            len(api_key) < 25 and ("your-api-key-here" in api_key_lower or "your-api*****here" in api_key_lower)
-        )
+        from ..utils.settings_utils import is_valid_api_key
+        return not is_valid_api_key(api_key)
     
     def create_client(self, user_id: Optional[str] = None) -> AsyncOpenAI:
         """Create LLM client using settings service and provider strategy"""

@@ -96,19 +96,21 @@ class SettingsService(ISettingsService):
         if settings.default_model:
             for provider in settings.providers:
                 if provider.enabled and provider.apiKey and self._is_valid_api_key(provider.apiKey):
-                    normalized_selected = settings.default_model.lower().strip()
-                    normalized_provider_models = [m.lower().strip() for m in provider.models]
+                    from ..utils.provider_utils import normalize_model_name, normalize_model_names
+                    normalized_selected = normalize_model_name(settings.default_model)
+                    normalized_provider_models = normalize_model_names(provider.models)
                     if normalized_selected in normalized_provider_models:
-                        original_model_name = next(
-                            (m for m in provider.models if m.lower().strip() == normalized_selected),
-                            settings.default_model
+                        from ..utils.provider_utils import find_original_model_name, build_provider_config
+                        original_model_name = find_original_model_name(
+                            provider.models,
+                            normalized_selected
+                        ) or settings.default_model
+                        config = build_provider_config(
+                            provider.type,
+                            provider.apiKey,
+                            provider.baseUrl,
+                            original_model_name
                         )
-                        config = {
-                            "type": provider.type,
-                            "api_key": provider.apiKey.strip(),
-                            "base_url": provider.baseUrl,
-                            "model": original_model_name
-                        }
                         logger.info(f"Using provider {provider.name} with selected model {original_model_name} for user {uid}")
                         return config
         
@@ -116,12 +118,13 @@ class SettingsService(ISettingsService):
         for provider in settings.providers:
             logger.debug(f"Checking provider {provider.name}: enabled={provider.enabled}, has_key={len(provider.apiKey) > 0}")
             if provider.enabled and provider.apiKey and self._is_valid_api_key(provider.apiKey):
-                config = {
-                    "type": provider.type,
-                    "api_key": provider.apiKey.strip(),
-                    "base_url": provider.baseUrl,
-                    "model": provider.defaultModel
-                }
+                from ..utils.provider_utils import build_provider_config
+                config = build_provider_config(
+                    provider.type,
+                    provider.apiKey,
+                    provider.baseUrl,
+                    provider.defaultModel
+                )
                 logger.info(f"Using provider {provider.name} with default model {provider.defaultModel} for user {uid}")
                 return config
         
@@ -154,25 +157,29 @@ class SettingsService(ISettingsService):
         
         logger.debug(f"Searching for provider for model '{model_name}' (user: {uid})")
         
-        normalized_model_name = model_name.lower().strip()
+        from ..utils.provider_utils import (
+            normalize_model_name, normalize_model_names,
+            find_original_model_name, build_provider_config
+        )
+        normalized_model_name = normalize_model_name(model_name)
         
         for provider in settings.providers:
             logger.debug(f"Checking provider '{provider.name}': enabled={provider.enabled}, has_key={bool(provider.apiKey)}")
             
             if provider.enabled and provider.apiKey and self._is_valid_api_key(provider.apiKey) and provider.models:
-                normalized_provider_models = [m.lower().strip() for m in provider.models]
+                normalized_provider_models = normalize_model_names(provider.models)
                 if normalized_model_name in normalized_provider_models:
-                    original_model_name = next(
-                        (m for m in provider.models if m.lower().strip() == normalized_model_name),
-                        model_name
-                    )
+                    original_model_name = find_original_model_name(
+                        provider.models,
+                        normalized_model_name
+                    ) or model_name
                     logger.info(f"Found provider '{provider.name}' for model '{model_name}' (matched: {original_model_name})")
-                    return {
-                        "type": provider.type,
-                        "api_key": provider.apiKey.strip(),
-                        "base_url": provider.baseUrl,
-                        "model": original_model_name
-                    }
+                    return build_provider_config(
+                        provider.type,
+                        provider.apiKey,
+                        provider.baseUrl,
+                        original_model_name
+                    )
         
         logger.warning(f"No provider found for model '{model_name}'")
         return None
