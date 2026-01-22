@@ -35,6 +35,7 @@ interface AgentTemplate {
   published_at?: string;
   author_id?: string | null;
   author_name?: string | null;
+  is_official?: boolean;
 }
 
 type TabType = 'agents' | 'workflows'
@@ -60,6 +61,146 @@ export default function MarketplacePage() {
       fetchAgents();
     }
   }, [category, sortBy, activeTab]);
+
+  // Seed official agents from official workflows (one-time)
+  useEffect(() => {
+    const seedOfficialAgents = async () => {
+      const seededKey = 'officialAgentsSeeded';
+      // Clear the flag to force re-seeding (remove this line after first successful seed)
+      localStorage.removeItem(seededKey);
+      
+      if (localStorage.getItem(seededKey)) {
+        console.log('[Marketplace] Official agents already seeded, skipping');
+        return; // Already seeded
+      }
+
+      console.log('[Marketplace] Starting to seed official agents...');
+      try {
+        // Fetch all official workflows
+        const response = await fetch('http://localhost:8000/api/templates/?sort_by=popular');
+        if (!response.ok) {
+          console.error('[Marketplace] Failed to fetch templates:', response.statusText);
+          return;
+        }
+        const workflows = await response.json();
+        console.log('[Marketplace] Fetched workflows:', workflows.length);
+        const officialWorkflows = workflows.filter((w: Template) => w.is_official);
+        console.log('[Marketplace] Official workflows found:', officialWorkflows.length);
+
+        if (officialWorkflows.length === 0) {
+          console.log('[Marketplace] No official workflows found, marking as seeded');
+          localStorage.setItem(seededKey, 'true');
+          return;
+        }
+
+        // Fetch workflow details using the /use endpoint to get nodes
+        // Note: This creates a temporary workflow but we only use it to extract agent nodes
+        const agentsToAdd: AgentTemplate[] = [];
+        for (const workflow of officialWorkflows) {
+          try {
+            console.log(`[Marketplace] Processing workflow: ${workflow.name} (${workflow.id})`);
+            // Use the /use endpoint to get the full workflow with nodes
+            const workflowResponse = await fetch(`http://localhost:8000/api/templates/${workflow.id}/use`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' }
+            });
+            
+            if (!workflowResponse.ok) {
+              console.error(`[Marketplace] Failed to fetch workflow ${workflow.id}: ${workflowResponse.statusText}`);
+              continue;
+            }
+            
+            const workflowDetail = await workflowResponse.json();
+            console.log(`[Marketplace] Workflow ${workflow.name} has ${workflowDetail.nodes?.length || 0} nodes`);
+            
+            // Extract agent nodes from workflow nodes
+            if (workflowDetail.nodes && Array.isArray(workflowDetail.nodes)) {
+              const agentNodes = workflowDetail.nodes.filter((node: any) => {
+                const nodeType = node.type || node.data?.type;
+                const hasAgentConfig = node.agent_config || node.data?.agent_config;
+                const isAgent = nodeType === 'agent' && hasAgentConfig;
+                if (isAgent) {
+                  console.log(`[Marketplace] Found agent node: ${node.id || node.data?.id}`, {
+                    type: nodeType,
+                    hasConfig: !!hasAgentConfig,
+                    name: node.name || node.data?.name
+                  });
+                }
+                return isAgent;
+              });
+
+              console.log(`[Marketplace] Found ${agentNodes.length} agent nodes in workflow ${workflow.name}`);
+
+              for (const agentNode of agentNodes) {
+                // Create unique agent ID based on workflow and node
+                const nodeId = agentNode.id || agentNode.data?.id || `node_${Date.now()}`;
+                const agentId = `official_${workflow.id}_${nodeId}`;
+                
+                // Check if agent already exists
+                const existingAgents = localStorage.getItem('publishedAgents');
+                const agents: AgentTemplate[] = existingAgents ? JSON.parse(existingAgents) : [];
+                if (agents.some(a => a.id === agentId)) {
+                  console.log(`[Marketplace] Agent ${agentId} already exists, skipping`);
+                  continue; // Skip if already exists
+                }
+
+                const agentConfig = agentNode.agent_config || agentNode.data?.agent_config || {};
+                const nodeName = agentNode.name || agentNode.data?.name || agentNode.data?.label || 'Agent';
+                const nodeDescription = agentNode.description || agentNode.data?.description || `Agent from ${workflow.name}`;
+
+                console.log(`[Marketplace] Creating official agent: ${nodeName} (${agentId})`);
+
+                agentsToAdd.push({
+                  id: agentId,
+                  name: nodeName,
+                  label: nodeName,
+                  description: nodeDescription,
+                  category: workflow.category || 'automation',
+                  tags: [...(workflow.tags || []), 'official', workflow.name.toLowerCase().replace(/\s+/g, '-')],
+                  difficulty: workflow.difficulty || 'intermediate',
+                  estimated_time: workflow.estimated_time || '5 min',
+                  agent_config: agentConfig,
+                  published_at: workflow.created_at || new Date().toISOString(),
+                  author_id: workflow.author_id || null,
+                  author_name: workflow.author_name || 'System',
+                  is_official: true
+                });
+              }
+            } else {
+              console.log(`[Marketplace] Workflow ${workflow.name} has no nodes array`);
+            }
+          } catch (error) {
+            console.error(`[Marketplace] Failed to fetch workflow ${workflow.id}:`, error);
+          }
+        }
+
+        // Add official agents to localStorage
+        if (agentsToAdd.length > 0) {
+          const existingAgents = localStorage.getItem('publishedAgents');
+          const agents: AgentTemplate[] = existingAgents ? JSON.parse(existingAgents) : [];
+          agents.push(...agentsToAdd);
+          localStorage.setItem('publishedAgents', JSON.stringify(agents));
+          console.log(`[Marketplace] Seeded ${agentsToAdd.length} official agents from workflows`);
+          console.log(`[Marketplace] Total agents in storage: ${agents.length}`);
+          
+          // Refresh the agents list if we're on the agents tab
+          if (activeTab === 'agents') {
+            fetchAgents();
+          }
+        } else {
+          console.log('[Marketplace] No agents to add');
+        }
+
+        localStorage.setItem(seededKey, 'true');
+        console.log('[Marketplace] Seeding complete');
+      } catch (error) {
+        console.error('[Marketplace] Failed to seed official agents:', error);
+      }
+    };
+
+    seedOfficialAgents();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Run once on mount
 
   const fetchTemplates = async () => {
     setLoading(true);
@@ -128,21 +269,30 @@ export default function MarketplacePage() {
         );
       }
       
-      // Apply sorting
-      if (sortBy === 'popular') {
-        // For now, sort by published_at (most recent first)
-        agentsData.sort((a, b) => {
+      // Sort: Official agents first, then by selected sort order
+      agentsData.sort((a, b) => {
+        // First, prioritize official agents
+        const aIsOfficial = a.is_official ? 1 : 0;
+        const bIsOfficial = b.is_official ? 1 : 0;
+        if (aIsOfficial !== bIsOfficial) {
+          return bIsOfficial - aIsOfficial; // Official first (1 - 0 = 1, so b comes first)
+        }
+        
+        // If both are official or both are not, apply the selected sort
+        if (sortBy === 'popular') {
+          // For now, sort by published_at (most recent first)
           const dateA = a.published_at ? new Date(a.published_at).getTime() : 0;
           const dateB = b.published_at ? new Date(b.published_at).getTime() : 0;
           return dateB - dateA;
-        });
-      } else if (sortBy === 'recent') {
-        agentsData.sort((a, b) => {
+        } else if (sortBy === 'recent') {
           const dateA = a.published_at ? new Date(a.published_at).getTime() : 0;
           const dateB = b.published_at ? new Date(b.published_at).getTime() : 0;
           return dateB - dateA;
-        });
-      }
+        }
+        
+        // Default: alphabetical by name
+        return (a.name || '').localeCompare(b.name || '');
+      });
       
       setAgents(agentsData);
     } catch (error) {
@@ -184,11 +334,22 @@ export default function MarketplacePage() {
     
     const selectedAgents = agents.filter(a => selectedAgentIds.has(a.id));
     
+    // Filter out official agents - they cannot be deleted
+    const officialAgents = selectedAgents.filter(a => a.is_official);
+    const deletableAgents = selectedAgents.filter(a => !a.is_official);
+    
+    if (officialAgents.length > 0) {
+      showError(`Cannot delete ${officialAgents.length} official agent(s). Official agents cannot be deleted.`);
+      if (deletableAgents.length === 0) {
+        return; // All selected are official, nothing to delete
+      }
+    }
+    
     // Debug logging
     console.log('[Marketplace] Delete agents check:', {
-      selectedCount: selectedAgents.length,
+      selectedCount: deletableAgents.length,
       user: user ? { id: user.id, username: user.username } : null,
-      selectedAgents: selectedAgents.map(a => ({
+      selectedAgents: deletableAgents.map(a => ({
         id: a.id,
         name: a.name,
         author_id: a.author_id,
@@ -198,7 +359,7 @@ export default function MarketplacePage() {
       }))
     });
     
-    const userOwnedAgents = selectedAgents.filter(a => {
+    const userOwnedAgents = deletableAgents.filter(a => {
       if (!user || !a.author_id || !user.id) return false;
       const authorIdStr = String(a.author_id);
       const userIdStr = String(user.id);
@@ -217,18 +378,26 @@ export default function MarketplacePage() {
     
     if (userOwnedAgents.length === 0) {
       // Check if any agents have author_id set
-      const agentsWithAuthorId = selectedAgents.filter(a => a.author_id);
+      const agentsWithAuthorId = deletableAgents.filter(a => a.author_id);
       if (agentsWithAuthorId.length === 0) {
-        showError('Selected agents were published before author tracking was added. Please republish them to enable deletion.');
+        if (officialAgents.length > 0) {
+          showError('Selected agents were published before author tracking was added or are official. Please republish them to enable deletion.');
+        } else {
+          showError('Selected agents were published before author tracking was added. Please republish them to enable deletion.');
+        }
       } else {
-        showError(`You can only delete agents that you published. ${selectedAgents.length} selected, ${agentsWithAuthorId.length} have author info, but none match your user ID.`);
+        if (officialAgents.length > 0) {
+          showError(`You can only delete agents that you published (official agents cannot be deleted). ${deletableAgents.length} selected, ${agentsWithAuthorId.length} have author info, but none match your user ID.`);
+        } else {
+          showError(`You can only delete agents that you published. ${deletableAgents.length} selected, ${agentsWithAuthorId.length} have author info, but none match your user ID.`);
+        }
       }
       return;
     }
     
-    if (userOwnedAgents.length < selectedAgents.length) {
+    if (userOwnedAgents.length < deletableAgents.length) {
       const confirmed = await showConfirm(
-        `You can only delete ${userOwnedAgents.length} of ${selectedAgents.length} selected agent(s). Delete only the ones you own?`,
+        `You can only delete ${userOwnedAgents.length} of ${deletableAgents.length} selected agent(s). Delete only the ones you own?`,
         { title: 'Partial Delete', confirmText: 'Delete', cancelText: 'Cancel', type: 'warning' }
       );
       if (!confirmed) return;
@@ -454,13 +623,25 @@ export default function MarketplacePage() {
                     <Download className="w-4 h-4" />
                     Use {selectedAgentIds.size} Agent{selectedAgentIds.size > 1 ? 's' : ''}
                   </button>
-                  <button
-                    onClick={deleteSelectedAgents}
-                    className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center gap-2"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                    Delete {selectedAgentIds.size} Agent{selectedAgentIds.size > 1 ? 's' : ''}
-                  </button>
+                  {(() => {
+                    // Check if any selected agents are official
+                    const selectedAgents = agents.filter(a => selectedAgentIds.has(a.id));
+                    const hasOfficialAgent = selectedAgents.some(a => a.is_official);
+                    
+                    // Only show delete button if no official agents are selected
+                    if (!hasOfficialAgent) {
+                      return (
+                        <button
+                          onClick={deleteSelectedAgents}
+                          className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center gap-2"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                          Delete {selectedAgentIds.size} Agent{selectedAgentIds.size > 1 ? 's' : ''}
+                        </button>
+                      );
+                    }
+                    return null;
+                  })()}
                 </>
               )}
             </div>
@@ -653,6 +834,11 @@ export default function MarketplacePage() {
                           </h3>
                         </div>
                         <div className="flex items-center gap-2">
+                          {agent.is_official && (
+                            <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded">
+                              Official
+                            </span>
+                          )}
                         </div>
                       </div>
 
