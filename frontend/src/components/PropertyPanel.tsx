@@ -1267,6 +1267,472 @@ export default function PropertyPanel({ selectedNodeId, setSelectedNodeId, selec
         )}
 
         {/* Local File System configuration */}
+        {selectedNode.type === 'database' && (
+          <>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Database Type</label>
+              <select
+                value={selectedNode.data.input_config?.database_type || 'postgresql'}
+                onChange={(e) =>
+                  handleConfigUpdate('input_config', 'database_type', e.target.value)
+                }
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+              >
+                <option value="postgresql">PostgreSQL</option>
+                <option value="mysql">MySQL</option>
+                <option value="sqlite">SQLite</option>
+                <option value="mongodb">MongoDB</option>
+                <option value="mssql">Microsoft SQL Server</option>
+                <option value="oracle">Oracle</option>
+              </select>
+              <p className="text-xs text-gray-500 mt-1">
+                Type of database to connect to
+              </p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Connection Mode</label>
+              <select
+                value={selectedNode.data.input_config?.mode || 'read'}
+                onChange={(e) =>
+                  handleConfigUpdate('input_config', 'mode', e.target.value)
+                }
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+              >
+                <option value="read">Read</option>
+                <option value="write">Write</option>
+              </select>
+              <p className="text-xs text-gray-500 mt-1">
+                Whether to read from or write to the database
+              </p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Connection String (optional)</label>
+              <textarea
+                value={selectedNode.data.input_config?.connection_string || ''}
+                onChange={(e) =>
+                  handleConfigUpdate('input_config', 'connection_string', e.target.value)
+                }
+                placeholder="postgresql://user:password@host:port/database"
+                rows={2}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 font-mono text-sm"
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Full connection string. If provided, individual connection fields are ignored.
+              </p>
+            </div>
+
+            <div className="border-t border-gray-200 pt-3 mt-3">
+              <p className="text-xs font-semibold text-gray-700 mb-2">Or specify individual fields:</p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Host</label>
+              <input
+                type="text"
+                value={selectedNode.data.input_config?.host || ''}
+                onChange={(e) =>
+                  handleConfigUpdate('input_config', 'host', e.target.value)
+                }
+                placeholder="localhost"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Port</label>
+              <input
+                type="number"
+                value={selectedNode.data.input_config?.port || ''}
+                onChange={(e) =>
+                  handleConfigUpdate('input_config', 'port', e.target.value ? parseInt(e.target.value) : undefined)
+                }
+                placeholder="5432"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Database Name</label>
+              <input
+                type="text"
+                value={selectedNode.data.input_config?.database_name || ''}
+                onChange={(e) =>
+                  handleConfigUpdate('input_config', 'database_name', e.target.value)
+                }
+                placeholder="mydatabase"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Username</label>
+              <input
+                type="text"
+                value={selectedNode.data.input_config?.username || ''}
+                onChange={(e) =>
+                  handleConfigUpdate('input_config', 'username', e.target.value)
+                }
+                placeholder="dbuser"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+              <input
+                type="password"
+                value={selectedNode.data.input_config?.password || ''}
+                onChange={(e) =>
+                  handleConfigUpdate('input_config', 'password', e.target.value)
+                }
+                placeholder="••••••••"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Password will be stored securely
+              </p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Query / SQL Statement</label>
+              <textarea
+                value={selectedNode.data.input_config?.query || ''}
+                onChange={(e) =>
+                  handleConfigUpdate('input_config', 'query', e.target.value)
+                }
+                placeholder="SELECT * FROM users WHERE id = ?"
+                rows={4}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 font-mono text-sm"
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                SQL query to execute. Use ? for parameterized queries.
+              </p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">SSL Mode</label>
+              <select
+                value={selectedNode.data.input_config?.ssl_mode || 'prefer'}
+                onChange={(e) =>
+                  handleConfigUpdate('input_config', 'ssl_mode', e.target.value)
+                }
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+              >
+                <option value="disable">Disable</option>
+                <option value="allow">Allow</option>
+                <option value="prefer">Prefer</option>
+                <option value="require">Require</option>
+                <option value="verify-ca">Verify CA</option>
+                <option value="verify-full">Verify Full</option>
+              </select>
+              <p className="text-xs text-gray-500 mt-1">
+                SSL/TLS connection mode
+              </p>
+            </div>
+
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+              <p className="text-xs text-blue-900 font-medium mb-1">💾 Database Node</p>
+              <p className="text-xs text-blue-700">
+                This node connects to a database and executes SQL queries. Use parameterized queries (?) for security.
+              </p>
+            </div>
+          </>
+        )}
+
+        {selectedNode.type === 'firebase' && (
+          <>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Firebase Service</label>
+              <select
+                value={selectedNode.data.input_config?.firebase_service || 'firestore'}
+                onChange={(e) =>
+                  handleConfigUpdate('input_config', 'firebase_service', e.target.value)
+                }
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+              >
+                <option value="firestore">Firestore (NoSQL Database)</option>
+                <option value="realtime_db">Realtime Database</option>
+                <option value="storage">Firebase Storage</option>
+                <option value="auth">Firebase Authentication</option>
+              </select>
+              <p className="text-xs text-gray-500 mt-1">
+                Select which Firebase service to use
+              </p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Project ID</label>
+              <input
+                type="text"
+                value={selectedNode.data.input_config?.project_id || ''}
+                onChange={(e) =>
+                  handleConfigUpdate('input_config', 'project_id', e.target.value)
+                }
+                placeholder="my-firebase-project"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Your Firebase project ID
+              </p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Connection Mode</label>
+              <select
+                value={selectedNode.data.input_config?.mode || 'read'}
+                onChange={(e) =>
+                  handleConfigUpdate('input_config', 'mode', e.target.value)
+                }
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+              >
+                <option value="read">Read</option>
+                <option value="write">Write</option>
+              </select>
+            </div>
+
+            {(selectedNode.data.input_config?.firebase_service === 'firestore' || 
+              selectedNode.data.input_config?.firebase_service === 'realtime_db') && (
+              <>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Collection / Path</label>
+                  <input
+                    type="text"
+                    value={selectedNode.data.input_config?.collection_path || ''}
+                    onChange={(e) =>
+                      handleConfigUpdate('input_config', 'collection_path', e.target.value)
+                    }
+                    placeholder="users or users/{userId}/posts"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Firestore collection path or Realtime DB path
+                  </p>
+                </div>
+
+                {selectedNode.data.input_config?.mode === 'read' && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Query Filter (optional)</label>
+                    <textarea
+                      value={selectedNode.data.input_config?.query_filter || ''}
+                      onChange={(e) =>
+                        handleConfigUpdate('input_config', 'query_filter', e.target.value)
+                      }
+                      placeholder='{"field": "value"} or JSON query'
+                      rows={3}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 font-mono text-sm"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      JSON filter for querying documents
+                    </p>
+                  </div>
+                )}
+              </>
+            )}
+
+            {selectedNode.data.input_config?.firebase_service === 'storage' && (
+              <>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Bucket Name</label>
+                  <input
+                    type="text"
+                    value={selectedNode.data.input_config?.bucket_name || ''}
+                    onChange={(e) =>
+                      handleConfigUpdate('input_config', 'bucket_name', e.target.value)
+                    }
+                    placeholder="my-firebase-storage.appspot.com"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">File Path</label>
+                  <input
+                    type="text"
+                    value={selectedNode.data.input_config?.file_path || ''}
+                    onChange={(e) =>
+                      handleConfigUpdate('input_config', 'file_path', e.target.value)
+                    }
+                    placeholder="images/photo.jpg"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+                  />
+                </div>
+              </>
+            )}
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Service Account Credentials (JSON)</label>
+              <textarea
+                value={selectedNode.data.input_config?.credentials || ''}
+                onChange={(e) =>
+                  handleConfigUpdate('input_config', 'credentials', e.target.value)
+                }
+                placeholder='{"type": "service_account", ...}'
+                rows={4}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 font-mono text-sm"
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Firebase service account JSON credentials. Leave blank to use default credentials.
+              </p>
+            </div>
+
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+              <p className="text-xs text-blue-900 font-medium mb-1">🔥 Firebase Node</p>
+              <p className="text-xs text-blue-700">
+                Connect to Firebase services. Supports Firestore, Realtime Database, Storage, and Authentication.
+              </p>
+            </div>
+          </>
+        )}
+
+        {selectedNode.type === 'bigquery' && (
+          <>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Project ID</label>
+              <input
+                type="text"
+                value={selectedNode.data.input_config?.project_id || ''}
+                onChange={(e) =>
+                  handleConfigUpdate('input_config', 'project_id', e.target.value)
+                }
+                placeholder="my-gcp-project"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Your Google Cloud project ID
+              </p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Connection Mode</label>
+              <select
+                value={selectedNode.data.input_config?.mode || 'read'}
+                onChange={(e) =>
+                  handleConfigUpdate('input_config', 'mode', e.target.value)
+                }
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+              >
+                <option value="read">Read (Query)</option>
+                <option value="write">Write (Insert/Update)</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Dataset</label>
+              <input
+                type="text"
+                value={selectedNode.data.input_config?.dataset || ''}
+                onChange={(e) =>
+                  handleConfigUpdate('input_config', 'dataset', e.target.value)
+                }
+                placeholder="my_dataset"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                BigQuery dataset name
+              </p>
+            </div>
+
+            {selectedNode.data.input_config?.mode === 'read' && (
+              <>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">SQL Query</label>
+                  <textarea
+                    value={selectedNode.data.input_config?.query || ''}
+                    onChange={(e) =>
+                      handleConfigUpdate('input_config', 'query', e.target.value)
+                    }
+                    placeholder="SELECT * FROM `project.dataset.table` LIMIT 100"
+                    rows={6}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 font-mono text-sm"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Standard SQL query to execute
+                  </p>
+                </div>
+              </>
+            )}
+
+            {selectedNode.data.input_config?.mode === 'write' && (
+              <>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Table</label>
+                  <input
+                    type="text"
+                    value={selectedNode.data.input_config?.table || ''}
+                    onChange={(e) =>
+                      handleConfigUpdate('input_config', 'table', e.target.value)
+                    }
+                    placeholder="my_table"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Target table for insert/update operations
+                  </p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Write Disposition</label>
+                  <select
+                    value={selectedNode.data.input_config?.write_disposition || 'append'}
+                    onChange={(e) =>
+                      handleConfigUpdate('input_config', 'write_disposition', e.target.value)
+                    }
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+                  >
+                    <option value="append">Append</option>
+                    <option value="truncate">Truncate and Write</option>
+                    <option value="merge">Merge (Upsert)</option>
+                  </select>
+                  <p className="text-xs text-gray-500 mt-1">
+                    How to handle existing data in the table
+                  </p>
+                </div>
+              </>
+            )}
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Location (optional)</label>
+              <input
+                type="text"
+                value={selectedNode.data.input_config?.location || ''}
+                onChange={(e) =>
+                  handleConfigUpdate('input_config', 'location', e.target.value)
+                }
+                placeholder="US or EU"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                BigQuery dataset location (US, EU, etc.). Leave blank for default.
+              </p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Service Account Credentials (JSON)</label>
+              <textarea
+                value={selectedNode.data.input_config?.credentials || ''}
+                onChange={(e) =>
+                  handleConfigUpdate('input_config', 'credentials', e.target.value)
+                }
+                placeholder='{"type": "service_account", ...}'
+                rows={4}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 font-mono text-sm"
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Google Cloud service account JSON credentials. Leave blank to use default credentials.
+              </p>
+            </div>
+
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+              <p className="text-xs text-blue-900 font-medium mb-1">📊 BigQuery Node</p>
+              <p className="text-xs text-blue-700">
+                Query and write data to Google BigQuery data warehouse. Supports standard SQL queries and data loading.
+              </p>
+            </div>
+          </>
+        )}
+
         {selectedNode.type === 'local_filesystem' && (
           <div className="border-t pt-4">
             <h4 className="text-sm font-semibold text-gray-900 mb-3">Local File System Configuration</h4>
