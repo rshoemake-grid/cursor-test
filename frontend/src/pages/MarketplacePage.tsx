@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { Download, Heart, TrendingUp, Clock, Star, ArrowLeft, Trash2 } from 'lucide-react';
+import { Download, Heart, TrendingUp, Clock, Star, ArrowLeft, Trash2, Bot, Workflow } from 'lucide-react';
 import { showError, showSuccess } from '../utils/notifications';
 import { showConfirm } from '../utils/confirm';
 import { api } from '../api/client';
@@ -22,20 +22,44 @@ interface Template {
   author_name?: string | null;
 }
 
+interface AgentTemplate {
+  id: string;
+  name: string;
+  label: string;
+  description: string;
+  category: string;
+  tags: string[];
+  difficulty: string;
+  estimated_time: string;
+  agent_config: any;
+  published_at?: string;
+  author_id?: string | null;
+  author_name?: string | null;
+}
+
+type TabType = 'agents' | 'workflows'
+
 export default function MarketplacePage() {
+  const [activeTab, setActiveTab] = useState<TabType>('agents');
   const [templates, setTemplates] = useState<Template[]>([]);
+  const [agents, setAgents] = useState<AgentTemplate[]>([]);
   const [loading, setLoading] = useState(true);
   const [category, setCategory] = useState<string>('');
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState('popular');
   const [selectedTemplateIds, setSelectedTemplateIds] = useState<Set<string>>(new Set());
+  const [selectedAgentIds, setSelectedAgentIds] = useState<Set<string>>(new Set());
   
   const { token, user } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
-    fetchTemplates();
-  }, [category, sortBy]);
+    if (activeTab === 'workflows') {
+      fetchTemplates();
+    } else {
+      fetchAgents();
+    }
+  }, [category, sortBy, activeTab]);
 
   const fetchTemplates = async () => {
     setLoading(true);
@@ -50,6 +74,50 @@ export default function MarketplacePage() {
       setTemplates(data);
     } catch (error) {
       console.error('Failed to fetch templates:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchAgents = async () => {
+    setLoading(true);
+    try {
+      // For now, load from localStorage (until backend API is ready)
+      const savedAgents = localStorage.getItem('publishedAgents');
+      let agentsData: AgentTemplate[] = savedAgents ? JSON.parse(savedAgents) : [];
+      
+      // Apply filters
+      if (category) {
+        agentsData = agentsData.filter(a => a.category === category);
+      }
+      if (searchQuery) {
+        const query = searchQuery.toLowerCase();
+        agentsData = agentsData.filter(a => 
+          a.name.toLowerCase().includes(query) || 
+          a.description.toLowerCase().includes(query) ||
+          a.tags.some(tag => tag.toLowerCase().includes(query))
+        );
+      }
+      
+      // Apply sorting
+      if (sortBy === 'popular') {
+        // For now, sort by published_at (most recent first)
+        agentsData.sort((a, b) => {
+          const dateA = a.published_at ? new Date(a.published_at).getTime() : 0;
+          const dateB = b.published_at ? new Date(b.published_at).getTime() : 0;
+          return dateB - dateA;
+        });
+      } else if (sortBy === 'recent') {
+        agentsData.sort((a, b) => {
+          const dateA = a.published_at ? new Date(a.published_at).getTime() : 0;
+          const dateB = b.published_at ? new Date(b.published_at).getTime() : 0;
+          return dateB - dateA;
+        });
+      }
+      
+      setAgents(agentsData);
+    } catch (error) {
+      console.error('Failed to fetch agents:', error);
     } finally {
       setLoading(false);
     }
@@ -99,6 +167,30 @@ export default function MarketplacePage() {
     }
   };
 
+  const deleteAgent = async (agentId: string, agentName: string) => {
+    const confirmed = await showConfirm(
+      `Are you sure you want to delete "${agentName}" from the marketplace?`,
+      { title: 'Delete Agent', confirmText: 'Delete', cancelText: 'Cancel', type: 'danger' }
+    );
+    if (!confirmed) return;
+
+    try {
+      // Remove from localStorage
+      const publishedAgents = localStorage.getItem('publishedAgents');
+      if (publishedAgents) {
+        const agents: AgentTemplate[] = JSON.parse(publishedAgents);
+        const filteredAgents = agents.filter(a => a.id !== agentId);
+        localStorage.setItem('publishedAgents', JSON.stringify(filteredAgents));
+        
+        // Update state
+        setAgents(prevAgents => prevAgents.filter(a => a.id !== agentId));
+        showSuccess('Agent deleted successfully');
+      }
+    } catch (error: any) {
+      showError(`Failed to delete agent: ${error?.message ?? 'Unknown error'}`);
+    }
+  };
+
   const handleCardClick = (e: React.MouseEvent, templateId: string) => {
     // Prevent any default behavior
     e.preventDefault();
@@ -135,9 +227,9 @@ export default function MarketplacePage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="h-screen bg-gray-50 flex flex-col overflow-hidden">
       {/* Header */}
-      <div className="bg-white border-b border-gray-200">
+      <div className="bg-white border-b border-gray-200 flex-shrink-0">
         <div className="max-w-7xl mx-auto px-4 py-6">
           <button
             onClick={() => navigate('/')}
@@ -148,11 +240,11 @@ export default function MarketplacePage() {
           </button>
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Workflow Marketplace</h1>
-              <p className="text-gray-600 mt-1">Discover and use pre-built workflow templates</p>
+              <h1 className="text-3xl font-bold text-gray-900">Marketplace</h1>
+              <p className="text-gray-600 mt-1">Discover and use pre-built agents and workflows</p>
             </div>
             <div className="flex items-center gap-3">
-              {selectedTemplateIds.size > 0 && (
+              {activeTab === 'workflows' && selectedTemplateIds.size > 0 && (
                 <button
                   onClick={async () => {
                     // Load all selected workflows
@@ -170,23 +262,97 @@ export default function MarketplacePage() {
                   Load {selectedTemplateIds.size} Workflow{selectedTemplateIds.size > 1 ? 's' : ''}
                 </button>
               )}
-              <button
-                onClick={() => navigate('/')}
-                className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300"
-              >
-                My Workflows
-              </button>
+              {activeTab === 'agents' && selectedAgentIds.size > 0 && (
+                <button
+                  onClick={() => {
+                    // Get selected agents
+                    const selectedAgents = agents.filter(a => selectedAgentIds.has(a.id));
+                    
+                    // Get the active workflow tab ID
+                    const activeTabId = localStorage.getItem('activeWorkflowTabId');
+                    
+                    if (!activeTabId) {
+                      showError('No active workflow found. Please open a workflow first.');
+                      return;
+                    }
+                    
+                    // Store agents to add in localStorage (more reliable than events)
+                    const pendingAgents = {
+                      tabId: activeTabId,
+                      agents: selectedAgents,
+                      timestamp: Date.now()
+                    };
+                    localStorage.setItem('pendingAgentsToAdd', JSON.stringify(pendingAgents));
+                    
+                    // Dispatch event as backup
+                    const event = new CustomEvent('addAgentsToWorkflow', {
+                      detail: {
+                        agents: selectedAgents,
+                        tabId: activeTabId
+                      }
+                    });
+                    window.dispatchEvent(event);
+                    
+                    showSuccess(`${selectedAgentIds.size} agent(s) added to workflow`);
+                    setSelectedAgentIds(new Set());
+                    
+                    // Small delay to ensure localStorage is written before navigation
+                    setTimeout(() => {
+                      // Navigate back to workflow builder
+                      navigate('/');
+                    }, 100);
+                  }}
+                  className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors flex items-center gap-2"
+                >
+                  <Download className="w-4 h-4" />
+                  Use {selectedAgentIds.size} Agent{selectedAgentIds.size > 1 ? 's' : ''}
+                </button>
+              )}
             </div>
+          </div>
+
+          {/* Tabs */}
+          <div className="flex border-b border-gray-200 mb-4">
+            <button
+              onClick={() => setActiveTab('agents')}
+              className={`px-6 py-3 text-sm font-medium flex items-center gap-2 transition-colors ${
+                activeTab === 'agents'
+                  ? 'text-primary-600 border-b-2 border-primary-600'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              <Bot className="w-5 h-5" />
+              Agents
+            </button>
+            <button
+              onClick={() => setActiveTab('workflows')}
+              className={`px-6 py-3 text-sm font-medium flex items-center gap-2 transition-colors ${
+                activeTab === 'workflows'
+                  ? 'text-primary-600 border-b-2 border-primary-600'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              <Workflow className="w-5 h-5" />
+              Workflows
+            </button>
           </div>
 
           {/* Search and Filters */}
           <div className="flex gap-4 flex-wrap">
             <input
               type="text"
-              placeholder="Search templates..."
+              placeholder={activeTab === 'agents' ? "Search agents..." : "Search workflows..."}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && fetchTemplates()}
+              onKeyPress={(e) => {
+                if (e.key === 'Enter') {
+                  if (activeTab === 'workflows') {
+                    fetchTemplates();
+                  } else {
+                    fetchAgents();
+                  }
+                }
+              }}
               className="flex-1 min-w-[300px] px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
             />
 
@@ -222,7 +388,13 @@ export default function MarketplacePage() {
             </div>
 
             <button
-              onClick={fetchTemplates}
+              onClick={() => {
+                if (activeTab === 'workflows') {
+                  fetchTemplates();
+                } else {
+                  fetchAgents();
+                }
+              }}
               className="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300"
             >
               Search
@@ -231,16 +403,152 @@ export default function MarketplacePage() {
         </div>
       </div>
 
-      {/* Templates Grid */}
-      <div className="max-w-7xl mx-auto px-4 py-8">
+      {/* Content Grid */}
+      <div className="max-w-7xl mx-auto px-4 py-8 flex-1 overflow-y-auto">
         {loading ? (
           <div className="text-center py-12">
             <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
-            <p className="mt-4 text-gray-600">Loading templates...</p>
+            <p className="mt-4 text-gray-600">Loading {activeTab}...</p>
           </div>
+        ) : activeTab === 'agents' ? (
+          agents.length === 0 ? (
+            <div className="text-center py-12">
+              <p className="text-gray-600">No agents found. Try adjusting your filters.</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {agents.map((agent) => {
+                const isSelected = selectedAgentIds.has(agent.id);
+                return (
+                  <div 
+                    key={agent.id} 
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      const target = e.target as HTMLElement;
+                      if (target.closest('input[type="checkbox"]') || 
+                          target.closest('button') || 
+                          target.tagName === 'BUTTON' ||
+                          target.tagName === 'INPUT') {
+                        return;
+                      }
+                      setSelectedAgentIds(prev => {
+                        const newSet = new Set(prev);
+                        if (newSet.has(agent.id)) {
+                          newSet.delete(agent.id);
+                        } else {
+                          newSet.add(agent.id);
+                        }
+                        return newSet;
+                      });
+                    }}
+                    className={`bg-white rounded-lg shadow-md hover:shadow-lg transition-all overflow-hidden cursor-pointer border-2 ${
+                      isSelected 
+                        ? 'border-primary-500 ring-2 ring-primary-200' 
+                        : 'border-transparent'
+                    }`}
+                  >
+                    <div className="p-6">
+                      <div className="flex items-start justify-between mb-3">
+                        <div className="flex items-start gap-3 flex-1">
+                          <input
+                            type="checkbox"
+                            checked={isSelected}
+                            onChange={(e) => {
+                              e.stopPropagation();
+                              setSelectedAgentIds(prev => {
+                                const newSet = new Set(prev);
+                                if (e.target.checked) {
+                                  newSet.add(agent.id);
+                                } else {
+                                  newSet.delete(agent.id);
+                                }
+                                return newSet;
+                              });
+                            }}
+                            className="mt-1 w-5 h-5 text-primary-600 border-gray-300 rounded focus:ring-primary-500 cursor-pointer"
+                            onClick={(e) => e.stopPropagation()}
+                          />
+                          <h3 className="text-xl font-semibold text-gray-900 flex-1">
+                            {agent.name || agent.label}
+                          </h3>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          {user && agent.author_id === user.id && (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                deleteAgent(agent.id, agent.name || agent.label);
+                              }}
+                              className="text-red-600 hover:bg-red-50 p-1 rounded"
+                              title="Delete agent"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          )}
+                        </div>
+                      </div>
+
+                      <p className="text-gray-600 text-sm mb-4 line-clamp-2">
+                        {agent.description}
+                      </p>
+
+                      {/* Tags */}
+                      {agent.tags && agent.tags.length > 0 && (
+                        <div className="flex flex-wrap gap-2 mb-4">
+                          {agent.tags.map((tag, idx) => (
+                            <span key={idx} className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded">
+                              {tag}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* Metadata */}
+                      <div className="flex items-center gap-4 text-sm text-gray-500 mb-4">
+                        <div className="flex items-center gap-1">
+                          <Clock className="w-4 h-4" />
+                          <span>{agent.estimated_time || 'N/A'}</span>
+                        </div>
+                        {agent.category && (
+                          <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded">
+                            {agent.category.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}
+                          </span>
+                        )}
+                        {agent.author_name && (
+                          <div className="flex items-center gap-1 text-gray-600">
+                            <span className="font-medium">By:</span>
+                            <span>{agent.author_name}</span>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Difficulty */}
+                      <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${getDifficultyColor(agent.difficulty)}`}>
+                        {agent.difficulty}
+                      </span>
+                    </div>
+
+                    {/* Footer */}
+                    <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">
+                      <div className={`text-sm text-center py-2 px-4 rounded-lg ${
+                        isSelected 
+                          ? 'bg-primary-100 text-primary-700 font-medium' 
+                          : 'text-gray-500'
+                      }`}>
+                        {isSelected 
+                          ? 'Selected - Click "Use Agent(s)" above to use' 
+                          : 'Click card or checkbox to select'}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )
         ) : templates.length === 0 ? (
           <div className="text-center py-12">
-            <p className="text-gray-600">No templates found. Try adjusting your filters.</p>
+            <p className="text-gray-600">No workflows found. Try adjusting your filters.</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

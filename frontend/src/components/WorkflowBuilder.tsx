@@ -21,6 +21,7 @@ import NodePanel from './NodePanel'
 import PropertyPanel from './PropertyPanel'
 import ExecutionConsole from './ExecutionConsole'
 import ContextMenu from './NodeContextMenu'
+import MarketplaceDialog from './MarketplaceDialog'
 import { api } from '../api/client'
 import { showSuccess, showError } from '../utils/notifications'
 import { showConfirm } from '../utils/confirm'
@@ -130,7 +131,12 @@ const WorkflowBuilder = forwardRef<WorkflowBuilderHandle, WorkflowBuilderProps>(
   const [selectedNodeIds, setSelectedNodeIds] = React.useState<Set<string>>(new Set())
   const [localWorkflowId, setLocalWorkflowId] = useState<string | null>(workflowId)
   const [nodeExecutionStates, setNodeExecutionStates] = useState<Record<string, { status: string; error?: string }>>({})
+  const [clipboardNode, setClipboardNode] = useState<any>(null)
+  const [clipboardAction, setClipboardAction] = useState<'copy' | 'cut' | null>(null)
+  const [showMarketplaceDialog, setShowMarketplaceDialog] = useState(false)
+  const [marketplaceNode, setMarketplaceNode] = useState<any>(null)
   const reactFlowInstanceRef = useRef<any>(null)
+  const isAddingAgentsRef = useRef<boolean>(false)
   
   // Component to capture React Flow instance for coordinate conversion
   const ReactFlowInstanceCapture = () => {
@@ -149,14 +155,40 @@ const WorkflowBuilder = forwardRef<WorkflowBuilderHandle, WorkflowBuilderProps>(
     
     useEffect(() => {
       const handleKeyDown = (event: KeyboardEvent) => {
+        // Don't handle shortcuts if user is typing in an input field
+        const target = event.target as HTMLElement
+        if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) {
+          return
+        }
+
+        // Handle Copy (Ctrl/Cmd + C)
+        if ((event.ctrlKey || event.metaKey) && event.key === 'c') {
+          const selectedNodes = getNodes().filter(node => node.selected)
+          if (selectedNodes.length === 1) {
+            event.preventDefault()
+            handleCopy(selectedNodes[0])
+          }
+        }
+        
+        // Handle Cut (Ctrl/Cmd + X)
+        if ((event.ctrlKey || event.metaKey) && event.key === 'x') {
+          const selectedNodes = getNodes().filter(node => node.selected)
+          if (selectedNodes.length === 1) {
+            event.preventDefault()
+            handleCut(selectedNodes[0])
+          }
+        }
+        
+        // Handle Paste (Ctrl/Cmd + V)
+        if ((event.ctrlKey || event.metaKey) && event.key === 'v') {
+          if (clipboardNode) {
+            event.preventDefault()
+            handlePaste()
+          }
+        }
+        
         // Check if Delete or Backspace is pressed
         if (event.key === 'Delete' || event.key === 'Backspace') {
-          // Don't delete if user is typing in an input field
-          const target = event.target as HTMLElement
-          if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) {
-            return
-          }
-          
           // Get selected nodes and edges
           const selectedNodes = getNodes().filter(node => node.selected)
           const selectedEdges = getEdges().filter(edge => edge.selected)
@@ -186,7 +218,7 @@ const WorkflowBuilder = forwardRef<WorkflowBuilderHandle, WorkflowBuilderProps>(
       return () => {
         window.removeEventListener('keydown', handleKeyDown)
       }
-    }, [deleteElements, getNodes, getEdges, selectedNodeId, setSelectedNodeId, notifyModified])
+    }, [deleteElements, getNodes, getEdges, selectedNodeId, setSelectedNodeId, notifyModified, clipboardNode, handleCopy, handleCut, handlePaste])
     
     return null
   }
@@ -236,6 +268,12 @@ const WorkflowBuilder = forwardRef<WorkflowBuilderHandle, WorkflowBuilderProps>(
   }), [])
 
   useEffect(() => {
+    // Don't load draft if we're in the middle of adding agents
+    if (isAddingAgentsRef.current) {
+      console.log('[WorkflowBuilder] Skipping draft load - adding agents in progress')
+      return
+    }
+    
     const draft = tabDraftsRef.current[tabId]
     const matchesCurrentWorkflow = draft && (
       (!workflowId && !draft.workflowId) ||
@@ -243,6 +281,7 @@ const WorkflowBuilder = forwardRef<WorkflowBuilderHandle, WorkflowBuilderProps>(
     )
 
     if (matchesCurrentWorkflow) {
+      console.log('[WorkflowBuilder] Loading draft nodes:', draft.nodes.length)
       setNodes(draft.nodes.map(normalizeNodeForStorage))
       setEdges(draft.edges)
       setLocalWorkflowId(draft.workflowId)
@@ -255,7 +294,7 @@ const WorkflowBuilder = forwardRef<WorkflowBuilderHandle, WorkflowBuilderProps>(
       setLocalWorkflowName('Untitled Workflow')
       setLocalWorkflowDescription('')
     }
-  }, [tabId, workflowId])
+  }, [tabId, workflowId, normalizeNodeForStorage])
 
   useEffect(() => {
     tabDraftsRef.current[tabId] = {
@@ -362,7 +401,7 @@ const WorkflowBuilder = forwardRef<WorkflowBuilderHandle, WorkflowBuilderProps>(
     URL.revokeObjectURL(url)
   }, [localWorkflowName, localWorkflowDescription, nodes, edges, variables, nodeToWorkflowNode])
   const lastLoadedWorkflowIdRef = useRef<string | null>(null)
-  const [contextMenu, setContextMenu] = useState<{ nodeId?: string; edgeId?: string; x: number; y: number } | null>(null)
+  const [contextMenu, setContextMenu] = useState<{ nodeId?: string; edgeId?: string; node?: any; x: number; y: number } | null>(null)
 
   // Track modifications
   const notifyModified = useCallback(() => {
@@ -370,6 +409,156 @@ const WorkflowBuilder = forwardRef<WorkflowBuilderHandle, WorkflowBuilderProps>(
       onWorkflowModified()
     }
   }, [onWorkflowModified])
+
+  // Listen for agents to add from marketplace
+  useEffect(() => {
+    const addAgentsToCanvas = (agentsToAdd: any[]) => {
+      console.log('[WorkflowBuilder] addAgentsToCanvas called with', agentsToAdd.length, 'agents')
+      console.log('[WorkflowBuilder] Current tabId:', tabId)
+      isAddingAgentsRef.current = true
+      
+      // Get current state values
+      const currentTabId = tabId
+      const currentWorkflowId = localWorkflowId
+      const currentWorkflowName = localWorkflowName
+      const currentWorkflowDescription = localWorkflowDescription
+      const currentTabIsUnsaved = tabIsUnsaved
+      
+      // Add each agent as a node
+      // Use functional update to get current nodes for positioning
+      setNodes((currentNodes) => {
+        console.log('[WorkflowBuilder] Current nodes before adding:', currentNodes.length)
+        const startX = currentNodes.length > 0 
+          ? Math.max(...currentNodes.map(n => n.position.x)) + 200 
+          : 250
+        let currentY = 250
+        
+        const newNodes = agentsToAdd.map((agent: any, index: number) => {
+          const node = {
+            id: `agent-${Date.now()}-${index}`,
+            type: 'agent',
+            position: {
+              x: startX,
+              y: currentY + (index * 150)
+            },
+            draggable: true,
+            data: {
+              label: agent.name || agent.label || 'Agent Node',
+              name: agent.name || agent.label || 'Agent Node',
+              description: agent.description || '',
+              agent_config: agent.agent_config || {},
+              inputs: [],
+            },
+          }
+          return node
+        })
+        
+        const updatedNodes = [...currentNodes, ...newNodes]
+        console.log('[WorkflowBuilder] Updated nodes after adding:', updatedNodes.length)
+        console.log('[WorkflowBuilder] New nodes:', newNodes.map(n => ({ id: n.id, label: n.data.label })))
+        
+        // Update draft storage immediately to persist the change
+        // Use a setTimeout to ensure this happens after the state update
+        setTimeout(() => {
+          const currentDraft = tabDraftsRef.current[currentTabId]
+          const updatedDraft = {
+            nodes: updatedNodes.map(normalizeNodeForStorage),
+            edges: currentDraft?.edges || [],
+            workflowId: currentWorkflowId,
+            workflowName: currentWorkflowName,
+            workflowDescription: currentWorkflowDescription,
+            isUnsaved: currentTabIsUnsaved
+          }
+          tabDraftsRef.current[currentTabId] = updatedDraft
+          saveDraftsToStorage(tabDraftsRef.current)
+          console.log('[WorkflowBuilder] Draft updated with new nodes, total:', updatedNodes.length)
+        }, 0)
+        
+        // Reset flag after a delay to allow state update
+        setTimeout(() => {
+          isAddingAgentsRef.current = false
+          console.log('[WorkflowBuilder] Reset isAddingAgentsRef flag')
+        }, 1000)
+        
+        return updatedNodes
+      })
+      
+      notifyModified()
+    }
+
+    const handleAddAgentsToWorkflow = (event: CustomEvent) => {
+      const { agents: agentsToAdd, tabId: targetTabId } = event.detail
+      console.log('[WorkflowBuilder] Received addAgentsToWorkflow event:', { 
+        targetTabId, 
+        currentTabId: tabId, 
+        agentCount: agentsToAdd.length 
+      })
+      
+      // Only process if this is the active tab
+      if (targetTabId !== tabId) {
+        console.log('[WorkflowBuilder] Event for different tab, ignoring')
+        return
+      }
+      
+      console.log('[WorkflowBuilder] Adding agents via event')
+      addAgentsToCanvas(agentsToAdd)
+    }
+    
+    // Check localStorage for pending agents (more reliable than events)
+    const checkPendingAgents = () => {
+      try {
+        const pendingData = localStorage.getItem('pendingAgentsToAdd')
+        if (pendingData) {
+          const pending = JSON.parse(pendingData)
+          console.log('[WorkflowBuilder] Found pending agents:', { 
+            pendingTabId: pending.tabId, 
+            currentTabId: tabId, 
+            age: Date.now() - pending.timestamp 
+          })
+          // Only process if it's for this tab and recent (within last 10 seconds)
+          if (pending.tabId === tabId && Date.now() - pending.timestamp < 10000) {
+            console.log('[WorkflowBuilder] Adding agents to canvas:', pending.agents.length)
+            addAgentsToCanvas(pending.agents)
+            // Clear after processing
+            localStorage.removeItem('pendingAgentsToAdd')
+          } else if (pending.tabId !== tabId) {
+            // Clear if it's for a different tab
+            console.log('[WorkflowBuilder] Pending agents for different tab, clearing')
+            localStorage.removeItem('pendingAgentsToAdd')
+          } else if (Date.now() - pending.timestamp >= 10000) {
+            // Clear if too old
+            console.log('[WorkflowBuilder] Pending agents too old, clearing')
+            localStorage.removeItem('pendingAgentsToAdd')
+          }
+        }
+      } catch (e) {
+        console.error('Failed to process pending agents:', e)
+        localStorage.removeItem('pendingAgentsToAdd')
+      }
+    }
+    
+    // Check immediately when tab becomes active
+    checkPendingAgents()
+    
+    // Also listen for events
+    window.addEventListener('addAgentsToWorkflow', handleAddAgentsToWorkflow as EventListener)
+    
+    // Check periodically in case we missed the event (check every 1 second for 10 seconds)
+    let checkCount = 0
+    const maxChecks = 10
+    const interval = setInterval(() => {
+      checkPendingAgents()
+      checkCount++
+      if (checkCount >= maxChecks) {
+        clearInterval(interval)
+      }
+    }, 1000)
+    
+    return () => {
+      window.removeEventListener('addAgentsToWorkflow', handleAddAgentsToWorkflow as EventListener)
+      clearInterval(interval)
+    }
+  }, [tabId, setNodes, notifyModified])
 
   const executeWorkflow = useCallback(async () => {
     console.log('[WorkflowBuilder] executeWorkflow called')
@@ -947,12 +1136,29 @@ const WorkflowBuilder = forwardRef<WorkflowBuilderHandle, WorkflowBuilderProps>(
         }
       }
 
+      // Check for custom agent node data
+      const customAgentData = event.dataTransfer.getData('application/custom-agent')
+      let customData = null
+      if (customAgentData) {
+        try {
+          customData = JSON.parse(customAgentData)
+        } catch (e) {
+          console.error('Failed to parse custom agent data:', e)
+        }
+      }
+
       const newNode = {
         id: `${type}-${Date.now()}`,
         type,
         position,
         draggable: true,
-        data: {
+        data: customData ? {
+          label: customData.label || `${type.charAt(0).toUpperCase() + type.slice(1)} Node`,
+          name: customData.label || `${type.charAt(0).toUpperCase() + type.slice(1)} Node`,
+          description: customData.description || '',
+          agent_config: customData.agent_config || {},
+          inputs: [],
+        } : {
           label: `${type.charAt(0).toUpperCase() + type.slice(1)} Node`,
           name: `${type.charAt(0).toUpperCase() + type.slice(1)} Node`,
           inputs: [],
@@ -1002,9 +1208,98 @@ const WorkflowBuilder = forwardRef<WorkflowBuilderHandle, WorkflowBuilderProps>(
     [setNodes]
   )
 
-  const onPaneClick = useCallback(() => {
+  const onPaneClick = useCallback((event: React.MouseEvent) => {
     setSelectedNodeId(null)
     setContextMenu(null) // Close context menu when clicking on pane
+    
+    // Handle paste on pane click with Ctrl/Cmd+V
+    if ((event.ctrlKey || event.metaKey) && event.button === 0 && clipboardNode) {
+      handlePaste(event.clientX, event.clientY)
+    }
+  }, [clipboardNode])
+
+  const handleCopy = useCallback((node: any) => {
+    setClipboardNode(node)
+    setClipboardAction('copy')
+    showSuccess('Node copied to clipboard')
+  }, [])
+
+  const handleCut = useCallback((node: any) => {
+    setClipboardNode(node)
+    setClipboardAction('cut')
+    showSuccess('Node cut to clipboard')
+  }, [])
+
+  const handlePaste = useCallback((x?: number, y?: number) => {
+    if (!clipboardNode) return
+
+    const { getNodes, screenToFlowPosition, addNodes, deleteElements } = reactFlowInstanceRef.current || {}
+    if (!getNodes || !screenToFlowPosition || !addNodes) return
+
+    const position = x !== undefined && y !== undefined 
+      ? screenToFlowPosition({ x, y })
+      : { x: clipboardNode.position.x + 50, y: clipboardNode.position.y + 50 }
+
+    const newNode = {
+      ...clipboardNode,
+      id: `${clipboardNode.type}_${Date.now()}`,
+      position,
+      selected: false,
+    }
+
+    addNodes(newNode)
+    
+    if (clipboardAction === 'cut' && deleteElements) {
+      deleteElements({ nodes: [{ id: clipboardNode.id }] })
+      setClipboardNode(null)
+      setClipboardAction(null)
+    }
+    
+    notifyModified()
+    showSuccess('Node pasted')
+  }, [clipboardNode, clipboardAction, notifyModified])
+
+  const handleSendToMarketplace = useCallback((node: any) => {
+    setMarketplaceNode(node)
+    setShowMarketplaceDialog(true)
+  }, [])
+
+  const handleAddToAgentNodes = useCallback((node: any) => {
+    if (node.type !== 'agent') return
+
+    try {
+      // Get existing agent nodes from localStorage
+      const savedAgentNodes = localStorage.getItem('customAgentNodes')
+      const agentNodes = savedAgentNodes ? JSON.parse(savedAgentNodes) : []
+      
+      // Create a template from the node
+      const agentTemplate = {
+        id: `agent_${Date.now()}`,
+        label: node.data.label || node.data.name || 'Custom Agent',
+        description: node.data.description || '',
+        agent_config: node.data.agent_config || {},
+        type: 'agent'
+      }
+      
+      // Add to list (avoid duplicates)
+      const exists = agentNodes.some((n: any) => 
+        n.label === agentTemplate.label && 
+        JSON.stringify(n.agent_config) === JSON.stringify(agentTemplate.agent_config)
+      )
+      
+      if (!exists) {
+        agentNodes.push(agentTemplate)
+        localStorage.setItem('customAgentNodes', JSON.stringify(agentNodes))
+        // Dispatch custom event to update NodePanel in same window
+        window.dispatchEvent(new Event('customAgentNodesUpdated'))
+        showSuccess('Agent node added to palette')
+      } else {
+        showError('This agent node already exists in the palette')
+      }
+    } catch (error) {
+      console.error('Failed to save agent node:', error)
+      showError('Failed to add agent node to palette')
+    }
   }, [])
 
   const onNodeContextMenu = useCallback(
@@ -1015,6 +1310,7 @@ const WorkflowBuilder = forwardRef<WorkflowBuilderHandle, WorkflowBuilderProps>(
       // Get the position relative to the viewport
       setContextMenu({
         nodeId: node.id,
+        node: node,
         x: event.clientX,
         y: event.clientY,
       })
@@ -1241,6 +1537,7 @@ const WorkflowBuilder = forwardRef<WorkflowBuilderHandle, WorkflowBuilderProps>(
           <ContextMenu
             nodeId={contextMenu.nodeId}
             edgeId={contextMenu.edgeId}
+            node={contextMenu.node}
             x={contextMenu.x}
             y={contextMenu.y}
             onClose={() => setContextMenu(null)}
@@ -1251,9 +1548,27 @@ const WorkflowBuilder = forwardRef<WorkflowBuilderHandle, WorkflowBuilderProps>(
               }
               notifyModified()
             }}
+            onCopy={handleCopy}
+            onCut={handleCut}
+            onPaste={handlePaste}
+            onAddToAgentNodes={handleAddToAgentNodes}
+            onSendToMarketplace={handleSendToMarketplace}
+            canPaste={!!clipboardNode}
           />
         </>
       )}
+
+      {/* Marketplace Dialog */}
+      <MarketplaceDialog
+        isOpen={showMarketplaceDialog}
+        onClose={() => {
+          setShowMarketplaceDialog(false)
+          setMarketplaceNode(null)
+        }}
+        node={marketplaceNode}
+        workflowId={localWorkflowId}
+        workflowName={localWorkflowName}
+      />
     </ReactFlowProvider>
   )
 })

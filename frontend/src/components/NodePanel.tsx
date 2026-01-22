@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { Bot, GitBranch, RotateCw, Play, Flag, Database, Radio, Folder, ChevronDown, ChevronRight } from 'lucide-react'
 
 const workflowNodeTemplates = [
@@ -8,7 +8,7 @@ const workflowNodeTemplates = [
   { type: 'end', label: 'End', icon: Flag, color: 'text-gray-600', description: 'Workflow completion' },
 ]
 
-const agentNodeTemplates = [
+const defaultAgentNodeTemplates = [
   { type: 'agent', label: 'Agent', icon: Bot, color: 'text-blue-600', description: 'LLM-powered agent' },
 ]
 
@@ -28,6 +28,71 @@ export default function NodePanel() {
     agentNodes: false,
     dataNodes: false,
   })
+  const [customAgentNodes, setCustomAgentNodes] = useState<any[]>([])
+
+  useEffect(() => {
+    // Load custom agent nodes from localStorage
+    try {
+      const savedAgentNodes = localStorage.getItem('customAgentNodes')
+      if (savedAgentNodes) {
+        const parsed = JSON.parse(savedAgentNodes)
+        if (Array.isArray(parsed)) {
+          setCustomAgentNodes(parsed)
+        }
+      }
+    } catch (error) {
+      console.error('Failed to load custom agent nodes:', error)
+    }
+
+    // Listen for storage changes to update when agent nodes are added
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'customAgentNodes') {
+        try {
+          const parsed = e.newValue ? JSON.parse(e.newValue) : []
+          if (Array.isArray(parsed)) {
+            setCustomAgentNodes(parsed)
+          }
+        } catch (error) {
+          console.error('Failed to parse custom agent nodes:', error)
+        }
+      }
+    }
+
+    window.addEventListener('storage', handleStorageChange)
+    
+    // Also listen for custom event for same-window updates
+    const handleCustomStorageChange = () => {
+      try {
+        const savedAgentNodes = localStorage.getItem('customAgentNodes')
+        if (savedAgentNodes) {
+          const parsed = JSON.parse(savedAgentNodes)
+          if (Array.isArray(parsed)) {
+            setCustomAgentNodes(parsed)
+          }
+        }
+      } catch (error) {
+        console.error('Failed to load custom agent nodes:', error)
+      }
+    }
+
+    window.addEventListener('customAgentNodesUpdated', handleCustomStorageChange)
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange)
+      window.removeEventListener('customAgentNodesUpdated', handleCustomStorageChange)
+    }
+  }, [])
+
+  const agentNodeTemplates = useMemo(() => {
+    return [...defaultAgentNodeTemplates, ...customAgentNodes.map(node => ({
+      type: 'agent',
+      label: node.label || 'Custom Agent',
+      icon: Bot,
+      color: 'text-blue-600',
+      description: node.description || 'Custom LLM-powered agent',
+      customData: node
+    }))]
+  }, [customAgentNodes])
 
   const toggleCategory = (category: string) => {
     setExpandedCategories(prev => ({
@@ -36,8 +101,11 @@ export default function NodePanel() {
     }))
   }
 
-  const onDragStart = (event: React.DragEvent, nodeType: string) => {
+  const onDragStart = (event: React.DragEvent, nodeType: string, customData?: any) => {
     event.dataTransfer.setData('application/reactflow', nodeType)
+    if (customData) {
+      event.dataTransfer.setData('application/custom-agent', JSON.stringify(customData))
+    }
     event.dataTransfer.effectAllowed = 'move'
   }
 
@@ -97,13 +165,14 @@ export default function NodePanel() {
         </button>
         {expandedCategories.agentNodes && (
           <div className="space-y-2">
-            {agentNodeTemplates.map((template) => {
+            {agentNodeTemplates.map((template, index) => {
               const Icon = template.icon
+              const key = template.customData ? `custom-${template.customData.id}` : `${template.type}-${index}`
               return (
                 <div
-                  key={template.type}
+                  key={key}
                   draggable
-                  onDragStart={(e) => onDragStart(e, template.type)}
+                  onDragStart={(e) => onDragStart(e, template.type, template.customData)}
                   className="p-3 border-2 border-gray-200 rounded-lg cursor-move hover:border-primary-400 hover:bg-primary-50 transition-colors"
                 >
                   <div className="flex items-center gap-2 mb-1">
