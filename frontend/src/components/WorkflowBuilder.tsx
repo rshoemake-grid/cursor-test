@@ -56,6 +56,7 @@ interface WorkflowBuilderProps {
   onExecutionLogUpdate?: (workflowId: string, executionId: string, log: any) => void
   onExecutionStatusUpdate?: (workflowId: string, executionId: string, status: 'running' | 'completed' | 'failed') => void
   onExecutionNodeUpdate?: (workflowId: string, executionId: string, nodeId: string, nodeState: any) => void
+  onRemoveExecution?: (workflowId: string, executionId: string) => void
   tabIsUnsaved: boolean
 }
 
@@ -119,7 +120,8 @@ const WorkflowBuilder = forwardRef<WorkflowBuilderHandle, WorkflowBuilderProps>(
   onClearExecutions,
   onExecutionLogUpdate,
   onExecutionStatusUpdate,
-  onExecutionNodeUpdate
+  onExecutionNodeUpdate,
+  onRemoveExecution
 }: WorkflowBuilderProps, ref) {
   // Local state for this tab - NOT using global store
   const [nodes, setNodes, onNodesChangeBase] = useNodesState([] as Node[])
@@ -1125,6 +1127,10 @@ const WorkflowBuilder = forwardRef<WorkflowBuilderHandle, WorkflowBuilderProps>(
             executions={workflowTabs?.find(t => t.workflowId === localWorkflowId)?.executions || []}
             activeExecutionId={workflowTabs?.find(t => t.workflowId === localWorkflowId)?.activeExecutionId || null}
             onWorkflowUpdate={handleWorkflowUpdate}
+            onExecutionLogUpdate={onExecutionLogUpdate}
+            onExecutionStatusUpdate={onExecutionStatusUpdate}
+            onExecutionNodeUpdate={onExecutionNodeUpdate}
+            onRemoveExecution={onRemoveExecution}
           />
         </div>
 

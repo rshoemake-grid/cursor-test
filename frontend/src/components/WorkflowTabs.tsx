@@ -447,6 +447,25 @@ export default function WorkflowTabs({ initialWorkflowId, workflowLoadKey, onExe
     })
   }, [])
 
+  // Handle removing a single execution
+  const handleRemoveExecution = useCallback((workflowId: string, executionId: string) => {
+    console.log('handleRemoveExecution called for workflowId:', workflowId, 'executionId:', executionId)
+    setTabs(prev => prev.map(tab => {
+      if (tab.workflowId !== workflowId) return tab
+      
+      const updatedExecutions = tab.executions.filter(exec => exec.id !== executionId)
+      const newActiveExecutionId = tab.activeExecutionId === executionId 
+        ? (updatedExecutions.length > 0 ? updatedExecutions[0].id : null)
+        : tab.activeExecutionId
+      
+      return {
+        ...tab,
+        executions: updatedExecutions,
+        activeExecutionId: newActiveExecutionId
+      }
+    }))
+  }, [])
+
   // Handle real-time log updates from WebSocket
   const handleExecutionLogUpdate = useCallback((workflowId: string, executionId: string, log: any) => {
     setTabs(prev => prev.map(tab => 
@@ -831,6 +850,7 @@ export default function WorkflowTabs({ initialWorkflowId, workflowLoadKey, onExe
             onExecutionLogUpdate={handleExecutionLogUpdate}
             onExecutionStatusUpdate={handleExecutionStatusUpdate}
             onExecutionNodeUpdate={handleExecutionNodeUpdate}
+            onRemoveExecution={handleRemoveExecution}
           />
         </div>
       )}
