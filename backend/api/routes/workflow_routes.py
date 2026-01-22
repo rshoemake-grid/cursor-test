@@ -70,15 +70,16 @@ def reconstruct_nodes(nodes_data: List[dict]) -> List[Node]:
                     logger.debug(f"Extracting agent_config from data object for node {node_id}")
                     node_data['agent_config'] = data_agent_config
         
-        # Warn only if config is still missing after extraction attempt
+        # Log at debug level if config is still missing after extraction attempt
+        # These configs are optional in the Node model, so this is informational only
         if node_data.get('type') == 'loop' and not node_data.get('loop_config'):
-            logger.warning(f"Loop node {node_id} missing loop_config after extraction attempt")
+            logger.debug(f"Loop node {node_id} missing loop_config after extraction attempt")
         
         if node_data.get('type') == 'condition' and not node_data.get('condition_config'):
-            logger.warning(f"Condition node {node_id} missing condition_config after extraction attempt")
+            logger.debug(f"Condition node {node_id} missing condition_config after extraction attempt")
         
         if node_data.get('type') == 'agent' and not node_data.get('agent_config'):
-            logger.warning(f"Agent node {node_id} missing agent_config after extraction attempt")
+            logger.debug(f"Agent node {node_id} missing agent_config after extraction attempt")
         
         try:
             node = Node(**node_data)

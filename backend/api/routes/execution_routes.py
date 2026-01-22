@@ -4,7 +4,7 @@ Handles workflow execution and execution history.
 """
 import asyncio
 from datetime import datetime
-from typing import Optional
+from typing import Optional, Annotated
 from fastapi import APIRouter, HTTPException, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
@@ -66,15 +66,16 @@ def reconstruct_workflow_definition(definition: dict) -> WorkflowDefinition:
                     logger.debug(f"Extracting agent_config from data object for node {node_id}")
                     node_data['agent_config'] = data_agent_config
         
-        # Warn only if config is still missing after extraction attempt
+        # Log at debug level if config is still missing after extraction attempt
+        # These configs are optional in the Node model, so this is informational only
         if node_data.get('type') == 'loop' and not node_data.get('loop_config'):
-            logger.warning(f"Loop node {node_id} missing loop_config after extraction attempt")
+            logger.debug(f"Loop node {node_id} missing loop_config after extraction attempt")
         
         if node_data.get('type') == 'condition' and not node_data.get('condition_config'):
-            logger.warning(f"Condition node {node_id} missing condition_config after extraction attempt")
+            logger.debug(f"Condition node {node_id} missing condition_config after extraction attempt")
         
         if node_data.get('type') == 'agent' and not node_data.get('agent_config'):
-            logger.warning(f"Agent node {node_id} missing agent_config after extraction attempt")
+            logger.debug(f"Agent node {node_id} missing agent_config after extraction attempt")
         
         try:
             node = Node(**node_data)
@@ -99,15 +100,20 @@ def reconstruct_workflow_definition(definition: dict) -> WorkflowDefinition:
 @router.post("/workflows/{workflow_id}/execute", response_model=ExecutionResponse)
 async def execute_workflow(
     workflow_id: str,
+    execution_request: Optional[ExecutionRequest] = None,
     db: AsyncSession = Depends(get_db),
     current_user: Optional[UserDB] = Depends(get_optional_user),
-    settings_service: SettingsServiceDep = ...,
-    execution_request: ExecutionRequest = None
+    settings_service: SettingsServiceDep = ...
 ):
     """Execute a workflow (optionally authenticated)"""
     from ...dependencies import get_workflow_service
     
     try:
+        logger.info(f"=== EXECUTE WORKFLOW REQUEST START ===")
+        logger.info(f"workflow_id={workflow_id}")
+        logger.info(f"execution_request={execution_request}")
+        logger.info(f"current_user={current_user.id if current_user else None}")
+        logger.info(f"has_settings_service={settings_service is not None}")
         logger.info(f"Starting workflow execution request for workflow_id={workflow_id}")
         workflow_service = get_workflow_service(db)
         
@@ -180,8 +186,11 @@ async def execute_workflow(
             raise HTTPException(status_code=500, detail=f"Failed to create workflow executor: {str(e)}")
         
         inputs = execution_request.inputs if execution_request else {}
+        logger.info(f"Execution inputs: {inputs}")
+        logger.debug(f"Inputs type: {type(inputs)}, keys: {list(inputs.keys()) if isinstance(inputs, dict) else 'not a dict'}")
         
         # Create initial execution record in database (status: running)
+        logger.info(f"Creating execution record in database with execution_id={execution_id}")
         try:
             db_execution = ExecutionDB(
                 id=execution_id,
@@ -201,20 +210,34 @@ async def execute_workflow(
         # Define background task to run execution and update database
         async def run_execution():
             try:
+                logger.info(f"=== BACKGROUND EXECUTION START ===")
+                logger.info(f"execution_id={execution_id}, workflow_id={workflow_id}")
+                logger.info(f"inputs={inputs}, inputs_type={type(inputs)}")
+                logger.info(f"executor type={type(executor)}")
                 execution_state = await executor.execute(inputs)
+                logger.info(f"Execution completed: status={execution_state.status}")
+                logger.info(f"Execution result: {execution_state.result}")
                 
                 # Update execution in database
+                logger.info(f"Updating execution record in database for execution_id={execution_id}")
                 async with AsyncSessionLocal() as db_session:
                     result = await db_session.execute(
                         select(ExecutionDB).where(ExecutionDB.id == execution_id)
                     )
                     db_exec = result.scalar_one_or_none()
                     if db_exec:
+                        logger.info(f"Found execution record, updating status to {execution_state.status.value}")
                         db_exec.status = execution_state.status.value
                         db_exec.state = execution_state.model_dump(mode='json')
                         db_exec.completed_at = execution_state.completed_at
                         await db_session.commit()
+                        logger.info(f"Execution record updated successfully")
+                    else:
+                        logger.warning(f"Execution record not found in database for execution_id={execution_id}")
             except Exception as e:
+                logger.error(f"=== BACKGROUND EXECUTION ERROR ===")
+                logger.error(f"Execution {execution_id} failed: {e}", exc_info=True)
+                logger.error(f"Exception type: {type(e).__name__}")
                 # Update execution status to failed
                 async with AsyncSessionLocal() as db_session:
                     result = await db_session.execute(
@@ -225,23 +248,33 @@ async def execute_workflow(
                         db_exec.status = 'failed'
                         db_exec.completed_at = datetime.utcnow()
                         await db_session.commit()
-                logger.error(f"Execution {execution_id} failed: {e}", exc_info=True)
+                        logger.info(f"Updated execution record status to 'failed'")
         
         # Start execution in background
-        asyncio.create_task(run_execution())
+        logger.info(f"Creating background task for execution_id={execution_id}")
+        task = asyncio.create_task(run_execution())
+        logger.info(f"Background task created: task={task}, done={task.done()}")
         
         started_at = datetime.utcnow()
-        return ExecutionResponse(
+        response = ExecutionResponse(
             execution_id=execution_id,
             workflow_id=workflow_id,
             status=ExecutionStatus.RUNNING,
             started_at=started_at
         )
-    except HTTPException:
+        logger.info(f"=== EXECUTE WORKFLOW REQUEST END ===")
+        logger.info(f"Returning response: execution_id={response.execution_id}, status={response.status}")
+        return response
+    except HTTPException as e:
+        logger.error(f"=== EXECUTE WORKFLOW HTTP ERROR ===")
+        logger.error(f"HTTPException: status={e.status_code}, detail={e.detail}")
         # Re-raise HTTP exceptions (404, 422, etc.)
         raise
     except Exception as e:
+        logger.error(f"=== EXECUTE WORKFLOW UNEXPECTED ERROR ===")
         logger.error(f"Unexpected error executing workflow: {e}", exc_info=True)
+        logger.error(f"Exception type: {type(e).__name__}")
+        logger.error(f"Exception args: {e.args}")
         raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
 
 

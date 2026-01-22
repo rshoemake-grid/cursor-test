@@ -370,13 +370,19 @@ const WorkflowBuilder = forwardRef<WorkflowBuilderHandle, WorkflowBuilderProps>(
   }, [onWorkflowModified])
 
   const executeWorkflow = useCallback(async () => {
+    console.log('[WorkflowBuilder] executeWorkflow called')
+    console.log('[WorkflowBuilder] isAuthenticated:', isAuthenticated)
+    console.log('[WorkflowBuilder] localWorkflowId:', localWorkflowId)
     if (!isAuthenticated) {
+      console.error('[WorkflowBuilder] User not authenticated')
       showError('Please log in to execute workflows.')
       return
     }
 
     let currentWorkflowId = localWorkflowId
+    console.log('[WorkflowBuilder] Current workflow ID:', currentWorkflowId)
     if (!currentWorkflowId) {
+      console.log('[WorkflowBuilder] No workflow ID, prompting to save')
       const confirmed = await showConfirm(
         'Workflow needs to be saved before execution. Save now?',
         { title: 'Save Workflow', confirmText: 'Save', cancelText: 'Cancel' }
@@ -397,44 +403,69 @@ const WorkflowBuilder = forwardRef<WorkflowBuilderHandle, WorkflowBuilderProps>(
       }
     }
 
+    console.log('[WorkflowBuilder] Setting execution inputs and showing dialog')
     setExecutionInputs('{}')
     setShowInputs(true)
+    console.log('[WorkflowBuilder] showInputs set to true')
   }, [isAuthenticated, localWorkflowId, saveWorkflow])
 
+  // Log when showInputs changes
+  useEffect(() => {
+    console.log('[WorkflowBuilder] showInputs changed to:', showInputs)
+  }, [showInputs])
+
   const handleConfirmExecute = useCallback(async () => {
+    console.log('[WorkflowBuilder] ===== handleConfirmExecute CALLED =====')
+    console.log('[WorkflowBuilder] executionInputs:', executionInputs)
+    console.log('[WorkflowBuilder] workflowIdRef.current:', workflowIdRef.current)
     setIsExecuting(true)
     setTimeout(async () => {
       try {
+        console.log('[WorkflowBuilder] Parsing execution inputs:', executionInputs)
         const inputs = JSON.parse(executionInputs)
+        console.log('[WorkflowBuilder] Parsed inputs:', inputs)
         setShowInputs(false)
         setExecutionInputs('{}')
         setIsExecuting(false)
 
         const tempExecutionId = `pending-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+        console.log('[WorkflowBuilder] Created temp execution ID:', tempExecutionId)
 
         if (onExecutionStart) {
+          console.log('[WorkflowBuilder] Calling onExecutionStart with temp ID')
           onExecutionStart(tempExecutionId)
         }
 
         showSuccess('✅ Execution starting...\n\nCheck the console at the bottom of the screen to watch it run.', 6000)
 
         const workflowIdToExecute = workflowIdRef.current
+        console.log('[WorkflowBuilder] Workflow ID to execute:', workflowIdToExecute)
         if (!workflowIdToExecute) {
+          console.error('[WorkflowBuilder] No workflow ID found - workflow must be saved')
           showError('Workflow must be saved before executing.')
           setIsExecuting(false)
           return
         }
 
+        console.log('[WorkflowBuilder] Calling api.executeWorkflow with:', { workflowIdToExecute, inputs })
         api.executeWorkflow(workflowIdToExecute, inputs)
           .then((execution) => {
+            console.log('[WorkflowBuilder] Execution response received:', execution)
             if (execution.execution_id && execution.execution_id !== tempExecutionId) {
+              console.log('[WorkflowBuilder] Updating execution ID:', execution.execution_id)
               if (onExecutionStart) {
                 onExecutionStart(execution.execution_id)
               }
             }
           })
           .catch((error: any) => {
-            console.error('Execution failed:', error)
+            console.error('[WorkflowBuilder] Execution failed:', error)
+            console.error('[WorkflowBuilder] Error details:', {
+              message: error.message,
+              response: error.response,
+              status: error.response?.status,
+              data: error.response?.data
+            })
             setIsExecuting(false)
             const errorMessage = error.response?.data?.detail || error.message || 'Unknown error'
             showError(`Failed to execute workflow: ${errorMessage}`)
@@ -1091,6 +1122,8 @@ const WorkflowBuilder = forwardRef<WorkflowBuilderHandle, WorkflowBuilderProps>(
           {/* Bottom: Chat Console */}
           <ExecutionConsole 
             activeWorkflowId={localWorkflowId || null}
+            executions={workflowTabs?.find(t => t.workflowId === localWorkflowId)?.executions || []}
+            activeExecutionId={workflowTabs?.find(t => t.workflowId === localWorkflowId)?.activeExecutionId || null}
             onWorkflowUpdate={handleWorkflowUpdate}
           />
         </div>
@@ -1105,6 +1138,92 @@ const WorkflowBuilder = forwardRef<WorkflowBuilderHandle, WorkflowBuilderProps>(
         />
       </div>
       
+      {/* Execution Inputs Dialog */}
+      {showInputs && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white rounded-lg shadow-xl p-6 max-w-md w-full mx-4">
+            <h3 className="text-lg font-semibold mb-4">Execution Inputs</h3>
+            <p className="text-sm text-gray-600 mb-4">
+              Enter input values as JSON (e.g., {"{"}"key": "value"{"}"})
+            </p>
+            <textarea
+              value={executionInputs}
+              onChange={(e) => {
+                console.log('[WorkflowBuilder] Execution inputs changed:', e.target.value)
+                setExecutionInputs(e.target.value)
+              }}
+              className="w-full h-32 p-3 border border-gray-300 rounded-md font-mono text-sm"
+              placeholder='{"key": "value"}'
+            />
+            <div className="flex gap-3 mt-4 justify-end">
+              <button
+                onClick={() => {
+                  console.log('[WorkflowBuilder] Cancel execution inputs dialog')
+                  setShowInputs(false)
+                  setExecutionInputs('{}')
+                }}
+                className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  console.log('[WorkflowBuilder] Confirm execution with inputs:', executionInputs)
+                  handleConfirmExecute()
+                }}
+                className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
+                disabled={isExecuting}
+              >
+                {isExecuting ? 'Executing...' : 'Execute'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Execution Inputs Dialog */}
+      {showInputs && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white rounded-lg shadow-xl p-6 max-w-md w-full mx-4">
+            <h3 className="text-lg font-semibold mb-4">Execution Inputs</h3>
+            <p className="text-sm text-gray-600 mb-4">
+              Enter input values as JSON (e.g., {"{"}"key": "value"{"}"})
+            </p>
+            <textarea
+              value={executionInputs}
+              onChange={(e) => {
+                console.log('[WorkflowBuilder] Execution inputs changed:', e.target.value)
+                setExecutionInputs(e.target.value)
+              }}
+              className="w-full h-32 p-3 border border-gray-300 rounded-md font-mono text-sm"
+              placeholder='{"key": "value"}'
+            />
+            <div className="flex gap-3 mt-4 justify-end">
+              <button
+                onClick={() => {
+                  console.log('[WorkflowBuilder] Cancel execution inputs dialog')
+                  setShowInputs(false)
+                  setExecutionInputs('{}')
+                }}
+                className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  console.log('[WorkflowBuilder] Confirm execution with inputs:', executionInputs)
+                  handleConfirmExecute()
+                }}
+                className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
+                disabled={isExecuting}
+              >
+                {isExecuting ? 'Executing...' : 'Execute'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Context Menu */}
       {contextMenu && (
         <>

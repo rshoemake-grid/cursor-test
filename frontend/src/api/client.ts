@@ -95,11 +95,32 @@ export const api = {
     workflowId: string,
     inputs: Record<string, any> = {}
   ): Promise<ExecutionState> {
-    const response = await axiosInstance.post(`/workflows/${workflowId}/execute`, {
-      workflow_id: workflowId,
-      inputs,
-    })
-    return response.data
+    console.log('[API Client] executeWorkflow called with:', { workflowId, inputs })
+    try {
+      const url = `/workflows/${workflowId}/execute`
+      const payload = {
+        workflow_id: workflowId,
+        inputs,
+      }
+      console.log('[API Client] POST request to:', url)
+      console.log('[API Client] Request payload:', payload)
+      const response = await axiosInstance.post(url, payload)
+      console.log('[API Client] Response received:', {
+        status: response.status,
+        data: response.data
+      })
+      return response.data
+    } catch (error: any) {
+      console.error('[API Client] executeWorkflow error:', error)
+      console.error('[API Client] Error details:', {
+        message: error.message,
+        response: error.response,
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        data: error.response?.data
+      })
+      throw error
+    }
   },
 
   async getExecution(executionId: string): Promise<ExecutionState> {
