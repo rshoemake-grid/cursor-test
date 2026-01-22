@@ -86,6 +86,35 @@ export default function MarketplacePage() {
       const savedAgents = localStorage.getItem('publishedAgents');
       let agentsData: AgentTemplate[] = savedAgents ? JSON.parse(savedAgents) : [];
       
+      // One-time migration: Set current user as author for all agents without author_id
+      if (user && user.id && agentsData.length > 0) {
+        let updated = false;
+        agentsData = agentsData.map(agent => {
+          if (!agent.author_id) {
+            updated = true;
+            return {
+              ...agent,
+              author_id: user.id,
+              author_name: user.username || user.email || null
+            };
+          }
+          return agent;
+        });
+        
+        if (updated) {
+          console.log('[Marketplace] Updated agents with author info:', user.id);
+          localStorage.setItem('publishedAgents', JSON.stringify(agentsData));
+        }
+      }
+      
+      // Debug: Log loaded agents with author info
+      console.log('[Marketplace] Loaded agents:', agentsData.map(a => ({
+        id: a.id,
+        name: a.name,
+        author_id: a.author_id,
+        has_author_id: !!a.author_id
+      })));
+      
       // Apply filters
       if (category) {
         agentsData = agentsData.filter(a => a.category === category);
@@ -149,45 +178,141 @@ export default function MarketplacePage() {
     }
   };
 
-  const deleteTemplate = async (templateId: string, templateName: string) => {
-    const confirmed = await showConfirm(
-      `Are you sure you want to delete "${templateName}" from the marketplace?`,
-      { title: 'Delete Template', confirmText: 'Delete', cancelText: 'Cancel', type: 'danger' }
-    );
-    if (!confirmed) return;
 
-    try {
-      await api.deleteTemplate(templateId);
-      showSuccess('Template deleted successfully');
-      // Remove from list
-      setTemplates(templates.filter(t => t.id !== templateId));
-    } catch (error: any) {
-      const detail = error?.response?.data?.detail ?? error?.message ?? 'Unknown error';
-      showError(`Failed to delete template: ${detail}`);
+  const deleteSelectedAgents = async () => {
+    if (selectedAgentIds.size === 0) return;
+    
+    const selectedAgents = agents.filter(a => selectedAgentIds.has(a.id));
+    
+    // Debug logging
+    console.log('[Marketplace] Delete agents check:', {
+      selectedCount: selectedAgents.length,
+      user: user ? { id: user.id, username: user.username } : null,
+      selectedAgents: selectedAgents.map(a => ({
+        id: a.id,
+        name: a.name,
+        author_id: a.author_id,
+        author_id_type: typeof a.author_id,
+        user_id: user?.id,
+        user_id_type: typeof user?.id
+      }))
+    });
+    
+    const userOwnedAgents = selectedAgents.filter(a => {
+      if (!user || !a.author_id || !user.id) return false;
+      const authorIdStr = String(a.author_id);
+      const userIdStr = String(user.id);
+      const isMatch = authorIdStr === userIdStr;
+      console.log(`[Marketplace] Agent ${a.id} ownership:`, {
+        authorId: a.author_id,
+        authorIdStr,
+        userId: user.id,
+        userIdStr,
+        isMatch
+      });
+      return isMatch;
+    });
+    
+    console.log('[Marketplace] User owned agents:', userOwnedAgents.length);
+    
+    if (userOwnedAgents.length === 0) {
+      // Check if any agents have author_id set
+      const agentsWithAuthorId = selectedAgents.filter(a => a.author_id);
+      if (agentsWithAuthorId.length === 0) {
+        showError('Selected agents were published before author tracking was added. Please republish them to enable deletion.');
+      } else {
+        showError(`You can only delete agents that you published. ${selectedAgents.length} selected, ${agentsWithAuthorId.length} have author info, but none match your user ID.`);
+      }
+      return;
     }
-  };
-
-  const deleteAgent = async (agentId: string, agentName: string) => {
-    const confirmed = await showConfirm(
-      `Are you sure you want to delete "${agentName}" from the marketplace?`,
-      { title: 'Delete Agent', confirmText: 'Delete', cancelText: 'Cancel', type: 'danger' }
-    );
-    if (!confirmed) return;
+    
+    if (userOwnedAgents.length < selectedAgents.length) {
+      const confirmed = await showConfirm(
+        `You can only delete ${userOwnedAgents.length} of ${selectedAgents.length} selected agent(s). Delete only the ones you own?`,
+        { title: 'Partial Delete', confirmText: 'Delete', cancelText: 'Cancel', type: 'warning' }
+      );
+      if (!confirmed) return;
+    } else {
+      const confirmed = await showConfirm(
+        `Are you sure you want to delete ${userOwnedAgents.length} selected agent(s) from the marketplace?`,
+        { title: 'Delete Agents', confirmText: 'Delete', cancelText: 'Cancel', type: 'danger' }
+      );
+      if (!confirmed) return;
+    }
 
     try {
       // Remove from localStorage
       const publishedAgents = localStorage.getItem('publishedAgents');
       if (publishedAgents) {
-        const agents: AgentTemplate[] = JSON.parse(publishedAgents);
-        const filteredAgents = agents.filter(a => a.id !== agentId);
+        const allAgents: AgentTemplate[] = JSON.parse(publishedAgents);
+        const agentIdsToDelete = new Set(userOwnedAgents.map(a => a.id));
+        const filteredAgents = allAgents.filter(a => !agentIdsToDelete.has(a.id));
         localStorage.setItem('publishedAgents', JSON.stringify(filteredAgents));
         
         // Update state
-        setAgents(prevAgents => prevAgents.filter(a => a.id !== agentId));
-        showSuccess('Agent deleted successfully');
+        setAgents(prevAgents => prevAgents.filter(a => !agentIdsToDelete.has(a.id)));
+        setSelectedAgentIds(new Set());
+        showSuccess(`Successfully deleted ${userOwnedAgents.length} agent(s)`);
       }
     } catch (error: any) {
-      showError(`Failed to delete agent: ${error?.message ?? 'Unknown error'}`);
+      showError(`Failed to delete agents: ${error?.message ?? 'Unknown error'}`);
+    }
+  };
+
+  const deleteSelectedWorkflows = async () => {
+    if (selectedTemplateIds.size === 0) return;
+    
+    const selectedTemplates = templates.filter(t => selectedTemplateIds.has(t.id));
+    
+    // Filter out official workflows - they cannot be deleted
+    const officialTemplates = selectedTemplates.filter(t => t.is_official);
+    const deletableTemplates = selectedTemplates.filter(t => !t.is_official);
+    
+    if (officialTemplates.length > 0) {
+      showError(`Cannot delete ${officialTemplates.length} official workflow(s). Official workflows cannot be deleted.`);
+      if (deletableTemplates.length === 0) {
+        return; // All selected are official, nothing to delete
+      }
+    }
+    
+    const userOwnedTemplates = deletableTemplates.filter(t => user && t.author_id && String(t.author_id) === String(user.id));
+    
+    if (userOwnedTemplates.length === 0) {
+      if (officialTemplates.length > 0) {
+        showError('You can only delete workflows that you published (official workflows cannot be deleted)');
+      } else {
+        showError('You can only delete workflows that you published');
+      }
+      return;
+    }
+    
+    if (userOwnedTemplates.length < deletableTemplates.length) {
+      const confirmed = await showConfirm(
+        `You can only delete ${userOwnedTemplates.length} of ${deletableTemplates.length} selected workflow(s). Delete only the ones you own?`,
+        { title: 'Partial Delete', confirmText: 'Delete', cancelText: 'Cancel', type: 'warning' }
+      );
+      if (!confirmed) return;
+    } else {
+      const confirmed = await showConfirm(
+        `Are you sure you want to delete ${userOwnedTemplates.length} selected workflow(s) from the marketplace?`,
+        { title: 'Delete Workflows', confirmText: 'Delete', cancelText: 'Cancel', type: 'danger' }
+      );
+      if (!confirmed) return;
+    }
+
+    try {
+      // Delete each template via API
+      const deletePromises = userOwnedTemplates.map(template => api.deleteTemplate(template.id));
+      await Promise.all(deletePromises);
+      
+      // Update state
+      const templateIdsToDelete = new Set(userOwnedTemplates.map(t => t.id));
+      setTemplates(prevTemplates => prevTemplates.filter(t => !templateIdsToDelete.has(t.id)));
+      setSelectedTemplateIds(new Set());
+      showSuccess(`Successfully deleted ${userOwnedTemplates.length} workflow(s)`);
+    } catch (error: any) {
+      const detail = error?.response?.data?.detail ?? error?.message ?? 'Unknown error';
+      showError(`Failed to delete workflows: ${detail}`);
     }
   };
 
@@ -245,68 +370,98 @@ export default function MarketplacePage() {
             </div>
             <div className="flex items-center gap-3">
               {activeTab === 'workflows' && selectedTemplateIds.size > 0 && (
-                <button
-                  onClick={async () => {
-                    // Load all selected workflows
-                    for (const templateId of selectedTemplateIds) {
-                      await useTemplate(templateId);
-                      // Small delay between loads to avoid race conditions
-                      await new Promise(resolve => setTimeout(resolve, 100));
+                <>
+                  <button
+                    onClick={async () => {
+                      // Load all selected workflows
+                      for (const templateId of selectedTemplateIds) {
+                        await useTemplate(templateId);
+                        // Small delay between loads to avoid race conditions
+                        await new Promise(resolve => setTimeout(resolve, 100));
+                      }
+                      // Clear selection after loading
+                      setSelectedTemplateIds(new Set());
+                    }}
+                    className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors flex items-center gap-2"
+                  >
+                    <Download className="w-4 h-4" />
+                    Load {selectedTemplateIds.size} Workflow{selectedTemplateIds.size > 1 ? 's' : ''}
+                  </button>
+                  {(() => {
+                    // Check if any selected workflows are official
+                    const selectedTemplates = templates.filter(t => selectedTemplateIds.has(t.id));
+                    const hasOfficialWorkflow = selectedTemplates.some(t => t.is_official);
+                    
+                    // Only show delete button if no official workflows are selected
+                    if (!hasOfficialWorkflow) {
+                      return (
+                        <button
+                          onClick={deleteSelectedWorkflows}
+                          className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center gap-2"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                          Delete {selectedTemplateIds.size} Workflow{selectedTemplateIds.size > 1 ? 's' : ''}
+                        </button>
+                      );
                     }
-                    // Clear selection after loading
-                    setSelectedTemplateIds(new Set());
-                  }}
-                  className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors flex items-center gap-2"
-                >
-                  <Download className="w-4 h-4" />
-                  Load {selectedTemplateIds.size} Workflow{selectedTemplateIds.size > 1 ? 's' : ''}
-                </button>
+                    return null;
+                  })()}
+                </>
               )}
               {activeTab === 'agents' && selectedAgentIds.size > 0 && (
-                <button
-                  onClick={() => {
-                    // Get selected agents
-                    const selectedAgents = agents.filter(a => selectedAgentIds.has(a.id));
-                    
-                    // Get the active workflow tab ID
-                    const activeTabId = localStorage.getItem('activeWorkflowTabId');
-                    
-                    if (!activeTabId) {
-                      showError('No active workflow found. Please open a workflow first.');
-                      return;
-                    }
-                    
-                    // Store agents to add in localStorage (more reliable than events)
-                    const pendingAgents = {
-                      tabId: activeTabId,
-                      agents: selectedAgents,
-                      timestamp: Date.now()
-                    };
-                    localStorage.setItem('pendingAgentsToAdd', JSON.stringify(pendingAgents));
-                    
-                    // Dispatch event as backup
-                    const event = new CustomEvent('addAgentsToWorkflow', {
-                      detail: {
-                        agents: selectedAgents,
-                        tabId: activeTabId
+                <>
+                  <button
+                    onClick={() => {
+                      // Get selected agents
+                      const selectedAgents = agents.filter(a => selectedAgentIds.has(a.id));
+                      
+                      // Get the active workflow tab ID
+                      const activeTabId = localStorage.getItem('activeWorkflowTabId');
+                      
+                      if (!activeTabId) {
+                        showError('No active workflow found. Please open a workflow first.');
+                        return;
                       }
-                    });
-                    window.dispatchEvent(event);
-                    
-                    showSuccess(`${selectedAgentIds.size} agent(s) added to workflow`);
-                    setSelectedAgentIds(new Set());
-                    
-                    // Small delay to ensure localStorage is written before navigation
-                    setTimeout(() => {
-                      // Navigate back to workflow builder
-                      navigate('/');
-                    }, 100);
-                  }}
-                  className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors flex items-center gap-2"
-                >
-                  <Download className="w-4 h-4" />
-                  Use {selectedAgentIds.size} Agent{selectedAgentIds.size > 1 ? 's' : ''}
-                </button>
+                      
+                      // Store agents to add in localStorage (more reliable than events)
+                      const pendingAgents = {
+                        tabId: activeTabId,
+                        agents: selectedAgents,
+                        timestamp: Date.now()
+                      };
+                      localStorage.setItem('pendingAgentsToAdd', JSON.stringify(pendingAgents));
+                      
+                      // Dispatch event as backup
+                      const event = new CustomEvent('addAgentsToWorkflow', {
+                        detail: {
+                          agents: selectedAgents,
+                          tabId: activeTabId
+                        }
+                      });
+                      window.dispatchEvent(event);
+                      
+                      showSuccess(`${selectedAgentIds.size} agent(s) added to workflow`);
+                      setSelectedAgentIds(new Set());
+                      
+                      // Small delay to ensure localStorage is written before navigation
+                      setTimeout(() => {
+                        // Navigate back to workflow builder
+                        navigate('/');
+                      }, 100);
+                    }}
+                    className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors flex items-center gap-2"
+                  >
+                    <Download className="w-4 h-4" />
+                    Use {selectedAgentIds.size} Agent{selectedAgentIds.size > 1 ? 's' : ''}
+                  </button>
+                  <button
+                    onClick={deleteSelectedAgents}
+                    className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center gap-2"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                    Delete {selectedAgentIds.size} Agent{selectedAgentIds.size > 1 ? 's' : ''}
+                  </button>
+                </>
               )}
             </div>
           </div>
@@ -404,7 +559,31 @@ export default function MarketplacePage() {
       </div>
 
       {/* Content Grid */}
-      <div className="max-w-7xl mx-auto px-4 py-8 flex-1 overflow-y-auto">
+      <div 
+        className="max-w-7xl mx-auto px-4 py-8 flex-1 overflow-y-auto"
+        onClick={(e) => {
+          // Deselect if clicking on empty space (not on a card or interactive element)
+          const target = e.target as HTMLElement;
+          // Check if click is on a card (has the card classes) or interactive element
+          const isCard = target.closest('[class*="bg-white"][class*="rounded-lg"][class*="shadow"]');
+          const isInteractive = target.closest('button') || 
+                                target.closest('input') || 
+                                target.closest('select') ||
+                                target.closest('a') ||
+                                target.tagName === 'BUTTON' ||
+                                target.tagName === 'INPUT' ||
+                                target.tagName === 'SELECT' ||
+                                target.tagName === 'A';
+          
+          if (!isCard && !isInteractive) {
+            if (activeTab === 'agents') {
+              setSelectedAgentIds(new Set());
+            } else {
+              setSelectedTemplateIds(new Set());
+            }
+          }
+        }}
+      >
         {loading ? (
           <div className="text-center py-12">
             <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
@@ -474,18 +653,6 @@ export default function MarketplacePage() {
                           </h3>
                         </div>
                         <div className="flex items-center gap-2">
-                          {user && agent.author_id === user.id && (
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                deleteAgent(agent.id, agent.name || agent.label);
-                              }}
-                              className="text-red-600 hover:bg-red-50 p-1 rounded"
-                              title="Delete agent"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
-                          )}
                         </div>
                       </div>
 
@@ -595,18 +762,6 @@ export default function MarketplacePage() {
                         <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded">
                           Official
                         </span>
-                      )}
-                      {user && template.author_id === user.id && (
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            deleteTemplate(template.id, template.name);
-                          }}
-                          className="text-red-600 hover:bg-red-50 p-1 rounded"
-                          title="Delete template"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
                       )}
                     </div>
                   </div>
