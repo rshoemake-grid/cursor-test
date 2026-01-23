@@ -611,4 +611,277 @@ describe('confirm', () => {
       await promise
     })
   })
+
+  describe('edge cases', () => {
+    it('should handle empty message', async () => {
+      const promise = showConfirm('')
+      
+      jest.advanceTimersByTime(50); await Promise.resolve()
+      
+      const message = document.querySelector('p')
+      expect(message?.textContent).toBe('')
+      
+      const confirmBtn = document.querySelector('button:last-child')
+      confirmBtn?.click()
+      await promise
+    })
+
+    it('should handle very long message', async () => {
+      const longMessage = 'a'.repeat(1000)
+      const promise = showConfirm(longMessage)
+      
+      jest.advanceTimersByTime(50); await Promise.resolve()
+      
+      const message = document.querySelector('p')
+      expect(message?.textContent).toBe(longMessage)
+      
+      const confirmBtn = document.querySelector('button:last-child')
+      confirmBtn?.click()
+      await promise
+    })
+
+    it('should handle message with newlines', async () => {
+      const multilineMessage = 'Line 1\nLine 2\nLine 3'
+      const promise = showConfirm(multilineMessage)
+      
+      jest.advanceTimersByTime(50); await Promise.resolve()
+      
+      const message = document.querySelector('p')
+      expect(message?.textContent).toBe(multilineMessage)
+      
+      const confirmBtn = document.querySelector('button:last-child')
+      confirmBtn?.click()
+      await promise
+    })
+
+    it('should handle options object being undefined', async () => {
+      const promise = showConfirm('Test', undefined as any)
+      
+      jest.advanceTimersByTime(50); await Promise.resolve()
+      
+      // Should use defaults
+      const title = document.querySelector('h3')
+      expect(title?.textContent).toBe('Confirm')
+      
+      const confirmBtn = document.querySelector('button:last-child')
+      confirmBtn?.click()
+      await promise
+    })
+
+
+    it('should handle style element already existing', async () => {
+      // Create style element first
+      const existingStyle = document.createElement('style')
+      existingStyle.id = 'confirm-dialog-styles'
+      document.head.appendChild(existingStyle)
+      
+      const promise = showConfirm('Test')
+      
+      jest.advanceTimersByTime(50); await Promise.resolve()
+      
+      // Should not create duplicate style element
+      const styles = document.querySelectorAll('#confirm-dialog-styles')
+      expect(styles.length).toBe(1)
+      
+      const confirmBtn = document.querySelector('button:last-child')
+      confirmBtn?.click()
+      await promise
+    })
+
+    it('should handle all dialog types', async () => {
+      const types: Array<'warning' | 'danger' | 'info'> = ['warning', 'danger', 'info']
+      
+      for (const type of types) {
+        const promise = showConfirm('Test', { type })
+        
+        jest.advanceTimersByTime(50); await Promise.resolve()
+        
+        const confirmBtn = document.querySelector('button:last-child') as HTMLButtonElement
+        expect(confirmBtn).toBeTruthy()
+        
+        confirmBtn.click()
+        const result = await promise
+        expect(result).toBe(true)
+        
+        // Clean up
+        document.body.innerHTML = ''
+        document.head.querySelector('#confirm-dialog-styles')?.remove()
+      }
+    })
+
+    it('should handle overlay click on dialog itself (not overlay)', async () => {
+      const promise = showConfirm('Test')
+      
+      jest.advanceTimersByTime(50); await Promise.resolve()
+      
+      const dialog = document.querySelector('div[style*="background: white"]')
+      expect(dialog).toBeTruthy()
+      
+      // Click on dialog (not overlay) - should not close
+      if (dialog) {
+        const clickEvent = new MouseEvent('click', { bubbles: true })
+        dialog.dispatchEvent(clickEvent)
+      }
+      
+      await jest.advanceTimersByTime(50)
+      
+      // Dialog should still be open
+      expect(document.querySelector('div[style*="background: white"]')).toBeTruthy()
+      
+      // Close properly
+      const confirmBtn = document.querySelector('button:last-child')
+      confirmBtn?.click()
+      await promise
+    })
+
+    it('should handle cancel button hover states', async () => {
+      const promise = showConfirm('Test')
+      
+      jest.advanceTimersByTime(50); await Promise.resolve()
+      
+      const cancelBtn = document.querySelector('button:first-child') as HTMLButtonElement
+      expect(cancelBtn).toBeTruthy()
+      
+      // Test hover
+      const mouseoverEvent = new MouseEvent('mouseover', { bubbles: true })
+      cancelBtn.dispatchEvent(mouseoverEvent)
+      
+      // Test mouseout
+      const mouseoutEvent = new MouseEvent('mouseout', { bubbles: true })
+      cancelBtn.dispatchEvent(mouseoutEvent)
+      
+      cancelBtn.click()
+      await promise
+    })
+
+    it('should handle confirm button hover states for warning type', async () => {
+      const promise = showConfirm('Test', { type: 'warning' })
+      
+      jest.advanceTimersByTime(50); await Promise.resolve()
+      
+      const confirmBtn = document.querySelector('button:last-child') as HTMLButtonElement
+      expect(confirmBtn).toBeTruthy()
+      
+      // Test hover
+      const mouseoverEvent = new MouseEvent('mouseover', { bubbles: true })
+      confirmBtn.dispatchEvent(mouseoverEvent)
+      
+      // Test mouseout
+      const mouseoutEvent = new MouseEvent('mouseout', { bubbles: true })
+      confirmBtn.dispatchEvent(mouseoutEvent)
+      
+      confirmBtn.click()
+      await promise
+    })
+
+    it('should handle confirm button hover states for danger type', async () => {
+      const promise = showConfirm('Test', { type: 'danger' })
+      
+      jest.advanceTimersByTime(50); await Promise.resolve()
+      
+      const confirmBtn = document.querySelector('button:last-child') as HTMLButtonElement
+      expect(confirmBtn).toBeTruthy()
+      
+      // Test hover
+      const mouseoverEvent = new MouseEvent('mouseover', { bubbles: true })
+      confirmBtn.dispatchEvent(mouseoverEvent)
+      
+      // Test mouseout
+      const mouseoutEvent = new MouseEvent('mouseout', { bubbles: true })
+      confirmBtn.dispatchEvent(mouseoutEvent)
+      
+      confirmBtn.click()
+      await promise
+    })
+
+    it('should handle confirm button hover states for info type', async () => {
+      const promise = showConfirm('Test', { type: 'info' })
+      
+      jest.advanceTimersByTime(50); await Promise.resolve()
+      
+      const confirmBtn = document.querySelector('button:last-child') as HTMLButtonElement
+      expect(confirmBtn).toBeTruthy()
+      
+      // Test hover
+      const mouseoverEvent = new MouseEvent('mouseover', { bubbles: true })
+      confirmBtn.dispatchEvent(mouseoverEvent)
+      
+      // Test mouseout
+      const mouseoutEvent = new MouseEvent('mouseout', { bubbles: true })
+      confirmBtn.dispatchEvent(mouseoutEvent)
+      
+      confirmBtn.click()
+      await promise
+    })
+
+    it('should handle focus on confirm button', async () => {
+      const promise = showConfirm('Test')
+      
+      jest.advanceTimersByTime(50); await Promise.resolve()
+      
+      const confirmBtn = document.querySelector('button:last-child') as HTMLButtonElement
+      expect(confirmBtn).toBeTruthy()
+      
+      // Button should be focusable
+      confirmBtn.focus()
+      expect(document.activeElement).toBe(confirmBtn)
+      
+      confirmBtn.click()
+      await promise
+    })
+
+    it('should handle multiple dialogs', async () => {
+      const promise1 = showConfirm('First')
+      jest.advanceTimersByTime(50); await Promise.resolve()
+      
+      // Second dialog should be on top
+      const promise2 = showConfirm('Second')
+      jest.advanceTimersByTime(50); await Promise.resolve()
+      
+      // Both should exist
+      const dialogs = document.querySelectorAll('div[style*="background: white"]')
+      expect(dialogs.length).toBe(2)
+      
+      // Close second
+      const buttons2 = document.querySelectorAll('button')
+      buttons2[buttons2.length - 1].click()
+      await promise2
+      
+      // First should still exist
+      const dialogsAfter = document.querySelectorAll('div[style*="background: white"]')
+      expect(dialogsAfter.length).toBe(1)
+      
+      // Close first
+      const buttons1 = document.querySelectorAll('button')
+      buttons1[buttons1.length - 1].click()
+      await promise1
+    })
+
+    it('should handle title being empty string', async () => {
+      const promise = showConfirm('Test', { title: '' })
+      
+      jest.advanceTimersByTime(50); await Promise.resolve()
+      
+      const title = document.querySelector('h3')
+      expect(title?.textContent).toBe('')
+      
+      const confirmBtn = document.querySelector('button:last-child')
+      confirmBtn?.click()
+      await promise
+    })
+
+    it('should handle title being very long', async () => {
+      const longTitle = 'a'.repeat(200)
+      const promise = showConfirm('Test', { title: longTitle })
+      
+      jest.advanceTimersByTime(50); await Promise.resolve()
+      
+      const title = document.querySelector('h3')
+      expect(title?.textContent).toBe(longTitle)
+      
+      const confirmBtn = document.querySelector('button:last-child')
+      confirmBtn?.click()
+      await promise
+    })
+  })
 })

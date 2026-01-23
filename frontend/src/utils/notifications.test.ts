@@ -273,5 +273,182 @@ describe('notifications', () => {
       expect(document.body.contains(notification)).toBe(false)
     })
   })
+
+  describe('edge cases', () => {
+    it('should handle duration of 0', () => {
+      const notification = showNotification('Test message', { duration: 0 })
+      
+      expect(notification).toBeTruthy()
+      jest.advanceTimersByTime(0)
+      jest.advanceTimersByTime(300)
+      
+      // Should be removed immediately
+      expect(document.body.contains(notification)).toBe(false)
+    })
+
+    it('should handle very large duration', () => {
+      const notification = showNotification('Test message', { duration: 100000 })
+      
+      expect(notification).toBeTruthy()
+      jest.advanceTimersByTime(5000)
+      
+      // Should still be visible
+      expect(document.body.contains(notification)).toBe(true)
+    })
+
+    it('should handle empty message', () => {
+      const notification = showNotification('')
+      
+      expect(notification).toBeTruthy()
+      expect(notification.textContent).toBe('')
+      expect(document.body.contains(notification)).toBe(true)
+    })
+
+    it('should handle message with only whitespace', () => {
+      const notification = showNotification('   ')
+      
+      expect(notification).toBeTruthy()
+      expect(notification.textContent).toBe('   ')
+    })
+
+    it('should handle very long message', () => {
+      const longMessage = 'a'.repeat(1000)
+      const notification = showNotification(longMessage)
+      
+      expect(notification).toBeTruthy()
+      expect(notification.textContent).toBe(longMessage)
+    })
+
+    it('should handle options object being undefined', () => {
+      const notification = showNotification('Test message', undefined as any)
+      
+      expect(notification).toBeTruthy()
+      expect(notification.textContent).toBe('Test message')
+    })
+
+
+    it('should handle duration being undefined in options', () => {
+      const notification = showNotification('Test message', { type: 'success', duration: undefined })
+      
+      expect(notification).toBeTruthy()
+      // Should use default duration of 5000
+      jest.advanceTimersByTime(4999)
+      expect(notification.style.cssText).not.toContain('opacity: 0')
+      
+      jest.advanceTimersByTime(1)
+      expect(notification.style.cssText).toContain('opacity: 0')
+    })
+
+    it('should handle type being undefined in options', () => {
+      const notification = showNotification('Test message', { duration: 1000, type: undefined as any })
+      
+      expect(notification).toBeTruthy()
+      // Should use default type 'info'
+      expect(notification).toBeInstanceOf(HTMLDivElement)
+    })
+
+    it('should handle style element already existing', () => {
+      // Create style element first
+      const existingStyle = document.createElement('style')
+      existingStyle.id = 'notification-styles'
+      document.head.appendChild(existingStyle)
+      
+      const notification = showNotification('Test message')
+      
+      expect(notification).toBeTruthy()
+      // Should not create duplicate style element
+      const styles = document.querySelectorAll('#notification-styles')
+      expect(styles.length).toBe(1)
+    })
+
+    it('should handle multiple notifications with different durations', () => {
+      const notification1 = showNotification('Message 1', { duration: 1000 })
+      const notification2 = showNotification('Message 2', { duration: 2000 })
+      
+      expect(document.body.contains(notification1)).toBe(true)
+      expect(document.body.contains(notification2)).toBe(true)
+      
+      jest.advanceTimersByTime(1000)
+      jest.advanceTimersByTime(300)
+      
+      expect(document.body.contains(notification1)).toBe(false)
+      expect(document.body.contains(notification2)).toBe(true)
+      
+      jest.advanceTimersByTime(1000)
+      jest.advanceTimersByTime(300)
+      
+      expect(document.body.contains(notification2)).toBe(false)
+    })
+
+    it('should handle showSuccess with undefined duration', () => {
+      const notification = showSuccess('Success', undefined)
+      
+      expect(notification).toBeTruthy()
+      // Should use default duration
+      jest.advanceTimersByTime(4999)
+      expect(notification.style.cssText).not.toContain('opacity: 0')
+    })
+
+    it('should handle showError with undefined duration', () => {
+      const notification = showError('Error', undefined)
+      
+      expect(notification).toBeTruthy()
+      // Should use default duration
+      jest.advanceTimersByTime(4999)
+      expect(notification.style.cssText).not.toContain('opacity: 0')
+    })
+
+    it('should handle showInfo with undefined duration', () => {
+      const notification = showInfo('Info', undefined)
+      
+      expect(notification).toBeTruthy()
+      // Should use default duration
+      jest.advanceTimersByTime(4999)
+      expect(notification.style.cssText).not.toContain('opacity: 0')
+    })
+
+    it('should handle showWarning with undefined duration', () => {
+      const notification = showWarning('Warning', undefined)
+      
+      expect(notification).toBeTruthy()
+      // Should use default duration
+      jest.advanceTimersByTime(4999)
+      expect(notification.style.cssText).not.toContain('opacity: 0')
+    })
+
+    it('should handle notification removal timing edge case', () => {
+      const notification = showNotification('Test message', { duration: 1000 })
+      
+      // Advance exactly to duration
+      jest.advanceTimersByTime(1000)
+      
+      // Should start fading
+      expect(notification.style.cssText).toContain('opacity: 0')
+      
+      // Advance past fade duration
+      jest.advanceTimersByTime(300)
+      
+      // Should be removed
+      expect(document.body.contains(notification)).toBe(false)
+    })
+
+    it('should handle all notification types with custom colors', () => {
+      const success = showNotification('Success', { type: 'success' })
+      const error = showNotification('Error', { type: 'error' })
+      const info = showNotification('Info', { type: 'info' })
+      const warning = showNotification('Warning', { type: 'warning' })
+      
+      expect(success).toBeTruthy()
+      expect(error).toBeTruthy()
+      expect(info).toBeTruthy()
+      expect(warning).toBeTruthy()
+      
+      // All should be in DOM
+      expect(document.body.contains(success)).toBe(true)
+      expect(document.body.contains(error)).toBe(true)
+      expect(document.body.contains(info)).toBe(true)
+      expect(document.body.contains(warning)).toBe(true)
+    })
+  })
 })
 

@@ -91,5 +91,67 @@ describe('executionStatus utilities', () => {
       }
     })
   })
+
+  describe('edge cases', () => {
+    it('should handle statusMap[status] || fallback for invalid status', () => {
+      // Test the || operator fallback
+      const invalidStatus = 'invalid-status'
+      const result = getExecutionStatusColor(invalidStatus)
+      // Should return fallback
+      expect(result).toBe('bg-gray-900 text-gray-200')
+    })
+
+    it('should handle statusMap[status] || fallback for empty string', () => {
+      const result = getExecutionStatusColor('')
+      // Should return fallback
+      expect(result).toBe('bg-gray-900 text-gray-200')
+    })
+
+    it('should handle statusMap[status] || fallback for light variant', () => {
+      const invalidStatus = 'invalid-status'
+      const result = getExecutionStatusColorLight(invalidStatus)
+      // Should return fallback
+      expect(result).toBe('bg-gray-100 text-gray-800')
+    })
+
+    it('should handle isValidExecutionStatus with empty string', () => {
+      expect(isValidExecutionStatus('')).toBe(false)
+    })
+
+    it('should handle isValidExecutionStatus with case variations', () => {
+      expect(isValidExecutionStatus('PENDING')).toBe(false) // Case sensitive
+      expect(isValidExecutionStatus('Running')).toBe(false) // Case sensitive
+    })
+
+    it('should handle all statusMap keys for getExecutionStatusColor', () => {
+      const statuses: ExecutionStatus[] = ['pending', 'running', 'completed', 'failed', 'paused']
+      
+      for (const status of statuses) {
+        const result = getExecutionStatusColor(status)
+        // Should not return fallback (should have status-specific color)
+        expect(result).toBeTruthy()
+        expect(result).toContain('bg-')
+        // Verify it's not the default fallback
+        if (status !== 'paused') {
+          expect(result).not.toBe('bg-gray-900 text-gray-200')
+        }
+      }
+    })
+
+    it('should handle all statusMap keys for getExecutionStatusColorLight', () => {
+      const statuses: ExecutionStatus[] = ['pending', 'running', 'completed', 'failed', 'paused']
+      
+      for (const status of statuses) {
+        const result = getExecutionStatusColorLight(status)
+        // Should not return fallback (should have status-specific color)
+        expect(result).toBeTruthy()
+        expect(result).toContain('bg-')
+        // Verify it's not the default fallback
+        if (status !== 'paused') {
+          expect(result).not.toBe('bg-gray-100 text-gray-800')
+        }
+      }
+    })
+  })
 })
 

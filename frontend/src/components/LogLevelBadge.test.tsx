@@ -1,6 +1,7 @@
 // Jest globals - no import needed
 import { render, screen } from '@testing-library/react'
 import LogLevelBadge from './LogLevelBadge'
+import { isValidLogLevel } from '../utils/logLevel'
 
 describe('LogLevelBadge', () => {
   it('should render ERROR level', () => {
@@ -61,6 +62,85 @@ describe('LogLevelBadge', () => {
     const { container } = render(<LogLevelBadge level="ERROR" className="custom-class" />)
     const badge = container.firstChild as HTMLElement
     expect(badge.className).toContain('custom-class')
+  })
+
+  describe('edge cases', () => {
+    it('should handle showBackground being false', () => {
+      render(<LogLevelBadge level="INFO" showBackground={false} />)
+      
+      const badge = screen.getByText('INFO')
+      expect(badge).toBeInTheDocument()
+      // Should not have background color classes
+      expect(badge.className).not.toContain('bg-')
+    })
+
+    it('should handle showBackground being undefined', () => {
+      render(<LogLevelBadge level="INFO" />)
+      
+      const badge = screen.getByText('INFO')
+      expect(badge).toBeInTheDocument()
+      // Should have background (default is true)
+      expect(badge.className).toContain('bg-')
+    })
+
+    it('should handle className being empty string', () => {
+      render(<LogLevelBadge level="INFO" className="" />)
+      
+      const badge = screen.getByText('INFO')
+      expect(badge).toBeInTheDocument()
+    })
+
+    it('should handle className being provided', () => {
+      render(<LogLevelBadge level="INFO" className="custom-class" />)
+      
+      const badge = screen.getByText('INFO')
+      expect(badge.className).toContain('custom-class')
+    })
+
+    it('should handle showBackground true with className', () => {
+      render(<LogLevelBadge level="INFO" showBackground={true} className="test-class" />)
+      
+      const badge = screen.getByText('INFO')
+      expect(badge.className).toContain('test-class')
+      expect(badge.className).toContain('bg-')
+    })
+
+    it('should handle showBackground false with className', () => {
+      render(<LogLevelBadge level="INFO" showBackground={false} className="test-class" />)
+      
+      const badge = screen.getByText('INFO')
+      expect(badge.className).toContain('test-class')
+      expect(badge.className).not.toContain('bg-')
+    })
+
+    it('should handle ternary operator for showBackground', () => {
+      // Test both branches of showBackground ? getLogLevelColor : ''
+      const { unmount: unmount1 } = render(<LogLevelBadge level="INFO" showBackground={true} />)
+      const badge1 = screen.getByText('INFO')
+      expect(badge1.className).toContain('bg-')
+      unmount1()
+      document.body.innerHTML = ''
+      
+      const { unmount: unmount2 } = render(<LogLevelBadge level="INFO" showBackground={false} />)
+      const badge2 = screen.getByText('INFO')
+      expect(badge2.className).not.toContain('bg-')
+      unmount2()
+    })
+
+    it('should handle isValidLogLevel check for all levels', () => {
+      const levels = ['DEBUG', 'INFO', 'WARNING', 'ERROR', 'CRITICAL', 'INVALID']
+      
+      for (const level of levels) {
+        const { unmount } = render(<LogLevelBadge level={level} />)
+        
+        const badge = screen.getByText(isValidLogLevel(level) ? level : 'INFO')
+        expect(badge).toBeInTheDocument()
+        
+        unmount()
+        // Clean up DOM between renders
+        document.body.innerHTML = ''
+      }
+    })
   })
 })
 

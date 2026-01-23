@@ -194,4 +194,116 @@ describe('logger', () => {
       process.env.NODE_ENV = originalEnv
     })
   })
+
+  describe('isDev edge cases', () => {
+    it('should handle NODE_ENV being undefined', () => {
+      const originalEnv = process.env.NODE_ENV
+      delete process.env.NODE_ENV
+      
+      // Reload logger to get new isDev value
+      jest.resetModules()
+      const { logger: newLogger } = require('./logger')
+      
+      // Should log (isDev = undefined === 'development' || undefined !== 'production' = false || true = true)
+      newLogger.debug('test')
+      expect(consoleLogSpy).toHaveBeenCalled()
+      
+      process.env.NODE_ENV = originalEnv
+      jest.resetModules()
+    })
+
+    it('should handle NODE_ENV being empty string', () => {
+      const originalEnv = process.env.NODE_ENV
+      process.env.NODE_ENV = ''
+      
+      // Reload logger to get new isDev value
+      jest.resetModules()
+      const { logger: newLogger } = require('./logger')
+      
+      // Should log (isDev = '' === 'development' || '' !== 'production' = false || true = true)
+      newLogger.debug('test')
+      expect(consoleLogSpy).toHaveBeenCalled()
+      
+      process.env.NODE_ENV = originalEnv
+      jest.resetModules()
+    })
+
+    it('should handle NODE_ENV being "test"', () => {
+      const originalEnv = process.env.NODE_ENV
+      process.env.NODE_ENV = 'test'
+      
+      // Reload logger to get new isDev value
+      jest.resetModules()
+      const { logger: newLogger } = require('./logger')
+      
+      // Should log (isDev = 'test' === 'development' || 'test' !== 'production' = false || true = true)
+      newLogger.debug('test')
+      expect(consoleLogSpy).toHaveBeenCalled()
+      
+      process.env.NODE_ENV = originalEnv
+      jest.resetModules()
+    })
+
+    it('should handle NODE_ENV being "production"', () => {
+      const originalEnv = process.env.NODE_ENV
+      process.env.NODE_ENV = 'production'
+      
+      // Reload logger to get new isDev value
+      jest.resetModules()
+      const { logger: newLogger } = require('./logger')
+      
+      // Should not log (isDev = 'production' === 'development' || 'production' !== 'production' = false || false = false)
+      newLogger.debug('test')
+      expect(consoleLogSpy).not.toHaveBeenCalled()
+      
+      process.env.NODE_ENV = originalEnv
+      jest.resetModules()
+    })
+
+    it('should handle all logger methods with isDev check', () => {
+      // Test debug, info, and log (all check isDev)
+      logger.debug('debug message')
+      logger.info('info message')
+      logger.log('log message')
+      
+      // All should be called in development mode
+      expect(consoleLogSpy).toHaveBeenCalled()
+      expect(consoleInfoSpy).toHaveBeenCalled()
+    })
+
+    it('should handle warn and error without isDev check', () => {
+      // warn and error don't check isDev
+      logger.warn('warn message')
+      logger.error('error message')
+      
+      expect(consoleWarnSpy).toHaveBeenCalledWith('[WARN]', 'warn message')
+      expect(consoleErrorSpy).toHaveBeenCalledWith('[ERROR]', 'error message')
+    })
+
+    it('should handle logger methods with no arguments', () => {
+      logger.debug()
+      logger.info()
+      logger.warn()
+      logger.error()
+      logger.log()
+      
+      expect(consoleLogSpy).toHaveBeenCalled()
+      expect(consoleInfoSpy).toHaveBeenCalled()
+      expect(consoleWarnSpy).toHaveBeenCalled()
+      expect(consoleErrorSpy).toHaveBeenCalled()
+    })
+
+    it('should handle logger methods with empty string', () => {
+      logger.debug('')
+      logger.info('')
+      logger.warn('')
+      logger.error('')
+      logger.log('')
+      
+      expect(consoleLogSpy).toHaveBeenCalledWith('[DEBUG]', '')
+      expect(consoleInfoSpy).toHaveBeenCalledWith('[INFO]', '')
+      expect(consoleWarnSpy).toHaveBeenCalledWith('[WARN]', '')
+      expect(consoleErrorSpy).toHaveBeenCalledWith('[ERROR]', '')
+    })
+  })
 })

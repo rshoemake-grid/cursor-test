@@ -623,5 +623,491 @@ describe('AgentNodeEditor', () => {
     const temperatureSlider = screen.getByLabelText(/temperature/i) as HTMLInputElement
     expect(temperatureSlider.value).toBe('0.7')
   })
+
+  describe('edge cases', () => {
+    it('should handle agent_config being null', () => {
+      const nodeWithNullConfig = {
+        ...mockNode,
+        data: {
+          ...mockNode.data,
+          agent_config: null as any
+        }
+      }
+
+      render(
+        <AgentNodeEditor
+          node={nodeWithNullConfig}
+          availableModels={availableModels}
+          onUpdate={mockOnUpdate}
+          onConfigUpdate={mockOnConfigUpdate}
+        />
+      )
+
+      const modelSelect = screen.getByLabelText(/model/i) as HTMLSelectElement
+      // Should use first available model (agent_config || {})
+      expect(modelSelect.value).toBe('gpt-4')
+    })
+
+    it('should handle model || operator with availableModels.length > 0', () => {
+      const nodeWithoutModel = {
+        ...mockNode,
+        data: {
+          ...mockNode.data,
+          agent_config: {
+            system_prompt: 'Test'
+            // model is undefined
+          }
+        }
+      }
+
+      render(
+        <AgentNodeEditor
+          node={nodeWithoutModel}
+          availableModels={availableModels}
+          onUpdate={mockOnUpdate}
+          onConfigUpdate={mockOnConfigUpdate}
+        />
+      )
+
+      const modelSelect = screen.getByLabelText(/model/i) as HTMLSelectElement
+      // Should use first available model
+      expect(modelSelect.value).toBe('gpt-4')
+    })
+
+    it('should handle model || operator with availableModels.length === 0', () => {
+      const nodeWithoutModel = {
+        ...mockNode,
+        data: {
+          ...mockNode.data,
+          agent_config: {
+            system_prompt: 'Test'
+            // model is undefined
+          }
+        }
+      }
+
+      render(
+        <AgentNodeEditor
+          node={nodeWithoutModel}
+          availableModels={[]}
+          onUpdate={mockOnUpdate}
+          onConfigUpdate={mockOnConfigUpdate}
+        />
+      )
+
+      const modelSelect = screen.getByLabelText(/model/i) as HTMLSelectElement
+      // Should use default 'gpt-4o-mini'
+      expect(modelSelect.value).toBe('gpt-4o-mini')
+    })
+
+    it('should handle system_prompt || operator with empty string', () => {
+      const nodeWithEmptyPrompt = {
+        ...mockNode,
+        data: {
+          ...mockNode.data,
+          agent_config: {
+            ...mockNode.data.agent_config,
+            system_prompt: ''
+          }
+        }
+      }
+
+      render(
+        <AgentNodeEditor
+          node={nodeWithEmptyPrompt}
+          availableModels={availableModels}
+          onUpdate={mockOnUpdate}
+          onConfigUpdate={mockOnConfigUpdate}
+        />
+      )
+
+      const promptTextarea = screen.getByLabelText(/system prompt/i) as HTMLTextAreaElement
+      // Empty string || '' = '' (empty string is falsy)
+      expect(promptTextarea.value).toBe('')
+    })
+
+    it('should handle system_prompt || operator with undefined', () => {
+      const nodeWithoutPrompt = {
+        ...mockNode,
+        data: {
+          ...mockNode.data,
+          agent_config: {
+            ...mockNode.data.agent_config,
+            system_prompt: undefined
+          }
+        }
+      }
+
+      render(
+        <AgentNodeEditor
+          node={nodeWithoutPrompt}
+          availableModels={availableModels}
+          onUpdate={mockOnUpdate}
+          onConfigUpdate={mockOnConfigUpdate}
+        />
+      )
+
+      const promptTextarea = screen.getByLabelText(/system prompt/i) as HTMLTextAreaElement
+      // undefined || '' = ''
+      expect(promptTextarea.value).toBe('')
+    })
+
+    it('should handle max_tokens || operator with undefined', () => {
+      const nodeWithoutMaxTokens = {
+        ...mockNode,
+        data: {
+          ...mockNode.data,
+          agent_config: {
+            ...mockNode.data.agent_config,
+            max_tokens: undefined
+          }
+        }
+      }
+
+      render(
+        <AgentNodeEditor
+          node={nodeWithoutMaxTokens}
+          availableModels={availableModels}
+          onUpdate={mockOnUpdate}
+          onConfigUpdate={mockOnConfigUpdate}
+        />
+      )
+
+      const maxTokensInput = screen.getByLabelText(/max tokens/i) as HTMLInputElement
+      // undefined || '' = ''
+      expect(maxTokensInput.value).toBe('')
+    })
+
+    it('should handle max_tokens || operator with 0', () => {
+      const nodeWithZeroMaxTokens = {
+        ...mockNode,
+        data: {
+          ...mockNode.data,
+          agent_config: {
+            ...mockNode.data.agent_config,
+            max_tokens: 0
+          }
+        }
+      }
+
+      render(
+        <AgentNodeEditor
+          node={nodeWithZeroMaxTokens}
+          availableModels={availableModels}
+          onUpdate={mockOnUpdate}
+          onConfigUpdate={mockOnConfigUpdate}
+        />
+      )
+
+      const maxTokensInput = screen.getByLabelText(/max tokens/i) as HTMLInputElement
+      // 0 || '' = '' (0 is falsy)
+      expect(maxTokensInput.value).toBe('')
+    })
+
+    it('should handle temperature || operator with 0', () => {
+      const nodeWithZeroTemp = {
+        ...mockNode,
+        data: {
+          ...mockNode.data,
+          agent_config: {
+            ...mockNode.data.agent_config,
+            temperature: 0
+          }
+        }
+      }
+
+      render(
+        <AgentNodeEditor
+          node={nodeWithZeroTemp}
+          availableModels={availableModels}
+          onUpdate={mockOnUpdate}
+          onConfigUpdate={mockOnConfigUpdate}
+        />
+      )
+
+      const temperatureSlider = screen.getByLabelText(/temperature/i) as HTMLInputElement
+      // 0 || 0.7 = 0.7 (0 is falsy)
+      expect(temperatureSlider.value).toBe('0.7')
+    })
+
+    it('should handle temperature || operator with undefined', () => {
+      const nodeWithoutTemp = {
+        ...mockNode,
+        data: {
+          ...mockNode.data,
+          agent_config: {
+            ...mockNode.data.agent_config,
+            temperature: undefined
+          }
+        }
+      }
+
+      render(
+        <AgentNodeEditor
+          node={nodeWithoutTemp}
+          availableModels={availableModels}
+          onUpdate={mockOnUpdate}
+          onConfigUpdate={mockOnConfigUpdate}
+        />
+      )
+
+      const temperatureSlider = screen.getByLabelText(/temperature/i) as HTMLInputElement
+      // undefined || 0.7 = 0.7
+      expect(temperatureSlider.value).toBe('0.7')
+    })
+
+    it('should handle temperature?.toFixed(1) || fallback', () => {
+      const nodeWithTemp = {
+        ...mockNode,
+        data: {
+          ...mockNode.data,
+          agent_config: {
+            ...mockNode.data.agent_config,
+            temperature: 0.5
+          }
+        }
+      }
+
+      render(
+        <AgentNodeEditor
+          node={nodeWithTemp}
+          availableModels={availableModels}
+          onUpdate={mockOnUpdate}
+          onConfigUpdate={mockOnConfigUpdate}
+        />
+      )
+
+      const temperatureLabel = screen.getByLabelText(/temperature/i).previousElementSibling
+      // Should show temperature value
+      expect(temperatureLabel?.textContent).toContain('0.5')
+    })
+
+    it('should handle availableModels.length > 0 ternary', () => {
+      // Test availableModels.length > 0 ? ... : ...
+      render(
+        <AgentNodeEditor
+          node={mockNode}
+          availableModels={availableModels}
+          onUpdate={mockOnUpdate}
+          onConfigUpdate={mockOnConfigUpdate}
+        />
+      )
+
+      // Should show provider message when models are available
+      expect(screen.getByText(/This agent will use the configured LLM provider/i)).toBeInTheDocument()
+    })
+
+    it('should handle availableModels.length === 0 ternary', () => {
+      render(
+        <AgentNodeEditor
+          node={mockNode}
+          availableModels={[]}
+          onUpdate={mockOnUpdate}
+          onConfigUpdate={mockOnConfigUpdate}
+        />
+      )
+
+      // Should show OpenAI message when no models available
+      expect(screen.getByText(/This agent will call the OpenAI API/i)).toBeInTheDocument()
+    })
+
+    it('should handle parseInt with empty string returning undefined', () => {
+      render(
+        <AgentNodeEditor
+          node={mockNode}
+          availableModels={availableModels}
+          onUpdate={mockOnUpdate}
+          onConfigUpdate={mockOnConfigUpdate}
+        />
+      )
+
+      const maxTokensInput = screen.getByLabelText(/max tokens/i) as HTMLInputElement
+      fireEvent.change(maxTokensInput, { target: { value: '' } })
+
+      // e.target.value ? parseInt(...) : undefined
+      // Empty string is falsy, so should be undefined
+      expect(mockOnConfigUpdate).toHaveBeenCalledWith('agent_config', 'max_tokens', undefined)
+    })
+
+    it('should handle parseInt with valid number', () => {
+      render(
+        <AgentNodeEditor
+          node={mockNode}
+          availableModels={availableModels}
+          onUpdate={mockOnUpdate}
+          onConfigUpdate={mockOnConfigUpdate}
+        />
+      )
+
+      const maxTokensInput = screen.getByLabelText(/max tokens/i) as HTMLInputElement
+      fireEvent.change(maxTokensInput, { target: { value: '500' } })
+
+      // Should parse to number
+      expect(mockOnConfigUpdate).toHaveBeenCalledWith('agent_config', 'max_tokens', 500)
+    })
+
+    it('should handle parseInt with invalid string', () => {
+      render(
+        <AgentNodeEditor
+          node={mockNode}
+          availableModels={availableModels}
+          onUpdate={mockOnUpdate}
+          onConfigUpdate={mockOnConfigUpdate}
+        />
+      )
+
+      const maxTokensInput = screen.getByLabelText(/max tokens/i) as HTMLInputElement
+      fireEvent.change(maxTokensInput, { target: { value: 'abc' } })
+
+      // parseInt('abc') = NaN, but value is truthy so it's passed
+      // Verify the code path exists (NaN handling)
+      expect(mockOnConfigUpdate).toHaveBeenCalled()
+      const lastCall = mockOnConfigUpdate.mock.calls[mockOnConfigUpdate.mock.calls.length - 1]
+      expect(lastCall[0]).toBe('agent_config')
+      expect(lastCall[1]).toBe('max_tokens')
+      // Value might be NaN or undefined depending on implementation
+      expect(isNaN(lastCall[2] as number) || lastCall[2] === undefined).toBe(true)
+    })
+
+    it('should handle all focus checks for systemPromptRef', () => {
+      const { rerender } = render(
+        <AgentNodeEditor
+          node={mockNode}
+          availableModels={availableModels}
+          onUpdate={mockOnUpdate}
+          onConfigUpdate={mockOnConfigUpdate}
+        />
+      )
+
+      const promptTextarea = screen.getByLabelText(/system prompt/i) as HTMLTextAreaElement
+      promptTextarea.focus()
+
+      const updatedNode = {
+        ...mockNode,
+        data: {
+          ...mockNode.data,
+          agent_config: {
+            ...mockNode.data.agent_config,
+            system_prompt: 'New prompt'
+          }
+        }
+      }
+
+      rerender(
+        <AgentNodeEditor
+          node={updatedNode}
+          availableModels={availableModels}
+          onUpdate={mockOnUpdate}
+          onConfigUpdate={mockOnConfigUpdate}
+        />
+      )
+
+      // Value should not change when focused
+      expect(promptTextarea.value).toBe('You are a helpful assistant')
+    })
+
+    it('should handle all focus checks for maxTokensRef', () => {
+      const { rerender } = render(
+        <AgentNodeEditor
+          node={mockNode}
+          availableModels={availableModels}
+          onUpdate={mockOnUpdate}
+          onConfigUpdate={mockOnConfigUpdate}
+        />
+      )
+
+      const maxTokensInput = screen.getByLabelText(/max tokens/i) as HTMLInputElement
+      maxTokensInput.focus()
+
+      const updatedNode = {
+        ...mockNode,
+        data: {
+          ...mockNode.data,
+          agent_config: {
+            ...mockNode.data.agent_config,
+            max_tokens: 2000
+          }
+        }
+      }
+
+      rerender(
+        <AgentNodeEditor
+          node={updatedNode}
+          availableModels={availableModels}
+          onUpdate={mockOnUpdate}
+          onConfigUpdate={mockOnConfigUpdate}
+        />
+      )
+
+      // Value should not change when focused
+      expect(maxTokensInput.value).toBe('1000')
+    })
+
+    it('should handle model selection with all availableModels', () => {
+      const manyModels = [
+        { value: 'model1', label: 'Model 1', provider: 'openai' },
+        { value: 'model2', label: 'Model 2', provider: 'openai' },
+        { value: 'model3', label: 'Model 3', provider: 'openai' }
+      ]
+
+      render(
+        <AgentNodeEditor
+          node={mockNode}
+          availableModels={manyModels}
+          onUpdate={mockOnUpdate}
+          onConfigUpdate={mockOnConfigUpdate}
+        />
+      )
+
+      // Should render all models
+      manyModels.forEach(model => {
+        expect(screen.getByText(model.label)).toBeInTheDocument()
+      })
+    })
+
+    it('should handle temperature parseFloat', () => {
+      render(
+        <AgentNodeEditor
+          node={mockNode}
+          availableModels={availableModels}
+          onUpdate={mockOnUpdate}
+          onConfigUpdate={mockOnConfigUpdate}
+        />
+      )
+
+      const temperatureSlider = screen.getByLabelText(/temperature/i) as HTMLInputElement
+      fireEvent.change(temperatureSlider, { target: { value: '0.8' } })
+
+      // Should parse to float
+      expect(mockOnUpdate).toHaveBeenCalledWith('agent_config', expect.objectContaining({
+        temperature: 0.8
+      }))
+    })
+
+    it('should handle temperature parseFloat with various values', () => {
+      const values = ['0.0', '0.1', '0.5', '0.9', '1.0']
+
+      for (const value of values) {
+        jest.clearAllMocks()
+        document.body.innerHTML = ''
+        
+        render(
+          <AgentNodeEditor
+            node={mockNode}
+            availableModels={availableModels}
+            onUpdate={mockOnUpdate}
+            onConfigUpdate={mockOnConfigUpdate}
+          />
+        )
+
+        const temperatureSlider = screen.getByLabelText(/temperature/i) as HTMLInputElement
+        fireEvent.change(temperatureSlider, { target: { value } })
+
+        expect(mockOnUpdate).toHaveBeenCalledWith('agent_config', expect.objectContaining({
+          temperature: parseFloat(value)
+        }))
+      }
+    })
+  })
 })
 

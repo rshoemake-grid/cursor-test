@@ -82,5 +82,67 @@ describe('logLevel utilities', () => {
       }
     })
   })
+
+  describe('edge cases', () => {
+    it('should handle levelMap[level] || fallback for invalid level', () => {
+      // Test the || operator fallback
+      const invalidLevel = 'invalid-level'
+      const result = getLogLevelColor(invalidLevel)
+      // Should return fallback
+      expect(result).toBe('bg-gray-800 text-gray-300')
+    })
+
+    it('should handle levelMap[level] || fallback for empty string', () => {
+      const result = getLogLevelColor('')
+      // Should return fallback
+      expect(result).toBe('bg-gray-800 text-gray-300')
+    })
+
+    it('should handle levelMap[level] || fallback for getLogLevelTextColor', () => {
+      const invalidLevel = 'invalid-level'
+      const result = getLogLevelTextColor(invalidLevel)
+      // Should return fallback
+      expect(result).toBe('text-gray-300')
+    })
+
+    it('should handle isValidLogLevel with empty string', () => {
+      expect(isValidLogLevel('')).toBe(false)
+    })
+
+    it('should handle isValidLogLevel with case variations', () => {
+      expect(isValidLogLevel('info')).toBe(false) // Case sensitive
+      expect(isValidLogLevel('Error')).toBe(false) // Case sensitive
+    })
+
+    it('should handle all levelMap keys for getLogLevelColor', () => {
+      const levels: LogLevel[] = ['INFO', 'WARNING', 'ERROR', 'DEBUG']
+      
+      for (const level of levels) {
+        const result = getLogLevelColor(level)
+        // Should not return fallback (should have level-specific color)
+        expect(result).toBeTruthy()
+        expect(result).toContain('bg-')
+        // Verify it's not the default fallback
+        if (level !== 'INFO') {
+          expect(result).not.toBe('bg-gray-800 text-gray-300')
+        }
+      }
+    })
+
+    it('should handle all levelMap keys for getLogLevelTextColor', () => {
+      const levels: LogLevel[] = ['INFO', 'WARNING', 'ERROR', 'DEBUG']
+      
+      for (const level of levels) {
+        const result = getLogLevelTextColor(level)
+        // Should not return fallback (should have level-specific color)
+        expect(result).toBeTruthy()
+        expect(result).toContain('text-')
+        // Verify it's not the default fallback
+        if (level !== 'INFO') {
+          expect(result).not.toBe('text-gray-300')
+        }
+      }
+    })
+  })
 })
 
