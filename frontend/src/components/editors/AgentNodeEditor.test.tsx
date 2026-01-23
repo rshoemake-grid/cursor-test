@@ -482,5 +482,146 @@ describe('AgentNodeEditor', () => {
     const temperatureSlider = screen.getByLabelText(/temperature/i) as HTMLInputElement
     expect(temperatureSlider.value).toBe('1')
   })
+
+  it('should not update system prompt when input is focused', async () => {
+    const { rerender } = render(
+      <AgentNodeEditor
+        node={mockNode}
+        availableModels={availableModels}
+        onUpdate={mockOnUpdate}
+        onConfigUpdate={mockOnConfigUpdate}
+      />
+    )
+
+    const promptTextarea = screen.getByLabelText(/system prompt/i) as HTMLTextAreaElement
+    promptTextarea.focus()
+
+    const updatedNode = {
+      ...mockNode,
+      data: {
+        ...mockNode.data,
+        agent_config: {
+          ...mockNode.data.agent_config,
+          system_prompt: 'Updated prompt'
+        }
+      }
+    }
+
+    rerender(
+      <AgentNodeEditor
+        node={updatedNode}
+        availableModels={availableModels}
+        onUpdate={mockOnUpdate}
+        onConfigUpdate={mockOnConfigUpdate}
+      />
+    )
+
+    // Value should not change when input is focused
+    expect(promptTextarea.value).toBe('You are a helpful assistant')
+  })
+
+  it('should not update max tokens when input is focused', async () => {
+    const { rerender } = render(
+      <AgentNodeEditor
+        node={mockNode}
+        availableModels={availableModels}
+        onUpdate={mockOnUpdate}
+        onConfigUpdate={mockOnConfigUpdate}
+      />
+    )
+
+    const maxTokensInput = screen.getByLabelText(/max tokens/i) as HTMLInputElement
+    maxTokensInput.focus()
+
+    const updatedNode = {
+      ...mockNode,
+      data: {
+        ...mockNode.data,
+        agent_config: {
+          ...mockNode.data.agent_config,
+          max_tokens: 2000
+        }
+      }
+    }
+
+    rerender(
+      <AgentNodeEditor
+        node={updatedNode}
+        availableModels={availableModels}
+        onUpdate={mockOnUpdate}
+        onConfigUpdate={mockOnConfigUpdate}
+      />
+    )
+
+    // Value should not change when input is focused
+    expect(maxTokensInput.value).toBe('1000')
+  })
+
+  it('should use gpt-4o-mini when no model and no availableModels', () => {
+    const nodeWithoutModel = {
+      ...mockNode,
+      data: {
+        ...mockNode.data,
+        agent_config: {
+          system_prompt: 'Test'
+        }
+      }
+    }
+
+    render(
+      <AgentNodeEditor
+        node={nodeWithoutModel}
+        availableModels={[]}
+        onUpdate={mockOnUpdate}
+        onConfigUpdate={mockOnConfigUpdate}
+      />
+    )
+
+    const modelSelect = screen.getByLabelText(/model/i) as HTMLSelectElement
+    expect(modelSelect.value).toBe('gpt-4o-mini')
+  })
+
+  it('should handle empty max tokens input value', async () => {
+    const user = userEvent.setup()
+    render(
+      <AgentNodeEditor
+        node={mockNode}
+        availableModels={availableModels}
+        onUpdate={mockOnUpdate}
+        onConfigUpdate={mockOnConfigUpdate}
+      />
+    )
+
+    const maxTokensInput = screen.getByLabelText(/max tokens/i)
+    await user.clear(maxTokensInput)
+
+    // Should call onConfigUpdate with undefined when value is empty
+    expect(mockOnConfigUpdate).toHaveBeenCalledWith('agent_config', 'max_tokens', undefined)
+  })
+
+  it('should handle undefined temperature', () => {
+    const nodeWithoutTemp = {
+      ...mockNode,
+      data: {
+        ...mockNode.data,
+        agent_config: {
+          ...mockNode.data.agent_config,
+          temperature: undefined
+        }
+      }
+    }
+
+    render(
+      <AgentNodeEditor
+        node={nodeWithoutTemp}
+        availableModels={availableModels}
+        onUpdate={mockOnUpdate}
+        onConfigUpdate={mockOnConfigUpdate}
+      />
+    )
+
+    const temperatureSlider = screen.getByLabelText(/temperature/i) as HTMLInputElement
+    expect(temperatureSlider.value).toBe('0.7')
+  })
 })
 

@@ -37,7 +37,10 @@ export function useLocalStorage<T>(
         
         // Save to local storage
         if (typeof window !== 'undefined') {
-          window.localStorage.setItem(key, JSON.stringify(valueToStore))
+          // JSON.stringify(undefined) returns undefined, which causes issues
+          // Convert undefined to null for storage
+          const valueToStoreString = valueToStore === undefined ? JSON.stringify(null) : JSON.stringify(valueToStore)
+          window.localStorage.setItem(key, valueToStoreString)
         }
       } catch (error) {
         logger.error(`Error setting localStorage key "${key}":`, error)
@@ -136,7 +139,10 @@ export function setLocalStorageItem<T>(key: string, value: T): boolean {
   }
   
   try {
-    window.localStorage.setItem(key, JSON.stringify(value))
+    // JSON.stringify(undefined) returns undefined, which causes issues with localStorage.setItem
+    // Convert undefined to null for storage
+    const valueToStore = value === undefined ? null : value
+    window.localStorage.setItem(key, JSON.stringify(valueToStore))
     return true
   } catch (error) {
     logger.error(`Error setting localStorage key "${key}":`, error)
