@@ -3,6 +3,7 @@ import { showConfirm } from './confirm'
 
 describe('confirm', () => {
   beforeEach(() => {
+    jest.useFakeTimers()
     // Clear document body
     document.body.innerHTML = ''
     // Clear any existing styles
@@ -10,6 +11,10 @@ describe('confirm', () => {
     if (existingStyles) {
       existingStyles.remove()
     }
+  })
+
+  afterEach(() => {
+    jest.useRealTimers()
   })
 
   afterEach(() => {
@@ -36,8 +41,9 @@ describe('confirm', () => {
     it('should resolve to false when cancel button is clicked', async () => {
       const promise = showConfirm('Test message')
       
-      // Wait for DOM to be created
-      await new Promise(resolve => setTimeout(resolve, 50))
+      // Wait for DOM to be created (use jest timers)
+      jest.advanceTimersByTime(50)
+      await Promise.resolve() // Allow React to update
       
       const buttons = document.querySelectorAll('button')
       expect(buttons.length).toBeGreaterThan(0)
@@ -52,8 +58,9 @@ describe('confirm', () => {
     it('should resolve to true when confirm button is clicked', async () => {
       const promise = showConfirm('Test message')
       
-      // Wait for DOM to be created
-      await new Promise(resolve => setTimeout(resolve, 50))
+      // Wait for DOM to be created (use jest timers)
+      jest.advanceTimersByTime(50)
+      await Promise.resolve() // Allow React to update
       
       const buttons = document.querySelectorAll('button')
       expect(buttons.length).toBeGreaterThan(1)
@@ -68,7 +75,7 @@ describe('confirm', () => {
     it('should use custom title', async () => {
       const promise = showConfirm('Test message', { title: 'Custom Title' })
       
-      await new Promise(resolve => setTimeout(resolve, 50))
+      jest.advanceTimersByTime(50); await Promise.resolve()
       
       const title = document.querySelector('h3')
       expect(title?.textContent).toBe('Custom Title')
@@ -84,7 +91,7 @@ describe('confirm', () => {
         cancelText: 'No'
       })
       
-      await new Promise(resolve => setTimeout(resolve, 50))
+      jest.advanceTimersByTime(50); await Promise.resolve()
       
       const buttons = document.querySelectorAll('button')
       expect(buttons[0].textContent).toBe('No')
@@ -97,7 +104,7 @@ describe('confirm', () => {
     it('should resolve to false when overlay is clicked', async () => {
       const promise = showConfirm('Test message')
       
-      await new Promise(resolve => setTimeout(resolve, 50))
+      jest.advanceTimersByTime(50); await Promise.resolve()
       
       const overlay = document.body.lastElementChild as HTMLElement
       expect(overlay).toBeTruthy()
@@ -112,7 +119,7 @@ describe('confirm', () => {
     it('should apply warning type colors', async () => {
       const promise = showConfirm('Test message', { type: 'warning' })
       
-      await new Promise(resolve => setTimeout(resolve, 50))
+      jest.advanceTimersByTime(50); await Promise.resolve()
       
       const buttons = document.querySelectorAll('button')
       expect(buttons.length).toBe(2)
@@ -133,7 +140,7 @@ describe('confirm', () => {
     it('should apply danger type colors', async () => {
       const promise = showConfirm('Test message', { type: 'danger' })
       
-      await new Promise(resolve => setTimeout(resolve, 50))
+      jest.advanceTimersByTime(50); await Promise.resolve()
       
       const buttons = document.querySelectorAll('button')
       expect(buttons.length).toBe(2)
@@ -153,7 +160,7 @@ describe('confirm', () => {
     it('should apply info type colors', async () => {
       const promise = showConfirm('Test message', { type: 'info' })
       
-      await new Promise(resolve => setTimeout(resolve, 50))
+      jest.advanceTimersByTime(50); await Promise.resolve()
       
       const buttons = document.querySelectorAll('button')
       expect(buttons.length).toBe(2)
@@ -173,7 +180,7 @@ describe('confirm', () => {
     it('should handle hover effects on cancel button', async () => {
       const promise = showConfirm('Test message')
       
-      await new Promise(resolve => setTimeout(resolve, 50))
+      jest.advanceTimersByTime(50); await Promise.resolve()
       
       const buttons = document.querySelectorAll('button')
       const cancelBtn = buttons[0] as HTMLButtonElement
@@ -193,7 +200,7 @@ describe('confirm', () => {
     it('should handle hover effects on confirm button', async () => {
       const promise = showConfirm('Test message', { type: 'warning' })
       
-      await new Promise(resolve => setTimeout(resolve, 50))
+      jest.advanceTimersByTime(50); await Promise.resolve()
       
       const buttons = document.querySelectorAll('button')
       expect(buttons.length).toBe(2)
@@ -220,7 +227,7 @@ describe('confirm', () => {
 
     it('should add animation styles only once', async () => {
       const promise1 = showConfirm('First dialog')
-      await new Promise(resolve => setTimeout(resolve, 50))
+      jest.advanceTimersByTime(50); await Promise.resolve()
       
       const styles1 = document.getElementById('confirm-dialog-styles')
       expect(styles1).toBeTruthy()
@@ -232,7 +239,7 @@ describe('confirm', () => {
       
       // Create second dialog
       const promise2 = showConfirm('Second dialog')
-      await new Promise(resolve => setTimeout(resolve, 50))
+      jest.advanceTimersByTime(50); await Promise.resolve()
       
       const styles2 = document.getElementById('confirm-dialog-styles')
       expect(styles2).toBe(styles1) // Should be the same element
@@ -246,7 +253,7 @@ describe('confirm', () => {
     it('should handle multi-line messages', async () => {
       const promise = showConfirm('Line 1\nLine 2\nLine 3')
       
-      await new Promise(resolve => setTimeout(resolve, 50))
+      jest.advanceTimersByTime(50); await Promise.resolve()
       
       const message = document.querySelector('p')
       expect(message?.textContent).toBe('Line 1\nLine 2\nLine 3')
@@ -260,7 +267,7 @@ describe('confirm', () => {
     it('should remove overlay after confirmation', async () => {
       const promise = showConfirm('Test message')
       
-      await new Promise(resolve => setTimeout(resolve, 50))
+      jest.advanceTimersByTime(50); await Promise.resolve()
       
       const overlayBefore = document.body.children.length
       expect(overlayBefore).toBeGreaterThan(0)
@@ -271,7 +278,7 @@ describe('confirm', () => {
       await promise
       
       // Overlay should be removed
-      await new Promise(resolve => setTimeout(resolve, 10))
+      jest.advanceTimersByTime(10); await Promise.resolve()
       const overlayAfter = document.querySelector('div[style*="position: fixed"]')
       expect(overlayAfter).toBeFalsy()
     })
@@ -279,7 +286,7 @@ describe('confirm', () => {
     it('should remove overlay after cancellation', async () => {
       const promise = showConfirm('Test message')
       
-      await new Promise(resolve => setTimeout(resolve, 50))
+      jest.advanceTimersByTime(50); await Promise.resolve()
       
       const overlayBefore = document.body.children.length
       expect(overlayBefore).toBeGreaterThan(0)
@@ -290,7 +297,7 @@ describe('confirm', () => {
       await promise
       
       // Overlay should be removed
-      await new Promise(resolve => setTimeout(resolve, 10))
+      jest.advanceTimersByTime(10); await Promise.resolve()
       const overlayAfter = document.querySelector('div[style*="position: fixed"]')
       expect(overlayAfter).toBeFalsy()
     })
@@ -298,7 +305,7 @@ describe('confirm', () => {
     it('should use default options when not provided', async () => {
       const promise = showConfirm('Test message')
       
-      await new Promise(resolve => setTimeout(resolve, 50))
+      jest.advanceTimersByTime(50); await Promise.resolve()
       
       const title = document.querySelector('h3')
       expect(title?.textContent).toBe('Confirm')
@@ -314,7 +321,7 @@ describe('confirm', () => {
     it('should set overlay styles correctly', async () => {
       const promise = showConfirm('Test message')
       
-      await new Promise(resolve => setTimeout(resolve, 50))
+      jest.advanceTimersByTime(50); await Promise.resolve()
       
       const overlay = document.body.lastElementChild as HTMLElement
       expect(overlay).toBeTruthy()
@@ -328,7 +335,7 @@ describe('confirm', () => {
     it('should set dialog styles correctly', async () => {
       const promise = showConfirm('Test message')
       
-      await new Promise(resolve => setTimeout(resolve, 50))
+      jest.advanceTimersByTime(50); await Promise.resolve()
       
       const overlay = document.body.lastElementChild as HTMLElement
       const dialog = overlay.querySelector('div') as HTMLElement
@@ -343,7 +350,7 @@ describe('confirm', () => {
     it('should set title styles correctly', async () => {
       const promise = showConfirm('Test message')
       
-      await new Promise(resolve => setTimeout(resolve, 50))
+      jest.advanceTimersByTime(50); await Promise.resolve()
       
       const title = document.querySelector('h3') as HTMLElement
       expect(title).toBeTruthy()
@@ -357,7 +364,7 @@ describe('confirm', () => {
     it('should set message styles correctly', async () => {
       const promise = showConfirm('Test message')
       
-      await new Promise(resolve => setTimeout(resolve, 50))
+      jest.advanceTimersByTime(50); await Promise.resolve()
       
       const message = document.querySelector('p') as HTMLElement
       expect(message).toBeTruthy()
@@ -371,7 +378,7 @@ describe('confirm', () => {
     it('should set button container styles correctly', async () => {
       const promise = showConfirm('Test message')
       
-      await new Promise(resolve => setTimeout(resolve, 50))
+      jest.advanceTimersByTime(50); await Promise.resolve()
       
       // Find button container by looking for div containing buttons
       const buttons = document.querySelectorAll('button')
@@ -385,7 +392,7 @@ describe('confirm', () => {
     it('should set cancel button styles correctly', async () => {
       const promise = showConfirm('Test message')
       
-      await new Promise(resolve => setTimeout(resolve, 50))
+      jest.advanceTimersByTime(50); await Promise.resolve()
       
       const buttons = document.querySelectorAll('button')
       const cancelBtn = buttons[0] as HTMLButtonElement
@@ -399,7 +406,7 @@ describe('confirm', () => {
     it('should set confirm button styles with warning type', async () => {
       const promise = showConfirm('Test message', { type: 'warning' })
       
-      await new Promise(resolve => setTimeout(resolve, 50))
+      jest.advanceTimersByTime(50); await Promise.resolve()
       
       const buttons = document.querySelectorAll('button')
       const confirmBtn = buttons[1] as HTMLButtonElement
@@ -413,7 +420,7 @@ describe('confirm', () => {
     it('should set confirm button styles with danger type', async () => {
       const promise = showConfirm('Test message', { type: 'danger' })
       
-      await new Promise(resolve => setTimeout(resolve, 50))
+      jest.advanceTimersByTime(50); await Promise.resolve()
       
       const buttons = document.querySelectorAll('button')
       const confirmBtn = buttons[1] as HTMLButtonElement
@@ -427,7 +434,7 @@ describe('confirm', () => {
     it('should set confirm button styles with info type', async () => {
       const promise = showConfirm('Test message', { type: 'info' })
       
-      await new Promise(resolve => setTimeout(resolve, 50))
+      jest.advanceTimersByTime(50); await Promise.resolve()
       
       const buttons = document.querySelectorAll('button')
       const confirmBtn = buttons[1] as HTMLButtonElement
@@ -441,7 +448,7 @@ describe('confirm', () => {
     it('should add animation styles to document head', async () => {
       const promise = showConfirm('Test message')
       
-      await new Promise(resolve => setTimeout(resolve, 50))
+      jest.advanceTimersByTime(50); await Promise.resolve()
       
       const styles = document.getElementById('confirm-dialog-styles')
       expect(styles).toBeTruthy()
@@ -456,7 +463,7 @@ describe('confirm', () => {
     it('should focus confirm button on mount', async () => {
       const promise = showConfirm('Test message')
       
-      await new Promise(resolve => setTimeout(resolve, 50))
+      jest.advanceTimersByTime(50); await Promise.resolve()
       
       const buttons = document.querySelectorAll('button')
       const confirmBtn = buttons[1] as HTMLButtonElement
@@ -472,7 +479,7 @@ describe('confirm', () => {
     it('should not close when clicking dialog itself (not overlay)', async () => {
       const promise = showConfirm('Test message')
       
-      await new Promise(resolve => setTimeout(resolve, 50))
+      jest.advanceTimersByTime(50); await Promise.resolve()
       
       const overlay = document.body.lastElementChild as HTMLElement
       const dialog = overlay.querySelector('div') as HTMLElement
@@ -481,7 +488,7 @@ describe('confirm', () => {
       dialog.click()
       
       // Dialog should still be there
-      await new Promise(resolve => setTimeout(resolve, 10))
+      jest.advanceTimersByTime(10); await Promise.resolve()
       expect(document.body.lastElementChild).toBe(overlay)
       
       // Now click overlay to close
@@ -495,7 +502,7 @@ describe('confirm', () => {
       for (const type of types) {
         const promise = showConfirm('Test message', { type })
         
-        await new Promise(resolve => setTimeout(resolve, 50))
+        jest.advanceTimersByTime(50); await Promise.resolve()
         
         const buttons = document.querySelectorAll('button')
         const confirmBtn = buttons[1] as HTMLButtonElement
@@ -509,7 +516,7 @@ describe('confirm', () => {
     it('should handle button hover state transitions', async () => {
       const promise = showConfirm('Test message', { type: 'danger' })
       
-      await new Promise(resolve => setTimeout(resolve, 50))
+      jest.advanceTimersByTime(50); await Promise.resolve()
       
       const buttons = document.querySelectorAll('button')
       const confirmBtn = buttons[1] as HTMLButtonElement
@@ -537,7 +544,7 @@ describe('confirm', () => {
     it('should handle empty message', async () => {
       const promise = showConfirm('')
       
-      await new Promise(resolve => setTimeout(resolve, 50))
+      jest.advanceTimersByTime(50); await Promise.resolve()
       
       const message = document.querySelector('p')
       expect(message?.textContent).toBe('')
@@ -551,7 +558,7 @@ describe('confirm', () => {
       const longMessage = 'A'.repeat(1000)
       const promise = showConfirm(longMessage)
       
-      await new Promise(resolve => setTimeout(resolve, 50))
+      jest.advanceTimersByTime(50); await Promise.resolve()
       
       const message = document.querySelector('p')
       expect(message?.textContent).toBe(longMessage)
@@ -565,7 +572,7 @@ describe('confirm', () => {
       const specialMessage = 'Test <script>alert("xss")</script> & "quotes"'
       const promise = showConfirm(specialMessage)
       
-      await new Promise(resolve => setTimeout(resolve, 50))
+      jest.advanceTimersByTime(50); await Promise.resolve()
       
       const message = document.querySelector('p')
       expect(message?.textContent).toBe(specialMessage)
@@ -578,7 +585,7 @@ describe('confirm', () => {
     it('should handle empty title', async () => {
       const promise = showConfirm('Test message', { title: '' })
       
-      await new Promise(resolve => setTimeout(resolve, 50))
+      jest.advanceTimersByTime(50); await Promise.resolve()
       
       const title = document.querySelector('h3')
       expect(title?.textContent).toBe('')
@@ -594,7 +601,7 @@ describe('confirm', () => {
         cancelText: ''
       })
       
-      await new Promise(resolve => setTimeout(resolve, 50))
+      jest.advanceTimersByTime(50); await Promise.resolve()
       
       const buttons = document.querySelectorAll('button')
       expect(buttons[0].textContent).toBe('')
