@@ -39,7 +39,7 @@ async def test_user(db_session: AsyncSession):
 class TestStatusCodeComparisons:
     """Test status code comparison boundaries"""
     
-            @pytest.mark.asyncio
+    @pytest.mark.asyncio
     async def test_test_llm_connection_status_200(self, test_user, db_session):
         """Test LLM connection test with status 200 (boundary: == 200)"""
         from main import app
@@ -159,7 +159,7 @@ class TestStatusCodeComparisons:
                 with patch("backend.api.settings_routes.httpx.AsyncClient") as mock_client:
                     mock_response = MagicMock()
                     mock_response.status_code = 404
-            mock_response.text = "Not found"
+                    mock_response.text = "Not found"
                     mock_client.return_value.__aenter__.return_value.post = AsyncMock(return_value=mock_response)
                     
                     response = await client.post(
@@ -212,9 +212,9 @@ class TestStatusCodeComparisons:
 
 
 class TestTypeComparisons:
-        """Test type comparison boundaries"""
+    """Test type comparison boundaries"""
     
-            @pytest.mark.asyncio
+    @pytest.mark.asyncio
     async def test_test_llm_connection_type_openai(self, test_user, db_session):
         """Test LLM connection test with type 'openai' (boundary: == 'openai')"""
         from main import app
@@ -264,21 +264,23 @@ class TestTypeComparisons:
                 headers = {"Authorization": f"Bearer {token}"}
                 
                 with patch("backend.api.settings_routes.httpx.AsyncClient") as mock_client:
-            mock_response = MagicMock()
-            mock_response.status_code = 200
-            mock_response.json.return_value = {"content": [{"text": "test"}]}
+                    mock_response = MagicMock()
+                    mock_response.status_code = 200
+                    mock_response.json.return_value = {"content": [{"text": "test"}]}
                     mock_client.return_value.__aenter__.return_value.post = AsyncMock(return_value=mock_response)
                     
                     response = await client.post(
-                "/api/settings/llm/test",
-                json={
-                    "type": "anthropic",
-                    "api_key": "sk-ant-test-key-12345678901234567890",
-                    "model": "claude-3-5-sonnet"
-                    },
-                    headers=headers
-                )
-                assert response.status_code == 200
+                        "/api/settings/llm/test",
+                        json={
+                            "type": "anthropic",
+                            "api_key": "sk-ant-test-key-12345678901234567890",
+                            "model": "claude-3-5-sonnet"
+                        },
+                        headers=headers
+                    )
+                    assert response.status_code == 200
+        finally:
+            app.dependency_overrides.clear()
     
     @pytest.mark.asyncio
     async def test_test_llm_connection_type_gemini(self, test_user, db_session):
@@ -346,67 +348,74 @@ class TestTypeComparisons:
                     headers=headers
                 )
                 assert response.status_code == 200
+        finally:
+            app.dependency_overrides.clear()
 
 
 class TestAPIKeyLengthComparisons:
-            """Test API key length comparison boundaries"""
+    """Test API key length comparison boundaries"""
+    
+    def test_is_valid_api_key_length_9(self):
+        """Test API key validation with length exactly 9 (boundary: < 10 true)"""
+        from backend.api.settings_routes import _is_valid_api_key
+        result = _is_valid_api_key("123456789")  # Exactly 9 chars
+        assert result is False
+    
+    def test_is_valid_api_key_length_10(self):
+        """Test API key validation with length exactly 10 (boundary: < 10 false)"""
+        from backend.api.settings_routes import _is_valid_api_key
+        result = _is_valid_api_key("1234567890")  # Exactly 10 chars
+        assert result is True
+    
+    def test_is_valid_api_key_length_11(self):
+        """Test API key validation with length exactly 11 (boundary: > 10)"""
+        from backend.api.settings_routes import _is_valid_api_key
+        result = _is_valid_api_key("12345678901")  # Exactly 11 chars
+        assert result is True
+    
+    def test_is_valid_api_key_length_24_with_placeholder(self):
+        """Test API key validation with length 24 and placeholder (boundary: < 25)"""
+        from backend.api.settings_routes import _is_valid_api_key
+        result = _is_valid_api_key("your-api-key-here-123")  # Exactly 24 chars
+        assert result is False
             
-            def test_is_valid_api_key_length_9(self):
-                """Test API key validation with length exactly 9 (boundary: < 10 true)"""
-                from backend.api.settings_routes import _is_valid_api_key
-                result = _is_valid_api_key("123456789")  # Exactly 9 chars
-                assert result is False
-            
-            def test_is_valid_api_key_length_10(self):
-                """Test API key validation with length exactly 10 (boundary: < 10 false)"""
-                from backend.api.settings_routes import _is_valid_api_key
-                result = _is_valid_api_key("1234567890")  # Exactly 10 chars
-                assert result is True
-            
-            def test_is_valid_api_key_length_11(self):
-                """Test API key validation with length exactly 11 (boundary: > 10)"""
-                from backend.api.settings_routes import _is_valid_api_key
-                result = _is_valid_api_key("12345678901")  # Exactly 11 chars
-                assert result is True
-            
-            def test_is_valid_api_key_length_24_with_placeholder(self):
-                """Test API key validation with length 24 and placeholder (boundary: < 25)"""
-                from backend.api.settings_routes import _is_valid_api_key
-                result = _is_valid_api_key("your-api-key-here-123")  # Exactly 24 chars
-                assert result is False
-            
-            def test_is_valid_api_key_length_25_with_placeholder(self):
+    def test_is_valid_api_key_length_25_with_placeholder(self):
         """Test API key validation with length 25 and placeholder (boundary: >= 25)"""
+        from backend.api.settings_routes import _is_valid_api_key
         result = _is_valid_api_key("your-api-key-here-1234")  # Exactly 25 chars
         # Should pass length check but fail placeholder check
         assert result is False
     
-        def test_is_valid_api_key_length_29_with_masked(self):
+    def test_is_valid_api_key_length_29_with_masked(self):
         """Test API key validation with length 29 and masked pattern (boundary: < 30)"""
+        from backend.api.settings_routes import _is_valid_api_key
         result = _is_valid_api_key("sk-test-*****here-123456")  # Exactly 29 chars
         assert result is False
     
-        def test_is_valid_api_key_length_30_with_masked(self):
+    def test_is_valid_api_key_length_30_with_masked(self):
         """Test API key validation with length 30 and masked pattern (boundary: >= 30)"""
+        from backend.api.settings_routes import _is_valid_api_key
         result = _is_valid_api_key("sk-test-*****here-1234567")  # Exactly 30 chars
         # Should pass length check but fail masked pattern check
         assert result is False
     
-        def test_is_valid_api_key_empty_string(self):
+    def test_is_valid_api_key_empty_string(self):
         """Test API key validation with empty string"""
+        from backend.api.settings_routes import _is_valid_api_key
         result = _is_valid_api_key("")
         assert result is False
     
-        def test_is_valid_api_key_valid_long(self):
+    def test_is_valid_api_key_valid_long(self):
         """Test API key validation with valid long key"""
+        from backend.api.settings_routes import _is_valid_api_key
         result = _is_valid_api_key("sk-test-key-123456789012345678901234567890")
         assert result is True
 
 
 class TestLengthComparisons:
-            """Test length comparison boundaries"""
-            
-            @pytest.mark.asyncio
+    """Test length comparison boundaries"""
+    
+    @pytest.mark.asyncio
     async def test_save_llm_settings_providers_length_zero(self, test_user, db_session):
         """Test save settings with 0 providers (boundary: len(providers) == 0)"""
         from main import app
@@ -537,9 +546,9 @@ class TestAPIKeyLengthComparisonsStandalone:
 
 
 class TestCacheComparisons:
-            """Test cache comparison boundaries"""
-            
-            @pytest.mark.asyncio
+    """Test cache comparison boundaries"""
+    
+    @pytest.mark.asyncio
     async def test_get_llm_settings_from_cache(self, test_user, db_session):
         """Test get settings from cache (boundary: user_id in _settings_cache)"""
         from main import app
@@ -553,29 +562,33 @@ class TestCacheComparisons:
         try:
             async with AsyncClient(app=app, base_url="http://test") as client:
                 # Clear cache first
+                from backend.api.settings_routes import _settings_cache
                 _settings_cache.clear()
-        
-        # Add to cache
-        from backend.api.settings_routes import LLMSettings, LLMProvider
-        settings = LLMSettings(
-            providers=[LLMProvider(
-                id="test-1",
-                name="Test",
-                type="openai",
-                apiKey="sk-test",
-                defaultModel="gpt-4",
-                models=["gpt-4"],
-                enabled=True
-            )]
-        )
-        _settings_cache[test_user.id] = settings
-        
-        token = create_access_token({"sub": test_user.username})
-        headers = {"Authorization": f"Bearer {token}"}
-        
-        response = await client.get("/api/settings/llm", headers=headers)
-        assert response.status_code == 200
-        assert len(response.json()["providers"]) == 1
+                
+                # Add to cache
+                from backend.api.settings_routes import LLMSettings, LLMProvider
+                settings = LLMSettings(
+                    providers=[LLMProvider(
+                        id="test-1",
+                        name="Test",
+                        type="openai",
+                        apiKey="sk-test",
+                        defaultModel="gpt-4",
+                        models=["gpt-4"],
+                        enabled=True
+                    )]
+                )
+                _settings_cache[test_user.id] = settings
+                
+                from backend.auth.jwt import create_access_token
+                token = create_access_token({"sub": test_user.username})
+                headers = {"Authorization": f"Bearer {token}"}
+                
+                response = await client.get("/api/settings/llm", headers=headers)
+                assert response.status_code == 200
+                assert len(response.json()["providers"]) == 1
+        finally:
+            app.dependency_overrides.clear()
     
     @pytest.mark.asyncio
     async def test_get_llm_settings_not_in_cache(self, test_user, db_session):
@@ -591,20 +604,24 @@ class TestCacheComparisons:
         try:
             async with AsyncClient(app=app, base_url="http://test") as client:
                 # Clear cache
+                from backend.api.settings_routes import _settings_cache
                 _settings_cache.clear()
-        
-        token = create_access_token({"sub": test_user.username})
-        headers = {"Authorization": f"Bearer {token}"}
-        
-        response = await client.get("/api/settings/llm", headers=headers)
-        # Should return empty settings or load from DB
-        assert response.status_code == 200
+                
+                from backend.auth.jwt import create_access_token
+                token = create_access_token({"sub": test_user.username})
+                headers = {"Authorization": f"Bearer {token}"}
+                
+                response = await client.get("/api/settings/llm", headers=headers)
+                # Should return empty settings or load from DB
+                assert response.status_code == 200
+        finally:
+            app.dependency_overrides.clear()
 
 
 class TestEmptyChecks:
-        """Test empty value comparison boundaries"""
+    """Test empty value comparison boundaries"""
     
-            @pytest.mark.asyncio
+    @pytest.mark.asyncio
     async def test_get_llm_settings_settings_db_none(self, test_user, db_session):
         """Test get settings when settings_db is None (boundary: settings_db is None)"""
         from main import app
@@ -619,19 +636,24 @@ class TestEmptyChecks:
             async with AsyncClient(app=app, base_url="http://test") as client:
                 # Ensure no settings in DB
                 from sqlalchemy import delete
+                from backend.database.models import SettingsDB
                 await db_session.execute(delete(SettingsDB).where(SettingsDB.user_id == test_user.id))
-        await db_session.commit()
-        
-        # Clear cache
-        _settings_cache.clear()
-        
-        token = create_access_token({"sub": test_user.username})
-        headers = {"Authorization": f"Bearer {token}"}
-        
-        response = await client.get("/api/settings/llm", headers=headers)
-        assert response.status_code == 200
-        # Should return empty settings
-        assert "providers" in response.json()
+                await db_session.commit()
+                
+                # Clear cache
+                from backend.api.settings_routes import _settings_cache
+                _settings_cache.clear()
+                
+                from backend.auth.jwt import create_access_token
+                token = create_access_token({"sub": test_user.username})
+                headers = {"Authorization": f"Bearer {token}"}
+                
+                response = await client.get("/api/settings/llm", headers=headers)
+                assert response.status_code == 200
+                # Should return empty settings
+                assert "providers" in response.json()
+        finally:
+            app.dependency_overrides.clear()
     
     @pytest.mark.asyncio
     async def test_get_llm_settings_settings_data_none(self, test_user, db_session):
@@ -647,22 +669,27 @@ class TestEmptyChecks:
         try:
             async with AsyncClient(app=app, base_url="http://test") as client:
                 # Create settings DB record with None settings_data
+                from backend.database.models import SettingsDB
                 settings_db = SettingsDB(
-            user_id=test_user.id,
-            settings_data=None
-        )
-        db_session.add(settings_db)
-        await db_session.commit()
-        
-        # Clear cache
-        _settings_cache.clear()
-        
-        token = create_access_token({"sub": test_user.username})
-        headers = {"Authorization": f"Bearer {token}"}
-        
-        response = await client.get("/api/settings/llm", headers=headers)
-        assert response.status_code == 200
-        # Should return empty settings
+                    user_id=test_user.id,
+                    settings_data=None
+                )
+                db_session.add(settings_db)
+                await db_session.commit()
+                
+                # Clear cache
+                from backend.api.settings_routes import _settings_cache
+                _settings_cache.clear()
+                
+                from backend.auth.jwt import create_access_token
+                token = create_access_token({"sub": test_user.username})
+                headers = {"Authorization": f"Bearer {token}"}
+                
+                response = await client.get("/api/settings/llm", headers=headers)
+                assert response.status_code == 200
+                # Should return empty settings
+        finally:
+            app.dependency_overrides.clear()
     
     @pytest.mark.asyncio
     async def test_get_llm_settings_settings_data_not_none(self, test_user, db_session):
@@ -678,39 +705,44 @@ class TestEmptyChecks:
         try:
             async with AsyncClient(app=app, base_url="http://test") as client:
                 # Create settings DB record with settings_data
+                from backend.database.models import SettingsDB
                 settings_db = SettingsDB(
-            user_id=test_user.id,
-            settings_data={
-                "providers": [{
-                    "id": "test-1",
-                    "name": "Test",
-                    "type": "openai",
-                    "apiKey": "sk-test",
-                    "defaultModel": "gpt-4",
-                    "models": ["gpt-4"],
-                    "enabled": True
-                }],
-                "iteration_limit": 10
-            }
-        )
-        db_session.add(settings_db)
-        await db_session.commit()
-        
-        # Clear cache
-        _settings_cache.clear()
-        
-        token = create_access_token({"sub": test_user.username})
-        headers = {"Authorization": f"Bearer {token}"}
-        
-        response = await client.get("/api/settings/llm", headers=headers)
-        assert response.status_code == 200
-        assert len(response.json()["providers"]) == 1
+                    user_id=test_user.id,
+                    settings_data={
+                        "providers": [{
+                            "id": "test-1",
+                            "name": "Test",
+                            "type": "openai",
+                            "apiKey": "sk-test",
+                            "defaultModel": "gpt-4",
+                            "models": ["gpt-4"],
+                            "enabled": True
+                        }],
+                        "iteration_limit": 10
+                    }
+                )
+                db_session.add(settings_db)
+                await db_session.commit()
+                
+                # Clear cache
+                from backend.api.settings_routes import _settings_cache
+                _settings_cache.clear()
+                
+                from backend.auth.jwt import create_access_token
+                token = create_access_token({"sub": test_user.username})
+                headers = {"Authorization": f"Bearer {token}"}
+                
+                response = await client.get("/api/settings/llm", headers=headers)
+                assert response.status_code == 200
+                assert len(response.json()["providers"]) == 1
+        finally:
+            app.dependency_overrides.clear()
 
 
 class TestSaveSettingsComparisons:
-        """Test save settings comparison boundaries"""
+    """Test save settings comparison boundaries"""
     
-            @pytest.mark.asyncio
+    @pytest.mark.asyncio
     async def test_save_llm_settings_settings_db_exists(self, test_user, db_session):
         """Test save settings when settings_db exists (boundary: settings_db is not None)"""
         from main import app
@@ -724,33 +756,37 @@ class TestSaveSettingsComparisons:
         try:
             async with AsyncClient(app=app, base_url="http://test") as client:
                 # Create existing settings
+                from backend.database.models import SettingsDB
                 settings_db = SettingsDB(
-            user_id=test_user.id,
-            settings_data={"providers": []}
-        )
-        db_session.add(settings_db)
-        await db_session.commit()
-        
-        token = create_access_token({"sub": test_user.username})
-        headers = {"Authorization": f"Bearer {token}"}
-        
-        response = await client.post(
-            "/api/settings/llm",
-            json={
-                "providers": [{
-                    "id": "test-1",
-                    "name": "Test",
-                    "type": "openai",
-                    "apiKey": "sk-test-key-12345678901234567890",
-                    "defaultModel": "gpt-4",
-                    "models": ["gpt-4"],
-                    "enabled": True
-                }],
-                "iteration_limit": 10
-            },
-            headers=headers
-        )
-        assert response.status_code == 200
+                    user_id=test_user.id,
+                    settings_data={"providers": []}
+                )
+                db_session.add(settings_db)
+                await db_session.commit()
+                
+                from backend.auth.jwt import create_access_token
+                token = create_access_token({"sub": test_user.username})
+                headers = {"Authorization": f"Bearer {token}"}
+                
+                response = await client.post(
+                    "/api/settings/llm",
+                    json={
+                        "providers": [{
+                            "id": "test-1",
+                            "name": "Test",
+                            "type": "openai",
+                            "apiKey": "sk-test-key-12345678901234567890",
+                            "defaultModel": "gpt-4",
+                            "models": ["gpt-4"],
+                            "enabled": True
+                        }],
+                        "iteration_limit": 10
+                    },
+                    headers=headers
+                )
+                assert response.status_code == 200
+        finally:
+            app.dependency_overrides.clear()
     
     @pytest.mark.asyncio
     async def test_save_llm_settings_settings_db_not_exists(self, test_user, db_session):
@@ -767,27 +803,31 @@ class TestSaveSettingsComparisons:
             async with AsyncClient(app=app, base_url="http://test") as client:
                 # Ensure no settings in DB
                 from sqlalchemy import delete
+                from backend.database.models import SettingsDB
                 await db_session.execute(delete(SettingsDB).where(SettingsDB.user_id == test_user.id))
-        await db_session.commit()
-        
-        token = create_access_token({"sub": test_user.username})
-        headers = {"Authorization": f"Bearer {token}"}
-        
-        response = await client.post(
-            "/api/settings/llm",
-            json={
-                "providers": [{
-                    "id": "test-1",
-                    "name": "Test",
-                    "type": "openai",
-                    "apiKey": "sk-test-key-12345678901234567890",
-                    "defaultModel": "gpt-4",
-                    "models": ["gpt-4"],
-                    "enabled": True
-                }],
-                "iteration_limit": 10
-            },
-            headers=headers
-        )
-        assert response.status_code == 200
+                await db_session.commit()
+                
+                from backend.auth.jwt import create_access_token
+                token = create_access_token({"sub": test_user.username})
+                headers = {"Authorization": f"Bearer {token}"}
+                
+                response = await client.post(
+                    "/api/settings/llm",
+                    json={
+                        "providers": [{
+                            "id": "test-1",
+                            "name": "Test",
+                            "type": "openai",
+                            "apiKey": "sk-test-key-12345678901234567890",
+                            "defaultModel": "gpt-4",
+                            "models": ["gpt-4"],
+                            "enabled": True
+                        }],
+                        "iteration_limit": 10
+                    },
+                    headers=headers
+                )
+                assert response.status_code == 200
+        finally:
+            app.dependency_overrides.clear()
 
