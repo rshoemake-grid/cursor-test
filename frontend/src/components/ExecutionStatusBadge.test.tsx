@@ -23,6 +23,21 @@ describe('ExecutionStatusBadge', () => {
     expect(screen.getByText('pending')).toBeInTheDocument()
   })
 
+  it('should render paused status', () => {
+    render(<ExecutionStatusBadge status="paused" />)
+    expect(screen.getByText('paused')).toBeInTheDocument()
+    // Verify the exact status string to kill mutants
+    const badge = screen.getByText('paused')
+    expect(badge.textContent).toBe('paused')
+  })
+
+  it('should apply correct classes for paused status', () => {
+    const { container } = render(<ExecutionStatusBadge status="paused" />)
+    const badge = container.firstChild as HTMLElement
+    expect(badge.className).toContain('bg-gray-900')
+    expect(badge.className).toContain('text-gray-200')
+  })
+
   it('should use dark variant by default', () => {
     const { container } = render(<ExecutionStatusBadge status="completed" />)
     const badge = container.firstChild as HTMLElement

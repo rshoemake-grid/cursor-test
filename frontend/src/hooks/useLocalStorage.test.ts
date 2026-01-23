@@ -165,5 +165,137 @@ describe('useLocalStorage', () => {
       localStorage.removeItem = originalRemoveItem
     })
   })
+
+  describe('edge cases', () => {
+    it('should handle null values', () => {
+      const { result } = renderHook(() => useLocalStorage('test-key', null))
+      expect(result.current[0]).toBe(null)
+      
+      act(() => {
+        result.current[1](null)
+      })
+      
+      expect(result.current[0]).toBe(null)
+      expect(localStorage.getItem('test-key')).toBe(JSON.stringify(null))
+    })
+
+    it('should handle undefined values', () => {
+      const { result } = renderHook(() => useLocalStorage('test-key', undefined))
+      expect(result.current[0]).toBe(undefined)
+      
+      act(() => {
+        result.current[1](undefined)
+      })
+      
+      expect(result.current[0]).toBe(undefined)
+    })
+
+    it('should handle empty strings', () => {
+      const { result } = renderHook(() => useLocalStorage('test-key', ''))
+      expect(result.current[0]).toBe('')
+      
+      act(() => {
+        result.current[1]('')
+      })
+      
+      expect(result.current[0]).toBe('')
+      expect(localStorage.getItem('test-key')).toBe(JSON.stringify(''))
+    })
+
+    it('should handle zero values', () => {
+      const { result } = renderHook(() => useLocalStorage('test-key', 0))
+      expect(result.current[0]).toBe(0)
+      
+      act(() => {
+        result.current[1](0)
+      })
+      
+      expect(result.current[0]).toBe(0)
+      expect(localStorage.getItem('test-key')).toBe(JSON.stringify(0))
+    })
+
+    it('should handle false boolean values', () => {
+      const { result } = renderHook(() => useLocalStorage('test-key', false))
+      expect(result.current[0]).toBe(false)
+      
+      act(() => {
+        result.current[1](false)
+      })
+      
+      expect(result.current[0]).toBe(false)
+      expect(localStorage.getItem('test-key')).toBe(JSON.stringify(false))
+    })
+
+    it('should handle arrays', () => {
+      const array = [1, 2, 3]
+      const { result } = renderHook(() => useLocalStorage('test-key', array))
+      expect(result.current[0]).toEqual(array)
+      
+      act(() => {
+        result.current[1]([4, 5, 6])
+      })
+      
+      expect(result.current[0]).toEqual([4, 5, 6])
+      expect(JSON.parse(localStorage.getItem('test-key')!)).toEqual([4, 5, 6])
+    })
+
+    it('should handle nested objects', () => {
+      const nested = { a: { b: { c: 'value' } } }
+      const { result } = renderHook(() => useLocalStorage('test-key', nested))
+      expect(result.current[0]).toEqual(nested)
+      
+      act(() => {
+        result.current[1]({ a: { b: { c: 'updated' } } })
+      })
+      
+      expect(result.current[0]).toEqual({ a: { b: { c: 'updated' } } })
+    })
+
+    it('should handle JSON-like strings that are not valid JSON', () => {
+      // Store a string that looks like JSON but isn't
+      localStorage.setItem('test-key', '{"invalid": json}')
+      expect(getLocalStorageItem('test-key', 'default')).toBe('default')
+    })
+
+    it('should handle storage quota exceeded error', () => {
+      // Set up initial value
+      localStorage.setItem('test-key', JSON.stringify('initial'))
+      
+      const { result } = renderHook(() => useLocalStorage('test-key', 'default'))
+      
+      // Should have initial value
+      expect(result.current[0]).toBe('initial')
+      
+      // Mock setItem to throw error on next call
+      const originalSetItem = localStorage.setItem
+      localStorage.setItem = vi.fn(() => {
+        const error = new Error('QuotaExceededError')
+        error.name = 'QuotaExceededError'
+        throw error
+      })
+
+      act(() => {
+        // This should handle the error gracefully
+        result.current[1]('new-value')
+      })
+
+      // Value might not change due to error, but hook should not crash
+      expect(result.current[0]).toBeDefined()
+      
+      // Restore original
+      localStorage.setItem = originalSetItem
+    })
+
+    it('should handle getItem throwing error', () => {
+      const originalGetItem = localStorage.getItem
+      localStorage.getItem = vi.fn(() => {
+        throw new Error('Error')
+      })
+
+      expect(getLocalStorageItem('test-key', 'default')).toBe('default')
+      
+      localStorage.getItem = originalGetItem
+    })
+  })
 })
 

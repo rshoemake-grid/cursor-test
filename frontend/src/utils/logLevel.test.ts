@@ -17,7 +17,11 @@ describe('logLevel utilities', () => {
     })
 
     it('should return correct color for INFO level', () => {
-      expect(getLogLevelColor('INFO')).toBe('bg-gray-800 text-gray-300')
+      const result = getLogLevelColor('INFO')
+      expect(result).toBe('bg-gray-800 text-gray-300')
+      // Verify the exact string to kill mutants that change 'INFO' to empty string
+      expect(result).toContain('bg-gray-800')
+      expect(result).toContain('text-gray-300')
     })
 
     it('should return correct color for DEBUG level', () => {
@@ -39,7 +43,10 @@ describe('logLevel utilities', () => {
     })
 
     it('should return correct text color for INFO level', () => {
-      expect(getLogLevelTextColor('INFO')).toBe('text-gray-300')
+      const result = getLogLevelTextColor('INFO')
+      expect(result).toBe('text-gray-300')
+      // Verify the exact string to kill mutants that change 'INFO' to empty string
+      expect(result).toContain('text-gray-300')
     })
 
     it('should return correct text color for DEBUG level', () => {

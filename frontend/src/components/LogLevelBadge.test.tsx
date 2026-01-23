@@ -15,7 +15,23 @@ describe('LogLevelBadge', () => {
 
   it('should render INFO level', () => {
     render(<LogLevelBadge level="INFO" />)
-    expect(screen.getByText('INFO')).toBeInTheDocument()
+    const badge = screen.getByText('INFO')
+    expect(badge).toBeInTheDocument()
+    // Verify the exact level string to kill mutants
+    expect(badge.textContent).toBe('INFO')
+  })
+
+  it('should apply correct classes for INFO level', () => {
+    const { container } = render(<LogLevelBadge level="INFO" />)
+    const badge = container.firstChild as HTMLElement
+    expect(badge.className).toContain('bg-gray-800')
+    expect(badge.className).toContain('text-gray-300')
+  })
+
+  it('should apply correct text color for INFO level without background', () => {
+    const { container } = render(<LogLevelBadge level="INFO" showBackground={false} />)
+    const badge = container.firstChild as HTMLElement
+    expect(badge.className).toContain('text-gray-300')
   })
 
   it('should render DEBUG level', () => {

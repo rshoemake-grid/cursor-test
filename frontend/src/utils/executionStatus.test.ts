@@ -25,7 +25,11 @@ describe('executionStatus utilities', () => {
     })
 
     it('should return correct color for paused status', () => {
-      expect(getExecutionStatusColor('paused')).toBe('bg-gray-900 text-gray-200')
+      const result = getExecutionStatusColor('paused')
+      expect(result).toBe('bg-gray-900 text-gray-200')
+      // Verify the exact string to kill mutants that change 'paused' to empty string
+      expect(result).toContain('bg-gray-900')
+      expect(result).toContain('text-gray-200')
     })
 
     it('should return default color for unknown status', () => {
@@ -51,7 +55,11 @@ describe('executionStatus utilities', () => {
     })
 
     it('should return correct light color for paused status', () => {
-      expect(getExecutionStatusColorLight('paused')).toBe('bg-gray-100 text-gray-800')
+      const result = getExecutionStatusColorLight('paused')
+      expect(result).toBe('bg-gray-100 text-gray-800')
+      // Verify the exact string to kill mutants that change 'paused' to empty string
+      expect(result).toContain('bg-gray-100')
+      expect(result).toContain('text-gray-800')
     })
 
     it('should return default light color for unknown status', () => {
