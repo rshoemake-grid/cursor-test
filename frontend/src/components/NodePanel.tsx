@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react'
 import { Bot, GitBranch, RotateCw, Play, Flag, Database, Radio, Folder, ChevronDown, ChevronRight } from 'lucide-react'
+import { logger } from '../utils/logger'
 
 const workflowNodeTemplates = [
   { type: 'start', label: 'Start', icon: Play, color: 'text-primary-600', description: 'Workflow entry point' },
@@ -41,7 +42,7 @@ export default function NodePanel() {
         }
       }
     } catch (error) {
-      console.error('Failed to load custom agent nodes:', error)
+      logger.error('Failed to load custom agent nodes:', error)
     }
 
     // Listen for storage changes to update when agent nodes are added
@@ -53,7 +54,7 @@ export default function NodePanel() {
             setCustomAgentNodes(parsed)
           }
         } catch (error) {
-          console.error('Failed to parse custom agent nodes:', error)
+          logger.error('Failed to parse custom agent nodes:', error)
         }
       }
     }
@@ -71,7 +72,7 @@ export default function NodePanel() {
           }
         }
       } catch (error) {
-        console.error('Failed to load custom agent nodes:', error)
+        logger.error('Failed to load custom agent nodes:', error)
       }
     }
 

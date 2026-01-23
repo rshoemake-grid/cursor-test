@@ -65,7 +65,7 @@ async def test_workflow(db_session: AsyncSession, test_user: UserDB):
 class TestIDComparisons:
     """Test ID comparison boundaries"""
     
-    @pytest.mark.asyncio
+            @pytest.mark.asyncio
     async def test_share_workflow_workflow_id_match(self, test_user, other_user, test_workflow, db_session):
         """Test share workflow with matching workflow_id (boundary: ==)"""
         from main import app
@@ -110,14 +110,14 @@ class TestIDComparisons:
         
         try:
             async with AsyncClient(app=app, base_url="http://test") as client:
-            async with AsyncClient(app=app, base_url="http://test") as client:
-                "/api/sharing/share",
-                json={
-                    "workflow_id": str(uuid.uuid4()),  # Non-existent workflow
-                    "shared_with_username": other_user.username,
-                    "permission": "view"
-                },
-                headers={"Authorization": f"Bearer {token}"}
+                response = await client.post(
+                    "/api/sharing/share",
+                    json={
+                        "workflow_id": str(uuid.uuid4()),  # Non-existent workflow
+                        "shared_with_username": other_user.username,
+                        "permission": "view"
+                    },
+                    headers={"Authorization": f"Bearer {token}"}
                 )
                 assert response.status_code == 404
         finally:
@@ -144,8 +144,8 @@ class TestIDComparisons:
                     "permission": "view"
                 },
                 headers={"Authorization": f"Bearer {token}"}
-                )
-                assert response.status_code == 201
+            )
+            assert response.status_code == 201
         finally:
             app.dependency_overrides.clear()
     
@@ -179,7 +179,7 @@ class TestIDComparisons:
 class TestOwnerIDComparisons:
     """Test owner ID comparison boundaries"""
     
-    @pytest.mark.asyncio
+            @pytest.mark.asyncio
     async def test_share_workflow_owner_id_match(self, test_user, other_user, test_workflow, db_session):
         """Test share workflow with matching owner_id (boundary: ==)"""
         from main import app
@@ -200,8 +200,8 @@ class TestOwnerIDComparisons:
                     "permission": "view"
                 },
                 headers={"Authorization": f"Bearer {token}"}
-                )
-                assert response.status_code == 201
+            )
+            assert response.status_code == 201
         finally:
             app.dependency_overrides.clear()
     
@@ -351,7 +351,7 @@ class TestOwnerIDComparisons:
 class TestShareExistenceComparisons:
     """Test share existence comparison boundaries"""
     
-    @pytest.mark.asyncio
+            @pytest.mark.asyncio
     async def test_share_workflow_existing_share(self, test_user, other_user, test_workflow, db_session):
         """Test share workflow with existing share (boundary: existing_share is not None)"""
         from main import app
@@ -394,8 +394,8 @@ class TestShareExistenceComparisons:
                     "permission": "edit"  # Update permission
                 },
                 headers={"Authorization": f"Bearer {token}"}
-                )
-                assert response.status_code == 201
+            )
+            assert response.status_code == 201
                 data = response.json()
                 assert data["permission"] == "edit"
         finally:
@@ -422,8 +422,8 @@ class TestShareExistenceComparisons:
                     "permission": "view"
                 },
                 headers={"Authorization": f"Bearer {token}"}
-                )
-                assert response.status_code == 201
+            )
+            assert response.status_code == 201
         finally:
             app.dependency_overrides.clear()
 
@@ -431,7 +431,7 @@ class TestShareExistenceComparisons:
 class TestSharedWithUserIDComparisons:
     """Test shared_with_user_id comparison boundaries"""
     
-    @pytest.mark.asyncio
+            @pytest.mark.asyncio
     async def test_get_shared_workflows_user_id_match(self, test_user, other_user, test_workflow, db_session):
         """Test get shared workflows with matching user_id (boundary: ==)"""
         from main import app
@@ -525,7 +525,7 @@ class TestSharedWithUserIDComparisons:
 class TestSharedByComparisons:
     """Test shared_by comparison boundaries"""
     
-    @pytest.mark.asyncio
+            @pytest.mark.asyncio
     async def test_get_my_shares_shared_by_match(self, test_user, other_user, test_workflow, db_session):
         """Test get my shares with matching shared_by (boundary: ==)"""
         from main import app
@@ -619,7 +619,7 @@ class TestSharedByComparisons:
 class TestWorkflowExistenceComparisons:
     """Test workflow existence comparison boundaries"""
     
-    @pytest.mark.asyncio
+            @pytest.mark.asyncio
     async def test_revoke_share_workflow_exists(self, test_user, other_user, test_workflow, db_session):
         """Test revoke share with existing workflow (boundary: workflow is not None)"""
         from main import app

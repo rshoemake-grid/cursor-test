@@ -5,6 +5,8 @@ import { Download, Heart, TrendingUp, Clock, Star, ArrowLeft, Trash2, Bot, Workf
 import { showError, showSuccess } from '../utils/notifications';
 import { showConfirm } from '../utils/confirm';
 import { api } from '../api/client';
+import { useLocalStorage, getLocalStorageItem, setLocalStorageItem, removeLocalStorageItem } from '../hooks/useLocalStorage';
+import { logger } from '../utils/logger';
 
 interface Template {
   id: string;
@@ -38,29 +40,40 @@ interface AgentTemplate {
   is_official?: boolean;
 }
 
-type TabType = 'agents' | 'workflows'
+type TabType = 'agents' | 'repository' | 'workflows-of-workflows'
+type RepositorySubTabType = 'workflows' | 'agents'
 
 export default function MarketplacePage() {
   const [activeTab, setActiveTab] = useState<TabType>('agents');
+  const [repositorySubTab, setRepositorySubTab] = useState<RepositorySubTabType>('workflows');
   const [templates, setTemplates] = useState<Template[]>([]);
+  const [workflowsOfWorkflows, setWorkflowsOfWorkflows] = useState<Template[]>([]);
   const [agents, setAgents] = useState<AgentTemplate[]>([]);
+  const [repositoryAgents, setRepositoryAgents] = useState<AgentTemplate[]>([]);
   const [loading, setLoading] = useState(true);
   const [category, setCategory] = useState<string>('');
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState('popular');
   const [selectedTemplateIds, setSelectedTemplateIds] = useState<Set<string>>(new Set());
   const [selectedAgentIds, setSelectedAgentIds] = useState<Set<string>>(new Set());
+  const [selectedRepositoryAgentIds, setSelectedRepositoryAgentIds] = useState<Set<string>>(new Set());
   
   const { token, user } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (activeTab === 'workflows') {
-      fetchTemplates();
+    if (activeTab === 'repository') {
+      if (repositorySubTab === 'workflows') {
+        fetchTemplates();
+      } else {
+        fetchRepositoryAgents();
+      }
+    } else if (activeTab === 'workflows-of-workflows') {
+      fetchWorkflowsOfWorkflows();
     } else {
       fetchAgents();
     }
-  }, [category, sortBy, activeTab]);
+  }, [category, sortBy, activeTab, repositorySubTab]);
 
   // Seed official agents from official workflows (one-time)
   useEffect(() => {
@@ -89,7 +102,7 @@ export default function MarketplacePage() {
 
         if (officialWorkflows.length === 0) {
           console.log('[Marketplace] No official workflows found, marking as seeded');
-          localStorage.setItem(seededKey, 'true');
+          setLocalStorageItem(seededKey, 'true');
           return;
         }
 
@@ -148,7 +161,7 @@ export default function MarketplacePage() {
                 const nodeName = agentNode.name || agentNode.data?.name || agentNode.data?.label || 'Agent';
                 const nodeDescription = agentNode.description || agentNode.data?.description || `Agent from ${workflow.name}`;
 
-                console.log(`[Marketplace] Creating official agent: ${nodeName} (${agentId})`);
+                logger.debug(`[Marketplace] Creating official agent: ${nodeName} (${agentId})`);
 
                 agentsToAdd.push({
                   id: agentId,
@@ -179,7 +192,7 @@ export default function MarketplacePage() {
           const existingAgents = localStorage.getItem('publishedAgents');
           const agents: AgentTemplate[] = existingAgents ? JSON.parse(existingAgents) : [];
           agents.push(...agentsToAdd);
-          localStorage.setItem('publishedAgents', JSON.stringify(agents));
+                setLocalStorageItem('publishedAgents', agents);
           console.log(`[Marketplace] Seeded ${agentsToAdd.length} official agents from workflows`);
           console.log(`[Marketplace] Total agents in storage: ${agents.length}`);
           
@@ -191,7 +204,7 @@ export default function MarketplacePage() {
           console.log('[Marketplace] No agents to add');
         }
 
-        localStorage.setItem(seededKey, 'true');
+        setLocalStorageItem(seededKey, 'true');
         console.log('[Marketplace] Seeding complete');
       } catch (error) {
         console.error('[Marketplace] Failed to seed official agents:', error);
@@ -220,12 +233,84 @@ export default function MarketplacePage() {
     }
   };
 
+  const fetchWorkflowsOfWorkflows = async () => {
+    setLoading(true);
+    try {
+      // Fetch all workflows
+      const params = new URLSearchParams();
+      if (category) params.append('category', category);
+      if (searchQuery) params.append('search', searchQuery);
+      params.append('sort_by', sortBy);
+      
+      const response = await fetch(`http://localhost:8000/api/templates/?${params}`);
+      const allWorkflows = await response.json();
+      
+      // Filter workflows that contain references to other workflows
+      // A "workflow of workflows" is one that references other workflows in its definition
+      const workflowsOfWorkflows: Template[] = [];
+      
+      for (const workflow of allWorkflows) {
+        try {
+          // Use the /use endpoint to get workflow details
+          const workflowResponse = await fetch(`http://localhost:8000/api/templates/${workflow.id}/use`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }
+          });
+          
+          if (workflowResponse.ok) {
+            const workflowDetail = await workflowResponse.json();
+            
+            // Check if workflow has nodes that reference other workflows
+            // This could be through tags, descriptions, or a workflow_id field in nodes
+            if (workflowDetail.nodes && Array.isArray(workflowDetail.nodes)) {
+              const hasWorkflowReference = workflowDetail.nodes.some((node: any) => {
+                // Check for workflow references in various ways
+                const nodeData = node.data || {};
+                const hasWorkflowId = node.workflow_id || nodeData.workflow_id;
+                const description = (node.description || nodeData.description || '').toLowerCase();
+                const name = (node.name || nodeData.name || '').toLowerCase();
+                
+                // Check if node references another workflow
+                return hasWorkflowId || 
+                       description.includes('workflow') || 
+                       name.includes('workflow') ||
+                       (workflow.tags && workflow.tags.some(tag => tag.toLowerCase().includes('workflow')));
+              });
+              
+              // Also check if workflow description or tags indicate it's a workflow of workflows
+              const workflowDescription = (workflow.description || '').toLowerCase();
+              const isWorkflowOfWorkflows = workflowDescription.includes('workflow of workflows') ||
+                                           workflowDescription.includes('composite workflow') ||
+                                           workflowDescription.includes('nested workflow') ||
+                                           (workflow.tags && workflow.tags.some(tag => 
+                                             tag.toLowerCase().includes('workflow-of-workflows') ||
+                                             tag.toLowerCase().includes('composite') ||
+                                             tag.toLowerCase().includes('nested')
+                                           ));
+              
+              if (hasWorkflowReference || isWorkflowOfWorkflows) {
+                workflowsOfWorkflows.push(workflow);
+              }
+            }
+          }
+        } catch (error) {
+          console.error(`Failed to check workflow ${workflow.id}:`, error);
+        }
+      }
+      
+      setWorkflowsOfWorkflows(workflowsOfWorkflows);
+    } catch (error) {
+      console.error('Failed to fetch workflows of workflows:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const fetchAgents = async () => {
     setLoading(true);
     try {
       // For now, load from localStorage (until backend API is ready)
-      const savedAgents = localStorage.getItem('publishedAgents');
-      let agentsData: AgentTemplate[] = savedAgents ? JSON.parse(savedAgents) : [];
+      let agentsData = getLocalStorageItem<AgentTemplate[]>('publishedAgents', []);
       
       // One-time migration: Set current user as author for all agents without author_id
       if (user && user.id && agentsData.length > 0) {
@@ -243,13 +328,13 @@ export default function MarketplacePage() {
         });
         
         if (updated) {
-          console.log('[Marketplace] Updated agents with author info:', user.id);
-          localStorage.setItem('publishedAgents', JSON.stringify(agentsData));
+          logger.debug('[Marketplace] Updated agents with author info:', user.id);
+          setLocalStorageItem('publishedAgents', agentsData);
         }
       }
       
       // Debug: Log loaded agents with author info
-      console.log('[Marketplace] Loaded agents:', agentsData.map(a => ({
+      logger.debug('[Marketplace] Loaded agents:', agentsData.map(a => ({
         id: a.id,
         name: a.name,
         author_id: a.author_id,
@@ -431,7 +516,8 @@ export default function MarketplacePage() {
   const deleteSelectedWorkflows = async () => {
     if (selectedTemplateIds.size === 0) return;
     
-    const selectedTemplates = templates.filter(t => selectedTemplateIds.has(t.id));
+    const currentTemplates = activeTab === 'workflows-of-workflows' ? workflowsOfWorkflows : templates;
+    const selectedTemplates = currentTemplates.filter(t => selectedTemplateIds.has(t.id));
     
     // Filter out official workflows - they cannot be deleted
     const officialTemplates = selectedTemplates.filter(t => t.is_official);
@@ -477,6 +563,7 @@ export default function MarketplacePage() {
       // Update state
       const templateIdsToDelete = new Set(userOwnedTemplates.map(t => t.id));
       setTemplates(prevTemplates => prevTemplates.filter(t => !templateIdsToDelete.has(t.id)));
+      setWorkflowsOfWorkflows(prevWorkflows => prevWorkflows.filter(t => !templateIdsToDelete.has(t.id)));
       setSelectedTemplateIds(new Set());
       showSuccess(`Successfully deleted ${userOwnedTemplates.length} workflow(s)`);
     } catch (error: any) {
@@ -538,7 +625,7 @@ export default function MarketplacePage() {
               <p className="text-gray-600 mt-1">Discover and use pre-built agents and workflows</p>
             </div>
             <div className="flex items-center gap-3">
-              {activeTab === 'workflows' && selectedTemplateIds.size > 0 && (
+              {(activeTab === 'repository' || activeTab === 'workflows-of-workflows') && selectedTemplateIds.size > 0 && (activeTab === 'workflows-of-workflows' || repositorySubTab === 'workflows') && (
                 <>
                   <button
                     onClick={async () => {
@@ -557,32 +644,37 @@ export default function MarketplacePage() {
                     Load {selectedTemplateIds.size} Workflow{selectedTemplateIds.size > 1 ? 's' : ''}
                   </button>
                   {(() => {
-                    // Check if any selected workflows are official
-                    const selectedTemplates = templates.filter(t => selectedTemplateIds.has(t.id));
-                    const hasOfficialWorkflow = selectedTemplates.some(t => t.is_official);
-                    
-                    // Only show delete button if no official workflows are selected
-                    if (!hasOfficialWorkflow) {
-                      return (
-                        <button
-                          onClick={deleteSelectedWorkflows}
-                          className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center gap-2"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                          Delete {selectedTemplateIds.size} Workflow{selectedTemplateIds.size > 1 ? 's' : ''}
-                        </button>
-                      );
+                    // Only show delete button for repository workflows, not workflows-of-workflows
+                    if (activeTab === 'repository' && repositorySubTab === 'workflows') {
+                      // Check if any selected workflows are official
+                      const selectedTemplates = templates.filter(t => selectedTemplateIds.has(t.id));
+                      const hasOfficialWorkflow = selectedTemplates.some(t => t.is_official);
+                      
+                      // Only show delete button if no official workflows are selected
+                      if (!hasOfficialWorkflow) {
+                        return (
+                          <button
+                            onClick={deleteSelectedWorkflows}
+                            className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center gap-2"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                            Delete {selectedTemplateIds.size} Workflow{selectedTemplateIds.size > 1 ? 's' : ''}
+                          </button>
+                        );
+                      }
                     }
                     return null;
                   })()}
                 </>
               )}
-              {activeTab === 'agents' && selectedAgentIds.size > 0 && (
+              {(activeTab === 'agents' && selectedAgentIds.size > 0) || (activeTab === 'repository' && repositorySubTab === 'agents' && selectedRepositoryAgentIds.size > 0) ? (
                 <>
                   <button
                     onClick={() => {
-                      // Get selected agents
-                      const selectedAgents = agents.filter(a => selectedAgentIds.has(a.id));
+                      // Get selected agents based on active tab
+                      const selectedAgents = activeTab === 'repository' && repositorySubTab === 'agents'
+                        ? repositoryAgents.filter(a => selectedRepositoryAgentIds.has(a.id))
+                        : agents.filter(a => selectedAgentIds.has(a.id));
                       
                       // Get the active workflow tab ID
                       const activeTabId = localStorage.getItem('activeWorkflowTabId');
@@ -609,8 +701,16 @@ export default function MarketplacePage() {
                       });
                       window.dispatchEvent(event);
                       
-                      showSuccess(`${selectedAgentIds.size} agent(s) added to workflow`);
-                      setSelectedAgentIds(new Set());
+                      const count = activeTab === 'repository' && repositorySubTab === 'agents' 
+                        ? selectedRepositoryAgentIds.size 
+                        : selectedAgentIds.size;
+                      showSuccess(`${count} agent(s) added to workflow`);
+                      
+                      if (activeTab === 'repository' && repositorySubTab === 'agents') {
+                        setSelectedRepositoryAgentIds(new Set());
+                      } else {
+                        setSelectedAgentIds(new Set());
+                      }
                       
                       // Small delay to ensure localStorage is written before navigation
                       setTimeout(() => {
@@ -621,29 +721,56 @@ export default function MarketplacePage() {
                     className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors flex items-center gap-2"
                   >
                     <Download className="w-4 h-4" />
-                    Use {selectedAgentIds.size} Agent{selectedAgentIds.size > 1 ? 's' : ''}
+                    Use {(activeTab === 'repository' && repositorySubTab === 'agents' ? selectedRepositoryAgentIds.size : selectedAgentIds.size)} Agent{(activeTab === 'repository' && repositorySubTab === 'agents' ? selectedRepositoryAgentIds.size : selectedAgentIds.size) > 1 ? 's' : ''}
                   </button>
                   {(() => {
-                    // Check if any selected agents are official
-                    const selectedAgents = agents.filter(a => selectedAgentIds.has(a.id));
-                    const hasOfficialAgent = selectedAgents.some(a => a.is_official);
-                    
-                    // Only show delete button if no official agents are selected
-                    if (!hasOfficialAgent) {
+                    // Check if any selected agents are official (only for public marketplace)
+                    if (activeTab === 'agents') {
+                      const selectedAgents = agents.filter(a => selectedAgentIds.has(a.id));
+                      const hasOfficialAgent = selectedAgents.some(a => a.is_official);
+                      
+                      // Only show delete button if no official agents are selected
+                      if (!hasOfficialAgent) {
+                        return (
+                          <button
+                            onClick={deleteSelectedAgents}
+                            className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center gap-2"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                            Delete {selectedAgentIds.size} Agent{selectedAgentIds.size > 1 ? 's' : ''}
+                          </button>
+                        );
+                      }
+                    } else if (activeTab === 'repository' && repositorySubTab === 'agents') {
+                      // Repository agents can always be deleted
                       return (
                         <button
-                          onClick={deleteSelectedAgents}
+                          onClick={async () => {
+                            const selectedAgents = repositoryAgents.filter(a => selectedRepositoryAgentIds.has(a.id));
+                            const confirmed = await showConfirm(
+                              `Are you sure you want to delete ${selectedAgents.length} selected agent(s) from your repository?`,
+                              { title: 'Delete Agents', confirmText: 'Delete', cancelText: 'Cancel', type: 'danger' }
+                            );
+                            if (!confirmed) return;
+
+                            // Remove from repositoryAgents localStorage
+                            const remainingAgents = repositoryAgents.filter(a => !selectedRepositoryAgentIds.has(a.id));
+                            localStorage.setItem('repositoryAgents', JSON.stringify(remainingAgents));
+                            setRepositoryAgents(remainingAgents);
+                            setSelectedRepositoryAgentIds(new Set());
+                            showSuccess(`Successfully deleted ${selectedAgents.length} agent(s)`);
+                          }}
                           className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center gap-2"
                         >
                           <Trash2 className="w-4 h-4" />
-                          Delete {selectedAgentIds.size} Agent{selectedAgentIds.size > 1 ? 's' : ''}
+                          Delete {selectedRepositoryAgentIds.size} Agent{selectedRepositoryAgentIds.size > 1 ? 's' : ''}
                         </button>
                       );
                     }
                     return null;
                   })()}
                 </>
-              )}
+              ) : null}
             </div>
           </div>
 
@@ -661,29 +788,80 @@ export default function MarketplacePage() {
               Agents
             </button>
             <button
-              onClick={() => setActiveTab('workflows')}
+              onClick={() => setActiveTab('repository')}
               className={`px-6 py-3 text-sm font-medium flex items-center gap-2 transition-colors ${
-                activeTab === 'workflows'
+                activeTab === 'repository'
                   ? 'text-primary-600 border-b-2 border-primary-600'
                   : 'text-gray-600 hover:text-gray-900'
               }`}
             >
               <Workflow className="w-5 h-5" />
-              Workflows
+              Repository
+            </button>
+            <button
+              onClick={() => setActiveTab('workflows-of-workflows')}
+              className={`px-6 py-3 text-sm font-medium flex items-center gap-2 transition-colors ${
+                activeTab === 'workflows-of-workflows'
+                  ? 'text-primary-600 border-b-2 border-primary-600'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              <Workflow className="w-5 h-5" />
+              Workflows of Workflows
             </button>
           </div>
+
+          {/* Repository Sub-tabs */}
+          {activeTab === 'repository' && (
+            <div className="flex border-b border-gray-200 mb-4">
+              <button
+                onClick={() => setRepositorySubTab('workflows')}
+                className={`px-6 py-3 text-sm font-medium flex items-center gap-2 transition-colors ${
+                  repositorySubTab === 'workflows'
+                    ? 'text-primary-600 border-b-2 border-primary-600'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                <Workflow className="w-4 h-4" />
+                Workflows
+              </button>
+              <button
+                onClick={() => setRepositorySubTab('agents')}
+                className={`px-6 py-3 text-sm font-medium flex items-center gap-2 transition-colors ${
+                  repositorySubTab === 'agents'
+                    ? 'text-primary-600 border-b-2 border-primary-600'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                <Bot className="w-4 h-4" />
+                Agents
+              </button>
+            </div>
+          )}
 
           {/* Search and Filters */}
           <div className="flex gap-4 flex-wrap">
             <input
               type="text"
-              placeholder={activeTab === 'agents' ? "Search agents..." : "Search workflows..."}
+              placeholder={
+                activeTab === 'agents' 
+                  ? "Search agents..." 
+                  : activeTab === 'workflows-of-workflows'
+                  ? "Search workflows of workflows..."
+                  : "Search workflows..."
+              }
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               onKeyPress={(e) => {
                 if (e.key === 'Enter') {
-                  if (activeTab === 'workflows') {
-                    fetchTemplates();
+                  if (activeTab === 'repository') {
+                    if (repositorySubTab === 'workflows') {
+                      fetchTemplates();
+                    } else {
+                      fetchRepositoryAgents();
+                    }
+                  } else if (activeTab === 'workflows-of-workflows') {
+                    fetchWorkflowsOfWorkflows();
                   } else {
                     fetchAgents();
                   }
@@ -725,8 +903,14 @@ export default function MarketplacePage() {
 
             <button
               onClick={() => {
-                if (activeTab === 'workflows') {
-                  fetchTemplates();
+                if (activeTab === 'repository') {
+                  if (repositorySubTab === 'workflows') {
+                    fetchTemplates();
+                  } else {
+                    fetchRepositoryAgents();
+                  }
+                } else if (activeTab === 'workflows-of-workflows') {
+                  fetchWorkflowsOfWorkflows();
                 } else {
                   fetchAgents();
                 }
@@ -759,8 +943,12 @@ export default function MarketplacePage() {
           if (!isCard && !isInteractive) {
             if (activeTab === 'agents') {
               setSelectedAgentIds(new Set());
-            } else {
-              setSelectedTemplateIds(new Set());
+            } else if (activeTab === 'repository' || activeTab === 'workflows-of-workflows') {
+              if (activeTab === 'repository' && repositorySubTab === 'agents') {
+                setSelectedRepositoryAgentIds(new Set());
+              } else {
+                setSelectedTemplateIds(new Set());
+              }
             }
           }
         }}
@@ -896,6 +1084,118 @@ export default function MarketplacePage() {
                     </div>
                   </div>
                 );
+              })}
+            </div>
+          )
+        ) : activeTab === 'repository' && repositorySubTab === 'workflows' ? (
+          templates.length === 0 ? (
+            <div className="text-center py-12">
+              <p className="text-gray-600">No workflows found. Try adjusting your filters.</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {templates.map((template) => {
+                const isSelected = selectedTemplateIds.has(template.id);
+                return (
+                <div 
+                  key={template.id} 
+                  onClick={(e) => handleCardClick(e, template.id)}
+                  className={`bg-white rounded-lg shadow-md hover:shadow-lg transition-all overflow-hidden cursor-pointer border-2 ${
+                    isSelected 
+                      ? 'border-primary-500 ring-2 ring-primary-200' 
+                      : 'border-transparent'
+                  }`}
+                >
+                  {/* Header */}
+                  <div className="p-6">
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="flex items-start gap-3 flex-1">
+                        <input
+                          type="checkbox"
+                          checked={isSelected}
+                          onChange={(e) => {
+                            e.stopPropagation();
+                            setSelectedTemplateIds(prev => {
+                              const newSet = new Set(prev);
+                              if (e.target.checked) {
+                                newSet.add(template.id);
+                              } else {
+                                newSet.delete(template.id);
+                              }
+                              return newSet;
+                            });
+                          }}
+                          className="mt-1 w-5 h-5 text-primary-600 border-gray-300 rounded focus:ring-primary-500 cursor-pointer"
+                          onClick={(e) => e.stopPropagation()}
+                        />
+                        <h3 className="text-xl font-semibold text-gray-900 flex-1">
+                          {template.name}
+                        </h3>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {template.is_official && (
+                          <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded">
+                            Official
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    <p className="text-gray-600 text-sm mb-4 line-clamp-2">
+                      {template.description}
+                    </p>
+
+                    {/* Tags */}
+                    <div className="flex flex-wrap gap-2 mb-4">
+                      {template.tags.map((tag) => (
+                        <span key={tag} className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded">
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+
+                    {/* Metadata */}
+                    <div className="flex items-center gap-4 text-sm text-gray-500 mb-4">
+                      <div className="flex items-center gap-1">
+                        <TrendingUp className="w-4 h-4" />
+                        <span>{template.uses_count}</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <Heart className="w-4 h-4" />
+                        <span>{template.likes_count}</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <Clock className="w-4 h-4" />
+                        <span>{template.estimated_time}</span>
+                      </div>
+                      {template.author_name && (
+                        <div className="flex items-center gap-1 text-gray-600">
+                          <span className="font-medium">By:</span>
+                          <span>{template.author_name}</span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Difficulty */}
+                    <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${getDifficultyColor(template.difficulty)}`}>
+                      {template.difficulty}
+                    </span>
+                  </div>
+
+                  {/* Footer */}
+                  <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">
+                    <div className={`text-sm text-center py-2 px-4 rounded-lg ${
+                      isSelected 
+                        ? 'bg-primary-100 text-primary-700 font-medium' 
+                        : 'text-gray-500'
+                    }`}>
+                      {isSelected 
+                        ? 'Selected - Click "Load Workflow(s)" above to use' 
+                        : 'Click card or checkbox to select'}
+                    </div>
+                  </div>
+                </div>
+              );
               })}
             </div>
           )

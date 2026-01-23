@@ -1,0 +1,163 @@
+// @ts-nocheck
+import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { renderHook, act } from '@testing-library/react'
+import { useLocalStorage, getLocalStorageItem, setLocalStorageItem, removeLocalStorageItem } from './useLocalStorage'
+
+describe('useLocalStorage', () => {
+  beforeEach(() => {
+    localStorage.clear()
+    vi.clearAllMocks()
+  })
+
+  describe('useLocalStorage hook', () => {
+    it('should initialize with initial value when localStorage is empty', () => {
+      const { result } = renderHook(() => useLocalStorage('test-key', 'initial'))
+      expect(result.current[0]).toBe('initial')
+    })
+
+    it('should initialize with value from localStorage', () => {
+      localStorage.setItem('test-key', JSON.stringify('stored-value'))
+      const { result } = renderHook(() => useLocalStorage('test-key', 'initial'))
+      expect(result.current[0]).toBe('stored-value')
+    })
+
+    it('should update localStorage when value changes', () => {
+      const { result } = renderHook(() => useLocalStorage('test-key', 'initial'))
+      
+      act(() => {
+        result.current[1]('new-value')
+      })
+
+      expect(result.current[0]).toBe('new-value')
+      expect(localStorage.getItem('test-key')).toBe(JSON.stringify('new-value'))
+    })
+
+    it('should handle function updater', () => {
+      const { result } = renderHook(() => useLocalStorage('test-key', 0))
+      
+      act(() => {
+        result.current[1]((prev) => prev + 1)
+      })
+
+      expect(result.current[0]).toBe(1)
+    })
+
+    it('should handle complex objects', () => {
+      const obj = { name: 'test', value: 123 }
+      const { result } = renderHook(() => useLocalStorage('test-key', obj))
+      
+      act(() => {
+        result.current[1]({ name: 'updated', value: 456 })
+      })
+
+      expect(result.current[0]).toEqual({ name: 'updated', value: 456 })
+      expect(JSON.parse(localStorage.getItem('test-key')!)).toEqual({ name: 'updated', value: 456 })
+    })
+
+    it('should remove value from localStorage', () => {
+      localStorage.setItem('test-key', JSON.stringify('value'))
+      const { result } = renderHook(() => useLocalStorage('test-key', 'initial'))
+      
+      act(() => {
+        result.current[2]()
+      })
+
+      expect(result.current[0]).toBe('initial')
+      expect(localStorage.getItem('test-key')).toBeNull()
+    })
+
+    it('should handle storage events from other tabs', () => {
+      const { result } = renderHook(() => useLocalStorage('test-key', 'initial'))
+      
+      act(() => {
+        const event = new StorageEvent('storage', {
+          key: 'test-key',
+          newValue: JSON.stringify('updated-from-tab'),
+        })
+        window.dispatchEvent(event)
+      })
+
+      expect(result.current[0]).toBe('updated-from-tab')
+    })
+
+    it('should ignore storage events for other keys', () => {
+      const { result } = renderHook(() => useLocalStorage('test-key', 'initial'))
+      
+      act(() => {
+        const event = new StorageEvent('storage', {
+          key: 'other-key',
+          newValue: JSON.stringify('should-not-update'),
+        })
+        window.dispatchEvent(event)
+      })
+
+      expect(result.current[0]).toBe('initial')
+    })
+  })
+
+  describe('getLocalStorageItem', () => {
+    it('should return stored value', () => {
+      localStorage.setItem('test-key', JSON.stringify('stored-value'))
+      expect(getLocalStorageItem('test-key', 'default')).toBe('stored-value')
+    })
+
+    it('should return default value when key does not exist', () => {
+      expect(getLocalStorageItem('non-existent', 'default')).toBe('default')
+    })
+
+    it('should return default value on parse error', () => {
+      localStorage.setItem('test-key', 'invalid-json')
+      expect(getLocalStorageItem('test-key', 'default')).toBe('default')
+    })
+  })
+
+  describe('setLocalStorageItem', () => {
+    it('should set value in localStorage', () => {
+      expect(setLocalStorageItem('test-key', 'value')).toBe(true)
+      expect(localStorage.getItem('test-key')).toBe(JSON.stringify('value'))
+    })
+
+    it('should handle complex objects', () => {
+      const obj = { name: 'test', value: 123 }
+      expect(setLocalStorageItem('test-key', obj)).toBe(true)
+      expect(JSON.parse(localStorage.getItem('test-key')!)).toEqual(obj)
+    })
+
+    it('should return false on error', () => {
+      // Mock localStorage.setItem to throw error
+      const originalSetItem = localStorage.setItem
+      localStorage.setItem = vi.fn(() => {
+        throw new Error('Quota exceeded')
+      })
+
+      expect(setLocalStorageItem('test-key', 'value')).toBe(false)
+      
+      localStorage.setItem = originalSetItem
+    })
+  })
+
+  describe('removeLocalStorageItem', () => {
+    it('should remove value from localStorage', () => {
+      localStorage.setItem('test-key', JSON.stringify('value'))
+      expect(removeLocalStorageItem('test-key')).toBe(true)
+      expect(localStorage.getItem('test-key')).toBeNull()
+    })
+
+    it('should return true even if key does not exist', () => {
+      expect(removeLocalStorageItem('non-existent')).toBe(true)
+    })
+
+    it('should return false on error', () => {
+      // Mock localStorage.removeItem to throw error
+      const originalRemoveItem = localStorage.removeItem
+      localStorage.removeItem = vi.fn(() => {
+        throw new Error('Error')
+      })
+
+      expect(removeLocalStorageItem('test-key')).toBe(false)
+      
+      localStorage.removeItem = originalRemoveItem
+    })
+  })
+})
+

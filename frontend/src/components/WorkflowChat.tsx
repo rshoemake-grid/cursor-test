@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 import { Send, Loader, Bot, User } from 'lucide-react'
 import { api } from '../api/client'
 import { useAuth } from '../contexts/AuthContext'
+import { logger } from '../utils/logger'
 
 interface ChatMessage {
   role: 'user' | 'assistant'
@@ -26,7 +27,7 @@ export default function WorkflowChat({ workflowId, onWorkflowUpdate }: WorkflowC
           return parsed
         }
       } catch (e) {
-        console.error('Failed to load conversation history:', e)
+        logger.error('Failed to load conversation history:', e)
       }
     }
     
@@ -111,13 +112,13 @@ export default function WorkflowChat({ workflowId, onWorkflowUpdate }: WorkflowC
 
       // Apply workflow changes if any
       if (data.workflow_changes && onWorkflowUpdate) {
-        console.log('Received workflow changes:', data.workflow_changes)
-        console.log('Nodes to delete:', data.workflow_changes.nodes_to_delete)
+        logger.debug('Received workflow changes:', data.workflow_changes)
+        logger.debug('Nodes to delete:', data.workflow_changes.nodes_to_delete)
         onWorkflowUpdate(data.workflow_changes)
       }
 
     } catch (error) {
-      console.error('Chat error:', error)
+      logger.error('Chat error:', error)
       const errorMessage: ChatMessage = {
         role: 'assistant',
         content: `Sorry, I encountered an error: ${error instanceof Error ? error.message : 'Unknown error'}. Please try again.`

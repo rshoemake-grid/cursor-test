@@ -4,6 +4,12 @@ import { useState, useEffect, useRef, useMemo } from 'react'
 import { showError } from '../utils/notifications'
 import { showConfirm } from '../utils/confirm'
 import { api } from '../api/client'
+import { logger } from '../utils/logger'
+import { isAgentNode, isConditionNode, isLoopNode, isInputNode } from '../types/nodeData'
+import AgentNodeEditor from './editors/AgentNodeEditor'
+import ConditionNodeEditor from './editors/ConditionNodeEditor'
+import LoopNodeEditor from './editors/LoopNodeEditor'
+import InputNodeEditor from './editors/InputNodeEditor'
 
 interface PropertyPanelProps {
   selectedNodeId: string | null
@@ -50,12 +56,7 @@ export default function PropertyPanel({ selectedNodeId, setSelectedNodeId, selec
   const nameInputRef = useRef<HTMLInputElement>(null)
   const descriptionInputRef = useRef<HTMLTextAreaElement>(null)
   
-  // Refs for all other input fields
-  const systemPromptRef = useRef<HTMLTextAreaElement>(null)
-  const maxTokensRef = useRef<HTMLInputElement>(null)
-  const conditionFieldRef = useRef<HTMLInputElement>(null)
-  const conditionValueRef = useRef<HTMLInputElement>(null)
-  const loopMaxIterationsRef = useRef<HTMLInputElement>(null)
+  // Refs removed - now handled by node-specific editors
   
   // Input config refs
   const bucketNameRef = useRef<HTMLInputElement>(null)
@@ -137,12 +138,7 @@ export default function PropertyPanel({ selectedNodeId, setSelectedNodeId, selec
   }, [selectedNode])
   
   
-  // Local state for all config fields
-  const [systemPromptValue, setSystemPromptValue] = useState('')
-  const [maxTokensValue, setMaxTokensValue] = useState<string | number>('')
-  const [conditionFieldValue, setConditionFieldValue] = useState('')
-  const [conditionValueValue, setConditionValueValue] = useState('')
-  const [loopMaxIterationsValue, setLoopMaxIterationsValue] = useState<number>(10)
+  // Local state for config fields removed - now handled by node-specific editors
   
   // Input config local state
   const [bucketNameValue, setBucketNameValue] = useState('')
@@ -168,11 +164,7 @@ export default function PropertyPanel({ selectedNodeId, setSelectedNodeId, selec
       // Reset when no node is selected
       setNameValue('')
       setDescriptionValue('')
-      setSystemPromptValue('')
-      setMaxTokensValue('')
-      setConditionFieldValue('')
-      setConditionValueValue('')
-      setLoopMaxIterationsValue(0)
+      // Config fields are now handled by node-specific editors
       setBucketNameValue('')
       setObjectPathValue('')
       setGcpCredentialsValue('')
@@ -254,21 +246,7 @@ export default function PropertyPanel({ selectedNodeId, setSelectedNodeId, selec
       if (document.activeElement !== descriptionInputRef.current) {
         setDescriptionValue(nodeDescription)
       }
-      if (document.activeElement !== systemPromptRef.current) {
-        setSystemPromptValue(agentConfig.system_prompt || '')
-      }
-      if (document.activeElement !== maxTokensRef.current) {
-        setMaxTokensValue(agentConfig.max_tokens || '')
-      }
-      if (document.activeElement !== conditionFieldRef.current) {
-        setConditionFieldValue(conditionConfig.field || '')
-      }
-      if (document.activeElement !== conditionValueRef.current) {
-        setConditionValueValue(conditionConfig.value || '')
-      }
-      if (document.activeElement !== loopMaxIterationsRef.current) {
-        setLoopMaxIterationsValue(loopConfig.max_iterations ?? 0)
-      }
+      // Config fields are now handled by node-specific editors
       
       // Input config fields
       if (document.activeElement !== bucketNameRef.current) {
@@ -337,7 +315,7 @@ export default function PropertyPanel({ selectedNodeId, setSelectedNodeId, selec
           return
         }
       } catch (e) {
-        console.log('Could not load from backend, trying localStorage', e)
+        logger.debug('Could not load from backend, trying localStorage', e)
       }
       
       // Fallback to localStorage
@@ -363,7 +341,7 @@ export default function PropertyPanel({ selectedNodeId, setSelectedNodeId, selec
             return
           }
         } catch (e) {
-          console.error('Failed to load providers:', e)
+          logger.error('Failed to load providers:', e)
         }
       }
 
@@ -450,18 +428,8 @@ export default function PropertyPanel({ selectedNodeId, setSelectedNodeId, selec
       }
     }
     
-    // Update local state immediately for text fields
-    if (configField === 'agent_config' && field === 'system_prompt') {
-      setSystemPromptValue(value)
-    } else if (configField === 'agent_config' && field === 'max_tokens') {
-      setMaxTokensValue(value)
-    } else if (configField === 'condition_config' && field === 'field') {
-      setConditionFieldValue(value)
-    } else if (configField === 'condition_config' && field === 'value') {
-      setConditionValueValue(value)
-    } else if (configField === 'loop_config' && field === 'max_iterations') {
-      setLoopMaxIterationsValue(value)
-    } else if (configField === 'input_config') {
+    // Config fields are now handled by node-specific editors
+    if (configField === 'input_config') {
       // Update appropriate input config field
       if (field === 'bucket_name') setBucketNameValue(value)
       else if (field === 'object_path') setObjectPathValue(value)
@@ -527,7 +495,7 @@ export default function PropertyPanel({ selectedNodeId, setSelectedNodeId, selec
         setSaveStatus('idle')
       }, 2000)
     } catch (error) {
-      console.error('Save failed:', error)
+      logger.error('Save failed:', error)
       setSaveStatus('idle')
       showError('Failed to save workflow: ' + (error instanceof Error ? error.message : 'Unknown error'))
     }
@@ -608,6 +576,7 @@ export default function PropertyPanel({ selectedNodeId, setSelectedNodeId, selec
             onClick={handleDelete}
             className="p-1 text-red-600 hover:bg-red-50 rounded"
             title="Delete node"
+            aria-label="Delete selected node"
           >
             <Trash2 className="w-4 h-4" />
           </button>
@@ -633,8 +602,9 @@ export default function PropertyPanel({ selectedNodeId, setSelectedNodeId, selec
 
         {/* Description */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+          <label htmlFor="node-description" className="block text-sm font-medium text-gray-700 mb-1">Description</label>
           <textarea
+            id="node-description"
             ref={descriptionInputRef}
             value={descriptionValue}
             onChange={(e) => {
@@ -644,6 +614,7 @@ export default function PropertyPanel({ selectedNodeId, setSelectedNodeId, selec
             }}
             rows={3}
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            aria-label="Node description"
           />
         </div>
 
@@ -655,6 +626,7 @@ export default function PropertyPanel({ selectedNodeId, setSelectedNodeId, selec
               <button
                 onClick={() => setShowAddInput(true)}
                 className="text-xs px-2 py-1 bg-primary-100 text-primary-700 rounded hover:bg-primary-200 flex items-center gap-1"
+                aria-label="Add input to node"
               >
                 <Plus className="w-3 h-3" />
                 Add Input
@@ -670,6 +642,7 @@ export default function PropertyPanel({ selectedNodeId, setSelectedNodeId, selec
                     <button
                       onClick={() => handleRemoveInput(index)}
                       className="text-red-600 hover:bg-red-50 p-1 rounded"
+                      aria-label={`Remove input ${input.name}`}
                     >
                       <Trash2 className="w-3 h-3" />
                     </button>
@@ -702,9 +675,14 @@ export default function PropertyPanel({ selectedNodeId, setSelectedNodeId, selec
 
             {/* Add Input Modal */}
             {showAddInput && (
-              <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+              <div 
+                className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="add-input-title"
+              >
                 <div className="bg-white rounded-lg p-4 w-96">
-                  <h4 className="font-semibold mb-3">Add Input</h4>
+                  <h4 id="add-input-title" className="font-semibold mb-3">Add Input</h4>
                   <form
                     onSubmit={(e) => {
                       e.preventDefault()
@@ -770,12 +748,14 @@ export default function PropertyPanel({ selectedNodeId, setSelectedNodeId, selec
                         type="button"
                         onClick={() => setShowAddInput(false)}
                         className="px-3 py-1 text-sm text-gray-700 hover:bg-gray-100 rounded"
+                        aria-label="Cancel adding input"
                       >
                         Cancel
                       </button>
                       <button
                         type="submit"
                         className="px-3 py-1 text-sm bg-primary-600 text-white rounded hover:bg-primary-700"
+                        aria-label="Add input to node"
                       >
                         Add Input
                       </button>
@@ -792,224 +772,42 @@ export default function PropertyPanel({ selectedNodeId, setSelectedNodeId, selec
         )}
 
         {/* Agent-specific properties */}
-        {selectedNode.type === 'agent' && (
-          <div className="border-t pt-4">
-            <h4 className="text-sm font-semibold text-gray-900 mb-3">LLM Agent Configuration</h4>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Model</label>
-              <select
-                value={selectedNode.data.agent_config?.model || (availableModels.length > 0 ? availableModels[0].value : 'gpt-4o-mini')}
-                onChange={(e) =>
-                  handleUpdate('agent_config', {
-                    ...selectedNode.data.agent_config,
-                    model: e.target.value,
-                  })
-                }
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
-              >
-                {availableModels.length > 0 ? (
-                  availableModels.map((model) => (
-                    <option key={model.value} value={model.value}>
-                      {model.label}
-                    </option>
-                  ))
-                ) : (
-                  <>
-                    <option value="gpt-4o-mini">GPT-4o Mini (OpenAI)</option>
-                    <option value="gpt-4o">GPT-4o (OpenAI)</option>
-                    <option value="gpt-4">GPT-4 (OpenAI)</option>
-                    <option value="gpt-3.5-turbo">GPT-3.5 Turbo (OpenAI)</option>
-                  </>
-                )}
-              </select>
-              <p className="text-xs text-gray-500 mt-1">
-                {availableModels.length > 0 
-                  ? `This agent will use the configured LLM provider with the selected model`
-                  : 'This agent will call the OpenAI API with this model. Configure providers in Settings.'}
-              </p>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">System Prompt</label>
-              <textarea
-                ref={systemPromptRef}
-                value={systemPromptValue}
-                onChange={(e) => {
-                  const newValue = e.target.value
-                  setSystemPromptValue(newValue)
-                  handleConfigUpdate('agent_config', 'system_prompt', newValue)
-                }}
-                rows={4}
-                placeholder="You are a helpful assistant that..."
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
-              />
-              <p className="text-xs text-gray-500 mt-1">
-                Instructions that define the agent's role and behavior
-              </p>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Temperature: {selectedNode.data.agent_config?.temperature?.toFixed(1) || '0.7'}
-              </label>
-              <input
-                type="range"
-                min="0"
-                max="1"
-                step="0.1"
-                value={selectedNode.data.agent_config?.temperature || 0.7}
-                onChange={(e) =>
-                  handleUpdate('agent_config', {
-                    ...selectedNode.data.agent_config,
-                    temperature: parseFloat(e.target.value),
-                  })
-                }
-                className="w-full"
-              />
-              <div className="flex justify-between text-xs text-gray-500 mt-1">
-                <span>Focused (0.0)</span>
-                <span>Creative (1.0)</span>
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Max Tokens (optional)</label>
-              <input
-                ref={maxTokensRef}
-                type="number"
-                value={maxTokensValue}
-                onChange={(e) => {
-                  const newValue = e.target.value ? parseInt(e.target.value) : undefined
-                  setMaxTokensValue(e.target.value)
-                  handleConfigUpdate('agent_config', 'max_tokens', newValue)
-                }}
-                placeholder="Leave blank for default"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
-              />
-              <p className="text-xs text-gray-500 mt-1">
-                Maximum length of the agent's response
-              </p>
-            </div>
-
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-              <p className="text-xs text-blue-900 font-medium mb-1">🤖 This is a Real LLM Agent</p>
-              <p className="text-xs text-blue-700">
-                When executed, this agent will call OpenAI's API with your configured model and prompt.
-                The agent receives data from its inputs and produces output for the next nodes.
-              </p>
-            </div>
-          </div>
+        {isAgentNode(selectedNode) && (
+          <AgentNodeEditor
+            node={selectedNode}
+            availableModels={availableModels}
+            onUpdate={handleUpdate}
+            onConfigUpdate={handleConfigUpdate}
+          />
         )}
 
         {/* Condition-specific properties */}
-        {selectedNode.type === 'condition' && (
-          <>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Condition Type</label>
-              <select
-                value={selectedNode.data.condition_config?.condition_type || 'equals'}
-                onChange={(e) =>
-                  handleUpdate('condition_config', {
-                    ...selectedNode.data.condition_config,
-                    condition_type: e.target.value,
-                  })
-                }
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-              >
-                <option value="equals">Equals</option>
-                <option value="not_equals">Not Equals</option>
-                <option value="contains">Contains</option>
-                <option value="not_contains">Not Contains</option>
-                <option value="greater_than">Greater Than</option>
-                <option value="not_greater_than">Not Greater Than</option>
-                <option value="less_than">Less Than</option>
-                <option value="not_less_than">Not Less Than</option>
-                <option value="empty">Empty</option>
-                <option value="not_empty">Not Empty</option>
-                <option value="custom">Custom</option>
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Field</label>
-              <input
-                ref={conditionFieldRef}
-                type="text"
-                value={conditionFieldValue}
-                onChange={(e) => {
-                  const newValue = e.target.value
-                  setConditionFieldValue(newValue)
-                  handleConfigUpdate('condition_config', 'field', newValue)
-                }}
-                placeholder="Field to check"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-              />
-            </div>
-
-            {(selectedNode.data.condition_config?.condition_type !== 'empty' && 
-              selectedNode.data.condition_config?.condition_type !== 'not_empty') && (
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Value</label>
-                <input
-                  ref={conditionValueRef}
-                  type="text"
-                  value={conditionValueValue}
-                  onChange={(e) => {
-                    const newValue = e.target.value
-                    setConditionValueValue(newValue)
-                    handleConfigUpdate('condition_config', 'value', newValue)
-                  }}
-                  placeholder="Value to compare"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-                />
-              </div>
-            )}
-          </>
+        {isConditionNode(selectedNode) && (
+          <ConditionNodeEditor
+            node={selectedNode}
+            onConfigUpdate={handleConfigUpdate}
+          />
         )}
 
         {/* Loop-specific properties */}
-        {selectedNode.type === 'loop' && (
-          <>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Loop Type</label>
-              <select
-                value={selectedNode.data.loop_config?.loop_type || 'for_each'}
-                onChange={(e) => {
-                  const currentLoopConfig = selectedNode.data.loop_config || {}
-                  handleUpdate('loop_config', {
-                    loop_type: e.target.value,
-                    max_iterations: currentLoopConfig.max_iterations ?? 0,
-                    items_source: currentLoopConfig.items_source,
-                    condition: currentLoopConfig.condition,
-                  })
-                }}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-              >
-                <option value="for_each">For Each</option>
-                <option value="while">While</option>
-                <option value="until">Until</option>
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Max Iterations</label>
-              <input
-                ref={loopMaxIterationsRef}
-                type="number"
-                value={loopMaxIterationsValue}
-                onChange={(e) => {
-                  const newValue = parseInt(e.target.value) || 0
-                  setLoopMaxIterationsValue(newValue)
-                  handleConfigUpdate('loop_config', 'max_iterations', newValue)
-                }}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-              />
-            </div>
-          </>
+        {isLoopNode(selectedNode) && (
+          <LoopNodeEditor
+            node={selectedNode}
+            onUpdate={handleUpdate}
+            onConfigUpdate={handleConfigUpdate}
+          />
         )}
 
-        {/* GCP Bucket configuration */}
-        {selectedNode.type === 'gcp_bucket' && (
+        {/* Input node configurations - use InputNodeEditor for simpler types */}
+        {isInputNode(selectedNode) && ['gcp_bucket', 'aws_s3', 'gcp_pubsub', 'local_filesystem'].includes(selectedNode.type) && (
+          <InputNodeEditor
+            node={selectedNode}
+            onConfigUpdate={handleConfigUpdate}
+          />
+        )}
+
+        {/* GCP Bucket configuration - Legacy (kept for reference, replaced by InputNodeEditor above) */}
+        {selectedNode.type === 'gcp_bucket' && !['gcp_bucket', 'aws_s3', 'gcp_pubsub', 'local_filesystem'].includes(selectedNode.type) && (
           <div className="border-t pt-4">
             <h4 className="text-sm font-semibold text-gray-900 mb-3">GCP Bucket Configuration</h4>
             <div className="mb-3">
@@ -1181,8 +979,8 @@ export default function PropertyPanel({ selectedNodeId, setSelectedNodeId, selec
           </div>
         )}
 
-        {/* GCP Pub/Sub configuration */}
-        {selectedNode.type === 'gcp_pubsub' && (
+        {/* GCP Pub/Sub configuration - Legacy (replaced by InputNodeEditor above) */}
+        {selectedNode.type === 'gcp_pubsub' && !isInputNode(selectedNode) && (
           <div className="border-t pt-4">
             <h4 className="text-sm font-semibold text-gray-900 mb-3">GCP Pub/Sub Configuration</h4>
             <div className="mb-3">

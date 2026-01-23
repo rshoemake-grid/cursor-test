@@ -5,6 +5,8 @@ import WorkflowBuilder, { WorkflowBuilderHandle } from './WorkflowBuilder'
 import { api } from '../api/client'
 import { showConfirm } from '../utils/confirm'
 import { showError, showSuccess } from '../utils/notifications'
+import { useLocalStorage, getLocalStorageItem, setLocalStorageItem, removeLocalStorageItem } from '../hooks/useLocalStorage'
+import { logger } from '../utils/logger'
 
 interface Execution {
   id: string
@@ -32,57 +34,27 @@ interface WorkflowTabsProps {
 const WORKFLOW_TABS_STORAGE_KEY = 'workflowTabs'
 const ACTIVE_TAB_STORAGE_KEY = 'activeWorkflowTabId'
 
+// Use utility functions instead of direct localStorage access (DIP compliance)
 const loadTabsFromStorage = (): WorkflowTabData[] => {
-  if (typeof window === 'undefined') {
-    return []
-  }
-
-  try {
-    const raw = window.localStorage.getItem(WORKFLOW_TABS_STORAGE_KEY)
-    if (!raw) {
-      return []
-    }
-    const parsed = JSON.parse(raw)
-    if (Array.isArray(parsed)) {
-      return parsed
-    }
-  } catch {
-    // ignore parse errors
-  }
-  return []
+  const tabs = getLocalStorageItem<WorkflowTabData[]>(WORKFLOW_TABS_STORAGE_KEY, [])
+  return Array.isArray(tabs) ? tabs : []
 }
 
 const loadActiveTabFromStorage = (tabs: WorkflowTabData[]): string | null => {
-  if (typeof window === 'undefined') {
-    return null
-  }
-  try {
-    const saved = localStorage.getItem(ACTIVE_TAB_STORAGE_KEY)
-    if (saved) {
-      // Verify the saved tab ID still exists in tabs
-      const tabExists = tabs.some(tab => tab.id === saved)
-      if (tabExists) {
-        return saved
-      }
-    }
-  } catch {
-    // ignore parse errors
+  const saved = getLocalStorageItem<string | null>(ACTIVE_TAB_STORAGE_KEY, null)
+  if (saved && tabs.some(tab => tab.id === saved)) {
+    return saved
   }
   return null
 }
 
 const saveActiveTabToStorage = (activeTabId: string | null) => {
-  if (typeof window === 'undefined') {
-    return
-  }
-  try {
-    if (activeTabId) {
-      localStorage.setItem(ACTIVE_TAB_STORAGE_KEY, activeTabId)
-    } else {
-      localStorage.removeItem(ACTIVE_TAB_STORAGE_KEY)
-    }
-  } catch {
-    // ignore quota errors
+  if (activeTabId) {
+    // Store as JSON string for consistency
+    setLocalStorageItem(ACTIVE_TAB_STORAGE_KEY, activeTabId)
+  } else {
+    // Remove if null
+    removeLocalStorageItem(ACTIVE_TAB_STORAGE_KEY)
   }
 }
 
@@ -435,21 +407,21 @@ export default function WorkflowTabs({ initialWorkflowId, workflowLoadKey, onExe
 
   // Handle clearing executions for a workflow
   const handleClearExecutions = useCallback((workflowId: string) => {
-    console.log('handleClearExecutions called for workflowId:', workflowId)
+    logger.debug('handleClearExecutions called for workflowId:', workflowId)
     setTabs(prev => {
       const updated = prev.map(tab => 
         tab.workflowId === workflowId
           ? { ...tab, executions: [], activeExecutionId: null }
           : tab
       )
-      console.log('Updated tabs:', updated)
+      logger.debug('Updated tabs:', updated)
       return updated
     })
   }, [])
 
   // Handle removing a single execution
   const handleRemoveExecution = useCallback((workflowId: string, executionId: string) => {
-    console.log('handleRemoveExecution called for workflowId:', workflowId, 'executionId:', executionId)
+    logger.debug('handleRemoveExecution called for workflowId:', workflowId, 'executionId:', executionId)
     setTabs(prev => prev.map(tab => {
       if (tab.workflowId !== workflowId) return tab
       
@@ -540,7 +512,7 @@ export default function WorkflowTabs({ initialWorkflowId, workflowLoadKey, onExe
       if (runningExecutions.length === 0) return
 
       // Only poll occasionally as fallback - WebSocket handles real-time updates
-      console.log(`[WorkflowTabs] Polling ${runningExecutions.length} running execution(s) (fallback)...`)
+      logger.debug(`[WorkflowTabs] Polling ${runningExecutions.length} running execution(s) (fallback)...`)
 
       // Update all running executions
       const updates = await Promise.all(
@@ -553,7 +525,7 @@ export default function WorkflowTabs({ initialWorkflowId, workflowLoadKey, onExe
                              'running' as const
             
             if (exec.status !== newStatus) {
-              console.log(`[WorkflowTabs] Execution ${exec.id} status changed: ${exec.status} → ${newStatus}`)
+              logger.debug(`[WorkflowTabs] Execution ${exec.id} status changed: ${exec.status} → ${newStatus}`)
             }
             
             return {
@@ -568,7 +540,7 @@ export default function WorkflowTabs({ initialWorkflowId, workflowLoadKey, onExe
             // If execution not found (404), it might be a temp execution that failed
             // Don't log errors for pending executions
             if (!exec.id.startsWith('pending-')) {
-              console.error(`[WorkflowTabs] Failed to fetch execution ${exec.id}:`, error)
+              logger.error(`[WorkflowTabs] Failed to fetch execution ${exec.id}:`, error)
             }
             return null
           }

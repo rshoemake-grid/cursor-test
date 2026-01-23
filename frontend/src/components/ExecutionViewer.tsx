@@ -1,7 +1,10 @@
 import { useEffect, useState } from 'react'
-import { api } from '../api/client'
 import type { ExecutionState, NodeState } from '../types/workflow'
 import { CheckCircle, XCircle, Clock, AlertCircle } from 'lucide-react'
+import ExecutionStatusBadge from './ExecutionStatusBadge'
+import { getExecutionStatusColorLight } from '../utils/executionStatus'
+import { logger } from '../utils/logger'
+import { useWorkflowAPI } from '../hooks/useWorkflowAPI'
 
 interface ExecutionViewerProps {
   executionId: string
@@ -11,6 +14,7 @@ export default function ExecutionViewer({ executionId }: ExecutionViewerProps) {
   const [execution, setExecution] = useState<ExecutionState | null>(null)
   const [loading, setLoading] = useState(true)
   const [isPolling, setIsPolling] = useState(false)
+  const { getExecution } = useWorkflowAPI()
 
   useEffect(() => {
     loadExecution()
@@ -25,15 +29,15 @@ export default function ExecutionViewer({ executionId }: ExecutionViewerProps) {
     }, 2000)
 
     return () => clearInterval(interval)
-  }, [executionId, execution?.status])
+  }, [executionId, execution?.status, getExecution])
 
   const loadExecution = async () => {
     try {
-      const data = await api.getExecution(executionId)
+      const data = await getExecution(executionId)
       setExecution(data)
       setIsPolling(data.status === 'running' || data.status === 'pending')
     } catch (error: any) {
-      console.error('Failed to load execution:', error)
+      logger.error('Failed to load execution:', error)
     } finally {
       setLoading(false)
     }
@@ -68,18 +72,8 @@ export default function ExecutionViewer({ executionId }: ExecutionViewerProps) {
     }
   }
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'completed':
-        return 'bg-green-100 text-green-800'
-      case 'failed':
-        return 'bg-red-100 text-red-800'
-      case 'running':
-        return 'bg-blue-100 text-blue-800'
-      default:
-        return 'bg-gray-100 text-gray-800'
-    }
-  }
+  // Use utility function instead of local function
+  const getStatusColor = (status: string) => getExecutionStatusColorLight(status)
 
   return (
     <div className="h-full overflow-y-auto p-6">

@@ -1,7 +1,11 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useMemo } from 'react'
 import { ChevronDown, ChevronUp, MessageSquare, Play, X } from 'lucide-react'
 import WorkflowChat from './WorkflowChat'
 import { useWebSocket } from '../hooks/useWebSocket'
+import ExecutionStatusBadge from './ExecutionStatusBadge'
+import LogLevelBadge from './LogLevelBadge'
+import { logger } from '../utils/logger'
+import { getLogLevelColor } from '../utils/logLevel'
 
 interface Execution {
   id: string
@@ -39,35 +43,62 @@ export default function ExecutionConsole({
   const startY = useRef(0)
   const startHeight = useRef(0)
   
+  // Get all tabs: Chat + one per execution (memoized to prevent unnecessary re-renders)
+  const allTabs = useMemo(() => [
+    { id: 'chat', name: 'Chat', type: 'chat' as const },
+    ...executions.map(exec => ({ 
+      id: exec.id, 
+      name: exec.id.slice(0, 8), 
+      type: 'execution' as const,
+      execution: exec
+    }))
+  ], [executions])
+  
+  const activeTabData = useMemo(
+    () => allTabs.find(t => t.id === activeTab),
+    [allTabs, activeTab]
+  )
+  const activeExecution = activeTabData?.type === 'execution' ? activeTabData.execution : null
+  
+  // Get active execution status - find by activeExecutionId if not in activeTab
+  const activeExecutionStatus = useMemo(() => {
+    if (activeExecutionId) {
+      const exec = executions.find(e => e.id === activeExecutionId)
+      return exec?.status as 'running' | 'completed' | 'failed' | 'pending' | 'paused' | undefined
+    }
+    return activeExecution?.status as 'running' | 'completed' | 'failed' | 'pending' | 'paused' | undefined
+  }, [activeExecutionId, executions, activeExecution])
+
   // Set up WebSocket connection for active execution
-  const { isConnected } = useWebSocket({
+  useWebSocket({
     executionId: activeExecutionId,
+    executionStatus: activeExecutionStatus,
     onLog: (log) => {
       if (activeWorkflowId && activeExecutionId && onExecutionLogUpdate) {
-        console.log('[ExecutionConsole] Received log via WebSocket:', log)
+        logger.debug('[ExecutionConsole] Received log via WebSocket:', log)
         onExecutionLogUpdate(activeWorkflowId, activeExecutionId, log)
       }
     },
     onStatus: (status) => {
       if (activeWorkflowId && activeExecutionId && onExecutionStatusUpdate) {
-        console.log('[ExecutionConsole] Received status update via WebSocket:', status)
+        logger.debug('[ExecutionConsole] Received status update via WebSocket:', status)
         onExecutionStatusUpdate(activeWorkflowId, activeExecutionId, status as 'running' | 'completed' | 'failed')
       }
     },
     onNodeUpdate: (nodeId, nodeState) => {
       if (activeWorkflowId && activeExecutionId && onExecutionNodeUpdate) {
-        console.log('[ExecutionConsole] Received node update via WebSocket:', nodeId, nodeState)
+        logger.debug('[ExecutionConsole] Received node update via WebSocket:', nodeId, nodeState)
         onExecutionNodeUpdate(activeWorkflowId, activeExecutionId, nodeId, nodeState)
       }
     },
     onCompletion: (result) => {
       if (activeWorkflowId && activeExecutionId && onExecutionStatusUpdate) {
-        console.log('[ExecutionConsole] Received completion via WebSocket:', result)
+        logger.debug('[ExecutionConsole] Received completion via WebSocket:', result)
         onExecutionStatusUpdate(activeWorkflowId, activeExecutionId, 'completed')
       }
     },
     onError: (error) => {
-      console.error('[ExecutionConsole] WebSocket error:', error)
+      logger.error('[ExecutionConsole] WebSocket error:', error)
       if (activeWorkflowId && activeExecutionId && onExecutionStatusUpdate) {
         onExecutionStatusUpdate(activeWorkflowId, activeExecutionId, 'failed')
       }
@@ -96,19 +127,6 @@ export default function ExecutionConsole({
     }
   }
   
-  // Get all tabs: Chat + one per execution
-  const allTabs = [
-    { id: 'chat', name: 'Chat', type: 'chat' as const },
-    ...executions.map(exec => ({ 
-      id: exec.id, 
-      name: exec.id.slice(0, 8), 
-      type: 'execution' as const,
-      execution: exec
-    }))
-  ]
-  
-  const activeTabData = allTabs.find(t => t.id === activeTab)
-  const activeExecution = activeTabData?.type === 'execution' ? activeTabData.execution : null
 
   // Handle resizing
   useEffect(() => {
@@ -239,13 +257,7 @@ export default function ExecutionConsole({
                       Started: {new Date(activeExecution.startedAt).toLocaleString()}
                     </p>
                   </div>
-                  <div className={`px-3 py-1 rounded text-sm font-medium ${
-                    activeExecution.status === 'completed' ? 'bg-green-900 text-green-200' :
-                    activeExecution.status === 'failed' ? 'bg-red-900 text-red-200' :
-                    'bg-blue-900 text-blue-200'
-                  }`}>
-                    {activeExecution.status}
-                  </div>
+                  <ExecutionStatusBadge status={activeExecution.status} />
                 </div>
                 
                 {activeExecution.logs && activeExecution.logs.length > 0 ? (
@@ -253,25 +265,13 @@ export default function ExecutionConsole({
                     {activeExecution.logs.map((log: any, index: number) => (
                       <div
                         key={index}
-                        className={`p-2 rounded ${
-                          log.level === 'ERROR'
-                            ? 'bg-red-900/30 text-red-200'
-                            : log.level === 'WARNING'
-                            ? 'bg-yellow-900/30 text-yellow-200'
-                            : 'bg-gray-800 text-gray-300'
-                        }`}
+                        className={`p-2 rounded ${getLogLevelColor(log.level || 'INFO')}`}
                       >
                         <span className="text-gray-500">
                           {new Date(log.timestamp || Date.now()).toLocaleTimeString()}
                         </span>
                         {' '}
-                        <span className={`font-semibold ${
-                          log.level === 'ERROR' ? 'text-red-400' : 
-                          log.level === 'WARNING' ? 'text-yellow-400' : 
-                          'text-blue-400'
-                        }`}>
-                          {log.level || 'INFO'}
-                        </span>
+                        <LogLevelBadge level={log.level || 'INFO'} showBackground={false} />
                         {log.node_id && <span className="text-gray-500"> [{log.node_id}]</span>}
                         {' '}
                         {log.message || JSON.stringify(log)}

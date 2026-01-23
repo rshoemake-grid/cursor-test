@@ -18,6 +18,7 @@ import '@xyflow/react/dist/style.css'
 
 import { nodeTypes } from './nodes'
 import NodePanel from './NodePanel'
+import ExecutionInputDialog from './ExecutionInputDialog'
 import PropertyPanel from './PropertyPanel'
 import ExecutionConsole from './ExecutionConsole'
 import ContextMenu from './NodeContextMenu'
@@ -26,6 +27,8 @@ import { api } from '../api/client'
 import { showSuccess, showError } from '../utils/notifications'
 import { showConfirm } from '../utils/confirm'
 import { useAuth } from '../contexts/AuthContext'
+import { getLocalStorageItem, setLocalStorageItem } from '../hooks/useLocalStorage'
+import { logger } from '../utils/logger'
 
 interface Execution {
   id: string
@@ -43,6 +46,8 @@ interface WorkflowTab {
   activeExecutionId: string | null
 }
 
+// Extended WorkflowBuilderProps with additional properties needed by WorkflowTabs
+// TODO: Refactor to use split interfaces from types/workflowBuilder.ts (ISP compliance)
 interface WorkflowBuilderProps {
   tabId: string
   workflowId: string | null
@@ -72,33 +77,14 @@ interface TabDraft {
 
 const DRAFT_STORAGE_KEY = 'workflowBuilderDrafts'
 
+// Use utility functions instead of direct localStorage access (DIP compliance)
 const loadDraftsFromStorage = (): Record<string, TabDraft> => {
-  if (typeof window === 'undefined') {
-    return {}
-  }
-
-  try {
-    const raw = window.localStorage.getItem(DRAFT_STORAGE_KEY)
-    if (!raw) {
-      return {}
-    }
-    const parsed = JSON.parse(raw)
-    return typeof parsed === 'object' && parsed !== null ? parsed : {}
-  } catch {
-    return {}
-  }
+  const drafts = getLocalStorageItem<Record<string, TabDraft>>(DRAFT_STORAGE_KEY, {})
+  return typeof drafts === 'object' && drafts !== null ? drafts : {}
 }
 
 const saveDraftsToStorage = (drafts: Record<string, TabDraft>) => {
-  if (typeof window === 'undefined') {
-    return
-  }
-
-  try {
-    window.localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(drafts))
-  } catch {
-    // Ignore write failures (e.g., storage quota)
-  }
+  setLocalStorageItem(DRAFT_STORAGE_KEY, drafts)
 }
 
 export interface WorkflowBuilderHandle {
@@ -270,7 +256,7 @@ const WorkflowBuilder = forwardRef<WorkflowBuilderHandle, WorkflowBuilderProps>(
   useEffect(() => {
     // Don't load draft if we're in the middle of adding agents
     if (isAddingAgentsRef.current) {
-      console.log('[WorkflowBuilder] Skipping draft load - adding agents in progress')
+      logger.debug('[WorkflowBuilder] Skipping draft load - adding agents in progress')
       return
     }
     
@@ -281,7 +267,7 @@ const WorkflowBuilder = forwardRef<WorkflowBuilderHandle, WorkflowBuilderProps>(
     )
 
     if (matchesCurrentWorkflow) {
-      console.log('[WorkflowBuilder] Loading draft nodes:', draft.nodes.length)
+      logger.debug('[WorkflowBuilder] Loading draft nodes:', draft.nodes.length)
       setNodes(draft.nodes.map(normalizeNodeForStorage))
       setEdges(draft.edges)
       setLocalWorkflowId(draft.workflowId)
@@ -365,7 +351,7 @@ const WorkflowBuilder = forwardRef<WorkflowBuilderHandle, WorkflowBuilderProps>(
       }
     } catch (error: any) {
       showError('Failed to save workflow: ' + (error.message || 'Unknown error'))
-      console.error('Failed to save workflow:', error)
+      logger.error('Failed to save workflow:', error)
       throw new Error('Failed to save workflow: ' + (error.message || 'Unknown error'))
     } finally {
       setIsSaving(false)
@@ -413,8 +399,8 @@ const WorkflowBuilder = forwardRef<WorkflowBuilderHandle, WorkflowBuilderProps>(
   // Listen for agents to add from marketplace
   useEffect(() => {
     const addAgentsToCanvas = (agentsToAdd: any[]) => {
-      console.log('[WorkflowBuilder] addAgentsToCanvas called with', agentsToAdd.length, 'agents')
-      console.log('[WorkflowBuilder] Current tabId:', tabId)
+      logger.debug('[WorkflowBuilder] addAgentsToCanvas called with', agentsToAdd.length, 'agents')
+      logger.debug('[WorkflowBuilder] Current tabId:', tabId)
       isAddingAgentsRef.current = true
       
       // Get current state values
@@ -427,7 +413,7 @@ const WorkflowBuilder = forwardRef<WorkflowBuilderHandle, WorkflowBuilderProps>(
       // Add each agent as a node
       // Use functional update to get current nodes for positioning
       setNodes((currentNodes) => {
-        console.log('[WorkflowBuilder] Current nodes before adding:', currentNodes.length)
+        logger.debug('[WorkflowBuilder] Current nodes before adding:', currentNodes.length)
         const startX = currentNodes.length > 0 
           ? Math.max(...currentNodes.map(n => n.position.x)) + 200 
           : 250
@@ -454,8 +440,8 @@ const WorkflowBuilder = forwardRef<WorkflowBuilderHandle, WorkflowBuilderProps>(
         })
         
         const updatedNodes = [...currentNodes, ...newNodes]
-        console.log('[WorkflowBuilder] Updated nodes after adding:', updatedNodes.length)
-        console.log('[WorkflowBuilder] New nodes:', newNodes.map(n => ({ id: n.id, label: n.data.label })))
+        logger.debug('[WorkflowBuilder] Updated nodes after adding:', updatedNodes.length)
+        logger.debug('[WorkflowBuilder] New nodes:', newNodes.map(n => ({ id: n.id, label: n.data.label })))
         
         // Update draft storage immediately to persist the change
         // Use a setTimeout to ensure this happens after the state update
@@ -471,13 +457,13 @@ const WorkflowBuilder = forwardRef<WorkflowBuilderHandle, WorkflowBuilderProps>(
           }
           tabDraftsRef.current[currentTabId] = updatedDraft
           saveDraftsToStorage(tabDraftsRef.current)
-          console.log('[WorkflowBuilder] Draft updated with new nodes, total:', updatedNodes.length)
+          logger.debug('[WorkflowBuilder] Draft updated with new nodes, total:', updatedNodes.length)
         }, 0)
         
         // Reset flag after a delay to allow state update
         setTimeout(() => {
           isAddingAgentsRef.current = false
-          console.log('[WorkflowBuilder] Reset isAddingAgentsRef flag')
+          logger.debug('[WorkflowBuilder] Reset isAddingAgentsRef flag')
         }, 1000)
         
         return updatedNodes
@@ -488,7 +474,7 @@ const WorkflowBuilder = forwardRef<WorkflowBuilderHandle, WorkflowBuilderProps>(
 
     const handleAddAgentsToWorkflow = (event: CustomEvent) => {
       const { agents: agentsToAdd, tabId: targetTabId } = event.detail
-      console.log('[WorkflowBuilder] Received addAgentsToWorkflow event:', { 
+      logger.debug('[WorkflowBuilder] Received addAgentsToWorkflow event:', { 
         targetTabId, 
         currentTabId: tabId, 
         agentCount: agentsToAdd.length 
@@ -496,11 +482,11 @@ const WorkflowBuilder = forwardRef<WorkflowBuilderHandle, WorkflowBuilderProps>(
       
       // Only process if this is the active tab
       if (targetTabId !== tabId) {
-        console.log('[WorkflowBuilder] Event for different tab, ignoring')
+        logger.debug('[WorkflowBuilder] Event for different tab, ignoring')
         return
       }
       
-      console.log('[WorkflowBuilder] Adding agents via event')
+      logger.debug('[WorkflowBuilder] Adding agents via event')
       addAgentsToCanvas(agentsToAdd)
     }
     
@@ -510,29 +496,29 @@ const WorkflowBuilder = forwardRef<WorkflowBuilderHandle, WorkflowBuilderProps>(
         const pendingData = localStorage.getItem('pendingAgentsToAdd')
         if (pendingData) {
           const pending = JSON.parse(pendingData)
-          console.log('[WorkflowBuilder] Found pending agents:', { 
+            logger.debug('[WorkflowBuilder] Found pending agents:', {
             pendingTabId: pending.tabId, 
             currentTabId: tabId, 
             age: Date.now() - pending.timestamp 
           })
           // Only process if it's for this tab and recent (within last 10 seconds)
           if (pending.tabId === tabId && Date.now() - pending.timestamp < 10000) {
-            console.log('[WorkflowBuilder] Adding agents to canvas:', pending.agents.length)
+              logger.debug('[WorkflowBuilder] Adding agents to canvas:', pending.agents.length)
             addAgentsToCanvas(pending.agents)
             // Clear after processing
             localStorage.removeItem('pendingAgentsToAdd')
           } else if (pending.tabId !== tabId) {
             // Clear if it's for a different tab
-            console.log('[WorkflowBuilder] Pending agents for different tab, clearing')
+              logger.debug('[WorkflowBuilder] Pending agents for different tab, clearing')
             localStorage.removeItem('pendingAgentsToAdd')
           } else if (Date.now() - pending.timestamp >= 10000) {
             // Clear if too old
-            console.log('[WorkflowBuilder] Pending agents too old, clearing')
+              logger.debug('[WorkflowBuilder] Pending agents too old, clearing')
             localStorage.removeItem('pendingAgentsToAdd')
           }
         }
       } catch (e) {
-        console.error('Failed to process pending agents:', e)
+        logger.error('Failed to process pending agents:', e)
         localStorage.removeItem('pendingAgentsToAdd')
       }
     }
@@ -561,7 +547,7 @@ const WorkflowBuilder = forwardRef<WorkflowBuilderHandle, WorkflowBuilderProps>(
   }, [tabId, setNodes, notifyModified])
 
   const executeWorkflow = useCallback(async () => {
-    console.log('[WorkflowBuilder] executeWorkflow called')
+    logger.debug('[WorkflowBuilder] executeWorkflow called')
     console.log('[WorkflowBuilder] isAuthenticated:', isAuthenticated)
     console.log('[WorkflowBuilder] localWorkflowId:', localWorkflowId)
     if (!isAuthenticated) {
@@ -594,15 +580,13 @@ const WorkflowBuilder = forwardRef<WorkflowBuilderHandle, WorkflowBuilderProps>(
       }
     }
 
-    console.log('[WorkflowBuilder] Setting execution inputs and showing dialog')
-    setExecutionInputs('{}')
+    logger.debug('[WorkflowBuilder] Setting execution inputs and showing dialog')
     setShowInputs(true)
-    console.log('[WorkflowBuilder] showInputs set to true')
   }, [isAuthenticated, localWorkflowId, saveWorkflow])
 
   // Log when showInputs changes
   useEffect(() => {
-    console.log('[WorkflowBuilder] showInputs changed to:', showInputs)
+    logger.debug('[WorkflowBuilder] showInputs changed to:', showInputs)
   }, [showInputs])
 
   const handleConfirmExecute = useCallback(async () => {
@@ -620,38 +604,38 @@ const WorkflowBuilder = forwardRef<WorkflowBuilderHandle, WorkflowBuilderProps>(
         setIsExecuting(false)
 
         const tempExecutionId = `pending-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
-        console.log('[WorkflowBuilder] Created temp execution ID:', tempExecutionId)
+        logger.debug('[WorkflowBuilder] Created temp execution ID:', tempExecutionId)
 
         if (onExecutionStart) {
-          console.log('[WorkflowBuilder] Calling onExecutionStart with temp ID')
+          logger.debug('[WorkflowBuilder] Calling onExecutionStart with temp ID')
           onExecutionStart(tempExecutionId)
         }
 
         showSuccess('✅ Execution starting...\n\nCheck the console at the bottom of the screen to watch it run.', 6000)
 
         const workflowIdToExecute = workflowIdRef.current
-        console.log('[WorkflowBuilder] Workflow ID to execute:', workflowIdToExecute)
+        logger.debug('[WorkflowBuilder] Workflow ID to execute:', workflowIdToExecute)
         if (!workflowIdToExecute) {
-          console.error('[WorkflowBuilder] No workflow ID found - workflow must be saved')
+          logger.error('[WorkflowBuilder] No workflow ID found - workflow must be saved')
           showError('Workflow must be saved before executing.')
           setIsExecuting(false)
           return
         }
 
-        console.log('[WorkflowBuilder] Calling api.executeWorkflow with:', { workflowIdToExecute, inputs })
+        logger.debug('[WorkflowBuilder] Calling api.executeWorkflow with:', { workflowIdToExecute, inputs })
         api.executeWorkflow(workflowIdToExecute, inputs)
           .then((execution) => {
-            console.log('[WorkflowBuilder] Execution response received:', execution)
+            logger.debug('[WorkflowBuilder] Execution response received:', execution)
             if (execution.execution_id && execution.execution_id !== tempExecutionId) {
-              console.log('[WorkflowBuilder] Updating execution ID:', execution.execution_id)
+              logger.debug('[WorkflowBuilder] Updating execution ID:', execution.execution_id)
               if (onExecutionStart) {
                 onExecutionStart(execution.execution_id)
               }
             }
           })
           .catch((error: any) => {
-            console.error('[WorkflowBuilder] Execution failed:', error)
-            console.error('[WorkflowBuilder] Error details:', {
+            logger.error('[WorkflowBuilder] Execution failed:', error)
+            logger.error('[WorkflowBuilder] Error details:', {
               message: error.message,
               response: error.response,
               status: error.response?.status,
@@ -662,7 +646,7 @@ const WorkflowBuilder = forwardRef<WorkflowBuilderHandle, WorkflowBuilderProps>(
             showError(`Failed to execute workflow: ${errorMessage}`)
           })
       } catch (error: any) {
-        console.error('Execution setup failed:', error)
+        logger.error('Execution setup failed:', error)
         setIsExecuting(false)
         const errorNotification = document.createElement('div')
         errorNotification.style.cssText = `
@@ -688,7 +672,7 @@ const WorkflowBuilder = forwardRef<WorkflowBuilderHandle, WorkflowBuilderProps>(
         }, 5000)
       }
     }, 0)
-  }, [executionInputs, localWorkflowId, onExecutionStart])
+  }, [localWorkflowId, onExecutionStart])
 
   useImperativeHandle(ref, () => ({
     saveWorkflow,
@@ -1440,91 +1424,18 @@ const WorkflowBuilder = forwardRef<WorkflowBuilderHandle, WorkflowBuilderProps>(
         />
       </div>
       
-      {/* Execution Inputs Dialog */}
-      {showInputs && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white rounded-lg shadow-xl p-6 max-w-md w-full mx-4">
-            <h3 className="text-lg font-semibold mb-4">Execution Inputs</h3>
-            <p className="text-sm text-gray-600 mb-4">
-              Enter input values as JSON (e.g., {"{"}"key": "value"{"}"})
-            </p>
-            <textarea
-              value={executionInputs}
-              onChange={(e) => {
-                console.log('[WorkflowBuilder] Execution inputs changed:', e.target.value)
-                setExecutionInputs(e.target.value)
-              }}
-              className="w-full h-32 p-3 border border-gray-300 rounded-md font-mono text-sm"
-              placeholder='{"key": "value"}'
-            />
-            <div className="flex gap-3 mt-4 justify-end">
-              <button
-                onClick={() => {
-                  console.log('[WorkflowBuilder] Cancel execution inputs dialog')
-                  setShowInputs(false)
-                  setExecutionInputs('{}')
-                }}
-                className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={() => {
-                  console.log('[WorkflowBuilder] Confirm execution with inputs:', executionInputs)
-                  handleConfirmExecute()
-                }}
-                className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
-                disabled={isExecuting}
-              >
-                {isExecuting ? 'Executing...' : 'Execute'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Execution Inputs Dialog */}
-      {showInputs && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white rounded-lg shadow-xl p-6 max-w-md w-full mx-4">
-            <h3 className="text-lg font-semibold mb-4">Execution Inputs</h3>
-            <p className="text-sm text-gray-600 mb-4">
-              Enter input values as JSON (e.g., {"{"}"key": "value"{"}"})
-            </p>
-            <textarea
-              value={executionInputs}
-              onChange={(e) => {
-                console.log('[WorkflowBuilder] Execution inputs changed:', e.target.value)
-                setExecutionInputs(e.target.value)
-              }}
-              className="w-full h-32 p-3 border border-gray-300 rounded-md font-mono text-sm"
-              placeholder='{"key": "value"}'
-            />
-            <div className="flex gap-3 mt-4 justify-end">
-              <button
-                onClick={() => {
-                  console.log('[WorkflowBuilder] Cancel execution inputs dialog')
-                  setShowInputs(false)
-                  setExecutionInputs('{}')
-                }}
-                className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={() => {
-                  console.log('[WorkflowBuilder] Confirm execution with inputs:', executionInputs)
-                  handleConfirmExecute()
-                }}
-                className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
-                disabled={isExecuting}
-              >
-                {isExecuting ? 'Executing...' : 'Execute'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Execution Input Dialog - Using extracted component (SRP compliance) */}
+      <ExecutionInputDialog
+        isOpen={showInputs}
+        onClose={() => {
+          setShowInputs(false)
+        }}
+        onSubmit={(inputs) => {
+          handleConfirmExecute(inputs)
+        }}
+        nodes={nodes}
+        workflowName={localWorkflowName}
+      />
 
       {/* Context Menu */}
       {contextMenu && (

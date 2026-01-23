@@ -58,7 +58,7 @@ async def public_workflow(db_session: AsyncSession, test_user: UserDB):
 class TestBooleanComparisons:
     """Test boolean comparison boundaries"""
     
-    @pytest.mark.asyncio
+            @pytest.mark.asyncio
     async def test_discover_workflows_is_public_true(self, test_user, db_session):
         """Test discover workflows with is_public == True (boundary: == True)"""
         from main import app
@@ -188,7 +188,7 @@ class TestBooleanComparisons:
 class TestSortComparisons:
     """Test sort comparison boundaries"""
     
-    @pytest.mark.asyncio
+            @pytest.mark.asyncio
     async def test_discover_workflows_sort_popular(self, test_user, db_session):
         """Test discover workflows with sort_by == 'popular' (boundary: == 'popular')"""
         from main import app
@@ -299,7 +299,7 @@ class TestSortComparisons:
                 class TestCategoryComparisons:
         """Test category comparison boundaries"""
     
-    @pytest.mark.asyncio
+            @pytest.mark.asyncio
     async def test_discover_workflows_category_match(self, test_user, db_session):
         """Test discover workflows with matching category (boundary: == category)"""
         from main import app
@@ -362,7 +362,7 @@ class TestSortComparisons:
                 class TestLikeExistenceComparisons:
         """Test like existence comparison boundaries"""
     
-    @pytest.mark.asyncio
+            @pytest.mark.asyncio
     async def test_like_workflow_existing_like(self, test_user, public_workflow, db_session):
         """Test like workflow with existing like (boundary: existing_like is not None)"""
         from main import app
@@ -453,7 +453,7 @@ class TestSortComparisons:
 class TestWorkflowIDComparisons:
     """Test workflow ID comparison boundaries"""
     
-    @pytest.mark.asyncio
+            @pytest.mark.asyncio
     async def test_like_workflow_workflow_id_match(self, test_user, public_workflow, db_session):
         """Test like workflow with matching workflow_id (boundary: ==)"""
         from main import app
@@ -612,7 +612,7 @@ class TestWorkflowIDComparisons:
 class TestUserIDComparisons:
     """Test user ID comparison boundaries"""
     
-    @pytest.mark.asyncio
+            @pytest.mark.asyncio
     async def test_like_workflow_user_id_match(self, test_user, public_workflow, db_session):
         """Test like workflow with matching user_id (boundary: ==)"""
         from main import app
@@ -700,7 +700,7 @@ class TestUserIDComparisons:
 class TestWorkflowExistenceComparisons:
     """Test workflow existence comparison boundaries"""
     
-    @pytest.mark.asyncio
+            @pytest.mark.asyncio
     async def test_like_workflow_workflow_exists(self, test_user, public_workflow, db_session):
         """Test like workflow with existing workflow (boundary: workflow is not None)"""
         from main import app
