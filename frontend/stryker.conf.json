@@ -2,7 +2,7 @@
   "$schema": "./node_modules/@stryker-mutator/core/schema/stryker-schema.json",
   "packageManager": "npm",
   "reporters": ["html", "clear-text", "progress"],
-  "testRunner": "vitest",
+  "testRunner": "jest",
   "coverageAnalysis": "perTest",
   "concurrency": 16,
   "mutate": [
@@ -22,8 +22,9 @@
     "low": 70,
     "break": 60
   },
-  "vitest": {
-    "configFile": "./vite.config.ts"
+  "jest": {
+    "configFile": "./jest.config.cjs",
+    "enableFindRelatedTests": true
   }
 }
 

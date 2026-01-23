@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
+// Jest globals - no import needed
 import { showNotification, showSuccess, showError, showInfo, showWarning } from './notifications'
 
 describe('notifications', () => {
@@ -11,7 +11,7 @@ describe('notifications', () => {
       existingStyles.remove()
     }
     // Mock setTimeout/clearTimeout
-    vi.useFakeTimers()
+    jest.useFakeTimers()
   })
 
   afterEach(() => {
@@ -21,7 +21,7 @@ describe('notifications', () => {
     if (existingStyles) {
       existingStyles.remove()
     }
-    vi.useRealTimers()
+    jest.useRealTimers()
   })
 
   describe('showNotification', () => {
@@ -73,7 +73,7 @@ describe('notifications', () => {
       const notification = showNotification('Test message', { duration: 1000 })
       
       // Fast-forward time
-      vi.advanceTimersByTime(1000)
+      jest.advanceTimersByTime(1000)
       
       // Notification should start fading out - check cssText or individual styles
       expect(notification.style.cssText).toContain('opacity: 0')
@@ -86,8 +86,8 @@ describe('notifications', () => {
       expect(document.body.contains(notification)).toBe(true)
       
       // Fast-forward through duration and fade-out
-      vi.advanceTimersByTime(1000)
-      vi.advanceTimersByTime(300)
+      jest.advanceTimersByTime(1000)
+      jest.advanceTimersByTime(300)
       
       // Notification should be removed
       expect(document.body.contains(notification)).toBe(false)
@@ -131,10 +131,10 @@ describe('notifications', () => {
       const notification = showNotification('Test message')
       
       // Fast-forward time
-      vi.advanceTimersByTime(4999)
+      jest.advanceTimersByTime(4999)
       expect(notification.style.cssText).not.toContain('opacity: 0')
       
-      vi.advanceTimersByTime(1)
+      jest.advanceTimersByTime(1)
       expect(notification.style.cssText).toContain('opacity: 0')
     })
   })
@@ -151,7 +151,7 @@ describe('notifications', () => {
     it('should use custom duration', () => {
       const notification = showSuccess('Success message', 2000)
       
-      vi.advanceTimersByTime(2000)
+      jest.advanceTimersByTime(2000)
       expect(notification.style.cssText).toContain('opacity: 0')
     })
   })
@@ -168,7 +168,7 @@ describe('notifications', () => {
     it('should use custom duration', () => {
       const notification = showError('Error message', 3000)
       
-      vi.advanceTimersByTime(3000)
+      jest.advanceTimersByTime(3000)
       expect(notification.style.cssText).toContain('opacity: 0')
     })
   })
@@ -185,7 +185,7 @@ describe('notifications', () => {
     it('should use custom duration', () => {
       const notification = showInfo('Info message', 4000)
       
-      vi.advanceTimersByTime(4000)
+      jest.advanceTimersByTime(4000)
       expect(notification.style.cssText).toContain('opacity: 0')
     })
   })
@@ -202,7 +202,7 @@ describe('notifications', () => {
     it('should use custom duration', () => {
       const notification = showWarning('Warning message', 6000)
       
-      vi.advanceTimersByTime(6000)
+      jest.advanceTimersByTime(6000)
       expect(notification.style.cssText).toContain('opacity: 0')
     })
   })
@@ -255,7 +255,7 @@ describe('notifications', () => {
     it('should set transition styles when fading out', () => {
       const notification = showNotification('Test message', { duration: 1000 })
       
-      vi.advanceTimersByTime(1000)
+      jest.advanceTimersByTime(1000)
       
       expect(notification.style.cssText).toContain('transition: opacity 0.3s')
       expect(notification.style.cssText).toContain('opacity: 0')
@@ -267,8 +267,8 @@ describe('notifications', () => {
       
       expect(document.body.contains(notification)).toBe(true)
       
-      vi.advanceTimersByTime(1000)
-      vi.advanceTimersByTime(300)
+      jest.advanceTimersByTime(1000)
+      jest.advanceTimersByTime(300)
       
       expect(document.body.contains(notification)).toBe(false)
     })

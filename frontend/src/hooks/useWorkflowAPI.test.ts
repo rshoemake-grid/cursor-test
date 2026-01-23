@@ -1,32 +1,40 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+// Jest globals - no import needed
 import { renderHook } from '@testing-library/react'
 import { useWorkflowAPI } from './useWorkflowAPI'
 import { api } from '../api/client'
 import { logger } from '../utils/logger'
 
 // Mock the API client
-vi.mock('../api/client', () => ({
+jest.mock('../api/client', () => ({
   api: {
-    getWorkflows: vi.fn(),
-    getWorkflow: vi.fn(),
-    createWorkflow: vi.fn(),
-    updateWorkflow: vi.fn(),
-    deleteWorkflow: vi.fn(),
-    executeWorkflow: vi.fn(),
-    getExecution: vi.fn(),
+    getWorkflows: jest.fn(),
+    getWorkflow: jest.fn(),
+    createWorkflow: jest.fn(),
+    updateWorkflow: jest.fn(),
+    deleteWorkflow: jest.fn(),
+    executeWorkflow: jest.fn(),
+    getExecution: jest.fn(),
   }
 }))
 
 // Mock logger
-vi.mock('../utils/logger', () => ({
+jest.mock('../utils/logger', () => ({
   logger: {
-    error: vi.fn()
+    error: jest.fn()
   }
 }))
 
 describe('useWorkflowAPI', () => {
   beforeEach(() => {
-    vi.clearAllMocks()
+    jest.clearAllMocks()
+    // Reset all mocks
+    ;(api.getWorkflows as jest.Mock).mockReset()
+    ;(api.getWorkflow as jest.Mock).mockReset()
+    ;(api.createWorkflow as jest.Mock).mockReset()
+    ;(api.updateWorkflow as jest.Mock).mockReset()
+    ;(api.deleteWorkflow as jest.Mock).mockReset()
+    ;(api.executeWorkflow as jest.Mock).mockReset()
+    ;(api.getExecution as jest.Mock).mockReset()
   })
 
   describe('getWorkflows', () => {
@@ -35,7 +43,7 @@ describe('useWorkflowAPI', () => {
         { id: '1', name: 'Workflow 1', nodes: [], edges: [] },
         { id: '2', name: 'Workflow 2', nodes: [], edges: [] }
       ]
-      vi.mocked(api.getWorkflows).mockResolvedValue(mockWorkflows as any)
+      ;(api.getWorkflows as jest.Mock).mockResolvedValue(mockWorkflows as any)
 
       const { result } = renderHook(() => useWorkflowAPI())
       const workflows = await result.current.getWorkflows()
@@ -46,7 +54,7 @@ describe('useWorkflowAPI', () => {
 
     it('should log error and throw when api.getWorkflows fails', async () => {
       const error = new Error('Failed to fetch')
-      vi.mocked(api.getWorkflows).mockRejectedValue(error)
+      ;(api.getWorkflows as jest.Mock).mockRejectedValue(error)
 
       const { result } = renderHook(() => useWorkflowAPI())
       
@@ -58,7 +66,7 @@ describe('useWorkflowAPI', () => {
   describe('getWorkflow', () => {
     it('should call api.getWorkflow with id and return workflow', async () => {
       const mockWorkflow = { id: '1', name: 'Workflow 1', nodes: [], edges: [] }
-      vi.mocked(api.getWorkflow).mockResolvedValue(mockWorkflow as any)
+      ;(api.getWorkflow as jest.Mock).mockResolvedValue(mockWorkflow as any)
 
       const { result } = renderHook(() => useWorkflowAPI())
       const workflow = await result.current.getWorkflow('1')
@@ -69,7 +77,7 @@ describe('useWorkflowAPI', () => {
 
     it('should log error with workflow id and throw when api.getWorkflow fails', async () => {
       const error = new Error('Not found')
-      vi.mocked(api.getWorkflow).mockRejectedValue(error)
+      ;(api.getWorkflow as jest.Mock).mockRejectedValue(error)
 
       const { result } = renderHook(() => useWorkflowAPI())
       
@@ -82,7 +90,7 @@ describe('useWorkflowAPI', () => {
     it('should call api.createWorkflow with workflow and return created workflow', async () => {
       const newWorkflow = { name: 'New Workflow', nodes: [], edges: [] }
       const createdWorkflow = { id: '1', ...newWorkflow }
-      vi.mocked(api.createWorkflow).mockResolvedValue(createdWorkflow as any)
+      ;(api.createWorkflow as jest.Mock).mockResolvedValue(createdWorkflow as any)
 
       const { result } = renderHook(() => useWorkflowAPI())
       const workflow = await result.current.createWorkflow(newWorkflow as any)
@@ -93,7 +101,7 @@ describe('useWorkflowAPI', () => {
 
     it('should log error and throw when api.createWorkflow fails', async () => {
       const error = new Error('Creation failed')
-      vi.mocked(api.createWorkflow).mockRejectedValue(error)
+      ;(api.createWorkflow as jest.Mock).mockRejectedValue(error)
 
       const { result } = renderHook(() => useWorkflowAPI())
       
@@ -105,7 +113,7 @@ describe('useWorkflowAPI', () => {
   describe('updateWorkflow', () => {
     it('should call api.updateWorkflow with id and workflow and return updated workflow', async () => {
       const updatedWorkflow = { id: '1', name: 'Updated Workflow', nodes: [], edges: [] }
-      vi.mocked(api.updateWorkflow).mockResolvedValue(updatedWorkflow as any)
+      ;(api.updateWorkflow as jest.Mock).mockResolvedValue(updatedWorkflow as any)
 
       const { result } = renderHook(() => useWorkflowAPI())
       const workflow = await result.current.updateWorkflow('1', updatedWorkflow as any)
@@ -116,7 +124,7 @@ describe('useWorkflowAPI', () => {
 
     it('should log error with workflow id and throw when api.updateWorkflow fails', async () => {
       const error = new Error('Update failed')
-      vi.mocked(api.updateWorkflow).mockRejectedValue(error)
+      ;(api.updateWorkflow as jest.Mock).mockRejectedValue(error)
 
       const { result } = renderHook(() => useWorkflowAPI())
       
@@ -127,7 +135,7 @@ describe('useWorkflowAPI', () => {
 
   describe('deleteWorkflow', () => {
     it('should call api.deleteWorkflow with id', async () => {
-      vi.mocked(api.deleteWorkflow).mockResolvedValue(undefined)
+      ;(api.deleteWorkflow as jest.Mock).mockResolvedValue(undefined)
 
       const { result } = renderHook(() => useWorkflowAPI())
       await result.current.deleteWorkflow('1')
@@ -137,7 +145,7 @@ describe('useWorkflowAPI', () => {
 
     it('should log error with workflow id and throw when api.deleteWorkflow fails', async () => {
       const error = new Error('Delete failed')
-      vi.mocked(api.deleteWorkflow).mockRejectedValue(error)
+      ;(api.deleteWorkflow as jest.Mock).mockRejectedValue(error)
 
       const { result } = renderHook(() => useWorkflowAPI())
       
@@ -149,7 +157,7 @@ describe('useWorkflowAPI', () => {
   describe('executeWorkflow', () => {
     it('should call api.executeWorkflow with workflowId and inputs and return execution state', async () => {
       const executionState = { id: 'exec-1', status: 'running', workflow_id: '1' }
-      vi.mocked(api.executeWorkflow).mockResolvedValue(executionState as any)
+      ;(api.executeWorkflow as jest.Mock).mockResolvedValue(executionState as any)
 
       const { result } = renderHook(() => useWorkflowAPI())
       const execution = await result.current.executeWorkflow('1', { input: 'value' })
@@ -160,7 +168,7 @@ describe('useWorkflowAPI', () => {
 
     it('should call api.executeWorkflow without inputs', async () => {
       const executionState = { id: 'exec-1', status: 'running', workflow_id: '1' }
-      vi.mocked(api.executeWorkflow).mockResolvedValue(executionState as any)
+      ;(api.executeWorkflow as jest.Mock).mockResolvedValue(executionState as any)
 
       const { result } = renderHook(() => useWorkflowAPI())
       await result.current.executeWorkflow('1')
@@ -170,7 +178,7 @@ describe('useWorkflowAPI', () => {
 
     it('should log error with workflow id and throw when api.executeWorkflow fails', async () => {
       const error = new Error('Execution failed')
-      vi.mocked(api.executeWorkflow).mockRejectedValue(error)
+      ;(api.executeWorkflow as jest.Mock).mockRejectedValue(error)
 
       const { result } = renderHook(() => useWorkflowAPI())
       
@@ -182,7 +190,7 @@ describe('useWorkflowAPI', () => {
   describe('getExecution', () => {
     it('should call api.getExecution with executionId and return execution state', async () => {
       const executionState = { id: 'exec-1', status: 'completed', workflow_id: '1' }
-      vi.mocked(api.getExecution).mockResolvedValue(executionState as any)
+      ;(api.getExecution as jest.Mock).mockResolvedValue(executionState as any)
 
       const { result } = renderHook(() => useWorkflowAPI())
       const execution = await result.current.getExecution('exec-1')
@@ -193,7 +201,7 @@ describe('useWorkflowAPI', () => {
 
     it('should log error with execution id and throw when api.getExecution fails', async () => {
       const error = new Error('Not found')
-      vi.mocked(api.getExecution).mockRejectedValue(error)
+      ;(api.getExecution as jest.Mock).mockRejectedValue(error)
 
       const { result } = renderHook(() => useWorkflowAPI())
       

@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+// Jest globals - no import needed
 import { render, screen, waitFor, fireEvent } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import AgentNodeEditor from './AgentNodeEditor'
@@ -20,15 +20,15 @@ const mockNode: NodeWithData & { type: 'agent' } = {
 } as NodeWithData & { type: 'agent' }
 
 describe('AgentNodeEditor', () => {
-  const mockOnUpdate = vi.fn()
-  const mockOnConfigUpdate = vi.fn()
+  const mockOnUpdate = jest.fn()
+  const mockOnConfigUpdate = jest.fn()
   const availableModels = [
     { value: 'gpt-4', label: 'GPT-4', provider: 'openai' },
     { value: 'gpt-3.5-turbo', label: 'GPT-3.5 Turbo', provider: 'openai' },
   ]
 
   beforeEach(() => {
-    vi.clearAllMocks()
+    jest.clearAllMocks()
   })
 
   it('should render agent configuration fields', () => {

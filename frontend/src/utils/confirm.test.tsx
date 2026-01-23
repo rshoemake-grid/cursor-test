@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
+// Jest globals - no import needed
 import { showConfirm } from './confirm'
 
 describe('confirm', () => {
@@ -466,6 +466,141 @@ describe('confirm', () => {
       expect(document.activeElement).toBe(confirmBtn)
       
       confirmBtn.click()
+      await promise
+    })
+
+    it('should not close when clicking dialog itself (not overlay)', async () => {
+      const promise = showConfirm('Test message')
+      
+      await new Promise(resolve => setTimeout(resolve, 50))
+      
+      const overlay = document.body.lastElementChild as HTMLElement
+      const dialog = overlay.querySelector('div') as HTMLElement
+      
+      // Click dialog (not overlay) - should not close
+      dialog.click()
+      
+      // Dialog should still be there
+      await new Promise(resolve => setTimeout(resolve, 10))
+      expect(document.body.lastElementChild).toBe(overlay)
+      
+      // Now click overlay to close
+      overlay.click()
+      await promise
+    })
+
+    it('should handle confirm button click with different types', async () => {
+      const types: Array<'warning' | 'danger' | 'info'> = ['warning', 'danger', 'info']
+      
+      for (const type of types) {
+        const promise = showConfirm('Test message', { type })
+        
+        await new Promise(resolve => setTimeout(resolve, 50))
+        
+        const buttons = document.querySelectorAll('button')
+        const confirmBtn = buttons[1] as HTMLButtonElement
+        
+        confirmBtn.click()
+        const result = await promise
+        expect(result).toBe(true)
+      }
+    })
+
+    it('should handle button hover state transitions', async () => {
+      const promise = showConfirm('Test message', { type: 'danger' })
+      
+      await new Promise(resolve => setTimeout(resolve, 50))
+      
+      const buttons = document.querySelectorAll('button')
+      const confirmBtn = buttons[1] as HTMLButtonElement
+      
+      // Get initial background
+      const initialBg = confirmBtn.style.background
+      
+      // Hover
+      if (confirmBtn.onmouseover) {
+        confirmBtn.onmouseover(new MouseEvent('mouseover'))
+      }
+      
+      // Mouseout
+      if (confirmBtn.onmouseout) {
+        confirmBtn.onmouseout(new MouseEvent('mouseout'))
+      }
+      
+      // Should return to initial state
+      expect(confirmBtn.style.background).toBe(initialBg)
+      
+      confirmBtn.click()
+      await promise
+    })
+
+    it('should handle empty message', async () => {
+      const promise = showConfirm('')
+      
+      await new Promise(resolve => setTimeout(resolve, 50))
+      
+      const message = document.querySelector('p')
+      expect(message?.textContent).toBe('')
+      
+      const buttons = document.querySelectorAll('button')
+      buttons[0].click()
+      await promise
+    })
+
+    it('should handle very long message', async () => {
+      const longMessage = 'A'.repeat(1000)
+      const promise = showConfirm(longMessage)
+      
+      await new Promise(resolve => setTimeout(resolve, 50))
+      
+      const message = document.querySelector('p')
+      expect(message?.textContent).toBe(longMessage)
+      
+      const buttons = document.querySelectorAll('button')
+      buttons[0].click()
+      await promise
+    })
+
+    it('should handle special characters in message', async () => {
+      const specialMessage = 'Test <script>alert("xss")</script> & "quotes"'
+      const promise = showConfirm(specialMessage)
+      
+      await new Promise(resolve => setTimeout(resolve, 50))
+      
+      const message = document.querySelector('p')
+      expect(message?.textContent).toBe(specialMessage)
+      
+      const buttons = document.querySelectorAll('button')
+      buttons[0].click()
+      await promise
+    })
+
+    it('should handle empty title', async () => {
+      const promise = showConfirm('Test message', { title: '' })
+      
+      await new Promise(resolve => setTimeout(resolve, 50))
+      
+      const title = document.querySelector('h3')
+      expect(title?.textContent).toBe('')
+      
+      const buttons = document.querySelectorAll('button')
+      buttons[0].click()
+      await promise
+    })
+
+    it('should handle empty button texts', async () => {
+      const promise = showConfirm('Test message', {
+        confirmText: '',
+        cancelText: ''
+      })
+      
+      await new Promise(resolve => setTimeout(resolve, 50))
+      
+      const buttons = document.querySelectorAll('button')
+      expect(buttons[0].textContent).toBe('')
+      expect(buttons[1].textContent).toBe('')
+      
+      buttons[0].click()
       await promise
     })
   })

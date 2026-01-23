@@ -1,11 +1,11 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest'
+// Jest globals - no import needed
 import { renderHook, act } from '@testing-library/react'
 import { useLocalStorage, getLocalStorageItem, setLocalStorageItem, removeLocalStorageItem } from './useLocalStorage'
 
 describe('useLocalStorage', () => {
   beforeEach(() => {
     localStorage.clear()
-    vi.clearAllMocks()
+    jest.clearAllMocks()
   })
 
   describe('useLocalStorage hook', () => {
@@ -192,7 +192,7 @@ describe('useLocalStorage', () => {
     it('should return false on error', () => {
       // Mock localStorage.setItem to throw error
       const originalSetItem = localStorage.setItem
-      localStorage.setItem = vi.fn(() => {
+      localStorage.setItem = jest.fn(() => {
         throw new Error('Quota exceeded')
       })
 
@@ -216,7 +216,7 @@ describe('useLocalStorage', () => {
     it('should return false on error', () => {
       // Mock localStorage.removeItem to throw error
       const originalRemoveItem = localStorage.removeItem
-      localStorage.removeItem = vi.fn(() => {
+      localStorage.removeItem = jest.fn(() => {
         throw new Error('Error')
       })
 
@@ -330,7 +330,7 @@ describe('useLocalStorage', () => {
       
       // Mock setItem to throw error on next call
       const originalSetItem = localStorage.setItem
-      localStorage.setItem = vi.fn(() => {
+      localStorage.setItem = jest.fn(() => {
         const error = new Error('QuotaExceededError')
         error.name = 'QuotaExceededError'
         throw error
@@ -350,7 +350,7 @@ describe('useLocalStorage', () => {
 
     it('should handle getItem throwing error', () => {
       const originalGetItem = localStorage.getItem
-      localStorage.getItem = vi.fn(() => {
+      localStorage.getItem = jest.fn(() => {
         throw new Error('Error')
       })
 

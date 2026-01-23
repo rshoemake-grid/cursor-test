@@ -30,9 +30,9 @@
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">57.14% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>16/28</span>
+                <span class='fraction'>28/28</span>
             </div>
         
             
@@ -275,28 +275,28 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">32x</span>
-<span class="cline-any cline-yes">32x</span>
+<span class="cline-any cline-yes">73x</span>
+<span class="cline-any cline-yes">73x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">32x</span>
-<span class="cline-any cline-yes">32x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">32x</span>
-<span class="cline-any cline-yes">8x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">8x</span>
-<span class="cline-any cline-yes">8x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">8x</span>
-<span class="cline-any cline-yes">8x</span>
+<span class="cline-any cline-yes">73x</span>
+<span class="cline-any cline-yes">73x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">73x</span>
+<span class="cline-any cline-yes">30x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">32x</span>
-<span class="cline-any cline-yes">32x</span>
+<span class="cline-any cline-yes">30x</span>
+<span class="cline-any cline-yes">28x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">32x</span>
+<span class="cline-any cline-yes">30x</span>
+<span class="cline-any cline-yes">29x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">73x</span>
+<span class="cline-any cline-yes">73x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">73x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -322,7 +322,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">60x</span>
+<span class="cline-any cline-yes">130x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -417,9 +417,9 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">5x</span>
-<span class="cline-any cline-yes">5x</span>
-<span class="cline-any cline-yes">5x</span>
+<span class="cline-any cline-yes">6x</span>
+<span class="cline-any cline-yes">6x</span>
+<span class="cline-any cline-yes">6x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -473,18 +473,18 @@ export default function AgentNodeEditor({
 &nbsp;
   // Sync local state with node data
   useEffect(() =&gt; {
-    const agentConfig = node.data.agent_config || <span class="branch-1 cbranch-no" title="branch not covered" >{}</span>
+    const agentConfig = node.data.agent_config || {}
     
-    <span class="missing-if-branch" title="else path not taken" >E</span>if (document.activeElement !== systemPromptRef.current) {
-      setSystemPromptValue(agentConfig.system_prompt || <span class="branch-1 cbranch-no" title="branch not covered" >'')</span>
+    if (document.activeElement !== systemPromptRef.current) {
+      setSystemPromptValue(agentConfig.system_prompt || '')
     }
-    <span class="missing-if-branch" title="else path not taken" >E</span>if (document.activeElement !== maxTokensRef.current) {
-      setMaxTokensValue(agentConfig.max_tokens || <span class="branch-1 cbranch-no" title="branch not covered" >'')</span>
+    if (document.activeElement !== maxTokensRef.current) {
+      setMaxTokensValue(agentConfig.max_tokens || '')
     }
   }, [node.data.agent_config])
 &nbsp;
-  const agentConfig = node.data.agent_config || <span class="branch-1 cbranch-no" title="branch not covered" >{}</span>
-  const currentModel = agentConfig.model || (<span class="branch-1 cbranch-no" title="branch not covered" >availableModels.length &gt; 0 ? availableModels[0].value : 'gpt-4o-mini')</span>
+  const agentConfig = node.data.agent_config || {}
+  const currentModel = agentConfig.model || (availableModels.length &gt; 0 ? availableModels[0].value : 'gpt-4o-mini')
 &nbsp;
   return (
     &lt;div className="border-t pt-4"&gt;
@@ -566,7 +566,7 @@ export default function AgentNodeEditor({
           htmlFor="agent-temperature"
           className="block text-sm font-medium text-gray-700 mb-1"
         &gt;
-          Temperature: {agentConfig.temperature?.toFixed(1) || <span class="branch-1 cbranch-no" title="branch not covered" >'0.7'}</span>
+          Temperature: {agentConfig.temperature?.toFixed(1) || '0.7'}
         &lt;/label&gt;
         &lt;input
           id="agent-temperature"
@@ -574,7 +574,7 @@ export default function AgentNodeEditor({
           min="0"
           max="1"
           step="0.1"
-          value={agentConfig.temperature || <span class="branch-1 cbranch-no" title="branch not covered" >0.7}</span>
+          value={agentConfig.temperature || 0.7}
           onChange={(e) =&gt;
             onUpdate('agent_config', {
               ...agentConfig,
@@ -585,7 +585,7 @@ export default function AgentNodeEditor({
           aria-label="Temperature control for agent creativity"
           aria-valuemin={0}
           aria-valuemax={1}
-          aria-valuenow={agentConfig.temperature || <span class="branch-1 cbranch-no" title="branch not covered" >0.7}</span>
+          aria-valuenow={agentConfig.temperature || 0.7}
         /&gt;
         &lt;div className="flex justify-between text-xs text-gray-500 mt-1"&gt;
           &lt;span&gt;Focused (0.0)&lt;/span&gt;
@@ -640,7 +640,7 @@ export default function AgentNodeEditor({
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-01-23T20:38:45.170Z
+                at 2026-01-23T22:02:47.324Z
             </div>
         <script src="../../prettify.js"></script>
         <script>

@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest'
+// Jest globals - no import needed
 import { render, screen } from '@testing-library/react'
 import LogLevelBadge from './LogLevelBadge'
 

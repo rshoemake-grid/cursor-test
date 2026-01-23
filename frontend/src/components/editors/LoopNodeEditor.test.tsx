@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+// Jest globals - no import needed
 import { render, screen, fireEvent } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import LoopNodeEditor from './LoopNodeEditor'
@@ -18,11 +18,11 @@ const mockNode: NodeWithData & { type: 'loop' } = {
 } as NodeWithData & { type: 'loop' }
 
 describe('LoopNodeEditor', () => {
-  const mockOnUpdate = vi.fn()
-  const mockOnConfigUpdate = vi.fn()
+  const mockOnUpdate = jest.fn()
+  const mockOnConfigUpdate = jest.fn()
 
   beforeEach(() => {
-    vi.clearAllMocks()
+    jest.clearAllMocks()
   })
 
   it('should render loop configuration fields', () => {
