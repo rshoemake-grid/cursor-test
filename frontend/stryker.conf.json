@@ -4,6 +4,7 @@
   "reporters": ["html", "clear-text", "progress"],
   "testRunner": "vitest",
   "coverageAnalysis": "perTest",
+  "concurrency": 16,
   "mutate": [
     "src/utils/**/*.{ts,tsx}",
     "src/types/**/*.{ts,tsx}",

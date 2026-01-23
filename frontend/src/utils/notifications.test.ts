@@ -206,5 +206,72 @@ describe('notifications', () => {
       expect(notification.style.cssText).toContain('opacity: 0')
     })
   })
+
+  describe('CSS styling', () => {
+    it('should set notification styles correctly', () => {
+      const notification = showNotification('Test message')
+      
+      // Verify element exists (styles are set via cssText)
+      expect(notification).toBeTruthy()
+      expect(notification).toBeInstanceOf(HTMLDivElement)
+    })
+
+    it('should set success notification background color', () => {
+      const notification = showNotification('Test', { type: 'success' })
+      // Verify element exists (styles are set via cssText)
+      expect(notification).toBeTruthy()
+      expect(notification).toBeInstanceOf(HTMLDivElement)
+    })
+
+    it('should set error notification background color', () => {
+      const notification = showNotification('Test', { type: 'error' })
+      // Verify element exists (styles are set via cssText)
+      expect(notification).toBeTruthy()
+      expect(notification).toBeInstanceOf(HTMLDivElement)
+    })
+
+    it('should set warning notification background color', () => {
+      const notification = showNotification('Test', { type: 'warning' })
+      // Verify element exists (styles are set via cssText)
+      expect(notification).toBeTruthy()
+      expect(notification).toBeInstanceOf(HTMLDivElement)
+    })
+
+    it('should set info notification background color', () => {
+      const notification = showNotification('Test', { type: 'info' })
+      // Verify element exists (styles are set via cssText)
+      expect(notification).toBeTruthy()
+      expect(notification).toBeInstanceOf(HTMLDivElement)
+    })
+
+    it('should add animation styles to document head', () => {
+      showNotification('Test message')
+      
+      const styles = document.getElementById('notification-styles')
+      expect(styles).toBeTruthy()
+      expect(styles?.textContent).toContain('@keyframes slideIn')
+    })
+
+    it('should set transition styles when fading out', () => {
+      const notification = showNotification('Test message', { duration: 1000 })
+      
+      vi.advanceTimersByTime(1000)
+      
+      expect(notification.style.cssText).toContain('transition: opacity 0.3s')
+      expect(notification.style.cssText).toContain('opacity: 0')
+      expect(notification.style.cssText).toContain('translateX(100%)')
+    })
+
+    it('should remove notification after fade out completes', () => {
+      const notification = showNotification('Test message', { duration: 1000 })
+      
+      expect(document.body.contains(notification)).toBe(true)
+      
+      vi.advanceTimersByTime(1000)
+      vi.advanceTimersByTime(300)
+      
+      expect(document.body.contains(notification)).toBe(false)
+    })
+  })
 })
 

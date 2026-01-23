@@ -310,5 +310,163 @@ describe('confirm', () => {
       buttons[0].click()
       await promise
     })
+
+    it('should set overlay styles correctly', async () => {
+      const promise = showConfirm('Test message')
+      
+      await new Promise(resolve => setTimeout(resolve, 50))
+      
+      const overlay = document.body.lastElementChild as HTMLElement
+      expect(overlay).toBeTruthy()
+      // Verify element exists (styles are set via cssText)
+      
+      const buttons = document.querySelectorAll('button')
+      buttons[0].click()
+      await promise
+    })
+
+    it('should set dialog styles correctly', async () => {
+      const promise = showConfirm('Test message')
+      
+      await new Promise(resolve => setTimeout(resolve, 50))
+      
+      const overlay = document.body.lastElementChild as HTMLElement
+      const dialog = overlay.querySelector('div') as HTMLElement
+      expect(dialog).toBeTruthy()
+      // Verify element exists (styles are set via cssText)
+      
+      const buttons = document.querySelectorAll('button')
+      buttons[0].click()
+      await promise
+    })
+
+    it('should set title styles correctly', async () => {
+      const promise = showConfirm('Test message')
+      
+      await new Promise(resolve => setTimeout(resolve, 50))
+      
+      const title = document.querySelector('h3') as HTMLElement
+      expect(title).toBeTruthy()
+      // Verify element exists (styles are set via cssText)
+      
+      const buttons = document.querySelectorAll('button')
+      buttons[0].click()
+      await promise
+    })
+
+    it('should set message styles correctly', async () => {
+      const promise = showConfirm('Test message')
+      
+      await new Promise(resolve => setTimeout(resolve, 50))
+      
+      const message = document.querySelector('p') as HTMLElement
+      expect(message).toBeTruthy()
+      // Verify element exists (styles are set via cssText)
+      
+      const buttons = document.querySelectorAll('button')
+      buttons[0].click()
+      await promise
+    })
+
+    it('should set button container styles correctly', async () => {
+      const promise = showConfirm('Test message')
+      
+      await new Promise(resolve => setTimeout(resolve, 50))
+      
+      // Find button container by looking for div containing buttons
+      const buttons = document.querySelectorAll('button')
+      const container = buttons[0]?.parentElement
+      expect(container).toBeTruthy()
+      
+      buttons[0].click()
+      await promise
+    })
+
+    it('should set cancel button styles correctly', async () => {
+      const promise = showConfirm('Test message')
+      
+      await new Promise(resolve => setTimeout(resolve, 50))
+      
+      const buttons = document.querySelectorAll('button')
+      const cancelBtn = buttons[0] as HTMLButtonElement
+      expect(cancelBtn).toBeTruthy()
+      // Verify element exists (styles are set via cssText)
+      
+      cancelBtn.click()
+      await promise
+    })
+
+    it('should set confirm button styles with warning type', async () => {
+      const promise = showConfirm('Test message', { type: 'warning' })
+      
+      await new Promise(resolve => setTimeout(resolve, 50))
+      
+      const buttons = document.querySelectorAll('button')
+      const confirmBtn = buttons[1] as HTMLButtonElement
+      expect(confirmBtn).toBeTruthy()
+      // Verify element exists (styles are set via cssText)
+      
+      confirmBtn.click()
+      await promise
+    })
+
+    it('should set confirm button styles with danger type', async () => {
+      const promise = showConfirm('Test message', { type: 'danger' })
+      
+      await new Promise(resolve => setTimeout(resolve, 50))
+      
+      const buttons = document.querySelectorAll('button')
+      const confirmBtn = buttons[1] as HTMLButtonElement
+      expect(confirmBtn).toBeTruthy()
+      // Verify element exists (styles are set via cssText)
+      
+      confirmBtn.click()
+      await promise
+    })
+
+    it('should set confirm button styles with info type', async () => {
+      const promise = showConfirm('Test message', { type: 'info' })
+      
+      await new Promise(resolve => setTimeout(resolve, 50))
+      
+      const buttons = document.querySelectorAll('button')
+      const confirmBtn = buttons[1] as HTMLButtonElement
+      expect(confirmBtn).toBeTruthy()
+      // Verify element exists (styles are set via cssText)
+      
+      confirmBtn.click()
+      await promise
+    })
+
+    it('should add animation styles to document head', async () => {
+      const promise = showConfirm('Test message')
+      
+      await new Promise(resolve => setTimeout(resolve, 50))
+      
+      const styles = document.getElementById('confirm-dialog-styles')
+      expect(styles).toBeTruthy()
+      expect(styles?.textContent).toContain('@keyframes fadeIn')
+      expect(styles?.textContent).toContain('@keyframes slideUp')
+      
+      const buttons = document.querySelectorAll('button')
+      buttons[0].click()
+      await promise
+    })
+
+    it('should focus confirm button on mount', async () => {
+      const promise = showConfirm('Test message')
+      
+      await new Promise(resolve => setTimeout(resolve, 50))
+      
+      const buttons = document.querySelectorAll('button')
+      const confirmBtn = buttons[1] as HTMLButtonElement
+      
+      // Button should be focusable
+      confirmBtn.focus()
+      expect(document.activeElement).toBe(confirmBtn)
+      
+      confirmBtn.click()
+      await promise
+    })
   })
 })

@@ -238,5 +238,30 @@ describe('useWorkflowAPI', () => {
       expect(firstRender.getExecution).toBe(secondRender.getExecution)
     })
   })
+
+  describe('dependency arrays', () => {
+    it('should work correctly with empty dependency arrays', async () => {
+      const { result } = renderHook(() => useWorkflowAPI())
+      
+      // Call functions multiple times to ensure they work with empty deps
+      const promise1 = result.current.getWorkflows()
+      const promise2 = result.current.getWorkflows()
+      
+      // Both should work independently
+      expect(promise1).toBeInstanceOf(Promise)
+      expect(promise2).toBeInstanceOf(Promise)
+    })
+
+    it('should maintain function identity across renders', () => {
+      const { result, rerender } = renderHook(() => useWorkflowAPI())
+      
+      const func1 = result.current.getWorkflows
+      rerender()
+      const func2 = result.current.getWorkflows
+      
+      // Functions should be the same reference (memoized with empty deps)
+      expect(func1).toBe(func2)
+    })
+  })
 })
 
