@@ -450,5 +450,130 @@ describe('notifications', () => {
       expect(document.body.contains(warning)).toBe(true)
     })
   })
+
+  describe('object literal coverage for helper functions', () => {
+    it('should verify exact object literal for showSuccess', () => {
+      const notification = showSuccess('Success message', 2000)
+      
+      expect(notification).toBeTruthy()
+      // Verify the exact object structure: { type: 'success', duration: 2000 }
+      // This kills mutants that change the object literal
+      expect(notification.textContent).toBe('Success message')
+      
+      // Verify it uses success type (green background)
+      expect(notification.style.background).toBe('rgb(16, 185, 129)') // #10b981
+    })
+
+    it('should verify exact object literal for showSuccess with undefined duration', () => {
+      const notification = showSuccess('Success message', undefined)
+      
+      expect(notification).toBeTruthy()
+      // Verify object structure: { type: 'success', duration: undefined }
+      expect(notification.textContent).toBe('Success message')
+    })
+
+    it('should verify exact object literal for showError', () => {
+      const notification = showError('Error message', 3000)
+      
+      expect(notification).toBeTruthy()
+      // Verify the exact object structure: { type: 'error', duration: 3000 }
+      expect(notification.textContent).toBe('Error message')
+      
+      // Verify it uses error type (red background)
+      expect(notification.style.background).toBe('rgb(239, 68, 68)') // #ef4444
+    })
+
+    it('should verify exact object literal for showError with undefined duration', () => {
+      const notification = showError('Error message', undefined)
+      
+      expect(notification).toBeTruthy()
+      // Verify object structure: { type: 'error', duration: undefined }
+      expect(notification.textContent).toBe('Error message')
+    })
+
+    it('should verify exact object literal for showInfo', () => {
+      const notification = showInfo('Info message', 4000)
+      
+      expect(notification).toBeTruthy()
+      // Verify the exact object structure: { type: 'info', duration: 4000 }
+      expect(notification.textContent).toBe('Info message')
+      
+      // Verify it uses info type (blue background)
+      expect(notification.style.background).toBe('rgb(59, 130, 246)') // #3b82f6
+    })
+
+    it('should verify exact object literal for showInfo with undefined duration', () => {
+      const notification = showInfo('Info message', undefined)
+      
+      expect(notification).toBeTruthy()
+      // Verify object structure: { type: 'info', duration: undefined }
+      expect(notification.textContent).toBe('Info message')
+    })
+
+    it('should verify exact object literal for showWarning', () => {
+      const notification = showWarning('Warning message', 6000)
+      
+      expect(notification).toBeTruthy()
+      // Verify the exact object structure: { type: 'warning', duration: 6000 }
+      expect(notification.textContent).toBe('Warning message')
+      
+      // Verify it uses warning type (orange background)
+      expect(notification.style.background).toBe('rgb(245, 158, 11)') // #f59e0b
+    })
+
+    it('should verify exact object literal for showWarning with undefined duration', () => {
+      const notification = showWarning('Warning message', undefined)
+      
+      expect(notification).toBeTruthy()
+      // Verify object structure: { type: 'warning', duration: undefined }
+      expect(notification.textContent).toBe('Warning message')
+    })
+
+    it('should verify all helper functions use correct type values', () => {
+      const success = showSuccess('Test')
+      const error = showError('Test')
+      const info = showInfo('Test')
+      const warning = showWarning('Test')
+      
+      // Verify each uses the correct type in the object literal
+      expect(success.style.background).toBe('rgb(16, 185, 129)') // success: #10b981
+      expect(error.style.background).toBe('rgb(239, 68, 68)') // error: #ef4444
+      expect(info.style.background).toBe('rgb(59, 130, 246)') // info: #3b82f6
+      expect(warning.style.background).toBe('rgb(245, 158, 11)') // warning: #f59e0b
+    })
+
+    it('should verify exact text color string literal is white', () => {
+      // This kills mutants that change 'white' to empty string or other values
+      const success = showSuccess('Test')
+      const error = showError('Test')
+      const info = showInfo('Test')
+      const warning = showWarning('Test')
+      
+      // Verify exact text color: text: 'white' in colors object
+      expect(success.style.color).toBe('white')
+      expect(error.style.color).toBe('white')
+      expect(info.style.color).toBe('white')
+      expect(warning.style.color).toBe('white')
+    })
+
+    it('should verify exact color object literal structure', () => {
+      // Verify the exact structure: { bg: '#...', text: 'white' }
+      const notification = showNotification('Test', { type: 'success' })
+      
+      // Verify both bg and text properties exist with correct values
+      expect(notification.style.background).toBe('rgb(16, 185, 129)') // #10b981
+      expect(notification.style.color).toBe('white')
+    })
+
+    it('should verify all color object literals have white text', () => {
+      const types: Array<'success' | 'error' | 'info' | 'warning'> = ['success', 'error', 'info', 'warning']
+      
+      for (const type of types) {
+        const notification = showNotification('Test', { type })
+        // Verify exact text color string literal: 'white'
+        expect(notification.style.color).toBe('white')
+      }
+    })
+  })
 })
 

@@ -884,4 +884,118 @@ describe('confirm', () => {
       await promise
     })
   })
+
+  describe('object literal coverage for confirmColors', () => {
+    it('should verify exact confirmColors object literal for warning type', async () => {
+      const promise = showConfirm('Test', { type: 'warning' })
+      
+      jest.advanceTimersByTime(50); await Promise.resolve()
+      
+      const confirmBtn = document.querySelector('button:last-child') as HTMLButtonElement
+      expect(confirmBtn).toBeTruthy()
+      
+      // Verify exact color values from confirmColors object literal
+      // warning: { bg: '#f59e0b', hover: '#d97706' }
+      expect(confirmBtn.style.background).toBe('rgb(245, 158, 11)') // #f59e0b
+      
+      // Test hover
+      confirmBtn.dispatchEvent(new MouseEvent('mouseover', { bubbles: true }))
+      expect(confirmBtn.style.background).toBe('rgb(217, 119, 6)') // #d97706
+      
+      confirmBtn.click()
+      await promise
+    })
+
+    it('should verify exact confirmColors object literal for danger type', async () => {
+      const promise = showConfirm('Test', { type: 'danger' })
+      
+      jest.advanceTimersByTime(50); await Promise.resolve()
+      
+      const confirmBtn = document.querySelector('button:last-child') as HTMLButtonElement
+      expect(confirmBtn).toBeTruthy()
+      
+      // Verify exact color values
+      // danger: { bg: '#ef4444', hover: '#dc2626' }
+      expect(confirmBtn.style.background).toBe('rgb(239, 68, 68)') // #ef4444
+      
+      // Test hover
+      confirmBtn.dispatchEvent(new MouseEvent('mouseover', { bubbles: true }))
+      expect(confirmBtn.style.background).toBe('rgb(220, 38, 38)') // #dc2626
+      
+      confirmBtn.click()
+      await promise
+    })
+
+    it('should verify exact confirmColors object literal for info type', async () => {
+      const promise = showConfirm('Test', { type: 'info' })
+      
+      jest.advanceTimersByTime(50); await Promise.resolve()
+      
+      const confirmBtn = document.querySelector('button:last-child') as HTMLButtonElement
+      expect(confirmBtn).toBeTruthy()
+      
+      // Verify exact color values
+      // info: { bg: '#3b82f6', hover: '#2563eb' }
+      expect(confirmBtn.style.background).toBe('rgb(59, 130, 246)') // #3b82f6
+      
+      // Test hover
+      confirmBtn.dispatchEvent(new MouseEvent('mouseover', { bubbles: true }))
+      expect(confirmBtn.style.background).toBe('rgb(37, 99, 235)') // #2563eb
+      
+      confirmBtn.click()
+      await promise
+    })
+
+    it('should verify all confirmColors object literal keys', async () => {
+      const types: Array<'warning' | 'danger' | 'info'> = ['warning', 'danger', 'info']
+      const expectedColors = {
+        warning: { bg: 'rgb(245, 158, 11)', hover: 'rgb(217, 119, 6)' },
+        danger: { bg: 'rgb(239, 68, 68)', hover: 'rgb(220, 38, 38)' },
+        info: { bg: 'rgb(59, 130, 246)', hover: 'rgb(37, 99, 235)' }
+      }
+
+      for (const type of types) {
+        const promise = showConfirm('Test', { type })
+        
+        jest.advanceTimersByTime(50); await Promise.resolve()
+        
+        const confirmBtn = document.querySelector('button:last-child') as HTMLButtonElement
+        expect(confirmBtn.style.background).toBe(expectedColors[type].bg)
+        
+        // Test hover
+        confirmBtn.dispatchEvent(new MouseEvent('mouseover', { bubbles: true }))
+        expect(confirmBtn.style.background).toBe(expectedColors[type].hover)
+        
+        confirmBtn.click()
+        await promise
+        
+        // Clean up
+        document.body.innerHTML = ''
+        document.head.querySelector('#confirm-dialog-styles')?.remove()
+      }
+    })
+
+    it('should verify confirmColors[type] access pattern', async () => {
+      // Test that confirmColors[type] correctly accesses the object literal
+      const types: Array<'warning' | 'danger' | 'info'> = ['warning', 'danger', 'info']
+      
+      for (const type of types) {
+        const promise = showConfirm('Test', { type })
+        
+        jest.advanceTimersByTime(50); await Promise.resolve()
+        
+        const confirmBtn = document.querySelector('button:last-child') as HTMLButtonElement
+        // Verify colors object is correctly accessed
+        expect(confirmBtn.style.background).toBeTruthy()
+        expect(confirmBtn.style.background).not.toBe('')
+        
+        confirmBtn.click()
+        await promise
+        
+        // Clean up
+        document.body.innerHTML = ''
+        document.head.querySelector('#confirm-dialog-styles')?.remove()
+      }
+    })
+  })
 })
