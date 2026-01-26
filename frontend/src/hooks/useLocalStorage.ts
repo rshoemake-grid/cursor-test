@@ -1,5 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { logger } from '../utils/logger'
+import type { StorageAdapter } from '../types/adapters'
+import { defaultAdapters } from '../types/adapters'
 
 /**
  * Custom hook for localStorage with consistent error handling
@@ -7,19 +9,26 @@ import { logger } from '../utils/logger'
  */
 export function useLocalStorage<T>(
   key: string,
-  initialValue: T
+  initialValue: T,
+  options?: {
+    storage?: StorageAdapter | null
+    logger?: typeof logger
+  }
 ): [T, (value: T | ((val: T) => T)) => void, () => void] {
+  const storage = options?.storage ?? defaultAdapters.createLocalStorageAdapter()
+  const injectedLogger = options?.logger ?? logger
+
   // State to store our value
   const [storedValue, setStoredValue] = useState<T>(() => {
-    if (typeof window === 'undefined') {
+    if (!storage) {
       return initialValue
     }
     
     try {
-      const item = window.localStorage.getItem(key)
+      const item = storage.getItem(key)
       return item ? JSON.parse(item) : initialValue
     } catch (error) {
-      logger.error(`Error reading localStorage key "${key}":`, error)
+      injectedLogger.error(`Error reading localStorage key "${key}":`, error)
       return initialValue
     }
   })
@@ -36,34 +45,34 @@ export function useLocalStorage<T>(
         setStoredValue(valueToStore)
         
         // Save to local storage
-        if (typeof window !== 'undefined') {
+        if (storage) {
           // JSON.stringify(undefined) returns undefined, which causes issues
           // Convert undefined to null for storage
           const valueToStoreString = valueToStore === undefined ? JSON.stringify(null) : JSON.stringify(valueToStore)
-          window.localStorage.setItem(key, valueToStoreString)
+          storage.setItem(key, valueToStoreString)
         }
       } catch (error) {
-        logger.error(`Error setting localStorage key "${key}":`, error)
+        injectedLogger.error(`Error setting localStorage key "${key}":`, error)
       }
     },
-    [key, storedValue]
+    [key, storedValue, storage, injectedLogger]
   )
 
   // Remove value from localStorage
   const removeValue = useCallback(() => {
     try {
       setStoredValue(initialValue)
-      if (typeof window !== 'undefined') {
-        window.localStorage.removeItem(key)
+      if (storage) {
+        storage.removeItem(key)
       }
     } catch (error) {
-      logger.error(`Error removing localStorage key "${key}":`, error)
+      injectedLogger.error(`Error removing localStorage key "${key}":`, error)
     }
-  }, [key, initialValue])
+  }, [key, initialValue, storage, injectedLogger])
 
   // Listen for changes to this key in other tabs/windows
   useEffect(() => {
-    if (typeof window === 'undefined') {
+    if (!storage) {
       return
     }
 
@@ -72,14 +81,14 @@ export function useLocalStorage<T>(
         try {
           setStoredValue(JSON.parse(e.newValue))
         } catch (error) {
-          logger.error(`Error parsing storage event for key "${key}":`, error)
+          injectedLogger.error(`Error parsing storage event for key "${key}":`, error)
         }
       }
     }
 
-    window.addEventListener('storage', handleStorageChange)
-    return () => window.removeEventListener('storage', handleStorageChange)
-  }, [key])
+    storage.addEventListener('storage', handleStorageChange)
+    return () => storage.removeEventListener('storage', handleStorageChange)
+  }, [key, storage, injectedLogger])
 
   return [storedValue, setValue, removeValue]
 }
@@ -88,13 +97,23 @@ export function useLocalStorage<T>(
  * Simple localStorage getter with error handling
  * Handles both JSON strings and plain strings (for backward compatibility)
  */
-export function getLocalStorageItem<T>(key: string, defaultValue: T): T {
-  if (typeof window === 'undefined') {
+export function getLocalStorageItem<T>(
+  key: string,
+  defaultValue: T,
+  options?: {
+    storage?: StorageAdapter | null
+    logger?: typeof logger
+  }
+): T {
+  const storage = options?.storage ?? defaultAdapters.createLocalStorageAdapter()
+  const injectedLogger = options?.logger ?? logger
+
+  if (!storage) {
     return defaultValue
   }
   
   try {
-    const item = window.localStorage.getItem(key)
+    const item = storage.getItem(key)
     if (!item) {
       return defaultValue
     }
@@ -110,7 +129,7 @@ export function getLocalStorageItem<T>(key: string, defaultValue: T): T {
       
       if (looksLikeJson) {
         // Invalid JSON that was meant to be JSON - return default
-        logger.warn(`localStorage key "${key}" contains invalid JSON. Returning default value.`, item)
+        injectedLogger.warn(`localStorage key "${key}" contains invalid JSON. Returning default value.`, item)
         return defaultValue
       }
       
@@ -121,11 +140,11 @@ export function getLocalStorageItem<T>(key: string, defaultValue: T): T {
       }
       
       // For non-string types, return default
-      logger.warn(`localStorage key "${key}" contains plain string but expected JSON. Returning default value.`, item)
+      injectedLogger.warn(`localStorage key "${key}" contains plain string but expected JSON. Returning default value.`, item)
       return defaultValue
     }
   } catch (error) {
-    logger.error(`Error reading localStorage key "${key}":`, error)
+    injectedLogger.error(`Error reading localStorage key "${key}":`, error)
     return defaultValue
   }
 }
@@ -133,8 +152,18 @@ export function getLocalStorageItem<T>(key: string, defaultValue: T): T {
 /**
  * Simple localStorage setter with error handling
  */
-export function setLocalStorageItem<T>(key: string, value: T): boolean {
-  if (typeof window === 'undefined') {
+export function setLocalStorageItem<T>(
+  key: string,
+  value: T,
+  options?: {
+    storage?: StorageAdapter | null
+    logger?: typeof logger
+  }
+): boolean {
+  const storage = options?.storage ?? defaultAdapters.createLocalStorageAdapter()
+  const injectedLogger = options?.logger ?? logger
+
+  if (!storage) {
     return false
   }
   
@@ -142,10 +171,10 @@ export function setLocalStorageItem<T>(key: string, value: T): boolean {
     // JSON.stringify(undefined) returns undefined, which causes issues with localStorage.setItem
     // Convert undefined to null for storage
     const valueToStore = value === undefined ? null : value
-    window.localStorage.setItem(key, JSON.stringify(valueToStore))
+    storage.setItem(key, JSON.stringify(valueToStore))
     return true
   } catch (error) {
-    logger.error(`Error setting localStorage key "${key}":`, error)
+    injectedLogger.error(`Error setting localStorage key "${key}":`, error)
     return false
   }
 }
@@ -153,16 +182,25 @@ export function setLocalStorageItem<T>(key: string, value: T): boolean {
 /**
  * Simple localStorage remover with error handling
  */
-export function removeLocalStorageItem(key: string): boolean {
-  if (typeof window === 'undefined') {
+export function removeLocalStorageItem(
+  key: string,
+  options?: {
+    storage?: StorageAdapter | null
+    logger?: typeof logger
+  }
+): boolean {
+  const storage = options?.storage ?? defaultAdapters.createLocalStorageAdapter()
+  const injectedLogger = options?.logger ?? logger
+
+  if (!storage) {
     return false
   }
   
   try {
-    window.localStorage.removeItem(key)
+    storage.removeItem(key)
     return true
   } catch (error) {
-    logger.error(`Error removing localStorage key "${key}":`, error)
+    injectedLogger.error(`Error removing localStorage key "${key}":`, error)
     return false
   }
 }

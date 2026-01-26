@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { logger } from '../utils/logger'
+import type { WebSocketFactory, WindowLocation } from '../types/adapters'
+import { defaultAdapters } from '../types/adapters'
 
 interface WebSocketMessage {
   type: 'log' | 'status' | 'node_update' | 'completion' | 'error'
@@ -25,6 +27,10 @@ interface UseWebSocketOptions {
   onNodeUpdate?: (nodeId: string, nodeState: any) => void
   onCompletion?: (result: any) => void
   onError?: (error: string) => void
+  // Dependency injection
+  webSocketFactory?: WebSocketFactory
+  windowLocation?: WindowLocation | null
+  logger?: typeof logger
 }
 
 export function useWebSocket({
@@ -34,7 +40,10 @@ export function useWebSocket({
   onStatus,
   onNodeUpdate,
   onCompletion,
-  onError
+  onError,
+  webSocketFactory = defaultAdapters.createWebSocketFactory(),
+  windowLocation = defaultAdapters.createWindowLocation(),
+  logger: injectedLogger = logger
 }: UseWebSocketOptions) {
   const [isConnected, setIsConnected] = useState(false)
   const wsRef = useRef<WebSocket | null>(null)
@@ -50,14 +59,14 @@ export function useWebSocket({
 
     // Don't connect to temporary execution IDs (they don't exist in backend)
     if (executionId.startsWith('pending-')) {
-      logger.debug(`[WebSocket] Skipping connection to temporary execution ID: ${executionId}`)
+      injectedLogger.debug(`[WebSocket] Skipping connection to temporary execution ID: ${executionId}`)
       return
     }
 
     // Don't connect if execution is already completed or failed
     const currentStatus = executionStatus || lastKnownStatusRef.current
     if (currentStatus === 'completed' || currentStatus === 'failed') {
-      logger.debug(`[WebSocket] Skipping connection - execution ${executionId} is ${currentStatus}`)
+      injectedLogger.debug(`[WebSocket] Skipping connection - execution ${executionId} is ${currentStatus}`)
       return
     }
 
@@ -69,18 +78,19 @@ export function useWebSocket({
 
     // Determine WebSocket URL
     // Use /ws path which is proxied by Vite to backend
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
-    const host = window.location.host
+    // Provide fallback for test environments
+    const protocol = windowLocation?.protocol === 'https:' ? 'wss:' : 'ws:'
+    const host = windowLocation?.host || 'localhost:8000'
     const wsUrl = `${protocol}//${host}/ws/executions/${executionId}`
     
-    logger.debug(`[WebSocket] Connecting to ${wsUrl} for execution ${executionId}`)
+    injectedLogger.debug(`[WebSocket] Connecting to ${wsUrl} for execution ${executionId}`)
 
     try {
-      const ws = new WebSocket(wsUrl)
+      const ws = webSocketFactory.create(wsUrl)
       wsRef.current = ws
 
       ws.onopen = () => {
-        logger.debug(`[WebSocket] Connected to execution ${executionId}`)
+        injectedLogger.debug(`[WebSocket] Connected to execution ${executionId}`)
         setIsConnected(true)
         reconnectAttempts.current = 0
       }
@@ -121,7 +131,7 @@ export function useWebSocket({
               break
           }
         } catch (error) {
-          logger.error('[WebSocket] Failed to parse message:', error)
+          injectedLogger.error('[WebSocket] Failed to parse message:', error)
         }
       }
 
@@ -134,7 +144,7 @@ export function useWebSocket({
                            wsState === WebSocket.CLOSING ? 'CLOSING' :
                            wsState === WebSocket.CLOSED ? 'CLOSED' : 'UNKNOWN'
         
-        logger.error(`[WebSocket] Connection error for execution ${executionId}:`, {
+        injectedLogger.error(`[WebSocket] Connection error for execution ${executionId}:`, {
           message: errorMessage,
           readyState: wsStateText,
           url: wsUrl
@@ -144,7 +154,7 @@ export function useWebSocket({
 
       ws.onclose = (event) => {
         const { code, reason, wasClean } = event
-        logger.debug(`[WebSocket] Disconnected from execution ${executionId}`, {
+        injectedLogger.debug(`[WebSocket] Disconnected from execution ${executionId}`, {
           code,
           reason: reason || 'No reason provided',
           wasClean,
@@ -155,20 +165,20 @@ export function useWebSocket({
 
         // Don't reconnect to temporary execution IDs
         if (executionId && executionId.startsWith('pending-')) {
-          logger.debug(`[WebSocket] Skipping reconnect for temporary execution ID: ${executionId}`)
+          injectedLogger.debug(`[WebSocket] Skipping reconnect for temporary execution ID: ${executionId}`)
           return
         }
 
         // Don't reconnect if execution is completed or failed
         const currentStatus = executionStatus || lastKnownStatusRef.current
         if (currentStatus === 'completed' || currentStatus === 'failed') {
-          logger.debug(`[WebSocket] Skipping reconnect - execution ${executionId} is ${currentStatus}`)
+          injectedLogger.debug(`[WebSocket] Skipping reconnect - execution ${executionId} is ${currentStatus}`)
           return
         }
 
         // Don't reconnect if connection was closed cleanly and execution might be done
         if (wasClean && code === 1000) {
-          logger.debug(`[WebSocket] Connection closed cleanly, not reconnecting`)
+          injectedLogger.debug(`[WebSocket] Connection closed cleanly, not reconnecting`)
           return
         }
 
@@ -176,26 +186,26 @@ export function useWebSocket({
         if (reconnectAttempts.current < maxReconnectAttempts && executionId) {
           reconnectAttempts.current++
           const delay = Math.min(1000 * Math.pow(2, reconnectAttempts.current), 10000)
-          logger.debug(`[WebSocket] Reconnecting in ${delay}ms (attempt ${reconnectAttempts.current}/${maxReconnectAttempts})`)
+          injectedLogger.debug(`[WebSocket] Reconnecting in ${delay}ms (attempt ${reconnectAttempts.current}/${maxReconnectAttempts})`)
           
           reconnectTimeoutRef.current = setTimeout(() => {
             connect()
           }, delay)
         } else if (reconnectAttempts.current >= maxReconnectAttempts) {
-          logger.warn(`[WebSocket] Max reconnect attempts (${maxReconnectAttempts}) reached for execution ${executionId}`)
+          injectedLogger.warn(`[WebSocket] Max reconnect attempts (${maxReconnectAttempts}) reached for execution ${executionId}`)
           if (onError) {
             onError(`WebSocket connection failed after ${maxReconnectAttempts} attempts`)
           }
         }
       }
     } catch (error) {
-      logger.error(`[WebSocket] Failed to create connection for execution ${executionId}:`, error)
+      injectedLogger.error(`[WebSocket] Failed to create connection for execution ${executionId}:`, error)
       setIsConnected(false)
       if (onError) {
         onError(error instanceof Error ? error.message : 'Failed to create WebSocket connection')
       }
     }
-  }, [executionId, executionStatus, onLog, onStatus, onNodeUpdate, onCompletion, onError])
+  }, [executionId, executionStatus, onLog, onStatus, onNodeUpdate, onCompletion, onError, webSocketFactory, windowLocation, injectedLogger])
 
   // Update last known status when it changes
   useEffect(() => {
@@ -205,7 +215,7 @@ export function useWebSocket({
       // If execution completed or failed, close connection
       if (executionStatus === 'completed' || executionStatus === 'failed') {
         if (wsRef.current) {
-          logger.debug(`[WebSocket] Closing connection - execution ${executionId} is ${executionStatus}`)
+          injectedLogger.debug(`[WebSocket] Closing connection - execution ${executionId} is ${executionStatus}`)
           wsRef.current.close(1000, 'Execution completed')
           wsRef.current = null
         }
@@ -217,7 +227,7 @@ export function useWebSocket({
         }
       }
     }
-  }, [executionId, executionStatus])
+  }, [executionId, executionStatus, injectedLogger])
 
   useEffect(() => {
     // Clear any pending reconnection attempts when execution ID changes
@@ -244,7 +254,7 @@ export function useWebSocket({
       // Don't connect if execution is already completed or failed
       const currentStatus = executionStatus || lastKnownStatusRef.current
       if (currentStatus === 'completed' || currentStatus === 'failed') {
-        logger.debug(`[WebSocket] Skipping connection - execution ${executionId} is ${currentStatus}`)
+        injectedLogger.debug(`[WebSocket] Skipping connection - execution ${executionId} is ${currentStatus}`)
         return
       }
       
@@ -269,7 +279,7 @@ export function useWebSocket({
       }
       setIsConnected(false)
     }
-  }, [executionId, executionStatus, connect])
+  }, [executionId, executionStatus, connect, injectedLogger])
 
   return { isConnected }
 }

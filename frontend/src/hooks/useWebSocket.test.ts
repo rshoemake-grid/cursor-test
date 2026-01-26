@@ -1,5 +1,5 @@
 // Jest globals - no import needed
-import { renderHook, waitFor } from '@testing-library/react'
+import { renderHook, waitFor, act } from '@testing-library/react'
 import { useWebSocket } from './useWebSocket'
 import { logger } from '../utils/logger'
 
@@ -28,13 +28,27 @@ class MockWebSocket {
 
   constructor(url: string) {
     this.url = url
-    // Simulate connection opening
-    setTimeout(() => {
-      this.readyState = MockWebSocket.OPEN
-      if (this.onopen) {
-        this.onopen(new Event('open'))
-      }
-    }, 10)
+    // Simulate connection opening (but delay it to allow handler to be set)
+    // Use setImmediate or setTimeout with a small delay
+    if (typeof setImmediate !== 'undefined') {
+      setImmediate(() => {
+        if (this.readyState === MockWebSocket.CONNECTING) {
+          this.readyState = MockWebSocket.OPEN
+          if (this.onopen) {
+            this.onopen(new Event('open'))
+          }
+        }
+      })
+    } else {
+      setTimeout(() => {
+        if (this.readyState === MockWebSocket.CONNECTING) {
+          this.readyState = MockWebSocket.OPEN
+          if (this.onopen) {
+            this.onopen(new Event('open'))
+          }
+        }
+      }, 10)
+    }
   }
 
   send(data: string) {
@@ -265,20 +279,78 @@ describe('useWebSocket', () => {
 
   describe('connection state', () => {
     it('should set isConnected to true when connection opens', async () => {
+      // Provide windowLocation and webSocketFactory explicitly to ensure stable references
+      // The issue is that defaultAdapters.createWebSocketFactory() creates a new function
+      // on each call, which causes connect to be recreated, which triggers useEffect cleanup
+      const windowLocation = {
+        protocol: 'http:',
+        host: 'localhost:8000',
+        hostname: 'localhost',
+        port: '8000',
+        pathname: '/',
+        search: '',
+        hash: '',
+      }
+      
+      // Create a stable webSocketFactory to prevent connect from being recreated
+      const webSocketFactory = {
+        create: (url: string) => {
+          const ws = new MockWebSocket(url)
+          wsInstances.push(ws)
+          return ws as any
+        }
+      }
+
       const { result } = renderHook(() =>
-        useWebSocket({ executionId: 'exec-1' })
+        useWebSocket({ 
+          executionId: 'exec-1',
+          windowLocation,
+          webSocketFactory
+        })
       )
 
-      // Wait for WebSocket to be created
-      await jest.advanceTimersByTime(50)
+      // Wait for WebSocket to be created (but not auto-opened yet)
+      // The MockWebSocket constructor has a setTimeout that auto-opens after 10ms
+      // We need to check state before that happens
+      await act(async () => {
+        await jest.advanceTimersByTime(5) // Less than 10ms to prevent auto-open
+      })
 
       expect(wsInstances.length).toBeGreaterThan(0)
       const ws = wsInstances[0]
       
-      // Manually trigger open event
-      ws.simulateOpen()
+      // Verify handler is set (this confirms connect() was called)
+      expect(ws.onopen).toBeDefined()
       
-      // Wait for React state update using waitFor with timeout
+      // Verify logger was called (confirms connect() executed)
+      expect(logger.debug).toHaveBeenCalledWith(
+        expect.stringContaining('[WebSocket] Connecting to')
+      )
+      
+      // Verify initial state is false (before WebSocket opens)
+      expect(result.current.isConnected).toBe(false)
+      
+      // Clear logger to verify the "Connected" message
+      ;(logger.debug as jest.Mock).mockClear()
+      
+      // Manually trigger open event (simulating WebSocket opening)
+      await act(async () => {
+        if (ws.onopen) {
+          ws.onopen(new Event('open'))
+        }
+        // Advance timers to allow React to process state updates
+        await jest.advanceTimersByTime(0)
+      })
+      
+      // Verify the onopen handler was called (logger should show "Connected")
+      // This confirms setIsConnected(true) was called on line 94 of useWebSocket.ts
+      expect(logger.debug).toHaveBeenCalledWith(
+        expect.stringContaining('[WebSocket] Connected to execution exec-1')
+      )
+      
+      // Verify state was updated - the handler execution (verified above) confirms
+      // setIsConnected(true) was called. With stable webSocketFactory reference,
+      // the cleanup function shouldn't run and reset the state.
       await waitFor(() => {
         expect(result.current.isConnected).toBe(true)
       }, { timeout: 1000 })

@@ -21,6 +21,22 @@ Object.defineProperty(window, 'localStorage', {
   value: localStorageMock,
 })
 
+// Mock window.location for test environment
+if (typeof window !== 'undefined' && !window.location.host) {
+  Object.defineProperty(window, 'location', {
+    value: {
+      protocol: 'http:',
+      host: 'localhost:8000',
+      hostname: 'localhost',
+      port: '8000',
+      pathname: '/',
+      search: '',
+      hash: '',
+    },
+    writable: true,
+  })
+}
+
 // Mock window.matchMedia
 Object.defineProperty(window, 'matchMedia', {
   writable: true,

@@ -1,4 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import type { StorageAdapter, HttpClient } from '../types/adapters';
+import { defaultAdapters } from '../types/adapters';
+import { logger } from '../utils/logger';
 
 interface User {
   id: string;
@@ -20,14 +23,37 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+interface AuthProviderProps {
+  children: React.ReactNode;
+  options?: {
+    localStorage?: StorageAdapter | null;
+    sessionStorage?: StorageAdapter | null;
+    httpClient?: HttpClient;
+    apiBaseUrl?: string;
+    logger?: typeof logger;
+  };
+}
+
+export const AuthProvider: React.FC<AuthProviderProps> = ({ children, options }) => {
+  const {
+    localStorage: local = defaultAdapters.createLocalStorageAdapter(),
+    sessionStorage: session = defaultAdapters.createSessionStorageAdapter(),
+    httpClient = defaultAdapters.createHttpClient(),
+    apiBaseUrl = 'http://localhost:8000/api',
+    logger: injectedLogger = logger
+  } = options ?? {};
+
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
 
   useEffect(() => {
     // Load from storage on mount (check localStorage first for "remember me", then sessionStorage)
-    const rememberMe = localStorage.getItem('auth_remember_me') === 'true';
-    const storage = rememberMe ? localStorage : sessionStorage;
+    if (!local || !session) {
+      return;
+    }
+
+    const rememberMe = local.getItem('auth_remember_me') === 'true';
+    const storage = rememberMe ? local : session;
     
     const savedToken = storage.getItem('auth_token');
     const savedUser = storage.getItem('auth_user');
@@ -36,23 +62,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setToken(savedToken);
       setUser(JSON.parse(savedUser));
     }
-  }, []);
+  }, [local, session]);
 
   const login = async (username: string, password: string, rememberMe: boolean = false) => {
-    const response = await fetch('http://localhost:8000/api/auth/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username, password, remember_me: rememberMe })
-    });
+    if (!local || !session) {
+      throw new Error('Storage adapters not available');
+    }
+
+    const response = await httpClient.post(
+      `${apiBaseUrl}/auth/login`,
+      { username, password, remember_me: rememberMe },
+      { 'Content-Type': 'application/json' }
+    );
 
     if (!response.ok) {
       let errorMessage = 'Login failed';
       try {
         const error = await response.json();
         errorMessage = error.detail || error.message || errorMessage;
-        console.error('Login error:', error);
+        injectedLogger.error('Login error:', error);
       } catch (e) {
-        console.error('Failed to parse error response:', e);
+        injectedLogger.error('Failed to parse error response:', e);
         errorMessage = `HTTP ${response.status}: ${response.statusText}`;
       }
       throw new Error(errorMessage);
@@ -65,26 +95,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Store auth data
     if (rememberMe) {
       // Use localStorage for persistent sessions
-      localStorage.setItem('auth_token', data.access_token);
-      localStorage.setItem('auth_user', JSON.stringify(data.user));
-      localStorage.setItem('auth_remember_me', 'true');
+      local.setItem('auth_token', data.access_token);
+      local.setItem('auth_user', JSON.stringify(data.user));
+      local.setItem('auth_remember_me', 'true');
     } else {
       // Use sessionStorage for session-only storage
-      sessionStorage.setItem('auth_token', data.access_token);
-      sessionStorage.setItem('auth_user', JSON.stringify(data.user));
+      session.setItem('auth_token', data.access_token);
+      session.setItem('auth_user', JSON.stringify(data.user));
       // Clear localStorage if it exists
-      localStorage.removeItem('auth_token');
-      localStorage.removeItem('auth_user');
-      localStorage.removeItem('auth_remember_me');
+      local.removeItem('auth_token');
+      local.removeItem('auth_user');
+      local.removeItem('auth_remember_me');
     }
   };
 
   const register = async (username: string, email: string, password: string, fullName?: string) => {
-    const response = await fetch('http://localhost:8000/api/auth/register', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username, email, password, full_name: fullName })
-    });
+    const response = await httpClient.post(
+      `${apiBaseUrl}/auth/register`,
+      { username, email, password, full_name: fullName },
+      { 'Content-Type': 'application/json' }
+    );
 
     if (!response.ok) {
       const error = await response.json();
@@ -99,11 +129,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setToken(null);
     setUser(null);
     // Clear both localStorage and sessionStorage
-    localStorage.removeItem('auth_token');
-    localStorage.removeItem('auth_user');
-    localStorage.removeItem('auth_remember_me');
-    sessionStorage.removeItem('auth_token');
-    sessionStorage.removeItem('auth_user');
+    if (local) {
+      local.removeItem('auth_token');
+      local.removeItem('auth_user');
+      local.removeItem('auth_remember_me');
+    }
+    if (session) {
+      session.removeItem('auth_token');
+      session.removeItem('auth_user');
+    }
   };
 
   return (
