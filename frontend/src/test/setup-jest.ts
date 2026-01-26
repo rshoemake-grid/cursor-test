@@ -79,3 +79,10 @@ Object.defineProperty(global, 'import', {
   writable: true,
 })
 
+// Polyfill TextEncoder/TextDecoder for react-router-dom
+if (typeof global.TextEncoder === 'undefined') {
+  const { TextEncoder, TextDecoder } = require('util')
+  global.TextEncoder = TextEncoder
+  global.TextDecoder = TextDecoder
+}
+
