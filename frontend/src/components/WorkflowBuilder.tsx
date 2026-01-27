@@ -562,18 +562,18 @@ const WorkflowBuilder = forwardRef<WorkflowBuilderHandle, WorkflowBuilderProps>(
 
   const executeWorkflow = useCallback(async () => {
     logger.debug('[WorkflowBuilder] executeWorkflow called')
-    console.log('[WorkflowBuilder] isAuthenticated:', isAuthenticated)
-    console.log('[WorkflowBuilder] localWorkflowId:', localWorkflowId)
+    logger.debug('[WorkflowBuilder] isAuthenticated:', isAuthenticated)
+    logger.debug('[WorkflowBuilder] localWorkflowId:', localWorkflowId)
     if (!isAuthenticated) {
-      console.error('[WorkflowBuilder] User not authenticated')
+      logger.error('[WorkflowBuilder] User not authenticated')
       showError('Please log in to execute workflows.')
       return
     }
 
     let currentWorkflowId = localWorkflowId
-    console.log('[WorkflowBuilder] Current workflow ID:', currentWorkflowId)
+    logger.debug('[WorkflowBuilder] Current workflow ID:', currentWorkflowId)
     if (!currentWorkflowId) {
-      console.log('[WorkflowBuilder] No workflow ID, prompting to save')
+      logger.debug('[WorkflowBuilder] No workflow ID, prompting to save')
       const confirmed = await showConfirm(
         'Workflow needs to be saved before execution. Save now?',
         { title: 'Save Workflow', confirmText: 'Save', cancelText: 'Cancel' }
@@ -604,15 +604,15 @@ const WorkflowBuilder = forwardRef<WorkflowBuilderHandle, WorkflowBuilderProps>(
   }, [showInputs])
 
   const handleConfirmExecute = useCallback(async () => {
-    console.log('[WorkflowBuilder] ===== handleConfirmExecute CALLED =====')
-    console.log('[WorkflowBuilder] executionInputs:', executionInputs)
-    console.log('[WorkflowBuilder] workflowIdRef.current:', workflowIdRef.current)
+    logger.debug('[WorkflowBuilder] ===== handleConfirmExecute CALLED =====')
+    logger.debug('[WorkflowBuilder] executionInputs:', executionInputs)
+    logger.debug('[WorkflowBuilder] workflowIdRef.current:', workflowIdRef.current)
     setIsExecuting(true)
     setTimeout(async () => {
       try {
-        console.log('[WorkflowBuilder] Parsing execution inputs:', executionInputs)
+        logger.debug('[WorkflowBuilder] Parsing execution inputs:', executionInputs)
         const inputs = JSON.parse(executionInputs)
-        console.log('[WorkflowBuilder] Parsed inputs:', inputs)
+        logger.debug('[WorkflowBuilder] Parsed inputs:', inputs)
         setShowInputs(false)
         setExecutionInputs('{}')
         setIsExecuting(false)
@@ -662,28 +662,8 @@ const WorkflowBuilder = forwardRef<WorkflowBuilderHandle, WorkflowBuilderProps>(
       } catch (error: any) {
         logger.error('Execution setup failed:', error)
         setIsExecuting(false)
-        const errorNotification = document.createElement('div')
-        errorNotification.style.cssText = `
-          position: fixed;
-          top: 20px;
-          right: 20px;
-          background: #ef4444;
-          color: white;
-          padding: 16px 24px;
-          border-radius: 8px;
-          box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-          z-index: 10000;
-          max-width: 400px;
-          font-family: system-ui, -apple-system, sans-serif;
-        `
-        errorNotification.textContent = `Failed to execute workflow: ${error.message}`
-        document.body.appendChild(errorNotification)
-
-        setTimeout(() => {
-          errorNotification.style.transition = 'opacity 0.3s'
-          errorNotification.style.opacity = '0'
-          setTimeout(() => errorNotification.remove(), 300)
-        }, 5000)
+        const errorMessage = error?.message || 'Unknown error'
+        showError(`Failed to execute workflow: ${errorMessage}`)
       }
     }, 0)
   }, [localWorkflowId, onExecutionStart])
@@ -807,14 +787,14 @@ const WorkflowBuilder = forwardRef<WorkflowBuilderHandle, WorkflowBuilderProps>(
             inputs: node.data.inputs || [],
           }
         }))
-        console.log('Loaded nodes:', initializedNodes.map(n => ({ id: n.id, type: n.type, position: n.position })))
-        console.log('Looking for agent-generate:', initializedNodes.find(n => n.id === 'agent-generate'))
+        logger.debug('Loaded nodes:', initializedNodes.map(n => ({ id: n.id, type: n.type, position: n.position })))
+        logger.debug('Looking for agent-generate:', initializedNodes.find(n => n.id === 'agent-generate'))
         
         // Debug: log raw edges from API
         const conditionEdgesRaw = (workflow.edges || []).filter((e: any) => e.source === 'condition-1')
-        console.log('Raw condition edges from API:', JSON.stringify(conditionEdgesRaw, null, 2))
+        logger.debug('Raw condition edges from API:', JSON.stringify(conditionEdgesRaw, null, 2))
         conditionEdgesRaw.forEach((e: any) => {
-          console.log(`  Edge ${e.id}:`, JSON.stringify({
+          logger.debug(`  Edge ${e.id}:`, JSON.stringify({
             id: e.id,
             source: e.source,
             target: e.target,
@@ -868,8 +848,8 @@ const WorkflowBuilder = forwardRef<WorkflowBuilderHandle, WorkflowBuilderProps>(
         })
         
         const conditionEdges = formattedEdges.filter(e => e.source === 'condition-1')
-        console.log('Formatted condition edges:', JSON.stringify(conditionEdges, null, 2))
-        console.log('Edge details (formatted):', conditionEdges.map(e => ({
+        logger.debug('Formatted condition edges:', JSON.stringify(conditionEdges, null, 2))
+        logger.debug('Edge details (formatted):', conditionEdges.map(e => ({
           id: e.id,
           source: e.source,
           target: e.target,
@@ -902,7 +882,7 @@ const WorkflowBuilder = forwardRef<WorkflowBuilderHandle, WorkflowBuilderProps>(
           onWorkflowLoaded(workflowId, workflow.name)
         }
       }).catch(err => {
-        console.error("Failed to load workflow:", err)
+        logger.error("Failed to load workflow:", err)
         isLoadingRef.current = false
       })
     } else {
@@ -925,7 +905,7 @@ const WorkflowBuilder = forwardRef<WorkflowBuilderHandle, WorkflowBuilderProps>(
 
     // Apply node additions first (edges need nodes to exist)
     if (changes.nodes_to_add && changes.nodes_to_add.length > 0) {
-      console.log('Adding nodes:', changes.nodes_to_add)
+      logger.debug('Adding nodes:', changes.nodes_to_add)
       setNodes((nds) => {
         // Convert backend node format to React Flow format
         const convertedNodes = changes.nodes_to_add.map((n: any) => {
@@ -937,7 +917,7 @@ const WorkflowBuilder = forwardRef<WorkflowBuilderHandle, WorkflowBuilderProps>(
           }
         })
         const newNodes = [...nds, ...convertedNodes]
-        console.log('New nodes after addition:', newNodes.map(n => ({ id: n.id, type: n.type })))
+        logger.debug('New nodes after addition:', newNodes.map(n => ({ id: n.id, type: n.type })))
         return newNodes
       })
       notifyModified()
@@ -965,11 +945,11 @@ const WorkflowBuilder = forwardRef<WorkflowBuilderHandle, WorkflowBuilderProps>(
 
     // Apply node deletions
     if (changes.nodes_to_delete && changes.nodes_to_delete.length > 0) {
-      console.log('Deleting nodes:', changes.nodes_to_delete)
+      logger.debug('Deleting nodes:', changes.nodes_to_delete)
       setNodes((nds) => {
-        console.log('Current node IDs before deletion:', nds.map(n => n.id))
+        logger.debug('Current node IDs before deletion:', nds.map(n => n.id))
         const filtered = nds.filter((node) => !changes.nodes_to_delete.includes(node.id))
-        console.log('Nodes after deletion:', filtered.map(n => n.id))
+        logger.debug('Nodes after deletion:', filtered.map(n => n.id))
         return filtered
       })
       // Also remove edges connected to deleted nodes
@@ -991,20 +971,20 @@ const WorkflowBuilder = forwardRef<WorkflowBuilderHandle, WorkflowBuilderProps>(
         const currentEdges = edgesRef.current
         const nodeIds = new Set(currentNodes.map(n => n.id))
         
-        console.log('Adding edges:', changes.edges_to_add)
-        console.log('Current nodes:', Array.from(nodeIds))
-        console.log('Current edges:', currentEdges.map(e => `${e.source} -> ${e.target}`))
+        logger.debug('Adding edges:', changes.edges_to_add)
+        logger.debug('Current nodes:', Array.from(nodeIds))
+        logger.debug('Current edges:', currentEdges.map(e => `${e.source} -> ${e.target}`))
         
         let updatedEdges = [...currentEdges]
         
         for (const edgeToAdd of changes.edges_to_add) {
           // Validate that both source and target nodes exist
           if (!nodeIds.has(edgeToAdd.source)) {
-            console.warn(`Cannot connect edge: source node "${edgeToAdd.source}" does not exist. Available nodes:`, Array.from(nodeIds))
+            logger.warn(`Cannot connect edge: source node "${edgeToAdd.source}" does not exist. Available nodes:`, Array.from(nodeIds))
             continue
           }
           if (!nodeIds.has(edgeToAdd.target)) {
-            console.warn(`Cannot connect edge: target node "${edgeToAdd.target}" does not exist. Available nodes:`, Array.from(nodeIds))
+            logger.warn(`Cannot connect edge: target node "${edgeToAdd.target}" does not exist. Available nodes:`, Array.from(nodeIds))
             continue
           }
           
@@ -1013,7 +993,7 @@ const WorkflowBuilder = forwardRef<WorkflowBuilderHandle, WorkflowBuilderProps>(
             e => e.source === edgeToAdd.source && e.target === edgeToAdd.target
           )
           if (edgeExists) {
-            console.warn(`Edge from "${edgeToAdd.source}" to "${edgeToAdd.target}" already exists`)
+            logger.warn(`Edge from "${edgeToAdd.source}" to "${edgeToAdd.target}" already exists`)
             continue
           }
           
@@ -1024,10 +1004,10 @@ const WorkflowBuilder = forwardRef<WorkflowBuilderHandle, WorkflowBuilderProps>(
             sourceHandle: edgeToAdd.sourceHandle || null,
             targetHandle: edgeToAdd.targetHandle || null,
           }
-          console.log('Adding connection:', connection)
+          logger.debug('Adding connection:', connection)
           // Use addEdge to properly format the edge - it returns the updated array
           updatedEdges = addEdge(connection, updatedEdges)
-          console.log('Updated edges count:', updatedEdges.length)
+          logger.debug('Updated edges count:', updatedEdges.length)
         }
         
         setEdges(updatedEdges)
@@ -1053,7 +1033,7 @@ const WorkflowBuilder = forwardRef<WorkflowBuilderHandle, WorkflowBuilderProps>(
   const handleWorkflowUpdate = useCallback((changes: any) => {
     if (!changes) return
 
-    console.log('Received workflow changes:', changes)
+    logger.debug('Received workflow changes:', changes)
     
     // If there are deletions and we have a workflowId, reload from database
     // The chat agent saves deletions to the database, so we need to reload to ensure UI matches
@@ -1061,7 +1041,7 @@ const WorkflowBuilder = forwardRef<WorkflowBuilderHandle, WorkflowBuilderProps>(
     
     if (hasDeletions && localWorkflowId) {
       // Reload workflow from database to ensure UI matches saved state
-      console.log('Reloading workflow from database after deletions:', changes.nodes_to_delete)
+      logger.debug('Reloading workflow from database after deletions:', changes.nodes_to_delete)
       // Small delay to ensure backend has finished saving
       setTimeout(() => {
         api.getWorkflow(localWorkflowId).then((workflow) => {
@@ -1081,10 +1061,10 @@ const WorkflowBuilder = forwardRef<WorkflowBuilderHandle, WorkflowBuilderProps>(
           }))
           setNodes(initializedNodes)
           setEdges(workflow.edges || [])
-          console.log('Reloaded workflow after deletion, nodes:', initializedNodes.map(n => n.id))
-          console.log('Expected deleted nodes:', changes.nodes_to_delete)
+          logger.debug('Reloaded workflow after deletion, nodes:', initializedNodes.map(n => n.id))
+          logger.debug('Expected deleted nodes:', changes.nodes_to_delete)
         }).catch(err => {
-          console.error('Failed to reload workflow after deletion:', err)
+          logger.error('Failed to reload workflow after deletion:', err)
           // Fall back to applying changes locally
           applyLocalChanges(changes)
         })
@@ -1141,7 +1121,7 @@ const WorkflowBuilder = forwardRef<WorkflowBuilderHandle, WorkflowBuilderProps>(
         try {
           customData = JSON.parse(customAgentData)
         } catch (e) {
-          console.error('Failed to parse custom agent data:', e)
+          logger.error('Failed to parse custom agent data:', e)
         }
       }
 

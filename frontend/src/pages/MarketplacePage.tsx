@@ -5,7 +5,7 @@ import { Download, Heart, TrendingUp, Clock, Star, ArrowLeft, Trash2, Bot, Workf
 import { showError, showSuccess } from '../utils/notifications';
 import { showConfirm } from '../utils/confirm';
 import { api } from '../api/client';
-import { useLocalStorage, getLocalStorageItem, setLocalStorageItem, removeLocalStorageItem } from '../hooks/useLocalStorage';
+import { getLocalStorageItem, setLocalStorageItem, removeLocalStorageItem } from '../hooks/useLocalStorage';
 import { logger } from '../utils/logger';
 import type { StorageAdapter, HttpClient } from '../types/adapters';
 import { defaultAdapters } from '../types/adapters';
@@ -98,36 +98,36 @@ export default function MarketplacePage({
       try {
         storage.removeItem(seededKey);
       } catch (error) {
-        console.error('Failed to remove seeded key:', error);
+        logger.error('Failed to remove seeded key:', error);
       }
       
       let seeded = false;
       try {
         seeded = !!storage.getItem(seededKey);
       } catch (error) {
-        console.error('Failed to check seeded key:', error);
+        logger.error('Failed to check seeded key:', error);
       }
       
       if (seeded) {
-        console.log('[Marketplace] Official agents already seeded, skipping');
+        logger.debug('[Marketplace] Official agents already seeded, skipping');
         return; // Already seeded
       }
 
-      console.log('[Marketplace] Starting to seed official agents...');
+      logger.debug('[Marketplace] Starting to seed official agents...');
       try {
         // Fetch all official workflows
         const response = await httpClient.get(`${apiBaseUrl}/templates/?sort_by=popular`);
         if (!response.ok) {
-          console.error('[Marketplace] Failed to fetch templates:', response.statusText);
+          logger.error('[Marketplace] Failed to fetch templates:', response.statusText);
           return;
         }
         const workflows = await response.json() as Template[];
-        console.log('[Marketplace] Fetched workflows:', workflows.length);
+        logger.debug('[Marketplace] Fetched workflows:', workflows.length);
         const officialWorkflows = workflows.filter((w: Template) => w.is_official);
-        console.log('[Marketplace] Official workflows found:', officialWorkflows.length);
+        logger.debug('[Marketplace] Official workflows found:', officialWorkflows.length);
 
         if (officialWorkflows.length === 0) {
-          console.log('[Marketplace] No official workflows found, marking as seeded');
+          logger.debug('[Marketplace] No official workflows found, marking as seeded');
           setLocalStorageItem(seededKey, 'true');
           return;
         }
@@ -137,7 +137,7 @@ export default function MarketplacePage({
         const agentsToAdd: AgentTemplate[] = [];
         for (const workflow of officialWorkflows) {
           try {
-            console.log(`[Marketplace] Processing workflow: ${workflow.name} (${workflow.id})`);
+            logger.debug(`[Marketplace] Processing workflow: ${workflow.name} (${workflow.id})`);
             // Use the /use endpoint to get the full workflow with nodes
             const workflowResponse = await httpClient.post(
               `${apiBaseUrl}/templates/${workflow.id}/use`,
@@ -146,12 +146,12 @@ export default function MarketplacePage({
             );
             
             if (!workflowResponse.ok) {
-              console.error(`[Marketplace] Failed to fetch workflow ${workflow.id}: ${workflowResponse.statusText}`);
+              logger.error(`[Marketplace] Failed to fetch workflow ${workflow.id}: ${workflowResponse.statusText}`);
               continue;
             }
             
             const workflowDetail = await workflowResponse.json();
-            console.log(`[Marketplace] Workflow ${workflow.name} has ${workflowDetail.nodes?.length || 0} nodes`);
+            logger.debug(`[Marketplace] Workflow ${workflow.name} has ${workflowDetail.nodes?.length || 0} nodes`);
             
             // Extract agent nodes from workflow nodes
             if (workflowDetail.nodes && Array.isArray(workflowDetail.nodes)) {
@@ -160,7 +160,7 @@ export default function MarketplacePage({
                 const hasAgentConfig = node.agent_config || node.data?.agent_config;
                 const isAgent = nodeType === 'agent' && hasAgentConfig;
                 if (isAgent) {
-                  console.log(`[Marketplace] Found agent node: ${node.id || node.data?.id}`, {
+                  logger.debug(`[Marketplace] Found agent node: ${node.id || node.data?.id}`, {
                     type: nodeType,
                     hasConfig: !!hasAgentConfig,
                     name: node.name || node.data?.name
@@ -169,7 +169,7 @@ export default function MarketplacePage({
                 return isAgent;
               });
 
-              console.log(`[Marketplace] Found ${agentNodes.length} agent nodes in workflow ${workflow.name}`);
+              logger.debug(`[Marketplace] Found ${agentNodes.length} agent nodes in workflow ${workflow.name}`);
 
               for (const agentNode of agentNodes) {
                 // Create unique agent ID based on workflow and node
@@ -181,7 +181,7 @@ export default function MarketplacePage({
                 const existingAgents = storage.getItem('publishedAgents');
                 const agents: AgentTemplate[] = existingAgents ? JSON.parse(existingAgents) : [];
                 if (agents.some(a => a.id === agentId)) {
-                  console.log(`[Marketplace] Agent ${agentId} already exists, skipping`);
+                  logger.debug(`[Marketplace] Agent ${agentId} already exists, skipping`);
                   continue; // Skip if already exists
                 }
 
@@ -208,10 +208,10 @@ export default function MarketplacePage({
                 });
               }
             } else {
-              console.log(`[Marketplace] Workflow ${workflow.name} has no nodes array`);
+              logger.debug(`[Marketplace] Workflow ${workflow.name} has no nodes array`);
             }
           } catch (error) {
-            console.error(`[Marketplace] Failed to fetch workflow ${workflow.id}:`, error);
+            logger.error(`[Marketplace] Failed to fetch workflow ${workflow.id}:`, error);
           }
         }
 
@@ -221,21 +221,21 @@ export default function MarketplacePage({
           const agents: AgentTemplate[] = existingAgents ? JSON.parse(existingAgents) : [];
           agents.push(...agentsToAdd);
           storage.setItem('publishedAgents', JSON.stringify(agents));
-          console.log(`[Marketplace] Seeded ${agentsToAdd.length} official agents from workflows`);
-          console.log(`[Marketplace] Total agents in storage: ${agents.length}`);
+          logger.debug(`[Marketplace] Seeded ${agentsToAdd.length} official agents from workflows`);
+          logger.debug(`[Marketplace] Total agents in storage: ${agents.length}`);
           
           // Refresh the agents list if we're on the agents tab
           if (activeTab === 'agents') {
             fetchAgents();
           }
         } else {
-          console.log('[Marketplace] No agents to add');
+          logger.debug('[Marketplace] No agents to add');
         }
 
         setLocalStorageItem(seededKey, 'true');
-        console.log('[Marketplace] Seeding complete');
+        logger.debug('[Marketplace] Seeding complete');
       } catch (error) {
-        console.error('[Marketplace] Failed to seed official agents:', error);
+        logger.error('[Marketplace] Failed to seed official agents:', error);
       }
     };
 
@@ -255,7 +255,7 @@ export default function MarketplacePage({
       const data = await response.json() as Template[];
       setTemplates(data);
     } catch (error) {
-      console.error('Failed to fetch templates:', error);
+      logger.error('Failed to fetch templates:', error);
     } finally {
       setLoading(false);
     }
@@ -323,13 +323,13 @@ export default function MarketplacePage({
             }
           }
         } catch (error) {
-          console.error(`Failed to check workflow ${workflow.id}:`, error);
+          logger.error(`Failed to check workflow ${workflow.id}:`, error);
         }
       }
       
       setWorkflowsOfWorkflows(workflowsOfWorkflows);
     } catch (error) {
-      console.error('Failed to fetch workflows of workflows:', error);
+      logger.error('Failed to fetch workflows of workflows:', error);
     } finally {
       setLoading(false);
     }
@@ -410,7 +410,7 @@ export default function MarketplacePage({
       
       setAgents(agentsData);
     } catch (error) {
-      console.error('Failed to fetch agents:', error);
+      logger.error('Failed to fetch agents:', error);
     } finally {
       setLoading(false);
     }
@@ -431,7 +431,7 @@ export default function MarketplacePage({
         const savedAgents = storage.getItem('repositoryAgents');
         agentsData = savedAgents ? JSON.parse(savedAgents) : [];
       } catch (error) {
-        console.error('Failed to load repository agents from storage:', error);
+        logger.error('Failed to load repository agents from storage:', error);
         agentsData = [];
       }
       
@@ -460,7 +460,7 @@ export default function MarketplacePage({
       
       setRepositoryAgents(agentsData);
     } catch (error) {
-      console.error('Failed to fetch repository agents:', error);
+      logger.error('Failed to fetch repository agents:', error);
     } finally {
       setLoading(false);
     }
@@ -481,15 +481,15 @@ export default function MarketplacePage({
 
       if (response.ok) {
         const workflow = await response.json();
-        console.log('Created workflow from template:', workflow);
+        logger.debug('Created workflow from template:', workflow);
         // Navigate to builder with workflow ID and timestamp to ensure new tab is always created
         // The timestamp makes each navigation unique, even for the same workflow
         navigate(`/?workflow=${workflow.id}&_new=${Date.now()}`);
       } else {
-        console.error('Failed to use template:', await response.text());
+        logger.error('Failed to use template:', await response.text());
       }
     } catch (error) {
-      console.error('Failed to use template:', error);
+      logger.error('Failed to use template:', error);
     }
   };
 
@@ -511,7 +511,7 @@ export default function MarketplacePage({
     }
     
     // Debug logging
-    console.log('[Marketplace] Delete agents check:', {
+    logger.debug('[Marketplace] Delete agents check:', {
       selectedCount: deletableAgents.length,
       user: user ? { id: user.id, username: user.username } : null,
       selectedAgents: deletableAgents.map(a => ({
@@ -529,7 +529,7 @@ export default function MarketplacePage({
       const authorIdStr = String(a.author_id);
       const userIdStr = String(user.id);
       const isMatch = authorIdStr === userIdStr;
-      console.log(`[Marketplace] Agent ${a.id} ownership:`, {
+      logger.debug(`[Marketplace] Agent ${a.id} ownership:`, {
         authorId: a.author_id,
         authorIdStr,
         userId: user.id,
@@ -539,7 +539,7 @@ export default function MarketplacePage({
       return isMatch;
     });
     
-    console.log('[Marketplace] User owned agents:', userOwnedAgents.length);
+    logger.debug('[Marketplace] User owned agents:', userOwnedAgents.length);
     
     if (userOwnedAgents.length === 0) {
       // Check if any agents have author_id set

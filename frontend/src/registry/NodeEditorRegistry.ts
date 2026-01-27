@@ -1,5 +1,6 @@
 import type { Node } from '@xyflow/react'
 import type { WorkflowNode } from '../types/workflow'
+import { logger } from '../utils/logger'
 
 export interface ValidationResult {
   isValid: boolean
@@ -41,7 +42,7 @@ class NodeEditorRegistry {
    */
   register(nodeType: string, handler: NodeTypeHandler): void {
     if (this.handlers.has(nodeType)) {
-      console.warn(`Node type "${nodeType}" is already registered. Overwriting.`)
+      logger.warn(`Node type "${nodeType}" is already registered. Overwriting.`)
     }
     this.handlers.set(nodeType, handler)
   }

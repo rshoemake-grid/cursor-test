@@ -1,7 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
 import { Send, Loader, Bot, User } from 'lucide-react'
-import { api } from '../api/client'
-import { useAuth } from '../contexts/AuthContext'
 import { logger } from '../utils/logger'
 import type { StorageAdapter, HttpClient } from '../types/adapters'
 import { defaultAdapters } from '../types/adapters'

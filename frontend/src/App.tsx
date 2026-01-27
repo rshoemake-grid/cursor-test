@@ -11,6 +11,7 @@ import SettingsPage from './pages/SettingsPage'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
 import { Play, List, Eye, Store, User, LogOut, LogIn, Settings } from 'lucide-react'
 import { showConfirm } from './utils/confirm'
+import { logger } from './utils/logger'
 
 type View = 'builder' | 'list' | 'execution'
 
@@ -33,12 +34,12 @@ function AuthenticatedLayout() {
   useEffect(() => {
     const workflowId = searchParams.get('workflow')
     if (workflowId && workflowId !== processedWorkflowFromUrl.current) {
-      console.log(`[App] Loading workflow ${workflowId} from URL`)
+      logger.debug(`[App] Loading workflow ${workflowId} from URL`)
       processedWorkflowFromUrl.current = workflowId
 
       globalWorkflowLoadKey += 1
       const newKey = globalWorkflowLoadKey
-      console.log(`[App] Incrementing workflowLoadKey: ${newKey - 1} → ${newKey} (global: ${globalWorkflowLoadKey})`)
+      logger.debug(`[App] Incrementing workflowLoadKey: ${newKey - 1} → ${newKey} (global: ${globalWorkflowLoadKey})`)
 
       setSelectedWorkflowId(workflowId)
       setWorkflowLoadKey(newKey)

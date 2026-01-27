@@ -47,6 +47,7 @@ describe('NodeEditorRegistry', () => {
       nodeEditorRegistry.register('test-node', anotherHandler)
 
       expect(consoleSpy).toHaveBeenCalledWith(
+        '[WARN]',
         expect.stringContaining('Node type "test-node" is already registered. Overwriting.')
       )
       expect(nodeEditorRegistry.getHandler('test-node')).toBe(anotherHandler)
