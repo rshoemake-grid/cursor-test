@@ -824,13 +824,11 @@ describe('WorkflowTabs', () => {
         delete: jest.fn(),
       }
 
-      // Use a tab with null workflowId to trigger the error
-      const savedTabs = [
-        { id: 'workflow-1', name: 'Untitled Workflow', workflowId: null, isUnsaved: true, executions: [], activeExecutionId: null },
-      ]
+      // Component uses module-level globalTabs which defaults to emptyTabState with workflow-1
+      // We need to ensure the component sees a tab with null workflowId
+      // Since globalTabs is module-level, we'll test with the default tab which has workflowId: null
       mockGetLocalStorageItem.mockImplementation((key: string) => {
-        if (key === 'workflowTabs') return savedTabs
-        if (key === 'activeWorkflowTabId') return 'workflow-1'
+        if (key === 'workflowTabs') return [] // Empty array forces use of default emptyTabState
         return null
       })
 
@@ -849,9 +847,8 @@ describe('WorkflowTabs', () => {
 
       // Submit form - find the form and submit it
       const form = screen.getByText(/Publish to Marketplace/).closest('form')
-      if (form) {
-        fireEvent.submit(form)
-      }
+      expect(form).toBeInTheDocument()
+      fireEvent.submit(form!)
 
       await waitFor(() => {
         expect(showError).toHaveBeenCalledWith(expect.stringContaining('Save the workflow before publishing'))
