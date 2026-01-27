@@ -64,6 +64,8 @@ describe('WorkflowTabs', () => {
   beforeEach(() => {
     jest.clearAllMocks()
     localStorage.clear()
+    // Reset module-level globalTabs by clearing storage
+    mockGetLocalStorageItem.mockReturnValue([])
     mockUseAuth.mockReturnValue({
       isAuthenticated: true,
       user: { id: '1', username: 'testuser' },
@@ -72,7 +74,6 @@ describe('WorkflowTabs', () => {
       logout: jest.fn(),
       register: jest.fn(),
     } as any)
-    mockGetLocalStorageItem.mockReturnValue([])
     ;(showConfirm as jest.Mock).mockResolvedValue(true)
   })
 
@@ -811,6 +812,16 @@ describe('WorkflowTabs', () => {
     })
 
     it('should show error when trying to publish without workflow saved', async () => {
+      const mockHttpClient: HttpClient = {
+        get: jest.fn(),
+        post: jest.fn().mockResolvedValue({
+          ok: true,
+          json: async () => ({}),
+        } as Response),
+        put: jest.fn(),
+        delete: jest.fn(),
+      }
+
       const savedTabs = [
         { id: 'tab-1', name: 'Test Workflow', workflowId: null, isUnsaved: true, executions: [], activeExecutionId: null },
       ]
@@ -820,7 +831,7 @@ describe('WorkflowTabs', () => {
         return null
       })
 
-      render(<WorkflowTabs onExecutionStart={mockOnExecutionStart} />)
+      render(<WorkflowTabs httpClient={mockHttpClient} onExecutionStart={mockOnExecutionStart} />)
 
       await waitFor(() => {
         expect(screen.getAllByRole('button').length).toBeGreaterThan(0)
@@ -1888,6 +1899,14 @@ describe('WorkflowTabs', () => {
         expect(screen.getAllByRole('button').length).toBeGreaterThan(0)
       })
 
+      // Wait for the component to render with the correct tab
+      await waitFor(() => {
+        const buttons = screen.getAllByRole('button')
+        const hasTestWorkflow = buttons.some(btn => btn.textContent?.includes('Test Workflow'))
+        const hasPublishButton = buttons.some(btn => btn.getAttribute('title') === 'Publish workflow')
+        expect(hasPublishButton).toBe(true)
+      }, { timeout: 2000 })
+
       const publishButton = screen.getByTitle(/Publish workflow/)
       fireEvent.click(publishButton)
 
@@ -1930,6 +1949,13 @@ describe('WorkflowTabs', () => {
       await waitFor(() => {
         expect(screen.getAllByRole('button').length).toBeGreaterThan(0)
       })
+
+      // Wait for the component to render with the correct tab
+      await waitFor(() => {
+        const buttons = screen.getAllByRole('button')
+        const hasPublishButton = buttons.some(btn => btn.getAttribute('title') === 'Publish workflow')
+        expect(hasPublishButton).toBe(true)
+      }, { timeout: 2000 })
 
       const publishButton = screen.getByTitle(/Publish workflow/)
       fireEvent.click(publishButton)
