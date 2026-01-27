@@ -25,13 +25,22 @@ import ContextMenu from './NodeContextMenu'
 import MarketplaceDialog from './MarketplaceDialog'
 import { api } from '../api/client'
 import { showSuccess, showError } from '../utils/notifications'
-import { showConfirm } from '../utils/confirm'
 import { useAuth } from '../contexts/AuthContext'
 import { getLocalStorageItem, setLocalStorageItem } from '../hooks/useLocalStorage'
 import { logger } from '../utils/logger'
 import type { StorageAdapter } from '../types/adapters'
 import { defaultAdapters } from '../types/adapters'
 import type { Execution } from '../contexts/WorkflowTabsContext'
+import { 
+  initializeReactFlowNodes, 
+  formatEdgesForReactFlow,
+  normalizeNodeForStorage,
+  workflowNodeToReactFlowNode
+} from '../utils/workflowFormat'
+import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts'
+import { useClipboard } from '../hooks/useClipboard'
+import { useWorkflowPersistence } from '../hooks/useWorkflowPersistence'
+import { useWorkflowExecution } from '../hooks/useWorkflowExecution'
 
 interface WorkflowTab {
   workflowId: string
@@ -114,8 +123,6 @@ const WorkflowBuilder = forwardRef<WorkflowBuilderHandle, WorkflowBuilderProps>(
   const [selectedNodeIds, setSelectedNodeIds] = React.useState<Set<string>>(new Set())
   const [localWorkflowId, setLocalWorkflowId] = useState<string | null>(workflowId)
   const [nodeExecutionStates, _setNodeExecutionStates] = useState<Record<string, { status: string; error?: string }>>({})
-  const [clipboardNode, setClipboardNode] = useState<any>(null)
-  const [clipboardAction, setClipboardAction] = useState<'copy' | 'cut' | null>(null)
   const [showMarketplaceDialog, setShowMarketplaceDialog] = useState(false)
   const [marketplaceNode, setMarketplaceNode] = useState<any>(null)
   const reactFlowInstanceRef = useRef<any>(null)
@@ -134,75 +141,15 @@ const WorkflowBuilder = forwardRef<WorkflowBuilderHandle, WorkflowBuilderProps>(
   
   // Component to handle keyboard shortcuts (must be inside ReactFlowProvider)
   const KeyboardHandler = () => {
-    const { deleteElements, getNodes, getEdges } = useReactFlow()
-    
-    useEffect(() => {
-      const handleKeyDown = (event: KeyboardEvent) => {
-        // Don't handle shortcuts if user is typing in an input field
-        const target = event.target as HTMLElement
-        if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) {
-          return
-        }
-
-        // Handle Copy (Ctrl/Cmd + C)
-        if ((event.ctrlKey || event.metaKey) && event.key === 'c') {
-          const selectedNodes = getNodes().filter(node => node.selected)
-          if (selectedNodes.length === 1) {
-            event.preventDefault()
-            handleCopy(selectedNodes[0])
-          }
-        }
-        
-        // Handle Cut (Ctrl/Cmd + X)
-        if ((event.ctrlKey || event.metaKey) && event.key === 'x') {
-          const selectedNodes = getNodes().filter(node => node.selected)
-          if (selectedNodes.length === 1) {
-            event.preventDefault()
-            handleCut(selectedNodes[0])
-          }
-        }
-        
-        // Handle Paste (Ctrl/Cmd + V)
-        if ((event.ctrlKey || event.metaKey) && event.key === 'v') {
-          if (clipboardNode) {
-            event.preventDefault()
-            handlePaste()
-          }
-        }
-        
-        // Check if Delete or Backspace is pressed
-        if (event.key === 'Delete' || event.key === 'Backspace') {
-          // Get selected nodes and edges
-          const selectedNodes = getNodes().filter(node => node.selected)
-          const selectedEdges = getEdges().filter(edge => edge.selected)
-          
-          // Delete selected items
-          if (selectedNodes.length > 0 || selectedEdges.length > 0) {
-            event.preventDefault()
-            event.stopPropagation()
-            
-            deleteElements({
-              nodes: selectedNodes,
-              edges: selectedEdges
-            })
-            
-            // Clear selection if deleted node was selected
-            const currentSelectedId = selectedNodeId
-            if (selectedNodes.some(node => node.id === currentSelectedId)) {
-              setSelectedNodeId(null)
-            }
-            
-            notifyModified()
-          }
-        }
-      }
-      
-      window.addEventListener('keydown', handleKeyDown)
-      return () => {
-        window.removeEventListener('keydown', handleKeyDown)
-      }
-    }, [deleteElements, getNodes, getEdges, selectedNodeId, setSelectedNodeId, notifyModified, clipboardNode, handleCopy, handleCut, handlePaste])
-    
+    useKeyboardShortcuts({
+      selectedNodeId,
+      setSelectedNodeId,
+      notifyModified,
+      clipboardNode: clipboard.clipboardNode,
+      onCopy: clipboard.copy,
+      onCut: clipboard.cut,
+      onPaste: () => clipboard.paste(),
+    })
     return null
   }
   
@@ -226,10 +173,6 @@ const WorkflowBuilder = forwardRef<WorkflowBuilderHandle, WorkflowBuilderProps>(
   const isDraggingRef = useRef<boolean>(false)
   const { isAuthenticated } = useAuth()
   const [isSaving, setIsSaving] = useState(false)
-  const [_isExecuting, setIsExecuting] = useState(false)
-  const [showInputs, setShowInputs] = useState(false)
-  const [executionInputs, setExecutionInputs] = useState<string>('{}')
-  const workflowIdRef = useRef<string | null>(workflowId)
   const tabDraftsRef = useRef<Record<string, TabDraft>>(loadDraftsFromStorage())
   
   useEffect(() => {
@@ -239,16 +182,17 @@ const WorkflowBuilder = forwardRef<WorkflowBuilderHandle, WorkflowBuilderProps>(
     }
   }, [tabName])
 
-  const normalizeNodeForStorage = useCallback((node: Node) => ({
-    ...node,
-    data: {
-      ...node.data,
-      agent_config: (node.data as any)?.agent_config ?? (node as any).agent_config ?? {},
-      condition_config: (node.data as any)?.condition_config ?? (node as any).condition_config ?? {},
-      loop_config: (node.data as any)?.loop_config ?? (node as any).loop_config ?? {},
-      input_config: (node.data as any)?.input_config ?? (node as any).input_config ?? {},
-    },
-  }), [])
+  // Track modifications
+  const notifyModified = useCallback(() => {
+    if (onWorkflowModified && !isLoadingRef.current) {
+      onWorkflowModified()
+    }
+  }, [onWorkflowModified])
+  
+  // Clipboard operations (must be before KeyboardHandler)
+  const clipboard = useClipboard(reactFlowInstanceRef, notifyModified)
+  
+
 
   useEffect(() => {
     // Don't load draft if we're in the middle of adding agents
@@ -289,119 +233,38 @@ const WorkflowBuilder = forwardRef<WorkflowBuilderHandle, WorkflowBuilderProps>(
       isUnsaved: tabIsUnsaved
     }
     saveDraftsToStorage(tabDraftsRef.current)
-  }, [tabId, nodes, edges, localWorkflowId, localWorkflowName, localWorkflowDescription, tabIsUnsaved, normalizeNodeForStorage])
+  }, [tabId, nodes, edges, localWorkflowId, localWorkflowName, localWorkflowDescription, tabIsUnsaved])
 
   useEffect(() => {
     workflowIdRef.current = localWorkflowId
   }, [localWorkflowId])
   
-  // Helper to convert nodes to workflow format
-  const nodeToWorkflowNode = useCallback((node: any) => ({
-    id: node.id,
-    type: node.type,
-    name: node.data.name || (typeof node.data.label === 'string' ? node.data.label : ''),
-    description: node.data.description,
-        agent_config: (node.data as any).agent_config,
-        condition_config: (node.data as any).condition_config,
-    loop_config: node.data.loop_config,
-    input_config: node.data.input_config,
-    inputs: node.data.inputs || [],
-    position: node.position,
-  }), [])
-  
-  // Function to save the workflow (can be called from PropertyPanel or toolbar buttons)
-  const saveWorkflow = useCallback(async (): Promise<string | null> => {
-    if (!isAuthenticated) {
-      showError('Please log in to save workflows.')
-      return null
-    }
-
-    if (isSaving) {
-      return localWorkflowId ?? null
-    }
-
-    const workflowDef = {
-      name: localWorkflowName,
-      description: localWorkflowDescription,
-      nodes: nodes.map(nodeToWorkflowNode),
-      edges: edges.map(edge => ({
-        id: edge.id,
-        source: edge.source,
-        target: edge.target,
-        label: typeof edge.label === 'string' ? edge.label : undefined
-      })),
-      variables: variables,
-    }
-
-    setIsSaving(true)
-    try {
-      if (localWorkflowId) {
-        await api.updateWorkflow(localWorkflowId, workflowDef)
-        showSuccess('Workflow updated successfully!')
-        if (onWorkflowSaved) {
-          onWorkflowSaved(localWorkflowId, workflowDef.name)
-        }
-        return localWorkflowId
-      } else {
-        const created = await api.createWorkflow(workflowDef)
-        setLocalWorkflowId(created.id!)
-        showSuccess('Workflow created successfully!')
-        if (onWorkflowSaved) {
-          onWorkflowSaved(created.id!, workflowDef.name)
-        }
-        return created.id!
-      }
-    } catch (error: any) {
-      showError('Failed to save workflow: ' + (error.message || 'Unknown error'))
-      logger.error('Failed to save workflow:', error)
-      throw new Error('Failed to save workflow: ' + (error.message || 'Unknown error'))
-    } finally {
-      setIsSaving(false)
-    }
-  }, [
+  // Workflow persistence (save, export)
+  const { saveWorkflow, exportWorkflow } = useWorkflowPersistence({
     isAuthenticated,
-    isSaving,
     localWorkflowId,
     localWorkflowName,
     localWorkflowDescription,
     nodes,
     edges,
     variables,
-    nodeToWorkflowNode,
+    setLocalWorkflowId,
     onWorkflowSaved,
-  ])
-
-  const exportWorkflow = useCallback(() => {
-    const workflowDef = {
-      name: localWorkflowName,
-      description: localWorkflowDescription,
-      nodes: nodes.map(nodeToWorkflowNode),
-      edges: edges.map(edge => ({
-        id: edge.id,
-        source: edge.source,
-        target: edge.target,
-        label: typeof edge.label === 'string' ? edge.label : undefined
-      })),
-      variables: variables,
-    }
-    const filename = (localWorkflowName.trim() || 'workflow').replace(/\s+/g, '-')
-    const blob = new Blob([JSON.stringify(workflowDef, null, 2)], { type: 'application/json' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `${filename}.json`
-    a.click()
-    URL.revokeObjectURL(url)
-  }, [localWorkflowName, localWorkflowDescription, nodes, edges, variables, nodeToWorkflowNode])
+    isSaving,
+    setIsSaving,
+  })
+  
+  // Workflow execution
+  const workflowIdRef = useRef<string | null>(workflowId)
+  const execution = useWorkflowExecution({
+    isAuthenticated,
+    localWorkflowId,
+    workflowIdRef,
+    saveWorkflow,
+    onExecutionStart,
+  })
   const lastLoadedWorkflowIdRef = useRef<string | null>(null)
   const [contextMenu, setContextMenu] = useState<{ nodeId?: string; edgeId?: string; node?: any; x: number; y: number } | null>(null)
-
-  // Track modifications
-  const notifyModified = useCallback(() => {
-    if (onWorkflowModified && !isLoadingRef.current) {
-      onWorkflowModified()
-    }
-  }, [onWorkflowModified])
 
   // Listen for agents to add from marketplace
   useEffect(() => {
@@ -562,119 +425,21 @@ const WorkflowBuilder = forwardRef<WorkflowBuilderHandle, WorkflowBuilderProps>(
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tabId, setNodes, notifyModified]) // storage is accessed via closure in checkPendingAgents
 
-  const executeWorkflow = useCallback(async () => {
-    logger.debug('[WorkflowBuilder] executeWorkflow called')
-    logger.debug('[WorkflowBuilder] isAuthenticated:', isAuthenticated)
-    logger.debug('[WorkflowBuilder] localWorkflowId:', localWorkflowId)
-    if (!isAuthenticated) {
-      logger.error('[WorkflowBuilder] User not authenticated')
-      showError('Please log in to execute workflows.')
-      return
-    }
-
-    let currentWorkflowId = localWorkflowId
-    logger.debug('[WorkflowBuilder] Current workflow ID:', currentWorkflowId)
-    if (!currentWorkflowId) {
-      logger.debug('[WorkflowBuilder] No workflow ID, prompting to save')
-      const confirmed = await showConfirm(
-        'Workflow needs to be saved before execution. Save now?',
-        { title: 'Save Workflow', confirmText: 'Save', cancelText: 'Cancel' }
-      )
-      if (!confirmed) {
-        return
-      }
-      try {
-        const savedId = await saveWorkflow()
-        if (!savedId) {
-          showError('Failed to save workflow. Cannot execute.')
-          return
-        }
-        currentWorkflowId = savedId
-      } catch (error: any) {
-        showError('Failed to save workflow. Cannot execute.')
-        return
-      }
-    }
-
-    logger.debug('[WorkflowBuilder] Setting execution inputs and showing dialog')
-    setShowInputs(true)
-  }, [isAuthenticated, localWorkflowId, saveWorkflow])
-
   // Log when showInputs changes
   useEffect(() => {
-    logger.debug('[WorkflowBuilder] showInputs changed to:', showInputs)
-  }, [showInputs])
-
-  const handleConfirmExecute = useCallback(async () => {
-    logger.debug('[WorkflowBuilder] ===== handleConfirmExecute CALLED =====')
-    logger.debug('[WorkflowBuilder] executionInputs:', executionInputs)
-    logger.debug('[WorkflowBuilder] workflowIdRef.current:', workflowIdRef.current)
-    setIsExecuting(true)
-    setTimeout(async () => {
-      try {
-        logger.debug('[WorkflowBuilder] Parsing execution inputs:', executionInputs)
-        const inputs = JSON.parse(executionInputs)
-        logger.debug('[WorkflowBuilder] Parsed inputs:', inputs)
-        setShowInputs(false)
-        setExecutionInputs('{}')
-        setIsExecuting(false)
-
-        const tempExecutionId = `pending-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
-        logger.debug('[WorkflowBuilder] Created temp execution ID:', tempExecutionId)
-
-        if (onExecutionStart) {
-          logger.debug('[WorkflowBuilder] Calling onExecutionStart with temp ID')
-          onExecutionStart(tempExecutionId)
-        }
-
-        showSuccess('✅ Execution starting...\n\nCheck the console at the bottom of the screen to watch it run.', 6000)
-
-        const workflowIdToExecute = workflowIdRef.current
-        logger.debug('[WorkflowBuilder] Workflow ID to execute:', workflowIdToExecute)
-        if (!workflowIdToExecute) {
-          logger.error('[WorkflowBuilder] No workflow ID found - workflow must be saved')
-          showError('Workflow must be saved before executing.')
-          setIsExecuting(false)
-          return
-        }
-
-        logger.debug('[WorkflowBuilder] Calling api.executeWorkflow with:', { workflowIdToExecute, inputs })
-        api.executeWorkflow(workflowIdToExecute, inputs)
-          .then((execution) => {
-            logger.debug('[WorkflowBuilder] Execution response received:', execution)
-            if (execution.execution_id && execution.execution_id !== tempExecutionId) {
-              logger.debug('[WorkflowBuilder] Updating execution ID:', execution.execution_id)
-              if (onExecutionStart) {
-                onExecutionStart(execution.execution_id)
-              }
-            }
-          })
-          .catch((error: any) => {
-            logger.error('[WorkflowBuilder] Execution failed:', error)
-            logger.error('[WorkflowBuilder] Error details:', {
-              message: error.message,
-              response: error.response,
-              status: error.response?.status,
-              data: error.response?.data
-            })
-            setIsExecuting(false)
-            const errorMessage = error.response?.data?.detail || error.message || 'Unknown error'
-            showError(`Failed to execute workflow: ${errorMessage}`)
-          })
-      } catch (error: any) {
-        logger.error('Execution setup failed:', error)
-        setIsExecuting(false)
-        const errorMessage = error?.message || 'Unknown error'
-        showError(`Failed to execute workflow: ${errorMessage}`)
-      }
-    }, 0)
-  }, [localWorkflowId, onExecutionStart])
+    logger.debug('[WorkflowBuilder] showInputs changed to:', execution.showInputs)
+  }, [execution.showInputs])
+  
+  // Update workflowIdRef when localWorkflowId changes
+  useEffect(() => {
+    workflowIdRef.current = localWorkflowId
+  }, [localWorkflowId])
 
   useImperativeHandle(ref, () => ({
     saveWorkflow,
-    executeWorkflow,
+    executeWorkflow: execution.executeWorkflow,
     exportWorkflow,
-  }), [saveWorkflow, executeWorkflow, exportWorkflow])
+  }), [saveWorkflow, execution.executeWorkflow, exportWorkflow])
 
   // Wrap React Flow change handlers to notify modifications
   const onNodesChange = useCallback((changes: any) => {
@@ -726,32 +491,8 @@ const WorkflowBuilder = forwardRef<WorkflowBuilderHandle, WorkflowBuilderProps>(
   }, [onEdgesChangeBase, notifyModified])
 
   // Helper to convert WorkflowNode to React Flow Node
-  // Handles both flattened (top-level) and nested (data object) structures
   const workflowNodeToNode = useCallback((wfNode: any) => {
-    const data = wfNode.data || {}
-    const nodeExecutionState = nodeExecutionStates[wfNode.id]
-    // Merge top-level fields with data object fields, preferring data object
-    return {
-      id: wfNode.id,
-      type: wfNode.type,
-      position: wfNode.position || { x: 0, y: 0 },
-      draggable: true,
-      selected: false, // Explicitly set selected state
-      data: {
-        label: data.label || data.name || wfNode.name || wfNode.type,
-        name: data.name || wfNode.name || wfNode.type,
-        description: data.description ?? wfNode.description ?? '',
-        // Merge configs - prefer data object, fallback to top-level
-        agent_config: data.agent_config || wfNode.agent_config || {},
-        condition_config: data.condition_config || wfNode.condition_config || {},
-        loop_config: data.loop_config || wfNode.loop_config || {},
-        input_config: data.input_config || wfNode.input_config || {},
-        inputs: data.inputs || wfNode.inputs || [],
-        // Add execution state for visual feedback
-        executionStatus: nodeExecutionState?.status,
-        executionError: nodeExecutionState?.error,
-      },
-    }
+    return workflowNodeToReactFlowNode(wfNode, nodeExecutionStates)
   }, [nodeExecutionStates])
 
   // Load workflow if ID provided and create/activate tab
@@ -774,21 +515,7 @@ const WorkflowBuilder = forwardRef<WorkflowBuilderHandle, WorkflowBuilderProps>(
         setVariables(workflow.variables || {})
         const convertedNodes = workflow.nodes.map(workflowNodeToNode)
         // Ensure all nodes have required React Flow properties
-        const initializedNodes = convertedNodes.map(node => ({
-          ...node,
-          draggable: true,
-          selected: false,
-          // Ensure data object exists and has all fields
-          data: {
-            ...node.data,
-            // Ensure configs are objects, not null/undefined
-            agent_config: node.data.agent_config || {},
-            condition_config: node.data.condition_config || {},
-            loop_config: node.data.loop_config || {},
-            input_config: node.data.input_config || {},
-            inputs: node.data.inputs || [],
-          }
-        }))
+        const initializedNodes = initializeReactFlowNodes(convertedNodes)
         logger.debug('Loaded nodes:', initializedNodes.map(n => ({ id: n.id, type: n.type, position: n.position })))
         logger.debug('Looking for agent-generate:', initializedNodes.find(n => n.id === 'agent-generate'))
         
@@ -808,46 +535,7 @@ const WorkflowBuilder = forwardRef<WorkflowBuilderHandle, WorkflowBuilderProps>(
         })
         
         // Ensure edges preserve sourceHandle and targetHandle properties
-        const formattedEdges = (workflow.edges || []).map((edge: any) => {
-          // Get sourceHandle from either camelCase or snake_case - ensure it's a string, not boolean
-          let sourceHandle = edge.sourceHandle || edge.source_handle || null
-          let targetHandle = edge.targetHandle || edge.target_handle || null
-          
-          // Convert boolean to string if needed (React Flow expects strings)
-          if (sourceHandle === true) sourceHandle = "true"
-          if (sourceHandle === false) sourceHandle = "false"
-          if (targetHandle === true) targetHandle = "true"
-          if (targetHandle === false) targetHandle = "false"
-          
-          // Generate unique ID that includes sourceHandle to differentiate edges from same source
-          const edgeId = edge.id || (sourceHandle 
-            ? `${edge.source}-${sourceHandle}-${edge.target}` 
-            : `${edge.source}-${edge.target}`)
-          
-          // Create edge object with sourceHandle/targetHandle set explicitly
-          const formattedEdge: any = {
-            id: edgeId,
-            source: edge.source,
-            target: edge.target,
-          }
-          
-          // Only add sourceHandle/targetHandle if they have values
-          if (sourceHandle) {
-            formattedEdge.sourceHandle = String(sourceHandle)
-          }
-          if (targetHandle) {
-            formattedEdge.targetHandle = String(targetHandle)
-          }
-          
-          // Preserve other edge properties (but don't overwrite sourceHandle/targetHandle)
-          Object.keys(edge).forEach(key => {
-            if (key !== 'sourceHandle' && key !== 'source_handle' && key !== 'targetHandle' && key !== 'target_handle') {
-              formattedEdge[key] = edge[key]
-            }
-          })
-          
-          return formattedEdge
-        })
+        const formattedEdges = formatEdgesForReactFlow(workflow.edges || [])
         
         const conditionEdges = formattedEdges.filter(e => e.source === 'condition-1')
         logger.debug('Formatted condition edges:', JSON.stringify(conditionEdges, null, 2))
@@ -903,15 +591,9 @@ const WorkflowBuilder = forwardRef<WorkflowBuilderHandle, WorkflowBuilderProps>(
       logger.debug('Adding nodes:', changes.nodes_to_add)
       setNodes((nds) => {
         // Convert backend node format to React Flow format
-        const convertedNodes = changes.nodes_to_add.map((n: any) => {
-          const converted = workflowNodeToNode(n)
-          return {
-            ...converted,
-            draggable: true,
-            selected: false
-          }
-        })
-        const newNodes = [...nds, ...convertedNodes]
+        const convertedNodes = changes.nodes_to_add.map((n: any) => workflowNodeToNode(n))
+        const initializedNodes = initializeReactFlowNodes(convertedNodes)
+        const newNodes = [...nds, ...initializedNodes]
         logger.debug('New nodes after addition:', newNodes.map(n => ({ id: n.id, type: n.type })))
         return newNodes
       })
@@ -1041,21 +723,9 @@ const WorkflowBuilder = forwardRef<WorkflowBuilderHandle, WorkflowBuilderProps>(
       setTimeout(() => {
         api.getWorkflow(localWorkflowId).then((workflow) => {
           const convertedNodes = workflow.nodes.map(workflowNodeToNode)
-          const initializedNodes = convertedNodes.map(node => ({
-            ...node,
-            draggable: true,
-            selected: false,
-            data: {
-              ...node.data,
-              agent_config: node.data.agent_config || {},
-              condition_config: node.data.condition_config || {},
-              loop_config: node.data.loop_config || {},
-              input_config: node.data.input_config || {},
-              inputs: node.data.inputs || [],
-            }
-          }))
+          const initializedNodes = initializeReactFlowNodes(convertedNodes)
           setNodes(initializedNodes)
-          setEdges(workflow.edges || [])
+          setEdges(formatEdgesForReactFlow(workflow.edges || []))
           logger.debug('Reloaded workflow after deletion, nodes:', initializedNodes.map(n => n.id))
           logger.debug('Expected deleted nodes:', changes.nodes_to_delete)
         }).catch(err => {
@@ -1186,51 +856,10 @@ const WorkflowBuilder = forwardRef<WorkflowBuilderHandle, WorkflowBuilderProps>(
     setContextMenu(null) // Close context menu when clicking on pane
     
     // Handle paste on pane click with Ctrl/Cmd+V
-    if ((event.ctrlKey || event.metaKey) && event.button === 0 && clipboardNode) {
-      handlePaste(event.clientX, event.clientY)
+    if ((event.ctrlKey || event.metaKey) && event.button === 0 && clipboard.clipboardNode) {
+      clipboard.paste(event.clientX, event.clientY)
     }
-  }, [clipboardNode])
-
-  const handleCopy = useCallback((node: any) => {
-    setClipboardNode(node)
-    setClipboardAction('copy')
-    showSuccess('Node copied to clipboard')
-  }, [])
-
-  const handleCut = useCallback((node: any) => {
-    setClipboardNode(node)
-    setClipboardAction('cut')
-    showSuccess('Node cut to clipboard')
-  }, [])
-
-  const handlePaste = useCallback((x?: number, y?: number) => {
-    if (!clipboardNode) return
-
-    const { getNodes, screenToFlowPosition, addNodes, deleteElements } = reactFlowInstanceRef.current || {}
-    if (!getNodes || !screenToFlowPosition || !addNodes) return
-
-    const position = x !== undefined && y !== undefined 
-      ? screenToFlowPosition({ x, y })
-      : { x: clipboardNode.position.x + 50, y: clipboardNode.position.y + 50 }
-
-    const newNode = {
-      ...clipboardNode,
-      id: `${clipboardNode.type}_${Date.now()}`,
-      position,
-      selected: false,
-    }
-
-    addNodes(newNode)
-    
-    if (clipboardAction === 'cut' && deleteElements) {
-      deleteElements({ nodes: [{ id: clipboardNode.id }] })
-      setClipboardNode(null)
-      setClipboardAction(null)
-    }
-    
-    notifyModified()
-    showSuccess('Node pasted')
-  }, [clipboardNode, clipboardAction, notifyModified])
+  }, [clipboard])
 
   const handleSendToMarketplace = useCallback((node: any) => {
     setMarketplaceNode(node)
@@ -1421,15 +1050,26 @@ const WorkflowBuilder = forwardRef<WorkflowBuilderHandle, WorkflowBuilderProps>(
       
       {/* Execution Input Dialog - Using extracted component (SRP compliance) */}
       <ExecutionInputDialog
-        isOpen={showInputs}
+        isOpen={execution.showInputs}
         onClose={() => {
-          setShowInputs(false)
+          execution.setShowInputs(false)
         }}
         onSubmit={(inputs) => {
-          setExecutionInputs(JSON.stringify(inputs))
-          handleConfirmExecute()
+          execution.setExecutionInputs(JSON.stringify(inputs))
+          execution.handleConfirmExecute()
         }}
-        nodes={nodes.map(nodeToWorkflowNode)}
+        nodes={nodes.map((node: any) => ({
+          id: node.id,
+          type: node.type,
+          name: node.data.name || (typeof node.data.label === 'string' ? node.data.label : ''),
+          description: node.data.description,
+          agent_config: (node.data as any).agent_config,
+          condition_config: (node.data as any).condition_config,
+          loop_config: node.data.loop_config,
+          input_config: node.data.input_config,
+          inputs: node.data.inputs || [],
+          position: node.position,
+        }))}
         workflowName={localWorkflowName}
       />
 
@@ -1455,12 +1095,12 @@ const WorkflowBuilder = forwardRef<WorkflowBuilderHandle, WorkflowBuilderProps>(
               }
               notifyModified()
             }}
-            onCopy={handleCopy}
-            onCut={handleCut}
-            onPaste={handlePaste}
+            onCopy={clipboard.copy}
+            onCut={clipboard.cut}
+            onPaste={clipboard.paste}
             onAddToAgentNodes={handleAddToAgentNodes}
             onSendToMarketplace={handleSendToMarketplace}
-            canPaste={!!clipboardNode}
+            canPaste={!!clipboard.clipboardNode}
           />
         </>
       )}

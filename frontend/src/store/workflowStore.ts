@@ -1,7 +1,6 @@
 import { create } from 'zustand'
 import type { Node, Edge } from '@xyflow/react'
 import type { WorkflowNode, WorkflowEdge, WorkflowDefinition } from '../types/workflow'
-import type { InputMapping } from '../types/nodeData'
 
 interface WorkflowStore {
   // Current workflow state
