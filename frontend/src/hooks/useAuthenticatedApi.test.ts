@@ -263,17 +263,18 @@ describe('useAuthenticatedApi', () => {
     )
   })
 
-  it('should handle additional headers overriding Authorization', () => {
+  it('should handle additional headers with Authorization (token takes precedence)', () => {
     const { result } = renderHook(() => useAuthenticatedApi(mockHttpClient))
 
     result.current.authenticatedGet('/test', {
       Authorization: 'Custom token',
     })
 
+    // Token from useAuth takes precedence over additional headers
     expect(mockGet).toHaveBeenCalledWith(
       expect.any(String),
       expect.objectContaining({
-        Authorization: 'Custom token', // Additional headers should override
+        Authorization: 'Bearer test-token', // Token from hook takes precedence
       })
     )
   })
