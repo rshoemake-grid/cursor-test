@@ -144,6 +144,77 @@ describe('ExecutionStatusBadge', () => {
         unmount()
       }
     })
+
+    it('should handle status being empty string', () => {
+      render(<ExecutionStatusBadge status="" />)
+      // Empty string is invalid, should normalize to 'pending'
+      expect(screen.getByText('pending')).toBeInTheDocument()
+    })
+
+    it('should handle status being null', () => {
+      render(<ExecutionStatusBadge status={null as any} />)
+      // null is invalid, should normalize to 'pending'
+      expect(screen.getByText('pending')).toBeInTheDocument()
+    })
+
+    it('should handle status being undefined', () => {
+      render(<ExecutionStatusBadge status={undefined as any} />)
+      // undefined is invalid, should normalize to 'pending'
+      expect(screen.getByText('pending')).toBeInTheDocument()
+    })
+
+    it('should handle className concatenation with empty className', () => {
+      const { container } = render(<ExecutionStatusBadge status="completed" className="" />)
+      const badge = container.firstChild as HTMLElement
+      // Should still have base classes
+      expect(badge.className).toContain('px-3')
+      expect(badge.className).toContain('py-1')
+    })
+
+    it('should handle className concatenation with multiple classes', () => {
+      const { container } = render(<ExecutionStatusBadge status="completed" className="class1 class2 class3" />)
+      const badge = container.firstChild as HTMLElement
+      expect(badge.className).toContain('class1')
+      expect(badge.className).toContain('class2')
+      expect(badge.className).toContain('class3')
+    })
+
+    it('should handle all valid statuses with light variant', () => {
+      const statuses = ['running', 'completed', 'failed', 'pending', 'paused']
+      
+      for (const status of statuses) {
+        const { unmount, container } = render(<ExecutionStatusBadge status={status} variant="light" />)
+        const badge = container.firstChild as HTMLElement
+        
+        expect(badge.textContent).toBe(status)
+        expect(badge.className).toContain('bg-')
+        
+        unmount()
+        document.body.innerHTML = ''
+      }
+    })
+
+    it('should handle all valid statuses with dark variant', () => {
+      const statuses = ['running', 'completed', 'failed', 'pending', 'paused']
+      
+      for (const status of statuses) {
+        const { unmount, container } = render(<ExecutionStatusBadge status={status} variant="dark" />)
+        const badge = container.firstChild as HTMLElement
+        
+        expect(badge.textContent).toBe(status)
+        expect(badge.className).toContain('bg-')
+        
+        unmount()
+        document.body.innerHTML = ''
+      }
+    })
+
+    it('should handle className prop being undefined', () => {
+      const { container } = render(<ExecutionStatusBadge status="completed" className={undefined as any} />)
+      const badge = container.firstChild as HTMLElement
+      // Should still render with base classes
+      expect(badge.className).toContain('px-3')
+    })
   })
 })
 
