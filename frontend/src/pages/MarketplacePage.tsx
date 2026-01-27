@@ -6,9 +6,9 @@ import { showError, showSuccess } from '../utils/notifications';
 import { useOfficialAgentSeeding } from '../hooks/useOfficialAgentSeeding';
 import { useMarketplaceData } from '../hooks/useMarketplaceData';
 import { useTemplateOperations } from '../hooks/useTemplateOperations';
+import { TemplateFilters } from '../components/TemplateFilters';
 import type { StorageAdapter, HttpClient } from '../types/adapters';
 import { defaultAdapters } from '../types/adapters';
-import type { AgentTemplate } from '../hooks/useMarketplaceData';
 
 type TabType = 'agents' | 'repository' | 'workflows-of-workflows'
 type RepositorySubTabType = 'workflows' | 'agents'
@@ -90,7 +90,6 @@ export default function MarketplacePage({
     templates,
     workflowsOfWorkflows,
     activeTab,
-    repositorySubTab,
     setAgents,
     setTemplates,
     setWorkflowsOfWorkflows,
@@ -380,86 +379,28 @@ export default function MarketplacePage({
           )}
 
           {/* Search and Filters */}
-          <div className="flex gap-4 flex-wrap">
-            <input
-              type="text"
-              placeholder={
-                activeTab === 'agents' 
-                  ? "Search agents..." 
-                  : activeTab === 'workflows-of-workflows'
-                  ? "Search workflows of workflows..."
-                  : "Search workflows..."
-              }
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              onKeyPress={(e) => {
-                if (e.key === 'Enter') {
-                  if (activeTab === 'repository') {
-                    if (repositorySubTab === 'workflows') {
-                      fetchTemplates();
-                    } else {
-                      fetchRepositoryAgents();
-                    }
-                  } else if (activeTab === 'workflows-of-workflows') {
-                    fetchWorkflowsOfWorkflows();
-                  } else {
-                    fetchAgents();
-                  }
-                }
-              }}
-              className="flex-1 min-w-[300px] px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
-            />
-
-            <select
-              value={category}
-              onChange={(e) => setCategory(e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
-            >
-              <option value="">All Categories</option>
-              <option value="content_creation">Content Creation</option>
-              <option value="data_analysis">Data Analysis</option>
-              <option value="customer_service">Customer Service</option>
-              <option value="research">Research</option>
-              <option value="automation">Automation</option>
-              <option value="education">Education</option>
-              <option value="marketing">Marketing</option>
-            </select>
-
-            <div className="flex items-center gap-2">
-              <label htmlFor="sort-select" className="text-sm font-medium text-gray-700 whitespace-nowrap">
-                Sort:
-              </label>
-              <select
-                id="sort-select"
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value)}
-                className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
-              >
-                <option value="popular">Most Popular</option>
-                <option value="recent">Most Recent</option>
-                <option value="rating">Highest Rated</option>
-              </select>
-            </div>
-
-            <button
-              onClick={() => {
-                if (activeTab === 'repository') {
-                  if (repositorySubTab === 'workflows') {
-                    fetchTemplates();
-                  } else {
-                    fetchRepositoryAgents();
-                  }
-                } else if (activeTab === 'workflows-of-workflows') {
-                  fetchWorkflowsOfWorkflows();
+          <TemplateFilters
+            category={category}
+            searchQuery={searchQuery}
+            sortBy={sortBy}
+            activeTab={activeTab}
+            onCategoryChange={setCategory}
+            onSearchChange={setSearchQuery}
+            onSortChange={setSortBy}
+            onSearch={() => {
+              if (activeTab === 'repository') {
+                if (repositorySubTab === 'workflows') {
+                  fetchTemplates();
                 } else {
-                  fetchAgents();
+                  fetchRepositoryAgents();
                 }
-              }}
-              className="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300"
-            >
-              Search
-            </button>
-          </div>
+              } else if (activeTab === 'workflows-of-workflows') {
+                fetchWorkflowsOfWorkflows();
+              } else {
+                fetchAgents();
+              }
+            }}
+          />
         </div>
       </div>
 

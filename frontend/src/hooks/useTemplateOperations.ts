@@ -22,7 +22,6 @@ interface UseTemplateOperationsOptions {
   templates: Template[]
   workflowsOfWorkflows: Template[]
   activeTab: 'agents' | 'repository' | 'workflows-of-workflows'
-  repositorySubTab: 'workflows' | 'agents'
   setAgents: React.Dispatch<React.SetStateAction<AgentTemplate[]>>
   setTemplates: React.Dispatch<React.SetStateAction<Template[]>>
   setWorkflowsOfWorkflows: React.Dispatch<React.SetStateAction<Template[]>>
@@ -44,12 +43,11 @@ export function useTemplateOperations({
   httpClient,
   apiBaseUrl,
   storage,
-  agents,
-  templates,
-  workflowsOfWorkflows,
-  activeTab,
-  repositorySubTab,
-  setAgents,
+    agents,
+    templates,
+    workflowsOfWorkflows,
+    activeTab,
+    setAgents,
   setTemplates,
   setWorkflowsOfWorkflows,
   setRepositoryAgents,
