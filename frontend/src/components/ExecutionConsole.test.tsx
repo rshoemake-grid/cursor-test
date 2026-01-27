@@ -17,13 +17,21 @@ jest.mock('./WorkflowChat', () => {
   }
 })
 jest.mock('./ExecutionStatusBadge', () => {
-  return function MockExecutionStatusBadge({ status }: { status: string }) {
-    return <div data-testid="execution-status-badge">{status}</div>
+  const React = require('react')
+  return {
+    __esModule: true,
+    default: function MockExecutionStatusBadge({ status }: { status: string }) {
+      return React.createElement('div', { 'data-testid': 'execution-status-badge' }, status)
+    },
   }
 })
 jest.mock('./LogLevelBadge', () => {
-  return function MockLogLevelBadge({ level }: { level: string }) {
-    return <span data-testid="log-level-badge">{level}</span>
+  const React = require('react')
+  return {
+    __esModule: true,
+    default: function MockLogLevelBadge({ level }: { level: string }) {
+      return React.createElement('span', { 'data-testid': 'log-level-badge' }, level)
+    },
   }
 })
 jest.mock('../utils/logger', () => ({
@@ -107,8 +115,7 @@ describe('ExecutionConsole', () => {
     })
   })
 
-  it.skip('should switch to chat tab', async () => {
-    // Skipped: Complex interaction test, core functionality covered
+  it('should switch to chat tab', async () => {
     render(
       <ExecutionConsole
         activeWorkflowId="workflow-1"
@@ -117,6 +124,18 @@ describe('ExecutionConsole', () => {
       />
     )
 
+    // Expand console first
+    const buttons = screen.getAllByRole('button')
+    const toggleButton = buttons.find(btn => btn.querySelector('svg'))
+    if (toggleButton) {
+      fireEvent.click(toggleButton)
+    }
+
+    await waitFor(() => {
+      expect(screen.getByTestId('workflow-chat')).toBeInTheDocument()
+    })
+
+    // Click chat tab (should already be active, but verify it works)
     const chatTab = screen.getByText('Chat')
     fireEvent.click(chatTab)
 
@@ -125,8 +144,7 @@ describe('ExecutionConsole', () => {
     })
   })
 
-  it.skip('should switch to execution tab', async () => {
-    // Skipped: Complex interaction test, core functionality covered by other tests
+  it('should switch to execution tab', async () => {
     render(
       <ExecutionConsole
         activeWorkflowId="workflow-1"
@@ -143,17 +161,20 @@ describe('ExecutionConsole', () => {
     }
 
     await waitFor(() => {
-      const execTab = screen.getByText('exec-123')
-      fireEvent.click(execTab)
+      expect(screen.getByTestId('workflow-chat')).toBeInTheDocument()
     })
 
+    // Click execution tab
+    const execTab = screen.getByText('exec-123')
+    fireEvent.click(execTab)
+
     await waitFor(() => {
-      expect(screen.getByText(/Execution exec-123/)).toBeInTheDocument()
+      // Check for execution content - logs should be visible
+      expect(screen.getByText('Test log message')).toBeInTheDocument()
     })
   })
 
-  it.skip('should display execution logs', async () => {
-    // Skipped: Requires complex rendering setup, core functionality covered
+  it('should display execution logs', async () => {
     render(
       <ExecutionConsole
         activeWorkflowId="workflow-1"
@@ -162,13 +183,13 @@ describe('ExecutionConsole', () => {
       />
     )
 
+    // Console should auto-expand when activeExecutionId is set
     await waitFor(() => {
       expect(screen.getByText('Test log message')).toBeInTheDocument()
     })
   })
 
-  it.skip('should display empty state when no logs', () => {
-    // Skipped: Requires complex rendering setup, core functionality covered
+  it('should display empty state when no logs', async () => {
     const execWithoutLogs = {
       ...mockExecution,
       logs: [],
@@ -182,7 +203,9 @@ describe('ExecutionConsole', () => {
       />
     )
 
-    expect(screen.getByText(/No logs yet/)).toBeInTheDocument()
+    await waitFor(() => {
+      expect(screen.getByText(/No logs yet/)).toBeInTheDocument()
+    })
   })
 
   it('should handle null activeWorkflowId', () => {
@@ -197,8 +220,7 @@ describe('ExecutionConsole', () => {
     expect(screen.getByText('Chat')).toBeInTheDocument()
   })
 
-  it.skip('should call useWebSocket with correct parameters', () => {
-    // Skipped: Requires complex mock setup, core functionality covered by callback tests
+  it('should call useWebSocket with correct parameters', () => {
     render(
       <ExecutionConsole
         activeWorkflowId="workflow-1"
@@ -223,12 +245,12 @@ describe('ExecutionConsole', () => {
     )
   })
 
-  it.skip('should handle WebSocket log callback', () => {
-    // Skipped: Requires complex mock setup, core functionality covered
+  it('should handle WebSocket log callback', () => {
     let onLogCallback: (log: any) => void
 
     mockUseWebSocket.mockImplementation((config: any) => {
       onLogCallback = config.onLog
+      return {} as any
     })
 
     render(
@@ -247,12 +269,12 @@ describe('ExecutionConsole', () => {
     expect(logger.debug).toHaveBeenCalled()
   })
 
-  it.skip('should handle WebSocket status callback', () => {
-    // Skipped: Requires complex mock setup, core functionality covered
+  it('should handle WebSocket status callback', () => {
     let onStatusCallback: (status: string) => void
 
     mockUseWebSocket.mockImplementation((config: any) => {
       onStatusCallback = config.onStatus
+      return {} as any
     })
 
     render(
@@ -270,12 +292,12 @@ describe('ExecutionConsole', () => {
     expect(logger.debug).toHaveBeenCalled()
   })
 
-  it.skip('should handle WebSocket node update callback', () => {
-    // Skipped: Requires complex mock setup, core functionality covered
+  it('should handle WebSocket node update callback', () => {
     let onNodeUpdateCallback: (nodeId: string, nodeState: any) => void
 
     mockUseWebSocket.mockImplementation((config: any) => {
       onNodeUpdateCallback = config.onNodeUpdate
+      return {} as any
     })
 
     render(
@@ -293,12 +315,12 @@ describe('ExecutionConsole', () => {
     expect(logger.debug).toHaveBeenCalled()
   })
 
-  it.skip('should handle WebSocket error callback', () => {
-    // Skipped: Requires complex mock setup, core functionality covered
+  it('should handle WebSocket error callback', () => {
     let onErrorCallback: (error: any) => void
 
     mockUseWebSocket.mockImplementation((config: any) => {
       onErrorCallback = config.onError
+      return {} as any
     })
 
     render(
@@ -445,12 +467,12 @@ describe('ExecutionConsole', () => {
     expect(screen.getByText('Chat')).toBeInTheDocument()
   })
 
-  it.skip('should not call callbacks when activeWorkflowId is null', () => {
-    // Skipped: Requires complex mock setup, core functionality covered
+  it('should not call callbacks when activeWorkflowId is null', () => {
     let onLogCallback: (log: any) => void
 
     mockUseWebSocket.mockImplementation((config: any) => {
       onLogCallback = config.onLog
+      return {} as any
     })
 
     render(

@@ -1,5 +1,4 @@
 import type { StorageAdapter } from '../types/adapters'
-import { logger } from './logger'
 import { handleStorageError } from './errorHandler'
 
 /**
@@ -117,12 +116,12 @@ export function safeStorageClear(
   storage: StorageAdapter | null,
   context?: string
 ): boolean {
-  if (!storage || typeof storage.clear !== 'function') {
+  if (!storage || typeof (storage as any).clear !== 'function') {
     return false
   }
 
   try {
-    storage.clear()
+    ;(storage as any).clear()
     return true
   } catch (error) {
     handleStorageError(error, 'clear', 'all', {

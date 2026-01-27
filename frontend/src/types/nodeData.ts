@@ -48,6 +48,27 @@ export interface InputConfig {
   file_path?: string
   file_pattern?: string
   overwrite?: boolean
+  // Database-specific fields
+  database_type?: string
+  connection_string?: string
+  host?: string
+  port?: number
+  database_name?: string
+  username?: string
+  password?: string
+  query?: string
+  ssl_mode?: string
+  // Firebase-specific fields
+  firebase_service?: string
+  collection_path?: string
+  query_filter?: string
+  // BigQuery-specific fields
+  dataset?: string
+  table?: string
+  write_disposition?: string
+  location?: string
+  // Local filesystem-specific fields
+  encoding?: string
   inputs?: Array<{
     name: string
     type?: string
@@ -70,7 +91,7 @@ export interface NodeData {
   executionStatus?: 'running' | 'completed' | 'failed' | 'pending'
 }
 
-export type NodeWithData = Node<NodeData>
+export type NodeWithData = Node<NodeData & Record<string, unknown>>
 
 // Type guards
 export function isAgentNode(node: NodeWithData | null): node is NodeWithData & { type: 'agent' } {

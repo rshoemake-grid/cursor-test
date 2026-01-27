@@ -172,11 +172,13 @@ export const defaultAdapters = {
    */
   createTimerAdapter(): TimerAdapter {
     return {
-      setTimeout: (callback: () => void, delay: number) =>
-        setTimeout(callback, delay),
+      setTimeout: ((callback: () => void, delay: number) => {
+        return setTimeout(callback, delay) as unknown as number
+      }) as TimerAdapter['setTimeout'],
       clearTimeout: (id: number) => clearTimeout(id),
-      setInterval: (callback: () => void, delay: number) =>
-        setInterval(callback, delay),
+      setInterval: ((callback: () => void, delay: number) => {
+        return setInterval(callback, delay) as unknown as number
+      }) as TimerAdapter['setInterval'],
       clearInterval: (id: number) => clearInterval(id),
     }
   },
@@ -240,7 +242,13 @@ export const defaultAdapters = {
       info: (...args: any[]) => console.info(...args),
       warn: (...args: any[]) => console.warn(...args),
       error: (...args: any[]) => console.error(...args),
-      debug: (...args: any[]) => console.debug?.(...args) || console.log(...args),
+      debug: (...args: any[]) => {
+        if (console.debug) {
+          console.debug(...args)
+        } else {
+          console.log(...args)
+        }
+      },
     }
   },
 

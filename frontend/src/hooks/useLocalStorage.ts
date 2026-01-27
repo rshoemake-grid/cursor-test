@@ -86,8 +86,8 @@ export function useLocalStorage<T>(
       }
     }
 
-    storage.addEventListener('storage', handleStorageChange)
-    return () => storage.removeEventListener('storage', handleStorageChange)
+    storage.addEventListener('storage', handleStorageChange as any)
+    return () => storage.removeEventListener('storage', handleStorageChange as any)
   }, [key, storage, injectedLogger])
 
   return [storedValue, setValue, removeValue]

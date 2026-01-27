@@ -457,77 +457,85 @@ describe('notifications', () => {
       const notification = showSuccess('Success message', 2000)
       
       expect(notification).toBeTruthy()
+      expect(notification).not.toBeNull()
       // Verify the exact object structure: { type: 'success', duration: 2000 }
       // This kills mutants that change the object literal
-      expect(notification.textContent).toBe('Success message')
+      expect(notification!.textContent).toBe('Success message')
       
       // Verify it uses success type (green background)
-      expect(notification.style.background).toBe('rgb(16, 185, 129)') // #10b981
+      expect(notification!.style.background).toBe('rgb(16, 185, 129)') // #10b981
     })
 
     it('should verify exact object literal for showSuccess with undefined duration', () => {
       const notification = showSuccess('Success message', undefined)
       
       expect(notification).toBeTruthy()
+      expect(notification).not.toBeNull()
       // Verify object structure: { type: 'success', duration: undefined }
-      expect(notification.textContent).toBe('Success message')
+      expect(notification!.textContent).toBe('Success message')
     })
 
     it('should verify exact object literal for showError', () => {
       const notification = showError('Error message', 3000)
       
       expect(notification).toBeTruthy()
+      expect(notification).not.toBeNull()
       // Verify the exact object structure: { type: 'error', duration: 3000 }
-      expect(notification.textContent).toBe('Error message')
+      expect(notification!.textContent).toBe('Error message')
       
       // Verify it uses error type (red background)
-      expect(notification.style.background).toBe('rgb(239, 68, 68)') // #ef4444
+      expect(notification!.style.background).toBe('rgb(239, 68, 68)') // #ef4444
     })
 
     it('should verify exact object literal for showError with undefined duration', () => {
       const notification = showError('Error message', undefined)
       
       expect(notification).toBeTruthy()
+      expect(notification).not.toBeNull()
       // Verify object structure: { type: 'error', duration: undefined }
-      expect(notification.textContent).toBe('Error message')
+      expect(notification!.textContent).toBe('Error message')
     })
 
     it('should verify exact object literal for showInfo', () => {
       const notification = showInfo('Info message', 4000)
       
       expect(notification).toBeTruthy()
+      expect(notification).not.toBeNull()
       // Verify the exact object structure: { type: 'info', duration: 4000 }
-      expect(notification.textContent).toBe('Info message')
+      expect(notification!.textContent).toBe('Info message')
       
       // Verify it uses info type (blue background)
-      expect(notification.style.background).toBe('rgb(59, 130, 246)') // #3b82f6
+      expect(notification!.style.background).toBe('rgb(59, 130, 246)') // #3b82f6
     })
 
     it('should verify exact object literal for showInfo with undefined duration', () => {
       const notification = showInfo('Info message', undefined)
       
       expect(notification).toBeTruthy()
+      expect(notification).not.toBeNull()
       // Verify object structure: { type: 'info', duration: undefined }
-      expect(notification.textContent).toBe('Info message')
+      expect(notification!.textContent).toBe('Info message')
     })
 
     it('should verify exact object literal for showWarning', () => {
       const notification = showWarning('Warning message', 6000)
       
       expect(notification).toBeTruthy()
+      expect(notification).not.toBeNull()
       // Verify the exact object structure: { type: 'warning', duration: 6000 }
-      expect(notification.textContent).toBe('Warning message')
+      expect(notification!.textContent).toBe('Warning message')
       
       // Verify it uses warning type (orange background)
-      expect(notification.style.background).toBe('rgb(245, 158, 11)') // #f59e0b
+      expect(notification!.style.background).toBe('rgb(245, 158, 11)') // #f59e0b
     })
 
     it('should verify exact object literal for showWarning with undefined duration', () => {
       const notification = showWarning('Warning message', undefined)
       
       expect(notification).toBeTruthy()
+      expect(notification).not.toBeNull()
       // Verify object structure: { type: 'warning', duration: undefined }
-      expect(notification.textContent).toBe('Warning message')
+      expect(notification!.textContent).toBe('Warning message')
     })
 
     it('should verify all helper functions use correct type values', () => {
@@ -537,10 +545,14 @@ describe('notifications', () => {
       const warning = showWarning('Test')
       
       // Verify each uses the correct type in the object literal
-      expect(success.style.background).toBe('rgb(16, 185, 129)') // success: #10b981
-      expect(error.style.background).toBe('rgb(239, 68, 68)') // error: #ef4444
-      expect(info.style.background).toBe('rgb(59, 130, 246)') // info: #3b82f6
-      expect(warning.style.background).toBe('rgb(245, 158, 11)') // warning: #f59e0b
+      expect(success).not.toBeNull()
+      expect(error).not.toBeNull()
+      expect(info).not.toBeNull()
+      expect(warning).not.toBeNull()
+      expect(success!.style.background).toBe('rgb(16, 185, 129)') // success: #10b981
+      expect(error!.style.background).toBe('rgb(239, 68, 68)') // error: #ef4444
+      expect(info!.style.background).toBe('rgb(59, 130, 246)') // info: #3b82f6
+      expect(warning!.style.background).toBe('rgb(245, 158, 11)') // warning: #f59e0b
     })
 
     it('should verify exact text color string literal is white', () => {
@@ -551,10 +563,14 @@ describe('notifications', () => {
       const warning = showWarning('Test')
       
       // Verify exact text color: text: 'white' in colors object
-      expect(success.style.color).toBe('white')
-      expect(error.style.color).toBe('white')
-      expect(info.style.color).toBe('white')
-      expect(warning.style.color).toBe('white')
+      expect(success).not.toBeNull()
+      expect(error).not.toBeNull()
+      expect(info).not.toBeNull()
+      expect(warning).not.toBeNull()
+      expect(success!.style.color).toBe('white')
+      expect(error!.style.color).toBe('white')
+      expect(info!.style.color).toBe('white')
+      expect(warning!.style.color).toBe('white')
     })
 
     it('should verify exact color object literal structure', () => {
@@ -562,8 +578,9 @@ describe('notifications', () => {
       const notification = showNotification('Test', { type: 'success' })
       
       // Verify both bg and text properties exist with correct values
-      expect(notification.style.background).toBe('rgb(16, 185, 129)') // #10b981
-      expect(notification.style.color).toBe('white')
+      expect(notification).not.toBeNull()
+      expect(notification!.style.background).toBe('rgb(16, 185, 129)') // #10b981
+      expect(notification!.style.color).toBe('white')
     })
 
     it('should verify all color object literals have white text', () => {
@@ -572,7 +589,8 @@ describe('notifications', () => {
       for (const type of types) {
         const notification = showNotification('Test', { type })
         // Verify exact text color string literal: 'white'
-        expect(notification.style.color).toBe('white')
+        expect(notification).not.toBeNull()
+        expect(notification!.style.color).toBe('white')
       }
     })
   })
@@ -587,7 +605,7 @@ describe('notifications', () => {
         body: document.body,
       }
 
-      const notification = showNotification('Test message', {
+      showNotification('Test message', {
         documentAdapter: mockDocumentAdapter,
       })
 
@@ -599,16 +617,16 @@ describe('notifications', () => {
     it('should use injected timer adapter', () => {
       const mockTimerAdapter: TimerAdapter = {
         setTimeout: jest.fn((callback: () => void, delay: number) => {
-          return setTimeout(callback, delay)
-        }),
+          return setTimeout(callback, delay) as unknown as number
+        }) as any,
         clearTimeout: jest.fn((id: number) => clearTimeout(id)),
         setInterval: jest.fn((callback: () => void, delay: number) => {
-          return setInterval(callback, delay)
-        }),
+          return setInterval(callback, delay) as unknown as number
+        }) as any,
         clearInterval: jest.fn((id: number) => clearInterval(id)),
       }
 
-      const notification = showNotification('Test message', {
+      showNotification('Test message', {
         duration: 1000,
         timerAdapter: mockTimerAdapter,
       })

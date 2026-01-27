@@ -10,7 +10,7 @@ import { defaultAdapters } from '../types/adapters'
 interface LLMProvider {
   id: string
   name: string
-  type: 'openai' | 'anthropic' | 'custom'
+  type: 'openai' | 'anthropic' | 'custom' | 'gemini'
   apiKey: string
   baseUrl?: string
   defaultModel: string

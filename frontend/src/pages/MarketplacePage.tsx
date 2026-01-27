@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { Download, Heart, TrendingUp, Clock, Star, ArrowLeft, Trash2, Bot, Workflow } from 'lucide-react';
+import { Download, Heart, TrendingUp, Clock, ArrowLeft, Trash2, Bot, Workflow } from 'lucide-react';
 import { showError, showSuccess } from '../utils/notifications';
 import { showConfirm } from '../utils/confirm';
 import { api } from '../api/client';
-import { getLocalStorageItem, setLocalStorageItem, removeLocalStorageItem } from '../hooks/useLocalStorage';
+import { getLocalStorageItem, setLocalStorageItem } from '../hooks/useLocalStorage';
 import { logger } from '../utils/logger';
 import type { StorageAdapter, HttpClient } from '../types/adapters';
 import { defaultAdapters } from '../types/adapters';
@@ -201,7 +201,7 @@ export default function MarketplacePage({
                   difficulty: workflow.difficulty || 'intermediate',
                   estimated_time: workflow.estimated_time || '5 min',
                   agent_config: agentConfig,
-                  published_at: workflow.created_at || new Date().toISOString(),
+                  published_at: (workflow as any).created_at || new Date().toISOString(),
                   author_id: workflow.author_id || null,
                   author_name: workflow.author_name || 'System',
                   is_official: true

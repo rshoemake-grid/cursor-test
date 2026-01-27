@@ -21,8 +21,10 @@ describe('storageHelpers', () => {
       getItem: jest.fn(),
       setItem: jest.fn(),
       removeItem: jest.fn(),
+      addEventListener: jest.fn(),
+      removeEventListener: jest.fn(),
       clear: jest.fn(),
-    }
+    } as any
   })
 
   describe('safeStorageGet', () => {
@@ -195,6 +197,8 @@ describe('storageHelpers', () => {
         getItem: jest.fn(),
         setItem: jest.fn(),
         removeItem: jest.fn(),
+        addEventListener: jest.fn(),
+        removeEventListener: jest.fn(),
       }
       const result = safeStorageClear(storageWithoutClear as StorageAdapter)
       expect(result).toBe(false)
@@ -203,11 +207,11 @@ describe('storageHelpers', () => {
     it('should clear storage successfully', () => {
       const result = safeStorageClear(mockStorage)
       expect(result).toBe(true)
-      expect(mockStorage.clear).toHaveBeenCalled()
+      expect((mockStorage as any).clear).toHaveBeenCalled()
     })
 
     it('should handle clear errors', () => {
-      ;(mockStorage.clear as jest.Mock).mockImplementation(() => {
+      ;((mockStorage as any).clear as jest.Mock).mockImplementation(() => {
         throw new Error('Clear error')
       })
       const result = safeStorageClear(mockStorage)
@@ -216,7 +220,7 @@ describe('storageHelpers', () => {
     })
 
     it('should include context in error handling', () => {
-      ;(mockStorage.clear as jest.Mock).mockImplementation(() => {
+      ;((mockStorage as any).clear as jest.Mock).mockImplementation(() => {
         throw new Error('Clear error')
       })
       safeStorageClear(mockStorage, 'TestContext')
@@ -332,6 +336,8 @@ describe('storageHelpers', () => {
         getItem: jest.fn(),
         setItem: jest.fn(),
         removeItem: jest.fn(),
+        addEventListener: jest.fn(),
+        removeEventListener: jest.fn(),
       }
       const result = safeStorageClear(storageWithoutClear as StorageAdapter)
       expect(result).toBe(false)

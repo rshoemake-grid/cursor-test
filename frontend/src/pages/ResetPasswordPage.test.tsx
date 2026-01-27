@@ -202,25 +202,32 @@ describe('ResetPasswordPage', () => {
   })
 
   it('should submit form when Enter key is pressed and token exists', async () => {
-    ;(global.fetch as jest.Mock).mockResolvedValue({
-      ok: true,
-      json: async () => ({}),
-    })
+    const mockHttpClient: HttpClient = {
+      get: jest.fn(),
+      post: jest.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({}),
+      }),
+      put: jest.fn(),
+      delete: jest.fn(),
+    }
 
-    renderWithRouter(<ResetPasswordPage />)
+    renderWithRouter(<ResetPasswordPage httpClient={mockHttpClient} />)
 
     await waitFor(() => {
       const passwordInputs = screen.getAllByPlaceholderText(/••••••••/)
-      const passwordInput = passwordInputs[0]
-      fireEvent.change(passwordInput, { target: { value: 'newpassword123' } })
-      if (passwordInputs.length > 1) {
-        fireEvent.change(passwordInputs[1], { target: { value: 'newpassword123' } })
-      }
-      fireEvent.keyDown(passwordInput, { key: 'Enter', code: 'Enter' })
+      expect(passwordInputs.length).toBeGreaterThanOrEqual(2)
+      
+      // Fill in both password fields
+      fireEvent.change(passwordInputs[0], { target: { value: 'newpassword123' } })
+      fireEvent.change(passwordInputs[1], { target: { value: 'newpassword123' } })
+      
+      // Press Enter on the confirm password input (which has the onKeyDown handler)
+      fireEvent.keyDown(passwordInputs[1], { key: 'Enter', code: 'Enter' })
     })
 
     await waitFor(() => {
-      expect(global.fetch).toHaveBeenCalled()
+      expect(mockHttpClient.post).toHaveBeenCalled()
     }, { timeout: 3000 })
   })
 

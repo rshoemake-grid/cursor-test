@@ -1,5 +1,5 @@
-import React from 'react'
-import { useFormField, UseFormFieldOptions } from '../../hooks/useFormField'
+import React, { useRef } from 'react'
+import { useFormField } from '../../hooks/useFormField'
 
 export interface FormFieldProps<T = any> {
   label: string
@@ -61,7 +61,7 @@ export function FormField<T = any>({
     : null
 
   const value = useHook ? fieldHook!.value : controlledValue
-  const inputRef = useHook ? fieldHook!.inputRef : React.useRef<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>(null)
+  const inputRef = useHook ? fieldHook!.inputRef : useRef<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>(null)
 
   const baseInputClasses = 'w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent'
   const disabledClasses = disabled ? 'bg-gray-100 cursor-not-allowed' : ''

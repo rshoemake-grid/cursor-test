@@ -119,7 +119,7 @@ export default function NodePanel({
       color: 'text-blue-600',
       description: node.description || 'Custom LLM-powered agent',
       customData: node
-    }))]
+    } as any))]
   }, [customAgentNodes])
 
   const toggleCategory = (category: string) => {
@@ -195,7 +195,7 @@ export default function NodePanel({
           <div className="space-y-2">
             {agentNodeTemplates.map((template, index) => {
               const Icon = template.icon
-              const key = template.customData ? `custom-${template.customData.id}` : `${template.type}-${index}`
+              const key = (template as any).customData ? `custom-${(template as any).customData.id}` : `${template.type}-${index}`
               return (
                 <div
                   key={key}

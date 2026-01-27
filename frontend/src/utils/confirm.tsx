@@ -23,7 +23,7 @@ export function showConfirm(
     cancelText = 'Cancel',
     type = 'warning',
     documentAdapter = defaultAdapters.createDocumentAdapter(),
-    timerAdapter = defaultAdapters.createTimerAdapter()
+    timerAdapter: _timerAdapter = defaultAdapters.createTimerAdapter()
   } = options
 
   // Handle null document adapter

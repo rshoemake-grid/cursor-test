@@ -39,7 +39,7 @@ export default function MarketplaceDialog({
   workflowId,
   workflowName,
   storage = defaultAdapters.createLocalStorageAdapter(),
-  httpClient = defaultAdapters.createHttpClient()
+  httpClient: _httpClient = defaultAdapters.createHttpClient()
 }: MarketplaceDialogProps) {
   const [activeTab, setActiveTab] = useState<TabType>('agents')
   const [isPublishing, setIsPublishing] = useState(false)

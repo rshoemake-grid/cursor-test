@@ -30,11 +30,15 @@ jest.mock('../types/adapters', () => ({
       getItem: jest.fn(() => null),
       setItem: jest.fn(),
       removeItem: jest.fn(),
+      addEventListener: jest.fn(),
+      removeEventListener: jest.fn(),
     })),
     createSessionStorageAdapter: jest.fn(() => ({
       getItem: jest.fn(() => null),
       setItem: jest.fn(),
       removeItem: jest.fn(),
+      addEventListener: jest.fn(),
+      removeEventListener: jest.fn(),
     })),
   },
 }))
@@ -83,12 +87,16 @@ describe('createApiClient', () => {
       getItem: jest.fn(),
       setItem: jest.fn(),
       removeItem: jest.fn(),
+      addEventListener: jest.fn(),
+      removeEventListener: jest.fn(),
     }
 
     mockSessionStorage = {
       getItem: jest.fn(),
       setItem: jest.fn(),
       removeItem: jest.fn(),
+      addEventListener: jest.fn(),
+      removeEventListener: jest.fn(),
     }
 
     mockedAxios.create.mockReturnValue(mockInstance as any)

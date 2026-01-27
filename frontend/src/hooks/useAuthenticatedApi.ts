@@ -31,7 +31,7 @@ export function useAuthenticatedApi(
       }
 
       if (token) {
-        headers['Authorization'] = `Bearer ${token}`
+        ;(headers as any)['Authorization'] = `Bearer ${token}`
       }
 
       return client.post(`${baseUrl}${endpoint}`, data, headers)
@@ -49,7 +49,7 @@ export function useAuthenticatedApi(
       }
 
       if (token) {
-        headers['Authorization'] = `Bearer ${token}`
+        ;(headers as any)['Authorization'] = `Bearer ${token}`
       }
 
       return client.get(`${baseUrl}${endpoint}`, headers)
@@ -72,7 +72,7 @@ export function useAuthenticatedApi(
       }
 
       if (token) {
-        headers['Authorization'] = `Bearer ${token}`
+        ;(headers as any)['Authorization'] = `Bearer ${token}`
       }
 
       return client.put(`${baseUrl}${endpoint}`, data, headers)
@@ -90,7 +90,7 @@ export function useAuthenticatedApi(
       }
 
       if (token) {
-        headers['Authorization'] = `Bearer ${token}`
+        ;(headers as any)['Authorization'] = `Bearer ${token}`
       }
 
       return client.delete(`${baseUrl}${endpoint}`, headers)

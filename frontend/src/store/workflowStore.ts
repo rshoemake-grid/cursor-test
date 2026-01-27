@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import type { Node, Edge } from '@xyflow/react'
 import type { WorkflowNode, WorkflowEdge, WorkflowDefinition } from '../types/workflow'
+import type { InputMapping } from '../types/nodeData'
 
 interface WorkflowStore {
   // Current workflow state
@@ -31,17 +32,35 @@ interface WorkflowStore {
 }
 
 // Convert our node format to WorkflowNode format
-const nodeToWorkflowNode = (node: Node): WorkflowNode => ({
-  id: node.id,
-  type: node.type as any,
-  name: node.data.label || node.data.name || node.id,
-  description: node.data.description,
-  agent_config: node.data.agent_config,
-  condition_config: node.data.condition_config,
-  loop_config: node.data.loop_config,
-  inputs: node.data.inputs || [],
-  position: node.position,
-})
+const nodeToWorkflowNode = (node: Node): WorkflowNode => {
+  const nodeData = node.data as any
+  return {
+    id: node.id,
+    type: node.type as any,
+    name: nodeData.label || nodeData.name || node.id,
+    description: nodeData.description,
+    agent_config: nodeData.agent_config,
+    condition_config: nodeData.condition_config ? {
+      condition_type: nodeData.condition_config.condition_type || 'equals',
+      field: nodeData.condition_config.field || '',
+      value: nodeData.condition_config.value || '',
+      true_branch: nodeData.condition_config.true_branch,
+      false_branch: nodeData.condition_config.false_branch,
+    } : undefined,
+    loop_config: nodeData.loop_config ? {
+      loop_type: nodeData.loop_config.loop_type || 'for_each',
+      items_source: nodeData.loop_config.items_source,
+      condition: nodeData.loop_config.condition,
+      max_iterations: nodeData.loop_config.max_iterations,
+    } : undefined,
+    inputs: ((nodeData.inputs || []) as InputMapping[]).map(input => ({
+      name: input.name,
+      source_node: input.source_node,
+      source_field: input.source_field || '',
+    })),
+    position: node.position,
+  }
+}
 
 // Convert WorkflowNode to our node format
 const workflowNodeToNode = (wfNode: WorkflowNode): Node => {
