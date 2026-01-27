@@ -277,7 +277,8 @@ describe('errorHandler', () => {
 
       const message = handleApiError(error, { defaultMessage: 'Default' })
 
-      expect(message).toBe('')
+      // Empty string is falsy, so should fall back to defaultMessage
+      expect(message).toBe('Default')
     })
 
     it('should handle error.response.data.detail being empty string', () => {
