@@ -3,6 +3,7 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { BrowserRouter } from 'react-router-dom'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import ResetPasswordPage from './ResetPasswordPage'
+import type { HttpClient } from '../types/adapters'
 
 // Mock react-router-dom
 jest.mock('react-router-dom', () => ({
@@ -175,6 +176,99 @@ describe('ResetPasswordPage', () => {
 
     await waitFor(() => {
       expect(screen.getByText('Invalid token')).toBeInTheDocument()
+    })
+  })
+
+  describe('Dependency Injection', () => {
+    it('should use injected HTTP client', async () => {
+      const mockHttpClient: HttpClient = {
+        get: jest.fn(),
+        post: jest.fn().mockResolvedValue({
+          ok: true,
+          json: async () => ({}),
+        } as Response),
+        put: jest.fn(),
+        delete: jest.fn(),
+      }
+
+      renderWithRouter(<ResetPasswordPage httpClient={mockHttpClient} />)
+
+      const passwordInputs = screen.getAllByPlaceholderText(/••••••••/)
+      const submitButton = screen.getByRole('button', { name: /Reset Password/ })
+
+      fireEvent.change(passwordInputs[0], { target: { value: 'newpassword123' } })
+      if (passwordInputs.length > 1) {
+        fireEvent.change(passwordInputs[1], { target: { value: 'newpassword123' } })
+      }
+      fireEvent.click(submitButton)
+
+      await waitFor(() => {
+        expect(mockHttpClient.post).toHaveBeenCalledWith(
+          expect.stringContaining('/auth/reset-password'),
+          expect.objectContaining({ token: 'test-token', new_password: 'newpassword123' }),
+          expect.any(Object)
+        )
+      })
+    })
+
+    it('should use injected API base URL', async () => {
+      const mockHttpClient: HttpClient = {
+        get: jest.fn(),
+        post: jest.fn().mockResolvedValue({
+          ok: true,
+          json: async () => ({}),
+        } as Response),
+        put: jest.fn(),
+        delete: jest.fn(),
+      }
+
+      renderWithRouter(
+        <ResetPasswordPage 
+          httpClient={mockHttpClient} 
+          apiBaseUrl="https://custom-api.example.com/api"
+        />
+      )
+
+      const passwordInputs = screen.getAllByPlaceholderText(/••••••••/)
+      const submitButton = screen.getByRole('button', { name: /Reset Password/ })
+
+      fireEvent.change(passwordInputs[0], { target: { value: 'newpassword123' } })
+      if (passwordInputs.length > 1) {
+        fireEvent.change(passwordInputs[1], { target: { value: 'newpassword123' } })
+      }
+      fireEvent.click(submitButton)
+
+      await waitFor(() => {
+        expect(mockHttpClient.post).toHaveBeenCalledWith(
+          'https://custom-api.example.com/api/auth/reset-password',
+          expect.any(Object),
+          expect.any(Object)
+        )
+      })
+    })
+
+    it('should handle HTTP client errors gracefully', async () => {
+      const mockHttpClient: HttpClient = {
+        get: jest.fn(),
+        post: jest.fn().mockRejectedValue(new Error('Network error')),
+        put: jest.fn(),
+        delete: jest.fn(),
+      }
+
+      renderWithRouter(<ResetPasswordPage httpClient={mockHttpClient} />)
+
+      const passwordInputs = screen.getAllByPlaceholderText(/••••••••/)
+      const submitButton = screen.getByRole('button', { name: /Reset Password/ })
+
+      fireEvent.change(passwordInputs[0], { target: { value: 'newpassword123' } })
+      if (passwordInputs.length > 1) {
+        fireEvent.change(passwordInputs[1], { target: { value: 'newpassword123' } })
+      }
+      fireEvent.click(submitButton)
+
+      await waitFor(() => {
+        expect(screen.getByText(/Network error/)).toBeInTheDocument()
+      })
     })
   })
 })

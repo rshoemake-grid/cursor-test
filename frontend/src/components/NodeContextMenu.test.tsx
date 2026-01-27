@@ -325,4 +325,212 @@ describe('NodeContextMenu', () => {
     // Parent click handler should not be called due to stopPropagation
     expect(handleParentClick).not.toHaveBeenCalled()
   })
+
+  it('should handle copy when node is null', () => {
+    renderWithProvider(
+      <NodeContextMenu
+        nodeId="node-1"
+        node={null}
+        x={100}
+        y={200}
+        onClose={mockOnClose}
+        onCopy={mockOnCopy}
+      />
+    )
+
+    const copyButton = screen.getByText('Copy')
+    fireEvent.click(copyButton)
+
+    // Should not call onCopy when node is null
+    expect(mockOnCopy).not.toHaveBeenCalled()
+    expect(mockOnClose).toHaveBeenCalledTimes(1)
+  })
+
+  it('should handle copy when callback is not provided', () => {
+    renderWithProvider(
+      <NodeContextMenu
+        nodeId="node-1"
+        node={mockNode}
+        x={100}
+        y={200}
+        onClose={mockOnClose}
+      />
+    )
+
+    const copyButton = screen.getByText('Copy')
+    fireEvent.click(copyButton)
+
+    // Should not crash, just close
+    expect(mockOnClose).toHaveBeenCalledTimes(1)
+  })
+
+  it('should handle cut when node is null', () => {
+    renderWithProvider(
+      <NodeContextMenu
+        nodeId="node-1"
+        node={null}
+        x={100}
+        y={200}
+        onClose={mockOnClose}
+        onCut={mockOnCut}
+      />
+    )
+
+    const cutButton = screen.getByText('Cut')
+    fireEvent.click(cutButton)
+
+    // Should not call onCut when node is null
+    expect(mockOnCut).not.toHaveBeenCalled()
+    expect(mockOnClose).toHaveBeenCalledTimes(1)
+  })
+
+  it('should handle paste when callback is not provided', () => {
+    renderWithProvider(
+      <NodeContextMenu
+        nodeId="node-1"
+        node={mockNode}
+        x={100}
+        y={200}
+        onClose={mockOnClose}
+        canPaste={true}
+      />
+    )
+
+    const pasteButton = screen.getByText('Paste')
+    fireEvent.click(pasteButton)
+
+    // Should not crash, just close
+    expect(mockOnClose).toHaveBeenCalledTimes(1)
+  })
+
+  it('should handle addToAgentNodes when node is null', () => {
+    renderWithProvider(
+      <NodeContextMenu
+        nodeId="node-1"
+        node={null}
+        x={100}
+        y={200}
+        onClose={mockOnClose}
+        onAddToAgentNodes={mockOnAddToAgentNodes}
+      />
+    )
+
+    // Add to Agent Nodes button should not be visible for non-agent nodes
+    expect(screen.queryByText('Add to Agent Nodes')).not.toBeInTheDocument()
+  })
+
+  it('should handle sendToMarketplace when node is null', () => {
+    renderWithProvider(
+      <NodeContextMenu
+        nodeId="node-1"
+        node={null}
+        x={100}
+        y={200}
+        onClose={mockOnClose}
+        onSendToMarketplace={mockOnSendToMarketplace}
+      />
+    )
+
+    // Send to Marketplace button should not be visible for non-agent nodes
+    expect(screen.queryByText('Send to Marketplace')).not.toBeInTheDocument()
+  })
+
+  it('should handle delete when both nodeId and edgeId are provided', () => {
+    const mockDeleteElements = jest.fn()
+    jest.spyOn(require('@xyflow/react'), 'useReactFlow').mockReturnValue({
+      deleteElements: mockDeleteElements,
+    })
+
+    renderWithProvider(
+      <NodeContextMenu
+        nodeId="node-1"
+        edgeId="edge-1"
+        node={mockNode}
+        x={100}
+        y={200}
+        onClose={mockOnClose}
+        onDelete={mockOnDelete}
+      />
+    )
+
+    const deleteButton = screen.getByText('Delete Node')
+    fireEvent.click(deleteButton)
+
+    // Should delete node (nodeId takes precedence)
+    expect(mockDeleteElements).toHaveBeenCalledWith({ nodes: [{ id: 'node-1' }] })
+    expect(mockOnDelete).toHaveBeenCalledTimes(1)
+    expect(mockOnClose).toHaveBeenCalledTimes(1)
+  })
+
+  it('should handle delete when neither nodeId nor edgeId are provided', () => {
+    const mockDeleteElements = jest.fn()
+    jest.spyOn(require('@xyflow/react'), 'useReactFlow').mockReturnValue({
+      deleteElements: mockDeleteElements,
+    })
+
+    renderWithProvider(
+      <NodeContextMenu
+        x={100}
+        y={200}
+        onClose={mockOnClose}
+        onDelete={mockOnDelete}
+      />
+    )
+
+    const deleteButton = screen.getByText('Delete Connection')
+    fireEvent.click(deleteButton)
+
+    // Should not call deleteElements when neither nodeId nor edgeId
+    expect(mockDeleteElements).not.toHaveBeenCalled()
+    expect(mockOnDelete).toHaveBeenCalledTimes(1)
+    expect(mockOnClose).toHaveBeenCalledTimes(1)
+  })
+
+  it('should handle non-agent node type', () => {
+    const nonAgentNode = {
+      id: 'node-1',
+      type: 'condition',
+      data: { label: 'Condition Node' },
+    }
+
+    renderWithProvider(
+      <NodeContextMenu
+        nodeId="node-1"
+        node={nonAgentNode}
+        x={100}
+        y={200}
+        onClose={mockOnClose}
+        onAddToAgentNodes={mockOnAddToAgentNodes}
+        onSendToMarketplace={mockOnSendToMarketplace}
+      />
+    )
+
+    // Agent-specific buttons should not be visible
+    expect(screen.queryByText('Add to Agent Nodes')).not.toBeInTheDocument()
+    expect(screen.queryByText('Send to Marketplace')).not.toBeInTheDocument()
+  })
+
+  it('should handle delete without onDelete callback', () => {
+    const mockDeleteElements = jest.fn()
+    jest.spyOn(require('@xyflow/react'), 'useReactFlow').mockReturnValue({
+      deleteElements: mockDeleteElements,
+    })
+
+    renderWithProvider(
+      <NodeContextMenu
+        nodeId="node-1"
+        node={mockNode}
+        x={100}
+        y={200}
+        onClose={mockOnClose}
+      />
+    )
+
+    const deleteButton = screen.getByText('Delete Node')
+    fireEvent.click(deleteButton)
+
+    // Should still delete and close
+    expect(mockDeleteElements).toHaveBeenCalledWith({ nodes: [{ id: 'node-1' }] })
+    expect(mockOnClose).toHaveBeenCalledTimes(1)
+  })
 })

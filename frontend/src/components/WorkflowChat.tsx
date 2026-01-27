@@ -3,6 +3,8 @@ import { Send, Loader, Bot, User } from 'lucide-react'
 import { api } from '../api/client'
 import { useAuth } from '../contexts/AuthContext'
 import { logger } from '../utils/logger'
+import type { StorageAdapter, HttpClient } from '../types/adapters'
+import { defaultAdapters } from '../types/adapters'
 
 interface ChatMessage {
   role: 'user' | 'assistant'
@@ -12,23 +14,49 @@ interface ChatMessage {
 interface WorkflowChatProps {
   workflowId: string | null
   onWorkflowUpdate?: (changes: any) => void
+  // Dependency injection
+  storage?: StorageAdapter | null
+  httpClient?: HttpClient
+  apiBaseUrl?: string
+  logger?: typeof logger
 }
 
-export default function WorkflowChat({ workflowId, onWorkflowUpdate }: WorkflowChatProps) {
+export default function WorkflowChat({ 
+  workflowId, 
+  onWorkflowUpdate,
+  storage = defaultAdapters.createLocalStorageAdapter(),
+  httpClient = defaultAdapters.createHttpClient(),
+  apiBaseUrl = 'http://localhost:8000/api',
+  logger: injectedLogger = logger
+}: WorkflowChatProps) {
   const { token } = useAuth()
-  // Load conversation history from localStorage on mount or workflow change
+  // Load conversation history from storage on mount or workflow change
   const loadConversationHistory = (workflowId: string | null): ChatMessage[] => {
+    if (!storage) {
+      // Return default greeting if storage is not available
+      return [{
+        role: 'assistant',
+        content: workflowId 
+          ? "Hello! I can help you create or modify this workflow. What would you like to do?"
+          : "Hello! I can help you create a new workflow. What would you like to build?"
+      }]
+    }
+
     const storageKey = workflowId ? `chat_history_${workflowId}` : 'chat_history_new_workflow'
-    const saved = localStorage.getItem(storageKey)
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved)
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          return parsed
+    try {
+      const saved = storage.getItem(storageKey)
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved)
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            return parsed
+          }
+        } catch (e) {
+          injectedLogger.error('Failed to load conversation history:', e)
         }
-      } catch (e) {
-        logger.error('Failed to load conversation history:', e)
       }
+    } catch (e) {
+      injectedLogger.error('Failed to load conversation history:', e)
     }
     
     // Return default greeting if no history found
@@ -46,13 +74,17 @@ export default function WorkflowChat({ workflowId, onWorkflowUpdate }: WorkflowC
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
 
-  // Save conversation history to localStorage whenever messages change
+  // Save conversation history to storage whenever messages change
   useEffect(() => {
-    if (messages.length > 0) {
+    if (messages.length > 0 && storage) {
       const storageKey = workflowId ? `chat_history_${workflowId}` : 'chat_history_new_workflow'
-      localStorage.setItem(storageKey, JSON.stringify(messages))
+      try {
+        storage.setItem(storageKey, JSON.stringify(messages))
+      } catch (e) {
+        injectedLogger.error('Failed to save conversation history:', e)
+      }
     }
-  }, [messages, workflowId])
+  }, [messages, workflowId, storage, injectedLogger])
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -62,7 +94,8 @@ export default function WorkflowChat({ workflowId, onWorkflowUpdate }: WorkflowC
     // Load conversation history when workflow changes
     const history = loadConversationHistory(workflowId)
     setMessages(history)
-  }, [workflowId])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [workflowId]) // Note: loadConversationHistory depends on storage, but we don't want to reload on storage changes
 
   const handleSend = async () => {
     if (!input.trim() || isLoading) return
@@ -84,18 +117,18 @@ export default function WorkflowChat({ workflowId, onWorkflowUpdate }: WorkflowC
         headers['Authorization'] = `Bearer ${token}`
       }
       
-      const response = await fetch('http://localhost:8000/api/workflow-chat/chat', {
-        method: 'POST',
-        headers,
-        body: JSON.stringify({
+      const response = await httpClient.post(
+        `${apiBaseUrl}/workflow-chat/chat`,
+        {
           workflow_id: workflowId,
           message: userMessage.content,
           conversation_history: messages.map(m => ({
             role: m.role,
             content: m.content
           }))
-        })
-      })
+        },
+        headers
+      )
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`)
@@ -112,13 +145,13 @@ export default function WorkflowChat({ workflowId, onWorkflowUpdate }: WorkflowC
 
       // Apply workflow changes if any
       if (data.workflow_changes && onWorkflowUpdate) {
-        logger.debug('Received workflow changes:', data.workflow_changes)
-        logger.debug('Nodes to delete:', data.workflow_changes.nodes_to_delete)
+        injectedLogger.debug('Received workflow changes:', data.workflow_changes)
+        injectedLogger.debug('Nodes to delete:', data.workflow_changes.nodes_to_delete)
         onWorkflowUpdate(data.workflow_changes)
       }
 
     } catch (error) {
-      logger.error('Chat error:', error)
+      injectedLogger.error('Chat error:', error)
       const errorMessage: ChatMessage = {
         role: 'assistant',
         content: `Sorry, I encountered an error: ${error instanceof Error ? error.message : 'Unknown error'}. Please try again.`

@@ -29,6 +29,8 @@ import { showConfirm } from '../utils/confirm'
 import { useAuth } from '../contexts/AuthContext'
 import { getLocalStorageItem, setLocalStorageItem } from '../hooks/useLocalStorage'
 import { logger } from '../utils/logger'
+import type { StorageAdapter } from '../types/adapters'
+import { defaultAdapters } from '../types/adapters'
 
 interface Execution {
   id: string
@@ -64,6 +66,8 @@ interface WorkflowBuilderProps {
   onExecutionNodeUpdate?: (workflowId: string, executionId: string, nodeId: string, nodeState: any) => void
   onRemoveExecution?: (workflowId: string, executionId: string) => void
   tabIsUnsaved: boolean
+  // Dependency injection
+  storage?: StorageAdapter | null
 }
 
 interface TabDraft {
@@ -98,6 +102,7 @@ const WorkflowBuilder = forwardRef<WorkflowBuilderHandle, WorkflowBuilderProps>(
   workflowId,
   tabName,
   tabIsUnsaved,
+  storage = defaultAdapters.createLocalStorageAdapter(),
   workflowTabs = [],
   onExecutionStart,
   onWorkflowSaved,
@@ -490,10 +495,12 @@ const WorkflowBuilder = forwardRef<WorkflowBuilderHandle, WorkflowBuilderProps>(
       addAgentsToCanvas(agentsToAdd)
     }
     
-    // Check localStorage for pending agents (more reliable than events)
+    // Check storage for pending agents (more reliable than events)
     const checkPendingAgents = () => {
+      if (!storage) return
+      
       try {
-        const pendingData = localStorage.getItem('pendingAgentsToAdd')
+        const pendingData = storage.getItem('pendingAgentsToAdd')
         if (pendingData) {
           const pending = JSON.parse(pendingData)
             logger.debug('[WorkflowBuilder] Found pending agents:', {
@@ -506,20 +513,22 @@ const WorkflowBuilder = forwardRef<WorkflowBuilderHandle, WorkflowBuilderProps>(
               logger.debug('[WorkflowBuilder] Adding agents to canvas:', pending.agents.length)
             addAgentsToCanvas(pending.agents)
             // Clear after processing
-            localStorage.removeItem('pendingAgentsToAdd')
+            storage.removeItem('pendingAgentsToAdd')
           } else if (pending.tabId !== tabId) {
             // Clear if it's for a different tab
               logger.debug('[WorkflowBuilder] Pending agents for different tab, clearing')
-            localStorage.removeItem('pendingAgentsToAdd')
+            storage.removeItem('pendingAgentsToAdd')
           } else if (Date.now() - pending.timestamp >= 10000) {
             // Clear if too old
               logger.debug('[WorkflowBuilder] Pending agents too old, clearing')
-            localStorage.removeItem('pendingAgentsToAdd')
+            storage.removeItem('pendingAgentsToAdd')
           }
         }
       } catch (e) {
         logger.error('Failed to process pending agents:', e)
-        localStorage.removeItem('pendingAgentsToAdd')
+        if (storage) {
+          storage.removeItem('pendingAgentsToAdd')
+        }
       }
     }
     
@@ -527,7 +536,9 @@ const WorkflowBuilder = forwardRef<WorkflowBuilderHandle, WorkflowBuilderProps>(
     checkPendingAgents()
     
     // Also listen for events
-    window.addEventListener('addAgentsToWorkflow', handleAddAgentsToWorkflow as EventListener)
+    if (typeof window !== 'undefined') {
+      window.addEventListener('addAgentsToWorkflow', handleAddAgentsToWorkflow as EventListener)
+    }
     
     // Check periodically in case we missed the event (check every 1 second for 10 seconds)
     let checkCount = 0
@@ -541,10 +552,13 @@ const WorkflowBuilder = forwardRef<WorkflowBuilderHandle, WorkflowBuilderProps>(
     }, 1000)
     
     return () => {
-      window.removeEventListener('addAgentsToWorkflow', handleAddAgentsToWorkflow as EventListener)
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('addAgentsToWorkflow', handleAddAgentsToWorkflow as EventListener)
+      }
       clearInterval(interval)
     }
-  }, [tabId, setNodes, notifyModified])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tabId, setNodes, notifyModified]) // storage is accessed via closure in checkPendingAgents
 
   const executeWorkflow = useCallback(async () => {
     logger.debug('[WorkflowBuilder] executeWorkflow called')
@@ -1250,10 +1264,14 @@ const WorkflowBuilder = forwardRef<WorkflowBuilderHandle, WorkflowBuilderProps>(
 
   const handleAddToAgentNodes = useCallback((node: any) => {
     if (node.type !== 'agent') return
+    if (!storage) {
+      showError('Storage not available')
+      return
+    }
 
     try {
-      // Get existing agent nodes from localStorage
-      const savedAgentNodes = localStorage.getItem('customAgentNodes')
+      // Get existing agent nodes from storage
+      const savedAgentNodes = storage.getItem('customAgentNodes')
       const agentNodes = savedAgentNodes ? JSON.parse(savedAgentNodes) : []
       
       // Create a template from the node
@@ -1273,18 +1291,20 @@ const WorkflowBuilder = forwardRef<WorkflowBuilderHandle, WorkflowBuilderProps>(
       
       if (!exists) {
         agentNodes.push(agentTemplate)
-        localStorage.setItem('customAgentNodes', JSON.stringify(agentNodes))
+        storage.setItem('customAgentNodes', JSON.stringify(agentNodes))
         // Dispatch custom event to update NodePanel in same window
-        window.dispatchEvent(new Event('customAgentNodesUpdated'))
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new Event('customAgentNodesUpdated'))
+        }
         showSuccess('Agent node added to palette')
       } else {
         showError('This agent node already exists in the palette')
       }
     } catch (error) {
-      console.error('Failed to save agent node:', error)
+      logger.error('Failed to save agent node:', error)
       showError('Failed to add agent node to palette')
     }
-  }, [])
+  }, [storage])
 
   const onNodeContextMenu = useCallback(
     (event: React.MouseEvent, node: any) => {

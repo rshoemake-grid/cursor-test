@@ -1,6 +1,8 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import { Bot, GitBranch, RotateCw, Play, Flag, Database, Radio, Folder, ChevronDown, ChevronRight } from 'lucide-react'
 import { logger } from '../utils/logger'
+import type { StorageAdapter } from '../types/adapters'
+import { defaultAdapters } from '../types/adapters'
 
 const workflowNodeTemplates = [
   { type: 'start', label: 'Start', icon: Play, color: 'text-primary-600', description: 'Workflow entry point' },
@@ -23,27 +25,54 @@ const dataNodeTemplates = [
   { type: 'bigquery', label: 'BigQuery', icon: Database, color: 'text-blue-600', description: 'Query Google BigQuery data warehouse' },
 ]
 
-export default function NodePanel() {
+interface NodePanelProps {
+  // Dependency injection
+  storage?: StorageAdapter | null
+  logger?: typeof logger
+}
+
+export default function NodePanel({
+  storage = defaultAdapters.createLocalStorageAdapter(),
+  logger: injectedLogger = logger
+}: NodePanelProps = {}) {
   const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>({
     workflowNodes: false,
     agentNodes: false,
     dataNodes: false,
   })
   const [customAgentNodes, setCustomAgentNodes] = useState<any[]>([])
+  
+  // Use refs to avoid stale closures in event handlers
+  const storageRef = useRef(storage)
+  const loggerRef = useRef(injectedLogger)
+  
+  // Update refs when props change
+  useEffect(() => {
+    storageRef.current = storage
+    loggerRef.current = injectedLogger
+  }, [storage, injectedLogger])
 
   useEffect(() => {
-    // Load custom agent nodes from localStorage
-    try {
-      const savedAgentNodes = localStorage.getItem('customAgentNodes')
-      if (savedAgentNodes) {
-        const parsed = JSON.parse(savedAgentNodes)
-        if (Array.isArray(parsed)) {
-          setCustomAgentNodes(parsed)
+    // Load custom agent nodes from storage
+    const loadAgentNodes = () => {
+      const currentStorage = storageRef.current
+      if (!currentStorage) return
+      
+      try {
+        const savedAgentNodes = currentStorage.getItem('customAgentNodes')
+        if (savedAgentNodes) {
+          const parsed = JSON.parse(savedAgentNodes)
+          if (Array.isArray(parsed)) {
+            setCustomAgentNodes(parsed)
+          }
         }
+      } catch (error) {
+        loggerRef.current.error('Failed to load custom agent nodes:', error)
       }
-    } catch (error) {
-      logger.error('Failed to load custom agent nodes:', error)
     }
+
+    // Initial load
+    loadAgentNodes()
 
     // Listen for storage changes to update when agent nodes are added
     const handleStorageChange = (e: StorageEvent) => {
@@ -54,35 +83,33 @@ export default function NodePanel() {
             setCustomAgentNodes(parsed)
           }
         } catch (error) {
-          logger.error('Failed to parse custom agent nodes:', error)
+          loggerRef.current.error('Failed to parse custom agent nodes:', error)
         }
       }
     }
 
-    window.addEventListener('storage', handleStorageChange)
+    // Always use window.addEventListener for storage events (browser API)
+    // StorageAdapter is only for getItem/setItem operations
+    if (typeof window !== 'undefined') {
+      window.addEventListener('storage', handleStorageChange)
+    }
     
     // Also listen for custom event for same-window updates
     const handleCustomStorageChange = () => {
-      try {
-        const savedAgentNodes = localStorage.getItem('customAgentNodes')
-        if (savedAgentNodes) {
-          const parsed = JSON.parse(savedAgentNodes)
-          if (Array.isArray(parsed)) {
-            setCustomAgentNodes(parsed)
-          }
-        }
-      } catch (error) {
-        logger.error('Failed to load custom agent nodes:', error)
-      }
+      loadAgentNodes()
     }
 
-    window.addEventListener('customAgentNodesUpdated', handleCustomStorageChange)
+    if (typeof window !== 'undefined') {
+      window.addEventListener('customAgentNodesUpdated', handleCustomStorageChange)
+    }
 
     return () => {
-      window.removeEventListener('storage', handleStorageChange)
-      window.removeEventListener('customAgentNodesUpdated', handleCustomStorageChange)
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('storage', handleStorageChange)
+        window.removeEventListener('customAgentNodesUpdated', handleCustomStorageChange)
+      }
     }
-  }, [])
+  }, []) // Only run once on mount
 
   const agentNodeTemplates = useMemo(() => {
     return [...defaultAgentNodeTemplates, ...customAgentNodes.map(node => ({

@@ -1,9 +1,11 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { showSuccess, showError } from '../utils/notifications'
 import { showConfirm } from '../utils/confirm'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { Save, Plus, Trash2, CheckCircle, XCircle, Loader, ArrowLeft, Eye, EyeOff, ChevronDown, ChevronRight } from 'lucide-react'
+import type { StorageAdapter, HttpClient, ConsoleAdapter } from '../types/adapters'
+import { defaultAdapters } from '../types/adapters'
 
 interface LLMProvider {
   id: string
@@ -69,9 +71,36 @@ const PROVIDER_TEMPLATES = {
   }
 }
 
-export default function SettingsPage() {
+interface SettingsPageProps {
+  // Dependency injection
+  storage?: StorageAdapter | null
+  httpClient?: HttpClient
+  apiBaseUrl?: string
+  consoleAdapter?: ConsoleAdapter
+}
+
+export default function SettingsPage({
+  storage = defaultAdapters.createLocalStorageAdapter(),
+  httpClient = defaultAdapters.createHttpClient(),
+  apiBaseUrl = '/api',
+  consoleAdapter = defaultAdapters.createConsoleAdapter()
+}: SettingsPageProps = {}) {
   const { isAuthenticated, user, token } = useAuth()
   const navigate = useNavigate()
+  
+  // Use refs to avoid stale closures in event handlers
+  const storageRef = useRef(storage)
+  const httpClientRef = useRef(httpClient)
+  const apiBaseUrlRef = useRef(apiBaseUrl)
+  const consoleAdapterRef = useRef(consoleAdapter)
+  
+  // Update refs when props change
+  useEffect(() => {
+    storageRef.current = storage
+    httpClientRef.current = httpClient
+    apiBaseUrlRef.current = apiBaseUrl
+    consoleAdapterRef.current = consoleAdapter
+  }, [storage, httpClient, apiBaseUrl, consoleAdapter])
   const [providers, setProviders] = useState<LLMProvider[]>([])
   const [showAddProvider, setShowAddProvider] = useState(false)
   const [selectedTemplate, setSelectedTemplate] = useState<keyof typeof PROVIDER_TEMPLATES>('openai')
@@ -119,25 +148,42 @@ export default function SettingsPage() {
   // Load providers from backend on mount
   useEffect(() => {
     const loadProviders = async () => {
+      const currentStorage = storageRef.current
+      const currentHttpClient = httpClientRef.current
+      const currentApiBaseUrl = apiBaseUrlRef.current
+      const currentConsole = consoleAdapterRef.current
+
       const fallbackToLocal = () => {
-        const saved = localStorage.getItem('llm_settings')
-        if (saved) {
-          try {
-            const parsed = JSON.parse(saved)
-            if (parsed.providers) {
-              setProviders(parsed.providers)
+        if (!currentStorage) {
+          setSettingsLoaded(true)
+          return
+        }
+
+        try {
+          const saved = currentStorage.getItem('llm_settings')
+          if (saved) {
+            try {
+              const parsed = JSON.parse(saved)
+              if (parsed.providers) {
+                setProviders(parsed.providers)
+              }
+              if (typeof parsed.iteration_limit === 'number') {
+                setIterationLimit(parsed.iteration_limit)
+              }
+              if (parsed.default_model) {
+                setDefaultModel(parsed.default_model)
+              }
+              setSettingsLoaded(true)
+            } catch (e) {
+              currentConsole.error('Failed to load providers:', e)
+              setSettingsLoaded(true)
             }
-            if (typeof parsed.iteration_limit === 'number') {
-              setIterationLimit(parsed.iteration_limit)
-            }
-            if (parsed.default_model) {
-              setDefaultModel(parsed.default_model)
-            }
+          } else {
             setSettingsLoaded(true)
-          } catch (e) {
-            console.error('Failed to load providers:', e)
           }
-        } else {
+        } catch (e) {
+          // Handle storage errors (e.g., quota exceeded)
+          currentConsole.error('Failed to access storage:', e)
           setSettingsLoaded(true)
         }
       }
@@ -148,11 +194,11 @@ export default function SettingsPage() {
       }
 
       try {
-      const headers: HeadersInit = {}
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`
-      }
-      const response = await fetch('/api/settings/llm', { headers })
+        const headers: HeadersInit = {}
+        if (token) {
+          headers['Authorization'] = `Bearer ${token}`
+        }
+        const response = await currentHttpClient.get(`${currentApiBaseUrl}/settings/llm`, headers)
         if (response.ok) {
           const data = await response.json()
           // Always load providers (even if empty) and iteration limit
@@ -165,23 +211,25 @@ export default function SettingsPage() {
           if (data.default_model) {
             setDefaultModel(data.default_model)
           }
-          localStorage.setItem('llm_settings', JSON.stringify({
-            providers: data.providers || [],
-            iteration_limit: data.iteration_limit ?? 10,
-            default_model: data.default_model || ''
-          }))
+          if (currentStorage) {
+            currentStorage.setItem('llm_settings', JSON.stringify({
+              providers: data.providers || [],
+              iteration_limit: data.iteration_limit ?? 10,
+              default_model: data.default_model || ''
+            }))
+          }
           setSettingsLoaded(true)
           return
         }
       } catch (e) {
-        console.log('Could not load from backend, trying localStorage')
+        currentConsole.log('Could not load from backend, trying localStorage')
       }
 
       fallbackToLocal()
     }
     
     loadProviders()
-  }, [isAuthenticated])
+  }, [isAuthenticated, token])
 
   // Track if settings have been loaded to prevent saving on initial mount
   const [settingsLoaded, setSettingsLoaded] = useState(false)
@@ -193,25 +241,32 @@ export default function SettingsPage() {
     // Debounce: only save after user stops typing (500ms delay)
     const timeoutId = setTimeout(() => {
       const saveSettings = async () => {
+        const currentHttpClient = httpClientRef.current
+        const currentApiBaseUrl = apiBaseUrlRef.current
+        const currentStorage = storageRef.current
+        const currentConsole = consoleAdapterRef.current
+
         try {
           const headers: HeadersInit = { 'Content-Type': 'application/json' }
           if (token) {
             headers['Authorization'] = `Bearer ${token}`
           }
-          await fetch('/api/settings/llm', {
-            method: 'POST',
-            headers,
-            body: JSON.stringify({ providers, iteration_limit: iterationLimit, default_model: defaultModel })
-          })
-          // Update localStorage as well
-          localStorage.setItem('llm_settings', JSON.stringify({
-            providers,
-            iteration_limit: iterationLimit,
-            default_model: defaultModel
-          }))
-          console.log('Settings auto-saved to backend')
+          await currentHttpClient.post(
+            `${currentApiBaseUrl}/settings/llm`,
+            { providers, iteration_limit: iterationLimit, default_model: defaultModel },
+            headers
+          )
+          // Update storage as well
+          if (currentStorage) {
+            currentStorage.setItem('llm_settings', JSON.stringify({
+              providers,
+              iteration_limit: iterationLimit,
+              default_model: defaultModel
+            }))
+          }
+          currentConsole.log('Settings auto-saved to backend')
         } catch (error) {
-          console.error('Failed to auto-save settings:', error)
+          currentConsole.error('Failed to auto-save settings:', error)
         }
       }
       saveSettings()
@@ -221,12 +276,19 @@ export default function SettingsPage() {
   }, [iterationLimit, defaultModel, isAuthenticated, token, providers, settingsLoaded])
 
   const saveProviders = async (newProviders: LLMProvider[]) => {
+    const currentStorage = storageRef.current
+    const currentHttpClient = httpClientRef.current
+    const currentApiBaseUrl = apiBaseUrlRef.current
+    const currentConsole = consoleAdapterRef.current
+
     setProviders(newProviders)
-    localStorage.setItem('llm_settings', JSON.stringify({
-      providers: newProviders,
-      iteration_limit: iterationLimit,
-      default_model: defaultModel
-    }))
+    if (currentStorage) {
+      currentStorage.setItem('llm_settings', JSON.stringify({
+        providers: newProviders,
+        iteration_limit: iterationLimit,
+        default_model: defaultModel
+      }))
+    }
     
     // Auto-save to backend
     try {
@@ -234,14 +296,14 @@ export default function SettingsPage() {
       if (token) {
         headers['Authorization'] = `Bearer ${token}`
       }
-      await fetch('/api/settings/llm', {
-        method: 'POST',
-        headers,
-        body: JSON.stringify({ providers: newProviders, iteration_limit: iterationLimit, default_model: defaultModel })
-      })
-      console.log('Settings auto-synced to backend')
+      await currentHttpClient.post(
+        `${currentApiBaseUrl}/settings/llm`,
+        { providers: newProviders, iteration_limit: iterationLimit, default_model: defaultModel },
+        headers
+      )
+      currentConsole.log('Settings auto-synced to backend')
     } catch (error) {
-      console.error('Failed to sync settings to backend:', error)
+      currentConsole.error('Failed to sync settings to backend:', error)
     }
   }
 
@@ -276,20 +338,23 @@ export default function SettingsPage() {
   }
 
   const handleTestProvider = async (provider: LLMProvider) => {
+    const currentHttpClient = httpClientRef.current
+    const currentApiBaseUrl = apiBaseUrlRef.current
+
     setTestingProvider(provider.id)
     setTestResults({ ...testResults, [provider.id]: undefined as any })
 
     try {
-      const response = await fetch('/api/settings/llm/test', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+      const response = await currentHttpClient.post(
+        `${currentApiBaseUrl}/settings/llm/test`,
+        {
           type: provider.type,
           api_key: provider.apiKey,
           base_url: provider.baseUrl,
           model: provider.defaultModel
-        })
-      })
+        },
+        { 'Content-Type': 'application/json' }
+      )
 
       const data = await response.json()
       
@@ -324,6 +389,9 @@ export default function SettingsPage() {
   }
 
   const handleManualSync = async () => {
+    const currentHttpClient = httpClientRef.current
+    const currentApiBaseUrl = apiBaseUrlRef.current
+
     if (!isAuthenticated) {
       showError('Sign in to sync your LLM settings with the server.')
       return
@@ -334,11 +402,11 @@ export default function SettingsPage() {
       if (token) {
         headers['Authorization'] = `Bearer ${token}`
       }
-      const response = await fetch('/api/settings/llm', {
-        method: 'POST',
-        headers,
-        body: JSON.stringify({ providers, iteration_limit: iterationLimit, default_model: defaultModel })
-      })
+      const response = await currentHttpClient.post(
+        `${currentApiBaseUrl}/settings/llm`,
+        { providers, iteration_limit: iterationLimit, default_model: defaultModel },
+        headers
+      )
       if (response.ok) {
         showSuccess('Settings synced to backend successfully!')
       } else {

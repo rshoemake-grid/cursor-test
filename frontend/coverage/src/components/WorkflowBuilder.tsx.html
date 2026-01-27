@@ -23,9 +23,9 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">6.25% </span>
+                <span class="strong">6.43% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>93/1487</span>
+                <span class='fraction'>97/1507</span>
             </div>
         
             
@@ -44,9 +44,9 @@
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">6.25% </span>
+                <span class="strong">6.43% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>93/1487</span>
+                <span class='fraction'>97/1507</span>
             </div>
         
             
@@ -1550,7 +1550,31 @@
 <a name='L1485'></a><a href='#L1485'>1485</a>
 <a name='L1486'></a><a href='#L1486'>1486</a>
 <a name='L1487'></a><a href='#L1487'>1487</a>
-<a name='L1488'></a><a href='#L1488'>1488</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">1x</span>
+<a name='L1488'></a><a href='#L1488'>1488</a>
+<a name='L1489'></a><a href='#L1489'>1489</a>
+<a name='L1490'></a><a href='#L1490'>1490</a>
+<a name='L1491'></a><a href='#L1491'>1491</a>
+<a name='L1492'></a><a href='#L1492'>1492</a>
+<a name='L1493'></a><a href='#L1493'>1493</a>
+<a name='L1494'></a><a href='#L1494'>1494</a>
+<a name='L1495'></a><a href='#L1495'>1495</a>
+<a name='L1496'></a><a href='#L1496'>1496</a>
+<a name='L1497'></a><a href='#L1497'>1497</a>
+<a name='L1498'></a><a href='#L1498'>1498</a>
+<a name='L1499'></a><a href='#L1499'>1499</a>
+<a name='L1500'></a><a href='#L1500'>1500</a>
+<a name='L1501'></a><a href='#L1501'>1501</a>
+<a name='L1502'></a><a href='#L1502'>1502</a>
+<a name='L1503'></a><a href='#L1503'>1503</a>
+<a name='L1504'></a><a href='#L1504'>1504</a>
+<a name='L1505'></a><a href='#L1505'>1505</a>
+<a name='L1506'></a><a href='#L1506'>1506</a>
+<a name='L1507'></a><a href='#L1507'>1507</a>
+<a name='L1508'></a><a href='#L1508'>1508</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
@@ -1646,6 +1670,22 @@
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -3068,6 +3108,8 @@ import { showConfirm } from '../utils/confirm'
 import { useAuth } from '../contexts/AuthContext'
 import { getLocalStorageItem, setLocalStorageItem } from '../hooks/useLocalStorage'
 import { logger } from '../utils/logger'
+import type { StorageAdapter } from '../types/adapters'
+import { defaultAdapters } from '../types/adapters'
 &nbsp;
 interface Execution {
   id: string
@@ -3103,6 +3145,8 @@ interface WorkflowBuilderProps {
   onExecutionNodeUpdate?: (workflowId: string, executionId: string, nodeId: string, nodeState: any) =&gt; void
   onRemoveExecution?: (workflowId: string, executionId: string) =&gt; void
   tabIsUnsaved: boolean
+  // Dependency injection
+  storage?: StorageAdapter | null
 }
 &nbsp;
 interface TabDraft {
@@ -3137,6 +3181,7 @@ const WorkflowBuilder = forwardRef&lt;WorkflowBuilderHandle, WorkflowBuilderProp
 <span class="cstat-no" title="statement not covered" >  workflowId,</span>
 <span class="cstat-no" title="statement not covered" >  tabName,</span>
 <span class="cstat-no" title="statement not covered" >  tabIsUnsaved,</span>
+<span class="cstat-no" title="statement not covered" >  storage = defaultAdapters.createLocalStorageAdapter(),</span>
 <span class="cstat-no" title="statement not covered" >  workflowTabs = [],</span>
 <span class="cstat-no" title="statement not covered" >  onExecutionStart,</span>
 <span class="cstat-no" title="statement not covered" >  onWorkflowSaved,</span>
@@ -3529,10 +3574,12 @@ const WorkflowBuilder = forwardRef&lt;WorkflowBuilderHandle, WorkflowBuilderProp
 <span class="cstat-no" title="statement not covered" >      addAgentsToCanvas(agentsToAdd)</span>
 <span class="cstat-no" title="statement not covered" >    }</span>
 <span class="cstat-no" title="statement not covered" >    </span>
-<span class="cstat-no" title="statement not covered" >    // Check localStorage for pending agents (more reliable than events)</span>
+<span class="cstat-no" title="statement not covered" >    // Check storage for pending agents (more reliable than events)</span>
 <span class="cstat-no" title="statement not covered" >    const checkPendingAgents = () =&gt; {</span>
+<span class="cstat-no" title="statement not covered" >      if (!storage) return</span>
+<span class="cstat-no" title="statement not covered" >      </span>
 <span class="cstat-no" title="statement not covered" >      try {</span>
-<span class="cstat-no" title="statement not covered" >        const pendingData = localStorage.getItem('pendingAgentsToAdd')</span>
+<span class="cstat-no" title="statement not covered" >        const pendingData = storage.getItem('pendingAgentsToAdd')</span>
 <span class="cstat-no" title="statement not covered" >        if (pendingData) {</span>
 <span class="cstat-no" title="statement not covered" >          const pending = JSON.parse(pendingData)</span>
 <span class="cstat-no" title="statement not covered" >            logger.debug('[WorkflowBuilder] Found pending agents:', {</span>
@@ -3545,20 +3592,22 @@ const WorkflowBuilder = forwardRef&lt;WorkflowBuilderHandle, WorkflowBuilderProp
 <span class="cstat-no" title="statement not covered" >              logger.debug('[WorkflowBuilder] Adding agents to canvas:', pending.agents.length)</span>
 <span class="cstat-no" title="statement not covered" >            addAgentsToCanvas(pending.agents)</span>
 <span class="cstat-no" title="statement not covered" >            // Clear after processing</span>
-<span class="cstat-no" title="statement not covered" >            localStorage.removeItem('pendingAgentsToAdd')</span>
+<span class="cstat-no" title="statement not covered" >            storage.removeItem('pendingAgentsToAdd')</span>
 <span class="cstat-no" title="statement not covered" >          } else if (pending.tabId !== tabId) {</span>
 <span class="cstat-no" title="statement not covered" >            // Clear if it's for a different tab</span>
 <span class="cstat-no" title="statement not covered" >              logger.debug('[WorkflowBuilder] Pending agents for different tab, clearing')</span>
-<span class="cstat-no" title="statement not covered" >            localStorage.removeItem('pendingAgentsToAdd')</span>
+<span class="cstat-no" title="statement not covered" >            storage.removeItem('pendingAgentsToAdd')</span>
 <span class="cstat-no" title="statement not covered" >          } else if (Date.now() - pending.timestamp &gt;= 10000) {</span>
 <span class="cstat-no" title="statement not covered" >            // Clear if too old</span>
 <span class="cstat-no" title="statement not covered" >              logger.debug('[WorkflowBuilder] Pending agents too old, clearing')</span>
-<span class="cstat-no" title="statement not covered" >            localStorage.removeItem('pendingAgentsToAdd')</span>
+<span class="cstat-no" title="statement not covered" >            storage.removeItem('pendingAgentsToAdd')</span>
 <span class="cstat-no" title="statement not covered" >          }</span>
 <span class="cstat-no" title="statement not covered" >        }</span>
 <span class="cstat-no" title="statement not covered" >      } catch (e) {</span>
 <span class="cstat-no" title="statement not covered" >        logger.error('Failed to process pending agents:', e)</span>
-<span class="cstat-no" title="statement not covered" >        localStorage.removeItem('pendingAgentsToAdd')</span>
+<span class="cstat-no" title="statement not covered" >        if (storage) {</span>
+<span class="cstat-no" title="statement not covered" >          storage.removeItem('pendingAgentsToAdd')</span>
+<span class="cstat-no" title="statement not covered" >        }</span>
 <span class="cstat-no" title="statement not covered" >      }</span>
 <span class="cstat-no" title="statement not covered" >    }</span>
 <span class="cstat-no" title="statement not covered" >    </span>
@@ -3566,7 +3615,9 @@ const WorkflowBuilder = forwardRef&lt;WorkflowBuilderHandle, WorkflowBuilderProp
 <span class="cstat-no" title="statement not covered" >    checkPendingAgents()</span>
 <span class="cstat-no" title="statement not covered" >    </span>
 <span class="cstat-no" title="statement not covered" >    // Also listen for events</span>
-<span class="cstat-no" title="statement not covered" >    window.addEventListener('addAgentsToWorkflow', handleAddAgentsToWorkflow as EventListener)</span>
+<span class="cstat-no" title="statement not covered" >    if (typeof window !== 'undefined') {</span>
+<span class="cstat-no" title="statement not covered" >      window.addEventListener('addAgentsToWorkflow', handleAddAgentsToWorkflow as EventListener)</span>
+<span class="cstat-no" title="statement not covered" >    }</span>
 <span class="cstat-no" title="statement not covered" >    </span>
 <span class="cstat-no" title="statement not covered" >    // Check periodically in case we missed the event (check every 1 second for 10 seconds)</span>
 <span class="cstat-no" title="statement not covered" >    let checkCount = 0</span>
@@ -3580,10 +3631,13 @@ const WorkflowBuilder = forwardRef&lt;WorkflowBuilderHandle, WorkflowBuilderProp
 <span class="cstat-no" title="statement not covered" >    }, 1000)</span>
 <span class="cstat-no" title="statement not covered" >    </span>
 <span class="cstat-no" title="statement not covered" >    return () =&gt; {</span>
-<span class="cstat-no" title="statement not covered" >      window.removeEventListener('addAgentsToWorkflow', handleAddAgentsToWorkflow as EventListener)</span>
+<span class="cstat-no" title="statement not covered" >      if (typeof window !== 'undefined') {</span>
+<span class="cstat-no" title="statement not covered" >        window.removeEventListener('addAgentsToWorkflow', handleAddAgentsToWorkflow as EventListener)</span>
+<span class="cstat-no" title="statement not covered" >      }</span>
 <span class="cstat-no" title="statement not covered" >      clearInterval(interval)</span>
 <span class="cstat-no" title="statement not covered" >    }</span>
-<span class="cstat-no" title="statement not covered" >  }, [tabId, setNodes, notifyModified])</span>
+<span class="cstat-no" title="statement not covered" >    // eslint-disable-next-line react-hooks/exhaustive-deps</span>
+<span class="cstat-no" title="statement not covered" >  }, [tabId, setNodes, notifyModified]) // storage is accessed via closure in checkPendingAgents</span>
 <span class="cstat-no" title="statement not covered" ></span>
 <span class="cstat-no" title="statement not covered" >  const executeWorkflow = useCallback(async () =&gt; {</span>
 <span class="cstat-no" title="statement not covered" >    logger.debug('[WorkflowBuilder] executeWorkflow called')</span>
@@ -4289,10 +4343,14 @@ const WorkflowBuilder = forwardRef&lt;WorkflowBuilderHandle, WorkflowBuilderProp
 <span class="cstat-no" title="statement not covered" ></span>
 <span class="cstat-no" title="statement not covered" >  const handleAddToAgentNodes = useCallback((node: any) =&gt; {</span>
 <span class="cstat-no" title="statement not covered" >    if (node.type !== 'agent') return</span>
+<span class="cstat-no" title="statement not covered" >    if (!storage) {</span>
+<span class="cstat-no" title="statement not covered" >      showError('Storage not available')</span>
+<span class="cstat-no" title="statement not covered" >      return</span>
+<span class="cstat-no" title="statement not covered" >    }</span>
 <span class="cstat-no" title="statement not covered" ></span>
 <span class="cstat-no" title="statement not covered" >    try {</span>
-<span class="cstat-no" title="statement not covered" >      // Get existing agent nodes from localStorage</span>
-<span class="cstat-no" title="statement not covered" >      const savedAgentNodes = localStorage.getItem('customAgentNodes')</span>
+<span class="cstat-no" title="statement not covered" >      // Get existing agent nodes from storage</span>
+<span class="cstat-no" title="statement not covered" >      const savedAgentNodes = storage.getItem('customAgentNodes')</span>
 <span class="cstat-no" title="statement not covered" >      const agentNodes = savedAgentNodes ? JSON.parse(savedAgentNodes) : []</span>
 <span class="cstat-no" title="statement not covered" >      </span>
 <span class="cstat-no" title="statement not covered" >      // Create a template from the node</span>
@@ -4312,18 +4370,20 @@ const WorkflowBuilder = forwardRef&lt;WorkflowBuilderHandle, WorkflowBuilderProp
 <span class="cstat-no" title="statement not covered" >      </span>
 <span class="cstat-no" title="statement not covered" >      if (!exists) {</span>
 <span class="cstat-no" title="statement not covered" >        agentNodes.push(agentTemplate)</span>
-<span class="cstat-no" title="statement not covered" >        localStorage.setItem('customAgentNodes', JSON.stringify(agentNodes))</span>
+<span class="cstat-no" title="statement not covered" >        storage.setItem('customAgentNodes', JSON.stringify(agentNodes))</span>
 <span class="cstat-no" title="statement not covered" >        // Dispatch custom event to update NodePanel in same window</span>
-<span class="cstat-no" title="statement not covered" >        window.dispatchEvent(new Event('customAgentNodesUpdated'))</span>
+<span class="cstat-no" title="statement not covered" >        if (typeof window !== 'undefined') {</span>
+<span class="cstat-no" title="statement not covered" >          window.dispatchEvent(new Event('customAgentNodesUpdated'))</span>
+<span class="cstat-no" title="statement not covered" >        }</span>
 <span class="cstat-no" title="statement not covered" >        showSuccess('Agent node added to palette')</span>
 <span class="cstat-no" title="statement not covered" >      } else {</span>
 <span class="cstat-no" title="statement not covered" >        showError('This agent node already exists in the palette')</span>
 <span class="cstat-no" title="statement not covered" >      }</span>
 <span class="cstat-no" title="statement not covered" >    } catch (error) {</span>
-<span class="cstat-no" title="statement not covered" >      console.error('Failed to save agent node:', error)</span>
+<span class="cstat-no" title="statement not covered" >      logger.error('Failed to save agent node:', error)</span>
 <span class="cstat-no" title="statement not covered" >      showError('Failed to add agent node to palette')</span>
 <span class="cstat-no" title="statement not covered" >    }</span>
-<span class="cstat-no" title="statement not covered" >  }, [])</span>
+<span class="cstat-no" title="statement not covered" >  }, [storage])</span>
 <span class="cstat-no" title="statement not covered" ></span>
 <span class="cstat-no" title="statement not covered" >  const onNodeContextMenu = useCallback(</span>
 <span class="cstat-no" title="statement not covered" >    (event: React.MouseEvent, node: any) =&gt; {</span>
@@ -4531,7 +4591,7 @@ export default WorkflowBuilder
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-01-26T23:40:54.597Z
+                at 2026-01-27T00:25:36.067Z
             </div>
         <script src="../../prettify.js"></script>
         <script>

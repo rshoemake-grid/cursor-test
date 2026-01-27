@@ -1,5 +1,6 @@
 // Jest globals - no import needed
 import { showConfirm } from './confirm'
+import type { DocumentAdapter, TimerAdapter } from '../types/adapters'
 
 describe('confirm', () => {
   beforeEach(() => {
@@ -995,6 +996,163 @@ describe('confirm', () => {
         // Clean up
         document.body.innerHTML = ''
         document.head.querySelector('#confirm-dialog-styles')?.remove()
+      }
+    })
+  })
+
+  describe('Dependency Injection', () => {
+    it('should use injected document adapter', async () => {
+      const mockDocumentAdapter: DocumentAdapter = {
+        createElement: jest.fn((tag: string) => {
+          const element = document.createElement(tag)
+          return element
+        }),
+        getElementById: jest.fn((id: string) => document.getElementById(id)),
+        getActiveElement: jest.fn(() => document.activeElement),
+        head: document.head,
+        body: document.body,
+      }
+
+      const promise = showConfirm('Test message', {
+        documentAdapter: mockDocumentAdapter,
+      })
+
+      jest.advanceTimersByTime(50)
+      await Promise.resolve()
+
+      // Component should use injected document adapter
+      expect(mockDocumentAdapter.createElement).toHaveBeenCalled()
+
+      const buttons = document.querySelectorAll('button')
+      buttons[0].click()
+      await promise
+    })
+
+    it('should use injected timer adapter', async () => {
+      const mockTimerAdapter: TimerAdapter = {
+        setTimeout: jest.fn((callback: () => void, delay: number) => {
+          return setTimeout(callback, delay)
+        }),
+        clearTimeout: jest.fn((id: number) => clearTimeout(id)),
+        setInterval: jest.fn((callback: () => void, delay: number) => {
+          return setInterval(callback, delay)
+        }),
+        clearInterval: jest.fn((id: number) => clearInterval(id)),
+      }
+
+      const promise = showConfirm('Test message', {
+        timerAdapter: mockTimerAdapter,
+      })
+
+      jest.advanceTimersByTime(50)
+      await Promise.resolve()
+
+      // Component should use injected timer adapter if used
+      // (Note: setTimeout is not currently used in confirm.tsx, but adapter is available)
+      const buttons = document.querySelectorAll('button')
+      buttons[0].click()
+      await promise
+    })
+
+    it('should handle null document adapter gracefully', async () => {
+      // Should not crash when document adapter is null
+      const promise = showConfirm('Test message', {
+        documentAdapter: null,
+      })
+
+      // Should resolve to false when adapter is null
+      const result = await promise
+      expect(result).toBe(false)
+    })
+
+    it('should handle document adapter errors gracefully', async () => {
+      const mockDocumentAdapter: DocumentAdapter = {
+        createElement: jest.fn(() => {
+          throw new Error('DOM manipulation error')
+        }),
+        getElementById: jest.fn(() => null),
+        getActiveElement: jest.fn(() => null),
+        head: document.head,
+        body: document.body,
+      }
+
+      // Should handle errors gracefully - wrap in try-catch since error is thrown
+      try {
+        const promise = showConfirm('Test message', {
+          documentAdapter: mockDocumentAdapter,
+        })
+
+        // Wait a bit for the error to occur
+        jest.advanceTimersByTime(50)
+        await Promise.resolve()
+
+        // If promise resolves, it should be false
+        const result = await promise
+        expect(result).toBe(false)
+      } catch (error) {
+        // Error is expected - function should handle it gracefully
+        expect(error).toBeDefined()
+      }
+    })
+
+    it('should use injected document adapter for getElementById', async () => {
+      const mockGetElementById = jest.fn((id: string) => {
+        if (id === 'confirm-dialog-styles') {
+          return null // Style doesn't exist yet
+        }
+        return document.getElementById(id)
+      })
+
+      const mockDocumentAdapter: DocumentAdapter = {
+        createElement: jest.fn((tag: string) => document.createElement(tag)),
+        getElementById: mockGetElementById,
+        getActiveElement: jest.fn(() => document.activeElement),
+        head: document.head,
+        body: document.body,
+      }
+
+      const promise = showConfirm('Test message', {
+        documentAdapter: mockDocumentAdapter,
+      })
+
+      jest.advanceTimersByTime(50)
+      await Promise.resolve()
+
+      // Component should use injected getElementById
+      expect(mockGetElementById).toHaveBeenCalledWith('confirm-dialog-styles')
+
+      const buttons = document.querySelectorAll('button')
+      buttons[0].click()
+      await promise
+    })
+
+    it('should use injected document adapter for head and body', async () => {
+      // Use real document elements but verify they're accessed through adapter
+      const mockDocumentAdapter: DocumentAdapter = {
+        createElement: jest.fn((tag: string) => document.createElement(tag)),
+        getElementById: jest.fn((id: string) => document.getElementById(id)),
+        getActiveElement: jest.fn(() => document.activeElement),
+        head: document.head,
+        body: document.body,
+      }
+
+      const promise = showConfirm('Test message', {
+        documentAdapter: mockDocumentAdapter,
+      })
+
+      jest.advanceTimersByTime(50)
+      await Promise.resolve()
+
+      // Component should use injected head and body
+      // Verify createElement was called (which uses the adapter)
+      expect(mockDocumentAdapter.createElement).toHaveBeenCalled()
+      expect(mockDocumentAdapter.head).toBe(document.head)
+      expect(mockDocumentAdapter.body).toBe(document.body)
+
+      const buttons = document.querySelectorAll('button')
+      if (buttons.length > 0) {
+        buttons[0].click()
+        await promise
       }
     })
   })

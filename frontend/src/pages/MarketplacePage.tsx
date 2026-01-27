@@ -7,6 +7,8 @@ import { showConfirm } from '../utils/confirm';
 import { api } from '../api/client';
 import { useLocalStorage, getLocalStorageItem, setLocalStorageItem, removeLocalStorageItem } from '../hooks/useLocalStorage';
 import { logger } from '../utils/logger';
+import type { StorageAdapter, HttpClient } from '../types/adapters';
+import { defaultAdapters } from '../types/adapters';
 
 interface Template {
   id: string;
@@ -43,7 +45,18 @@ interface AgentTemplate {
 type TabType = 'agents' | 'repository' | 'workflows-of-workflows'
 type RepositorySubTabType = 'workflows' | 'agents'
 
-export default function MarketplacePage() {
+interface MarketplacePageProps {
+  // Dependency injection
+  storage?: StorageAdapter | null
+  httpClient?: HttpClient
+  apiBaseUrl?: string
+}
+
+export default function MarketplacePage({
+  storage = defaultAdapters.createLocalStorageAdapter(),
+  httpClient = defaultAdapters.createHttpClient(),
+  apiBaseUrl = 'http://localhost:8000/api'
+}: MarketplacePageProps = {}) {
   const [activeTab, setActiveTab] = useState<TabType>('agents');
   const [repositorySubTab, setRepositorySubTab] = useState<RepositorySubTabType>('workflows');
   const [templates, setTemplates] = useState<Template[]>([]);
@@ -78,11 +91,24 @@ export default function MarketplacePage() {
   // Seed official agents from official workflows (one-time)
   useEffect(() => {
     const seedOfficialAgents = async () => {
+      if (!storage) return
+
       const seededKey = 'officialAgentsSeeded';
       // Clear the flag to force re-seeding (remove this line after first successful seed)
-      localStorage.removeItem(seededKey);
+      try {
+        storage.removeItem(seededKey);
+      } catch (error) {
+        console.error('Failed to remove seeded key:', error);
+      }
       
-      if (localStorage.getItem(seededKey)) {
+      let seeded = false;
+      try {
+        seeded = !!storage.getItem(seededKey);
+      } catch (error) {
+        console.error('Failed to check seeded key:', error);
+      }
+      
+      if (seeded) {
         console.log('[Marketplace] Official agents already seeded, skipping');
         return; // Already seeded
       }
@@ -90,12 +116,12 @@ export default function MarketplacePage() {
       console.log('[Marketplace] Starting to seed official agents...');
       try {
         // Fetch all official workflows
-        const response = await fetch('http://localhost:8000/api/templates/?sort_by=popular');
+        const response = await httpClient.get(`${apiBaseUrl}/templates/?sort_by=popular`);
         if (!response.ok) {
           console.error('[Marketplace] Failed to fetch templates:', response.statusText);
           return;
         }
-        const workflows = await response.json();
+        const workflows = await response.json() as Template[];
         console.log('[Marketplace] Fetched workflows:', workflows.length);
         const officialWorkflows = workflows.filter((w: Template) => w.is_official);
         console.log('[Marketplace] Official workflows found:', officialWorkflows.length);
@@ -113,10 +139,11 @@ export default function MarketplacePage() {
           try {
             console.log(`[Marketplace] Processing workflow: ${workflow.name} (${workflow.id})`);
             // Use the /use endpoint to get the full workflow with nodes
-            const workflowResponse = await fetch(`http://localhost:8000/api/templates/${workflow.id}/use`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' }
-            });
+            const workflowResponse = await httpClient.post(
+              `${apiBaseUrl}/templates/${workflow.id}/use`,
+              {},
+              { 'Content-Type': 'application/json' }
+            );
             
             if (!workflowResponse.ok) {
               console.error(`[Marketplace] Failed to fetch workflow ${workflow.id}: ${workflowResponse.statusText}`);
@@ -150,7 +177,8 @@ export default function MarketplacePage() {
                 const agentId = `official_${workflow.id}_${nodeId}`;
                 
                 // Check if agent already exists
-                const existingAgents = localStorage.getItem('publishedAgents');
+                if (!storage) continue
+                const existingAgents = storage.getItem('publishedAgents');
                 const agents: AgentTemplate[] = existingAgents ? JSON.parse(existingAgents) : [];
                 if (agents.some(a => a.id === agentId)) {
                   console.log(`[Marketplace] Agent ${agentId} already exists, skipping`);
@@ -187,12 +215,12 @@ export default function MarketplacePage() {
           }
         }
 
-        // Add official agents to localStorage
-        if (agentsToAdd.length > 0) {
-          const existingAgents = localStorage.getItem('publishedAgents');
+        // Add official agents to storage
+        if (agentsToAdd.length > 0 && storage) {
+          const existingAgents = storage.getItem('publishedAgents');
           const agents: AgentTemplate[] = existingAgents ? JSON.parse(existingAgents) : [];
           agents.push(...agentsToAdd);
-                setLocalStorageItem('publishedAgents', agents);
+          storage.setItem('publishedAgents', JSON.stringify(agents));
           console.log(`[Marketplace] Seeded ${agentsToAdd.length} official agents from workflows`);
           console.log(`[Marketplace] Total agents in storage: ${agents.length}`);
           
@@ -213,7 +241,7 @@ export default function MarketplacePage() {
 
     seedOfficialAgents();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // Run once on mount
+  }, [storage, httpClient, apiBaseUrl]); // Run once on mount
 
   const fetchTemplates = async () => {
     setLoading(true);
@@ -223,8 +251,8 @@ export default function MarketplacePage() {
       if (searchQuery) params.append('search', searchQuery);
       params.append('sort_by', sortBy);
       
-      const response = await fetch(`http://localhost:8000/api/templates/?${params}`);
-      const data = await response.json();
+      const response = await httpClient.get(`${apiBaseUrl}/templates/?${params}`);
+      const data = await response.json() as Template[];
       setTemplates(data);
     } catch (error) {
       console.error('Failed to fetch templates:', error);
@@ -242,8 +270,8 @@ export default function MarketplacePage() {
       if (searchQuery) params.append('search', searchQuery);
       params.append('sort_by', sortBy);
       
-      const response = await fetch(`http://localhost:8000/api/templates/?${params}`);
-      const allWorkflows = await response.json();
+      const response = await httpClient.get(`${apiBaseUrl}/templates/?${params}`);
+      const allWorkflows = await response.json() as Template[];
       
       // Filter workflows that contain references to other workflows
       // A "workflow of workflows" is one that references other workflows in its definition
@@ -252,10 +280,11 @@ export default function MarketplacePage() {
       for (const workflow of allWorkflows) {
         try {
           // Use the /use endpoint to get workflow details
-          const workflowResponse = await fetch(`http://localhost:8000/api/templates/${workflow.id}/use`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' }
-          });
+          const workflowResponse = await httpClient.post(
+            `${apiBaseUrl}/templates/${workflow.id}/use`,
+            {},
+            { 'Content-Type': 'application/json' }
+          );
           
           if (workflowResponse.ok) {
             const workflowDetail = await workflowResponse.json();
@@ -327,9 +356,9 @@ export default function MarketplacePage() {
           return agent;
         });
         
-        if (updated) {
+        if (updated && storage) {
           logger.debug('[Marketplace] Updated agents with author info:', user.id);
-          setLocalStorageItem('publishedAgents', agentsData);
+          storage.setItem('publishedAgents', JSON.stringify(agentsData));
         }
       }
       
@@ -387,6 +416,56 @@ export default function MarketplacePage() {
     }
   };
 
+  const fetchRepositoryAgents = async () => {
+    setLoading(true);
+    try {
+      // Load from storage
+      if (!storage) {
+        setRepositoryAgents([]);
+        setLoading(false);
+        return;
+      }
+      
+      let agentsData: AgentTemplate[] = [];
+      try {
+        const savedAgents = storage.getItem('repositoryAgents');
+        agentsData = savedAgents ? JSON.parse(savedAgents) : [];
+      } catch (error) {
+        console.error('Failed to load repository agents from storage:', error);
+        agentsData = [];
+      }
+      
+      // Apply filters
+      if (category) {
+        agentsData = agentsData.filter(a => a.category === category);
+      }
+      if (searchQuery) {
+        const query = searchQuery.toLowerCase();
+        agentsData = agentsData.filter(a => 
+          a.name.toLowerCase().includes(query) || 
+          a.description.toLowerCase().includes(query) ||
+          a.tags.some(tag => tag.toLowerCase().includes(query))
+        );
+      }
+      
+      // Sort
+      agentsData.sort((a, b) => {
+        if (sortBy === 'popular' || sortBy === 'recent') {
+          const dateA = a.published_at ? new Date(a.published_at).getTime() : 0;
+          const dateB = b.published_at ? new Date(b.published_at).getTime() : 0;
+          return dateB - dateA;
+        }
+        return (a.name || '').localeCompare(b.name || '');
+      });
+      
+      setRepositoryAgents(agentsData);
+    } catch (error) {
+      console.error('Failed to fetch repository agents:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const useTemplate = async (templateId: string) => {
     try {
       const headers: HeadersInit = { 'Content-Type': 'application/json' };
@@ -394,10 +473,11 @@ export default function MarketplacePage() {
         headers['Authorization'] = `Bearer ${token}`;
       }
 
-      const response = await fetch(`http://localhost:8000/api/templates/${templateId}/use`, {
-        method: 'POST',
+      const response = await httpClient.post(
+        `${apiBaseUrl}/templates/${templateId}/use`,
+        {},
         headers
-      });
+      );
 
       if (response.ok) {
         const workflow = await response.json();
@@ -495,13 +575,17 @@ export default function MarketplacePage() {
     }
 
     try {
-      // Remove from localStorage
-      const publishedAgents = localStorage.getItem('publishedAgents');
+      // Remove from storage
+      if (!storage) {
+        showError('Storage not available');
+        return;
+      }
+      const publishedAgents = storage.getItem('publishedAgents');
       if (publishedAgents) {
         const allAgents: AgentTemplate[] = JSON.parse(publishedAgents);
         const agentIdsToDelete = new Set(userOwnedAgents.map(a => a.id));
         const filteredAgents = allAgents.filter(a => !agentIdsToDelete.has(a.id));
-        localStorage.setItem('publishedAgents', JSON.stringify(filteredAgents));
+        storage.setItem('publishedAgents', JSON.stringify(filteredAgents));
         
         // Update state
         setAgents(prevAgents => prevAgents.filter(a => !agentIdsToDelete.has(a.id)));
@@ -677,20 +761,24 @@ export default function MarketplacePage() {
                         : agents.filter(a => selectedAgentIds.has(a.id));
                       
                       // Get the active workflow tab ID
-                      const activeTabId = localStorage.getItem('activeWorkflowTabId');
+                      if (!storage) {
+                        showError('Storage not available');
+                        return;
+                      }
+                      const activeTabId = storage.getItem('activeWorkflowTabId');
                       
                       if (!activeTabId) {
                         showError('No active workflow found. Please open a workflow first.');
                         return;
                       }
                       
-                      // Store agents to add in localStorage (more reliable than events)
+                      // Store agents to add in storage (more reliable than events)
                       const pendingAgents = {
                         tabId: activeTabId,
                         agents: selectedAgents,
                         timestamp: Date.now()
                       };
-                      localStorage.setItem('pendingAgentsToAdd', JSON.stringify(pendingAgents));
+                      storage.setItem('pendingAgentsToAdd', JSON.stringify(pendingAgents));
                       
                       // Dispatch event as backup
                       const event = new CustomEvent('addAgentsToWorkflow', {
@@ -753,9 +841,13 @@ export default function MarketplacePage() {
                             );
                             if (!confirmed) return;
 
-                            // Remove from repositoryAgents localStorage
+                            // Remove from repositoryAgents storage
+                            if (!storage) {
+                              showError('Storage not available');
+                              return;
+                            }
                             const remainingAgents = repositoryAgents.filter(a => !selectedRepositoryAgentIds.has(a.id));
-                            localStorage.setItem('repositoryAgents', JSON.stringify(remainingAgents));
+                            storage.setItem('repositoryAgents', JSON.stringify(remainingAgents));
                             setRepositoryAgents(remainingAgents);
                             setSelectedRepositoryAgentIds(new Set());
                             showSuccess(`Successfully deleted ${selectedAgents.length} agent(s)`);

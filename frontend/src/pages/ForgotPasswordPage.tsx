@@ -1,8 +1,19 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
+import type { HttpClient } from '../types/adapters';
+import { defaultAdapters } from '../types/adapters';
 
-export default function ForgotPasswordPage() {
+interface ForgotPasswordPageProps {
+  // Dependency injection
+  httpClient?: HttpClient
+  apiBaseUrl?: string
+}
+
+export default function ForgotPasswordPage({
+  httpClient = defaultAdapters.createHttpClient(),
+  apiBaseUrl = 'http://localhost:8000/api'
+}: ForgotPasswordPageProps = {}) {
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -16,11 +27,11 @@ export default function ForgotPasswordPage() {
     setLoading(true);
 
     try {
-      const response = await fetch('http://localhost:8000/api/auth/forgot-password', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email })
-      });
+      const response = await httpClient.post(
+        `${apiBaseUrl}/auth/forgot-password`,
+        { email },
+        { 'Content-Type': 'application/json' }
+      );
 
       if (!response.ok) {
         const error = await response.json();

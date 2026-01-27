@@ -1,15 +1,31 @@
+import type { DocumentAdapter, TimerAdapter } from '../types/adapters'
+import { defaultAdapters } from '../types/adapters'
+
 export type NotificationType = 'success' | 'error' | 'info' | 'warning'
 
 export interface NotificationOptions {
   duration?: number // milliseconds, default 5000
   type?: NotificationType // default 'info'
+  // Dependency injection
+  documentAdapter?: DocumentAdapter | null
+  timerAdapter?: TimerAdapter
 }
 
 /**
  * Show a non-blocking notification toast
  */
 export function showNotification(message: string, options: NotificationOptions = {}) {
-  const { duration = 5000, type = 'info' } = options
+  const { 
+    duration = 5000, 
+    type = 'info',
+    documentAdapter = defaultAdapters.createDocumentAdapter(),
+    timerAdapter = defaultAdapters.createTimerAdapter()
+  } = options
+
+  // Handle null document adapter
+  if (!documentAdapter) {
+    return null
+  }
 
   const colors = {
     success: { bg: '#10b981', text: 'white' },
@@ -20,7 +36,8 @@ export function showNotification(message: string, options: NotificationOptions =
 
   const color = colors[type]
 
-  const notification = document.createElement('div')
+  try {
+    const notification = documentAdapter.createElement('div')
   notification.style.cssText = `
     position: fixed;
     top: 20px;
@@ -37,37 +54,41 @@ export function showNotification(message: string, options: NotificationOptions =
     animation: slideIn 0.3s ease-out;
   `
 
-  // Add animation keyframes if not already added
-  if (!document.getElementById('notification-styles')) {
-    const style = document.createElement('style')
-    style.id = 'notification-styles'
-    style.textContent = `
-      @keyframes slideIn {
-        from {
-          transform: translateX(100%);
-          opacity: 0;
+    // Add animation keyframes if not already added
+    if (!documentAdapter.getElementById('notification-styles')) {
+      const style = documentAdapter.createElement('style')
+      style.id = 'notification-styles'
+      style.textContent = `
+        @keyframes slideIn {
+          from {
+            transform: translateX(100%);
+            opacity: 0;
+          }
+          to {
+            transform: translateX(0);
+            opacity: 1;
+          }
         }
-        to {
-          transform: translateX(0);
-          opacity: 1;
-        }
-      }
-    `
-    document.head.appendChild(style)
+      `
+      documentAdapter.head.appendChild(style)
+    }
+
+    notification.textContent = message
+    documentAdapter.body.appendChild(notification)
+
+    // Auto-remove after duration
+    timerAdapter.setTimeout(() => {
+      notification.style.transition = 'opacity 0.3s, transform 0.3s'
+      notification.style.opacity = '0'
+      notification.style.transform = 'translateX(100%)'
+      timerAdapter.setTimeout(() => notification.remove(), 300)
+    }, duration)
+
+    return notification
+  } catch (error) {
+    // Handle errors gracefully
+    return null
   }
-
-  notification.textContent = message
-  document.body.appendChild(notification)
-
-  // Auto-remove after duration
-  setTimeout(() => {
-    notification.style.transition = 'opacity 0.3s, transform 0.3s'
-    notification.style.opacity = '0'
-    notification.style.transform = 'translateX(100%)'
-    setTimeout(() => notification.remove(), 300)
-  }, duration)
-
-  return notification
 }
 
 /**

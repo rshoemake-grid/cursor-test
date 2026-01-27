@@ -3,6 +3,7 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import WorkflowChat from './WorkflowChat'
 import { AuthProvider } from '../contexts/AuthContext'
 import { logger } from '../utils/logger'
+import type { StorageAdapter, HttpClient } from '../types/adapters'
 
 // Mock logger
 jest.mock('../utils/logger', () => ({
@@ -405,6 +406,291 @@ describe('WorkflowChat', () => {
     resolvePromise!({
       ok: true,
       json: async () => ({ message: 'Response' }),
+    })
+  })
+
+  describe('Dependency Injection', () => {
+    it('should use injected storage adapter', () => {
+      const mockStorage: StorageAdapter = {
+        getItem: jest.fn().mockReturnValue(JSON.stringify([
+          { role: 'user', content: 'Test message' }
+        ])),
+        setItem: jest.fn(),
+        removeItem: jest.fn(),
+        addEventListener: jest.fn(),
+        removeEventListener: jest.fn(),
+      }
+
+      renderWithProvider(
+        <WorkflowChat workflowId="workflow-1" storage={mockStorage} />
+      )
+
+      expect(mockStorage.getItem).toHaveBeenCalledWith('chat_history_workflow-1')
+    })
+
+    it('should use injected HTTP client', async () => {
+      const mockHttpClient: HttpClient = {
+        get: jest.fn(),
+        post: jest.fn().mockResolvedValue({
+          ok: true,
+          json: async () => ({ message: 'Response from injected client' }),
+        } as Response),
+        put: jest.fn(),
+        delete: jest.fn(),
+      }
+
+      renderWithProvider(
+        <WorkflowChat workflowId="workflow-1" httpClient={mockHttpClient} />
+      )
+
+      const input = screen.getByPlaceholderText(/Type your message/)
+      fireEvent.change(input, { target: { value: 'Test message' } })
+
+      const sendButton = screen.getByText('Send')
+      fireEvent.click(sendButton)
+
+      await waitFor(() => {
+        expect(mockHttpClient.post).toHaveBeenCalled()
+      })
+
+      await waitFor(() => {
+        expect(screen.getByText('Response from injected client')).toBeInTheDocument()
+      })
+    })
+
+    it('should use injected API base URL', async () => {
+      const mockHttpClient: HttpClient = {
+        get: jest.fn(),
+        post: jest.fn().mockResolvedValue({
+          ok: true,
+          json: async () => ({ message: 'Response' }),
+        } as Response),
+        put: jest.fn(),
+        delete: jest.fn(),
+      }
+
+      renderWithProvider(
+        <WorkflowChat 
+          workflowId="workflow-1" 
+          httpClient={mockHttpClient}
+          apiBaseUrl="https://custom-api.com/api"
+        />
+      )
+
+      const input = screen.getByPlaceholderText(/Type your message/)
+      fireEvent.change(input, { target: { value: 'Test message' } })
+
+      const sendButton = screen.getByText('Send')
+      fireEvent.click(sendButton)
+
+      await waitFor(() => {
+        expect(mockHttpClient.post).toHaveBeenCalledWith(
+          'https://custom-api.com/api/workflow-chat/chat',
+          expect.any(Object),
+          expect.any(Object)
+        )
+      })
+    })
+
+    it('should use injected logger', async () => {
+      const mockLogger = {
+        debug: jest.fn(),
+        error: jest.fn(),
+        warn: jest.fn(),
+        info: jest.fn(),
+      }
+
+      const mockOnWorkflowUpdate = jest.fn()
+
+      const mockHttpClient: HttpClient = {
+        get: jest.fn(),
+        post: jest.fn().mockResolvedValue({
+          ok: true,
+          json: async () => ({ 
+            message: 'Response',
+            workflow_changes: { nodes_to_delete: ['node-1'] }
+          }),
+        } as Response),
+        put: jest.fn(),
+        delete: jest.fn(),
+      }
+
+      renderWithProvider(
+        <WorkflowChat 
+          workflowId="workflow-1" 
+          logger={mockLogger}
+          httpClient={mockHttpClient}
+          onWorkflowUpdate={mockOnWorkflowUpdate}
+        />
+      )
+
+      const input = screen.getByPlaceholderText(/Type your message/)
+      fireEvent.change(input, { target: { value: 'Test message' } })
+
+      const sendButton = screen.getByText('Send')
+      fireEvent.click(sendButton)
+
+      await waitFor(() => {
+        expect(mockLogger.debug).toHaveBeenCalledWith(
+          'Received workflow changes:',
+          expect.objectContaining({ nodes_to_delete: ['node-1'] })
+        )
+      })
+    })
+
+    it('should handle storage errors gracefully', () => {
+      const mockStorage: StorageAdapter = {
+        getItem: jest.fn().mockImplementation(() => {
+          throw new Error('Storage quota exceeded')
+        }),
+        setItem: jest.fn(),
+        removeItem: jest.fn(),
+        addEventListener: jest.fn(),
+        removeEventListener: jest.fn(),
+      }
+
+      const mockLogger = {
+        debug: jest.fn(),
+        error: jest.fn(),
+        warn: jest.fn(),
+        info: jest.fn(),
+      }
+
+      renderWithProvider(
+        <WorkflowChat 
+          workflowId="workflow-1" 
+          storage={mockStorage}
+          logger={mockLogger}
+        />
+      )
+
+      // Should show default greeting when storage fails
+      expect(screen.getByText(/Hello! I can help you/)).toBeInTheDocument()
+      expect(mockLogger.error).toHaveBeenCalled()
+    })
+
+    it('should handle storage setItem errors', async () => {
+      const mockStorage: StorageAdapter = {
+        getItem: jest.fn().mockReturnValue(null),
+        setItem: jest.fn().mockImplementation(() => {
+          throw new Error('Storage quota exceeded')
+        }),
+        removeItem: jest.fn(),
+        addEventListener: jest.fn(),
+        removeEventListener: jest.fn(),
+      }
+
+      const mockLogger = {
+        debug: jest.fn(),
+        error: jest.fn(),
+        warn: jest.fn(),
+        info: jest.fn(),
+      }
+
+      const mockResponse = {
+        ok: true,
+        json: async () => ({ message: 'Response' }),
+      }
+      ;(global.fetch as jest.Mock).mockResolvedValue(mockResponse)
+
+      renderWithProvider(
+        <WorkflowChat 
+          workflowId="workflow-1" 
+          storage={mockStorage}
+          logger={mockLogger}
+        />
+      )
+
+      const input = screen.getByPlaceholderText(/Type your message/)
+      fireEvent.change(input, { target: { value: 'Test message' } })
+
+      const sendButton = screen.getByText('Send')
+      fireEvent.click(sendButton)
+
+      await waitFor(() => {
+        expect(screen.getByText('Response')).toBeInTheDocument()
+      })
+
+      // Should handle storage error gracefully
+      expect(mockLogger.error).toHaveBeenCalled()
+    })
+
+    it('should handle HTTP client errors', async () => {
+      const mockHttpClient: HttpClient = {
+        get: jest.fn(),
+        post: jest.fn().mockRejectedValue(new Error('Network error')),
+        put: jest.fn(),
+        delete: jest.fn(),
+      }
+
+      const mockLogger = {
+        debug: jest.fn(),
+        error: jest.fn(),
+        warn: jest.fn(),
+        info: jest.fn(),
+      }
+
+      renderWithProvider(
+        <WorkflowChat 
+          workflowId="workflow-1" 
+          httpClient={mockHttpClient}
+          logger={mockLogger}
+        />
+      )
+
+      const input = screen.getByPlaceholderText(/Type your message/)
+      fireEvent.change(input, { target: { value: 'Test message' } })
+
+      const sendButton = screen.getByText('Send')
+      fireEvent.click(sendButton)
+
+      await waitFor(() => {
+        expect(screen.getByText(/Network error/)).toBeInTheDocument()
+      })
+
+      expect(mockLogger.error).toHaveBeenCalled()
+    })
+
+    it('should handle null storage adapter', () => {
+      renderWithProvider(
+        <WorkflowChat workflowId="workflow-1" storage={null} />
+      )
+
+      // Should show default greeting when storage is null
+      expect(screen.getByText(/Hello! I can help you/)).toBeInTheDocument()
+    })
+
+    it('should save to injected storage adapter', async () => {
+      const mockStorage: StorageAdapter = {
+        getItem: jest.fn().mockReturnValue(null),
+        setItem: jest.fn(),
+        removeItem: jest.fn(),
+        addEventListener: jest.fn(),
+        removeEventListener: jest.fn(),
+      }
+
+      const mockResponse = {
+        ok: true,
+        json: async () => ({ message: 'Response' }),
+      }
+      ;(global.fetch as jest.Mock).mockResolvedValue(mockResponse)
+
+      renderWithProvider(
+        <WorkflowChat workflowId="workflow-1" storage={mockStorage} />
+      )
+
+      const input = screen.getByPlaceholderText(/Type your message/)
+      fireEvent.change(input, { target: { value: 'Test message' } })
+
+      const sendButton = screen.getByText('Send')
+      fireEvent.click(sendButton)
+
+      await waitFor(() => {
+        expect(mockStorage.setItem).toHaveBeenCalledWith(
+          'chat_history_workflow-1',
+          expect.stringContaining('Test message')
+        )
+      })
     })
   })
 })

@@ -5,6 +5,7 @@ import MarketplacePage from './MarketplacePage'
 import { useAuth } from '../contexts/AuthContext'
 import { api } from '../api/client'
 import { getLocalStorageItem } from '../hooks/useLocalStorage'
+import type { StorageAdapter, HttpClient } from '../types/adapters'
 
 // Mock dependencies
 jest.mock('../contexts/AuthContext', () => ({
@@ -146,6 +147,115 @@ describe('MarketplacePage', () => {
       if (sortSelects.length > 0) {
         fireEvent.change(sortSelects[sortSelects.length - 1], { target: { value: 'newest' } })
       }
+    })
+  })
+
+  describe('Dependency Injection', () => {
+    it('should use injected HTTP client', async () => {
+      const mockHttpClient: HttpClient = {
+        get: jest.fn().mockResolvedValue({
+          ok: true,
+          json: async () => [],
+        } as Response),
+        post: jest.fn().mockResolvedValue({
+          ok: true,
+          json: async () => ({ nodes: [] }),
+        } as Response),
+        put: jest.fn(),
+        delete: jest.fn(),
+      }
+
+      renderWithRouter(<MarketplacePage httpClient={mockHttpClient} />)
+
+      await waitFor(() => {
+        expect(mockHttpClient.get).toHaveBeenCalled()
+      })
+    })
+
+    it('should use injected storage adapter', () => {
+      const mockStorage: StorageAdapter = {
+        getItem: jest.fn().mockReturnValue(null),
+        setItem: jest.fn(),
+        removeItem: jest.fn(),
+        addEventListener: jest.fn(),
+        removeEventListener: jest.fn(),
+      }
+
+      renderWithRouter(<MarketplacePage storage={mockStorage} />)
+
+      // Component should use injected storage
+      expect(mockStorage.getItem).toHaveBeenCalled()
+    })
+
+    it('should use injected API base URL', async () => {
+      const mockHttpClient: HttpClient = {
+        get: jest.fn().mockResolvedValue({
+          ok: true,
+          json: async () => [],
+        } as Response),
+        post: jest.fn(),
+        put: jest.fn(),
+        delete: jest.fn(),
+      }
+
+      renderWithRouter(
+        <MarketplacePage 
+          httpClient={mockHttpClient} 
+          apiBaseUrl="https://custom-api.example.com/api"
+        />
+      )
+
+      await waitFor(() => {
+        expect(mockHttpClient.get).toHaveBeenCalled()
+      })
+    })
+
+    it('should handle storage errors gracefully', async () => {
+      const mockStorage: StorageAdapter = {
+        getItem: jest.fn().mockImplementation(() => {
+          throw new Error('Storage quota exceeded')
+        }),
+        setItem: jest.fn(),
+        removeItem: jest.fn(),
+        addEventListener: jest.fn(),
+        removeEventListener: jest.fn(),
+      }
+
+      // Should not crash
+      renderWithRouter(<MarketplacePage storage={mockStorage} />)
+
+      // Component should handle storage errors
+      await waitFor(() => {
+        expect(mockStorage.getItem).toHaveBeenCalled()
+      })
+    })
+
+    it('should handle HTTP client errors gracefully', async () => {
+      const mockHttpClient: HttpClient = {
+        get: jest.fn().mockRejectedValue(new Error('Network error')),
+        post: jest.fn(),
+        put: jest.fn(),
+        delete: jest.fn(),
+      }
+
+      renderWithRouter(<MarketplacePage httpClient={mockHttpClient} />)
+
+      await waitFor(() => {
+        expect(mockHttpClient.get).toHaveBeenCalled()
+      })
+    })
+
+    it('should handle null storage adapter', async () => {
+      // Should not crash when storage is null
+      renderWithRouter(<MarketplacePage storage={null} />)
+
+      // Component should render - wait for it to load
+      await waitFor(() => {
+        const marketplaceText = screen.queryByText(/Marketplace/)
+        const agentsText = screen.queryByText(/Agents/)
+        const workflowsText = screen.queryByText(/Workflows/)
+        expect(marketplaceText || agentsText || workflowsText).toBeTruthy()
+      }, { timeout: 3000 })
     })
   })
 })

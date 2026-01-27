@@ -271,5 +271,76 @@ describe('useWorkflowAPI', () => {
       expect(func1).toBe(func2)
     })
   })
+
+  describe('Dependency Injection', () => {
+    it('should use injected API client', async () => {
+      const mockApiClient = {
+        getWorkflows: jest.fn().mockResolvedValue([{ id: '1', name: 'Workflow 1' }]),
+        getWorkflow: jest.fn(),
+        createWorkflow: jest.fn(),
+        updateWorkflow: jest.fn(),
+        deleteWorkflow: jest.fn(),
+        executeWorkflow: jest.fn(),
+        getExecution: jest.fn(),
+      }
+
+      const { result } = renderHook(() => useWorkflowAPI({ apiClient: mockApiClient }))
+      const workflows = await result.current.getWorkflows()
+
+      expect(mockApiClient.getWorkflows).toHaveBeenCalledTimes(1)
+      expect(workflows).toEqual([{ id: '1', name: 'Workflow 1' }])
+      expect(api.getWorkflows).not.toHaveBeenCalled()
+    })
+
+    it('should use injected logger', async () => {
+      const mockLogger = {
+        error: jest.fn(),
+      }
+
+      const error = new Error('Test error')
+      ;(api.getWorkflows as jest.Mock).mockRejectedValue(error)
+
+      const { result } = renderHook(() => useWorkflowAPI({ logger: mockLogger }))
+      
+      await expect(result.current.getWorkflows()).rejects.toThrow('Test error')
+      expect(mockLogger.error).toHaveBeenCalledWith('Failed to fetch workflows:', error)
+      expect(logger.error).not.toHaveBeenCalled()
+    })
+
+    it('should use both injected API client and logger', async () => {
+      const mockApiClient = {
+        getWorkflows: jest.fn().mockRejectedValue(new Error('API error')),
+        getWorkflow: jest.fn(),
+        createWorkflow: jest.fn(),
+        updateWorkflow: jest.fn(),
+        deleteWorkflow: jest.fn(),
+        executeWorkflow: jest.fn(),
+        getExecution: jest.fn(),
+      }
+
+      const mockLogger = {
+        error: jest.fn(),
+      }
+
+      const { result } = renderHook(() => 
+        useWorkflowAPI({ apiClient: mockApiClient, logger: mockLogger })
+      )
+      
+      await expect(result.current.getWorkflows()).rejects.toThrow('API error')
+      expect(mockApiClient.getWorkflows).toHaveBeenCalled()
+      expect(mockLogger.error).toHaveBeenCalled()
+    })
+
+    it('should default to api and logger when not provided', async () => {
+      const mockWorkflows = [{ id: '1', name: 'Workflow 1' }]
+      ;(api.getWorkflows as jest.Mock).mockResolvedValue(mockWorkflows as any)
+
+      const { result } = renderHook(() => useWorkflowAPI())
+      const workflows = await result.current.getWorkflows()
+
+      expect(api.getWorkflows).toHaveBeenCalled()
+      expect(workflows).toEqual(mockWorkflows)
+    })
+  })
 })
 

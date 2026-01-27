@@ -5,6 +5,7 @@ import SettingsPage from './SettingsPage'
 import { useAuth } from '../contexts/AuthContext'
 import { showSuccess, showError } from '../utils/notifications'
 import { showConfirm } from '../utils/confirm'
+import type { StorageAdapter, HttpClient, ConsoleAdapter } from '../types/adapters'
 
 // Mock dependencies
 jest.mock('../contexts/AuthContext', () => ({
@@ -420,5 +421,450 @@ describe('SettingsPage', () => {
 
     // Component should handle unauthenticated state
     // (may redirect or show message)
+  })
+
+  describe('Dependency Injection', () => {
+    it('should use injected storage adapter', async () => {
+      const mockStorage: StorageAdapter = {
+        getItem: jest.fn().mockReturnValue(JSON.stringify({
+          providers: [],
+          iteration_limit: 20,
+          default_model: 'gpt-4'
+        })),
+        setItem: jest.fn(),
+        removeItem: jest.fn(),
+        addEventListener: jest.fn(),
+        removeEventListener: jest.fn(),
+      }
+
+      mockUseAuth.mockReturnValue({
+        isAuthenticated: false,
+        user: null,
+        token: null,
+        login: jest.fn(),
+        logout: jest.fn(),
+        register: jest.fn(),
+      } as any)
+
+      renderWithRouter(<SettingsPage storage={mockStorage} />)
+
+      await waitFor(() => {
+        expect(mockStorage.getItem).toHaveBeenCalledWith('llm_settings')
+      }, { timeout: 3000 })
+    })
+
+    it('should use injected HTTP client', async () => {
+      const mockHttpClient: HttpClient = {
+        get: jest.fn().mockResolvedValue({
+          ok: true,
+          json: async () => ({ providers: [], iteration_limit: 10, default_model: '' }),
+        } as Response),
+        post: jest.fn(),
+        put: jest.fn(),
+        delete: jest.fn(),
+      }
+
+      mockUseAuth.mockReturnValue({
+        isAuthenticated: true,
+        user: { id: '1', username: 'testuser' },
+        token: 'token',
+        login: jest.fn(),
+        logout: jest.fn(),
+        register: jest.fn(),
+      } as any)
+
+      renderWithRouter(<SettingsPage httpClient={mockHttpClient} />)
+
+      await waitFor(() => {
+        expect(mockHttpClient.get).toHaveBeenCalled()
+      }, { timeout: 3000 })
+    })
+
+    it('should use injected API base URL', async () => {
+      const mockHttpClient: HttpClient = {
+        get: jest.fn().mockResolvedValue({
+          ok: true,
+          json: async () => ({ providers: [], iteration_limit: 10, default_model: '' }),
+        } as Response),
+        post: jest.fn(),
+        put: jest.fn(),
+        delete: jest.fn(),
+      }
+
+      mockUseAuth.mockReturnValue({
+        isAuthenticated: true,
+        user: { id: '1', username: 'testuser' },
+        token: 'token',
+        login: jest.fn(),
+        logout: jest.fn(),
+        register: jest.fn(),
+      } as any)
+
+      renderWithRouter(
+        <SettingsPage 
+          httpClient={mockHttpClient}
+          apiBaseUrl="https://custom-api.com/api"
+        />
+      )
+
+      await waitFor(() => {
+        expect(mockHttpClient.get).toHaveBeenCalledWith(
+          'https://custom-api.com/api/settings/llm',
+          expect.any(Object)
+        )
+      }, { timeout: 3000 })
+    })
+
+    it('should use injected console adapter', async () => {
+      const mockConsoleAdapter: ConsoleAdapter = {
+        log: jest.fn(),
+        error: jest.fn(),
+        warn: jest.fn(),
+        info: jest.fn(),
+      }
+
+      const mockStorage: StorageAdapter = {
+        getItem: jest.fn().mockReturnValue('invalid json'),
+        setItem: jest.fn(),
+        removeItem: jest.fn(),
+        addEventListener: jest.fn(),
+        removeEventListener: jest.fn(),
+      }
+
+      mockUseAuth.mockReturnValue({
+        isAuthenticated: false,
+        user: null,
+        token: null,
+        login: jest.fn(),
+        logout: jest.fn(),
+        register: jest.fn(),
+      } as any)
+
+      renderWithRouter(
+        <SettingsPage 
+          storage={mockStorage}
+          consoleAdapter={mockConsoleAdapter}
+        />
+      )
+
+      await waitFor(() => {
+        expect(mockConsoleAdapter.error).toHaveBeenCalled()
+      }, { timeout: 3000 })
+    })
+
+    it('should handle storage errors gracefully', async () => {
+      const mockStorage: StorageAdapter = {
+        getItem: jest.fn().mockImplementation(() => {
+          throw new Error('Storage error')
+        }),
+        setItem: jest.fn(),
+        removeItem: jest.fn(),
+        addEventListener: jest.fn(),
+        removeEventListener: jest.fn(),
+      }
+
+      const mockConsoleAdapter: ConsoleAdapter = {
+        log: jest.fn(),
+        error: jest.fn(),
+        warn: jest.fn(),
+        info: jest.fn(),
+      }
+
+      mockUseAuth.mockReturnValue({
+        isAuthenticated: false,
+        user: null,
+        token: null,
+        login: jest.fn(),
+        logout: jest.fn(),
+        register: jest.fn(),
+      } as any)
+
+      renderWithRouter(
+        <SettingsPage 
+          storage={mockStorage}
+          consoleAdapter={mockConsoleAdapter}
+        />
+      )
+
+      // Should not crash
+      await waitFor(() => {
+        expect(screen.getAllByText(/Settings/).length).toBeGreaterThan(0)
+      }, { timeout: 3000 })
+    })
+
+    it('should handle HTTP client errors', async () => {
+      const mockHttpClient: HttpClient = {
+        get: jest.fn().mockRejectedValue(new Error('Network error')),
+        post: jest.fn(),
+        put: jest.fn(),
+        delete: jest.fn(),
+      }
+
+      const mockConsoleAdapter: ConsoleAdapter = {
+        log: jest.fn(),
+        error: jest.fn(),
+        warn: jest.fn(),
+        info: jest.fn(),
+      }
+
+      mockUseAuth.mockReturnValue({
+        isAuthenticated: true,
+        user: { id: '1', username: 'testuser' },
+        token: 'token',
+        login: jest.fn(),
+        logout: jest.fn(),
+        register: jest.fn(),
+      } as any)
+
+      renderWithRouter(
+        <SettingsPage 
+          httpClient={mockHttpClient}
+          consoleAdapter={mockConsoleAdapter}
+        />
+      )
+
+      await waitFor(() => {
+        expect(mockConsoleAdapter.log).toHaveBeenCalledWith(
+          'Could not load from backend, trying localStorage'
+        )
+      }, { timeout: 3000 })
+    })
+
+    it('should handle null storage adapter', async () => {
+      mockUseAuth.mockReturnValue({
+        isAuthenticated: false,
+        user: null,
+        token: null,
+        login: jest.fn(),
+        logout: jest.fn(),
+        register: jest.fn(),
+      } as any)
+
+      renderWithRouter(<SettingsPage storage={null} />)
+
+      // Should not crash
+      await waitFor(() => {
+        expect(screen.getAllByText(/Settings/).length).toBeGreaterThan(0)
+      }, { timeout: 3000 })
+    })
+  })
+
+  it('should handle test provider error', async () => {
+    const savedProviders = [
+      {
+        id: 'provider-1',
+        name: 'OpenAI',
+        type: 'openai' as const,
+        apiKey: 'sk-test',
+        defaultModel: 'gpt-4',
+        models: ['gpt-4'],
+        enabled: true,
+      },
+    ]
+    localStorage.setItem('llm_settings', JSON.stringify({ providers: savedProviders }))
+    ;(global.fetch as jest.Mock).mockResolvedValue({
+      ok: false,
+      json: async () => ({ status: 'error', message: 'Test failed' }),
+    })
+
+    renderWithRouter(<SettingsPage />)
+
+    await waitFor(() => {
+      expect(screen.getAllByText(/Settings/).length).toBeGreaterThan(0)
+    }, { timeout: 3000 })
+
+    // Find test button and click it
+    const testButtons = screen.queryAllByText(/Test|Test Connection/)
+    if (testButtons.length > 0) {
+      fireEvent.click(testButtons[0])
+
+      await waitFor(() => {
+        // Should show error result
+        expect(global.fetch).toHaveBeenCalled()
+      }, { timeout: 3000 })
+    }
+  })
+
+  it('should handle test provider network error', async () => {
+    const savedProviders = [
+      {
+        id: 'provider-1',
+        name: 'OpenAI',
+        type: 'openai' as const,
+        apiKey: 'sk-test',
+        defaultModel: 'gpt-4',
+        models: ['gpt-4'],
+        enabled: true,
+      },
+    ]
+    localStorage.setItem('llm_settings', JSON.stringify({ providers: savedProviders }))
+    ;(global.fetch as jest.Mock).mockRejectedValue(new Error('Network error'))
+
+    renderWithRouter(<SettingsPage />)
+
+    await waitFor(() => {
+      expect(screen.getAllByText(/Settings/).length).toBeGreaterThan(0)
+    }, { timeout: 3000 })
+
+    // Find test button and click it
+    const testButtons = screen.queryAllByText(/Test|Test Connection/)
+    if (testButtons.length > 0) {
+      fireEvent.click(testButtons[0])
+
+      await waitFor(() => {
+        // Should handle network error
+        expect(global.fetch).toHaveBeenCalled()
+      }, { timeout: 3000 })
+    }
+  })
+
+  it('should handle delete provider cancellation', async () => {
+    const savedProviders = [
+      {
+        id: 'provider-1',
+        name: 'OpenAI',
+        type: 'openai' as const,
+        apiKey: 'sk-test',
+        defaultModel: 'gpt-4',
+        models: ['gpt-4'],
+        enabled: true,
+      },
+    ]
+    localStorage.setItem('llm_settings', JSON.stringify({ providers: savedProviders }))
+    ;(showConfirm as jest.Mock).mockResolvedValue(false)
+
+    renderWithRouter(<SettingsPage />)
+
+    await waitFor(() => {
+      expect(screen.getAllByText(/Settings/).length).toBeGreaterThan(0)
+    }, { timeout: 3000 })
+
+    // Find delete button and click it
+    const deleteButtons = screen.queryAllByTitle(/Delete|Remove/)
+    if (deleteButtons.length > 0) {
+      fireEvent.click(deleteButtons[0])
+
+      await waitFor(() => {
+        expect(showConfirm).toHaveBeenCalled()
+      })
+
+      // Provider should still exist
+      expect(localStorage.getItem('llm_settings')).toBeTruthy()
+    }
+  })
+
+  it('should handle save settings error', async () => {
+    ;(global.fetch as jest.Mock).mockResolvedValue({
+      ok: false,
+      status: 500,
+      json: async () => ({ detail: 'Save failed' }),
+    })
+
+    renderWithRouter(<SettingsPage />)
+
+    await waitFor(() => {
+      expect(screen.getAllByText(/Settings/).length).toBeGreaterThan(0)
+    }, { timeout: 3000 })
+
+    // Find save button and click it
+    const saveButtons = screen.queryAllByText(/Save|Save Settings/)
+    if (saveButtons.length > 0) {
+      fireEvent.click(saveButtons[0])
+
+      await waitFor(() => {
+        expect(showError).toHaveBeenCalled()
+      }, { timeout: 3000 })
+    }
+  })
+
+  it('should handle load settings error', async () => {
+    ;(global.fetch as jest.Mock).mockRejectedValue(new Error('Load failed'))
+
+    renderWithRouter(<SettingsPage />)
+
+    // Should fallback to localStorage or show error
+    await waitFor(() => {
+      expect(screen.getAllByText(/Settings/).length).toBeGreaterThan(0)
+    }, { timeout: 3000 })
+  })
+
+  it('should handle invalid localStorage data', async () => {
+    localStorage.setItem('llm_settings', 'invalid json')
+    mockUseAuth.mockReturnValue({
+      isAuthenticated: false,
+      user: null,
+      token: null,
+      login: jest.fn(),
+      logout: jest.fn(),
+      register: jest.fn(),
+    } as any)
+
+    renderWithRouter(<SettingsPage />)
+
+    // Should not crash
+    await waitFor(() => {
+      expect(screen.getAllByText(/Settings/).length).toBeGreaterThan(0)
+    }, { timeout: 3000 })
+  })
+
+  it('should handle toggle API key visibility', async () => {
+    const savedProviders = [
+      {
+        id: 'provider-1',
+        name: 'OpenAI',
+        type: 'openai' as const,
+        apiKey: 'sk-test-key',
+        defaultModel: 'gpt-4',
+        models: ['gpt-4'],
+        enabled: true,
+      },
+    ]
+    localStorage.setItem('llm_settings', JSON.stringify({ providers: savedProviders }))
+
+    renderWithRouter(<SettingsPage />)
+
+    await waitFor(() => {
+      expect(screen.getAllByText(/Settings/).length).toBeGreaterThan(0)
+    }, { timeout: 3000 })
+
+    // Find eye icon button to toggle visibility
+    const eyeButtons = screen.queryAllByTitle(/Show|Hide/)
+    if (eyeButtons.length > 0) {
+      fireEvent.click(eyeButtons[0])
+      // Should toggle visibility
+      expect(eyeButtons[0]).toBeInTheDocument()
+    }
+  })
+
+  it('should handle provider enable/disable toggle', async () => {
+    const savedProviders = [
+      {
+        id: 'provider-1',
+        name: 'OpenAI',
+        type: 'openai' as const,
+        apiKey: 'sk-test',
+        defaultModel: 'gpt-4',
+        models: ['gpt-4'],
+        enabled: true,
+      },
+    ]
+    localStorage.setItem('llm_settings', JSON.stringify({ providers: savedProviders }))
+
+    renderWithRouter(<SettingsPage />)
+
+    await waitFor(() => {
+      expect(screen.getAllByText(/Settings/).length).toBeGreaterThan(0)
+    }, { timeout: 3000 })
+
+    // Find enable/disable toggle
+    const checkboxes = screen.queryAllByRole('checkbox')
+    if (checkboxes.length > 0) {
+      const enabledCheckbox = checkboxes.find(cb => (cb as HTMLInputElement).checked)
+      if (enabledCheckbox) {
+        fireEvent.click(enabledCheckbox)
+        // Should toggle enabled state
+        expect((enabledCheckbox as HTMLInputElement).checked).toBe(false)
+      }
+    }
   })
 })

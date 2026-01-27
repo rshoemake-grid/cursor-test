@@ -1,8 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, Eye, EyeOff } from 'lucide-react';
+import type { HttpClient } from '../types/adapters';
+import { defaultAdapters } from '../types/adapters';
 
-export default function ResetPasswordPage() {
+interface ResetPasswordPageProps {
+  // Dependency injection
+  httpClient?: HttpClient
+  apiBaseUrl?: string
+}
+
+export default function ResetPasswordPage({
+  httpClient = defaultAdapters.createHttpClient(),
+  apiBaseUrl = 'http://localhost:8000/api'
+}: ResetPasswordPageProps = {}) {
   const [searchParams] = useSearchParams();
   const token = searchParams.get('token');
   const [password, setPassword] = useState('');
@@ -42,11 +53,11 @@ export default function ResetPasswordPage() {
     setLoading(true);
 
     try {
-      const response = await fetch('http://localhost:8000/api/auth/reset-password', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token, new_password: password })
-      });
+      const response = await httpClient.post(
+        `${apiBaseUrl}/auth/reset-password`,
+        { token, new_password: password },
+        { 'Content-Type': 'application/json' }
+      );
 
       if (!response.ok) {
         const error = await response.json();

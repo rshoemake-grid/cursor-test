@@ -4,6 +4,7 @@ import MarketplaceDialog from './MarketplaceDialog'
 import { useAuth } from '../contexts/AuthContext'
 import { api } from '../api/client'
 import { showSuccess, showError } from '../utils/notifications'
+import type { StorageAdapter, HttpClient } from '../types/adapters'
 
 // Mock dependencies
 jest.mock('../contexts/AuthContext', () => ({
@@ -508,5 +509,156 @@ describe('MarketplaceDialog', () => {
       const lastAgent = agents[agents.length - 1]
       expect(lastAgent.author_name).toBeNull()
     }
+  })
+
+  describe('Dependency Injection', () => {
+    it('should use injected storage adapter', async () => {
+      const mockStorage: StorageAdapter = {
+        getItem: jest.fn().mockReturnValue(JSON.stringify([])),
+        setItem: jest.fn(),
+        removeItem: jest.fn(),
+        addEventListener: jest.fn(),
+        removeEventListener: jest.fn(),
+      }
+
+      render(
+        <MarketplaceDialog 
+          isOpen={true} 
+          onClose={mockOnClose}
+          node={mockNode}
+          storage={mockStorage}
+        />
+      )
+
+      const publishButton = screen.getByText(/Publish/)
+      fireEvent.click(publishButton)
+
+      await waitFor(() => {
+        expect(mockStorage.getItem).toHaveBeenCalledWith('publishedAgents')
+        expect(mockStorage.setItem).toHaveBeenCalled()
+      })
+    })
+
+    it('should use injected HTTP client for workflow publishing', async () => {
+      const mockHttpClient: HttpClient = {
+        get: jest.fn(),
+        post: jest.fn(),
+        put: jest.fn(),
+        delete: jest.fn(),
+      }
+
+      // Mock api.publishWorkflow to use httpClient
+      const mockPublishWorkflow = jest.fn().mockResolvedValue({})
+      mockApi.publishWorkflow = mockPublishWorkflow
+
+      render(
+        <MarketplaceDialog 
+          isOpen={true} 
+          onClose={mockOnClose}
+          workflowId="workflow-1"
+          workflowName="Test Workflow"
+          httpClient={mockHttpClient}
+        />
+      )
+
+      // Switch to workflows tab
+      const workflowsTab = screen.getByText('Workflows')
+      fireEvent.click(workflowsTab)
+
+      await waitFor(() => {
+        const publishButton = screen.getByText(/Publish/)
+        fireEvent.click(publishButton)
+      })
+
+      await waitFor(() => {
+        expect(mockPublishWorkflow).toHaveBeenCalled()
+      })
+    })
+
+    it('should handle storage errors gracefully', async () => {
+      const mockStorage: StorageAdapter = {
+        getItem: jest.fn().mockImplementation(() => {
+          throw new Error('Storage quota exceeded')
+        }),
+        setItem: jest.fn(),
+        removeItem: jest.fn(),
+        addEventListener: jest.fn(),
+        removeEventListener: jest.fn(),
+      }
+
+      render(
+        <MarketplaceDialog 
+          isOpen={true} 
+          onClose={mockOnClose}
+          node={mockNode}
+          storage={mockStorage}
+        />
+      )
+
+      const publishButton = screen.getByText(/Publish/)
+      fireEvent.click(publishButton)
+
+      await waitFor(() => {
+        expect(showError).toHaveBeenCalledWith(
+          expect.stringContaining('Failed to publish agent')
+        )
+      })
+    })
+
+    it('should handle null storage adapter', async () => {
+      render(
+        <MarketplaceDialog 
+          isOpen={true} 
+          onClose={mockOnClose}
+          node={mockNode}
+          storage={null}
+        />
+      )
+
+      const publishButton = screen.getByText(/Publish/)
+      fireEvent.click(publishButton)
+
+      // Should handle null storage gracefully
+      await waitFor(() => {
+        expect(showError).toHaveBeenCalled()
+      })
+    })
+
+    it('should handle HTTP client errors for workflow publishing', async () => {
+      const mockHttpClient: HttpClient = {
+        get: jest.fn(),
+        post: jest.fn(),
+        put: jest.fn(),
+        delete: jest.fn(),
+      }
+
+      const mockPublishWorkflow = jest.fn().mockRejectedValue(new Error('Network error'))
+      mockApi.publishWorkflow = mockPublishWorkflow
+
+      render(
+        <MarketplaceDialog 
+          isOpen={true} 
+          onClose={mockOnClose}
+          workflowId="workflow-1"
+          workflowName="Test Workflow"
+          httpClient={mockHttpClient}
+        />
+      )
+
+      // Switch to workflows tab
+      const workflowsTab = screen.getByText('Workflows')
+      fireEvent.click(workflowsTab)
+
+      await waitFor(() => {
+        const publishButton = screen.getByText(/Publish/)
+        fireEvent.click(publishButton)
+      })
+
+      await waitFor(() => {
+        expect(showError).toHaveBeenCalledWith(
+          expect.stringContaining('Failed to publish workflow')
+        )
+      })
+    })
   })
 })

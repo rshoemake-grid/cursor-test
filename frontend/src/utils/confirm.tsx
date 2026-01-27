@@ -1,3 +1,6 @@
+import type { DocumentAdapter, TimerAdapter } from '../types/adapters'
+import { defaultAdapters } from '../types/adapters'
+
 /**
  * Show a confirmation dialog (non-blocking, promise-based)
  * Returns a promise that resolves to true if confirmed, false if cancelled
@@ -9,18 +12,29 @@ export function showConfirm(
     confirmText?: string
     cancelText?: string
     type?: 'warning' | 'danger' | 'info'
+    // Dependency injection
+    documentAdapter?: DocumentAdapter | null
+    timerAdapter?: TimerAdapter
   } = {}
 ): Promise<boolean> {
   const {
     title = 'Confirm',
     confirmText = 'Confirm',
     cancelText = 'Cancel',
-    type = 'warning'
+    type = 'warning',
+    documentAdapter = defaultAdapters.createDocumentAdapter(),
+    timerAdapter = defaultAdapters.createTimerAdapter()
   } = options
 
+  // Handle null document adapter
+  if (!documentAdapter) {
+    return Promise.resolve(false)
+  }
+
   return new Promise((resolve) => {
-    // Create overlay
-    const overlay = document.createElement('div')
+    try {
+      // Create overlay
+      const overlay = documentAdapter.createElement('div')
     overlay.style.cssText = `
       position: fixed;
       top: 0;
@@ -36,7 +50,7 @@ export function showConfirm(
     `
 
     // Create dialog
-    const dialog = document.createElement('div')
+    const dialog = documentAdapter.createElement('div')
     dialog.style.cssText = `
       background: white;
       border-radius: 8px;
@@ -49,8 +63,8 @@ export function showConfirm(
     `
 
     // Add animation styles if not already added
-    if (!document.getElementById('confirm-dialog-styles')) {
-      const style = document.createElement('style')
+    if (!documentAdapter.getElementById('confirm-dialog-styles')) {
+      const style = documentAdapter.createElement('style')
       style.id = 'confirm-dialog-styles'
       style.textContent = `
         @keyframes fadeIn {
@@ -68,11 +82,11 @@ export function showConfirm(
           }
         }
       `
-      document.head.appendChild(style)
+      documentAdapter.head.appendChild(style)
     }
 
     // Title
-    const titleEl = document.createElement('h3')
+    const titleEl = documentAdapter.createElement('h3')
     titleEl.textContent = title
     titleEl.style.cssText = `
       margin: 0 0 12px 0;
@@ -83,7 +97,7 @@ export function showConfirm(
     dialog.appendChild(titleEl)
 
     // Message
-    const messageEl = document.createElement('p')
+    const messageEl = documentAdapter.createElement('p')
     messageEl.textContent = message
     messageEl.style.cssText = `
       margin: 0 0 24px 0;
@@ -94,7 +108,7 @@ export function showConfirm(
     dialog.appendChild(messageEl)
 
     // Buttons container
-    const buttonsContainer = document.createElement('div')
+    const buttonsContainer = documentAdapter.createElement('div')
     buttonsContainer.style.cssText = `
       display: flex;
       gap: 12px;
@@ -103,7 +117,7 @@ export function showConfirm(
     dialog.appendChild(buttonsContainer)
 
     // Cancel button
-    const cancelBtn = document.createElement('button')
+    const cancelBtn = documentAdapter.createElement('button')
     cancelBtn.textContent = cancelText
     cancelBtn.style.cssText = `
       padding: 8px 16px;
@@ -129,7 +143,7 @@ export function showConfirm(
     buttonsContainer.appendChild(cancelBtn)
 
     // Confirm button
-    const confirmBtn = document.createElement('button')
+    const confirmBtn = documentAdapter.createElement('button')
     confirmBtn.textContent = confirmText
     const confirmColors = {
       warning: { bg: '#f59e0b', hover: '#d97706' },
@@ -171,10 +185,14 @@ export function showConfirm(
     // Add to DOM
     dialog.appendChild(buttonsContainer)
     overlay.appendChild(dialog)
-    document.body.appendChild(overlay)
+    documentAdapter.body.appendChild(overlay)
 
     // Focus confirm button
     confirmBtn.focus()
+    } catch (error) {
+      // Handle errors gracefully
+      resolve(false)
+    }
   })
 }
 

@@ -2,6 +2,7 @@ import React from 'react'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import NodePanel from './NodePanel'
 import { logger } from '../utils/logger'
+import type { StorageAdapter } from '../types/adapters'
 
 // Mock logger
 jest.mock('../utils/logger', () => ({
@@ -196,5 +197,130 @@ describe('NodePanel', () => {
     fireEvent.click(toggleButton!)
 
     expect(screen.getByText('Updated Agent')).toBeInTheDocument()
+  })
+
+  describe('Dependency Injection', () => {
+    it('should use injected storage adapter', () => {
+      const mockStorage: StorageAdapter = {
+        getItem: jest.fn().mockReturnValue(JSON.stringify([
+          { id: 'custom-1', label: 'Custom Agent 1' }
+        ])),
+        setItem: jest.fn(),
+        removeItem: jest.fn(),
+        addEventListener: jest.fn(),
+        removeEventListener: jest.fn(),
+      }
+
+      render(<NodePanel storage={mockStorage} />)
+
+      expect(mockStorage.getItem).toHaveBeenCalledWith('customAgentNodes')
+    })
+
+    it('should use injected logger', () => {
+      const mockLogger = {
+        debug: jest.fn(),
+        error: jest.fn(),
+        warn: jest.fn(),
+        info: jest.fn(),
+      }
+
+      const mockStorage: StorageAdapter = {
+        getItem: jest.fn().mockReturnValue('invalid json'),
+        setItem: jest.fn(),
+        removeItem: jest.fn(),
+        addEventListener: jest.fn(),
+        removeEventListener: jest.fn(),
+      }
+
+      render(<NodePanel storage={mockStorage} logger={mockLogger} />)
+
+      expect(mockLogger.error).toHaveBeenCalled()
+    })
+
+    it('should handle storage errors gracefully', () => {
+      const mockStorage: StorageAdapter = {
+        getItem: jest.fn().mockImplementation(() => {
+          throw new Error('Storage error')
+        }),
+        setItem: jest.fn(),
+        removeItem: jest.fn(),
+        addEventListener: jest.fn(),
+        removeEventListener: jest.fn(),
+      }
+
+      const mockLogger = {
+        debug: jest.fn(),
+        error: jest.fn(),
+        warn: jest.fn(),
+        info: jest.fn(),
+      }
+
+      render(<NodePanel storage={mockStorage} logger={mockLogger} />)
+
+      // Should not crash
+      expect(screen.getByText('Node Palette')).toBeInTheDocument()
+      expect(mockLogger.error).toHaveBeenCalled()
+    })
+
+    it('should handle null storage adapter', () => {
+      render(<NodePanel storage={null} />)
+
+      // Should not crash
+      expect(screen.getByText('Node Palette')).toBeInTheDocument()
+    })
+
+    it('should use window event listeners for storage events', () => {
+      const addEventListenerSpy = jest.spyOn(window, 'addEventListener')
+      const removeEventListenerSpy = jest.spyOn(window, 'removeEventListener')
+
+      const mockStorage: StorageAdapter = {
+        getItem: jest.fn().mockReturnValue(null),
+        setItem: jest.fn(),
+        removeItem: jest.fn(),
+        addEventListener: jest.fn(),
+        removeEventListener: jest.fn(),
+      }
+
+      const { unmount } = render(<NodePanel storage={mockStorage} />)
+
+      expect(addEventListenerSpy).toHaveBeenCalledWith('storage', expect.any(Function))
+      expect(addEventListenerSpy).toHaveBeenCalledWith('customAgentNodesUpdated', expect.any(Function))
+
+      unmount()
+
+      expect(removeEventListenerSpy).toHaveBeenCalledWith('storage', expect.any(Function))
+      expect(removeEventListenerSpy).toHaveBeenCalledWith('customAgentNodesUpdated', expect.any(Function))
+
+      addEventListenerSpy.mockRestore()
+      removeEventListenerSpy.mockRestore()
+    })
+
+    it('should handle storage event with injected storage', () => {
+      const mockStorage: StorageAdapter = {
+        getItem: jest.fn()
+          .mockReturnValueOnce(null) // Initial load
+          .mockReturnValueOnce(JSON.stringify([{ id: 'custom-1', label: 'New Agent' }])), // After event
+        setItem: jest.fn(),
+        removeItem: jest.fn(),
+        addEventListener: jest.fn(),
+        removeEventListener: jest.fn(),
+      }
+
+      render(<NodePanel storage={mockStorage} />)
+
+      // Simulate storage event
+      const storageEvent = new StorageEvent('storage', {
+        key: 'customAgentNodes',
+        newValue: JSON.stringify([{ id: 'custom-1', label: 'New Agent' }]),
+      })
+
+      window.dispatchEvent(storageEvent)
+
+      const toggleButton = screen.getByText('Agent Nodes').closest('button')
+      fireEvent.click(toggleButton!)
+
+      // Should show updated nodes
+      expect(screen.getByText('New Agent')).toBeInTheDocument()
+    })
   })
 })

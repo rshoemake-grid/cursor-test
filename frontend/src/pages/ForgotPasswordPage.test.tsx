@@ -3,6 +3,7 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { BrowserRouter } from 'react-router-dom'
 import { useNavigate } from 'react-router-dom'
 import ForgotPasswordPage from './ForgotPasswordPage'
+import type { HttpClient } from '../types/adapters'
 
 // Mock react-router-dom
 jest.mock('react-router-dom', () => ({
@@ -136,5 +137,95 @@ describe('ForgotPasswordPage', () => {
     })
 
     expect(mockNavigate).toHaveBeenCalledWith('/auth')
+  })
+
+  describe('Dependency Injection', () => {
+    it('should use injected HTTP client', async () => {
+      const mockHttpClient: HttpClient = {
+        get: jest.fn(),
+        post: jest.fn().mockResolvedValue({
+          ok: true,
+          json: async () => ({ token: 'reset-token-123' }),
+        } as Response),
+        put: jest.fn(),
+        delete: jest.fn(),
+      }
+
+      renderWithRouter(<ForgotPasswordPage httpClient={mockHttpClient} />)
+
+      await waitFor(() => {
+        const emailInput = screen.getByPlaceholderText(/your@email.com/)
+        const submitButton = screen.getByRole('button', { name: /Send Reset Link/ })
+
+        fireEvent.change(emailInput, { target: { value: 'test@example.com' } })
+        fireEvent.click(submitButton)
+      })
+
+      await waitFor(() => {
+        expect(mockHttpClient.post).toHaveBeenCalledWith(
+          expect.stringContaining('/auth/forgot-password'),
+          { email: 'test@example.com' },
+          expect.any(Object)
+        )
+      })
+    })
+
+    it('should use injected API base URL', async () => {
+      const mockHttpClient: HttpClient = {
+        get: jest.fn(),
+        post: jest.fn().mockResolvedValue({
+          ok: true,
+          json: async () => ({ token: 'reset-token-123' }),
+        } as Response),
+        put: jest.fn(),
+        delete: jest.fn(),
+      }
+
+      renderWithRouter(
+        <ForgotPasswordPage 
+          httpClient={mockHttpClient} 
+          apiBaseUrl="https://custom-api.example.com/api"
+        />
+      )
+
+      await waitFor(() => {
+        const emailInput = screen.getByPlaceholderText(/your@email.com/)
+        const submitButton = screen.getByRole('button', { name: /Send Reset Link/ })
+
+        fireEvent.change(emailInput, { target: { value: 'test@example.com' } })
+        fireEvent.click(submitButton)
+      })
+
+      await waitFor(() => {
+        expect(mockHttpClient.post).toHaveBeenCalledWith(
+          'https://custom-api.example.com/api/auth/forgot-password',
+          expect.any(Object),
+          expect.any(Object)
+        )
+      })
+    })
+
+    it('should handle HTTP client errors gracefully', async () => {
+      const mockHttpClient: HttpClient = {
+        get: jest.fn(),
+        post: jest.fn().mockRejectedValue(new Error('Network error')),
+        put: jest.fn(),
+        delete: jest.fn(),
+      }
+
+      renderWithRouter(<ForgotPasswordPage httpClient={mockHttpClient} />)
+
+      await waitFor(() => {
+        const emailInput = screen.getByPlaceholderText(/your@email.com/)
+        const submitButton = screen.getByRole('button', { name: /Send Reset Link/ })
+
+        fireEvent.change(emailInput, { target: { value: 'test@example.com' } })
+        fireEvent.click(submitButton)
+      })
+
+      await waitFor(() => {
+        expect(screen.getByText(/Network error/)).toBeInTheDocument()
+      })
+    })
   })
 })

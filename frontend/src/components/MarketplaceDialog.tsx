@@ -3,6 +3,8 @@ import { X, Upload, Bot, Workflow } from 'lucide-react'
 import { showSuccess, showError } from '../utils/notifications'
 import { api } from '../api/client'
 import { useAuth } from '../contexts/AuthContext'
+import type { StorageAdapter, HttpClient } from '../types/adapters'
+import { defaultAdapters } from '../types/adapters'
 
 interface MarketplaceDialogProps {
   isOpen: boolean
@@ -10,6 +12,9 @@ interface MarketplaceDialogProps {
   node?: any
   workflowId?: string | null
   workflowName?: string
+  // Dependency injection
+  storage?: StorageAdapter | null
+  httpClient?: HttpClient
 }
 
 type TabType = 'agents' | 'workflows'
@@ -32,7 +37,9 @@ export default function MarketplaceDialog({
   onClose, 
   node,
   workflowId,
-  workflowName 
+  workflowName,
+  storage = defaultAdapters.createLocalStorageAdapter(),
+  httpClient = defaultAdapters.createHttpClient()
 }: MarketplaceDialogProps) {
   const [activeTab, setActiveTab] = useState<TabType>('agents')
   const [isPublishing, setIsPublishing] = useState(false)
@@ -93,11 +100,15 @@ export default function MarketplaceDialog({
         author_name: user?.username || user?.email || null
       }
 
-      // Save to localStorage for now (until backend API is ready)
-      const publishedAgents = localStorage.getItem('publishedAgents')
+      // Save to storage for now (until backend API is ready)
+      if (!storage) {
+        throw new Error('Storage not available')
+      }
+
+      const publishedAgents = storage.getItem('publishedAgents')
       const agents = publishedAgents ? JSON.parse(publishedAgents) : []
       agents.push(agentTemplate)
-      localStorage.setItem('publishedAgents', JSON.stringify(agents))
+      storage.setItem('publishedAgents', JSON.stringify(agents))
 
       showSuccess('Agent published to marketplace successfully!')
       onClose()

@@ -10,6 +10,8 @@ import AgentNodeEditor from './editors/AgentNodeEditor'
 import ConditionNodeEditor from './editors/ConditionNodeEditor'
 import LoopNodeEditor from './editors/LoopNodeEditor'
 import InputNodeEditor from './editors/InputNodeEditor'
+import type { StorageAdapter } from '../types/adapters'
+import { defaultAdapters } from '../types/adapters'
 
 interface PropertyPanelProps {
   selectedNodeId: string | null
@@ -18,6 +20,8 @@ interface PropertyPanelProps {
   nodes?: any[] // Pass nodes as prop for better reactivity
   onSave?: () => void // Optional callback when save is clicked
   onSaveWorkflow?: () => Promise<string | null> // Callback to save the entire workflow
+  // Dependency injection
+  storage?: StorageAdapter | null
 }
 
 
@@ -32,7 +36,7 @@ interface LLMProvider {
   enabled: boolean
 }
 
-export default function PropertyPanel({ selectedNodeId, setSelectedNodeId, selectedNodeIds, nodes: nodesProp, onSave, onSaveWorkflow }: PropertyPanelProps) {
+export default function PropertyPanel({ selectedNodeId, setSelectedNodeId, selectedNodeIds, nodes: nodesProp, onSave, onSaveWorkflow, storage = defaultAdapters.createLocalStorageAdapter() }: PropertyPanelProps) {
   const { setNodes, deleteElements, getNodes } = useReactFlow()
   const [showAddInput, setShowAddInput] = useState(false)
   const [availableModels, setAvailableModels] = useState<Array<{ value: string; label: string; provider: string }>>([])
@@ -318,31 +322,40 @@ export default function PropertyPanel({ selectedNodeId, setSelectedNodeId, selec
         logger.debug('Could not load from backend, trying localStorage', e)
       }
       
-      // Fallback to localStorage
-      const saved = localStorage.getItem('llm_settings')
-      if (saved) {
-        try {
-          const parsed = JSON.parse(saved)
-          const providers: LLMProvider[] = parsed.providers || []
-          const models: Array<{ value: string; label: string; provider: string }> = []
-          providers.forEach((provider) => {
-            if (provider.enabled && provider.models && provider.models.length > 0) {
-              provider.models.forEach((model) => {
-                models.push({
-                  value: model,
-                  label: `${model} (${provider.name})`,
-                  provider: provider.name
+      // Fallback to storage
+      if (!storage) {
+        setAvailableModels([])
+        return
+      }
+
+      try {
+        const saved = storage.getItem('llm_settings')
+        if (saved) {
+          try {
+            const parsed = JSON.parse(saved)
+            const providers: LLMProvider[] = parsed.providers || []
+            const models: Array<{ value: string; label: string; provider: string }> = []
+            providers.forEach((provider) => {
+              if (provider.enabled && provider.models && provider.models.length > 0) {
+                provider.models.forEach((model) => {
+                  models.push({
+                    value: model,
+                    label: `${model} (${provider.name})`,
+                    provider: provider.name
+                  })
                 })
-              })
+              }
+            })
+            if (models.length > 0) {
+              setAvailableModels(models)
+              return
             }
-          })
-          if (models.length > 0) {
-            setAvailableModels(models)
-            return
+          } catch (e) {
+            logger.error('Failed to load providers:', e)
           }
-        } catch (e) {
-          logger.error('Failed to load providers:', e)
         }
+      } catch (loadError) {
+        logger.error('Failed to load models from storage', loadError)
       }
 
       // Fallback to default GPT models if no providers found
@@ -355,7 +368,8 @@ export default function PropertyPanel({ selectedNodeId, setSelectedNodeId, selec
     }
     
     loadModels()
-  }, [])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []) // storage is accessed via closure in loadModels
 
 
   // Check if multiple nodes are selected

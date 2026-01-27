@@ -647,4 +647,99 @@ describe('PropertyPanel', () => {
     // For now, we test that the component renders correctly
     expect(screen.getByTestId('agent-node-editor')).toBeInTheDocument()
   })
+
+  describe('Dependency Injection', () => {
+    it('should use injected storage adapter', async () => {
+      const mockStorage: StorageAdapter = {
+        getItem: jest.fn().mockReturnValue(JSON.stringify({
+          providers: [],
+          iteration_limit: 10,
+          default_model: ''
+        })),
+        setItem: jest.fn(),
+        removeItem: jest.fn(),
+        addEventListener: jest.fn(),
+        removeEventListener: jest.fn(),
+      }
+
+      const mockNode = {
+        id: 'node-1',
+        type: 'agent',
+        data: { label: 'Test Agent' },
+      }
+      mockGetNodes.mockReturnValue([mockNode])
+
+      renderWithProvider(
+        <PropertyPanel
+          selectedNodeId="node-1"
+          setSelectedNodeId={mockSetSelectedNodeId}
+          storage={mockStorage}
+        />
+      )
+
+      // Wait for component to load models
+      await waitFor(() => {
+        expect(mockStorage.getItem).toHaveBeenCalledWith('llm_settings')
+      })
+    })
+
+    it('should handle storage errors gracefully', async () => {
+      const mockStorage: StorageAdapter = {
+        getItem: jest.fn().mockImplementation(() => {
+          throw new Error('Storage quota exceeded')
+        }),
+        setItem: jest.fn(),
+        removeItem: jest.fn(),
+        addEventListener: jest.fn(),
+        removeEventListener: jest.fn(),
+      }
+
+      const mockNode = {
+        id: 'node-1',
+        type: 'agent',
+        data: { label: 'Test Agent' },
+      }
+      mockGetNodes.mockReturnValue([mockNode])
+
+      // Should not crash - storage errors are caught in try-catch
+      renderWithProvider(
+        <PropertyPanel
+          selectedNodeId="node-1"
+          setSelectedNodeId={mockSetSelectedNodeId}
+          storage={mockStorage}
+        />
+      )
+
+      // Wait for component to handle storage error and render
+      await waitFor(() => {
+        expect(screen.getByTestId('agent-node-editor')).toBeInTheDocument()
+      })
+
+      // Component should render despite storage error
+      expect(screen.getByTestId('agent-node-editor')).toBeInTheDocument()
+    })
+
+    it('should handle null storage adapter', async () => {
+      const mockNode = {
+        id: 'node-1',
+        type: 'agent',
+        data: { label: 'Test Agent' },
+      }
+      mockGetNodes.mockReturnValue([mockNode])
+
+      // Should not crash when storage is null
+      renderWithProvider(
+        <PropertyPanel
+          selectedNodeId="node-1"
+          setSelectedNodeId={mockSetSelectedNodeId}
+          storage={null}
+        />
+      )
+
+      // Wait for component to render
+      await waitFor(() => {
+        expect(screen.getByTestId('agent-node-editor')).toBeInTheDocument()
+      })
+    })
+  })
 })

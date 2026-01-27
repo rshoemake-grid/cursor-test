@@ -1,5 +1,6 @@
 // Jest globals - no import needed
 import { showNotification, showSuccess, showError, showInfo, showWarning } from './notifications'
+import type { DocumentAdapter, TimerAdapter } from '../types/adapters'
 
 describe('notifications', () => {
   beforeEach(() => {
@@ -573,6 +574,120 @@ describe('notifications', () => {
         // Verify exact text color string literal: 'white'
         expect(notification.style.color).toBe('white')
       }
+    })
+  })
+
+  describe('Dependency Injection', () => {
+    it('should use injected document adapter', () => {
+      const mockDocumentAdapter: DocumentAdapter = {
+        createElement: jest.fn((tag: string) => document.createElement(tag)),
+        getElementById: jest.fn((id: string) => document.getElementById(id)),
+        getActiveElement: jest.fn(() => document.activeElement),
+        head: document.head,
+        body: document.body,
+      }
+
+      const notification = showNotification('Test message', {
+        documentAdapter: mockDocumentAdapter,
+      })
+
+      // Component should use injected document adapter
+      expect(mockDocumentAdapter.createElement).toHaveBeenCalled()
+      expect(mockDocumentAdapter.body).toBe(document.body)
+    })
+
+    it('should use injected timer adapter', () => {
+      const mockTimerAdapter: TimerAdapter = {
+        setTimeout: jest.fn((callback: () => void, delay: number) => {
+          return setTimeout(callback, delay)
+        }),
+        clearTimeout: jest.fn((id: number) => clearTimeout(id)),
+        setInterval: jest.fn((callback: () => void, delay: number) => {
+          return setInterval(callback, delay)
+        }),
+        clearInterval: jest.fn((id: number) => clearInterval(id)),
+      }
+
+      const notification = showNotification('Test message', {
+        duration: 1000,
+        timerAdapter: mockTimerAdapter,
+      })
+
+      // Component should use injected timer adapter
+      expect(mockTimerAdapter.setTimeout).toHaveBeenCalled()
+    })
+
+    it('should handle null document adapter gracefully', () => {
+      // Should not crash when document adapter is null
+      const notification = showNotification('Test message', {
+        documentAdapter: null,
+      })
+
+      // Should return null or handle gracefully
+      expect(notification).toBeNull()
+    })
+
+    it('should use injected document adapter for getElementById', () => {
+      const mockGetElementById = jest.fn((id: string) => {
+        if (id === 'notification-styles') {
+          return null // Style doesn't exist yet
+        }
+        return document.getElementById(id)
+      })
+
+      const mockDocumentAdapter: DocumentAdapter = {
+        createElement: jest.fn((tag: string) => document.createElement(tag)),
+        getElementById: mockGetElementById,
+        getActiveElement: jest.fn(() => document.activeElement),
+        head: document.head,
+        body: document.body,
+      }
+
+      showNotification('Test message', {
+        documentAdapter: mockDocumentAdapter,
+      })
+
+      // Component should use injected getElementById
+      expect(mockGetElementById).toHaveBeenCalledWith('notification-styles')
+    })
+
+    it('should use injected document adapter for head and body', () => {
+      const mockDocumentAdapter: DocumentAdapter = {
+        createElement: jest.fn((tag: string) => document.createElement(tag)),
+        getElementById: jest.fn((id: string) => document.getElementById(id)),
+        getActiveElement: jest.fn(() => document.activeElement),
+        head: document.head,
+        body: document.body,
+      }
+
+      const notification = showNotification('Test message', {
+        documentAdapter: mockDocumentAdapter,
+      })
+
+      // Component should use injected head and body
+      expect(mockDocumentAdapter.head).toBe(document.head)
+      expect(mockDocumentAdapter.body).toBe(document.body)
+      expect(notification).toBeTruthy()
+    })
+
+    it('should handle document adapter errors gracefully', () => {
+      const mockDocumentAdapter: DocumentAdapter = {
+        createElement: jest.fn(() => {
+          throw new Error('DOM manipulation error')
+        }),
+        getElementById: jest.fn(() => null),
+        getActiveElement: jest.fn(() => null),
+        head: document.head,
+        body: document.body,
+      }
+
+      // Should handle errors gracefully
+      const notification = showNotification('Test message', {
+        documentAdapter: mockDocumentAdapter,
+      })
+
+      // Should return null on error
+      expect(notification).toBeNull()
     })
   })
 })

@@ -7,6 +7,8 @@ import { showConfirm } from '../utils/confirm'
 import { showError, showSuccess } from '../utils/notifications'
 import { useLocalStorage, getLocalStorageItem, setLocalStorageItem, removeLocalStorageItem } from '../hooks/useLocalStorage'
 import { logger } from '../utils/logger'
+import type { StorageAdapter, HttpClient } from '../types/adapters'
+import { defaultAdapters } from '../types/adapters'
 
 interface Execution {
   id: string
@@ -29,6 +31,10 @@ interface WorkflowTabsProps {
   initialWorkflowId?: string | null
   workflowLoadKey?: number // Counter to force new tab creation (required when initialWorkflowId is set)
   onExecutionStart?: (executionId: string) => void
+  // Dependency injection
+  storage?: StorageAdapter | null
+  httpClient?: HttpClient
+  apiBaseUrl?: string
 }
 
 const WORKFLOW_TABS_STORAGE_KEY = 'workflowTabs'
@@ -71,18 +77,33 @@ const emptyTabState: WorkflowTabData = {
 const storedTabs = loadTabsFromStorage()
 let globalTabs: WorkflowTabData[] = storedTabs.length > 0 ? storedTabs : [emptyTabState]
 
-const saveTabsToStorage = (tabs: WorkflowTabData[]) => {
-  if (typeof window === 'undefined') {
+const saveTabsToStorage = (tabs: WorkflowTabData[], storage?: StorageAdapter | null) => {
+  if (!storage) {
+    if (typeof window !== 'undefined') {
+      try {
+        window.localStorage.setItem(WORKFLOW_TABS_STORAGE_KEY, JSON.stringify(tabs))
+      } catch {
+        // ignore quota errors
+      }
+    }
     return
   }
+  
   try {
-    window.localStorage.setItem(WORKFLOW_TABS_STORAGE_KEY, JSON.stringify(tabs))
+    storage.setItem(WORKFLOW_TABS_STORAGE_KEY, JSON.stringify(tabs))
   } catch {
     // ignore quota errors
   }
 }
 
-export default function WorkflowTabs({ initialWorkflowId, workflowLoadKey, onExecutionStart }: WorkflowTabsProps) {
+export default function WorkflowTabs({ 
+  initialWorkflowId, 
+  workflowLoadKey, 
+  onExecutionStart,
+  storage = defaultAdapters.createLocalStorageAdapter(),
+  httpClient = defaultAdapters.createHttpClient(),
+  apiBaseUrl = 'http://localhost:8000/api'
+}: WorkflowTabsProps) {
   // Initialize from global tabs (persists across remounts)
   const [tabs, setTabs] = useState<WorkflowTabData[]>(() => {
     return [...globalTabs] // Create a copy
@@ -156,7 +177,7 @@ export default function WorkflowTabs({ initialWorkflowId, workflowLoadKey, onExe
   useEffect(() => {
     tabsRef.current = tabs
     globalTabs = [...tabs] // Update global storage
-    saveTabsToStorage(tabs)
+    saveTabsToStorage(tabs, storage)
   }, [tabs])
 
   useEffect(() => {
@@ -661,19 +682,20 @@ export default function WorkflowTabs({ initialWorkflowId, workflowLoadKey, onExe
     setIsPublishing(true)
     try {
       const tagsArray = publishForm.tags.split(',').map(tag => tag.trim()).filter(Boolean)
-      const response = await fetch(`http://localhost:8000/api/workflows/${activeTab.workflowId}/publish`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token ? { Authorization: `Bearer ${token}` } : {})
-        },
-        body: JSON.stringify({
+      const headers: HeadersInit = {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {})
+      }
+      const response = await httpClient.post(
+        `${apiBaseUrl}/workflows/${activeTab.workflowId}/publish`,
+        {
           category: publishForm.category,
           tags: tagsArray,
           difficulty: publishForm.difficulty,
           estimated_time: publishForm.estimated_time || undefined
-        })
-      })
+        },
+        headers
+      )
 
       if (response.ok) {
         const published = await response.json()

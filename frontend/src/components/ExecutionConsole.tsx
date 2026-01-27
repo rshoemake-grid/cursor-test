@@ -6,6 +6,8 @@ import ExecutionStatusBadge from './ExecutionStatusBadge'
 import LogLevelBadge from './LogLevelBadge'
 import { logger } from '../utils/logger'
 import { getLogLevelColor } from '../utils/logLevel'
+import type { DocumentAdapter } from '../types/adapters'
+import { defaultAdapters } from '../types/adapters'
 
 interface Execution {
   id: string
@@ -24,6 +26,8 @@ interface ExecutionConsoleProps {
   onExecutionStatusUpdate?: (workflowId: string, executionId: string, status: 'running' | 'completed' | 'failed') => void
   onExecutionNodeUpdate?: (workflowId: string, executionId: string, nodeId: string, nodeState: any) => void
   onRemoveExecution?: (workflowId: string, executionId: string) => void
+  // Dependency injection
+  documentAdapter?: DocumentAdapter | null
 }
 
 export default function ExecutionConsole({ 
@@ -34,7 +38,8 @@ export default function ExecutionConsole({
   onExecutionLogUpdate,
   onExecutionStatusUpdate,
   onExecutionNodeUpdate,
-  onRemoveExecution
+  onRemoveExecution,
+  documentAdapter = defaultAdapters.createDocumentAdapter()
 }: ExecutionConsoleProps) {
   const [isExpanded, setIsExpanded] = useState(false)
   const [height, setHeight] = useState(300)
@@ -130,6 +135,8 @@ export default function ExecutionConsole({
 
   // Handle resizing
   useEffect(() => {
+    if (!documentAdapter) return
+
     const handleMouseMove = (e: MouseEvent) => {
       if (isResizing.current) {
         const delta = startY.current - e.clientY
@@ -140,25 +147,35 @@ export default function ExecutionConsole({
 
     const handleMouseUp = () => {
       isResizing.current = false
-      document.body.style.cursor = 'default'
-      document.body.style.userSelect = 'auto'
+      if (documentAdapter.body) {
+        documentAdapter.body.style.cursor = 'default'
+        documentAdapter.body.style.userSelect = 'auto'
+      }
     }
 
-    document.addEventListener('mousemove', handleMouseMove)
-    document.addEventListener('mouseup', handleMouseUp)
+    if (typeof document !== 'undefined') {
+      document.addEventListener('mousemove', handleMouseMove)
+      document.addEventListener('mouseup', handleMouseUp)
+    }
 
     return () => {
-      document.removeEventListener('mousemove', handleMouseMove)
-      document.removeEventListener('mouseup', handleMouseUp)
+      if (typeof document !== 'undefined') {
+        document.removeEventListener('mousemove', handleMouseMove)
+        document.removeEventListener('mouseup', handleMouseUp)
+      }
     }
-  }, [])
+  }, [documentAdapter])
 
   const handleMouseDown = (e: React.MouseEvent) => {
+    if (!documentAdapter) return
+
     isResizing.current = true
     startY.current = e.clientY
     startHeight.current = height
-    document.body.style.cursor = 'ns-resize'
-    document.body.style.userSelect = 'none'
+    if (documentAdapter.body) {
+      documentAdapter.body.style.cursor = 'ns-resize'
+      documentAdapter.body.style.userSelect = 'none'
+    }
   }
 
   return (
@@ -243,7 +260,7 @@ export default function ExecutionConsole({
       {isExpanded && (
         <div className="overflow-hidden" style={{ height: `${height - 48}px` }}>
           {activeTab === 'chat' ? (
-            <WorkflowChat 
+            <WorkflowChat
               workflowId={activeWorkflowId}
               onWorkflowUpdate={onWorkflowUpdate}
             />
