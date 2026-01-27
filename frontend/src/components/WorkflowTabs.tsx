@@ -5,7 +5,7 @@ import { useWorkflowTabs, type WorkflowTabData, type Execution } from '../contex
 import WorkflowBuilder, { WorkflowBuilderHandle } from './WorkflowBuilder'
 import { api } from '../api/client'
 import { showConfirm } from '../utils/confirm'
-import { showError } from '../utils/notifications'
+import { showError, showSuccess } from '../utils/notifications'
 import { logger } from '../utils/logger'
 import type { StorageAdapter, HttpClient } from '../types/adapters'
 import { defaultAdapters } from '../types/adapters'
@@ -26,7 +26,7 @@ export default function WorkflowTabs({
   initialWorkflowId, 
   workflowLoadKey, 
   onExecutionStart,
-  storage = defaultAdapters.createLocalStorageAdapter(),
+  storage: _storage = defaultAdapters.createLocalStorageAdapter(),
   httpClient = defaultAdapters.createHttpClient(),
   apiBaseUrl = 'http://localhost:8000/api'
 }: WorkflowTabsProps) {
@@ -165,8 +165,9 @@ export default function WorkflowTabs({
           // If closing active tab, switch to the last tab
           if (tabId === activeTabId && filtered.length > 0) {
             setActiveTabId(filtered[filtered.length - 1].id)
-          } else if (tabId === activeTabId) {
-            setActiveTabId(null)
+          } else if (tabId === activeTabId && filtered.length === 0) {
+            // If no tabs left, set to empty string (will be handled by context)
+            setActiveTabId('')
           }
           return filtered
         })
@@ -293,8 +294,9 @@ export default function WorkflowTabs({
           // If closing active tab, switch to the last tab
           if (tabToClose.id === activeTabId && filtered.length > 0) {
             setActiveTabId(filtered[filtered.length - 1].id)
-          } else if (tabToClose.id === activeTabId) {
-            setActiveTabId(null)
+          } else if (tabToClose.id === activeTabId && filtered.length === 0) {
+            // If no tabs left, set to empty string (will be handled by context)
+            setActiveTabId('')
           }
           return filtered
         })

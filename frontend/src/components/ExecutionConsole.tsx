@@ -8,14 +8,7 @@ import { logger } from '../utils/logger'
 import { getLogLevelColor } from '../utils/logLevel'
 import type { DocumentAdapter } from '../types/adapters'
 import { defaultAdapters } from '../types/adapters'
-
-interface Execution {
-  id: string
-  status: string
-  startedAt: Date
-  nodes: Record<string, any>
-  logs: any[]
-}
+import type { Execution } from '../contexts/WorkflowTabsContext'
 
 interface ExecutionConsoleProps {
   activeWorkflowId: string | null

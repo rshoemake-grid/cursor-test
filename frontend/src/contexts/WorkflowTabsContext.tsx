@@ -7,6 +7,7 @@ export interface Execution {
   id: string
   status: string
   startedAt: Date
+  completedAt?: Date
   nodes: Record<string, any>
   logs: any[]
 }

@@ -49,8 +49,8 @@ function createAxiosInstance(
   return instance
 }
 
-// Default axios instance for backward compatibility
-const axiosInstance = createAxiosInstance()
+// Default axios instance for backward compatibility (exported via api object)
+// Note: createAxiosInstance() is called directly in createApiClient() below
 
 /**
  * Create API client with dependency injection support

@@ -31,15 +31,7 @@ import { getLocalStorageItem, setLocalStorageItem } from '../hooks/useLocalStora
 import { logger } from '../utils/logger'
 import type { StorageAdapter } from '../types/adapters'
 import { defaultAdapters } from '../types/adapters'
-
-interface Execution {
-  id: string
-  status: 'running' | 'completed' | 'failed'
-  startedAt: Date
-  completedAt?: Date
-  nodes: Record<string, any>
-  logs: any[]
-}
+import type { Execution } from '../contexts/WorkflowTabsContext'
 
 interface WorkflowTab {
   workflowId: string
@@ -59,7 +51,7 @@ interface WorkflowBuilderProps {
   onWorkflowSaved?: (workflowId: string, name: string) => void
   onWorkflowModified?: () => void
   onWorkflowLoaded?: (workflowId: string, name: string) => void
-  onCloseWorkflow?: (workflowId: string) => void
+  onCloseWorkflow?: (workflowId: string) => void // Unused but kept for API compatibility
   onClearExecutions?: (workflowId: string) => void
   onExecutionLogUpdate?: (workflowId: string, executionId: string, log: any) => void
   onExecutionStatusUpdate?: (workflowId: string, executionId: string, status: 'running' | 'completed' | 'failed') => void
@@ -108,7 +100,7 @@ const WorkflowBuilder = forwardRef<WorkflowBuilderHandle, WorkflowBuilderProps>(
   onWorkflowSaved,
   onWorkflowModified,
   onWorkflowLoaded,
-  onCloseWorkflow,
+  onCloseWorkflow: _onCloseWorkflow,
       onClearExecutions: _onClearExecutions,
   onExecutionLogUpdate,
   onExecutionStatusUpdate,
@@ -121,7 +113,7 @@ const WorkflowBuilder = forwardRef<WorkflowBuilderHandle, WorkflowBuilderProps>(
   const [selectedNodeId, setSelectedNodeId] = React.useState<string | null>(null)
   const [selectedNodeIds, setSelectedNodeIds] = React.useState<Set<string>>(new Set())
   const [localWorkflowId, setLocalWorkflowId] = useState<string | null>(workflowId)
-  const [nodeExecutionStates, setNodeExecutionStates] = useState<Record<string, { status: string; error?: string }>>({})
+  const [nodeExecutionStates, _setNodeExecutionStates] = useState<Record<string, { status: string; error?: string }>>({})
   const [clipboardNode, setClipboardNode] = useState<any>(null)
   const [clipboardAction, setClipboardAction] = useState<'copy' | 'cut' | null>(null)
   const [showMarketplaceDialog, setShowMarketplaceDialog] = useState(false)
@@ -234,7 +226,7 @@ const WorkflowBuilder = forwardRef<WorkflowBuilderHandle, WorkflowBuilderProps>(
   const isDraggingRef = useRef<boolean>(false)
   const { isAuthenticated } = useAuth()
   const [isSaving, setIsSaving] = useState(false)
-  const [isExecuting, setIsExecuting] = useState(false)
+  const [_isExecuting, setIsExecuting] = useState(false)
   const [showInputs, setShowInputs] = useState(false)
   const [executionInputs, setExecutionInputs] = useState<string>('{}')
   const workflowIdRef = useRef<string | null>(workflowId)
@@ -251,10 +243,10 @@ const WorkflowBuilder = forwardRef<WorkflowBuilderHandle, WorkflowBuilderProps>(
     ...node,
     data: {
       ...node.data,
-      agent_config: node.data?.agent_config ?? node.agent_config ?? {},
-      condition_config: node.data?.condition_config ?? node.condition_config ?? {},
-      loop_config: node.data?.loop_config ?? node.loop_config ?? {},
-      input_config: node.data?.input_config ?? node.input_config ?? {},
+      agent_config: (node.data as any)?.agent_config ?? (node as any).agent_config ?? {},
+      condition_config: (node.data as any)?.condition_config ?? (node as any).condition_config ?? {},
+      loop_config: (node.data as any)?.loop_config ?? (node as any).loop_config ?? {},
+      input_config: (node.data as any)?.input_config ?? (node as any).input_config ?? {},
     },
   }), [])
 
@@ -307,7 +299,7 @@ const WorkflowBuilder = forwardRef<WorkflowBuilderHandle, WorkflowBuilderProps>(
   const nodeToWorkflowNode = useCallback((node: any) => ({
     id: node.id,
     type: node.type,
-    name: node.data.name || node.data.label,
+    name: node.data.name || (typeof node.data.label === 'string' ? node.data.label : ''),
     description: node.data.description,
         agent_config: (node.data as any).agent_config,
         condition_config: (node.data as any).condition_config,
@@ -332,7 +324,12 @@ const WorkflowBuilder = forwardRef<WorkflowBuilderHandle, WorkflowBuilderProps>(
       name: localWorkflowName,
       description: localWorkflowDescription,
       nodes: nodes.map(nodeToWorkflowNode),
-      edges: edges,
+      edges: edges.map(edge => ({
+        id: edge.id,
+        source: edge.source,
+        target: edge.target,
+        label: typeof edge.label === 'string' ? edge.label : undefined
+      })),
       variables: variables,
     }
 
@@ -379,7 +376,12 @@ const WorkflowBuilder = forwardRef<WorkflowBuilderHandle, WorkflowBuilderProps>(
       name: localWorkflowName,
       description: localWorkflowDescription,
       nodes: nodes.map(nodeToWorkflowNode),
-      edges: edges,
+      edges: edges.map(edge => ({
+        id: edge.id,
+        source: edge.source,
+        target: edge.target,
+        label: typeof edge.label === 'string' ? edge.label : undefined
+      })),
       variables: variables,
     }
     const filename = (localWorkflowName.trim() || 'workflow').replace(/\s+/g, '-')
@@ -683,7 +685,7 @@ const WorkflowBuilder = forwardRef<WorkflowBuilderHandle, WorkflowBuilderProps>(
     const reactFlowInstance = reactFlowInstanceRef.current
     if (reactFlowInstance) {
       const allSelectedNodes = reactFlowInstance.getNodes().filter((n: Node) => n.selected)
-      const allSelectedIds = new Set(allSelectedNodes.map((n: Node) => n.id))
+      const allSelectedIds = new Set<string>(allSelectedNodes.map((n: Node) => n.id as string))
       setSelectedNodeIds(allSelectedIds)
       
       // Update selectedNodeId based on selection count
@@ -691,7 +693,7 @@ const WorkflowBuilder = forwardRef<WorkflowBuilderHandle, WorkflowBuilderProps>(
         setSelectedNodeId(null)
       } else if (allSelectedIds.size === 1) {
         // Single selection - set the selected node ID
-        const singleId = Array.from(allSelectedIds)[0]
+        const singleId = Array.from(allSelectedIds)[0] as string
         setSelectedNodeId(singleId)
       } else {
         // Multiple selection - clear selectedNodeId to disable properties panel
@@ -892,13 +894,6 @@ const WorkflowBuilder = forwardRef<WorkflowBuilderHandle, WorkflowBuilderProps>(
     }
   }, [workflowId, onWorkflowLoaded, workflowNodeToNode, setNodes, setEdges, tabIsUnsaved])
 
-  // Handle execution start - just call parent callback
-  const handleExecutionStart = useCallback((executionId: string) => {
-    // Parent (WorkflowTabs) handles execution tracking
-    if (onExecutionStart) {
-      onExecutionStart(executionId)
-    }
-  }, [onExecutionStart])
 
   // Helper function to apply workflow changes locally
   const applyLocalChanges = useCallback((changes: any) => {
@@ -1431,9 +1426,10 @@ const WorkflowBuilder = forwardRef<WorkflowBuilderHandle, WorkflowBuilderProps>(
           setShowInputs(false)
         }}
         onSubmit={(inputs) => {
-          handleConfirmExecute(inputs)
+          setExecutionInputs(JSON.stringify(inputs))
+          handleConfirmExecute()
         }}
-        nodes={nodes}
+        nodes={nodes.map(nodeToWorkflowNode)}
         workflowName={localWorkflowName}
       />
 

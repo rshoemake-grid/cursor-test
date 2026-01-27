@@ -164,10 +164,6 @@ export default function PropertyPanel({ selectedNodeId, setSelectedNodeId, selec
     if (nodeData) {
       const nodeName = nodeData.name || nodeData.label || ''
       const nodeDescription = nodeData.description || ''
-      const agentConfig = nodeData.agent_config || {}
-      const conditionConfig = nodeData.condition_config || {}
-      let loopConfig = nodeData.loop_config || {}
-      const inputConfig = nodeData.input_config || {}
       
       // Initialize loop_config with defaults if it's missing or empty for Loop nodes
       const selectedNode = nodes.find((n) => n.id === selectedNodeId) || 
@@ -199,7 +195,6 @@ export default function PropertyPanel({ selectedNodeId, setSelectedNodeId, selec
               : node
           )
         )
-        loopConfig = defaultLoopConfig
       }
       
       // Only sync if the input is not currently focused (user is not typing)
@@ -361,22 +356,7 @@ export default function PropertyPanel({ selectedNodeId, setSelectedNodeId, selec
     }
     
     // Config fields are now handled by node-specific editors
-    if (configField === 'input_config') {
-      // Update appropriate input config field
-      if (field === 'bucket_name') setBucketNameValue(value)
-      else if (field === 'object_path') setObjectPathValue(value)
-      else if (field === 'credentials') setGcpCredentialsValue(value)
-      else if (field === 'object_key') setObjectKeyValue(value)
-      else if (field === 'access_key_id') setAccessKeyIdValue(value)
-      else if (field === 'secret_access_key') setSecretKeyValue(value)
-      else if (field === 'region') setRegionValue(value)
-      else if (field === 'project_id') setProjectIdValue(value)
-      else if (field === 'topic_name') setTopicNameValue(value)
-      else if (field === 'subscription_name') setSubscriptionNameValue(value)
-      else if (field === 'file_path') setFilePathValue(value)
-      else if (field === 'file_pattern') setFilePatternValue(value)
-      else if (field === 'overwrite') setOverwriteValue(value)
-    }
+    // No need to update local state here - editors handle their own state
     
     // Update the node state
     setNodes((nodes) =>
