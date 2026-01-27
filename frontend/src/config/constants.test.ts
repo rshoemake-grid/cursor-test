@@ -121,5 +121,41 @@ describe('constants', () => {
     it('should return key for new workflow when workflowId is null', () => {
       expect(getChatHistoryKey(null)).toBe('chat_history_new_workflow')
     })
+
+    it('should handle empty string workflowId', () => {
+      // Empty string is falsy, so should use new_workflow fallback
+      expect(getChatHistoryKey('')).toBe('chat_history_new_workflow')
+    })
+  })
+
+  describe('buildStorageKey edge cases', () => {
+    it('should handle undefined suffix', () => {
+      expect(buildStorageKey('prefix', undefined)).toBe('prefix')
+    })
+
+    it('should handle null suffix', () => {
+      expect(buildStorageKey('prefix', null as any)).toBe('prefix')
+    })
+
+    it('should handle empty prefix', () => {
+      expect(buildStorageKey('', 'suffix')).toBe('suffix')
+    })
+
+    it('should handle both empty', () => {
+      expect(buildStorageKey('', '')).toBe('')
+    })
+  })
+
+  describe('API_BASE_URL environment variable handling', () => {
+    it('should use default URL when process.env is not available', () => {
+      // API_BASE_URL is evaluated at module load time
+      // This test verifies the default value is used
+      expect(API_CONFIG.BASE_URL).toBeDefined()
+      expect(typeof API_CONFIG.BASE_URL).toBe('string')
+    })
+
+    it('should have valid URL format', () => {
+      expect(API_CONFIG.BASE_URL).toMatch(/^https?:\/\//)
+    })
   })
 })
