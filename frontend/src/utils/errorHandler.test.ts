@@ -188,5 +188,33 @@ describe('errorHandler', () => {
 
       expect(logger.error).toHaveBeenCalledWith('[Component] Error:', expect.any(Error))
     })
+
+    it('should not show notification when showNotification is false', () => {
+      handleError(new Error('Error'), { showNotification: false })
+
+      expect(showError).not.toHaveBeenCalled()
+    })
+
+    it('should not log when logError is false', () => {
+      handleError(new Error('Error'), { logError: false })
+
+      expect(logger.error).not.toHaveBeenCalled()
+    })
+
+    it('should handle storage error without message', () => {
+      const error = {}
+      
+      handleStorageError(error, 'getItem', 'key', { showNotification: true })
+
+      expect(showError).toHaveBeenCalledWith('Failed to getItem storage: Unknown error')
+    })
+
+    it('should not log storage error when logError is false', () => {
+      const error = new Error('Storage error')
+      
+      handleStorageError(error, 'setItem', 'key', { logError: false })
+
+      expect(logger.error).not.toHaveBeenCalled()
+    })
   })
 })

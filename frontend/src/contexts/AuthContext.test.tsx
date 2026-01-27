@@ -533,6 +533,76 @@ describe('AuthProvider', () => {
       )
     })
 
+    it('should handle register error when response json fails', async () => {
+      const response = {
+        ok: false,
+        json: async () => { throw new Error('JSON parse error') },
+      }
+      ;(mockHttpClient.post as jest.Mock).mockResolvedValue(response)
+
+      const { result } = renderHook(() => useAuth(), {
+        wrapper: ({ children }) => wrapper({ children, options: { localStorage: mockLocalStorage, sessionStorage: mockSessionStorage, httpClient: mockHttpClient } }),
+      })
+
+      await expect(
+        act(async () => {
+          await result.current.register('newuser', 'new@example.com', 'password')
+        })
+      ).rejects.toThrow()
+    })
+
+    it('should handle login with rememberMe false clears localStorage', async () => {
+      const user = { id: '1', username: 'testuser', email: 'test@example.com', is_active: true, is_admin: false }
+      const response = {
+        ok: true,
+        json: async () => ({ access_token: 'token-123', user }),
+      }
+      ;(mockHttpClient.post as jest.Mock).mockResolvedValue(response)
+
+      // Set up localStorage with existing data
+      mockLocalStorage.getItem = jest.fn((key: string) => {
+        if (key === 'auth_token') return 'old-token'
+        if (key === 'auth_user') return JSON.stringify(user)
+        return null
+      })
+
+      const { result } = renderHook(() => useAuth(), {
+        wrapper: ({ children }) => wrapper({ children, options: { localStorage: mockLocalStorage, sessionStorage: mockSessionStorage, httpClient: mockHttpClient } }),
+      })
+
+      await act(async () => {
+        await result.current.login('testuser', 'password', false)
+      })
+
+      // Should clear localStorage items
+      expect(mockLocalStorage.removeItem).toHaveBeenCalledWith('auth_token')
+      expect(mockLocalStorage.removeItem).toHaveBeenCalledWith('auth_user')
+      expect(mockLocalStorage.removeItem).toHaveBeenCalledWith('auth_remember_me')
+      // Should store in sessionStorage
+      expect(mockSessionStorage.setItem).toHaveBeenCalledWith('auth_token', 'token-123')
+      expect(mockSessionStorage.setItem).toHaveBeenCalledWith('auth_user', JSON.stringify(user))
+    })
+
+    it('should handle login error with message field', async () => {
+      const response = {
+        ok: false,
+        status: 401,
+        statusText: 'Unauthorized',
+        json: async () => ({ message: 'Invalid credentials' }),
+      }
+      ;(mockHttpClient.post as jest.Mock).mockResolvedValue(response)
+
+      const { result } = renderHook(() => useAuth(), {
+        wrapper: ({ children }) => wrapper({ children, options: { localStorage: mockLocalStorage, sessionStorage: mockSessionStorage, httpClient: mockHttpClient } }),
+      })
+
+      await expect(
+        act(async () => {
+          await result.current.login('testuser', 'wrongpassword')
+        })
+      ).rejects.toThrow('Invalid credentials')
+    })
+
     it('should use custom logger', async () => {
       const customLogger = {
         debug: jest.fn(),

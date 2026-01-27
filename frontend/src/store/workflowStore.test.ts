@@ -315,5 +315,243 @@ describe('useWorkflowStore', () => {
       
       expect(workflow.nodes[0].name).toBe('node-1')
     })
+
+    it('should convert node with agent_config', () => {
+      const node: Node = {
+        id: '1',
+        type: 'agent',
+        position: { x: 0, y: 0 },
+        data: {
+          label: 'Agent Node',
+          agent_config: { model: 'gpt-4', temperature: 0.7 },
+        },
+      }
+      
+      useWorkflowStore.getState().addNode(node)
+      
+      const workflow = useWorkflowStore.getState().toWorkflowDefinition()
+      
+      expect(workflow.nodes[0].agent_config).toEqual({ model: 'gpt-4', temperature: 0.7 })
+    })
+
+    it('should convert node with condition_config', () => {
+      const node: Node = {
+        id: '1',
+        type: 'condition',
+        position: { x: 0, y: 0 },
+        data: {
+          label: 'Condition Node',
+          condition_config: { expression: 'x > 10' },
+        },
+      }
+      
+      useWorkflowStore.getState().addNode(node)
+      
+      const workflow = useWorkflowStore.getState().toWorkflowDefinition()
+      
+      expect(workflow.nodes[0].condition_config).toEqual({ expression: 'x > 10' })
+    })
+
+    it('should convert node with loop_config', () => {
+      const node: Node = {
+        id: '1',
+        type: 'loop',
+        position: { x: 0, y: 0 },
+        data: {
+          label: 'Loop Node',
+          loop_config: { max_iterations: 10 },
+        },
+      }
+      
+      useWorkflowStore.getState().addNode(node)
+      
+      const workflow = useWorkflowStore.getState().toWorkflowDefinition()
+      
+      expect(workflow.nodes[0].loop_config).toEqual({ max_iterations: 10 })
+    })
+
+    it('should convert node with inputs', () => {
+      const node: Node = {
+        id: '1',
+        type: 'start',
+        position: { x: 0, y: 0 },
+        data: {
+          label: 'Start',
+          inputs: ['input1', 'input2'],
+        },
+      }
+      
+      useWorkflowStore.getState().addNode(node)
+      
+      const workflow = useWorkflowStore.getState().toWorkflowDefinition()
+      
+      expect(workflow.nodes[0].inputs).toEqual(['input1', 'input2'])
+    })
+
+    it('should convert node with empty inputs array', () => {
+      const node: Node = {
+        id: '1',
+        type: 'start',
+        position: { x: 0, y: 0 },
+        data: {
+          label: 'Start',
+          inputs: [],
+        },
+      }
+      
+      useWorkflowStore.getState().addNode(node)
+      
+      const workflow = useWorkflowStore.getState().toWorkflowDefinition()
+      
+      expect(workflow.nodes[0].inputs).toEqual([])
+    })
+
+    it('should convert node without inputs (defaults to empty array)', () => {
+      const node: Node = {
+        id: '1',
+        type: 'start',
+        position: { x: 0, y: 0 },
+        data: {
+          label: 'Start',
+        },
+      }
+      
+      useWorkflowStore.getState().addNode(node)
+      
+      const workflow = useWorkflowStore.getState().toWorkflowDefinition()
+      
+      expect(workflow.nodes[0].inputs).toEqual([])
+    })
+
+    it('should load workflow with empty description', () => {
+      const workflow: WorkflowDefinition = {
+        id: 'workflow-1',
+        name: 'Test Workflow',
+        description: '',
+        nodes: [],
+        edges: [],
+        variables: {},
+      }
+      
+      useWorkflowStore.getState().loadWorkflow(workflow)
+      
+      expect(useWorkflowStore.getState().workflowDescription).toBe('')
+    })
+
+    it('should load workflow with undefined description', () => {
+      const workflow: WorkflowDefinition = {
+        id: 'workflow-1',
+        name: 'Test Workflow',
+        description: undefined as any,
+        nodes: [],
+        edges: [],
+        variables: {},
+      }
+      
+      useWorkflowStore.getState().loadWorkflow(workflow)
+      
+      expect(useWorkflowStore.getState().workflowDescription).toBe('')
+    })
+
+    it('should load workflow node with missing position (defaults to 0,0)', () => {
+      const workflow: WorkflowDefinition = {
+        id: 'workflow-1',
+        name: 'Test Workflow',
+        description: 'Test',
+        nodes: [
+          {
+            id: '1',
+            type: 'start',
+            name: 'Start',
+            position: undefined as any,
+          },
+        ],
+        edges: [],
+        variables: {},
+      }
+      
+      useWorkflowStore.getState().loadWorkflow(workflow)
+      
+      const node = useWorkflowStore.getState().nodes[0]
+      expect(node.position).toEqual({ x: 0, y: 0 })
+    })
+
+    it('should handle node data with all fallback options', () => {
+      const workflow: WorkflowDefinition = {
+        id: 'workflow-1',
+        name: 'Test Workflow',
+        description: 'Test',
+        nodes: [
+          {
+            id: '1',
+            type: 'start',
+            name: 'Node Name',
+            position: { x: 0, y: 0 },
+            data: {
+              label: 'Label',
+              name: 'Data Name',
+            },
+          } as any,
+        ],
+        edges: [],
+        variables: {},
+      }
+      
+      useWorkflowStore.getState().loadWorkflow(workflow)
+      
+      const node = useWorkflowStore.getState().nodes[0]
+      // Should prefer data.label, then data.name, then wfNode.name, then wfNode.type
+      expect(node.data.label).toBe('Label')
+      expect(node.data.name).toBe('Data Name')
+    })
+
+    it('should handle node data fallback chain correctly', () => {
+      const workflow: WorkflowDefinition = {
+        id: 'workflow-1',
+        name: 'Test Workflow',
+        description: 'Test',
+        nodes: [
+          {
+            id: '1',
+            type: 'start',
+            name: 'Workflow Node Name',
+            position: { x: 0, y: 0 },
+          },
+        ],
+        edges: [],
+        variables: {},
+      }
+      
+      useWorkflowStore.getState().loadWorkflow(workflow)
+      
+      const node = useWorkflowStore.getState().nodes[0]
+      // Should use wfNode.name when data.label and data.name are missing
+      expect(node.data.label).toBe('Workflow Node Name')
+      expect(node.data.name).toBe('Workflow Node Name')
+    })
+
+    it('should handle node data fallback to type', () => {
+      const workflow: WorkflowDefinition = {
+        id: 'workflow-1',
+        name: 'Test Workflow',
+        description: 'Test',
+        nodes: [
+          {
+            id: '1',
+            type: 'agent',
+            position: { x: 0, y: 0 },
+          } as any,
+        ],
+        edges: [],
+        variables: {},
+      }
+      
+      useWorkflowStore.getState().loadWorkflow(workflow)
+      
+      const node = useWorkflowStore.getState().nodes[0]
+      // Should use type when all other options are missing
+      expect(node.data.label).toBe('agent')
+      expect(node.data.name).toBe('agent')
+    })
   })
 })

@@ -421,5 +421,67 @@ describe('createApiClient', () => {
         statusText: 'Internal Server Error',
       }))
     })
+
+    it('should handle executeWorkflow error without response', async () => {
+      const error: any = new Error('Network error')
+      // No response property
+      ;(mockInstance.post as jest.Mock).mockRejectedValue(error)
+
+      const api = createApiClient()
+      
+      await expect(api.executeWorkflow('workflow-1')).rejects.toThrow('Network error')
+      expect(logger.error).toHaveBeenCalledWith('[API Client] executeWorkflow error:', error)
+      expect(logger.error).toHaveBeenCalledWith('[API Client] Error details:', expect.objectContaining({
+        message: 'Network error',
+      }))
+    })
+
+    it('should handle getLLMSettings error without response status', async () => {
+      const error: any = new Error('Network error')
+      // No response.status property
+      ;(mockInstance.get as jest.Mock).mockRejectedValue(error)
+
+      const api = createApiClient()
+      
+      await expect(api.getLLMSettings()).rejects.toThrow('Network error')
+    })
+
+    it('should handle getLLMSettings with 401 status', async () => {
+      const error: any = new Error('Unauthorized')
+      error.response = { status: 401 }
+      ;(mockInstance.get as jest.Mock).mockRejectedValue(error)
+
+      const api = createApiClient()
+      const result = await api.getLLMSettings()
+      
+      expect(result).toEqual({ providers: [] })
+    })
+
+    it('should handle getLLMSettings with non-401 error status', async () => {
+      const error: any = new Error('Server error')
+      error.response = { status: 500 }
+      ;(mockInstance.get as jest.Mock).mockRejectedValue(error)
+
+      const api = createApiClient()
+      
+      await expect(api.getLLMSettings()).rejects.toThrow('Server error')
+    })
+
+    it('should handle request interceptor error', () => {
+      const error = new Error('Interceptor error')
+      mockInstance.interceptors.request.use.mockImplementation((onFulfilled, onRejected) => {
+        if (onRejected) {
+          onRejected(error)
+        }
+      })
+
+      createApiClient({
+        localStorage: mockLocalStorage,
+        sessionStorage: mockSessionStorage,
+      })
+
+      // Should not crash
+      expect(mockInstance.interceptors.request.use).toHaveBeenCalled()
+    })
   })
 })
