@@ -228,4 +228,113 @@ describe('storageHelpers', () => {
       )
     })
   })
+
+  describe('edge cases', () => {
+    it('should handle safeStorageGet with undefined item', () => {
+      ;(mockStorage.getItem as jest.Mock).mockReturnValue(undefined)
+      const result = safeStorageGet(mockStorage, 'key', 'default')
+      expect(result).toBe('default')
+    })
+
+    it('should handle safeStorageGet with empty string item', () => {
+      ;(mockStorage.getItem as jest.Mock).mockReturnValue('')
+      const result = safeStorageGet(mockStorage, 'key', 'default')
+      // Empty string is falsy, should return default
+      expect(result).toBe('default')
+    })
+
+    it('should handle safeStorageGet with valid JSON string "null"', () => {
+      ;(mockStorage.getItem as jest.Mock).mockReturnValue('null')
+      const result = safeStorageGet(mockStorage, 'key', 'default')
+      expect(result).toBe(null)
+    })
+
+    it('should handle safeStorageGet with valid JSON string "false"', () => {
+      ;(mockStorage.getItem as jest.Mock).mockReturnValue('false')
+      const result = safeStorageGet(mockStorage, 'key', 'default')
+      expect(result).toBe(false)
+    })
+
+    it('should handle safeStorageGet with valid JSON string "0"', () => {
+      ;(mockStorage.getItem as jest.Mock).mockReturnValue('0')
+      const result = safeStorageGet(mockStorage, 'key', 'default')
+      expect(result).toBe(0)
+    })
+
+    it('should handle safeStorageGet with valid JSON string empty array', () => {
+      ;(mockStorage.getItem as jest.Mock).mockReturnValue('[]')
+      const result = safeStorageGet(mockStorage, 'key', 'default')
+      expect(result).toEqual([])
+    })
+
+    it('should handle safeStorageGet with valid JSON string empty object', () => {
+      ;(mockStorage.getItem as jest.Mock).mockReturnValue('{}')
+      const result = safeStorageGet(mockStorage, 'key', 'default')
+      expect(result).toEqual({})
+    })
+
+    it('should handle safeStorageSet with null value', () => {
+      const result = safeStorageSet(mockStorage, 'key', null)
+      expect(result).toBe(true)
+      expect(mockStorage.setItem).toHaveBeenCalledWith('key', 'null')
+    })
+
+    it('should handle safeStorageSet with false value', () => {
+      const result = safeStorageSet(mockStorage, 'key', false)
+      expect(result).toBe(true)
+      expect(mockStorage.setItem).toHaveBeenCalledWith('key', 'false')
+    })
+
+    it('should handle safeStorageSet with 0 value', () => {
+      const result = safeStorageSet(mockStorage, 'key', 0)
+      expect(result).toBe(true)
+      expect(mockStorage.setItem).toHaveBeenCalledWith('key', '0')
+    })
+
+    it('should handle safeStorageSet with empty string value', () => {
+      const result = safeStorageSet(mockStorage, 'key', '')
+      expect(result).toBe(true)
+      expect(mockStorage.setItem).toHaveBeenCalledWith('key', '""')
+    })
+
+    it('should handle safeStorageSet with empty array value', () => {
+      const result = safeStorageSet(mockStorage, 'key', [])
+      expect(result).toBe(true)
+      expect(mockStorage.setItem).toHaveBeenCalledWith('key', '[]')
+    })
+
+    it('should handle safeStorageSet with empty object value', () => {
+      const result = safeStorageSet(mockStorage, 'key', {})
+      expect(result).toBe(true)
+      expect(mockStorage.setItem).toHaveBeenCalledWith('key', '{}')
+    })
+
+    it('should handle safeStorageHas with empty string', () => {
+      ;(mockStorage.getItem as jest.Mock).mockReturnValue('')
+      const result = safeStorageHas(mockStorage, 'key')
+      // Empty string is truthy, so should return true
+      expect(result).toBe(true)
+    })
+
+    it('should handle safeStorageClear when clear is not a function', () => {
+      const storageWithoutClear = {
+        getItem: jest.fn(),
+        setItem: jest.fn(),
+        removeItem: jest.fn(),
+        clear: 'not-a-function',
+      }
+      const result = safeStorageClear(storageWithoutClear as any)
+      expect(result).toBe(false)
+    })
+
+    it('should handle safeStorageClear when clear is undefined', () => {
+      const storageWithoutClear = {
+        getItem: jest.fn(),
+        setItem: jest.fn(),
+        removeItem: jest.fn(),
+      }
+      const result = safeStorageClear(storageWithoutClear as StorageAdapter)
+      expect(result).toBe(false)
+    })
+  })
 })

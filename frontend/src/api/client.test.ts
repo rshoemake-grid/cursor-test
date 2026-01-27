@@ -483,5 +483,179 @@ describe('createApiClient', () => {
       // Should not crash
       expect(mockInstance.interceptors.request.use).toHaveBeenCalled()
     })
+
+    it('should handle localStorage null but sessionStorage available', () => {
+      mockSessionStorage.getItem.mockImplementation((key: string) => {
+        if (key === 'auth_token') return 'token-from-session'
+        return null
+      })
+
+      createApiClient({
+        localStorage: null,
+        sessionStorage: mockSessionStorage,
+      })
+
+      expect(mockInstance.interceptors.request.use).toHaveBeenCalled()
+      const interceptorFn = (mockInstance.interceptors.request.use as jest.Mock).mock.calls[0][0]
+      const config = { headers: {} }
+      const result = interceptorFn(config)
+      
+      // Should not add token when localStorage is null (because local && session check fails)
+      expect(result.headers.Authorization).toBeUndefined()
+    })
+
+    it('should handle sessionStorage null but localStorage available', () => {
+      mockLocalStorage.getItem.mockImplementation((key: string) => {
+        if (key === 'auth_remember_me') return 'true'
+        if (key === 'auth_token') return 'token-from-local'
+        return null
+      })
+
+      createApiClient({
+        localStorage: mockLocalStorage,
+        sessionStorage: null,
+      })
+
+      expect(mockInstance.interceptors.request.use).toHaveBeenCalled()
+      const interceptorFn = (mockInstance.interceptors.request.use as jest.Mock).mock.calls[0][0]
+      const config = { headers: {} }
+      const result = interceptorFn(config)
+      
+      // Should not add token when sessionStorage is null (because local && session check fails)
+      expect(result.headers.Authorization).toBeUndefined()
+    })
+
+    it('should handle rememberMe being undefined', () => {
+      mockLocalStorage.getItem.mockImplementation((key: string) => {
+        if (key === 'auth_remember_me') return null // undefined/not set
+        if (key === 'auth_token') return 'token-from-local'
+        return null
+      })
+      mockSessionStorage.getItem.mockImplementation((key: string) => {
+        if (key === 'auth_token') return 'token-from-session'
+        return null
+      })
+
+      createApiClient({
+        localStorage: mockLocalStorage,
+        sessionStorage: mockSessionStorage,
+      })
+
+      expect(mockInstance.interceptors.request.use).toHaveBeenCalled()
+      const interceptorFn = (mockInstance.interceptors.request.use as jest.Mock).mock.calls[0][0]
+      const config = { headers: {} }
+      const result = interceptorFn(config)
+      
+      // When rememberMe is not 'true', should use sessionStorage
+      expect(result.headers.Authorization).toBe('Bearer token-from-session')
+    })
+
+    it('should handle rememberMe being false string', () => {
+      mockLocalStorage.getItem.mockImplementation((key: string) => {
+        if (key === 'auth_remember_me') return 'false'
+        return null
+      })
+      mockSessionStorage.getItem.mockImplementation((key: string) => {
+        if (key === 'auth_token') return 'token-from-session'
+        return null
+      })
+
+      createApiClient({
+        localStorage: mockLocalStorage,
+        sessionStorage: mockSessionStorage,
+      })
+
+      expect(mockInstance.interceptors.request.use).toHaveBeenCalled()
+      const interceptorFn = (mockInstance.interceptors.request.use as jest.Mock).mock.calls[0][0]
+      const config = { headers: {} }
+      const result = interceptorFn(config)
+      
+      // When rememberMe is 'false', should use sessionStorage
+      expect(result.headers.Authorization).toBe('Bearer token-from-session')
+    })
+
+    it('should handle duplicateWorkflow with workflow that has no name', async () => {
+      const originalWorkflow = { id: '1' } // No name property
+      const duplicatedWorkflow = { id: '2', name: 'undefined-copy' }
+      ;(mockInstance.get as jest.Mock).mockResolvedValue({ data: originalWorkflow })
+      ;(mockInstance.post as jest.Mock).mockResolvedValue({ data: duplicatedWorkflow })
+
+      const api = createApiClient()
+      const result = await api.duplicateWorkflow('1')
+
+      expect(mockInstance.get).toHaveBeenCalledWith('/workflows/1')
+      expect(mockInstance.post).toHaveBeenCalledWith('/workflows', {
+        ...originalWorkflow,
+        id: undefined,
+        name: 'undefined-copy'
+      })
+      expect(result).toEqual(duplicatedWorkflow)
+    })
+
+    it('should handle bulkDeleteWorkflows with empty array', async () => {
+      const response = { message: 'Deleted', deleted_count: 0 }
+      ;(mockInstance.post as jest.Mock).mockResolvedValue({ data: response })
+
+      const api = createApiClient()
+      const result = await api.bulkDeleteWorkflows([])
+
+      expect(mockInstance.post).toHaveBeenCalledWith('/workflows/bulk-delete', {
+        workflow_ids: []
+      })
+      expect(result).toEqual(response)
+    })
+
+    it('should handle bulkDeleteWorkflows with failed_ids', async () => {
+      const response = { 
+        message: 'Partially deleted', 
+        deleted_count: 1, 
+        failed_ids: ['workflow-2'] 
+      }
+      ;(mockInstance.post as jest.Mock).mockResolvedValue({ data: response })
+
+      const api = createApiClient()
+      const result = await api.bulkDeleteWorkflows(['workflow-1', 'workflow-2'])
+
+      expect(result).toEqual(response)
+      expect(result.failed_ids).toEqual(['workflow-2'])
+    })
+
+    it('should handle publishWorkflow without estimated_time', async () => {
+      const publishData = {
+        category: 'automation',
+        tags: ['tag1'],
+        difficulty: 'medium',
+      }
+      const response = { success: true }
+      ;(mockInstance.post as jest.Mock).mockResolvedValue({ data: response })
+
+      const api = createApiClient()
+      const result = await api.publishWorkflow('1', publishData)
+
+      expect(mockInstance.post).toHaveBeenCalledWith('/workflows/1/publish', publishData)
+      expect(result).toEqual(response)
+    })
+
+    it('should handle config.headers being undefined', () => {
+      mockLocalStorage.getItem.mockImplementation((key: string) => {
+        if (key === 'auth_remember_me') return 'true'
+        if (key === 'auth_token') return 'token-from-local'
+        return null
+      })
+
+      createApiClient({
+        localStorage: mockLocalStorage,
+        sessionStorage: mockSessionStorage,
+      })
+
+      expect(mockInstance.interceptors.request.use).toHaveBeenCalled()
+      const interceptorFn = (mockInstance.interceptors.request.use as jest.Mock).mock.calls[0][0]
+      const config: any = {} // headers is undefined
+      const result = interceptorFn(config)
+      
+      // Should create headers object if it doesn't exist
+      expect(result.headers).toBeDefined()
+      expect(result.headers.Authorization).toBe('Bearer token-from-local')
+    })
   })
 })

@@ -216,5 +216,128 @@ describe('errorHandler', () => {
 
       expect(logger.error).not.toHaveBeenCalled()
     })
+
+    it('should handle error.response without status', () => {
+      const error = {
+        response: {
+          data: { detail: 'Error without status' },
+        },
+      }
+
+      const message = handleApiError(error)
+
+      expect(message).toBe('Error without status')
+      expect(logger.error).toHaveBeenCalled()
+    })
+
+    it('should handle error.response without data', () => {
+      const error = {
+        response: {
+          status: 500,
+          statusText: 'Server Error',
+        },
+        message: 'Network error',
+      }
+
+      const message = handleApiError(error)
+
+      expect(message).toBe('Network error')
+    })
+
+    it('should handle error with config but no url', () => {
+      const error = {
+        response: {
+          status: 404,
+          statusText: 'Not Found',
+          data: { detail: 'Not found' },
+        },
+        config: {},
+      }
+
+      handleApiError(error, { context: 'API' })
+
+      expect(logger.error).toHaveBeenCalledWith('[API] Error details:', {
+        status: 404,
+        statusText: 'Not Found',
+        data: { detail: 'Not found' },
+        url: undefined,
+      })
+    })
+
+    it('should handle error without response or message', () => {
+      const error = {}
+
+      const message = handleApiError(error, { defaultMessage: 'Default' })
+
+      expect(message).toBe('Default')
+    })
+
+    it('should handle error with empty string message', () => {
+      const error = { message: '' }
+
+      const message = handleApiError(error, { defaultMessage: 'Default' })
+
+      expect(message).toBe('')
+    })
+
+    it('should handle error.response.data.detail being empty string', () => {
+      const error = {
+        response: {
+          data: { detail: '' },
+        },
+        message: 'Fallback message',
+      }
+
+      const message = handleApiError(error)
+
+      // Empty string is falsy, should fall back to message
+      expect(message).toBe('Fallback message')
+    })
+
+    it('should handle error.response.data.message being empty string', () => {
+      const error = {
+        response: {
+          data: { message: '' },
+        },
+        message: 'Fallback message',
+      }
+
+      const message = handleApiError(error)
+
+      // Empty string is falsy, should fall back to message
+      expect(message).toBe('Fallback message')
+    })
+
+    it('should handle handleError with null error', () => {
+      const message = handleError(null as any, { defaultMessage: 'Default' })
+
+      expect(message).toBe('Default')
+    })
+
+    it('should handle handleError with number error', () => {
+      const message = handleError(123 as any, { defaultMessage: 'Default' })
+
+      expect(message).toBe('Default')
+    })
+
+    it('should handle handleError with boolean error', () => {
+      const message = handleError(true as any, { defaultMessage: 'Default' })
+
+      expect(message).toBe('Default')
+    })
+
+    it('should handle handleStorageError with null error', () => {
+      handleStorageError(null as any, 'getItem', 'key')
+
+      expect(logger.error).toHaveBeenCalled()
+    })
+
+    it('should handle handleStorageError with error that has no message property', () => {
+      const error = { code: 'QUOTA_EXCEEDED' }
+      
+      handleStorageError(error, 'setItem', 'key', { showNotification: true })
+
+      expect(showError).toHaveBeenCalledWith('Failed to setItem storage: Unknown error')
+    })
   })
 })
