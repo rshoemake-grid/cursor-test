@@ -693,8 +693,9 @@ describe('WorkflowTabs', () => {
         expect(showError).toHaveBeenCalledWith(expect.stringContaining('Failed to publish workflow'))
       })
     })
+  })
 
-    describe('Execution handling', () => {
+  describe('Execution handling', () => {
     it('should handle execution start with pending execution replacement', async () => {
       const savedTabs = [
         { 
