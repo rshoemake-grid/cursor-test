@@ -1,9 +1,5 @@
-import { useReactFlow } from '@xyflow/react'
 import { X, Plus, Trash2, Save, Check } from 'lucide-react'
-import { useState, useEffect, useRef, useMemo } from 'react'
-import { showError } from '../utils/notifications'
-import { showConfirm } from '../utils/confirm'
-import { logger } from '../utils/logger'
+import { useState } from 'react'
 import { isAgentNode, isConditionNode, isLoopNode, isInputNode } from '../types/nodeData'
 import AgentNodeEditor from './editors/AgentNodeEditor'
 import ConditionNodeEditor from './editors/ConditionNodeEditor'
@@ -14,8 +10,11 @@ import FirebaseNodeEditor from './editors/FirebaseNodeEditor'
 import BigQueryNodeEditor from './editors/BigQueryNodeEditor'
 import type { StorageAdapter } from '../types/adapters'
 import { defaultAdapters } from '../types/adapters'
-import { findNodeById, nodeExists } from '../utils/nodeUtils'
 import { useNodeForm } from '../hooks/useNodeForm'
+import { useSelectedNode } from '../hooks/useSelectedNode'
+import { usePanelState } from '../hooks/usePanelState'
+import { useNodeOperations } from '../hooks/useNodeOperations'
+import { useLoopConfig } from '../hooks/useLoopConfig'
 
 interface PropertyPanelProps {
   selectedNodeId: string | null
@@ -33,97 +32,40 @@ import { useLLMProviders } from '../hooks/useLLMProviders'
 import { useAuth } from '../contexts/AuthContext'
 
 export default function PropertyPanel({ selectedNodeId, setSelectedNodeId, selectedNodeIds, nodes: nodesProp, onSave, onSaveWorkflow, storage = defaultAdapters.createLocalStorageAdapter() }: PropertyPanelProps) {
-  const { setNodes, deleteElements, getNodes } = useReactFlow()
   const { isAuthenticated } = useAuth()
   const { availableModels } = useLLMProviders({ storage, isAuthenticated })
   const [showAddInput, setShowAddInput] = useState(false)
-  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle')
-  const [panelOpen, setPanelOpen] = useState(true)
 
-  // Get nodes directly from React Flow store for stability, fallback to prop
-  const nodes = useMemo(() => {
-    try {
-      const flowNodes = getNodes()
-      return flowNodes.length > 0 ? flowNodes : (nodesProp || [])
-    } catch {
-      return nodesProp || []
-    }
-  }, [getNodes, nodesProp])
-  
-  
+  // Node selection hook
+  const { selectedNode } = useSelectedNode({
+    selectedNodeId,
+    nodesProp,
+  })
 
-  // Get selected node - use a ref to cache and prevent flickering
-  const selectedNodeRef = useRef<any>(null)
-  const selectedNodeIdRef = useRef<string | null>(null)
-  
-  const selectedNode = useMemo(() => {
-    // If no selection, clear cache
-    if (!selectedNodeId) {
-      selectedNodeRef.current = null
-      selectedNodeIdRef.current = null
-      return null
-    }
-    
-    // If same node ID and we have it cached, return cached version
-    if (selectedNodeIdRef.current === selectedNodeId && selectedNodeRef.current) {
-      // Verify it still exists
-      if (nodeExists(selectedNodeId, getNodes, nodes)) {
-        // Update cache with latest data but return cached reference to prevent flicker
-        const updated = findNodeById(selectedNodeId, getNodes, nodes)
-        if (updated) {
-          // Only update cache, but return the cached reference for stability
-          Object.assign(selectedNodeRef.current, updated)
-          return selectedNodeRef.current
-        }
-      }
-    }
-    
-    // Find the node
-    const found = findNodeById(selectedNodeId, getNodes, nodes)
-    
-    // Cache it
-    if (found) {
-      selectedNodeRef.current = { ...found } // Create a copy to stabilize reference
-      selectedNodeIdRef.current = selectedNodeId
-    } else {
-      selectedNodeRef.current = null
-      selectedNodeIdRef.current = null
-    }
-    
-    return found
-  }, [selectedNodeId, getNodes, nodes])
+  // Panel state hook
+  const { panelOpen, setPanelOpen, saveStatus, setSaveStatus, closePanel } = usePanelState({
+    selectedNode,
+  })
 
-  useEffect(() => {
-    setPanelOpen(Boolean(selectedNode))
-  }, [selectedNode])
-  
-  
-  // Initialize loop_config with defaults if it's missing or empty for Loop nodes
-  useEffect(() => {
-    if (!selectedNode || selectedNode.type !== 'loop') return
-    
-    const nodeData = selectedNode.data || {}
-    if (!nodeData.loop_config || Object.keys(nodeData.loop_config).length === 0) {
-      const defaultLoopConfig = {
-        loop_type: 'for_each',
-        max_iterations: 0,
-      }
-      // Update the node with default config
-      setNodes((nodes) =>
-        nodes.map((n) =>
-          n.id === selectedNode.id
-            ? {
-                ...n,
-                data: {
-                  ...n.data,
-                  loop_config: defaultLoopConfig,
-                },
-              }
-            : n
-        )
-      )
-    }
-  }, [selectedNode, setNodes])
+  // Loop config initialization hook
+  useLoopConfig({ selectedNode })
+
+  // Node operations hook
+  const nodeOperations = useNodeOperations({
+    selectedNode,
+    setSelectedNodeId,
+    onSave,
+    onSaveWorkflow,
+  })
+  const {
+    handleUpdate,
+    handleConfigUpdate,
+    handleDelete,
+    handleSave,
+    handleAddInput: handleAddInputOperation,
+    handleRemoveInput,
+    handleUpdateInput,
+  } = nodeOperations
 
   // LLM providers are now loaded via useLLMProviders hook
 
@@ -162,130 +104,25 @@ export default function PropertyPanel({ selectedNodeId, setSelectedNodeId, selec
     )
   }
 
-  const handleUpdate = (field: string, value: any) => {
-    if (!selectedNode) return
-    
-    const updatedData = { ...selectedNode.data, [field]: value }
-    
-    // Update label when name changes
-    if (field === 'name') {
-      updatedData.label = value
-    }
-    
-    // Update the node state
-    setNodes((nodes) =>
-      nodes.map((node) =>
-        node.id === selectedNode.id ? { ...node, data: updatedData } : node
-      )
-    )
-  }
-  
-  // Node form state management (must be after handleUpdate definition)
+  // Node form state management
   const nodeForm = useNodeForm({
     selectedNode,
     onUpdate: handleUpdate,
   })
   const { nameValue, descriptionValue, nameInputRef, descriptionInputRef, handleNameChange, handleDescriptionChange } = nodeForm
-  
-  // Helper to update nested config objects
-  const handleConfigUpdate = (configField: string, field: string, value: any) => {
-    if (!selectedNode) return
-    
-    const currentConfig = selectedNode.data[configField] || {}
-    const updatedData = {
-      ...selectedNode.data,
-      [configField]: {
-        ...currentConfig,
-        [field]: value
-      }
-    }
-    
-    // Config fields are now handled by node-specific editors
-    // No need to update local state here - editors handle their own state
-    
-    // Update the node state
-    setNodes((nodes) =>
-      nodes.map((node) =>
-        node.id === selectedNode.id ? { ...node, data: updatedData } : node
-      )
-    )
-  }
-
-  const handleDelete = async () => {
-    if (!selectedNode) return
-    // Require confirmation before deleting
-    const confirmed = await showConfirm(
-      `Are you sure you want to delete "${selectedNode.data.name || selectedNode.data.label || selectedNode.id}"?`,
-      { title: 'Delete Node', confirmText: 'Delete', cancelText: 'Cancel', type: 'danger' }
-    )
-    if (confirmed) {
-      deleteElements({ nodes: [{ id: selectedNode.id }] })
-      setSelectedNodeId(null)
-    }
-  }
 
   const handleClose = () => {
     // Just close the panel (deselect node) without deleting
     setSelectedNodeId(null)
-    setPanelOpen(false)
+    closePanel()
   }
 
-  const handleSave = async () => {
-    if (!selectedNode) return
-    
-    setSaveStatus('saving')
-    
-    try {
-      // Save the workflow first (if callback provided)
-      if (onSaveWorkflow) {
-        await onSaveWorkflow()
-      }
-      
-      // Call optional save callback if provided
-      if (onSave) {
-        await onSave()
-      }
-      
-      // Show saved feedback
-      setSaveStatus('saved')
-      setTimeout(() => {
-        setSaveStatus('idle')
-      }, 2000)
-    } catch (error) {
-      logger.error('Save failed:', error)
-      setSaveStatus('idle')
-      showError('Failed to save workflow: ' + (error instanceof Error ? error.message : 'Unknown error'))
-    }
+  const handleSaveWrapper = async () => {
+    await handleSave(setSaveStatus)
   }
 
   const handleAddInput = (inputName: string, sourceNode: string, sourceField: string) => {
-    if (!selectedNode) return
-    
-    const currentInputs = selectedNode.data.inputs || []
-    const newInput = {
-      name: inputName,
-      source_node: sourceNode || undefined,
-      source_field: sourceField || 'output'
-    }
-    
-    handleUpdate('inputs', [...currentInputs, newInput])
-    setShowAddInput(false)
-  }
-
-  const handleRemoveInput = (index: number) => {
-    if (!selectedNode) return
-    
-    const currentInputs = selectedNode.data.inputs || []
-    const newInputs = currentInputs.filter((_: any, i: number) => i !== index)
-    handleUpdate('inputs', newInputs)
-  }
-
-  const handleUpdateInput = (index: number, field: string, value: any) => {
-    if (!selectedNode) return
-    
-    const currentInputs = [...(selectedNode.data.inputs || [])]
-    currentInputs[index] = { ...currentInputs[index], [field]: value }
-    handleUpdate('inputs', currentInputs)
+    handleAddInputOperation(inputName, sourceNode, sourceField, setShowAddInput)
   }
 
   return (
@@ -301,7 +138,7 @@ export default function PropertyPanel({ selectedNodeId, setSelectedNodeId, selec
         <h3 className="text-lg font-semibold text-gray-900">Properties</h3>
         <div className="flex items-center gap-2">
           <button
-            onClick={handleSave}
+            onClick={handleSaveWrapper}
             disabled={saveStatus === 'saving'}
             className={`px-3 py-1.5 text-sm rounded-lg flex items-center gap-2 transition-colors ${
               saveStatus === 'saved'

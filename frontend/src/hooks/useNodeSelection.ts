@@ -1,6 +1,7 @@
 /**
  * Node Selection Hook
  * Manages node selection state and syncs with React Flow selection
+ * Used by WorkflowBuilder for managing selection state
  */
 
 import { useState, useCallback } from 'react'
