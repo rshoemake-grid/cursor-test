@@ -139,29 +139,6 @@ const WorkflowBuilder = forwardRef<WorkflowBuilderHandle, WorkflowBuilderProps>(
     return null
   }
   
-  // Component to handle keyboard shortcuts (must be inside ReactFlowProvider)
-  const KeyboardHandler = () => {
-    useKeyboardShortcuts({
-      selectedNodeId,
-      setSelectedNodeId,
-      notifyModified,
-      clipboardNode: clipboard.clipboardNode,
-      onCopy: clipboard.copy,
-      onCut: clipboard.cut,
-      onPaste: () => clipboard.paste(),
-    })
-    return null
-  }
-  
-  // Workflow updates handler
-  const workflowUpdates = useWorkflowUpdates({
-    nodes,
-    edges,
-    setNodes,
-    setEdges,
-    notifyModified,
-    nodeExecutionStates,
-  })
   const [localWorkflowName, setLocalWorkflowName] = useState<string>('Untitled Workflow')
   const [localWorkflowDescription, setLocalWorkflowDescription] = useState<string>('')
   const tabNameRef = useRef<string>(tabName)
@@ -179,8 +156,39 @@ const WorkflowBuilder = forwardRef<WorkflowBuilderHandle, WorkflowBuilderProps>(
     }
   }, [tabName])
 
+  // Track modifications
+  const notifyModified = useCallback(() => {
+    if (onWorkflowModified && !isLoadingRef.current) {
+      onWorkflowModified()
+    }
+  }, [onWorkflowModified])
   
-
+  // Clipboard operations (must be before KeyboardHandler)
+  const clipboard = useClipboard(reactFlowInstanceRef, notifyModified)
+  
+  // Workflow updates handler
+  const workflowUpdates = useWorkflowUpdates({
+    nodes,
+    edges,
+    setNodes,
+    setEdges,
+    notifyModified,
+    nodeExecutionStates,
+  })
+  
+  // Component to handle keyboard shortcuts (must be inside ReactFlowProvider)
+  const KeyboardHandler = () => {
+    useKeyboardShortcuts({
+      selectedNodeId,
+      setSelectedNodeId,
+      notifyModified,
+      clipboardNode: clipboard.clipboardNode,
+      onCopy: clipboard.copy,
+      onCut: clipboard.cut,
+      onPaste: () => clipboard.paste(),
+    })
+    return null
+  }
 
   useEffect(() => {
     // Don't load draft if we're in the middle of adding agents
@@ -722,7 +730,7 @@ const WorkflowBuilder = forwardRef<WorkflowBuilderHandle, WorkflowBuilderProps>(
     setContextMenu(null) // Close context menu when clicking on pane
     
     // Handle paste on pane click with Ctrl/Cmd+V
-    if ((event.ctrlKey || event.metaKey) && event.button === 0 && clipboard.clipboardNode) {
+    if ((event.ctrlKey || event.metaKey) && event.button === 0 && clipboard?.clipboardNode) {
       clipboard.paste(event.clientX, event.clientY)
     }
   }, [clipboard])
