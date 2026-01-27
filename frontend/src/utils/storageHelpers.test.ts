@@ -87,6 +87,19 @@ describe('storageHelpers', () => {
       expect(result).toBe(false)
       expect(handleStorageError).toHaveBeenCalled()
     })
+
+    it('should include context in error handling', () => {
+      ;(mockStorage.setItem as jest.Mock).mockImplementation(() => {
+        throw new Error('Quota exceeded')
+      })
+      safeStorageSet(mockStorage, 'key', 'value', 'TestContext')
+      expect(handleStorageError).toHaveBeenCalledWith(
+        expect.any(Error),
+        'setItem',
+        'key',
+        expect.objectContaining({ context: 'TestContext' })
+      )
+    })
   })
 
   describe('safeStorageRemove', () => {
@@ -108,6 +121,19 @@ describe('storageHelpers', () => {
       const result = safeStorageRemove(mockStorage, 'key')
       expect(result).toBe(false)
       expect(handleStorageError).toHaveBeenCalled()
+    })
+
+    it('should include context in error handling', () => {
+      ;(mockStorage.removeItem as jest.Mock).mockImplementation(() => {
+        throw new Error('Storage error')
+      })
+      safeStorageRemove(mockStorage, 'key', 'TestContext')
+      expect(handleStorageError).toHaveBeenCalledWith(
+        expect.any(Error),
+        'removeItem',
+        'key',
+        expect.objectContaining({ context: 'TestContext' })
+      )
     })
   })
 
@@ -143,6 +169,19 @@ describe('storageHelpers', () => {
       const result = safeStorageHas(mockStorage, 'key')
       expect(result).toBe(false)
     })
+
+    it('should include context in error handling', () => {
+      ;(mockStorage.getItem as jest.Mock).mockImplementation(() => {
+        throw new Error('Storage error')
+      })
+      safeStorageHas(mockStorage, 'key', 'TestContext')
+      expect(handleStorageError).toHaveBeenCalledWith(
+        expect.any(Error),
+        'getItem',
+        'key',
+        expect.objectContaining({ context: 'TestContext' })
+      )
+    })
   })
 
   describe('safeStorageClear', () => {
@@ -174,6 +213,19 @@ describe('storageHelpers', () => {
       const result = safeStorageClear(mockStorage)
       expect(result).toBe(false)
       expect(handleStorageError).toHaveBeenCalled()
+    })
+
+    it('should include context in error handling', () => {
+      ;(mockStorage.clear as jest.Mock).mockImplementation(() => {
+        throw new Error('Clear error')
+      })
+      safeStorageClear(mockStorage, 'TestContext')
+      expect(handleStorageError).toHaveBeenCalledWith(
+        expect.any(Error),
+        'clear',
+        'all',
+        expect.objectContaining({ context: 'TestContext' })
+      )
     })
   })
 })
