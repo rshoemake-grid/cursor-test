@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { Download, Heart, TrendingUp, Clock, ArrowLeft, Trash2, Bot, Workflow } from 'lucide-react';
+import { Download, ArrowLeft, Trash2, Bot, Workflow } from 'lucide-react';
 import { showError, showSuccess } from '../utils/notifications';
 import { useOfficialAgentSeeding } from '../hooks/useOfficialAgentSeeding';
 import { useMarketplaceData } from '../hooks/useMarketplaceData';
 import { useTemplateOperations } from '../hooks/useTemplateOperations';
 import { TemplateFilters } from '../components/TemplateFilters';
+import { TemplateGrid } from '../components/TemplateGrid';
 import type { StorageAdapter, HttpClient } from '../types/adapters';
 import { defaultAdapters } from '../types/adapters';
 
@@ -142,6 +143,51 @@ export default function MarketplacePage({
         newSet.delete(templateId);
       } else {
         newSet.add(templateId);
+      }
+      return newSet;
+    });
+  };
+
+  const handleAgentCardClick = (e: React.MouseEvent, agentId: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const target = e.target as HTMLElement;
+    if (target.closest('input[type="checkbox"]') || 
+        target.closest('button') || 
+        target.tagName === 'BUTTON' ||
+        target.tagName === 'INPUT') {
+      return;
+    }
+    setSelectedAgentIds(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(agentId)) {
+        newSet.delete(agentId);
+      } else {
+        newSet.add(agentId);
+      }
+      return newSet;
+    });
+  };
+
+  const handleToggleTemplate = (id: string) => {
+    setSelectedTemplateIds(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(id)) {
+        newSet.delete(id);
+      } else {
+        newSet.add(id);
+      }
+      return newSet;
+    });
+  };
+
+  const handleToggleAgent = (id: string) => {
+    setSelectedAgentIds(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(id)) {
+        newSet.delete(id);
+      } else {
+        newSet.add(id);
       }
       return newSet;
     });
@@ -440,356 +486,38 @@ export default function MarketplacePage({
             <p className="mt-4 text-gray-600">Loading {activeTab}...</p>
           </div>
         ) : activeTab === 'agents' ? (
-          agents.length === 0 ? (
-            <div className="text-center py-12">
-              <p className="text-gray-600">No agents found. Try adjusting your filters.</p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {agents.map((agent) => {
-                const isSelected = selectedAgentIds.has(agent.id);
-                return (
-                  <div 
-                    key={agent.id} 
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      const target = e.target as HTMLElement;
-                      if (target.closest('input[type="checkbox"]') || 
-                          target.closest('button') || 
-                          target.tagName === 'BUTTON' ||
-                          target.tagName === 'INPUT') {
-                        return;
-                      }
-                      setSelectedAgentIds(prev => {
-                        const newSet = new Set(prev);
-                        if (newSet.has(agent.id)) {
-                          newSet.delete(agent.id);
-                        } else {
-                          newSet.add(agent.id);
-                        }
-                        return newSet;
-                      });
-                    }}
-                    className={`bg-white rounded-lg shadow-md hover:shadow-lg transition-all overflow-hidden cursor-pointer border-2 ${
-                      isSelected 
-                        ? 'border-primary-500 ring-2 ring-primary-200' 
-                        : 'border-transparent'
-                    }`}
-                  >
-                    <div className="p-6">
-                      <div className="flex items-start justify-between mb-3">
-                        <div className="flex items-start gap-3 flex-1">
-                          <input
-                            type="checkbox"
-                            checked={isSelected}
-                            onChange={(e) => {
-                              e.stopPropagation();
-                              setSelectedAgentIds(prev => {
-                                const newSet = new Set(prev);
-                                if (e.target.checked) {
-                                  newSet.add(agent.id);
-                                } else {
-                                  newSet.delete(agent.id);
-                                }
-                                return newSet;
-                              });
-                            }}
-                            className="mt-1 w-5 h-5 text-primary-600 border-gray-300 rounded focus:ring-primary-500 cursor-pointer"
-                            onClick={(e) => e.stopPropagation()}
-                          />
-                          <h3 className="text-xl font-semibold text-gray-900 flex-1">
-                            {agent.name || agent.label}
-                          </h3>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          {agent.is_official && (
-                            <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded">
-                              Official
-                            </span>
-                          )}
-                        </div>
-                      </div>
-
-                      <p className="text-gray-600 text-sm mb-4 line-clamp-2">
-                        {agent.description}
-                      </p>
-
-                      {/* Tags */}
-                      {agent.tags && agent.tags.length > 0 && (
-                        <div className="flex flex-wrap gap-2 mb-4">
-                          {agent.tags.map((tag, idx) => (
-                            <span key={idx} className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded">
-                              {tag}
-                            </span>
-                          ))}
-                        </div>
-                      )}
-
-                      {/* Metadata */}
-                      <div className="flex items-center gap-4 text-sm text-gray-500 mb-4">
-                        <div className="flex items-center gap-1">
-                          <Clock className="w-4 h-4" />
-                          <span>{agent.estimated_time || 'N/A'}</span>
-                        </div>
-                        {agent.category && (
-                          <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded">
-                            {agent.category.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}
-                          </span>
-                        )}
-                        {agent.author_name && (
-                          <div className="flex items-center gap-1 text-gray-600">
-                            <span className="font-medium">By:</span>
-                            <span>{agent.author_name}</span>
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Difficulty */}
-                      <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${getDifficultyColor(agent.difficulty)}`}>
-                        {agent.difficulty}
-                      </span>
-                    </div>
-
-                    {/* Footer */}
-                    <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">
-                      <div className={`text-sm text-center py-2 px-4 rounded-lg ${
-                        isSelected 
-                          ? 'bg-primary-100 text-primary-700 font-medium' 
-                          : 'text-gray-500'
-                      }`}>
-                        {isSelected 
-                          ? 'Selected - Click "Use Agent(s)" above to use' 
-                          : 'Click card or checkbox to select'}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )
+          <TemplateGrid
+            items={agents}
+            selectedIds={selectedAgentIds}
+            type="agent"
+            onToggleSelect={handleToggleAgent}
+            onCardClick={handleAgentCardClick}
+            getDifficultyColor={getDifficultyColor}
+            emptyMessage="No agents found. Try adjusting your filters."
+            footerText={'Selected - Click "Use Agent(s)" above to use'}
+          />
         ) : activeTab === 'repository' && repositorySubTab === 'workflows' ? (
-          templates.length === 0 ? (
-            <div className="text-center py-12">
-              <p className="text-gray-600">No workflows found. Try adjusting your filters.</p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {templates.map((template) => {
-                const isSelected = selectedTemplateIds.has(template.id);
-                return (
-                <div 
-                  key={template.id} 
-                  onClick={(e) => handleCardClick(e, template.id)}
-                  className={`bg-white rounded-lg shadow-md hover:shadow-lg transition-all overflow-hidden cursor-pointer border-2 ${
-                    isSelected 
-                      ? 'border-primary-500 ring-2 ring-primary-200' 
-                      : 'border-transparent'
-                  }`}
-                >
-                  {/* Header */}
-                  <div className="p-6">
-                    <div className="flex items-start justify-between mb-3">
-                      <div className="flex items-start gap-3 flex-1">
-                        <input
-                          type="checkbox"
-                          checked={isSelected}
-                          onChange={(e) => {
-                            e.stopPropagation();
-                            setSelectedTemplateIds(prev => {
-                              const newSet = new Set(prev);
-                              if (e.target.checked) {
-                                newSet.add(template.id);
-                              } else {
-                                newSet.delete(template.id);
-                              }
-                              return newSet;
-                            });
-                          }}
-                          className="mt-1 w-5 h-5 text-primary-600 border-gray-300 rounded focus:ring-primary-500 cursor-pointer"
-                          onClick={(e) => e.stopPropagation()}
-                        />
-                        <h3 className="text-xl font-semibold text-gray-900 flex-1">
-                          {template.name}
-                        </h3>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        {template.is_official && (
-                          <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded">
-                            Official
-                          </span>
-                        )}
-                      </div>
-                    </div>
-
-                    <p className="text-gray-600 text-sm mb-4 line-clamp-2">
-                      {template.description}
-                    </p>
-
-                    {/* Tags */}
-                    <div className="flex flex-wrap gap-2 mb-4">
-                      {template.tags.map((tag) => (
-                        <span key={tag} className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded">
-                          {tag}
-                        </span>
-                      ))}
-                    </div>
-
-                    {/* Metadata */}
-                    <div className="flex items-center gap-4 text-sm text-gray-500 mb-4">
-                      <div className="flex items-center gap-1">
-                        <TrendingUp className="w-4 h-4" />
-                        <span>{template.uses_count}</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <Heart className="w-4 h-4" />
-                        <span>{template.likes_count}</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <Clock className="w-4 h-4" />
-                        <span>{template.estimated_time}</span>
-                      </div>
-                      {template.author_name && (
-                        <div className="flex items-center gap-1 text-gray-600">
-                          <span className="font-medium">By:</span>
-                          <span>{template.author_name}</span>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Difficulty */}
-                    <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${getDifficultyColor(template.difficulty)}`}>
-                      {template.difficulty}
-                    </span>
-                  </div>
-
-                  {/* Footer */}
-                  <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">
-                    <div className={`text-sm text-center py-2 px-4 rounded-lg ${
-                      isSelected 
-                        ? 'bg-primary-100 text-primary-700 font-medium' 
-                        : 'text-gray-500'
-                    }`}>
-                      {isSelected 
-                        ? 'Selected - Click "Load Workflow(s)" above to use' 
-                        : 'Click card or checkbox to select'}
-                    </div>
-                  </div>
-                </div>
-              );
-              })}
-            </div>
-          )
-        ) : templates.length === 0 ? (
-          <div className="text-center py-12">
-            <p className="text-gray-600">No workflows found. Try adjusting your filters.</p>
-          </div>
+          <TemplateGrid
+            items={templates}
+            selectedIds={selectedTemplateIds}
+            type="template"
+            onToggleSelect={handleToggleTemplate}
+            onCardClick={handleCardClick}
+            getDifficultyColor={getDifficultyColor}
+            emptyMessage="No workflows found. Try adjusting your filters."
+            footerText={'Selected - Click "Load Workflow(s)" above to use'}
+          />
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {templates.map((template) => {
-              const isSelected = selectedTemplateIds.has(template.id);
-              return (
-              <div 
-                key={template.id} 
-                onClick={(e) => handleCardClick(e, template.id)}
-                className={`bg-white rounded-lg shadow-md hover:shadow-lg transition-all overflow-hidden cursor-pointer border-2 ${
-                  isSelected 
-                    ? 'border-primary-500 ring-2 ring-primary-200' 
-                    : 'border-transparent'
-                }`}
-              >
-                {/* Header */}
-                <div className="p-6">
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="flex items-start gap-3 flex-1">
-                      <input
-                        type="checkbox"
-                        checked={isSelected}
-                        onChange={(e) => {
-                          e.stopPropagation();
-                          setSelectedTemplateIds(prev => {
-                            const newSet = new Set(prev);
-                            if (e.target.checked) {
-                              newSet.add(template.id);
-                            } else {
-                              newSet.delete(template.id);
-                            }
-                            return newSet;
-                          });
-                        }}
-                        className="mt-1 w-5 h-5 text-primary-600 border-gray-300 rounded focus:ring-primary-500 cursor-pointer"
-                        onClick={(e) => e.stopPropagation()}
-                      />
-                      <h3 className="text-xl font-semibold text-gray-900 flex-1">
-                        {template.name}
-                      </h3>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      {template.is_official && (
-                        <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded">
-                          Official
-                        </span>
-                      )}
-                    </div>
-                  </div>
-
-                  <p className="text-gray-600 text-sm mb-4 line-clamp-2">
-                    {template.description}
-                  </p>
-
-                  {/* Tags */}
-                  <div className="flex flex-wrap gap-2 mb-4">
-                    {template.tags.map((tag) => (
-                      <span key={tag} className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded">
-                        {tag}
-                      </span>
-                    ))}
-                  </div>
-
-                  {/* Metadata */}
-                  <div className="flex items-center gap-4 text-sm text-gray-500 mb-4">
-                    <div className="flex items-center gap-1">
-                      <TrendingUp className="w-4 h-4" />
-                      <span>{template.uses_count}</span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <Heart className="w-4 h-4" />
-                      <span>{template.likes_count}</span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <Clock className="w-4 h-4" />
-                      <span>{template.estimated_time}</span>
-                    </div>
-                    {template.author_name && (
-                      <div className="flex items-center gap-1 text-gray-600">
-                        <span className="font-medium">By:</span>
-                        <span>{template.author_name}</span>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Difficulty */}
-                  <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${getDifficultyColor(template.difficulty)}`}>
-                    {template.difficulty}
-                  </span>
-                </div>
-
-                {/* Footer */}
-                <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">
-                  <div className={`text-sm text-center py-2 px-4 rounded-lg ${
-                    isSelected 
-                      ? 'bg-primary-100 text-primary-700 font-medium' 
-                      : 'text-gray-500'
-                  }`}>
-                    {isSelected 
-                      ? 'Selected - Click "Load Workflow(s)" above to use' 
-                      : 'Click card or checkbox to select'}
-                  </div>
-                </div>
-              </div>
-            );
-            })}
-          </div>
+          <TemplateGrid
+            items={workflowsOfWorkflows}
+            selectedIds={selectedTemplateIds}
+            type="template"
+            onToggleSelect={handleToggleTemplate}
+            onCardClick={handleCardClick}
+            getDifficultyColor={getDifficultyColor}
+            emptyMessage="No workflows found. Try adjusting your filters."
+            footerText={'Selected - Click "Load Workflow(s)" above to use'}
+          />
         )}
       </div>
     </div>
