@@ -193,6 +193,31 @@ export default function MarketplacePage({
     });
   };
 
+  const handleToggleRepositoryAgent = (id: string) => {
+    setSelectedRepositoryAgentIds(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(id)) {
+        newSet.delete(id);
+      } else {
+        newSet.add(id);
+      }
+      return newSet;
+    });
+  };
+
+  const handleRepositoryAgentCardClick = (e: React.MouseEvent, agentId: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const target = e.target as HTMLElement;
+    if (target.closest('input[type="checkbox"]') || 
+        target.closest('button') || 
+        target.tagName === 'BUTTON' ||
+        target.tagName === 'INPUT') {
+      return;
+    }
+    handleToggleRepositoryAgent(agentId);
+  };
+
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
       case 'beginner': return 'bg-green-100 text-green-800';
@@ -506,6 +531,17 @@ export default function MarketplacePage({
             getDifficultyColor={getDifficultyColor}
             emptyMessage="No workflows found. Try adjusting your filters."
             footerText={'Selected - Click "Load Workflow(s)" above to use'}
+          />
+        ) : activeTab === 'repository' && repositorySubTab === 'agents' ? (
+          <TemplateGrid
+            items={repositoryAgents}
+            selectedIds={selectedRepositoryAgentIds}
+            type="agent"
+            onToggleSelect={handleToggleRepositoryAgent}
+            onCardClick={handleRepositoryAgentCardClick}
+            getDifficultyColor={getDifficultyColor}
+            emptyMessage="No repository agents found. Try adjusting your filters."
+            footerText={'Selected - Click "Use Agent(s)" above to use'}
           />
         ) : (
           <TemplateGrid
