@@ -832,14 +832,6 @@ describe('WorkflowTabs', () => {
         expect(screen.getByText(/Publish to Marketplace/)).toBeInTheDocument()
       })
 
-      // Submit form - use queryAllByRole to handle multiple buttons
-      const submitButtons = screen.queryAllByRole('button').filter(btn => 
-        btn.textContent?.includes('Publish') && btn.type === 'submit'
-      )
-      if (submitButtons.length > 0) {
-        fireEvent.click(submitButtons[0])
-      }
-
       // Submit form - find the form and submit it
       const form = screen.getByText(/Publish to Marketplace/).closest('form')
       if (form) {

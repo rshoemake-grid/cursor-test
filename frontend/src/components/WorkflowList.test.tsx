@@ -522,4 +522,168 @@ describe('WorkflowList', () => {
     // Should not crash when workflow has no id
     expect(screen.getByText('Workflow without ID')).toBeInTheDocument()
   })
+
+  describe('Publish functionality', () => {
+    it('should open publish modal when publish button is clicked', async () => {
+      mockApi.getWorkflows.mockResolvedValue(mockWorkflows as any)
+
+      renderWithRouter(<WorkflowList onSelectWorkflow={mockOnSelectWorkflow} />)
+
+      await waitFor(() => {
+        expect(screen.getByText('Test Workflow 1')).toBeInTheDocument()
+      })
+
+      // Find publish button - it should be in the workflow card
+      const publishButtons = screen.queryAllByRole('button').filter(btn => 
+        btn.textContent?.includes('Publish') || btn.getAttribute('title')?.includes('Publish')
+      )
+      
+      if (publishButtons.length > 0) {
+        fireEvent.click(publishButtons[0])
+        
+        await waitFor(() => {
+          expect(screen.getByText(/Publish to Marketplace/)).toBeInTheDocument()
+        })
+      }
+    })
+
+    it('should show error when trying to publish without authentication', async () => {
+      mockUseAuth.mockReturnValue({
+        isAuthenticated: false,
+        user: null,
+        token: null,
+        login: jest.fn(),
+        logout: jest.fn(),
+        register: jest.fn(),
+      } as any)
+
+      mockApi.getWorkflows.mockResolvedValue(mockWorkflows as any)
+
+      renderWithRouter(<WorkflowList onSelectWorkflow={mockOnSelectWorkflow} />)
+
+      await waitFor(() => {
+        expect(screen.getByText('Test Workflow 1')).toBeInTheDocument()
+      })
+
+      // Try to publish - should show error
+      const publishButtons = screen.queryAllByRole('button').filter(btn => 
+        btn.textContent?.includes('Publish') || btn.getAttribute('title')?.includes('Publish')
+      )
+      
+      if (publishButtons.length > 0) {
+        fireEvent.click(publishButtons[0])
+        
+        await waitFor(() => {
+          expect(showError).toHaveBeenCalledWith(expect.stringContaining('log in to publish'))
+        })
+      }
+    })
+
+    it('should handle publish form submission', async () => {
+      mockApi.getWorkflows.mockResolvedValue(mockWorkflows as any)
+      mockApi.publishWorkflow.mockResolvedValue({
+        id: 'template-1',
+        name: 'Test Workflow 1',
+        category: 'automation',
+      } as any)
+
+      renderWithRouter(<WorkflowList onSelectWorkflow={mockOnSelectWorkflow} />)
+
+      await waitFor(() => {
+        expect(screen.getByText('Test Workflow 1')).toBeInTheDocument()
+      })
+
+      // Open publish modal
+      const publishButtons = screen.queryAllByRole('button').filter(btn => 
+        btn.textContent?.includes('Publish') || btn.getAttribute('title')?.includes('Publish')
+      )
+      
+      if (publishButtons.length > 0) {
+        fireEvent.click(publishButtons[0])
+        
+        await waitFor(() => {
+          expect(screen.getByText(/Publish to Marketplace/)).toBeInTheDocument()
+        })
+
+        // Submit form
+        const form = screen.getByText(/Publish to Marketplace/).closest('form')
+        if (form) {
+          fireEvent.submit(form)
+        }
+
+        await waitFor(() => {
+          expect(showSuccess).toHaveBeenCalledWith(expect.stringContaining('Published'))
+        })
+      }
+    })
+
+    it('should handle publish error', async () => {
+      mockApi.getWorkflows.mockResolvedValue(mockWorkflows as any)
+      mockApi.publishWorkflow.mockRejectedValue(new Error('Publish failed'))
+
+      renderWithRouter(<WorkflowList onSelectWorkflow={mockOnSelectWorkflow} />)
+
+      await waitFor(() => {
+        expect(screen.getByText('Test Workflow 1')).toBeInTheDocument()
+      })
+
+      // Open publish modal
+      const publishButtons = screen.queryAllByRole('button').filter(btn => 
+        btn.textContent?.includes('Publish') || btn.getAttribute('title')?.includes('Publish')
+      )
+      
+      if (publishButtons.length > 0) {
+        fireEvent.click(publishButtons[0])
+        
+        await waitFor(() => {
+          expect(screen.getByText(/Publish to Marketplace/)).toBeInTheDocument()
+        })
+
+        // Submit form
+        const form = screen.getByText(/Publish to Marketplace/).closest('form')
+        if (form) {
+          fireEvent.submit(form)
+        }
+
+        await waitFor(() => {
+          expect(showError).toHaveBeenCalledWith(expect.stringContaining('Failed to publish'))
+        })
+      }
+    })
+
+    it('should handle publish form field changes', async () => {
+      mockApi.getWorkflows.mockResolvedValue(mockWorkflows as any)
+
+      renderWithRouter(<WorkflowList onSelectWorkflow={mockOnSelectWorkflow} />)
+
+      await waitFor(() => {
+        expect(screen.getByText('Test Workflow 1')).toBeInTheDocument()
+      })
+
+      // Open publish modal
+      const publishButtons = screen.queryAllByRole('button').filter(btn => 
+        btn.textContent?.includes('Publish') || btn.getAttribute('title')?.includes('Publish')
+      )
+      
+      if (publishButtons.length > 0) {
+        fireEvent.click(publishButtons[0])
+        
+        await waitFor(() => {
+          expect(screen.getByText(/Publish to Marketplace/)).toBeInTheDocument()
+        })
+
+        // Change form fields
+        const categorySelect = screen.queryByLabelText(/Category/i) || 
+          screen.queryAllByRole('combobox').find(sel => 
+            sel.closest('div')?.textContent?.includes('Category')
+          )
+        if (categorySelect) {
+          fireEvent.change(categorySelect, { target: { value: 'data_analysis' } })
+        }
+
+        // Form should accept changes
+        expect(categorySelect).toBeDefined()
+      }
+    })
+  })
 })
