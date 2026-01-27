@@ -1,46 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { Download, Heart, TrendingUp, Clock, ArrowLeft, Trash2, Bot, Workflow } from 'lucide-react';
 import { showError, showSuccess } from '../utils/notifications';
-import { showConfirm } from '../utils/confirm';
-import { api } from '../api/client';
-import { getLocalStorageItem, setLocalStorageItem } from '../hooks/useLocalStorage';
-import { logger } from '../utils/logger';
+import { useOfficialAgentSeeding } from '../hooks/useOfficialAgentSeeding';
+import { useMarketplaceData } from '../hooks/useMarketplaceData';
+import { useTemplateOperations } from '../hooks/useTemplateOperations';
 import type { StorageAdapter, HttpClient } from '../types/adapters';
 import { defaultAdapters } from '../types/adapters';
-
-interface Template {
-  id: string;
-  name: string;
-  description: string;
-  category: string;
-  tags: string[];
-  difficulty: string;
-  estimated_time: string;
-  is_official: boolean;
-  uses_count: number;
-  likes_count: number;
-  rating: number;
-  author_id?: string | null;
-  author_name?: string | null;
-}
-
-interface AgentTemplate {
-  id: string;
-  name: string;
-  label: string;
-  description: string;
-  category: string;
-  tags: string[];
-  difficulty: string;
-  estimated_time: string;
-  agent_config: any;
-  published_at?: string;
-  author_id?: string | null;
-  author_name?: string | null;
-  is_official?: boolean;
-}
+import type { AgentTemplate } from '../hooks/useMarketplaceData';
 
 type TabType = 'agents' | 'repository' | 'workflows-of-workflows'
 type RepositorySubTabType = 'workflows' | 'agents'
@@ -59,11 +27,6 @@ export default function MarketplacePage({
 }: MarketplacePageProps = {}) {
   const [activeTab, setActiveTab] = useState<TabType>('agents');
   const [repositorySubTab, setRepositorySubTab] = useState<RepositorySubTabType>('workflows');
-  const [templates, setTemplates] = useState<Template[]>([]);
-  const [workflowsOfWorkflows, setWorkflowsOfWorkflows] = useState<Template[]>([]);
-  const [agents, setAgents] = useState<AgentTemplate[]>([]);
-  const [repositoryAgents, setRepositoryAgents] = useState<AgentTemplate[]>([]);
-  const [loading, setLoading] = useState(true);
   const [category, setCategory] = useState<string>('');
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState('popular');
@@ -74,587 +37,90 @@ export default function MarketplacePage({
   const { token, user } = useAuth();
   const navigate = useNavigate();
 
-  useEffect(() => {
-    if (activeTab === 'repository') {
-      if (repositorySubTab === 'workflows') {
-        fetchTemplates();
-      } else {
-        fetchRepositoryAgents();
-      }
-    } else if (activeTab === 'workflows-of-workflows') {
-      fetchWorkflowsOfWorkflows();
-    } else {
-      fetchAgents();
-    }
-  }, [category, sortBy, activeTab, repositorySubTab]);
+  // Marketplace data hook
+  const marketplaceData = useMarketplaceData({
+    storage,
+    httpClient,
+    apiBaseUrl,
+    category,
+    searchQuery,
+    sortBy,
+    user,
+    activeTab,
+    repositorySubTab,
+  })
+  const {
+    templates,
+    workflowsOfWorkflows,
+    agents,
+    repositoryAgents,
+    loading,
+    setTemplates,
+    setWorkflowsOfWorkflows,
+    setAgents,
+    setRepositoryAgents,
+    fetchTemplates,
+    fetchWorkflowsOfWorkflows,
+    fetchAgents,
+    fetchRepositoryAgents,
+  } = marketplaceData
 
   // Seed official agents from official workflows (one-time)
-  useEffect(() => {
-    const seedOfficialAgents = async () => {
-      if (!storage) return
-
-      const seededKey = 'officialAgentsSeeded';
-      // Clear the flag to force re-seeding (remove this line after first successful seed)
-      try {
-        storage.removeItem(seededKey);
-      } catch (error) {
-        logger.error('Failed to remove seeded key:', error);
+  useOfficialAgentSeeding({
+    storage,
+    httpClient,
+    apiBaseUrl,
+    onAgentsSeeded: () => {
+      // Refresh the agents list if we're on the agents tab
+      if (activeTab === 'agents') {
+        fetchAgents();
       }
-      
-      let seeded = false;
-      try {
-        seeded = !!storage.getItem(seededKey);
-      } catch (error) {
-        logger.error('Failed to check seeded key:', error);
-      }
-      
-      if (seeded) {
-        logger.debug('[Marketplace] Official agents already seeded, skipping');
-        return; // Already seeded
-      }
-
-      logger.debug('[Marketplace] Starting to seed official agents...');
-      try {
-        // Fetch all official workflows
-        const response = await httpClient.get(`${apiBaseUrl}/templates/?sort_by=popular`);
-        if (!response.ok) {
-          logger.error('[Marketplace] Failed to fetch templates:', response.statusText);
-          return;
-        }
-        const workflows = await response.json() as Template[];
-        logger.debug('[Marketplace] Fetched workflows:', workflows.length);
-        const officialWorkflows = workflows.filter((w: Template) => w.is_official);
-        logger.debug('[Marketplace] Official workflows found:', officialWorkflows.length);
-
-        if (officialWorkflows.length === 0) {
-          logger.debug('[Marketplace] No official workflows found, marking as seeded');
-          setLocalStorageItem(seededKey, 'true');
-          return;
-        }
-
-        // Fetch workflow details using the /use endpoint to get nodes
-        // Note: This creates a temporary workflow but we only use it to extract agent nodes
-        const agentsToAdd: AgentTemplate[] = [];
-        for (const workflow of officialWorkflows) {
-          try {
-            logger.debug(`[Marketplace] Processing workflow: ${workflow.name} (${workflow.id})`);
-            // Use the /use endpoint to get the full workflow with nodes
-            const workflowResponse = await httpClient.post(
-              `${apiBaseUrl}/templates/${workflow.id}/use`,
-              {},
-              { 'Content-Type': 'application/json' }
-            );
-            
-            if (!workflowResponse.ok) {
-              logger.error(`[Marketplace] Failed to fetch workflow ${workflow.id}: ${workflowResponse.statusText}`);
-              continue;
-            }
-            
-            const workflowDetail = await workflowResponse.json();
-            logger.debug(`[Marketplace] Workflow ${workflow.name} has ${workflowDetail.nodes?.length || 0} nodes`);
-            
-            // Extract agent nodes from workflow nodes
-            if (workflowDetail.nodes && Array.isArray(workflowDetail.nodes)) {
-              const agentNodes = workflowDetail.nodes.filter((node: any) => {
-                const nodeType = node.type || node.data?.type;
-                const hasAgentConfig = node.agent_config || node.data?.agent_config;
-                const isAgent = nodeType === 'agent' && hasAgentConfig;
-                if (isAgent) {
-                  logger.debug(`[Marketplace] Found agent node: ${node.id || node.data?.id}`, {
-                    type: nodeType,
-                    hasConfig: !!hasAgentConfig,
-                    name: node.name || node.data?.name
-                  });
-                }
-                return isAgent;
-              });
-
-              logger.debug(`[Marketplace] Found ${agentNodes.length} agent nodes in workflow ${workflow.name}`);
-
-              for (const agentNode of agentNodes) {
-                // Create unique agent ID based on workflow and node
-                const nodeId = agentNode.id || agentNode.data?.id || `node_${Date.now()}`;
-                const agentId = `official_${workflow.id}_${nodeId}`;
-                
-                // Check if agent already exists
-                if (!storage) continue
-                const existingAgents = storage.getItem('publishedAgents');
-                const agents: AgentTemplate[] = existingAgents ? JSON.parse(existingAgents) : [];
-                if (agents.some(a => a.id === agentId)) {
-                  logger.debug(`[Marketplace] Agent ${agentId} already exists, skipping`);
-                  continue; // Skip if already exists
-                }
-
-                const agentConfig = agentNode.agent_config || agentNode.data?.agent_config || {};
-                const nodeName = agentNode.name || agentNode.data?.name || agentNode.data?.label || 'Agent';
-                const nodeDescription = agentNode.description || agentNode.data?.description || `Agent from ${workflow.name}`;
-
-                logger.debug(`[Marketplace] Creating official agent: ${nodeName} (${agentId})`);
-
-                agentsToAdd.push({
-                  id: agentId,
-                  name: nodeName,
-                  label: nodeName,
-                  description: nodeDescription,
-                  category: workflow.category || 'automation',
-                  tags: [...(workflow.tags || []), 'official', workflow.name.toLowerCase().replace(/\s+/g, '-')],
-                  difficulty: workflow.difficulty || 'intermediate',
-                  estimated_time: workflow.estimated_time || '5 min',
-                  agent_config: agentConfig,
-                  published_at: (workflow as any).created_at || new Date().toISOString(),
-                  author_id: workflow.author_id || null,
-                  author_name: workflow.author_name || 'System',
-                  is_official: true
-                });
-              }
-            } else {
-              logger.debug(`[Marketplace] Workflow ${workflow.name} has no nodes array`);
-            }
-          } catch (error) {
-            logger.error(`[Marketplace] Failed to fetch workflow ${workflow.id}:`, error);
-          }
-        }
-
-        // Add official agents to storage
-        if (agentsToAdd.length > 0 && storage) {
-          const existingAgents = storage.getItem('publishedAgents');
-          const agents: AgentTemplate[] = existingAgents ? JSON.parse(existingAgents) : [];
-          agents.push(...agentsToAdd);
-          storage.setItem('publishedAgents', JSON.stringify(agents));
-          logger.debug(`[Marketplace] Seeded ${agentsToAdd.length} official agents from workflows`);
-          logger.debug(`[Marketplace] Total agents in storage: ${agents.length}`);
-          
-          // Refresh the agents list if we're on the agents tab
-          if (activeTab === 'agents') {
-            fetchAgents();
-          }
-        } else {
-          logger.debug('[Marketplace] No agents to add');
-        }
-
-        setLocalStorageItem(seededKey, 'true');
-        logger.debug('[Marketplace] Seeding complete');
-      } catch (error) {
-        logger.error('[Marketplace] Failed to seed official agents:', error);
-      }
-    };
-
-    seedOfficialAgents();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [storage, httpClient, apiBaseUrl]); // Run once on mount
-
-  const fetchTemplates = async () => {
-    setLoading(true);
-    try {
-      const params = new URLSearchParams();
-      if (category) params.append('category', category);
-      if (searchQuery) params.append('search', searchQuery);
-      params.append('sort_by', sortBy);
-      
-      const response = await httpClient.get(`${apiBaseUrl}/templates/?${params}`);
-      const data = await response.json() as Template[];
-      setTemplates(data);
-    } catch (error) {
-      logger.error('Failed to fetch templates:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchWorkflowsOfWorkflows = async () => {
-    setLoading(true);
-    try {
-      // Fetch all workflows
-      const params = new URLSearchParams();
-      if (category) params.append('category', category);
-      if (searchQuery) params.append('search', searchQuery);
-      params.append('sort_by', sortBy);
-      
-      const response = await httpClient.get(`${apiBaseUrl}/templates/?${params}`);
-      const allWorkflows = await response.json() as Template[];
-      
-      // Filter workflows that contain references to other workflows
-      // A "workflow of workflows" is one that references other workflows in its definition
-      const workflowsOfWorkflows: Template[] = [];
-      
-      for (const workflow of allWorkflows) {
-        try {
-          // Use the /use endpoint to get workflow details
-          const workflowResponse = await httpClient.post(
-            `${apiBaseUrl}/templates/${workflow.id}/use`,
-            {},
-            { 'Content-Type': 'application/json' }
-          );
-          
-          if (workflowResponse.ok) {
-            const workflowDetail = await workflowResponse.json();
-            
-            // Check if workflow has nodes that reference other workflows
-            // This could be through tags, descriptions, or a workflow_id field in nodes
-            if (workflowDetail.nodes && Array.isArray(workflowDetail.nodes)) {
-              const hasWorkflowReference = workflowDetail.nodes.some((node: any) => {
-                // Check for workflow references in various ways
-                const nodeData = node.data || {};
-                const hasWorkflowId = node.workflow_id || nodeData.workflow_id;
-                const description = (node.description || nodeData.description || '').toLowerCase();
-                const name = (node.name || nodeData.name || '').toLowerCase();
-                
-                // Check if node references another workflow
-                return hasWorkflowId || 
-                       description.includes('workflow') || 
-                       name.includes('workflow') ||
-                       (workflow.tags && workflow.tags.some(tag => tag.toLowerCase().includes('workflow')));
-              });
-              
-              // Also check if workflow description or tags indicate it's a workflow of workflows
-              const workflowDescription = (workflow.description || '').toLowerCase();
-              const isWorkflowOfWorkflows = workflowDescription.includes('workflow of workflows') ||
-                                           workflowDescription.includes('composite workflow') ||
-                                           workflowDescription.includes('nested workflow') ||
-                                           (workflow.tags && workflow.tags.some(tag => 
-                                             tag.toLowerCase().includes('workflow-of-workflows') ||
-                                             tag.toLowerCase().includes('composite') ||
-                                             tag.toLowerCase().includes('nested')
-                                           ));
-              
-              if (hasWorkflowReference || isWorkflowOfWorkflows) {
-                workflowsOfWorkflows.push(workflow);
-              }
-            }
-          }
-        } catch (error) {
-          logger.error(`Failed to check workflow ${workflow.id}:`, error);
-        }
-      }
-      
-      setWorkflowsOfWorkflows(workflowsOfWorkflows);
-    } catch (error) {
-      logger.error('Failed to fetch workflows of workflows:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchAgents = async () => {
-    setLoading(true);
-    try {
-      // For now, load from localStorage (until backend API is ready)
-      let agentsData = getLocalStorageItem<AgentTemplate[]>('publishedAgents', []);
-      
-      // One-time migration: Set current user as author for all agents without author_id
-      if (user && user.id && agentsData.length > 0) {
-        let updated = false;
-        agentsData = agentsData.map(agent => {
-          if (!agent.author_id) {
-            updated = true;
-            return {
-              ...agent,
-              author_id: user.id,
-              author_name: user.username || user.email || null
-            };
-          }
-          return agent;
-        });
-        
-        if (updated && storage) {
-          logger.debug('[Marketplace] Updated agents with author info:', user.id);
-          storage.setItem('publishedAgents', JSON.stringify(agentsData));
-        }
-      }
-      
-      // Debug: Log loaded agents with author info
-      logger.debug('[Marketplace] Loaded agents:', agentsData.map(a => ({
-        id: a.id,
-        name: a.name,
-        author_id: a.author_id,
-        has_author_id: !!a.author_id
-      })));
-      
-      // Apply filters
-      if (category) {
-        agentsData = agentsData.filter(a => a.category === category);
-      }
-      if (searchQuery) {
-        const query = searchQuery.toLowerCase();
-        agentsData = agentsData.filter(a => 
-          a.name.toLowerCase().includes(query) || 
-          a.description.toLowerCase().includes(query) ||
-          a.tags.some(tag => tag.toLowerCase().includes(query))
-        );
-      }
-      
-      // Sort: Official agents first, then by selected sort order
-      agentsData.sort((a, b) => {
-        // First, prioritize official agents
-        const aIsOfficial = a.is_official ? 1 : 0;
-        const bIsOfficial = b.is_official ? 1 : 0;
-        if (aIsOfficial !== bIsOfficial) {
-          return bIsOfficial - aIsOfficial; // Official first (1 - 0 = 1, so b comes first)
-        }
-        
-        // If both are official or both are not, apply the selected sort
-        if (sortBy === 'popular') {
-          // For now, sort by published_at (most recent first)
-          const dateA = a.published_at ? new Date(a.published_at).getTime() : 0;
-          const dateB = b.published_at ? new Date(b.published_at).getTime() : 0;
-          return dateB - dateA;
-        } else if (sortBy === 'recent') {
-          const dateA = a.published_at ? new Date(a.published_at).getTime() : 0;
-          const dateB = b.published_at ? new Date(b.published_at).getTime() : 0;
-          return dateB - dateA;
-        }
-        
-        // Default: alphabetical by name
-        return (a.name || '').localeCompare(b.name || '');
-      });
-      
-      setAgents(agentsData);
-    } catch (error) {
-      logger.error('Failed to fetch agents:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchRepositoryAgents = async () => {
-    setLoading(true);
-    try {
-      // Load from storage
-      if (!storage) {
-        setRepositoryAgents([]);
-        setLoading(false);
-        return;
-      }
-      
-      let agentsData: AgentTemplate[] = [];
-      try {
-        const savedAgents = storage.getItem('repositoryAgents');
-        agentsData = savedAgents ? JSON.parse(savedAgents) : [];
-      } catch (error) {
-        logger.error('Failed to load repository agents from storage:', error);
-        agentsData = [];
-      }
-      
-      // Apply filters
-      if (category) {
-        agentsData = agentsData.filter(a => a.category === category);
-      }
-      if (searchQuery) {
-        const query = searchQuery.toLowerCase();
-        agentsData = agentsData.filter(a => 
-          a.name.toLowerCase().includes(query) || 
-          a.description.toLowerCase().includes(query) ||
-          a.tags.some(tag => tag.toLowerCase().includes(query))
-        );
-      }
-      
-      // Sort
-      agentsData.sort((a, b) => {
-        if (sortBy === 'popular' || sortBy === 'recent') {
-          const dateA = a.published_at ? new Date(a.published_at).getTime() : 0;
-          const dateB = b.published_at ? new Date(b.published_at).getTime() : 0;
-          return dateB - dateA;
-        }
-        return (a.name || '').localeCompare(b.name || '');
-      });
-      
-      setRepositoryAgents(agentsData);
-    } catch (error) {
-      logger.error('Failed to fetch repository agents:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const useTemplate = async (templateId: string) => {
-    try {
-      const headers: HeadersInit = { 'Content-Type': 'application/json' };
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
-      }
-
-      const response = await httpClient.post(
-        `${apiBaseUrl}/templates/${templateId}/use`,
-        {},
-        headers
-      );
-
-      if (response.ok) {
-        const workflow = await response.json();
-        logger.debug('Created workflow from template:', workflow);
-        // Navigate to builder with workflow ID and timestamp to ensure new tab is always created
-        // The timestamp makes each navigation unique, even for the same workflow
-        navigate(`/?workflow=${workflow.id}&_new=${Date.now()}`);
-      } else {
-        logger.error('Failed to use template:', await response.text());
-      }
-    } catch (error) {
-      logger.error('Failed to use template:', error);
-    }
-  };
+    },
+  })
 
 
-  const deleteSelectedAgents = async () => {
-    if (selectedAgentIds.size === 0) return;
-    
-    const selectedAgents = agents.filter(a => selectedAgentIds.has(a.id));
-    
-    // Filter out official agents - they cannot be deleted
-    const officialAgents = selectedAgents.filter(a => a.is_official);
-    const deletableAgents = selectedAgents.filter(a => !a.is_official);
-    
-    if (officialAgents.length > 0) {
-      showError(`Cannot delete ${officialAgents.length} official agent(s). Official agents cannot be deleted.`);
-      if (deletableAgents.length === 0) {
-        return; // All selected are official, nothing to delete
-      }
-    }
-    
-    // Debug logging
-    logger.debug('[Marketplace] Delete agents check:', {
-      selectedCount: deletableAgents.length,
-      user: user ? { id: user.id, username: user.username } : null,
-      selectedAgents: deletableAgents.map(a => ({
-        id: a.id,
-        name: a.name,
-        author_id: a.author_id,
-        author_id_type: typeof a.author_id,
-        user_id: user?.id,
-        user_id_type: typeof user?.id
-      }))
-    });
-    
-    const userOwnedAgents = deletableAgents.filter(a => {
-      if (!user || !a.author_id || !user.id) return false;
-      const authorIdStr = String(a.author_id);
-      const userIdStr = String(user.id);
-      const isMatch = authorIdStr === userIdStr;
-      logger.debug(`[Marketplace] Agent ${a.id} ownership:`, {
-        authorId: a.author_id,
-        authorIdStr,
-        userId: user.id,
-        userIdStr,
-        isMatch
-      });
-      return isMatch;
-    });
-    
-    logger.debug('[Marketplace] User owned agents:', userOwnedAgents.length);
-    
-    if (userOwnedAgents.length === 0) {
-      // Check if any agents have author_id set
-      const agentsWithAuthorId = deletableAgents.filter(a => a.author_id);
-      if (agentsWithAuthorId.length === 0) {
-        if (officialAgents.length > 0) {
-          showError('Selected agents were published before author tracking was added or are official. Please republish them to enable deletion.');
-        } else {
-          showError('Selected agents were published before author tracking was added. Please republish them to enable deletion.');
-        }
-      } else {
-        if (officialAgents.length > 0) {
-          showError(`You can only delete agents that you published (official agents cannot be deleted). ${deletableAgents.length} selected, ${agentsWithAuthorId.length} have author info, but none match your user ID.`);
-        } else {
-          showError(`You can only delete agents that you published. ${deletableAgents.length} selected, ${agentsWithAuthorId.length} have author info, but none match your user ID.`);
-        }
-      }
-      return;
-    }
-    
-    if (userOwnedAgents.length < deletableAgents.length) {
-      const confirmed = await showConfirm(
-        `You can only delete ${userOwnedAgents.length} of ${deletableAgents.length} selected agent(s). Delete only the ones you own?`,
-        { title: 'Partial Delete', confirmText: 'Delete', cancelText: 'Cancel', type: 'warning' }
-      );
-      if (!confirmed) return;
-    } else {
-      const confirmed = await showConfirm(
-        `Are you sure you want to delete ${userOwnedAgents.length} selected agent(s) from the marketplace?`,
-        { title: 'Delete Agents', confirmText: 'Delete', cancelText: 'Cancel', type: 'danger' }
-      );
-      if (!confirmed) return;
-    }
+  // Template operations hook
+  const templateOperations = useTemplateOperations({
+    token,
+    user,
+    httpClient,
+    apiBaseUrl,
+    storage,
+    agents,
+    templates,
+    workflowsOfWorkflows,
+    activeTab,
+    repositorySubTab,
+    setAgents,
+    setTemplates,
+    setWorkflowsOfWorkflows,
+    setRepositoryAgents,
+    setSelectedAgentIds,
+    setSelectedTemplateIds,
+    setSelectedRepositoryAgentIds,
+  })
+  const {
+    useTemplate,
+    deleteSelectedAgents: deleteSelectedAgentsHandler,
+    deleteSelectedWorkflows,
+    deleteSelectedRepositoryAgents,
+  } = templateOperations
 
-    try {
-      // Remove from storage
-      if (!storage) {
-        showError('Storage not available');
-        return;
-      }
-      const publishedAgents = storage.getItem('publishedAgents');
-      if (publishedAgents) {
-        const allAgents: AgentTemplate[] = JSON.parse(publishedAgents);
-        const agentIdsToDelete = new Set(userOwnedAgents.map(a => a.id));
-        const filteredAgents = allAgents.filter(a => !agentIdsToDelete.has(a.id));
-        storage.setItem('publishedAgents', JSON.stringify(filteredAgents));
-        
-        // Update state
-        setAgents(prevAgents => prevAgents.filter(a => !agentIdsToDelete.has(a.id)));
-        setSelectedAgentIds(new Set());
-        showSuccess(`Successfully deleted ${userOwnedAgents.length} agent(s)`);
-      }
-    } catch (error: any) {
-      showError(`Failed to delete agents: ${error?.message ?? 'Unknown error'}`);
-    }
-  };
 
-  const deleteSelectedWorkflows = async () => {
-    if (selectedTemplateIds.size === 0) return;
-    
-    const currentTemplates = activeTab === 'workflows-of-workflows' ? workflowsOfWorkflows : templates;
-    const selectedTemplates = currentTemplates.filter(t => selectedTemplateIds.has(t.id));
-    
-    // Filter out official workflows - they cannot be deleted
-    const officialTemplates = selectedTemplates.filter(t => t.is_official);
-    const deletableTemplates = selectedTemplates.filter(t => !t.is_official);
-    
-    if (officialTemplates.length > 0) {
-      showError(`Cannot delete ${officialTemplates.length} official workflow(s). Official workflows cannot be deleted.`);
-      if (deletableTemplates.length === 0) {
-        return; // All selected are official, nothing to delete
-      }
-    }
-    
-    const userOwnedTemplates = deletableTemplates.filter(t => user && t.author_id && String(t.author_id) === String(user.id));
-    
-    if (userOwnedTemplates.length === 0) {
-      if (officialTemplates.length > 0) {
-        showError('You can only delete workflows that you published (official workflows cannot be deleted)');
-      } else {
-        showError('You can only delete workflows that you published');
-      }
-      return;
-    }
-    
-    if (userOwnedTemplates.length < deletableTemplates.length) {
-      const confirmed = await showConfirm(
-        `You can only delete ${userOwnedTemplates.length} of ${deletableTemplates.length} selected workflow(s). Delete only the ones you own?`,
-        { title: 'Partial Delete', confirmText: 'Delete', cancelText: 'Cancel', type: 'warning' }
-      );
-      if (!confirmed) return;
-    } else {
-      const confirmed = await showConfirm(
-        `Are you sure you want to delete ${userOwnedTemplates.length} selected workflow(s) from the marketplace?`,
-        { title: 'Delete Workflows', confirmText: 'Delete', cancelText: 'Cancel', type: 'danger' }
-      );
-      if (!confirmed) return;
-    }
 
-    try {
-      // Delete each template via API
-      const deletePromises = userOwnedTemplates.map(template => api.deleteTemplate(template.id));
-      await Promise.all(deletePromises);
-      
-      // Update state
-      const templateIdsToDelete = new Set(userOwnedTemplates.map(t => t.id));
-      setTemplates(prevTemplates => prevTemplates.filter(t => !templateIdsToDelete.has(t.id)));
-      setWorkflowsOfWorkflows(prevWorkflows => prevWorkflows.filter(t => !templateIdsToDelete.has(t.id)));
-      setSelectedTemplateIds(new Set());
-      showSuccess(`Successfully deleted ${userOwnedTemplates.length} workflow(s)`);
-    } catch (error: any) {
-      const detail = error?.response?.data?.detail ?? error?.message ?? 'Unknown error';
-      showError(`Failed to delete workflows: ${detail}`);
-    }
-  };
+
+  // Wrapper functions that pass selected IDs to the hook handlers
+  const deleteSelectedAgentsWrapper = async () => {
+    await deleteSelectedAgentsHandler(selectedAgentIds)
+  }
+
+  const deleteSelectedWorkflowsWrapper = async () => {
+    await deleteSelectedWorkflows(selectedTemplateIds)
+  }
+
+  const deleteSelectedRepositoryAgentsWrapper = async () => {
+    await deleteSelectedRepositoryAgents(selectedRepositoryAgentIds, fetchRepositoryAgents)
+  }
 
   const handleCardClick = (e: React.MouseEvent, templateId: string) => {
     // Prevent any default behavior
@@ -738,7 +204,7 @@ export default function MarketplacePage({
                       if (!hasOfficialWorkflow) {
                         return (
                           <button
-                            onClick={deleteSelectedWorkflows}
+                            onClick={deleteSelectedWorkflowsWrapper}
                             className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center gap-2"
                           >
                             <Trash2 className="w-4 h-4" />
@@ -821,7 +287,7 @@ export default function MarketplacePage({
                       if (!hasOfficialAgent) {
                         return (
                           <button
-                            onClick={deleteSelectedAgents}
+                            onClick={deleteSelectedAgentsWrapper}
                             className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center gap-2"
                           >
                             <Trash2 className="w-4 h-4" />
@@ -833,25 +299,7 @@ export default function MarketplacePage({
                       // Repository agents can always be deleted
                       return (
                         <button
-                          onClick={async () => {
-                            const selectedAgents = repositoryAgents.filter(a => selectedRepositoryAgentIds.has(a.id));
-                            const confirmed = await showConfirm(
-                              `Are you sure you want to delete ${selectedAgents.length} selected agent(s) from your repository?`,
-                              { title: 'Delete Agents', confirmText: 'Delete', cancelText: 'Cancel', type: 'danger' }
-                            );
-                            if (!confirmed) return;
-
-                            // Remove from repositoryAgents storage
-                            if (!storage) {
-                              showError('Storage not available');
-                              return;
-                            }
-                            const remainingAgents = repositoryAgents.filter(a => !selectedRepositoryAgentIds.has(a.id));
-                            storage.setItem('repositoryAgents', JSON.stringify(remainingAgents));
-                            setRepositoryAgents(remainingAgents);
-                            setSelectedRepositoryAgentIds(new Set());
-                            showSuccess(`Successfully deleted ${selectedAgents.length} agent(s)`);
-                          }}
+                          onClick={deleteSelectedRepositoryAgentsWrapper}
                           className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center gap-2"
                         >
                           <Trash2 className="w-4 h-4" />
