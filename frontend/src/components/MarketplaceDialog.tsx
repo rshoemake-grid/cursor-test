@@ -3,6 +3,7 @@ import { X, Upload, Bot, Workflow } from 'lucide-react'
 import { showSuccess, showError } from '../utils/notifications'
 import { api } from '../api/client'
 import { useAuth } from '../contexts/AuthContext'
+import { STORAGE_KEYS } from '../config/constants'
 import type { StorageAdapter, HttpClient } from '../types/adapters'
 import { defaultAdapters } from '../types/adapters'
 
@@ -88,10 +89,10 @@ export default function MarketplaceDialog({
         throw new Error('Storage not available')
       }
 
-      const publishedAgents = storage.getItem('publishedAgents')
+      const publishedAgents = storage.getItem(STORAGE_KEYS.PUBLISHED_AGENTS)
       const agents = publishedAgents ? JSON.parse(publishedAgents) : []
       agents.push(agentTemplate)
-      storage.setItem('publishedAgents', JSON.stringify(agents))
+      storage.setItem(STORAGE_KEYS.PUBLISHED_AGENTS, JSON.stringify(agents))
 
       showSuccess('Agent published to marketplace successfully!')
       onClose()

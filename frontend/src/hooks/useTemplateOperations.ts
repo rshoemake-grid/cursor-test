@@ -9,6 +9,7 @@ import { showError, showSuccess } from '../utils/notifications'
 import { showConfirm } from '../utils/confirm'
 import { api } from '../api/client'
 import { logger } from '../utils/logger'
+import { STORAGE_KEYS } from '../config/constants'
 import type { StorageAdapter } from '../types/adapters'
 import type { Template, AgentTemplate } from './useMarketplaceData'
 
@@ -264,12 +265,12 @@ export function useTemplateOperations({
     )
     if (!confirmed) return
 
-    try {
-      const repositoryAgents = storage.getItem('repositoryAgents')
-      if (repositoryAgents) {
-        const allAgents: AgentTemplate[] = JSON.parse(repositoryAgents)
-        const remainingAgents = allAgents.filter(a => !selectedRepositoryAgentIds.has(a.id))
-        storage.setItem('repositoryAgents', JSON.stringify(remainingAgents))
+                try {
+                  const repositoryAgents = storage.getItem(STORAGE_KEYS.REPOSITORY_AGENTS)
+                  if (repositoryAgents) {
+                    const allAgents: AgentTemplate[] = JSON.parse(repositoryAgents)
+                    const remainingAgents = allAgents.filter(a => !selectedRepositoryAgentIds.has(a.id))
+                    storage.setItem(STORAGE_KEYS.REPOSITORY_AGENTS, JSON.stringify(remainingAgents))
         setRepositoryAgents(remainingAgents)
         setSelectedRepositoryAgentIds(new Set())
         showSuccess(`Successfully deleted ${selectedRepositoryAgentIds.size} agent(s)`)

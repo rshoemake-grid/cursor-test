@@ -7,6 +7,7 @@ import { useCallback, useRef } from 'react'
 import { addEdge, type Connection } from '@xyflow/react'
 import { logger } from '../utils/logger'
 import { showSuccess, showError } from '../utils/notifications'
+import { STORAGE_KEYS } from '../config/constants'
 import type { Node, Edge } from '@xyflow/react'
 import type { StorageAdapter } from '../types/adapters'
 
@@ -180,7 +181,7 @@ export function useCanvasEvents({
       
       if (!exists) {
         agentNodes.push(agentTemplate)
-        storage.setItem('customAgentNodes', JSON.stringify(agentNodes))
+        storage.setItem(STORAGE_KEYS.CUSTOM_AGENT_NODES, JSON.stringify(agentNodes))
         // Dispatch custom event to update NodePanel in same window
         if (typeof window !== 'undefined') {
           window.dispatchEvent(new Event('customAgentNodesUpdated'))

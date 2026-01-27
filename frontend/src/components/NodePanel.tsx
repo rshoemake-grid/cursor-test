@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo, useRef } from 'react'
 import { Bot, GitBranch, RotateCw, Play, Flag, Database, Radio, Folder, ChevronDown, ChevronRight } from 'lucide-react'
 import { logger } from '../utils/logger'
+import { STORAGE_KEYS } from '../config/constants'
 import type { StorageAdapter } from '../types/adapters'
 import { defaultAdapters } from '../types/adapters'
 
@@ -76,7 +77,7 @@ export default function NodePanel({
 
     // Listen for storage changes to update when agent nodes are added
     const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'customAgentNodes') {
+      if (e.key === STORAGE_KEYS.CUSTOM_AGENT_NODES) {
         try {
           const parsed = e.newValue ? JSON.parse(e.newValue) : []
           if (Array.isArray(parsed)) {

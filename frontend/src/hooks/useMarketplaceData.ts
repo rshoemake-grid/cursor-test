@@ -6,6 +6,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { logger } from '../utils/logger'
 import { getLocalStorageItem } from './useLocalStorage'
+import { STORAGE_KEYS } from '../config/constants'
 import type { StorageAdapter, HttpClient } from '../types/adapters'
 
 interface Template {
@@ -168,7 +169,7 @@ export function useMarketplaceData({
     setLoading(true)
     try {
       // For now, load from localStorage (until backend API is ready)
-      let agentsData = getLocalStorageItem<AgentTemplate[]>('publishedAgents', [])
+      let agentsData = getLocalStorageItem<AgentTemplate[]>(STORAGE_KEYS.PUBLISHED_AGENTS, [])
       
       // One-time migration: Set current user as author for all agents without author_id
       if (user && user.id && agentsData.length > 0) {
@@ -257,7 +258,7 @@ export function useMarketplaceData({
       
       let agentsData: AgentTemplate[] = []
       try {
-        const savedAgents = storage.getItem('repositoryAgents')
+        const savedAgents = storage.getItem(STORAGE_KEYS.REPOSITORY_AGENTS)
         agentsData = savedAgents ? JSON.parse(savedAgents) : []
       } catch (error) {
         logger.error('Failed to load repository agents from storage:', error)

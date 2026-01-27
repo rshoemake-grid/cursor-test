@@ -6,6 +6,7 @@
 import { useEffect } from 'react'
 import { logger } from '../utils/logger'
 import { setLocalStorageItem } from './useLocalStorage'
+import { STORAGE_KEYS } from '../config/constants'
 import type { StorageAdapter, HttpClient } from '../types/adapters'
 
 interface Template {
@@ -147,7 +148,7 @@ export function useOfficialAgentSeeding({
                 
                 // Check if agent already exists
                 if (!storage) continue
-                const existingAgents = storage.getItem('publishedAgents')
+                const existingAgents = storage.getItem(STORAGE_KEYS.PUBLISHED_AGENTS)
                 const agents: AgentTemplate[] = existingAgents ? JSON.parse(existingAgents) : []
                 if (agents.some(a => a.id === agentId)) {
                   logger.debug(`[Marketplace] Agent ${agentId} already exists, skipping`)
@@ -186,10 +187,10 @@ export function useOfficialAgentSeeding({
 
         // Add official agents to storage
         if (agentsToAdd.length > 0 && storage) {
-          const existingAgents = storage.getItem('publishedAgents')
+          const existingAgents = storage.getItem(STORAGE_KEYS.PUBLISHED_AGENTS)
           const agents: AgentTemplate[] = existingAgents ? JSON.parse(existingAgents) : []
           agents.push(...agentsToAdd)
-          storage.setItem('publishedAgents', JSON.stringify(agents))
+          storage.setItem(STORAGE_KEYS.PUBLISHED_AGENTS, JSON.stringify(agents))
           logger.debug(`[Marketplace] Seeded ${agentsToAdd.length} official agents from workflows`)
           logger.debug(`[Marketplace] Total agents in storage: ${agents.length}`)
           

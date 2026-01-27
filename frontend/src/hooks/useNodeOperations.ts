@@ -8,6 +8,7 @@ import { useReactFlow } from '@xyflow/react'
 import { showError } from '../utils/notifications'
 import { showConfirm } from '../utils/confirm'
 import { logger } from '../utils/logger'
+import { UI_CONSTANTS } from '../config/constants'
 
 interface UseNodeOperationsOptions {
   selectedNode: any | null
@@ -101,7 +102,7 @@ export function useNodeOperations({
       setSaveStatus('saved')
       setTimeout(() => {
         setSaveStatus('idle')
-      }, 2000)
+      }, UI_CONSTANTS.SAVE_STATUS_DELAY)
     } catch (error) {
       logger.error('Save failed:', error)
       setSaveStatus('idle')

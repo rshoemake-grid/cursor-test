@@ -44,6 +44,10 @@ export const STORAGE_KEYS = {
   WORKFLOW_DRAFTS: 'workflowDrafts',
   AUTH_TOKEN: 'auth_token',
   SESSION_TOKEN: 'session_token',
+  PUBLISHED_AGENTS: 'publishedAgents',
+  REPOSITORY_AGENTS: 'repositoryAgents',
+  CUSTOM_AGENT_NODES: 'customAgentNodes',
+  WORKFLOW_ID_PREFIX: 'workflow-',
 } as const
 
 // Default Values
@@ -71,6 +75,7 @@ export const UI_CONSTANTS = {
     MAX: 600,
     DEFAULT: 300,
   },
+  SAVE_STATUS_DELAY: 2000, // Delay before resetting save status (ms)
 } as const
 
 // Node Types
