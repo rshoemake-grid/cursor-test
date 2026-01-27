@@ -23,30 +23,30 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">100% </span>
+                <span class="strong">78.29% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>129/129</span>
+                <span class='fraction'>101/129</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">92.3% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>12/13</span>
+                <span class='fraction'>0/0</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">100% </span>
+                <span class="strong">0% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>6/6</span>
+                <span class='fraction'>0/6</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">100% </span>
+                <span class="strong">78.29% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>129/129</span>
+                <span class='fraction'>101/129</span>
             </div>
         
             
@@ -61,7 +61,7 @@
             </div>
         </template>
     </div>
-    <div class='status-line high'></div>
+    <div class='status-line medium'></div>
     <pre><table class="coverage">
 <tr><td class="line-count quiet"><a name='L1'></a><a href='#L1'>1</a>
 <a name='L2'></a><a href='#L2'>2</a>
@@ -289,39 +289,39 @@
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">235x</span>
-<span class="cline-any cline-yes">235x</span>
-<span class="cline-any cline-yes">235x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">235x</span>
-<span class="cline-any cline-yes">235x</span>
-<span class="cline-any cline-yes">235x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">235x</span>
-<span class="cline-any cline-yes">235x</span>
-<span class="cline-any cline-yes">235x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">241x</span>
-<span class="cline-any cline-yes">241x</span>
-<span class="cline-any cline-yes">241x</span>
-<span class="cline-any cline-yes">241x</span>
-<span class="cline-any cline-yes">240x</span>
-<span class="cline-any cline-yes">240x</span>
-<span class="cline-any cline-yes">240x</span>
-<span class="cline-any cline-yes">240x</span>
-<span class="cline-any cline-yes">240x</span>
-<span class="cline-any cline-yes">240x</span>
-<span class="cline-any cline-yes">240x</span>
-<span class="cline-any cline-yes">240x</span>
-<span class="cline-any cline-yes">241x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">3x</span>
-<span class="cline-any cline-yes">3x</span>
-<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">3x</span>
-<span class="cline-any cline-yes">3x</span>
-<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">/**
  * Type definitions for node data structures
@@ -419,39 +419,39 @@ export interface NodeData {
 export type NodeWithData = Node&lt;NodeData &amp; Record&lt;string, unknown&gt;&gt;
 &nbsp;
 // Type guards
-export function isAgentNode(node: NodeWithData | null): node is NodeWithData &amp; { type: 'agent' } {
-  return node?.type === 'agent'
-}
+<span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >export function isAgentNode(node: NodeWithData | null): node is NodeWithData &amp; { type: 'agent' } {</span></span>
+<span class="cstat-no" title="statement not covered" >  return node?.type === 'agent'</span>
+<span class="cstat-no" title="statement not covered" >}</span>
 &nbsp;
-export function isConditionNode(node: NodeWithData | null): node is NodeWithData &amp; { type: 'condition' } {
-  return node?.type === 'condition'
-}
+<span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >export function isConditionNode(node: NodeWithData | null): node is NodeWithData &amp; { type: 'condition' } {</span></span>
+<span class="cstat-no" title="statement not covered" >  return node?.type === 'condition'</span>
+<span class="cstat-no" title="statement not covered" >}</span>
 &nbsp;
-export function isLoopNode(node: NodeWithData | null): node is NodeWithData &amp; { type: 'loop' } {
-  return node?.type === 'loop'
-}
+<span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >export function isLoopNode(node: NodeWithData | null): node is NodeWithData &amp; { type: 'loop' } {</span></span>
+<span class="cstat-no" title="statement not covered" >  return node?.type === 'loop'</span>
+<span class="cstat-no" title="statement not covered" >}</span>
 &nbsp;
-export function isInputNode(node: NodeWithData | null): node is NodeWithData &amp; { 
-  type: 'gcp_bucket' | 'aws_s3' | 'gcp_pubsub' | 'local_filesystem' | 'database' | 'firebase' | 'bigquery'
-} {
-  return node !== null &amp;&amp; [
-    'gcp_bucket', 
-    'aws_s3', 
-    'gcp_pubsub', 
-    'local_filesystem', 
-    'database', 
-    'firebase', 
-    'bigquery'
-  ].includes(node.type<span class="branch-0 cbranch-no" title="branch not covered" > || '')</span>
-}
+<span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >export function isInputNode(node: NodeWithData | null): node is NodeWithData &amp; { </span></span>
+<span class="cstat-no" title="statement not covered" >  type: 'gcp_bucket' | 'aws_s3' | 'gcp_pubsub' | 'local_filesystem' | 'database' | 'firebase' | 'bigquery'</span>
+<span class="cstat-no" title="statement not covered" >} {</span>
+<span class="cstat-no" title="statement not covered" >  return node !== null &amp;&amp; [</span>
+<span class="cstat-no" title="statement not covered" >    'gcp_bucket', </span>
+<span class="cstat-no" title="statement not covered" >    'aws_s3', </span>
+<span class="cstat-no" title="statement not covered" >    'gcp_pubsub', </span>
+<span class="cstat-no" title="statement not covered" >    'local_filesystem', </span>
+<span class="cstat-no" title="statement not covered" >    'database', </span>
+<span class="cstat-no" title="statement not covered" >    'firebase', </span>
+<span class="cstat-no" title="statement not covered" >    'bigquery'</span>
+<span class="cstat-no" title="statement not covered" >  ].includes(node.type || '')</span>
+<span class="cstat-no" title="statement not covered" >}</span>
 &nbsp;
-export function isStartNode(node: NodeWithData | null): node is NodeWithData &amp; { type: 'start' } {
-  return node?.type === 'start'
-}
+<span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >export function isStartNode(node: NodeWithData | null): node is NodeWithData &amp; { type: 'start' } {</span></span>
+<span class="cstat-no" title="statement not covered" >  return node?.type === 'start'</span>
+<span class="cstat-no" title="statement not covered" >}</span>
 &nbsp;
-export function isEndNode(node: NodeWithData | null): node is NodeWithData &amp; { type: 'end' } {
-  return node?.type === 'end'
-}
+<span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >export function isEndNode(node: NodeWithData | null): node is NodeWithData &amp; { type: 'end' } {</span></span>
+<span class="cstat-no" title="statement not covered" >  return node?.type === 'end'</span>
+<span class="cstat-no" title="statement not covered" >}</span>
 &nbsp;
 &nbsp;</pre></td></tr></table></pre>
 
@@ -460,7 +460,7 @@ export function isEndNode(node: NodeWithData | null): node is NodeWithData &amp;
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-01-27T21:06:22.235Z
+                at 2026-01-27T22:19:41.510Z
             </div>
         <script src="../../prettify.js"></script>
         <script>

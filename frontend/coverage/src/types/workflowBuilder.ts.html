@@ -25,7 +25,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>0/32</span>
+                <span class='fraction'>0/61</span>
             </div>
         
             
@@ -46,7 +46,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>0/32</span>
+                <span class='fraction'>0/61</span>
             </div>
         
             
@@ -96,7 +96,65 @@
 <a name='L31'></a><a href='#L31'>31</a>
 <a name='L32'></a><a href='#L32'>32</a>
 <a name='L33'></a><a href='#L33'>33</a>
-<a name='L34'></a><a href='#L34'>34</a></td><td class="line-coverage quiet"><span class="cline-any cline-no">&nbsp;</span>
+<a name='L34'></a><a href='#L34'>34</a>
+<a name='L35'></a><a href='#L35'>35</a>
+<a name='L36'></a><a href='#L36'>36</a>
+<a name='L37'></a><a href='#L37'>37</a>
+<a name='L38'></a><a href='#L38'>38</a>
+<a name='L39'></a><a href='#L39'>39</a>
+<a name='L40'></a><a href='#L40'>40</a>
+<a name='L41'></a><a href='#L41'>41</a>
+<a name='L42'></a><a href='#L42'>42</a>
+<a name='L43'></a><a href='#L43'>43</a>
+<a name='L44'></a><a href='#L44'>44</a>
+<a name='L45'></a><a href='#L45'>45</a>
+<a name='L46'></a><a href='#L46'>46</a>
+<a name='L47'></a><a href='#L47'>47</a>
+<a name='L48'></a><a href='#L48'>48</a>
+<a name='L49'></a><a href='#L49'>49</a>
+<a name='L50'></a><a href='#L50'>50</a>
+<a name='L51'></a><a href='#L51'>51</a>
+<a name='L52'></a><a href='#L52'>52</a>
+<a name='L53'></a><a href='#L53'>53</a>
+<a name='L54'></a><a href='#L54'>54</a>
+<a name='L55'></a><a href='#L55'>55</a>
+<a name='L56'></a><a href='#L56'>56</a>
+<a name='L57'></a><a href='#L57'>57</a>
+<a name='L58'></a><a href='#L58'>58</a>
+<a name='L59'></a><a href='#L59'>59</a>
+<a name='L60'></a><a href='#L60'>60</a>
+<a name='L61'></a><a href='#L61'>61</a>
+<a name='L62'></a><a href='#L62'>62</a>
+<a name='L63'></a><a href='#L63'>63</a></td><td class="line-coverage quiet"><span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -134,33 +192,62 @@
 <span class="cstat-no" title="statement not covered" > * Follows Interface Segregation Principle - clients only depend on what they need</span>
 <span class="cstat-no" title="statement not covered" > */</span>
 <span class="cstat-no" title="statement not covered" ></span>
+<span class="cstat-no" title="statement not covered" >import type { StorageAdapter } from '../types/adapters'</span>
+<span class="cstat-no" title="statement not covered" >import type { Execution } from '../contexts/WorkflowTabsContext'</span>
+<span class="cstat-no" title="statement not covered" ></span>
+<span class="cstat-no" title="statement not covered" >/**</span>
+<span class="cstat-no" title="statement not covered" > * Core workflow builder properties - always required</span>
+<span class="cstat-no" title="statement not covered" > */</span>
 <span class="cstat-no" title="statement not covered" >export interface WorkflowBuilderCoreProps {</span>
 <span class="cstat-no" title="statement not covered" >  tabId: string</span>
 <span class="cstat-no" title="statement not covered" >  workflowId: string | null</span>
 <span class="cstat-no" title="statement not covered" >  tabName: string</span>
-<span class="cstat-no" title="statement not covered" >  tabIsUnsaved?: boolean</span>
+<span class="cstat-no" title="statement not covered" >  tabIsUnsaved: boolean</span>
 <span class="cstat-no" title="statement not covered" >}</span>
 <span class="cstat-no" title="statement not covered" ></span>
+<span class="cstat-no" title="statement not covered" >/**</span>
+<span class="cstat-no" title="statement not covered" > * Execution-related properties - for workflow execution tracking</span>
+<span class="cstat-no" title="statement not covered" > */</span>
 <span class="cstat-no" title="statement not covered" >export interface WorkflowBuilderExecutionProps {</span>
-<span class="cstat-no" title="statement not covered" >  onExecutionStart?: (id: string) =&gt; void</span>
+<span class="cstat-no" title="statement not covered" >  workflowTabs?: Array&lt;{</span>
+<span class="cstat-no" title="statement not covered" >    workflowId: string</span>
+<span class="cstat-no" title="statement not covered" >    workflowName: string</span>
+<span class="cstat-no" title="statement not covered" >    executions: Execution[]</span>
+<span class="cstat-no" title="statement not covered" >    activeExecutionId: string | null</span>
+<span class="cstat-no" title="statement not covered" >  }&gt;</span>
+<span class="cstat-no" title="statement not covered" >  onExecutionStart?: (executionId: string) =&gt; void</span>
 <span class="cstat-no" title="statement not covered" >  onExecutionLogUpdate?: (workflowId: string, executionId: string, log: any) =&gt; void</span>
 <span class="cstat-no" title="statement not covered" >  onExecutionStatusUpdate?: (workflowId: string, executionId: string, status: 'running' | 'completed' | 'failed') =&gt; void</span>
 <span class="cstat-no" title="statement not covered" >  onExecutionNodeUpdate?: (workflowId: string, executionId: string, nodeId: string, nodeState: any) =&gt; void</span>
+<span class="cstat-no" title="statement not covered" >  onRemoveExecution?: (workflowId: string, executionId: string) =&gt; void</span>
+<span class="cstat-no" title="statement not covered" >  onClearExecutions?: (workflowId: string) =&gt; void</span>
 <span class="cstat-no" title="statement not covered" >}</span>
 <span class="cstat-no" title="statement not covered" ></span>
+<span class="cstat-no" title="statement not covered" >/**</span>
+<span class="cstat-no" title="statement not covered" > * Persistence-related properties - for workflow save/load operations</span>
+<span class="cstat-no" title="statement not covered" > */</span>
 <span class="cstat-no" title="statement not covered" >export interface WorkflowBuilderPersistenceProps {</span>
-<span class="cstat-no" title="statement not covered" >  onWorkflowSaved?: (id: string, name: string) =&gt; void</span>
+<span class="cstat-no" title="statement not covered" >  onWorkflowSaved?: (workflowId: string, name: string) =&gt; void</span>
 <span class="cstat-no" title="statement not covered" >  onWorkflowModified?: () =&gt; void</span>
+<span class="cstat-no" title="statement not covered" >  onWorkflowLoaded?: (workflowId: string, name: string) =&gt; void</span>
+<span class="cstat-no" title="statement not covered" >  onCloseWorkflow?: (workflowId: string) =&gt; void // Unused but kept for API compatibility</span>
 <span class="cstat-no" title="statement not covered" >}</span>
 <span class="cstat-no" title="statement not covered" ></span>
-<span class="cstat-no" title="statement not covered" >export interface WorkflowBuilderSelectionProps {</span>
-<span class="cstat-no" title="statement not covered" >  onNodeSelected?: (nodeId: string | null) =&gt; void</span>
+<span class="cstat-no" title="statement not covered" >/**</span>
+<span class="cstat-no" title="statement not covered" > * Dependency injection properties</span>
+<span class="cstat-no" title="statement not covered" > */</span>
+<span class="cstat-no" title="statement not covered" >export interface WorkflowBuilderDependencyProps {</span>
+<span class="cstat-no" title="statement not covered" >  storage?: StorageAdapter | null</span>
 <span class="cstat-no" title="statement not covered" >}</span>
 <span class="cstat-no" title="statement not covered" ></span>
+<span class="cstat-no" title="statement not covered" >/**</span>
+<span class="cstat-no" title="statement not covered" > * Complete WorkflowBuilder props - combines all interface segments</span>
+<span class="cstat-no" title="statement not covered" > * This follows ISP by allowing clients to only depend on the segments they need</span>
+<span class="cstat-no" title="statement not covered" > */</span>
 <span class="cstat-no" title="statement not covered" >export type WorkflowBuilderProps = WorkflowBuilderCoreProps &amp;</span>
 <span class="cstat-no" title="statement not covered" >  Partial&lt;WorkflowBuilderExecutionProps&gt; &amp;</span>
 <span class="cstat-no" title="statement not covered" >  Partial&lt;WorkflowBuilderPersistenceProps&gt; &amp;</span>
-<span class="cstat-no" title="statement not covered" >  Partial&lt;WorkflowBuilderSelectionProps&gt;</span>
+<span class="cstat-no" title="statement not covered" >  Partial&lt;WorkflowBuilderDependencyProps&gt;</span>
 &nbsp;
 &nbsp;</pre></td></tr></table></pre>
 
@@ -169,7 +256,7 @@
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-01-27T21:06:22.235Z
+                at 2026-01-27T22:19:41.510Z
             </div>
         <script src="../../prettify.js"></script>
         <script>

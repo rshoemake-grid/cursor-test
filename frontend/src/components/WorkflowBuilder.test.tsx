@@ -81,6 +81,12 @@ jest.mock('./MarketplaceDialog', () => {
   }
 })
 
+jest.mock('./WorkflowCanvas', () => {
+  return function MockWorkflowCanvas() {
+    return <div data-testid="workflow-canvas">WorkflowCanvas</div>
+  }
+})
+
 jest.mock('./nodes', () => ({
   nodeTypes: {},
 }))

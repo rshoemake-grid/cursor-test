@@ -67,8 +67,14 @@ export default function PropertyPanel({ selectedNodeId, setSelectedNodeId, selec
     handleUpdateInput,
   } = nodeOperations
 
-  // LLM providers are now loaded via useLLMProviders hook
+  // Node form state management - MUST be called before any early returns (Rules of Hooks)
+  const nodeForm = useNodeForm({
+    selectedNode,
+    onUpdate: handleUpdate,
+  })
+  const { nameValue, descriptionValue, nameInputRef, descriptionInputRef, handleNameChange, handleDescriptionChange } = nodeForm
 
+  // LLM providers are now loaded via useLLMProviders hook
 
   // Check if multiple nodes are selected
   const multipleSelected = selectedNodeIds && selectedNodeIds.size > 1
@@ -103,13 +109,6 @@ export default function PropertyPanel({ selectedNodeId, setSelectedNodeId, selec
       </div>
     )
   }
-
-  // Node form state management
-  const nodeForm = useNodeForm({
-    selectedNode,
-    onUpdate: handleUpdate,
-  })
-  const { nameValue, descriptionValue, nameInputRef, descriptionInputRef, handleNameChange, handleDescriptionChange } = nodeForm
 
   const handleClose = () => {
     // Just close the panel (deselect node) without deleting

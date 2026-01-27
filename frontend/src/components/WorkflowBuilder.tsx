@@ -3,9 +3,9 @@ import {
   ReactFlowProvider,
   useNodesState,
   useEdgesState,
-  useReactFlow,
   type Node,
   type Edge,
+  type ReactFlowInstance,
 } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
 
@@ -16,6 +16,8 @@ import PropertyPanel from './PropertyPanel'
 import ExecutionConsole from './ExecutionConsole'
 import ContextMenu from './NodeContextMenu'
 import MarketplaceDialog from './MarketplaceDialog'
+import { ReactFlowInstanceCapture } from './ReactFlowInstanceCapture'
+import { KeyboardHandler } from './KeyboardHandler'
 // api, showSuccess, showError moved to hooks
 import { useAuth } from '../contexts/AuthContext'
 // getLocalStorageItem and setLocalStorageItem moved to useDraftManagement hook
@@ -24,7 +26,6 @@ import { defaultAdapters } from '../types/adapters'
 import { 
   normalizeNodeForStorage
 } from '../utils/workflowFormat'
-import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts'
 import { useClipboard } from '../hooks/useClipboard'
 import { useWorkflowPersistence } from '../hooks/useWorkflowPersistence'
 import { useWorkflowExecution } from '../hooks/useWorkflowExecution'
@@ -62,17 +63,19 @@ const WorkflowBuilder = forwardRef<WorkflowBuilderHandle, WorkflowBuilderProps>(
   onWorkflowModified,
   onWorkflowLoaded,
   onCloseWorkflow: _onCloseWorkflow,
-      onClearExecutions: _onClearExecutions,
+  onClearExecutions: _onClearExecutions,
   onExecutionLogUpdate,
   onExecutionStatusUpdate,
   onExecutionNodeUpdate,
   onRemoveExecution
 }: WorkflowBuilderProps, ref) {
+  // Note: onCloseWorkflow and onClearExecutions are passed to WorkflowBuilder
+  // but handled by parent component (WorkflowTabs) via context
   // Local state for this tab - NOT using global store
   const [nodes, setNodes, onNodesChangeBase] = useNodesState([] as Node[])
   const [edges, setEdges, onEdgesChangeBase] = useEdgesState([] as Edge[])
-  const [nodeExecutionStates, _setNodeExecutionStates] = useState<Record<string, { status: string; error?: string }>>({})
-  const reactFlowInstanceRef = useRef<any>(null)
+  const [nodeExecutionStates] = useState<Record<string, { status: string; error?: string }>>({})
+  const reactFlowInstanceRef = useRef<ReactFlowInstance | null>(null)
   
   // Track modifications (must be before hooks that use it)
   const notifyModified = useCallback(() => {
@@ -98,17 +101,6 @@ const WorkflowBuilder = forwardRef<WorkflowBuilderHandle, WorkflowBuilderProps>(
   // Marketplace dialog management
   const marketplaceDialog = useMarketplaceDialog()
   const { showMarketplaceDialog, marketplaceNode, openDialog: openMarketplaceDialog, closeDialog: closeMarketplaceDialog } = marketplaceDialog
-  
-  // Component to capture React Flow instance for coordinate conversion
-  const ReactFlowInstanceCapture = () => {
-    const reactFlowInstance = useReactFlow()
-    
-    useEffect(() => {
-      reactFlowInstanceRef.current = reactFlowInstance
-    }, [reactFlowInstance])
-    
-    return null
-  }
   
   const isLoadingRef = useRef<boolean>(false)
   const { isAuthenticated } = useAuth()
@@ -171,31 +163,10 @@ const WorkflowBuilder = forwardRef<WorkflowBuilderHandle, WorkflowBuilderProps>(
     saveDraftsToStorageRef.current = draftManagement.saveDraftsToStorage
   }, [draftManagement.saveDraftsToStorage])
   
-  // Use draft management refs
-  const { tabDraftsRef: finalTabDraftsRef, saveDraftsToStorage: finalSaveDraftsToStorage } = draftManagement
-  
-  // Update marketplace integration with final draft refs
-  useEffect(() => {
-    // Marketplace integration already has access via closure
-  }, [finalTabDraftsRef, finalSaveDraftsToStorage])
+  // Note: Marketplace integration already has access to draft refs via closure
+  // No need for additional synchronization
   
   const lastLoadedWorkflowIdRef = useRef<string | null>(null)
-  
-  // Component to handle keyboard shortcuts (must be inside ReactFlowProvider)
-  const KeyboardHandler = () => {
-    useKeyboardShortcuts({
-      selectedNodeId,
-      setSelectedNodeId,
-      notifyModified,
-      clipboardNode: clipboard.clipboardNode,
-      onCopy: clipboard.copy,
-      onCut: clipboard.cut,
-      onPaste: () => clipboard.paste(),
-    })
-    return null
-  }
-
-  // Draft management is now handled by useDraftManagement hook
 
   useEffect(() => {
     workflowIdRef.current = localWorkflowId
@@ -328,8 +299,16 @@ const WorkflowBuilder = forwardRef<WorkflowBuilderHandle, WorkflowBuilderProps>(
         <div className="flex-1 flex flex-col overflow-hidden">
           {/* Canvas Area */}
           <div className="flex-1 relative">
-            <KeyboardHandler />
-            <ReactFlowInstanceCapture />
+            <KeyboardHandler
+              selectedNodeId={selectedNodeId}
+              setSelectedNodeId={setSelectedNodeId}
+              notifyModified={notifyModified}
+              clipboardNode={clipboard.clipboardNode}
+              onCopy={clipboard.copy}
+              onCut={clipboard.cut}
+              onPaste={clipboard.paste}
+            />
+            <ReactFlowInstanceCapture instanceRef={reactFlowInstanceRef} />
             <WorkflowCanvas
               nodes={nodes}
               edges={edges}
