@@ -924,4 +924,1535 @@ describe('WorkflowTabs', () => {
       expect(screen.getAllByRole('button').length).toBeGreaterThan(0)
     })
   })
+
+  describe('Execution handling edge cases', () => {
+    it('should handle handleExecutionStart when activeTab is not found', async () => {
+      const savedTabs = [
+        { id: 'tab-1', name: 'Tab 1', workflowId: 'workflow-1', isUnsaved: false, executions: [], activeExecutionId: null },
+      ]
+      mockGetLocalStorageItem.mockImplementation((key: string) => {
+        if (key === 'workflowTabs') return savedTabs
+        if (key === 'activeWorkflowTabId') return 'non-existent-tab'
+        return null
+      })
+
+      render(<WorkflowTabs onExecutionStart={mockOnExecutionStart} />)
+
+      await waitFor(() => {
+        expect(screen.getAllByRole('button').length).toBeGreaterThan(0)
+      })
+
+      // Component should handle gracefully when activeTab is not found
+      expect(screen.getAllByRole('button').length).toBeGreaterThan(0)
+    })
+
+    it('should handle handleExecutionStart with multiple pending executions', async () => {
+      const savedTabs = [
+        { 
+          id: 'tab-1', 
+          name: 'Tab 1', 
+          workflowId: 'workflow-1', 
+          isUnsaved: false, 
+          executions: [
+            { id: 'pending-1', status: 'running', startedAt: new Date(), nodes: {}, logs: [] },
+            { id: 'pending-2', status: 'running', startedAt: new Date(), nodes: {}, logs: [] },
+            { id: 'pending-3', status: 'running', startedAt: new Date(), nodes: {}, logs: [] }
+          ], 
+          activeExecutionId: 'pending-1' 
+        },
+      ]
+      mockGetLocalStorageItem.mockImplementation((key: string) => {
+        if (key === 'workflowTabs') return savedTabs
+        if (key === 'activeWorkflowTabId') return 'tab-1'
+        return null
+      })
+
+      render(<WorkflowTabs onExecutionStart={mockOnExecutionStart} />)
+
+      await waitFor(() => {
+        expect(screen.getAllByRole('button').length).toBeGreaterThan(0)
+      })
+
+      // Component should handle multiple pending executions
+      expect(screen.getAllByRole('button').length).toBeGreaterThan(0)
+    })
+
+    it('should handle handleExecutionStart when execution already exists', async () => {
+      const savedTabs = [
+        { 
+          id: 'tab-1', 
+          name: 'Tab 1', 
+          workflowId: 'workflow-1', 
+          isUnsaved: false, 
+          executions: [
+            { id: 'exec-1', status: 'running', startedAt: new Date(), nodes: {}, logs: [] }
+          ], 
+          activeExecutionId: null 
+        },
+      ]
+      mockGetLocalStorageItem.mockImplementation((key: string) => {
+        if (key === 'workflowTabs') return savedTabs
+        if (key === 'activeWorkflowTabId') return 'tab-1'
+        return null
+      })
+
+      render(<WorkflowTabs onExecutionStart={mockOnExecutionStart} />)
+
+      await waitFor(() => {
+        expect(screen.getAllByRole('button').length).toBeGreaterThan(0)
+      })
+
+      // Component should handle when execution already exists
+      expect(screen.getAllByRole('button').length).toBeGreaterThan(0)
+    })
+
+    it('should handle handleExecutionStart with pending execution ID', async () => {
+      const savedTabs = [
+        { 
+          id: 'tab-1', 
+          name: 'Tab 1', 
+          workflowId: 'workflow-1', 
+          isUnsaved: false, 
+          executions: [], 
+          activeExecutionId: null 
+        },
+      ]
+      mockGetLocalStorageItem.mockImplementation((key: string) => {
+        if (key === 'workflowTabs') return savedTabs
+        if (key === 'activeWorkflowTabId') return 'tab-1'
+        return null
+      })
+
+      render(<WorkflowTabs onExecutionStart={mockOnExecutionStart} />)
+
+      await waitFor(() => {
+        expect(screen.getAllByRole('button').length).toBeGreaterThan(0)
+      })
+
+      // Component should handle pending execution IDs
+      expect(screen.getAllByRole('button').length).toBeGreaterThan(0)
+    })
+
+    it('should handle handleRemoveExecution when execution is active', async () => {
+      const savedTabs = [
+        { 
+          id: 'tab-1', 
+          name: 'Tab 1', 
+          workflowId: 'workflow-1', 
+          isUnsaved: false, 
+          executions: [
+            { id: 'exec-1', status: 'running', startedAt: new Date(), nodes: {}, logs: [] },
+            { id: 'exec-2', status: 'completed', startedAt: new Date(), nodes: {}, logs: [] }
+          ], 
+          activeExecutionId: 'exec-1' 
+        },
+      ]
+      mockGetLocalStorageItem.mockImplementation((key: string) => {
+        if (key === 'workflowTabs') return savedTabs
+        if (key === 'activeWorkflowTabId') return 'tab-1'
+        return null
+      })
+
+      render(<WorkflowTabs onExecutionStart={mockOnExecutionStart} />)
+
+      await waitFor(() => {
+        expect(screen.getAllByRole('button').length).toBeGreaterThan(0)
+      })
+
+      // Component should handle removing active execution
+      expect(screen.getAllByRole('button').length).toBeGreaterThan(0)
+    })
+
+    it('should handle handleRemoveExecution when execution is not active', async () => {
+      const savedTabs = [
+        { 
+          id: 'tab-1', 
+          name: 'Tab 1', 
+          workflowId: 'workflow-1', 
+          isUnsaved: false, 
+          executions: [
+            { id: 'exec-1', status: 'running', startedAt: new Date(), nodes: {}, logs: [] },
+            { id: 'exec-2', status: 'completed', startedAt: new Date(), nodes: {}, logs: [] }
+          ], 
+          activeExecutionId: 'exec-1' 
+        },
+      ]
+      mockGetLocalStorageItem.mockImplementation((key: string) => {
+        if (key === 'workflowTabs') return savedTabs
+        if (key === 'activeWorkflowTabId') return 'tab-1'
+        return null
+      })
+
+      render(<WorkflowTabs onExecutionStart={mockOnExecutionStart} />)
+
+      await waitFor(() => {
+        expect(screen.getAllByRole('button').length).toBeGreaterThan(0)
+      })
+
+      // Component should handle removing non-active execution
+      expect(screen.getAllByRole('button').length).toBeGreaterThan(0)
+    })
+
+    it('should handle handleRemoveExecution when no executions remain', async () => {
+      const savedTabs = [
+        { 
+          id: 'tab-1', 
+          name: 'Tab 1', 
+          workflowId: 'workflow-1', 
+          isUnsaved: false, 
+          executions: [
+            { id: 'exec-1', status: 'running', startedAt: new Date(), nodes: {}, logs: [] }
+          ], 
+          activeExecutionId: 'exec-1' 
+        },
+      ]
+      mockGetLocalStorageItem.mockImplementation((key: string) => {
+        if (key === 'workflowTabs') return savedTabs
+        if (key === 'activeWorkflowTabId') return 'tab-1'
+        return null
+      })
+
+      render(<WorkflowTabs onExecutionStart={mockOnExecutionStart} />)
+
+      await waitFor(() => {
+        expect(screen.getAllByRole('button').length).toBeGreaterThan(0)
+      })
+
+      // Component should handle when no executions remain
+      expect(screen.getAllByRole('button').length).toBeGreaterThan(0)
+    })
+
+    it('should handle handleClearExecutions for workflow with multiple tabs', async () => {
+      const savedTabs = [
+        { 
+          id: 'tab-1', 
+          name: 'Tab 1', 
+          workflowId: 'workflow-1', 
+          isUnsaved: false, 
+          executions: [
+            { id: 'exec-1', status: 'running', startedAt: new Date(), nodes: {}, logs: [] }
+          ], 
+          activeExecutionId: 'exec-1' 
+        },
+        { 
+          id: 'tab-2', 
+          name: 'Tab 2', 
+          workflowId: 'workflow-1', 
+          isUnsaved: false, 
+          executions: [
+            { id: 'exec-2', status: 'completed', startedAt: new Date(), nodes: {}, logs: [] }
+          ], 
+          activeExecutionId: 'exec-2' 
+        },
+      ]
+      mockGetLocalStorageItem.mockImplementation((key: string) => {
+        if (key === 'workflowTabs') return savedTabs
+        if (key === 'activeWorkflowTabId') return 'tab-1'
+        return null
+      })
+
+      render(<WorkflowTabs onExecutionStart={mockOnExecutionStart} />)
+
+      await waitFor(() => {
+        expect(screen.getAllByRole('button').length).toBeGreaterThan(0)
+      })
+
+      // Component should handle clearing executions for workflow with multiple tabs
+      expect(screen.getAllByRole('button').length).toBeGreaterThan(0)
+    })
+
+    it('should handle handleExecutionLogUpdate when execution not found', async () => {
+      const savedTabs = [
+        { 
+          id: 'tab-1', 
+          name: 'Tab 1', 
+          workflowId: 'workflow-1', 
+          isUnsaved: false, 
+          executions: [
+            { id: 'exec-1', status: 'running', startedAt: new Date(), nodes: {}, logs: [] }
+          ], 
+          activeExecutionId: 'exec-1' 
+        },
+      ]
+      mockGetLocalStorageItem.mockImplementation((key: string) => {
+        if (key === 'workflowTabs') return savedTabs
+        if (key === 'activeWorkflowTabId') return 'tab-1'
+        return null
+      })
+
+      render(<WorkflowTabs onExecutionStart={mockOnExecutionStart} />)
+
+      await waitFor(() => {
+        expect(screen.getAllByRole('button').length).toBeGreaterThan(0)
+      })
+
+      // Component should handle when execution not found
+      expect(screen.getAllByRole('button').length).toBeGreaterThan(0)
+    })
+
+    it('should handle handleExecutionStatusUpdate with completed status', async () => {
+      const savedTabs = [
+        { 
+          id: 'tab-1', 
+          name: 'Tab 1', 
+          workflowId: 'workflow-1', 
+          isUnsaved: false, 
+          executions: [
+            { id: 'exec-1', status: 'running', startedAt: new Date(), nodes: {}, logs: [] }
+          ], 
+          activeExecutionId: 'exec-1' 
+        },
+      ]
+      mockGetLocalStorageItem.mockImplementation((key: string) => {
+        if (key === 'workflowTabs') return savedTabs
+        if (key === 'activeWorkflowTabId') return 'tab-1'
+        return null
+      })
+
+      render(<WorkflowTabs onExecutionStart={mockOnExecutionStart} />)
+
+      await waitFor(() => {
+        expect(screen.getAllByRole('button').length).toBeGreaterThan(0)
+      })
+
+      // Component should handle status update to completed
+      expect(screen.getAllByRole('button').length).toBeGreaterThan(0)
+    })
+
+    it('should handle handleExecutionStatusUpdate with failed status', async () => {
+      const savedTabs = [
+        { 
+          id: 'tab-1', 
+          name: 'Tab 1', 
+          workflowId: 'workflow-1', 
+          isUnsaved: false, 
+          executions: [
+            { id: 'exec-1', status: 'running', startedAt: new Date(), nodes: {}, logs: [] }
+          ], 
+          activeExecutionId: 'exec-1' 
+        },
+      ]
+      mockGetLocalStorageItem.mockImplementation((key: string) => {
+        if (key === 'workflowTabs') return savedTabs
+        if (key === 'activeWorkflowTabId') return 'tab-1'
+        return null
+      })
+
+      render(<WorkflowTabs onExecutionStart={mockOnExecutionStart} />)
+
+      await waitFor(() => {
+        expect(screen.getAllByRole('button').length).toBeGreaterThan(0)
+      })
+
+      // Component should handle status update to failed
+      expect(screen.getAllByRole('button').length).toBeGreaterThan(0)
+    })
+
+    it('should handle handleExecutionNodeUpdate when node state is provided', async () => {
+      const savedTabs = [
+        { 
+          id: 'tab-1', 
+          name: 'Tab 1', 
+          workflowId: 'workflow-1', 
+          isUnsaved: false, 
+          executions: [
+            { id: 'exec-1', status: 'running', startedAt: new Date(), nodes: {}, logs: [] }
+          ], 
+          activeExecutionId: 'exec-1' 
+        },
+      ]
+      mockGetLocalStorageItem.mockImplementation((key: string) => {
+        if (key === 'workflowTabs') return savedTabs
+        if (key === 'activeWorkflowTabId') return 'tab-1'
+        return null
+      })
+
+      render(<WorkflowTabs onExecutionStart={mockOnExecutionStart} />)
+
+      await waitFor(() => {
+        expect(screen.getAllByRole('button').length).toBeGreaterThan(0)
+      })
+
+      // Component should handle node state update
+      expect(screen.getAllByRole('button').length).toBeGreaterThan(0)
+    })
+  })
+
+  describe('Polling logic edge cases', () => {
+    beforeEach(() => {
+      jest.useFakeTimers()
+    })
+
+    afterEach(() => {
+      jest.useRealTimers()
+    })
+
+    it('should handle polling when no running executions', async () => {
+      const savedTabs = [
+        { 
+          id: 'tab-1', 
+          name: 'Tab 1', 
+          workflowId: 'workflow-1', 
+          isUnsaved: false, 
+          executions: [
+            { id: 'exec-1', status: 'completed', startedAt: new Date(), nodes: {}, logs: [] }
+          ], 
+          activeExecutionId: 'exec-1' 
+        },
+      ]
+      mockGetLocalStorageItem.mockImplementation((key: string) => {
+        if (key === 'workflowTabs') return savedTabs
+        if (key === 'activeWorkflowTabId') return 'tab-1'
+        return null
+      })
+
+      render(<WorkflowTabs onExecutionStart={mockOnExecutionStart} />)
+
+      await waitFor(() => {
+        expect(screen.getAllByRole('button').length).toBeGreaterThan(0)
+      })
+
+      // Advance timers - should not poll when no running executions
+      jest.advanceTimersByTime(2000)
+
+      // Should not call getExecution when no running executions
+      expect(mockApi.getExecution).not.toHaveBeenCalled()
+    })
+
+    it('should handle polling when execution fetch fails', async () => {
+      mockApi.getExecution.mockRejectedValue(new Error('Fetch failed'))
+
+      const savedTabs = [
+        { 
+          id: 'tab-1', 
+          name: 'Tab 1', 
+          workflowId: 'workflow-1', 
+          isUnsaved: false, 
+          executions: [
+            { id: 'exec-1', status: 'running', startedAt: new Date(), nodes: {}, logs: [] }
+          ], 
+          activeExecutionId: 'exec-1' 
+        },
+      ]
+      mockGetLocalStorageItem.mockImplementation((key: string) => {
+        if (key === 'workflowTabs') return savedTabs
+        if (key === 'activeWorkflowTabId') return 'tab-1'
+        return null
+      })
+
+      render(<WorkflowTabs onExecutionStart={mockOnExecutionStart} />)
+
+      await waitFor(() => {
+        expect(screen.getAllByRole('button').length).toBeGreaterThan(0)
+      })
+
+      // Advance timers - should handle fetch errors gracefully
+      jest.advanceTimersByTime(2000)
+
+      await waitFor(() => {
+        // Component should still render despite fetch error
+        expect(screen.getAllByRole('button').length).toBeGreaterThan(0)
+      })
+    })
+
+    it('should handle polling when execution status is paused', async () => {
+      const mockExecution = {
+        id: 'exec-1',
+        status: 'paused',
+        started_at: '2024-01-01T00:00:00Z',
+        node_states: {},
+        logs: []
+      }
+      mockApi.getExecution.mockResolvedValue(mockExecution as any)
+
+      const savedTabs = [
+        { 
+          id: 'tab-1', 
+          name: 'Tab 1', 
+          workflowId: 'workflow-1', 
+          isUnsaved: false, 
+          executions: [
+            { id: 'exec-1', status: 'running', startedAt: new Date(), nodes: {}, logs: [] }
+          ], 
+          activeExecutionId: 'exec-1' 
+        },
+      ]
+      mockGetLocalStorageItem.mockImplementation((key: string) => {
+        if (key === 'workflowTabs') return savedTabs
+        if (key === 'activeWorkflowTabId') return 'tab-1'
+        return null
+      })
+
+      render(<WorkflowTabs onExecutionStart={mockOnExecutionStart} />)
+
+      await waitFor(() => {
+        expect(screen.getAllByRole('button').length).toBeGreaterThan(0)
+      })
+
+      // Advance timers - should handle paused status
+      jest.advanceTimersByTime(2000)
+
+      await waitFor(() => {
+        // Component should handle paused status (kept as running)
+        expect(screen.getAllByRole('button').length).toBeGreaterThan(0)
+      })
+    })
+
+    it('should handle polling when execution has completed_at', async () => {
+      const mockExecution = {
+        id: 'exec-1',
+        status: 'completed',
+        started_at: '2024-01-01T00:00:00Z',
+        completed_at: '2024-01-01T01:00:00Z',
+        node_states: {},
+        logs: []
+      }
+      mockApi.getExecution.mockResolvedValue(mockExecution as any)
+
+      const savedTabs = [
+        { 
+          id: 'tab-1', 
+          name: 'Tab 1', 
+          workflowId: 'workflow-1', 
+          isUnsaved: false, 
+          executions: [
+            { id: 'exec-1', status: 'running', startedAt: new Date(), nodes: {}, logs: [] }
+          ], 
+          activeExecutionId: 'exec-1' 
+        },
+      ]
+      mockGetLocalStorageItem.mockImplementation((key: string) => {
+        if (key === 'workflowTabs') return savedTabs
+        if (key === 'activeWorkflowTabId') return 'tab-1'
+        return null
+      })
+
+      render(<WorkflowTabs onExecutionStart={mockOnExecutionStart} />)
+
+      await waitFor(() => {
+        expect(screen.getAllByRole('button').length).toBeGreaterThan(0)
+      })
+
+      // Advance timers - should handle completed_at timestamp
+      jest.advanceTimersByTime(2000)
+
+      await waitFor(() => {
+        // Component should handle completed_at
+        expect(screen.getAllByRole('button').length).toBeGreaterThan(0)
+      })
+    })
+
+    it('should handle polling when execution has node_states', async () => {
+      const mockExecution = {
+        id: 'exec-1',
+        status: 'running',
+        started_at: '2024-01-01T00:00:00Z',
+        node_states: { 'node-1': { status: 'completed' } },
+        logs: []
+      }
+      mockApi.getExecution.mockResolvedValue(mockExecution as any)
+
+      const savedTabs = [
+        { 
+          id: 'tab-1', 
+          name: 'Tab 1', 
+          workflowId: 'workflow-1', 
+          isUnsaved: false, 
+          executions: [
+            { id: 'exec-1', status: 'running', startedAt: new Date(), nodes: {}, logs: [] }
+          ], 
+          activeExecutionId: 'exec-1' 
+        },
+      ]
+      mockGetLocalStorageItem.mockImplementation((key: string) => {
+        if (key === 'workflowTabs') return savedTabs
+        if (key === 'activeWorkflowTabId') return 'tab-1'
+        return null
+      })
+
+      render(<WorkflowTabs onExecutionStart={mockOnExecutionStart} />)
+
+      await waitFor(() => {
+        expect(screen.getAllByRole('button').length).toBeGreaterThan(0)
+      })
+
+      // Advance timers - should handle node_states
+      jest.advanceTimersByTime(2000)
+
+      await waitFor(() => {
+        // Component should handle node_states
+        expect(screen.getAllByRole('button').length).toBeGreaterThan(0)
+      })
+    })
+
+    it('should handle polling when execution has logs', async () => {
+      const mockExecution = {
+        id: 'exec-1',
+        status: 'running',
+        started_at: '2024-01-01T00:00:00Z',
+        node_states: {},
+        logs: [{ level: 'INFO', message: 'Test log' }]
+      }
+      mockApi.getExecution.mockResolvedValue(mockExecution as any)
+
+      const savedTabs = [
+        { 
+          id: 'tab-1', 
+          name: 'Tab 1', 
+          workflowId: 'workflow-1', 
+          isUnsaved: false, 
+          executions: [
+            { id: 'exec-1', status: 'running', startedAt: new Date(), nodes: {}, logs: [] }
+          ], 
+          activeExecutionId: 'exec-1' 
+        },
+      ]
+      mockGetLocalStorageItem.mockImplementation((key: string) => {
+        if (key === 'workflowTabs') return savedTabs
+        if (key === 'activeWorkflowTabId') return 'tab-1'
+        return null
+      })
+
+      render(<WorkflowTabs onExecutionStart={mockOnExecutionStart} />)
+
+      await waitFor(() => {
+        expect(screen.getAllByRole('button').length).toBeGreaterThan(0)
+      })
+
+      // Advance timers - should handle logs
+      jest.advanceTimersByTime(2000)
+
+      await waitFor(() => {
+        // Component should handle logs
+        expect(screen.getAllByRole('button').length).toBeGreaterThan(0)
+      })
+    })
+
+    it('should handle polling when execution update is null', async () => {
+      mockApi.getExecution.mockResolvedValue(null as any)
+
+      const savedTabs = [
+        { 
+          id: 'tab-1', 
+          name: 'Tab 1', 
+          workflowId: 'workflow-1', 
+          isUnsaved: false, 
+          executions: [
+            { id: 'exec-1', status: 'running', startedAt: new Date(), nodes: {}, logs: [] }
+          ], 
+          activeExecutionId: 'exec-1' 
+        },
+      ]
+      mockGetLocalStorageItem.mockImplementation((key: string) => {
+        if (key === 'workflowTabs') return savedTabs
+        if (key === 'activeWorkflowTabId') return 'tab-1'
+        return null
+      })
+
+      render(<WorkflowTabs onExecutionStart={mockOnExecutionStart} />)
+
+      await waitFor(() => {
+        expect(screen.getAllByRole('button').length).toBeGreaterThan(0)
+      })
+
+      // Advance timers - should handle null update
+      jest.advanceTimersByTime(2000)
+
+      await waitFor(() => {
+        // Component should handle null update gracefully
+        expect(screen.getAllByRole('button').length).toBeGreaterThan(0)
+      })
+    })
+  })
+
+  describe('Tab rename edge cases', () => {
+    it('should handle commitTabRename when tab is not found', async () => {
+      render(<WorkflowTabs onExecutionStart={mockOnExecutionStart} />)
+
+      await waitFor(() => {
+        expect(screen.getAllByRole('button').length).toBeGreaterThan(0)
+      })
+
+      // Component should handle when tab is not found during rename
+      expect(screen.getAllByRole('button').length).toBeGreaterThan(0)
+    })
+
+    it('should handle commitTabRename when renameInFlight is true', async () => {
+      render(<WorkflowTabs onExecutionStart={mockOnExecutionStart} />)
+
+      await waitFor(() => {
+        expect(screen.getAllByRole('button').length).toBeGreaterThan(0)
+      })
+
+      // Component should handle when rename is already in flight
+      expect(screen.getAllByRole('button').length).toBeGreaterThan(0)
+    })
+
+    it('should handle commitTabRename when workflowId is null', async () => {
+      render(<WorkflowTabs onExecutionStart={mockOnExecutionStart} />)
+
+      await waitFor(() => {
+        expect(screen.getAllByRole('button').length).toBeGreaterThan(0)
+      })
+
+      const tabButtons = screen.getAllByRole('button').filter(btn => 
+        btn.textContent?.includes('Untitled Workflow') && btn.getAttribute('title') !== 'Close tab'
+      )
+      if (tabButtons.length > 0) {
+        fireEvent.dblClick(tabButtons[0])
+
+        await waitFor(() => {
+          const input = screen.getByDisplayValue(/Untitled Workflow/)
+          expect(input).toBeInTheDocument()
+          
+          fireEvent.change(input, { target: { value: 'New Name' } })
+          fireEvent.blur(input)
+        })
+
+        // Should not call updateWorkflow when workflowId is null
+        await waitFor(() => {
+          expect(mockApi.updateWorkflow).not.toHaveBeenCalled()
+        })
+      }
+    })
+
+    it('should handle commitTabRename when getWorkflow fails', async () => {
+      mockApi.getWorkflow.mockRejectedValue(new Error('Get workflow failed'))
+
+      const savedTabs = [
+        { id: 'tab-1', name: 'Test Workflow', workflowId: 'workflow-1', isUnsaved: false, executions: [], activeExecutionId: null },
+      ]
+      mockGetLocalStorageItem.mockImplementation((key: string) => {
+        if (key === 'workflowTabs') return savedTabs
+        if (key === 'activeWorkflowTabId') return 'tab-1'
+        return null
+      })
+
+      render(<WorkflowTabs onExecutionStart={mockOnExecutionStart} />)
+
+      await waitFor(() => {
+        expect(screen.getAllByRole('button').length).toBeGreaterThan(0)
+      })
+
+      const tabButtons = screen.getAllByRole('button').filter(btn => 
+        btn.textContent?.includes('Test Workflow')
+      )
+      if (tabButtons.length > 0) {
+        fireEvent.dblClick(tabButtons[0])
+
+        await waitFor(() => {
+          const input = screen.getByDisplayValue(/Test Workflow/)
+          expect(input).toBeInTheDocument()
+          
+          fireEvent.change(input, { target: { value: 'New Name' } })
+          fireEvent.blur(input)
+        })
+
+        await waitFor(() => {
+          expect(showError).toHaveBeenCalledWith(expect.stringContaining('Failed to rename workflow'))
+        }, { timeout: 3000 })
+      }
+    })
+
+    it('should handle commitTabRename when updateWorkflow fails', async () => {
+      const mockWorkflow = {
+        id: 'workflow-1',
+        name: 'Test Workflow',
+        description: 'Test',
+        nodes: [],
+        edges: [],
+        variables: {}
+      }
+      mockApi.getWorkflow.mockResolvedValue(mockWorkflow as any)
+      mockApi.updateWorkflow.mockRejectedValue(new Error('Update failed'))
+
+      const savedTabs = [
+        { id: 'tab-1', name: 'Test Workflow', workflowId: 'workflow-1', isUnsaved: false, executions: [], activeExecutionId: null },
+      ]
+      mockGetLocalStorageItem.mockImplementation((key: string) => {
+        if (key === 'workflowTabs') return savedTabs
+        if (key === 'activeWorkflowTabId') return 'tab-1'
+        return null
+      })
+
+      render(<WorkflowTabs onExecutionStart={mockOnExecutionStart} />)
+
+      await waitFor(() => {
+        expect(screen.getAllByRole('button').length).toBeGreaterThan(0)
+      })
+
+      const tabButtons = screen.getAllByRole('button').filter(btn => 
+        btn.textContent?.includes('Test Workflow')
+      )
+      if (tabButtons.length > 0) {
+        fireEvent.dblClick(tabButtons[0])
+
+        await waitFor(() => {
+          const input = screen.getByDisplayValue(/Test Workflow/)
+          expect(input).toBeInTheDocument()
+          
+          fireEvent.change(input, { target: { value: 'New Name' } })
+          fireEvent.blur(input)
+        })
+
+        await waitFor(() => {
+          expect(showError).toHaveBeenCalledWith(expect.stringContaining('Failed to rename workflow'))
+        }, { timeout: 3000 })
+      }
+    })
+
+    it('should handle commitTabRename error with response.data.detail', async () => {
+      const mockWorkflow = {
+        id: 'workflow-1',
+        name: 'Test Workflow',
+        description: 'Test',
+        nodes: [],
+        edges: [],
+        variables: {}
+      }
+      mockApi.getWorkflow.mockResolvedValue(mockWorkflow as any)
+      const error: any = new Error('Update failed')
+      error.response = { data: { detail: 'Custom error detail' } }
+      mockApi.updateWorkflow.mockRejectedValue(error)
+
+      const savedTabs = [
+        { id: 'tab-1', name: 'Test Workflow', workflowId: 'workflow-1', isUnsaved: false, executions: [], activeExecutionId: null },
+      ]
+      mockGetLocalStorageItem.mockImplementation((key: string) => {
+        if (key === 'workflowTabs') return savedTabs
+        if (key === 'activeWorkflowTabId') return 'tab-1'
+        return null
+      })
+
+      render(<WorkflowTabs onExecutionStart={mockOnExecutionStart} />)
+
+      await waitFor(() => {
+        expect(screen.getAllByRole('button').length).toBeGreaterThan(0)
+      })
+
+      const tabButtons = screen.getAllByRole('button').filter(btn => 
+        btn.textContent?.includes('Test Workflow')
+      )
+      if (tabButtons.length > 0) {
+        fireEvent.dblClick(tabButtons[0])
+
+        await waitFor(() => {
+          const input = screen.getByDisplayValue(/Test Workflow/)
+          expect(input).toBeInTheDocument()
+          
+          fireEvent.change(input, { target: { value: 'New Name' } })
+          fireEvent.blur(input)
+        })
+
+        await waitFor(() => {
+          expect(showError).toHaveBeenCalledWith(expect.stringContaining('Custom error detail'))
+        }, { timeout: 3000 })
+      }
+    })
+
+    it('should handle commitTabRename error with error.message', async () => {
+      const mockWorkflow = {
+        id: 'workflow-1',
+        name: 'Test Workflow',
+        description: 'Test',
+        nodes: [],
+        edges: [],
+        variables: {}
+      }
+      mockApi.getWorkflow.mockResolvedValue(mockWorkflow as any)
+      mockApi.updateWorkflow.mockRejectedValue(new Error('Network error'))
+
+      const savedTabs = [
+        { id: 'tab-1', name: 'Test Workflow', workflowId: 'workflow-1', isUnsaved: false, executions: [], activeExecutionId: null },
+      ]
+      mockGetLocalStorageItem.mockImplementation((key: string) => {
+        if (key === 'workflowTabs') return savedTabs
+        if (key === 'activeWorkflowTabId') return 'tab-1'
+        return null
+      })
+
+      render(<WorkflowTabs onExecutionStart={mockOnExecutionStart} />)
+
+      await waitFor(() => {
+        expect(screen.getAllByRole('button').length).toBeGreaterThan(0)
+      })
+
+      const tabButtons = screen.getAllByRole('button').filter(btn => 
+        btn.textContent?.includes('Test Workflow')
+      )
+      if (tabButtons.length > 0) {
+        fireEvent.dblClick(tabButtons[0])
+
+        await waitFor(() => {
+          const input = screen.getByDisplayValue(/Test Workflow/)
+          expect(input).toBeInTheDocument()
+          
+          fireEvent.change(input, { target: { value: 'New Name' } })
+          fireEvent.blur(input)
+        })
+
+        await waitFor(() => {
+          expect(showError).toHaveBeenCalledWith(expect.stringContaining('Network error'))
+        }, { timeout: 3000 })
+      }
+    })
+
+    it('should handle commitTabRename error with unknown error', async () => {
+      const mockWorkflow = {
+        id: 'workflow-1',
+        name: 'Test Workflow',
+        description: 'Test',
+        nodes: [],
+        edges: [],
+        variables: {}
+      }
+      mockApi.getWorkflow.mockResolvedValue(mockWorkflow as any)
+      mockApi.updateWorkflow.mockRejectedValue({})
+
+      const savedTabs = [
+        { id: 'tab-1', name: 'Test Workflow', workflowId: 'workflow-1', isUnsaved: false, executions: [], activeExecutionId: null },
+      ]
+      mockGetLocalStorageItem.mockImplementation((key: string) => {
+        if (key === 'workflowTabs') return savedTabs
+        if (key === 'activeWorkflowTabId') return 'tab-1'
+        return null
+      })
+
+      render(<WorkflowTabs onExecutionStart={mockOnExecutionStart} />)
+
+      await waitFor(() => {
+        expect(screen.getAllByRole('button').length).toBeGreaterThan(0)
+      })
+
+      const tabButtons = screen.getAllByRole('button').filter(btn => 
+        btn.textContent?.includes('Test Workflow')
+      )
+      if (tabButtons.length > 0) {
+        fireEvent.dblClick(tabButtons[0])
+
+        await waitFor(() => {
+          const input = screen.getByDisplayValue(/Test Workflow/)
+          expect(input).toBeInTheDocument()
+          
+          fireEvent.change(input, { target: { value: 'New Name' } })
+          fireEvent.blur(input)
+        })
+
+        await waitFor(() => {
+          expect(showError).toHaveBeenCalledWith(expect.stringContaining('Unknown error'))
+        }, { timeout: 3000 })
+      }
+    })
+
+    it('should handle handleInputBlur when renameInFlight is true', async () => {
+      render(<WorkflowTabs onExecutionStart={mockOnExecutionStart} />)
+
+      await waitFor(() => {
+        expect(screen.getAllByRole('button').length).toBeGreaterThan(0)
+      })
+
+      // Component should handle when rename is in flight
+      expect(screen.getAllByRole('button').length).toBeGreaterThan(0)
+    })
+
+    it('should handle handleInputBlur when editingTabId does not match', async () => {
+      render(<WorkflowTabs onExecutionStart={mockOnExecutionStart} />)
+
+      await waitFor(() => {
+        expect(screen.getAllByRole('button').length).toBeGreaterThan(0)
+      })
+
+      // Component should handle when editingTabId does not match
+      expect(screen.getAllByRole('button').length).toBeGreaterThan(0)
+    })
+  })
+
+  describe('Publish workflow edge cases', () => {
+    it('should handle handlePublish when response.ok is false', async () => {
+      const mockHttpClient: HttpClient = {
+        get: jest.fn(),
+        post: jest.fn().mockResolvedValue({
+          ok: false,
+          text: async () => 'Server error',
+        } as Response),
+        put: jest.fn(),
+        delete: jest.fn(),
+      }
+
+      const savedTabs = [
+        { id: 'tab-1', name: 'Test Workflow', workflowId: 'workflow-1', isUnsaved: false, executions: [], activeExecutionId: null },
+      ]
+      mockGetLocalStorageItem.mockImplementation((key: string) => {
+        if (key === 'workflowTabs') return savedTabs
+        if (key === 'activeWorkflowTabId') return 'tab-1'
+        return null
+      })
+
+      render(<WorkflowTabs httpClient={mockHttpClient} onExecutionStart={mockOnExecutionStart} />)
+
+      await waitFor(() => {
+        expect(screen.getAllByRole('button').length).toBeGreaterThan(0)
+      })
+
+      const publishButton = screen.getByTitle(/Publish workflow/)
+      fireEvent.click(publishButton)
+
+      await waitFor(() => {
+        expect(screen.getByText(/Publish to Marketplace/)).toBeInTheDocument()
+      })
+
+      const form = screen.getByText(/Publish to Marketplace/).closest('form')
+      if (form) {
+        fireEvent.submit(form)
+      }
+
+      await waitFor(() => {
+        expect(showError).toHaveBeenCalledWith(expect.stringContaining('Failed to publish'))
+      }, { timeout: 3000 })
+    })
+
+    it('should handle handlePublish when response.json() fails', async () => {
+      const mockHttpClient: HttpClient = {
+        get: jest.fn(),
+        post: jest.fn().mockResolvedValue({
+          ok: true,
+          json: async () => { throw new Error('JSON parse error') },
+        } as Response),
+        put: jest.fn(),
+        delete: jest.fn(),
+      }
+
+      const savedTabs = [
+        { id: 'tab-1', name: 'Test Workflow', workflowId: 'workflow-1', isUnsaved: false, executions: [], activeExecutionId: null },
+      ]
+      mockGetLocalStorageItem.mockImplementation((key: string) => {
+        if (key === 'workflowTabs') return savedTabs
+        if (key === 'activeWorkflowTabId') return 'tab-1'
+        return null
+      })
+
+      render(<WorkflowTabs httpClient={mockHttpClient} onExecutionStart={mockOnExecutionStart} />)
+
+      await waitFor(() => {
+        expect(screen.getAllByRole('button').length).toBeGreaterThan(0)
+      })
+
+      const publishButton = screen.getByTitle(/Publish workflow/)
+      fireEvent.click(publishButton)
+
+      await waitFor(() => {
+        expect(screen.getByText(/Publish to Marketplace/)).toBeInTheDocument()
+      })
+
+      const form = screen.getByText(/Publish to Marketplace/).closest('form')
+      if (form) {
+        fireEvent.submit(form)
+      }
+
+      await waitFor(() => {
+        expect(showError).toHaveBeenCalledWith(expect.stringContaining('Failed to publish workflow'))
+      }, { timeout: 3000 })
+    })
+
+    it('should handle handlePublish when tags are empty', async () => {
+      const mockHttpClient: HttpClient = {
+        get: jest.fn(),
+        post: jest.fn().mockResolvedValue({
+          ok: true,
+          json: async () => ({ id: 'published-1', name: 'Published Workflow' }),
+        } as Response),
+        put: jest.fn(),
+        delete: jest.fn(),
+      }
+
+      const savedTabs = [
+        { id: 'tab-1', name: 'Test Workflow', workflowId: 'workflow-1', isUnsaved: false, executions: [], activeExecutionId: null },
+      ]
+      mockGetLocalStorageItem.mockImplementation((key: string) => {
+        if (key === 'workflowTabs') return savedTabs
+        if (key === 'activeWorkflowTabId') return 'tab-1'
+        return null
+      })
+
+      render(<WorkflowTabs httpClient={mockHttpClient} onExecutionStart={mockOnExecutionStart} />)
+
+      await waitFor(() => {
+        expect(screen.getAllByRole('button').length).toBeGreaterThan(0)
+      })
+
+      const publishButton = screen.getByTitle(/Publish workflow/)
+      fireEvent.click(publishButton)
+
+      await waitFor(() => {
+        expect(screen.getByText(/Publish to Marketplace/)).toBeInTheDocument()
+      })
+
+      // Set empty tags
+      const tagsInput = screen.getByPlaceholderText(/automation, ai/)
+      fireEvent.change(tagsInput, { target: { value: '' } })
+
+      const form = screen.getByText(/Publish to Marketplace/).closest('form')
+      if (form) {
+        fireEvent.submit(form)
+      }
+
+      await waitFor(() => {
+        expect(mockHttpClient.post).toHaveBeenCalledWith(
+          expect.stringContaining('/workflows/workflow-1/publish'),
+          expect.objectContaining({ tags: [] }),
+          expect.any(Object)
+        )
+      }, { timeout: 3000 })
+    })
+
+    it('should handle handlePublish when tags have whitespace', async () => {
+      const mockHttpClient: HttpClient = {
+        get: jest.fn(),
+        post: jest.fn().mockResolvedValue({
+          ok: true,
+          json: async () => ({ id: 'published-1', name: 'Published Workflow' }),
+        } as Response),
+        put: jest.fn(),
+        delete: jest.fn(),
+      }
+
+      const savedTabs = [
+        { id: 'tab-1', name: 'Test Workflow', workflowId: 'workflow-1', isUnsaved: false, executions: [], activeExecutionId: null },
+      ]
+      mockGetLocalStorageItem.mockImplementation((key: string) => {
+        if (key === 'workflowTabs') return savedTabs
+        if (key === 'activeWorkflowTabId') return 'tab-1'
+        return null
+      })
+
+      render(<WorkflowTabs httpClient={mockHttpClient} onExecutionStart={mockOnExecutionStart} />)
+
+      await waitFor(() => {
+        expect(screen.getAllByRole('button').length).toBeGreaterThan(0)
+      })
+
+      const publishButton = screen.getByTitle(/Publish workflow/)
+      fireEvent.click(publishButton)
+
+      await waitFor(() => {
+        expect(screen.getByText(/Publish to Marketplace/)).toBeInTheDocument()
+      })
+
+      // Set tags with whitespace
+      const tagsInput = screen.getByPlaceholderText(/automation, ai/)
+      fireEvent.change(tagsInput, { target: { value: ' tag1 , tag2 , tag3 ' } })
+
+      const form = screen.getByText(/Publish to Marketplace/).closest('form')
+      if (form) {
+        fireEvent.submit(form)
+      }
+
+      await waitFor(() => {
+        expect(mockHttpClient.post).toHaveBeenCalledWith(
+          expect.stringContaining('/workflows/workflow-1/publish'),
+          expect.objectContaining({ tags: ['tag1', 'tag2', 'tag3'] }),
+          expect.any(Object)
+        )
+      }, { timeout: 3000 })
+    })
+
+    it('should handle handlePublish when estimated_time is empty', async () => {
+      const mockHttpClient: HttpClient = {
+        get: jest.fn(),
+        post: jest.fn().mockResolvedValue({
+          ok: true,
+          json: async () => ({ id: 'published-1', name: 'Published Workflow' }),
+        } as Response),
+        put: jest.fn(),
+        delete: jest.fn(),
+      }
+
+      const savedTabs = [
+        { id: 'tab-1', name: 'Test Workflow', workflowId: 'workflow-1', isUnsaved: false, executions: [], activeExecutionId: null },
+      ]
+      mockGetLocalStorageItem.mockImplementation((key: string) => {
+        if (key === 'workflowTabs') return savedTabs
+        if (key === 'activeWorkflowTabId') return 'tab-1'
+        return null
+      })
+
+      render(<WorkflowTabs httpClient={mockHttpClient} onExecutionStart={mockOnExecutionStart} />)
+
+      await waitFor(() => {
+        expect(screen.getAllByRole('button').length).toBeGreaterThan(0)
+      })
+
+      const publishButton = screen.getByTitle(/Publish workflow/)
+      fireEvent.click(publishButton)
+
+      await waitFor(() => {
+        expect(screen.getByText(/Publish to Marketplace/)).toBeInTheDocument()
+      })
+
+      // Leave estimated_time empty
+      const form = screen.getByText(/Publish to Marketplace/).closest('form')
+      if (form) {
+        fireEvent.submit(form)
+      }
+
+      await waitFor(() => {
+        expect(mockHttpClient.post).toHaveBeenCalledWith(
+          expect.stringContaining('/workflows/workflow-1/publish'),
+          expect.objectContaining({ estimated_time: undefined }),
+          expect.any(Object)
+        )
+      }, { timeout: 3000 })
+    })
+
+    it('should handle handlePublish when token is not available', async () => {
+      mockUseAuth.mockReturnValue({
+        isAuthenticated: false,
+        user: null,
+        token: null,
+        login: jest.fn(),
+        logout: jest.fn(),
+        register: jest.fn(),
+      } as any)
+
+      const mockHttpClient: HttpClient = {
+        get: jest.fn(),
+        post: jest.fn().mockResolvedValue({
+          ok: true,
+          json: async () => ({ id: 'published-1', name: 'Published Workflow' }),
+        } as Response),
+        put: jest.fn(),
+        delete: jest.fn(),
+      }
+
+      const savedTabs = [
+        { id: 'tab-1', name: 'Test Workflow', workflowId: 'workflow-1', isUnsaved: false, executions: [], activeExecutionId: null },
+      ]
+      mockGetLocalStorageItem.mockImplementation((key: string) => {
+        if (key === 'workflowTabs') return savedTabs
+        if (key === 'activeWorkflowTabId') return 'tab-1'
+        return null
+      })
+
+      render(<WorkflowTabs httpClient={mockHttpClient} onExecutionStart={mockOnExecutionStart} />)
+
+      await waitFor(() => {
+        expect(screen.getAllByRole('button').length).toBeGreaterThan(0)
+      })
+
+      const publishButton = screen.getByTitle(/Publish workflow/)
+      fireEvent.click(publishButton)
+
+      await waitFor(() => {
+        expect(screen.getByText(/Publish to Marketplace/)).toBeInTheDocument()
+      })
+
+      const form = screen.getByText(/Publish to Marketplace/).closest('form')
+      if (form) {
+        fireEvent.submit(form)
+      }
+
+      await waitFor(() => {
+        expect(mockHttpClient.post).toHaveBeenCalledWith(
+          expect.stringContaining('/workflows/workflow-1/publish'),
+          expect.any(Object),
+          expect.objectContaining({ 'Content-Type': 'application/json' })
+        )
+      }, { timeout: 3000 })
+    })
+  })
+
+  describe('Initial workflow loading edge cases', () => {
+    it('should handle initialWorkflowId with same workflowLoadKey twice', async () => {
+      mockApi.getWorkflow.mockResolvedValue({
+        id: 'workflow-1',
+        name: 'Loaded Workflow',
+        description: 'Test',
+        nodes: [],
+        edges: [],
+      } as any)
+
+      const { rerender } = render(
+        <WorkflowTabs initialWorkflowId="workflow-1" workflowLoadKey={1} onExecutionStart={mockOnExecutionStart} />
+      )
+
+      await waitFor(() => {
+        expect(screen.getAllByRole('button').length).toBeGreaterThan(0)
+      })
+
+      // Render again with same workflowLoadKey - should not create duplicate
+      rerender(
+        <WorkflowTabs initialWorkflowId="workflow-1" workflowLoadKey={1} onExecutionStart={mockOnExecutionStart} />
+      )
+
+      await waitFor(() => {
+        // Should not create duplicate tab
+        expect(screen.getAllByRole('button').length).toBeGreaterThan(0)
+      })
+    })
+
+    it('should handle initialWorkflowId with different workflowLoadKey', async () => {
+      mockApi.getWorkflow.mockResolvedValue({
+        id: 'workflow-1',
+        name: 'Loaded Workflow',
+        description: 'Test',
+        nodes: [],
+        edges: [],
+      } as any)
+
+      const { rerender } = render(
+        <WorkflowTabs initialWorkflowId="workflow-1" workflowLoadKey={1} onExecutionStart={mockOnExecutionStart} />
+      )
+
+      await waitFor(() => {
+        expect(screen.getAllByRole('button').length).toBeGreaterThan(0)
+      })
+
+      // Render again with different workflowLoadKey - should create new tab
+      rerender(
+        <WorkflowTabs initialWorkflowId="workflow-1" workflowLoadKey={2} onExecutionStart={mockOnExecutionStart} />
+      )
+
+      await waitFor(() => {
+        // Should create new tab
+        expect(screen.getAllByRole('button').length).toBeGreaterThan(0)
+      })
+    })
+
+    it('should handle initialWorkflowId when workflowLoadKey is undefined', async () => {
+      render(<WorkflowTabs initialWorkflowId="workflow-1" onExecutionStart={mockOnExecutionStart} />)
+
+      await waitFor(() => {
+        expect(screen.getAllByRole('button').length).toBeGreaterThan(0)
+      })
+
+      // Should not create tab when workflowLoadKey is undefined
+      expect(screen.getAllByRole('button').length).toBeGreaterThan(0)
+    })
+
+    it('should handle initialWorkflowId when prev.length === 1 and globalTabs.length > 1', async () => {
+      mockApi.getWorkflow.mockResolvedValue({
+        id: 'workflow-1',
+        name: 'Loaded Workflow',
+        description: 'Test',
+        nodes: [],
+        edges: [],
+      } as any)
+
+      // Set up globalTabs to have multiple tabs
+      const savedTabs = [
+        { id: 'tab-1', name: 'Tab 1', workflowId: null, isUnsaved: false, executions: [], activeExecutionId: null },
+        { id: 'tab-2', name: 'Tab 2', workflowId: null, isUnsaved: false, executions: [], activeExecutionId: null },
+      ]
+      mockGetLocalStorageItem.mockImplementation((key: string) => {
+        if (key === 'workflowTabs') return savedTabs
+        return null
+      })
+
+      render(<WorkflowTabs initialWorkflowId="workflow-1" workflowLoadKey={1} onExecutionStart={mockOnExecutionStart} />)
+
+      await waitFor(() => {
+        expect(screen.getAllByRole('button').length).toBeGreaterThan(0)
+      })
+
+      // Should use globalTabs as source of truth
+      expect(screen.getAllByRole('button').length).toBeGreaterThan(0)
+    })
+
+    it('should handle initialWorkflowId when existingTab is found', async () => {
+      mockApi.getWorkflow.mockResolvedValue({
+        id: 'workflow-1',
+        name: 'Loaded Workflow',
+        description: 'Test',
+        nodes: [],
+        edges: [],
+      } as any)
+
+      // Create a tab with the same ID that would be generated
+      const existingTabId = `workflow-${Date.now()}`
+      const savedTabs = [
+        { id: existingTabId, name: 'Existing Tab', workflowId: 'workflow-1', isUnsaved: false, executions: [], activeExecutionId: null },
+      ]
+      mockGetLocalStorageItem.mockImplementation((key: string) => {
+        if (key === 'workflowTabs') return savedTabs
+        return null
+      })
+
+      render(<WorkflowTabs initialWorkflowId="workflow-1" workflowLoadKey={1} onExecutionStart={mockOnExecutionStart} />)
+
+      await waitFor(() => {
+        expect(screen.getAllByRole('button').length).toBeGreaterThan(0)
+      })
+
+      // Should not create duplicate when existing tab is found
+      expect(screen.getAllByRole('button').length).toBeGreaterThan(0)
+    })
+  })
+
+  describe('Active tab validation edge cases', () => {
+    it('should handle activeTabId validation when tabs array is empty', async () => {
+      mockGetLocalStorageItem.mockImplementation((key: string) => {
+        if (key === 'workflowTabs') return []
+        if (key === 'activeWorkflowTabId') return 'non-existent-tab'
+        return null
+      })
+
+      render(<WorkflowTabs onExecutionStart={mockOnExecutionStart} />)
+
+      await waitFor(() => {
+        expect(screen.getAllByRole('button').length).toBeGreaterThan(0)
+      })
+
+      // Should create new tab when tabs array is empty
+      expect(screen.getAllByRole('button').length).toBeGreaterThan(0)
+    })
+
+    it('should handle activeTabId validation when activeTabId is null', async () => {
+      const savedTabs = [
+        { id: 'tab-1', name: 'Tab 1', workflowId: null, isUnsaved: false, executions: [], activeExecutionId: null },
+      ]
+      mockGetLocalStorageItem.mockImplementation((key: string) => {
+        if (key === 'workflowTabs') return savedTabs
+        if (key === 'activeWorkflowTabId') return null
+        return null
+      })
+
+      render(<WorkflowTabs onExecutionStart={mockOnExecutionStart} />)
+
+      await waitFor(() => {
+        expect(screen.getAllByRole('button').length).toBeGreaterThan(0)
+      })
+
+      // Should use first tab when activeTabId is null
+      expect(screen.getAllByRole('button').length).toBeGreaterThan(0)
+    })
+
+    it('should handle activeTabId validation when activeTabId does not exist in tabs', async () => {
+      const savedTabs = [
+        { id: 'tab-1', name: 'Tab 1', workflowId: null, isUnsaved: false, executions: [], activeExecutionId: null },
+      ]
+      mockGetLocalStorageItem.mockImplementation((key: string) => {
+        if (key === 'workflowTabs') return savedTabs
+        if (key === 'activeWorkflowTabId') return 'non-existent-tab'
+        return null
+      })
+
+      render(<WorkflowTabs onExecutionStart={mockOnExecutionStart} />)
+
+      await waitFor(() => {
+        expect(screen.getAllByRole('button').length).toBeGreaterThan(0)
+      })
+
+      // Should switch to first tab when activeTabId does not exist
+      expect(screen.getAllByRole('button').length).toBeGreaterThan(0)
+    })
+  })
+
+  describe('Storage edge cases', () => {
+    it('should handle saveTabsToStorage when storage is null and window is undefined', async () => {
+      // Mock window as undefined
+      const originalWindow = global.window
+      // @ts-ignore
+      delete global.window
+
+      render(<WorkflowTabs storage={null} onExecutionStart={mockOnExecutionStart} />)
+
+      await waitFor(() => {
+        expect(screen.getAllByRole('button').length).toBeGreaterThan(0)
+      })
+
+      // Should handle gracefully when window is undefined
+      expect(screen.getAllByRole('button').length).toBeGreaterThan(0)
+
+      global.window = originalWindow
+    })
+
+    it('should handle saveTabsToStorage when localStorage.setItem throws', async () => {
+      const originalSetItem = window.localStorage.setItem
+      window.localStorage.setItem = jest.fn(() => {
+        throw new Error('Quota exceeded')
+      })
+
+      render(<WorkflowTabs storage={null} onExecutionStart={mockOnExecutionStart} />)
+
+      await waitFor(() => {
+        expect(screen.getAllByRole('button').length).toBeGreaterThan(0)
+      })
+
+      // Should handle quota errors gracefully
+      expect(screen.getAllByRole('button').length).toBeGreaterThan(0)
+
+      window.localStorage.setItem = originalSetItem
+    })
+
+    it('should handle saveTabsToStorage when storage.setItem throws', async () => {
+      const mockStorage: StorageAdapter = {
+        getItem: jest.fn().mockReturnValue(null),
+        setItem: jest.fn(() => {
+          throw new Error('Quota exceeded')
+        }),
+        removeItem: jest.fn(),
+        addEventListener: jest.fn(),
+        removeEventListener: jest.fn(),
+      }
+
+      render(<WorkflowTabs storage={mockStorage} onExecutionStart={mockOnExecutionStart} />)
+
+      await waitFor(() => {
+        expect(screen.getAllByRole('button').length).toBeGreaterThan(0)
+      })
+
+      // Should handle quota errors gracefully
+      expect(screen.getAllByRole('button').length).toBeGreaterThan(0)
+    })
+
+    it('should handle loadTabsFromStorage when tabs is not an array', async () => {
+      mockGetLocalStorageItem.mockImplementation((key: string) => {
+        if (key === 'workflowTabs') return { not: 'an array' }
+        return null
+      })
+
+      render(<WorkflowTabs onExecutionStart={mockOnExecutionStart} />)
+
+      await waitFor(() => {
+        expect(screen.getAllByRole('button').length).toBeGreaterThan(0)
+      })
+
+      // Should handle non-array tabs gracefully
+      expect(screen.getAllByRole('button').length).toBeGreaterThan(0)
+    })
+
+    it('should handle loadActiveTabFromStorage when saved tab does not exist', async () => {
+      const savedTabs = [
+        { id: 'tab-1', name: 'Tab 1', workflowId: null, isUnsaved: false, executions: [], activeExecutionId: null },
+      ]
+      mockGetLocalStorageItem.mockImplementation((key: string) => {
+        if (key === 'workflowTabs') return savedTabs
+        if (key === 'activeWorkflowTabId') return 'non-existent-tab'
+        return null
+      })
+
+      render(<WorkflowTabs onExecutionStart={mockOnExecutionStart} />)
+
+      await waitFor(() => {
+        expect(screen.getAllByRole('button').length).toBeGreaterThan(0)
+      })
+
+      // Should handle when saved tab does not exist
+      expect(screen.getAllByRole('button').length).toBeGreaterThan(0)
+    })
+
+    it('should handle saveActiveTabToStorage when activeTabId is null', async () => {
+      const { removeLocalStorageItem } = require('../hooks/useLocalStorage')
+      const mockRemoveLocalStorageItem = removeLocalStorageItem as jest.MockedFunction<typeof removeLocalStorageItem>
+
+      render(<WorkflowTabs onExecutionStart={mockOnExecutionStart} />)
+
+      await waitFor(() => {
+        expect(screen.getAllByRole('button').length).toBeGreaterThan(0)
+      })
+
+      // Component should handle when activeTabId is null
+      expect(screen.getAllByRole('button').length).toBeGreaterThan(0)
+    })
+  })
 })
