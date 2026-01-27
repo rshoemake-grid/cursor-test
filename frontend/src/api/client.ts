@@ -133,6 +133,21 @@ export function createApiClient(options?: {
     return response.data
   },
 
+  async publishAgent(
+    agentData: {
+      name: string
+      description: string
+      category: string
+      tags: string[]
+      difficulty: string
+      estimated_time?: string
+      agent_config: any
+    }
+  ): Promise<any> {
+    const response = await instance.post('/marketplace/agents', agentData)
+    return response.data
+  },
+
   // Templates
   async deleteTemplate(templateId: string): Promise<void> {
     await instance.delete(`/templates/${templateId}`)

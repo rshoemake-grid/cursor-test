@@ -4,6 +4,7 @@ import { showSuccess, showError } from '../utils/notifications'
 import { api } from '../api/client'
 import { useAuth } from '../contexts/AuthContext'
 import { STORAGE_KEYS } from '../config/constants'
+import { logger } from '../utils/logger'
 import type { StorageAdapter, HttpClient } from '../types/adapters'
 import { defaultAdapters } from '../types/adapters'
 
@@ -68,38 +69,68 @@ export default function MarketplaceDialog({
 
     setIsPublishing(true)
     try {
-      // TODO: Implement agent publishing API endpoint
-      // For now, we'll save to localStorage as a custom agent template
-      const agentTemplate = {
-        id: `agent_${Date.now()}`,
+      // Publish agent to backend API
+      const tagsArray = publishFormHook.form.tags.split(',').map((t: string) => t.trim()).filter((t: string) => t)
+      
+      const publishedAgent = await api.publishAgent({
         name: publishFormHook.form.name,
-        label: publishFormHook.form.name, // Also store as label for consistency
         description: publishFormHook.form.description,
         category: publishFormHook.form.category,
-        tags: publishFormHook.form.tags.split(',').map((t: string) => t.trim()).filter((t: string) => t),
+        tags: tagsArray,
         difficulty: publishFormHook.form.difficulty,
-        estimated_time: publishFormHook.form.estimated_time || '5 min',
+        estimated_time: publishFormHook.form.estimated_time || undefined,
         agent_config: node.data.agent_config || {},
-        type: 'agent',
-        published_at: new Date().toISOString(),
-        author_id: user?.id || null,
-        author_name: user?.username || user?.email || null
-      }
+      })
 
-      // Save to storage for now (until backend API is ready)
-      if (!storage) {
-        throw new Error('Storage not available')
-      }
+      // Also save to localStorage as fallback for offline access
+      if (storage) {
+        try {
+          const agentTemplate = {
+            id: publishedAgent.id || `agent_${Date.now()}`,
+            name: publishedAgent.name || publishFormHook.form.name,
+            label: publishedAgent.name || publishFormHook.form.name,
+            description: publishedAgent.description || publishFormHook.form.description,
+            category: publishedAgent.category || publishFormHook.form.category,
+            tags: publishedAgent.tags || tagsArray,
+            difficulty: publishedAgent.difficulty || publishFormHook.form.difficulty,
+            estimated_time: publishedAgent.estimated_time || publishFormHook.form.estimated_time || '5 min',
+            agent_config: publishedAgent.agent_config || node.data.agent_config || {},
+            type: 'agent',
+            published_at: publishedAgent.published_at || new Date().toISOString(),
+            author_id: publishedAgent.author_id || user?.id || null,
+            author_name: publishedAgent.author_name || user?.username || user?.email || null,
+            is_official: publishedAgent.is_official || false,
+          }
 
-      const publishedAgents = storage.getItem(STORAGE_KEYS.PUBLISHED_AGENTS)
-      const agents = publishedAgents ? JSON.parse(publishedAgents) : []
-      agents.push(agentTemplate)
-      storage.setItem(STORAGE_KEYS.PUBLISHED_AGENTS, JSON.stringify(agents))
+          const publishedAgents = storage.getItem(STORAGE_KEYS.PUBLISHED_AGENTS)
+          const agents = publishedAgents ? JSON.parse(publishedAgents) : []
+          
+          // Check if agent already exists (by ID or name)
+          const existingIndex = agents.findIndex((a: any) => 
+            a.id === agentTemplate.id || 
+            (a.name === agentTemplate.name && a.author_id === agentTemplate.author_id)
+          )
+          
+          if (existingIndex >= 0) {
+            // Update existing agent
+            agents[existingIndex] = agentTemplate
+          } else {
+            // Add new agent
+            agents.push(agentTemplate)
+          }
+          
+          storage.setItem(STORAGE_KEYS.PUBLISHED_AGENTS, JSON.stringify(agents))
+        } catch (storageError) {
+          // Log but don't fail the publish if localStorage fails
+          logger.error('Failed to save agent to localStorage:', storageError)
+        }
+      }
 
       showSuccess('Agent published to marketplace successfully!')
       onClose()
     } catch (error: any) {
-      showError('Failed to publish agent: ' + (error.message || 'Unknown error'))
+      const errorMessage = error?.response?.data?.detail || error?.message || 'Unknown error'
+      showError('Failed to publish agent: ' + errorMessage)
     } finally {
       setIsPublishing(false)
     }
