@@ -819,7 +819,15 @@ describe('WorkflowTabs', () => {
         return null
       })
 
-      render(<WorkflowTabs onExecutionStart={mockOnExecutionStart} />)
+      // Mock httpClient to avoid fetch errors
+      const mockHttpClient: HttpClient = {
+        get: jest.fn(),
+        post: jest.fn(),
+        put: jest.fn(),
+        delete: jest.fn(),
+      }
+
+      render(<WorkflowTabs httpClient={mockHttpClient} onExecutionStart={mockOnExecutionStart} />)
 
       await waitFor(() => {
         expect(screen.getAllByRole('button').length).toBeGreaterThan(0)
