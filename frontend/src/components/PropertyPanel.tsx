@@ -14,6 +14,8 @@ import FirebaseNodeEditor from './editors/FirebaseNodeEditor'
 import BigQueryNodeEditor from './editors/BigQueryNodeEditor'
 import type { StorageAdapter } from '../types/adapters'
 import { defaultAdapters } from '../types/adapters'
+import { findNodeById, nodeExists } from '../utils/nodeUtils'
+import { useNodeForm } from '../hooks/useNodeForm'
 
 interface PropertyPanelProps {
   selectedNodeId: string | null
@@ -49,13 +51,6 @@ export default function PropertyPanel({ selectedNodeId, setSelectedNodeId, selec
   }, [getNodes, nodesProp])
   
   
-  // Local state for input fields to prevent flickering
-  const [nameValue, setNameValue] = useState('')
-  const [descriptionValue, setDescriptionValue] = useState('')
-  const nameInputRef = useRef<HTMLInputElement>(null)
-  const descriptionInputRef = useRef<HTMLTextAreaElement>(null)
-  
-  // Refs removed - now handled by node-specific editors
 
   // Get selected node - use a ref to cache and prevent flickering
   const selectedNodeRef = useRef<any>(null)
@@ -72,39 +67,19 @@ export default function PropertyPanel({ selectedNodeId, setSelectedNodeId, selec
     // If same node ID and we have it cached, return cached version
     if (selectedNodeIdRef.current === selectedNodeId && selectedNodeRef.current) {
       // Verify it still exists
-      try {
-        const flowNodes = getNodes()
-        const stillExists = flowNodes.some(n => n.id === selectedNodeId)
-        if (stillExists) {
-          // Update cache with latest data but return cached reference to prevent flicker
-          const updated = flowNodes.find((n) => n.id === selectedNodeId)
-          if (updated) {
-            // Only update cache, but return the cached reference for stability
-            Object.assign(selectedNodeRef.current, updated)
-            return selectedNodeRef.current
-          }
-        }
-      } catch {
-        // Fallback
-        const stillExists = nodes.some(n => n.id === selectedNodeId)
-        if (stillExists) {
-          const updated = nodes.find((n) => n.id === selectedNodeId)
-          if (updated) {
-            Object.assign(selectedNodeRef.current, updated)
-            return selectedNodeRef.current
-          }
+      if (nodeExists(selectedNodeId, getNodes, nodes)) {
+        // Update cache with latest data but return cached reference to prevent flicker
+        const updated = findNodeById(selectedNodeId, getNodes, nodes)
+        if (updated) {
+          // Only update cache, but return the cached reference for stability
+          Object.assign(selectedNodeRef.current, updated)
+          return selectedNodeRef.current
         }
       }
     }
     
     // Find the node
-    let found = null
-    try {
-      const flowNodes = getNodes()
-      found = flowNodes.find((n) => n.id === selectedNodeId) || null
-    } catch {
-      found = nodes.find((n) => n.id === selectedNodeId) || null
-    }
+    const found = findNodeById(selectedNodeId, getNodes, nodes)
     
     // Cache it
     if (found) {
@@ -123,83 +98,32 @@ export default function PropertyPanel({ selectedNodeId, setSelectedNodeId, selec
   }, [selectedNode])
   
   
-  // Local state for config fields removed - now handled by node-specific editors
-  
-  // Sync all local state with node data only when a different node is selected
-  // This prevents flickering while typing
+  // Initialize loop_config with defaults if it's missing or empty for Loop nodes
   useEffect(() => {
-    // Only clear if selectedNodeId is actually null (not just if selectedNode is null temporarily)
-    if (!selectedNodeId) {
-      // Reset when no node is selected
-      setNameValue('')
-      setDescriptionValue('')
-      // Config fields are now handled by node-specific editors
-      return
-    }
+    if (!selectedNode || selectedNode.type !== 'loop') return
     
-    // Get node data directly to avoid dependency on selectedNode
-    let nodeData = null
-    try {
-      const flowNodes = getNodes()
-      const node = flowNodes.find((n) => n.id === selectedNodeId)
-      if (node) {
-        nodeData = node.data
+    const nodeData = selectedNode.data || {}
+    if (!nodeData.loop_config || Object.keys(nodeData.loop_config).length === 0) {
+      const defaultLoopConfig = {
+        loop_type: 'for_each',
+        max_iterations: 0,
       }
-    } catch {
-      const node = nodes.find((n) => n.id === selectedNodeId)
-      if (node) {
-        nodeData = node.data
-      }
-    }
-    
-    // Only update if we found the node
-    if (nodeData) {
-      const nodeName = nodeData.name || nodeData.label || ''
-      const nodeDescription = nodeData.description || ''
-      
-      // Initialize loop_config with defaults if it's missing or empty for Loop nodes
-      const selectedNode = nodes.find((n) => n.id === selectedNodeId) || 
-                          (() => {
-                            try {
-                              const flowNodes = getNodes()
-                              return flowNodes.find((n) => n.id === selectedNodeId)
-                            } catch {
-                              return null
-                            }
-                          })()
-      
-      if (selectedNode && selectedNode.type === 'loop' && (!nodeData.loop_config || Object.keys(nodeData.loop_config).length === 0)) {
-        const defaultLoopConfig = {
-          loop_type: 'for_each',
-          max_iterations: 0,
-        }
-        // Update the node with default config
-        setNodes((nodes) =>
-          nodes.map((node) =>
-            node.id === selectedNodeId
-              ? {
-                  ...node,
-                  data: {
-                    ...node.data,
-                    loop_config: defaultLoopConfig,
-                  },
-                }
-              : node
-          )
+      // Update the node with default config
+      setNodes((nodes) =>
+        nodes.map((n) =>
+          n.id === selectedNode.id
+            ? {
+                ...n,
+                data: {
+                  ...n.data,
+                  loop_config: defaultLoopConfig,
+                },
+              }
+            : n
         )
-      }
-      
-      // Only sync if the input is not currently focused (user is not typing)
-      if (document.activeElement !== nameInputRef.current) {
-        setNameValue(nodeName)
-      }
-      if (document.activeElement !== descriptionInputRef.current) {
-        setDescriptionValue(nodeDescription)
-      }
-      // Config fields are now handled by node-specific editors
+      )
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedNodeId]) // Only depend on selectedNodeId, not the node data
+  }, [selectedNode, setNodes])
 
   // LLM providers are now loaded via useLLMProviders hook
 
@@ -246,11 +170,6 @@ export default function PropertyPanel({ selectedNodeId, setSelectedNodeId, selec
     // Update label when name changes
     if (field === 'name') {
       updatedData.label = value
-      setNameValue(value) // Update local state immediately
-    }
-    
-    if (field === 'description') {
-      setDescriptionValue(value) // Update local state immediately
     }
     
     // Update the node state
@@ -260,6 +179,13 @@ export default function PropertyPanel({ selectedNodeId, setSelectedNodeId, selec
       )
     )
   }
+  
+  // Node form state management (must be after handleUpdate definition)
+  const nodeForm = useNodeForm({
+    selectedNode,
+    onUpdate: handleUpdate,
+  })
+  const { nameValue, descriptionValue, nameInputRef, descriptionInputRef, handleNameChange, handleDescriptionChange } = nodeForm
   
   // Helper to update nested config objects
   const handleConfigUpdate = (configField: string, field: string, value: any) => {
@@ -422,11 +348,7 @@ export default function PropertyPanel({ selectedNodeId, setSelectedNodeId, selec
             ref={nameInputRef}
             type="text"
             value={nameValue}
-            onChange={(e) => {
-              const newValue = e.target.value
-              setNameValue(newValue)
-              handleUpdate('name', newValue)
-            }}
+            onChange={(e) => handleNameChange(e.target.value)}
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
           />
         </div>
@@ -438,11 +360,7 @@ export default function PropertyPanel({ selectedNodeId, setSelectedNodeId, selec
             id="node-description"
             ref={descriptionInputRef}
             value={descriptionValue}
-            onChange={(e) => {
-              const newValue = e.target.value
-              setDescriptionValue(newValue)
-              handleUpdate('description', newValue)
-            }}
+            onChange={(e) => handleDescriptionChange(e.target.value)}
             rows={3}
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
             aria-label="Node description"

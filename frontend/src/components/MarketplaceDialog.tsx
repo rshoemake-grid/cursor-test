@@ -20,6 +20,7 @@ interface MarketplaceDialogProps {
 type TabType = 'agents' | 'workflows'
 
 import { TEMPLATE_CATEGORIES, TEMPLATE_DIFFICULTIES, formatCategory, formatDifficulty } from '../config/templateConstants'
+import { usePublishForm } from '../hooks/usePublishForm'
 
 export default function MarketplaceDialog({ 
   isOpen, 
@@ -32,20 +33,13 @@ export default function MarketplaceDialog({
 }: MarketplaceDialogProps) {
   const [activeTab, setActiveTab] = useState<TabType>('agents')
   const [isPublishing, setIsPublishing] = useState(false)
-  const [publishForm, setPublishForm] = useState({
-    category: 'automation',
-    tags: '',
-    difficulty: 'beginner',
-    estimated_time: '',
-    name: '',
-    description: ''
-  })
+  const publishFormHook = usePublishForm()
   const { isAuthenticated, user } = useAuth()
 
   // Update form when dialog opens or node changes
   useEffect(() => {
     if (isOpen && node) {
-      setPublishForm({
+      publishFormHook.updateForm({
         category: 'automation',
         tags: '',
         difficulty: 'beginner',
@@ -54,7 +48,7 @@ export default function MarketplaceDialog({
         description: node.data?.description || ''
       })
     }
-  }, [isOpen, node])
+  }, [isOpen, node, publishFormHook])
 
   if (!isOpen) return null
 
@@ -75,13 +69,13 @@ export default function MarketplaceDialog({
       // For now, we'll save to localStorage as a custom agent template
       const agentTemplate = {
         id: `agent_${Date.now()}`,
-        name: publishForm.name,
-        label: publishForm.name, // Also store as label for consistency
-        description: publishForm.description,
-        category: publishForm.category,
-        tags: publishForm.tags.split(',').map(t => t.trim()).filter(t => t),
-        difficulty: publishForm.difficulty,
-        estimated_time: publishForm.estimated_time || '5 min',
+        name: publishFormHook.form.name,
+        label: publishFormHook.form.name, // Also store as label for consistency
+        description: publishFormHook.form.description,
+        category: publishFormHook.form.category,
+        tags: publishFormHook.form.tags.split(',').map((t: string) => t.trim()).filter((t: string) => t),
+        difficulty: publishFormHook.form.difficulty,
+        estimated_time: publishFormHook.form.estimated_time || '5 min',
         agent_config: node.data.agent_config || {},
         type: 'agent',
         published_at: new Date().toISOString(),
@@ -122,10 +116,10 @@ export default function MarketplaceDialog({
     setIsPublishing(true)
     try {
       await api.publishWorkflow(workflowId, {
-        category: publishForm.category,
-        tags: publishForm.tags.split(',').map(t => t.trim()).filter(t => t),
-        difficulty: publishForm.difficulty,
-        estimated_time: publishForm.estimated_time || undefined
+          category: publishFormHook.form.category,
+          tags: publishFormHook.form.tags.split(',').map((t: string) => t.trim()).filter((t: string) => t),
+          difficulty: publishFormHook.form.difficulty,
+          estimated_time: publishFormHook.form.estimated_time || undefined
       })
       showSuccess('Workflow published to marketplace successfully!')
       onClose()
@@ -201,8 +195,8 @@ export default function MarketplaceDialog({
                 </label>
                 <input
                   type="text"
-                  value={publishForm.name}
-                  onChange={(e) => setPublishForm({ ...publishForm, name: e.target.value })}
+                  value={publishFormHook.form.name}
+                  onChange={(e) => publishFormHook.updateField('name', e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
                   placeholder="Enter agent name"
                 />
@@ -213,8 +207,8 @@ export default function MarketplaceDialog({
                   Description
                 </label>
                 <textarea
-                  value={publishForm.description}
-                  onChange={(e) => setPublishForm({ ...publishForm, description: e.target.value })}
+                  value={publishFormHook.form.description}
+                  onChange={(e) => publishFormHook.updateField('description', e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
                   rows={3}
                   placeholder="Describe what this agent does..."
@@ -226,8 +220,8 @@ export default function MarketplaceDialog({
                   Category
                 </label>
                 <select
-                  value={publishForm.category}
-                  onChange={(e) => setPublishForm({ ...publishForm, category: e.target.value })}
+                  value={publishFormHook.form.category}
+                  onChange={(e) => publishFormHook.updateField('category', e.target.value as any)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
                 >
                   {TEMPLATE_CATEGORIES.map(cat => (
@@ -244,8 +238,8 @@ export default function MarketplaceDialog({
                 </label>
                 <input
                   type="text"
-                  value={publishForm.tags}
-                  onChange={(e) => setPublishForm({ ...publishForm, tags: e.target.value })}
+                  value={publishFormHook.form.tags}
+                  onChange={(e) => publishFormHook.updateField('tags', e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
                   placeholder="e.g., llm, automation, ai"
                 />
@@ -257,8 +251,8 @@ export default function MarketplaceDialog({
                     Difficulty
                   </label>
                   <select
-                    value={publishForm.difficulty}
-                    onChange={(e) => setPublishForm({ ...publishForm, difficulty: e.target.value })}
+                    value={publishFormHook.form.difficulty}
+                    onChange={(e) => publishFormHook.updateField('difficulty', e.target.value as any)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
                   >
                     {TEMPLATE_DIFFICULTIES.map(diff => (
@@ -275,8 +269,8 @@ export default function MarketplaceDialog({
                   </label>
                   <input
                     type="text"
-                    value={publishForm.estimated_time}
-                    onChange={(e) => setPublishForm({ ...publishForm, estimated_time: e.target.value })}
+                    value={publishFormHook.form.estimated_time}
+                  onChange={(e) => publishFormHook.updateField('estimated_time', e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
                     placeholder="e.g., 5 min"
                   />
@@ -305,8 +299,8 @@ export default function MarketplaceDialog({
                   Category
                 </label>
                 <select
-                  value={publishForm.category}
-                  onChange={(e) => setPublishForm({ ...publishForm, category: e.target.value })}
+                  value={publishFormHook.form.category}
+                  onChange={(e) => publishFormHook.updateField('category', e.target.value as any)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
                 >
                   {TEMPLATE_CATEGORIES.map(cat => (
@@ -323,8 +317,8 @@ export default function MarketplaceDialog({
                 </label>
                 <input
                   type="text"
-                  value={publishForm.tags}
-                  onChange={(e) => setPublishForm({ ...publishForm, tags: e.target.value })}
+                  value={publishFormHook.form.tags}
+                  onChange={(e) => publishFormHook.updateField('tags', e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
                   placeholder="e.g., automation, workflow, template"
                 />
@@ -336,8 +330,8 @@ export default function MarketplaceDialog({
                     Difficulty
                   </label>
                   <select
-                    value={publishForm.difficulty}
-                    onChange={(e) => setPublishForm({ ...publishForm, difficulty: e.target.value })}
+                    value={publishFormHook.form.difficulty}
+                    onChange={(e) => publishFormHook.updateField('difficulty', e.target.value as any)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
                   >
                     {TEMPLATE_DIFFICULTIES.map(diff => (
@@ -354,8 +348,8 @@ export default function MarketplaceDialog({
                   </label>
                   <input
                     type="text"
-                    value={publishForm.estimated_time}
-                    onChange={(e) => setPublishForm({ ...publishForm, estimated_time: e.target.value })}
+                    value={publishFormHook.form.estimated_time}
+                  onChange={(e) => publishFormHook.updateField('estimated_time', e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
                     placeholder="e.g., 10 min"
                   />
@@ -375,7 +369,7 @@ export default function MarketplaceDialog({
           </button>
           <button
             onClick={handlePublish}
-            disabled={isPublishing || (activeTab === 'agents' && !publishForm.name)}
+            disabled={isPublishing || (activeTab === 'agents' && !publishFormHook.form.name)}
             className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 transition-colors"
           >
             {isPublishing ? (
