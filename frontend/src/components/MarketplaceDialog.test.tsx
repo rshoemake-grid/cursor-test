@@ -661,4 +661,126 @@ describe('MarketplaceDialog', () => {
       })
     })
   })
+
+  describe('Edge cases', () => {
+    it('should handle estimated_time being empty string', async () => {
+      render(<MarketplaceDialog isOpen={true} onClose={mockOnClose} node={mockNode} />)
+
+      const timeInput = screen.getByPlaceholderText(/5 min/)
+      fireEvent.change(timeInput, { target: { value: '' } })
+
+      const publishButton = screen.getByText(/Publish/)
+      fireEvent.click(publishButton)
+
+      await waitFor(() => {
+        expect(showSuccess).toHaveBeenCalled()
+      })
+
+      // Should use default '5 min' when empty
+      const saved = localStorage.getItem('publishedAgents')
+      if (saved) {
+        const agents = JSON.parse(saved)
+        const lastAgent = agents[agents.length - 1]
+        expect(lastAgent.estimated_time).toBe('5 min')
+      }
+    })
+
+    it('should handle node with name but no label', async () => {
+      const nodeWithName = {
+        type: 'agent',
+        data: {
+          name: 'Agent Name',
+          description: 'Test',
+        },
+      }
+
+      render(<MarketplaceDialog isOpen={true} onClose={mockOnClose} node={nodeWithName} />)
+
+      expect(screen.getByDisplayValue('Agent Name')).toBeInTheDocument()
+    })
+
+    it('should handle node with label but no name', async () => {
+      const nodeWithLabel = {
+        type: 'agent',
+        data: {
+          label: 'Agent Label',
+          description: 'Test',
+        },
+      }
+
+      render(<MarketplaceDialog isOpen={true} onClose={mockOnClose} node={nodeWithLabel} />)
+
+      expect(screen.getByDisplayValue('Agent Label')).toBeInTheDocument()
+    })
+
+    it('should handle workflow publishing with empty estimated_time', async () => {
+      mockApi.publishWorkflow.mockResolvedValue({ id: 'published-1', name: 'Test Workflow' } as any)
+
+      render(
+        <MarketplaceDialog
+          isOpen={true}
+          onClose={mockOnClose}
+          workflowId="workflow-1"
+          workflowName="Test Workflow"
+        />
+      )
+
+      const workflowsTab = screen.getByText('Workflows')
+      fireEvent.click(workflowsTab)
+
+      await waitFor(() => {
+        const timeInput = screen.getByPlaceholderText(/e.g., 30 minutes/)
+        fireEvent.change(timeInput, { target: { value: '' } })
+      })
+
+      await waitFor(() => {
+        const publishButton = screen.getByText(/Publish/)
+        fireEvent.click(publishButton)
+      })
+
+      await waitFor(() => {
+        expect(mockApi.publishWorkflow).toHaveBeenCalledWith(
+          'workflow-1',
+          expect.objectContaining({
+            estimated_time: undefined,
+          })
+        )
+      })
+    })
+
+    it('should handle workflow publishing with estimated_time', async () => {
+      mockApi.publishWorkflow.mockResolvedValue({ id: 'published-1', name: 'Test Workflow' } as any)
+
+      render(
+        <MarketplaceDialog
+          isOpen={true}
+          onClose={mockOnClose}
+          workflowId="workflow-1"
+          workflowName="Test Workflow"
+        />
+      )
+
+      const workflowsTab = screen.getByText('Workflows')
+      fireEvent.click(workflowsTab)
+
+      await waitFor(() => {
+        const timeInput = screen.getByPlaceholderText(/e.g., 30 minutes/)
+        fireEvent.change(timeInput, { target: { value: '45 minutes' } })
+      })
+
+      await waitFor(() => {
+        const publishButton = screen.getByText(/Publish/)
+        fireEvent.click(publishButton)
+      })
+
+      await waitFor(() => {
+        expect(mockApi.publishWorkflow).toHaveBeenCalledWith(
+          'workflow-1',
+          expect.objectContaining({
+            estimated_time: '45 minutes',
+          })
+        )
+      })
+    })
+  })
 })

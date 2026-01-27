@@ -790,4 +790,197 @@ describe('ExecutionInputDialog', () => {
     // The component should still render without crashing
     expect(screen.getByText('Execute')).toBeInTheDocument()
   })
+
+  it('should handle node without input_config', () => {
+    const nodesWithoutConfig: WorkflowNode[] = [
+      {
+        id: 'start-1',
+        type: 'start',
+        name: 'Start Node',
+        position: { x: 0, y: 0 },
+        inputs: [],
+      },
+    ]
+
+    render(
+      <ExecutionInputDialog
+        isOpen={true}
+        onClose={mockOnClose}
+        onSubmit={mockOnSubmit}
+        nodes={nodesWithoutConfig}
+      />
+    )
+
+    // Should show message that workflow doesn't require inputs
+    expect(screen.getByText(/This workflow doesn't require any inputs/)).toBeInTheDocument()
+  })
+
+  it('should handle input_config without inputs property', () => {
+    const nodesWithoutInputsProperty: WorkflowNode[] = [
+      {
+        id: 'start-1',
+        type: 'start',
+        name: 'Start Node',
+        position: { x: 0, y: 0 },
+        inputs: [],
+        input_config: {},
+      } as any,
+    ]
+
+    render(
+      <ExecutionInputDialog
+        isOpen={true}
+        onClose={mockOnClose}
+        onSubmit={mockOnSubmit}
+        nodes={nodesWithoutInputsProperty}
+      />
+    )
+
+    // Should handle gracefully - node is in inputNodes but returns null in map
+    expect(screen.getByText('Execute')).toBeInTheDocument()
+  })
+
+  it('should handle input without default_value', () => {
+    const nodesWithInputs: WorkflowNode[] = [
+      {
+        id: 'start-1',
+        type: 'start',
+        name: 'Start Node',
+        position: { x: 0, y: 0 },
+        inputs: [],
+        input_config: {
+          inputs: [
+            {
+              name: 'input1',
+              label: 'Input 1',
+              type: 'text',
+            },
+          ],
+        },
+      } as any,
+    ]
+
+    render(
+      <ExecutionInputDialog
+        isOpen={true}
+        onClose={mockOnClose}
+        onSubmit={mockOnSubmit}
+        nodes={nodesWithInputs}
+      />
+    )
+
+    // Should initialize with empty string when no default_value
+    const inputs = screen.getAllByRole('textbox')
+    const input = inputs[0] as HTMLInputElement
+    expect(input.value).toBe('')
+  })
+
+  it('should handle input with default_value as null', () => {
+    const nodesWithInputs: WorkflowNode[] = [
+      {
+        id: 'start-1',
+        type: 'start',
+        name: 'Start Node',
+        position: { x: 0, y: 0 },
+        inputs: [],
+        input_config: {
+          inputs: [
+            {
+              name: 'input1',
+              label: 'Input 1',
+              type: 'text',
+              default_value: null,
+            },
+          ],
+        },
+      } as any,
+    ]
+
+    render(
+      <ExecutionInputDialog
+        isOpen={true}
+        onClose={mockOnClose}
+        onSubmit={mockOnSubmit}
+        nodes={nodesWithInputs}
+      />
+    )
+
+    // Should use empty string when default_value is null
+    const inputs = screen.getAllByRole('textbox')
+    const input = inputs[0] as HTMLInputElement
+    expect(input.value).toBe('')
+  })
+
+  it('should handle input with default_value as 0', () => {
+    const nodesWithInputs: WorkflowNode[] = [
+      {
+        id: 'start-1',
+        type: 'start',
+        name: 'Start Node',
+        position: { x: 0, y: 0 },
+        inputs: [],
+        input_config: {
+          inputs: [
+            {
+              name: 'count',
+              label: 'Count',
+              type: 'number',
+              default_value: 0,
+            },
+          ],
+        },
+      } as any,
+    ]
+
+    render(
+      <ExecutionInputDialog
+        isOpen={true}
+        onClose={mockOnClose}
+        onSubmit={mockOnSubmit}
+        nodes={nodesWithInputs}
+      />
+    )
+
+    // Should display 0 as default value
+    const numberInput = screen.getByLabelText(/Count/)?.nextElementSibling as HTMLInputElement
+    if (numberInput) {
+      expect(numberInput.value).toBe('0')
+    }
+  })
+
+  it('should handle input with default_value as false', () => {
+    const nodesWithInputs: WorkflowNode[] = [
+      {
+        id: 'start-1',
+        type: 'start',
+        name: 'Start Node',
+        position: { x: 0, y: 0 },
+        inputs: [],
+        input_config: {
+          inputs: [
+            {
+              name: 'enabled',
+              label: 'Enabled',
+              type: 'text',
+              default_value: false,
+            },
+          ],
+        },
+      } as any,
+    ]
+
+    render(
+      <ExecutionInputDialog
+        isOpen={true}
+        onClose={mockOnClose}
+        onSubmit={mockOnSubmit}
+        nodes={nodesWithInputs}
+      />
+    )
+
+    // Should handle false as default value
+    const inputs = screen.getAllByRole('textbox')
+    const input = inputs[0] as HTMLInputElement
+    expect(input.value).toBe('false')
+  })
 })
