@@ -729,7 +729,7 @@ describe('MarketplaceDialog', () => {
       fireEvent.click(workflowsTab)
 
       await waitFor(() => {
-        const timeInput = screen.getByPlaceholderText(/e.g., 30 minutes/)
+        const timeInput = screen.getByPlaceholderText(/e.g., 10 min/)
         fireEvent.change(timeInput, { target: { value: '' } })
       })
 
@@ -764,7 +764,7 @@ describe('MarketplaceDialog', () => {
       fireEvent.click(workflowsTab)
 
       await waitFor(() => {
-        const timeInput = screen.getByPlaceholderText(/e.g., 30 minutes/)
+        const timeInput = screen.getByPlaceholderText(/e.g., 10 min/)
         fireEvent.change(timeInput, { target: { value: '45 minutes' } })
       })
 
