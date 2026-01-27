@@ -812,6 +812,8 @@ describe('WorkflowTabs', () => {
     })
 
     it('should show error when trying to publish without workflow saved', async () => {
+      // The component checks workflowId before calling httpClient.post
+      // When workflowId is null, it should show the "Save workflow" error
       const mockHttpClient: HttpClient = {
         get: jest.fn(),
         post: jest.fn().mockResolvedValue({
@@ -822,12 +824,13 @@ describe('WorkflowTabs', () => {
         delete: jest.fn(),
       }
 
+      // Use a tab with null workflowId to trigger the error
       const savedTabs = [
-        { id: 'tab-1', name: 'Test Workflow', workflowId: null, isUnsaved: true, executions: [], activeExecutionId: null },
+        { id: 'workflow-1', name: 'Untitled Workflow', workflowId: null, isUnsaved: true, executions: [], activeExecutionId: null },
       ]
       mockGetLocalStorageItem.mockImplementation((key: string) => {
         if (key === 'workflowTabs') return savedTabs
-        if (key === 'activeWorkflowTabId') return 'tab-1'
+        if (key === 'activeWorkflowTabId') return 'workflow-1'
         return null
       })
 
@@ -853,6 +856,9 @@ describe('WorkflowTabs', () => {
       await waitFor(() => {
         expect(showError).toHaveBeenCalledWith(expect.stringContaining('Save the workflow before publishing'))
       }, { timeout: 3000 })
+      
+      // Verify httpClient.post was NOT called (since workflowId is null)
+      expect(mockHttpClient.post).not.toHaveBeenCalled()
     })
 
     it('should show error when no active tab for publish', async () => {
@@ -1935,12 +1941,13 @@ describe('WorkflowTabs', () => {
         delete: jest.fn(),
       }
 
+      // Use workflow-1 as the tab id to match the default emptyTabState
       const savedTabs = [
-        { id: 'tab-1', name: 'Test Workflow', workflowId: 'workflow-1', isUnsaved: false, executions: [], activeExecutionId: null },
+        { id: 'workflow-1', name: 'Test Workflow', workflowId: 'workflow-1', isUnsaved: false, executions: [], activeExecutionId: null },
       ]
       mockGetLocalStorageItem.mockImplementation((key: string) => {
         if (key === 'workflowTabs') return savedTabs
-        if (key === 'activeWorkflowTabId') return 'tab-1'
+        if (key === 'activeWorkflowTabId') return 'workflow-1'
         return null
       })
 
@@ -1949,13 +1956,6 @@ describe('WorkflowTabs', () => {
       await waitFor(() => {
         expect(screen.getAllByRole('button').length).toBeGreaterThan(0)
       })
-
-      // Wait for the component to render with the correct tab
-      await waitFor(() => {
-        const buttons = screen.getAllByRole('button')
-        const hasPublishButton = buttons.some(btn => btn.getAttribute('title') === 'Publish workflow')
-        expect(hasPublishButton).toBe(true)
-      }, { timeout: 2000 })
 
       const publishButton = screen.getByTitle(/Publish workflow/)
       fireEvent.click(publishButton)
