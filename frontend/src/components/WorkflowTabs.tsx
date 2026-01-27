@@ -20,6 +20,7 @@ interface WorkflowTabsProps {
   workflowLoadKey?: number // Counter to force new tab creation (required when initialWorkflowId is set)
   onExecutionStart?: (executionId: string) => void
   // Dependency injection
+  // Note: storage is now handled by WorkflowTabsContext, but kept for API compatibility
   storage?: StorageAdapter | null
   httpClient?: HttpClient
   apiBaseUrl?: string
@@ -31,6 +32,7 @@ export default function WorkflowTabs({
   initialWorkflowId, 
   workflowLoadKey, 
   onExecutionStart,
+  // storage is now handled by WorkflowTabsContext, but kept for API compatibility
   storage: _storage = defaultAdapters.createLocalStorageAdapter(),
   httpClient = defaultAdapters.createHttpClient(),
   apiBaseUrl = 'http://localhost:8000/api'

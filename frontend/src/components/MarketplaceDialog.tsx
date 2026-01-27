@@ -15,6 +15,7 @@ interface MarketplaceDialogProps {
   workflowName?: string
   // Dependency injection
   storage?: StorageAdapter | null
+  // httpClient is currently unused but kept for future API integration
   httpClient?: HttpClient
 }
 
@@ -30,6 +31,7 @@ export default function MarketplaceDialog({
   workflowId,
   workflowName,
   storage = defaultAdapters.createLocalStorageAdapter(),
+  // httpClient is currently unused but kept for future API integration
   httpClient: _httpClient = defaultAdapters.createHttpClient()
 }: MarketplaceDialogProps) {
   const [activeTab, setActiveTab] = useState<TabType>('agents')
