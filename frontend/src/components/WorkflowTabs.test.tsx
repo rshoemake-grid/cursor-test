@@ -840,9 +840,15 @@ describe('WorkflowTabs', () => {
         fireEvent.click(submitButtons[0])
       }
 
+      // Submit form - find the form and submit it
+      const form = screen.getByText(/Publish to Marketplace/).closest('form')
+      if (form) {
+        fireEvent.submit(form)
+      }
+
       await waitFor(() => {
         expect(showError).toHaveBeenCalledWith(expect.stringContaining('Save the workflow before publishing'))
-      })
+      }, { timeout: 3000 })
     })
 
     it('should show error when no active tab for publish', async () => {
