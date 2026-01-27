@@ -1126,6 +1126,26 @@ describe('confirm', () => {
       await promise
     })
 
+    it('should handle errors gracefully in try-catch block', async () => {
+      const mockDocumentAdapter: DocumentAdapter = {
+        createElement: jest.fn(() => {
+          throw new Error('DOM error')
+        }),
+        getElementById: jest.fn(() => null),
+        getActiveElement: jest.fn(() => null),
+        head: document.head,
+        body: document.body,
+      }
+
+      const promise = showConfirm('Test message', {
+        documentAdapter: mockDocumentAdapter,
+      })
+
+      // Should resolve to false on error
+      const result = await promise
+      expect(result).toBe(false)
+    })
+
     it('should use injected document adapter for head and body', async () => {
       // Use real document elements but verify they're accessed through adapter
       const mockDocumentAdapter: DocumentAdapter = {
