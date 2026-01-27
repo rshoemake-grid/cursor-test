@@ -362,7 +362,7 @@ describe('AuthProvider', () => {
   })
 
   describe('Custom options', () => {
-    it.skip('should use custom apiBaseUrl', async () => {
+    it('should use custom apiBaseUrl', async () => {
       const user = { id: '1', username: 'testuser', email: 'test@example.com', is_active: true, is_admin: false }
       const response = {
         ok: true,
@@ -393,10 +393,22 @@ describe('AuthProvider', () => {
       )
     })
 
-    it.skip('should handle invalid JSON in saved user', () => {
-      // This test reveals that the component doesn't handle JSON.parse errors
-      // The component would need try-catch around JSON.parse to handle this case
-      // Skipping for now as it would require component changes
+    it('should handle invalid JSON in saved user', () => {
+      // Test that invalid JSON in localStorage doesn't crash the component
+      mockLocalStorage.getItem = jest.fn((key: string) => {
+        if (key === 'auth_remember_me') return 'true'
+        if (key === 'auth_token') return 'token-123'
+        if (key === 'auth_user') return 'invalid-json-{broken'
+        return null
+      })
+
+      const { result } = renderHook(() => useAuth(), {
+        wrapper: ({ children }) => wrapper({ children, options: { localStorage: mockLocalStorage, sessionStorage: mockSessionStorage, httpClient: mockHttpClient } }),
+      })
+
+      // Component should handle invalid JSON gracefully
+      expect(result.current.user).toBeNull()
+      expect(result.current.isAuthenticated).toBe(false)
     })
 
     it('should handle loading when only token exists', () => {
@@ -521,12 +533,13 @@ describe('AuthProvider', () => {
       )
     })
 
-    it.skip('should use custom logger', async () => {
+    it('should use custom logger', async () => {
       const customLogger = {
         debug: jest.fn(),
         error: jest.fn(),
         warn: jest.fn(),
         info: jest.fn(),
+        log: jest.fn(),
       }
 
       const response = {
@@ -553,7 +566,10 @@ describe('AuthProvider', () => {
         })
       ).rejects.toThrow('Invalid credentials')
 
-      expect(customLogger.error).toHaveBeenCalled()
+      // Logger should be called for error handling (called in the login function when response.ok is false)
+      await waitFor(() => {
+        expect(customLogger.error).toHaveBeenCalled()
+      })
     })
   })
 })

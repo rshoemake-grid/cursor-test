@@ -2,6 +2,7 @@
 import { renderHook, waitFor, act } from '@testing-library/react'
 import { useWebSocket } from './useWebSocket'
 import { logger } from '../utils/logger'
+import type { WindowLocation } from '../types/adapters'
 
 // Mock logger
 jest.mock('../utils/logger', () => ({
@@ -264,16 +265,67 @@ describe('useWebSocket', () => {
       }
     })
 
-    it.skip('should use wss:// for https protocol', async () => {
-      // Skipped: window.location.protocol cannot be mocked in jsdom
-      // The protocol is determined by window.location.protocol in useWebSocket.ts
-      // This test would require mocking location which is not configurable in jsdom
+    it('should use wss:// for https protocol', async () => {
+      const mockWindowLocation: WindowLocation = {
+        protocol: 'https:',
+        host: 'localhost:8000',
+        hostname: 'localhost',
+        port: '8000',
+        href: 'https://localhost:8000',
+        origin: 'https://localhost:8000',
+      }
+
+      const executionId = 'exec-protocol-https'
+      const mockWs = new MockWebSocket('wss://localhost:8000/ws/execution/exec-protocol-https/stream')
+
+      renderHook(() =>
+        useWebSocket({
+          executionId,
+          executionStatus: 'running',
+          windowLocation: mockWindowLocation,
+        })
+      )
+
+      await jest.advanceTimersByTime(100)
+
+      expect(wsInstances.length).toBeGreaterThan(0)
+      const ws = wsInstances.find(w => w.url.includes('wss://'))
+      expect(ws).toBeDefined()
+      if (ws) {
+        expect(ws.url).toContain('wss://')
+      }
     })
 
-    it.skip('should use ws:// for http protocol', async () => {
-      // Skipped: window.location.protocol cannot be mocked in jsdom
-      // The protocol is determined by window.location.protocol in useWebSocket.ts
-      // This test would require mocking location which is not configurable in jsdom
+    it('should use ws:// for http protocol', async () => {
+      const mockWindowLocation: WindowLocation = {
+        protocol: 'http:',
+        host: 'localhost:8000',
+        hostname: 'localhost',
+        port: '8000',
+        href: 'http://localhost:8000',
+        origin: 'http://localhost:8000',
+      }
+
+      const executionId = 'exec-protocol-http'
+      const mockWs = new MockWebSocket('ws://localhost:8000/ws/execution/exec-protocol-http/stream')
+
+      renderHook(() =>
+        useWebSocket({
+          executionId,
+          executionStatus: 'running',
+          windowLocation: mockWindowLocation,
+        })
+      )
+
+      await jest.advanceTimersByTime(100)
+
+      expect(wsInstances.length).toBeGreaterThan(0)
+      const ws = wsInstances.find(w => w.url.includes('ws://') && !w.url.includes('wss://'))
+      expect(ws).toBeDefined()
+      if (ws) {
+        expect(ws.url).toContain('ws://')
+        expect(ws.url).not.toContain('wss://')
+      }
     })
   })
 

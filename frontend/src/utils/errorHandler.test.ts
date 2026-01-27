@@ -83,6 +83,12 @@ describe('errorHandler', () => {
       expect(logger.error).not.toHaveBeenCalled()
     })
 
+    it('should show notification when showNotification is true', () => {
+      const error = { message: 'Storage error' }
+      handleStorageError(error, 'getItem', 'key', { showNotification: true })
+      expect(showError).toHaveBeenCalledWith(expect.stringContaining('Failed to getItem storage'))
+    })
+
     it('should include context in log messages', () => {
       const error = { message: 'Error' }
 

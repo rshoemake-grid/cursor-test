@@ -139,6 +139,25 @@ describe('ForgotPasswordPage', () => {
     expect(mockNavigate).toHaveBeenCalledWith('/auth')
   })
 
+  it('should submit form when Enter key is pressed', async () => {
+    ;(global.fetch as jest.Mock).mockResolvedValue({
+      ok: true,
+      json: async () => ({ token: 'reset-token-123' }),
+    })
+
+    renderWithRouter(<ForgotPasswordPage />)
+
+    await waitFor(() => {
+      const emailInput = screen.getByPlaceholderText(/your@email.com/)
+      fireEvent.change(emailInput, { target: { value: 'test@example.com' } })
+      fireEvent.keyDown(emailInput, { key: 'Enter', code: 'Enter' })
+    })
+
+    await waitFor(() => {
+      expect(global.fetch).toHaveBeenCalled()
+    }, { timeout: 3000 })
+  })
+
   describe('Dependency Injection', () => {
     it('should use injected HTTP client', async () => {
       const mockHttpClient: HttpClient = {

@@ -23,9 +23,9 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">6.43% </span>
+                <span class="strong">6.52% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>97/1507</span>
+                <span class='fraction'>97/1487</span>
             </div>
         
             
@@ -44,9 +44,9 @@
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">6.43% </span>
+                <span class="strong">6.52% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>97/1507</span>
+                <span class='fraction'>97/1487</span>
             </div>
         
             
@@ -1550,27 +1550,7 @@
 <a name='L1485'></a><a href='#L1485'>1485</a>
 <a name='L1486'></a><a href='#L1486'>1486</a>
 <a name='L1487'></a><a href='#L1487'>1487</a>
-<a name='L1488'></a><a href='#L1488'>1488</a>
-<a name='L1489'></a><a href='#L1489'>1489</a>
-<a name='L1490'></a><a href='#L1490'>1490</a>
-<a name='L1491'></a><a href='#L1491'>1491</a>
-<a name='L1492'></a><a href='#L1492'>1492</a>
-<a name='L1493'></a><a href='#L1493'>1493</a>
-<a name='L1494'></a><a href='#L1494'>1494</a>
-<a name='L1495'></a><a href='#L1495'>1495</a>
-<a name='L1496'></a><a href='#L1496'>1496</a>
-<a name='L1497'></a><a href='#L1497'>1497</a>
-<a name='L1498'></a><a href='#L1498'>1498</a>
-<a name='L1499'></a><a href='#L1499'>1499</a>
-<a name='L1500'></a><a href='#L1500'>1500</a>
-<a name='L1501'></a><a href='#L1501'>1501</a>
-<a name='L1502'></a><a href='#L1502'>1502</a>
-<a name='L1503'></a><a href='#L1503'>1503</a>
-<a name='L1504'></a><a href='#L1504'>1504</a>
-<a name='L1505'></a><a href='#L1505'>1505</a>
-<a name='L1506'></a><a href='#L1506'>1506</a>
-<a name='L1507'></a><a href='#L1507'>1507</a>
-<a name='L1508'></a><a href='#L1508'>1508</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">1x</span>
+<a name='L1488'></a><a href='#L1488'>1488</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
@@ -1670,26 +1650,6 @@
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -3641,18 +3601,18 @@ const WorkflowBuilder = forwardRef&lt;WorkflowBuilderHandle, WorkflowBuilderProp
 <span class="cstat-no" title="statement not covered" ></span>
 <span class="cstat-no" title="statement not covered" >  const executeWorkflow = useCallback(async () =&gt; {</span>
 <span class="cstat-no" title="statement not covered" >    logger.debug('[WorkflowBuilder] executeWorkflow called')</span>
-<span class="cstat-no" title="statement not covered" >    console.log('[WorkflowBuilder] isAuthenticated:', isAuthenticated)</span>
-<span class="cstat-no" title="statement not covered" >    console.log('[WorkflowBuilder] localWorkflowId:', localWorkflowId)</span>
+<span class="cstat-no" title="statement not covered" >    logger.debug('[WorkflowBuilder] isAuthenticated:', isAuthenticated)</span>
+<span class="cstat-no" title="statement not covered" >    logger.debug('[WorkflowBuilder] localWorkflowId:', localWorkflowId)</span>
 <span class="cstat-no" title="statement not covered" >    if (!isAuthenticated) {</span>
-<span class="cstat-no" title="statement not covered" >      console.error('[WorkflowBuilder] User not authenticated')</span>
+<span class="cstat-no" title="statement not covered" >      logger.error('[WorkflowBuilder] User not authenticated')</span>
 <span class="cstat-no" title="statement not covered" >      showError('Please log in to execute workflows.')</span>
 <span class="cstat-no" title="statement not covered" >      return</span>
 <span class="cstat-no" title="statement not covered" >    }</span>
 <span class="cstat-no" title="statement not covered" ></span>
 <span class="cstat-no" title="statement not covered" >    let currentWorkflowId = localWorkflowId</span>
-<span class="cstat-no" title="statement not covered" >    console.log('[WorkflowBuilder] Current workflow ID:', currentWorkflowId)</span>
+<span class="cstat-no" title="statement not covered" >    logger.debug('[WorkflowBuilder] Current workflow ID:', currentWorkflowId)</span>
 <span class="cstat-no" title="statement not covered" >    if (!currentWorkflowId) {</span>
-<span class="cstat-no" title="statement not covered" >      console.log('[WorkflowBuilder] No workflow ID, prompting to save')</span>
+<span class="cstat-no" title="statement not covered" >      logger.debug('[WorkflowBuilder] No workflow ID, prompting to save')</span>
 <span class="cstat-no" title="statement not covered" >      const confirmed = await showConfirm(</span>
 <span class="cstat-no" title="statement not covered" >        'Workflow needs to be saved before execution. Save now?',</span>
 <span class="cstat-no" title="statement not covered" >        { title: 'Save Workflow', confirmText: 'Save', cancelText: 'Cancel' }</span>
@@ -3683,15 +3643,15 @@ const WorkflowBuilder = forwardRef&lt;WorkflowBuilderHandle, WorkflowBuilderProp
 <span class="cstat-no" title="statement not covered" >  }, [showInputs])</span>
 <span class="cstat-no" title="statement not covered" ></span>
 <span class="cstat-no" title="statement not covered" >  const handleConfirmExecute = useCallback(async () =&gt; {</span>
-<span class="cstat-no" title="statement not covered" >    console.log('[WorkflowBuilder] ===== handleConfirmExecute CALLED =====')</span>
-<span class="cstat-no" title="statement not covered" >    console.log('[WorkflowBuilder] executionInputs:', executionInputs)</span>
-<span class="cstat-no" title="statement not covered" >    console.log('[WorkflowBuilder] workflowIdRef.current:', workflowIdRef.current)</span>
+<span class="cstat-no" title="statement not covered" >    logger.debug('[WorkflowBuilder] ===== handleConfirmExecute CALLED =====')</span>
+<span class="cstat-no" title="statement not covered" >    logger.debug('[WorkflowBuilder] executionInputs:', executionInputs)</span>
+<span class="cstat-no" title="statement not covered" >    logger.debug('[WorkflowBuilder] workflowIdRef.current:', workflowIdRef.current)</span>
 <span class="cstat-no" title="statement not covered" >    setIsExecuting(true)</span>
 <span class="cstat-no" title="statement not covered" >    setTimeout(async () =&gt; {</span>
 <span class="cstat-no" title="statement not covered" >      try {</span>
-<span class="cstat-no" title="statement not covered" >        console.log('[WorkflowBuilder] Parsing execution inputs:', executionInputs)</span>
+<span class="cstat-no" title="statement not covered" >        logger.debug('[WorkflowBuilder] Parsing execution inputs:', executionInputs)</span>
 <span class="cstat-no" title="statement not covered" >        const inputs = JSON.parse(executionInputs)</span>
-<span class="cstat-no" title="statement not covered" >        console.log('[WorkflowBuilder] Parsed inputs:', inputs)</span>
+<span class="cstat-no" title="statement not covered" >        logger.debug('[WorkflowBuilder] Parsed inputs:', inputs)</span>
 <span class="cstat-no" title="statement not covered" >        setShowInputs(false)</span>
 <span class="cstat-no" title="statement not covered" >        setExecutionInputs('{}')</span>
 <span class="cstat-no" title="statement not covered" >        setIsExecuting(false)</span>
@@ -3741,28 +3701,8 @@ const WorkflowBuilder = forwardRef&lt;WorkflowBuilderHandle, WorkflowBuilderProp
 <span class="cstat-no" title="statement not covered" >      } catch (error: any) {</span>
 <span class="cstat-no" title="statement not covered" >        logger.error('Execution setup failed:', error)</span>
 <span class="cstat-no" title="statement not covered" >        setIsExecuting(false)</span>
-<span class="cstat-no" title="statement not covered" >        const errorNotification = document.createElement('div')</span>
-<span class="cstat-no" title="statement not covered" >        errorNotification.style.cssText = `</span>
-<span class="cstat-no" title="statement not covered" >          position: fixed;</span>
-<span class="cstat-no" title="statement not covered" >          top: 20px;</span>
-<span class="cstat-no" title="statement not covered" >          right: 20px;</span>
-<span class="cstat-no" title="statement not covered" >          background: #ef4444;</span>
-<span class="cstat-no" title="statement not covered" >          color: white;</span>
-<span class="cstat-no" title="statement not covered" >          padding: 16px 24px;</span>
-<span class="cstat-no" title="statement not covered" >          border-radius: 8px;</span>
-<span class="cstat-no" title="statement not covered" >          box-shadow: 0 4px 6px rgba(0,0,0,0.1);</span>
-<span class="cstat-no" title="statement not covered" >          z-index: 10000;</span>
-<span class="cstat-no" title="statement not covered" >          max-width: 400px;</span>
-<span class="cstat-no" title="statement not covered" >          font-family: system-ui, -apple-system, sans-serif;</span>
-<span class="cstat-no" title="statement not covered" >        `</span>
-<span class="cstat-no" title="statement not covered" >        errorNotification.textContent = `Failed to execute workflow: ${error.message}`</span>
-<span class="cstat-no" title="statement not covered" >        document.body.appendChild(errorNotification)</span>
-<span class="cstat-no" title="statement not covered" ></span>
-<span class="cstat-no" title="statement not covered" >        setTimeout(() =&gt; {</span>
-<span class="cstat-no" title="statement not covered" >          errorNotification.style.transition = 'opacity 0.3s'</span>
-<span class="cstat-no" title="statement not covered" >          errorNotification.style.opacity = '0'</span>
-<span class="cstat-no" title="statement not covered" >          setTimeout(() =&gt; errorNotification.remove(), 300)</span>
-<span class="cstat-no" title="statement not covered" >        }, 5000)</span>
+<span class="cstat-no" title="statement not covered" >        const errorMessage = error?.message || 'Unknown error'</span>
+<span class="cstat-no" title="statement not covered" >        showError(`Failed to execute workflow: ${errorMessage}`)</span>
 <span class="cstat-no" title="statement not covered" >      }</span>
 <span class="cstat-no" title="statement not covered" >    }, 0)</span>
 <span class="cstat-no" title="statement not covered" >  }, [localWorkflowId, onExecutionStart])</span>
@@ -3886,14 +3826,14 @@ const WorkflowBuilder = forwardRef&lt;WorkflowBuilderHandle, WorkflowBuilderProp
 <span class="cstat-no" title="statement not covered" >            inputs: node.data.inputs || [],</span>
 <span class="cstat-no" title="statement not covered" >          }</span>
 <span class="cstat-no" title="statement not covered" >        }))</span>
-<span class="cstat-no" title="statement not covered" >        console.log('Loaded nodes:', initializedNodes.map(n =&gt; ({ id: n.id, type: n.type, position: n.position })))</span>
-<span class="cstat-no" title="statement not covered" >        console.log('Looking for agent-generate:', initializedNodes.find(n =&gt; n.id === 'agent-generate'))</span>
+<span class="cstat-no" title="statement not covered" >        logger.debug('Loaded nodes:', initializedNodes.map(n =&gt; ({ id: n.id, type: n.type, position: n.position })))</span>
+<span class="cstat-no" title="statement not covered" >        logger.debug('Looking for agent-generate:', initializedNodes.find(n =&gt; n.id === 'agent-generate'))</span>
 <span class="cstat-no" title="statement not covered" >        </span>
 <span class="cstat-no" title="statement not covered" >        // Debug: log raw edges from API</span>
 <span class="cstat-no" title="statement not covered" >        const conditionEdgesRaw = (workflow.edges || []).filter((e: any) =&gt; e.source === 'condition-1')</span>
-<span class="cstat-no" title="statement not covered" >        console.log('Raw condition edges from API:', JSON.stringify(conditionEdgesRaw, null, 2))</span>
+<span class="cstat-no" title="statement not covered" >        logger.debug('Raw condition edges from API:', JSON.stringify(conditionEdgesRaw, null, 2))</span>
 <span class="cstat-no" title="statement not covered" >        conditionEdgesRaw.forEach((e: any) =&gt; {</span>
-<span class="cstat-no" title="statement not covered" >          console.log(`  Edge ${e.id}:`, JSON.stringify({</span>
+<span class="cstat-no" title="statement not covered" >          logger.debug(`  Edge ${e.id}:`, JSON.stringify({</span>
 <span class="cstat-no" title="statement not covered" >            id: e.id,</span>
 <span class="cstat-no" title="statement not covered" >            source: e.source,</span>
 <span class="cstat-no" title="statement not covered" >            target: e.target,</span>
@@ -3947,8 +3887,8 @@ const WorkflowBuilder = forwardRef&lt;WorkflowBuilderHandle, WorkflowBuilderProp
 <span class="cstat-no" title="statement not covered" >        })</span>
 <span class="cstat-no" title="statement not covered" >        </span>
 <span class="cstat-no" title="statement not covered" >        const conditionEdges = formattedEdges.filter(e =&gt; e.source === 'condition-1')</span>
-<span class="cstat-no" title="statement not covered" >        console.log('Formatted condition edges:', JSON.stringify(conditionEdges, null, 2))</span>
-<span class="cstat-no" title="statement not covered" >        console.log('Edge details (formatted):', conditionEdges.map(e =&gt; ({</span>
+<span class="cstat-no" title="statement not covered" >        logger.debug('Formatted condition edges:', JSON.stringify(conditionEdges, null, 2))</span>
+<span class="cstat-no" title="statement not covered" >        logger.debug('Edge details (formatted):', conditionEdges.map(e =&gt; ({</span>
 <span class="cstat-no" title="statement not covered" >          id: e.id,</span>
 <span class="cstat-no" title="statement not covered" >          source: e.source,</span>
 <span class="cstat-no" title="statement not covered" >          target: e.target,</span>
@@ -3981,7 +3921,7 @@ const WorkflowBuilder = forwardRef&lt;WorkflowBuilderHandle, WorkflowBuilderProp
 <span class="cstat-no" title="statement not covered" >          onWorkflowLoaded(workflowId, workflow.name)</span>
 <span class="cstat-no" title="statement not covered" >        }</span>
 <span class="cstat-no" title="statement not covered" >      }).catch(err =&gt; {</span>
-<span class="cstat-no" title="statement not covered" >        console.error("Failed to load workflow:", err)</span>
+<span class="cstat-no" title="statement not covered" >        logger.error("Failed to load workflow:", err)</span>
 <span class="cstat-no" title="statement not covered" >        isLoadingRef.current = false</span>
 <span class="cstat-no" title="statement not covered" >      })</span>
 <span class="cstat-no" title="statement not covered" >    } else {</span>
@@ -4004,7 +3944,7 @@ const WorkflowBuilder = forwardRef&lt;WorkflowBuilderHandle, WorkflowBuilderProp
 <span class="cstat-no" title="statement not covered" ></span>
 <span class="cstat-no" title="statement not covered" >    // Apply node additions first (edges need nodes to exist)</span>
 <span class="cstat-no" title="statement not covered" >    if (changes.nodes_to_add &amp;&amp; changes.nodes_to_add.length &gt; 0) {</span>
-<span class="cstat-no" title="statement not covered" >      console.log('Adding nodes:', changes.nodes_to_add)</span>
+<span class="cstat-no" title="statement not covered" >      logger.debug('Adding nodes:', changes.nodes_to_add)</span>
 <span class="cstat-no" title="statement not covered" >      setNodes((nds) =&gt; {</span>
 <span class="cstat-no" title="statement not covered" >        // Convert backend node format to React Flow format</span>
 <span class="cstat-no" title="statement not covered" >        const convertedNodes = changes.nodes_to_add.map((n: any) =&gt; {</span>
@@ -4016,7 +3956,7 @@ const WorkflowBuilder = forwardRef&lt;WorkflowBuilderHandle, WorkflowBuilderProp
 <span class="cstat-no" title="statement not covered" >          }</span>
 <span class="cstat-no" title="statement not covered" >        })</span>
 <span class="cstat-no" title="statement not covered" >        const newNodes = [...nds, ...convertedNodes]</span>
-<span class="cstat-no" title="statement not covered" >        console.log('New nodes after addition:', newNodes.map(n =&gt; ({ id: n.id, type: n.type })))</span>
+<span class="cstat-no" title="statement not covered" >        logger.debug('New nodes after addition:', newNodes.map(n =&gt; ({ id: n.id, type: n.type })))</span>
 <span class="cstat-no" title="statement not covered" >        return newNodes</span>
 <span class="cstat-no" title="statement not covered" >      })</span>
 <span class="cstat-no" title="statement not covered" >      notifyModified()</span>
@@ -4044,11 +3984,11 @@ const WorkflowBuilder = forwardRef&lt;WorkflowBuilderHandle, WorkflowBuilderProp
 <span class="cstat-no" title="statement not covered" ></span>
 <span class="cstat-no" title="statement not covered" >    // Apply node deletions</span>
 <span class="cstat-no" title="statement not covered" >    if (changes.nodes_to_delete &amp;&amp; changes.nodes_to_delete.length &gt; 0) {</span>
-<span class="cstat-no" title="statement not covered" >      console.log('Deleting nodes:', changes.nodes_to_delete)</span>
+<span class="cstat-no" title="statement not covered" >      logger.debug('Deleting nodes:', changes.nodes_to_delete)</span>
 <span class="cstat-no" title="statement not covered" >      setNodes((nds) =&gt; {</span>
-<span class="cstat-no" title="statement not covered" >        console.log('Current node IDs before deletion:', nds.map(n =&gt; n.id))</span>
+<span class="cstat-no" title="statement not covered" >        logger.debug('Current node IDs before deletion:', nds.map(n =&gt; n.id))</span>
 <span class="cstat-no" title="statement not covered" >        const filtered = nds.filter((node) =&gt; !changes.nodes_to_delete.includes(node.id))</span>
-<span class="cstat-no" title="statement not covered" >        console.log('Nodes after deletion:', filtered.map(n =&gt; n.id))</span>
+<span class="cstat-no" title="statement not covered" >        logger.debug('Nodes after deletion:', filtered.map(n =&gt; n.id))</span>
 <span class="cstat-no" title="statement not covered" >        return filtered</span>
 <span class="cstat-no" title="statement not covered" >      })</span>
 <span class="cstat-no" title="statement not covered" >      // Also remove edges connected to deleted nodes</span>
@@ -4070,20 +4010,20 @@ const WorkflowBuilder = forwardRef&lt;WorkflowBuilderHandle, WorkflowBuilderProp
 <span class="cstat-no" title="statement not covered" >        const currentEdges = edgesRef.current</span>
 <span class="cstat-no" title="statement not covered" >        const nodeIds = new Set(currentNodes.map(n =&gt; n.id))</span>
 <span class="cstat-no" title="statement not covered" >        </span>
-<span class="cstat-no" title="statement not covered" >        console.log('Adding edges:', changes.edges_to_add)</span>
-<span class="cstat-no" title="statement not covered" >        console.log('Current nodes:', Array.from(nodeIds))</span>
-<span class="cstat-no" title="statement not covered" >        console.log('Current edges:', currentEdges.map(e =&gt; `${e.source} -&gt; ${e.target}`))</span>
+<span class="cstat-no" title="statement not covered" >        logger.debug('Adding edges:', changes.edges_to_add)</span>
+<span class="cstat-no" title="statement not covered" >        logger.debug('Current nodes:', Array.from(nodeIds))</span>
+<span class="cstat-no" title="statement not covered" >        logger.debug('Current edges:', currentEdges.map(e =&gt; `${e.source} -&gt; ${e.target}`))</span>
 <span class="cstat-no" title="statement not covered" >        </span>
 <span class="cstat-no" title="statement not covered" >        let updatedEdges = [...currentEdges]</span>
 <span class="cstat-no" title="statement not covered" >        </span>
 <span class="cstat-no" title="statement not covered" >        for (const edgeToAdd of changes.edges_to_add) {</span>
 <span class="cstat-no" title="statement not covered" >          // Validate that both source and target nodes exist</span>
 <span class="cstat-no" title="statement not covered" >          if (!nodeIds.has(edgeToAdd.source)) {</span>
-<span class="cstat-no" title="statement not covered" >            console.warn(`Cannot connect edge: source node "${edgeToAdd.source}" does not exist. Available nodes:`, Array.from(nodeIds))</span>
+<span class="cstat-no" title="statement not covered" >            logger.warn(`Cannot connect edge: source node "${edgeToAdd.source}" does not exist. Available nodes:`, Array.from(nodeIds))</span>
 <span class="cstat-no" title="statement not covered" >            continue</span>
 <span class="cstat-no" title="statement not covered" >          }</span>
 <span class="cstat-no" title="statement not covered" >          if (!nodeIds.has(edgeToAdd.target)) {</span>
-<span class="cstat-no" title="statement not covered" >            console.warn(`Cannot connect edge: target node "${edgeToAdd.target}" does not exist. Available nodes:`, Array.from(nodeIds))</span>
+<span class="cstat-no" title="statement not covered" >            logger.warn(`Cannot connect edge: target node "${edgeToAdd.target}" does not exist. Available nodes:`, Array.from(nodeIds))</span>
 <span class="cstat-no" title="statement not covered" >            continue</span>
 <span class="cstat-no" title="statement not covered" >          }</span>
 <span class="cstat-no" title="statement not covered" >          </span>
@@ -4092,7 +4032,7 @@ const WorkflowBuilder = forwardRef&lt;WorkflowBuilderHandle, WorkflowBuilderProp
 <span class="cstat-no" title="statement not covered" >            e =&gt; e.source === edgeToAdd.source &amp;&amp; e.target === edgeToAdd.target</span>
 <span class="cstat-no" title="statement not covered" >          )</span>
 <span class="cstat-no" title="statement not covered" >          if (edgeExists) {</span>
-<span class="cstat-no" title="statement not covered" >            console.warn(`Edge from "${edgeToAdd.source}" to "${edgeToAdd.target}" already exists`)</span>
+<span class="cstat-no" title="statement not covered" >            logger.warn(`Edge from "${edgeToAdd.source}" to "${edgeToAdd.target}" already exists`)</span>
 <span class="cstat-no" title="statement not covered" >            continue</span>
 <span class="cstat-no" title="statement not covered" >          }</span>
 <span class="cstat-no" title="statement not covered" >          </span>
@@ -4103,10 +4043,10 @@ const WorkflowBuilder = forwardRef&lt;WorkflowBuilderHandle, WorkflowBuilderProp
 <span class="cstat-no" title="statement not covered" >            sourceHandle: edgeToAdd.sourceHandle || null,</span>
 <span class="cstat-no" title="statement not covered" >            targetHandle: edgeToAdd.targetHandle || null,</span>
 <span class="cstat-no" title="statement not covered" >          }</span>
-<span class="cstat-no" title="statement not covered" >          console.log('Adding connection:', connection)</span>
+<span class="cstat-no" title="statement not covered" >          logger.debug('Adding connection:', connection)</span>
 <span class="cstat-no" title="statement not covered" >          // Use addEdge to properly format the edge - it returns the updated array</span>
 <span class="cstat-no" title="statement not covered" >          updatedEdges = addEdge(connection, updatedEdges)</span>
-<span class="cstat-no" title="statement not covered" >          console.log('Updated edges count:', updatedEdges.length)</span>
+<span class="cstat-no" title="statement not covered" >          logger.debug('Updated edges count:', updatedEdges.length)</span>
 <span class="cstat-no" title="statement not covered" >        }</span>
 <span class="cstat-no" title="statement not covered" >        </span>
 <span class="cstat-no" title="statement not covered" >        setEdges(updatedEdges)</span>
@@ -4132,7 +4072,7 @@ const WorkflowBuilder = forwardRef&lt;WorkflowBuilderHandle, WorkflowBuilderProp
 <span class="cstat-no" title="statement not covered" >  const handleWorkflowUpdate = useCallback((changes: any) =&gt; {</span>
 <span class="cstat-no" title="statement not covered" >    if (!changes) return</span>
 <span class="cstat-no" title="statement not covered" ></span>
-<span class="cstat-no" title="statement not covered" >    console.log('Received workflow changes:', changes)</span>
+<span class="cstat-no" title="statement not covered" >    logger.debug('Received workflow changes:', changes)</span>
 <span class="cstat-no" title="statement not covered" >    </span>
 <span class="cstat-no" title="statement not covered" >    // If there are deletions and we have a workflowId, reload from database</span>
 <span class="cstat-no" title="statement not covered" >    // The chat agent saves deletions to the database, so we need to reload to ensure UI matches</span>
@@ -4140,7 +4080,7 @@ const WorkflowBuilder = forwardRef&lt;WorkflowBuilderHandle, WorkflowBuilderProp
 <span class="cstat-no" title="statement not covered" >    </span>
 <span class="cstat-no" title="statement not covered" >    if (hasDeletions &amp;&amp; localWorkflowId) {</span>
 <span class="cstat-no" title="statement not covered" >      // Reload workflow from database to ensure UI matches saved state</span>
-<span class="cstat-no" title="statement not covered" >      console.log('Reloading workflow from database after deletions:', changes.nodes_to_delete)</span>
+<span class="cstat-no" title="statement not covered" >      logger.debug('Reloading workflow from database after deletions:', changes.nodes_to_delete)</span>
 <span class="cstat-no" title="statement not covered" >      // Small delay to ensure backend has finished saving</span>
 <span class="cstat-no" title="statement not covered" >      setTimeout(() =&gt; {</span>
 <span class="cstat-no" title="statement not covered" >        api.getWorkflow(localWorkflowId).then((workflow) =&gt; {</span>
@@ -4160,10 +4100,10 @@ const WorkflowBuilder = forwardRef&lt;WorkflowBuilderHandle, WorkflowBuilderProp
 <span class="cstat-no" title="statement not covered" >          }))</span>
 <span class="cstat-no" title="statement not covered" >          setNodes(initializedNodes)</span>
 <span class="cstat-no" title="statement not covered" >          setEdges(workflow.edges || [])</span>
-<span class="cstat-no" title="statement not covered" >          console.log('Reloaded workflow after deletion, nodes:', initializedNodes.map(n =&gt; n.id))</span>
-<span class="cstat-no" title="statement not covered" >          console.log('Expected deleted nodes:', changes.nodes_to_delete)</span>
+<span class="cstat-no" title="statement not covered" >          logger.debug('Reloaded workflow after deletion, nodes:', initializedNodes.map(n =&gt; n.id))</span>
+<span class="cstat-no" title="statement not covered" >          logger.debug('Expected deleted nodes:', changes.nodes_to_delete)</span>
 <span class="cstat-no" title="statement not covered" >        }).catch(err =&gt; {</span>
-<span class="cstat-no" title="statement not covered" >          console.error('Failed to reload workflow after deletion:', err)</span>
+<span class="cstat-no" title="statement not covered" >          logger.error('Failed to reload workflow after deletion:', err)</span>
 <span class="cstat-no" title="statement not covered" >          // Fall back to applying changes locally</span>
 <span class="cstat-no" title="statement not covered" >          applyLocalChanges(changes)</span>
 <span class="cstat-no" title="statement not covered" >        })</span>
@@ -4220,7 +4160,7 @@ const WorkflowBuilder = forwardRef&lt;WorkflowBuilderHandle, WorkflowBuilderProp
 <span class="cstat-no" title="statement not covered" >        try {</span>
 <span class="cstat-no" title="statement not covered" >          customData = JSON.parse(customAgentData)</span>
 <span class="cstat-no" title="statement not covered" >        } catch (e) {</span>
-<span class="cstat-no" title="statement not covered" >          console.error('Failed to parse custom agent data:', e)</span>
+<span class="cstat-no" title="statement not covered" >          logger.error('Failed to parse custom agent data:', e)</span>
 <span class="cstat-no" title="statement not covered" >        }</span>
 <span class="cstat-no" title="statement not covered" >      }</span>
 <span class="cstat-no" title="statement not covered" ></span>
@@ -4591,7 +4531,7 @@ export default WorkflowBuilder
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-01-27T00:35:04.491Z
+                at 2026-01-27T01:00:38.887Z
             </div>
         <script src="../../prettify.js"></script>
         <script>

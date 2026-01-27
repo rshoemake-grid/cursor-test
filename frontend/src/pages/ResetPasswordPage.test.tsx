@@ -56,6 +56,28 @@ describe('ResetPasswordPage', () => {
     })
   })
 
+  it('should show error when token is missing on submit', async () => {
+    mockUseSearchParams.mockReturnValue([
+      new URLSearchParams(''),
+      jest.fn(),
+    ])
+
+    renderWithRouter(<ResetPasswordPage />)
+
+    const passwordInputs = screen.getAllByPlaceholderText(/••••••••/)
+    const submitButton = screen.getByRole('button', { name: /Reset Password/ })
+
+    fireEvent.change(passwordInputs[0], { target: { value: 'newpassword123' } })
+    if (passwordInputs.length > 1) {
+      fireEvent.change(passwordInputs[1], { target: { value: 'newpassword123' } })
+    }
+    fireEvent.click(submitButton)
+
+    await waitFor(() => {
+      expect(screen.getByText(/Reset token is missing/)).toBeInTheDocument()
+    })
+  })
+
   it('should handle password reset', async () => {
     ;(global.fetch as jest.Mock).mockResolvedValue({
       ok: true,
@@ -177,6 +199,45 @@ describe('ResetPasswordPage', () => {
     await waitFor(() => {
       expect(screen.getByText('Invalid token')).toBeInTheDocument()
     })
+  })
+
+  it('should submit form when Enter key is pressed and token exists', async () => {
+    ;(global.fetch as jest.Mock).mockResolvedValue({
+      ok: true,
+      json: async () => ({}),
+    })
+
+    renderWithRouter(<ResetPasswordPage />)
+
+    await waitFor(() => {
+      const passwordInputs = screen.getAllByPlaceholderText(/••••••••/)
+      const passwordInput = passwordInputs[0]
+      fireEvent.change(passwordInput, { target: { value: 'newpassword123' } })
+      if (passwordInputs.length > 1) {
+        fireEvent.change(passwordInputs[1], { target: { value: 'newpassword123' } })
+      }
+      fireEvent.keyDown(passwordInput, { key: 'Enter', code: 'Enter' })
+    })
+
+    await waitFor(() => {
+      expect(global.fetch).toHaveBeenCalled()
+    }, { timeout: 3000 })
+  })
+
+  it('should toggle confirm password visibility', async () => {
+    renderWithRouter(<ResetPasswordPage />)
+
+    const passwordInputs = screen.getAllByPlaceholderText(/••••••••/)
+    const confirmPasswordInput = passwordInputs.length > 1 ? passwordInputs[1] : passwordInputs[0]
+    expect((confirmPasswordInput as HTMLInputElement).type).toBe('password')
+
+    const toggleButtons = screen.getAllByRole('button').filter(btn => 
+      btn.getAttribute('type') === 'button' && btn.querySelector('svg')
+    )
+    if (toggleButtons.length > 1) {
+      fireEvent.click(toggleButtons[1])
+      expect((confirmPasswordInput as HTMLInputElement).type).toBe('text')
+    }
   })
 
   describe('Dependency Injection', () => {

@@ -60,7 +60,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children, options })
     
     if (savedToken && savedUser) {
       setToken(savedToken);
-      setUser(JSON.parse(savedUser));
+      try {
+        setUser(JSON.parse(savedUser));
+      } catch (error) {
+        // Handle invalid JSON gracefully - clear corrupted data
+        injectedLogger.warn('Failed to parse saved user data, clearing auth state:', error);
+        storage.removeItem('auth_token');
+        storage.removeItem('auth_user');
+        setToken(null);
+        setUser(null);
+      }
     }
   }, [local, session]);
 

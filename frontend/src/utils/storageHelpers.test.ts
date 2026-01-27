@@ -128,6 +128,21 @@ describe('storageHelpers', () => {
       const result = safeStorageHas(mockStorage, 'key')
       expect(result).toBe(false)
     })
+
+    it('should handle getItem errors', () => {
+      ;(mockStorage.getItem as jest.Mock).mockImplementation(() => {
+        throw new Error('Storage error')
+      })
+      const result = safeStorageHas(mockStorage, 'key')
+      expect(result).toBe(false)
+      expect(handleStorageError).toHaveBeenCalled()
+    })
+
+    it('should return false when item is undefined', () => {
+      ;(mockStorage.getItem as jest.Mock).mockReturnValue(undefined)
+      const result = safeStorageHas(mockStorage, 'key')
+      expect(result).toBe(false)
+    })
   })
 
   describe('safeStorageClear', () => {
