@@ -141,6 +141,58 @@ describe('LogLevelBadge', () => {
         document.body.innerHTML = ''
       }
     })
+
+    it('should handle all valid log levels with background', () => {
+      const validLevels: Array<'INFO' | 'WARNING' | 'ERROR' | 'DEBUG'> = ['INFO', 'WARNING', 'ERROR', 'DEBUG']
+      
+      for (const level of validLevels) {
+        const { unmount, container } = render(<LogLevelBadge level={level} showBackground={true} />)
+        const badge = container.firstChild as HTMLElement
+        
+        expect(badge.textContent).toBe(level)
+        expect(badge.className).toContain('bg-')
+        
+        unmount()
+        document.body.innerHTML = ''
+      }
+    })
+
+    it('should handle all valid log levels without background', () => {
+      const validLevels: Array<'INFO' | 'WARNING' | 'ERROR' | 'DEBUG'> = ['INFO', 'WARNING', 'ERROR', 'DEBUG']
+      
+      for (const level of validLevels) {
+        const { unmount, container } = render(<LogLevelBadge level={level} showBackground={false} />)
+        const badge = container.firstChild as HTMLElement
+        
+        expect(badge.textContent).toBe(level)
+        expect(badge.className).not.toContain('bg-')
+        expect(badge.className).toContain('text-')
+        
+        unmount()
+        document.body.innerHTML = ''
+      }
+    })
+
+    it('should handle className concatenation correctly', () => {
+      const { container } = render(<LogLevelBadge level="ERROR" className="custom-class another-class" />)
+      const badge = container.firstChild as HTMLElement
+      
+      expect(badge.className).toContain('custom-class')
+      expect(badge.className).toContain('another-class')
+      expect(badge.className).toContain('font-semibold')
+    })
+
+    it('should handle empty level string', () => {
+      render(<LogLevelBadge level="" />)
+      // Should normalize to INFO
+      expect(screen.getByText('INFO')).toBeInTheDocument()
+    })
+
+    it('should handle level with whitespace', () => {
+      render(<LogLevelBadge level="  ERROR  " />)
+      // Should normalize to INFO (trimmed but still invalid)
+      expect(screen.getByText('INFO')).toBeInTheDocument()
+    })
   })
 })
 
