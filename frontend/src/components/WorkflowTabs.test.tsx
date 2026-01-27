@@ -1939,6 +1939,7 @@ describe('WorkflowTabs', () => {
       }
 
       // Use workflow-1 as the tab id to match the default emptyTabState
+      // Set workflowId to a non-null value so the component will call httpClient.post
       const savedTabs = [
         { id: 'workflow-1', name: 'Test Workflow', workflowId: 'workflow-1', isUnsaved: false, executions: [], activeExecutionId: null },
       ]
@@ -1962,9 +1963,8 @@ describe('WorkflowTabs', () => {
       })
 
       const form = screen.getByText(/Publish to Marketplace/).closest('form')
-      if (form) {
-        fireEvent.submit(form)
-      }
+      expect(form).toBeInTheDocument()
+      fireEvent.submit(form!)
 
       await waitFor(() => {
         expect(showError).toHaveBeenCalledWith(expect.stringContaining('Failed to publish workflow'))
