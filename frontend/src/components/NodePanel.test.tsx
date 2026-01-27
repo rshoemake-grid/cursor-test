@@ -323,4 +323,160 @@ describe('NodePanel', () => {
       expect(screen.getByText('New Agent')).toBeInTheDocument()
     })
   })
+
+  describe('edge cases', () => {
+    it('should handle storage event with null newValue', () => {
+      render(<NodePanel />)
+
+      const storageEvent = new StorageEvent('storage', {
+        key: 'customAgentNodes',
+        newValue: null,
+      })
+
+      window.dispatchEvent(storageEvent)
+
+      // Should handle gracefully
+      expect(screen.getByText('Node Palette')).toBeInTheDocument()
+    })
+
+    it('should handle storage event with empty string newValue', () => {
+      render(<NodePanel />)
+
+      const storageEvent = new StorageEvent('storage', {
+        key: 'customAgentNodes',
+        newValue: '',
+      })
+
+      window.dispatchEvent(storageEvent)
+
+      // Should handle gracefully
+      expect(screen.getByText('Node Palette')).toBeInTheDocument()
+    })
+
+    it('should handle storage event with invalid JSON newValue', () => {
+      render(<NodePanel />)
+
+      const storageEvent = new StorageEvent('storage', {
+        key: 'customAgentNodes',
+        newValue: '{invalid json}',
+      })
+
+      window.dispatchEvent(storageEvent)
+
+      // Should handle gracefully and log error
+      expect(screen.getByText('Node Palette')).toBeInTheDocument()
+      expect(logger.error).toHaveBeenCalled()
+    })
+
+    it('should handle storage event with non-array parsed value', () => {
+      render(<NodePanel />)
+
+      const storageEvent = new StorageEvent('storage', {
+        key: 'customAgentNodes',
+        newValue: JSON.stringify({ not: 'an array' }),
+      })
+
+      window.dispatchEvent(storageEvent)
+
+      // Should handle gracefully - parsed value is not array
+      expect(screen.getByText('Node Palette')).toBeInTheDocument()
+    })
+
+    it('should handle customAgentNodesUpdated event when storage is null', () => {
+      render(<NodePanel storage={null} />)
+
+      const customEvent = new Event('customAgentNodesUpdated')
+      window.dispatchEvent(customEvent)
+
+      // Should handle gracefully
+      expect(screen.getByText('Node Palette')).toBeInTheDocument()
+    })
+
+    it('should handle storage.getItem returning non-string value', () => {
+      const mockStorage: StorageAdapter = {
+        getItem: jest.fn().mockReturnValue(123 as any), // Non-string
+        setItem: jest.fn(),
+        removeItem: jest.fn(),
+        addEventListener: jest.fn(),
+        removeEventListener: jest.fn(),
+      }
+
+      render(<NodePanel storage={mockStorage} />)
+
+      // Should handle gracefully
+      expect(screen.getByText('Node Palette')).toBeInTheDocument()
+    })
+
+    it('should handle storage.getItem returning empty string', () => {
+      const mockStorage: StorageAdapter = {
+        getItem: jest.fn().mockReturnValue(''),
+        setItem: jest.fn(),
+        removeItem: jest.fn(),
+        addEventListener: jest.fn(),
+        removeEventListener: jest.fn(),
+      }
+
+      render(<NodePanel storage={mockStorage} />)
+
+      // Should handle gracefully - empty string is falsy
+      expect(screen.getByText('Node Palette')).toBeInTheDocument()
+    })
+
+    it('should handle all categories being expanded', () => {
+      render(<NodePanel />)
+
+      // Expand all categories
+      const workflowToggle = screen.getByText('Workflow Nodes').closest('button')
+      const agentToggle = screen.getByText('Agent Nodes').closest('button')
+      const dataToggle = screen.getByText('Data Nodes').closest('button')
+
+      fireEvent.click(workflowToggle!)
+      fireEvent.click(agentToggle!)
+      fireEvent.click(dataToggle!)
+
+      // All should be visible
+      expect(screen.getByText('Start')).toBeInTheDocument()
+      expect(screen.getByText('Agent')).toBeInTheDocument()
+      expect(screen.getByText('GCP Bucket')).toBeInTheDocument()
+    })
+
+    it('should handle all categories being collapsed', () => {
+      render(<NodePanel />)
+
+      // All categories start collapsed
+      expect(screen.queryByText('Start')).not.toBeInTheDocument()
+      expect(screen.queryByText('Agent')).not.toBeInTheDocument()
+      expect(screen.queryByText('GCP Bucket')).not.toBeInTheDocument()
+    })
+
+    it('should handle custom agent nodes with missing properties', () => {
+      const customNodes = [
+        { id: 'custom-1' }, // Missing label
+        { label: 'Custom 2' }, // Missing id
+        { id: 'custom-3', label: 'Custom 3', description: null },
+      ]
+      localStorage.setItem('customAgentNodes', JSON.stringify(customNodes))
+
+      render(<NodePanel />)
+
+      const toggleButton = screen.getByText('Agent Nodes').closest('button')
+      fireEvent.click(toggleButton!)
+
+      // Should handle gracefully
+      expect(screen.getByText('Node Palette')).toBeInTheDocument()
+    })
+
+    it('should handle window being undefined', () => {
+      const originalWindow = global.window
+      // @ts-ignore
+      delete global.window
+
+      // Should not crash
+      render(<NodePanel />)
+
+      expect(screen.getByText('Node Palette')).toBeInTheDocument()
+
+      global.window = originalWindow
+    })
+  })
 })

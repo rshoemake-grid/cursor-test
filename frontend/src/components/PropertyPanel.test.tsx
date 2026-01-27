@@ -742,4 +742,166 @@ describe('PropertyPanel', () => {
       })
     })
   })
+
+  describe('edge cases', () => {
+    it('should handle selectedNodeId changing to null', () => {
+      const mockNode = {
+        id: 'node-1',
+        type: 'agent',
+        data: { label: 'Test Agent' },
+      }
+      mockGetNodes.mockReturnValue([mockNode])
+
+      const { rerender } = renderWithProvider(
+        <PropertyPanel
+          selectedNodeId="node-1"
+          setSelectedNodeId={mockSetSelectedNodeId}
+        />
+      )
+
+      expect(screen.getByTestId('agent-node-editor')).toBeInTheDocument()
+
+      rerender(
+        <ReactFlowProvider>
+          <PropertyPanel
+            selectedNodeId={null}
+            setSelectedNodeId={mockSetSelectedNodeId}
+          />
+        </ReactFlowProvider>
+      )
+
+      // Should not render when selectedNodeId is null
+      expect(screen.queryByTestId('agent-node-editor')).not.toBeInTheDocument()
+    })
+
+    it('should handle node not found in nodes array', () => {
+      mockGetNodes.mockReturnValue([])
+
+      renderWithProvider(
+        <PropertyPanel
+          selectedNodeId="non-existent-node"
+          setSelectedNodeId={mockSetSelectedNodeId}
+        />
+      )
+
+      // Should handle gracefully - may not render or show error
+      expect(screen.queryByTestId('agent-node-editor')).not.toBeInTheDocument()
+    })
+
+    it('should handle nodes prop with empty array', () => {
+      renderWithProvider(
+        <PropertyPanel
+          selectedNodeId="node-1"
+          setSelectedNodeId={mockSetSelectedNodeId}
+          nodes={[]}
+        />
+      )
+
+      // Should handle gracefully
+      expect(screen.queryByTestId('agent-node-editor')).not.toBeInTheDocument()
+    })
+
+    it('should handle getNodes returning empty array and nodes prop being undefined', () => {
+      mockGetNodes.mockReturnValue([])
+
+      renderWithProvider(
+        <PropertyPanel
+          selectedNodeId="node-1"
+          setSelectedNodeId={mockSetSelectedNodeId}
+        />
+      )
+
+      // Should handle gracefully
+      expect(screen.queryByTestId('agent-node-editor')).not.toBeInTheDocument()
+    })
+
+    it('should handle selectedNodeIds being undefined', () => {
+      const mockNode = {
+        id: 'node-1',
+        type: 'agent',
+        data: { label: 'Test Agent' },
+      }
+      mockGetNodes.mockReturnValue([mockNode])
+
+      renderWithProvider(
+        <PropertyPanel
+          selectedNodeId="node-1"
+          setSelectedNodeId={mockSetSelectedNodeId}
+          selectedNodeIds={undefined}
+        />
+      )
+
+      // Should render normally when selectedNodeIds is undefined
+      expect(screen.getByTestId('agent-node-editor')).toBeInTheDocument()
+    })
+
+    it('should handle selectedNodeIds being empty Set', () => {
+      const mockNode = {
+        id: 'node-1',
+        type: 'agent',
+        data: { label: 'Test Agent' },
+      }
+      mockGetNodes.mockReturnValue([mockNode])
+
+      renderWithProvider(
+        <PropertyPanel
+          selectedNodeId="node-1"
+          setSelectedNodeId={mockSetSelectedNodeId}
+          selectedNodeIds={new Set()}
+        />
+      )
+
+      // Should render normally when selectedNodeIds is empty
+      expect(screen.getByTestId('agent-node-editor')).toBeInTheDocument()
+    })
+
+    it('should handle onSave being undefined', async () => {
+      jest.useFakeTimers()
+      const mockNode = {
+        id: 'node-1',
+        type: 'agent',
+        data: { label: 'Test Agent' },
+      }
+      mockGetNodes.mockReturnValue([mockNode])
+
+      renderWithProvider(
+        <PropertyPanel
+          selectedNodeId="node-1"
+          setSelectedNodeId={mockSetSelectedNodeId}
+          onSave={undefined}
+        />
+      )
+
+      const saveButton = screen.queryByTitle(/Save changes/)
+      if (saveButton) {
+        fireEvent.click(saveButton)
+        // Should not crash when onSave is undefined
+        await waitFor(() => {
+          expect(screen.getByText(/Saved/)).toBeInTheDocument()
+        })
+      }
+
+      jest.useRealTimers()
+    })
+
+    it('should handle onSaveWorkflow being undefined', async () => {
+      const mockNode = {
+        id: 'node-1',
+        type: 'agent',
+        data: { label: 'Test Agent' },
+      }
+      mockGetNodes.mockReturnValue([mockNode])
+
+      renderWithProvider(
+        <PropertyPanel
+          selectedNodeId="node-1"
+          setSelectedNodeId={mockSetSelectedNodeId}
+          onSaveWorkflow={undefined}
+        />
+      )
+
+      // Should render without crashing
+      expect(screen.getByTestId('agent-node-editor')).toBeInTheDocument()
+    })
+  })
 })
