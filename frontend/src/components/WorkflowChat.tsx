@@ -5,6 +5,10 @@ import { useAuth } from '../contexts/AuthContext'
 import { logger } from '../utils/logger'
 import type { StorageAdapter, HttpClient } from '../types/adapters'
 import { defaultAdapters } from '../types/adapters'
+import { useAuthenticatedApi } from '../hooks/useAuthenticatedApi'
+import { handleApiError } from '../utils/errorHandler'
+import { safeStorageGet, safeStorageSet } from '../utils/storageHelpers'
+import { getChatHistoryKey, API_CONFIG } from '../config/constants'
 
 interface ChatMessage {
   role: 'user' | 'assistant'
@@ -26,37 +30,23 @@ export default function WorkflowChat({
   onWorkflowUpdate,
   storage = defaultAdapters.createLocalStorageAdapter(),
   httpClient = defaultAdapters.createHttpClient(),
-  apiBaseUrl = 'http://localhost:8000/api',
+  apiBaseUrl = API_CONFIG.BASE_URL,
   logger: injectedLogger = logger
 }: WorkflowChatProps) {
-  const { token } = useAuth()
+  const { authenticatedPost } = useAuthenticatedApi(httpClient, apiBaseUrl)
+  
   // Load conversation history from storage on mount or workflow change
   const loadConversationHistory = (workflowId: string | null): ChatMessage[] => {
-    if (!storage) {
-      // Return default greeting if storage is not available
-      return [{
-        role: 'assistant',
-        content: workflowId 
-          ? "Hello! I can help you create or modify this workflow. What would you like to do?"
-          : "Hello! I can help you create a new workflow. What would you like to build?"
-      }]
-    }
-
-    const storageKey = workflowId ? `chat_history_${workflowId}` : 'chat_history_new_workflow'
-    try {
-      const saved = storage.getItem(storageKey)
-      if (saved) {
-        try {
-          const parsed = JSON.parse(saved)
-          if (Array.isArray(parsed) && parsed.length > 0) {
-            return parsed
-          }
-        } catch (e) {
-          injectedLogger.error('Failed to load conversation history:', e)
-        }
-      }
-    } catch (e) {
-      injectedLogger.error('Failed to load conversation history:', e)
+    const storageKey = getChatHistoryKey(workflowId)
+    const saved = safeStorageGet<ChatMessage[]>(
+      storage,
+      storageKey,
+      [],
+      'WorkflowChat'
+    )
+    
+    if (Array.isArray(saved) && saved.length > 0) {
+      return saved
     }
     
     // Return default greeting if no history found
@@ -76,15 +66,11 @@ export default function WorkflowChat({
 
   // Save conversation history to storage whenever messages change
   useEffect(() => {
-    if (messages.length > 0 && storage) {
-      const storageKey = workflowId ? `chat_history_${workflowId}` : 'chat_history_new_workflow'
-      try {
-        storage.setItem(storageKey, JSON.stringify(messages))
-      } catch (e) {
-        injectedLogger.error('Failed to save conversation history:', e)
-      }
+    if (messages.length > 0) {
+      const storageKey = getChatHistoryKey(workflowId)
+      safeStorageSet(storage, storageKey, messages, 'WorkflowChat')
     }
-  }, [messages, workflowId, storage, injectedLogger])
+  }, [messages, workflowId, storage])
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -110,15 +96,8 @@ export default function WorkflowChat({
     setIsLoading(true)
 
     try {
-      const headers: HeadersInit = {
-        'Content-Type': 'application/json',
-      }
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`
-      }
-      
-      const response = await httpClient.post(
-        `${apiBaseUrl}/workflow-chat/chat`,
+      const response = await authenticatedPost(
+        API_CONFIG.ENDPOINTS.CHAT,
         {
           workflow_id: workflowId,
           message: userMessage.content,
@@ -126,8 +105,7 @@ export default function WorkflowChat({
             role: m.role,
             content: m.content
           }))
-        },
-        headers
+        }
       )
 
       if (!response.ok) {
@@ -151,12 +129,16 @@ export default function WorkflowChat({
       }
 
     } catch (error) {
-      injectedLogger.error('Chat error:', error)
-      const errorMessage: ChatMessage = {
+      const errorMessage = handleApiError(error, {
+        context: 'WorkflowChat',
+        showNotification: false, // We'll show error in chat instead
+      })
+      
+      const chatErrorMessage: ChatMessage = {
         role: 'assistant',
-        content: `Sorry, I encountered an error: ${error instanceof Error ? error.message : 'Unknown error'}. Please try again.`
+        content: `Sorry, I encountered an error: ${errorMessage}. Please try again.`
       }
-      setMessages(prev => [...prev, errorMessage])
+      setMessages(prev => [...prev, chatErrorMessage])
     } finally {
       setIsLoading(false)
       inputRef.current?.focus()
