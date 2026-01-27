@@ -19,18 +19,7 @@ interface MarketplaceDialogProps {
 
 type TabType = 'agents' | 'workflows'
 
-const templateCategories = [
-  'content_creation',
-  'data_analysis',
-  'customer_service',
-  'research',
-  'automation',
-  'education',
-  'marketing',
-  'other'
-]
-
-const templateDifficulties = ['beginner', 'intermediate', 'advanced']
+import { TEMPLATE_CATEGORIES, TEMPLATE_DIFFICULTIES, formatCategory, formatDifficulty } from '../config/templateConstants'
 
 export default function MarketplaceDialog({ 
   isOpen, 
@@ -241,9 +230,9 @@ export default function MarketplaceDialog({
                   onChange={(e) => setPublishForm({ ...publishForm, category: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
                 >
-                  {templateCategories.map(cat => (
+                  {TEMPLATE_CATEGORIES.map(cat => (
                     <option key={cat} value={cat}>
-                      {cat.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}
+                      {formatCategory(cat).split(' ').map((w: string) => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}
                     </option>
                   ))}
                 </select>
@@ -272,9 +261,9 @@ export default function MarketplaceDialog({
                     onChange={(e) => setPublishForm({ ...publishForm, difficulty: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
                   >
-                    {templateDifficulties.map(diff => (
+                    {TEMPLATE_DIFFICULTIES.map(diff => (
                       <option key={diff} value={diff}>
-                        {diff.charAt(0).toUpperCase() + diff.slice(1)}
+                        {formatDifficulty(diff)}
                       </option>
                     ))}
                   </select>
@@ -320,9 +309,9 @@ export default function MarketplaceDialog({
                   onChange={(e) => setPublishForm({ ...publishForm, category: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
                 >
-                  {templateCategories.map(cat => (
+                  {TEMPLATE_CATEGORIES.map(cat => (
                     <option key={cat} value={cat}>
-                      {cat.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}
+                      {formatCategory(cat).split(' ').map((w: string) => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}
                     </option>
                   ))}
                 </select>
@@ -351,9 +340,9 @@ export default function MarketplaceDialog({
                     onChange={(e) => setPublishForm({ ...publishForm, difficulty: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
                   >
-                    {templateDifficulties.map(diff => (
+                    {TEMPLATE_DIFFICULTIES.map(diff => (
                       <option key={diff} value={diff}>
-                        {diff.charAt(0).toUpperCase() + diff.slice(1)}
+                        {formatDifficulty(diff)}
                       </option>
                     ))}
                   </select>

@@ -6,17 +6,7 @@ import { useAuth } from '../contexts/AuthContext'
 import { Save, Plus, Trash2, CheckCircle, XCircle, Loader, ArrowLeft, Eye, EyeOff, ChevronDown, ChevronRight } from 'lucide-react'
 import type { StorageAdapter, HttpClient, ConsoleAdapter } from '../types/adapters'
 import { defaultAdapters } from '../types/adapters'
-
-interface LLMProvider {
-  id: string
-  name: string
-  type: 'openai' | 'anthropic' | 'custom' | 'gemini'
-  apiKey: string
-  baseUrl?: string
-  defaultModel: string
-  models: string[]
-  enabled: boolean
-}
+import { useLLMProviders, type LLMProvider } from '../hooks/useLLMProviders'
 
 interface TestResult {
   status: 'success' | 'error'
@@ -101,6 +91,24 @@ export default function SettingsPage({
     apiBaseUrlRef.current = apiBaseUrl
     consoleAdapterRef.current = consoleAdapter
   }, [storage, httpClient, apiBaseUrl, consoleAdapter])
+  
+  // Load LLM providers using centralized hook
+  const { providers: loadedProviders, iterationLimit: loadedIterationLimit, defaultModel: loadedDefaultModel } = useLLMProviders({
+    storage,
+    isAuthenticated,
+    onLoadComplete: (settings) => {
+      // Sync state when hook loads settings
+      setProviders(settings.providers || [])
+      if (typeof settings.iteration_limit === 'number') {
+        setIterationLimit(settings.iteration_limit)
+      }
+      if (settings.default_model) {
+        setDefaultModel(settings.default_model)
+      }
+      setSettingsLoaded(true)
+    }
+  })
+  
   const [providers, setProviders] = useState<LLMProvider[]>([])
   const [showAddProvider, setShowAddProvider] = useState(false)
   const [selectedTemplate, setSelectedTemplate] = useState<keyof typeof PROVIDER_TEMPLATES>('openai')
@@ -145,94 +153,27 @@ export default function SettingsPage({
     return isExpanded
   }
 
-  // Load providers from backend on mount
-  useEffect(() => {
-    const loadProviders = async () => {
-      const currentStorage = storageRef.current
-      const currentHttpClient = httpClientRef.current
-      const currentApiBaseUrl = apiBaseUrlRef.current
-      const currentConsole = consoleAdapterRef.current
-
-      const fallbackToLocal = () => {
-        if (!currentStorage) {
-          setSettingsLoaded(true)
-          return
-        }
-
-        try {
-          const saved = currentStorage.getItem('llm_settings')
-          if (saved) {
-            try {
-              const parsed = JSON.parse(saved)
-              if (parsed.providers) {
-                setProviders(parsed.providers)
-              }
-              if (typeof parsed.iteration_limit === 'number') {
-                setIterationLimit(parsed.iteration_limit)
-              }
-              if (parsed.default_model) {
-                setDefaultModel(parsed.default_model)
-              }
-              setSettingsLoaded(true)
-            } catch (e) {
-              currentConsole.error('Failed to load providers:', e)
-              setSettingsLoaded(true)
-            }
-          } else {
-            setSettingsLoaded(true)
-          }
-        } catch (e) {
-          // Handle storage errors (e.g., quota exceeded)
-          currentConsole.error('Failed to access storage:', e)
-          setSettingsLoaded(true)
-        }
-      }
-
-      if (!isAuthenticated) {
-        fallbackToLocal()
-        return
-      }
-
-      try {
-        const headers: HeadersInit = {}
-        if (token) {
-          headers['Authorization'] = `Bearer ${token}`
-        }
-        const response = await currentHttpClient.get(`${currentApiBaseUrl}/settings/llm`, headers)
-        if (response.ok) {
-          const data = await response.json()
-          // Always load providers (even if empty) and iteration limit
-          if (data.providers) {
-            setProviders(data.providers)
-          }
-          if (typeof data.iteration_limit === 'number') {
-            setIterationLimit(data.iteration_limit)
-          }
-          if (data.default_model) {
-            setDefaultModel(data.default_model)
-          }
-          if (currentStorage) {
-            currentStorage.setItem('llm_settings', JSON.stringify({
-              providers: data.providers || [],
-              iteration_limit: data.iteration_limit ?? 10,
-              default_model: data.default_model || ''
-            }))
-          }
-          setSettingsLoaded(true)
-          return
-        }
-      } catch (e) {
-        currentConsole.log('Could not load from backend, trying localStorage')
-      }
-
-      fallbackToLocal()
-    }
-    
-    loadProviders()
-  }, [isAuthenticated, token])
-
   // Track if settings have been loaded to prevent saving on initial mount
   const [settingsLoaded, setSettingsLoaded] = useState(false)
+  
+  // Sync hook-loaded values to local state when they change (if not already set via onLoadComplete)
+  useEffect(() => {
+    if (loadedProviders.length > 0 && providers.length === 0) {
+      setProviders(loadedProviders)
+    }
+  }, [loadedProviders, providers.length])
+  
+  useEffect(() => {
+    if (typeof loadedIterationLimit === 'number' && iterationLimit === 10) {
+      setIterationLimit(loadedIterationLimit)
+    }
+  }, [loadedIterationLimit, iterationLimit])
+  
+  useEffect(() => {
+    if (loadedDefaultModel && !defaultModel) {
+      setDefaultModel(loadedDefaultModel)
+    }
+  }, [loadedDefaultModel, defaultModel])
 
   // Auto-save iteration limit and default model when they change (after initial load)
   useEffect(() => {
@@ -382,7 +323,7 @@ export default function SettingsPage({
       const provider = providers.find(p => p.id === providerId)
       if (provider) {
         handleUpdateProvider(providerId, {
-          models: [...provider.models, modelName]
+          models: [...(provider.models || []), modelName]
         })
       }
     }
@@ -499,7 +440,7 @@ export default function SettingsPage({
                     {providers
                       .filter(p => p.enabled && p.models && p.models.length > 0)
                       .flatMap(provider => 
-                        provider.models.map(model => ({
+                        (provider.models || []).map(model => ({
                           value: model,
                           label: `${model} (${provider.name})`
                         }))
@@ -663,7 +604,7 @@ export default function SettingsPage({
                               onChange={(e) => handleUpdateProvider(provider.id, { defaultModel: e.target.value })}
                               className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                             >
-                              {provider.models.map(model => (
+                              {(provider.models || []).map(model => (
                                 <option key={model} value={model}>{model}</option>
                               ))}
                             </select>
@@ -683,7 +624,7 @@ export default function SettingsPage({
                             Models
                           </label>
                           <div className="space-y-1">
-                            {provider.models.map((model, index) => {
+                            {(provider.models || []).map((model, index) => {
                               const modelKey = `${provider.id}-${model}-${index}`
                               const isExpanded = isModelExpanded(provider.id, model)
                               return (
@@ -721,7 +662,7 @@ export default function SettingsPage({
                                           type="text"
                                           value={model}
                                           onChange={(e) => {
-                                            const newModels = provider.models.map(m => m === model ? e.target.value : m)
+                                            const newModels = (provider.models || []).map(m => m === model ? e.target.value : m)
                                             const newDefaultModel = provider.defaultModel === model ? e.target.value : provider.defaultModel
                                             handleUpdateProvider(provider.id, {
                                               models: newModels,
@@ -752,8 +693,8 @@ export default function SettingsPage({
                                           type="button"
                                           onClick={(e) => {
                                             e.stopPropagation()
-                                            if (provider.models.length > 1) {
-                                              const newModels = provider.models.filter(m => m !== model)
+                                            if ((provider.models || []).length > 1) {
+                                              const newModels = (provider.models || []).filter(m => m !== model)
                                               const newDefaultModel = provider.defaultModel === model 
                                                 ? (newModels[0] || '')
                                                 : provider.defaultModel

@@ -6,6 +6,7 @@ import { showError, showSuccess, showWarning } from '../utils/notifications'
 import { showConfirm } from '../utils/confirm'
 import { useAuth } from '../contexts/AuthContext'
 import { useNavigate } from 'react-router-dom'
+import { TEMPLATE_CATEGORIES, TEMPLATE_DIFFICULTIES, formatCategory, formatDifficulty } from '../config/templateConstants'
 
 interface WorkflowListProps {
   onSelectWorkflow: (id: string) => void
@@ -28,17 +29,6 @@ export default function WorkflowList({ onSelectWorkflow, onBack }: WorkflowListP
   })
   const [isPublishing, setIsPublishing] = useState(false)
 
-  const templateCategories = [
-    'content_creation',
-    'data_analysis',
-    'customer_service',
-    'research',
-    'automation',
-    'education',
-    'marketing',
-    'other'
-  ]
-  const templateDifficulties = ['beginner', 'intermediate', 'advanced']
 
   useEffect(() => {
     loadWorkflows()
@@ -434,8 +424,8 @@ export default function WorkflowList({ onSelectWorkflow, onBack }: WorkflowListP
                 onChange={(e) => handlePublishFormChange('category', e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
               >
-                {templateCategories.map(category => (
-                  <option key={category} value={category}>{category.replace('_', ' ')}</option>
+                {TEMPLATE_CATEGORIES.map(category => (
+                  <option key={category} value={category}>{formatCategory(category)}</option>
                 ))}
               </select>
             </div>
@@ -448,9 +438,9 @@ export default function WorkflowList({ onSelectWorkflow, onBack }: WorkflowListP
                   onChange={(e) => handlePublishFormChange('difficulty', e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
                 >
-                  {templateDifficulties.map(diff => (
+                  {TEMPLATE_DIFFICULTIES.map(diff => (
                     <option key={diff} value={diff}>
-                      {diff.charAt(0).toUpperCase() + diff.slice(1)}
+                      {formatDifficulty(diff)}
                     </option>
                   ))}
                 </select>

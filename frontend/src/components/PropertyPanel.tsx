@@ -3,7 +3,6 @@ import { X, Plus, Trash2, Save, Check } from 'lucide-react'
 import { useState, useEffect, useRef, useMemo } from 'react'
 import { showError } from '../utils/notifications'
 import { showConfirm } from '../utils/confirm'
-import { api } from '../api/client'
 import { logger } from '../utils/logger'
 import { isAgentNode, isConditionNode, isLoopNode, isInputNode } from '../types/nodeData'
 import AgentNodeEditor from './editors/AgentNodeEditor'
@@ -28,21 +27,14 @@ interface PropertyPanelProps {
 }
 
 
-interface LLMProvider {
-  id: string
-  name: string
-  type: string
-  apiKey: string
-  baseUrl?: string
-  defaultModel: string
-  models: string[]
-  enabled: boolean
-}
+import { useLLMProviders } from '../hooks/useLLMProviders'
+import { useAuth } from '../contexts/AuthContext'
 
 export default function PropertyPanel({ selectedNodeId, setSelectedNodeId, selectedNodeIds, nodes: nodesProp, onSave, onSaveWorkflow, storage = defaultAdapters.createLocalStorageAdapter() }: PropertyPanelProps) {
   const { setNodes, deleteElements, getNodes } = useReactFlow()
+  const { isAuthenticated } = useAuth()
+  const { availableModels } = useLLMProviders({ storage, isAuthenticated })
   const [showAddInput, setShowAddInput] = useState(false)
-  const [availableModels, setAvailableModels] = useState<Array<{ value: string; label: string; provider: string }>>([])
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle')
   const [panelOpen, setPanelOpen] = useState(true)
 
@@ -209,80 +201,7 @@ export default function PropertyPanel({ selectedNodeId, setSelectedNodeId, selec
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedNodeId]) // Only depend on selectedNodeId, not the node data
 
-  // Load available models from configured providers
-  useEffect(() => {
-    const loadModels = async () => {
-      try {
-        // Try to load from backend first using authenticated API client
-        const data = await api.getLLMSettings()
-        if (data.providers && data.providers.length > 0) {
-          const models: Array<{ value: string; label: string; provider: string }> = []
-          data.providers.forEach((provider: LLMProvider) => {
-            if (provider.enabled && provider.models && provider.models.length > 0) {
-              provider.models.forEach((model) => {
-                models.push({
-                  value: model,
-                  label: `${model} (${provider.name})`,
-                  provider: provider.name
-                })
-              })
-            }
-          })
-          setAvailableModels(models)
-          return
-        }
-      } catch (e) {
-        logger.debug('Could not load from backend, trying localStorage', e)
-      }
-      
-      // Fallback to storage
-      if (!storage) {
-        setAvailableModels([])
-        return
-      }
-
-      try {
-        const saved = storage.getItem('llm_settings')
-        if (saved) {
-          try {
-            const parsed = JSON.parse(saved)
-            const providers: LLMProvider[] = parsed.providers || []
-            const models: Array<{ value: string; label: string; provider: string }> = []
-            providers.forEach((provider) => {
-              if (provider.enabled && provider.models && provider.models.length > 0) {
-                provider.models.forEach((model) => {
-                  models.push({
-                    value: model,
-                    label: `${model} (${provider.name})`,
-                    provider: provider.name
-                  })
-                })
-              }
-            })
-            if (models.length > 0) {
-              setAvailableModels(models)
-              return
-            }
-          } catch (e) {
-            logger.error('Failed to load providers:', e)
-          }
-        }
-      } catch (loadError) {
-        logger.error('Failed to load models from storage', loadError)
-      }
-
-      // Fallback to default GPT models if no providers found
-      setAvailableModels([
-        { value: 'gpt-4o-mini', label: 'GPT-4o Mini (OpenAI)', provider: 'OpenAI' },
-        { value: 'gpt-4o', label: 'GPT-4o (OpenAI)', provider: 'OpenAI' },
-        { value: 'gpt-4', label: 'GPT-4 (OpenAI)', provider: 'OpenAI' },
-        { value: 'gpt-3.5-turbo', label: 'GPT-3.5 Turbo (OpenAI)', provider: 'OpenAI' }
-      ])
-    }
-    
-    loadModels()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []) // storage is accessed via closure in loadModels
+  // LLM providers are now loaded via useLLMProviders hook
 
 
   // Check if multiple nodes are selected

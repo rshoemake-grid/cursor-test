@@ -9,6 +9,7 @@ import { showError, showSuccess } from '../utils/notifications'
 import { logger } from '../utils/logger'
 import type { StorageAdapter, HttpClient } from '../types/adapters'
 import { defaultAdapters } from '../types/adapters'
+import { TEMPLATE_CATEGORIES, TEMPLATE_DIFFICULTIES, formatCategory, formatDifficulty } from '../config/templateConstants'
 
 interface WorkflowTabsProps {
   initialWorkflowId?: string | null
@@ -45,17 +46,6 @@ export default function WorkflowTabs({
   const editingInputRef = useRef<HTMLInputElement | null>(null)
   const renameInFlightRef = useRef(false)
   const { token } = useAuth()
-  const templateCategories = [
-    'content_creation',
-    'data_analysis',
-    'customer_service',
-    'research',
-    'automation',
-    'education',
-    'marketing',
-    'other'
-  ]
-  const templateDifficulties = ['beginner', 'intermediate', 'advanced']
   const [showPublishModal, setShowPublishModal] = useState(false)
   const [publishForm, setPublishForm] = useState({
     name: '',
@@ -807,8 +797,8 @@ export default function WorkflowTabs({
                 onChange={(e) => handlePublishFormChange('category', e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
               >
-                {templateCategories.map(category => (
-                  <option key={category} value={category}>{category.replace('_', ' ')}</option>
+                {TEMPLATE_CATEGORIES.map(category => (
+                  <option key={category} value={category}>{formatCategory(category)}</option>
                 ))}
               </select>
             </div>
@@ -821,9 +811,9 @@ export default function WorkflowTabs({
                   onChange={(e) => handlePublishFormChange('difficulty', e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
                 >
-                  {templateDifficulties.map(diff => (
+                  {TEMPLATE_DIFFICULTIES.map(diff => (
                     <option key={diff} value={diff}>
-                      {diff.charAt(0).toUpperCase() + diff.slice(1)}
+                      {formatDifficulty(diff)}
                     </option>
                   ))}
                 </select>
