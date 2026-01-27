@@ -51,13 +51,23 @@ const nodeToWorkflowNode = (node: Node): WorkflowNode => {
       loop_type: nodeData.loop_config.loop_type || 'for_each',
       items_source: nodeData.loop_config.items_source,
       condition: nodeData.loop_config.condition,
-      max_iterations: nodeData.loop_config.max_iterations,
+      max_iterations: nodeData.loop_config.max_iterations ?? undefined,
     } : undefined,
-    inputs: ((nodeData.inputs || []) as InputMapping[]).map(input => ({
-      name: input.name,
-      source_node: input.source_node,
-      source_field: input.source_field || '',
-    })),
+    inputs: (nodeData.inputs || []).map((input: any) => {
+      // Handle both string arrays and InputMapping objects
+      if (typeof input === 'string') {
+        return {
+          name: input,
+          source_node: undefined,
+          source_field: '',
+        }
+      }
+      return {
+        name: input.name,
+        source_node: input.source_node,
+        source_field: input.source_field || '',
+      }
+    }),
     position: node.position,
   }
 }

@@ -23,16 +23,16 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">82.74% </span>
+                <span class="strong">84.29% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>633/765</span>
+                <span class='fraction'>628/745</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">86.2% </span>
+                <span class="strong">85.71% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>100/116</span>
+                <span class='fraction'>96/112</span>
             </div>
         
             
@@ -44,9 +44,9 @@
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">82.74% </span>
+                <span class="strong">84.29% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>633/765</span>
+                <span class='fraction'>628/745</span>
             </div>
         
             
@@ -809,27 +809,7 @@
 <a name='L744'></a><a href='#L744'>744</a>
 <a name='L745'></a><a href='#L745'>745</a>
 <a name='L746'></a><a href='#L746'>746</a>
-<a name='L747'></a><a href='#L747'>747</a>
-<a name='L748'></a><a href='#L748'>748</a>
-<a name='L749'></a><a href='#L749'>749</a>
-<a name='L750'></a><a href='#L750'>750</a>
-<a name='L751'></a><a href='#L751'>751</a>
-<a name='L752'></a><a href='#L752'>752</a>
-<a name='L753'></a><a href='#L753'>753</a>
-<a name='L754'></a><a href='#L754'>754</a>
-<a name='L755'></a><a href='#L755'>755</a>
-<a name='L756'></a><a href='#L756'>756</a>
-<a name='L757'></a><a href='#L757'>757</a>
-<a name='L758'></a><a href='#L758'>758</a>
-<a name='L759'></a><a href='#L759'>759</a>
-<a name='L760'></a><a href='#L760'>760</a>
-<a name='L761'></a><a href='#L761'>761</a>
-<a name='L762'></a><a href='#L762'>762</a>
-<a name='L763'></a><a href='#L763'>763</a>
-<a name='L764'></a><a href='#L764'>764</a>
-<a name='L765'></a><a href='#L765'>765</a>
-<a name='L766'></a><a href='#L766'>766</a>
-<a name='L767'></a><a href='#L767'>767</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">1x</span>
+<a name='L747'></a><a href='#L747'>747</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
@@ -998,10 +978,6 @@
 <span class="cline-any cline-yes">103x</span>
 <span class="cline-any cline-yes">103x</span>
 <span class="cline-any cline-yes">103x</span>
-<span class="cline-any cline-yes">103x</span>
-<span class="cline-any cline-yes">103x</span>
-<span class="cline-any cline-yes">103x</span>
-<span class="cline-any cline-yes">103x</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -1028,7 +1004,6 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-yes">2x</span>
@@ -1180,21 +1155,6 @@
 <span class="cline-any cline-yes">232x</span>
 <span class="cline-any cline-yes">232x</span>
 <span class="cline-any cline-yes">232x</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -1761,10 +1721,6 @@ export default function PropertyPanel({ selectedNodeId, setSelectedNodeId, selec
     if (nodeData) {
       const nodeName = nodeData.name || nodeData.label || ''
       const nodeDescription = nodeData.description || ''
-      const agentConfig = nodeData.agent_config || {}
-      const conditionConfig = nodeData.condition_config || {}
-      let loopConfig = nodeData.loop_config || {}
-      const inputConfig = nodeData.input_config || {}
       
       // Initialize loop_config with defaults if it's missing or empty for Loop nodes
       const selectedNode = nodes.find((n) =&gt; n.id === selectedNodeId)<span class="branch-0 cbranch-no" title="branch not covered" > || </span>
@@ -1796,7 +1752,6 @@ export default function PropertyPanel({ selectedNodeId, setSelectedNodeId, selec
 <span class="cstat-no" title="statement not covered" >              : node</span>
           )
         )
-        loopConfig = defaultLoopConfig
       }
       
       // Only sync if the input is not currently focused (user is not typing)
@@ -1958,22 +1913,7 @@ export default function PropertyPanel({ selectedNodeId, setSelectedNodeId, selec
 <span class="cstat-no" title="statement not covered" >    }</span>
 <span class="cstat-no" title="statement not covered" >    </span>
 <span class="cstat-no" title="statement not covered" >    // Config fields are now handled by node-specific editors</span>
-<span class="cstat-no" title="statement not covered" >    if (configField === 'input_config') {</span>
-<span class="cstat-no" title="statement not covered" >      // Update appropriate input config field</span>
-<span class="cstat-no" title="statement not covered" >      if (field === 'bucket_name') setBucketNameValue(value)</span>
-<span class="cstat-no" title="statement not covered" >      else if (field === 'object_path') setObjectPathValue(value)</span>
-<span class="cstat-no" title="statement not covered" >      else if (field === 'credentials') setGcpCredentialsValue(value)</span>
-<span class="cstat-no" title="statement not covered" >      else if (field === 'object_key') setObjectKeyValue(value)</span>
-<span class="cstat-no" title="statement not covered" >      else if (field === 'access_key_id') setAccessKeyIdValue(value)</span>
-<span class="cstat-no" title="statement not covered" >      else if (field === 'secret_access_key') setSecretKeyValue(value)</span>
-<span class="cstat-no" title="statement not covered" >      else if (field === 'region') setRegionValue(value)</span>
-<span class="cstat-no" title="statement not covered" >      else if (field === 'project_id') setProjectIdValue(value)</span>
-<span class="cstat-no" title="statement not covered" >      else if (field === 'topic_name') setTopicNameValue(value)</span>
-<span class="cstat-no" title="statement not covered" >      else if (field === 'subscription_name') setSubscriptionNameValue(value)</span>
-<span class="cstat-no" title="statement not covered" >      else if (field === 'file_path') setFilePathValue(value)</span>
-<span class="cstat-no" title="statement not covered" >      else if (field === 'file_pattern') setFilePatternValue(value)</span>
-<span class="cstat-no" title="statement not covered" >      else if (field === 'overwrite') setOverwriteValue(value)</span>
-<span class="cstat-no" title="statement not covered" >    }</span>
+<span class="cstat-no" title="statement not covered" >    // No need to update local state here - editors handle their own state</span>
 <span class="cstat-no" title="statement not covered" >    </span>
 <span class="cstat-no" title="statement not covered" >    // Update the node state</span>
 <span class="cstat-no" title="statement not covered" >    setNodes((nodes) =&gt;</span>
@@ -2368,7 +2308,7 @@ export default function PropertyPanel({ selectedNodeId, setSelectedNodeId, selec
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-01-27T20:03:29.662Z
+                at 2026-01-27T20:51:30.576Z
             </div>
         <script src="../../prettify.js"></script>
         <script>

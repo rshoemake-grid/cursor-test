@@ -23,9 +23,9 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">6.52% </span>
+                <span class="strong">6% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>97/1487</span>
+                <span class='fraction'>89/1483</span>
             </div>
         
             
@@ -44,9 +44,9 @@
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">6.52% </span>
+                <span class="strong">6% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>97/1487</span>
+                <span class='fraction'>89/1483</span>
             </div>
         
             
@@ -1546,19 +1546,7 @@
 <a name='L1481'></a><a href='#L1481'>1481</a>
 <a name='L1482'></a><a href='#L1482'>1482</a>
 <a name='L1483'></a><a href='#L1483'>1483</a>
-<a name='L1484'></a><a href='#L1484'>1484</a>
-<a name='L1485'></a><a href='#L1485'>1485</a>
-<a name='L1486'></a><a href='#L1486'>1486</a>
-<a name='L1487'></a><a href='#L1487'>1487</a>
-<a name='L1488'></a><a href='#L1488'>1488</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
+<a name='L1484'></a><a href='#L1484'>1484</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
@@ -1650,6 +1638,10 @@
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -3070,15 +3062,7 @@ import { getLocalStorageItem, setLocalStorageItem } from '../hooks/useLocalStora
 import { logger } from '../utils/logger'
 import type { StorageAdapter } from '../types/adapters'
 import { defaultAdapters } from '../types/adapters'
-&nbsp;
-interface Execution {
-  id: string
-  status: 'running' | 'completed' | 'failed'
-  startedAt: Date
-  completedAt?: Date
-  nodes: Record&lt;string, any&gt;
-  logs: any[]
-}
+import type { Execution } from '../contexts/WorkflowTabsContext'
 &nbsp;
 interface WorkflowTab {
   workflowId: string
@@ -3098,7 +3082,7 @@ interface WorkflowBuilderProps {
   onWorkflowSaved?: (workflowId: string, name: string) =&gt; void
   onWorkflowModified?: () =&gt; void
   onWorkflowLoaded?: (workflowId: string, name: string) =&gt; void
-  onCloseWorkflow?: (workflowId: string) =&gt; void
+  onCloseWorkflow?: (workflowId: string) =&gt; void // Unused but kept for API compatibility
   onClearExecutions?: (workflowId: string) =&gt; void
   onExecutionLogUpdate?: (workflowId: string, executionId: string, log: any) =&gt; void
   onExecutionStatusUpdate?: (workflowId: string, executionId: string, status: 'running' | 'completed' | 'failed') =&gt; void
@@ -3147,8 +3131,8 @@ const WorkflowBuilder = forwardRef&lt;WorkflowBuilderHandle, WorkflowBuilderProp
 <span class="cstat-no" title="statement not covered" >  onWorkflowSaved,</span>
 <span class="cstat-no" title="statement not covered" >  onWorkflowModified,</span>
 <span class="cstat-no" title="statement not covered" >  onWorkflowLoaded,</span>
-<span class="cstat-no" title="statement not covered" >  onCloseWorkflow,</span>
-<span class="cstat-no" title="statement not covered" >  onClearExecutions,</span>
+<span class="cstat-no" title="statement not covered" >  onCloseWorkflow: _onCloseWorkflow,</span>
+<span class="cstat-no" title="statement not covered" >      onClearExecutions: _onClearExecutions,</span>
 <span class="cstat-no" title="statement not covered" >  onExecutionLogUpdate,</span>
 <span class="cstat-no" title="statement not covered" >  onExecutionStatusUpdate,</span>
 <span class="cstat-no" title="statement not covered" >  onExecutionNodeUpdate,</span>
@@ -3160,7 +3144,7 @@ const WorkflowBuilder = forwardRef&lt;WorkflowBuilderHandle, WorkflowBuilderProp
 <span class="cstat-no" title="statement not covered" >  const [selectedNodeId, setSelectedNodeId] = React.useState&lt;string | null&gt;(null)</span>
 <span class="cstat-no" title="statement not covered" >  const [selectedNodeIds, setSelectedNodeIds] = React.useState&lt;Set&lt;string&gt;&gt;(new Set())</span>
 <span class="cstat-no" title="statement not covered" >  const [localWorkflowId, setLocalWorkflowId] = useState&lt;string | null&gt;(workflowId)</span>
-<span class="cstat-no" title="statement not covered" >  const [nodeExecutionStates, setNodeExecutionStates] = useState&lt;Record&lt;string, { status: string; error?: string }&gt;&gt;({})</span>
+<span class="cstat-no" title="statement not covered" >  const [nodeExecutionStates, _setNodeExecutionStates] = useState&lt;Record&lt;string, { status: string; error?: string }&gt;&gt;({})</span>
 <span class="cstat-no" title="statement not covered" >  const [clipboardNode, setClipboardNode] = useState&lt;any&gt;(null)</span>
 <span class="cstat-no" title="statement not covered" >  const [clipboardAction, setClipboardAction] = useState&lt;'copy' | 'cut' | null&gt;(null)</span>
 <span class="cstat-no" title="statement not covered" >  const [showMarketplaceDialog, setShowMarketplaceDialog] = useState(false)</span>
@@ -3273,7 +3257,7 @@ const WorkflowBuilder = forwardRef&lt;WorkflowBuilderHandle, WorkflowBuilderProp
 <span class="cstat-no" title="statement not covered" >  const isDraggingRef = useRef&lt;boolean&gt;(false)</span>
 <span class="cstat-no" title="statement not covered" >  const { isAuthenticated } = useAuth()</span>
 <span class="cstat-no" title="statement not covered" >  const [isSaving, setIsSaving] = useState(false)</span>
-<span class="cstat-no" title="statement not covered" >  const [isExecuting, setIsExecuting] = useState(false)</span>
+<span class="cstat-no" title="statement not covered" >  const [_isExecuting, setIsExecuting] = useState(false)</span>
 <span class="cstat-no" title="statement not covered" >  const [showInputs, setShowInputs] = useState(false)</span>
 <span class="cstat-no" title="statement not covered" >  const [executionInputs, setExecutionInputs] = useState&lt;string&gt;('{}')</span>
 <span class="cstat-no" title="statement not covered" >  const workflowIdRef = useRef&lt;string | null&gt;(workflowId)</span>
@@ -3290,10 +3274,10 @@ const WorkflowBuilder = forwardRef&lt;WorkflowBuilderHandle, WorkflowBuilderProp
 <span class="cstat-no" title="statement not covered" >    ...node,</span>
 <span class="cstat-no" title="statement not covered" >    data: {</span>
 <span class="cstat-no" title="statement not covered" >      ...node.data,</span>
-<span class="cstat-no" title="statement not covered" >      agent_config: node.data?.agent_config ?? node.agent_config ?? {},</span>
-<span class="cstat-no" title="statement not covered" >      condition_config: node.data?.condition_config ?? node.condition_config ?? {},</span>
-<span class="cstat-no" title="statement not covered" >      loop_config: node.data?.loop_config ?? node.loop_config ?? {},</span>
-<span class="cstat-no" title="statement not covered" >      input_config: node.data?.input_config ?? node.input_config ?? {},</span>
+<span class="cstat-no" title="statement not covered" >      agent_config: (node.data as any)?.agent_config ?? (node as any).agent_config ?? {},</span>
+<span class="cstat-no" title="statement not covered" >      condition_config: (node.data as any)?.condition_config ?? (node as any).condition_config ?? {},</span>
+<span class="cstat-no" title="statement not covered" >      loop_config: (node.data as any)?.loop_config ?? (node as any).loop_config ?? {},</span>
+<span class="cstat-no" title="statement not covered" >      input_config: (node.data as any)?.input_config ?? (node as any).input_config ?? {},</span>
 <span class="cstat-no" title="statement not covered" >    },</span>
 <span class="cstat-no" title="statement not covered" >  }), [])</span>
 <span class="cstat-no" title="statement not covered" ></span>
@@ -3346,10 +3330,10 @@ const WorkflowBuilder = forwardRef&lt;WorkflowBuilderHandle, WorkflowBuilderProp
 <span class="cstat-no" title="statement not covered" >  const nodeToWorkflowNode = useCallback((node: any) =&gt; ({</span>
 <span class="cstat-no" title="statement not covered" >    id: node.id,</span>
 <span class="cstat-no" title="statement not covered" >    type: node.type,</span>
-<span class="cstat-no" title="statement not covered" >    name: node.data.name || node.data.label,</span>
+<span class="cstat-no" title="statement not covered" >    name: node.data.name || (typeof node.data.label === 'string' ? node.data.label : ''),</span>
 <span class="cstat-no" title="statement not covered" >    description: node.data.description,</span>
-<span class="cstat-no" title="statement not covered" >    agent_config: node.data.agent_config,</span>
-<span class="cstat-no" title="statement not covered" >    condition_config: node.data.condition_config,</span>
+<span class="cstat-no" title="statement not covered" >        agent_config: (node.data as any).agent_config,</span>
+<span class="cstat-no" title="statement not covered" >        condition_config: (node.data as any).condition_config,</span>
 <span class="cstat-no" title="statement not covered" >    loop_config: node.data.loop_config,</span>
 <span class="cstat-no" title="statement not covered" >    input_config: node.data.input_config,</span>
 <span class="cstat-no" title="statement not covered" >    inputs: node.data.inputs || [],</span>
@@ -3371,7 +3355,12 @@ const WorkflowBuilder = forwardRef&lt;WorkflowBuilderHandle, WorkflowBuilderProp
 <span class="cstat-no" title="statement not covered" >      name: localWorkflowName,</span>
 <span class="cstat-no" title="statement not covered" >      description: localWorkflowDescription,</span>
 <span class="cstat-no" title="statement not covered" >      nodes: nodes.map(nodeToWorkflowNode),</span>
-<span class="cstat-no" title="statement not covered" >      edges: edges,</span>
+<span class="cstat-no" title="statement not covered" >      edges: edges.map(edge =&gt; ({</span>
+<span class="cstat-no" title="statement not covered" >        id: edge.id,</span>
+<span class="cstat-no" title="statement not covered" >        source: edge.source,</span>
+<span class="cstat-no" title="statement not covered" >        target: edge.target,</span>
+<span class="cstat-no" title="statement not covered" >        label: typeof edge.label === 'string' ? edge.label : undefined</span>
+<span class="cstat-no" title="statement not covered" >      })),</span>
 <span class="cstat-no" title="statement not covered" >      variables: variables,</span>
 <span class="cstat-no" title="statement not covered" >    }</span>
 <span class="cstat-no" title="statement not covered" ></span>
@@ -3418,7 +3407,12 @@ const WorkflowBuilder = forwardRef&lt;WorkflowBuilderHandle, WorkflowBuilderProp
 <span class="cstat-no" title="statement not covered" >      name: localWorkflowName,</span>
 <span class="cstat-no" title="statement not covered" >      description: localWorkflowDescription,</span>
 <span class="cstat-no" title="statement not covered" >      nodes: nodes.map(nodeToWorkflowNode),</span>
-<span class="cstat-no" title="statement not covered" >      edges: edges,</span>
+<span class="cstat-no" title="statement not covered" >      edges: edges.map(edge =&gt; ({</span>
+<span class="cstat-no" title="statement not covered" >        id: edge.id,</span>
+<span class="cstat-no" title="statement not covered" >        source: edge.source,</span>
+<span class="cstat-no" title="statement not covered" >        target: edge.target,</span>
+<span class="cstat-no" title="statement not covered" >        label: typeof edge.label === 'string' ? edge.label : undefined</span>
+<span class="cstat-no" title="statement not covered" >      })),</span>
 <span class="cstat-no" title="statement not covered" >      variables: variables,</span>
 <span class="cstat-no" title="statement not covered" >    }</span>
 <span class="cstat-no" title="statement not covered" >    const filename = (localWorkflowName.trim() || 'workflow').replace(/\s+/g, '-')</span>
@@ -3722,7 +3716,7 @@ const WorkflowBuilder = forwardRef&lt;WorkflowBuilderHandle, WorkflowBuilderProp
 <span class="cstat-no" title="statement not covered" >    const reactFlowInstance = reactFlowInstanceRef.current</span>
 <span class="cstat-no" title="statement not covered" >    if (reactFlowInstance) {</span>
 <span class="cstat-no" title="statement not covered" >      const allSelectedNodes = reactFlowInstance.getNodes().filter((n: Node) =&gt; n.selected)</span>
-<span class="cstat-no" title="statement not covered" >      const allSelectedIds = new Set(allSelectedNodes.map((n: Node) =&gt; n.id))</span>
+<span class="cstat-no" title="statement not covered" >      const allSelectedIds = new Set&lt;string&gt;(allSelectedNodes.map((n: Node) =&gt; n.id as string))</span>
 <span class="cstat-no" title="statement not covered" >      setSelectedNodeIds(allSelectedIds)</span>
 <span class="cstat-no" title="statement not covered" >      </span>
 <span class="cstat-no" title="statement not covered" >      // Update selectedNodeId based on selection count</span>
@@ -3730,7 +3724,7 @@ const WorkflowBuilder = forwardRef&lt;WorkflowBuilderHandle, WorkflowBuilderProp
 <span class="cstat-no" title="statement not covered" >        setSelectedNodeId(null)</span>
 <span class="cstat-no" title="statement not covered" >      } else if (allSelectedIds.size === 1) {</span>
 <span class="cstat-no" title="statement not covered" >        // Single selection - set the selected node ID</span>
-<span class="cstat-no" title="statement not covered" >        const singleId = Array.from(allSelectedIds)[0]</span>
+<span class="cstat-no" title="statement not covered" >        const singleId = Array.from(allSelectedIds)[0] as string</span>
 <span class="cstat-no" title="statement not covered" >        setSelectedNodeId(singleId)</span>
 <span class="cstat-no" title="statement not covered" >      } else {</span>
 <span class="cstat-no" title="statement not covered" >        // Multiple selection - clear selectedNodeId to disable properties panel</span>
@@ -3931,13 +3925,6 @@ const WorkflowBuilder = forwardRef&lt;WorkflowBuilderHandle, WorkflowBuilderProp
 <span class="cstat-no" title="statement not covered" >    }</span>
 <span class="cstat-no" title="statement not covered" >  }, [workflowId, onWorkflowLoaded, workflowNodeToNode, setNodes, setEdges, tabIsUnsaved])</span>
 <span class="cstat-no" title="statement not covered" ></span>
-<span class="cstat-no" title="statement not covered" >  // Handle execution start - just call parent callback</span>
-<span class="cstat-no" title="statement not covered" >  const handleExecutionStart = useCallback((executionId: string) =&gt; {</span>
-<span class="cstat-no" title="statement not covered" >    // Parent (WorkflowTabs) handles execution tracking</span>
-<span class="cstat-no" title="statement not covered" >    if (onExecutionStart) {</span>
-<span class="cstat-no" title="statement not covered" >      onExecutionStart(executionId)</span>
-<span class="cstat-no" title="statement not covered" >    }</span>
-<span class="cstat-no" title="statement not covered" >  }, [onExecutionStart])</span>
 <span class="cstat-no" title="statement not covered" ></span>
 <span class="cstat-no" title="statement not covered" >  // Helper function to apply workflow changes locally</span>
 <span class="cstat-no" title="statement not covered" >  const applyLocalChanges = useCallback((changes: any) =&gt; {</span>
@@ -4470,9 +4457,10 @@ const WorkflowBuilder = forwardRef&lt;WorkflowBuilderHandle, WorkflowBuilderProp
 <span class="cstat-no" title="statement not covered" >          setShowInputs(false)</span>
 <span class="cstat-no" title="statement not covered" >        }}</span>
 <span class="cstat-no" title="statement not covered" >        onSubmit={(inputs) =&gt; {</span>
-<span class="cstat-no" title="statement not covered" >          handleConfirmExecute(inputs)</span>
+<span class="cstat-no" title="statement not covered" >          setExecutionInputs(JSON.stringify(inputs))</span>
+<span class="cstat-no" title="statement not covered" >          handleConfirmExecute()</span>
 <span class="cstat-no" title="statement not covered" >        }}</span>
-<span class="cstat-no" title="statement not covered" >        nodes={nodes}</span>
+<span class="cstat-no" title="statement not covered" >        nodes={nodes.map(nodeToWorkflowNode)}</span>
 <span class="cstat-no" title="statement not covered" >        workflowName={localWorkflowName}</span>
 <span class="cstat-no" title="statement not covered" >      /&gt;</span>
 <span class="cstat-no" title="statement not covered" ></span>
@@ -4531,7 +4519,7 @@ export default WorkflowBuilder
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-01-27T20:03:29.662Z
+                at 2026-01-27T20:51:30.576Z
             </div>
         <script src="../../prettify.js"></script>
         <script>

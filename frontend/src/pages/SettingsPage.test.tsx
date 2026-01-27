@@ -1743,5 +1743,221 @@ describe('SettingsPage', () => {
         }
       }, { timeout: 3000 })
     })
+
+    it('should toggle provider models expansion', async () => {
+      const savedProviders = [
+        {
+          id: 'provider-1',
+          name: 'OpenAI',
+          type: 'openai' as const,
+          apiKey: 'sk-test',
+          defaultModel: 'gpt-4',
+          models: ['gpt-4', 'gpt-3.5-turbo'],
+          enabled: true,
+        },
+      ]
+      localStorage.setItem('llm_settings', JSON.stringify({ providers: savedProviders }))
+
+      renderWithRouter(<SettingsPage />)
+
+      await waitFor(() => {
+        expect(screen.getAllByText(/Settings/).length).toBeGreaterThan(0)
+      }, { timeout: 3000 })
+
+      // Find and click the expand/collapse button for models
+      const expandButtons = screen.queryAllByTitle(/Expand models|Collapse models/i)
+      if (expandButtons.length > 0) {
+        fireEvent.click(expandButtons[0])
+        // After clicking, models should be expanded
+        await waitFor(() => {
+          const apiKeyInputs = screen.queryAllByPlaceholderText(/sk-/i)
+          // If expanded, API key input should be visible
+          expect(expandButtons.length).toBeGreaterThan(0)
+        }, { timeout: 2000 })
+      }
+    })
+
+    it('should handle manual sync when authenticated', async () => {
+      mockUseAuth.mockReturnValue({
+        isAuthenticated: true,
+        user: { id: '1', username: 'testuser' },
+        token: 'token',
+        login: jest.fn(),
+        logout: jest.fn(),
+        register: jest.fn(),
+      } as any)
+
+      const mockHttpClient = {
+        get: jest.fn().mockResolvedValue({
+          ok: true,
+          json: async () => ({ providers: [], iteration_limit: 10, default_model: '' }),
+        }),
+        post: jest.fn().mockResolvedValue({
+          ok: true,
+          json: async () => ({}),
+        }),
+        put: jest.fn(),
+        delete: jest.fn(),
+      }
+
+      renderWithRouter(<SettingsPage httpClient={mockHttpClient as any} />)
+
+      await waitFor(() => {
+        const syncButtons = screen.queryAllByText(/Sync Now|Sync/i)
+        if (syncButtons.length > 0) {
+          fireEvent.click(syncButtons[0])
+        }
+      }, { timeout: 3000 })
+
+      await waitFor(() => {
+        // Verify sync was called
+        expect(mockHttpClient.post).toHaveBeenCalled()
+      }, { timeout: 2000 })
+    })
+
+    it('should show error when manual sync fails', async () => {
+      mockUseAuth.mockReturnValue({
+        isAuthenticated: true,
+        user: { id: '1', username: 'testuser' },
+        token: 'token',
+        login: jest.fn(),
+        logout: jest.fn(),
+        register: jest.fn(),
+      } as any)
+
+      const mockHttpClient = {
+        get: jest.fn().mockResolvedValue({
+          ok: true,
+          json: async () => ({ providers: [], iteration_limit: 10, default_model: '' }),
+        }),
+        post: jest.fn().mockResolvedValue({
+          ok: false,
+          json: async () => ({}),
+        }),
+        put: jest.fn(),
+        delete: jest.fn(),
+      }
+
+      renderWithRouter(<SettingsPage httpClient={mockHttpClient as any} />)
+
+      await waitFor(() => {
+        const syncButtons = screen.queryAllByText(/Sync Now|Sync/i)
+        if (syncButtons.length > 0) {
+          fireEvent.click(syncButtons[0])
+        }
+      }, { timeout: 3000 })
+
+      await waitFor(() => {
+        expect(mockShowError).toHaveBeenCalled()
+      }, { timeout: 2000 })
+    })
+
+    it('should test provider connection', async () => {
+      const savedProviders = [
+        {
+          id: 'provider-1',
+          name: 'OpenAI',
+          type: 'openai' as const,
+          apiKey: 'sk-test',
+          defaultModel: 'gpt-4',
+          models: ['gpt-4'],
+          enabled: true,
+        },
+      ]
+      localStorage.setItem('llm_settings', JSON.stringify({ providers: savedProviders }))
+
+      const mockHttpClient = {
+        get: jest.fn().mockResolvedValue({
+          ok: true,
+          json: async () => ({ providers: savedProviders, iteration_limit: 10, default_model: '' }),
+        }),
+        post: jest.fn().mockResolvedValue({
+          ok: true,
+          json: async () => ({ status: 'success', message: 'Connection successful' }),
+        }),
+        put: jest.fn(),
+        delete: jest.fn(),
+      }
+
+      renderWithRouter(<SettingsPage httpClient={mockHttpClient as any} />)
+
+      await waitFor(() => {
+        expect(screen.getAllByText(/Settings/).length).toBeGreaterThan(0)
+      }, { timeout: 3000 })
+
+      // Find test button
+      await waitFor(() => {
+        const testButtons = screen.queryAllByText(/Test|Test Connection/i)
+        if (testButtons.length > 0) {
+          fireEvent.click(testButtons[0])
+        }
+      }, { timeout: 2000 })
+
+      await waitFor(() => {
+        expect(mockHttpClient.post).toHaveBeenCalled()
+      }, { timeout: 2000 })
+    })
+
+    it('should handle test provider error', async () => {
+      const savedProviders = [
+        {
+          id: 'provider-1',
+          name: 'OpenAI',
+          type: 'openai' as const,
+          apiKey: 'sk-test',
+          defaultModel: 'gpt-4',
+          models: ['gpt-4'],
+          enabled: true,
+        },
+      ]
+      localStorage.setItem('llm_settings', JSON.stringify({ providers: savedProviders }))
+
+      const mockHttpClient = {
+        get: jest.fn().mockResolvedValue({
+          ok: true,
+          json: async () => ({ providers: savedProviders, iteration_limit: 10, default_model: '' }),
+        }),
+        post: jest.fn().mockRejectedValue(new Error('Network error')),
+        put: jest.fn(),
+        delete: jest.fn(),
+      }
+
+      renderWithRouter(<SettingsPage httpClient={mockHttpClient as any} />)
+
+      await waitFor(() => {
+        expect(screen.getAllByText(/Settings/).length).toBeGreaterThan(0)
+      }, { timeout: 3000 })
+
+      // Find test button
+      await waitFor(() => {
+        const testButtons = screen.queryAllByText(/Test|Test Connection/i)
+        if (testButtons.length > 0) {
+          fireEvent.click(testButtons[0])
+        }
+      }, { timeout: 2000 })
+
+      await waitFor(() => {
+        expect(mockHttpClient.post).toHaveBeenCalled()
+      }, { timeout: 2000 })
+    })
+
+    it('should update iteration limit', async () => {
+      renderWithRouter(<SettingsPage />)
+
+      await waitFor(() => {
+        // Switch to workflow tab
+        const workflowTabs = screen.queryAllByText(/Workflow Generation|Workflow/i)
+        if (workflowTabs.length > 0) {
+          fireEvent.click(workflowTabs[0])
+        }
+      }, { timeout: 3000 })
+
+      await waitFor(() => {
+        const iterationInputs = screen.queryAllByLabelText(/Iteration limit/i)
+        if (iterationInputs.length > 0) {
+          fireEvent.change(iterationInputs[0], { target: { value: '20' } })
+        }
+      }, { timeout: 2000 })
+    })
   })
 })

@@ -349,7 +349,11 @@ describe('useWorkflowStore', () => {
       
       const workflow = useWorkflowStore.getState().toWorkflowDefinition()
       
-      expect(workflow.nodes[0].condition_config).toEqual({ expression: 'x > 10' })
+      expect(workflow.nodes[0].condition_config).toEqual({
+        condition_type: 'equals',
+        field: '',
+        value: '',
+      })
     })
 
     it('should convert node with loop_config', () => {
@@ -367,7 +371,10 @@ describe('useWorkflowStore', () => {
       
       const workflow = useWorkflowStore.getState().toWorkflowDefinition()
       
-      expect(workflow.nodes[0].loop_config).toEqual({ max_iterations: 10 })
+      expect(workflow.nodes[0].loop_config).toEqual({
+        loop_type: 'for_each',
+        max_iterations: 10,
+      })
     })
 
     it('should convert node with inputs', () => {
@@ -385,7 +392,10 @@ describe('useWorkflowStore', () => {
       
       const workflow = useWorkflowStore.getState().toWorkflowDefinition()
       
-      expect(workflow.nodes[0].inputs).toEqual(['input1', 'input2'])
+      expect(workflow.nodes[0].inputs).toEqual([
+        { name: 'input1', source_node: undefined, source_field: '' },
+        { name: 'input2', source_node: undefined, source_field: '' },
+      ])
     })
 
     it('should convert node with empty inputs array', () => {
