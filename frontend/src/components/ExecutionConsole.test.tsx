@@ -59,7 +59,7 @@ describe('ExecutionConsole', () => {
 
   beforeEach(() => {
     jest.clearAllMocks()
-    mockUseWebSocket.mockImplementation(() => {})
+    mockUseWebSocket.mockImplementation(() => ({} as any))
   })
 
   it('should render collapsed console', () => {
@@ -183,6 +183,18 @@ describe('ExecutionConsole', () => {
     )
 
     expect(screen.getByText(/No logs yet/)).toBeInTheDocument()
+  })
+
+  it('should handle null activeWorkflowId', () => {
+    render(
+      <ExecutionConsole
+        activeWorkflowId={null}
+        executions={[]}
+        activeExecutionId={null}
+      />
+    )
+
+    expect(screen.getByText('Chat')).toBeInTheDocument()
   })
 
   it.skip('should call useWebSocket with correct parameters', () => {

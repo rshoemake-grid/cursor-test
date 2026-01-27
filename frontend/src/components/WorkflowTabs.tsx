@@ -1,31 +1,14 @@
 import { useState, useCallback, useEffect, useRef, MouseEvent, KeyboardEvent } from 'react'
 import { X, Plus } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
+import { useWorkflowTabs, type WorkflowTabData, type Execution } from '../contexts/WorkflowTabsContext'
 import WorkflowBuilder, { WorkflowBuilderHandle } from './WorkflowBuilder'
 import { api } from '../api/client'
 import { showConfirm } from '../utils/confirm'
-import { showError, showSuccess } from '../utils/notifications'
-import { getLocalStorageItem, setLocalStorageItem, removeLocalStorageItem } from '../hooks/useLocalStorage'
+import { showError } from '../utils/notifications'
 import { logger } from '../utils/logger'
 import type { StorageAdapter, HttpClient } from '../types/adapters'
 import { defaultAdapters } from '../types/adapters'
-
-interface Execution {
-  id: string
-  status: string
-  startedAt: Date
-  nodes: Record<string, any>
-  logs: any[]
-}
-
-interface WorkflowTabData {
-  id: string
-  name: string
-  workflowId: string | null
-  isUnsaved: boolean
-  executions: Execution[]
-  activeExecutionId: string | null
-}
 
 interface WorkflowTabsProps {
   initialWorkflowId?: string | null
@@ -37,64 +20,7 @@ interface WorkflowTabsProps {
   apiBaseUrl?: string
 }
 
-const WORKFLOW_TABS_STORAGE_KEY = 'workflowTabs'
-const ACTIVE_TAB_STORAGE_KEY = 'activeWorkflowTabId'
-
-// Use utility functions instead of direct localStorage access (DIP compliance)
-const loadTabsFromStorage = (): WorkflowTabData[] => {
-  const tabs = getLocalStorageItem<WorkflowTabData[]>(WORKFLOW_TABS_STORAGE_KEY, [])
-  return Array.isArray(tabs) ? tabs : []
-}
-
-const loadActiveTabFromStorage = (tabs: WorkflowTabData[]): string | null => {
-  const saved = getLocalStorageItem<string | null>(ACTIVE_TAB_STORAGE_KEY, null)
-  if (saved && tabs.some(tab => tab.id === saved)) {
-    return saved
-  }
-  return null
-}
-
-const saveActiveTabToStorage = (activeTabId: string | null) => {
-  if (activeTabId) {
-    // Store as JSON string for consistency
-    setLocalStorageItem(ACTIVE_TAB_STORAGE_KEY, activeTabId)
-  } else {
-    // Remove if null
-    removeLocalStorageItem(ACTIVE_TAB_STORAGE_KEY)
-  }
-}
-
-const emptyTabState: WorkflowTabData = {
-  id: 'workflow-1',
-  name: 'Untitled Workflow',
-  workflowId: null,
-  isUnsaved: true,
-  executions: [],
-  activeExecutionId: null
-}
-
-// Module-level storage for tabs to persist across remounts
-const storedTabs = loadTabsFromStorage()
-let globalTabs: WorkflowTabData[] = storedTabs.length > 0 ? storedTabs : [emptyTabState]
-
-const saveTabsToStorage = (tabs: WorkflowTabData[], storage?: StorageAdapter | null) => {
-  if (!storage) {
-    if (typeof window !== 'undefined') {
-      try {
-        window.localStorage.setItem(WORKFLOW_TABS_STORAGE_KEY, JSON.stringify(tabs))
-      } catch {
-        // ignore quota errors
-      }
-    }
-    return
-  }
-  
-  try {
-    storage.setItem(WORKFLOW_TABS_STORAGE_KEY, JSON.stringify(tabs))
-  } catch {
-    // ignore quota errors
-  }
-}
+// Storage functions removed - now handled by WorkflowTabsContext
 
 export default function WorkflowTabs({ 
   initialWorkflowId, 
@@ -104,45 +30,15 @@ export default function WorkflowTabs({
   httpClient = defaultAdapters.createHttpClient(),
   apiBaseUrl = 'http://localhost:8000/api'
 }: WorkflowTabsProps) {
-  // Initialize from global tabs (persists across remounts)
-  const [tabs, setTabs] = useState<WorkflowTabData[]>(() => {
-    return [...globalTabs] // Create a copy
-  })
+  // Use context for tabs state management (replaces module-level globalTabs)
+  const { tabs, setTabs, activeTabId, setActiveTabId, processedKeys } = useWorkflowTabs()
   
-  // Load active tab from storage, fallback to first tab
-  const initialActiveTabId = loadActiveTabFromStorage(tabs) || tabs[0]?.id || 'workflow-1'
-  const [activeTabId, setActiveTabId] = useState<string>(initialActiveTabId)
-  
-  // Save active tab to storage whenever it changes
+  // Keep ref in sync with tabs state for polling logic
+  const tabsRef = useRef<WorkflowTabData[]>(tabs)
   useEffect(() => {
-    saveActiveTabToStorage(activeTabId)
-  }, [activeTabId])
+    tabsRef.current = tabs
+  }, [tabs])
   
-  // Validate that activeTabId still exists in tabs, reset if not
-  useEffect(() => {
-    if (activeTabId && !tabs.some(tab => tab.id === activeTabId)) {
-      // Active tab no longer exists, switch to first tab or create new one
-      if (tabs.length > 0) {
-        setActiveTabId(tabs[0].id)
-      } else {
-        // No tabs left, create a new one
-        const newId = `workflow-${Date.now()}`
-        const newTab: WorkflowTabData = {
-          id: newId,
-          name: 'Untitled Workflow',
-          workflowId: null,
-          isUnsaved: true,
-          executions: [],
-          activeExecutionId: null
-        }
-        setTabs([newTab])
-        setActiveTabId(newId)
-      }
-    }
-  }, [tabs, activeTabId])
-  
-  const processedKeys = useRef<Set<string>>(new Set()) // Track processed workflowId+loadKey combinations
-  const tabsRef = useRef<WorkflowTabData[]>(tabs) // Keep ref in sync with tabs state
   const builderRef = useRef<WorkflowBuilderHandle | null>(null)
   const [editingTabId, setEditingTabId] = useState<string | null>(null)
   const [editingName, setEditingName] = useState('')
@@ -170,22 +66,29 @@ export default function WorkflowTabs({
     estimated_time: ''
   })
   const [isPublishing, setIsPublishing] = useState(false)
-  const [storageToastShown, setStorageToastShown] = useState(false)
-  const isInitialStoragePresent = storedTabs.length > 0
 
-  // Sync tabsRef and globalTabs with tabs state
+  // Validate that activeTabId still exists in tabs, reset if not
   useEffect(() => {
-    tabsRef.current = tabs
-    globalTabs = [...tabs] // Update global storage
-    saveTabsToStorage(tabs, storage)
-  }, [tabs])
-
-  useEffect(() => {
-    if (isInitialStoragePresent && !storageToastShown) {
-      showSuccess('Restored open workflow tabs from your previous session.')
-      setStorageToastShown(true)
+    if (activeTabId && !tabs.some(tab => tab.id === activeTabId)) {
+      // Active tab no longer exists, switch to first tab or create new one
+      if (tabs.length > 0) {
+        setActiveTabId(tabs[0].id)
+      } else {
+        // No tabs left, create a new one
+        const newId = `workflow-${Date.now()}`
+        const newTab: WorkflowTabData = {
+          id: newId,
+          name: 'Untitled Workflow',
+          workflowId: null,
+          isUnsaved: true,
+          executions: [],
+          activeExecutionId: null
+        }
+        setTabs([newTab])
+        setActiveTabId(newId)
+      }
     }
-  }, [isInitialStoragePresent, storageToastShown])
+  }, [tabs, activeTabId, setTabs, setActiveTabId])
 
   useEffect(() => {
     if (editingTabId && editingInputRef.current) {
@@ -219,16 +122,12 @@ export default function WorkflowTabs({
         }
         
         setTabs(prev => {
-          // Use globalTabs as source of truth if prev seems stale
-          const currentTabs = prev.length === 1 && globalTabs.length > 1 ? globalTabs : prev
-          
           // Double-check we're not adding a duplicate
-          const existingTab = currentTabs.find(t => t.id === newId)
+          const existingTab = prev.find(t => t.id === newId)
           if (existingTab) {
-            return currentTabs
+            return prev
           }
-          const newTabs = [...currentTabs, newTab]
-          globalTabs = [...newTabs] // Update global storage immediately
+          const newTabs = [...prev, newTab]
           tabsRef.current = newTabs // Update ref immediately
           return newTabs
         })
@@ -568,19 +467,15 @@ export default function WorkflowTabs({
         })
       )
 
-      // Apply updates to tabs
+        // Apply updates to tabs
       setTabs(prev => {
-        const updated = prev.map(tab => ({
+        return prev.map(tab => ({
           ...tab,
           executions: tab.executions.map(exec => {
             const update = updates.find(u => u && u.id === exec.id)
             return update || exec
           })
         }))
-        
-        // Update global storage
-        globalTabs = [...updated]
-        return updated
       })
     }, 2000) // Poll every 2 seconds
 

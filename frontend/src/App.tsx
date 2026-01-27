@@ -9,6 +9,7 @@ import ResetPasswordPage from './pages/ResetPasswordPage'
 import MarketplacePage from './pages/MarketplacePage'
 import SettingsPage from './pages/SettingsPage'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
+import { WorkflowTabsProvider } from './contexts/WorkflowTabsContext'
 import { Play, List, Eye, Store, User, LogOut, LogIn, Settings } from 'lucide-react'
 import { showConfirm } from './utils/confirm'
 import { logger } from './utils/logger'
@@ -75,7 +76,7 @@ function AuthenticatedLayout() {
   }
 
   const renderBuilderContent = () => (
-    <>
+    <WorkflowTabsProvider>
       {currentView === 'builder' && (
         <WorkflowTabs
           initialWorkflowId={selectedWorkflowId}
@@ -97,7 +98,7 @@ function AuthenticatedLayout() {
       {currentView === 'execution' && executionId && (
         <ExecutionViewer executionId={executionId} />
       )}
-    </>
+    </WorkflowTabsProvider>
   )
 
   return (
