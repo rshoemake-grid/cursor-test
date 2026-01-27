@@ -20,9 +20,7 @@ import MarketplaceDialog from './MarketplaceDialog'
 import { useAuth } from '../contexts/AuthContext'
 // getLocalStorageItem and setLocalStorageItem moved to useDraftManagement hook
 import { logger } from '../utils/logger'
-import type { StorageAdapter } from '../types/adapters'
 import { defaultAdapters } from '../types/adapters'
-import type { Execution } from '../contexts/WorkflowTabsContext'
 import { 
   normalizeNodeForStorage
 } from '../utils/workflowFormat'
@@ -42,35 +40,7 @@ import { useWorkflowState } from '../hooks/useWorkflowState'
 import { useMarketplaceDialog } from '../hooks/useMarketplaceDialog'
 import { convertNodesForExecutionInput } from '../utils/nodeConversion'
 import WorkflowCanvas from './WorkflowCanvas'
-
-interface WorkflowTab {
-  workflowId: string
-  workflowName: string
-  executions: Execution[]
-  activeExecutionId: string | null
-}
-
-// Extended WorkflowBuilderProps with additional properties needed by WorkflowTabs
-// TODO: Refactor to use split interfaces from types/workflowBuilder.ts (ISP compliance)
-interface WorkflowBuilderProps {
-  tabId: string
-  workflowId: string | null
-  tabName: string
-  workflowTabs?: WorkflowTab[] // Execution data from parent
-  onExecutionStart?: (executionId: string) => void
-  onWorkflowSaved?: (workflowId: string, name: string) => void
-  onWorkflowModified?: () => void
-  onWorkflowLoaded?: (workflowId: string, name: string) => void
-  onCloseWorkflow?: (workflowId: string) => void // Unused but kept for API compatibility
-  onClearExecutions?: (workflowId: string) => void
-  onExecutionLogUpdate?: (workflowId: string, executionId: string, log: any) => void
-  onExecutionStatusUpdate?: (workflowId: string, executionId: string, status: 'running' | 'completed' | 'failed') => void
-  onExecutionNodeUpdate?: (workflowId: string, executionId: string, nodeId: string, nodeState: any) => void
-  onRemoveExecution?: (workflowId: string, executionId: string) => void
-  tabIsUnsaved: boolean
-  // Dependency injection
-  storage?: StorageAdapter | null
-}
+import type { WorkflowBuilderProps } from '../types/workflowBuilder'
 
 // TabDraft interface and storage functions moved to useDraftManagement hook
 
