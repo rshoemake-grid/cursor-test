@@ -113,4 +113,3 @@ const suiteLogs: Array<{ file: string; name: string; start: number }> = []
 
 // Note: We can't easily wrap describe() without causing parsing issues,
 // so we'll rely on beforeEach/afterEach for test logging
-
