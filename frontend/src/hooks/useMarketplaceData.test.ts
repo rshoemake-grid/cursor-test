@@ -306,7 +306,12 @@ describe('useMarketplaceData', () => {
 
       // Wait for initial effect to complete (it will call fetchAgents)
       await act(async () => {
-        await new Promise(resolve => setTimeout(resolve, 200))
+        await new Promise(resolve => setTimeout(resolve, 100))
+      })
+
+      // Wait for loading to complete
+      await act(async () => {
+        await new Promise(resolve => setTimeout(resolve, 100))
       })
 
       // Check migration happened - setItem should be called during initial fetchAgents
