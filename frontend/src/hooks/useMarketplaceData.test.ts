@@ -299,26 +299,17 @@ describe('useMarketplaceData', () => {
           searchQuery: '',
           sortBy: 'popular',
           user: { id: 'user-1', username: 'testuser' },
-          activeTab: 'repository',
+          activeTab: 'agents',
           repositorySubTab: 'workflows',
         })
       )
 
-      // Wait for initial effect to complete
+      // Wait for initial effect to complete (it will call fetchAgents)
       await act(async () => {
         await new Promise(resolve => setTimeout(resolve, 200))
       })
 
-      // Manually trigger fetchAgents to test migration
-      mockGetLocalStorageItem.mockClear()
-      mockGetLocalStorageItem.mockReturnValue([agentWithoutAuthor])
-      mockStorage.setItem.mockClear()
-
-      await act(async () => {
-        await result.current.fetchAgents()
-      })
-
-      // Check migration happened - setItem is called synchronously in fetchAgents when updated=true
+      // Check migration happened - setItem should be called during initial fetchAgents
       expect(mockStorage.setItem).toHaveBeenCalled()
       const savedAgents = JSON.parse(mockStorage.setItem.mock.calls[0][1])
       expect(savedAgents[0].author_id).toBe('user-1')
