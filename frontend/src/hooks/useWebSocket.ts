@@ -156,7 +156,7 @@ export function useWebSocket({
         const { code, reason, wasClean } = event
         injectedLogger.debug(`[WebSocket] Disconnected from execution ${executionId}`, {
           code,
-          reason: reason || 'No reason provided',
+          reason: reason && reason.length > 0 ? reason : 'No reason provided',
           wasClean,
           reconnectAttempts: reconnectAttempts.current
         })

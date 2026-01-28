@@ -1,5 +1,11 @@
 import React from 'react'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
+
+// Helper to ensure all waitFor calls have timeouts
+const waitForWithTimeout = (callback: () => void | Promise<void>, timeout = 2000) => {
+  return waitFor(callback, { timeout })
+}
+
 import { BrowserRouter } from 'react-router-dom'
 import WorkflowList from './WorkflowList'
 import { api } from '../api/client'
@@ -95,7 +101,7 @@ describe('WorkflowList', () => {
 
     renderWithRouter(<WorkflowList onSelectWorkflow={mockOnSelectWorkflow} />)
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       expect(screen.getByText('Test Workflow 1')).toBeInTheDocument()
       expect(screen.getByText('Test Workflow 2')).toBeInTheDocument()
     })
@@ -109,7 +115,7 @@ describe('WorkflowList', () => {
 
     renderWithRouter(<WorkflowList onSelectWorkflow={mockOnSelectWorkflow} />)
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       expect(showError).toHaveBeenCalledWith('Failed to load workflows: Failed to load')
     })
   })
@@ -119,7 +125,7 @@ describe('WorkflowList', () => {
 
     renderWithRouter(<WorkflowList onSelectWorkflow={mockOnSelectWorkflow} />)
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       expect(screen.getByText('Test Workflow 1')).toBeInTheDocument()
     })
 
@@ -136,7 +142,7 @@ describe('WorkflowList', () => {
 
     renderWithRouter(<WorkflowList onSelectWorkflow={mockOnSelectWorkflow} onBack={mockOnBack} />)
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       expect(screen.getByTitle('Back to builder')).toBeInTheDocument()
     })
 
@@ -152,18 +158,18 @@ describe('WorkflowList', () => {
 
     renderWithRouter(<WorkflowList onSelectWorkflow={mockOnSelectWorkflow} />)
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       expect(screen.getByText('Test Workflow 1')).toBeInTheDocument()
     })
 
     const deleteButtons = screen.getAllByTitle(/Delete workflow/)
     fireEvent.click(deleteButtons[0])
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       expect(showConfirm).toHaveBeenCalled()
     })
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       expect(mockApi.deleteWorkflow).toHaveBeenCalledWith('workflow-1')
       expect(showSuccess).toHaveBeenCalledWith('Workflow deleted successfully')
     })
@@ -175,14 +181,14 @@ describe('WorkflowList', () => {
 
     renderWithRouter(<WorkflowList onSelectWorkflow={mockOnSelectWorkflow} />)
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       expect(screen.getByText('Test Workflow 1')).toBeInTheDocument()
     })
 
     const deleteButtons = screen.getAllByTitle(/Delete workflow/)
     fireEvent.click(deleteButtons[0])
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       expect(showConfirm).toHaveBeenCalled()
     })
 
@@ -196,14 +202,14 @@ describe('WorkflowList', () => {
 
     renderWithRouter(<WorkflowList onSelectWorkflow={mockOnSelectWorkflow} />)
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       expect(screen.getByText('Test Workflow 1')).toBeInTheDocument()
     })
 
     const deleteButtons = screen.getAllByTitle(/Delete workflow/)
     fireEvent.click(deleteButtons[0])
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       expect(mockApi.deleteWorkflow).toHaveBeenCalled()
       expect(showError).toHaveBeenCalledWith('Failed to delete workflow: Delete failed')
     })
@@ -214,7 +220,7 @@ describe('WorkflowList', () => {
 
     renderWithRouter(<WorkflowList onSelectWorkflow={mockOnSelectWorkflow} />)
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       expect(screen.getByText('Test Workflow 1')).toBeInTheDocument()
     })
 
@@ -223,7 +229,7 @@ describe('WorkflowList', () => {
     if (selectButtons.length > 0) {
       fireEvent.click(selectButtons[0])
       
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(screen.getByText(/1 selected/)).toBeInTheDocument()
       })
     }
@@ -234,7 +240,7 @@ describe('WorkflowList', () => {
 
     renderWithRouter(<WorkflowList onSelectWorkflow={mockOnSelectWorkflow} />)
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       expect(screen.getByText('Test Workflow 1')).toBeInTheDocument()
     })
 
@@ -243,7 +249,7 @@ describe('WorkflowList', () => {
     if (selectButtons.length > 0) {
       fireEvent.click(selectButtons[0])
       
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(screen.getByText(/Duplicate Selected/)).toBeInTheDocument()
         expect(screen.getByText(/Delete Selected/)).toBeInTheDocument()
       })
@@ -260,7 +266,7 @@ describe('WorkflowList', () => {
 
     renderWithRouter(<WorkflowList onSelectWorkflow={mockOnSelectWorkflow} />)
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       const workflow1Elements = screen.getAllByText('Test Workflow 1')
       expect(workflow1Elements.length).toBeGreaterThan(0)
     })
@@ -278,20 +284,20 @@ describe('WorkflowList', () => {
       }
     }
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       expect(screen.getByText(/Duplicate Selected/)).toBeInTheDocument()
     })
 
     const duplicateButton = screen.getByText(/Duplicate Selected/)
     fireEvent.click(duplicateButton)
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       expect(showConfirm).toHaveBeenCalled()
     })
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       expect(mockApi.duplicateWorkflow).toHaveBeenCalled()
-    }, { timeout: 3000 })
+    }, 3000)
   })
 
   it('should show warning when trying to bulk duplicate without selection', async () => {
@@ -299,7 +305,7 @@ describe('WorkflowList', () => {
 
     renderWithRouter(<WorkflowList onSelectWorkflow={mockOnSelectWorkflow} />)
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       expect(screen.getByText('Test Workflow 1')).toBeInTheDocument()
     })
 
@@ -321,7 +327,7 @@ describe('WorkflowList', () => {
 
     renderWithRouter(<WorkflowList onSelectWorkflow={mockOnSelectWorkflow} />)
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       expect(screen.getByText(/Showing anonymous workflows only/)).toBeInTheDocument()
       expect(screen.getByText(/Log in/)).toBeInTheDocument()
     })
@@ -332,7 +338,7 @@ describe('WorkflowList', () => {
 
     renderWithRouter(<WorkflowList onSelectWorkflow={mockOnSelectWorkflow} />)
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       expect(screen.getByText(/No workflows yet/)).toBeInTheDocument()
     })
   })
@@ -342,7 +348,7 @@ describe('WorkflowList', () => {
 
     renderWithRouter(<WorkflowList onSelectWorkflow={mockOnSelectWorkflow} />)
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       expect(screen.getByText('Test Workflow 1')).toBeInTheDocument()
       expect(screen.getByText('Description 1')).toBeInTheDocument()
     })
@@ -358,7 +364,7 @@ describe('WorkflowList', () => {
 
     renderWithRouter(<WorkflowList onSelectWorkflow={mockOnSelectWorkflow} />)
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       expect(screen.getByText('Test Workflow 1')).toBeInTheDocument()
     })
 
@@ -370,7 +376,7 @@ describe('WorkflowList', () => {
     const bulkDeleteButton = screen.getByText(/Delete Selected/)
     fireEvent.click(bulkDeleteButton)
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       expect(showError).toHaveBeenCalledWith(expect.stringContaining('Failed IDs: workflow-2'))
     })
   })
@@ -383,7 +389,7 @@ describe('WorkflowList', () => {
 
     renderWithRouter(<WorkflowList onSelectWorkflow={mockOnSelectWorkflow} />)
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       expect(screen.getByText('Test Workflow 1')).toBeInTheDocument()
     })
 
@@ -395,7 +401,7 @@ describe('WorkflowList', () => {
     const bulkDuplicateButton = screen.getByText(/Duplicate Selected/)
     fireEvent.click(bulkDuplicateButton)
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       // Should show error for failed duplicate
       expect(showError).toHaveBeenCalledWith(expect.stringContaining('Failed to duplicate workflow'))
     })
@@ -407,14 +413,14 @@ describe('WorkflowList', () => {
 
     renderWithRouter(<WorkflowList onSelectWorkflow={mockOnSelectWorkflow} />)
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       expect(screen.getByText('Test Workflow 1')).toBeInTheDocument()
     })
 
     const deleteButtons = screen.getAllByTitle(/Delete workflow/)
     fireEvent.click(deleteButtons[0])
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       expect(showConfirm).toHaveBeenCalled()
     })
 
@@ -427,7 +433,7 @@ describe('WorkflowList', () => {
 
     renderWithRouter(<WorkflowList onSelectWorkflow={mockOnSelectWorkflow} />)
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       expect(screen.getByText('Test Workflow 1')).toBeInTheDocument()
     })
 
@@ -438,7 +444,7 @@ describe('WorkflowList', () => {
     const bulkDeleteButton = screen.getByText(/Delete Selected/)
     fireEvent.click(bulkDeleteButton)
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       expect(showConfirm).toHaveBeenCalled()
     })
 
@@ -453,7 +459,7 @@ describe('WorkflowList', () => {
 
     renderWithRouter(<WorkflowList onSelectWorkflow={mockOnSelectWorkflow} />)
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       expect(screen.getByText('Test Workflow 1')).toBeInTheDocument()
     })
 
@@ -468,14 +474,14 @@ describe('WorkflowList', () => {
 
     renderWithRouter(<WorkflowList onSelectWorkflow={mockOnSelectWorkflow} />)
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       expect(screen.getByText('Test Workflow 1')).toBeInTheDocument()
     })
 
     const deleteButtons = screen.getAllByTitle(/Delete workflow/)
     fireEvent.click(deleteButtons[0])
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       expect(showError).toHaveBeenCalledWith('Failed to delete workflow: Delete failed')
     })
   })
@@ -486,7 +492,7 @@ describe('WorkflowList', () => {
 
     renderWithRouter(<WorkflowList onSelectWorkflow={mockOnSelectWorkflow} />)
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       expect(screen.getByText('Test Workflow 1')).toBeInTheDocument()
     })
 
@@ -497,7 +503,7 @@ describe('WorkflowList', () => {
     const bulkDeleteButton = screen.getByText(/Delete Selected/)
     fireEvent.click(bulkDeleteButton)
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       expect(showError).toHaveBeenCalledWith('Failed to delete workflows: Bulk delete failed')
     })
   })
@@ -515,7 +521,7 @@ describe('WorkflowList', () => {
 
     renderWithRouter(<WorkflowList onSelectWorkflow={mockOnSelectWorkflow} />)
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       expect(screen.getByText('Workflow without ID')).toBeInTheDocument()
     })
 
@@ -529,7 +535,7 @@ describe('WorkflowList', () => {
 
       renderWithRouter(<WorkflowList onSelectWorkflow={mockOnSelectWorkflow} />)
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(screen.getByText('Test Workflow 1')).toBeInTheDocument()
       })
 
@@ -541,7 +547,7 @@ describe('WorkflowList', () => {
       if (publishButtons.length > 0) {
         fireEvent.click(publishButtons[0])
         
-        await waitFor(() => {
+        await waitForWithTimeout(() => {
           expect(screen.getByText(/Publish to Marketplace/)).toBeInTheDocument()
         })
       }
@@ -561,7 +567,7 @@ describe('WorkflowList', () => {
 
       renderWithRouter(<WorkflowList onSelectWorkflow={mockOnSelectWorkflow} />)
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(screen.getByText('Test Workflow 1')).toBeInTheDocument()
       })
 
@@ -573,7 +579,7 @@ describe('WorkflowList', () => {
       if (publishButtons.length > 0) {
         fireEvent.click(publishButtons[0])
         
-        await waitFor(() => {
+        await waitForWithTimeout(() => {
           expect(showError).toHaveBeenCalledWith(expect.stringContaining('log in to publish'))
         })
       }
@@ -589,7 +595,7 @@ describe('WorkflowList', () => {
 
       renderWithRouter(<WorkflowList onSelectWorkflow={mockOnSelectWorkflow} />)
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(screen.getByText('Test Workflow 1')).toBeInTheDocument()
       })
 
@@ -601,7 +607,7 @@ describe('WorkflowList', () => {
       if (publishButtons.length > 0) {
         fireEvent.click(publishButtons[0])
         
-        await waitFor(() => {
+        await waitForWithTimeout(() => {
           expect(screen.getByText(/Publish to Marketplace/)).toBeInTheDocument()
         })
 
@@ -611,7 +617,7 @@ describe('WorkflowList', () => {
           fireEvent.submit(form)
         }
 
-        await waitFor(() => {
+        await waitForWithTimeout(() => {
           expect(showSuccess).toHaveBeenCalledWith(expect.stringContaining('Published'))
         })
       }
@@ -623,7 +629,7 @@ describe('WorkflowList', () => {
 
       renderWithRouter(<WorkflowList onSelectWorkflow={mockOnSelectWorkflow} />)
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(screen.getByText('Test Workflow 1')).toBeInTheDocument()
       })
 
@@ -635,7 +641,7 @@ describe('WorkflowList', () => {
       if (publishButtons.length > 0) {
         fireEvent.click(publishButtons[0])
         
-        await waitFor(() => {
+        await waitForWithTimeout(() => {
           expect(screen.getByText(/Publish to Marketplace/)).toBeInTheDocument()
         })
 
@@ -645,7 +651,7 @@ describe('WorkflowList', () => {
           fireEvent.submit(form)
         }
 
-        await waitFor(() => {
+        await waitForWithTimeout(() => {
           expect(showError).toHaveBeenCalledWith(expect.stringContaining('Failed to publish'))
         })
       }
@@ -656,7 +662,7 @@ describe('WorkflowList', () => {
 
       renderWithRouter(<WorkflowList onSelectWorkflow={mockOnSelectWorkflow} />)
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(screen.getByText('Test Workflow 1')).toBeInTheDocument()
       })
 
@@ -668,7 +674,7 @@ describe('WorkflowList', () => {
       if (publishButtons.length > 0) {
         fireEvent.click(publishButtons[0])
         
-        await waitFor(() => {
+        await waitForWithTimeout(() => {
           expect(screen.getByText(/Publish to Marketplace/)).toBeInTheDocument()
         })
 

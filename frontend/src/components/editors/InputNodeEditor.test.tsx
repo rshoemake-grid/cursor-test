@@ -1,5 +1,11 @@
 // Jest globals - no import needed
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
+
+// Helper to ensure all waitFor calls have timeouts
+const waitForWithTimeout = (callback: () => void | Promise<void>, timeout = 2000) => {
+  return waitFor(callback, { timeout })
+}
+
 import InputNodeEditor from './InputNodeEditor'
 import type { NodeWithData } from '../../types/nodeData'
 

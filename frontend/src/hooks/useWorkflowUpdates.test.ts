@@ -3,6 +3,12 @@
  */
 
 import { renderHook, act, waitFor } from '@testing-library/react'
+
+// Helper to ensure all waitFor calls have timeouts
+const waitForWithTimeout = (callback: () => void | Promise<void>, timeout = 2000) => {
+  return waitFor(callback, { timeout })
+}
+
 import { useWorkflowUpdates } from './useWorkflowUpdates'
 import { logger } from '../utils/logger'
 import { addEdge } from '@xyflow/react'
@@ -212,7 +218,7 @@ describe('useWorkflowUpdates', () => {
         jest.advanceTimersByTime(50)
       })
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(mockSetEdges).toHaveBeenCalled()
         expect(mockNotifyModified).toHaveBeenCalled()
       })
@@ -241,7 +247,7 @@ describe('useWorkflowUpdates', () => {
         jest.advanceTimersByTime(50)
       })
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(mockLoggerWarn).toHaveBeenCalledWith(
           expect.stringContaining('source node'),
           expect.any(Array)
@@ -272,7 +278,7 @@ describe('useWorkflowUpdates', () => {
         jest.advanceTimersByTime(50)
       })
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(mockLoggerWarn).toHaveBeenCalledWith(
           expect.stringContaining('target node'),
           expect.any(Array)
@@ -313,7 +319,7 @@ describe('useWorkflowUpdates', () => {
         jest.advanceTimersByTime(50)
       })
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(mockLoggerWarn).toHaveBeenCalledWith(
           expect.stringContaining('already exists')
         )

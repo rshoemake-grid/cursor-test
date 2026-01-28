@@ -1,5 +1,10 @@
 import React from 'react'
 import { render, screen, waitFor, fireEvent } from '@testing-library/react'
+
+// Helper to ensure all waitFor calls have timeouts
+const waitForWithTimeout = (callback: () => void | Promise<void>, timeout = 2000) => {
+  return waitFor(callback, { timeout })
+
 import App from './App'
 
 // Mock components
@@ -144,14 +149,14 @@ describe('App', () => {
       // First switch to list
       const workflowsButton = screen.getByText('Workflows')
       fireEvent.click(workflowsButton)
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(screen.getByText('WorkflowList')).toBeInTheDocument()
       })
       
       // Then switch back to builder
       const builderButton = screen.getByText('Builder')
       fireEvent.click(builderButton)
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(screen.getByText('WorkflowTabs')).toBeInTheDocument()
       })
     })
@@ -170,7 +175,7 @@ describe('App', () => {
       const workflowsButton = screen.getByText('Workflows')
       fireEvent.click(workflowsButton)
       
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(screen.getByText('WorkflowList')).toBeInTheDocument()
       })
       
@@ -179,7 +184,7 @@ describe('App', () => {
       fireEvent.click(selectButton)
       
       // Should switch back to builder view
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(screen.getByText('WorkflowTabs')).toBeInTheDocument()
       })
     })
@@ -191,7 +196,7 @@ describe('App', () => {
       const workflowsButton = screen.getByText('Workflows')
       fireEvent.click(workflowsButton)
       
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(screen.getByText('WorkflowList')).toBeInTheDocument()
       })
       
@@ -200,7 +205,7 @@ describe('App', () => {
       fireEvent.click(backButton)
       
       // Should switch back to builder view
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(screen.getByText('WorkflowTabs')).toBeInTheDocument()
       })
     })

@@ -5,6 +5,11 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import ResetPasswordPage from './ResetPasswordPage'
 import type { HttpClient } from '../types/adapters'
 
+// Helper to ensure all waitFor calls have timeouts
+const waitForWithTimeout = (callback: () => void | Promise<void>, timeout = 2000) => {
+  return waitFor(callback, { timeout })
+}
+
 // Mock react-router-dom
 jest.mock('react-router-dom', () => ({
   ...jest.requireActual('react-router-dom'),
@@ -38,8 +43,8 @@ describe('ResetPasswordPage', () => {
   it('should render reset password page', async () => {
     renderWithRouter(<ResetPasswordPage />)
 
-    await waitFor(() => {
-      expect(screen.getByRole('heading', { name: /Reset Password/ })).toBeInTheDocument()
+    await waitForWithTimeout(() => {
+      expect(screen.getByRole('heading', { name: /Reset Password/ }), 2000) // Default timeout.toBeInTheDocument()
     })
   })
 
@@ -51,7 +56,7 @@ describe('ResetPasswordPage', () => {
 
     renderWithRouter(<ResetPasswordPage />)
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       expect(screen.getByText(/Reset token is missing/)).toBeInTheDocument()
     })
   })
@@ -73,7 +78,7 @@ describe('ResetPasswordPage', () => {
     }
     fireEvent.click(submitButton)
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       expect(screen.getByText(/Reset token is missing/)).toBeInTheDocument()
     })
   })
@@ -95,7 +100,7 @@ describe('ResetPasswordPage', () => {
     }
     fireEvent.click(submitButton)
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       expect(global.fetch).toHaveBeenCalledWith(
         'http://localhost:8000/api/auth/reset-password',
         expect.objectContaining({
@@ -103,7 +108,7 @@ describe('ResetPasswordPage', () => {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ token: 'test-token', new_password: 'newpassword123' }),
         })
-      )
+      , 2000) // Default timeout
     })
   })
 
@@ -119,7 +124,7 @@ describe('ResetPasswordPage', () => {
     }
     fireEvent.click(submitButton)
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       expect(screen.getByText('Passwords do not match')).toBeInTheDocument()
     })
   })
@@ -136,7 +141,7 @@ describe('ResetPasswordPage', () => {
     }
     fireEvent.click(submitButton)
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       expect(screen.getByText(/Password must be at least 6 characters/)).toBeInTheDocument()
     })
   })
@@ -174,9 +179,9 @@ describe('ResetPasswordPage', () => {
     }
     fireEvent.click(submitButton)
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       expect(screen.getByText('Password Reset Successful!')).toBeInTheDocument()
-    }, { timeout: 3000 })
+    }, 3000)
   })
 
   it('should handle API error', async () => {
@@ -196,7 +201,7 @@ describe('ResetPasswordPage', () => {
     }
     fireEvent.click(submitButton)
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       expect(screen.getByText('Invalid token')).toBeInTheDocument()
     })
   })
@@ -214,7 +219,7 @@ describe('ResetPasswordPage', () => {
 
     renderWithRouter(<ResetPasswordPage httpClient={mockHttpClient} />)
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       const passwordInputs = screen.getAllByPlaceholderText(/••••••••/)
       expect(passwordInputs.length).toBeGreaterThanOrEqual(2)
       
@@ -226,9 +231,9 @@ describe('ResetPasswordPage', () => {
       fireEvent.keyDown(passwordInputs[1], { key: 'Enter', code: 'Enter' })
     })
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       expect(mockHttpClient.post).toHaveBeenCalled()
-    }, { timeout: 3000 })
+    }, 3000)
   })
 
   it('should toggle confirm password visibility', async () => {
@@ -270,7 +275,7 @@ describe('ResetPasswordPage', () => {
       }
       fireEvent.click(submitButton)
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(mockHttpClient.post).toHaveBeenCalledWith(
           expect.stringContaining('/auth/reset-password'),
           expect.objectContaining({ token: 'test-token', new_password: 'newpassword123' }),
@@ -306,7 +311,7 @@ describe('ResetPasswordPage', () => {
       }
       fireEvent.click(submitButton)
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(mockHttpClient.post).toHaveBeenCalledWith(
           'https://custom-api.example.com/api/auth/reset-password',
           expect.any(Object),
@@ -334,7 +339,7 @@ describe('ResetPasswordPage', () => {
       }
       fireEvent.click(submitButton)
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(screen.getByText(/Network error/)).toBeInTheDocument()
       })
     })

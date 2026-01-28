@@ -1,5 +1,11 @@
 import React from 'react'
 import { render, screen, fireEvent, waitFor, queryAllByTitle } from '@testing-library/react'
+
+// Helper to ensure all waitFor calls have timeouts
+const waitForWithTimeout = (callback: () => void | Promise<void>, timeout = 2000) => {
+  return waitFor(callback, { timeout })
+}
+
 import ExecutionConsole from './ExecutionConsole'
 import { useWebSocket } from '../hooks/useWebSocket'
 import { logger } from '../utils/logger'
@@ -110,7 +116,7 @@ describe('ExecutionConsole', () => {
       fireEvent.click(toggleButton)
     }
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       expect(screen.getByTestId('workflow-chat')).toBeInTheDocument()
     })
   })
@@ -131,7 +137,7 @@ describe('ExecutionConsole', () => {
       fireEvent.click(toggleButton)
     }
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       expect(screen.getByTestId('workflow-chat')).toBeInTheDocument()
     })
 
@@ -139,7 +145,7 @@ describe('ExecutionConsole', () => {
     const chatTab = screen.getByText('Chat')
     fireEvent.click(chatTab)
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       expect(screen.getByTestId('workflow-chat')).toBeInTheDocument()
     })
   })
@@ -160,7 +166,7 @@ describe('ExecutionConsole', () => {
       fireEvent.click(toggleButton)
     }
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       expect(screen.getByTestId('workflow-chat')).toBeInTheDocument()
     })
 
@@ -168,7 +174,7 @@ describe('ExecutionConsole', () => {
     const execTab = screen.getByText('exec-123')
     fireEvent.click(execTab)
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       // Check for execution content - logs should be visible
       expect(screen.getByText('Test log message')).toBeInTheDocument()
     })
@@ -184,7 +190,7 @@ describe('ExecutionConsole', () => {
     )
 
     // Console should auto-expand when activeExecutionId is set
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       expect(screen.getByText('Test log message')).toBeInTheDocument()
     })
   })
@@ -203,7 +209,7 @@ describe('ExecutionConsole', () => {
       />
     )
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       expect(screen.getByText(/No logs yet/)).toBeInTheDocument()
     })
   })
@@ -362,21 +368,21 @@ describe('ExecutionConsole', () => {
       fireEvent.click(toggleButton)
     }
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       const execTab = screen.getByText('exec-123')
       fireEvent.click(execTab)
     })
 
     // Close the execution tab
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       const closeButtons = screen.queryAllByTitle(/close/i)
       if (closeButtons.length > 0) {
         fireEvent.click(closeButtons[0])
       }
-    }, { timeout: 2000 })
+    }, 2000)
 
     // Should switch back to chat
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       expect(screen.getByTestId('workflow-chat')).toBeInTheDocument()
     })
   })
@@ -399,7 +405,7 @@ describe('ExecutionConsole', () => {
       />
     )
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       expect(screen.getByText(/Execution exec-123/)).toBeInTheDocument()
     })
   })
@@ -421,7 +427,7 @@ describe('ExecutionConsole', () => {
       fireEvent.click(toggleButton)
     }
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       // Find resize handle
       const resizeHandle = document.querySelector('.cursor-ns-resize')
       if (resizeHandle) {

@@ -1,5 +1,11 @@
 import React from 'react'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
+
+// Helper to ensure all waitFor calls have timeouts
+const waitForWithTimeout = (callback: () => void | Promise<void>, timeout = 2000) => {
+  return waitFor(callback, { timeout })
+}
+
 import { ReactFlowProvider } from '@xyflow/react'
 import PropertyPanel from './PropertyPanel'
 import { useReactFlow } from '@xyflow/react'
@@ -259,7 +265,7 @@ describe('PropertyPanel', () => {
       />
     )
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       // Input node editor should render for gcp_bucket type
       expect(screen.getByTestId('input-node-editor')).toBeInTheDocument()
     })
@@ -287,7 +293,7 @@ describe('PropertyPanel', () => {
     if (deleteButtons.length > 0) {
       fireEvent.click(deleteButtons[0])
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(mockShowConfirm).toHaveBeenCalled()
       })
     } else {
@@ -369,7 +375,7 @@ describe('PropertyPanel', () => {
     if (saveButtons.length > 0) {
       fireEvent.click(saveButtons[0])
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(mockOnSaveWorkflow).toHaveBeenCalled()
       })
     } else {
@@ -488,7 +494,7 @@ describe('PropertyPanel', () => {
     const deleteButton = screen.queryAllByTitle(/Delete/)[0]
     fireEvent.click(deleteButton)
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       expect(mockShowConfirm).toHaveBeenCalled()
     })
 
@@ -515,7 +521,7 @@ describe('PropertyPanel', () => {
     const saveButton = screen.getByTitle(/Save changes/)
     fireEvent.click(saveButton)
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       expect(mockShowError).toHaveBeenCalledWith(expect.stringContaining('Save failed'))
     })
   })
@@ -540,7 +546,7 @@ describe('PropertyPanel', () => {
     const saveButton = screen.getByTitle(/Save changes/)
     fireEvent.click(saveButton)
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       expect(mockShowError).toHaveBeenCalledWith(expect.stringContaining('Unknown error'))
     })
   })
@@ -602,7 +608,7 @@ describe('PropertyPanel', () => {
     const deleteButton = screen.queryAllByTitle(/Delete/)[0]
     fireEvent.click(deleteButton)
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       expect(mockShowConfirm).toHaveBeenCalledWith(
         expect.stringContaining('node-1'),
         expect.any(Object)
@@ -652,12 +658,12 @@ describe('PropertyPanel', () => {
     const saveButton = screen.getByTitle(/Save changes/)
     fireEvent.click(saveButton)
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       expect(mockOnSave).toHaveBeenCalled()
     })
 
     // Check for saved status text
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       expect(screen.getByText(/Saved/)).toBeInTheDocument()
     })
 
@@ -715,7 +721,7 @@ describe('PropertyPanel', () => {
       )
 
       // Wait for component to load models
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(mockStorage.getItem).toHaveBeenCalledWith('llm_settings')
       })
     })
@@ -748,7 +754,7 @@ describe('PropertyPanel', () => {
       )
 
       // Wait for component to handle storage error and render
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(screen.getByTestId('agent-node-editor')).toBeInTheDocument()
       })
 
@@ -774,7 +780,7 @@ describe('PropertyPanel', () => {
       )
 
       // Wait for component to render
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(screen.getByTestId('agent-node-editor')).toBeInTheDocument()
       })
     })
@@ -915,7 +921,7 @@ describe('PropertyPanel', () => {
       if (saveButton) {
         fireEvent.click(saveButton)
         // Should not crash when onSave is undefined
-        await waitFor(() => {
+        await waitForWithTimeout(() => {
           expect(screen.getByText(/Saved/)).toBeInTheDocument()
         })
       }
@@ -1051,7 +1057,7 @@ describe('PropertyPanel', () => {
       const saveButton = screen.queryByTitle(/Save workflow/)
       if (saveButton) {
         fireEvent.click(saveButton)
-        await waitFor(() => {
+        await waitForWithTimeout(() => {
           expect(mockShowError).toHaveBeenCalledWith('Failed to save workflow: Save failed')
         })
       }
@@ -1077,7 +1083,7 @@ describe('PropertyPanel', () => {
       const saveButton = screen.queryByTitle(/Save workflow/)
       if (saveButton) {
         fireEvent.click(saveButton)
-        await waitFor(() => {
+        await waitForWithTimeout(() => {
           expect(mockShowError).toHaveBeenCalledWith('Failed to save workflow: Unknown error')
         })
       }
@@ -1113,7 +1119,7 @@ describe('PropertyPanel', () => {
         />
       )
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(mockApi.getLLMSettings).toHaveBeenCalled()
       })
     })
@@ -1148,7 +1154,7 @@ describe('PropertyPanel', () => {
         />
       )
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(mockStorage.getItem).toHaveBeenCalled()
       })
     })
@@ -1180,7 +1186,7 @@ describe('PropertyPanel', () => {
       )
 
       // Should fallback to default models
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(screen.getByTestId('agent-node-editor')).toBeInTheDocument()
       })
     })
@@ -1212,7 +1218,7 @@ describe('PropertyPanel', () => {
       )
 
       // Should fallback to default models
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(screen.getByTestId('agent-node-editor')).toBeInTheDocument()
       })
     })
@@ -1234,7 +1240,7 @@ describe('PropertyPanel', () => {
       )
 
       // Should render without crashing
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(screen.getByTestId('agent-node-editor')).toBeInTheDocument()
       })
     })
@@ -1540,7 +1546,7 @@ describe('PropertyPanel', () => {
         />
       )
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(screen.getByTestId('agent-node-editor')).toBeInTheDocument()
       })
 
@@ -1555,7 +1561,7 @@ describe('PropertyPanel', () => {
         </AuthProvider>
       )
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(screen.getByTestId('condition-node-editor')).toBeInTheDocument()
       })
     })
@@ -2116,10 +2122,10 @@ describe('PropertyPanel', () => {
       if (addInputButton) {
         fireEvent.click(addInputButton)
         // Modal should appear
-        await waitFor(() => {
+        await waitForWithTimeout(() => {
           const modal = screen.queryByRole('dialog')
           expect(modal).toBeInTheDocument()
-        }, { timeout: 2000 })
+        }, 2000)
       } else {
         // If button not found, just verify component rendered
         expect(screen.getByTestId('agent-node-editor')).toBeInTheDocument()
@@ -2149,7 +2155,7 @@ describe('PropertyPanel', () => {
       if (addInputButton) {
         fireEvent.click(addInputButton)
         
-        await waitFor(() => {
+        await waitForWithTimeout(() => {
           const modal = screen.queryByRole('dialog')
           if (modal) {
             const inputNameInput = screen.queryByPlaceholderText(/e.g., topic/)
@@ -2167,7 +2173,7 @@ describe('PropertyPanel', () => {
               // The function is tested indirectly through component rendering
             }
           }
-        }, { timeout: 2000 })
+        }, 2000)
       } else {
         // If button not found, just verify component rendered
         expect(screen.getByTestId('agent-node-editor')).toBeInTheDocument()
@@ -2197,7 +2203,7 @@ describe('PropertyPanel', () => {
       if (addInputButton) {
         fireEvent.click(addInputButton)
         
-        await waitFor(() => {
+        await waitForWithTimeout(() => {
           const modal = screen.queryByRole('dialog')
           if (modal) {
             const cancelButton = screen.queryByText(/Cancel/)
@@ -2207,7 +2213,7 @@ describe('PropertyPanel', () => {
               expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
             }
           }
-        }, { timeout: 2000 })
+        }, 2000)
       }
     })
   })
@@ -2599,14 +2605,14 @@ describe('PropertyPanel', () => {
       const saveButton = screen.queryByTitle(/Save changes|Save/)
       if (saveButton) {
         fireEvent.click(saveButton)
-        await waitFor(() => {
+        await waitForWithTimeout(() => {
           expect(mockOnSaveWorkflow).toHaveBeenCalled()
         })
-        await waitFor(() => {
+        await waitForWithTimeout(() => {
           expect(mockOnSave).toHaveBeenCalled()
         })
         // Should show saved status
-        await waitFor(() => {
+        await waitForWithTimeout(() => {
           expect(screen.queryByText(/Saved/)).toBeInTheDocument()
         })
         // Advance timers to clear saved status
@@ -2640,7 +2646,7 @@ describe('PropertyPanel', () => {
       const saveButton = screen.queryByTitle(/Save changes|Save/)
       if (saveButton) {
         fireEvent.click(saveButton)
-        await waitFor(() => {
+        await waitForWithTimeout(() => {
           expect(mockOnSave).toHaveBeenCalled()
         })
         jest.advanceTimersByTime(2000)
@@ -2672,7 +2678,7 @@ describe('PropertyPanel', () => {
       const saveButton = screen.queryByTitle(/Save changes|Save/)
       if (saveButton) {
         fireEvent.click(saveButton)
-        await waitFor(() => {
+        await waitForWithTimeout(() => {
           expect(mockShowError).toHaveBeenCalledWith('Failed to save workflow: Save failed')
         })
       }
@@ -2702,7 +2708,7 @@ describe('PropertyPanel', () => {
       const saveButton = screen.queryByTitle(/Save changes|Save/)
       if (saveButton) {
         fireEvent.click(saveButton)
-        await waitFor(() => {
+        await waitForWithTimeout(() => {
           expect(mockShowError).toHaveBeenCalledWith('Failed to save workflow: Unknown error')
         })
       }
@@ -3290,7 +3296,7 @@ describe('PropertyPanel', () => {
       fireEvent.click(saveButton)
 
       // Should show saving state
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(screen.getByText(/Saving/)).toBeInTheDocument()
       })
     })
@@ -3316,9 +3322,9 @@ describe('PropertyPanel', () => {
       fireEvent.click(saveButton)
 
       // Should show saved state
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(screen.getByText(/Saved/)).toBeInTheDocument()
-      }, { timeout: 3000 })
+      }, 3000) // Save status update
     })
   })
 })

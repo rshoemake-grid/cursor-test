@@ -5,6 +5,11 @@ import { useNavigate } from 'react-router-dom'
 import ForgotPasswordPage from './ForgotPasswordPage'
 import type { HttpClient } from '../types/adapters'
 
+// Helper to ensure all waitFor calls have timeouts
+const waitForWithTimeout = (callback: () => void | Promise<void>, timeout = 2000) => {
+  return waitFor(callback, { timeout })
+}
+
 // Mock react-router-dom
 jest.mock('react-router-dom', () => ({
   ...jest.requireActual('react-router-dom'),
@@ -32,9 +37,9 @@ describe('ForgotPasswordPage', () => {
   it('should render forgot password page', async () => {
     renderWithRouter(<ForgotPasswordPage />)
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       expect(screen.getByText('Forgot Password?')).toBeInTheDocument()
-    })
+    }, 2000) // Component rendering
   })
 
   it('should handle email submission', async () => {
@@ -45,15 +50,15 @@ describe('ForgotPasswordPage', () => {
 
     renderWithRouter(<ForgotPasswordPage />)
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       const emailInput = screen.getByPlaceholderText(/your@email.com/)
       const submitButton = screen.getByRole('button', { name: /Send Reset Link/ })
 
       fireEvent.change(emailInput, { target: { value: 'test@example.com' } })
       fireEvent.click(submitButton)
-    })
+    }, 2000) // Form interaction
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       expect(global.fetch).toHaveBeenCalledWith(
         'http://localhost:8000/api/auth/forgot-password',
         expect.objectContaining({
@@ -62,7 +67,7 @@ describe('ForgotPasswordPage', () => {
           body: JSON.stringify({ email: 'test@example.com' }),
         })
       )
-    })
+    }, 3000) // API call completion
   })
 
   it('should show success message after submission', async () => {
@@ -73,7 +78,7 @@ describe('ForgotPasswordPage', () => {
 
     renderWithRouter(<ForgotPasswordPage />)
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       const emailInput = screen.getByPlaceholderText(/your@email.com/)
       const submitButton = screen.getByRole('button', { name: /Send Reset Link/ })
 
@@ -81,9 +86,9 @@ describe('ForgotPasswordPage', () => {
       fireEvent.click(submitButton)
     })
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       expect(screen.getByText('Check Your Email')).toBeInTheDocument()
-    }, { timeout: 3000 })
+    }, 3000)
   })
 
   it('should show reset token in development mode', async () => {
@@ -94,7 +99,7 @@ describe('ForgotPasswordPage', () => {
 
     renderWithRouter(<ForgotPasswordPage />)
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       const emailInput = screen.getByPlaceholderText(/your@email.com/)
       const submitButton = screen.getByRole('button', { name: /Send Reset Link/ })
 
@@ -102,9 +107,9 @@ describe('ForgotPasswordPage', () => {
       fireEvent.click(submitButton)
     })
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       expect(screen.getByText('reset-token-123')).toBeInTheDocument()
-    }, { timeout: 3000 })
+    }, 3000)
   })
 
   it('should handle API error', async () => {
@@ -115,7 +120,7 @@ describe('ForgotPasswordPage', () => {
 
     renderWithRouter(<ForgotPasswordPage />)
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       const emailInput = screen.getByPlaceholderText(/your@email.com/)
       const submitButton = screen.getByRole('button', { name: /Send Reset Link/ })
 
@@ -123,7 +128,7 @@ describe('ForgotPasswordPage', () => {
       fireEvent.click(submitButton)
     })
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       expect(screen.getByText('Email not found')).toBeInTheDocument()
     })
   })
@@ -131,7 +136,7 @@ describe('ForgotPasswordPage', () => {
   it('should navigate back to auth page', async () => {
     renderWithRouter(<ForgotPasswordPage />)
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       const backButton = screen.getByText(/Back to Login/)
       fireEvent.click(backButton)
     })
@@ -147,15 +152,15 @@ describe('ForgotPasswordPage', () => {
 
     renderWithRouter(<ForgotPasswordPage />)
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       const emailInput = screen.getByPlaceholderText(/your@email.com/)
       fireEvent.change(emailInput, { target: { value: 'test@example.com' } })
       fireEvent.keyDown(emailInput, { key: 'Enter', code: 'Enter' })
     })
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       expect(global.fetch).toHaveBeenCalled()
-    }, { timeout: 3000 })
+    }, 3000)
   })
 
   describe('Dependency Injection', () => {
@@ -172,7 +177,7 @@ describe('ForgotPasswordPage', () => {
 
       renderWithRouter(<ForgotPasswordPage httpClient={mockHttpClient} />)
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         const emailInput = screen.getByPlaceholderText(/your@email.com/)
         const submitButton = screen.getByRole('button', { name: /Send Reset Link/ })
 
@@ -180,7 +185,7 @@ describe('ForgotPasswordPage', () => {
         fireEvent.click(submitButton)
       })
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(mockHttpClient.post).toHaveBeenCalledWith(
           expect.stringContaining('/auth/forgot-password'),
           { email: 'test@example.com' },
@@ -207,7 +212,7 @@ describe('ForgotPasswordPage', () => {
         />
       )
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         const emailInput = screen.getByPlaceholderText(/your@email.com/)
         const submitButton = screen.getByRole('button', { name: /Send Reset Link/ })
 
@@ -215,7 +220,7 @@ describe('ForgotPasswordPage', () => {
         fireEvent.click(submitButton)
       })
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(mockHttpClient.post).toHaveBeenCalledWith(
           'https://custom-api.example.com/api/auth/forgot-password',
           expect.any(Object),
@@ -234,7 +239,7 @@ describe('ForgotPasswordPage', () => {
 
       renderWithRouter(<ForgotPasswordPage httpClient={mockHttpClient} />)
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         const emailInput = screen.getByPlaceholderText(/your@email.com/)
         const submitButton = screen.getByRole('button', { name: /Send Reset Link/ })
 
@@ -242,7 +247,7 @@ describe('ForgotPasswordPage', () => {
         fireEvent.click(submitButton)
       })
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(screen.getByText(/Network error/)).toBeInTheDocument()
       })
     })

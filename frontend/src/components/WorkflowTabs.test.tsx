@@ -1,5 +1,11 @@
 import React from 'react'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
+
+// Helper to ensure all waitFor calls have timeouts
+const waitForWithTimeout = (callback: () => void | Promise<void>, timeout = 2000) => {
+  return waitFor(callback, { timeout })
+}
+
 import WorkflowTabs from './WorkflowTabs'
 import { WorkflowTabsProvider } from '../contexts/WorkflowTabsContext'
 import { useAuth } from '../contexts/AuthContext'
@@ -114,7 +120,7 @@ describe('WorkflowTabs', () => {
     const plusButton = screen.getByTitle(/New workflow/)
     fireEvent.click(plusButton)
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       const tabButtons = screen.getAllByRole('button').filter(btn => 
         btn.textContent?.includes('Untitled Workflow')
       )
@@ -129,7 +135,7 @@ describe('WorkflowTabs', () => {
     const plusButton = screen.getByTitle(/New workflow/)
     fireEvent.click(plusButton)
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       const tabs = screen.getAllByText(/Untitled Workflow/)
       expect(tabs.length).toBeGreaterThan(1)
     })
@@ -153,7 +159,7 @@ describe('WorkflowTabs', () => {
       fireEvent.click(tabButtons[1])
       
       // Verify tab switching occurred (check that active tab changed)
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         const updatedTabButtons = screen.getAllByRole('button').filter(btn => {
           const text = btn.textContent || ''
           const title = btn.getAttribute('title') || ''
@@ -180,7 +186,7 @@ describe('WorkflowTabs', () => {
     const plusButton = screen.getByTitle(/New workflow/)
     fireEvent.click(plusButton)
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       const tabs = screen.getAllByText(/Untitled Workflow/)
       expect(tabs.length).toBeGreaterThan(1)
     })
@@ -195,7 +201,7 @@ describe('WorkflowTabs', () => {
       // Click the last close button (should be the newest tab)
       fireEvent.click(closeButtons[closeButtons.length - 1])
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         const tabsAfterClose = screen.getAllByText(/Untitled Workflow/)
         // Should have one less tab
         expect(tabsAfterClose.length).toBeLessThan(initialCount)
@@ -207,7 +213,7 @@ describe('WorkflowTabs', () => {
     renderWithProvider()
 
     // Verify we have at least one tab
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       const tabButtons = screen.getAllByRole('button').filter(btn => 
         btn.textContent?.includes('Untitled Workflow')
       )
@@ -229,7 +235,7 @@ describe('WorkflowTabs', () => {
   it('should start editing tab name on double click', async () => {
     renderWithProvider()
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       const tabButtons = screen.getAllByRole('button').filter(btn => 
         btn.textContent?.includes('Untitled Workflow')
       )
@@ -243,7 +249,7 @@ describe('WorkflowTabs', () => {
     if (tabButtons.length > 0) {
       fireEvent.doubleClick(tabButtons[0])
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         const input = screen.queryByDisplayValue(/Untitled Workflow/)
         expect(input).toBeInTheDocument()
       })
@@ -253,7 +259,7 @@ describe('WorkflowTabs', () => {
   it('should save tab name on Enter', async () => {
     renderWithProvider()
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       const tabButtons = screen.getAllByRole('button').filter(btn => 
         btn.textContent?.includes('Untitled Workflow')
       )
@@ -266,7 +272,7 @@ describe('WorkflowTabs', () => {
     if (tabButtons.length > 0) {
       fireEvent.doubleClick(tabButtons[0])
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         const input = screen.getByDisplayValue(/Untitled Workflow/) as HTMLInputElement
         expect(input).toBeInTheDocument()
         
@@ -274,7 +280,7 @@ describe('WorkflowTabs', () => {
         fireEvent.keyDown(input, { key: 'Enter', code: 'Enter' })
       })
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(screen.getByText('New Name')).toBeInTheDocument()
       })
     }
@@ -283,7 +289,7 @@ describe('WorkflowTabs', () => {
   it('should cancel editing on Escape', async () => {
     renderWithProvider()
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       const tabButtons = screen.getAllByRole('button').filter(btn => 
         btn.textContent?.includes('Untitled Workflow')
       )
@@ -296,7 +302,7 @@ describe('WorkflowTabs', () => {
     if (tabButtons.length > 0) {
       fireEvent.doubleClick(tabButtons[0])
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         const input = screen.getByDisplayValue(/Untitled Workflow/) as HTMLInputElement
         expect(input).toBeInTheDocument()
         
@@ -305,7 +311,7 @@ describe('WorkflowTabs', () => {
       })
 
       // Should revert to original name
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         const tabButtonsAfter = screen.getAllByRole('button').filter(btn => 
           btn.textContent?.includes('Untitled Workflow')
         )
@@ -327,14 +333,14 @@ describe('WorkflowTabs', () => {
 
     renderWithProvider({ initialWorkflowId: "workflow-1", workflowLoadKey: 1 })
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       // The component creates a new tab - check for the tab exists
       // With context, a new tab should be created with the workflowId
       const tabButtons = screen.getAllByRole('button').filter(btn => 
         btn.textContent?.includes('Loading') || btn.textContent?.includes('Loaded Workflow') || btn.textContent?.includes('Untitled Workflow')
       )
       expect(tabButtons.length).toBeGreaterThan(0)
-    }, { timeout: 3000 })
+    }, 3000)
     
     // Note: getWorkflow is called by WorkflowBuilder, which is mocked, so we can't test it here
   })
@@ -361,7 +367,7 @@ describe('WorkflowTabs', () => {
       </WorkflowTabsProvider>
     )
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       expect(screen.getAllByRole('button').length).toBeGreaterThan(0)
     })
 
@@ -392,12 +398,12 @@ describe('WorkflowTabs', () => {
       
       // Context saves to localStorage through the injected storage adapter
       // The context persists activeTabId whenever it changes via useEffect
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         // Check that storage.setItem was called with activeWorkflowTabId (through the context)
         const calls = mockStorage.setItem.mock.calls
         const activeTabCalls = calls.filter(call => call[0] === 'activeWorkflowTabId')
         expect(activeTabCalls.length).toBeGreaterThan(0)
-      }, { timeout: 2000 })
+      }, 2000)
     }
   })
 
@@ -414,11 +420,11 @@ describe('WorkflowTabs', () => {
 
     renderWithProvider()
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       // Component should render - check for any tabs
       const tabButtons = screen.getAllByRole('button')
       expect(tabButtons.length).toBeGreaterThan(0)
-    }, { timeout: 2000 })
+    }, 2000)
   })
 
   it('should show success message when restoring tabs', async () => {
@@ -432,11 +438,11 @@ describe('WorkflowTabs', () => {
 
     renderWithProvider()
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       // Component should render - verify it loads
       const tabButtons = screen.getAllByRole('button')
       expect(tabButtons.length).toBeGreaterThan(0)
-    }, { timeout: 2000 })
+    }, 2000)
   })
 
   it('should handle tab rename error', async () => {
@@ -462,7 +468,7 @@ describe('WorkflowTabs', () => {
     renderWithProvider()
 
     // Wait for component to render
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       expect(screen.getAllByRole('button').length).toBeGreaterThan(0)
     })
 
@@ -473,7 +479,7 @@ describe('WorkflowTabs', () => {
     if (tabButtons.length > 0) {
       fireEvent.dblClick(tabButtons[0])
       
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         const input = screen.getByDisplayValue(/Test Workflow/)
         expect(input).toBeInTheDocument()
       })
@@ -483,16 +489,16 @@ describe('WorkflowTabs', () => {
       fireEvent.change(input, { target: { value: 'New Name' } })
       fireEvent.blur(input)
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(showError).toHaveBeenCalledWith(expect.stringContaining('Failed to rename workflow'))
-      }, { timeout: 3000 })
+      }, 3000)
     }
   })
 
   it('should prevent empty name in tab rename', async () => {
     renderWithProvider()
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       expect(screen.getAllByRole('button').length).toBeGreaterThan(0)
     })
 
@@ -503,7 +509,7 @@ describe('WorkflowTabs', () => {
     if (tabButtons.length > 0) {
       fireEvent.dblClick(tabButtons[0])
       
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         const input = screen.getByDisplayValue(/Untitled Workflow/)
         expect(input).toBeInTheDocument()
       })
@@ -513,7 +519,7 @@ describe('WorkflowTabs', () => {
       fireEvent.change(input, { target: { value: '   ' } })
       fireEvent.blur(input)
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(showError).toHaveBeenCalledWith('Workflow name cannot be empty.')
       })
     }
@@ -530,7 +536,7 @@ describe('WorkflowTabs', () => {
 
     renderWithProvider({ initialTabs: savedTabs, initialActiveTabId: 'tab-1' })
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       expect(screen.getAllByRole('button').length).toBeGreaterThan(0)
     })
 
@@ -540,7 +546,7 @@ describe('WorkflowTabs', () => {
     
     fireEvent.click(closeButtons[0])
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       expect(showConfirm).toHaveBeenCalled()
     })
 
@@ -558,7 +564,7 @@ describe('WorkflowTabs', () => {
 
     renderWithProvider({ initialTabs: savedTabs, initialActiveTabId: 'tab-1' })
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       expect(screen.getAllByRole('button').length).toBeGreaterThan(0)
     })
 
@@ -569,7 +575,7 @@ describe('WorkflowTabs', () => {
     fireEvent.click(closeButtons[0])
     
     // Wait for first tab to be removed
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       expect(screen.queryByText(/Tab 1/)).not.toBeInTheDocument()
       // Should now only have Tab 2 visible
       expect(screen.getByText(/Tab 2/)).toBeInTheDocument()
@@ -594,7 +600,7 @@ describe('WorkflowTabs', () => {
   it('should handle tab rename with same name', async () => {
     renderWithProvider()
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       expect(screen.getAllByRole('button').length).toBeGreaterThan(0)
     })
 
@@ -605,7 +611,7 @@ describe('WorkflowTabs', () => {
     if (tabButtons.length > 0) {
       fireEvent.dblClick(tabButtons[0])
       
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         const input = screen.getByDisplayValue(/Untitled Workflow/)
         expect(input).toBeInTheDocument()
       })
@@ -615,7 +621,7 @@ describe('WorkflowTabs', () => {
       fireEvent.blur(input)
 
       // Should not call updateWorkflow
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(mockApi.updateWorkflow).not.toHaveBeenCalled()
       })
     }
@@ -626,11 +632,11 @@ describe('WorkflowTabs', () => {
 
     renderWithProvider({ initialWorkflowId: "workflow-1", workflowLoadKey: 1 })
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       // Component should still render even if loading fails
       const tabButtons = screen.getAllByRole('button')
       expect(tabButtons.length).toBeGreaterThan(0)
-    }, { timeout: 2000 })
+    }, 2000)
   })
 
   it('should switch to first tab when active tab is deleted', async () => {
@@ -642,7 +648,7 @@ describe('WorkflowTabs', () => {
     const plusButton = screen.getByTitle(/New workflow/)
     fireEvent.click(plusButton)
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       const tabs = screen.getAllByText(/Untitled Workflow/)
       expect(tabs.length).toBeGreaterThan(1)
     })
@@ -652,7 +658,7 @@ describe('WorkflowTabs', () => {
     if (closeButtons.length > 0) {
       fireEvent.click(closeButtons[0])
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         // Should still have tabs
         const remainingTabs = screen.getAllByText(/Untitled Workflow/)
         expect(remainingTabs.length).toBeGreaterThan(0)
@@ -673,11 +679,11 @@ describe('WorkflowTabs', () => {
 
     renderWithProvider()
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       // Should switch to first available tab
       const tabButtons = screen.getAllByRole('button')
       expect(tabButtons.length).toBeGreaterThan(0)
-    }, { timeout: 2000 })
+    }, 2000)
   })
 
   describe('Dependency Injection', () => {
@@ -697,7 +703,7 @@ describe('WorkflowTabs', () => {
       // Wait a bit for the context to persist initial tabs
       waitFor(() => {
         expect(mockStorage.setItem).toHaveBeenCalled()
-      }, { timeout: 1000 })
+      }, 1000)
     })
 
     it('should use injected HTTP client for workflow publishing', async () => {
@@ -729,7 +735,7 @@ describe('WorkflowTabs', () => {
       renderWithProvider({ httpClient: mockHttpClient, apiBaseUrl: "http://test.api.com/api" })
 
       // Wait for component to load
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(screen.getByText(/Test Workflow|Untitled Workflow/)).toBeInTheDocument()
       })
 
@@ -786,7 +792,7 @@ describe('WorkflowTabs', () => {
         initialActiveTabId: 'tab-1'
       })
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(screen.getAllByRole('button').length).toBeGreaterThan(0)
       })
 
@@ -794,7 +800,7 @@ describe('WorkflowTabs', () => {
       const publishButton = screen.getByTitle(/Publish workflow/)
       fireEvent.click(publishButton)
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(screen.getByText(/Publish to Marketplace/)).toBeInTheDocument()
       })
 
@@ -804,9 +810,9 @@ describe('WorkflowTabs', () => {
         fireEvent.submit(form)
       }
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(showError).toHaveBeenCalledWith(expect.stringContaining('Failed to publish workflow'))
-      }, { timeout: 3000 })
+      }, 3000)
     })
   })
 
@@ -832,7 +838,7 @@ describe('WorkflowTabs', () => {
 
       renderWithProvider()
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(screen.getAllByRole('button').length).toBeGreaterThan(0)
       })
 
@@ -861,7 +867,7 @@ describe('WorkflowTabs', () => {
 
       renderWithProvider()
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(screen.getAllByRole('button').length).toBeGreaterThan(0)
       })
 
@@ -888,7 +894,7 @@ describe('WorkflowTabs', () => {
 
       renderWithProvider()
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(screen.getAllByRole('button').length).toBeGreaterThan(0)
       })
 
@@ -910,14 +916,14 @@ describe('WorkflowTabs', () => {
 
       renderWithProvider()
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(screen.getAllByRole('button').length).toBeGreaterThan(0)
       })
 
       const publishButton = screen.getByTitle(/Publish workflow/)
       fireEvent.click(publishButton)
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(screen.getByText(/Publish to Marketplace/)).toBeInTheDocument()
       })
     })
@@ -945,14 +951,14 @@ describe('WorkflowTabs', () => {
 
       renderWithProvider({ httpClient: mockHttpClient })
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(screen.getAllByRole('button').length).toBeGreaterThan(0)
       })
 
       const publishButton = screen.getByTitle(/Publish workflow/)
       fireEvent.click(publishButton)
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(screen.getByText(/Publish to Marketplace/)).toBeInTheDocument()
       })
 
@@ -961,9 +967,9 @@ describe('WorkflowTabs', () => {
       expect(form).toBeInTheDocument()
       fireEvent.submit(form!)
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(showError).toHaveBeenCalledWith(expect.stringContaining('Save the workflow before publishing'))
-      }, { timeout: 3000 })
+      }, 3000)
       
       // Verify httpClient.post was NOT called (since workflowId is null)
       expect(mockHttpClient.post).not.toHaveBeenCalled()
@@ -981,7 +987,7 @@ describe('WorkflowTabs', () => {
 
       renderWithProvider()
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(screen.getAllByRole('button').length).toBeGreaterThan(0)
       })
 
@@ -1001,7 +1007,7 @@ describe('WorkflowTabs', () => {
 
       renderWithProvider({ initialTabs: savedTabs, initialActiveTabId: 'tab-1' })
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(screen.getAllByRole('button').length).toBeGreaterThan(0)
       })
 
@@ -1014,13 +1020,13 @@ describe('WorkflowTabs', () => {
         
         fireEvent.click(closeButtons[0])
 
-        await waitFor(() => {
+        await waitForWithTimeout(() => {
           // Should switch to tab-2 and tab-1 should be gone
           const remainingTabs = screen.getAllByText(/Tab/)
           expect(remainingTabs.length).toBeLessThan(initialTabs.length)
           // Tab 2 should still be visible
           expect(screen.getByText(/Tab 2/)).toBeInTheDocument()
-        }, { timeout: 2000 })
+        }, 2000)
       }
     })
 
@@ -1036,7 +1042,7 @@ describe('WorkflowTabs', () => {
 
       renderWithProvider()
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(screen.getAllByRole('button').length).toBeGreaterThan(0)
       })
 
@@ -1058,7 +1064,7 @@ describe('WorkflowTabs', () => {
 
       renderWithProvider()
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(screen.getAllByRole('button').length).toBeGreaterThan(0)
       })
 
@@ -1089,7 +1095,7 @@ describe('WorkflowTabs', () => {
 
       renderWithProvider()
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(screen.getAllByRole('button').length).toBeGreaterThan(0)
       })
 
@@ -1118,7 +1124,7 @@ describe('WorkflowTabs', () => {
 
       renderWithProvider()
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(screen.getAllByRole('button').length).toBeGreaterThan(0)
       })
 
@@ -1145,7 +1151,7 @@ describe('WorkflowTabs', () => {
 
       renderWithProvider()
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(screen.getAllByRole('button').length).toBeGreaterThan(0)
       })
 
@@ -1175,7 +1181,7 @@ describe('WorkflowTabs', () => {
 
       renderWithProvider()
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(screen.getAllByRole('button').length).toBeGreaterThan(0)
       })
 
@@ -1205,7 +1211,7 @@ describe('WorkflowTabs', () => {
 
       renderWithProvider()
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(screen.getAllByRole('button').length).toBeGreaterThan(0)
       })
 
@@ -1234,7 +1240,7 @@ describe('WorkflowTabs', () => {
 
       renderWithProvider()
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(screen.getAllByRole('button').length).toBeGreaterThan(0)
       })
 
@@ -1273,7 +1279,7 @@ describe('WorkflowTabs', () => {
 
       renderWithProvider()
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(screen.getAllByRole('button').length).toBeGreaterThan(0)
       })
 
@@ -1302,7 +1308,7 @@ describe('WorkflowTabs', () => {
 
       renderWithProvider()
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(screen.getAllByRole('button').length).toBeGreaterThan(0)
       })
 
@@ -1331,7 +1337,7 @@ describe('WorkflowTabs', () => {
 
       renderWithProvider()
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(screen.getAllByRole('button').length).toBeGreaterThan(0)
       })
 
@@ -1360,7 +1366,7 @@ describe('WorkflowTabs', () => {
 
       renderWithProvider()
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(screen.getAllByRole('button').length).toBeGreaterThan(0)
       })
 
@@ -1389,7 +1395,7 @@ describe('WorkflowTabs', () => {
 
       renderWithProvider()
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(screen.getAllByRole('button').length).toBeGreaterThan(0)
       })
 
@@ -1429,7 +1435,7 @@ describe('WorkflowTabs', () => {
 
       renderWithProvider()
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(screen.getAllByRole('button').length).toBeGreaterThan(0)
       })
 
@@ -1463,14 +1469,14 @@ describe('WorkflowTabs', () => {
 
       renderWithProvider()
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(screen.getAllByRole('button').length).toBeGreaterThan(0)
       })
 
       // Advance timers - should handle fetch errors gracefully
       jest.advanceTimersByTime(2000)
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         // Component should still render despite fetch error
         expect(screen.getAllByRole('button').length).toBeGreaterThan(0)
       })
@@ -1506,14 +1512,14 @@ describe('WorkflowTabs', () => {
 
       renderWithProvider()
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(screen.getAllByRole('button').length).toBeGreaterThan(0)
       })
 
       // Advance timers - should handle paused status
       jest.advanceTimersByTime(2000)
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         // Component should handle paused status (kept as running)
         expect(screen.getAllByRole('button').length).toBeGreaterThan(0)
       })
@@ -1550,14 +1556,14 @@ describe('WorkflowTabs', () => {
 
       renderWithProvider()
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(screen.getAllByRole('button').length).toBeGreaterThan(0)
       })
 
       // Advance timers - should handle completed_at timestamp
       jest.advanceTimersByTime(2000)
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         // Component should handle completed_at
         expect(screen.getAllByRole('button').length).toBeGreaterThan(0)
       })
@@ -1593,14 +1599,14 @@ describe('WorkflowTabs', () => {
 
       renderWithProvider()
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(screen.getAllByRole('button').length).toBeGreaterThan(0)
       })
 
       // Advance timers - should handle node_states
       jest.advanceTimersByTime(2000)
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         // Component should handle node_states
         expect(screen.getAllByRole('button').length).toBeGreaterThan(0)
       })
@@ -1636,14 +1642,14 @@ describe('WorkflowTabs', () => {
 
       renderWithProvider()
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(screen.getAllByRole('button').length).toBeGreaterThan(0)
       })
 
       // Advance timers - should handle logs
       jest.advanceTimersByTime(2000)
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         // Component should handle logs
         expect(screen.getAllByRole('button').length).toBeGreaterThan(0)
       })
@@ -1672,14 +1678,14 @@ describe('WorkflowTabs', () => {
 
       renderWithProvider()
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(screen.getAllByRole('button').length).toBeGreaterThan(0)
       })
 
       // Advance timers - should handle null update
       jest.advanceTimersByTime(2000)
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         // Component should handle null update gracefully
         expect(screen.getAllByRole('button').length).toBeGreaterThan(0)
       })
@@ -1690,7 +1696,7 @@ describe('WorkflowTabs', () => {
     it('should handle commitTabRename when tab is not found', async () => {
       renderWithProvider()
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(screen.getAllByRole('button').length).toBeGreaterThan(0)
       })
 
@@ -1701,7 +1707,7 @@ describe('WorkflowTabs', () => {
     it('should handle commitTabRename when renameInFlight is true', async () => {
       renderWithProvider()
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(screen.getAllByRole('button').length).toBeGreaterThan(0)
       })
 
@@ -1712,7 +1718,7 @@ describe('WorkflowTabs', () => {
     it('should handle commitTabRename when workflowId is null', async () => {
       renderWithProvider()
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(screen.getAllByRole('button').length).toBeGreaterThan(0)
       })
 
@@ -1722,7 +1728,7 @@ describe('WorkflowTabs', () => {
       if (tabButtons.length > 0) {
         fireEvent.dblClick(tabButtons[0])
 
-        await waitFor(() => {
+        await waitForWithTimeout(() => {
           const input = screen.getByDisplayValue(/Untitled Workflow/)
           expect(input).toBeInTheDocument()
           
@@ -1731,7 +1737,7 @@ describe('WorkflowTabs', () => {
         })
 
         // Should not call updateWorkflow when workflowId is null
-        await waitFor(() => {
+        await waitForWithTimeout(() => {
           expect(mockApi.updateWorkflow).not.toHaveBeenCalled()
         })
       }
@@ -1751,7 +1757,7 @@ describe('WorkflowTabs', () => {
 
       renderWithProvider()
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(screen.getAllByRole('button').length).toBeGreaterThan(0)
       })
 
@@ -1761,7 +1767,7 @@ describe('WorkflowTabs', () => {
       if (tabButtons.length > 0) {
         fireEvent.dblClick(tabButtons[0])
 
-        await waitFor(() => {
+        await waitForWithTimeout(() => {
           const input = screen.getByDisplayValue(/Test Workflow/)
           expect(input).toBeInTheDocument()
           
@@ -1769,9 +1775,9 @@ describe('WorkflowTabs', () => {
           fireEvent.blur(input)
         })
 
-        await waitFor(() => {
+        await waitForWithTimeout(() => {
           expect(showError).toHaveBeenCalledWith(expect.stringContaining('Failed to rename workflow'))
-        }, { timeout: 3000 })
+        }, 3000)
       }
     })
 
@@ -1798,7 +1804,7 @@ describe('WorkflowTabs', () => {
 
       renderWithProvider()
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(screen.getAllByRole('button').length).toBeGreaterThan(0)
       })
 
@@ -1808,7 +1814,7 @@ describe('WorkflowTabs', () => {
       if (tabButtons.length > 0) {
         fireEvent.dblClick(tabButtons[0])
 
-        await waitFor(() => {
+        await waitForWithTimeout(() => {
           const input = screen.getByDisplayValue(/Test Workflow/)
           expect(input).toBeInTheDocument()
           
@@ -1816,9 +1822,9 @@ describe('WorkflowTabs', () => {
           fireEvent.blur(input)
         })
 
-        await waitFor(() => {
+        await waitForWithTimeout(() => {
           expect(showError).toHaveBeenCalledWith(expect.stringContaining('Failed to rename workflow'))
-        }, { timeout: 3000 })
+        }, 3000)
       }
     })
 
@@ -1847,7 +1853,7 @@ describe('WorkflowTabs', () => {
 
       renderWithProvider()
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(screen.getAllByRole('button').length).toBeGreaterThan(0)
       })
 
@@ -1857,7 +1863,7 @@ describe('WorkflowTabs', () => {
       if (tabButtons.length > 0) {
         fireEvent.dblClick(tabButtons[0])
 
-        await waitFor(() => {
+        await waitForWithTimeout(() => {
           const input = screen.getByDisplayValue(/Test Workflow/)
           expect(input).toBeInTheDocument()
           
@@ -1865,9 +1871,9 @@ describe('WorkflowTabs', () => {
           fireEvent.blur(input)
         })
 
-        await waitFor(() => {
+        await waitForWithTimeout(() => {
           expect(showError).toHaveBeenCalledWith(expect.stringContaining('Custom error detail'))
-        }, { timeout: 3000 })
+        }, 3000)
       }
     })
 
@@ -1894,7 +1900,7 @@ describe('WorkflowTabs', () => {
 
       renderWithProvider()
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(screen.getAllByRole('button').length).toBeGreaterThan(0)
       })
 
@@ -1904,7 +1910,7 @@ describe('WorkflowTabs', () => {
       if (tabButtons.length > 0) {
         fireEvent.dblClick(tabButtons[0])
 
-        await waitFor(() => {
+        await waitForWithTimeout(() => {
           const input = screen.getByDisplayValue(/Test Workflow/)
           expect(input).toBeInTheDocument()
           
@@ -1912,9 +1918,9 @@ describe('WorkflowTabs', () => {
           fireEvent.blur(input)
         })
 
-        await waitFor(() => {
+        await waitForWithTimeout(() => {
           expect(showError).toHaveBeenCalledWith(expect.stringContaining('Network error'))
-        }, { timeout: 3000 })
+        }, 3000)
       }
     })
 
@@ -1941,7 +1947,7 @@ describe('WorkflowTabs', () => {
 
       renderWithProvider()
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(screen.getAllByRole('button').length).toBeGreaterThan(0)
       })
 
@@ -1951,7 +1957,7 @@ describe('WorkflowTabs', () => {
       if (tabButtons.length > 0) {
         fireEvent.dblClick(tabButtons[0])
 
-        await waitFor(() => {
+        await waitForWithTimeout(() => {
           const input = screen.getByDisplayValue(/Test Workflow/)
           expect(input).toBeInTheDocument()
           
@@ -1959,16 +1965,16 @@ describe('WorkflowTabs', () => {
           fireEvent.blur(input)
         })
 
-        await waitFor(() => {
+        await waitForWithTimeout(() => {
           expect(showError).toHaveBeenCalledWith(expect.stringContaining('Unknown error'))
-        }, { timeout: 3000 })
+        }, 3000)
       }
     })
 
     it('should handle handleInputBlur when renameInFlight is true', async () => {
       renderWithProvider()
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(screen.getAllByRole('button').length).toBeGreaterThan(0)
       })
 
@@ -1979,7 +1985,7 @@ describe('WorkflowTabs', () => {
     it('should handle handleInputBlur when editingTabId does not match', async () => {
       renderWithProvider()
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(screen.getAllByRole('button').length).toBeGreaterThan(0)
       })
 
@@ -2011,22 +2017,22 @@ describe('WorkflowTabs', () => {
         initialActiveTabId: 'tab-1'
       })
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(screen.getAllByRole('button').length).toBeGreaterThan(0)
       })
 
       // Wait for the component to render with the correct tab
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         const buttons = screen.getAllByRole('button')
         const hasTestWorkflow = buttons.some(btn => btn.textContent?.includes('Test Workflow'))
         const hasPublishButton = buttons.some(btn => btn.getAttribute('title') === 'Publish workflow')
         expect(hasPublishButton).toBe(true)
-      }, { timeout: 2000 })
+      }, 2000)
 
       const publishButton = screen.getByTitle(/Publish workflow/)
       fireEvent.click(publishButton)
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(screen.getByText(/Publish to Marketplace/)).toBeInTheDocument()
       })
 
@@ -2035,9 +2041,9 @@ describe('WorkflowTabs', () => {
         fireEvent.submit(form)
       }
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(showError).toHaveBeenCalledWith(expect.stringContaining('Failed to publish'))
-      }, { timeout: 3000 })
+      }, 3000)
     })
 
     it('should handle handlePublish when response.json() fails', async () => {
@@ -2064,14 +2070,14 @@ describe('WorkflowTabs', () => {
         initialActiveTabId: 'workflow-1'
       })
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(screen.getAllByRole('button').length).toBeGreaterThan(0)
       })
 
       const publishButton = screen.getByTitle(/Publish workflow/)
       fireEvent.click(publishButton)
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(screen.getByText(/Publish to Marketplace/)).toBeInTheDocument()
       })
 
@@ -2079,9 +2085,9 @@ describe('WorkflowTabs', () => {
       expect(form).toBeInTheDocument()
       fireEvent.submit(form!)
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(showError).toHaveBeenCalledWith(expect.stringContaining('Failed to publish workflow'))
-      }, { timeout: 3000 })
+      }, 3000)
     })
 
     it('should handle handlePublish when tags are empty', async () => {
@@ -2106,14 +2112,14 @@ describe('WorkflowTabs', () => {
         initialActiveTabId: 'tab-1'
       })
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(screen.getAllByRole('button').length).toBeGreaterThan(0)
       })
 
       const publishButton = screen.getByTitle(/Publish workflow/)
       fireEvent.click(publishButton)
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(screen.getByText(/Publish to Marketplace/)).toBeInTheDocument()
       })
 
@@ -2128,10 +2134,10 @@ describe('WorkflowTabs', () => {
         fireEvent.submit(form)
       }
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         // Component should handle empty tags - verify post was called
         expect(mockHttpClient.post).toHaveBeenCalled()
-      }, { timeout: 3000 })
+      }, 3000)
     })
 
     it('should handle handlePublish when tags have whitespace', async () => {
@@ -2156,14 +2162,14 @@ describe('WorkflowTabs', () => {
         initialActiveTabId: 'tab-1'
       })
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(screen.getAllByRole('button').length).toBeGreaterThan(0)
       })
 
       const publishButton = screen.getByTitle(/Publish workflow/)
       fireEvent.click(publishButton)
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(screen.getByText(/Publish to Marketplace/)).toBeInTheDocument()
       })
 
@@ -2178,10 +2184,10 @@ describe('WorkflowTabs', () => {
         fireEvent.submit(form)
       }
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         // Component should handle tags with whitespace - verify post was called
         expect(mockHttpClient.post).toHaveBeenCalled()
-      }, { timeout: 3000 })
+      }, 3000)
     })
 
     it('should handle handlePublish when estimated_time is empty', async () => {
@@ -2206,14 +2212,14 @@ describe('WorkflowTabs', () => {
         initialActiveTabId: 'tab-1'
       })
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(screen.getAllByRole('button').length).toBeGreaterThan(0)
       })
 
       const publishButton = screen.getByTitle(/Publish workflow/)
       fireEvent.click(publishButton)
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(screen.getByText(/Publish to Marketplace/)).toBeInTheDocument()
       })
 
@@ -2223,10 +2229,10 @@ describe('WorkflowTabs', () => {
         fireEvent.submit(form)
       }
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         // Component should handle empty estimated_time - verify post was called
         expect(mockHttpClient.post).toHaveBeenCalled()
-      }, { timeout: 3000 })
+      }, 3000)
     })
 
     it('should handle handlePublish when token is not available', async () => {
@@ -2260,14 +2266,14 @@ describe('WorkflowTabs', () => {
         initialActiveTabId: 'tab-1'
       })
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(screen.getAllByRole('button').length).toBeGreaterThan(0)
       })
 
       const publishButton = screen.getByTitle(/Publish workflow/)
       fireEvent.click(publishButton)
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(screen.getByText(/Publish to Marketplace/)).toBeInTheDocument()
       })
 
@@ -2276,10 +2282,10 @@ describe('WorkflowTabs', () => {
         fireEvent.submit(form)
       }
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         // Component should handle missing token - verify post was called without Authorization header
         expect(mockHttpClient.post).toHaveBeenCalled()
-      }, { timeout: 3000 })
+      }, 3000)
     })
   })
 
@@ -2295,7 +2301,7 @@ describe('WorkflowTabs', () => {
 
       const { rerender } = renderWithProvider({ initialWorkflowId: "workflow-1", workflowLoadKey: 1 })
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(screen.getAllByRole('button').length).toBeGreaterThan(0)
       })
 
@@ -2306,7 +2312,7 @@ describe('WorkflowTabs', () => {
         </WorkflowTabsProvider>
       )
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         // Should not create duplicate tab
         expect(screen.getAllByRole('button').length).toBeGreaterThan(0)
       })
@@ -2323,7 +2329,7 @@ describe('WorkflowTabs', () => {
 
       const { rerender } = renderWithProvider({ initialWorkflowId: "workflow-1", workflowLoadKey: 1 })
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(screen.getAllByRole('button').length).toBeGreaterThan(0)
       })
 
@@ -2334,7 +2340,7 @@ describe('WorkflowTabs', () => {
         </WorkflowTabsProvider>
       )
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         // Should create new tab
         expect(screen.getAllByRole('button').length).toBeGreaterThan(0)
       })
@@ -2343,7 +2349,7 @@ describe('WorkflowTabs', () => {
     it('should handle initialWorkflowId when workflowLoadKey is undefined', async () => {
       renderWithProvider({ initialWorkflowId: "workflow-1" })
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(screen.getAllByRole('button').length).toBeGreaterThan(0)
       })
 
@@ -2372,7 +2378,7 @@ describe('WorkflowTabs', () => {
 
       renderWithProvider({ initialWorkflowId: "workflow-1", workflowLoadKey: 1 })
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(screen.getAllByRole('button').length).toBeGreaterThan(0)
       })
 
@@ -2401,7 +2407,7 @@ describe('WorkflowTabs', () => {
 
       renderWithProvider({ initialWorkflowId: "workflow-1", workflowLoadKey: 1 })
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(screen.getAllByRole('button').length).toBeGreaterThan(0)
       })
 
@@ -2420,7 +2426,7 @@ describe('WorkflowTabs', () => {
 
       renderWithProvider()
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(screen.getAllByRole('button').length).toBeGreaterThan(0)
       })
 
@@ -2440,7 +2446,7 @@ describe('WorkflowTabs', () => {
 
       renderWithProvider()
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(screen.getAllByRole('button').length).toBeGreaterThan(0)
       })
 
@@ -2460,7 +2466,7 @@ describe('WorkflowTabs', () => {
 
       renderWithProvider()
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(screen.getAllByRole('button').length).toBeGreaterThan(0)
       })
 
@@ -2478,7 +2484,7 @@ describe('WorkflowTabs', () => {
 
       renderWithProvider({ storage: null })
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(screen.getAllByRole('button').length).toBeGreaterThan(0)
       })
 
@@ -2496,7 +2502,7 @@ describe('WorkflowTabs', () => {
 
       renderWithProvider({ storage: null })
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(screen.getAllByRole('button').length).toBeGreaterThan(0)
       })
 
@@ -2519,7 +2525,7 @@ describe('WorkflowTabs', () => {
 
       renderWithProvider({ storage: mockStorage })
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(screen.getAllByRole('button').length).toBeGreaterThan(0)
       })
 
@@ -2535,7 +2541,7 @@ describe('WorkflowTabs', () => {
 
       renderWithProvider()
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(screen.getAllByRole('button').length).toBeGreaterThan(0)
       })
 
@@ -2555,7 +2561,7 @@ describe('WorkflowTabs', () => {
 
       renderWithProvider()
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(screen.getAllByRole('button').length).toBeGreaterThan(0)
       })
 
@@ -2569,7 +2575,7 @@ describe('WorkflowTabs', () => {
 
       renderWithProvider()
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(screen.getAllByRole('button').length).toBeGreaterThan(0)
       })
 
@@ -2588,12 +2594,12 @@ describe('WorkflowTabs', () => {
         </WorkflowTabsProvider>
       )
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         const noExecutionsText = screen.queryByText(/No executions/i)
         const newWorkflowButton = screen.queryByText(/New Workflow/i)
         // Either the no tabs state shows, or a default tab was created
         expect(noExecutionsText || newWorkflowButton || screen.queryAllByText(/Untitled Workflow/).length > 0).toBeTruthy()
-      }, { timeout: 3000 })
+      }, 3000)
     })
 
     it('should create new workflow when clicking New Workflow button in no tabs state', async () => {
@@ -2604,13 +2610,13 @@ describe('WorkflowTabs', () => {
         </WorkflowTabsProvider>
       )
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         // Look for New Workflow button or the plus button
         const newWorkflowButton = screen.queryByText(/New Workflow/i)?.closest('button')
         const plusButton = screen.queryByTitle(/New workflow/)
         const button = newWorkflowButton || plusButton
         return button !== null || screen.queryAllByText(/Untitled Workflow/).length > 0
-      }, { timeout: 3000 })
+      }, 3000)
 
       // Try to click button if found
       const newWorkflowButton = screen.queryByText(/New Workflow/i)?.closest('button')
@@ -2620,11 +2626,11 @@ describe('WorkflowTabs', () => {
       if (button) {
         fireEvent.click(button)
 
-        await waitFor(() => {
+        await waitForWithTimeout(() => {
           // Should create a new tab
           const tabs = screen.queryAllByText(/Untitled Workflow/)
           expect(tabs.length).toBeGreaterThan(0)
-        }, { timeout: 3000 })
+        }, 3000)
       } else {
         // If no button found, component might have auto-created a tab
         const tabs = screen.queryAllByText(/Untitled Workflow/)
@@ -2637,7 +2643,7 @@ describe('WorkflowTabs', () => {
     it('should call saveWorkflow when Save button is clicked', async () => {
       renderWithProvider()
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         const saveButton = screen.getByTitle(/Save workflow/)
         expect(saveButton).toBeInTheDocument()
       })
@@ -2652,7 +2658,7 @@ describe('WorkflowTabs', () => {
     it('should call executeWorkflow when Execute button is clicked', async () => {
       renderWithProvider()
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         const executeButton = screen.getByTitle(/Execute workflow/)
         expect(executeButton).toBeInTheDocument()
       })
@@ -2667,7 +2673,7 @@ describe('WorkflowTabs', () => {
     it('should call exportWorkflow when Export button is clicked', async () => {
       renderWithProvider()
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         const exportButton = screen.getByTitle(/Export workflow/)
         expect(exportButton).toBeInTheDocument()
       })
@@ -2689,7 +2695,7 @@ describe('WorkflowTabs', () => {
 
       renderWithProvider({ initialTabs: tabsWithNullWorkflow, initialActiveTabId: 'tab-2' })
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(screen.getByText('Tab 2')).toBeInTheDocument()
       })
 
@@ -2711,7 +2717,7 @@ describe('WorkflowTabs', () => {
 
       renderWithProvider({ initialTabs: tabsWithExecutions, initialActiveTabId: 'tab-1' })
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(screen.getByText('Tab 1')).toBeInTheDocument()
       })
 
@@ -2724,7 +2730,7 @@ describe('WorkflowTabs', () => {
     it('should handle when activeTab is undefined', async () => {
       renderWithProvider({ initialTabs: [], initialActiveTabId: 'non-existent-tab' })
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         // Should show no tabs state or handle gracefully
         const buttons = screen.getAllByRole('button')
         expect(buttons.length).toBeGreaterThan(0)
@@ -2739,7 +2745,7 @@ describe('WorkflowTabs', () => {
         </WorkflowTabsProvider>
       )
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         // Should show no tabs state OR a default tab was created
         const noExecutionsText = screen.queryByText(/No executions/i)
         const workflowBuilder = screen.queryByText('WorkflowBuilder Mock')
@@ -2751,7 +2757,7 @@ describe('WorkflowTabs', () => {
           // Default tab was created, which is also acceptable behavior
           expect(screen.queryAllByText(/Untitled Workflow/).length).toBeGreaterThan(0)
         }
-      }, { timeout: 3000 })
+      }, 3000)
     })
   })
 
@@ -2766,7 +2772,7 @@ describe('WorkflowTabs', () => {
 
       renderWithProvider({ initialTabs: tabs, initialActiveTabId: 'tab-1' })
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(screen.getByText(originalName)).toBeInTheDocument()
       })
 
@@ -2775,7 +2781,7 @@ describe('WorkflowTabs', () => {
       if (tabButton) {
         fireEvent.doubleClick(tabButton)
 
-        await waitFor(() => {
+        await waitForWithTimeout(() => {
           const input = screen.getByDisplayValue(originalName) as HTMLInputElement
           expect(input).toBeInTheDocument()
 
@@ -2784,10 +2790,10 @@ describe('WorkflowTabs', () => {
           fireEvent.blur(input)
         })
 
-        await waitFor(() => {
+        await waitForWithTimeout(() => {
           // Should show error and revert name
           expect(showError).toHaveBeenCalled()
-        }, { timeout: 3000 })
+        }, 3000)
       }
     })
   })
@@ -2805,7 +2811,7 @@ describe('WorkflowTabs', () => {
         onExecutionStart: mockOnExecutionStart,
       })
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(screen.getByText('Tab 1')).toBeInTheDocument()
       })
 
@@ -2852,7 +2858,7 @@ describe('WorkflowTabs', () => {
       const publishButton = screen.getByTitle(/Publish workflow/)
       fireEvent.click(publishButton)
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(screen.getByText(/Publish to Marketplace/i)).toBeInTheDocument()
       })
 
@@ -2861,7 +2867,7 @@ describe('WorkflowTabs', () => {
       if (closeButton) {
         fireEvent.click(closeButton)
 
-        await waitFor(() => {
+        await waitForWithTimeout(() => {
           expect(screen.queryByText(/Publish to Marketplace/i)).not.toBeInTheDocument()
         })
       }
@@ -2874,7 +2880,7 @@ describe('WorkflowTabs', () => {
       const publishButton = screen.getByTitle(/Publish workflow/)
       fireEvent.click(publishButton)
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(screen.getByText(/Publish to Marketplace/i)).toBeInTheDocument()
       })
 
@@ -2895,7 +2901,7 @@ describe('WorkflowTabs', () => {
 
       renderWithProvider({ initialTabs: tabs, initialActiveTabId: 'tab-1' })
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(screen.getByText('Tab 1')).toBeInTheDocument()
       })
 
@@ -2910,7 +2916,7 @@ describe('WorkflowTabs', () => {
 
       renderWithProvider({ initialTabs: tabs, initialActiveTabId: 'tab-1' })
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(screen.getByText('Tab 1')).toBeInTheDocument()
       })
 
@@ -2934,7 +2940,7 @@ describe('WorkflowTabs', () => {
 
       renderWithProvider({ initialTabs: tabs, initialActiveTabId: 'tab-1' })
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(screen.getByText('Tab 1')).toBeInTheDocument()
       })
 
@@ -2951,7 +2957,7 @@ describe('WorkflowTabs', () => {
       const plusButton = screen.getByTitle(/New workflow/)
       fireEvent.click(plusButton)
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         const tabs = screen.queryAllByText(/Untitled Workflow/)
         expect(tabs.length).toBeGreaterThan(1)
       })

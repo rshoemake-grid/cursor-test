@@ -3,6 +3,12 @@
  */
 
 import { renderHook, act, waitFor } from '@testing-library/react'
+
+// Helper to ensure all waitFor calls have timeouts
+const waitForWithTimeout = (callback: () => void | Promise<void>, timeout = 2000) => {
+  return waitFor(callback, { timeout })
+}
+
 import { useWorkflowExecution } from './useWorkflowExecution'
 import { showSuccess, showError } from '../utils/notifications'
 import { showConfirm } from '../utils/confirm'
@@ -190,7 +196,7 @@ describe('useWorkflowExecution', () => {
         jest.advanceTimersByTime(0)
       })
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(mockApi.executeWorkflow).toHaveBeenCalledWith('workflow-id', { input1: 'value1' })
       })
 
@@ -222,7 +228,7 @@ describe('useWorkflowExecution', () => {
         jest.advanceTimersByTime(0)
       })
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(mockOnExecutionStart).toHaveBeenCalled()
         const callArgs = mockOnExecutionStart.mock.calls[0][0]
         expect(callArgs).toMatch(/^pending-/)
@@ -252,7 +258,7 @@ describe('useWorkflowExecution', () => {
         jest.advanceTimersByTime(0)
       })
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(mockOnExecutionStart).toHaveBeenCalledTimes(2)
         expect(mockOnExecutionStart).toHaveBeenLastCalledWith('exec-123')
       })
@@ -287,7 +293,7 @@ describe('useWorkflowExecution', () => {
         jest.advanceTimersByTime(0)
       })
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(mockShowError).toHaveBeenCalledWith('Failed to execute workflow: Workflow error')
         expect(result.current.isExecuting).toBe(false)
       })
@@ -313,7 +319,7 @@ describe('useWorkflowExecution', () => {
         jest.advanceTimersByTime(0)
       })
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(mockShowError).toHaveBeenCalledWith('Workflow must be saved before executing.')
         expect(result.current.isExecuting).toBe(false)
       })
@@ -339,7 +345,7 @@ describe('useWorkflowExecution', () => {
         jest.advanceTimersByTime(0)
       })
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(mockShowError).toHaveBeenCalled()
         expect(result.current.isExecuting).toBe(false)
       })

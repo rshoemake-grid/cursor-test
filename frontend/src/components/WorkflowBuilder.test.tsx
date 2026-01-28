@@ -1,5 +1,11 @@
 import React from 'react'
 import { render, screen, fireEvent, waitFor, act } from '@testing-library/react'
+
+// Helper to ensure all waitFor calls have timeouts
+const waitForWithTimeout = (callback: () => void | Promise<void>, timeout = 2000) => {
+  return waitFor(callback, { timeout })
+}
+
 import { ReactFlowProvider } from '@xyflow/react'
 import { useAuth } from '../contexts/AuthContext'
 import { api } from '../api/client'
@@ -170,7 +176,7 @@ describe('WorkflowBuilder', () => {
       </ReactFlowProvider>
     )
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       expect(screen.getByTestId('react-flow')).toBeInTheDocument()
     })
     expect(screen.getByTestId('node-panel')).toBeInTheDocument()
@@ -194,7 +200,7 @@ describe('WorkflowBuilder', () => {
       </ReactFlowProvider>
     )
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       expect(mockApi.getWorkflow).toHaveBeenCalledWith('workflow-1')
     })
   })

@@ -1,5 +1,10 @@
 import React from 'react'
 import { render, screen, waitFor } from '@testing-library/react'
+
+// Helper to ensure all waitFor calls have timeouts
+const waitForWithTimeout = (callback: () => void | Promise<void>, timeout = 2000) => {
+  return waitFor(callback, { timeout })
+
 import ExecutionViewer from './ExecutionViewer'
 import { useWorkflowAPI } from '../hooks/useWorkflowAPI'
 import { logger } from '../utils/logger'
@@ -61,9 +66,9 @@ describe('ExecutionViewer', () => {
 
     render(<ExecutionViewer executionId="exec-1" />)
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       expect(screen.queryByText('Loading execution...')).not.toBeInTheDocument()
-    }, { timeout: 3000 })
+    }, 3000)
 
     expect(mockGetExecution).toHaveBeenCalledWith('exec-1')
   })
@@ -73,7 +78,7 @@ describe('ExecutionViewer', () => {
 
     render(<ExecutionViewer executionId="exec-1" />)
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       expect(screen.getByText('Execution not found')).toBeInTheDocument()
     })
 
@@ -93,17 +98,17 @@ describe('ExecutionViewer', () => {
 
     render(<ExecutionViewer executionId="exec-1" />)
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       expect(mockGetExecution).toHaveBeenCalledTimes(1)
-    }, { timeout: 3000 })
+    }, 3000)
 
     // Advance timers to trigger polling
     jest.advanceTimersByTime(2000)
     await Promise.resolve() // Allow promises to resolve
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       expect(mockGetExecution).toHaveBeenCalledTimes(2)
-    }, { timeout: 3000 })
+    }, 3000)
   })
 
   it('should stop polling when execution completes', async () => {
@@ -130,18 +135,18 @@ describe('ExecutionViewer', () => {
 
     render(<ExecutionViewer executionId="exec-1" />)
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       expect(mockGetExecution).toHaveBeenCalledTimes(1)
-    }, { timeout: 3000 })
+    }, 3000)
 
     // Advance timers to trigger polling - this will get completed status
     jest.advanceTimersByTime(2000)
     await Promise.resolve() // Allow promises to resolve
 
     // Wait for execution to complete
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       expect(mockGetExecution.mock.calls.length).toBeGreaterThanOrEqual(2)
-    }, { timeout: 3000 })
+    }, 3000)
 
     const callCountAfterCompletion = mockGetExecution.mock.calls.length
 
@@ -173,10 +178,10 @@ describe('ExecutionViewer', () => {
 
     render(<ExecutionViewer executionId="exec-1" />)
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       // Execution ID might be displayed in various ways, check for completion status instead
       expect(screen.queryByText('Loading execution...')).not.toBeInTheDocument()
-    }, { timeout: 3000 })
+    }, 3000)
     
     // Verify execution was loaded
     expect(mockGetExecution).toHaveBeenCalledWith('exec-1')
@@ -198,7 +203,7 @@ describe('ExecutionViewer', () => {
 
     render(<ExecutionViewer executionId="exec-1" />)
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       expect(screen.getByText(/Execution failed with error/)).toBeInTheDocument()
     })
   })
@@ -224,7 +229,7 @@ describe('ExecutionViewer', () => {
 
     render(<ExecutionViewer executionId="exec-1" />)
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       expect(screen.getByText(/node-1/)).toBeInTheDocument()
     })
   })
@@ -251,7 +256,7 @@ describe('ExecutionViewer', () => {
 
     render(<ExecutionViewer executionId="exec-1" />)
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       expect(screen.getByText(/Log message/)).toBeInTheDocument()
     })
   })
@@ -271,7 +276,7 @@ describe('ExecutionViewer', () => {
 
     render(<ExecutionViewer executionId="exec-1" />)
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       expect(mockGetExecution).toHaveBeenCalled()
     })
 
@@ -279,7 +284,7 @@ describe('ExecutionViewer', () => {
     jest.advanceTimersByTime(2000)
     await Promise.resolve()
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       expect(mockGetExecution.mock.calls.length).toBeGreaterThanOrEqual(2)
     })
   })
@@ -299,7 +304,7 @@ describe('ExecutionViewer', () => {
 
     render(<ExecutionViewer executionId="exec-1" />)
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       expect(screen.queryByText('Loading execution...')).not.toBeInTheDocument()
     })
 
@@ -339,13 +344,13 @@ describe('ExecutionViewer', () => {
 
     const { rerender } = render(<ExecutionViewer executionId="exec-1" />)
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       expect(mockGetExecution).toHaveBeenCalledWith('exec-1')
     })
 
     rerender(<ExecutionViewer executionId="exec-2" />)
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       expect(mockGetExecution).toHaveBeenCalledWith('exec-2')
     })
   })
@@ -368,7 +373,7 @@ describe('ExecutionViewer', () => {
 
       const { unmount } = render(<ExecutionViewer executionId="exec-1" />)
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(screen.queryByText('Loading execution...')).not.toBeInTheDocument()
       })
 
@@ -399,7 +404,7 @@ describe('ExecutionViewer', () => {
 
     render(<ExecutionViewer executionId="exec-1" />)
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       expect(mockGetExecution).toHaveBeenCalledTimes(1)
     })
 
@@ -408,7 +413,7 @@ describe('ExecutionViewer', () => {
     await Promise.resolve()
 
     // Should handle error and continue polling
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       expect(logger.error).toHaveBeenCalled()
     })
 
@@ -435,12 +440,12 @@ describe('ExecutionViewer', () => {
 
     render(<ExecutionViewer executionId="exec-1" />)
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       expect(screen.queryByText('Loading execution...')).not.toBeInTheDocument()
     })
 
     // Should show monitoring banner for running execution
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       expect(screen.getByText(/Workflow Running/)).toBeInTheDocument()
     })
   })
@@ -460,7 +465,7 @@ describe('ExecutionViewer', () => {
 
     render(<ExecutionViewer executionId="exec-1" />)
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       expect(screen.queryByText('Loading execution...')).not.toBeInTheDocument()
     })
 
@@ -484,7 +489,7 @@ describe('ExecutionViewer', () => {
 
     render(<ExecutionViewer executionId="exec-1" />)
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       expect(screen.queryByText('Loading execution...')).not.toBeInTheDocument()
     })
 
@@ -508,7 +513,7 @@ describe('ExecutionViewer', () => {
 
     render(<ExecutionViewer executionId="exec-1" />)
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       expect(screen.getByText(/Final Result/)).toBeInTheDocument()
       expect(screen.getByText('Final result text')).toBeInTheDocument()
     })
@@ -530,7 +535,7 @@ describe('ExecutionViewer', () => {
 
     render(<ExecutionViewer executionId="exec-1" />)
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       expect(screen.getByText(/Final Result/)).toBeInTheDocument()
       expect(screen.getByText(/"key"/)).toBeInTheDocument()
     })
@@ -557,7 +562,7 @@ describe('ExecutionViewer', () => {
 
     render(<ExecutionViewer executionId="exec-1" />)
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       expect(screen.getByText('String output')).toBeInTheDocument()
     })
   })
@@ -583,7 +588,7 @@ describe('ExecutionViewer', () => {
 
     render(<ExecutionViewer executionId="exec-1" />)
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       expect(screen.getByText(/"result"/)).toBeInTheDocument()
     })
   })
@@ -609,7 +614,7 @@ describe('ExecutionViewer', () => {
 
     render(<ExecutionViewer executionId="exec-1" />)
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       expect(screen.getByText(/Input:/)).toBeInTheDocument()
       expect(screen.getByText(/"param"/)).toBeInTheDocument()
     })
@@ -636,7 +641,7 @@ describe('ExecutionViewer', () => {
 
     render(<ExecutionViewer executionId="exec-1" />)
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       expect(screen.getByText(/Error:/)).toBeInTheDocument()
       expect(screen.getByText('Node execution failed')).toBeInTheDocument()
     })
@@ -661,7 +666,7 @@ describe('ExecutionViewer', () => {
 
     render(<ExecutionViewer executionId="exec-1" />)
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       expect(screen.getByText('Info log')).toBeInTheDocument()
       expect(screen.getByText('Warning log')).toBeInTheDocument()
       expect(screen.getByText('Error log')).toBeInTheDocument()
@@ -687,7 +692,7 @@ describe('ExecutionViewer', () => {
 
     render(<ExecutionViewer executionId="exec-1" />)
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       expect(screen.getByText(/1 \/ 3 nodes completed/)).toBeInTheDocument()
     })
   })
@@ -710,7 +715,7 @@ describe('ExecutionViewer', () => {
 
     render(<ExecutionViewer executionId="exec-1" />)
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       // Progress bar should be rendered
       const progressBar = document.querySelector('.bg-blue-600')
       expect(progressBar).toBeInTheDocument()

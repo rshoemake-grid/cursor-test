@@ -5,6 +5,11 @@ import { AuthProvider } from '../contexts/AuthContext'
 import { logger } from '../utils/logger'
 import type { StorageAdapter, HttpClient } from '../types/adapters'
 
+// Helper to ensure all waitFor calls have timeouts
+const waitForWithTimeout = (callback: () => void | Promise<void>, timeout = 2000) => {
+  return waitFor(callback, { timeout })
+}
+
 // Mock logger
 jest.mock('../utils/logger', () => ({
   logger: {
@@ -212,7 +217,7 @@ describe('WorkflowChat', () => {
     const sendButton = screen.getByText('Send')
     fireEvent.click(sendButton)
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       expect(mockAuthenticatedPost).toHaveBeenCalledWith(
         '/workflow-chat/chat',
         expect.objectContaining({
@@ -220,7 +225,7 @@ describe('WorkflowChat', () => {
           message: 'Test message',
         })
       )
-    })
+    }, 3000) // API call completion
   })
 
   it('should send message when Enter is pressed', async () => {
@@ -235,9 +240,9 @@ describe('WorkflowChat', () => {
     fireEvent.change(input, { target: { value: 'Test message' } })
     fireEvent.keyPress(input, { key: 'Enter', code: 'Enter', charCode: 13 })
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       expect(mockAuthenticatedPost).toHaveBeenCalled()
-    })
+    }, 3000) // API call completion
   })
 
   it('should not send message when Shift+Enter is pressed', () => {
@@ -271,13 +276,13 @@ describe('WorkflowChat', () => {
     const sendButton = screen.getByText('Send')
     fireEvent.click(sendButton)
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       expect(screen.getByText('User message')).toBeInTheDocument()
-    })
+    }, 2000) // Component rendering
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       expect(screen.getByText('Assistant response')).toBeInTheDocument()
-    })
+    }, 3000) // API response rendering
   })
 
   it('should handle API error', async () => {
@@ -297,9 +302,9 @@ describe('WorkflowChat', () => {
     const sendButton = screen.getByText('Send')
     fireEvent.click(sendButton)
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       expect(screen.getByText(/HTTP error/)).toBeInTheDocument()
-    })
+    }, 2000) // Error message display
   })
 
   it('should apply workflow changes when received', async () => {
@@ -322,12 +327,12 @@ describe('WorkflowChat', () => {
     const sendButton = screen.getByText('Send')
     fireEvent.click(sendButton)
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       expect(mockOnWorkflowUpdate).toHaveBeenCalledWith({
         nodes_to_add: [],
         nodes_to_delete: ['node-1'],
       })
-    })
+    }, 3000) // Workflow update callback
   })
 
   it('should save conversation history to localStorage', async () => {
@@ -345,12 +350,12 @@ describe('WorkflowChat', () => {
     const sendButton = screen.getByText('Send')
     fireEvent.click(sendButton)
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       const saved = localStorage.getItem('chat_history_workflow-1')
       expect(saved).toBeDefined()
       const parsed = JSON.parse(saved!)
       expect(parsed.length).toBeGreaterThan(1)
-    })
+    }, 2000) // Storage operation
   })
 
   it('should load conversation history when workflowId changes', async () => {
@@ -366,9 +371,9 @@ describe('WorkflowChat', () => {
 
     const { rerender, unmount } = renderWithProvider(<WorkflowChat workflowId="workflow-1" />)
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       expect(screen.getByText('Message 1')).toBeInTheDocument()
-    })
+    }, 2000) // Message rendering
 
     unmount()
 
@@ -379,9 +384,9 @@ describe('WorkflowChat', () => {
 
     renderWithProvider(<WorkflowChat workflowId="workflow-2" />)
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       expect(screen.getByText('Message 2')).toBeInTheDocument()
-    }, { timeout: 2000 })
+    }, 2000) // Message rendering
   })
 
   it('should show loading state while sending', async () => {
@@ -400,18 +405,18 @@ describe('WorkflowChat', () => {
     fireEvent.click(sendButton)
 
     // Should show loading state
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       expect(screen.queryByText('Send')).not.toBeInTheDocument()
-    })
+    }, 2000) // UI state update
 
     resolvePromise!({
       ok: true,
       json: async () => ({ message: 'Response' }),
     })
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       expect(screen.getByText('Send')).toBeInTheDocument()
-    })
+    }, 2000) // UI state update
   })
 
   it('should handle non-Error exception', async () => {
@@ -428,9 +433,9 @@ describe('WorkflowChat', () => {
     const sendButton = screen.getByText('Send')
     fireEvent.click(sendButton)
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       expect(screen.getByText(/Unknown error/)).toBeInTheDocument()
-    })
+    }, 2000) // Error message display
   })
 
   it('should handle empty history array', () => {
@@ -456,9 +461,9 @@ describe('WorkflowChat', () => {
     const sendButton = screen.getByText('Send')
     fireEvent.click(sendButton)
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       expect(screen.getByText('Response')).toBeInTheDocument()
-    })
+    }, 3000) // API response rendering
 
     expect(mockOnWorkflowUpdate).not.toHaveBeenCalled()
   })
@@ -477,9 +482,9 @@ describe('WorkflowChat', () => {
     const sendButton = screen.getByText('Send')
     fireEvent.click(sendButton)
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       expect(screen.getByText(/Network error/)).toBeInTheDocument()
-    })
+    }, 2000) // Error message display
   })
 
   it('should not send when input is only whitespace', () => {
@@ -508,9 +513,9 @@ describe('WorkflowChat', () => {
     fireEvent.click(sendButton)
 
     // Try to send again while loading
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       expect(sendButton).toBeDisabled()
-    })
+    }, 2000) // Loading state update
 
     // Input should be disabled or send button should not exist
     fireEvent.change(input, { target: { value: 'Another message' } })
@@ -565,13 +570,13 @@ describe('WorkflowChat', () => {
       const sendButton = screen.getByText('Send')
       fireEvent.click(sendButton)
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(injectedMockPost).toHaveBeenCalled()
-      })
+      }, 3000) // API call completion
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(screen.getByText('Response from injected client')).toBeInTheDocument()
-      })
+      }, 3000) // API response rendering
     })
 
     it('should use injected API base URL', async () => {
@@ -598,16 +603,16 @@ describe('WorkflowChat', () => {
       const sendButton = screen.getByText('Send')
       fireEvent.click(sendButton)
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(useAuthenticatedApi).toHaveBeenCalledWith(
           expect.any(Object),
           'https://custom-api.com/api'
         )
-      })
-      
-      await waitFor(() => {
+      }, 2000) // Hook initialization
+
+      await waitForWithTimeout(() => {
         expect(customMockPost).toHaveBeenCalled()
-      })
+      }, 3000) // API call completion
     })
 
     it('should use injected logger', async () => {
@@ -640,16 +645,16 @@ describe('WorkflowChat', () => {
       const sendButton = screen.getByText('Send')
       fireEvent.click(sendButton)
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(screen.getByText('Response')).toBeInTheDocument()
       })
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(mockLogger.debug).toHaveBeenCalledWith(
           'Received workflow changes:',
           expect.objectContaining({ nodes_to_delete: ['node-1'] })
         )
-      }, { timeout: 2000 })
+      }, 2000)
     })
 
     it('should handle storage errors gracefully', () => {
@@ -696,7 +701,7 @@ describe('WorkflowChat', () => {
       const sendButton = screen.getByText('Send')
       fireEvent.click(sendButton)
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(screen.getByText('Response')).toBeInTheDocument()
       })
 
@@ -719,9 +724,9 @@ describe('WorkflowChat', () => {
       const sendButton = screen.getByText('Send')
       fireEvent.click(sendButton)
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(screen.getByText(/Network error/)).toBeInTheDocument()
-      })
+      }, 2000) // Error message display
 
       expect(handleApiError).toHaveBeenCalled()
     })
@@ -760,12 +765,12 @@ describe('WorkflowChat', () => {
       const sendButton = screen.getByText('Send')
       fireEvent.click(sendButton)
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(mockStorage.setItem).toHaveBeenCalledWith(
           'chat_history_workflow-1',
           expect.stringContaining('Test message')
         )
-      })
+      }, 2000) // Storage operation
     })
   })
 })

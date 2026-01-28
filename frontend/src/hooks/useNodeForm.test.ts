@@ -3,6 +3,12 @@
  */
 
 import { renderHook, act, waitFor } from '@testing-library/react'
+
+// Helper to ensure all waitFor calls have timeouts
+const waitForWithTimeout = (callback: () => void | Promise<void>, timeout = 2000) => {
+  return waitFor(callback, { timeout })
+}
+
 import { useNodeForm } from './useNodeForm'
 import type { Node } from '@xyflow/react'
 
@@ -52,7 +58,7 @@ describe('useNodeForm', () => {
 
     rerender({ selectedNode: node })
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       expect(result.current.nameValue).toBe('Test Node')
       expect(result.current.descriptionValue).toBe('Test description')
     })
@@ -81,7 +87,7 @@ describe('useNodeForm', () => {
 
     rerender({ selectedNode: node })
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       expect(result.current.nameValue).toBe('Label Only')
     })
   })
@@ -110,7 +116,7 @@ describe('useNodeForm', () => {
 
     rerender({ selectedNode: node })
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       expect(result.current.nameValue).toBe('Name Value')
     })
   })
@@ -137,13 +143,13 @@ describe('useNodeForm', () => {
       }
     )
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       expect(result.current.nameValue).toBe('Test Node')
     })
 
     rerender({ selectedNode: null })
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       expect(result.current.nameValue).toBe('')
       expect(result.current.descriptionValue).toBe('')
     })
@@ -249,7 +255,7 @@ describe('useNodeForm', () => {
 
     rerender({ selectedNode: node })
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       expect(result.current.nameValue).toBe('')
     })
   })

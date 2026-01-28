@@ -1,5 +1,10 @@
 import React from 'react'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
+
+// Helper to ensure all waitFor calls have timeouts
+const waitForWithTimeout = (callback: () => void | Promise<void>, timeout = 2000) => {
+  return waitFor(callback, { timeout })
+
 import NodePanel from './NodePanel'
 import { logger } from '../utils/logger'
 import type { StorageAdapter } from '../types/adapters'
@@ -142,7 +147,7 @@ describe('NodePanel', () => {
     const toggleButton = screen.getByText('Agent Nodes').closest('button')
     fireEvent.click(toggleButton!)
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       const customAgentNode = screen.getByText('Custom Agent').closest('div')
       expect(customAgentNode).toBeDefined()
 

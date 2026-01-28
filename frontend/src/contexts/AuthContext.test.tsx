@@ -1,5 +1,11 @@
 import React from 'react'
 import { renderHook, act, waitFor } from '@testing-library/react'
+
+// Helper to ensure all waitFor calls have timeouts
+const waitForWithTimeout = (callback: () => void | Promise<void>, timeout = 2000) => {
+  return waitFor(callback, { timeout })
+}
+
 import { AuthProvider, useAuth } from './AuthContext'
 import type { StorageAdapter, HttpClient } from '../types/adapters'
 import { logger } from '../utils/logger'
@@ -637,7 +643,7 @@ describe('AuthProvider', () => {
       ).rejects.toThrow('Invalid credentials')
 
       // Logger should be called for error handling (called in the login function when response.ok is false)
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(customLogger.error).toHaveBeenCalled()
       })
     })

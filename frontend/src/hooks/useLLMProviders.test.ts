@@ -3,6 +3,12 @@
  */
 
 import { renderHook, waitFor } from '@testing-library/react'
+
+// Helper to ensure all waitFor calls have timeouts
+const waitForWithTimeout = (callback: () => void | Promise<void>, timeout = 2000) => {
+  return waitFor(callback, { timeout })
+}
+
 import { useLLMProviders, type LLMProvider } from './useLLMProviders'
 import { api } from '../api/client'
 import { logger } from '../utils/logger'
@@ -71,7 +77,7 @@ describe('useLLMProviders', () => {
       useLLMProviders({ storage: mockStorage, isAuthenticated: true })
     )
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       expect(result.current.isLoading).toBe(false)
     })
 
@@ -105,7 +111,7 @@ describe('useLLMProviders', () => {
 
     renderHook(() => useLLMProviders({ storage: mockStorage, isAuthenticated: true }))
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       expect(mockStorage.setItem).toHaveBeenCalledWith(
         'llm_settings',
         JSON.stringify({
@@ -141,7 +147,7 @@ describe('useLLMProviders', () => {
       useLLMProviders({ storage: mockStorage, isAuthenticated: true })
     )
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       expect(result.current.isLoading).toBe(false)
     })
 
@@ -159,7 +165,7 @@ describe('useLLMProviders', () => {
       useLLMProviders({ storage: mockStorage, isAuthenticated: true })
     )
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       expect(result.current.isLoading).toBe(false)
     })
 
@@ -192,7 +198,7 @@ describe('useLLMProviders', () => {
       useLLMProviders({ storage: mockStorage, isAuthenticated: true })
     )
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       expect(result.current.isLoading).toBe(false)
     })
 
@@ -224,7 +230,7 @@ describe('useLLMProviders', () => {
       useLLMProviders({ storage: mockStorage, isAuthenticated: true })
     )
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       expect(result.current.isLoading).toBe(false)
     })
 
@@ -258,7 +264,7 @@ describe('useLLMProviders', () => {
       })
     )
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       expect(onLoadComplete).toHaveBeenCalledWith({
         providers: mockProviders,
         iteration_limit: 10,
@@ -277,7 +283,7 @@ describe('useLLMProviders', () => {
       useLLMProviders({ storage: mockStorage, isAuthenticated: true })
     )
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       expect(result.current.isLoading).toBe(false)
     })
 
@@ -293,7 +299,7 @@ describe('useLLMProviders', () => {
       useLLMProviders({ storage: mockStorage, isAuthenticated: true })
     )
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       expect(result.current.isLoading).toBe(false)
     })
 
@@ -308,7 +314,7 @@ describe('useLLMProviders', () => {
       useLLMProviders({ storage: null, isAuthenticated: true })
     )
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       expect(result.current.isLoading).toBe(false)
     })
 
@@ -335,7 +341,7 @@ describe('useLLMProviders', () => {
       useLLMProviders({ storage: mockStorage, isAuthenticated: true })
     )
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       expect(result.current.isLoading).toBe(false)
     })
 
@@ -361,7 +367,7 @@ describe('useLLMProviders', () => {
       useLLMProviders({ storage: mockStorage, isAuthenticated: true })
     )
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       expect(result.current.isLoading).toBe(false)
     })
 

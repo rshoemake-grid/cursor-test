@@ -1,5 +1,11 @@
 // Jest globals - no import needed
 import { render, screen, waitFor, fireEvent } from '@testing-library/react'
+
+// Helper to ensure all waitFor calls have timeouts
+const waitForWithTimeout = (callback: () => void | Promise<void>, timeout = 2000) => {
+  return waitFor(callback, { timeout })
+}
+
 import userEvent from '@testing-library/user-event'
 import AgentNodeEditor from './AgentNodeEditor'
 import { type NodeWithData } from '../../types/nodeData'
@@ -95,7 +101,7 @@ describe('AgentNodeEditor', () => {
     await user.clear(promptTextarea)
     await user.type(promptTextarea, 'New prompt')
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       expect(mockOnConfigUpdate).toHaveBeenCalledWith('agent_config', 'system_prompt', 'New prompt')
     })
   })
@@ -115,7 +121,7 @@ describe('AgentNodeEditor', () => {
     await user.clear(maxTokensInput)
     await user.type(maxTokensInput, '2000')
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       expect(mockOnConfigUpdate).toHaveBeenCalledWith('agent_config', 'max_tokens', 2000)
     })
   })
@@ -297,7 +303,7 @@ describe('AgentNodeEditor', () => {
       />
     )
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       expect(promptTextarea.value).toBe('Updated prompt')
     })
   })
@@ -335,7 +341,7 @@ describe('AgentNodeEditor', () => {
       />
     )
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       expect(maxTokensInput.value).toBe('2000')
     })
   })
@@ -451,7 +457,7 @@ describe('AgentNodeEditor', () => {
     const temperatureSlider = screen.getByLabelText(/temperature/i) as HTMLInputElement
     // Note: Component uses || operator, so 0 becomes 0.7 (falsy check)
     // This test verifies the component renders with temperature config
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       expect(temperatureSlider).toBeInTheDocument()
       // Component treats 0 as falsy and defaults to 0.7
       expect(temperatureSlider.value).toBe('0.7')

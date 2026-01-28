@@ -3,6 +3,12 @@
  */
 
 import { renderHook, act, waitFor } from '@testing-library/react'
+
+// Helper to ensure all waitFor calls have timeouts
+const waitForWithTimeout = (callback: () => void | Promise<void>, timeout = 2000) => {
+  return waitFor(callback, { timeout })
+}
+
 import { useWorkflowState } from './useWorkflowState'
 
 describe('useWorkflowState', () => {
@@ -50,7 +56,7 @@ describe('useWorkflowState', () => {
 
     rerender({ workflowId: null, tabName: 'Updated Tab' })
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       expect(result.current.localWorkflowName).toBe('Updated Tab')
     })
   })
@@ -74,7 +80,7 @@ describe('useWorkflowState', () => {
 
     rerender({ workflowId: 'workflow-2', tabName: 'Test Tab' })
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       expect(result.current.localWorkflowId).toBe('workflow-2')
     })
   })

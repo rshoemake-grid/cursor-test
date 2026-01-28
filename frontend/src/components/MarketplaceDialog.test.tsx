@@ -6,6 +6,11 @@ import { api } from '../api/client'
 import { showSuccess, showError } from '../utils/notifications'
 import type { StorageAdapter, HttpClient } from '../types/adapters'
 
+// Helper to ensure all waitFor calls have timeouts
+const waitForWithTimeout = (callback: () => void | Promise<void>, timeout = 2000) => {
+  return waitFor(callback, { timeout })
+}
+
 // Mock dependencies
 jest.mock('../contexts/AuthContext', () => ({
   useAuth: jest.fn(),
@@ -80,7 +85,7 @@ describe('MarketplaceDialog', () => {
     fireEvent.click(workflowsTab)
 
     // Should show workflow form fields (category select should be visible)
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       const selects = screen.getAllByRole('combobox')
       expect(selects.length).toBeGreaterThan(0)
     })
@@ -128,7 +133,7 @@ describe('MarketplaceDialog', () => {
     const publishButton = screen.getByText(/Publish/)
     fireEvent.click(publishButton)
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       expect(showSuccess).toHaveBeenCalledWith('Agent published to marketplace successfully!')
       expect(mockOnClose).toHaveBeenCalled()
     })
@@ -187,12 +192,12 @@ describe('MarketplaceDialog', () => {
     const workflowsTab = screen.getByText('Workflows')
     fireEvent.click(workflowsTab)
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       const publishButton = screen.getByText(/Publish/)
       fireEvent.click(publishButton)
     })
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       expect(mockApi.publishWorkflow).toHaveBeenCalledWith('workflow-1', expect.any(Object))
       expect(showSuccess).toHaveBeenCalledWith('Workflow published to marketplace successfully!')
       expect(mockOnClose).toHaveBeenCalled()
@@ -313,12 +318,12 @@ describe('MarketplaceDialog', () => {
     const workflowsTab = screen.getByText('Workflows')
     fireEvent.click(workflowsTab)
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       const publishButton = screen.getByText(/Publish/)
       fireEvent.click(publishButton)
     })
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       expect(showError).toHaveBeenCalledWith('Failed to publish workflow: Publish failed')
     })
   })
@@ -369,7 +374,7 @@ describe('MarketplaceDialog', () => {
     const publishButton = screen.getByText(/Publish/)
     fireEvent.click(publishButton)
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       expect(showError).toHaveBeenCalledWith('Please sign in to publish to the marketplace')
     })
   })
@@ -385,7 +390,7 @@ describe('MarketplaceDialog', () => {
     const publishButton = screen.getByText(/Publish/)
     fireEvent.click(publishButton)
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       expect(showError).toHaveBeenCalledWith('Invalid agent node')
     })
   })
@@ -405,7 +410,7 @@ describe('MarketplaceDialog', () => {
     const publishButton = screen.getByText(/Publish/)
     fireEvent.click(publishButton)
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       expect(showError).toHaveBeenCalledWith(expect.stringContaining('Failed to publish agent'))
     })
 
@@ -422,7 +427,7 @@ describe('MarketplaceDialog', () => {
     const publishButton = screen.getByText(/Publish/)
     fireEvent.click(publishButton)
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       expect(showSuccess).toHaveBeenCalled()
     })
 
@@ -444,7 +449,7 @@ describe('MarketplaceDialog', () => {
     const publishButton = screen.getByText(/Publish/)
     fireEvent.click(publishButton)
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       expect(showSuccess).toHaveBeenCalled()
     })
 
@@ -470,7 +475,7 @@ describe('MarketplaceDialog', () => {
     const publishButton = screen.getByText(/Publish/)
     fireEvent.click(publishButton)
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       expect(showSuccess).toHaveBeenCalled()
     })
 
@@ -498,7 +503,7 @@ describe('MarketplaceDialog', () => {
     const publishButton = screen.getByText(/Publish/)
     fireEvent.click(publishButton)
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       expect(showSuccess).toHaveBeenCalled()
     })
 
@@ -533,7 +538,7 @@ describe('MarketplaceDialog', () => {
       const publishButton = screen.getByText(/Publish/)
       fireEvent.click(publishButton)
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(mockStorage.getItem).toHaveBeenCalledWith('publishedAgents')
         expect(mockStorage.setItem).toHaveBeenCalled()
       })
@@ -565,12 +570,12 @@ describe('MarketplaceDialog', () => {
       const workflowsTab = screen.getByText('Workflows')
       fireEvent.click(workflowsTab)
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         const publishButton = screen.getByText(/Publish/)
         fireEvent.click(publishButton)
       })
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(mockPublishWorkflow).toHaveBeenCalled()
       })
     })
@@ -598,7 +603,7 @@ describe('MarketplaceDialog', () => {
       const publishButton = screen.getByText(/Publish/)
       fireEvent.click(publishButton)
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(showError).toHaveBeenCalledWith(
           expect.stringContaining('Failed to publish agent')
         )
@@ -619,7 +624,7 @@ describe('MarketplaceDialog', () => {
       fireEvent.click(publishButton)
 
       // Should handle null storage gracefully
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(showError).toHaveBeenCalled()
       })
     })
@@ -649,12 +654,12 @@ describe('MarketplaceDialog', () => {
       const workflowsTab = screen.getByText('Workflows')
       fireEvent.click(workflowsTab)
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         const publishButton = screen.getByText(/Publish/)
         fireEvent.click(publishButton)
       })
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(showError).toHaveBeenCalledWith(
           expect.stringContaining('Failed to publish workflow')
         )
@@ -672,7 +677,7 @@ describe('MarketplaceDialog', () => {
       const publishButton = screen.getByText(/Publish/)
       fireEvent.click(publishButton)
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(showSuccess).toHaveBeenCalled()
       })
 
@@ -728,23 +733,23 @@ describe('MarketplaceDialog', () => {
       const workflowsTab = screen.getByText('Workflows')
       fireEvent.click(workflowsTab)
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         const timeInput = screen.getByPlaceholderText(/e.g., 10 min/)
         fireEvent.change(timeInput, { target: { value: '' } })
       })
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         const publishButton = screen.getByText(/Publish/)
         fireEvent.click(publishButton)
       })
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(mockApi.publishWorkflow).toHaveBeenCalledWith(
           'workflow-1',
           expect.objectContaining({
             estimated_time: undefined,
           })
-        )
+        , 2000) // Default timeout
       })
     })
 
@@ -763,23 +768,23 @@ describe('MarketplaceDialog', () => {
       const workflowsTab = screen.getByText('Workflows')
       fireEvent.click(workflowsTab)
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         const timeInput = screen.getByPlaceholderText(/e.g., 10 min/)
         fireEvent.change(timeInput, { target: { value: '45 minutes' } })
       })
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         const publishButton = screen.getByText(/Publish/)
         fireEvent.click(publishButton)
       })
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(mockApi.publishWorkflow).toHaveBeenCalledWith(
           'workflow-1',
           expect.objectContaining({
             estimated_time: '45 minutes',
           })
-        )
+        , 2000) // Default timeout
       })
     })
   })

@@ -1,5 +1,11 @@
 import React from 'react'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
+
+// Helper to ensure all waitFor calls have timeouts
+const waitForWithTimeout = (callback: () => void | Promise<void>, timeout = 2000) => {
+  return waitFor(callback, { timeout })
+}
+
 import { BrowserRouter } from 'react-router-dom'
 import AuthPage from './AuthPage'
 import { useAuth } from '../contexts/AuthContext'
@@ -70,7 +76,7 @@ describe('AuthPage', () => {
     fireEvent.change(passwordInput, { target: { value: 'password123' } })
     fireEvent.click(submitButton)
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       expect(mockLogin).toHaveBeenCalledWith('testuser', 'password123', false)
     })
   })
@@ -84,7 +90,7 @@ describe('AuthPage', () => {
     const switchButton = screen.getByText(/Don't have an account/i)
     fireEvent.click(switchButton)
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       const usernameInput = screen.getByPlaceholderText('Enter your username')
       const emailInput = screen.getByPlaceholderText(/your@email.com/)
       const passwordInput = screen.getByPlaceholderText('••••••••')
@@ -96,7 +102,7 @@ describe('AuthPage', () => {
       fireEvent.click(submitButton)
     })
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       expect(mockRegister).toHaveBeenCalled()
     })
   })
@@ -138,7 +144,7 @@ describe('AuthPage', () => {
     fireEvent.change(passwordInput, { target: { value: 'wrongpassword' } })
     fireEvent.click(submitButton)
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       expect(screen.getByText('Invalid credentials')).toBeInTheDocument()
     })
   })
@@ -157,7 +163,7 @@ describe('AuthPage', () => {
       fireEvent.change(passwordInput, { target: { value: 'password' } })
       fireEvent.submit(form)
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         const submitButton = screen.getByRole('button', { name: /Processing/ })
         expect(submitButton).toBeDisabled()
       })
@@ -180,7 +186,7 @@ describe('AuthPage', () => {
     fireEvent.change(passwordInput, { target: { value: 'password123' } })
     fireEvent.click(submitButton)
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       expect(mockLogin).toHaveBeenCalledWith('testuser', 'password123', true)
     })
   })
@@ -210,7 +216,7 @@ describe('AuthPage', () => {
     const switchButton = screen.getByText(/Don't have an account/i)
     fireEvent.click(switchButton)
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       const usernameInput = screen.getByPlaceholderText('Enter your username')
       const emailInput = screen.getByPlaceholderText(/your@email.com/)
       const passwordInput = screen.getByPlaceholderText('••••••••')
@@ -224,7 +230,7 @@ describe('AuthPage', () => {
       fireEvent.click(submitButton)
     })
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       expect(mockRegister).toHaveBeenCalledWith('newuser', 'new@example.com', 'password123', 'John Doe')
     })
   })
@@ -238,7 +244,7 @@ describe('AuthPage', () => {
     const switchButton = screen.getByText(/Don't have an account/i)
     fireEvent.click(switchButton)
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       const usernameInput = screen.getByPlaceholderText('Enter your username')
       const emailInput = screen.getByPlaceholderText(/your@email.com/)
       const passwordInput = screen.getByPlaceholderText('••••••••')
@@ -250,7 +256,7 @@ describe('AuthPage', () => {
       fireEvent.click(submitButton)
     })
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       expect(mockRegister).toHaveBeenCalledWith('newuser', 'new@example.com', 'password123', '')
     })
   })
@@ -265,7 +271,7 @@ describe('AuthPage', () => {
     const switchButton = screen.getByText(/Don't have an account/i)
     fireEvent.click(switchButton)
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       const usernameInput = screen.getByPlaceholderText('Enter your username')
       const emailInput = screen.getByPlaceholderText(/your@email.com/)
       const passwordInput = screen.getByPlaceholderText('••••••••')
@@ -277,7 +283,7 @@ describe('AuthPage', () => {
       fireEvent.click(submitButton)
     })
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       expect(screen.getByText('Registration failed')).toBeInTheDocument()
     })
   })
@@ -295,7 +301,7 @@ describe('AuthPage', () => {
     fireEvent.change(passwordInput, { target: { value: 'password123' } })
     fireEvent.click(submitButton)
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       // Should handle non-Error - error.message will be undefined, so it might show empty or undefined
       // The component uses err.message, so non-Error will show undefined
       const errorElement = screen.queryByText(/undefined/i)
@@ -333,7 +339,7 @@ describe('AuthPage', () => {
     // Press Enter on password field
     fireEvent.keyDown(passwordInput, { key: 'Enter', code: 'Enter', charCode: 13 })
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       expect(mockLogin).toHaveBeenCalledWith('testuser', 'password123', false)
     })
   })
@@ -352,7 +358,7 @@ describe('AuthPage', () => {
     const submitButton = screen.getByRole('button', { name: /Sign In/ })
     fireEvent.click(submitButton)
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       expect(submitButton).toBeDisabled()
     })
 
@@ -360,7 +366,7 @@ describe('AuthPage', () => {
     fireEvent.keyDown(passwordInput, { key: 'Enter', code: 'Enter', charCode: 13 })
 
     // Should only be called once
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       expect(mockLogin).toHaveBeenCalledTimes(1)
     })
   })
@@ -380,7 +386,7 @@ describe('AuthPage', () => {
     fireEvent.click(submitButton)
 
     // Wait for error to appear
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       expect(screen.getByText('Login failed')).toBeInTheDocument()
     })
 
@@ -388,7 +394,7 @@ describe('AuthPage', () => {
     const switchButton = screen.getByText(/Don't have an account/i)
     fireEvent.click(switchButton)
 
-    await waitFor(() => {
+    await waitForWithTimeout(() => {
       // Error should be cleared when switching forms (error state is reset)
       expect(screen.queryByText('Login failed')).not.toBeInTheDocument()
     })
