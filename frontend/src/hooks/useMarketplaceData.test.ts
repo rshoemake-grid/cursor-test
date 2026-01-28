@@ -219,13 +219,11 @@ describe('useMarketplaceData', () => {
     })
 
     it('should set loading to true then false', async () => {
-      let loadingDuringFetch = false
-      mockHttpClient.get.mockImplementation(() => {
-        loadingDuringFetch = true
-        return Promise.resolve({ json: async () => [] })
+      mockHttpClient.get.mockResolvedValue({
+        json: async () => [],
       })
 
-      const { result, waitForNextUpdate } = renderHook(() =>
+      const { result } = renderHook(() =>
         useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
@@ -239,13 +237,21 @@ describe('useMarketplaceData', () => {
         })
       )
 
-      await act(async () => {
-        await result.current.fetchTemplates()
-        await waitFor(() => {
-          expect(result.current.loading).toBe(false)
-        })
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false)
       })
 
+      // Reset mock to track new call
+      mockHttpClient.get.mockClear()
+
+      await act(async () => {
+        const promise = result.current.fetchTemplates()
+        // Loading should be true immediately
+        expect(result.current.loading).toBe(true)
+        await promise
+      })
+
+      // Loading should be false after fetch completes
       expect(result.current.loading).toBe(false)
     })
   })
@@ -406,6 +412,10 @@ describe('useMarketplaceData', () => {
         })
       )
 
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false)
+      })
+
       await act(async () => {
         await result.current.fetchAgents()
       })
@@ -433,6 +443,10 @@ describe('useMarketplaceData', () => {
         })
       )
 
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false)
+      })
+
       await act(async () => {
         await result.current.fetchAgents()
       })
@@ -458,6 +472,10 @@ describe('useMarketplaceData', () => {
           repositorySubTab: 'workflows',
         })
       )
+
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false)
+      })
 
       await act(async () => {
         await result.current.fetchAgents()
@@ -724,6 +742,10 @@ describe('useMarketplaceData', () => {
           repositorySubTab: 'agents',
         })
       )
+
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false)
+      })
 
       await act(async () => {
         await result.current.fetchRepositoryAgents()
