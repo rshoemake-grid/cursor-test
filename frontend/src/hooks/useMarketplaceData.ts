@@ -244,7 +244,7 @@ export function useMarketplaceData({
     } finally {
       setLoading(false)
     }
-  }, [category, searchQuery, sortBy, user, storage])
+  }, [category, searchQuery, sortBy, user?.id, user?.username, user?.email, storage])
 
   const fetchRepositoryAgents = useCallback(async () => {
     setLoading(true)

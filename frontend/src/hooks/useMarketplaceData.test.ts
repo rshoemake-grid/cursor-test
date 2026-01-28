@@ -289,6 +289,9 @@ describe('useMarketplaceData', () => {
     it('should migrate agents without author_id when user is provided', async () => {
       const agentWithoutAuthor = { ...mockAgent, author_id: null, author_name: null }
       mockGetLocalStorageItem.mockReturnValue([agentWithoutAuthor])
+      
+      // Create stable user object reference to prevent infinite re-renders
+      const user = { id: 'user-1', username: 'testuser' }
 
       const { result } = renderHook(() =>
         useMarketplaceData({
@@ -298,7 +301,7 @@ describe('useMarketplaceData', () => {
           category: '',
           searchQuery: '',
           sortBy: 'popular',
-          user: { id: 'user-1', username: 'testuser' },
+          user,
           activeTab: 'agents',
           repositorySubTab: 'workflows',
         })
@@ -738,8 +741,8 @@ describe('useMarketplaceData', () => {
     })
 
     it('should filter repository agents by search query', async () => {
-      const agent1 = { ...mockAgent, id: 'agent-1', name: 'Test Agent' }
-      const agent2 = { ...mockAgent, id: 'agent-2', name: 'Other Agent' }
+      const agent1 = { ...mockAgent, id: 'agent-1', name: 'Test Agent', description: 'Some description', tags: ['automation'] }
+      const agent2 = { ...mockAgent, id: 'agent-2', name: 'Other Agent', description: 'Other description', tags: ['other'] }
       mockStorage.getItem.mockReturnValue(JSON.stringify([agent1, agent2]))
 
       const { result } = renderHook(() =>
@@ -757,12 +760,13 @@ describe('useMarketplaceData', () => {
       )
 
       // Wait for initial effect to complete (it will call fetchRepositoryAgents with searchQuery='Test')
-      await waitFor(() => {
-        expect(result.current.loading).toBe(false)
-        expect(result.current.repositoryAgents.length).toBeGreaterThan(0)
-      }, { timeout: 3000 })
+      await act(async () => {
+        await new Promise(resolve => setTimeout(resolve, 300))
+      })
 
+      expect(result.current.loading).toBe(false)
       expect(result.current.repositoryAgents).toHaveLength(1)
+      expect(result.current.repositoryAgents[0].name).toBe('Test Agent')
     })
 
     it('should sort repository agents by published_at for recent sort', async () => {
