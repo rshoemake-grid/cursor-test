@@ -20,7 +20,13 @@ describe('useMarketplaceIntegration', () => {
   beforeEach(() => {
     jest.clearAllMocks()
     jest.useFakeTimers()
-    mockSetNodes = jest.fn()
+    mockSetNodes = jest.fn((updater: any) => {
+      // Default implementation - can be overridden in tests
+      if (typeof updater === 'function') {
+        return updater([])
+      }
+      return updater
+    })
     mockNotifyModified = jest.fn()
     mockSaveDraftsToStorage = jest.fn()
     mockTabDraftsRef = {
@@ -223,6 +229,15 @@ describe('useMarketplaceIntegration', () => {
     })
 
     it('should update draft storage after adding agents', async () => {
+      let currentNodes: Node[] = []
+      mockSetNodes.mockImplementation((updater: any) => {
+        if (typeof updater === 'function') {
+          currentNodes = updater(currentNodes)
+        } else {
+          currentNodes = updater
+        }
+      })
+
       const { result } = renderHook(() =>
         useMarketplaceIntegration({
           tabId: 'tab-1',
@@ -256,7 +271,7 @@ describe('useMarketplaceIntegration', () => {
 
       await waitFor(() => {
         expect(mockSaveDraftsToStorage).toHaveBeenCalled()
-      })
+      }, { timeout: 1000 })
 
       const savedDrafts = mockSaveDraftsToStorage.mock.calls[0][0]
       expect(savedDrafts['tab-1'].nodes.length).toBeGreaterThan(0)
@@ -273,6 +288,15 @@ describe('useMarketplaceIntegration', () => {
         workflowDescription: 'Test Description',
         isUnsaved: false,
       }
+
+      let currentNodes: Node[] = []
+      mockSetNodes.mockImplementation((updater: any) => {
+        if (typeof updater === 'function') {
+          currentNodes = updater(currentNodes)
+        } else {
+          currentNodes = updater
+        }
+      })
 
       const { result } = renderHook(() =>
         useMarketplaceIntegration({
@@ -301,7 +325,7 @@ describe('useMarketplaceIntegration', () => {
 
       await waitFor(() => {
         expect(mockSaveDraftsToStorage).toHaveBeenCalled()
-      })
+      }, { timeout: 1000 })
 
       const savedDrafts = mockSaveDraftsToStorage.mock.calls[0][0]
       expect(savedDrafts['tab-1'].edges).toHaveLength(1)
@@ -423,6 +447,15 @@ describe('useMarketplaceIntegration', () => {
     })
 
     it('should use current state values in draft update', async () => {
+      let currentNodes: Node[] = []
+      mockSetNodes.mockImplementation((updater: any) => {
+        if (typeof updater === 'function') {
+          currentNodes = updater(currentNodes)
+        } else {
+          currentNodes = updater
+        }
+      })
+
       const { result, rerender } = renderHook(
         ({ localWorkflowId, localWorkflowName, tabIsUnsaved }) =>
           useMarketplaceIntegration({
@@ -465,7 +498,7 @@ describe('useMarketplaceIntegration', () => {
 
       await waitFor(() => {
         expect(mockSaveDraftsToStorage).toHaveBeenCalled()
-      })
+      }, { timeout: 1000 })
 
       const savedDrafts = mockSaveDraftsToStorage.mock.calls[0][0]
       expect(savedDrafts['tab-1'].workflowId).toBe('workflow-1')
