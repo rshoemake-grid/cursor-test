@@ -248,7 +248,10 @@ describe('useMarketplaceIntegration', () => {
 
       act(() => {
         result.current.addAgentsToCanvas(agents)
-        jest.advanceTimersByTime(0)
+      })
+
+      act(() => {
+        jest.advanceTimersByTime(10)
       })
 
       await waitFor(() => {
@@ -290,7 +293,10 @@ describe('useMarketplaceIntegration', () => {
 
       act(() => {
         result.current.addAgentsToCanvas(agents)
-        jest.advanceTimersByTime(0)
+      })
+
+      act(() => {
+        jest.advanceTimersByTime(10)
       })
 
       await waitFor(() => {
@@ -348,7 +354,10 @@ describe('useMarketplaceIntegration', () => {
       act(() => {
         result.current.addAgentsToCanvas(agents)
         expect(result.current.isAddingAgentsRef.current).toBe(true)
-        jest.advanceTimersByTime(100)
+      })
+
+      act(() => {
+        jest.advanceTimersByTime(1000)
       })
 
       expect(result.current.isAddingAgentsRef.current).toBe(false)
@@ -448,7 +457,10 @@ describe('useMarketplaceIntegration', () => {
 
       act(() => {
         result.current.addAgentsToCanvas(agents)
-        jest.advanceTimersByTime(0)
+      })
+
+      act(() => {
+        jest.advanceTimersByTime(10)
       })
 
       await waitFor(() => {
