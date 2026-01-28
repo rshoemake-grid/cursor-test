@@ -9,8 +9,8 @@ import type { StorageAdapter, HttpClient, ConsoleAdapter } from '../types/adapte
 import { api } from '../api/client'
 
 // Helper to ensure all waitFor calls have timeouts
-const waitForWithTimeout = (callback: () => void | Promise<void>, timeout = 2000) => {
-  return waitFor(callback, { timeout })
+const waitForWithTimeout = async (callback: () => void | Promise<void>, timeout = 2000) => {
+  return await waitFor(callback, { timeout })
 }
 
 // Mock dependencies
@@ -1035,7 +1035,7 @@ describe('SettingsPage', () => {
 
     await waitForWithTimeout(() => {
       expect(screen.getAllByText(/Settings/).length).toBeGreaterThan(0)
-    }, 3000) // Default timeout
+    }, 3000)
 
     // Find manual sync button
     const syncButtons = screen.queryAllByText(/Sync|Manual Sync/)
@@ -1043,7 +1043,7 @@ describe('SettingsPage', () => {
       fireEvent.click(syncButtons[0])
       await waitForWithTimeout(() => {
         expect(mockShowError).toHaveBeenCalledWith('Sign in to sync your LLM settings with the server.')
-      }, 3000) // Default timeout
+      }, 3000)
     }
   })
 

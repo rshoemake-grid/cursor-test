@@ -23,30 +23,30 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>0/35</span>
+                <span class='fraction'>35/35</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>0/1</span>
+                <span class='fraction'>2/2</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>0/1</span>
+                <span class='fraction'>2/2</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>0/35</span>
+                <span class='fraction'>35/35</span>
             </div>
         
             
@@ -61,7 +61,7 @@
             </div>
         </template>
     </div>
-    <div class='status-line low'></div>
+    <div class='status-line high'></div>
     <pre><table class="coverage">
 <tr><td class="line-count quiet"><a name='L1'></a><a href='#L1'>1</a>
 <a name='L2'></a><a href='#L2'>2</a>
@@ -98,76 +98,76 @@
 <a name='L33'></a><a href='#L33'>33</a>
 <a name='L34'></a><a href='#L34'>34</a>
 <a name='L35'></a><a href='#L35'>35</a>
-<a name='L36'></a><a href='#L36'>36</a></td><td class="line-coverage quiet"><span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js"><span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" ><span class="branch-0 cbranch-no" title="branch not covered" >/**</span></span></span>
-<span class="cstat-no" title="statement not covered" > * Template Constants</span>
-<span class="cstat-no" title="statement not covered" > * Centralized definitions for template categories and difficulties</span>
-<span class="cstat-no" title="statement not covered" > * Used across WorkflowTabs, MarketplaceDialog, and WorkflowList components</span>
-<span class="cstat-no" title="statement not covered" > */</span>
-<span class="cstat-no" title="statement not covered" ></span>
-<span class="cstat-no" title="statement not covered" >export const TEMPLATE_CATEGORIES = [</span>
-<span class="cstat-no" title="statement not covered" >  'content_creation',</span>
-<span class="cstat-no" title="statement not covered" >  'data_analysis',</span>
-<span class="cstat-no" title="statement not covered" >  'customer_service',</span>
-<span class="cstat-no" title="statement not covered" >  'research',</span>
-<span class="cstat-no" title="statement not covered" >  'automation',</span>
-<span class="cstat-no" title="statement not covered" >  'education',</span>
-<span class="cstat-no" title="statement not covered" >  'marketing',</span>
-<span class="cstat-no" title="statement not covered" >  'other'</span>
-<span class="cstat-no" title="statement not covered" >] as const</span>
-<span class="cstat-no" title="statement not covered" ></span>
-<span class="cstat-no" title="statement not covered" >export const TEMPLATE_DIFFICULTIES = ['beginner', 'intermediate', 'advanced'] as const</span>
-<span class="cstat-no" title="statement not covered" ></span>
-<span class="cstat-no" title="statement not covered" >export type TemplateCategory = typeof TEMPLATE_CATEGORIES[number]</span>
-<span class="cstat-no" title="statement not covered" >export type TemplateDifficulty = typeof TEMPLATE_DIFFICULTIES[number]</span>
-<span class="cstat-no" title="statement not covered" ></span>
-<span class="cstat-no" title="statement not covered" >/**</span>
-<span class="cstat-no" title="statement not covered" > * Format category for display (replace underscores with spaces)</span>
-<span class="cstat-no" title="statement not covered" > */</span>
-<span class="cstat-no" title="statement not covered" >export function formatCategory(category: TemplateCategory): string {</span>
-<span class="cstat-no" title="statement not covered" >  return category.replace(/_/g, ' ')</span>
-<span class="cstat-no" title="statement not covered" >}</span>
-<span class="cstat-no" title="statement not covered" ></span>
-<span class="cstat-no" title="statement not covered" >/**</span>
-<span class="cstat-no" title="statement not covered" > * Format difficulty for display (capitalize first letter)</span>
-<span class="cstat-no" title="statement not covered" > */</span>
-<span class="cstat-no" title="statement not covered" >export function formatDifficulty(difficulty: TemplateDifficulty): string {</span>
-<span class="cstat-no" title="statement not covered" >  return difficulty.charAt(0).toUpperCase() + difficulty.slice(1)</span>
-<span class="cstat-no" title="statement not covered" >}</span>
+<a name='L36'></a><a href='#L36'>36</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1253x</span>
+<span class="cline-any cline-yes">1253x</span>
+<span class="cline-any cline-yes">1253x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">473x</span>
+<span class="cline-any cline-yes">473x</span>
+<span class="cline-any cline-yes">473x</span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">/**
+ * Template Constants
+ * Centralized definitions for template categories and difficulties
+ * Used across WorkflowTabs, MarketplaceDialog, and WorkflowList components
+ */
+&nbsp;
+export const TEMPLATE_CATEGORIES = [
+  'content_creation',
+  'data_analysis',
+  'customer_service',
+  'research',
+  'automation',
+  'education',
+  'marketing',
+  'other'
+] as const
+&nbsp;
+export const TEMPLATE_DIFFICULTIES = ['beginner', 'intermediate', 'advanced'] as const
+&nbsp;
+export type TemplateCategory = typeof TEMPLATE_CATEGORIES[number]
+export type TemplateDifficulty = typeof TEMPLATE_DIFFICULTIES[number]
+&nbsp;
+/**
+ * Format category for display (replace underscores with spaces)
+ */
+export function formatCategory(category: TemplateCategory): string {
+  return category.replace(/_/g, ' ')
+}
+&nbsp;
+/**
+ * Format difficulty for display (capitalize first letter)
+ */
+export function formatDifficulty(difficulty: TemplateDifficulty): string {
+  return difficulty.charAt(0).toUpperCase() + difficulty.slice(1)
+}
 &nbsp;</pre></td></tr></table></pre>
 
                 <div class='push'></div><!-- for sticky footer -->
@@ -175,7 +175,7 @@
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-01-27T22:19:41.510Z
+                at 2026-01-28T19:49:02.514Z
             </div>
         <script src="../../prettify.js"></script>
         <script>

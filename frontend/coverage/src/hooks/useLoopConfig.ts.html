@@ -23,30 +23,30 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">36.95% </span>
+                <span class="strong">78.26% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>17/46</span>
+                <span class='fraction'>36/46</span>
+            </div>
+        
+            
+            <div class='fl pad1y space-right2'>
+                <span class="strong">87.5% </span>
+                <span class="quiet">Branches</span>
+                <span class='fraction'>7/8</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
-                <span class="quiet">Branches</span>
-                <span class='fraction'>0/0</span>
-            </div>
-        
-            
-            <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>0/1</span>
+                <span class='fraction'>1/1</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">36.95% </span>
+                <span class="strong">78.26% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>17/46</span>
+                <span class='fraction'>36/46</span>
             </div>
         
             
@@ -61,7 +61,7 @@
             </div>
         </template>
     </div>
-    <div class='status-line low'></div>
+    <div class='status-line medium'></div>
     <pre><table class="coverage">
 <tr><td class="line-count quiet"><a name='L1'></a><a href='#L1'>1</a>
 <a name='L2'></a><a href='#L2'>2</a>
@@ -126,6 +126,20 @@
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">314x</span>
+<span class="cline-any cline-yes">314x</span>
+<span class="cline-any cline-yes">314x</span>
+<span class="cline-any cline-yes">314x</span>
+<span class="cline-any cline-yes">134x</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-yes">134x</span>
+<span class="cline-any cline-yes">134x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -136,25 +150,11 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">314x</span>
+<span class="cline-any cline-yes">314x</span>
 <span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">/**
  * Loop Config Hook
  * Manages loop_config initialization for Loop nodes
@@ -172,20 +172,20 @@ interface UseLoopConfigOptions {
  * 
  * @param options Configuration options
  */
-<span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >export function useLoopConfig({ selectedNode }: UseLoopConfigOptions) {</span></span>
-<span class="cstat-no" title="statement not covered" >  const { setNodes } = useReactFlow()</span>
-<span class="cstat-no" title="statement not covered" ></span>
-<span class="cstat-no" title="statement not covered" >  useEffect(() =&gt; {</span>
-<span class="cstat-no" title="statement not covered" >    if (!selectedNode || selectedNode.type !== 'loop') return</span>
-<span class="cstat-no" title="statement not covered" >    </span>
-<span class="cstat-no" title="statement not covered" >    const nodeData = selectedNode.data || {}</span>
-<span class="cstat-no" title="statement not covered" >    if (!nodeData.loop_config || Object.keys(nodeData.loop_config).length === 0) {</span>
-<span class="cstat-no" title="statement not covered" >      const defaultLoopConfig = {</span>
-<span class="cstat-no" title="statement not covered" >        loop_type: 'for_each',</span>
-<span class="cstat-no" title="statement not covered" >        max_iterations: 0,</span>
-<span class="cstat-no" title="statement not covered" >      }</span>
-<span class="cstat-no" title="statement not covered" >      // Update the node with default config</span>
-<span class="cstat-no" title="statement not covered" >      setNodes((nodes) =&gt;</span>
+export function useLoopConfig({ selectedNode }: UseLoopConfigOptions) {
+  const { setNodes } = useReactFlow()
+&nbsp;
+  useEffect(() =&gt; {
+    if (!selectedNode || selectedNode.type !== 'loop') return
+    
+    const nodeData = selectedNode.data<span class="branch-0 cbranch-no" title="branch not covered" > || {}</span>
+    if (!nodeData.loop_config || Object.keys(nodeData.loop_config).length === 0) {
+      const defaultLoopConfig = {
+        loop_type: 'for_each',
+        max_iterations: 0,
+      }
+      // Update the node with default config
+      setNodes((nodes) =&gt;
 <span class="cstat-no" title="statement not covered" >        nodes.map((n) =&gt;</span>
 <span class="cstat-no" title="statement not covered" >          n.id === selectedNode.id</span>
 <span class="cstat-no" title="statement not covered" >            ? {</span>
@@ -196,11 +196,11 @@ interface UseLoopConfigOptions {
 <span class="cstat-no" title="statement not covered" >                },</span>
 <span class="cstat-no" title="statement not covered" >              }</span>
 <span class="cstat-no" title="statement not covered" >            : n</span>
-<span class="cstat-no" title="statement not covered" >        )</span>
-<span class="cstat-no" title="statement not covered" >      )</span>
-<span class="cstat-no" title="statement not covered" >    }</span>
-<span class="cstat-no" title="statement not covered" >  }, [selectedNode, setNodes])</span>
-<span class="cstat-no" title="statement not covered" >}</span>
+        )
+      )
+    }
+  }, [selectedNode, setNodes])
+}
 &nbsp;</pre></td></tr></table></pre>
 
                 <div class='push'></div><!-- for sticky footer -->
@@ -208,7 +208,7 @@ interface UseLoopConfigOptions {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-01-27T22:19:41.510Z
+                at 2026-01-28T19:49:02.514Z
             </div>
         <script src="../../prettify.js"></script>
         <script>

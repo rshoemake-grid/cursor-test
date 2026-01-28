@@ -340,7 +340,7 @@ describe('WorkflowChat', () => {
       ok: true,
       json: async () => ({ message: 'Response' }),
     }
-    ;(global.fetch as jest.Mock).mockResolvedValue(mockResponse)
+    mockAuthenticatedPost.mockResolvedValue(mockResponse)
 
     renderWithProvider(<WorkflowChat workflowId="workflow-1" />)
 
@@ -394,7 +394,7 @@ describe('WorkflowChat', () => {
     const promise = new Promise((resolve) => {
       resolvePromise = resolve
     })
-    ;(global.fetch as jest.Mock).mockReturnValue(promise)
+    mockAuthenticatedPost.mockReturnValue(promise)
 
     renderWithProvider(<WorkflowChat workflowId="workflow-1" />)
 
@@ -753,7 +753,7 @@ describe('WorkflowChat', () => {
         ok: true,
         json: async () => ({ message: 'Response' }),
       }
-      ;(global.fetch as jest.Mock).mockResolvedValue(mockResponse)
+      mockAuthenticatedPost.mockResolvedValue(mockResponse)
 
       renderWithProvider(
         <WorkflowChat workflowId="workflow-1" storage={mockStorage} />

@@ -1,7 +1,14 @@
 import { logger } from './logger'
 
 describe('logger', () => {
-  const consoleLogSpy = jest.spyOn(console, 'log').mockImplementation(() => {})
+  const consoleLogSpy = jest.spyOn(console, 'log').mockImplementation((...args) => {
+    // Filter out our test logging messages
+    const message = args[0]
+    if (typeof message === 'string' && (message.includes('[TEST') || message.includes('[SUITE'))) {
+      return
+    }
+    // Don't actually log, just track calls
+  })
   const consoleInfoSpy = jest.spyOn(console, 'info').mockImplementation(() => {})
   const consoleWarnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {})
   const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {})

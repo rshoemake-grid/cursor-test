@@ -23,30 +23,30 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>0/25</span>
+                <span class='fraction'>25/25</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>0/1</span>
+                <span class='fraction'>6/6</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>0/1</span>
+                <span class='fraction'>1/1</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>0/25</span>
+                <span class='fraction'>25/25</span>
             </div>
         
             
@@ -61,7 +61,7 @@
             </div>
         </template>
     </div>
-    <div class='status-line low'></div>
+    <div class='status-line high'></div>
     <pre><table class="coverage">
 <tr><td class="line-count quiet"><a name='L1'></a><a href='#L1'>1</a>
 <a name='L2'></a><a href='#L2'>2</a>
@@ -88,56 +88,56 @@
 <a name='L23'></a><a href='#L23'>23</a>
 <a name='L24'></a><a href='#L24'>24</a>
 <a name='L25'></a><a href='#L25'>25</a>
-<a name='L26'></a><a href='#L26'>26</a></td><td class="line-coverage quiet"><span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js"><span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" ><span class="branch-0 cbranch-no" title="branch not covered" >/**</span></span></span>
-<span class="cstat-no" title="statement not covered" > * Node Conversion Utilities</span>
-<span class="cstat-no" title="statement not covered" > * Converts React Flow nodes to various formats for different use cases</span>
-<span class="cstat-no" title="statement not covered" > */</span>
-<span class="cstat-no" title="statement not covered" ></span>
-<span class="cstat-no" title="statement not covered" >import type { Node } from '@xyflow/react'</span>
-<span class="cstat-no" title="statement not covered" >import type { WorkflowNode } from '../types/workflow'</span>
-<span class="cstat-no" title="statement not covered" ></span>
-<span class="cstat-no" title="statement not covered" >/**</span>
-<span class="cstat-no" title="statement not covered" > * Convert React Flow nodes to WorkflowNode format for ExecutionInputDialog</span>
-<span class="cstat-no" title="statement not covered" > */</span>
-<span class="cstat-no" title="statement not covered" >export function convertNodesForExecutionInput(nodes: Node[]): WorkflowNode[] {</span>
-<span class="cstat-no" title="statement not covered" >  return nodes.map((node: any) =&gt; ({</span>
-<span class="cstat-no" title="statement not covered" >    id: node.id,</span>
-<span class="cstat-no" title="statement not covered" >    type: node.type as any, // NodeType from workflow types</span>
-<span class="cstat-no" title="statement not covered" >    name: node.data.name || (typeof node.data.label === 'string' ? node.data.label : ''),</span>
-<span class="cstat-no" title="statement not covered" >    description: node.data.description,</span>
-<span class="cstat-no" title="statement not covered" >    agent_config: (node.data as any).agent_config,</span>
-<span class="cstat-no" title="statement not covered" >    condition_config: (node.data as any).condition_config,</span>
-<span class="cstat-no" title="statement not covered" >    loop_config: node.data.loop_config,</span>
-<span class="cstat-no" title="statement not covered" >    input_config: node.data.input_config,</span>
-<span class="cstat-no" title="statement not covered" >    inputs: node.data.inputs || [],</span>
-<span class="cstat-no" title="statement not covered" >    position: node.position,</span>
-<span class="cstat-no" title="statement not covered" >  }))</span>
-<span class="cstat-no" title="statement not covered" >}</span>
+<a name='L26'></a><a href='#L26'>26</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">7x</span>
+<span class="cline-any cline-yes">7x</span>
+<span class="cline-any cline-yes">7x</span>
+<span class="cline-any cline-yes">7x</span>
+<span class="cline-any cline-yes">7x</span>
+<span class="cline-any cline-yes">7x</span>
+<span class="cline-any cline-yes">7x</span>
+<span class="cline-any cline-yes">7x</span>
+<span class="cline-any cline-yes">7x</span>
+<span class="cline-any cline-yes">7x</span>
+<span class="cline-any cline-yes">7x</span>
+<span class="cline-any cline-yes">7x</span>
+<span class="cline-any cline-yes">7x</span>
+<span class="cline-any cline-yes">7x</span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">/**
+ * Node Conversion Utilities
+ * Converts React Flow nodes to various formats for different use cases
+ */
+&nbsp;
+import type { Node } from '@xyflow/react'
+import type { WorkflowNode } from '../types/workflow'
+&nbsp;
+/**
+ * Convert React Flow nodes to WorkflowNode format for ExecutionInputDialog
+ */
+export function convertNodesForExecutionInput(nodes: Node[]): WorkflowNode[] {
+  return nodes.map((node: any) =&gt; ({
+    id: node.id,
+    type: node.type as any, // NodeType from workflow types
+    name: node.data.name || (typeof node.data.label === 'string' ? node.data.label : ''),
+    description: node.data.description,
+    agent_config: (node.data as any).agent_config,
+    condition_config: (node.data as any).condition_config,
+    loop_config: node.data.loop_config,
+    input_config: node.data.input_config,
+    inputs: node.data.inputs || [],
+    position: node.position,
+  }))
+}
 &nbsp;</pre></td></tr></table></pre>
 
                 <div class='push'></div><!-- for sticky footer -->
@@ -145,7 +145,7 @@
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-01-27T22:19:41.510Z
+                at 2026-01-28T19:49:02.514Z
             </div>
         <script src="../../prettify.js"></script>
         <script>

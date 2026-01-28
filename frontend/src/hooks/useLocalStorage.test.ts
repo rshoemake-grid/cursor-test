@@ -2,6 +2,16 @@
 import { renderHook, act } from '@testing-library/react'
 import { useLocalStorage, getLocalStorageItem, setLocalStorageItem, removeLocalStorageItem } from './useLocalStorage'
 
+// Mock logger to suppress expected console.error and console.warn messages in tests
+jest.mock('../utils/logger', () => ({
+  logger: {
+    error: jest.fn(),
+    warn: jest.fn(),
+    debug: jest.fn(),
+    info: jest.fn(),
+  }
+}))
+
 describe('useLocalStorage', () => {
   beforeEach(() => {
     localStorage.clear()

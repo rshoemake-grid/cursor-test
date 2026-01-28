@@ -18,6 +18,7 @@ jest.mock('../contexts/AuthContext', () => ({
 
 jest.mock('../api/client', () => ({
   api: {
+    publishAgent: jest.fn(),
     publishWorkflow: jest.fn(),
   },
 }))
@@ -128,6 +129,18 @@ describe('MarketplaceDialog', () => {
   })
 
   it('should handle agent publishing', async () => {
+    // Mock publishAgent to return a successful response
+    ;(mockApi.publishAgent as jest.Mock).mockResolvedValue({
+      id: 'agent-123',
+      name: 'Test Agent',
+      description: 'Test description',
+      category: 'automation',
+      tags: [],
+      difficulty: 'beginner',
+      estimated_time: '',
+      agent_config: {},
+    })
+
     render(<MarketplaceDialog isOpen={true} onClose={mockOnClose} node={mockNode} />)
 
     const publishButton = screen.getByText(/Publish/)
@@ -396,26 +409,39 @@ describe('MarketplaceDialog', () => {
   })
 
   it('should handle localStorage error when publishing agent', async () => {
-    // Mock localStorage.setItem to throw error
-    const originalSetItem = localStorage.setItem
-    localStorage.setItem = jest.fn(() => {
-      throw new Error('Storage quota exceeded')
+    // Mock publishAgent to succeed but localStorage to fail
+    ;(mockApi.publishAgent as jest.Mock).mockResolvedValue({
+      id: 'agent-123',
+      name: 'Test Agent',
+      description: 'Test description',
+      category: 'automation',
+      tags: [],
+      difficulty: 'beginner',
+      estimated_time: '',
+      agent_config: {},
     })
 
-    render(<MarketplaceDialog isOpen={true} onClose={mockOnClose} node={mockNode} />)
+    // Mock storage.setItem to throw error
+    const mockStorage = {
+      getItem: jest.fn().mockReturnValue(null),
+      setItem: jest.fn(() => {
+        throw new Error('Storage quota exceeded')
+      }),
+      removeItem: jest.fn(),
+      addEventListener: jest.fn(),
+      removeEventListener: jest.fn(),
+    }
 
-    const nameInput = screen.getByPlaceholderText(/Enter agent name/)
-    fireEvent.change(nameInput, { target: { value: 'Test Agent' } })
+    render(<MarketplaceDialog isOpen={true} onClose={mockOnClose} node={mockNode} storage={mockStorage as any} />)
 
     const publishButton = screen.getByText(/Publish/)
     fireEvent.click(publishButton)
 
+    // Should still succeed even if localStorage fails (error is logged but doesn't fail publish)
     await waitForWithTimeout(() => {
-      expect(showError).toHaveBeenCalledWith(expect.stringContaining('Failed to publish agent'))
+      expect(showSuccess).toHaveBeenCalledWith('Agent published to marketplace successfully!')
+      expect(mockOnClose).toHaveBeenCalled()
     })
-
-    // Restore original
-    localStorage.setItem = originalSetItem
   })
 
   it('should handle empty tags', async () => {
@@ -441,6 +467,18 @@ describe('MarketplaceDialog', () => {
   })
 
   it('should handle tags with spaces', async () => {
+    // Mock publishAgent to succeed
+    ;(mockApi.publishAgent as jest.Mock).mockResolvedValue({
+      id: 'agent-123',
+      name: 'Test Agent',
+      description: 'Test description',
+      category: 'automation',
+      tags: ['tag1', 'tag2', 'tag3'],
+      difficulty: 'beginner',
+      estimated_time: '',
+      agent_config: {},
+    })
+
     render(<MarketplaceDialog isOpen={true} onClose={mockOnClose} node={mockNode} />)
 
     const tagsInput = screen.getByPlaceholderText(/e.g., llm, automation, ai/)
@@ -453,7 +491,7 @@ describe('MarketplaceDialog', () => {
       expect(showSuccess).toHaveBeenCalled()
     })
 
-    // Tags should be trimmed
+    // Tags should be trimmed and saved to localStorage
     const saved = localStorage.getItem('publishedAgents')
     if (saved) {
       const agents = JSON.parse(saved)
@@ -581,11 +619,23 @@ describe('MarketplaceDialog', () => {
     })
 
     it('should handle storage errors gracefully', async () => {
+      // Mock publishAgent to succeed
+      ;(mockApi.publishAgent as jest.Mock).mockResolvedValue({
+        id: 'agent-123',
+        name: 'Test Agent',
+        description: 'Test description',
+        category: 'automation',
+        tags: [],
+        difficulty: 'beginner',
+        estimated_time: '',
+        agent_config: {},
+      })
+
       const mockStorage: StorageAdapter = {
-        getItem: jest.fn().mockImplementation(() => {
+        getItem: jest.fn().mockReturnValue(null),
+        setItem: jest.fn(() => {
           throw new Error('Storage quota exceeded')
         }),
-        setItem: jest.fn(),
         removeItem: jest.fn(),
         addEventListener: jest.fn(),
         removeEventListener: jest.fn(),
@@ -603,14 +653,26 @@ describe('MarketplaceDialog', () => {
       const publishButton = screen.getByText(/Publish/)
       fireEvent.click(publishButton)
 
+      // Storage error should be logged but publish should still succeed
       await waitForWithTimeout(() => {
-        expect(showError).toHaveBeenCalledWith(
-          expect.stringContaining('Failed to publish agent')
-        )
+        expect(showSuccess).toHaveBeenCalledWith('Agent published to marketplace successfully!')
+        expect(mockOnClose).toHaveBeenCalled()
       })
     })
 
     it('should handle null storage adapter', async () => {
+      // Mock publishAgent to succeed
+      ;(mockApi.publishAgent as jest.Mock).mockResolvedValue({
+        id: 'agent-123',
+        name: 'Test Agent',
+        description: 'Test description',
+        category: 'automation',
+        tags: [],
+        difficulty: 'beginner',
+        estimated_time: '',
+        agent_config: {},
+      })
+
       render(
         <MarketplaceDialog 
           isOpen={true} 
@@ -623,9 +685,10 @@ describe('MarketplaceDialog', () => {
       const publishButton = screen.getByText(/Publish/)
       fireEvent.click(publishButton)
 
-      // Should handle null storage gracefully
+      // Should handle null storage gracefully - publish should still succeed
       await waitForWithTimeout(() => {
-        expect(showError).toHaveBeenCalled()
+        expect(showSuccess).toHaveBeenCalledWith('Agent published to marketplace successfully!')
+        expect(mockOnClose).toHaveBeenCalled()
       })
     })
 
@@ -749,7 +812,7 @@ describe('MarketplaceDialog', () => {
           expect.objectContaining({
             estimated_time: undefined,
           })
-        , 2000) // Default timeout
+        )
       })
     })
 
@@ -784,7 +847,7 @@ describe('MarketplaceDialog', () => {
           expect.objectContaining({
             estimated_time: '45 minutes',
           })
-        , 2000) // Default timeout
+        )
       })
     })
   })

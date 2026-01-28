@@ -23,16 +23,16 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">30.15% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>0/63</span>
+                <span class='fraction'>19/63</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>0/1</span>
+                <span class='fraction'>0/0</span>
             </div>
         
             
@@ -44,9 +44,9 @@
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">30.15% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>0/63</span>
+                <span class='fraction'>19/63</span>
             </div>
         
             
@@ -126,7 +126,25 @@
 <a name='L61'></a><a href='#L61'>61</a>
 <a name='L62'></a><a href='#L62'>62</a>
 <a name='L63'></a><a href='#L63'>63</a>
-<a name='L64'></a><a href='#L64'>64</a></td><td class="line-coverage quiet"><span class="cline-any cline-no">&nbsp;</span>
+<a name='L64'></a><a href='#L64'>64</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -171,44 +189,26 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js"><span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" ><span class="branch-0 cbranch-no" title="branch not covered" >/**</span></span></span>
-<span class="cstat-no" title="statement not covered" > * Workflow Update Handler Hook</span>
-<span class="cstat-no" title="statement not covered" > * Handles workflow updates from chat/backend, including reload logic for deletions</span>
-<span class="cstat-no" title="statement not covered" > */</span>
-<span class="cstat-no" title="statement not covered" ></span>
-<span class="cstat-no" title="statement not covered" >import { useCallback } from 'react'</span>
-<span class="cstat-no" title="statement not covered" >import { api } from '../api/client'</span>
-<span class="cstat-no" title="statement not covered" >import { logger } from '../utils/logger'</span>
-<span class="cstat-no" title="statement not covered" >import { initializeReactFlowNodes, formatEdgesForReactFlow } from '../utils/workflowFormat'</span>
-<span class="cstat-no" title="statement not covered" >import type { Node, Edge } from '@xyflow/react'</span>
-<span class="cstat-no" title="statement not covered" ></span>
-<span class="cstat-no" title="statement not covered" >interface UseWorkflowUpdateHandlerOptions {</span>
-<span class="cstat-no" title="statement not covered" >  localWorkflowId: string | null</span>
-<span class="cstat-no" title="statement not covered" >  setNodes: (nodes: Node[] | ((prev: Node[]) =&gt; Node[])) =&gt; void</span>
-<span class="cstat-no" title="statement not covered" >  setEdges: (edges: Edge[] | ((prev: Edge[]) =&gt; Edge[])) =&gt; void</span>
-<span class="cstat-no" title="statement not covered" >  workflowNodeToNode: (wfNode: any) =&gt; Node</span>
-<span class="cstat-no" title="statement not covered" >  applyLocalChanges: (changes: any) =&gt; void</span>
-<span class="cstat-no" title="statement not covered" >}</span>
-<span class="cstat-no" title="statement not covered" ></span>
-<span class="cstat-no" title="statement not covered" >export function useWorkflowUpdateHandler({</span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">/**
+ * Workflow Update Handler Hook
+ * Handles workflow updates from chat/backend, including reload logic for deletions
+ */
+&nbsp;
+import { useCallback } from 'react'
+import { api } from '../api/client'
+import { logger } from '../utils/logger'
+import { initializeReactFlowNodes, formatEdgesForReactFlow } from '../utils/workflowFormat'
+import type { Node, Edge } from '@xyflow/react'
+&nbsp;
+interface UseWorkflowUpdateHandlerOptions {
+  localWorkflowId: string | null
+  setNodes: (nodes: Node[] | ((prev: Node[]) =&gt; Node[])) =&gt; void
+  setEdges: (edges: Edge[] | ((prev: Edge[]) =&gt; Edge[])) =&gt; void
+  workflowNodeToNode: (wfNode: any) =&gt; Node
+  applyLocalChanges: (changes: any) =&gt; void
+}
+&nbsp;
+<span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >export function useWorkflowUpdateHandler({</span></span>
 <span class="cstat-no" title="statement not covered" >  localWorkflowId,</span>
 <span class="cstat-no" title="statement not covered" >  setNodes,</span>
 <span class="cstat-no" title="statement not covered" >  setEdges,</span>
@@ -259,7 +259,7 @@
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-01-27T22:19:41.510Z
+                at 2026-01-28T19:49:02.514Z
             </div>
         <script src="../../prettify.js"></script>
         <script>

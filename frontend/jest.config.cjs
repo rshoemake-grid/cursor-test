@@ -21,10 +21,13 @@ module.exports = {
     '^.+\\.tsx?$': ['ts-jest', {
       tsconfig: {
         jsx: 'react-jsx',
+        target: 'ES2020',
+        module: 'ESNext',
       },
+      isolatedModules: true,
     }],
   },
+  testTimeout: 10000,
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json'],
-  testTimeout: 10000, // 10 second timeout for all tests
 }
 

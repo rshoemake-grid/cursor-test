@@ -86,3 +86,31 @@ if (typeof global.TextEncoder === 'undefined') {
   global.TextDecoder = TextDecoder
 }
 
+// Add logging to help identify which test is running when tests hang
+// This wraps Jest's test execution to log test names and durations
+// Using beforeEach/afterEach instead of wrapping it() to avoid parsing issues
+const testLogs: Array<{ file: string; name: string; start: number }> = []
+
+beforeEach(() => {
+  const stack = new Error().stack || ''
+  const match = stack.match(/at.*\((.+\.test\.(ts|tsx))/)
+  const testFile = match ? match[1].split('/').pop() || 'unknown' : 'unknown'
+  const testName = expect.getState().currentTestName || 'unknown'
+  testLogs.push({ file: testFile, name: testName, start: Date.now() })
+  console.log(`[TEST START] ${testFile} > ${testName}`)
+})
+
+afterEach(() => {
+  const log = testLogs.pop()
+  if (log) {
+    const duration = Date.now() - log.start
+    console.log(`[TEST END] ${log.file} > ${log.name} (${duration}ms)`)
+  }
+})
+
+// Log suite execution using describe hooks
+const suiteLogs: Array<{ file: string; name: string; start: number }> = []
+
+// Note: We can't easily wrap describe() without causing parsing issues,
+// so we'll rely on beforeEach/afterEach for test logging
+

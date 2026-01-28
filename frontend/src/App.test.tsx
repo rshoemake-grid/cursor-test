@@ -4,6 +4,7 @@ import { render, screen, waitFor, fireEvent } from '@testing-library/react'
 // Helper to ensure all waitFor calls have timeouts
 const waitForWithTimeout = (callback: () => void | Promise<void>, timeout = 2000) => {
   return waitFor(callback, { timeout })
+}
 
 import App from './App'
 

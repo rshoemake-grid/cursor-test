@@ -2,8 +2,24 @@ import React from 'react'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 
 // Helper to ensure all waitFor calls have timeouts
-const waitForWithTimeout = (callback: () => void | Promise<void>, timeout = 2000) => {
-  return waitFor(callback, { timeout })
+// When using fake timers, we need to advance timers and use real timers for waitFor
+const waitForWithTimeout = async (callback: () => void | Promise<void>, timeout = 2000) => {
+  // Check if fake timers are currently active by checking if setTimeout is mocked
+  // Note: This is a heuristic - if jest.getRealSystemTime exists, we're using fake timers
+  const wasUsingFakeTimers = typeof jest.getRealSystemTime === 'function'
+  
+  if (wasUsingFakeTimers) {
+    // Temporarily use real timers for waitFor, then restore fake timers
+    jest.useRealTimers()
+    try {
+      return await waitFor(callback, { timeout })
+    } finally {
+      jest.useFakeTimers()
+    }
+  } else {
+    // Not using fake timers, just use waitFor normally
+    return await waitFor(callback, { timeout })
+  }
 }
 
 import { ReactFlowProvider } from '@xyflow/react'

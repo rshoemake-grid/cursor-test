@@ -52,7 +52,8 @@ export default function MarketplaceDialog({
         description: node.data?.description || ''
       })
     }
-  }, [isOpen, node, publishFormHook])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, node]) // Only depend on isOpen and node, not publishFormHook (updateForm is stable)
 
   if (!isOpen) return null
 

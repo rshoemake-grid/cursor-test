@@ -44,7 +44,7 @@ describe('ResetPasswordPage', () => {
     renderWithRouter(<ResetPasswordPage />)
 
     await waitForWithTimeout(() => {
-      expect(screen.getByRole('heading', { name: /Reset Password/ }), 2000) // Default timeout.toBeInTheDocument()
+      expect(screen.getByRole('heading', { name: /Reset Password/ })).toBeInTheDocument()
     })
   })
 
@@ -108,7 +108,7 @@ describe('ResetPasswordPage', () => {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ token: 'test-token', new_password: 'newpassword123' }),
         })
-      , 2000) // Default timeout
+      )
     })
   })
 
