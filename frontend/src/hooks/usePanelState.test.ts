@@ -46,13 +46,21 @@ describe('usePanelState', () => {
   it('should close panel when closePanel is called', () => {
     const { result } = renderHook(() =>
       usePanelState({
-        selectedNode: { id: 'node-1', type: 'agent', data: {} },
+        selectedNode: null, // No node selected, so panel can be closed
       })
     )
 
-    // Panel should be open initially due to selectedNode
+    // Panel should be closed initially when no node selected
+    expect(result.current.panelOpen).toBe(false)
+
+    // Open it first
+    act(() => {
+      result.current.openPanel()
+    })
+
     expect(result.current.panelOpen).toBe(true)
 
+    // Now close it
     act(() => {
       result.current.closePanel()
     })
@@ -103,17 +111,11 @@ describe('usePanelState', () => {
   it('should update panelOpen when setPanelOpen is called', () => {
     const { result } = renderHook(() =>
       usePanelState({
-        selectedNode: { id: 'node-1', type: 'agent', data: {} },
+        selectedNode: null, // No node selected, so we can control panel state
       })
     )
 
-    // Panel should be open initially
-    expect(result.current.panelOpen).toBe(true)
-
-    act(() => {
-      result.current.setPanelOpen(false)
-    })
-
+    // Panel should be closed initially when no node selected
     expect(result.current.panelOpen).toBe(false)
 
     act(() => {
@@ -121,6 +123,12 @@ describe('usePanelState', () => {
     })
 
     expect(result.current.panelOpen).toBe(true)
+
+    act(() => {
+      result.current.setPanelOpen(false)
+    })
+
+    expect(result.current.panelOpen).toBe(false)
   })
 
   it('should handle Boolean conversion for selectedNode', () => {

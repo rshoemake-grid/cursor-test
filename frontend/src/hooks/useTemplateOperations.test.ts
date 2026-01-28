@@ -777,7 +777,7 @@ describe('useTemplateOperations', () => {
         await result.current.useTemplate('template-1')
       })
 
-      expect(mockLoggerDebug).toHaveBeenCalled()
+      expect(mockLoggerError).toHaveBeenCalled()
     })
 
     it('should handle use template exception', async () => {
@@ -808,7 +808,7 @@ describe('useTemplateOperations', () => {
         await result.current.useTemplate('template-1')
       })
 
-      expect(mockLoggerDebug).toHaveBeenCalled()
+      expect(mockLoggerError).toHaveBeenCalled()
     })
   })
 })

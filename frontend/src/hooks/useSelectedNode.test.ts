@@ -197,25 +197,29 @@ describe('useSelectedNode', () => {
     })
 
     it('should clear cache when node no longer exists', () => {
+      // First render with node existing
       const { result, rerender } = renderHook(
-        ({ selectedNodeId }) =>
+        ({ selectedNodeId, nodesProp }) =>
           useSelectedNode({
             selectedNodeId,
+            nodesProp,
           }),
         {
-          initialProps: { selectedNodeId: 'node-1' },
+          initialProps: { selectedNodeId: 'node-1', nodesProp: mockNodes },
         }
       )
 
       expect(result.current.selectedNode).toBeDefined()
 
-      // Update mocks to simulate node no longer exists
-      mockNodeExists.mockReturnValue(false)
-      mockFindNodeById.mockReturnValue(null)
+      // Update to simulate node no longer exists - use empty nodesProp
       mockGetNodes.mockReturnValue([])
+      mockNodeExists.mockImplementation(() => false)
+      mockFindNodeById.mockImplementation(() => null)
 
-      rerender({ selectedNodeId: 'node-1' })
+      // Rerender with empty nodes
+      rerender({ selectedNodeId: 'node-1', nodesProp: [] })
 
+      // Node should be null since it doesn't exist in the nodes array
       expect(result.current.selectedNode).toBeNull()
     })
 
