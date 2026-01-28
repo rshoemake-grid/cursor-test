@@ -299,44 +299,30 @@ describe('useMarketplaceData', () => {
           searchQuery: '',
           sortBy: 'popular',
           user: { id: 'user-1', username: 'testuser' },
-          activeTab: 'agents',
+          activeTab: 'repository',
           repositorySubTab: 'workflows',
         })
       )
 
       // Wait for initial effect to complete
-      await waitFor(() => {
-        expect(result.current.loading).toBe(false)
-      }, { timeout: 3000 })
-
-      // Give it a moment for migration to complete
       await act(async () => {
         await new Promise(resolve => setTimeout(resolve, 100))
       })
 
-      // Check if migration happened
-      if (mockStorage.setItem.mock.calls.length > 0) {
-        const savedAgents = JSON.parse(mockStorage.setItem.mock.calls[0][1])
-        expect(savedAgents[0].author_id).toBe('user-1')
-        expect(savedAgents[0].author_name).toBe('testuser')
-      } else {
-        // If migration didn't happen in initial effect, manually trigger it
-        mockGetLocalStorageItem.mockClear()
-        mockGetLocalStorageItem.mockReturnValue([agentWithoutAuthor])
-        mockStorage.setItem.mockClear()
+      // Manually trigger fetchAgents to test migration
+      mockGetLocalStorageItem.mockClear()
+      mockGetLocalStorageItem.mockReturnValue([agentWithoutAuthor])
+      mockStorage.setItem.mockClear()
 
-        await act(async () => {
-          await result.current.fetchAgents()
-        })
+      await act(async () => {
+        await result.current.fetchAgents()
+      })
 
-        await waitFor(() => {
-          expect(mockStorage.setItem).toHaveBeenCalled()
-        }, { timeout: 2000 })
-
-        const savedAgents = JSON.parse(mockStorage.setItem.mock.calls[0][1])
-        expect(savedAgents[0].author_id).toBe('user-1')
-        expect(savedAgents[0].author_name).toBe('testuser')
-      }
+      // Check migration happened
+      expect(mockStorage.setItem).toHaveBeenCalled()
+      const savedAgents = JSON.parse(mockStorage.setItem.mock.calls[0][1])
+      expect(savedAgents[0].author_id).toBe('user-1')
+      expect(savedAgents[0].author_name).toBe('testuser')
     })
 
     it('should use email when username not available for migration', async () => {
@@ -352,42 +338,29 @@ describe('useMarketplaceData', () => {
           searchQuery: '',
           sortBy: 'popular',
           user: { id: 'user-1', email: 'test@example.com' },
-          activeTab: 'agents',
+          activeTab: 'repository',
           repositorySubTab: 'workflows',
         })
       )
 
       // Wait for initial effect to complete
-      await waitFor(() => {
-        expect(result.current.loading).toBe(false)
-      }, { timeout: 3000 })
-
-      // Give it a moment for migration to complete
       await act(async () => {
         await new Promise(resolve => setTimeout(resolve, 100))
       })
 
-      // Check if migration happened
-      if (mockStorage.setItem.mock.calls.length > 0) {
-        const savedAgents = JSON.parse(mockStorage.setItem.mock.calls[0][1])
-        expect(savedAgents[0].author_name).toBe('test@example.com')
-      } else {
-        // If migration didn't happen in initial effect, manually trigger it
-        mockGetLocalStorageItem.mockClear()
-        mockGetLocalStorageItem.mockReturnValue([agentWithoutAuthor])
-        mockStorage.setItem.mockClear()
+      // Manually trigger fetchAgents to test migration
+      mockGetLocalStorageItem.mockClear()
+      mockGetLocalStorageItem.mockReturnValue([agentWithoutAuthor])
+      mockStorage.setItem.mockClear()
 
-        await act(async () => {
-          await result.current.fetchAgents()
-        })
+      await act(async () => {
+        await result.current.fetchAgents()
+      })
 
-        await waitFor(() => {
-          expect(mockStorage.setItem).toHaveBeenCalled()
-        }, { timeout: 2000 })
-
-        const savedAgents = JSON.parse(mockStorage.setItem.mock.calls[0][1])
-        expect(savedAgents[0].author_name).toBe('test@example.com')
-      }
+      // Check migration happened
+      expect(mockStorage.setItem).toHaveBeenCalled()
+      const savedAgents = JSON.parse(mockStorage.setItem.mock.calls[0][1])
+      expect(savedAgents[0].author_name).toBe('test@example.com')
     })
 
     it('should not migrate when user is null', async () => {
