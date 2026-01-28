@@ -40,6 +40,50 @@ describe('FirebaseNodeEditor', () => {
     expect(screen.getByLabelText(/Service Account Credentials/i)).toBeInTheDocument()
   })
 
+  it('should display default firebase_service of firestore when missing', () => {
+    const node = createMockNode({ firebase_service: undefined })
+    render(<FirebaseNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />)
+
+    const serviceSelect = screen.getByLabelText(/Firebase Service/i) as HTMLSelectElement
+    expect(serviceSelect.value).toBe('firestore')
+  })
+
+  it('should display empty string when project_id is missing', () => {
+    const node = createMockNode({ project_id: undefined })
+    render(<FirebaseNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />)
+
+    const projectIdInput = screen.getByLabelText(/Project ID/i) as HTMLInputElement
+    expect(projectIdInput.value).toBe('')
+  })
+
+  it('should display default mode of read when missing', () => {
+    const node = createMockNode({ mode: undefined })
+    render(<FirebaseNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />)
+
+    const modeSelect = screen.getByLabelText(/Connection Mode/i) as HTMLSelectElement
+    expect(modeSelect.value).toBe('read')
+  })
+
+  it('should display empty string when collection_path is missing', () => {
+    const node = createMockNode({ 
+      firebase_service: 'firestore', 
+      mode: 'read', 
+      collection_path: undefined,
+    })
+    render(<FirebaseNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />)
+
+    const collectionPathInput = screen.getByLabelText(/Collection \/ Path/i) as HTMLInputElement
+    expect(collectionPathInput.value).toBe('')
+  })
+
+  it('should display empty string when credentials is missing', () => {
+    const node = createMockNode({ credentials: undefined })
+    render(<FirebaseNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />)
+
+    const credentialsInput = screen.getByLabelText(/Service Account Credentials/i) as HTMLTextAreaElement
+    expect(credentialsInput.value).toBe('')
+  })
+
   it('should display current Firebase service value', () => {
     const node = createMockNode({ firebase_service: 'storage' })
     render(<FirebaseNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />)

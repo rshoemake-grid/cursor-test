@@ -198,6 +198,109 @@ describe('AgentNodeEditor', () => {
     expect(modelSelect.value).toBe('gpt-4') // First available model
   })
 
+  it('should display empty string when system_prompt is missing', () => {
+    const nodeWithoutPrompt: NodeWithData & { type: 'agent' } = {
+      ...mockNode,
+      data: {
+        ...mockNode.data,
+        agent_config: {
+          model: 'gpt-4',
+          max_tokens: 1000,
+          temperature: 0.7,
+        },
+      },
+    }
+
+    render(
+      <AgentNodeEditor
+        node={nodeWithoutPrompt}
+        availableModels={availableModels}
+        onUpdate={mockOnUpdate}
+        onConfigUpdate={mockOnConfigUpdate}
+      />
+    )
+
+    const promptTextarea = screen.getByLabelText(/system prompt/i) as HTMLTextAreaElement
+    expect(promptTextarea.value).toBe('')
+  })
+
+  it('should display empty string when max_tokens is missing', () => {
+    const nodeWithoutTokens: NodeWithData & { type: 'agent' } = {
+      ...mockNode,
+      data: {
+        ...mockNode.data,
+        agent_config: {
+          model: 'gpt-4',
+          system_prompt: 'Test prompt',
+          temperature: 0.7,
+        },
+      },
+    }
+
+    render(
+      <AgentNodeEditor
+        node={nodeWithoutTokens}
+        availableModels={availableModels}
+        onUpdate={mockOnUpdate}
+        onConfigUpdate={mockOnConfigUpdate}
+      />
+    )
+
+    const maxTokensInput = screen.getByLabelText(/max tokens/i) as HTMLInputElement
+    expect(maxTokensInput.value).toBe('')
+  })
+
+  it('should display default temperature value of 0.7 when missing', () => {
+    const nodeWithoutTemp: NodeWithData & { type: 'agent' } = {
+      ...mockNode,
+      data: {
+        ...mockNode.data,
+        agent_config: {
+          model: 'gpt-4',
+          system_prompt: 'Test prompt',
+          max_tokens: 1000,
+        },
+      },
+    }
+
+    render(
+      <AgentNodeEditor
+        node={nodeWithoutTemp}
+        availableModels={availableModels}
+        onUpdate={mockOnUpdate}
+        onConfigUpdate={mockOnConfigUpdate}
+      />
+    )
+
+    const temperatureSlider = screen.getByLabelText(/temperature/i) as HTMLInputElement
+    expect(temperatureSlider.getAttribute('aria-valuenow')).toBe('0.7')
+  })
+
+  it('should display default temperature display text when missing', () => {
+    const nodeWithoutTemp: NodeWithData & { type: 'agent' } = {
+      ...mockNode,
+      data: {
+        ...mockNode.data,
+        agent_config: {
+          model: 'gpt-4',
+          system_prompt: 'Test prompt',
+          max_tokens: 1000,
+        },
+      },
+    }
+
+    render(
+      <AgentNodeEditor
+        node={nodeWithoutTemp}
+        availableModels={availableModels}
+        onUpdate={mockOnUpdate}
+        onConfigUpdate={mockOnConfigUpdate}
+      />
+    )
+
+    expect(screen.getByText(/Temperature: 0.7/)).toBeInTheDocument()
+  })
+
   it('should use gpt-4o-mini when no availableModels and no model in config', () => {
     const nodeWithoutModel = {
       ...mockNode,

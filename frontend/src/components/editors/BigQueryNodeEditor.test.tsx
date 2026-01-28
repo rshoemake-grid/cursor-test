@@ -92,6 +92,22 @@ describe('BigQueryNodeEditor', () => {
     expect(screen.queryByLabelText(/SQL Query/i)).not.toBeInTheDocument()
   })
 
+  it('should display empty string when project_id is missing', () => {
+    const node = createMockNode({ project_id: undefined })
+    render(<BigQueryNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />)
+
+    const projectIdInput = screen.getByLabelText(/Project ID/i) as HTMLInputElement
+    expect(projectIdInput.value).toBe('')
+  })
+
+  it('should display default mode value of read when mode is missing', () => {
+    const node = createMockNode({ mode: undefined })
+    render(<BigQueryNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />)
+
+    const modeSelect = screen.getByLabelText(/Connection Mode/i) as HTMLSelectElement
+    expect(modeSelect.value).toBe('read')
+  })
+
   it('should call onConfigUpdate when query changes', () => {
     const node = createMockNode({ mode: 'read' })
     render(<BigQueryNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />)

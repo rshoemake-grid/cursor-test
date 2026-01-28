@@ -48,6 +48,38 @@ describe('DatabaseNodeEditor', () => {
     expect(screen.getByLabelText(/SSL Mode/i)).toBeInTheDocument()
   })
 
+  it('should display default database type of postgresql when missing', () => {
+    const node = createMockNode({ database_type: undefined })
+    render(<DatabaseNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />)
+
+    const typeSelect = screen.getByLabelText(/Database Type/i) as HTMLSelectElement
+    expect(typeSelect.value).toBe('postgresql')
+  })
+
+  it('should display default mode of read when missing', () => {
+    const node = createMockNode({ mode: undefined })
+    render(<DatabaseNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />)
+
+    const modeSelect = screen.getByLabelText(/Connection Mode/i) as HTMLSelectElement
+    expect(modeSelect.value).toBe('read')
+  })
+
+  it('should display empty string when connection_string is missing', () => {
+    const node = createMockNode({ connection_string: undefined })
+    render(<DatabaseNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />)
+
+    const connectionStringInput = screen.getByLabelText(/Connection String/i) as HTMLInputElement
+    expect(connectionStringInput.value).toBe('')
+  })
+
+  it('should display empty string when host is missing', () => {
+    const node = createMockNode({ host: undefined })
+    render(<DatabaseNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />)
+
+    const hostInput = screen.getByLabelText(/Host/i) as HTMLInputElement
+    expect(hostInput.value).toBe('')
+  })
+
   it('should display current database type value', () => {
     const node = createMockNode({ database_type: 'mysql' })
     render(<DatabaseNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />)
