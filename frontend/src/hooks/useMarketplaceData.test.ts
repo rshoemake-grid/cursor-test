@@ -318,12 +318,12 @@ describe('useMarketplaceData', () => {
         await result.current.fetchAgents()
       })
 
-      // Check migration happened - setItem is called synchronously in fetchAgents
+      // Check migration happened - setItem is called synchronously in fetchAgents when updated=true
       expect(mockStorage.setItem).toHaveBeenCalled()
       const savedAgents = JSON.parse(mockStorage.setItem.mock.calls[0][1])
       expect(savedAgents[0].author_id).toBe('user-1')
       expect(savedAgents[0].author_name).toBe('testuser')
-    }, 15000) // Increase timeout
+    })
 
     it('should use email when username not available for migration', async () => {
       const agentWithoutAuthor = { ...mockAgent, author_id: null, author_name: null }
