@@ -19,3 +19,8 @@ ENV/
 
 # Mutation testing reports
 mutation_report*.html
+
+# Coverage reports
+frontend/coverage/
+coverage/
+*.lcov
