@@ -446,6 +446,211 @@ describe('useWorkflowUpdates', () => {
       expect(converted.type).toBe('agent')
     })
 
+    it('should handle empty arrays for nodes_to_add', () => {
+      const { result } = renderHook(() =>
+        useWorkflowUpdates({
+          nodes: initialNodes,
+          edges: initialEdges,
+          setNodes: mockSetNodes,
+          setEdges: mockSetEdges,
+          notifyModified: mockNotifyModified,
+        })
+      )
+
+      act(() => {
+        result.current.applyLocalChanges({
+          nodes_to_add: [],
+        })
+      })
+
+      expect(mockSetNodes).not.toHaveBeenCalled()
+      expect(mockNotifyModified).not.toHaveBeenCalled()
+    })
+
+    it('should handle empty arrays for nodes_to_update', () => {
+      const { result } = renderHook(() =>
+        useWorkflowUpdates({
+          nodes: initialNodes,
+          edges: initialEdges,
+          setNodes: mockSetNodes,
+          setEdges: mockSetEdges,
+          notifyModified: mockNotifyModified,
+        })
+      )
+
+      act(() => {
+        result.current.applyLocalChanges({
+          nodes_to_update: [],
+        })
+      })
+
+      expect(mockSetNodes).not.toHaveBeenCalled()
+      expect(mockNotifyModified).not.toHaveBeenCalled()
+    })
+
+    it('should handle empty arrays for nodes_to_delete', () => {
+      const { result } = renderHook(() =>
+        useWorkflowUpdates({
+          nodes: initialNodes,
+          edges: initialEdges,
+          setNodes: mockSetNodes,
+          setEdges: mockSetEdges,
+          notifyModified: mockNotifyModified,
+        })
+      )
+
+      act(() => {
+        result.current.applyLocalChanges({
+          nodes_to_delete: [],
+        })
+      })
+
+      expect(mockSetNodes).not.toHaveBeenCalled()
+      expect(mockNotifyModified).not.toHaveBeenCalled()
+    })
+
+    it('should handle empty arrays for edges_to_add', async () => {
+      const { result } = renderHook(() =>
+        useWorkflowUpdates({
+          nodes: initialNodes,
+          edges: initialEdges,
+          setNodes: mockSetNodes,
+          setEdges: mockSetEdges,
+          notifyModified: mockNotifyModified,
+        })
+      )
+
+      act(() => {
+        result.current.applyLocalChanges({
+          edges_to_add: [],
+        })
+        jest.advanceTimersByTime(50)
+      })
+
+      await waitForWithTimeout(() => {
+        expect(mockSetEdges).not.toHaveBeenCalled()
+        expect(mockNotifyModified).not.toHaveBeenCalled()
+      })
+    })
+
+    it('should handle empty arrays for edges_to_delete', () => {
+      const { result } = renderHook(() =>
+        useWorkflowUpdates({
+          nodes: initialNodes,
+          edges: initialEdges,
+          setNodes: mockSetNodes,
+          setEdges: mockSetEdges,
+          notifyModified: mockNotifyModified,
+        })
+      )
+
+      act(() => {
+        result.current.applyLocalChanges({
+          edges_to_delete: [],
+        })
+      })
+
+      expect(mockSetEdges).not.toHaveBeenCalled()
+      expect(mockNotifyModified).not.toHaveBeenCalled()
+    })
+
+    it('should handle node update when node does not exist', () => {
+      const { result } = renderHook(() =>
+        useWorkflowUpdates({
+          nodes: initialNodes,
+          edges: initialEdges,
+          setNodes: mockSetNodes,
+          setEdges: mockSetEdges,
+          notifyModified: mockNotifyModified,
+        })
+      )
+
+      act(() => {
+        result.current.applyLocalChanges({
+          nodes_to_update: [
+            {
+              node_id: 'nonexistent',
+              updates: { name: 'Updated' },
+            },
+          ],
+        })
+      })
+
+      expect(mockSetNodes).toHaveBeenCalled()
+      const setNodesCall = mockSetNodes.mock.calls[0][0]
+      const updatedNodes = typeof setNodesCall === 'function' ? setNodesCall(initialNodes) : setNodesCall
+      expect(updatedNodes.find((n: Node) => n.id === 'nonexistent')).toBeUndefined()
+    })
+
+    it('should handle edge deletion with sourceHandle and targetHandle', () => {
+      const edgesWithHandles = [
+        {
+          id: 'e1',
+          source: 'node1',
+          target: 'node2',
+          sourceHandle: 'output-1',
+          targetHandle: 'input-1',
+        },
+      ]
+
+      const mockSetEdgesWithHandles = jest.fn((updater: any) => {
+        if (typeof updater === 'function') {
+          return updater(edgesWithHandles)
+        }
+        return updater
+      })
+
+      const { result } = renderHook(() =>
+        useWorkflowUpdates({
+          nodes: initialNodes,
+          edges: edgesWithHandles,
+          setNodes: mockSetNodes,
+          setEdges: mockSetEdgesWithHandles,
+          notifyModified: mockNotifyModified,
+        })
+      )
+
+      act(() => {
+        result.current.applyLocalChanges({
+          edges_to_delete: [
+            {
+              source: 'node1',
+              target: 'node2',
+              sourceHandle: 'output-1',
+              targetHandle: 'input-1',
+            },
+          ],
+        })
+      })
+
+      expect(mockSetEdgesWithHandles).toHaveBeenCalled()
+    })
+
+    it('should handle edge deletion without sourceHandle and targetHandle', () => {
+      const { result } = renderHook(() =>
+        useWorkflowUpdates({
+          nodes: initialNodes,
+          edges: initialEdges,
+          setNodes: mockSetNodes,
+          setEdges: mockSetEdges,
+          notifyModified: mockNotifyModified,
+        })
+      )
+
+      act(() => {
+        result.current.applyLocalChanges({
+          edges_to_delete: [
+            {
+              source: 'node1',
+              target: 'node2',
+            },
+          ],
+        })
+      })
+
+      expect(mockSetEdges).toHaveBeenCalled()
+    })
+
     it('should include execution state if provided', () => {
       const nodeExecutionStates = {
         node1: { status: 'running', error: undefined },
