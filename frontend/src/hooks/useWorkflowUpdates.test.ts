@@ -651,6 +651,231 @@ describe('useWorkflowUpdates', () => {
       expect(mockSetEdges).toHaveBeenCalled()
     })
 
+    it('should handle edge deletion with multiple edges', () => {
+      const multipleEdges = [
+        { id: 'e1', source: 'node1', target: 'node2' },
+        { id: 'e2', source: 'node2', target: 'node3' },
+        { id: 'e3', source: 'node1', target: 'node3' },
+      ]
+
+      const mockSetEdgesMultiple = jest.fn((updater: any) => {
+        if (typeof updater === 'function') {
+          return updater(multipleEdges)
+        }
+        return updater
+      })
+
+      const { result } = renderHook(() =>
+        useWorkflowUpdates({
+          nodes: initialNodes,
+          edges: multipleEdges,
+          setNodes: mockSetNodes,
+          setEdges: mockSetEdgesMultiple,
+          notifyModified: mockNotifyModified,
+        })
+      )
+
+      act(() => {
+        result.current.applyLocalChanges({
+          edges_to_delete: [
+            { source: 'node1', target: 'node2' },
+            { source: 'node2', target: 'node3' },
+          ],
+        })
+      })
+
+      expect(mockSetEdgesMultiple).toHaveBeenCalled()
+      const setEdgesCall = mockSetEdgesMultiple.mock.calls[0][0]
+      const filteredEdges = typeof setEdgesCall === 'function' ? setEdgesCall(multipleEdges) : setEdgesCall
+      expect(filteredEdges.length).toBe(1)
+      expect(filteredEdges[0].source).toBe('node1')
+      expect(filteredEdges[0].target).toBe('node3')
+    })
+
+    it('should handle edge addition with sourceHandle and targetHandle', async () => {
+      const nodesWithTarget = [
+        ...initialNodes,
+        {
+          id: 'node2',
+          type: 'agent',
+          position: { x: 100, y: 100 },
+          data: { name: 'Node 2' },
+        },
+      ]
+
+      const { result } = renderHook(() =>
+        useWorkflowUpdates({
+          nodes: nodesWithTarget,
+          edges: [],
+          setNodes: mockSetNodes,
+          setEdges: mockSetEdges,
+          notifyModified: mockNotifyModified,
+        })
+      )
+
+      act(() => {
+        result.current.applyLocalChanges({
+          edges_to_add: [
+            {
+              source: 'node1',
+              target: 'node2',
+              sourceHandle: 'output-1',
+              targetHandle: 'input-1',
+            },
+          ],
+        })
+        jest.advanceTimersByTime(50)
+      })
+
+      await waitForWithTimeout(() => {
+        expect(mockSetEdges).toHaveBeenCalled()
+        expect(mockNotifyModified).toHaveBeenCalled()
+      })
+    })
+
+    it('should handle edge addition when edge already exists', async () => {
+      const nodesWithTarget = [
+        ...initialNodes,
+        {
+          id: 'node2',
+          type: 'agent',
+          position: { x: 100, y: 100 },
+          data: { name: 'Node 2' },
+        },
+      ]
+
+      const existingEdges = [
+        { id: 'e1', source: 'node1', target: 'node2' },
+      ]
+
+      const { result } = renderHook(() =>
+        useWorkflowUpdates({
+          nodes: nodesWithTarget,
+          edges: existingEdges,
+          setNodes: mockSetNodes,
+          setEdges: mockSetEdges,
+          notifyModified: mockNotifyModified,
+        })
+      )
+
+      act(() => {
+        result.current.applyLocalChanges({
+          edges_to_add: [
+            {
+              source: 'node1',
+              target: 'node2',
+            },
+          ],
+        })
+        jest.advanceTimersByTime(50)
+      })
+
+      await waitForWithTimeout(() => {
+        expect(mockLoggerWarn).toHaveBeenCalledWith(
+          expect.stringContaining('already exists')
+        )
+      })
+    })
+
+    it('should handle node update with multiple fields', () => {
+      const { result } = renderHook(() =>
+        useWorkflowUpdates({
+          nodes: initialNodes,
+          edges: initialEdges,
+          setNodes: mockSetNodes,
+          setEdges: mockSetEdges,
+          notifyModified: mockNotifyModified,
+        })
+      )
+
+      act(() => {
+        result.current.applyLocalChanges({
+          nodes_to_update: [
+            {
+              node_id: 'node1',
+              updates: { name: 'Updated Name', description: 'Updated Description' },
+            },
+          ],
+        })
+      })
+
+      expect(mockSetNodes).toHaveBeenCalled()
+      const setNodesCall = mockSetNodes.mock.calls[0][0]
+      const updatedNodes = typeof setNodesCall === 'function' ? setNodesCall(initialNodes) : setNodesCall
+      const updatedNode = updatedNodes.find((n: Node) => n.id === 'node1')
+      expect(updatedNode.data.name).toBe('Updated Name')
+      expect(updatedNode.data.description).toBe('Updated Description')
+    })
+
+    it('should handle node deletion with multiple nodes', () => {
+      const multipleNodes = [
+        ...initialNodes,
+        {
+          id: 'node2',
+          type: 'agent',
+          position: { x: 100, y: 100 },
+          data: { name: 'Node 2' },
+        },
+        {
+          id: 'node3',
+          type: 'agent',
+          position: { x: 200, y: 200 },
+          data: { name: 'Node 3' },
+        },
+      ]
+
+      const { result } = renderHook(() =>
+        useWorkflowUpdates({
+          nodes: multipleNodes,
+          edges: initialEdges,
+          setNodes: mockSetNodes,
+          setEdges: mockSetEdges,
+          notifyModified: mockNotifyModified,
+        })
+      )
+
+      act(() => {
+        result.current.applyLocalChanges({
+          nodes_to_delete: ['node1', 'node2'],
+        })
+      })
+
+      expect(mockSetNodes).toHaveBeenCalled()
+      const setNodesCall = mockSetNodes.mock.calls[0][0]
+      const filteredNodes = typeof setNodesCall === 'function' ? setNodesCall(multipleNodes) : setNodesCall
+      expect(filteredNodes.length).toBe(1)
+      expect(filteredNodes[0].id).toBe('node3')
+    })
+
+    it('should handle node deletion and remove connected edges', () => {
+      const edgesConnected = [
+        { id: 'e1', source: 'node1', target: 'node2' },
+        { id: 'e2', source: 'node2', target: 'node3' },
+      ]
+
+      const { result } = renderHook(() =>
+        useWorkflowUpdates({
+          nodes: initialNodes,
+          edges: edgesConnected,
+          setNodes: mockSetNodes,
+          setEdges: mockSetEdges,
+          notifyModified: mockNotifyModified,
+        })
+      )
+
+      act(() => {
+        result.current.applyLocalChanges({
+          nodes_to_delete: ['node1'],
+        })
+      })
+
+      expect(mockSetEdges).toHaveBeenCalled()
+      const setEdgesCall = mockSetEdges.mock.calls[0][0]
+      const filteredEdges = typeof setEdgesCall === 'function' ? setEdgesCall(edgesConnected) : setEdgesCall
+      // Edge e1 should be removed (source is node1)
+      expect(filteredEdges.every((e: Edge) => e.source !== 'node1')).toBe(true)
+    })
+
     it('should include execution state if provided', () => {
       const nodeExecutionStates = {
         node1: { status: 'running', error: undefined },
