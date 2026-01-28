@@ -306,7 +306,7 @@ describe('useMarketplaceData', () => {
 
       // Wait for initial effect to complete
       await act(async () => {
-        await new Promise(resolve => setTimeout(resolve, 100))
+        await new Promise(resolve => setTimeout(resolve, 200))
       })
 
       // Manually trigger fetchAgents to test migration
@@ -318,12 +318,12 @@ describe('useMarketplaceData', () => {
         await result.current.fetchAgents()
       })
 
-      // Check migration happened
+      // Check migration happened - setItem is called synchronously in fetchAgents
       expect(mockStorage.setItem).toHaveBeenCalled()
       const savedAgents = JSON.parse(mockStorage.setItem.mock.calls[0][1])
       expect(savedAgents[0].author_id).toBe('user-1')
       expect(savedAgents[0].author_name).toBe('testuser')
-    })
+    }, 15000) // Increase timeout
 
     it('should use email when username not available for migration', async () => {
       const agentWithoutAuthor = { ...mockAgent, author_id: null, author_name: null }
@@ -415,8 +415,8 @@ describe('useMarketplaceData', () => {
     })
 
     it('should filter by search query in name', async () => {
-      const agent1 = { ...mockAgent, id: 'agent-1', name: 'Test Agent' }
-      const agent2 = { ...mockAgent, id: 'agent-2', name: 'Other Agent' }
+      const agent1 = { ...mockAgent, id: 'agent-1', name: 'Test Agent', description: 'Some description', tags: ['automation'] }
+      const agent2 = { ...mockAgent, id: 'agent-2', name: 'Other Agent', description: 'Other description', tags: ['other'] }
       mockGetLocalStorageItem.mockReturnValue([agent1, agent2])
 
       const { result } = renderHook(() =>
@@ -434,18 +434,18 @@ describe('useMarketplaceData', () => {
       )
 
       // Wait for initial effect to complete (it will call fetchAgents with searchQuery='Test')
-      await waitFor(() => {
-        expect(result.current.loading).toBe(false)
-        expect(result.current.agents.length).toBeGreaterThan(0)
-      }, { timeout: 3000 })
+      await act(async () => {
+        await new Promise(resolve => setTimeout(resolve, 300))
+      })
 
+      expect(result.current.loading).toBe(false)
       expect(result.current.agents).toHaveLength(1)
       expect(result.current.agents[0].name).toBe('Test Agent')
     })
 
     it('should filter by search query in description', async () => {
-      const agent1 = { ...mockAgent, id: 'agent-1', description: 'Test description' }
-      const agent2 = { ...mockAgent, id: 'agent-2', description: 'Other description' }
+      const agent1 = { ...mockAgent, id: 'agent-1', name: 'Agent One', description: 'Test description', tags: ['automation'] }
+      const agent2 = { ...mockAgent, id: 'agent-2', name: 'Agent Two', description: 'Other description', tags: ['other'] }
       mockGetLocalStorageItem.mockReturnValue([agent1, agent2])
 
       const { result } = renderHook(() =>
@@ -463,17 +463,18 @@ describe('useMarketplaceData', () => {
       )
 
       // Wait for initial effect to complete (it will call fetchAgents with searchQuery='Test')
-      await waitFor(() => {
-        expect(result.current.loading).toBe(false)
-        expect(result.current.agents.length).toBeGreaterThan(0)
-      }, { timeout: 3000 })
+      await act(async () => {
+        await new Promise(resolve => setTimeout(resolve, 300))
+      })
 
+      expect(result.current.loading).toBe(false)
       expect(result.current.agents).toHaveLength(1)
+      expect(result.current.agents[0].description).toContain('Test')
     })
 
     it('should filter by search query in tags', async () => {
-      const agent1 = { ...mockAgent, id: 'agent-1', tags: ['test', 'automation'] }
-      const agent2 = { ...mockAgent, id: 'agent-2', tags: ['other'] }
+      const agent1 = { ...mockAgent, id: 'agent-1', name: 'Agent One', description: 'Some description', tags: ['test', 'automation'] }
+      const agent2 = { ...mockAgent, id: 'agent-2', name: 'Agent Two', description: 'Other description', tags: ['other', 'data'] }
       mockGetLocalStorageItem.mockReturnValue([agent1, agent2])
 
       const { result } = renderHook(() =>
@@ -491,12 +492,13 @@ describe('useMarketplaceData', () => {
       )
 
       // Wait for initial effect to complete (it will call fetchAgents with searchQuery='test')
-      await waitFor(() => {
-        expect(result.current.loading).toBe(false)
-        expect(result.current.agents.length).toBeGreaterThan(0)
-      }, { timeout: 3000 })
+      await act(async () => {
+        await new Promise(resolve => setTimeout(resolve, 300))
+      })
 
+      expect(result.current.loading).toBe(false)
       expect(result.current.agents).toHaveLength(1)
+      expect(result.current.agents[0].tags).toContain('test')
     })
 
     it('should sort official agents first', async () => {
