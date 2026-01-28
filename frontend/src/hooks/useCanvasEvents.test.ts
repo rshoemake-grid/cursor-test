@@ -603,5 +603,394 @@ describe('useCanvasEvents', () => {
       expect(mockLoggerError).toHaveBeenCalled()
       expect(mockShowError).toHaveBeenCalledWith('Failed to add agent node to palette')
     })
+
+    it('should handle node with name but no label', () => {
+      mockStorage.getItem = jest.fn().mockReturnValue(JSON.stringify([]))
+
+      const { result } = renderHook(() =>
+        useCanvasEvents({
+          reactFlowInstanceRef: mockReactFlowInstanceRef as any,
+          setNodes: mockSetNodes,
+          setEdges: mockSetEdges,
+          setSelectedNodeId: mockSetSelectedNodeId,
+          notifyModified: mockNotifyModified,
+          clipboard: mockClipboard,
+          storage: mockStorage as any,
+        })
+      )
+
+      const mockNode: Node = {
+        id: 'node-1',
+        type: 'agent',
+        position: { x: 0, y: 0 },
+        data: {
+          name: 'Test Agent',
+          agent_config: {},
+        },
+      }
+
+      act(() => {
+        result.current.handleAddToAgentNodes(mockNode)
+      })
+
+      expect(mockStorage.setItem).toHaveBeenCalled()
+      const setItemCall = mockStorage.setItem.mock.calls[0]
+      const savedNodes = JSON.parse(setItemCall[1])
+      expect(savedNodes[0].label).toBe('Test Agent')
+    })
+
+    it('should handle node with neither label nor name', () => {
+      mockStorage.getItem = jest.fn().mockReturnValue(JSON.stringify([]))
+
+      const { result } = renderHook(() =>
+        useCanvasEvents({
+          reactFlowInstanceRef: mockReactFlowInstanceRef as any,
+          setNodes: mockSetNodes,
+          setEdges: mockSetEdges,
+          setSelectedNodeId: mockSetSelectedNodeId,
+          notifyModified: mockNotifyModified,
+          clipboard: mockClipboard,
+          storage: mockStorage as any,
+        })
+      )
+
+      const mockNode: Node = {
+        id: 'node-1',
+        type: 'agent',
+        position: { x: 0, y: 0 },
+        data: {
+          agent_config: {},
+        },
+      }
+
+      act(() => {
+        result.current.handleAddToAgentNodes(mockNode)
+      })
+
+      expect(mockStorage.setItem).toHaveBeenCalled()
+      const setItemCall = mockStorage.setItem.mock.calls[0]
+      const savedNodes = JSON.parse(setItemCall[1])
+      expect(savedNodes[0].label).toBe('Custom Agent')
+    })
+  })
+
+  describe('onNodeClick edge cases', () => {
+    it('should not handle clicks during drag operations', () => {
+      const { result } = renderHook(() =>
+        useCanvasEvents({
+          reactFlowInstanceRef: mockReactFlowInstanceRef as any,
+          setNodes: mockSetNodes,
+          setEdges: mockSetEdges,
+          setSelectedNodeId: mockSetSelectedNodeId,
+          notifyModified: mockNotifyModified,
+          clipboard: mockClipboard,
+        })
+      )
+
+      // Set isDraggingRef to true
+      result.current.isDraggingRef.current = true
+
+      const mockNode: Node = {
+        id: 'node-1',
+        type: 'agent',
+        position: { x: 0, y: 0 },
+        data: {},
+      }
+
+      const mockEvent = {
+        stopPropagation: jest.fn(),
+        shiftKey: false,
+        metaKey: false,
+        ctrlKey: false,
+      } as unknown as React.MouseEvent
+
+      act(() => {
+        result.current.onNodeClick(mockEvent, mockNode)
+      })
+
+      expect(mockSetSelectedNodeId).not.toHaveBeenCalled()
+      expect(mockSetNodes).not.toHaveBeenCalled()
+    })
+
+    it('should handle multi-select with metaKey', () => {
+      const { result } = renderHook(() =>
+        useCanvasEvents({
+          reactFlowInstanceRef: mockReactFlowInstanceRef as any,
+          setNodes: mockSetNodes,
+          setEdges: mockSetEdges,
+          setSelectedNodeId: mockSetSelectedNodeId,
+          notifyModified: mockNotifyModified,
+          clipboard: mockClipboard,
+        })
+      )
+
+      const mockNode: Node = {
+        id: 'node-1',
+        type: 'agent',
+        position: { x: 0, y: 0 },
+        data: {},
+        selected: false,
+      }
+
+      const mockEvent = {
+        stopPropagation: jest.fn(),
+        shiftKey: false,
+        metaKey: true,
+        ctrlKey: false,
+      } as unknown as React.MouseEvent
+
+      act(() => {
+        result.current.onNodeClick(mockEvent, mockNode)
+      })
+
+      expect(mockSetNodes).toHaveBeenCalled()
+    })
+
+    it('should handle multi-select with ctrlKey', () => {
+      const { result } = renderHook(() =>
+        useCanvasEvents({
+          reactFlowInstanceRef: mockReactFlowInstanceRef as any,
+          setNodes: mockSetNodes,
+          setEdges: mockSetEdges,
+          setSelectedNodeId: mockSetSelectedNodeId,
+          notifyModified: mockNotifyModified,
+          clipboard: mockClipboard,
+        })
+      )
+
+      const mockNode: Node = {
+        id: 'node-1',
+        type: 'agent',
+        position: { x: 0, y: 0 },
+        data: {},
+        selected: false,
+      }
+
+      const mockEvent = {
+        stopPropagation: jest.fn(),
+        shiftKey: false,
+        metaKey: false,
+        ctrlKey: true,
+      } as unknown as React.MouseEvent
+
+      act(() => {
+        result.current.onNodeClick(mockEvent, mockNode)
+      })
+
+      expect(mockSetNodes).toHaveBeenCalled()
+    })
+
+    it('should toggle selection when node is already selected in multi-select', () => {
+      const { result } = renderHook(() =>
+        useCanvasEvents({
+          reactFlowInstanceRef: mockReactFlowInstanceRef as any,
+          setNodes: mockSetNodes,
+          setEdges: mockSetEdges,
+          setSelectedNodeId: mockSetSelectedNodeId,
+          notifyModified: mockNotifyModified,
+          clipboard: mockClipboard,
+        })
+      )
+
+      const mockNode: Node = {
+        id: 'node-1',
+        type: 'agent',
+        position: { x: 0, y: 0 },
+        data: {},
+        selected: true,
+      }
+
+      const mockEvent = {
+        stopPropagation: jest.fn(),
+        shiftKey: true,
+        metaKey: false,
+        ctrlKey: false,
+      } as unknown as React.MouseEvent
+
+      act(() => {
+        result.current.onNodeClick(mockEvent, mockNode)
+      })
+
+      expect(mockSetNodes).toHaveBeenCalled()
+      const setNodesCall = mockSetNodes.mock.calls[0][0]
+      const updatedNodes = typeof setNodesCall === 'function' ? setNodesCall([mockNode]) : setNodesCall
+      const updatedNode = updatedNodes.find((n: Node) => n.id === 'node-1')
+      expect(updatedNode?.selected).toBe(false)
+    })
+  })
+
+  describe('onPaneClick edge cases', () => {
+    it('should not paste when button is not 0', () => {
+      const clipboardWithNode = {
+        clipboardNode: { id: 'node-1', type: 'agent', position: { x: 0, y: 0 }, data: {} } as Node,
+        paste: jest.fn(),
+      }
+
+      const { result } = renderHook(() =>
+        useCanvasEvents({
+          reactFlowInstanceRef: mockReactFlowInstanceRef as any,
+          setNodes: mockSetNodes,
+          setEdges: mockSetEdges,
+          setSelectedNodeId: mockSetSelectedNodeId,
+          notifyModified: mockNotifyModified,
+          clipboard: clipboardWithNode,
+        })
+      )
+
+      const mockEvent = {
+        ctrlKey: true,
+        metaKey: false,
+        button: 1, // Not left button
+        clientX: 100,
+        clientY: 200,
+      } as unknown as React.MouseEvent
+
+      act(() => {
+        result.current.onPaneClick(mockEvent)
+      })
+
+      expect(clipboardWithNode.paste).not.toHaveBeenCalled()
+    })
+
+    it('should not paste when clipboard node is null', () => {
+      const { result } = renderHook(() =>
+        useCanvasEvents({
+          reactFlowInstanceRef: mockReactFlowInstanceRef as any,
+          setNodes: mockSetNodes,
+          setEdges: mockSetEdges,
+          setSelectedNodeId: mockSetSelectedNodeId,
+          notifyModified: mockNotifyModified,
+          clipboard: mockClipboard,
+        })
+      )
+
+      const mockEvent = {
+        ctrlKey: true,
+        metaKey: false,
+        button: 0,
+        clientX: 100,
+        clientY: 200,
+      } as unknown as React.MouseEvent
+
+      act(() => {
+        result.current.onPaneClick(mockEvent)
+      })
+
+      expect(mockClipboard.paste).not.toHaveBeenCalled()
+    })
+
+    it('should paste with metaKey (Cmd on Mac)', () => {
+      const clipboardWithNode = {
+        clipboardNode: { id: 'node-1', type: 'agent', position: { x: 0, y: 0 }, data: {} } as Node,
+        paste: jest.fn(),
+      }
+
+      const { result } = renderHook(() =>
+        useCanvasEvents({
+          reactFlowInstanceRef: mockReactFlowInstanceRef as any,
+          setNodes: mockSetNodes,
+          setEdges: mockSetEdges,
+          setSelectedNodeId: mockSetSelectedNodeId,
+          notifyModified: mockNotifyModified,
+          clipboard: clipboardWithNode,
+        })
+      )
+
+      const mockEvent = {
+        ctrlKey: false,
+        metaKey: true,
+        button: 0,
+        clientX: 100,
+        clientY: 200,
+      } as unknown as React.MouseEvent
+
+      act(() => {
+        result.current.onPaneClick(mockEvent)
+      })
+
+      expect(clipboardWithNode.paste).toHaveBeenCalledWith(100, 200)
+    })
+  })
+
+  describe('onDrop edge cases', () => {
+    it('should handle fallback when closest returns null', () => {
+      mockReactFlowInstanceRef.current = { screenToFlowPosition: undefined }
+
+      const { result } = renderHook(() =>
+        useCanvasEvents({
+          reactFlowInstanceRef: mockReactFlowInstanceRef as any,
+          setNodes: mockSetNodes,
+          setEdges: mockSetEdges,
+          setSelectedNodeId: mockSetSelectedNodeId,
+          notifyModified: mockNotifyModified,
+          clipboard: mockClipboard,
+        })
+      )
+
+      const mockEvent = {
+        preventDefault: jest.fn(),
+        clientX: 150,
+        clientY: 250,
+        dataTransfer: {
+          getData: jest.fn((type: string) => {
+            if (type === 'application/reactflow') return 'agent'
+            return ''
+          }),
+        },
+        currentTarget: {
+          closest: jest.fn().mockReturnValue(null),
+        },
+      } as unknown as React.DragEvent
+
+      act(() => {
+        result.current.onDrop(mockEvent)
+      })
+
+      expect(mockSetNodes).not.toHaveBeenCalled()
+    })
+
+    it('should handle node type capitalization correctly', () => {
+      mockReactFlowInstanceRef.current.screenToFlowPosition = jest.fn().mockReturnValue({ x: 100, y: 200 })
+
+      const { result } = renderHook(() =>
+        useCanvasEvents({
+          reactFlowInstanceRef: mockReactFlowInstanceRef as any,
+          setNodes: mockSetNodes,
+          setEdges: mockSetEdges,
+          setSelectedNodeId: mockSetSelectedNodeId,
+          notifyModified: mockNotifyModified,
+          clipboard: mockClipboard,
+        })
+      )
+
+      const mockEvent = {
+        preventDefault: jest.fn(),
+        clientX: 150,
+        clientY: 250,
+        dataTransfer: {
+          getData: jest.fn((type: string) => {
+            if (type === 'application/reactflow') return 'condition'
+            return ''
+          }),
+        },
+        currentTarget: {
+          closest: jest.fn().mockReturnValue({
+            getBoundingClientRect: jest.fn().mockReturnValue({ left: 0, top: 0 }),
+          }),
+        },
+      } as unknown as React.DragEvent
+
+      act(() => {
+        result.current.onDrop(mockEvent)
+      })
+
+      expect(mockSetNodes).toHaveBeenCalled()
+      const setNodesCall = mockSetNodes.mock.calls[0][0]
+      const newNodes = typeof setNodesCall === 'function' ? setNodesCall([]) : setNodesCall
+      expect(Array.isArray(newNodes)).toBe(true)
+      if (Array.isArray(newNodes) && newNodes.length > 0) {
+        expect(newNodes[0].data.label).toContain('Condition')
+      }
+    })
   })
 })
