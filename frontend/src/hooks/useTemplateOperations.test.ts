@@ -3334,5 +3334,41 @@ describe('useTemplateOperations', () => {
       expect(setRepositoryAgentsCall.length).toBe(1) // Only agent-3 should remain
       expect(setRepositoryAgentsCall[0].id).toBe('agent-3')
     })
+
+    it('should verify user && t.author_id check in userOwnedTemplates filter kills LogicalOperator mutant', async () => {
+      const workflows = [
+        { ...mockTemplates[0], author_id: 'user-1' },
+        { ...mockTemplates[0], id: 'template-2', author_id: null },
+      ]
+
+      const { result } = renderHook(() =>
+        useTemplateOperations({
+          token: 'token',
+          user: { id: 'user-1', username: 'testuser' },
+          httpClient: mockHttpClient as any,
+          apiBaseUrl: 'http://api.test',
+          storage: mockStorage as any,
+          agents: [],
+          templates: workflows,
+          workflowsOfWorkflows: [],
+          activeTab: 'repository',
+          setAgents: mockSetAgents,
+          setTemplates: mockSetTemplates,
+          setWorkflowsOfWorkflows: mockSetWorkflowsOfWorkflows,
+          setRepositoryAgents: mockSetRepositoryAgents,
+          setSelectedAgentIds: mockSetSelectedAgentIds,
+          setSelectedTemplateIds: mockSetSelectedTemplateIds,
+          setSelectedRepositoryAgentIds: mockSetSelectedRepositoryAgentIds,
+        })
+      )
+
+      await act(async () => {
+        await result.current.deleteSelectedWorkflows(new Set(['template-1', 'template-2']))
+      })
+
+      // Should only process template-1 (has author_id), not template-2 (null author_id)
+      // This verifies the user && t.author_id check kills LogicalOperator mutant
+      expect(mockShowError).toHaveBeenCalled()
+    })
   })
 })
