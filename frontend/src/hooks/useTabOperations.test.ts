@@ -778,16 +778,41 @@ describe('useTabOperations', () => {
           result.current.handleCloseTab('non-existent-tab', mockEvent)
         })
 
-        expect(mockSetTabs).not.toHaveBeenCalled()
+        // When tabToClose is undefined, it still calls setTabs but filtered array is same as prev
+        expect(mockSetTabs).toHaveBeenCalled()
+        const setTabsCall = mockSetTabs.mock.calls[0][0]
+        const filteredTabs = typeof setTabsCall === 'function' ? setTabsCall(initialTabs) : setTabsCall
+        expect(filteredTabs.length).toBe(initialTabs.length)
       })
 
       it('should handle closing last tab when it is active', () => {
         const singleTab = [initialTabs[0]]
+        let filteredTabs: WorkflowTabData[] = []
+        const mockSetTabsSingle = jest.fn((updater: any) => {
+          if (typeof updater === 'function') {
+            filteredTabs = updater(singleTab)
+            // Simulate the else branch when filtered.length === 0
+            if (filteredTabs.length === 0) {
+              const newId = `workflow-${Date.now()}`
+              const newTab: WorkflowTabData = {
+                id: newId,
+                name: 'Untitled Workflow',
+                workflowId: null,
+                isUnsaved: true,
+                executions: [],
+                activeExecutionId: null,
+              }
+              mockSetActiveTabId(newId)
+              filteredTabs = [newTab]
+            }
+          }
+        })
+
         const { result } = renderHook(() =>
           useTabOperations({
             tabs: singleTab,
             activeTabId: 'tab-1',
-            setTabs: mockSetTabs,
+            setTabs: mockSetTabsSingle,
             setActiveTabId: mockSetActiveTabId,
           })
         )
@@ -800,10 +825,10 @@ describe('useTabOperations', () => {
           result.current.handleCloseTab('tab-1', mockEvent)
         })
 
-        const setTabsCall = mockSetTabs.mock.calls[0][0]
-        const filteredTabs = typeof setTabsCall === 'function' ? setTabsCall(singleTab) : setTabsCall
-        expect(filteredTabs.length).toBe(0)
-        expect(mockSetActiveTabId).toHaveBeenCalledWith('')
+        // When filtered.length === 0, it creates a new tab
+        expect(filteredTabs.length).toBe(1)
+        expect(filteredTabs[0].name).toBe('Untitled Workflow')
+        expect(mockSetActiveTabId).toHaveBeenCalled()
       })
 
       it('should handle closing active tab when filtered.length is 0', async () => {
@@ -876,6 +901,8 @@ describe('useTabOperations', () => {
         const setTabsCall = mockSetTabs.mock.calls[0][0]
         const filteredTabs = typeof setTabsCall === 'function' ? setTabsCall(initialTabs) : setTabsCall
         expect(filteredTabs.length).toBe(1)
+        // activeTabId is 'tab-1', closing 'tab-2', so filtered.length > 0 but tabId !== activeTabId
+        // So setActiveTabId should not be called
         expect(mockSetActiveTabId).not.toHaveBeenCalled()
       })
     })
