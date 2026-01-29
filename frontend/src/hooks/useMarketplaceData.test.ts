@@ -1197,4 +1197,659 @@ describe('useMarketplaceData', () => {
       expect(result.current.workflowsOfWorkflows).toHaveLength(1)
     })
   })
+
+  describe('edge cases and error handling', () => {
+    describe('fetchTemplates edge cases', () => {
+      it('should handle empty response array', async () => {
+        mockHttpClient.get.mockResolvedValue({
+          json: async () => [],
+        })
+
+        const { result } = renderHook(() =>
+          useMarketplaceData({
+            storage: mockStorage,
+            httpClient: mockHttpClient,
+            apiBaseUrl: 'http://api.test',
+            category: '',
+            searchQuery: '',
+            sortBy: 'popular',
+            user: null,
+            activeTab: 'repository',
+            repositorySubTab: 'workflows',
+          })
+        )
+
+        await act(async () => {
+          await result.current.fetchTemplates()
+        })
+
+        expect(result.current.templates).toHaveLength(0)
+        expect(result.current.loading).toBe(false)
+      })
+
+      it('should handle response.json() returning null', async () => {
+        mockHttpClient.get.mockResolvedValue({
+          json: async () => null,
+        })
+
+        const { result } = renderHook(() =>
+          useMarketplaceData({
+            storage: mockStorage,
+            httpClient: mockHttpClient,
+            apiBaseUrl: 'http://api.test',
+            category: '',
+            searchQuery: '',
+            sortBy: 'popular',
+            user: null,
+            activeTab: 'repository',
+            repositorySubTab: 'workflows',
+          })
+        )
+
+        await act(async () => {
+          await result.current.fetchTemplates()
+        })
+
+        expect(result.current.templates).toBeNull()
+        expect(result.current.loading).toBe(false)
+      })
+
+      it('should handle empty category string', async () => {
+        mockHttpClient.get.mockResolvedValue({
+          json: async () => [],
+        })
+
+        const { result } = renderHook(() =>
+          useMarketplaceData({
+            storage: mockStorage,
+            httpClient: mockHttpClient,
+            apiBaseUrl: 'http://api.test',
+            category: '',
+            searchQuery: '',
+            sortBy: 'popular',
+            user: null,
+            activeTab: 'repository',
+            repositorySubTab: 'workflows',
+          })
+        )
+
+        await act(async () => {
+          await result.current.fetchTemplates()
+        })
+
+        const callUrl = mockHttpClient.get.mock.calls[0][0]
+        expect(callUrl).not.toContain('category=')
+        expect(callUrl).toContain('sort_by=popular')
+      })
+
+      it('should handle empty searchQuery string', async () => {
+        mockHttpClient.get.mockResolvedValue({
+          json: async () => [],
+        })
+
+        const { result } = renderHook(() =>
+          useMarketplaceData({
+            storage: mockStorage,
+            httpClient: mockHttpClient,
+            apiBaseUrl: 'http://api.test',
+            category: '',
+            searchQuery: '',
+            sortBy: 'popular',
+            user: null,
+            activeTab: 'repository',
+            repositorySubTab: 'workflows',
+          })
+        )
+
+        await act(async () => {
+          await result.current.fetchTemplates()
+        })
+
+        const callUrl = mockHttpClient.get.mock.calls[0][0]
+        expect(callUrl).not.toContain('search=')
+      })
+    })
+
+    describe('fetchAgents edge cases', () => {
+      it('should handle empty agents array', async () => {
+        mockGetLocalStorageItem.mockReturnValue([])
+
+        const { result } = renderHook(() =>
+          useMarketplaceData({
+            storage: mockStorage,
+            httpClient: mockHttpClient,
+            apiBaseUrl: 'http://api.test',
+            category: '',
+            searchQuery: '',
+            sortBy: 'popular',
+            user: null,
+            activeTab: 'agents',
+            repositorySubTab: 'workflows',
+          })
+        )
+
+        await act(async () => {
+          await new Promise(resolve => setTimeout(resolve, 200))
+        })
+
+        expect(result.current.agents).toHaveLength(0)
+        expect(result.current.loading).toBe(false)
+      })
+
+      it('should handle agents with null name', async () => {
+        const agentWithNullName = { ...mockAgent, name: null }
+        mockGetLocalStorageItem.mockReturnValue([agentWithNullName])
+
+        const { result } = renderHook(() =>
+          useMarketplaceData({
+            storage: mockStorage,
+            httpClient: mockHttpClient,
+            apiBaseUrl: 'http://api.test',
+            category: '',
+            searchQuery: '',
+            sortBy: 'popular',
+            user: null,
+            activeTab: 'agents',
+            repositorySubTab: 'workflows',
+          })
+        )
+
+        await act(async () => {
+          await new Promise(resolve => setTimeout(resolve, 200))
+        })
+
+        expect(result.current.agents).toHaveLength(1)
+        expect(result.current.agents[0].name).toBeNull()
+      })
+
+      it('should handle agents with empty tags array', async () => {
+        const agentWithEmptyTags = { ...mockAgent, tags: [] }
+        mockGetLocalStorageItem.mockReturnValue([agentWithEmptyTags])
+
+        const { result } = renderHook(() =>
+          useMarketplaceData({
+            storage: mockStorage,
+            httpClient: mockHttpClient,
+            apiBaseUrl: 'http://api.test',
+            category: '',
+            searchQuery: '',
+            sortBy: 'popular',
+            user: null,
+            activeTab: 'agents',
+            repositorySubTab: 'workflows',
+          })
+        )
+
+        await act(async () => {
+          await new Promise(resolve => setTimeout(resolve, 200))
+        })
+
+        expect(result.current.agents).toHaveLength(1)
+        expect(result.current.agents[0].tags).toHaveLength(0)
+      })
+
+      it('should handle agents with undefined published_at', async () => {
+        const agentWithoutDate = { ...mockAgent, published_at: undefined }
+        const agentWithDate = { ...mockAgent, id: 'agent-2', published_at: '2024-01-02T00:00:00Z' }
+        mockGetLocalStorageItem.mockReturnValue([agentWithoutDate, agentWithDate])
+
+        const { result } = renderHook(() =>
+          useMarketplaceData({
+            storage: mockStorage,
+            httpClient: mockHttpClient,
+            apiBaseUrl: 'http://api.test',
+            category: '',
+            searchQuery: '',
+            sortBy: 'popular',
+            user: null,
+            activeTab: 'agents',
+            repositorySubTab: 'workflows',
+          })
+        )
+
+        await act(async () => {
+          await new Promise(resolve => setTimeout(resolve, 200))
+        })
+
+        expect(result.current.agents).toHaveLength(2)
+        // Agent with date should come first
+        expect(result.current.agents[0].published_at).toBe('2024-01-02T00:00:00Z')
+      })
+
+      it('should handle migration when user.id is empty string', async () => {
+        const agentWithoutAuthor = { ...mockAgent, author_id: null, author_name: null }
+        mockGetLocalStorageItem.mockReturnValue([agentWithoutAuthor])
+        const user = { id: '', username: 'testuser' }
+
+        const { result } = renderHook(() =>
+          useMarketplaceData({
+            storage: mockStorage,
+            httpClient: mockHttpClient,
+            apiBaseUrl: 'http://api.test',
+            category: '',
+            searchQuery: '',
+            sortBy: 'popular',
+            user,
+            activeTab: 'agents',
+            repositorySubTab: 'workflows',
+          })
+        )
+
+        await act(async () => {
+          await new Promise(resolve => setTimeout(resolve, 200))
+        })
+
+        // Should not migrate if user.id is empty
+        expect(mockStorage.setItem).not.toHaveBeenCalled()
+      })
+
+      it('should handle migration when agentsData.length is 0', async () => {
+        mockGetLocalStorageItem.mockReturnValue([])
+        const user = { id: 'user-1', username: 'testuser' }
+
+        const { result } = renderHook(() =>
+          useMarketplaceData({
+            storage: mockStorage,
+            httpClient: mockHttpClient,
+            apiBaseUrl: 'http://api.test',
+            category: '',
+            searchQuery: '',
+            sortBy: 'popular',
+            user,
+            activeTab: 'agents',
+            repositorySubTab: 'workflows',
+          })
+        )
+
+        await act(async () => {
+          await new Promise(resolve => setTimeout(resolve, 200))
+        })
+
+        // Should not migrate if no agents
+        expect(mockStorage.setItem).not.toHaveBeenCalled()
+      })
+
+      it('should handle search query with special characters', async () => {
+        const agent1 = { ...mockAgent, id: 'agent-1', name: 'Test-Agent', description: 'Test', tags: [] }
+        const agent2 = { ...mockAgent, id: 'agent-2', name: 'Other Agent', description: 'Other', tags: [] }
+        mockGetLocalStorageItem.mockReturnValue([agent1, agent2])
+
+        const { result } = renderHook(() =>
+          useMarketplaceData({
+            storage: mockStorage,
+            httpClient: mockHttpClient,
+            apiBaseUrl: 'http://api.test',
+            category: '',
+            searchQuery: 'Test-',
+            sortBy: 'popular',
+            user: null,
+            activeTab: 'agents',
+            repositorySubTab: 'workflows',
+          })
+        )
+
+        await act(async () => {
+          await new Promise(resolve => setTimeout(resolve, 300))
+        })
+
+        expect(result.current.agents).toHaveLength(1)
+        expect(result.current.agents[0].name).toBe('Test-Agent')
+      })
+
+      it('should handle case-insensitive search in tags', async () => {
+        const agent1 = { ...mockAgent, id: 'agent-1', name: 'Agent One', description: 'Desc', tags: ['TEST', 'automation'] }
+        const agent2 = { ...mockAgent, id: 'agent-2', name: 'Agent Two', description: 'Desc', tags: ['other'] }
+        mockGetLocalStorageItem.mockReturnValue([agent1, agent2])
+
+        const { result } = renderHook(() =>
+          useMarketplaceData({
+            storage: mockStorage,
+            httpClient: mockHttpClient,
+            apiBaseUrl: 'http://api.test',
+            category: '',
+            searchQuery: 'test',
+            sortBy: 'popular',
+            user: null,
+            activeTab: 'agents',
+            repositorySubTab: 'workflows',
+          })
+        )
+
+        await act(async () => {
+          await new Promise(resolve => setTimeout(resolve, 300))
+        })
+
+        expect(result.current.agents).toHaveLength(1)
+        expect(result.current.agents[0].tags).toContain('TEST')
+      })
+
+      it('should handle sorting when both agents have same published_at', async () => {
+        const agent1 = { ...mockAgent, id: 'agent-1', name: 'Zebra Agent', published_at: '2024-01-01T00:00:00Z' }
+        const agent2 = { ...mockAgent, id: 'agent-2', name: 'Alpha Agent', published_at: '2024-01-01T00:00:00Z' }
+        mockGetLocalStorageItem.mockReturnValue([agent1, agent2])
+
+        const { result } = renderHook(() =>
+          useMarketplaceData({
+            storage: mockStorage,
+            httpClient: mockHttpClient,
+            apiBaseUrl: 'http://api.test',
+            category: '',
+            searchQuery: '',
+            sortBy: 'popular',
+            user: null,
+            activeTab: 'agents',
+            repositorySubTab: 'workflows',
+          })
+        )
+
+        await act(async () => {
+          await new Promise(resolve => setTimeout(resolve, 200))
+        })
+
+        expect(result.current.agents).toHaveLength(2)
+        // When dates are equal, sort returns 0 (order is stable but not guaranteed)
+        // Just verify both agents are present
+        const names = result.current.agents.map(a => a.name)
+        expect(names).toContain('Alpha Agent')
+        expect(names).toContain('Zebra Agent')
+      })
+
+      it('should handle sorting with default sortBy value', async () => {
+        const agent1 = { ...mockAgent, id: 'agent-1', name: 'Zebra Agent' }
+        const agent2 = { ...mockAgent, id: 'agent-2', name: 'Alpha Agent' }
+        mockGetLocalStorageItem.mockReturnValue([agent1, agent2])
+
+        const { result } = renderHook(() =>
+          useMarketplaceData({
+            storage: mockStorage,
+            httpClient: mockHttpClient,
+            apiBaseUrl: 'http://api.test',
+            category: '',
+            searchQuery: '',
+            sortBy: 'alphabetical',
+            user: null,
+            activeTab: 'agents',
+            repositorySubTab: 'workflows',
+          })
+        )
+
+        await act(async () => {
+          await new Promise(resolve => setTimeout(resolve, 200))
+        })
+
+        expect(result.current.agents).toHaveLength(2)
+        expect(result.current.agents[0].name).toBe('Alpha Agent')
+      })
+    })
+
+    describe('fetchRepositoryAgents edge cases', () => {
+      it('should handle empty savedAgents string', async () => {
+        mockStorage.getItem.mockReturnValue('')
+
+        const { result } = renderHook(() =>
+          useMarketplaceData({
+            storage: mockStorage,
+            httpClient: mockHttpClient,
+            apiBaseUrl: 'http://api.test',
+            category: '',
+            searchQuery: '',
+            sortBy: 'popular',
+            user: null,
+            activeTab: 'repository',
+            repositorySubTab: 'agents',
+          })
+        )
+
+        await act(async () => {
+          await new Promise(resolve => setTimeout(resolve, 200))
+        })
+
+        expect(result.current.repositoryAgents).toHaveLength(0)
+        expect(result.current.loading).toBe(false)
+      })
+
+      it('should handle null savedAgents', async () => {
+        mockStorage.getItem.mockReturnValue(null)
+
+        const { result } = renderHook(() =>
+          useMarketplaceData({
+            storage: mockStorage,
+            httpClient: mockHttpClient,
+            apiBaseUrl: 'http://api.test',
+            category: '',
+            searchQuery: '',
+            sortBy: 'popular',
+            user: null,
+            activeTab: 'repository',
+            repositorySubTab: 'agents',
+          })
+        )
+
+        await act(async () => {
+          await new Promise(resolve => setTimeout(resolve, 200))
+        })
+
+        expect(result.current.repositoryAgents).toHaveLength(0)
+        expect(result.current.loading).toBe(false)
+      })
+
+      it('should handle repository agents with null name in sorting', async () => {
+        const agent1 = { ...mockAgent, id: 'agent-1', name: null }
+        const agent2 = { ...mockAgent, id: 'agent-2', name: 'Valid Name' }
+        mockStorage.getItem.mockReturnValue(JSON.stringify([agent1, agent2]))
+
+        const { result } = renderHook(() =>
+          useMarketplaceData({
+            storage: mockStorage,
+            httpClient: mockHttpClient,
+            apiBaseUrl: 'http://api.test',
+            category: '',
+            searchQuery: '',
+            sortBy: 'alphabetical',
+            user: null,
+            activeTab: 'repository',
+            repositorySubTab: 'agents',
+          })
+        )
+
+        await act(async () => {
+          await new Promise(resolve => setTimeout(resolve, 200))
+        })
+
+        expect(result.current.repositoryAgents).toHaveLength(2)
+        // Null name should be handled gracefully
+        expect(result.current.repositoryAgents[0].name).toBeNull()
+      })
+    })
+
+    describe('fetchWorkflowsOfWorkflows edge cases', () => {
+      it('should handle empty workflows array', async () => {
+        mockHttpClient.get.mockResolvedValue({
+          json: async () => [],
+        })
+
+        const { result } = renderHook(() =>
+          useMarketplaceData({
+            storage: mockStorage,
+            httpClient: mockHttpClient,
+            apiBaseUrl: 'http://api.test',
+            category: '',
+            searchQuery: '',
+            sortBy: 'popular',
+            user: null,
+            activeTab: 'workflows-of-workflows',
+            repositorySubTab: 'workflows',
+          })
+        )
+
+        await act(async () => {
+          await new Promise(resolve => setTimeout(resolve, 200))
+        })
+
+        expect(result.current.workflowsOfWorkflows).toHaveLength(0)
+        expect(result.current.loading).toBe(false)
+      })
+
+      it('should handle workflow with null nodes array', async () => {
+        const workflow = { ...mockTemplate, id: 'workflow-1' }
+        mockHttpClient.get.mockResolvedValue({
+          json: async () => [workflow],
+        })
+        mockHttpClient.post.mockResolvedValue({
+          ok: true,
+          json: async () => ({ nodes: null }),
+        })
+
+        const { result } = renderHook(() =>
+          useMarketplaceData({
+            storage: mockStorage,
+            httpClient: mockHttpClient,
+            apiBaseUrl: 'http://api.test',
+            category: '',
+            searchQuery: '',
+            sortBy: 'popular',
+            user: null,
+            activeTab: 'workflows-of-workflows',
+            repositorySubTab: 'workflows',
+          })
+        )
+
+        await act(async () => {
+          await new Promise(resolve => setTimeout(resolve, 300))
+        })
+
+        expect(result.current.workflowsOfWorkflows).toHaveLength(0)
+      })
+
+      it('should handle workflow with empty nodes array', async () => {
+        const workflow = { ...mockTemplate, id: 'workflow-1' }
+        mockHttpClient.get.mockResolvedValue({
+          json: async () => [workflow],
+        })
+        mockHttpClient.post.mockResolvedValue({
+          ok: true,
+          json: async () => ({ nodes: [] }),
+        })
+
+        const { result } = renderHook(() =>
+          useMarketplaceData({
+            storage: mockStorage,
+            httpClient: mockHttpClient,
+            apiBaseUrl: 'http://api.test',
+            category: '',
+            searchQuery: '',
+            sortBy: 'popular',
+            user: null,
+            activeTab: 'workflows-of-workflows',
+            repositorySubTab: 'workflows',
+          })
+        )
+
+        await act(async () => {
+          await new Promise(resolve => setTimeout(resolve, 300))
+        })
+
+        expect(result.current.workflowsOfWorkflows).toHaveLength(0)
+      })
+
+      it('should handle workflow with node.data as null', async () => {
+        const workflow = { ...mockTemplate, id: 'workflow-1' }
+        mockHttpClient.get.mockResolvedValue({
+          json: async () => [workflow],
+        })
+        mockHttpClient.post.mockResolvedValue({
+          ok: true,
+          json: async () => ({
+            nodes: [{ workflow_id: 'other-workflow', data: null }],
+          }),
+        })
+
+        const { result } = renderHook(() =>
+          useMarketplaceData({
+            storage: mockStorage,
+            httpClient: mockHttpClient,
+            apiBaseUrl: 'http://api.test',
+            category: '',
+            searchQuery: '',
+            sortBy: 'popular',
+            user: null,
+            activeTab: 'workflows-of-workflows',
+            repositorySubTab: 'workflows',
+          })
+        )
+
+        await act(async () => {
+          await new Promise(resolve => setTimeout(resolve, 300))
+        })
+
+        expect(result.current.workflowsOfWorkflows).toHaveLength(1)
+      })
+
+      it('should handle workflow with empty description', async () => {
+        const workflow = { ...mockTemplate, id: 'workflow-1', description: '' }
+        mockHttpClient.get.mockResolvedValue({
+          json: async () => [workflow],
+        })
+        mockHttpClient.post.mockResolvedValue({
+          ok: true,
+          json: async () => ({
+            nodes: [{ workflow_id: 'other-workflow' }],
+          }),
+        })
+
+        const { result } = renderHook(() =>
+          useMarketplaceData({
+            storage: mockStorage,
+            httpClient: mockHttpClient,
+            apiBaseUrl: 'http://api.test',
+            category: '',
+            searchQuery: '',
+            sortBy: 'popular',
+            user: null,
+            activeTab: 'workflows-of-workflows',
+            repositorySubTab: 'workflows',
+          })
+        )
+
+        await act(async () => {
+          await new Promise(resolve => setTimeout(resolve, 300))
+        })
+
+        expect(result.current.workflowsOfWorkflows).toHaveLength(1)
+      })
+
+      it('should handle workflow with null tags array', async () => {
+        const workflow = { ...mockTemplate, id: 'workflow-1', tags: null }
+        mockHttpClient.get.mockResolvedValue({
+          json: async () => [workflow],
+        })
+        mockHttpClient.post.mockResolvedValue({
+          ok: true,
+          json: async () => ({
+            nodes: [{ workflow_id: 'other-workflow' }],
+          }),
+        })
+
+        const { result } = renderHook(() =>
+          useMarketplaceData({
+            storage: mockStorage,
+            httpClient: mockHttpClient,
+            apiBaseUrl: 'http://api.test',
+            category: '',
+            searchQuery: '',
+            sortBy: 'popular',
+            user: null,
+            activeTab: 'workflows-of-workflows',
+            repositorySubTab: 'workflows',
+          })
+        )
+
+        await act(async () => {
+          await new Promise(resolve => setTimeout(resolve, 300))
+        })
+
+        expect(result.current.workflowsOfWorkflows).toHaveLength(1)
+      })
+    })
+  })
 })
