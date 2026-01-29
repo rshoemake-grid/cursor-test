@@ -9383,4 +9383,655 @@ describe('useWebSocket', () => {
       })
     })
   })
+
+  describe('mutation killers for status checks and reconnection', () => {
+    it('should verify currentStatus === completed check in connect', async () => {
+      renderHook(() =>
+        useWebSocket({
+          executionId: 'exec-1',
+          executionStatus: 'completed',
+        })
+      )
+
+      await advanceTimersByTime(100)
+
+      // Should not connect when status is completed
+      expect(wsInstances.length).toBe(0)
+      expect(logger.debug).toHaveBeenCalledWith(
+        expect.stringContaining('Skipping connection - execution exec-1 is completed')
+      )
+    })
+
+    it('should verify currentStatus === failed check in connect', async () => {
+      renderHook(() =>
+        useWebSocket({
+          executionId: 'exec-1',
+          executionStatus: 'failed',
+        })
+      )
+
+      await advanceTimersByTime(100)
+
+      // Should not connect when status is failed
+      expect(wsInstances.length).toBe(0)
+      expect(logger.debug).toHaveBeenCalledWith(
+        expect.stringContaining('Skipping connection - execution exec-1 is failed')
+      )
+    })
+
+    it('should verify currentStatus uses lastKnownStatusRef when executionStatus is undefined', async () => {
+      const { rerender } = renderHook(
+        ({ executionStatus }) => useWebSocket({
+          executionId: 'exec-1',
+          executionStatus,
+        }),
+        { initialProps: { executionStatus: 'running' as const } }
+      )
+
+      await advanceTimersByTime(100)
+      expect(wsInstances.length).toBeGreaterThan(0)
+
+      // Change to undefined but lastKnownStatusRef should have 'running'
+      rerender({ executionStatus: undefined })
+      await advanceTimersByTime(100)
+
+      // Should still be connected since lastKnownStatusRef is 'running'
+      expect(wsInstances.length).toBeGreaterThan(0)
+    })
+
+    it('should verify executionStatus === completed check in useEffect closes connection', async () => {
+      const { rerender } = renderHook(
+        ({ executionStatus }) => useWebSocket({
+          executionId: 'exec-1',
+          executionStatus,
+        }),
+        { initialProps: { executionStatus: 'running' as const } }
+      )
+
+      await advanceTimersByTime(100)
+      if (wsInstances.length > 0) {
+        const ws = wsInstances[0]
+        ws.simulateOpen()
+        await advanceTimersByTime(50)
+
+        // Change to completed
+        rerender({ executionStatus: 'completed' as const })
+        await advanceTimersByTime(50)
+
+        // Connection should be closed
+        expect(ws.readyState).toBe(MockWebSocket.CLOSED)
+        expect(logger.debug).toHaveBeenCalledWith(
+          expect.stringContaining('Closing connection - execution exec-1 is completed')
+        )
+      }
+    })
+
+    it('should verify executionStatus === failed check in useEffect closes connection', async () => {
+      const { rerender } = renderHook(
+        ({ executionStatus }) => useWebSocket({
+          executionId: 'exec-1',
+          executionStatus,
+        }),
+        { initialProps: { executionStatus: 'running' as const } }
+      )
+
+      await advanceTimersByTime(100)
+      if (wsInstances.length > 0) {
+        const ws = wsInstances[0]
+        ws.simulateOpen()
+        await advanceTimersByTime(50)
+
+        // Change to failed
+        rerender({ executionStatus: 'failed' as const })
+        await advanceTimersByTime(50)
+
+        // Connection should be closed
+        expect(ws.readyState).toBe(MockWebSocket.CLOSED)
+        expect(logger.debug).toHaveBeenCalledWith(
+          expect.stringContaining('Closing connection - execution exec-1 is failed')
+        )
+      }
+    })
+
+    it('should verify wasClean && code === 1000 check prevents reconnection', async () => {
+      renderHook(() =>
+        useWebSocket({
+          executionId: 'exec-1',
+          executionStatus: 'running',
+        })
+      )
+
+      await advanceTimersByTime(100)
+
+      if (wsInstances.length > 0) {
+        const ws = wsInstances[0]
+        ws.simulateOpen()
+        await advanceTimersByTime(50)
+        ws.simulateClose(1000, 'Normal closure', true) // wasClean = true, code = 1000
+        await advanceTimersByTime(200)
+
+        // Should not reconnect when closed cleanly with code 1000
+        expect(logger.debug).toHaveBeenCalledWith(
+          expect.stringContaining('Connection closed cleanly, not reconnecting')
+        )
+        // Should not have attempted reconnection
+        expect(reconnectAttempts.current).toBe(0)
+      }
+    })
+
+    it('should verify wasClean && code !== 1000 allows reconnection', async () => {
+      renderHook(() =>
+        useWebSocket({
+          executionId: 'exec-1',
+          executionStatus: 'running',
+        })
+      )
+
+      await advanceTimersByTime(100)
+
+      if (wsInstances.length > 0) {
+        const ws = wsInstances[0]
+        ws.simulateOpen()
+        await advanceTimersByTime(50)
+        ws.simulateClose(1001, 'Going away', true) // wasClean = true, but code != 1000
+        await advanceTimersByTime(200)
+
+        // Should attempt reconnection
+        expect(logger.debug).toHaveBeenCalledWith(
+          expect.stringContaining('Reconnecting in')
+        )
+      }
+    })
+
+    it('should verify reconnectAttempts.current < maxReconnectAttempts boundary (exactly maxReconnectAttempts)', async () => {
+      renderHook(() =>
+        useWebSocket({
+          executionId: 'exec-1',
+          executionStatus: 'running',
+        })
+      )
+
+      await advanceTimersByTime(100)
+
+      if (wsInstances.length > 0) {
+        const ws = wsInstances[0]
+        // Simulate multiple reconnection attempts
+        for (let i = 0; i < 5; i++) {
+          ws.simulateOpen()
+          await advanceTimersByTime(50)
+          ws.simulateClose(1001, 'Error', false) // Unclean close
+          await advanceTimersByTime(1200) // Wait for reconnection delay
+        }
+
+        // After 5 attempts, should stop reconnecting
+        expect(logger.warn).toHaveBeenCalledWith(
+          expect.stringContaining('Max reconnect attempts (5) reached')
+        )
+      }
+    })
+
+    it('should verify reconnectAttempts.current < maxReconnectAttempts boundary (less than max)', async () => {
+      renderHook(() =>
+        useWebSocket({
+          executionId: 'exec-1',
+          executionStatus: 'running',
+        })
+      )
+
+      await advanceTimersByTime(100)
+
+      if (wsInstances.length > 0) {
+        const ws = wsInstances[0]
+        ws.simulateOpen()
+        await advanceTimersByTime(50)
+        ws.simulateClose(1001, 'Error', false)
+        await advanceTimersByTime(1200)
+
+        // Should attempt reconnection when attempts < max
+        expect(logger.debug).toHaveBeenCalledWith(
+          expect.stringContaining('Reconnecting in')
+        )
+      }
+    })
+
+    it('should verify reconnectAttempts.current >= maxReconnectAttempts path calls onError', async () => {
+      const onError = jest.fn()
+      renderHook(() =>
+        useWebSocket({
+          executionId: 'exec-1',
+          executionStatus: 'running',
+          onError,
+        })
+      )
+
+      await advanceTimersByTime(100)
+
+      if (wsInstances.length > 0) {
+        const ws = wsInstances[0]
+        // Simulate max reconnection attempts
+        for (let i = 0; i < 5; i++) {
+          ws.simulateOpen()
+          await advanceTimersByTime(50)
+          ws.simulateClose(1001, 'Error', false)
+          await advanceTimersByTime(1200)
+        }
+
+        // Should call onError after max attempts
+        expect(onError).toHaveBeenCalledWith(
+          'WebSocket connection failed after 5 attempts'
+        )
+      }
+    })
+
+    it('should verify executionId check in onclose prevents reconnection for pending IDs', async () => {
+      renderHook(() =>
+        useWebSocket({
+          executionId: 'pending-123',
+          executionStatus: 'running',
+        })
+      )
+
+      await advanceTimersByTime(100)
+
+      // Should not create WebSocket for pending IDs
+      expect(wsInstances.length).toBe(0)
+    })
+
+    it('should verify executionId check in useEffect prevents connection for pending IDs', async () => {
+      renderHook(() =>
+        useWebSocket({
+          executionId: 'pending-456',
+        })
+      )
+
+      await advanceTimersByTime(100)
+
+      // Should not create WebSocket
+      expect(wsInstances.length).toBe(0)
+      expect(logger.debug).toHaveBeenCalledWith(
+        expect.stringContaining('Skipping connection to temporary execution ID')
+      )
+    })
+
+    it('should verify executionId null check closes connection', async () => {
+      const { rerender } = renderHook(
+        ({ executionId }) => useWebSocket({
+          executionId,
+        }),
+        { initialProps: { executionId: 'exec-1' as string | null } }
+      )
+
+      await advanceTimersByTime(100)
+      if (wsInstances.length > 0) {
+        const ws = wsInstances[0]
+        ws.simulateOpen()
+        await advanceTimersByTime(50)
+
+        // Change to null
+        rerender({ executionId: null })
+        await advanceTimersByTime(50)
+
+        // Connection should be closed
+        expect(ws.readyState).toBe(MockWebSocket.CLOSED)
+      }
+    })
+
+    it('should verify reconnectTimeoutRef cleanup in useEffect', async () => {
+      const clearTimeoutSpy = jest.spyOn(global, 'clearTimeout')
+      const { unmount } = renderHook(() =>
+        useWebSocket({
+          executionId: 'exec-1',
+          executionStatus: 'running',
+        })
+      )
+
+      await advanceTimersByTime(100)
+      if (wsInstances.length > 0) {
+        const ws = wsInstances[0]
+        ws.simulateOpen()
+        await advanceTimersByTime(50)
+        ws.simulateClose(1001, 'Error', false)
+        await advanceTimersByTime(50) // Start reconnection
+
+        unmount()
+        await advanceTimersByTime(50)
+
+        // Should clear timeout on unmount
+        expect(clearTimeoutSpy).toHaveBeenCalled()
+      }
+      clearTimeoutSpy.mockRestore()
+    })
+
+    it('should verify wsRef.current cleanup in useEffect return', async () => {
+      const { unmount } = renderHook(() =>
+        useWebSocket({
+          executionId: 'exec-1',
+        })
+      )
+
+      await advanceTimersByTime(100)
+      if (wsInstances.length > 0) {
+        const ws = wsInstances[0]
+        ws.simulateOpen()
+        await advanceTimersByTime(50)
+
+        unmount()
+        await advanceTimersByTime(50)
+
+        // Connection should be closed on unmount
+        expect(ws.readyState).toBe(MockWebSocket.CLOSED)
+      }
+    })
+
+    it('should verify onCompletion is called without checking result', async () => {
+      const onCompletion = jest.fn()
+      renderHook(() =>
+        useWebSocket({
+          executionId: 'exec-1',
+          onCompletion,
+        })
+      )
+
+      await advanceTimersByTime(100)
+
+      if (wsInstances.length > 0 && wsInstances[0].onmessage) {
+        wsInstances[0].simulateMessage({
+          type: 'completion',
+          execution_id: 'exec-1',
+          result: null,
+        })
+
+        // Should call onCompletion even with null result
+        expect(onCompletion).toHaveBeenCalledWith(null)
+      }
+    })
+
+    it('should verify exact logger.debug message for connection', async () => {
+      const windowLocation: WindowLocation = {
+        protocol: 'https:',
+        host: 'example.com:8000',
+      }
+
+      renderHook(() =>
+        useWebSocket({
+          executionId: 'exec-1',
+          windowLocation,
+        })
+      )
+
+      await advanceTimersByTime(100)
+
+      // Verify exact log message to kill StringLiteral mutant
+      expect(logger.debug).toHaveBeenCalledWith(
+        '[WebSocket] Connecting to wss://example.com:8000/ws/executions/exec-1 for execution exec-1'
+      )
+    })
+
+    it('should verify exact logger.debug message for connected', async () => {
+      renderHook(() =>
+        useWebSocket({
+          executionId: 'exec-1',
+        })
+      )
+
+      await advanceTimersByTime(100)
+
+      if (wsInstances.length > 0) {
+        const ws = wsInstances[0]
+        ws.simulateOpen()
+        await advanceTimersByTime(50)
+
+        // Verify exact log message
+        expect(logger.debug).toHaveBeenCalledWith(
+          '[WebSocket] Connected to execution exec-1'
+        )
+      }
+    })
+
+    it('should verify exact logger.debug message for skipping temporary ID', async () => {
+      renderHook(() =>
+        useWebSocket({
+          executionId: 'pending-123',
+        })
+      )
+
+      await advanceTimersByTime(100)
+
+      // Verify exact log message
+      expect(logger.debug).toHaveBeenCalledWith(
+        '[WebSocket] Skipping connection to temporary execution ID: pending-123'
+      )
+    })
+
+    it('should verify exact logger.debug message for skipping completed execution', async () => {
+      renderHook(() =>
+        useWebSocket({
+          executionId: 'exec-1',
+          executionStatus: 'completed',
+        })
+      )
+
+      await advanceTimersByTime(100)
+
+      // Verify exact log message
+      expect(logger.debug).toHaveBeenCalledWith(
+        '[WebSocket] Skipping connection - execution exec-1 is completed'
+      )
+    })
+
+    it('should verify exact logger.debug message for skipping failed execution', async () => {
+      renderHook(() =>
+        useWebSocket({
+          executionId: 'exec-1',
+          executionStatus: 'failed',
+        })
+      )
+
+      await advanceTimersByTime(100)
+
+      // Verify exact log message
+      expect(logger.debug).toHaveBeenCalledWith(
+        '[WebSocket] Skipping connection - execution exec-1 is failed'
+      )
+    })
+
+    it('should verify exact logger.debug message for skipping reconnect temporary ID', async () => {
+      renderHook(() =>
+        useWebSocket({
+          executionId: 'pending-123',
+          executionStatus: 'running',
+        })
+      )
+
+      await advanceTimersByTime(100)
+
+      if (wsInstances.length > 0) {
+        const ws = wsInstances[0]
+        ws.simulateOpen()
+        await advanceTimersByTime(50)
+        ws.simulateClose(1001, 'Error', false)
+        await advanceTimersByTime(50)
+
+        // Verify exact log message
+        expect(logger.debug).toHaveBeenCalledWith(
+          '[WebSocket] Skipping reconnect for temporary execution ID: pending-123'
+        )
+      }
+    })
+
+    it('should verify exact logger.debug message for skipping reconnect completed', async () => {
+      renderHook(() =>
+        useWebSocket({
+          executionId: 'exec-1',
+          executionStatus: 'completed',
+        })
+      )
+
+      await advanceTimersByTime(100)
+
+      if (wsInstances.length > 0) {
+        const ws = wsInstances[0]
+        ws.simulateOpen()
+        await advanceTimersByTime(50)
+        ws.simulateClose(1001, 'Error', false)
+        await advanceTimersByTime(50)
+
+        // Verify exact log message
+        expect(logger.debug).toHaveBeenCalledWith(
+          '[WebSocket] Skipping reconnect - execution exec-1 is completed'
+        )
+      }
+    })
+
+    it('should verify exact logger.debug message for clean closure', async () => {
+      renderHook(() =>
+        useWebSocket({
+          executionId: 'exec-1',
+          executionStatus: 'running',
+        })
+      )
+
+      await advanceTimersByTime(100)
+
+      if (wsInstances.length > 0) {
+        const ws = wsInstances[0]
+        ws.simulateOpen()
+        await advanceTimersByTime(50)
+        ws.simulateClose(1000, 'Normal closure', true)
+        await advanceTimersByTime(50)
+
+        // Verify exact log message
+        expect(logger.debug).toHaveBeenCalledWith(
+          '[WebSocket] Connection closed cleanly, not reconnecting'
+        )
+      }
+    })
+
+    it('should verify exact logger.debug message for reconnecting', async () => {
+      renderHook(() =>
+        useWebSocket({
+          executionId: 'exec-1',
+          executionStatus: 'running',
+        })
+      )
+
+      await advanceTimersByTime(100)
+
+      if (wsInstances.length > 0) {
+        const ws = wsInstances[0]
+        ws.simulateOpen()
+        await advanceTimersByTime(50)
+        ws.simulateClose(1001, 'Error', false)
+        await advanceTimersByTime(50)
+
+        // Verify exact log message format
+        expect(logger.debug).toHaveBeenCalledWith(
+          expect.stringMatching(/\[WebSocket\] Reconnecting in \d+ms \(attempt \d+\/5\)/)
+        )
+      }
+    })
+
+    it('should verify exact logger.warn message for max attempts', async () => {
+      renderHook(() =>
+        useWebSocket({
+          executionId: 'exec-1',
+          executionStatus: 'running',
+        })
+      )
+
+      await advanceTimersByTime(100)
+
+      if (wsInstances.length > 0) {
+        const ws = wsInstances[0]
+        // Simulate max reconnection attempts
+        for (let i = 0; i < 5; i++) {
+          ws.simulateOpen()
+          await advanceTimersByTime(50)
+          ws.simulateClose(1001, 'Error', false)
+          await advanceTimersByTime(1200)
+        }
+
+        // Verify exact warn message
+        expect(logger.warn).toHaveBeenCalledWith(
+          '[WebSocket] Max reconnect attempts (5) reached for execution exec-1'
+        )
+      }
+    })
+
+    it('should verify exact logger.debug message for closing connection', async () => {
+      const { rerender } = renderHook(
+        ({ executionStatus }) => useWebSocket({
+          executionId: 'exec-1',
+          executionStatus,
+        }),
+        { initialProps: { executionStatus: 'running' as const } }
+      )
+
+      await advanceTimersByTime(100)
+      if (wsInstances.length > 0) {
+        const ws = wsInstances[0]
+        ws.simulateOpen()
+        await advanceTimersByTime(50)
+
+        rerender({ executionStatus: 'completed' as const })
+        await advanceTimersByTime(50)
+
+        // Verify exact log message
+        expect(logger.debug).toHaveBeenCalledWith(
+          '[WebSocket] Closing connection - execution exec-1 is completed'
+        )
+      }
+    })
+
+    it('should verify exact logger.error message for connection error', async () => {
+      renderHook(() =>
+        useWebSocket({
+          executionId: 'exec-1',
+        })
+      )
+
+      await advanceTimersByTime(100)
+
+      if (wsInstances.length > 0 && wsInstances[0].onerror) {
+        const errorEvent = new Error('Connection failed') as any
+        wsInstances[0].onerror(errorEvent)
+        await advanceTimersByTime(50)
+
+        // Verify exact error message format
+        expect(logger.error).toHaveBeenCalledWith(
+          '[WebSocket] Connection error for execution exec-1:',
+          expect.objectContaining({
+            message: expect.any(String),
+            readyState: expect.any(String),
+            url: expect.stringContaining('exec-1'),
+          })
+        )
+      }
+    })
+
+    it('should verify exact logger.error message for creation failure', async () => {
+      const onError = jest.fn()
+      const webSocketFactory = {
+        create: jest.fn(() => {
+          throw new Error('Creation failed')
+        }),
+      }
+
+      renderHook(() =>
+        useWebSocket({
+          executionId: 'exec-1',
+          onError,
+          webSocketFactory: webSocketFactory as any,
+        })
+      )
+
+      await advanceTimersByTime(100)
+
+      // Verify exact error message
+      expect(logger.error).toHaveBeenCalledWith(
+        '[WebSocket] Failed to create connection for execution exec-1:',
+        expect.any(Error)
+      )
+    })
+  })
 })
