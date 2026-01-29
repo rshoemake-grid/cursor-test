@@ -1376,7 +1376,7 @@ describe('useExecutionManagement', () => {
       })
     })
 
-    describe('handleNodeStateUpdate edge cases', () => {
+    describe('handleExecutionNodeUpdate edge cases', () => {
       it('should handle executionId that does not exist', () => {
         const { result } = renderHook(() =>
           useExecutionManagement({
@@ -1388,10 +1388,15 @@ describe('useExecutionManagement', () => {
         )
 
         act(() => {
-          result.current.handleNodeStateUpdate('workflow-1', 'non-existent-exec', 'node-1', { status: 'running' })
+          result.current.handleExecutionNodeUpdate('workflow-1', 'non-existent-exec', 'node-1', { status: 'running' })
         })
 
-        expect(mockSetTabs).not.toHaveBeenCalled()
+        // setTabs is still called, but execution is not updated
+        expect(mockSetTabs).toHaveBeenCalled()
+        const setTabsCall = mockSetTabs.mock.calls[0][0]
+        const updatedTabs = typeof setTabsCall === 'function' ? setTabsCall([mockTab]) : setTabsCall
+        const updatedTab = updatedTabs.find((t: WorkflowTabData) => t.id === 'tab-1')
+        expect(updatedTab.executions).toHaveLength(0)
       })
 
       it('should handle workflowId that does not match', () => {
@@ -1417,10 +1422,15 @@ describe('useExecutionManagement', () => {
         )
 
         act(() => {
-          result.current.handleNodeStateUpdate('wrong-workflow', 'exec-1', 'node-1', { status: 'running' })
+          result.current.handleExecutionNodeUpdate('wrong-workflow', 'exec-1', 'node-1', { status: 'running' })
         })
 
-        expect(mockSetTabs).not.toHaveBeenCalled()
+        // setTabs is still called, but tab is not updated because workflowId doesn't match
+        expect(mockSetTabs).toHaveBeenCalled()
+        const setTabsCall = mockSetTabs.mock.calls[0][0]
+        const updatedTabs = typeof setTabsCall === 'function' ? setTabsCall([tabWithExecution]) : setTabsCall
+        const updatedTab = updatedTabs.find((t: WorkflowTabData) => t.id === 'tab-1')
+        expect(updatedTab.executions[0].nodes).toEqual({}) // Nodes should not be updated
       })
     })
   })
