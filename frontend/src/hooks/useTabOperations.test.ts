@@ -806,7 +806,7 @@ describe('useTabOperations', () => {
         expect(mockSetActiveTabId).toHaveBeenCalledWith('')
       })
 
-      it('should handle closing active tab when filtered.length is 0', () => {
+      it('should handle closing active tab when filtered.length is 0', async () => {
         const singleTab = [{ ...initialTabs[0], isUnsaved: true }]
         mockShowConfirm.mockResolvedValue(true)
 
@@ -823,7 +823,7 @@ describe('useTabOperations', () => {
           stopPropagation: jest.fn(),
         } as any
 
-        act(async () => {
+        await act(async () => {
           result.current.handleCloseTab('tab-1', mockEvent)
           await Promise.resolve()
         })
@@ -881,7 +881,7 @@ describe('useTabOperations', () => {
     })
 
     describe('handleCloseWorkflow edge cases', () => {
-      it('should handle closing workflow when tabToClose.id matches activeTabId and filtered.length is 0', () => {
+      it('should handle closing workflow when tabToClose.id matches activeTabId and filtered.length is 0', async () => {
         const singleTab = [{ ...initialTabs[0], isUnsaved: true }]
         mockShowConfirm.mockResolvedValue(true)
 
@@ -894,7 +894,7 @@ describe('useTabOperations', () => {
           })
         )
 
-        act(async () => {
+        await act(async () => {
           result.current.handleCloseWorkflow('workflow-1')
           await Promise.resolve()
         })
