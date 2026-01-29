@@ -757,4 +757,190 @@ describe('useTabOperations', () => {
       }
     })
   })
+
+  describe('edge cases and error handling', () => {
+    describe('handleCloseTab edge cases', () => {
+      it('should handle closing tab when tabToClose is undefined', () => {
+        const { result } = renderHook(() =>
+          useTabOperations({
+            tabs: initialTabs,
+            activeTabId: 'tab-1',
+            setTabs: mockSetTabs,
+            setActiveTabId: mockSetActiveTabId,
+          })
+        )
+
+        const mockEvent = {
+          stopPropagation: jest.fn(),
+        } as any
+
+        act(() => {
+          result.current.handleCloseTab('non-existent-tab', mockEvent)
+        })
+
+        expect(mockSetTabs).not.toHaveBeenCalled()
+      })
+
+      it('should handle closing last tab when it is active', () => {
+        const singleTab = [initialTabs[0]]
+        const { result } = renderHook(() =>
+          useTabOperations({
+            tabs: singleTab,
+            activeTabId: 'tab-1',
+            setTabs: mockSetTabs,
+            setActiveTabId: mockSetActiveTabId,
+          })
+        )
+
+        const mockEvent = {
+          stopPropagation: jest.fn(),
+        } as any
+
+        act(() => {
+          result.current.handleCloseTab('tab-1', mockEvent)
+        })
+
+        const setTabsCall = mockSetTabs.mock.calls[0][0]
+        const filteredTabs = typeof setTabsCall === 'function' ? setTabsCall(singleTab) : setTabsCall
+        expect(filteredTabs.length).toBe(0)
+        expect(mockSetActiveTabId).toHaveBeenCalledWith('')
+      })
+
+      it('should handle closing active tab when filtered.length is 0', () => {
+        const singleTab = [{ ...initialTabs[0], isUnsaved: true }]
+        mockShowConfirm.mockResolvedValue(true)
+
+        const { result } = renderHook(() =>
+          useTabOperations({
+            tabs: singleTab,
+            activeTabId: 'tab-1',
+            setTabs: mockSetTabs,
+            setActiveTabId: mockSetActiveTabId,
+          })
+        )
+
+        const mockEvent = {
+          stopPropagation: jest.fn(),
+        } as any
+
+        act(async () => {
+          result.current.handleCloseTab('tab-1', mockEvent)
+          await Promise.resolve()
+        })
+
+        const setTabsCall = mockSetTabs.mock.calls[0][0]
+        const filteredTabs = typeof setTabsCall === 'function' ? setTabsCall(singleTab) : setTabsCall
+        expect(filteredTabs.length).toBe(0)
+        expect(mockSetActiveTabId).toHaveBeenCalledWith('')
+      })
+
+      it('should handle closing non-active tab when activeTabId is null', () => {
+        const { result } = renderHook(() =>
+          useTabOperations({
+            tabs: initialTabs,
+            activeTabId: null,
+            setTabs: mockSetTabs,
+            setActiveTabId: mockSetActiveTabId,
+          })
+        )
+
+        const mockEvent = {
+          stopPropagation: jest.fn(),
+        } as any
+
+        act(() => {
+          result.current.handleCloseTab('tab-2', mockEvent)
+        })
+
+        expect(mockSetActiveTabId).not.toHaveBeenCalled()
+      })
+
+      it('should handle closing tab when activeTabId does not match', () => {
+        const { result } = renderHook(() =>
+          useTabOperations({
+            tabs: initialTabs,
+            activeTabId: 'tab-1',
+            setTabs: mockSetTabs,
+            setActiveTabId: mockSetActiveTabId,
+          })
+        )
+
+        const mockEvent = {
+          stopPropagation: jest.fn(),
+        } as any
+
+        act(() => {
+          result.current.handleCloseTab('tab-2', mockEvent)
+        })
+
+        const setTabsCall = mockSetTabs.mock.calls[0][0]
+        const filteredTabs = typeof setTabsCall === 'function' ? setTabsCall(initialTabs) : setTabsCall
+        expect(filteredTabs.length).toBe(1)
+        expect(mockSetActiveTabId).not.toHaveBeenCalled()
+      })
+    })
+
+    describe('handleCloseWorkflow edge cases', () => {
+      it('should handle closing workflow when tabToClose.id matches activeTabId and filtered.length is 0', () => {
+        const singleTab = [{ ...initialTabs[0], isUnsaved: true }]
+        mockShowConfirm.mockResolvedValue(true)
+
+        const { result } = renderHook(() =>
+          useTabOperations({
+            tabs: singleTab,
+            activeTabId: 'tab-1',
+            setTabs: mockSetTabs,
+            setActiveTabId: mockSetActiveTabId,
+          })
+        )
+
+        act(async () => {
+          result.current.handleCloseWorkflow('workflow-1')
+          await Promise.resolve()
+        })
+
+        const setTabsCall = mockSetTabs.mock.calls[0][0]
+        const filteredTabs = typeof setTabsCall === 'function' ? setTabsCall(singleTab) : setTabsCall
+        expect(filteredTabs.length).toBe(0)
+        expect(mockSetActiveTabId).toHaveBeenCalledWith('')
+      })
+
+      it('should handle closing workflow when tabToClose.id does not match activeTabId', () => {
+        const { result } = renderHook(() =>
+          useTabOperations({
+            tabs: initialTabs,
+            activeTabId: 'tab-2',
+            setTabs: mockSetTabs,
+            setActiveTabId: mockSetActiveTabId,
+          })
+        )
+
+        act(() => {
+          result.current.handleCloseWorkflow('workflow-1')
+        })
+
+        expect(mockSetActiveTabId).not.toHaveBeenCalled()
+      })
+
+      it('should handle closing workflow when activeTabId is null', () => {
+        const { result } = renderHook(() =>
+          useTabOperations({
+            tabs: initialTabs,
+            activeTabId: null,
+            setTabs: mockSetTabs,
+            setActiveTabId: mockSetActiveTabId,
+          })
+        )
+
+        act(() => {
+          result.current.handleCloseWorkflow('workflow-1')
+        })
+
+        const setTabsCall = mockSetTabs.mock.calls[0][0]
+        const filteredTabs = typeof setTabsCall === 'function' ? setTabsCall(initialTabs) : setTabsCall
+        expect(filteredTabs.length).toBe(1)
+        expect(mockSetActiveTabId).not.toHaveBeenCalled()
+      })
+    })
+  })
 })

@@ -1515,5 +1515,669 @@ describe('useTemplateOperations', () => {
 
       expect(mockLoggerError).toHaveBeenCalled()
     })
+
+    it('should handle workflow with null id', async () => {
+      mockHttpClient.post.mockResolvedValue({
+        ok: true,
+        json: async () => ({ id: null }),
+      })
+
+      const { result } = renderHook(() =>
+        useTemplateOperations({
+          token: 'token-123',
+          user: { id: 'user-1', username: 'testuser' },
+          httpClient: mockHttpClient as any,
+          apiBaseUrl: 'http://api.test',
+          storage: mockStorage as any,
+          agents: [],
+          templates: mockTemplates,
+          workflowsOfWorkflows: [],
+          activeTab: 'repository',
+          setAgents: mockSetAgents,
+          setTemplates: mockSetTemplates,
+          setWorkflowsOfWorkflows: mockSetWorkflowsOfWorkflows,
+          setRepositoryAgents: mockSetRepositoryAgents,
+          setSelectedAgentIds: mockSetSelectedAgentIds,
+          setSelectedTemplateIds: mockSetSelectedTemplateIds,
+          setSelectedRepositoryAgentIds: mockSetSelectedRepositoryAgentIds,
+        })
+      )
+
+      await act(async () => {
+        await result.current.useTemplate('template-1')
+      })
+
+      expect(mockNavigate).toHaveBeenCalledWith(expect.stringContaining('workflow=null'))
+    })
+
+    it('should handle workflow with undefined id', async () => {
+      mockHttpClient.post.mockResolvedValue({
+        ok: true,
+        json: async () => ({ id: undefined }),
+      })
+
+      const { result } = renderHook(() =>
+        useTemplateOperations({
+          token: 'token-123',
+          user: { id: 'user-1', username: 'testuser' },
+          httpClient: mockHttpClient as any,
+          apiBaseUrl: 'http://api.test',
+          storage: mockStorage as any,
+          agents: [],
+          templates: mockTemplates,
+          workflowsOfWorkflows: [],
+          activeTab: 'repository',
+          setAgents: mockSetAgents,
+          setTemplates: mockSetTemplates,
+          setWorkflowsOfWorkflows: mockSetWorkflowsOfWorkflows,
+          setRepositoryAgents: mockSetRepositoryAgents,
+          setSelectedAgentIds: mockSetSelectedAgentIds,
+          setSelectedTemplateIds: mockSetSelectedTemplateIds,
+          setSelectedRepositoryAgentIds: mockSetSelectedRepositoryAgentIds,
+        })
+      )
+
+      await act(async () => {
+        await result.current.useTemplate('template-1')
+      })
+
+      expect(mockNavigate).toHaveBeenCalled()
+    })
+
+    it('should handle response.json() throwing error', async () => {
+      mockHttpClient.post.mockResolvedValue({
+        ok: true,
+        json: async () => { throw new Error('Parse error') },
+      })
+
+      const { result } = renderHook(() =>
+        useTemplateOperations({
+          token: 'token-123',
+          user: { id: 'user-1', username: 'testuser' },
+          httpClient: mockHttpClient as any,
+          apiBaseUrl: 'http://api.test',
+          storage: mockStorage as any,
+          agents: [],
+          templates: mockTemplates,
+          workflowsOfWorkflows: [],
+          activeTab: 'repository',
+          setAgents: mockSetAgents,
+          setTemplates: mockSetTemplates,
+          setWorkflowsOfWorkflows: mockSetWorkflowsOfWorkflows,
+          setRepositoryAgents: mockSetRepositoryAgents,
+          setSelectedAgentIds: mockSetSelectedAgentIds,
+          setSelectedTemplateIds: mockSetSelectedTemplateIds,
+          setSelectedRepositoryAgentIds: mockSetSelectedRepositoryAgentIds,
+        })
+      )
+
+      await act(async () => {
+        await result.current.useTemplate('template-1')
+      })
+
+      expect(mockLoggerError).toHaveBeenCalled()
+    })
+
+    it('should handle response.text() throwing error', async () => {
+      mockHttpClient.post.mockResolvedValue({
+        ok: false,
+        text: async () => { throw new Error('Text error') },
+      })
+
+      const { result } = renderHook(() =>
+        useTemplateOperations({
+          token: 'token-123',
+          user: { id: 'user-1', username: 'testuser' },
+          httpClient: mockHttpClient as any,
+          apiBaseUrl: 'http://api.test',
+          storage: mockStorage as any,
+          agents: [],
+          templates: mockTemplates,
+          workflowsOfWorkflows: [],
+          activeTab: 'repository',
+          setAgents: mockSetAgents,
+          setTemplates: mockSetTemplates,
+          setWorkflowsOfWorkflows: mockSetWorkflowsOfWorkflows,
+          setRepositoryAgents: mockSetRepositoryAgents,
+          setSelectedAgentIds: mockSetSelectedAgentIds,
+          setSelectedTemplateIds: mockSetSelectedTemplateIds,
+          setSelectedRepositoryAgentIds: mockSetSelectedRepositoryAgentIds,
+        })
+      )
+
+      await act(async () => {
+        await result.current.useTemplate('template-1')
+      })
+
+      expect(mockLoggerError).toHaveBeenCalled()
+    })
+  })
+
+  describe('deleteSelectedAgents edge cases', () => {
+    it('should handle user.id as empty string', async () => {
+      const agents = [
+        { ...mockAgents[0], author_id: 'user-1' },
+      ]
+
+      const { result } = renderHook(() =>
+        useTemplateOperations({
+          token: 'token',
+          user: { id: '', username: 'testuser' },
+          httpClient: mockHttpClient as any,
+          apiBaseUrl: 'http://api.test',
+          storage: mockStorage as any,
+          agents,
+          templates: [],
+          workflowsOfWorkflows: [],
+          activeTab: 'agents',
+          setAgents: mockSetAgents,
+          setTemplates: mockSetTemplates,
+          setWorkflowsOfWorkflows: mockSetWorkflowsOfWorkflows,
+          setRepositoryAgents: mockSetRepositoryAgents,
+          setSelectedAgentIds: mockSetSelectedAgentIds,
+          setSelectedTemplateIds: mockSetSelectedTemplateIds,
+          setSelectedRepositoryAgentIds: mockSetSelectedRepositoryAgentIds,
+        })
+      )
+
+      await act(async () => {
+        await result.current.deleteSelectedAgents(new Set(['agent-1']))
+      })
+
+      expect(mockShowError).toHaveBeenCalled()
+    })
+
+    it('should handle author_id as null vs undefined', async () => {
+      const agents = [
+        { ...mockAgents[0], author_id: null },
+        { ...mockAgents[0], id: 'agent-2', author_id: undefined },
+      ]
+
+      const { result } = renderHook(() =>
+        useTemplateOperations({
+          token: 'token',
+          user: { id: 'user-1', username: 'testuser' },
+          httpClient: mockHttpClient as any,
+          apiBaseUrl: 'http://api.test',
+          storage: mockStorage as any,
+          agents,
+          templates: [],
+          workflowsOfWorkflows: [],
+          activeTab: 'agents',
+          setAgents: mockSetAgents,
+          setTemplates: mockSetTemplates,
+          setWorkflowsOfWorkflows: mockSetWorkflowsOfWorkflows,
+          setRepositoryAgents: mockSetRepositoryAgents,
+          setSelectedAgentIds: mockSetSelectedAgentIds,
+          setSelectedTemplateIds: mockSetSelectedTemplateIds,
+          setSelectedRepositoryAgentIds: mockSetSelectedRepositoryAgentIds,
+        })
+      )
+
+      await act(async () => {
+        await result.current.deleteSelectedAgents(new Set(['agent-1', 'agent-2']))
+      })
+
+      expect(mockShowError).toHaveBeenCalledWith(
+        expect.stringContaining('published before author tracking')
+      )
+    })
+
+    it('should handle String conversion for numeric author_id', async () => {
+      const agents = [
+        { ...mockAgents[0], author_id: 123 },
+      ]
+      mockStorage.getItem.mockReturnValue(JSON.stringify(agents))
+
+      const { result } = renderHook(() =>
+        useTemplateOperations({
+          token: 'token',
+          user: { id: '123', username: 'testuser' },
+          httpClient: mockHttpClient as any,
+          apiBaseUrl: 'http://api.test',
+          storage: mockStorage as any,
+          agents,
+          templates: [],
+          workflowsOfWorkflows: [],
+          activeTab: 'agents',
+          setAgents: mockSetAgents,
+          setTemplates: mockSetTemplates,
+          setWorkflowsOfWorkflows: mockSetWorkflowsOfWorkflows,
+          setRepositoryAgents: mockSetRepositoryAgents,
+          setSelectedAgentIds: mockSetSelectedAgentIds,
+          setSelectedTemplateIds: mockSetSelectedTemplateIds,
+          setSelectedRepositoryAgentIds: mockSetSelectedRepositoryAgentIds,
+        })
+      )
+
+      await act(async () => {
+        await result.current.deleteSelectedAgents(new Set(['agent-1']))
+      })
+
+      expect(mockSetAgents).toHaveBeenCalled()
+    })
+
+    it('should handle publishedAgents as empty string', async () => {
+      const agents = [
+        { ...mockAgents[0], author_id: 'user-1' },
+      ]
+      mockStorage.getItem.mockReturnValue('')
+
+      const { result } = renderHook(() =>
+        useTemplateOperations({
+          token: 'token',
+          user: { id: 'user-1', username: 'testuser' },
+          httpClient: mockHttpClient as any,
+          apiBaseUrl: 'http://api.test',
+          storage: mockStorage as any,
+          agents,
+          templates: [],
+          workflowsOfWorkflows: [],
+          activeTab: 'agents',
+          setAgents: mockSetAgents,
+          setTemplates: mockSetTemplates,
+          setWorkflowsOfWorkflows: mockSetWorkflowsOfWorkflows,
+          setRepositoryAgents: mockSetRepositoryAgents,
+          setSelectedAgentIds: mockSetSelectedAgentIds,
+          setSelectedTemplateIds: mockSetSelectedTemplateIds,
+          setSelectedRepositoryAgentIds: mockSetSelectedRepositoryAgentIds,
+        })
+      )
+
+      await act(async () => {
+        await result.current.deleteSelectedAgents(new Set(['agent-1']))
+      })
+
+      expect(mockSetAgents).not.toHaveBeenCalled()
+    })
+
+    it('should handle JSON.parse throwing error', async () => {
+      const agents = [
+        { ...mockAgents[0], author_id: 'user-1' },
+      ]
+      mockStorage.getItem.mockReturnValue('invalid json')
+
+      const { result } = renderHook(() =>
+        useTemplateOperations({
+          token: 'token',
+          user: { id: 'user-1', username: 'testuser' },
+          httpClient: mockHttpClient as any,
+          apiBaseUrl: 'http://api.test',
+          storage: mockStorage as any,
+          agents,
+          templates: [],
+          workflowsOfWorkflows: [],
+          activeTab: 'agents',
+          setAgents: mockSetAgents,
+          setTemplates: mockSetTemplates,
+          setWorkflowsOfWorkflows: mockSetWorkflowsOfWorkflows,
+          setRepositoryAgents: mockSetRepositoryAgents,
+          setSelectedAgentIds: mockSetSelectedAgentIds,
+          setSelectedTemplateIds: mockSetSelectedTemplateIds,
+          setSelectedRepositoryAgentIds: mockSetSelectedRepositoryAgentIds,
+        })
+      )
+
+      await act(async () => {
+        await result.current.deleteSelectedAgents(new Set(['agent-1']))
+      })
+
+      expect(mockShowError).toHaveBeenCalledWith(
+        expect.stringContaining('Failed to delete agents')
+      )
+    })
+
+    it('should handle error without message property', async () => {
+      const agents = [
+        { ...mockAgents[0], author_id: 'user-1' },
+      ]
+      mockStorage.getItem.mockImplementation(() => {
+        throw { toString: () => 'Error without message' }
+      })
+
+      const { result } = renderHook(() =>
+        useTemplateOperations({
+          token: 'token',
+          user: { id: 'user-1', username: 'testuser' },
+          httpClient: mockHttpClient as any,
+          apiBaseUrl: 'http://api.test',
+          storage: mockStorage as any,
+          agents,
+          templates: [],
+          workflowsOfWorkflows: [],
+          activeTab: 'agents',
+          setAgents: mockSetAgents,
+          setTemplates: mockSetTemplates,
+          setWorkflowsOfWorkflows: mockSetWorkflowsOfWorkflows,
+          setRepositoryAgents: mockSetRepositoryAgents,
+          setSelectedAgentIds: mockSetSelectedAgentIds,
+          setSelectedTemplateIds: mockSetSelectedTemplateIds,
+          setSelectedRepositoryAgentIds: mockSetSelectedRepositoryAgentIds,
+        })
+      )
+
+      await act(async () => {
+        await result.current.deleteSelectedAgents(new Set(['agent-1']))
+      })
+
+      expect(mockShowError).toHaveBeenCalledWith(
+        expect.stringContaining('Unknown error')
+      )
+    })
+  })
+
+  describe('deleteSelectedWorkflows edge cases', () => {
+    it('should handle activeTab as workflows-of-workflows', async () => {
+      const workflows = [
+        { ...mockTemplates[0], author_id: 'user-1' },
+      ]
+
+      const { result } = renderHook(() =>
+        useTemplateOperations({
+          token: 'token',
+          user: { id: 'user-1', username: 'testuser' },
+          httpClient: mockHttpClient as any,
+          apiBaseUrl: 'http://api.test',
+          storage: mockStorage as any,
+          agents: [],
+          templates: [],
+          workflowsOfWorkflows: workflows,
+          activeTab: 'workflows-of-workflows',
+          setAgents: mockSetAgents,
+          setTemplates: mockSetTemplates,
+          setWorkflowsOfWorkflows: mockSetWorkflowsOfWorkflows,
+          setRepositoryAgents: mockSetRepositoryAgents,
+          setSelectedAgentIds: mockSetSelectedAgentIds,
+          setSelectedTemplateIds: mockSetSelectedTemplateIds,
+          setSelectedRepositoryAgentIds: mockSetSelectedRepositoryAgentIds,
+        })
+      )
+
+      await act(async () => {
+        await result.current.deleteSelectedWorkflows(new Set(['template-1']))
+      })
+
+      expect(mockDeleteTemplate).toHaveBeenCalled()
+    })
+
+    it('should handle String conversion for numeric author_id in workflows', async () => {
+      const workflows = [
+        { ...mockTemplates[0], author_id: 123 },
+      ]
+
+      const { result } = renderHook(() =>
+        useTemplateOperations({
+          token: 'token',
+          user: { id: '123', username: 'testuser' },
+          httpClient: mockHttpClient as any,
+          apiBaseUrl: 'http://api.test',
+          storage: mockStorage as any,
+          agents: [],
+          templates: workflows,
+          workflowsOfWorkflows: [],
+          activeTab: 'repository',
+          setAgents: mockSetAgents,
+          setTemplates: mockSetTemplates,
+          setWorkflowsOfWorkflows: mockSetWorkflowsOfWorkflows,
+          setRepositoryAgents: mockSetRepositoryAgents,
+          setSelectedAgentIds: mockSetSelectedAgentIds,
+          setSelectedTemplateIds: mockSetSelectedTemplateIds,
+          setSelectedRepositoryAgentIds: mockSetSelectedRepositoryAgentIds,
+        })
+      )
+
+      await act(async () => {
+        await result.current.deleteSelectedWorkflows(new Set(['template-1']))
+      })
+
+      expect(mockDeleteTemplate).toHaveBeenCalled()
+    })
+
+    it('should handle Promise.all with partial errors', async () => {
+      const workflows = [
+        { ...mockTemplates[0], author_id: 'user-1' },
+        { ...mockTemplates[0], id: 'template-2', author_id: 'user-1' },
+      ]
+      mockDeleteTemplate
+        .mockResolvedValueOnce(undefined)
+        .mockRejectedValueOnce(new Error('Delete failed'))
+
+      const { result } = renderHook(() =>
+        useTemplateOperations({
+          token: 'token',
+          user: { id: 'user-1', username: 'testuser' },
+          httpClient: mockHttpClient as any,
+          apiBaseUrl: 'http://api.test',
+          storage: mockStorage as any,
+          agents: [],
+          templates: workflows,
+          workflowsOfWorkflows: [],
+          activeTab: 'repository',
+          setAgents: mockSetAgents,
+          setTemplates: mockSetTemplates,
+          setWorkflowsOfWorkflows: mockSetWorkflowsOfWorkflows,
+          setRepositoryAgents: mockSetRepositoryAgents,
+          setSelectedAgentIds: mockSetSelectedAgentIds,
+          setSelectedTemplateIds: mockSetSelectedTemplateIds,
+          setSelectedRepositoryAgentIds: mockSetSelectedRepositoryAgentIds,
+        })
+      )
+
+      await act(async () => {
+        await result.current.deleteSelectedWorkflows(new Set(['template-1', 'template-2']))
+      })
+
+      expect(mockShowError).toHaveBeenCalled()
+    })
+
+    it('should handle error.response.data.detail as null', async () => {
+      const workflows = [
+        { ...mockTemplates[0], author_id: 'user-1' },
+      ]
+      const error: any = new Error('Delete failed')
+      error.response = { data: { detail: null } }
+      mockDeleteTemplate.mockRejectedValue(error)
+
+      const { result } = renderHook(() =>
+        useTemplateOperations({
+          token: 'token',
+          user: { id: 'user-1', username: 'testuser' },
+          httpClient: mockHttpClient as any,
+          apiBaseUrl: 'http://api.test',
+          storage: mockStorage as any,
+          agents: [],
+          templates: workflows,
+          workflowsOfWorkflows: [],
+          activeTab: 'repository',
+          setAgents: mockSetAgents,
+          setTemplates: mockSetTemplates,
+          setWorkflowsOfWorkflows: mockSetWorkflowsOfWorkflows,
+          setRepositoryAgents: mockSetRepositoryAgents,
+          setSelectedAgentIds: mockSetSelectedAgentIds,
+          setSelectedTemplateIds: mockSetSelectedTemplateIds,
+          setSelectedRepositoryAgentIds: mockSetSelectedRepositoryAgentIds,
+        })
+      )
+
+      await act(async () => {
+        await result.current.deleteSelectedWorkflows(new Set(['template-1']))
+      })
+
+      expect(mockShowError).toHaveBeenCalledWith(
+        expect.stringContaining('Failed to delete workflows')
+      )
+    })
+
+    it('should handle error without message property', async () => {
+      const workflows = [
+        { ...mockTemplates[0], author_id: 'user-1' },
+      ]
+      const error: any = {}
+      mockDeleteTemplate.mockRejectedValue(error)
+
+      const { result } = renderHook(() =>
+        useTemplateOperations({
+          token: 'token',
+          user: { id: 'user-1', username: 'testuser' },
+          httpClient: mockHttpClient as any,
+          apiBaseUrl: 'http://api.test',
+          storage: mockStorage as any,
+          agents: [],
+          templates: workflows,
+          workflowsOfWorkflows: [],
+          activeTab: 'repository',
+          setAgents: mockSetAgents,
+          setTemplates: mockSetTemplates,
+          setWorkflowsOfWorkflows: mockSetWorkflowsOfWorkflows,
+          setRepositoryAgents: mockSetRepositoryAgents,
+          setSelectedAgentIds: mockSetSelectedAgentIds,
+          setSelectedTemplateIds: mockSetSelectedTemplateIds,
+          setSelectedRepositoryAgentIds: mockSetSelectedRepositoryAgentIds,
+        })
+      )
+
+      await act(async () => {
+        await result.current.deleteSelectedWorkflows(new Set(['template-1']))
+      })
+
+      expect(mockShowError).toHaveBeenCalledWith(
+        expect.stringContaining('Unknown error')
+      )
+    })
+  })
+
+  describe('deleteSelectedRepositoryAgents edge cases', () => {
+    it('should handle onRefresh as undefined', async () => {
+      const agents = [
+        { ...mockAgents[0] },
+      ]
+      mockStorage.getItem.mockReturnValue(JSON.stringify(agents))
+
+      const { result } = renderHook(() =>
+        useTemplateOperations({
+          token: 'token',
+          user: { id: 'user-1', username: 'testuser' },
+          httpClient: mockHttpClient as any,
+          apiBaseUrl: 'http://api.test',
+          storage: mockStorage as any,
+          agents: [],
+          templates: [],
+          workflowsOfWorkflows: [],
+          activeTab: 'repository',
+          setAgents: mockSetAgents,
+          setTemplates: mockSetTemplates,
+          setWorkflowsOfWorkflows: mockSetWorkflowsOfWorkflows,
+          setRepositoryAgents: mockSetRepositoryAgents,
+          setSelectedAgentIds: mockSetSelectedAgentIds,
+          setSelectedTemplateIds: mockSetSelectedTemplateIds,
+          setSelectedRepositoryAgentIds: mockSetSelectedRepositoryAgentIds,
+        })
+      )
+
+      await act(async () => {
+        await result.current.deleteSelectedRepositoryAgents(new Set(['agent-1']), undefined)
+      })
+
+      expect(mockSetRepositoryAgents).toHaveBeenCalled()
+    })
+
+    it('should handle repositoryAgents as empty string', async () => {
+      mockStorage.getItem.mockReturnValue('')
+
+      const { result } = renderHook(() =>
+        useTemplateOperations({
+          token: 'token',
+          user: { id: 'user-1', username: 'testuser' },
+          httpClient: mockHttpClient as any,
+          apiBaseUrl: 'http://api.test',
+          storage: mockStorage as any,
+          agents: [],
+          templates: [],
+          workflowsOfWorkflows: [],
+          activeTab: 'repository',
+          setAgents: mockSetAgents,
+          setTemplates: mockSetTemplates,
+          setWorkflowsOfWorkflows: mockSetWorkflowsOfWorkflows,
+          setRepositoryAgents: mockSetRepositoryAgents,
+          setSelectedAgentIds: mockSetSelectedAgentIds,
+          setSelectedTemplateIds: mockSetSelectedTemplateIds,
+          setSelectedRepositoryAgentIds: mockSetSelectedRepositoryAgentIds,
+        })
+      )
+
+      await act(async () => {
+        await result.current.deleteSelectedRepositoryAgents(new Set(['agent-1']))
+      })
+
+      expect(mockSetRepositoryAgents).not.toHaveBeenCalled()
+    })
+
+    it('should handle JSON.parse throwing error', async () => {
+      mockStorage.getItem.mockReturnValue('invalid json')
+
+      const { result } = renderHook(() =>
+        useTemplateOperations({
+          token: 'token',
+          user: { id: 'user-1', username: 'testuser' },
+          httpClient: mockHttpClient as any,
+          apiBaseUrl: 'http://api.test',
+          storage: mockStorage as any,
+          agents: [],
+          templates: [],
+          workflowsOfWorkflows: [],
+          activeTab: 'repository',
+          setAgents: mockSetAgents,
+          setTemplates: mockSetTemplates,
+          setWorkflowsOfWorkflows: mockSetWorkflowsOfWorkflows,
+          setRepositoryAgents: mockSetRepositoryAgents,
+          setSelectedAgentIds: mockSetSelectedAgentIds,
+          setSelectedTemplateIds: mockSetSelectedTemplateIds,
+          setSelectedRepositoryAgentIds: mockSetSelectedRepositoryAgentIds,
+        })
+      )
+
+      await act(async () => {
+        await result.current.deleteSelectedRepositoryAgents(new Set(['agent-1']))
+      })
+
+      expect(mockShowError).toHaveBeenCalledWith(
+        expect.stringContaining('Failed to delete repository agents')
+      )
+    })
+
+    it('should handle error without message property', async () => {
+      mockStorage.getItem.mockImplementation(() => {
+        throw { toString: () => 'Error without message' }
+      })
+
+      const { result } = renderHook(() =>
+        useTemplateOperations({
+          token: 'token',
+          user: { id: 'user-1', username: 'testuser' },
+          httpClient: mockHttpClient as any,
+          apiBaseUrl: 'http://api.test',
+          storage: mockStorage as any,
+          agents: [],
+          templates: [],
+          workflowsOfWorkflows: [],
+          activeTab: 'repository',
+          setAgents: mockSetAgents,
+          setTemplates: mockSetTemplates,
+          setWorkflowsOfWorkflows: mockSetWorkflowsOfWorkflows,
+          setRepositoryAgents: mockSetRepositoryAgents,
+          setSelectedAgentIds: mockSetSelectedAgentIds,
+          setSelectedTemplateIds: mockSetSelectedTemplateIds,
+          setSelectedRepositoryAgentIds: mockSetSelectedRepositoryAgentIds,
+        })
+      )
+
+      await act(async () => {
+        await result.current.deleteSelectedRepositoryAgents(new Set(['agent-1']))
+      })
+
+      expect(mockShowError).toHaveBeenCalledWith(
+        expect.stringContaining('Unknown error')
+      )
+    })
   })
 })

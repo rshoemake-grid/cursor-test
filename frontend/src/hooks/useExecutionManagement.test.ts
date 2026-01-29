@@ -963,4 +963,425 @@ describe('useExecutionManagement', () => {
       clearIntervalSpy.mockRestore()
     })
   })
+
+  describe('edge cases and error handling', () => {
+    describe('handleExecutionStart edge cases', () => {
+      it('should handle executionId starting with pending- when no pending executions exist', () => {
+        const { result } = renderHook(() =>
+          useExecutionManagement({
+            tabs: [mockTab],
+            activeTabId: 'tab-1',
+            setTabs: mockSetTabs,
+            tabsRef: mockTabsRef,
+            onExecutionStart: mockOnExecutionStart,
+          })
+        )
+
+        act(() => {
+          result.current.handleExecutionStart('pending-123')
+        })
+
+        expect(mockSetTabs).toHaveBeenCalled()
+        const setTabsCall = mockSetTabs.mock.calls[0][0]
+        const updatedTabs = typeof setTabsCall === 'function' ? setTabsCall([mockTab]) : setTabsCall
+        const updatedTab = updatedTabs.find((t: WorkflowTabData) => t.id === 'tab-1')
+        expect(updatedTab.executions[0].id).toBe('pending-123')
+      })
+
+      it('should handle replacing oldest pending execution when multiple exist', () => {
+        const tabWithPending: WorkflowTabData = {
+          ...mockTab,
+          executions: [
+            { id: 'pending-1', status: 'running' as const, startedAt: new Date(), nodes: {}, logs: [] },
+            { id: 'pending-2', status: 'running' as const, startedAt: new Date(), nodes: {}, logs: [] },
+          ],
+        }
+
+        const { result } = renderHook(() =>
+          useExecutionManagement({
+            tabs: [tabWithPending],
+            activeTabId: 'tab-1',
+            setTabs: mockSetTabs,
+            tabsRef: mockTabsRef,
+            onExecutionStart: mockOnExecutionStart,
+          })
+        )
+
+        act(() => {
+          result.current.handleExecutionStart('exec-real')
+        })
+
+        const setTabsCall = mockSetTabs.mock.calls[0][0]
+        const updatedTabs = typeof setTabsCall === 'function' ? setTabsCall([tabWithPending]) : setTabsCall
+        const updatedTab = updatedTabs.find((t: WorkflowTabData) => t.id === 'tab-1')
+        // Should replace pending-1 (oldest, last in array)
+        expect(updatedTab.executions.find((e: Execution) => e.id === 'exec-real')).toBeDefined()
+        expect(updatedTab.executions.find((e: Execution) => e.id === 'pending-1')).toBeUndefined()
+      })
+
+      it('should handle executionId that already exists', () => {
+        const existingExecution: Execution = {
+          id: 'exec-1',
+          status: 'running',
+          startedAt: new Date(),
+          nodes: {},
+          logs: [],
+        }
+        const tabWithExecution: WorkflowTabData = {
+          ...mockTab,
+          executions: [existingExecution],
+        }
+
+        const { result } = renderHook(() =>
+          useExecutionManagement({
+            tabs: [tabWithExecution],
+            activeTabId: 'tab-1',
+            setTabs: mockSetTabs,
+            tabsRef: mockTabsRef,
+            onExecutionStart: mockOnExecutionStart,
+          })
+        )
+
+        act(() => {
+          result.current.handleExecutionStart('exec-1')
+        })
+
+        const setTabsCall = mockSetTabs.mock.calls[0][0]
+        const updatedTabs = typeof setTabsCall === 'function' ? setTabsCall([tabWithExecution]) : setTabsCall
+        const updatedTab = updatedTabs.find((t: WorkflowTabData) => t.id === 'tab-1')
+        expect(updatedTab.executions).toHaveLength(1)
+        expect(updatedTab.activeExecutionId).toBe('exec-1')
+      })
+
+      it('should handle onExecutionStart as undefined', () => {
+        const { result } = renderHook(() =>
+          useExecutionManagement({
+            tabs: [mockTab],
+            activeTabId: 'tab-1',
+            setTabs: mockSetTabs,
+            tabsRef: mockTabsRef,
+            onExecutionStart: undefined,
+          })
+        )
+
+        act(() => {
+          result.current.handleExecutionStart('exec-1')
+        })
+
+        expect(mockSetTabs).toHaveBeenCalled()
+      })
+
+      it('should handle activeTabId as null', () => {
+        const { result } = renderHook(() =>
+          useExecutionManagement({
+            tabs: [mockTab],
+            activeTabId: null,
+            setTabs: mockSetTabs,
+            tabsRef: mockTabsRef,
+            onExecutionStart: mockOnExecutionStart,
+          })
+        )
+
+        act(() => {
+          result.current.handleExecutionStart('exec-1')
+        })
+
+        expect(mockSetTabs).not.toHaveBeenCalled()
+      })
+
+      it('should handle tab.id not matching activeTabId', () => {
+        const otherTab: WorkflowTabData = {
+          ...mockTab,
+          id: 'tab-2',
+        }
+
+        const { result } = renderHook(() =>
+          useExecutionManagement({
+            tabs: [otherTab],
+            activeTabId: 'tab-1',
+            setTabs: mockSetTabs,
+            tabsRef: mockTabsRef,
+            onExecutionStart: mockOnExecutionStart,
+          })
+        )
+
+        act(() => {
+          result.current.handleExecutionStart('exec-1')
+        })
+
+        const setTabsCall = mockSetTabs.mock.calls[0][0]
+        const updatedTabs = typeof setTabsCall === 'function' ? setTabsCall([otherTab]) : setTabsCall
+        const updatedTab = updatedTabs.find((t: WorkflowTabData) => t.id === 'tab-2')
+        expect(updatedTab).toBeUndefined() // Tab should not be updated
+      })
+    })
+
+    describe('handleClearExecutions edge cases', () => {
+      it('should handle workflowId that does not exist', () => {
+        const { result } = renderHook(() =>
+          useExecutionManagement({
+            tabs: [mockTab],
+            activeTabId: 'tab-1',
+            setTabs: mockSetTabs,
+            tabsRef: mockTabsRef,
+          })
+        )
+
+        act(() => {
+          result.current.handleClearExecutions('non-existent-workflow')
+        })
+
+        expect(mockSetTabs).not.toHaveBeenCalled()
+      })
+
+      it('should handle tab with no executions', () => {
+        const { result } = renderHook(() =>
+          useExecutionManagement({
+            tabs: [mockTab],
+            activeTabId: 'tab-1',
+            setTabs: mockSetTabs,
+            tabsRef: mockTabsRef,
+          })
+        )
+
+        act(() => {
+          result.current.handleClearExecutions('workflow-1')
+        })
+
+        const setTabsCall = mockSetTabs.mock.calls[0][0]
+        const updatedTabs = typeof setTabsCall === 'function' ? setTabsCall([mockTab]) : setTabsCall
+        const updatedTab = updatedTabs.find((t: WorkflowTabData) => t.id === 'tab-1')
+        expect(updatedTab.executions).toHaveLength(0)
+        expect(updatedTab.activeExecutionId).toBeNull()
+      })
+    })
+
+    describe('handleRemoveExecution edge cases', () => {
+      it('should handle removing execution when it is activeExecutionId', () => {
+        const execution: Execution = {
+          id: 'exec-1',
+          status: 'running',
+          startedAt: new Date(),
+          nodes: {},
+          logs: [],
+        }
+        const tabWithExecution: WorkflowTabData = {
+          ...mockTab,
+          executions: [execution],
+          activeExecutionId: 'exec-1',
+        }
+
+        const { result } = renderHook(() =>
+          useExecutionManagement({
+            tabs: [tabWithExecution],
+            activeTabId: 'tab-1',
+            setTabs: mockSetTabs,
+            tabsRef: mockTabsRef,
+          })
+        )
+
+        act(() => {
+          result.current.handleRemoveExecution('workflow-1', 'exec-1')
+        })
+
+        const setTabsCall = mockSetTabs.mock.calls[0][0]
+        const updatedTabs = typeof setTabsCall === 'function' ? setTabsCall([tabWithExecution]) : setTabsCall
+        const updatedTab = updatedTabs.find((t: WorkflowTabData) => t.id === 'tab-1')
+        expect(updatedTab.executions).toHaveLength(0)
+        expect(updatedTab.activeExecutionId).toBeNull()
+      })
+
+      it('should handle removing execution when workflowId does not match', () => {
+        const execution: Execution = {
+          id: 'exec-1',
+          status: 'running',
+          startedAt: new Date(),
+          nodes: {},
+          logs: [],
+        }
+        const tabWithExecution: WorkflowTabData = {
+          ...mockTab,
+          executions: [execution],
+        }
+
+        const { result } = renderHook(() =>
+          useExecutionManagement({
+            tabs: [tabWithExecution],
+            activeTabId: 'tab-1',
+            setTabs: mockSetTabs,
+            tabsRef: mockTabsRef,
+          })
+        )
+
+        act(() => {
+          result.current.handleRemoveExecution('wrong-workflow', 'exec-1')
+        })
+
+        expect(mockSetTabs).not.toHaveBeenCalled()
+      })
+
+      it('should handle removing non-existent execution', () => {
+        const { result } = renderHook(() =>
+          useExecutionManagement({
+            tabs: [mockTab],
+            activeTabId: 'tab-1',
+            setTabs: mockSetTabs,
+            tabsRef: mockTabsRef,
+          })
+        )
+
+        act(() => {
+          result.current.handleRemoveExecution('workflow-1', 'non-existent-exec')
+        })
+
+        expect(mockSetTabs).not.toHaveBeenCalled()
+      })
+    })
+
+    describe('handleExecutionLogUpdate edge cases', () => {
+      it('should handle executionId that does not exist', () => {
+        const { result } = renderHook(() =>
+          useExecutionManagement({
+            tabs: [mockTab],
+            activeTabId: 'tab-1',
+            setTabs: mockSetTabs,
+            tabsRef: mockTabsRef,
+          })
+        )
+
+        const newLog = { message: 'Test log', timestamp: new Date() }
+        act(() => {
+          result.current.handleExecutionLogUpdate('workflow-1', 'non-existent-exec', newLog)
+        })
+
+        expect(mockSetTabs).not.toHaveBeenCalled()
+      })
+
+      it('should handle workflowId that does not match', () => {
+        const execution: Execution = {
+          id: 'exec-1',
+          status: 'running',
+          startedAt: new Date(),
+          nodes: {},
+          logs: [],
+        }
+        const tabWithExecution: WorkflowTabData = {
+          ...mockTab,
+          executions: [execution],
+        }
+
+        const { result } = renderHook(() =>
+          useExecutionManagement({
+            tabs: [tabWithExecution],
+            activeTabId: 'tab-1',
+            setTabs: mockSetTabs,
+            tabsRef: mockTabsRef,
+          })
+        )
+
+        const newLog = { message: 'Test log', timestamp: new Date() }
+        act(() => {
+          result.current.handleExecutionLogUpdate('wrong-workflow', 'exec-1', newLog)
+        })
+
+        expect(mockSetTabs).not.toHaveBeenCalled()
+      })
+    })
+
+    describe('handleExecutionStatusUpdate edge cases', () => {
+      it('should handle executionId that does not exist', () => {
+        const { result } = renderHook(() =>
+          useExecutionManagement({
+            tabs: [mockTab],
+            activeTabId: 'tab-1',
+            setTabs: mockSetTabs,
+            tabsRef: mockTabsRef,
+          })
+        )
+
+        act(() => {
+          result.current.handleExecutionStatusUpdate('workflow-1', 'non-existent-exec', 'completed')
+        })
+
+        expect(mockSetTabs).not.toHaveBeenCalled()
+      })
+
+      it('should handle workflowId that does not match', () => {
+        const execution: Execution = {
+          id: 'exec-1',
+          status: 'running',
+          startedAt: new Date(),
+          nodes: {},
+          logs: [],
+        }
+        const tabWithExecution: WorkflowTabData = {
+          ...mockTab,
+          executions: [execution],
+        }
+
+        const { result } = renderHook(() =>
+          useExecutionManagement({
+            tabs: [tabWithExecution],
+            activeTabId: 'tab-1',
+            setTabs: mockSetTabs,
+            tabsRef: mockTabsRef,
+          })
+        )
+
+        act(() => {
+          result.current.handleExecutionStatusUpdate('wrong-workflow', 'exec-1', 'completed')
+        })
+
+        expect(mockSetTabs).not.toHaveBeenCalled()
+      })
+    })
+
+    describe('handleNodeStateUpdate edge cases', () => {
+      it('should handle executionId that does not exist', () => {
+        const { result } = renderHook(() =>
+          useExecutionManagement({
+            tabs: [mockTab],
+            activeTabId: 'tab-1',
+            setTabs: mockSetTabs,
+            tabsRef: mockTabsRef,
+          })
+        )
+
+        act(() => {
+          result.current.handleNodeStateUpdate('workflow-1', 'non-existent-exec', 'node-1', { status: 'running' })
+        })
+
+        expect(mockSetTabs).not.toHaveBeenCalled()
+      })
+
+      it('should handle workflowId that does not match', () => {
+        const execution: Execution = {
+          id: 'exec-1',
+          status: 'running',
+          startedAt: new Date(),
+          nodes: {},
+          logs: [],
+        }
+        const tabWithExecution: WorkflowTabData = {
+          ...mockTab,
+          executions: [execution],
+        }
+
+        const { result } = renderHook(() =>
+          useExecutionManagement({
+            tabs: [tabWithExecution],
+            activeTabId: 'tab-1',
+            setTabs: mockSetTabs,
+            tabsRef: mockTabsRef,
+          })
+        )
+
+        act(() => {
+          result.current.handleNodeStateUpdate('wrong-workflow', 'exec-1', 'node-1', { status: 'running' })
+        })
+
+        expect(mockSetTabs).not.toHaveBeenCalled()
+      })
+    })
+  })
 })
