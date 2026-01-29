@@ -880,7 +880,7 @@ describe('useTabOperations', () => {
         expect(mockSetActiveTabId).not.toHaveBeenCalled()
       })
 
-      it('should handle closing tab when activeTabId does not match', () => {
+      it('should handle closing tab when activeTabId does not match', async () => {
         // Reset mock before this test
         mockSetTabs.mockClear()
         mockSetActiveTabId.mockClear()
@@ -898,11 +898,13 @@ describe('useTabOperations', () => {
           stopPropagation: jest.fn(),
         } as any
 
-        act(() => {
+        // tab-2 is unsaved, so it will show confirmation
+        await act(async () => {
           result.current.handleCloseTab('tab-2', mockEvent)
+          await Promise.resolve() // Wait for confirmation promise
         })
 
-        // setTabs should be called to filter out tab-2
+        // setTabs should be called to filter out tab-2 (after confirmation)
         expect(mockSetTabs).toHaveBeenCalled()
         const setTabsCall = mockSetTabs.mock.calls[0][0]
         const filteredTabs = typeof setTabsCall === 'function' ? setTabsCall(initialTabs) : setTabsCall
