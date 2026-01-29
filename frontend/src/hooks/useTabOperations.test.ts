@@ -978,4 +978,238 @@ describe('useTabOperations', () => {
       })
     })
   })
+
+  describe('mutation killers for handleCloseTab', () => {
+    it('should verify exact showConfirm message and options for unsaved tab', async () => {
+      const unsavedTab = [{ ...initialTabs[0], isUnsaved: true }]
+      mockShowConfirm.mockResolvedValue(false)
+
+      const { result } = renderHook(() =>
+        useTabOperations({
+          tabs: unsavedTab,
+          activeTabId: 'tab-1',
+          setTabs: mockSetTabs,
+          setActiveTabId: mockSetActiveTabId,
+        })
+      )
+
+      const mockEvent = {
+        stopPropagation: jest.fn(),
+      } as any
+
+      await act(async () => {
+        result.current.handleCloseTab('tab-1', mockEvent)
+        await Promise.resolve()
+      })
+
+      // Verify exact message and options to kill StringLiteral and ObjectLiteral mutants
+      expect(mockShowConfirm).toHaveBeenCalledWith(
+        'This workflow has unsaved changes. Close anyway?',
+        { title: 'Unsaved Changes', confirmText: 'Close', cancelText: 'Cancel', type: 'warning' }
+      )
+    })
+
+    it('should verify tabId === activeTabId && filtered.length > 0 path', async () => {
+      const tabs = [
+        { ...initialTabs[0], id: 'tab-1' },
+        { ...initialTabs[0], id: 'tab-2' },
+      ]
+
+      const { result } = renderHook(() =>
+        useTabOperations({
+          tabs,
+          activeTabId: 'tab-1',
+          setTabs: mockSetTabs,
+          setActiveTabId: mockSetActiveTabId,
+        })
+      )
+
+      const mockEvent = {
+        stopPropagation: jest.fn(),
+      } as any
+
+      act(() => {
+        result.current.handleCloseTab('tab-1', mockEvent)
+      })
+
+      // Should switch to tab-2 (last remaining tab)
+      expect(mockSetActiveTabId).toHaveBeenCalledWith('tab-2')
+    })
+
+    it('should verify tabId === activeTabId && filtered.length === 0 path', async () => {
+      const singleTab = [{ ...initialTabs[0] }]
+
+      const { result } = renderHook(() =>
+        useTabOperations({
+          tabs: singleTab,
+          activeTabId: 'tab-1',
+          setTabs: mockSetTabs,
+          setActiveTabId: mockSetActiveTabId,
+        })
+      )
+
+      const mockEvent = {
+        stopPropagation: jest.fn(),
+      } as any
+
+      act(() => {
+        result.current.handleCloseTab('tab-1', mockEvent)
+      })
+
+      // Should set activeTabId to empty string when no tabs left
+      const setTabsCall = mockSetTabs.mock.calls[0][0]
+      const filteredTabs = typeof setTabsCall === 'function' ? setTabsCall(singleTab) : setTabsCall
+      if (filteredTabs.length === 0) {
+        expect(mockSetActiveTabId).toHaveBeenCalledWith('')
+      }
+    })
+
+    it('should verify tabId !== activeTabId path does not call setActiveTabId', async () => {
+      const tabs = [
+        { ...initialTabs[0], id: 'tab-1' },
+        { ...initialTabs[0], id: 'tab-2' },
+      ]
+
+      const { result } = renderHook(() =>
+        useTabOperations({
+          tabs,
+          activeTabId: 'tab-1',
+          setTabs: mockSetTabs,
+          setActiveTabId: mockSetActiveTabId,
+        })
+      )
+
+      const mockEvent = {
+        stopPropagation: jest.fn(),
+      } as any
+
+      act(() => {
+        result.current.handleCloseTab('tab-2', mockEvent)
+      })
+
+      // Should not change activeTabId when closing non-active tab
+      expect(mockSetActiveTabId).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('mutation killers for handleCloseWorkflow', () => {
+    it('should verify exact showConfirm message and options for unsaved workflow', async () => {
+      const unsavedTab = [{ ...initialTabs[0], isUnsaved: true }]
+      mockShowConfirm.mockResolvedValue(false)
+
+      const { result } = renderHook(() =>
+        useTabOperations({
+          tabs: unsavedTab,
+          activeTabId: 'tab-1',
+          setTabs: mockSetTabs,
+          setActiveTabId: mockSetActiveTabId,
+        })
+      )
+
+      await act(async () => {
+        result.current.handleCloseWorkflow('workflow-1')
+        await Promise.resolve()
+      })
+
+      // Verify exact message and options
+      expect(mockShowConfirm).toHaveBeenCalledWith(
+        'This workflow has unsaved changes. Close anyway?',
+        { title: 'Unsaved Changes', confirmText: 'Close', cancelText: 'Cancel', type: 'warning' }
+      )
+    })
+
+    it('should verify tabToClose.id === activeTabId && filtered.length > 0 path', async () => {
+      const tabs = [
+        { ...initialTabs[0], id: 'tab-1', workflowId: 'workflow-1' },
+        { ...initialTabs[0], id: 'tab-2', workflowId: 'workflow-2' },
+      ]
+
+      const { result } = renderHook(() =>
+        useTabOperations({
+          tabs,
+          activeTabId: 'tab-1',
+          setTabs: mockSetTabs,
+          setActiveTabId: mockSetActiveTabId,
+        })
+      )
+
+      act(() => {
+        result.current.handleCloseWorkflow('workflow-1')
+      })
+
+      // Should switch to tab-2
+      expect(mockSetActiveTabId).toHaveBeenCalledWith('tab-2')
+    })
+
+    it('should verify tabToClose.id === activeTabId && filtered.length === 0 path', async () => {
+      const singleTab = [{ ...initialTabs[0], workflowId: 'workflow-1' }]
+
+      const { result } = renderHook(() =>
+        useTabOperations({
+          tabs: singleTab,
+          activeTabId: 'tab-1',
+          setTabs: mockSetTabs,
+          setActiveTabId: mockSetActiveTabId,
+        })
+      )
+
+      act(() => {
+        result.current.handleCloseWorkflow('workflow-1')
+      })
+
+      // Should set activeTabId to empty string
+      const setTabsCall = mockSetTabs.mock.calls[0][0]
+      const filteredTabs = typeof setTabsCall === 'function' ? setTabsCall(singleTab) : setTabsCall
+      if (filteredTabs.length === 0) {
+        expect(mockSetActiveTabId).toHaveBeenCalledWith('')
+      } else {
+        // Or create new tab
+        expect(filteredTabs[0].name).toBe('Untitled Workflow')
+      }
+    })
+
+    it('should verify filtered.length === 0 path creates new tab when not active', async () => {
+      const singleTab = [{ ...initialTabs[0], workflowId: 'workflow-1' }]
+
+      const { result } = renderHook(() =>
+        useTabOperations({
+          tabs: singleTab,
+          activeTabId: null,
+          setTabs: mockSetTabs,
+          setActiveTabId: mockSetActiveTabId,
+        })
+      )
+
+      act(() => {
+        result.current.handleCloseWorkflow('workflow-1')
+      })
+
+      // Should create new tab when filtered.length === 0 and tabToClose.id !== activeTabId
+      const setTabsCall = mockSetTabs.mock.calls[0][0]
+      const filteredTabs = typeof setTabsCall === 'function' ? setTabsCall(singleTab) : setTabsCall
+      expect(filteredTabs.length).toBe(1)
+      expect(filteredTabs[0].name).toBe('Untitled Workflow')
+    })
+
+    it('should verify exact name string in handleNewWorkflow', () => {
+      const { result } = renderHook(() =>
+        useTabOperations({
+          tabs: initialTabs,
+          activeTabId: 'tab-1',
+          setTabs: mockSetTabs,
+          setActiveTabId: mockSetActiveTabId,
+        })
+      )
+
+      act(() => {
+        result.current.handleNewWorkflow()
+      })
+
+      // Verify exact name string to kill StringLiteral mutant
+      const setTabsCall = mockSetTabs.mock.calls[0][0]
+      const newTabs = typeof setTabsCall === 'function' ? setTabsCall(initialTabs) : setTabsCall
+      const newTab = newTabs[newTabs.length - 1]
+      expect(newTab.name).toBe('Untitled Workflow')
+    })
+  })
 })

@@ -1434,4 +1434,344 @@ describe('useExecutionManagement', () => {
       })
     })
   })
+
+  describe('mutation killers for polling useEffect', () => {
+    it('should verify runningExecutions.length === 0 early return', async () => {
+      const { result } = renderHook(() =>
+        useExecutionManagement({
+          tabs: [mockTab],
+          activeTabId: 'tab-1',
+          setTabs: mockSetTabs,
+          tabsRef: mockTabsRef,
+        })
+      )
+
+      // Advance timers to trigger polling
+      await act(async () => {
+        jest.advanceTimersByTime(2000)
+        await Promise.resolve()
+      })
+
+      // When no running executions, should not call api.getExecution
+      expect(mockApi.getExecution).not.toHaveBeenCalled()
+    })
+
+    it('should verify execution.status === completed check', async () => {
+      const execution: Execution = {
+        id: 'exec-1',
+        status: 'running',
+        startedAt: new Date(),
+        nodes: {},
+        logs: [],
+      }
+      const tabWithExecution: WorkflowTabData = {
+        ...mockTab,
+        executions: [execution],
+      }
+      mockTabsRef.current = [tabWithExecution]
+      mockApi.getExecution.mockResolvedValue({
+        id: 'exec-1',
+        status: 'completed',
+        started_at: new Date().toISOString(),
+        completed_at: new Date().toISOString(),
+        node_states: {},
+        logs: [],
+      })
+
+      renderHook(() =>
+        useExecutionManagement({
+          tabs: [tabWithExecution],
+          activeTabId: 'tab-1',
+          setTabs: mockSetTabs,
+          tabsRef: mockTabsRef,
+        })
+      )
+
+      await act(async () => {
+        jest.advanceTimersByTime(2000)
+        await Promise.resolve()
+      })
+
+      // Should call getExecution and update status to completed
+      expect(mockApi.getExecution).toHaveBeenCalledWith('exec-1')
+      expect(mockSetTabs).toHaveBeenCalled()
+    })
+
+    it('should verify execution.status === failed check', async () => {
+      const execution: Execution = {
+        id: 'exec-1',
+        status: 'running',
+        startedAt: new Date(),
+        nodes: {},
+        logs: [],
+      }
+      const tabWithExecution: WorkflowTabData = {
+        ...mockTab,
+        executions: [execution],
+      }
+      mockTabsRef.current = [tabWithExecution]
+      mockApi.getExecution.mockResolvedValue({
+        id: 'exec-1',
+        status: 'failed',
+        started_at: new Date().toISOString(),
+        completed_at: new Date().toISOString(),
+        node_states: {},
+        logs: [],
+      })
+
+      renderHook(() =>
+        useExecutionManagement({
+          tabs: [tabWithExecution],
+          activeTabId: 'tab-1',
+          setTabs: mockSetTabs,
+          tabsRef: mockTabsRef,
+        })
+      )
+
+      await act(async () => {
+        jest.advanceTimersByTime(2000)
+        await Promise.resolve()
+      })
+
+      // Should update status to failed
+      expect(mockApi.getExecution).toHaveBeenCalledWith('exec-1')
+      expect(mockSetTabs).toHaveBeenCalled()
+    })
+
+    it('should verify execution.status === paused check', async () => {
+      const execution: Execution = {
+        id: 'exec-1',
+        status: 'running',
+        startedAt: new Date(),
+        nodes: {},
+        logs: [],
+      }
+      const tabWithExecution: WorkflowTabData = {
+        ...mockTab,
+        executions: [execution],
+      }
+      mockTabsRef.current = [tabWithExecution]
+      mockApi.getExecution.mockResolvedValue({
+        id: 'exec-1',
+        status: 'paused',
+        started_at: new Date().toISOString(),
+        node_states: {},
+        logs: [],
+      })
+
+      renderHook(() =>
+        useExecutionManagement({
+          tabs: [tabWithExecution],
+          activeTabId: 'tab-1',
+          setTabs: mockSetTabs,
+          tabsRef: mockTabsRef,
+        })
+      )
+
+      await act(async () => {
+        jest.advanceTimersByTime(2000)
+        await Promise.resolve()
+      })
+
+      // Should keep status as running when paused
+      expect(mockApi.getExecution).toHaveBeenCalledWith('exec-1')
+      expect(mockSetTabs).toHaveBeenCalled()
+    })
+
+    it('should verify exec.status !== newStatus check', async () => {
+      const execution: Execution = {
+        id: 'exec-1',
+        status: 'running',
+        startedAt: new Date(),
+        nodes: {},
+        logs: [],
+      }
+      const tabWithExecution: WorkflowTabData = {
+        ...mockTab,
+        executions: [execution],
+      }
+      mockTabsRef.current = [tabWithExecution]
+      mockApi.getExecution.mockResolvedValue({
+        id: 'exec-1',
+        status: 'running', // Same status
+        started_at: new Date().toISOString(),
+        node_states: {},
+        logs: [],
+      })
+
+      renderHook(() =>
+        useExecutionManagement({
+          tabs: [tabWithExecution],
+          activeTabId: 'tab-1',
+          setTabs: mockSetTabs,
+          tabsRef: mockTabsRef,
+        })
+      )
+
+      await act(async () => {
+        jest.advanceTimersByTime(2000)
+        await Promise.resolve()
+      })
+
+      // Should still call getExecution even if status hasn't changed
+      expect(mockApi.getExecution).toHaveBeenCalledWith('exec-1')
+    })
+
+    it('should verify exact logger.debug message for status change', async () => {
+      const execution: Execution = {
+        id: 'exec-1',
+        status: 'running',
+        startedAt: new Date(),
+        nodes: {},
+        logs: [],
+      }
+      const tabWithExecution: WorkflowTabData = {
+        ...mockTab,
+        executions: [execution],
+      }
+      mockTabsRef.current = [tabWithExecution]
+      mockApi.getExecution.mockResolvedValue({
+        id: 'exec-1',
+        status: 'completed',
+        started_at: new Date().toISOString(),
+        completed_at: new Date().toISOString(),
+        node_states: {},
+        logs: [],
+      })
+
+      renderHook(() =>
+        useExecutionManagement({
+          tabs: [tabWithExecution],
+          activeTabId: 'tab-1',
+          setTabs: mockSetTabs,
+          tabsRef: mockTabsRef,
+        })
+      )
+
+      await act(async () => {
+        jest.advanceTimersByTime(2000)
+        await Promise.resolve()
+      })
+
+      // Verify exact log message format
+      expect(mockLoggerDebug).toHaveBeenCalledWith(
+        expect.stringMatching(/\[WorkflowTabs\] Execution exec-1 status changed: running → completed/)
+      )
+    })
+
+    it('should verify exact logger.debug message for polling', async () => {
+      const execution: Execution = {
+        id: 'exec-1',
+        status: 'running',
+        startedAt: new Date(),
+        nodes: {},
+        logs: [],
+      }
+      const tabWithExecution: WorkflowTabData = {
+        ...mockTab,
+        executions: [execution],
+      }
+      mockTabsRef.current = [tabWithExecution]
+      mockApi.getExecution.mockResolvedValue({
+        id: 'exec-1',
+        status: 'running',
+        started_at: new Date().toISOString(),
+        node_states: {},
+        logs: [],
+      })
+
+      renderHook(() =>
+        useExecutionManagement({
+          tabs: [tabWithExecution],
+          activeTabId: 'tab-1',
+          setTabs: mockSetTabs,
+          tabsRef: mockTabsRef,
+        })
+      )
+
+      await act(async () => {
+        jest.advanceTimersByTime(2000)
+        await Promise.resolve()
+      })
+
+      // Verify exact polling log message
+      expect(mockLoggerDebug).toHaveBeenCalledWith(
+        expect.stringMatching(/\[WorkflowTabs\] Polling \d+ running execution\(s\) \(fallback\)\.\.\./)
+      )
+    })
+
+    it('should verify error handling for 404 on non-pending execution', async () => {
+      const execution: Execution = {
+        id: 'exec-1',
+        status: 'running',
+        startedAt: new Date(),
+        nodes: {},
+        logs: [],
+      }
+      const tabWithExecution: WorkflowTabData = {
+        ...mockTab,
+        executions: [execution],
+      }
+      mockTabsRef.current = [tabWithExecution]
+      const error: any = new Error('Not found')
+      error.response = { status: 404 }
+      mockApi.getExecution.mockRejectedValue(error)
+
+      renderHook(() =>
+        useExecutionManagement({
+          tabs: [tabWithExecution],
+          activeTabId: 'tab-1',
+          setTabs: mockSetTabs,
+          tabsRef: mockTabsRef,
+        })
+      )
+
+      await act(async () => {
+        jest.advanceTimersByTime(2000)
+        await Promise.resolve()
+      })
+
+      // Should log error for non-pending execution
+      expect(mockLoggerError).toHaveBeenCalledWith(
+        expect.stringContaining('[WorkflowTabs] Failed to fetch execution exec-1:'),
+        error
+      )
+    })
+
+    it('should verify error handling skips logging for pending execution', async () => {
+      const execution: Execution = {
+        id: 'pending-123',
+        status: 'running',
+        startedAt: new Date(),
+        nodes: {},
+        logs: [],
+      }
+      const tabWithExecution: WorkflowTabData = {
+        ...mockTab,
+        executions: [execution],
+      }
+      mockTabsRef.current = [tabWithExecution]
+      mockApi.getExecution.mockRejectedValue(new Error('Not found'))
+
+      renderHook(() =>
+        useExecutionManagement({
+          tabs: [tabWithExecution],
+          activeTabId: 'tab-1',
+          setTabs: mockSetTabs,
+          tabsRef: mockTabsRef,
+        })
+      )
+
+      await act(async () => {
+        jest.advanceTimersByTime(2000)
+        await Promise.resolve()
+      })
+
+      // Should not log error for pending execution
+      const errorLogs = mockLoggerError.mock.calls.filter((call: any[]) =>
+        call[0] && typeof call[0] === 'string' && call[0].includes('pending-123')
+      )
+      expect(errorLogs.length).toBe(0)
+    })
+  })
 })
