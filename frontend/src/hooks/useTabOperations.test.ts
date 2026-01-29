@@ -881,6 +881,10 @@ describe('useTabOperations', () => {
       })
 
       it('should handle closing tab when activeTabId does not match', () => {
+        // Reset mock before this test
+        mockSetTabs.mockClear()
+        mockSetActiveTabId.mockClear()
+
         const { result } = renderHook(() =>
           useTabOperations({
             tabs: initialTabs,
@@ -900,11 +904,9 @@ describe('useTabOperations', () => {
 
         // setTabs should be called to filter out tab-2
         expect(mockSetTabs).toHaveBeenCalled()
-        if (mockSetTabs.mock.calls.length > 0) {
-          const setTabsCall = mockSetTabs.mock.calls[0][0]
-          const filteredTabs = typeof setTabsCall === 'function' ? setTabsCall(initialTabs) : setTabsCall
-          expect(filteredTabs.length).toBe(1)
-        }
+        const setTabsCall = mockSetTabs.mock.calls[0][0]
+        const filteredTabs = typeof setTabsCall === 'function' ? setTabsCall(initialTabs) : setTabsCall
+        expect(filteredTabs.length).toBe(1)
         // activeTabId is 'tab-1', closing 'tab-2', so filtered.length > 0 but tabId !== activeTabId
         // So setActiveTabId should not be called
         expect(mockSetActiveTabId).not.toHaveBeenCalled()
