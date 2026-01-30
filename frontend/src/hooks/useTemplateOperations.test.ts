@@ -3337,8 +3337,8 @@ describe('useTemplateOperations', () => {
 
     it('should verify user && t.author_id check in userOwnedTemplates filter kills LogicalOperator mutant', async () => {
       const workflows = [
-        { ...mockTemplates[0], author_id: 'user-1' },
-        { ...mockTemplates[0], id: 'template-2', author_id: null },
+        { ...mockTemplates[0], author_id: 'user-2' }, // Different user
+        { ...mockTemplates[0], id: 'template-2', author_id: null }, // No author_id
       ]
 
       const { result } = renderHook(() =>
@@ -3366,9 +3366,12 @@ describe('useTemplateOperations', () => {
         await result.current.deleteSelectedWorkflows(new Set(['template-1', 'template-2']))
       })
 
-      // Should only process template-1 (has author_id), not template-2 (null author_id)
-      // This verifies the user && t.author_id check kills LogicalOperator mutant
-      expect(mockShowError).toHaveBeenCalled()
+      // Should show error because userOwnedTemplates.length === 0
+      // This verifies the user && t.author_id check filters correctly
+      // If LogicalOperator was mutated to ||, it would incorrectly include templates with null author_id
+      expect(mockShowError).toHaveBeenCalledWith(
+        'You can only delete workflows that you published'
+      )
     })
   })
 })

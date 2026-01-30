@@ -34,7 +34,21 @@ export function useAuthenticatedApi(
         ;(headers as any)['Authorization'] = `Bearer ${token}`
       }
 
-      return client.post(`${baseUrl}${endpoint}`, data, headers)
+      // Ensure client and URL are valid before making request
+      if (!client || typeof client.post !== 'function') {
+        const error = new Error('HTTP client is not properly initialized')
+        error.name = 'HttpClientError'
+        throw error
+      }
+      
+      const url = `${baseUrl}${endpoint}`
+      if (!url || url.trim() === '') {
+        const error = new Error('URL cannot be empty')
+        error.name = 'InvalidUrlError'
+        throw error
+      }
+
+      return client.post(url, data, headers)
     },
     [token, client, baseUrl]
   )
@@ -52,7 +66,21 @@ export function useAuthenticatedApi(
         ;(headers as any)['Authorization'] = `Bearer ${token}`
       }
 
-      return client.get(`${baseUrl}${endpoint}`, headers)
+      // Ensure client and URL are valid before making request
+      if (!client || typeof client.get !== 'function') {
+        const error = new Error('HTTP client is not properly initialized')
+        error.name = 'HttpClientError'
+        throw error
+      }
+      
+      const url = `${baseUrl}${endpoint}`
+      if (!url || url.trim() === '') {
+        const error = new Error('URL cannot be empty')
+        error.name = 'InvalidUrlError'
+        throw error
+      }
+
+      return client.get(url, headers)
     },
     [token, client, baseUrl]
   )
@@ -75,7 +103,21 @@ export function useAuthenticatedApi(
         ;(headers as any)['Authorization'] = `Bearer ${token}`
       }
 
-      return client.put(`${baseUrl}${endpoint}`, data, headers)
+      // Ensure client and URL are valid before making request
+      if (!client || typeof client.put !== 'function') {
+        const error = new Error('HTTP client is not properly initialized')
+        error.name = 'HttpClientError'
+        throw error
+      }
+      
+      const url = `${baseUrl}${endpoint}`
+      if (!url || url.trim() === '') {
+        const error = new Error('URL cannot be empty')
+        error.name = 'InvalidUrlError'
+        throw error
+      }
+
+      return client.put(url, data, headers)
     },
     [token, client, baseUrl]
   )
@@ -93,7 +135,21 @@ export function useAuthenticatedApi(
         ;(headers as any)['Authorization'] = `Bearer ${token}`
       }
 
-      return client.delete(`${baseUrl}${endpoint}`, headers)
+      // Ensure client and URL are valid before making request
+      if (!client || typeof client.delete !== 'function') {
+        const error = new Error('HTTP client is not properly initialized')
+        error.name = 'HttpClientError'
+        throw error
+      }
+      
+      const url = `${baseUrl}${endpoint}`
+      if (!url || url.trim() === '') {
+        const error = new Error('URL cannot be empty')
+        error.name = 'InvalidUrlError'
+        throw error
+      }
+
+      return client.delete(url, headers)
     },
     [token, client, baseUrl]
   )

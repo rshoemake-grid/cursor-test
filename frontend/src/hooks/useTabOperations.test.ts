@@ -1037,11 +1037,15 @@ describe('useTabOperations', () => {
     })
 
     it('should verify tabId === activeTabId && filtered.length === 0 path', async () => {
-      const singleTab = [{ ...initialTabs[0] }]
+      // The filtered.length === 0 check only happens in the unsaved path
+      const unsavedSingleTab = [{ ...initialTabs[0], id: 'tab-1', isUnsaved: true }]
+      mockShowConfirm.mockResolvedValue(true)
+      mockSetActiveTabId.mockClear()
+      mockSetTabs.mockClear()
 
       const { result } = renderHook(() =>
         useTabOperations({
-          tabs: singleTab,
+          tabs: unsavedSingleTab,
           activeTabId: 'tab-1',
           setTabs: mockSetTabs,
           setActiveTabId: mockSetActiveTabId,
@@ -1052,16 +1056,21 @@ describe('useTabOperations', () => {
         stopPropagation: jest.fn(),
       } as any
 
-      act(() => {
-        result.current.handleCloseTab('tab-1', mockEvent)
+      await act(async () => {
+        await result.current.handleCloseTab('tab-1', mockEvent)
+        await Promise.resolve()
       })
 
-      // Should set activeTabId to empty string when no tabs left
+      // Verify setTabs was called with a function that filters out tab-1
+      expect(mockSetTabs).toHaveBeenCalled()
       const setTabsCall = mockSetTabs.mock.calls[0][0]
-      const filteredTabs = typeof setTabsCall === 'function' ? setTabsCall(singleTab) : setTabsCall
-      if (filteredTabs.length === 0) {
-        expect(mockSetActiveTabId).toHaveBeenCalledWith('')
-      }
+      const filteredTabs = typeof setTabsCall === 'function' ? setTabsCall(unsavedSingleTab) : setTabsCall
+      
+      // After filtering, there should be 0 tabs
+      expect(filteredTabs.length).toBe(0)
+      
+      // Should set activeTabId to empty string when no tabs left
+      expect(mockSetActiveTabId).toHaveBeenCalledWith('')
     })
 
     it('should verify tabId !== activeTabId path does not call setActiveTabId', async () => {

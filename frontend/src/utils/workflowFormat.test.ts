@@ -515,5 +515,258 @@ describe('workflowFormat utilities', () => {
       expect(result.data.name).toBe('agent')
       expect(result.data.label).toBe('agent')
     })
+
+    it('should verify exact fallback values for all logical OR operators', () => {
+      const wfNode: any = {
+        id: 'node1',
+        type: 'agent',
+        position: { x: 0, y: 0 },
+      }
+
+      const result = workflowNodeToReactFlowNode(wfNode)
+
+      // Verify exact fallback values (not mutated)
+      expect(result.position).toEqual({ x: 0, y: 0 })
+      expect(result.data.label).toBe('agent')
+      expect(result.data.name).toBe('agent')
+      expect(result.data.description).toBe('')
+      expect(result.data.agent_config).toEqual({})
+      expect(result.data.condition_config).toEqual({})
+      expect(result.data.loop_config).toEqual({})
+      expect(result.data.input_config).toEqual({})
+      expect(result.data.inputs).toEqual([])
+    })
+
+    it('should verify nodeName fallback chain uses exact empty string', () => {
+      const nodes: Node[] = [
+        {
+          id: 'node1',
+          type: 'agent',
+          position: { x: 0, y: 0 },
+          data: {
+            name: null as any,
+            label: null as any,
+          },
+        },
+      ]
+
+      const result = convertNodesToWorkflowFormat(nodes)
+
+      // Verify exact fallback chain: name || label || id
+      expect(result[0].name).toBe('node1')
+      expect(result[0].name).not.toBe('')
+    })
+
+    it('should verify sourceHandle || source_handle || null fallback chain', () => {
+      // Test: no sourceHandle
+      const edge1 = {
+        id: 'e1',
+        source: 'node1',
+        target: 'node2',
+      }
+      const result1 = formatEdgesForReactFlow([edge1])
+      expect(result1[0].sourceHandle).toBeUndefined()
+
+      // Test: has sourceHandle
+      const edge2 = {
+        id: 'e2',
+        source: 'node1',
+        target: 'node2',
+        sourceHandle: 'output',
+      }
+      const result2 = formatEdgesForReactFlow([edge2])
+      expect(result2[0].sourceHandle).toBe('output')
+
+      // Test: has source_handle (snake_case)
+      const edge3 = {
+        id: 'e3',
+        source: 'node1',
+        target: 'node2',
+        source_handle: 'input',
+      }
+      const result3 = formatEdgesForReactFlow([edge3])
+      expect(result3[0].sourceHandle).toBe('input')
+    })
+
+    it('should verify boolean to string conversion uses exact true/false strings', () => {
+      // Test: sourceHandle is true - gets converted to 'true' string
+      const edge1 = {
+        id: 'e1',
+        source: 'node1',
+        target: 'node2',
+        sourceHandle: true,
+      }
+      const result1 = formatEdgesForReactFlow([edge1])
+      // Verify exact 'true' string (not mutated)
+      expect(result1[0].sourceHandle).toBe('true')
+      expect(result1[0].sourceHandle).not.toBe(true)
+      expect(result1[0].sourceHandle).not.toBe('True')
+
+      // Test: sourceHandle is false
+      // Note: false || null = null, so sourceHandle becomes null before the false check
+      // The conversion check `if (sourceHandle === false)` never executes
+      const edge2 = {
+        source: 'node1',
+        target: 'node2',
+        sourceHandle: false,
+      }
+      const result2 = formatEdgesForReactFlow([edge2])
+      // When sourceHandle is false, it becomes null via || chain
+      expect(result2[0].sourceHandle).toBeUndefined()
+      expect(result2[0].id).toBe('node1-node2') // No sourceHandle in ID (generated)
+
+      // Test: targetHandle conversion
+      const edge3 = {
+        id: 'e3',
+        source: 'node1',
+        target: 'node2',
+        targetHandle: true,
+      }
+      const result3 = formatEdgesForReactFlow([edge3])
+      expect(result3[0].targetHandle).toBe('true')
+      expect(result3[0].targetHandle).not.toBe(true)
+    })
+
+    it('should verify edge.id || generated fallback uses exact template', () => {
+      const edge1 = {
+        source: 'node1',
+        target: 'node2',
+        sourceHandle: 'output',
+      }
+      const result1 = formatEdgesForReactFlow([edge1])
+      // Verify exact template: `${source}-${sourceHandle}-${target}`
+      expect(result1[0].id).toBe('node1-output-node2')
+
+      const edge2 = {
+        source: 'node1',
+        target: 'node2',
+      }
+      const result2 = formatEdgesForReactFlow([edge2])
+      // Verify exact template: `${source}-${target}`
+      expect(result2[0].id).toBe('node1-node2')
+    })
+
+    it('should verify initializeReactFlowNodes uses exact empty object/array fallbacks', () => {
+      const nodes: Node[] = [
+        {
+          id: 'node1',
+          type: 'agent',
+          position: { x: 0, y: 0 },
+          data: {
+            agent_config: null as any,
+            condition_config: undefined,
+            loop_config: null as any,
+            input_config: undefined,
+            inputs: null as any,
+          },
+        },
+      ]
+
+      const result = initializeReactFlowNodes(nodes)
+
+      // Verify exact empty object/array fallbacks (not mutated)
+      expect(result[0].data.agent_config).toEqual({})
+      expect(result[0].data.condition_config).toEqual({})
+      expect(result[0].data.loop_config).toEqual({})
+      expect(result[0].data.input_config).toEqual({})
+      expect(result[0].data.inputs).toEqual([])
+      expect(Object.keys(result[0].data.agent_config)).toHaveLength(0)
+      expect(result[0].data.inputs.length).toBe(0)
+    })
+
+    it('should verify wfNode.data || {} uses exact empty object fallback', () => {
+      const wfNode: any = {
+        id: 'node1',
+        type: 'agent',
+        position: { x: 0, y: 0 },
+        data: null,
+      }
+
+      const result = workflowNodeToReactFlowNode(wfNode)
+
+      // Verify data fallback to empty object
+      expect(result.data).toBeDefined()
+      expect(typeof result.data).toBe('object')
+    })
+
+    it('should verify position || { x: 0, y: 0 } uses exact fallback values', () => {
+      const wfNode: any = {
+        id: 'node1',
+        type: 'agent',
+      }
+
+      const result = workflowNodeToReactFlowNode(wfNode)
+
+      // Verify exact fallback position values (not mutated)
+      expect(result.position).toEqual({ x: 0, y: 0 })
+      expect(result.position.x).toBe(0)
+      expect(result.position.y).toBe(0)
+      expect(result.position.x).not.toBe(1)
+      expect(result.position.y).not.toBe(1)
+    })
+
+    it('should verify description ?? empty string uses exact empty string', () => {
+      const wfNode: any = {
+        id: 'node1',
+        type: 'agent',
+        position: { x: 0, y: 0 },
+        description: null,
+        data: { description: null },
+      }
+
+      const result = workflowNodeToReactFlowNode(wfNode)
+
+      // Verify exact empty string fallback (not null or undefined)
+      expect(result.data.description).toBe('')
+      expect(result.data.description.length).toBe(0)
+    })
+
+    it('should verify label fallback chain uses exact values', () => {
+      // Test: data.label exists
+      const wfNode1: any = {
+        id: 'node1',
+        type: 'agent',
+        position: { x: 0, y: 0 },
+        data: { label: 'Label' },
+      }
+      const result1 = workflowNodeToReactFlowNode(wfNode1)
+      expect(result1.data.label).toBe('Label')
+
+      // Test: data.name exists
+      const wfNode2: any = {
+        id: 'node1',
+        type: 'agent',
+        position: { x: 0, y: 0 },
+        name: 'Name',
+      }
+      const result2 = workflowNodeToReactFlowNode(wfNode2)
+      expect(result2.data.label).toBe('Name')
+
+      // Test: wfNode.type fallback
+      const wfNode3: any = {
+        id: 'node1',
+        type: 'agent',
+        position: { x: 0, y: 0 },
+      }
+      const result3 = workflowNodeToReactFlowNode(wfNode3)
+      expect(result3.data.label).toBe('agent')
+    })
+
+    it('should verify config fallback chains use exact empty object', () => {
+      const wfNode: any = {
+        id: 'node1',
+        type: 'agent',
+        position: { x: 0, y: 0 },
+      }
+
+      const result = workflowNodeToReactFlowNode(wfNode)
+
+      // Verify all configs use exact empty object fallback
+      expect(result.data.agent_config).toEqual({})
+      expect(result.data.condition_config).toEqual({})
+      expect(result.data.loop_config).toEqual({})
+      expect(result.data.input_config).toEqual({})
+      expect(result.data.inputs).toEqual([])
+    })
   })
 })

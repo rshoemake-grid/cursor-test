@@ -992,5 +992,345 @@ describe('useCanvasEvents', () => {
         expect(newNodes[0].data.label).toContain('Condition')
       }
     })
+
+    it('should handle node type with custom data fallback values', () => {
+      mockReactFlowInstanceRef.current.screenToFlowPosition = jest.fn().mockReturnValue({ x: 100, y: 200 })
+
+      const { result } = renderHook(() =>
+        useCanvasEvents({
+          reactFlowInstanceRef: mockReactFlowInstanceRef as any,
+          setNodes: mockSetNodes,
+          setEdges: mockSetEdges,
+          setSelectedNodeId: mockSetSelectedNodeId,
+          notifyModified: mockNotifyModified,
+          clipboard: mockClipboard,
+        })
+      )
+
+      const mockEvent = {
+        preventDefault: jest.fn(),
+        clientX: 150,
+        clientY: 250,
+        dataTransfer: {
+          getData: jest.fn((type: string) => {
+            if (type === 'application/reactflow') return 'loop'
+            return ''
+          }),
+        },
+        currentTarget: {
+          closest: jest.fn().mockReturnValue({
+            getBoundingClientRect: jest.fn().mockReturnValue({ left: 0, top: 0 }),
+          }),
+        },
+      } as unknown as React.DragEvent
+
+      act(() => {
+        result.current.onDrop(mockEvent)
+      })
+
+      expect(mockSetNodes).toHaveBeenCalled()
+      const setNodesCall = mockSetNodes.mock.calls[0][0]
+      const newNodes = typeof setNodesCall === 'function' ? setNodesCall([]) : setNodesCall
+      if (Array.isArray(newNodes) && newNodes.length > 0) {
+        expect(newNodes[0].data.label).toBe('Loop Node')
+        expect(newNodes[0].data.name).toBe('Loop Node')
+        expect(newNodes[0].data.inputs).toEqual([])
+      }
+    })
+
+    it('should verify custom agent data fallback for label when missing', () => {
+      mockReactFlowInstanceRef.current.screenToFlowPosition = jest.fn().mockReturnValue({ x: 100, y: 200 })
+
+      const { result } = renderHook(() =>
+        useCanvasEvents({
+          reactFlowInstanceRef: mockReactFlowInstanceRef as any,
+          setNodes: mockSetNodes,
+          setEdges: mockSetEdges,
+          setSelectedNodeId: mockSetSelectedNodeId,
+          notifyModified: mockNotifyModified,
+          clipboard: mockClipboard,
+        })
+      )
+
+      const customAgentData = {
+        description: 'Test Description',
+        agent_config: { model: 'gpt-4' },
+        // No label
+      }
+
+      const mockEvent = {
+        preventDefault: jest.fn(),
+        clientX: 150,
+        clientY: 250,
+        dataTransfer: {
+          getData: jest.fn((type: string) => {
+            if (type === 'application/reactflow') return 'agent'
+            if (type === 'application/custom-agent') return JSON.stringify(customAgentData)
+            return ''
+          }),
+        },
+        currentTarget: {
+          closest: jest.fn().mockReturnValue({
+            getBoundingClientRect: jest.fn().mockReturnValue({ left: 0, top: 0 }),
+          }),
+        },
+      } as unknown as React.DragEvent
+
+      act(() => {
+        result.current.onDrop(mockEvent)
+      })
+
+      expect(mockSetNodes).toHaveBeenCalled()
+      const setNodesCall = mockSetNodes.mock.calls[0][0]
+      const newNodes = typeof setNodesCall === 'function' ? setNodesCall([]) : setNodesCall
+      if (Array.isArray(newNodes) && newNodes.length > 0) {
+        // Should use fallback: `${type.charAt(0).toUpperCase() + type.slice(1)} Node`
+        expect(newNodes[0].data.label).toBe('Agent Node')
+        expect(newNodes[0].data.name).toBe('Agent Node')
+      }
+    })
+
+    it('should verify custom agent data fallback for description when missing', () => {
+      mockReactFlowInstanceRef.current.screenToFlowPosition = jest.fn().mockReturnValue({ x: 100, y: 200 })
+
+      const { result } = renderHook(() =>
+        useCanvasEvents({
+          reactFlowInstanceRef: mockReactFlowInstanceRef as any,
+          setNodes: mockSetNodes,
+          setEdges: mockSetEdges,
+          setSelectedNodeId: mockSetSelectedNodeId,
+          notifyModified: mockNotifyModified,
+          clipboard: mockClipboard,
+        })
+      )
+
+      const customAgentData = {
+        label: 'Custom Agent',
+        agent_config: { model: 'gpt-4' },
+        // No description
+      }
+
+      const mockEvent = {
+        preventDefault: jest.fn(),
+        clientX: 150,
+        clientY: 250,
+        dataTransfer: {
+          getData: jest.fn((type: string) => {
+            if (type === 'application/reactflow') return 'agent'
+            if (type === 'application/custom-agent') return JSON.stringify(customAgentData)
+            return ''
+          }),
+        },
+        currentTarget: {
+          closest: jest.fn().mockReturnValue({
+            getBoundingClientRect: jest.fn().mockReturnValue({ left: 0, top: 0 }),
+          }),
+        },
+      } as unknown as React.DragEvent
+
+      act(() => {
+        result.current.onDrop(mockEvent)
+      })
+
+      expect(mockSetNodes).toHaveBeenCalled()
+      const setNodesCall = mockSetNodes.mock.calls[0][0]
+      const newNodes = typeof setNodesCall === 'function' ? setNodesCall([]) : setNodesCall
+      if (Array.isArray(newNodes) && newNodes.length > 0) {
+        expect(newNodes[0].data.description).toBe('')
+      }
+    })
+
+    it('should verify custom agent data fallback for agent_config when missing', () => {
+      mockReactFlowInstanceRef.current.screenToFlowPosition = jest.fn().mockReturnValue({ x: 100, y: 200 })
+
+      const { result } = renderHook(() =>
+        useCanvasEvents({
+          reactFlowInstanceRef: mockReactFlowInstanceRef as any,
+          setNodes: mockSetNodes,
+          setEdges: mockSetEdges,
+          setSelectedNodeId: mockSetSelectedNodeId,
+          notifyModified: mockNotifyModified,
+          clipboard: mockClipboard,
+        })
+      )
+
+      const customAgentData = {
+        label: 'Custom Agent',
+        description: 'Test Description',
+        // No agent_config
+      }
+
+      const mockEvent = {
+        preventDefault: jest.fn(),
+        clientX: 150,
+        clientY: 250,
+        dataTransfer: {
+          getData: jest.fn((type: string) => {
+            if (type === 'application/reactflow') return 'agent'
+            if (type === 'application/custom-agent') return JSON.stringify(customAgentData)
+            return ''
+          }),
+        },
+        currentTarget: {
+          closest: jest.fn().mockReturnValue({
+            getBoundingClientRect: jest.fn().mockReturnValue({ left: 0, top: 0 }),
+          }),
+        },
+      } as unknown as React.DragEvent
+
+      act(() => {
+        result.current.onDrop(mockEvent)
+      })
+
+      expect(mockSetNodes).toHaveBeenCalled()
+      const setNodesCall = mockSetNodes.mock.calls[0][0]
+      const newNodes = typeof setNodesCall === 'function' ? setNodesCall([]) : setNodesCall
+      if (Array.isArray(newNodes) && newNodes.length > 0) {
+        expect(newNodes[0].data.agent_config).toEqual({})
+      }
+    })
+
+    it('should verify handleAddToAgentNodes checks node.type !== agent', () => {
+      mockStorage.getItem = jest.fn().mockReturnValue(JSON.stringify([]))
+
+      const { result } = renderHook(() =>
+        useCanvasEvents({
+          reactFlowInstanceRef: mockReactFlowInstanceRef as any,
+          setNodes: mockSetNodes,
+          setEdges: mockSetEdges,
+          setSelectedNodeId: mockSetSelectedNodeId,
+          notifyModified: mockNotifyModified,
+          clipboard: mockClipboard,
+          storage: mockStorage as any,
+        })
+      )
+
+      const mockNode: Node = {
+        id: 'node-1',
+        type: 'condition', // Not 'agent'
+        position: { x: 0, y: 0 },
+        data: {
+          label: 'Condition Node',
+        },
+      }
+
+      act(() => {
+        result.current.handleAddToAgentNodes(mockNode)
+      })
+
+      // Should return early, not call storage
+      expect(mockStorage.getItem).not.toHaveBeenCalled()
+      expect(mockStorage.setItem).not.toHaveBeenCalled()
+    })
+
+    it('should verify handleAddToAgentNodes checks !storage', () => {
+      const { result } = renderHook(() =>
+        useCanvasEvents({
+          reactFlowInstanceRef: mockReactFlowInstanceRef as any,
+          setNodes: mockSetNodes,
+          setEdges: mockSetEdges,
+          setSelectedNodeId: mockSetSelectedNodeId,
+          notifyModified: mockNotifyModified,
+          clipboard: mockClipboard,
+          storage: null,
+        })
+      )
+
+      const mockNode: Node = {
+        id: 'node-1',
+        type: 'agent',
+        position: { x: 0, y: 0 },
+        data: {},
+      }
+
+      act(() => {
+        result.current.handleAddToAgentNodes(mockNode)
+      })
+
+      expect(mockShowError).toHaveBeenCalledWith('Storage not available')
+    })
+
+    it('should verify handleAddToAgentNodes checks exists with label and agent_config comparison', () => {
+      const existingNodes = [
+        {
+          id: 'agent_1',
+          label: 'Test Agent',
+          agent_config: { model: 'gpt-4', temperature: 0.7 },
+          type: 'agent',
+        },
+      ]
+      mockStorage.getItem = jest.fn().mockReturnValue(JSON.stringify(existingNodes))
+
+      const { result } = renderHook(() =>
+        useCanvasEvents({
+          reactFlowInstanceRef: mockReactFlowInstanceRef as any,
+          setNodes: mockSetNodes,
+          setEdges: mockSetEdges,
+          setSelectedNodeId: mockSetSelectedNodeId,
+          notifyModified: mockNotifyModified,
+          clipboard: mockClipboard,
+          storage: mockStorage as any,
+        })
+      )
+
+      const mockNode: Node = {
+        id: 'node-1',
+        type: 'agent',
+        position: { x: 0, y: 0 },
+        data: {
+          label: 'Test Agent',
+          agent_config: { model: 'gpt-4', temperature: 0.7 },
+        },
+      }
+
+      act(() => {
+        result.current.handleAddToAgentNodes(mockNode)
+      })
+
+      expect(mockShowError).toHaveBeenCalledWith('This agent node already exists in the palette')
+      expect(mockStorage.setItem).not.toHaveBeenCalled()
+    })
+
+    it('should verify handleAddToAgentNodes checks exists with different agent_config', () => {
+      const existingNodes = [
+        {
+          id: 'agent_1',
+          label: 'Test Agent',
+          agent_config: { model: 'gpt-4' },
+          type: 'agent',
+        },
+      ]
+      mockStorage.getItem = jest.fn().mockReturnValue(JSON.stringify(existingNodes))
+
+      const { result } = renderHook(() =>
+        useCanvasEvents({
+          reactFlowInstanceRef: mockReactFlowInstanceRef as any,
+          setNodes: mockSetNodes,
+          setEdges: mockSetEdges,
+          setSelectedNodeId: mockSetSelectedNodeId,
+          notifyModified: mockNotifyModified,
+          clipboard: mockClipboard,
+          storage: mockStorage as any,
+        })
+      )
+
+      const mockNode: Node = {
+        id: 'node-1',
+        type: 'agent',
+        position: { x: 0, y: 0 },
+        data: {
+          label: 'Test Agent',
+          agent_config: { model: 'gpt-3.5' }, // Different config
+        },
+      }
+
+      act(() => {
+        result.current.handleAddToAgentNodes(mockNode)
+      })
+
+      // Should add since agent_config is different
+      expect(mockStorage.setItem).toHaveBeenCalled()
+      expect(mockShowSuccess).toHaveBeenCalled()
+    })
   })
 })

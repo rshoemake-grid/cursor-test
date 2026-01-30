@@ -242,4 +242,330 @@ describe('DatabaseNodeEditor', () => {
     expect(options).toContain('verify-ca')
     expect(options).toContain('verify-full')
   })
+
+  it('should handle null input_config', () => {
+    const node = createMockNode({})
+    node.data.input_config = null as any
+    render(<DatabaseNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />)
+
+    const typeSelect = screen.getByLabelText(/Database Type/i) as HTMLSelectElement
+    expect(typeSelect.value).toBe('postgresql')
+  })
+
+  it('should handle undefined input_config', () => {
+    const node = createMockNode({})
+    node.data.input_config = undefined as any
+    render(<DatabaseNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />)
+
+    const typeSelect = screen.getByLabelText(/Database Type/i) as HTMLSelectElement
+    expect(typeSelect.value).toBe('postgresql')
+  })
+
+  it('should verify all logical OR operators use correct fallback values', () => {
+    const node = createMockNode({
+      database_type: undefined,
+      mode: undefined,
+      connection_string: undefined,
+      host: undefined,
+      port: undefined,
+      database_name: undefined,
+      username: undefined,
+      password: undefined,
+      query: undefined,
+      ssl_mode: undefined,
+    })
+    render(<DatabaseNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />)
+
+    // Verify all fallbacks
+    expect((screen.getByLabelText(/Database Type/i) as HTMLSelectElement).value).toBe('postgresql')
+    expect((screen.getByLabelText(/Connection Mode/i) as HTMLSelectElement).value).toBe('read')
+    expect((screen.getByLabelText(/Connection String/i) as HTMLInputElement).value).toBe('')
+    expect((screen.getByLabelText(/Host/i) as HTMLInputElement).value).toBe('')
+    expect((screen.getByLabelText(/Port/i) as HTMLInputElement).value).toBe('')
+    expect((screen.getByLabelText(/Database Name/i) as HTMLInputElement).value).toBe('')
+    expect((screen.getByLabelText(/Username/i) as HTMLInputElement).value).toBe('')
+    expect((screen.getByLabelText(/Password/i) as HTMLInputElement).value).toBe('')
+    expect((screen.getByLabelText(/Query/i) as HTMLTextAreaElement).value).toBe('')
+    expect((screen.getByLabelText(/SSL Mode/i) as HTMLSelectElement).value).toBe('prefer')
+  })
+
+  it('should verify database_type fallback uses exact postgresql string', () => {
+    const node = createMockNode({ database_type: undefined })
+    render(<DatabaseNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />)
+
+    const typeSelect = screen.getByLabelText(/Database Type/i) as HTMLSelectElement
+    expect(typeSelect.value).toBe('postgresql')
+    expect(typeSelect.value).not.toBe('mysql')
+    expect(typeSelect.value).not.toBe('')
+  })
+
+  it('should verify mode fallback uses exact read string', () => {
+    const node = createMockNode({ mode: undefined })
+    render(<DatabaseNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />)
+
+    const modeSelect = screen.getByLabelText(/Connection Mode/i) as HTMLSelectElement
+    expect(modeSelect.value).toBe('read')
+    expect(modeSelect.value).not.toBe('write')
+    expect(modeSelect.value).not.toBe('')
+  })
+
+  it('should verify ssl_mode fallback uses exact prefer string', () => {
+    const node = createMockNode({ ssl_mode: undefined })
+    render(<DatabaseNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />)
+
+    const sslModeSelect = screen.getByLabelText(/SSL Mode/i) as HTMLSelectElement
+    expect(sslModeSelect.value).toBe('prefer')
+    expect(sslModeSelect.value).not.toBe('disable')
+    expect(sslModeSelect.value).not.toBe('')
+  })
+
+  it('should verify connection_string fallback uses exact empty string', () => {
+    const node = createMockNode({ connection_string: undefined })
+    render(<DatabaseNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />)
+
+    const connectionStringInput = screen.getByLabelText(/Connection String/i) as HTMLInputElement
+    expect(connectionStringInput.value).toBe('')
+    expect(connectionStringInput.value.length).toBe(0)
+  })
+
+  it('should verify host fallback uses exact empty string', () => {
+    const node = createMockNode({ host: undefined })
+    render(<DatabaseNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />)
+
+    const hostInput = screen.getByLabelText(/Host/i) as HTMLInputElement
+    expect(hostInput.value).toBe('')
+    expect(hostInput.value.length).toBe(0)
+  })
+
+  it('should verify port fallback uses exact empty string', () => {
+    const node = createMockNode({ port: undefined })
+    render(<DatabaseNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />)
+
+    const portInput = screen.getByLabelText(/Port/i) as HTMLInputElement
+    expect(portInput.value).toBe('')
+    expect(portInput.value.length).toBe(0)
+  })
+
+  it('should verify database_name fallback uses exact empty string', () => {
+    const node = createMockNode({ database_name: undefined })
+    render(<DatabaseNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />)
+
+    const databaseNameInput = screen.getByLabelText(/Database Name/i) as HTMLInputElement
+    expect(databaseNameInput.value).toBe('')
+    expect(databaseNameInput.value.length).toBe(0)
+  })
+
+  it('should verify username fallback uses exact empty string', () => {
+    const node = createMockNode({ username: undefined })
+    render(<DatabaseNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />)
+
+    const usernameInput = screen.getByLabelText(/Username/i) as HTMLInputElement
+    expect(usernameInput.value).toBe('')
+    expect(usernameInput.value.length).toBe(0)
+  })
+
+  it('should verify password fallback uses exact empty string', () => {
+    const node = createMockNode({ password: undefined })
+    render(<DatabaseNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />)
+
+    const passwordInput = screen.getByLabelText(/Password/i) as HTMLInputElement
+    expect(passwordInput.value).toBe('')
+    expect(passwordInput.value.length).toBe(0)
+  })
+
+  it('should verify query fallback uses exact empty string', () => {
+    const node = createMockNode({ query: undefined })
+    render(<DatabaseNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />)
+
+    const queryInput = screen.getByLabelText(/Query/i) as HTMLTextAreaElement
+    expect(queryInput.value).toBe('')
+    expect(queryInput.value.length).toBe(0)
+  })
+
+  it('should verify input_config fallback to empty object uses correct fallback', () => {
+    const node = createMockNode({})
+    node.data.input_config = null as any
+    const { container } = render(<DatabaseNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />)
+
+    // Verify component renders (inputConfig || {} ensures empty object)
+    expect(container.querySelector('h4')).toHaveTextContent('Database Configuration')
+  })
+
+  it('should handle empty string database_type', () => {
+    const node = createMockNode({ database_type: '' })
+    render(<DatabaseNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />)
+
+    const typeSelect = screen.getByLabelText(/Database Type/i) as HTMLSelectElement
+    expect(typeSelect.value).toBe('postgresql')
+  })
+
+  it('should handle null database_type', () => {
+    const node = createMockNode({ database_type: null as any })
+    render(<DatabaseNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />)
+
+    const typeSelect = screen.getByLabelText(/Database Type/i) as HTMLSelectElement
+    expect(typeSelect.value).toBe('postgresql')
+  })
+
+  it('should handle empty string mode', () => {
+    const node = createMockNode({ mode: '' })
+    render(<DatabaseNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />)
+
+    const modeSelect = screen.getByLabelText(/Connection Mode/i) as HTMLSelectElement
+    expect(modeSelect.value).toBe('read')
+  })
+
+  it('should handle null mode', () => {
+    const node = createMockNode({ mode: null as any })
+    render(<DatabaseNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />)
+
+    const modeSelect = screen.getByLabelText(/Connection Mode/i) as HTMLSelectElement
+    expect(modeSelect.value).toBe('read')
+  })
+
+  it('should handle null connection_string', () => {
+    const node = createMockNode({ connection_string: null as any })
+    render(<DatabaseNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />)
+
+    const connectionStringInput = screen.getByLabelText(/Connection String/i) as HTMLTextAreaElement
+    expect(connectionStringInput.value).toBe('')
+  })
+
+  it('should handle null host', () => {
+    const node = createMockNode({ host: null as any })
+    render(<DatabaseNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />)
+
+    const hostInput = screen.getByLabelText(/Host/i) as HTMLInputElement
+    expect(hostInput.value).toBe('')
+  })
+
+  it('should handle null port', () => {
+    const node = createMockNode({ port: null as any })
+    render(<DatabaseNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />)
+
+    const portInput = screen.getByLabelText(/Port/i) as HTMLInputElement
+    expect(portInput.value).toBe('')
+  })
+
+  it('should handle zero port', () => {
+    const node = createMockNode({ port: 0 })
+    render(<DatabaseNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />)
+
+    const portInput = screen.getByLabelText(/Port/i) as HTMLInputElement
+    // Port 0 is falsy, so || '' makes it empty string
+    expect(portInput.value).toBe('')
+  })
+
+  it('should handle null database_name', () => {
+    const node = createMockNode({ database_name: null as any })
+    render(<DatabaseNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />)
+
+    const dbNameInput = screen.getByLabelText(/Database Name/i) as HTMLInputElement
+    expect(dbNameInput.value).toBe('')
+  })
+
+  it('should handle null username', () => {
+    const node = createMockNode({ username: null as any })
+    render(<DatabaseNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />)
+
+    const usernameInput = screen.getByLabelText(/Username/i) as HTMLInputElement
+    expect(usernameInput.value).toBe('')
+  })
+
+  it('should handle null password', () => {
+    const node = createMockNode({ password: null as any })
+    render(<DatabaseNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />)
+
+    const passwordInput = screen.getByLabelText(/Password/i) as HTMLInputElement
+    expect(passwordInput.value).toBe('')
+  })
+
+  it('should handle null query', () => {
+    const node = createMockNode({ query: null as any })
+    render(<DatabaseNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />)
+
+    const queryInput = screen.getByLabelText(/Query/i) as HTMLTextAreaElement
+    expect(queryInput.value).toBe('')
+  })
+
+  it('should handle null ssl_mode', () => {
+    const node = createMockNode({ ssl_mode: null as any })
+    render(<DatabaseNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />)
+
+    const sslModeSelect = screen.getByLabelText(/SSL Mode/i) as HTMLSelectElement
+    expect(sslModeSelect.value).toBe('prefer')
+  })
+
+  it('should handle empty string ssl_mode', () => {
+    const node = createMockNode({ ssl_mode: '' })
+    render(<DatabaseNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />)
+
+    const sslModeSelect = screen.getByLabelText(/SSL Mode/i) as HTMLSelectElement
+    expect(sslModeSelect.value).toBe('prefer')
+  })
+
+  it('should handle port parsing with empty string', () => {
+    const node = createMockNode()
+    render(<DatabaseNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />)
+
+    const portInput = screen.getByLabelText(/Port/i)
+    fireEvent.change(portInput, { target: { value: '' } })
+
+    expect(mockOnConfigUpdate).toHaveBeenCalledWith('input_config', 'port', undefined)
+  })
+
+  it('should handle port parsing with non-numeric string', () => {
+    const node = createMockNode()
+    render(<DatabaseNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />)
+
+    const portInput = screen.getByLabelText(/Port/i)
+    fireEvent.change(portInput, { target: { value: 'abc' } })
+
+    // parseInt('abc') returns NaN, but NaN is falsy, so the ternary returns undefined
+    expect(mockOnConfigUpdate).toHaveBeenCalledWith('input_config', 'port', undefined)
+  })
+
+  it('should handle port parsing with valid number', () => {
+    const node = createMockNode()
+    render(<DatabaseNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />)
+
+    const portInput = screen.getByLabelText(/Port/i)
+    fireEvent.change(portInput, { target: { value: '3306' } })
+
+    expect(mockOnConfigUpdate).toHaveBeenCalledWith('input_config', 'port', 3306)
+  })
+
+  it('should handle port value of 0 displays as empty', () => {
+    const node = createMockNode({ port: 0 })
+    render(<DatabaseNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />)
+
+    const portInput = screen.getByLabelText(/Port/i) as HTMLInputElement
+    // Port 0 is falsy, so || '' makes it empty string
+    expect(portInput.value).toBe('')
+  })
+
+  it('should verify all fields handle falsy values correctly', () => {
+    const node = createMockNode({
+      database_type: false as any,
+      mode: false as any,
+      connection_string: false as any,
+      host: false as any,
+      port: false as any,
+      database_name: false as any,
+      username: false as any,
+      password: false as any,
+      query: false as any,
+      ssl_mode: false as any,
+    })
+    render(<DatabaseNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />)
+
+    const typeSelect = screen.getByLabelText(/Database Type/i) as HTMLSelectElement
+    expect(typeSelect.value).toBe('postgresql')
+
+    const modeSelect = screen.getByLabelText(/Connection Mode/i) as HTMLSelectElement
+    expect(modeSelect.value).toBe('read')
+
+    const sslModeSelect = screen.getByLabelText(/SSL Mode/i) as HTMLSelectElement
+    expect(sslModeSelect.value).toBe('prefer')
+  })
 })

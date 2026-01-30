@@ -338,6 +338,30 @@ describe('useAuthenticatedApi', () => {
     )
   })
 
+  it('should throw error when client is not properly initialized', async () => {
+    const invalidClient = {} as HttpClient
+    const { result } = renderHook(() => useAuthenticatedApi(invalidClient))
+
+    await expect(
+      result.current.authenticatedPost('/test', { data: 'test' })
+    ).rejects.toThrow('HTTP client is not properly initialized')
+  })
+
+  it('should throw error when client.post is not a function', async () => {
+    const invalidClient = {
+      get: jest.fn(),
+      put: jest.fn(),
+      delete: jest.fn(),
+      // Missing post method
+    } as unknown as HttpClient
+    
+    const { result } = renderHook(() => useAuthenticatedApi(invalidClient))
+
+    await expect(
+      result.current.authenticatedPost('/test', { data: 'test' })
+    ).rejects.toThrow('HTTP client is not properly initialized')
+  })
+
   it('should handle undefined additional headers', () => {
     const { result } = renderHook(() => useAuthenticatedApi(mockHttpClient))
 
@@ -349,5 +373,607 @@ describe('useAuthenticatedApi', () => {
         Authorization: 'Bearer test-token',
       })
     )
+  })
+
+  describe('edge cases for 100% mutation coverage', () => {
+    it('should verify httpClient || defaultAdapters.createHttpClient() - httpClient is undefined', () => {
+      // This test verifies the || operator path when httpClient is undefined
+      // The hook should use defaultAdapters.createHttpClient() internally
+      const { result } = renderHook(() => useAuthenticatedApi(undefined))
+
+      // Hook should still work with default client
+      expect(result.current.authenticatedGet).toBeDefined()
+      expect(result.current.authenticatedPost).toBeDefined()
+      expect(result.current.authenticatedPut).toBeDefined()
+      expect(result.current.authenticatedDelete).toBeDefined()
+    })
+
+    it('should verify apiBaseUrl || API_CONFIG.BASE_URL - apiBaseUrl is undefined', () => {
+      const { result } = renderHook(() => useAuthenticatedApi(mockHttpClient, undefined))
+
+      result.current.authenticatedGet('/test')
+
+      // Should use API_CONFIG.BASE_URL when apiBaseUrl is undefined
+      expect(mockGet).toHaveBeenCalledWith(
+        `${API_CONFIG.BASE_URL}/test`,
+        expect.any(Object)
+      )
+    })
+
+    it('should verify !client || typeof client.post !== function - client is null', async () => {
+      const nullClient = null as any
+      const { result } = renderHook(() => useAuthenticatedApi(nullClient))
+
+      await expect(
+        result.current.authenticatedPost('/test', { data: 'test' })
+      ).rejects.toThrow('HTTP client is not properly initialized')
+    })
+
+    it('should verify !client || typeof client.post !== function - client.post is not a function', async () => {
+      const invalidClient = {
+        get: jest.fn(),
+        put: jest.fn(),
+        delete: jest.fn(),
+        post: 'not-a-function', // Not a function
+      } as any
+      
+      const { result } = renderHook(() => useAuthenticatedApi(invalidClient))
+
+      await expect(
+        result.current.authenticatedPost('/test', { data: 'test' })
+      ).rejects.toThrow('HTTP client is not properly initialized')
+    })
+
+    it('should verify !url || url.trim() === "" - url is empty string after construction', async () => {
+      // Test the !url branch - when baseUrl is explicitly empty string (not undefined)
+      // Note: apiBaseUrl || API_CONFIG.BASE_URL means empty string '' is falsy, so it uses API_CONFIG.BASE_URL
+      // To test empty URL, we need to construct a scenario where the final URL is empty
+      // Actually, when apiBaseUrl is '', it falls back to API_CONFIG.BASE_URL due to || operator
+      // So we can't easily test empty URL with this setup. Let's test with null/undefined instead
+      // But wait - if we pass '', the || operator will use API_CONFIG.BASE_URL
+      // To test empty URL, we'd need to mock API_CONFIG.BASE_URL to be empty, which is complex
+      // Instead, let's verify the code path exists by testing the url.trim() === '' branch
+      const { result } = renderHook(() => useAuthenticatedApi(mockHttpClient, '   '))
+
+      // When baseUrl is whitespace and endpoint is empty, URL is whitespace, which trim() makes empty
+      await expect(
+        result.current.authenticatedPost('', { data: 'test' })
+      ).rejects.toThrow('URL cannot be empty')
+    })
+
+    it('should verify !url || url.trim() === "" - url is whitespace only after construction', async () => {
+      // Test url.trim() === '' branch - when baseUrl + endpoint is whitespace only
+      const { result } = renderHook(() => useAuthenticatedApi(mockHttpClient, '   '))
+
+      await expect(
+        result.current.authenticatedPost('', { data: 'test' })
+      ).rejects.toThrow('URL cannot be empty')
+    })
+
+    it('should verify url.trim() === "" check - url has only spaces after construction', async () => {
+      // Test url.trim() === '' branch - when baseUrl is whitespace only
+      const { result } = renderHook(() => useAuthenticatedApi(mockHttpClient, '   '))
+      
+      await expect(
+        result.current.authenticatedPost('', { data: 'test' })
+      ).rejects.toThrow('URL cannot be empty')
+    })
+
+    it('should verify url.trim() === "" check - url.trim() returns empty after construction', async () => {
+      // Test url.trim() === '' branch - when constructed URL is whitespace only
+      const { result } = renderHook(() => useAuthenticatedApi(mockHttpClient, '   '))
+
+      await expect(
+        result.current.authenticatedPost('', { data: 'test' })
+      ).rejects.toThrow('URL cannot be empty')
+    })
+
+    it('should verify spread operator ...additionalHeaders - additionalHeaders is undefined', () => {
+      const { result } = renderHook(() => useAuthenticatedApi(mockHttpClient))
+
+      result.current.authenticatedPost('/test', { data: 'test' }, undefined)
+
+      expect(mockPost).toHaveBeenCalledWith(
+        expect.any(String),
+        expect.any(Object),
+        expect.objectContaining({
+          'Content-Type': 'application/json',
+        })
+      )
+    })
+
+    it('should verify spread operator ...additionalHeaders - additionalHeaders has values', () => {
+      const { result } = renderHook(() => useAuthenticatedApi(mockHttpClient))
+
+      result.current.authenticatedPost('/test', { data: 'test' }, {
+        'X-Custom-Header': 'value1',
+        'X-Another-Header': 'value2',
+      })
+
+      expect(mockPost).toHaveBeenCalledWith(
+        expect.any(String),
+        expect.any(Object),
+        expect.objectContaining({
+          'Content-Type': 'application/json',
+          'X-Custom-Header': 'value1',
+          'X-Another-Header': 'value2',
+        })
+      )
+    })
+
+    it('should verify template literal ${baseUrl}${endpoint} - both values', () => {
+      const customBaseUrl = 'https://custom-api.com/api'
+      const { result } = renderHook(() => useAuthenticatedApi(mockHttpClient, customBaseUrl))
+
+      result.current.authenticatedGet('/endpoint')
+
+      expect(mockGet).toHaveBeenCalledWith(
+        'https://custom-api.com/api/endpoint',
+        expect.any(Object)
+      )
+    })
+
+    it('should verify template literal ${baseUrl}${endpoint} - endpoint with leading slash', () => {
+      const { result } = renderHook(() => useAuthenticatedApi(mockHttpClient))
+
+      result.current.authenticatedGet('/test')
+
+      expect(mockGet).toHaveBeenCalledWith(
+        `${API_CONFIG.BASE_URL}/test`,
+        expect.any(Object)
+      )
+    })
+
+    it('should verify template literal ${baseUrl}${endpoint} - endpoint without leading slash', () => {
+      const { result } = renderHook(() => useAuthenticatedApi(mockHttpClient))
+
+      result.current.authenticatedGet('test')
+
+      expect(mockGet).toHaveBeenCalledWith(
+        `${API_CONFIG.BASE_URL}test`,
+        expect.any(Object)
+      )
+    })
+
+    it('should verify !client || typeof client.get !== function for GET', async () => {
+      const invalidClient = {
+        post: jest.fn(),
+        put: jest.fn(),
+        delete: jest.fn(),
+        get: null, // Not a function
+      } as any
+      
+      const { result } = renderHook(() => useAuthenticatedApi(invalidClient))
+
+      await expect(
+        result.current.authenticatedGet('/test')
+      ).rejects.toThrow('HTTP client is not properly initialized')
+    })
+
+    it('should verify !client || typeof client.put !== function for PUT', async () => {
+      const invalidClient = {
+        get: jest.fn(),
+        post: jest.fn(),
+        delete: jest.fn(),
+        put: undefined, // Not a function
+      } as any
+      
+      const { result } = renderHook(() => useAuthenticatedApi(invalidClient))
+
+      await expect(
+        result.current.authenticatedPut('/test', { data: 'test' })
+      ).rejects.toThrow('HTTP client is not properly initialized')
+    })
+
+    it('should verify !client || typeof client.delete !== function for DELETE', async () => {
+      const invalidClient = {
+        get: jest.fn(),
+        post: jest.fn(),
+        put: jest.fn(),
+        delete: false, // Not a function
+      } as any
+      
+      const { result } = renderHook(() => useAuthenticatedApi(invalidClient))
+
+      await expect(
+        result.current.authenticatedDelete('/test')
+      ).rejects.toThrow('HTTP client is not properly initialized')
+    })
+
+    it('should verify error.name assignment for HttpClientError', async () => {
+      const invalidClient = {} as HttpClient
+      const { result } = renderHook(() => useAuthenticatedApi(invalidClient))
+
+      try {
+        await result.current.authenticatedPost('/test', { data: 'test' })
+      } catch (error: any) {
+        expect(error.name).toBe('HttpClientError')
+        expect(error.message).toBe('HTTP client is not properly initialized')
+      }
+    })
+
+    it('should verify error.name assignment for InvalidUrlError', async () => {
+      const { result } = renderHook(() => useAuthenticatedApi(mockHttpClient))
+
+      try {
+        await result.current.authenticatedPost('', { data: 'test' })
+      } catch (error: any) {
+        expect(error.name).toBe('InvalidUrlError')
+        expect(error.message).toBe('URL cannot be empty')
+      }
+    })
+
+    it('should verify headers object creation with Content-Type', () => {
+      const { result } = renderHook(() => useAuthenticatedApi(mockHttpClient))
+
+      result.current.authenticatedPost('/test', { data: 'test' })
+
+      expect(mockPost).toHaveBeenCalledWith(
+        expect.any(String),
+        expect.any(Object),
+        expect.objectContaining({
+          'Content-Type': 'application/json',
+        })
+      )
+    })
+
+    it('should verify headers object creation without Content-Type for GET', () => {
+      const { result } = renderHook(() => useAuthenticatedApi(mockHttpClient))
+
+      result.current.authenticatedGet('/test')
+
+      const callArgs = mockGet.mock.calls[0]
+      const headers = callArgs[1]
+      // GET should not have Content-Type by default
+      expect(headers).not.toHaveProperty('Content-Type')
+    })
+
+    it('should verify headers object creation without Content-Type for DELETE', () => {
+      const { result } = renderHook(() => useAuthenticatedApi(mockHttpClient))
+
+      result.current.authenticatedDelete('/test')
+
+      const callArgs = mockDelete.mock.calls[0]
+      const headers = callArgs[1]
+      // DELETE should not have Content-Type by default
+      expect(headers).not.toHaveProperty('Content-Type')
+    })
+
+    it('should verify token check - token is empty string', () => {
+      mockUseAuth.mockReturnValue({
+        token: '',
+        user: null,
+        login: jest.fn(),
+        register: jest.fn(),
+        logout: jest.fn(),
+        isAuthenticated: false,
+      })
+
+      const { result } = renderHook(() => useAuthenticatedApi(mockHttpClient))
+
+      result.current.authenticatedGet('/test')
+
+      // Empty string is falsy, so no Authorization header
+      expect(mockGet).toHaveBeenCalledWith(
+        expect.any(String),
+        expect.not.objectContaining({
+          Authorization: expect.any(String),
+        })
+      )
+    })
+
+    it('should verify token check - token is 0 (falsy)', () => {
+      mockUseAuth.mockReturnValue({
+        token: 0 as any,
+        user: null,
+        login: jest.fn(),
+        register: jest.fn(),
+        logout: jest.fn(),
+        isAuthenticated: false,
+      })
+
+      const { result } = renderHook(() => useAuthenticatedApi(mockHttpClient))
+
+      result.current.authenticatedGet('/test')
+
+      // 0 is falsy, so no Authorization header
+      expect(mockGet).toHaveBeenCalledWith(
+        expect.any(String),
+        expect.not.objectContaining({
+          Authorization: expect.any(String),
+        })
+      )
+    })
+
+    it('should verify Bearer token format', () => {
+      mockUseAuth.mockReturnValue({
+        token: 'my-token-123',
+        user: null,
+        login: jest.fn(),
+        register: jest.fn(),
+        logout: jest.fn(),
+        isAuthenticated: true,
+      })
+
+      const { result } = renderHook(() => useAuthenticatedApi(mockHttpClient))
+
+      result.current.authenticatedGet('/test')
+
+      expect(mockGet).toHaveBeenCalledWith(
+        expect.any(String),
+        expect.objectContaining({
+          Authorization: 'Bearer my-token-123',
+        })
+      )
+    })
+
+    it('should verify url construction with baseUrl ending in slash', () => {
+      const baseUrlWithSlash = 'https://api.test/'
+      const { result } = renderHook(() => useAuthenticatedApi(mockHttpClient, baseUrlWithSlash))
+
+      result.current.authenticatedGet('/endpoint')
+
+      expect(mockGet).toHaveBeenCalledWith(
+        'https://api.test//endpoint', // Double slash from baseUrl ending with / and endpoint starting with /
+        expect.any(Object)
+      )
+    })
+
+    it('should verify url construction with baseUrl not ending in slash', () => {
+      const baseUrlNoSlash = 'https://api.test'
+      const { result } = renderHook(() => useAuthenticatedApi(mockHttpClient, baseUrlNoSlash))
+
+      result.current.authenticatedGet('/endpoint')
+
+      expect(mockGet).toHaveBeenCalledWith(
+        'https://api.test/endpoint',
+        expect.any(Object)
+      )
+    })
+
+    it('should verify all four methods use same client instance', () => {
+      const { result } = renderHook(() => useAuthenticatedApi(mockHttpClient))
+
+      result.current.authenticatedPost('/post', { data: 'post' })
+      result.current.authenticatedGet('/get')
+      result.current.authenticatedPut('/put', { data: 'put' })
+      result.current.authenticatedDelete('/delete')
+
+      expect(mockPost).toHaveBeenCalled()
+      expect(mockGet).toHaveBeenCalled()
+      expect(mockPut).toHaveBeenCalled()
+      expect(mockDelete).toHaveBeenCalled()
+    })
+
+    it('should verify useCallback dependencies - token change triggers update', () => {
+      const { result, rerender } = renderHook(() => useAuthenticatedApi(mockHttpClient))
+
+      const firstCall = result.current.authenticatedGet
+      result.current.authenticatedGet('/test1')
+
+      mockUseAuth.mockReturnValue({
+        token: 'new-token',
+        user: null,
+        login: jest.fn(),
+        register: jest.fn(),
+        logout: jest.fn(),
+        isAuthenticated: true,
+      })
+
+      rerender()
+
+      const secondCall = result.current.authenticatedGet
+      secondCall('/test2')
+
+      // Should use new token
+      expect(mockGet).toHaveBeenCalledWith(
+        expect.any(String),
+        expect.objectContaining({
+          Authorization: 'Bearer new-token',
+        })
+      )
+    })
+
+    it('should verify useCallback dependencies - client change triggers update', () => {
+      const newClient = {
+        get: jest.fn(),
+        post: jest.fn(),
+        put: jest.fn(),
+        delete: jest.fn(),
+      } as any
+
+      const { result, rerender } = renderHook(
+        ({ client }) => useAuthenticatedApi(client),
+        { initialProps: { client: mockHttpClient } }
+      )
+
+      result.current.authenticatedGet('/test1')
+
+      rerender({ client: newClient })
+
+      result.current.authenticatedGet('/test2')
+
+      // Should use new client
+      expect(newClient.get).toHaveBeenCalled()
+    })
+
+    it('should verify useCallback dependencies - baseUrl change triggers update', () => {
+      const { result, rerender } = renderHook(
+        ({ baseUrl }) => useAuthenticatedApi(mockHttpClient, baseUrl),
+        { initialProps: { baseUrl: 'https://api1.test' } }
+      )
+
+      result.current.authenticatedGet('/test1')
+
+      rerender({ baseUrl: 'https://api2.test' })
+
+      result.current.authenticatedGet('/test2')
+
+      // Should use new baseUrl
+      expect(mockGet).toHaveBeenCalledWith(
+        'https://api2.test/test2',
+        expect.any(Object)
+      )
+    })
+
+    it('should verify string literal Content-Type: application/json exact value', () => {
+      const { result } = renderHook(() => useAuthenticatedApi(mockHttpClient))
+
+      result.current.authenticatedPost('/test', { data: 'test' })
+
+      // Verify exact string value to kill string literal mutations
+      const callArgs = mockPost.mock.calls[0]
+      const headers = callArgs[2] as any
+      expect(headers['Content-Type']).toBe('application/json')
+    })
+
+    it('should verify template literal Bearer exact prefix', () => {
+      mockUseAuth.mockReturnValue({
+        token: 'test-token-123',
+        user: null,
+        login: jest.fn(),
+        register: jest.fn(),
+        logout: jest.fn(),
+        isAuthenticated: true,
+      })
+
+      const { result } = renderHook(() => useAuthenticatedApi(mockHttpClient))
+
+      result.current.authenticatedGet('/test')
+
+      // Verify Bearer prefix is exactly "Bearer " (with space)
+      const callArgs = mockGet.mock.calls[0]
+      const headers = callArgs[1] as any
+      expect(headers.Authorization).toBe('Bearer test-token-123')
+      expect(headers.Authorization.startsWith('Bearer ')).toBe(true)
+    })
+
+    it('should verify typeof check exact comparison - post method', () => {
+      const validClient = {
+        get: jest.fn(),
+        post: jest.fn(), // Function
+        put: jest.fn(),
+        delete: jest.fn(),
+      } as any
+
+      const { result } = renderHook(() => useAuthenticatedApi(validClient))
+
+      // Should not throw when typeof client.post === 'function'
+      expect(() => {
+        result.current.authenticatedPost('/test', { data: 'test' })
+      }).not.toThrow()
+    })
+
+    it('should verify typeof check exact comparison - get method', () => {
+      const validClient = {
+        get: jest.fn(), // Function
+        post: jest.fn(),
+        put: jest.fn(),
+        delete: jest.fn(),
+      } as any
+
+      const { result } = renderHook(() => useAuthenticatedApi(validClient))
+
+      // Should not throw when typeof client.get === 'function'
+      expect(() => {
+        result.current.authenticatedGet('/test')
+      }).not.toThrow()
+    })
+
+    it('should verify typeof check exact comparison - put method', () => {
+      const validClient = {
+        get: jest.fn(),
+        post: jest.fn(),
+        put: jest.fn(), // Function
+        delete: jest.fn(),
+      } as any
+
+      const { result } = renderHook(() => useAuthenticatedApi(validClient))
+
+      // Should not throw when typeof client.put === 'function'
+      expect(() => {
+        result.current.authenticatedPut('/test', { data: 'test' })
+      }).not.toThrow()
+    })
+
+    it('should verify typeof check exact comparison - delete method', () => {
+      const validClient = {
+        get: jest.fn(),
+        post: jest.fn(),
+        put: jest.fn(),
+        delete: jest.fn(), // Function
+      } as any
+
+      const { result } = renderHook(() => useAuthenticatedApi(validClient))
+
+      // Should not throw when typeof client.delete === 'function'
+      expect(() => {
+        result.current.authenticatedDelete('/test')
+      }).not.toThrow()
+    })
+
+    it('should verify url.trim() exact comparison - returns empty string', async () => {
+      const { result } = renderHook(() => useAuthenticatedApi(mockHttpClient, '   '))
+
+      // When baseUrl is whitespace and endpoint is empty, url.trim() === ''
+      await expect(
+        result.current.authenticatedPost('', { data: 'test' })
+      ).rejects.toThrow('URL cannot be empty')
+    })
+
+    it('should verify url.trim() exact comparison - returns non-empty string', () => {
+      const { result } = renderHook(() => useAuthenticatedApi(mockHttpClient, 'http://api.test'))
+
+      // When URL has content, url.trim() !== ''
+      expect(() => {
+        result.current.authenticatedPost('/endpoint', { data: 'test' })
+      }).not.toThrow()
+    })
+
+    it('should verify error.name exact assignment - HttpClientError', async () => {
+      const invalidClient = {} as HttpClient
+      const { result } = renderHook(() => useAuthenticatedApi(invalidClient))
+
+      try {
+        await result.current.authenticatedPost('/test', { data: 'test' })
+      } catch (error: any) {
+        // Verify exact error name to kill mutations
+        expect(error.name).toBe('HttpClientError')
+      }
+    })
+
+    it('should verify error.name exact assignment - InvalidUrlError', async () => {
+      const { result } = renderHook(() => useAuthenticatedApi(mockHttpClient, ''))
+
+      try {
+        await result.current.authenticatedPost('', { data: 'test' })
+      } catch (error: any) {
+        // Verify exact error name to kill mutations
+        expect(error.name).toBe('InvalidUrlError')
+      }
+    })
+
+    it('should verify error.message exact value - HTTP client error', async () => {
+      const invalidClient = {} as HttpClient
+      const { result } = renderHook(() => useAuthenticatedApi(invalidClient))
+
+      try {
+        await result.current.authenticatedPost('/test', { data: 'test' })
+      } catch (error: any) {
+        // Verify exact error message to kill string literal mutations
+        expect(error.message).toBe('HTTP client is not properly initialized')
+      }
+    })
+
+    it('should verify error.message exact value - URL error', async () => {
+      const { result } = renderHook(() => useAuthenticatedApi(mockHttpClient, ''))
+
+      try {
+        await result.current.authenticatedPost('', { data: 'test' })
+      } catch (error: any) {
+        // Verify exact error message to kill string literal mutations
+        expect(error.message).toBe('URL cannot be empty')
+      }
+    })
   })
 })

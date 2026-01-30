@@ -13,6 +13,7 @@
     "src/components/LogLevelBadge.tsx",
     "src/components/editors/**/*.{ts,tsx}",
     "!src/**/*.test.{ts,tsx}",
+    "!src/**/*.test.setup.ts",
     "!src/**/*.spec.{ts,tsx}",
     "!src/test/**"
   ],

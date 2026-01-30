@@ -193,6 +193,87 @@ describe('LogLevelBadge', () => {
       // Should normalize to INFO (trimmed but still invalid)
       expect(screen.getByText('INFO')).toBeInTheDocument()
     })
+
+    it('should handle null level', () => {
+      render(<LogLevelBadge level={null as any} />)
+      expect(screen.getByText('INFO')).toBeInTheDocument()
+    })
+
+    it('should handle undefined level', () => {
+      render(<LogLevelBadge level={undefined as any} />)
+      expect(screen.getByText('INFO')).toBeInTheDocument()
+    })
+
+    it('should handle numeric level', () => {
+      render(<LogLevelBadge level={123 as any} />)
+      expect(screen.getByText('INFO')).toBeInTheDocument()
+    })
+
+    it('should handle boolean level', () => {
+      render(<LogLevelBadge level={true as any} />)
+      expect(screen.getByText('INFO')).toBeInTheDocument()
+    })
+
+    it('should verify showBackground default value is true', () => {
+      const { container } = render(<LogLevelBadge level="ERROR" />)
+      const badge = container.firstChild as HTMLElement
+      // showBackground defaults to true, so should have background
+      expect(badge.className).toContain('bg-red-900/30')
+    })
+
+    it('should verify showBackground ternary: true branch', () => {
+      const { container } = render(<LogLevelBadge level="WARNING" showBackground={true} />)
+      const badge = container.firstChild as HTMLElement
+      // When showBackground is true, should use getLogLevelColor
+      expect(badge.className).toContain('bg-yellow-900/30')
+      expect(badge.className).toContain('text-yellow-200')
+    })
+
+    it('should verify showBackground ternary: false branch', () => {
+      const { container } = render(<LogLevelBadge level="WARNING" showBackground={false} />)
+      const badge = container.firstChild as HTMLElement
+      // When showBackground is false, should use empty string for colorClasses
+      expect(badge.className).not.toContain('bg-yellow-900/30')
+      expect(badge.className).toContain('text-yellow-400')
+    })
+
+    it('should verify isValidLogLevel ternary: true branch', () => {
+      render(<LogLevelBadge level="DEBUG" />)
+      // When isValidLogLevel returns true, should use level
+      expect(screen.getByText('DEBUG')).toBeInTheDocument()
+    })
+
+    it('should verify isValidLogLevel ternary: false branch', () => {
+      render(<LogLevelBadge level="INVALID" />)
+      // When isValidLogLevel returns false, should use 'INFO'
+      expect(screen.getByText('INFO')).toBeInTheDocument()
+    })
+
+    it('should verify className concatenation with all parts', () => {
+      const { container } = render(<LogLevelBadge level="ERROR" showBackground={true} className="custom" />)
+      const badge = container.firstChild as HTMLElement
+      // Should contain: font-semibold + colorClasses + textColor + className
+      expect(badge.className).toContain('font-semibold')
+      expect(badge.className).toContain('bg-red-900/30')
+      expect(badge.className).toContain('text-red-200')
+      expect(badge.className).toContain('custom')
+    })
+
+    it('should verify className concatenation without background', () => {
+      const { container } = render(<LogLevelBadge level="ERROR" showBackground={false} className="custom" />)
+      const badge = container.firstChild as HTMLElement
+      // Should contain: font-semibold + '' (empty colorClasses) + textColor + className
+      expect(badge.className).toContain('font-semibold')
+      expect(badge.className).not.toContain('bg-red-900/30')
+      expect(badge.className).toContain('text-red-400')
+      expect(badge.className).toContain('custom')
+    })
+
+    it('should verify all CRITICAL level handling', () => {
+      render(<LogLevelBadge level="CRITICAL" />)
+      // CRITICAL is not in valid levels, so should normalize to INFO
+      expect(screen.getByText('INFO')).toBeInTheDocument()
+    })
   })
 })
 
