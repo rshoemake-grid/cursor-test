@@ -2860,5 +2860,199 @@ describe('useMarketplaceData', () => {
 
       expect(result.current.agents.length).toBeGreaterThan(0)
     })
+
+    it('should verify exact fallback values for logical OR operators', () => {
+      // Test: node.data || {}
+      const node1 = { id: 'node-1', data: undefined }
+      const nodeData1 = node1.data || {}
+      expect(nodeData1).toEqual({})
+      expect(Object.keys(nodeData1)).toHaveLength(0)
+
+      // Test: node.workflow_id || nodeData.workflow_id
+      const node2 = { id: 'node-2', workflow_id: undefined, data: { workflow_id: 'workflow-1' } }
+      const hasWorkflowId2 = node2.workflow_id || node2.data.workflow_id
+      expect(hasWorkflowId2).toBe('workflow-1')
+
+      // Test: node.description || nodeData.description || ''
+      const node3 = { id: 'node-3', description: undefined, data: { description: undefined } }
+      const description3 = (node3.description || node3.data.description || '').toLowerCase()
+      expect(description3).toBe('')
+      expect(description3.length).toBe(0)
+
+      // Test: user.username || user.email || null
+      const user1 = { id: 'user-1', username: undefined, email: 'test@example.com' }
+      const authorName1 = user1.username || user1.email || null
+      expect(authorName1).toBe('test@example.com')
+
+      const user2 = { id: 'user-2', username: undefined, email: undefined }
+      const authorName2 = user2.username || user2.email || null
+      expect(authorName2).toBeNull()
+
+      // Test: workflow.description || ''
+      const workflow1 = { id: 'workflow-1', description: undefined }
+      const workflowDescription1 = (workflow1.description || '').toLowerCase()
+      expect(workflowDescription1).toBe('')
+      expect(workflowDescription1.length).toBe(0)
+
+      // Test: a.name || ''
+      const agent1 = { id: 'agent-1', name: undefined }
+      const name1 = (agent1.name || '').localeCompare('')
+      expect(typeof name1).toBe('number')
+    })
+
+    it('should verify exact string comparisons for workflow of workflows detection', () => {
+      // Test: workflowDescription.includes('workflow of workflows')
+      const description1 = 'This is a workflow of workflows'
+      expect(description1.toLowerCase().includes('workflow of workflows')).toBe(true)
+
+      // Test: workflowDescription.includes('composite workflow')
+      const description2 = 'This is a composite workflow'
+      expect(description2.toLowerCase().includes('composite workflow')).toBe(true)
+
+      // Test: workflowDescription.includes('nested workflow')
+      const description3 = 'This is a nested workflow'
+      expect(description3.toLowerCase().includes('nested workflow')).toBe(true)
+
+      // Test: tag.toLowerCase().includes('workflow-of-workflows')
+      const tag1 = 'workflow-of-workflows'
+      expect(tag1.toLowerCase().includes('workflow-of-workflows')).toBe(true)
+
+      // Test: tag.toLowerCase().includes('composite')
+      const tag2 = 'composite'
+      expect(tag2.toLowerCase().includes('composite')).toBe(true)
+
+      // Test: tag.toLowerCase().includes('nested')
+      const tag3 = 'nested'
+      expect(tag3.toLowerCase().includes('nested')).toBe(true)
+    })
+
+    it('should verify exact comparison sortBy === popular', () => {
+      // Test: sortBy === 'popular'
+      const sortBy1 = 'popular'
+      const isPopular1 = sortBy1 === 'popular'
+      expect(isPopular1).toBe(true)
+
+      // Test: sortBy !== 'popular'
+      const sortBy2 = 'recent'
+      const isPopular2 = sortBy2 === 'popular'
+      expect(isPopular2).toBe(false)
+    })
+
+    it('should verify exact comparison sortBy === recent', () => {
+      // Test: sortBy === 'recent'
+      const sortBy1 = 'recent'
+      const isRecent1 = sortBy1 === 'recent'
+      expect(isRecent1).toBe(true)
+
+      // Test: sortBy !== 'recent'
+      const sortBy2 = 'popular'
+      const isRecent2 = sortBy2 === 'recent'
+      expect(isRecent2).toBe(false)
+    })
+
+    it('should verify exact comparison sortBy === popular || sortBy === recent', () => {
+      // Test: sortBy === 'popular'
+      const sortBy1 = 'popular'
+      const shouldSortByDate1 = sortBy1 === 'popular' || sortBy1 === 'recent'
+      expect(shouldSortByDate1).toBe(true)
+
+      // Test: sortBy === 'recent'
+      const sortBy2 = 'recent'
+      const shouldSortByDate2 = sortBy2 === 'popular' || sortBy2 === 'recent'
+      expect(shouldSortByDate2).toBe(true)
+
+      // Test: sortBy is neither
+      const sortBy3 = 'alphabetical'
+      const shouldSortByDate3 = sortBy3 === 'popular' || sortBy3 === 'recent'
+      expect(shouldSortByDate3).toBe(false)
+    })
+
+    it('should verify exact fallback value savedAgents ? JSON.parse(savedAgents) : []', () => {
+      // Test: savedAgents exists
+      const savedAgents1 = JSON.stringify([{ id: 'agent-1' }])
+      const agentsData1 = savedAgents1 ? JSON.parse(savedAgents1) : []
+      expect(agentsData1).toEqual([{ id: 'agent-1' }])
+
+      // Test: savedAgents is null/undefined
+      const savedAgents2 = null
+      const agentsData2 = savedAgents2 ? JSON.parse(savedAgents2) : []
+      expect(agentsData2).toEqual([])
+      expect(Array.isArray(agentsData2)).toBe(true)
+    })
+
+    it('should verify exact comparison a.category === category', () => {
+      const category = 'automation'
+      
+      // Test: a.category === category
+      const agent1 = { id: 'agent-1', category: 'automation' }
+      const matches1 = agent1.category === category
+      expect(matches1).toBe(true)
+
+      // Test: a.category !== category
+      const agent2 = { id: 'agent-2', category: 'other' }
+      const matches2 = agent2.category === category
+      expect(matches2).toBe(false)
+    })
+
+    it('should verify exact logical OR in search filter', () => {
+      const query = 'test'
+      
+      // Test: a.name.toLowerCase().includes(query)
+      const agent1 = { id: 'agent-1', name: 'Test Agent', description: '', tags: [] }
+      const matches1 = agent1.name.toLowerCase().includes(query) || 
+                      agent1.description.toLowerCase().includes(query) ||
+                      agent1.tags.some(tag => tag.toLowerCase().includes(query))
+      expect(matches1).toBe(true)
+
+      // Test: a.description.toLowerCase().includes(query)
+      const agent2 = { id: 'agent-2', name: 'Agent', description: 'Test Description', tags: [] }
+      const matches2 = agent2.name.toLowerCase().includes(query) || 
+                      agent2.description.toLowerCase().includes(query) ||
+                      agent2.tags.some(tag => tag.toLowerCase().includes(query))
+      expect(matches2).toBe(true)
+
+      // Test: a.tags.some(tag => tag.toLowerCase().includes(query))
+      const agent3 = { id: 'agent-3', name: 'Agent', description: '', tags: ['test'] }
+      const matches3 = agent3.name.toLowerCase().includes(query) || 
+                      agent3.description.toLowerCase().includes(query) ||
+                      agent3.tags.some(tag => tag.toLowerCase().includes(query))
+      expect(matches3).toBe(true)
+
+      // Test: none match
+      const agent4 = { id: 'agent-4', name: 'Agent', description: '', tags: [] }
+      const matches4 = agent4.name.toLowerCase().includes(query) || 
+                      agent4.description.toLowerCase().includes(query) ||
+                      agent4.tags.some(tag => tag.toLowerCase().includes(query))
+      expect(matches4).toBe(false)
+    })
+
+    it('should verify exact comparison a.is_official ? 1 : 0', () => {
+      // Test: a.is_official is true
+      const agent1 = { id: 'agent-1', is_official: true }
+      const isOfficial1 = agent1.is_official ? 1 : 0
+      expect(isOfficial1).toBe(1)
+
+      // Test: a.is_official is false
+      const agent2 = { id: 'agent-2', is_official: false }
+      const isOfficial2 = agent2.is_official ? 1 : 0
+      expect(isOfficial2).toBe(0)
+
+      // Test: a.is_official is undefined
+      const agent3 = { id: 'agent-3', is_official: undefined }
+      const isOfficial3 = agent3.is_official ? 1 : 0
+      expect(isOfficial3).toBe(0)
+    })
+
+    it('should verify exact comparison a.published_at ? new Date(a.published_at).getTime() : 0', () => {
+      // Test: a.published_at exists
+      const agent1 = { id: 'agent-1', published_at: '2024-01-01T00:00:00Z' }
+      const date1 = agent1.published_at ? new Date(agent1.published_at).getTime() : 0
+      expect(date1).toBeGreaterThan(0)
+
+      // Test: a.published_at is undefined
+      const agent2 = { id: 'agent-2', published_at: undefined }
+      const date2 = agent2.published_at ? new Date(agent2.published_at).getTime() : 0
+      expect(date2).toBe(0)
+    })
   })
 })

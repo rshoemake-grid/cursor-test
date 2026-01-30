@@ -975,5 +975,230 @@ describe('useAuthenticatedApi', () => {
         expect(error.message).toBe('URL cannot be empty')
       }
     })
+
+    it('should verify exact client.post() call with correct parameters', async () => {
+      const { result } = renderHook(() => useAuthenticatedApi(mockHttpClient))
+
+      await result.current.authenticatedPost('/test', { data: 'test' })
+
+      // Verify exact method call with exact parameters
+      expect(mockPost).toHaveBeenCalledTimes(1)
+      expect(mockPost).toHaveBeenCalledWith(
+        `${API_CONFIG.BASE_URL}/test`,
+        { data: 'test' },
+        expect.objectContaining({
+          'Content-Type': 'application/json',
+          Authorization: 'Bearer test-token',
+        })
+      )
+    })
+
+    it('should verify exact client.get() call with correct parameters', async () => {
+      const { result } = renderHook(() => useAuthenticatedApi(mockHttpClient))
+
+      await result.current.authenticatedGet('/test')
+
+      // Verify exact method call with exact parameters
+      expect(mockGet).toHaveBeenCalledTimes(1)
+      expect(mockGet).toHaveBeenCalledWith(
+        `${API_CONFIG.BASE_URL}/test`,
+        expect.objectContaining({
+          Authorization: 'Bearer test-token',
+        })
+      )
+    })
+
+    it('should verify exact client.put() call with correct parameters', async () => {
+      const { result } = renderHook(() => useAuthenticatedApi(mockHttpClient))
+
+      await result.current.authenticatedPut('/test', { data: 'test' })
+
+      // Verify exact method call with exact parameters
+      expect(mockPut).toHaveBeenCalledTimes(1)
+      expect(mockPut).toHaveBeenCalledWith(
+        `${API_CONFIG.BASE_URL}/test`,
+        { data: 'test' },
+        expect.objectContaining({
+          'Content-Type': 'application/json',
+          Authorization: 'Bearer test-token',
+        })
+      )
+    })
+
+    it('should verify exact client.delete() call with correct parameters', async () => {
+      const { result } = renderHook(() => useAuthenticatedApi(mockHttpClient))
+
+      await result.current.authenticatedDelete('/test')
+
+      // Verify exact method call with exact parameters
+      expect(mockDelete).toHaveBeenCalledTimes(1)
+      expect(mockDelete).toHaveBeenCalledWith(
+        `${API_CONFIG.BASE_URL}/test`,
+        expect.objectContaining({
+          Authorization: 'Bearer test-token',
+        })
+      )
+    })
+
+    it('should verify exact template literal ${baseUrl}${endpoint} - both values', async () => {
+      const customBaseUrl = 'https://custom-api.com/api'
+      const { result } = renderHook(() => useAuthenticatedApi(mockHttpClient, customBaseUrl))
+
+      await result.current.authenticatedGet('/endpoint')
+
+      // Verify exact URL construction
+      expect(mockGet).toHaveBeenCalledWith(
+        'https://custom-api.com/api/endpoint',
+        expect.any(Object)
+      )
+      expect(mockGet).not.toHaveBeenCalledWith(
+        'https://custom-api.com/apiendpoint',
+        expect.any(Object)
+      )
+    })
+
+    it('should verify exact template literal ${baseUrl}${endpoint} - endpoint with leading slash', async () => {
+      const { result } = renderHook(() => useAuthenticatedApi(mockHttpClient))
+
+      await result.current.authenticatedGet('/test')
+
+      // Verify exact URL construction with leading slash
+      expect(mockGet).toHaveBeenCalledWith(
+        `${API_CONFIG.BASE_URL}/test`,
+        expect.any(Object)
+      )
+    })
+
+    it('should verify exact template literal ${baseUrl}${endpoint} - endpoint without leading slash', async () => {
+      const { result } = renderHook(() => useAuthenticatedApi(mockHttpClient))
+
+      await result.current.authenticatedGet('test')
+
+      // Verify exact URL construction without leading slash
+      expect(mockGet).toHaveBeenCalledWith(
+        `${API_CONFIG.BASE_URL}test`,
+        expect.any(Object)
+      )
+    })
+
+    it('should verify exact headers object creation with Content-Type for POST', async () => {
+      const { result } = renderHook(() => useAuthenticatedApi(mockHttpClient))
+
+      await result.current.authenticatedPost('/test', { data: 'test' })
+
+      const callArgs = mockPost.mock.calls[0]
+      const headers = callArgs[2] as any
+      // Verify exact header structure
+      expect(headers).toHaveProperty('Content-Type', 'application/json')
+      expect(headers).toHaveProperty('Authorization', 'Bearer test-token')
+    })
+
+    it('should verify exact headers object creation without Content-Type for GET', async () => {
+      const { result } = renderHook(() => useAuthenticatedApi(mockHttpClient))
+
+      await result.current.authenticatedGet('/test')
+
+      const callArgs = mockGet.mock.calls[0]
+      const headers = callArgs[1] as any
+      // Verify exact header structure (no Content-Type)
+      expect(headers).not.toHaveProperty('Content-Type')
+      expect(headers).toHaveProperty('Authorization', 'Bearer test-token')
+    })
+
+    it('should verify exact headers object creation without Content-Type for DELETE', async () => {
+      const { result } = renderHook(() => useAuthenticatedApi(mockHttpClient))
+
+      await result.current.authenticatedDelete('/test')
+
+      const callArgs = mockDelete.mock.calls[0]
+      const headers = callArgs[1] as any
+      // Verify exact header structure (no Content-Type)
+      expect(headers).not.toHaveProperty('Content-Type')
+      expect(headers).toHaveProperty('Authorization', 'Bearer test-token')
+    })
+
+    it('should verify exact headers object creation with Content-Type for PUT', async () => {
+      const { result } = renderHook(() => useAuthenticatedApi(mockHttpClient))
+
+      await result.current.authenticatedPut('/test', { data: 'test' })
+
+      const callArgs = mockPut.mock.calls[0]
+      const headers = callArgs[2] as any
+      // Verify exact header structure
+      expect(headers).toHaveProperty('Content-Type', 'application/json')
+      expect(headers).toHaveProperty('Authorization', 'Bearer test-token')
+    })
+
+    it('should verify exact useCallback dependencies - token change', () => {
+      const { result, rerender } = renderHook(() => useAuthenticatedApi(mockHttpClient))
+
+      const firstCall = result.current.authenticatedPost
+      result.current.authenticatedPost('/test1', { data: 'test1' })
+
+      mockUseAuth.mockReturnValue({
+        token: 'new-token',
+        user: null,
+        login: jest.fn(),
+        register: jest.fn(),
+        logout: jest.fn(),
+        isAuthenticated: true,
+      })
+
+      rerender()
+
+      const secondCall = result.current.authenticatedPost
+      secondCall('/test2', { data: 'test2' })
+
+      // Verify new token is used
+      expect(mockPost).toHaveBeenCalledWith(
+        expect.any(String),
+        expect.any(Object),
+        expect.objectContaining({
+          Authorization: 'Bearer new-token',
+        })
+      )
+    })
+
+    it('should verify exact useCallback dependencies - client change', () => {
+      const newClient = {
+        get: jest.fn(),
+        post: jest.fn(),
+        put: jest.fn(),
+        delete: jest.fn(),
+      } as any
+
+      const { result, rerender } = renderHook(
+        ({ client }) => useAuthenticatedApi(client),
+        { initialProps: { client: mockHttpClient } }
+      )
+
+      result.current.authenticatedGet('/test1')
+
+      rerender({ client: newClient })
+
+      result.current.authenticatedGet('/test2')
+
+      // Verify new client is used
+      expect(newClient.get).toHaveBeenCalled()
+    })
+
+    it('should verify exact useCallback dependencies - baseUrl change', () => {
+      const { result, rerender } = renderHook(
+        ({ baseUrl }) => useAuthenticatedApi(mockHttpClient, baseUrl),
+        { initialProps: { baseUrl: 'https://api1.test' } }
+      )
+
+      result.current.authenticatedGet('/test1')
+
+      rerender({ baseUrl: 'https://api2.test' })
+
+      result.current.authenticatedGet('/test2')
+
+      // Verify new baseUrl is used
+      expect(mockGet).toHaveBeenCalledWith(
+        'https://api2.test/test2',
+        expect.any(Object)
+      )
+    })
   })
 })
