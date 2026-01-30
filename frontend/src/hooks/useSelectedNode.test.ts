@@ -1440,8 +1440,10 @@ describe('useSelectedNode', () => {
         })
       )
 
-      // Should use nodesProp when flowNodes.length is 0
+      // Should use nodesProp when flowNodes.length is 0 (not > 0)
+      // This verifies the exact comparison flowNodes.length > 0
       expect(result.current.nodes).toEqual(propNodes)
+      expect(mockGetNodes).toHaveBeenCalled()
     })
 
     it('should verify exact nodesProp || [] fallback - nodesProp is undefined', () => {
@@ -1471,8 +1473,10 @@ describe('useSelectedNode', () => {
         })
       )
 
-      // Should return nodesProp when getNodes throws
+      // Should return nodesProp when getNodes throws (catch block)
+      // This verifies the exact catch block: return nodesProp || []
       expect(result.current.nodes).toEqual(propNodes)
+      expect(mockGetNodes).toHaveBeenCalled()
     })
 
     it('should verify exact catch block returns empty array when nodesProp is undefined', () => {
