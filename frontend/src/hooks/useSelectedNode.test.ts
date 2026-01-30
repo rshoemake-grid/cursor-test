@@ -1370,7 +1370,7 @@ describe('useSelectedNode', () => {
       expect(secondRender).toBe(firstRender) // Same reference
     })
 
-    it.skip('should verify exact Object.assign call with correct parameters', () => {
+    it('should verify exact Object.assign call with correct parameters', () => {
       const node = { id: 'node-1', type: 'agent', position: { x: 0, y: 0 }, data: { label: 'Original' } }
       const updatedNode = { id: 'node-1', type: 'agent', position: { x: 0, y: 0 }, data: { label: 'Updated' } }
       mockGetNodes.mockReturnValue([updatedNode])
@@ -1427,6 +1427,186 @@ describe('useSelectedNode', () => {
       expect(matchingCall).toBeDefined()
 
       assignSpy.mockRestore()
+    })
+
+    it('should verify exact flowNodes.length > 0 check - length is 0', () => {
+      mockGetNodes.mockReturnValue([])
+      const propNodes = [{ id: 'prop-node', type: 'agent', data: {} }]
+
+      const { result } = renderHook(() =>
+        useSelectedNode({
+          selectedNodeId: null,
+          nodesProp: propNodes,
+        })
+      )
+
+      // Should use nodesProp when flowNodes.length is 0
+      expect(result.current.nodes).toEqual(propNodes)
+    })
+
+    it('should verify exact nodesProp || [] fallback - nodesProp is undefined', () => {
+      mockGetNodes.mockReturnValue([])
+
+      const { result } = renderHook(() =>
+        useSelectedNode({
+          selectedNodeId: null,
+          nodesProp: undefined,
+        })
+      )
+
+      // Should return empty array when nodesProp is undefined
+      expect(result.current.nodes).toEqual([])
+    })
+
+    it('should verify exact catch block returns nodesProp || []', () => {
+      mockGetNodes.mockImplementation(() => {
+        throw new Error('React Flow error')
+      })
+      const propNodes = [{ id: 'prop-node', type: 'agent', data: {} }]
+
+      const { result } = renderHook(() =>
+        useSelectedNode({
+          selectedNodeId: null,
+          nodesProp: propNodes,
+        })
+      )
+
+      // Should return nodesProp when getNodes throws
+      expect(result.current.nodes).toEqual(propNodes)
+    })
+
+    it('should verify exact catch block returns empty array when nodesProp is undefined', () => {
+      mockGetNodes.mockImplementation(() => {
+        throw new Error('React Flow error')
+      })
+
+      const { result } = renderHook(() =>
+        useSelectedNode({
+          selectedNodeId: null,
+          nodesProp: undefined,
+        })
+      )
+
+      // Should return empty array when getNodes throws and nodesProp is undefined
+      expect(result.current.nodes).toEqual([])
+    })
+
+    it('should verify exact selectedNodeIdRef.current === selectedNodeId check - IDs differ', () => {
+      const { result, rerender } = renderHook(
+        ({ selectedNodeId }) =>
+          useSelectedNode({
+            selectedNodeId,
+          }),
+        {
+          initialProps: { selectedNodeId: 'node-1' },
+        }
+      )
+
+      expect(result.current.selectedNode).toBeDefined()
+
+      // Change to different node ID - should not use cache
+      rerender({ selectedNodeId: 'node-2' })
+
+      // Should find new node, not use cache
+      expect(result.current.selectedNode?.id).toBe('node-2')
+    })
+
+    it('should verify exact selectedNodeRef.current check - cache is null', () => {
+      const { result, rerender } = renderHook(
+        ({ selectedNodeId }) =>
+          useSelectedNode({
+            selectedNodeId,
+          }),
+        {
+          initialProps: { selectedNodeId: null },
+        }
+      )
+
+      expect(result.current.selectedNode).toBeNull()
+
+      // Select a node - cache should be null initially
+      rerender({ selectedNodeId: 'node-1' })
+
+      // Should find and cache the node
+      expect(result.current.selectedNode).toBeDefined()
+      expect(result.current.selectedNode?.id).toBe('node-1')
+    })
+
+    it('should verify exact nodeExists check - node no longer exists', () => {
+      const { result, rerender } = renderHook(
+        ({ selectedNodeId }) =>
+          useSelectedNode({
+            selectedNodeId,
+          }),
+        {
+          initialProps: { selectedNodeId: 'node-1' },
+        }
+      )
+
+      expect(result.current.selectedNode).toBeDefined()
+
+      // Node exists initially
+      mockNodeExists.mockReturnValue(true)
+      rerender({ selectedNodeId: 'node-1' })
+      expect(result.current.selectedNode).toBeDefined()
+
+      // Node no longer exists
+      mockNodeExists.mockReturnValue(false)
+      mockFindNodeById.mockReturnValue(null)
+      rerender({ selectedNodeId: 'node-1' })
+
+      // Should return null when node no longer exists
+      expect(result.current.selectedNode).toBeNull()
+    })
+
+    it('should verify exact updated check - updated is null', () => {
+      const { result, rerender } = renderHook(
+        ({ selectedNodeId }) =>
+          useSelectedNode({
+            selectedNodeId,
+          }),
+        {
+          initialProps: { selectedNodeId: 'node-1' },
+        }
+      )
+
+      expect(result.current.selectedNode).toBeDefined()
+
+      // Cache exists, node exists, but findNodeById returns null
+      mockNodeExists.mockReturnValue(true)
+      mockFindNodeById.mockReturnValue(null)
+      rerender({ selectedNodeId: 'node-1' })
+
+      // Should handle case where updated is null
+      // The hook should fall through to finding the node again
+      expect(mockFindNodeById).toHaveBeenCalled()
+    })
+
+    it('should verify exact found check - found is null', () => {
+      mockFindNodeById.mockReturnValue(null)
+
+      const { result } = renderHook(() =>
+        useSelectedNode({
+          selectedNodeId: 'nonexistent',
+        })
+      )
+
+      // Should return null when node is not found
+      expect(result.current.selectedNode).toBeNull()
+      // Cache should be cleared
+      expect(result.current.nodes).toBeDefined()
+    })
+
+    it('should verify exact found check - found exists and cache is set', () => {
+      const { result } = renderHook(() =>
+        useSelectedNode({
+          selectedNodeId: 'node-1',
+        })
+      )
+
+      // Should find and cache the node
+      expect(result.current.selectedNode).toBeDefined()
+      expect(result.current.selectedNode?.id).toBe('node-1')
     })
 
     it('should verify exact check if (found) - found is null', () => {
