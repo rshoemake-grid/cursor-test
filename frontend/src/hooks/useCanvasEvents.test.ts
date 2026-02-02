@@ -1612,4 +1612,1124 @@ describe('useCanvasEvents', () => {
       expect(mockClipboard.paste).toHaveBeenCalled()
     })
   })
+
+  describe('additional coverage for no-coverage mutants', () => {
+    describe('exact string literal comparisons', () => {
+      it('should verify exact string literal "application/reactflow"', () => {
+        mockReactFlowInstanceRef.current.screenToFlowPosition = jest.fn().mockReturnValue({ x: 100, y: 200 })
+
+        const { result } = renderHook(() =>
+          useCanvasEvents({
+            reactFlowInstanceRef: mockReactFlowInstanceRef as any,
+            setNodes: mockSetNodes,
+            setEdges: mockSetEdges,
+            setSelectedNodeId: mockSetSelectedNodeId,
+            notifyModified: mockNotifyModified,
+            clipboard: mockClipboard,
+          })
+        )
+
+        const mockEvent = {
+          preventDefault: jest.fn(),
+          clientX: 150,
+          clientY: 250,
+          dataTransfer: {
+            getData: jest.fn((type: string) => {
+              // Verify exact string literal 'application/reactflow' is used
+              if (type === 'application/reactflow') return 'agent'
+              return ''
+            }),
+          },
+          currentTarget: {
+            closest: jest.fn().mockReturnValue({
+              getBoundingClientRect: jest.fn().mockReturnValue({ left: 0, top: 0 }),
+            }),
+          },
+        } as unknown as React.DragEvent
+
+        act(() => {
+          result.current.onDrop(mockEvent)
+        })
+
+        expect(mockEvent.dataTransfer.getData).toHaveBeenCalledWith('application/reactflow')
+        expect(mockSetNodes).toHaveBeenCalled()
+      })
+
+      it('should verify exact string literal "application/custom-agent"', () => {
+        mockReactFlowInstanceRef.current.screenToFlowPosition = jest.fn().mockReturnValue({ x: 100, y: 200 })
+
+        const { result } = renderHook(() =>
+          useCanvasEvents({
+            reactFlowInstanceRef: mockReactFlowInstanceRef as any,
+            setNodes: mockSetNodes,
+            setEdges: mockSetEdges,
+            setSelectedNodeId: mockSetSelectedNodeId,
+            notifyModified: mockNotifyModified,
+            clipboard: mockClipboard,
+          })
+        )
+
+        const mockEvent = {
+          preventDefault: jest.fn(),
+          clientX: 150,
+          clientY: 250,
+          dataTransfer: {
+            getData: jest.fn((type: string) => {
+              if (type === 'application/reactflow') return 'agent'
+              // Verify exact string literal 'application/custom-agent' is used
+              if (type === 'application/custom-agent') return JSON.stringify({ label: 'Test' })
+              return ''
+            }),
+          },
+          currentTarget: {
+            closest: jest.fn().mockReturnValue({
+              getBoundingClientRect: jest.fn().mockReturnValue({ left: 0, top: 0 }),
+            }),
+          },
+        } as unknown as React.DragEvent
+
+        act(() => {
+          result.current.onDrop(mockEvent)
+        })
+
+        expect(mockEvent.dataTransfer.getData).toHaveBeenCalledWith('application/custom-agent')
+      })
+
+      it('should verify exact string literal ".react-flow"', () => {
+        mockReactFlowInstanceRef.current = { screenToFlowPosition: undefined }
+
+        const { result } = renderHook(() =>
+          useCanvasEvents({
+            reactFlowInstanceRef: mockReactFlowInstanceRef as any,
+            setNodes: mockSetNodes,
+            setEdges: mockSetEdges,
+            setSelectedNodeId: mockSetSelectedNodeId,
+            notifyModified: mockNotifyModified,
+            clipboard: mockClipboard,
+          })
+        )
+
+        const mockClosest = jest.fn().mockReturnValue({
+          getBoundingClientRect: jest.fn().mockReturnValue({ left: 50, top: 50 }),
+        })
+
+        const mockEvent = {
+          preventDefault: jest.fn(),
+          clientX: 150,
+          clientY: 250,
+          dataTransfer: {
+            getData: jest.fn((type: string) => {
+              if (type === 'application/reactflow') return 'agent'
+              return ''
+            }),
+          },
+          currentTarget: {
+            closest: mockClosest,
+          },
+        } as unknown as React.DragEvent
+
+        act(() => {
+          result.current.onDrop(mockEvent)
+        })
+
+        // Verify exact string literal '.react-flow' is used
+        expect(mockClosest).toHaveBeenCalledWith('.react-flow')
+      })
+
+      it('should verify exact string literal "customAgentNodes"', () => {
+        mockStorage.getItem = jest.fn().mockReturnValue(JSON.stringify([]))
+
+        const { result } = renderHook(() =>
+          useCanvasEvents({
+            reactFlowInstanceRef: mockReactFlowInstanceRef as any,
+            setNodes: mockSetNodes,
+            setEdges: mockSetEdges,
+            setSelectedNodeId: mockSetSelectedNodeId,
+            notifyModified: mockNotifyModified,
+            clipboard: mockClipboard,
+            storage: mockStorage as any,
+          })
+        )
+
+        const mockNode: Node = {
+          id: 'node-1',
+          type: 'agent',
+          position: { x: 0, y: 0 },
+          data: { label: 'Test Agent', agent_config: {} },
+        }
+
+        act(() => {
+          result.current.handleAddToAgentNodes(mockNode)
+        })
+
+        // Verify exact string literal 'customAgentNodes' is used
+        expect(mockStorage.getItem).toHaveBeenCalledWith('customAgentNodes')
+      })
+
+      it('should verify exact string literal "move" for dropEffect', () => {
+        const { result } = renderHook(() =>
+          useCanvasEvents({
+            reactFlowInstanceRef: mockReactFlowInstanceRef as any,
+            setNodes: mockSetNodes,
+            setEdges: mockSetEdges,
+            setSelectedNodeId: mockSetSelectedNodeId,
+            notifyModified: mockNotifyModified,
+            clipboard: mockClipboard,
+          })
+        )
+
+        const mockEvent = {
+          preventDefault: jest.fn(),
+          dataTransfer: { dropEffect: '' },
+        } as unknown as React.DragEvent
+
+        act(() => {
+          result.current.onDragOver(mockEvent)
+        })
+
+        // Verify exact string literal 'move' is used
+        expect(mockEvent.dataTransfer.dropEffect).toBe('move')
+        expect(mockEvent.dataTransfer.dropEffect).not.toBe('copy')
+        expect(mockEvent.dataTransfer.dropEffect).not.toBe('link')
+      })
+    })
+
+    describe('exact conditional expressions', () => {
+      it('should verify exact falsy check !type', () => {
+        const { result } = renderHook(() =>
+          useCanvasEvents({
+            reactFlowInstanceRef: mockReactFlowInstanceRef as any,
+            setNodes: mockSetNodes,
+            setEdges: mockSetEdges,
+            setSelectedNodeId: mockSetSelectedNodeId,
+            notifyModified: mockNotifyModified,
+            clipboard: mockClipboard,
+          })
+        )
+
+        const mockEvent = {
+          preventDefault: jest.fn(),
+          dataTransfer: {
+            getData: jest.fn(() => ''), // Empty string - falsy
+          },
+        } as unknown as React.DragEvent
+
+        act(() => {
+          result.current.onDrop(mockEvent)
+        })
+
+        // Should return early when !type is true
+        expect(mockSetNodes).not.toHaveBeenCalled()
+      })
+
+      it('should verify exact null check !reactFlowWrapper', () => {
+        mockReactFlowInstanceRef.current = { screenToFlowPosition: undefined }
+
+        const { result } = renderHook(() =>
+          useCanvasEvents({
+            reactFlowInstanceRef: mockReactFlowInstanceRef as any,
+            setNodes: mockSetNodes,
+            setEdges: mockSetEdges,
+            setSelectedNodeId: mockSetSelectedNodeId,
+            notifyModified: mockNotifyModified,
+            clipboard: mockClipboard,
+          })
+        )
+
+        const mockEvent = {
+          preventDefault: jest.fn(),
+          clientX: 150,
+          clientY: 250,
+          dataTransfer: {
+            getData: jest.fn((type: string) => {
+              if (type === 'application/reactflow') return 'agent'
+              return ''
+            }),
+          },
+          currentTarget: {
+            closest: jest.fn().mockReturnValue(null), // null - falsy
+          },
+        } as unknown as React.DragEvent
+
+        act(() => {
+          result.current.onDrop(mockEvent)
+        })
+
+        // Should return early when !reactFlowWrapper is true
+        expect(mockSetNodes).not.toHaveBeenCalled()
+      })
+
+      it('should verify exact truthy check customAgentData', () => {
+        mockReactFlowInstanceRef.current.screenToFlowPosition = jest.fn().mockReturnValue({ x: 100, y: 200 })
+
+        const { result } = renderHook(() =>
+          useCanvasEvents({
+            reactFlowInstanceRef: mockReactFlowInstanceRef as any,
+            setNodes: mockSetNodes,
+            setEdges: mockSetEdges,
+            setSelectedNodeId: mockSetSelectedNodeId,
+            notifyModified: mockNotifyModified,
+            clipboard: mockClipboard,
+          })
+        )
+
+        const mockEvent = {
+          preventDefault: jest.fn(),
+          clientX: 150,
+          clientY: 250,
+          dataTransfer: {
+            getData: jest.fn((type: string) => {
+              if (type === 'application/reactflow') return 'agent'
+              if (type === 'application/custom-agent') return JSON.stringify({ label: 'Test' }) // Truthy
+              return ''
+            }),
+          },
+          currentTarget: {
+            closest: jest.fn().mockReturnValue({
+              getBoundingClientRect: jest.fn().mockReturnValue({ left: 0, top: 0 }),
+            }),
+          },
+        } as unknown as React.DragEvent
+
+        act(() => {
+          result.current.onDrop(mockEvent)
+        })
+
+        // Should use customData branch when customAgentData is truthy
+        expect(mockSetNodes).toHaveBeenCalled()
+        const setNodesCall = mockSetNodes.mock.calls[0][0]
+        const newNodes = typeof setNodesCall === 'function' ? setNodesCall([]) : setNodesCall
+        if (Array.isArray(newNodes) && newNodes.length > 0) {
+          expect(newNodes[0].data.label).toBe('Test')
+        }
+      })
+
+      it('should verify exact comparison node.type !== agent', () => {
+        const { result } = renderHook(() =>
+          useCanvasEvents({
+            reactFlowInstanceRef: mockReactFlowInstanceRef as any,
+            setNodes: mockSetNodes,
+            setEdges: mockSetEdges,
+            setSelectedNodeId: mockSetSelectedNodeId,
+            notifyModified: mockNotifyModified,
+            clipboard: mockClipboard,
+            storage: mockStorage as any,
+          })
+        )
+
+        const mockNode: Node = {
+          id: 'node-1',
+          type: 'condition', // !== 'agent'
+          position: { x: 0, y: 0 },
+          data: {},
+        }
+
+        act(() => {
+          result.current.handleAddToAgentNodes(mockNode)
+        })
+
+        // Should return early when node.type !== 'agent'
+        expect(mockStorage.getItem).not.toHaveBeenCalled()
+      })
+
+      it('should verify exact comparison event.button === 0', () => {
+        const clipboardWithNode = {
+          clipboardNode: { id: 'node-1', type: 'agent', position: { x: 0, y: 0 }, data: {} } as Node,
+          paste: jest.fn(),
+        }
+
+        const { result } = renderHook(() =>
+          useCanvasEvents({
+            reactFlowInstanceRef: mockReactFlowInstanceRef as any,
+            setNodes: mockSetNodes,
+            setEdges: mockSetEdges,
+            setSelectedNodeId: mockSetSelectedNodeId,
+            notifyModified: mockNotifyModified,
+            clipboard: clipboardWithNode,
+          })
+        )
+
+        const mockEvent = {
+          ctrlKey: true,
+          metaKey: false,
+          button: 0, // === 0
+          clientX: 100,
+          clientY: 200,
+        } as unknown as React.MouseEvent
+
+        act(() => {
+          result.current.onPaneClick(mockEvent)
+        })
+
+        // Should paste when event.button === 0
+        expect(clipboardWithNode.paste).toHaveBeenCalled()
+      })
+
+      it('should verify exact comparison n.id === node.id in toggle selection', () => {
+        const { result } = renderHook(() =>
+          useCanvasEvents({
+            reactFlowInstanceRef: mockReactFlowInstanceRef as any,
+            setNodes: mockSetNodes,
+            setEdges: mockSetEdges,
+            setSelectedNodeId: mockSetSelectedNodeId,
+            notifyModified: mockNotifyModified,
+            clipboard: mockClipboard,
+          })
+        )
+
+        const mockNode: Node = {
+          id: 'node-1',
+          type: 'agent',
+          position: { x: 0, y: 0 },
+          data: {},
+          selected: false,
+        }
+
+        const existingNodes: Node[] = [
+          { id: 'node-1', type: 'agent', position: { x: 0, y: 0 }, data: {}, selected: false },
+          { id: 'node-2', type: 'agent', position: { x: 0, y: 0 }, data: {}, selected: true },
+        ]
+
+        const mockEvent = {
+          stopPropagation: jest.fn(),
+          shiftKey: true,
+          metaKey: false,
+          ctrlKey: false,
+        } as unknown as React.MouseEvent
+
+        act(() => {
+          result.current.onNodeClick(mockEvent, mockNode)
+        })
+
+        // Verify n.id === node.id comparison is used
+        expect(mockSetNodes).toHaveBeenCalled()
+        const setNodesCall = mockSetNodes.mock.calls[0][0]
+        const updatedNodes = typeof setNodesCall === 'function' ? setNodesCall(existingNodes) : setNodesCall
+        const updatedNode1 = updatedNodes.find((n: Node) => n.id === 'node-1')
+        const updatedNode2 = updatedNodes.find((n: Node) => n.id === 'node-2')
+        // node-1 should be toggled (n.id === node.id)
+        expect(updatedNode1?.selected).toBe(true)
+        // node-2 should remain unchanged (n.id !== node.id)
+        expect(updatedNode2?.selected).toBe(true)
+      })
+    })
+
+    describe('exact logical OR operators', () => {
+      it('should verify exact logical OR event.shiftKey || event.metaKey || event.ctrlKey', () => {
+        const { result } = renderHook(() =>
+          useCanvasEvents({
+            reactFlowInstanceRef: mockReactFlowInstanceRef as any,
+            setNodes: mockSetNodes,
+            setEdges: mockSetEdges,
+            setSelectedNodeId: mockSetSelectedNodeId,
+            notifyModified: mockNotifyModified,
+            clipboard: mockClipboard,
+          })
+        )
+
+        const mockNode: Node = {
+          id: 'node-1',
+          type: 'agent',
+          position: { x: 0, y: 0 },
+          data: {},
+        }
+
+        // Test shiftKey only
+        const event1 = {
+          stopPropagation: jest.fn(),
+          shiftKey: true,
+          metaKey: false,
+          ctrlKey: false,
+        } as unknown as React.MouseEvent
+
+        act(() => {
+          result.current.onNodeClick(event1, mockNode)
+        })
+        expect(mockSetNodes).toHaveBeenCalled()
+
+        jest.clearAllMocks()
+
+        // Test metaKey only
+        const event2 = {
+          stopPropagation: jest.fn(),
+          shiftKey: false,
+          metaKey: true,
+          ctrlKey: false,
+        } as unknown as React.MouseEvent
+
+        act(() => {
+          result.current.onNodeClick(event2, mockNode)
+        })
+        expect(mockSetNodes).toHaveBeenCalled()
+
+        jest.clearAllMocks()
+
+        // Test ctrlKey only
+        const event3 = {
+          stopPropagation: jest.fn(),
+          shiftKey: false,
+          metaKey: false,
+          ctrlKey: true,
+        } as unknown as React.MouseEvent
+
+        act(() => {
+          result.current.onNodeClick(event3, mockNode)
+        })
+        expect(mockSetNodes).toHaveBeenCalled()
+      })
+
+      it('should verify exact logical OR event.ctrlKey || event.metaKey in onPaneClick', () => {
+        const clipboardWithNode = {
+          clipboardNode: { id: 'node-1', type: 'agent', position: { x: 0, y: 0 }, data: {} } as Node,
+          paste: jest.fn(),
+        }
+
+        const { result } = renderHook(() =>
+          useCanvasEvents({
+            reactFlowInstanceRef: mockReactFlowInstanceRef as any,
+            setNodes: mockSetNodes,
+            setEdges: mockSetEdges,
+            setSelectedNodeId: mockSetSelectedNodeId,
+            notifyModified: mockNotifyModified,
+            clipboard: clipboardWithNode,
+          })
+        )
+
+        // Test ctrlKey only
+        const event1 = {
+          ctrlKey: true,
+          metaKey: false,
+          button: 0,
+          clientX: 100,
+          clientY: 200,
+        } as unknown as React.MouseEvent
+
+        act(() => {
+          result.current.onPaneClick(event1)
+        })
+        expect(clipboardWithNode.paste).toHaveBeenCalled()
+
+        jest.clearAllMocks()
+
+        // Test metaKey only
+        const event2 = {
+          ctrlKey: false,
+          metaKey: true,
+          button: 0,
+          clientX: 100,
+          clientY: 200,
+        } as unknown as React.MouseEvent
+
+        act(() => {
+          result.current.onPaneClick(event2)
+        })
+        expect(clipboardWithNode.paste).toHaveBeenCalled()
+      })
+
+      it('should verify exact logical OR node.data.label || node.data.name || Custom Agent', () => {
+        mockStorage.getItem = jest.fn().mockReturnValue(JSON.stringify([]))
+
+        const { result } = renderHook(() =>
+          useCanvasEvents({
+            reactFlowInstanceRef: mockReactFlowInstanceRef as any,
+            setNodes: mockSetNodes,
+            setEdges: mockSetEdges,
+            setSelectedNodeId: mockSetSelectedNodeId,
+            notifyModified: mockNotifyModified,
+            clipboard: mockClipboard,
+            storage: mockStorage as any,
+          })
+        )
+
+        // Test with label
+        const node1: Node = {
+          id: 'node-1',
+          type: 'agent',
+          position: { x: 0, y: 0 },
+          data: { label: 'Test Label', agent_config: {} },
+        }
+
+        act(() => {
+          result.current.handleAddToAgentNodes(node1)
+        })
+        const setItemCall1 = mockStorage.setItem.mock.calls[0]
+        const agentNodes1 = JSON.parse(setItemCall1[1])
+        expect(agentNodes1[0].label).toBe('Test Label')
+
+        jest.clearAllMocks()
+        mockStorage.getItem.mockReturnValue(JSON.stringify([]))
+
+        // Test with name (no label)
+        const node2: Node = {
+          id: 'node-2',
+          type: 'agent',
+          position: { x: 0, y: 0 },
+          data: { name: 'Test Name', agent_config: {} },
+        }
+
+        act(() => {
+          result.current.handleAddToAgentNodes(node2)
+        })
+        const setItemCall2 = mockStorage.setItem.mock.calls[0]
+        const agentNodes2 = JSON.parse(setItemCall2[1])
+        expect(agentNodes2[0].label).toBe('Test Name')
+
+        jest.clearAllMocks()
+        mockStorage.getItem.mockReturnValue(JSON.stringify([]))
+
+        // Test with neither (should use 'Custom Agent')
+        const node3: Node = {
+          id: 'node-3',
+          type: 'agent',
+          position: { x: 0, y: 0 },
+          data: { agent_config: {} },
+        }
+
+        act(() => {
+          result.current.handleAddToAgentNodes(node3)
+        })
+        const setItemCall3 = mockStorage.setItem.mock.calls[0]
+        const agentNodes3 = JSON.parse(setItemCall3[1])
+        expect(agentNodes3[0].label).toBe('Custom Agent')
+      })
+    })
+
+    describe('exact ternary operators', () => {
+      it('should verify exact ternary customData ? {...} : {...}', () => {
+        mockReactFlowInstanceRef.current.screenToFlowPosition = jest.fn().mockReturnValue({ x: 100, y: 200 })
+
+        const { result } = renderHook(() =>
+          useCanvasEvents({
+            reactFlowInstanceRef: mockReactFlowInstanceRef as any,
+            setNodes: mockSetNodes,
+            setEdges: mockSetEdges,
+            setSelectedNodeId: mockSetSelectedNodeId,
+            notifyModified: mockNotifyModified,
+            clipboard: mockClipboard,
+          })
+        )
+
+        // Test with customData (truthy)
+        const event1 = {
+          preventDefault: jest.fn(),
+          clientX: 150,
+          clientY: 250,
+          dataTransfer: {
+            getData: jest.fn((type: string) => {
+              if (type === 'application/reactflow') return 'agent'
+              if (type === 'application/custom-agent') return JSON.stringify({ label: 'Custom' })
+              return ''
+            }),
+          },
+          currentTarget: {
+            closest: jest.fn().mockReturnValue({
+              getBoundingClientRect: jest.fn().mockReturnValue({ left: 0, top: 0 }),
+            }),
+          },
+        } as unknown as React.DragEvent
+
+        act(() => {
+          result.current.onDrop(event1)
+        })
+
+        const setNodesCall1 = mockSetNodes.mock.calls[0][0]
+        const newNodes1 = typeof setNodesCall1 === 'function' ? setNodesCall1([]) : setNodesCall1
+        if (Array.isArray(newNodes1) && newNodes1.length > 0) {
+          // Should use customData branch
+          expect(newNodes1[0].data.label).toBe('Custom')
+          expect(newNodes1[0].data.agent_config).toBeDefined()
+        }
+
+        jest.clearAllMocks()
+
+        // Test without customData (falsy)
+        const event2 = {
+          preventDefault: jest.fn(),
+          clientX: 150,
+          clientY: 250,
+          dataTransfer: {
+            getData: jest.fn((type: string) => {
+              if (type === 'application/reactflow') return 'agent'
+              return ''
+            }),
+          },
+          currentTarget: {
+            closest: jest.fn().mockReturnValue({
+              getBoundingClientRect: jest.fn().mockReturnValue({ left: 0, top: 0 }),
+            }),
+          },
+        } as unknown as React.DragEvent
+
+        act(() => {
+          result.current.onDrop(event2)
+        })
+
+        const setNodesCall2 = mockSetNodes.mock.calls[0][0]
+        const newNodes2 = typeof setNodesCall2 === 'function' ? setNodesCall2([]) : setNodesCall2
+        if (Array.isArray(newNodes2) && newNodes2.length > 0) {
+          // Should use default branch
+          expect(newNodes2[0].data.label).toBe('Agent Node')
+          expect(newNodes2[0].data.agent_config).toBeUndefined()
+        }
+      })
+
+      it('should verify exact ternary savedAgentNodes ? JSON.parse(savedAgentNodes) : []', () => {
+        // Test with savedAgentNodes (truthy)
+        mockStorage.getItem = jest.fn().mockReturnValue(JSON.stringify([{ label: 'Existing' }]))
+
+        const { result: result1 } = renderHook(() =>
+          useCanvasEvents({
+            reactFlowInstanceRef: mockReactFlowInstanceRef as any,
+            setNodes: mockSetNodes,
+            setEdges: mockSetEdges,
+            setSelectedNodeId: mockSetSelectedNodeId,
+            notifyModified: mockNotifyModified,
+            clipboard: mockClipboard,
+            storage: mockStorage as any,
+          })
+        )
+
+        const node1: Node = {
+          id: 'node-1',
+          type: 'agent',
+          position: { x: 0, y: 0 },
+          data: { label: 'New', agent_config: {} },
+        }
+
+        act(() => {
+          result1.current.handleAddToAgentNodes(node1)
+        })
+
+        const setItemCall1 = mockStorage.setItem.mock.calls[0]
+        const agentNodes1 = JSON.parse(setItemCall1[1])
+        expect(agentNodes1.length).toBe(2) // Existing + New
+
+        jest.clearAllMocks()
+
+        // Test without savedAgentNodes (falsy)
+        mockStorage.getItem = jest.fn().mockReturnValue(null)
+
+        const { result: result2 } = renderHook(() =>
+          useCanvasEvents({
+            reactFlowInstanceRef: mockReactFlowInstanceRef as any,
+            setNodes: mockSetNodes,
+            setEdges: mockSetEdges,
+            setSelectedNodeId: mockSetSelectedNodeId,
+            notifyModified: mockNotifyModified,
+            clipboard: mockClipboard,
+            storage: mockStorage as any,
+          })
+        )
+
+        const node2: Node = {
+          id: 'node-2',
+          type: 'agent',
+          position: { x: 0, y: 0 },
+          data: { label: 'New', agent_config: {} },
+        }
+
+        act(() => {
+          result2.current.handleAddToAgentNodes(node2)
+        })
+
+        const setItemCall2 = mockStorage.setItem.mock.calls[0]
+        const agentNodes2 = JSON.parse(setItemCall2[1])
+        expect(agentNodes2.length).toBe(1) // Just New (empty array fallback)
+      })
+
+      it('should verify exact ternary n.id === node.id ? !n.selected : n.selected', () => {
+        const { result } = renderHook(() =>
+          useCanvasEvents({
+            reactFlowInstanceRef: mockReactFlowInstanceRef as any,
+            setNodes: mockSetNodes,
+            setEdges: mockSetEdges,
+            setSelectedNodeId: mockSetSelectedNodeId,
+            notifyModified: mockNotifyModified,
+            clipboard: mockClipboard,
+          })
+        )
+
+        const mockNode: Node = {
+          id: 'node-1',
+          type: 'agent',
+          position: { x: 0, y: 0 },
+          data: {},
+          selected: false,
+        }
+
+        const existingNodes: Node[] = [
+          { id: 'node-1', type: 'agent', position: { x: 0, y: 0 }, data: {}, selected: false },
+          { id: 'node-2', type: 'agent', position: { x: 0, y: 0 }, data: {}, selected: true },
+        ]
+
+        const mockEvent = {
+          stopPropagation: jest.fn(),
+          shiftKey: true,
+          metaKey: false,
+          ctrlKey: false,
+        } as unknown as React.MouseEvent
+
+        act(() => {
+          result.current.onNodeClick(mockEvent, mockNode)
+        })
+
+        const setNodesCall = mockSetNodes.mock.calls[0][0]
+        const updatedNodes = typeof setNodesCall === 'function' ? setNodesCall(existingNodes) : setNodesCall
+        const updatedNode1 = updatedNodes.find((n: Node) => n.id === 'node-1')
+        const updatedNode2 = updatedNodes.find((n: Node) => n.id === 'node-2')
+        // node-1: n.id === node.id, so !n.selected (false -> true)
+        expect(updatedNode1?.selected).toBe(true)
+        // node-2: n.id !== node.id, so n.selected (true -> true)
+        expect(updatedNode2?.selected).toBe(true)
+      })
+    })
+
+    describe('exact optional chaining', () => {
+      it('should verify exact optional chaining reactFlowInstanceRef.current?.screenToFlowPosition', () => {
+        // Test when screenToFlowPosition exists
+        mockReactFlowInstanceRef.current = { screenToFlowPosition: jest.fn().mockReturnValue({ x: 100, y: 200 }) }
+
+        const { result: result1 } = renderHook(() =>
+          useCanvasEvents({
+            reactFlowInstanceRef: mockReactFlowInstanceRef as any,
+            setNodes: mockSetNodes,
+            setEdges: mockSetEdges,
+            setSelectedNodeId: mockSetSelectedNodeId,
+            notifyModified: mockNotifyModified,
+            clipboard: mockClipboard,
+          })
+        )
+
+        const event1 = {
+          preventDefault: jest.fn(),
+          clientX: 150,
+          clientY: 250,
+          dataTransfer: {
+            getData: jest.fn((type: string) => {
+              if (type === 'application/reactflow') return 'agent'
+              return ''
+            }),
+          },
+          currentTarget: {
+            closest: jest.fn().mockReturnValue({
+              getBoundingClientRect: jest.fn().mockReturnValue({ left: 0, top: 0 }),
+            }),
+          },
+        } as unknown as React.DragEvent
+
+        act(() => {
+          result1.current.onDrop(event1)
+        })
+
+        expect(mockReactFlowInstanceRef.current.screenToFlowPosition).toHaveBeenCalled()
+
+        jest.clearAllMocks()
+
+        // Test when screenToFlowPosition is undefined
+        mockReactFlowInstanceRef.current = { screenToFlowPosition: undefined }
+
+        const { result: result2 } = renderHook(() =>
+          useCanvasEvents({
+            reactFlowInstanceRef: mockReactFlowInstanceRef as any,
+            setNodes: mockSetNodes,
+            setEdges: mockSetEdges,
+            setSelectedNodeId: mockSetSelectedNodeId,
+            notifyModified: mockNotifyModified,
+            clipboard: mockClipboard,
+          })
+        )
+
+        const event2 = {
+          preventDefault: jest.fn(),
+          clientX: 150,
+          clientY: 250,
+          dataTransfer: {
+            getData: jest.fn((type: string) => {
+              if (type === 'application/reactflow') return 'agent'
+              return ''
+            }),
+          },
+          currentTarget: {
+            closest: jest.fn().mockReturnValue({
+              getBoundingClientRect: jest.fn().mockReturnValue({ left: 50, top: 50 }),
+            }),
+          },
+        } as unknown as React.DragEvent
+
+        act(() => {
+          result2.current.onDrop(event2)
+        })
+
+        // Should use fallback calculation
+        expect(mockSetNodes).toHaveBeenCalled()
+      })
+
+      it('should verify exact optional chaining clipboard?.clipboardNode', () => {
+        // Test when clipboardNode exists
+        const clipboardWithNode = {
+          clipboardNode: { id: 'node-1', type: 'agent', position: { x: 0, y: 0 }, data: {} } as Node,
+          paste: jest.fn(),
+        }
+
+        const { result: result1 } = renderHook(() =>
+          useCanvasEvents({
+            reactFlowInstanceRef: mockReactFlowInstanceRef as any,
+            setNodes: mockSetNodes,
+            setEdges: mockSetEdges,
+            setSelectedNodeId: mockSetSelectedNodeId,
+            notifyModified: mockNotifyModified,
+            clipboard: clipboardWithNode,
+          })
+        )
+
+        const event1 = {
+          ctrlKey: true,
+          metaKey: false,
+          button: 0,
+          clientX: 100,
+          clientY: 200,
+        } as unknown as React.MouseEvent
+
+        act(() => {
+          result1.current.onPaneClick(event1)
+        })
+
+        expect(clipboardWithNode.paste).toHaveBeenCalled()
+
+        jest.clearAllMocks()
+
+        // Test when clipboardNode is null
+        const clipboardWithoutNode = {
+          clipboardNode: null,
+          paste: jest.fn(),
+        }
+
+        const { result: result2 } = renderHook(() =>
+          useCanvasEvents({
+            reactFlowInstanceRef: mockReactFlowInstanceRef as any,
+            setNodes: mockSetNodes,
+            setEdges: mockSetEdges,
+            setSelectedNodeId: mockSetSelectedNodeId,
+            notifyModified: mockNotifyModified,
+            clipboard: clipboardWithoutNode,
+          })
+        )
+
+        const event2 = {
+          ctrlKey: true,
+          metaKey: false,
+          button: 0,
+          clientX: 100,
+          clientY: 200,
+        } as unknown as React.MouseEvent
+
+        act(() => {
+          result2.current.onPaneClick(event2)
+        })
+
+        // Should not paste when clipboardNode is null
+        expect(clipboardWithoutNode.paste).not.toHaveBeenCalled()
+      })
+    })
+
+    describe('exact property access', () => {
+      it('should verify exact property access event.clientX and event.clientY', () => {
+        mockReactFlowInstanceRef.current = { screenToFlowPosition: undefined }
+
+        const { result } = renderHook(() =>
+          useCanvasEvents({
+            reactFlowInstanceRef: mockReactFlowInstanceRef as any,
+            setNodes: mockSetNodes,
+            setEdges: mockSetEdges,
+            setSelectedNodeId: mockSetSelectedNodeId,
+            notifyModified: mockNotifyModified,
+            clipboard: mockClipboard,
+          })
+        )
+
+        const mockEvent = {
+          preventDefault: jest.fn(),
+          clientX: 150, // Exact property access
+          clientY: 250, // Exact property access
+          dataTransfer: {
+            getData: jest.fn((type: string) => {
+              if (type === 'application/reactflow') return 'agent'
+              return ''
+            }),
+          },
+          currentTarget: {
+            closest: jest.fn().mockReturnValue({
+              getBoundingClientRect: jest.fn().mockReturnValue({ left: 50, top: 50 }),
+            }),
+          },
+        } as unknown as React.DragEvent
+
+        act(() => {
+          result.current.onDrop(mockEvent)
+        })
+
+        // Verify exact property access is used in fallback calculation
+        expect(mockSetNodes).toHaveBeenCalled()
+        const setNodesCall = mockSetNodes.mock.calls[0][0]
+        const newNodes = typeof setNodesCall === 'function' ? setNodesCall([]) : setNodesCall
+        if (Array.isArray(newNodes) && newNodes.length > 0) {
+          // Position should be calculated using clientX and clientY
+          expect(newNodes[0].position.x).toBe(100) // 150 - 50
+          expect(newNodes[0].position.y).toBe(200) // 250 - 50
+        }
+      })
+
+      it('should verify exact property access isDraggingRef.current', () => {
+        const { result } = renderHook(() =>
+          useCanvasEvents({
+            reactFlowInstanceRef: mockReactFlowInstanceRef as any,
+            setNodes: mockSetNodes,
+            setEdges: mockSetEdges,
+            setSelectedNodeId: mockSetSelectedNodeId,
+            notifyModified: mockNotifyModified,
+            clipboard: mockClipboard,
+          })
+        )
+
+        const mockNode: Node = {
+          id: 'node-1',
+          type: 'agent',
+          position: { x: 0, y: 0 },
+          data: {},
+        }
+
+        // Test when isDraggingRef.current is false
+        result.current.isDraggingRef.current = false
+
+        const event1 = {
+          stopPropagation: jest.fn(),
+          shiftKey: false,
+          metaKey: false,
+          ctrlKey: false,
+        } as unknown as React.MouseEvent
+
+        act(() => {
+          result.current.onNodeClick(event1, mockNode)
+        })
+
+        expect(mockSetSelectedNodeId).toHaveBeenCalled()
+
+        jest.clearAllMocks()
+
+        // Test when isDraggingRef.current is true
+        result.current.isDraggingRef.current = true
+
+        const event2 = {
+          stopPropagation: jest.fn(),
+          shiftKey: false,
+          metaKey: false,
+          ctrlKey: false,
+        } as unknown as React.MouseEvent
+
+        act(() => {
+          result.current.onNodeClick(event2, mockNode)
+        })
+
+        // Should return early when isDraggingRef.current is true
+        expect(mockSetSelectedNodeId).not.toHaveBeenCalled()
+      })
+    })
+
+    describe('exact method calls', () => {
+      it('should verify exact method call event.preventDefault()', () => {
+        const { result } = renderHook(() =>
+          useCanvasEvents({
+            reactFlowInstanceRef: mockReactFlowInstanceRef as any,
+            setNodes: mockSetNodes,
+            setEdges: mockSetEdges,
+            setSelectedNodeId: mockSetSelectedNodeId,
+            notifyModified: mockNotifyModified,
+            clipboard: mockClipboard,
+          })
+        )
+
+        const mockEvent = {
+          preventDefault: jest.fn(), // Exact method call
+          dataTransfer: { dropEffect: '' },
+        } as unknown as React.DragEvent
+
+        act(() => {
+          result.current.onDragOver(mockEvent)
+        })
+
+        expect(mockEvent.preventDefault).toHaveBeenCalledTimes(1)
+      })
+
+      it('should verify exact method call event.stopPropagation()', () => {
+        const { result } = renderHook(() =>
+          useCanvasEvents({
+            reactFlowInstanceRef: mockReactFlowInstanceRef as any,
+            setNodes: mockSetNodes,
+            setEdges: mockSetEdges,
+            setSelectedNodeId: mockSetSelectedNodeId,
+            notifyModified: mockNotifyModified,
+            clipboard: mockClipboard,
+          })
+        )
+
+        const mockNode: Node = {
+          id: 'node-1',
+          type: 'agent',
+          position: { x: 0, y: 0 },
+          data: {},
+        }
+
+        const mockEvent = {
+          stopPropagation: jest.fn(), // Exact method call
+          shiftKey: false,
+          metaKey: false,
+          ctrlKey: false,
+        } as unknown as React.MouseEvent
+
+        act(() => {
+          result.current.onNodeClick(mockEvent, mockNode)
+        })
+
+        expect(mockEvent.stopPropagation).toHaveBeenCalledTimes(1)
+      })
+    })
+
+    describe('exact type checks', () => {
+      it('should verify exact comparison typeof window !== undefined', () => {
+        mockStorage.getItem = jest.fn().mockReturnValue(JSON.stringify([]))
+
+        const originalWindow = global.window
+        const dispatchEventSpy = jest.spyOn(window, 'dispatchEvent')
+
+        const { result } = renderHook(() =>
+          useCanvasEvents({
+            reactFlowInstanceRef: mockReactFlowInstanceRef as any,
+            setNodes: mockSetNodes,
+            setEdges: mockSetEdges,
+            setSelectedNodeId: mockSetSelectedNodeId,
+            notifyModified: mockNotifyModified,
+            clipboard: mockClipboard,
+            storage: mockStorage as any,
+          })
+        )
+
+        const mockNode: Node = {
+          id: 'node-1',
+          type: 'agent',
+          position: { x: 0, y: 0 },
+          data: { label: 'Test Agent', agent_config: {} },
+        }
+
+        act(() => {
+          result.current.handleAddToAgentNodes(mockNode)
+        })
+
+        // Should dispatch event when typeof window !== 'undefined'
+        expect(dispatchEventSpy).toHaveBeenCalled()
+        expect(dispatchEventSpy).toHaveBeenCalledWith(expect.any(Event))
+
+        dispatchEventSpy.mockRestore()
+      })
+    })
+  })
 })
