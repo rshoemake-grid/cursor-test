@@ -1201,4 +1201,129 @@ describe('useAuthenticatedApi', () => {
       )
     })
   })
+
+  describe('additional edge cases for improved mutation coverage', () => {
+    it('should verify exact url.trim() === "" check - url is empty string', async () => {
+      const { result } = renderHook(() => useAuthenticatedApi(mockHttpClient))
+
+      await expect(
+        result.current.authenticatedPost('   ', { data: 'test' })
+      ).rejects.toThrow('URL cannot be empty')
+    })
+
+    it('should verify exact url.trim() === "" check - url is whitespace only', async () => {
+      const { result } = renderHook(() => useAuthenticatedApi(mockHttpClient))
+
+      await expect(
+        result.current.authenticatedPost('\t\n  ', { data: 'test' })
+      ).rejects.toThrow('URL cannot be empty')
+    })
+
+    it('should verify exact typeof client.post !== function check - post is not a function', async () => {
+      const invalidClient = {
+        get: jest.fn(),
+        post: 'not-a-function',
+        put: jest.fn(),
+        delete: jest.fn(),
+      } as any
+
+      const { result } = renderHook(() => useAuthenticatedApi(invalidClient))
+
+      await expect(
+        result.current.authenticatedPost('/test', { data: 'test' })
+      ).rejects.toThrow('HTTP client is not properly initialized')
+    })
+
+    it('should verify exact typeof client.get !== function check - get is not a function', async () => {
+      const invalidClient = {
+        get: 'not-a-function',
+        post: jest.fn(),
+        put: jest.fn(),
+        delete: jest.fn(),
+      } as any
+
+      const { result } = renderHook(() => useAuthenticatedApi(invalidClient))
+
+      await expect(
+        result.current.authenticatedGet('/test')
+      ).rejects.toThrow('HTTP client is not properly initialized')
+    })
+
+    it('should verify exact typeof client.put !== function check - put is not a function', async () => {
+      const invalidClient = {
+        get: jest.fn(),
+        post: jest.fn(),
+        put: 'not-a-function',
+        delete: jest.fn(),
+      } as any
+
+      const { result } = renderHook(() => useAuthenticatedApi(invalidClient))
+
+      await expect(
+        result.current.authenticatedPut('/test', { data: 'test' })
+      ).rejects.toThrow('HTTP client is not properly initialized')
+    })
+
+    it('should verify exact typeof client.delete !== function check - delete is not a function', async () => {
+      const invalidClient = {
+        get: jest.fn(),
+        post: jest.fn(),
+        put: jest.fn(),
+        delete: 'not-a-function',
+      } as any
+
+      const { result } = renderHook(() => useAuthenticatedApi(invalidClient))
+
+      await expect(
+        result.current.authenticatedDelete('/test')
+      ).rejects.toThrow('HTTP client is not properly initialized')
+    })
+
+    it('should verify exact url.trim() check for GET requests', async () => {
+      const { result } = renderHook(() => useAuthenticatedApi(mockHttpClient))
+
+      await expect(
+        result.current.authenticatedGet('   ')
+      ).rejects.toThrow('URL cannot be empty')
+    })
+
+    it('should verify exact url.trim() check for PUT requests', async () => {
+      const { result } = renderHook(() => useAuthenticatedApi(mockHttpClient))
+
+      await expect(
+        result.current.authenticatedPut('   ', { data: 'test' })
+      ).rejects.toThrow('URL cannot be empty')
+    })
+
+    it('should verify exact url.trim() check for DELETE requests', async () => {
+      const { result } = renderHook(() => useAuthenticatedApi(mockHttpClient))
+
+      await expect(
+        result.current.authenticatedDelete('   ')
+      ).rejects.toThrow('URL cannot be empty')
+    })
+
+    it('should verify exact error.name assignment - HttpClientError', async () => {
+      const nullClient = null as any
+      const { result } = renderHook(() => useAuthenticatedApi(nullClient))
+
+      try {
+        await result.current.authenticatedPost('/test', { data: 'test' })
+      } catch (error: any) {
+        expect(error.name).toBe('HttpClientError')
+        expect(error.message).toBe('HTTP client is not properly initialized')
+      }
+    })
+
+    it('should verify exact error.name assignment - InvalidUrlError', async () => {
+      const { result } = renderHook(() => useAuthenticatedApi(mockHttpClient))
+
+      try {
+        await result.current.authenticatedPost('', { data: 'test' })
+      } catch (error: any) {
+        expect(error.name).toBe('InvalidUrlError')
+        expect(error.message).toBe('URL cannot be empty')
+      }
+    })
+  })
 })
