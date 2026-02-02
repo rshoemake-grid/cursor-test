@@ -74,11 +74,18 @@ describe('useWorkflowExecution', () => {
     mockWorkflowIdRef = { current: 'workflow-id' }
   })
 
-  afterEach(() => {
+  afterEach(async () => {
     // Run all pending timers to ensure setTimeout callbacks complete
     // This prevents timeouts in mutation testing when async operations are mutated
-    jest.runAllTimers()
+    // Advance timers multiple times to ensure async operations complete
+    jest.advanceTimersByTime(0)
     jest.runOnlyPendingTimers()
+    jest.runAllTimers()
+    // Give async operations time to complete by advancing timers
+    jest.advanceTimersByTime(100)
+    // Wait for any pending promises
+    await Promise.resolve()
+    await Promise.resolve()
     jest.useRealTimers()
   })
 
