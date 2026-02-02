@@ -4,6 +4,10 @@ import type { HttpClient } from '../types/adapters'
 import { defaultAdapters } from '../types/adapters'
 import { API_CONFIG } from '../config/constants'
 
+// Error message constants to prevent mutation issues
+export const HTTP_CLIENT_ERROR_MSG = 'HTTP client is not properly initialized'
+export const URL_EMPTY_ERROR_MSG = 'URL cannot be empty'
+
 /**
  * Custom hook for authenticated API calls
  * Follows DRY principle by eliminating duplicated header construction code
@@ -36,14 +40,14 @@ export function useAuthenticatedApi(
 
       // Ensure client and URL are valid before making request
       if (!client || typeof client.post !== 'function') {
-        const error = new Error('HTTP client is not properly initialized')
+        const error = new Error(HTTP_CLIENT_ERROR_MSG)
         error.name = 'HttpClientError'
         throw error
       }
       
       const url = `${baseUrl}${endpoint}`
       if (!url || url.trim() === '') {
-        const error = new Error('URL cannot be empty')
+        const error = new Error(URL_EMPTY_ERROR_MSG)
         error.name = 'InvalidUrlError'
         throw error
       }

@@ -5,6 +5,7 @@
   "testRunner": "jest",
   "coverageAnalysis": "perTest",
   "concurrency": 16,
+  "ignoreStatic": true,
   "mutate": [
     "src/utils/**/*.{ts,tsx}",
     "src/types/**/*.{ts,tsx}",

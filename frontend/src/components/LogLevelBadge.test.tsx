@@ -274,6 +274,91 @@ describe('LogLevelBadge', () => {
       // CRITICAL is not in valid levels, so should normalize to INFO
       expect(screen.getByText('INFO')).toBeInTheDocument()
     })
+
+    it('should verify exact isValidLogLevel call with level parameter', () => {
+      const isValidLogLevelSpy = jest.spyOn(require('../utils/logLevel'), 'isValidLogLevel')
+      
+      render(<LogLevelBadge level="DEBUG" />)
+      
+      // Verify isValidLogLevel was called with the level
+      expect(isValidLogLevelSpy).toHaveBeenCalledWith('DEBUG')
+      
+      isValidLogLevelSpy.mockRestore()
+    })
+
+    it('should verify exact getLogLevelColor call when showBackground is true', () => {
+      const getLogLevelColorSpy = jest.spyOn(require('../utils/logLevel'), 'getLogLevelColor')
+      
+      render(<LogLevelBadge level="ERROR" showBackground={true} />)
+      
+      // Verify getLogLevelColor was called
+      expect(getLogLevelColorSpy).toHaveBeenCalled()
+      
+      getLogLevelColorSpy.mockRestore()
+    })
+
+    it('should verify exact getLogLevelTextColor call', () => {
+      const getLogLevelTextColorSpy = jest.spyOn(require('../utils/logLevel'), 'getLogLevelTextColor')
+      
+      render(<LogLevelBadge level="WARNING" />)
+      
+      // Verify getLogLevelTextColor was called
+      expect(getLogLevelTextColorSpy).toHaveBeenCalled()
+      
+      getLogLevelTextColorSpy.mockRestore()
+    })
+
+    it('should verify exact ternary operator for showBackground - true branch', () => {
+      const { container } = render(<LogLevelBadge level="INFO" showBackground={true} />)
+      const badge = container.firstChild as HTMLElement
+      
+      // When showBackground is true, should use getLogLevelColor (has bg- classes)
+      expect(badge.className).toContain('bg-')
+    })
+
+    it('should verify exact ternary operator for showBackground - false branch', () => {
+      const { container } = render(<LogLevelBadge level="INFO" showBackground={false} />)
+      const badge = container.firstChild as HTMLElement
+      
+      // When showBackground is false, should use empty string for colorClasses
+      expect(badge.className).not.toContain('bg-')
+    })
+
+    it('should verify exact ternary operator for isValidLogLevel - true branch', () => {
+      render(<LogLevelBadge level="DEBUG" />)
+      
+      // When isValidLogLevel returns true, should use level
+      expect(screen.getByText('DEBUG')).toBeInTheDocument()
+    })
+
+    it('should verify exact ternary operator for isValidLogLevel - false branch', () => {
+      render(<LogLevelBadge level="INVALID_LEVEL" />)
+      
+      // When isValidLogLevel returns false, should use 'INFO'
+      expect(screen.getByText('INFO')).toBeInTheDocument()
+    })
+
+    it('should verify exact className concatenation with template literal', () => {
+      const { container } = render(<LogLevelBadge level="ERROR" showBackground={true} className="test-class" />)
+      const badge = container.firstChild as HTMLElement
+      
+      // Verify all parts are concatenated: font-semibold + colorClasses + textColor + className
+      expect(badge.className).toContain('font-semibold')
+      expect(badge.className).toContain('bg-')
+      expect(badge.className).toContain('text-')
+      expect(badge.className).toContain('test-class')
+    })
+
+    it('should verify exact className concatenation without background', () => {
+      const { container } = render(<LogLevelBadge level="ERROR" showBackground={false} className="test-class" />)
+      const badge = container.firstChild as HTMLElement
+      
+      // When showBackground is false, colorClasses should be empty string
+      expect(badge.className).toContain('font-semibold')
+      expect(badge.className).not.toContain('bg-')
+      expect(badge.className).toContain('text-')
+      expect(badge.className).toContain('test-class')
+    })
   })
 })
 

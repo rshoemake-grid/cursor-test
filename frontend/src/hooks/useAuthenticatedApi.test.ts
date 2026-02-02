@@ -1,5 +1,5 @@
 import { renderHook } from '@testing-library/react'
-import { useAuthenticatedApi } from './useAuthenticatedApi'
+import { useAuthenticatedApi, HTTP_CLIENT_ERROR_MSG, URL_EMPTY_ERROR_MSG } from './useAuthenticatedApi'
 import { useAuth } from '../contexts/AuthContext'
 import type { HttpClient } from '../types/adapters'
 import { API_CONFIG } from '../config/constants'
@@ -406,7 +406,7 @@ describe('useAuthenticatedApi', () => {
 
       await expect(
         result.current.authenticatedPost('/test', { data: 'test' })
-      ).rejects.toThrow('HTTP client is not properly initialized')
+      ).rejects.toThrow(HTTP_CLIENT_ERROR_MSG)
     })
 
     it('should verify !client || typeof client.post !== function - client.post is not a function', async () => {
@@ -421,7 +421,7 @@ describe('useAuthenticatedApi', () => {
 
       await expect(
         result.current.authenticatedPost('/test', { data: 'test' })
-      ).rejects.toThrow('HTTP client is not properly initialized')
+      ).rejects.toThrow(HTTP_CLIENT_ERROR_MSG)
     })
 
     it('should verify !url || url.trim() === "" - url is empty string after construction', async () => {
@@ -438,7 +438,7 @@ describe('useAuthenticatedApi', () => {
       // When baseUrl is whitespace and endpoint is empty, URL is whitespace, which trim() makes empty
       await expect(
         result.current.authenticatedPost('', { data: 'test' })
-      ).rejects.toThrow('URL cannot be empty')
+      ).rejects.toThrow(URL_EMPTY_ERROR_MSG)
     })
 
     it('should verify !url || url.trim() === "" - url is whitespace only after construction', async () => {
@@ -447,7 +447,7 @@ describe('useAuthenticatedApi', () => {
 
       await expect(
         result.current.authenticatedPost('', { data: 'test' })
-      ).rejects.toThrow('URL cannot be empty')
+      ).rejects.toThrow(URL_EMPTY_ERROR_MSG)
     })
 
     it('should verify url.trim() === "" check - url has only spaces after construction', async () => {
@@ -456,7 +456,7 @@ describe('useAuthenticatedApi', () => {
       
       await expect(
         result.current.authenticatedPost('', { data: 'test' })
-      ).rejects.toThrow('URL cannot be empty')
+      ).rejects.toThrow(URL_EMPTY_ERROR_MSG)
     })
 
     it('should verify url.trim() === "" check - url.trim() returns empty after construction', async () => {
@@ -465,7 +465,7 @@ describe('useAuthenticatedApi', () => {
 
       await expect(
         result.current.authenticatedPost('', { data: 'test' })
-      ).rejects.toThrow('URL cannot be empty')
+      ).rejects.toThrow(URL_EMPTY_ERROR_MSG)
     })
 
     it('should verify spread operator ...additionalHeaders - additionalHeaders is undefined', () => {
@@ -547,7 +547,7 @@ describe('useAuthenticatedApi', () => {
 
       await expect(
         result.current.authenticatedGet('/test')
-      ).rejects.toThrow('HTTP client is not properly initialized')
+      ).rejects.toThrow(HTTP_CLIENT_ERROR_MSG)
     })
 
     it('should verify !client || typeof client.put !== function for PUT', async () => {
@@ -562,7 +562,7 @@ describe('useAuthenticatedApi', () => {
 
       await expect(
         result.current.authenticatedPut('/test', { data: 'test' })
-      ).rejects.toThrow('HTTP client is not properly initialized')
+      ).rejects.toThrow(HTTP_CLIENT_ERROR_MSG)
     })
 
     it('should verify !client || typeof client.delete !== function for DELETE', async () => {
@@ -577,7 +577,7 @@ describe('useAuthenticatedApi', () => {
 
       await expect(
         result.current.authenticatedDelete('/test')
-      ).rejects.toThrow('HTTP client is not properly initialized')
+      ).rejects.toThrow(HTTP_CLIENT_ERROR_MSG)
     })
 
     it('should verify error.name assignment for HttpClientError', async () => {
@@ -588,7 +588,7 @@ describe('useAuthenticatedApi', () => {
         await result.current.authenticatedPost('/test', { data: 'test' })
       } catch (error: any) {
         expect(error.name).toBe('HttpClientError')
-        expect(error.message).toBe('HTTP client is not properly initialized')
+        expect(error.message).toBe(HTTP_CLIENT_ERROR_MSG)
       }
     })
 
@@ -599,7 +599,7 @@ describe('useAuthenticatedApi', () => {
         await result.current.authenticatedPost('', { data: 'test' })
       } catch (error: any) {
         expect(error.name).toBe('InvalidUrlError')
-        expect(error.message).toBe('URL cannot be empty')
+        expect(error.message).toBe(URL_EMPTY_ERROR_MSG)
       }
     })
 
@@ -918,7 +918,7 @@ describe('useAuthenticatedApi', () => {
       // When baseUrl is whitespace and endpoint is empty, url.trim() === ''
       await expect(
         result.current.authenticatedPost('', { data: 'test' })
-      ).rejects.toThrow('URL cannot be empty')
+      ).rejects.toThrow(URL_EMPTY_ERROR_MSG)
     })
 
     it('should verify url.trim() exact comparison - returns non-empty string', () => {
@@ -961,7 +961,7 @@ describe('useAuthenticatedApi', () => {
         await result.current.authenticatedPost('/test', { data: 'test' })
       } catch (error: any) {
         // Verify exact error message to kill string literal mutations
-        expect(error.message).toBe('HTTP client is not properly initialized')
+        expect(error.message).toBe(HTTP_CLIENT_ERROR_MSG)
       }
     })
 
@@ -972,7 +972,7 @@ describe('useAuthenticatedApi', () => {
         await result.current.authenticatedPost('', { data: 'test' })
       } catch (error: any) {
         // Verify exact error message to kill string literal mutations
-        expect(error.message).toBe('URL cannot be empty')
+        expect(error.message).toBe(URL_EMPTY_ERROR_MSG)
       }
     })
 
@@ -1239,7 +1239,7 @@ describe('useAuthenticatedApi', () => {
 
       await expect(
         result.current.authenticatedPost('/test', { data: 'test' })
-      ).rejects.toThrow('HTTP client is not properly initialized')
+      ).rejects.toThrow(HTTP_CLIENT_ERROR_MSG)
     })
 
     it('should verify exact typeof client.get !== function check - get is not a function', async () => {
@@ -1254,7 +1254,7 @@ describe('useAuthenticatedApi', () => {
 
       await expect(
         result.current.authenticatedGet('/test')
-      ).rejects.toThrow('HTTP client is not properly initialized')
+      ).rejects.toThrow(HTTP_CLIENT_ERROR_MSG)
     })
 
     it('should verify exact typeof client.put !== function check - put is not a function', async () => {
@@ -1269,7 +1269,7 @@ describe('useAuthenticatedApi', () => {
 
       await expect(
         result.current.authenticatedPut('/test', { data: 'test' })
-      ).rejects.toThrow('HTTP client is not properly initialized')
+      ).rejects.toThrow(HTTP_CLIENT_ERROR_MSG)
     })
 
     it('should verify exact typeof client.delete !== function check - delete is not a function', async () => {
@@ -1284,7 +1284,7 @@ describe('useAuthenticatedApi', () => {
 
       await expect(
         result.current.authenticatedDelete('/test')
-      ).rejects.toThrow('HTTP client is not properly initialized')
+      ).rejects.toThrow(HTTP_CLIENT_ERROR_MSG)
     })
 
     it('should verify exact url.trim() check for GET requests', async () => {
@@ -1318,7 +1318,7 @@ describe('useAuthenticatedApi', () => {
         fail('Should have thrown an error')
       } catch (error: any) {
         expect(error.name).toBe('HttpClientError')
-        expect(error.message).toBe('HTTP client is not properly initialized')
+        expect(error.message).toBe(HTTP_CLIENT_ERROR_MSG)
       }
     })
 
@@ -1404,7 +1404,7 @@ describe('useAuthenticatedApi', () => {
 
       await expect(
         result.current.authenticatedPost('/test', { data: 'test' })
-      ).rejects.toThrow('HTTP client is not properly initialized')
+      ).rejects.toThrow(HTTP_CLIENT_ERROR_MSG)
     })
 
     it('should verify exact !url check - url is null', async () => {

@@ -4,6 +4,7 @@ import { showError, showSuccess } from '../utils/notifications'
 import { showConfirm } from '../utils/confirm'
 import { api } from '../api/client'
 import { logger } from '../utils/logger'
+import { STORAGE_KEYS } from '../config/constants'
 
 jest.mock('../utils/notifications', () => ({
   showError: jest.fn(),
@@ -100,6 +101,10 @@ describe('useTemplateOperations', () => {
     mockShowConfirm.mockResolvedValue(true)
     mockDeleteTemplate.mockResolvedValue(undefined)
     mockNavigate.mockClear()
+    // Reset storage mock but keep the structure
+    mockStorage.getItem.mockReset()
+    mockStorage.setItem.mockReset()
+    mockStorage.removeItem.mockReset()
   })
 
   describe('deleteSelectedWorkflows', () => {
@@ -3517,9 +3522,17 @@ describe('useTemplateOperations', () => {
 
       it('should handle onRefresh callback execution', async () => {
         const agents = [{ ...mockAgents[0], id: 'agent-1' }]
-        mockStorage.getItem.mockReturnValue(JSON.stringify(agents))
-        mockShowConfirm.mockResolvedValue(true)
         const onRefresh = jest.fn()
+        
+        // Ensure mock is set up before hook render
+        mockStorage.getItem.mockImplementation((key: string) => {
+          if (key === STORAGE_KEYS.REPOSITORY_AGENTS) {
+            return JSON.stringify(agents)
+          }
+          return null
+        })
+        mockShowConfirm.mockResolvedValue(true)
+        mockStorage.setItem.mockImplementation(() => {}) // No-op
 
         const { result } = renderHook(() =>
           useTemplateOperations({
@@ -3546,7 +3559,9 @@ describe('useTemplateOperations', () => {
           await result.current.deleteSelectedRepositoryAgents(new Set(['agent-1']), onRefresh)
         })
 
-        // Should call onRefresh when provided
+        // Verify storage was called with correct key
+        expect(mockStorage.getItem).toHaveBeenCalledWith(STORAGE_KEYS.REPOSITORY_AGENTS)
+        // Should call onRefresh when provided and repositoryAgents exists
         expect(onRefresh).toHaveBeenCalled()
         expect(mockShowSuccess).toHaveBeenCalled()
       })
@@ -3775,9 +3790,16 @@ describe('useTemplateOperations', () => {
       })
 
       it('should handle numeric author_id vs string user.id', async () => {
-        const agents = [{ ...mockAgents[0], id: 'agent-1', author_id: 123 }] // Numeric author_id
-        mockStorage.getItem.mockReturnValue(JSON.stringify(agents))
+        const agents = [{ ...mockAgents[0], id: 'agent-1', author_id: 123, is_official: false }] // Numeric author_id, not official
+        // Mock storage to return publishedAgents using STORAGE_KEYS constant
+        mockStorage.getItem.mockImplementation((key: string) => {
+          if (key === STORAGE_KEYS.PUBLISHED_AGENTS) {
+            return JSON.stringify(agents)
+          }
+          return null
+        })
         mockShowConfirm.mockResolvedValue(true)
+        mockStorage.setItem.mockImplementation(() => {}) // No-op
 
         const { result } = renderHook(() =>
           useTemplateOperations({
@@ -3804,14 +3826,24 @@ describe('useTemplateOperations', () => {
           await result.current.deleteSelectedAgents(new Set(['agent-1']))
         })
 
-        // String conversion should make '123' === '123'
+        // String conversion should make '123' === '123', so deletion should succeed
+        // Verify storage was accessed
+        expect(mockStorage.getItem).toHaveBeenCalledWith(STORAGE_KEYS.PUBLISHED_AGENTS)
         expect(mockSetAgents).toHaveBeenCalled()
+        expect(mockShowSuccess).toHaveBeenCalled()
       })
 
       it('should handle numeric user.id vs string author_id', async () => {
-        const agents = [{ ...mockAgents[0], id: 'agent-1', author_id: '123' }] // String author_id
-        mockStorage.getItem.mockReturnValue(JSON.stringify(agents))
+        const agents = [{ ...mockAgents[0], id: 'agent-1', author_id: '123', is_official: false }] // String author_id, not official
+        // Mock storage to return publishedAgents using STORAGE_KEYS constant
+        mockStorage.getItem.mockImplementation((key: string) => {
+          if (key === STORAGE_KEYS.PUBLISHED_AGENTS) {
+            return JSON.stringify(agents)
+          }
+          return null
+        })
         mockShowConfirm.mockResolvedValue(true)
+        mockStorage.setItem.mockImplementation(() => {}) // No-op
 
         const { result } = renderHook(() =>
           useTemplateOperations({
@@ -3838,8 +3870,11 @@ describe('useTemplateOperations', () => {
           await result.current.deleteSelectedAgents(new Set(['agent-1']))
         })
 
-        // String conversion should make '123' === '123'
+        // String conversion should make '123' === '123', so deletion should succeed
+        // Verify storage was accessed
+        expect(mockStorage.getItem).toHaveBeenCalledWith(STORAGE_KEYS.PUBLISHED_AGENTS)
         expect(mockSetAgents).toHaveBeenCalled()
+        expect(mockShowSuccess).toHaveBeenCalled()
       })
     })
 
