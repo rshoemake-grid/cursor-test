@@ -5688,6 +5688,457 @@ describe('useWorkflowExecution', () => {
 
         setTimeoutSpy.mockRestore()
       })
+
+      it('should verify exact execution && execution.execution_id && execution.execution_id !== tempExecutionId check - execution is null', async () => {
+        mockWorkflowIdRef.current = 'workflow-id'
+        mockApi.executeWorkflow.mockResolvedValue(null as any)
+
+        const { result } = renderHook(() =>
+          useWorkflowExecution({
+            isAuthenticated: true,
+            localWorkflowId: 'workflow-id',
+            workflowIdRef: mockWorkflowIdRef,
+            saveWorkflow: mockSaveWorkflow,
+            onExecutionStart: mockOnExecutionStart,
+          })
+        )
+
+        await act(async () => {
+          result.current.setExecutionInputs('{}')
+          await result.current.handleConfirmExecute()
+        })
+
+        await act(async () => {
+          jest.runAllTimers()
+          await Promise.resolve()
+          await waitForWithTimeout(() => {
+            expect(mockApi.executeWorkflow).toHaveBeenCalled()
+          })
+        })
+
+        // When execution is null, the condition execution && execution.execution_id fails
+        // So onExecutionStart should not be called with a new execution_id
+        // It should only be called once with the temp execution ID
+        expect(mockOnExecutionStart).toHaveBeenCalledTimes(1)
+        expect(mockOnExecutionStart).toHaveBeenCalledWith(expect.stringMatching(/^pending-/))
+      })
+
+      it('should verify exact execution && execution.execution_id && execution.execution_id !== tempExecutionId check - execution.execution_id is null', async () => {
+        mockWorkflowIdRef.current = 'workflow-id'
+        mockApi.executeWorkflow.mockResolvedValue({
+          execution_id: null,
+        } as any)
+
+        const { result } = renderHook(() =>
+          useWorkflowExecution({
+            isAuthenticated: true,
+            localWorkflowId: 'workflow-id',
+            workflowIdRef: mockWorkflowIdRef,
+            saveWorkflow: mockSaveWorkflow,
+            onExecutionStart: mockOnExecutionStart,
+          })
+        )
+
+        await act(async () => {
+          result.current.setExecutionInputs('{}')
+          await result.current.handleConfirmExecute()
+        })
+
+        await act(async () => {
+          jest.runAllTimers()
+          await Promise.resolve()
+          await waitForWithTimeout(() => {
+            expect(mockApi.executeWorkflow).toHaveBeenCalled()
+          })
+        })
+
+        // When execution.execution_id is null, the condition execution.execution_id fails
+        expect(mockOnExecutionStart).toHaveBeenCalledTimes(1)
+        expect(mockOnExecutionStart).toHaveBeenCalledWith(expect.stringMatching(/^pending-/))
+      })
+
+      it('should verify exact execution && execution.execution_id && execution.execution_id !== tempExecutionId check - execution.execution_id is undefined', async () => {
+        mockWorkflowIdRef.current = 'workflow-id'
+        mockApi.executeWorkflow.mockResolvedValue({
+          execution_id: undefined,
+        } as any)
+
+        const { result } = renderHook(() =>
+          useWorkflowExecution({
+            isAuthenticated: true,
+            localWorkflowId: 'workflow-id',
+            workflowIdRef: mockWorkflowIdRef,
+            saveWorkflow: mockSaveWorkflow,
+            onExecutionStart: mockOnExecutionStart,
+          })
+        )
+
+        await act(async () => {
+          result.current.setExecutionInputs('{}')
+          await result.current.handleConfirmExecute()
+        })
+
+        await act(async () => {
+          jest.runAllTimers()
+          await Promise.resolve()
+          await waitForWithTimeout(() => {
+            expect(mockApi.executeWorkflow).toHaveBeenCalled()
+          })
+        })
+
+        // When execution.execution_id is undefined, the condition execution.execution_id fails
+        expect(mockOnExecutionStart).toHaveBeenCalledTimes(1)
+        expect(mockOnExecutionStart).toHaveBeenCalledWith(expect.stringMatching(/^pending-/))
+      })
+
+      it('should verify exact execution && execution.execution_id && execution.execution_id !== tempExecutionId check - execution.execution_id === tempExecutionId', async () => {
+        mockWorkflowIdRef.current = 'workflow-id'
+        let tempExecutionId: string | null = null
+
+        mockApi.executeWorkflow.mockImplementation(async () => {
+          // Capture the temp execution ID that was passed to onExecutionStart
+          await Promise.resolve()
+          return {
+            execution_id: tempExecutionId || 'exec-123',
+          }
+        })
+
+        mockOnExecutionStart.mockImplementation((id: string) => {
+          if (id.startsWith('pending-')) {
+            tempExecutionId = id
+          }
+        })
+
+        const { result } = renderHook(() =>
+          useWorkflowExecution({
+            isAuthenticated: true,
+            localWorkflowId: 'workflow-id',
+            workflowIdRef: mockWorkflowIdRef,
+            saveWorkflow: mockSaveWorkflow,
+            onExecutionStart: mockOnExecutionStart,
+          })
+        )
+
+        await act(async () => {
+          result.current.setExecutionInputs('{}')
+          await result.current.handleConfirmExecute()
+        })
+
+        await act(async () => {
+          jest.runAllTimers()
+          await Promise.resolve()
+          await waitForWithTimeout(() => {
+            expect(mockApi.executeWorkflow).toHaveBeenCalled()
+          })
+        })
+
+        // When execution.execution_id === tempExecutionId, the condition execution.execution_id !== tempExecutionId fails
+        // So onExecutionStart should only be called once with the temp execution ID
+        expect(mockOnExecutionStart).toHaveBeenCalledTimes(1)
+        expect(mockOnExecutionStart).toHaveBeenCalledWith(expect.stringMatching(/^pending-/))
+      })
+
+      it('should verify exact error?.response?.data?.detail || error?.message || "Unknown error" check - error.response.data.detail exists', async () => {
+        mockWorkflowIdRef.current = 'workflow-id'
+        const errorWithDetail = {
+          response: {
+            data: {
+              detail: 'Custom error detail',
+            },
+          },
+          message: 'Error message',
+        }
+        mockApi.executeWorkflow.mockRejectedValue(errorWithDetail)
+
+        const { result } = renderHook(() =>
+          useWorkflowExecution({
+            isAuthenticated: true,
+            localWorkflowId: 'workflow-id',
+            workflowIdRef: mockWorkflowIdRef,
+            saveWorkflow: mockSaveWorkflow,
+            onExecutionStart: mockOnExecutionStart,
+          })
+        )
+
+        await act(async () => {
+          result.current.setExecutionInputs('{}')
+          await result.current.handleConfirmExecute()
+        })
+
+        await act(async () => {
+          jest.runAllTimers()
+          await Promise.resolve()
+          await waitForWithTimeout(() => {
+            expect(mockApi.executeWorkflow).toHaveBeenCalled()
+          })
+        })
+
+        // Should use error.response.data.detail (first truthy value)
+        expect(mockShowError).toHaveBeenCalledWith('Failed to execute workflow: Custom error detail')
+        expect(mockShowError).not.toHaveBeenCalledWith(expect.stringContaining('Error message'))
+        expect(mockShowError).not.toHaveBeenCalledWith(expect.stringContaining('Unknown error'))
+      })
+
+      it('should verify exact error?.response?.data?.detail || error?.message || "Unknown error" check - error.response.data.detail is null', async () => {
+        mockWorkflowIdRef.current = 'workflow-id'
+        const errorWithNullDetail = {
+          response: {
+            data: {
+              detail: null,
+            },
+          },
+          message: 'Error message',
+        }
+        mockApi.executeWorkflow.mockRejectedValue(errorWithNullDetail)
+
+        const { result } = renderHook(() =>
+          useWorkflowExecution({
+            isAuthenticated: true,
+            localWorkflowId: 'workflow-id',
+            workflowIdRef: mockWorkflowIdRef,
+            saveWorkflow: mockSaveWorkflow,
+            onExecutionStart: mockOnExecutionStart,
+          })
+        )
+
+        await act(async () => {
+          result.current.setExecutionInputs('{}')
+          await result.current.handleConfirmExecute()
+        })
+
+        await act(async () => {
+          jest.runAllTimers()
+          await Promise.resolve()
+          await waitForWithTimeout(() => {
+            expect(mockApi.executeWorkflow).toHaveBeenCalled()
+          })
+        })
+
+        // When detail is null, should use error.message (second truthy value)
+        expect(mockShowError).toHaveBeenCalledWith('Failed to execute workflow: Error message')
+        expect(mockShowError).not.toHaveBeenCalledWith(expect.stringContaining('Unknown error'))
+      })
+
+      it('should verify exact error?.response?.data?.detail || error?.message || "Unknown error" check - error.response.data.detail is undefined', async () => {
+        mockWorkflowIdRef.current = 'workflow-id'
+        const errorWithUndefinedDetail = {
+          response: {
+            data: {
+              detail: undefined,
+            },
+          },
+          message: 'Error message',
+        }
+        mockApi.executeWorkflow.mockRejectedValue(errorWithUndefinedDetail)
+
+        const { result } = renderHook(() =>
+          useWorkflowExecution({
+            isAuthenticated: true,
+            localWorkflowId: 'workflow-id',
+            workflowIdRef: mockWorkflowIdRef,
+            saveWorkflow: mockSaveWorkflow,
+            onExecutionStart: mockOnExecutionStart,
+          })
+        )
+
+        await act(async () => {
+          result.current.setExecutionInputs('{}')
+          await result.current.handleConfirmExecute()
+        })
+
+        await act(async () => {
+          jest.runAllTimers()
+          await Promise.resolve()
+          await waitForWithTimeout(() => {
+            expect(mockApi.executeWorkflow).toHaveBeenCalled()
+          })
+        })
+
+        // When detail is undefined, should use error.message
+        expect(mockShowError).toHaveBeenCalledWith('Failed to execute workflow: Error message')
+      })
+
+      it('should verify exact error?.response?.data?.detail || error?.message || "Unknown error" check - error.response.data is null', async () => {
+        mockWorkflowIdRef.current = 'workflow-id'
+        const errorWithNullData = {
+          response: {
+            data: null,
+          },
+          message: 'Error message',
+        }
+        mockApi.executeWorkflow.mockRejectedValue(errorWithNullData)
+
+        const { result } = renderHook(() =>
+          useWorkflowExecution({
+            isAuthenticated: true,
+            localWorkflowId: 'workflow-id',
+            workflowIdRef: mockWorkflowIdRef,
+            saveWorkflow: mockSaveWorkflow,
+            onExecutionStart: mockOnExecutionStart,
+          })
+        )
+
+        await act(async () => {
+          result.current.setExecutionInputs('{}')
+          await result.current.handleConfirmExecute()
+        })
+
+        await act(async () => {
+          jest.runAllTimers()
+          await Promise.resolve()
+          await waitForWithTimeout(() => {
+            expect(mockApi.executeWorkflow).toHaveBeenCalled()
+          })
+        })
+
+        // When data is null, error?.response?.data?.detail is undefined, should use error.message
+        expect(mockShowError).toHaveBeenCalledWith('Failed to execute workflow: Error message')
+      })
+
+      it('should verify exact error?.response?.data?.detail || error?.message || "Unknown error" check - error.response is null', async () => {
+        mockWorkflowIdRef.current = 'workflow-id'
+        const errorWithNullResponse = {
+          response: null,
+          message: 'Error message',
+        }
+        mockApi.executeWorkflow.mockRejectedValue(errorWithNullResponse)
+
+        const { result } = renderHook(() =>
+          useWorkflowExecution({
+            isAuthenticated: true,
+            localWorkflowId: 'workflow-id',
+            workflowIdRef: mockWorkflowIdRef,
+            saveWorkflow: mockSaveWorkflow,
+            onExecutionStart: mockOnExecutionStart,
+          })
+        )
+
+        await act(async () => {
+          result.current.setExecutionInputs('{}')
+          await result.current.handleConfirmExecute()
+        })
+
+        await act(async () => {
+          jest.runAllTimers()
+          await Promise.resolve()
+          await waitForWithTimeout(() => {
+            expect(mockApi.executeWorkflow).toHaveBeenCalled()
+          })
+        })
+
+        // When response is null, error?.response?.data?.detail is undefined, should use error.message
+        expect(mockShowError).toHaveBeenCalledWith('Failed to execute workflow: Error message')
+      })
+
+      it('should verify exact error?.response?.data?.detail || error?.message || "Unknown error" check - error.message is null', async () => {
+        mockWorkflowIdRef.current = 'workflow-id'
+        const errorWithNullMessage = {
+          response: {
+            data: {
+              detail: null,
+            },
+          },
+          message: null,
+        }
+        mockApi.executeWorkflow.mockRejectedValue(errorWithNullMessage)
+
+        const { result } = renderHook(() =>
+          useWorkflowExecution({
+            isAuthenticated: true,
+            localWorkflowId: 'workflow-id',
+            workflowIdRef: mockWorkflowIdRef,
+            saveWorkflow: mockSaveWorkflow,
+            onExecutionStart: mockOnExecutionStart,
+          })
+        )
+
+        await act(async () => {
+          result.current.setExecutionInputs('{}')
+          await result.current.handleConfirmExecute()
+        })
+
+        await act(async () => {
+          jest.runAllTimers()
+          await Promise.resolve()
+          await waitForWithTimeout(() => {
+            expect(mockApi.executeWorkflow).toHaveBeenCalled()
+          })
+        })
+
+        // When both detail and message are null, should use "Unknown error" (fallback)
+        expect(mockShowError).toHaveBeenCalledWith('Failed to execute workflow: Unknown error')
+      })
+
+      it('should verify exact error?.response?.data?.detail || error?.message || "Unknown error" check - error.message is undefined', async () => {
+        mockWorkflowIdRef.current = 'workflow-id'
+        const errorWithUndefinedMessage = {
+          response: {
+            data: {
+              detail: null,
+            },
+          },
+          message: undefined,
+        }
+        mockApi.executeWorkflow.mockRejectedValue(errorWithUndefinedMessage)
+
+        const { result } = renderHook(() =>
+          useWorkflowExecution({
+            isAuthenticated: true,
+            localWorkflowId: 'workflow-id',
+            workflowIdRef: mockWorkflowIdRef,
+            saveWorkflow: mockSaveWorkflow,
+            onExecutionStart: mockOnExecutionStart,
+          })
+        )
+
+        await act(async () => {
+          result.current.setExecutionInputs('{}')
+          await result.current.handleConfirmExecute()
+        })
+
+        await act(async () => {
+          jest.runAllTimers()
+          await Promise.resolve()
+          await waitForWithTimeout(() => {
+            expect(mockApi.executeWorkflow).toHaveBeenCalled()
+          })
+        })
+
+        // When both detail and message are falsy, should use "Unknown error"
+        expect(mockShowError).toHaveBeenCalledWith('Failed to execute workflow: Unknown error')
+      })
+
+      it('should verify exact error?.response?.data?.detail || error?.message || "Unknown error" check - error has no response or message', async () => {
+        mockWorkflowIdRef.current = 'workflow-id'
+        const errorWithoutResponse = {} as any
+        mockApi.executeWorkflow.mockRejectedValue(errorWithoutResponse)
+
+        const { result } = renderHook(() =>
+          useWorkflowExecution({
+            isAuthenticated: true,
+            localWorkflowId: 'workflow-id',
+            workflowIdRef: mockWorkflowIdRef,
+            saveWorkflow: mockSaveWorkflow,
+            onExecutionStart: mockOnExecutionStart,
+          })
+        )
+
+        await act(async () => {
+          result.current.setExecutionInputs('{}')
+          await result.current.handleConfirmExecute()
+        })
+
+        await act(async () => {
+          jest.runAllTimers()
+          await Promise.resolve()
+          await waitForWithTimeout(() => {
+            expect(mockApi.executeWorkflow).toHaveBeenCalled()
+          })
+        })
+
+        // When error has no response or message, should use "Unknown error"
+        expect(mockShowError).toHaveBeenCalledWith('Failed to execute workflow: Unknown error')
+      })
     })
   })
 })
