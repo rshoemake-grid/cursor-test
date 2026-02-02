@@ -4600,5 +4600,348 @@ describe('InputNodeEditor', () => {
       })
     })
   })
+
+  describe('additional coverage for no-coverage mutants', () => {
+    describe('useEffect - document.activeElement checks', () => {
+      it('should verify document.activeElement !== bucketNameRef.current when field is not focused', () => {
+        const node: NodeWithData = {
+          id: '1',
+          type: 'gcp_bucket',
+          position: { x: 0, y: 0 },
+          data: {
+            input_config: {
+              bucket_name: 'new-bucket-name',
+            }
+          }
+        } as NodeWithData
+
+        // Mock document.activeElement to be something else
+        const mockActiveElement = document.createElement('div')
+        Object.defineProperty(document, 'activeElement', {
+          value: mockActiveElement,
+          writable: true,
+          configurable: true,
+        })
+
+        const { rerender } = render(<InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />)
+        
+        // Update node to trigger useEffect
+        const updatedNode = {
+          ...node,
+          data: {
+            input_config: {
+              bucket_name: 'updated-bucket',
+            }
+          }
+        }
+        rerender(<InputNodeEditor node={updatedNode} onConfigUpdate={mockOnConfigUpdate} />)
+
+        // Should update value when field is not focused
+        const bucketInput = screen.getByLabelText(/GCP bucket name/i) as HTMLInputElement
+        expect(bucketInput.value).toBe('updated-bucket')
+      })
+
+      it('should verify document.activeElement !== objectPathRef.current when field is not focused', () => {
+        const node: NodeWithData = {
+          id: '1',
+          type: 'gcp_bucket',
+          position: { x: 0, y: 0 },
+          data: {
+            input_config: {
+              object_path: 'new-path',
+            }
+          }
+        } as NodeWithData
+
+        const mockActiveElement = document.createElement('div')
+        Object.defineProperty(document, 'activeElement', {
+          value: mockActiveElement,
+          writable: true,
+          configurable: true,
+        })
+
+        const { rerender } = render(<InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />)
+        
+        const updatedNode = {
+          ...node,
+          data: {
+            input_config: {
+              object_path: 'updated-path',
+            }
+          }
+        }
+        rerender(<InputNodeEditor node={updatedNode} onConfigUpdate={mockOnConfigUpdate} />)
+
+        const objectPathInput = screen.getByLabelText(/Object path/i) as HTMLInputElement
+        expect(objectPathInput.value).toBe('updated-path')
+      })
+    })
+
+    describe('Logical OR operators - fallback values', () => {
+      it('should handle node.data.input_config || {} when input_config is null', () => {
+        const node: NodeWithData = {
+          id: '1',
+          type: 'gcp_bucket',
+          position: { x: 0, y: 0 },
+          data: {
+            input_config: null as any,
+          }
+        } as NodeWithData
+
+        render(<InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />)
+
+        // Should use empty object fallback
+        const bucketInput = screen.getByLabelText(/GCP bucket name/i) as HTMLInputElement
+        expect(bucketInput.value).toBe('') // Empty string fallback
+      })
+
+      it('should handle inputConfig.bucket_name || empty string when bucket_name is null', () => {
+        const node: NodeWithData = {
+          id: '1',
+          type: 'gcp_bucket',
+          position: { x: 0, y: 0 },
+          data: {
+            input_config: {
+              bucket_name: null as any,
+            }
+          }
+        } as NodeWithData
+
+        render(<InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />)
+
+        const bucketInput = screen.getByLabelText(/GCP bucket name/i) as HTMLInputElement
+        expect(bucketInput.value).toBe('')
+      })
+
+      it('should handle inputConfig.region || us-east-1 when region is null', () => {
+        const node: NodeWithData = {
+          id: '1',
+          type: 'aws_s3',
+          position: { x: 0, y: 0 },
+          data: {
+            input_config: {
+              region: null as any,
+            }
+          }
+        } as NodeWithData
+
+        render(<InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />)
+
+        const regionInput = screen.getByLabelText(/AWS Region/i) as HTMLInputElement
+        expect(regionInput.value).toBe('us-east-1')
+      })
+
+      it('should handle inputConfig.mode || read when mode is null', () => {
+        const node: NodeWithData = {
+          id: '1',
+          type: 'gcp_bucket',
+          position: { x: 0, y: 0 },
+          data: {
+            input_config: {
+              mode: null as any,
+            }
+          }
+        } as NodeWithData
+
+        render(<InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />)
+
+        const modeSelect = screen.getByLabelText(/Mode/i) as HTMLSelectElement
+        expect(modeSelect.value).toBe('read')
+      })
+    })
+
+    describe('Nullish coalescing - overwrite', () => {
+      it('should handle inputConfig.overwrite ?? true when overwrite is null', () => {
+        const node: NodeWithData = {
+          id: '1',
+          type: 'local_filesystem',
+          position: { x: 0, y: 0 },
+          data: {
+            input_config: {
+              mode: 'write',
+              overwrite: null as any,
+            }
+          }
+        } as NodeWithData
+
+        render(<InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />)
+
+        const overwriteCheckbox = screen.getByLabelText(/Overwrite existing file/i) as HTMLInputElement
+        // Nullish coalescing: null ?? true = true
+        expect(overwriteCheckbox.checked).toBe(true)
+      })
+
+      it('should handle inputConfig.overwrite ?? true when overwrite is undefined', () => {
+        const node: NodeWithData = {
+          id: '1',
+          type: 'local_filesystem',
+          position: { x: 0, y: 0 },
+          data: {
+            input_config: {
+              mode: 'write',
+              overwrite: undefined,
+            }
+          }
+        } as NodeWithData
+
+        render(<InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />)
+
+        const overwriteCheckbox = screen.getByLabelText(/Overwrite existing file/i) as HTMLInputElement
+        // Nullish coalescing: undefined ?? true = true
+        expect(overwriteCheckbox.checked).toBe(true)
+      })
+
+      it('should handle inputConfig.overwrite ?? true when overwrite is false', () => {
+        const node: NodeWithData = {
+          id: '1',
+          type: 'local_filesystem',
+          position: { x: 0, y: 0 },
+          data: {
+            input_config: {
+              mode: 'write',
+              overwrite: false,
+            }
+          }
+        } as NodeWithData
+
+        render(<InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />)
+
+        const overwriteCheckbox = screen.getByLabelText(/Overwrite existing file/i) as HTMLInputElement
+        // Nullish coalescing: false ?? true = false (false is not nullish)
+        expect(overwriteCheckbox.checked).toBe(false)
+      })
+    })
+
+    describe('Node type exact comparisons', () => {
+      it('should verify node.type === database exact comparison', () => {
+        const node: NodeWithData = {
+          id: '1',
+          type: 'database',
+          position: { x: 0, y: 0 },
+          data: { input_config: {} }
+        } as NodeWithData
+
+        render(<InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />)
+
+        // Should render database configuration message
+        expect(screen.getByText(/Database Configuration/i)).toBeInTheDocument()
+      })
+
+      it('should verify node.type === firebase exact comparison', () => {
+        const node: NodeWithData = {
+          id: '1',
+          type: 'firebase',
+          position: { x: 0, y: 0 },
+          data: { input_config: {} }
+        } as NodeWithData
+
+        render(<InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />)
+
+        // Should render firebase configuration message
+        expect(screen.getByText(/Firebase Configuration/i)).toBeInTheDocument()
+      })
+
+      it('should verify node.type === bigquery exact comparison', () => {
+        const node: NodeWithData = {
+          id: '1',
+          type: 'bigquery',
+          position: { x: 0, y: 0 },
+          data: { input_config: {} }
+        } as NodeWithData
+
+        render(<InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />)
+
+        // Should render bigquery configuration message
+        expect(screen.getByText(/BigQuery Configuration/i)).toBeInTheDocument()
+      })
+    })
+
+    describe('Mode value exact comparisons', () => {
+      it('should verify modeValue === read exact comparison for conditional rendering', () => {
+        const node: NodeWithData = {
+          id: '1',
+          type: 'local_filesystem',
+          position: { x: 0, y: 0 },
+          data: {
+            input_config: {
+              mode: 'read',
+            }
+          }
+        } as NodeWithData
+
+        render(<InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />)
+
+        // Should render file pattern input when modeValue === 'read'
+        expect(screen.getByLabelText(/File Pattern/i)).toBeInTheDocument()
+        // Should not render overwrite checkbox when modeValue !== 'write'
+        expect(screen.queryByLabelText(/Overwrite existing file/i)).not.toBeInTheDocument()
+      })
+
+      it('should verify modeValue === write exact comparison for conditional rendering', () => {
+        const node: NodeWithData = {
+          id: '1',
+          type: 'local_filesystem',
+          position: { x: 0, y: 0 },
+          data: {
+            input_config: {
+              mode: 'write',
+            }
+          }
+        } as NodeWithData
+
+        render(<InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />)
+
+        // Should render overwrite checkbox when modeValue === 'write'
+        expect(screen.getByLabelText(/Overwrite existing file/i)).toBeInTheDocument()
+        // Should not render file pattern input when modeValue !== 'read'
+        expect(screen.queryByLabelText(/File Pattern/i)).not.toBeInTheDocument()
+      })
+    })
+
+    describe('Event property access', () => {
+      it('should verify e.target.value exact property access', () => {
+        const node: NodeWithData = {
+          id: '1',
+          type: 'gcp_bucket',
+          position: { x: 0, y: 0 },
+          data: { input_config: {} }
+        } as NodeWithData
+
+        render(<InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />)
+
+        const bucketInput = screen.getByLabelText(/GCP bucket name/i)
+        
+        // Verify e.target.value is accessed correctly
+        fireEvent.change(bucketInput, { target: { value: 'test-value' } })
+        
+        expect(mockOnConfigUpdate).toHaveBeenCalledWith('input_config', 'bucket_name', 'test-value')
+      })
+
+      it('should verify e.target.checked exact property access', () => {
+        const node: NodeWithData = {
+          id: '1',
+          type: 'local_filesystem',
+          position: { x: 0, y: 0 },
+          data: {
+            input_config: {
+              mode: 'write',
+              overwrite: true,
+            }
+          }
+        } as NodeWithData
+
+        render(<InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />)
+
+        const overwriteCheckbox = screen.getByLabelText(/Overwrite existing file/i) as HTMLInputElement
+        
+        // Verify e.target.checked is accessed correctly
+        // For checkbox, we need to use click or change with checked property
+        fireEvent.click(overwriteCheckbox)
+        
+        // Should call onConfigUpdate with new checked value
+        expect(mockOnConfigUpdate).toHaveBeenCalledWith('input_config', 'overwrite', false)
+      })
+    })
+  })
 })
 
