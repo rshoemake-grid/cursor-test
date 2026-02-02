@@ -75,6 +75,9 @@ describe('useWorkflowExecution', () => {
   })
 
   afterEach(() => {
+    // Run all pending timers to ensure setTimeout callbacks complete
+    // This prevents timeouts in mutation testing when async operations are mutated
+    jest.runAllTimers()
     jest.runOnlyPendingTimers()
     jest.useRealTimers()
   })
