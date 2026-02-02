@@ -1395,9 +1395,15 @@ describe('useSelectedNode', () => {
 
     it('should verify exact logical AND selectedNodeIdRef.current === selectedNodeId && selectedNodeRef.current', () => {
       const node = { id: 'node-1', type: 'agent', position: { x: 0, y: 0 }, data: {} }
-      mockGetNodes.mockReturnValue([node])
-      mockFindNodeById.mockReturnValue(node)
-      mockNodeExists.mockReturnValue(true)
+      const node2 = { id: 'node-2', type: 'agent', position: { x: 0, y: 0 }, data: {} }
+      mockGetNodes.mockReturnValue([node, node2])
+      // Ensure findNodeById returns the correct node based on the nodes array
+      mockFindNodeById.mockImplementation((id, getNodes, nodes) => {
+        return nodes.find((n: any) => n.id === id) || null
+      })
+      mockNodeExists.mockImplementation((id, getNodes, nodes) => {
+        return nodes.some((n: any) => n.id === id)
+      })
 
       const { result, rerender } = renderHook(
         ({ selectedNodeId }) =>
@@ -1412,14 +1418,17 @@ describe('useSelectedNode', () => {
 
       // First render - both conditions should be false initially (no cache)
       expect(result.current.selectedNode).toBeDefined()
+      expect(result.current.selectedNode?.id).toBe('node-1')
 
       // Second render - both conditions should be true (cache hit)
       rerender({ selectedNodeId: 'node-1' })
       expect(result.current.selectedNode).toBeDefined()
+      expect(result.current.selectedNode?.id).toBe('node-1')
 
       // Test: first condition false (different ID)
       rerender({ selectedNodeId: 'node-2' })
       expect(mockFindNodeById).toHaveBeenCalledWith('node-2', expect.any(Function), expect.any(Array))
+      expect(result.current.selectedNode?.id).toBe('node-2')
     })
 
     it('should verify exact check if (updated) - updated is null', () => {
@@ -1775,6 +1784,7 @@ describe('useSelectedNode', () => {
 
     it('should verify exact useMemo dependencies - getNodes change', () => {
       const node = { id: 'node-1', type: 'agent', position: { x: 0, y: 0 }, data: {} }
+      const node2 = { id: 'node-2', type: 'agent', position: { x: 100, y: 100 }, data: {} }
       mockGetNodes.mockReturnValue([node])
 
       const { result, rerender } = renderHook(() =>
@@ -1786,12 +1796,12 @@ describe('useSelectedNode', () => {
 
       const firstNodes = result.current.nodes
       expect(firstNodes.length).toBe(1)
-
-      // Change getNodes implementation - update mockGetNodes to return more nodes
-      mockGetNodes.mockReturnValue([node, { id: 'node-2', type: 'agent', position: { x: 100, y: 100 }, data: {} }])
       
+      // Track how many times getNodes was called
+      const initialCallCount = mockGetNodes.mock.calls.length
+
       // Create a new getNodes function to change the reference (useMemo depends on getNodes reference)
-      const newGetNodes = jest.fn(() => [node, { id: 'node-2', type: 'agent', position: { x: 100, y: 100 }, data: {} }])
+      const newGetNodes = jest.fn(() => [node, node2])
       
       // Update mockUseReactFlow to return new getNodes function reference
       mockUseReactFlow.mockReturnValue({
@@ -1826,6 +1836,8 @@ describe('useSelectedNode', () => {
       // useMemo depends on getNodes function reference, so changing the function reference
       // should trigger a re-computation
       expect(result.current.nodes.length).toBeGreaterThan(firstNodes.length)
+      // Verify getNodes was called again (more than initial call count)
+      expect(newGetNodes.mock.calls.length).toBeGreaterThan(0)
     })
 
     it('should verify exact useMemo dependencies - nodesProp change', () => {

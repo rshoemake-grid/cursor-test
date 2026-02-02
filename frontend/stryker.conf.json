@@ -4,8 +4,11 @@
   "reporters": ["html", "clear-text", "progress"],
   "testRunner": "jest",
   "coverageAnalysis": "perTest",
-  "concurrency": 16,
+  "concurrency": 8,
   "ignoreStatic": true,
+  "timeoutMS": 60000,
+  "maxTestRunnerReuse": 25,
+  "plugins": ["@stryker-mutator/jest-runner"],
   "mutate": [
     "src/utils/**/*.{ts,tsx}",
     "src/types/**/*.{ts,tsx}",
@@ -27,6 +30,8 @@
   "jest": {
     "configFile": "./jest.config.cjs",
     "enableFindRelatedTests": true
-  }
+  },
+  "logLevel": "info",
+  "fileLogLevel": "trace"
 }
 
