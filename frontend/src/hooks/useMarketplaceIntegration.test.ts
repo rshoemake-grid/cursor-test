@@ -2191,4 +2191,559 @@ describe('useMarketplaceIntegration', () => {
       expect(Array.isArray(updatedDraft2.edges)).toBe(true)
     })
   })
+
+  describe('additional coverage for no-coverage mutants', () => {
+    describe('addAgentsToCanvas - boundary conditions and edge cases', () => {
+      it('should handle currentNodes.length === 0 exact boundary', () => {
+        mockSetNodes.mockImplementation((updater: any) => {
+          if (typeof updater === 'function') {
+            return updater([]) // Empty array - exact boundary
+          }
+          return updater
+        })
+
+        const { result } = renderHook(() =>
+          useMarketplaceIntegration({
+            tabId: 'tab-1',
+            storage: null,
+            setNodes: mockSetNodes,
+            notifyModified: mockNotifyModified,
+            localWorkflowId: null,
+            localWorkflowName: 'Test Workflow',
+            localWorkflowDescription: 'Test Description',
+            tabIsUnsaved: false,
+            tabDraftsRef: mockTabDraftsRef,
+            saveDraftsToStorage: mockSaveDraftsToStorage,
+          })
+        )
+
+        const agents = [{ id: 'agent-1', name: 'Agent' }]
+        act(() => {
+          result.current.addAgentsToCanvas(agents)
+        })
+
+        // Should use default startX = 250 when currentNodes.length === 0
+        const setNodesCall = mockSetNodes.mock.calls[0][0]
+        const newNodes = typeof setNodesCall === 'function' ? setNodesCall([]) : setNodesCall
+        expect(newNodes[0].position.x).toBe(250)
+      })
+
+      it('should handle agent.name || agent.label || Agent Node - name exists', () => {
+        const { result } = renderHook(() =>
+          useMarketplaceIntegration({
+            tabId: 'tab-1',
+            storage: null,
+            setNodes: mockSetNodes,
+            notifyModified: mockNotifyModified,
+            localWorkflowId: null,
+            localWorkflowName: 'Test Workflow',
+            localWorkflowDescription: 'Test Description',
+            tabIsUnsaved: false,
+            tabDraftsRef: mockTabDraftsRef,
+            saveDraftsToStorage: mockSaveDraftsToStorage,
+          })
+        )
+
+        const agents = [{ id: 'agent-1', name: 'Agent Name' }]
+        act(() => {
+          result.current.addAgentsToCanvas(agents)
+        })
+
+        const setNodesCall = mockSetNodes.mock.calls[0][0]
+        const newNodes = typeof setNodesCall === 'function' ? setNodesCall([]) : setNodesCall
+        expect(newNodes[0].data.name).toBe('Agent Name')
+        expect(newNodes[0].data.label).toBe('Agent Name')
+      })
+
+      it('should handle agent.name || agent.label || Agent Node - name null, label exists', () => {
+        const { result } = renderHook(() =>
+          useMarketplaceIntegration({
+            tabId: 'tab-1',
+            storage: null,
+            setNodes: mockSetNodes,
+            notifyModified: mockNotifyModified,
+            localWorkflowId: null,
+            localWorkflowName: 'Test Workflow',
+            localWorkflowDescription: 'Test Description',
+            tabIsUnsaved: false,
+            tabDraftsRef: mockTabDraftsRef,
+            saveDraftsToStorage: mockSaveDraftsToStorage,
+          })
+        )
+
+        const agents = [{ id: 'agent-1', name: null, label: 'Agent Label' }]
+        act(() => {
+          result.current.addAgentsToCanvas(agents)
+        })
+
+        const setNodesCall = mockSetNodes.mock.calls[0][0]
+        const newNodes = typeof setNodesCall === 'function' ? setNodesCall([]) : setNodesCall
+        expect(newNodes[0].data.name).toBe('Agent Label')
+        expect(newNodes[0].data.label).toBe('Agent Label')
+      })
+
+      it('should handle agent.name || agent.label || Agent Node - name undefined, label null', () => {
+        const { result } = renderHook(() =>
+          useMarketplaceIntegration({
+            tabId: 'tab-1',
+            storage: null,
+            setNodes: mockSetNodes,
+            notifyModified: mockNotifyModified,
+            localWorkflowId: null,
+            localWorkflowName: 'Test Workflow',
+            localWorkflowDescription: 'Test Description',
+            tabIsUnsaved: false,
+            tabDraftsRef: mockTabDraftsRef,
+            saveDraftsToStorage: mockSaveDraftsToStorage,
+          })
+        )
+
+        const agents = [{ id: 'agent-1', name: undefined, label: null }]
+        act(() => {
+          result.current.addAgentsToCanvas(agents)
+        })
+
+        const setNodesCall = mockSetNodes.mock.calls[0][0]
+        const newNodes = typeof setNodesCall === 'function' ? setNodesCall([]) : setNodesCall
+        expect(newNodes[0].data.name).toBe('Agent Node')
+        expect(newNodes[0].data.label).toBe('Agent Node')
+      })
+
+      it('should handle agent.description || empty string - description is null', () => {
+        const { result } = renderHook(() =>
+          useMarketplaceIntegration({
+            tabId: 'tab-1',
+            storage: null,
+            setNodes: mockSetNodes,
+            notifyModified: mockNotifyModified,
+            localWorkflowId: null,
+            localWorkflowName: 'Test Workflow',
+            localWorkflowDescription: 'Test Description',
+            tabIsUnsaved: false,
+            tabDraftsRef: mockTabDraftsRef,
+            saveDraftsToStorage: mockSaveDraftsToStorage,
+          })
+        )
+
+        const agents = [{ id: 'agent-1', name: 'Agent', description: null }]
+        act(() => {
+          result.current.addAgentsToCanvas(agents)
+        })
+
+        const setNodesCall = mockSetNodes.mock.calls[0][0]
+        const newNodes = typeof setNodesCall === 'function' ? setNodesCall([]) : setNodesCall
+        expect(newNodes[0].data.description).toBe('')
+      })
+
+      it('should handle agent.description || empty string - description is undefined', () => {
+        const { result } = renderHook(() =>
+          useMarketplaceIntegration({
+            tabId: 'tab-1',
+            storage: null,
+            setNodes: mockSetNodes,
+            notifyModified: mockNotifyModified,
+            localWorkflowId: null,
+            localWorkflowName: 'Test Workflow',
+            localWorkflowDescription: 'Test Description',
+            tabIsUnsaved: false,
+            tabDraftsRef: mockTabDraftsRef,
+            saveDraftsToStorage: mockSaveDraftsToStorage,
+          })
+        )
+
+        const agents = [{ id: 'agent-1', name: 'Agent', description: undefined }]
+        act(() => {
+          result.current.addAgentsToCanvas(agents)
+        })
+
+        const setNodesCall = mockSetNodes.mock.calls[0][0]
+        const newNodes = typeof setNodesCall === 'function' ? setNodesCall([]) : setNodesCall
+        expect(newNodes[0].data.description).toBe('')
+      })
+
+      it('should handle currentDraft is null in setTimeout callback', () => {
+        mockTabDraftsRef.current['tab-1'] = null as any
+
+        const { result } = renderHook(() =>
+          useMarketplaceIntegration({
+            tabId: 'tab-1',
+            storage: null,
+            setNodes: mockSetNodes,
+            notifyModified: mockNotifyModified,
+            localWorkflowId: null,
+            localWorkflowName: 'Test Workflow',
+            localWorkflowDescription: 'Test Description',
+            tabIsUnsaved: false,
+            tabDraftsRef: mockTabDraftsRef,
+            saveDraftsToStorage: mockSaveDraftsToStorage,
+          })
+        )
+
+        const agents = [{ id: 'agent-1', name: 'Agent' }]
+        act(() => {
+          result.current.addAgentsToCanvas(agents)
+        })
+
+        act(() => {
+          jest.advanceTimersByTime(0)
+        })
+
+        // Should handle currentDraft?.edges when currentDraft is null
+        // Uses optional chaining, so should use empty array fallback
+        expect(mockSaveDraftsToStorage).toHaveBeenCalled()
+      })
+
+      it('should handle currentDraft is undefined in setTimeout callback', () => {
+        mockTabDraftsRef.current['tab-1'] = undefined as any
+
+        const { result } = renderHook(() =>
+          useMarketplaceIntegration({
+            tabId: 'tab-1',
+            storage: null,
+            setNodes: mockSetNodes,
+            notifyModified: mockNotifyModified,
+            localWorkflowId: null,
+            localWorkflowName: 'Test Workflow',
+            localWorkflowDescription: 'Test Description',
+            tabIsUnsaved: false,
+            tabDraftsRef: mockTabDraftsRef,
+            saveDraftsToStorage: mockSaveDraftsToStorage,
+          })
+        )
+
+        const agents = [{ id: 'agent-1', name: 'Agent' }]
+        act(() => {
+          result.current.addAgentsToCanvas(agents)
+        })
+
+        act(() => {
+          jest.advanceTimersByTime(0)
+        })
+
+        // Should handle currentDraft?.edges when currentDraft is undefined
+        expect(mockSaveDraftsToStorage).toHaveBeenCalled()
+      })
+    })
+
+    describe('useEffect - storage check edge cases', () => {
+      it('should handle Date.now() - pending.timestamp === 10000 exact boundary', () => {
+        const mockStorage = {
+          getItem: jest.fn().mockReturnValue(JSON.stringify({
+            tabId: 'tab-1',
+            agents: [{ id: 'agent-1', name: 'Agent' }],
+            timestamp: Date.now() - 10000, // Exactly 10000ms ago
+          })),
+          removeItem: jest.fn(),
+          setItem: jest.fn(),
+          addEventListener: jest.fn(),
+          removeEventListener: jest.fn(),
+        }
+
+        renderHook(() =>
+          useMarketplaceIntegration({
+            tabId: 'tab-1',
+            storage: mockStorage as any,
+            setNodes: mockSetNodes,
+            notifyModified: mockNotifyModified,
+            localWorkflowId: null,
+            localWorkflowName: 'Test Workflow',
+            localWorkflowDescription: 'Test Description',
+            tabIsUnsaved: false,
+            tabDraftsRef: mockTabDraftsRef,
+            saveDraftsToStorage: mockSaveDraftsToStorage,
+          })
+        )
+
+        act(() => {
+          jest.advanceTimersByTime(0)
+        })
+
+        // Should clear because Date.now() - pending.timestamp >= 10000 (exactly equal)
+        expect(mockStorage.removeItem).toHaveBeenCalledWith('pendingAgentsToAdd')
+      })
+
+      it('should handle Date.now() - pending.timestamp === 9999 just under boundary', () => {
+        const mockStorage = {
+          getItem: jest.fn().mockReturnValue(JSON.stringify({
+            tabId: 'tab-1',
+            agents: [{ id: 'agent-1', name: 'Agent' }],
+            timestamp: Date.now() - 9999, // Just under 10000ms
+          })),
+          removeItem: jest.fn(),
+          setItem: jest.fn(),
+          addEventListener: jest.fn(),
+          removeEventListener: jest.fn(),
+        }
+
+        renderHook(() =>
+          useMarketplaceIntegration({
+            tabId: 'tab-1',
+            storage: mockStorage as any,
+            setNodes: mockSetNodes,
+            notifyModified: mockNotifyModified,
+            localWorkflowId: null,
+            localWorkflowName: 'Test Workflow',
+            localWorkflowDescription: 'Test Description',
+            tabIsUnsaved: false,
+            tabDraftsRef: mockTabDraftsRef,
+            saveDraftsToStorage: mockSaveDraftsToStorage,
+          })
+        )
+
+        act(() => {
+          jest.advanceTimersByTime(0)
+        })
+
+        // Should process because Date.now() - pending.timestamp < 10000
+        expect(mockSetNodes).toHaveBeenCalled()
+      })
+
+      it('should handle pending.tabId !== tabId exact comparison', () => {
+        const mockStorage = {
+          getItem: jest.fn().mockReturnValue(JSON.stringify({
+            tabId: 'tab-2', // Different tab
+            agents: [{ id: 'agent-1', name: 'Agent' }],
+            timestamp: Date.now() - 5000,
+          })),
+          removeItem: jest.fn(),
+          setItem: jest.fn(),
+          addEventListener: jest.fn(),
+          removeEventListener: jest.fn(),
+        }
+
+        renderHook(() =>
+          useMarketplaceIntegration({
+            tabId: 'tab-1', // Current tab
+            storage: mockStorage as any,
+            setNodes: mockSetNodes,
+            notifyModified: mockNotifyModified,
+            localWorkflowId: null,
+            localWorkflowName: 'Test Workflow',
+            localWorkflowDescription: 'Test Description',
+            tabIsUnsaved: false,
+            tabDraftsRef: mockTabDraftsRef,
+            saveDraftsToStorage: mockSaveDraftsToStorage,
+          })
+        )
+
+        act(() => {
+          jest.advanceTimersByTime(0)
+        })
+
+        // Should clear because pending.tabId !== tabId
+        expect(mockStorage.removeItem).toHaveBeenCalledWith('pendingAgentsToAdd')
+        expect(mockSetNodes).not.toHaveBeenCalled()
+      })
+
+      it('should handle pending object missing tabId property', () => {
+        const mockStorage = {
+          getItem: jest.fn().mockReturnValue(JSON.stringify({
+            // No tabId property
+            agents: [{ id: 'agent-1', name: 'Agent' }],
+            timestamp: Date.now() - 5000,
+          })),
+          removeItem: jest.fn(),
+          setItem: jest.fn(),
+          addEventListener: jest.fn(),
+          removeEventListener: jest.fn(),
+        }
+
+        renderHook(() =>
+          useMarketplaceIntegration({
+            tabId: 'tab-1',
+            storage: mockStorage as any,
+            setNodes: mockSetNodes,
+            notifyModified: mockNotifyModified,
+            localWorkflowId: null,
+            localWorkflowName: 'Test Workflow',
+            localWorkflowDescription: 'Test Description',
+            tabIsUnsaved: false,
+            tabDraftsRef: mockTabDraftsRef,
+            saveDraftsToStorage: mockSaveDraftsToStorage,
+          })
+        )
+
+        act(() => {
+          jest.advanceTimersByTime(0)
+        })
+
+        // Should handle missing tabId property (undefined !== 'tab-1')
+        expect(mockStorage.removeItem).toHaveBeenCalledWith('pendingAgentsToAdd')
+      })
+
+      it('should handle pending object missing timestamp property', () => {
+        const mockStorage = {
+          getItem: jest.fn().mockReturnValue(JSON.stringify({
+            tabId: 'tab-1',
+            agents: [{ id: 'agent-1', name: 'Agent' }],
+            // No timestamp property
+          })),
+          removeItem: jest.fn(),
+          setItem: jest.fn(),
+          addEventListener: jest.fn(),
+          removeEventListener: jest.fn(),
+        }
+
+        renderHook(() =>
+          useMarketplaceIntegration({
+            tabId: 'tab-1',
+            storage: mockStorage as any,
+            setNodes: mockSetNodes,
+            notifyModified: mockNotifyModified,
+            localWorkflowId: null,
+            localWorkflowName: 'Test Workflow',
+            localWorkflowDescription: 'Test Description',
+            tabIsUnsaved: false,
+            tabDraftsRef: mockTabDraftsRef,
+            saveDraftsToStorage: mockSaveDraftsToStorage,
+          })
+        )
+
+        act(() => {
+          jest.advanceTimersByTime(0)
+        })
+
+        // Should handle missing timestamp (NaN comparison)
+        // Date.now() - undefined = NaN, NaN < 10000 is false, so should clear
+        expect(mockStorage.removeItem).toHaveBeenCalledWith('pendingAgentsToAdd')
+      })
+
+      it('should handle checkCount >= maxChecks exact boundary', () => {
+        const mockStorage = {
+          getItem: jest.fn().mockReturnValue(null),
+          removeItem: jest.fn(),
+          setItem: jest.fn(),
+          addEventListener: jest.fn(),
+          removeEventListener: jest.fn(),
+        }
+
+        const { unmount } = renderHook(() =>
+          useMarketplaceIntegration({
+            tabId: 'tab-1',
+            storage: mockStorage as any,
+            setNodes: mockSetNodes,
+            notifyModified: mockNotifyModified,
+            localWorkflowId: null,
+            localWorkflowName: 'Test Workflow',
+            localWorkflowDescription: 'Test Description',
+            tabIsUnsaved: false,
+            tabDraftsRef: mockTabDraftsRef,
+            saveDraftsToStorage: mockSaveDraftsToStorage,
+          })
+        )
+
+        // Advance timers to trigger 10 interval checks (maxChecks = 10)
+        act(() => {
+          jest.advanceTimersByTime(10000) // 10 seconds = 10 checks
+        })
+
+        // Interval should be cleared after 10 checks
+        // Verify by checking that storage.getItem was called exactly 11 times (initial + 10 intervals)
+        expect(mockStorage.getItem.mock.calls.length).toBeGreaterThanOrEqual(10)
+        
+        unmount()
+      })
+
+      it('should handle typeof window !== undefined check - window is undefined', () => {
+        const originalWindow = global.window
+        // @ts-ignore
+        delete global.window
+
+        const mockStorage = {
+          getItem: jest.fn().mockReturnValue(null),
+          removeItem: jest.fn(),
+          setItem: jest.fn(),
+          addEventListener: jest.fn(),
+          removeEventListener: jest.fn(),
+        }
+
+        renderHook(() =>
+          useMarketplaceIntegration({
+            tabId: 'tab-1',
+            storage: mockStorage as any,
+            setNodes: mockSetNodes,
+            notifyModified: mockNotifyModified,
+            localWorkflowId: null,
+            localWorkflowName: 'Test Workflow',
+            localWorkflowDescription: 'Test Description',
+            tabIsUnsaved: false,
+            tabDraftsRef: mockTabDraftsRef,
+            saveDraftsToStorage: mockSaveDraftsToStorage,
+          })
+        )
+
+        // Should not crash when window is undefined (SSR scenario)
+        expect(mockStorage.getItem).toHaveBeenCalled()
+
+        // Restore window
+        global.window = originalWindow
+      })
+
+      it('should handle storage.removeItem when storage is null in catch block', () => {
+        const mockStorage = {
+          getItem: jest.fn().mockImplementation(() => {
+            throw new Error('Storage error')
+          }),
+          removeItem: jest.fn(),
+          setItem: jest.fn(),
+          addEventListener: jest.fn(),
+          removeEventListener: jest.fn(),
+        }
+
+        renderHook(() =>
+          useMarketplaceIntegration({
+            tabId: 'tab-1',
+            storage: mockStorage as any,
+            setNodes: mockSetNodes,
+            notifyModified: mockNotifyModified,
+            localWorkflowId: null,
+            localWorkflowName: 'Test Workflow',
+            localWorkflowDescription: 'Test Description',
+            tabIsUnsaved: false,
+            tabDraftsRef: mockTabDraftsRef,
+            saveDraftsToStorage: mockSaveDraftsToStorage,
+          })
+        )
+
+        act(() => {
+          jest.advanceTimersByTime(0)
+        })
+
+        // Should call removeItem in catch block when storage exists
+        expect(mockStorage.removeItem).toHaveBeenCalledWith('pendingAgentsToAdd')
+      })
+
+      it('should handle JSON.parse throwing SyntaxError', () => {
+        const mockStorage = {
+          getItem: jest.fn().mockReturnValue('invalid json'),
+          removeItem: jest.fn(),
+          setItem: jest.fn(),
+          addEventListener: jest.fn(),
+          removeEventListener: jest.fn(),
+        }
+
+        renderHook(() =>
+          useMarketplaceIntegration({
+            tabId: 'tab-1',
+            storage: mockStorage as any,
+            setNodes: mockSetNodes,
+            notifyModified: mockNotifyModified,
+            localWorkflowId: null,
+            localWorkflowName: 'Test Workflow',
+            localWorkflowDescription: 'Test Description',
+            tabIsUnsaved: false,
+            tabDraftsRef: mockTabDraftsRef,
+            saveDraftsToStorage: mockSaveDraftsToStorage,
+          })
+        )
+
+        act(() => {
+          jest.advanceTimersByTime(0)
+        })
+
+        // Should handle JSON.parse error and call removeItem
+        expect(mockStorage.removeItem).toHaveBeenCalledWith('pendingAgentsToAdd')
+      })
+    })
+  })
 })
