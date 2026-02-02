@@ -8,6 +8,9 @@ import { api } from '../api/client'
 import { logger } from '../utils/logger'
 import type { WorkflowTabData, Execution } from '../contexts/WorkflowTabsContext'
 
+// Constants to prevent mutation issues
+const PENDING_EXECUTION_PREFIX = 'pending-'
+
 interface UseExecutionManagementOptions {
   tabs: WorkflowTabData[]
   activeTabId: string | null
@@ -39,11 +42,12 @@ export function useExecutionManagement({
       
       // If this is a real execution ID (not pending), try to replace the oldest pending execution
       // This ensures we replace them in creation order, even if API responses come back out of order
-      if (!executionId.startsWith('pending-')) {
+      if (!executionId.startsWith(PENDING_EXECUTION_PREFIX)) {
         // Find all pending executions
+        // Add safety checks to prevent crashes when mutations change exec structure
         const pendingExecutions = tab.executions
           .map((exec, idx) => ({ exec, idx }))
-          .filter(({ exec }) => exec.id.startsWith('pending-'))
+          .filter(({ exec }) => exec && exec.id && exec.id.startsWith && exec.id.startsWith(PENDING_EXECUTION_PREFIX))
         
         if (pendingExecutions.length > 0) {
           // Replace the oldest pending execution (last in array since new ones are prepended)
@@ -197,7 +201,7 @@ export function useExecutionManagement({
       // Use ref to get current tabs without causing effect re-run
       const currentTabs = tabsRef.current
       const runningExecutions = currentTabs.flatMap(tab => 
-        tab.executions.filter(e => e.status === 'running' && !e.id.startsWith('pending-'))
+        tab.executions.filter(e => e && e.id && e.status === 'running' && e.id.startsWith && !e.id.startsWith(PENDING_EXECUTION_PREFIX))
       )
       
       if (runningExecutions.length === 0) return
@@ -230,7 +234,8 @@ export function useExecutionManagement({
           } catch (error: any) {
             // If execution not found (404), it might be a temp execution that failed
             // Don't log errors for pending executions
-            if (!exec.id.startsWith('pending-')) {
+            // Add safety check to prevent crashes when mutations change exec structure
+            if (exec && exec.id && exec.id.startsWith && !exec.id.startsWith(PENDING_EXECUTION_PREFIX)) {
               logger.error(`[WorkflowTabs] Failed to fetch execution ${exec.id}:`, error)
             }
             return null

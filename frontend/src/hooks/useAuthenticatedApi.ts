@@ -72,14 +72,14 @@ export function useAuthenticatedApi(
 
       // Ensure client and URL are valid before making request
       if (!client || typeof client.get !== 'function') {
-        const error = new Error('HTTP client is not properly initialized')
+        const error = new Error(HTTP_CLIENT_ERROR_MSG)
         error.name = 'HttpClientError'
         throw error
       }
       
       const url = `${baseUrl}${endpoint}`
       if (!url || url.trim() === '') {
-        const error = new Error('URL cannot be empty')
+        const error = new Error(URL_EMPTY_ERROR_MSG)
         error.name = 'InvalidUrlError'
         throw error
       }
@@ -109,14 +109,14 @@ export function useAuthenticatedApi(
 
       // Ensure client and URL are valid before making request
       if (!client || typeof client.put !== 'function') {
-        const error = new Error('HTTP client is not properly initialized')
+        const error = new Error(HTTP_CLIENT_ERROR_MSG)
         error.name = 'HttpClientError'
         throw error
       }
       
       const url = `${baseUrl}${endpoint}`
       if (!url || url.trim() === '') {
-        const error = new Error('URL cannot be empty')
+        const error = new Error(URL_EMPTY_ERROR_MSG)
         error.name = 'InvalidUrlError'
         throw error
       }
@@ -141,14 +141,14 @@ export function useAuthenticatedApi(
 
       // Ensure client and URL are valid before making request
       if (!client || typeof client.delete !== 'function') {
-        const error = new Error('HTTP client is not properly initialized')
+        const error = new Error(HTTP_CLIENT_ERROR_MSG)
         error.name = 'HttpClientError'
         throw error
       }
       
       const url = `${baseUrl}${endpoint}`
       if (!url || url.trim() === '') {
-        const error = new Error('URL cannot be empty')
+        const error = new Error(URL_EMPTY_ERROR_MSG)
         error.name = 'InvalidUrlError'
         throw error
       }
