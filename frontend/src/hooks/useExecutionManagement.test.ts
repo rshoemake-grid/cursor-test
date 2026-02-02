@@ -1774,4 +1774,616 @@ describe('useExecutionManagement', () => {
       expect(errorLogs.length).toBe(0)
     })
   })
+
+  describe('additional coverage for no-coverage mutants', () => {
+    describe('handleExecutionStart - edge cases', () => {
+      it('should handle pendingExecutions.length === 0 when executionId does not start with pending-', () => {
+        const tabWithoutPending: WorkflowTabData = {
+          ...mockTab,
+          executions: [
+            { id: 'exec-existing', status: 'running', startedAt: new Date(), nodes: {}, logs: [] },
+          ],
+        }
+
+        const { result } = renderHook(() =>
+          useExecutionManagement({
+            tabs: [tabWithoutPending],
+            activeTabId: 'tab-1',
+            setTabs: mockSetTabs,
+            tabsRef: { current: [tabWithoutPending] },
+            onExecutionStart: mockOnExecutionStart,
+          })
+        )
+
+        act(() => {
+          result.current.handleExecutionStart('exec-new')
+        })
+
+        // Should create new execution since no pending executions exist
+        expect(mockSetTabs).toHaveBeenCalled()
+        const setTabsCall = mockSetTabs.mock.calls[0][0]
+        const updatedTabs = typeof setTabsCall === 'function' ? setTabsCall([tabWithoutPending]) : setTabsCall
+        const updatedTab = updatedTabs.find((t: WorkflowTabData) => t.id === 'tab-1')
+        expect(updatedTab.executions.find((e: Execution) => e.id === 'exec-new')).toBeDefined()
+      })
+
+      it('should handle executionId.startsWith exact comparison with pending-', () => {
+        const { result } = renderHook(() =>
+          useExecutionManagement({
+            tabs: [mockTab],
+            activeTabId: 'tab-1',
+            setTabs: mockSetTabs,
+            tabsRef: mockTabsRef,
+            onExecutionStart: mockOnExecutionStart,
+          })
+        )
+
+        // Test exact 'pending-' prefix
+        act(() => {
+          result.current.handleExecutionStart('pending-exact')
+        })
+
+        // Should not try to replace pending execution (it IS a pending execution)
+        expect(mockSetTabs).toHaveBeenCalled()
+        const setTabsCall = mockSetTabs.mock.calls[0][0]
+        const updatedTabs = typeof setTabsCall === 'function' ? setTabsCall([mockTab]) : setTabsCall
+        const updatedTab = updatedTabs.find((t: WorkflowTabData) => t.id === 'tab-1')
+        expect(updatedTab.executions[0].id).toBe('pending-exact')
+      })
+
+      it('should handle onExecutionStart is undefined', () => {
+        const { result } = renderHook(() =>
+          useExecutionManagement({
+            tabs: [mockTab],
+            activeTabId: 'tab-1',
+            setTabs: mockSetTabs,
+            tabsRef: mockTabsRef,
+            onExecutionStart: undefined, // No callback
+          })
+        )
+
+        act(() => {
+          result.current.handleExecutionStart('exec-1')
+        })
+
+        // Should not crash when onExecutionStart is undefined
+        expect(mockSetTabs).toHaveBeenCalled()
+      })
+
+      it('should handle tab.id === activeTabId exact comparison', () => {
+        const tab1: WorkflowTabData = { ...mockTab, id: 'tab-1' }
+        const tab2: WorkflowTabData = { ...mockTab, id: 'tab-2', workflowId: 'workflow-2' }
+
+        const { result } = renderHook(() =>
+          useExecutionManagement({
+            tabs: [tab1, tab2],
+            activeTabId: 'tab-1', // Exact match
+            setTabs: mockSetTabs,
+            tabsRef: { current: [tab1, tab2] },
+            onExecutionStart: mockOnExecutionStart,
+          })
+        )
+
+        act(() => {
+          result.current.handleExecutionStart('exec-1')
+        })
+
+        // Should only update tab-1, not tab-2
+        expect(mockSetTabs).toHaveBeenCalled()
+        const setTabsCall = mockSetTabs.mock.calls[0][0]
+        const updatedTabs = typeof setTabsCall === 'function' ? setTabsCall([tab1, tab2]) : setTabsCall
+        const updatedTab1 = updatedTabs.find((t: WorkflowTabData) => t.id === 'tab-1')
+        const updatedTab2 = updatedTabs.find((t: WorkflowTabData) => t.id === 'tab-2')
+        expect(updatedTab1.executions.length).toBe(1)
+        expect(updatedTab2.executions.length).toBe(0)
+      })
+    })
+
+    describe('handleRemoveExecution - boundary conditions', () => {
+      it('should handle updatedExecutions.length === 0 exact boundary', () => {
+        const execution: Execution = {
+          id: 'exec-1',
+          status: 'running',
+          startedAt: new Date(),
+          nodes: {},
+          logs: [],
+        }
+        const tabWithExecution: WorkflowTabData = {
+          ...mockTab,
+          executions: [execution],
+          activeExecutionId: 'exec-1',
+        }
+
+        const { result } = renderHook(() =>
+          useExecutionManagement({
+            tabs: [tabWithExecution],
+            activeTabId: 'tab-1',
+            setTabs: mockSetTabs,
+            tabsRef: { current: [tabWithExecution] },
+          })
+        )
+
+        act(() => {
+          result.current.handleRemoveExecution('workflow-1', 'exec-1')
+        })
+
+        // Should set activeExecutionId to null when updatedExecutions.length === 0
+        expect(mockSetTabs).toHaveBeenCalled()
+        const setTabsCall = mockSetTabs.mock.calls[0][0]
+        const updatedTabs = typeof setTabsCall === 'function' ? setTabsCall([tabWithExecution]) : setTabsCall
+        const updatedTab = updatedTabs.find((t: WorkflowTabData) => t.id === 'tab-1')
+        expect(updatedTab.activeExecutionId).toBeNull()
+        expect(updatedTab.executions.length).toBe(0)
+      })
+
+      it('should handle updatedExecutions.length > 0 and set first execution as active', () => {
+        const executions: Execution[] = [
+          { id: 'exec-1', status: 'running', startedAt: new Date(), nodes: {}, logs: [] },
+          { id: 'exec-2', status: 'running', startedAt: new Date(), nodes: {}, logs: [] },
+        ]
+        const tabWithExecutions: WorkflowTabData = {
+          ...mockTab,
+          executions,
+          activeExecutionId: 'exec-1',
+        }
+
+        const { result } = renderHook(() =>
+          useExecutionManagement({
+            tabs: [tabWithExecutions],
+            activeTabId: 'tab-1',
+            setTabs: mockSetTabs,
+            tabsRef: { current: [tabWithExecutions] },
+          })
+        )
+
+        act(() => {
+          result.current.handleRemoveExecution('workflow-1', 'exec-1')
+        })
+
+        // Should set activeExecutionId to exec-2 (first remaining execution)
+        expect(mockSetTabs).toHaveBeenCalled()
+        const setTabsCall = mockSetTabs.mock.calls[0][0]
+        const updatedTabs = typeof setTabsCall === 'function' ? setTabsCall([tabWithExecutions]) : setTabsCall
+        const updatedTab = updatedTabs.find((t: WorkflowTabData) => t.id === 'tab-1')
+        expect(updatedTab.activeExecutionId).toBe('exec-2')
+        expect(updatedTab.executions.length).toBe(1)
+      })
+
+      it('should handle tab.activeExecutionId === executionId exact comparison', () => {
+        const execution: Execution = {
+          id: 'exec-1',
+          status: 'running',
+          startedAt: new Date(),
+          nodes: {},
+          logs: [],
+        }
+        const tabWithExecution: WorkflowTabData = {
+          ...mockTab,
+          executions: [execution],
+          activeExecutionId: 'exec-1', // Exact match
+        }
+
+        const { result } = renderHook(() =>
+          useExecutionManagement({
+            tabs: [tabWithExecution],
+            activeTabId: 'tab-1',
+            setTabs: mockSetTabs,
+            tabsRef: { current: [tabWithExecution] },
+          })
+        )
+
+        act(() => {
+          result.current.handleRemoveExecution('workflow-1', 'exec-1')
+        })
+
+        // Should update activeExecutionId since it matches
+        expect(mockSetTabs).toHaveBeenCalled()
+        const setTabsCall = mockSetTabs.mock.calls[0][0]
+        const updatedTabs = typeof setTabsCall === 'function' ? setTabsCall([tabWithExecution]) : setTabsCall
+        const updatedTab = updatedTabs.find((t: WorkflowTabData) => t.id === 'tab-1')
+        expect(updatedTab.activeExecutionId).toBeNull()
+      })
+    })
+
+    describe('handleExecutionStatusUpdate - status combinations', () => {
+      it('should handle status === completed exact comparison', () => {
+        const execution: Execution = {
+          id: 'exec-1',
+          status: 'running',
+          startedAt: new Date(),
+          nodes: {},
+          logs: [],
+        }
+        const tabWithExecution: WorkflowTabData = {
+          ...mockTab,
+          executions: [execution],
+        }
+
+        const { result } = renderHook(() =>
+          useExecutionManagement({
+            tabs: [tabWithExecution],
+            activeTabId: 'tab-1',
+            setTabs: mockSetTabs,
+            tabsRef: { current: [tabWithExecution] },
+          })
+        )
+
+        act(() => {
+          result.current.handleExecutionStatusUpdate('workflow-1', 'exec-1', 'completed')
+        })
+
+        // Should set completedAt when status === 'completed'
+        expect(mockSetTabs).toHaveBeenCalled()
+        const setTabsCall = mockSetTabs.mock.calls[0][0]
+        const updatedTabs = typeof setTabsCall === 'function' ? setTabsCall([tabWithExecution]) : setTabsCall
+        const updatedTab = updatedTabs.find((t: WorkflowTabData) => t.id === 'tab-1')
+        const updatedExec = updatedTab.executions.find((e: Execution) => e.id === 'exec-1')
+        expect(updatedExec.status).toBe('completed')
+        expect(updatedExec.completedAt).toBeDefined()
+      })
+
+      it('should handle status === failed exact comparison', () => {
+        const execution: Execution = {
+          id: 'exec-1',
+          status: 'running',
+          startedAt: new Date(),
+          nodes: {},
+          logs: [],
+        }
+        const tabWithExecution: WorkflowTabData = {
+          ...mockTab,
+          executions: [execution],
+        }
+
+        const { result } = renderHook(() =>
+          useExecutionManagement({
+            tabs: [tabWithExecution],
+            activeTabId: 'tab-1',
+            setTabs: mockSetTabs,
+            tabsRef: { current: [tabWithExecution] },
+          })
+        )
+
+        act(() => {
+          result.current.handleExecutionStatusUpdate('workflow-1', 'exec-1', 'failed')
+        })
+
+        // Should set completedAt when status === 'failed'
+        expect(mockSetTabs).toHaveBeenCalled()
+        const setTabsCall = mockSetTabs.mock.calls[0][0]
+        const updatedTabs = typeof setTabsCall === 'function' ? setTabsCall([tabWithExecution]) : setTabsCall
+        const updatedTab = updatedTabs.find((t: WorkflowTabData) => t.id === 'tab-1')
+        const updatedExec = updatedTab.executions.find((e: Execution) => e.id === 'exec-1')
+        expect(updatedExec.status).toBe('failed')
+        expect(updatedExec.completedAt).toBeDefined()
+      })
+
+      it('should handle status === running and preserve completedAt', () => {
+        const execution: Execution = {
+          id: 'exec-1',
+          status: 'completed',
+          startedAt: new Date(),
+          completedAt: new Date('2024-01-01'),
+          nodes: {},
+          logs: [],
+        }
+        const tabWithExecution: WorkflowTabData = {
+          ...mockTab,
+          executions: [execution],
+        }
+
+        const { result } = renderHook(() =>
+          useExecutionManagement({
+            tabs: [tabWithExecution],
+            activeTabId: 'tab-1',
+            setTabs: mockSetTabs,
+            tabsRef: { current: [tabWithExecution] },
+          })
+        )
+
+        act(() => {
+          result.current.handleExecutionStatusUpdate('workflow-1', 'exec-1', 'running')
+        })
+
+        // Should preserve completedAt when status is 'running'
+        expect(mockSetTabs).toHaveBeenCalled()
+        const setTabsCall = mockSetTabs.mock.calls[0][0]
+        const updatedTabs = typeof setTabsCall === 'function' ? setTabsCall([tabWithExecution]) : setTabsCall
+        const updatedTab = updatedTabs.find((t: WorkflowTabData) => t.id === 'tab-1')
+        const updatedExec = updatedTab.executions.find((e: Execution) => e.id === 'exec-1')
+        expect(updatedExec.status).toBe('running')
+        expect(updatedExec.completedAt).toEqual(new Date('2024-01-01'))
+      })
+    })
+
+    describe('useEffect polling - edge cases', () => {
+      it('should handle execution.status === paused exact comparison', async () => {
+        const execution: Execution = {
+          id: 'exec-1',
+          status: 'running',
+          startedAt: new Date(),
+          nodes: {},
+          logs: [],
+        }
+        const tabWithExecution: WorkflowTabData = {
+          ...mockTab,
+          executions: [execution],
+        }
+        mockTabsRef.current = [tabWithExecution]
+        mockApi.getExecution.mockResolvedValue({
+          id: 'exec-1',
+          status: 'paused' as any, // Paused status
+          started_at: new Date().toISOString(),
+        } as any)
+
+        renderHook(() =>
+          useExecutionManagement({
+            tabs: [tabWithExecution],
+            activeTabId: 'tab-1',
+            setTabs: mockSetTabs,
+            tabsRef: mockTabsRef,
+          })
+        )
+
+        await act(async () => {
+          jest.advanceTimersByTime(2000)
+          await Promise.resolve()
+        })
+
+        // Should map 'paused' to 'running'
+        expect(mockSetTabs).toHaveBeenCalled()
+        const setTabsCall = mockSetTabs.mock.calls[0][0]
+        const updatedTabs = typeof setTabsCall === 'function' ? setTabsCall([tabWithExecution]) : setTabsCall
+        const updatedTab = updatedTabs.find((t: WorkflowTabData) => t.id === 'tab-1')
+        const updatedExec = updatedTab.executions.find((e: Execution) => e.id === 'exec-1')
+        expect(updatedExec.status).toBe('running')
+      })
+
+      it('should handle execution.completed_at is null', async () => {
+        const execution: Execution = {
+          id: 'exec-1',
+          status: 'running',
+          startedAt: new Date(),
+          nodes: {},
+          logs: [],
+        }
+        const tabWithExecution: WorkflowTabData = {
+          ...mockTab,
+          executions: [execution],
+        }
+        mockTabsRef.current = [tabWithExecution]
+        mockApi.getExecution.mockResolvedValue({
+          id: 'exec-1',
+          status: 'completed',
+          started_at: new Date().toISOString(),
+          completed_at: null, // Null completed_at
+        } as any)
+
+        renderHook(() =>
+          useExecutionManagement({
+            tabs: [tabWithExecution],
+            activeTabId: 'tab-1',
+            setTabs: mockSetTabs,
+            tabsRef: mockTabsRef,
+          })
+        )
+
+        await act(async () => {
+          jest.advanceTimersByTime(2000)
+          await Promise.resolve()
+        })
+
+        // Should use undefined when completed_at is null
+        expect(mockSetTabs).toHaveBeenCalled()
+        const setTabsCall = mockSetTabs.mock.calls[0][0]
+        const updatedTabs = typeof setTabsCall === 'function' ? setTabsCall([tabWithExecution]) : setTabsCall
+        const updatedTab = updatedTabs.find((t: WorkflowTabData) => t.id === 'tab-1')
+        const updatedExec = updatedTab.executions.find((e: Execution) => e.id === 'exec-1')
+        expect(updatedExec.completedAt).toBeUndefined()
+      })
+
+      it('should handle execution.node_states is null', async () => {
+        const execution: Execution = {
+          id: 'exec-1',
+          status: 'running',
+          startedAt: new Date(),
+          nodes: {},
+          logs: [],
+        }
+        const tabWithExecution: WorkflowTabData = {
+          ...mockTab,
+          executions: [execution],
+        }
+        mockTabsRef.current = [tabWithExecution]
+        mockApi.getExecution.mockResolvedValue({
+          id: 'exec-1',
+          status: 'running',
+          started_at: new Date().toISOString(),
+          node_states: null, // Null node_states
+        } as any)
+
+        renderHook(() =>
+          useExecutionManagement({
+            tabs: [tabWithExecution],
+            activeTabId: 'tab-1',
+            setTabs: mockSetTabs,
+            tabsRef: mockTabsRef,
+          })
+        )
+
+        await act(async () => {
+          jest.advanceTimersByTime(2000)
+          await Promise.resolve()
+        })
+
+        // Should use empty object fallback when node_states is null
+        expect(mockSetTabs).toHaveBeenCalled()
+        const setTabsCall = mockSetTabs.mock.calls[0][0]
+        const updatedTabs = typeof setTabsCall === 'function' ? setTabsCall([tabWithExecution]) : setTabsCall
+        const updatedTab = updatedTabs.find((t: WorkflowTabData) => t.id === 'tab-1')
+        const updatedExec = updatedTab.executions.find((e: Execution) => e.id === 'exec-1')
+        expect(updatedExec.nodes).toEqual({})
+      })
+
+      it('should handle execution.logs is null', async () => {
+        const execution: Execution = {
+          id: 'exec-1',
+          status: 'running',
+          startedAt: new Date(),
+          nodes: {},
+          logs: [],
+        }
+        const tabWithExecution: WorkflowTabData = {
+          ...mockTab,
+          executions: [execution],
+        }
+        mockTabsRef.current = [tabWithExecution]
+        mockApi.getExecution.mockResolvedValue({
+          id: 'exec-1',
+          status: 'running',
+          started_at: new Date().toISOString(),
+          logs: null, // Null logs
+        } as any)
+
+        renderHook(() =>
+          useExecutionManagement({
+            tabs: [tabWithExecution],
+            activeTabId: 'tab-1',
+            setTabs: mockSetTabs,
+            tabsRef: mockTabsRef,
+          })
+        )
+
+        await act(async () => {
+          jest.advanceTimersByTime(2000)
+          await Promise.resolve()
+        })
+
+        // Should use empty array fallback when logs is null
+        expect(mockSetTabs).toHaveBeenCalled()
+        const setTabsCall = mockSetTabs.mock.calls[0][0]
+        const updatedTabs = typeof setTabsCall === 'function' ? setTabsCall([tabWithExecution]) : setTabsCall
+        const updatedTab = updatedTabs.find((t: WorkflowTabData) => t.id === 'tab-1')
+        const updatedExec = updatedTab.executions.find((e: Execution) => e.id === 'exec-1')
+        expect(updatedExec.logs).toEqual([])
+      })
+
+      it('should handle update is null in updates.find', async () => {
+        const execution: Execution = {
+          id: 'exec-1',
+          status: 'running',
+          startedAt: new Date(),
+          nodes: {},
+          logs: [],
+        }
+        const tabWithExecution: WorkflowTabData = {
+          ...mockTab,
+          executions: [execution],
+        }
+        mockTabsRef.current = [tabWithExecution]
+        mockApi.getExecution.mockRejectedValue(new Error('API error'))
+
+        renderHook(() =>
+          useExecutionManagement({
+            tabs: [tabWithExecution],
+            activeTabId: 'tab-1',
+            setTabs: mockSetTabs,
+            tabsRef: mockTabsRef,
+          })
+        )
+
+        await act(async () => {
+          jest.advanceTimersByTime(2000)
+          await Promise.resolve()
+        })
+
+        // Should use exec fallback when update is null
+        expect(mockSetTabs).toHaveBeenCalled()
+        const setTabsCall = mockSetTabs.mock.calls[0][0]
+        const updatedTabs = typeof setTabsCall === 'function' ? setTabsCall([tabWithExecution]) : setTabsCall
+        const updatedTab = updatedTabs.find((t: WorkflowTabData) => t.id === 'tab-1')
+        // Execution should remain unchanged when update is null
+        expect(updatedTab.executions[0].id).toBe('exec-1')
+      })
+
+      it('should handle exec.status !== newStatus exact comparison', async () => {
+        const execution: Execution = {
+          id: 'exec-1',
+          status: 'running',
+          startedAt: new Date(),
+          nodes: {},
+          logs: [],
+        }
+        const tabWithExecution: WorkflowTabData = {
+          ...mockTab,
+          executions: [execution],
+        }
+        mockTabsRef.current = [tabWithExecution]
+        mockApi.getExecution.mockResolvedValue({
+          id: 'exec-1',
+          status: 'completed', // Different from 'running'
+          started_at: new Date().toISOString(),
+        } as any)
+
+        renderHook(() =>
+          useExecutionManagement({
+            tabs: [tabWithExecution],
+            activeTabId: 'tab-1',
+            setTabs: mockSetTabs,
+            tabsRef: mockTabsRef,
+          })
+        )
+
+        await act(async () => {
+          jest.advanceTimersByTime(2000)
+          await Promise.resolve()
+        })
+
+        // Should log status change when exec.status !== newStatus
+        expect(mockLoggerDebug).toHaveBeenCalledWith(
+          expect.stringContaining('status changed: running → completed')
+        )
+      })
+
+      it('should handle exec.status === newStatus (no change)', async () => {
+        const execution: Execution = {
+          id: 'exec-1',
+          status: 'running',
+          startedAt: new Date(),
+          nodes: {},
+          logs: [],
+        }
+        const tabWithExecution: WorkflowTabData = {
+          ...mockTab,
+          executions: [execution],
+        }
+        mockTabsRef.current = [tabWithExecution]
+        mockApi.getExecution.mockResolvedValue({
+          id: 'exec-1',
+          status: 'running', // Same as current
+          started_at: new Date().toISOString(),
+        } as any)
+
+        renderHook(() =>
+          useExecutionManagement({
+            tabs: [tabWithExecution],
+            activeTabId: 'tab-1',
+            setTabs: mockSetTabs,
+            tabsRef: mockTabsRef,
+          })
+        )
+
+        await act(async () => {
+          jest.advanceTimersByTime(2000)
+          await Promise.resolve()
+        })
+
+        // Should not log status change when exec.status === newStatus
+        const statusChangeLogs = mockLoggerDebug.mock.calls.filter((call: any[]) =>
+          call[0] && typeof call[0] === 'string' && call[0].includes('status changed')
+        )
+        expect(statusChangeLogs.length).toBe(0)
+      })
+    })
+  })
 })
