@@ -3330,6 +3330,288 @@ describe('useMarketplaceIntegration', () => {
         
         unmount()
       })
+
+      it('should verify exact number literal 200 in Math.max calculation', () => {
+        const existingNodes: Node[] = [
+          { id: 'node-1', type: 'agent', position: { x: 100, y: 50 }, data: {} },
+        ]
+
+        mockSetNodes.mockImplementation((updater: any) => {
+          if (typeof updater === 'function') {
+            return updater(existingNodes)
+          }
+          return updater
+        })
+
+        const { result } = renderHook(() =>
+          useMarketplaceIntegration({
+            tabId: 'tab-1',
+            storage: null,
+            setNodes: mockSetNodes,
+            notifyModified: mockNotifyModified,
+            localWorkflowId: null,
+            localWorkflowName: 'Test Workflow',
+            localWorkflowDescription: 'Test Description',
+            tabIsUnsaved: false,
+            tabDraftsRef: mockTabDraftsRef,
+            saveDraftsToStorage: mockSaveDraftsToStorage,
+          })
+        )
+
+        const agents = [{ id: 'agent-1', name: 'Agent 1' }]
+
+        act(() => {
+          result.current.addAgentsToCanvas(agents)
+        })
+
+        const setNodesCall = mockSetNodes.mock.calls[0][0]
+        const newNodes = typeof setNodesCall === 'function' ? setNodesCall(existingNodes) : setNodesCall
+        
+        // Verify exact calculation: Math.max(100) + 200 = 300 (not 299, not 301)
+        expect(newNodes[1].position.x).toBe(300)
+        expect(newNodes[1].position.x).not.toBe(299)
+        expect(newNodes[1].position.x).not.toBe(301)
+      })
+
+      it('should verify exact number literal 250 for default startX', () => {
+        mockSetNodes.mockImplementation((updater: any) => {
+          if (typeof updater === 'function') {
+            return updater([])
+          }
+          return updater
+        })
+
+        const { result } = renderHook(() =>
+          useMarketplaceIntegration({
+            tabId: 'tab-1',
+            storage: null,
+            setNodes: mockSetNodes,
+            notifyModified: mockNotifyModified,
+            localWorkflowId: null,
+            localWorkflowName: 'Test Workflow',
+            localWorkflowDescription: 'Test Description',
+            tabIsUnsaved: false,
+            tabDraftsRef: mockTabDraftsRef,
+            saveDraftsToStorage: mockSaveDraftsToStorage,
+          })
+        )
+
+        const agents = [{ id: 'agent-1', name: 'Agent 1' }]
+
+        act(() => {
+          result.current.addAgentsToCanvas(agents)
+        })
+
+        const setNodesCall = mockSetNodes.mock.calls[0][0]
+        const newNodes = typeof setNodesCall === 'function' ? setNodesCall([]) : setNodesCall
+        
+        // Verify exact default startX is 250 (not 249, not 251, not 200)
+        expect(newNodes[0].position.x).toBe(250)
+        expect(newNodes[0].position.x).not.toBe(249)
+        expect(newNodes[0].position.x).not.toBe(251)
+        expect(newNodes[0].position.x).not.toBe(200)
+      })
+
+      it('should verify exact number literal 250 for currentY initial value', () => {
+        mockSetNodes.mockImplementation((updater: any) => {
+          if (typeof updater === 'function') {
+            return updater([])
+          }
+          return updater
+        })
+
+        const { result } = renderHook(() =>
+          useMarketplaceIntegration({
+            tabId: 'tab-1',
+            storage: null,
+            setNodes: mockSetNodes,
+            notifyModified: mockNotifyModified,
+            localWorkflowId: null,
+            localWorkflowName: 'Test Workflow',
+            localWorkflowDescription: 'Test Description',
+            tabIsUnsaved: false,
+            tabDraftsRef: mockTabDraftsRef,
+            saveDraftsToStorage: mockSaveDraftsToStorage,
+          })
+        )
+
+        const agents = [{ id: 'agent-1', name: 'Agent 1' }]
+
+        act(() => {
+          result.current.addAgentsToCanvas(agents)
+        })
+
+        const setNodesCall = mockSetNodes.mock.calls[0][0]
+        const newNodes = typeof setNodesCall === 'function' ? setNodesCall([]) : setNodesCall
+        
+        // Verify exact initial Y is 250 (250 + (0 * 150))
+        expect(newNodes[0].position.y).toBe(250)
+        expect(newNodes[0].position.y).not.toBe(249)
+        expect(newNodes[0].position.y).not.toBe(251)
+      })
+
+      it('should verify exact number literal 150 in Y positioning calculation', () => {
+        mockSetNodes.mockImplementation((updater: any) => {
+          if (typeof updater === 'function') {
+            return updater([])
+          }
+          return updater
+        })
+
+        const { result } = renderHook(() =>
+          useMarketplaceIntegration({
+            tabId: 'tab-1',
+            storage: null,
+            setNodes: mockSetNodes,
+            notifyModified: mockNotifyModified,
+            localWorkflowId: null,
+            localWorkflowName: 'Test Workflow',
+            localWorkflowDescription: 'Test Description',
+            tabIsUnsaved: false,
+            tabDraftsRef: mockTabDraftsRef,
+            saveDraftsToStorage: mockSaveDraftsToStorage,
+          })
+        )
+
+        const agents = [
+          { id: 'agent-1', name: 'Agent 1' },
+          { id: 'agent-2', name: 'Agent 2' },
+          { id: 'agent-3', name: 'Agent 3' },
+        ]
+
+        act(() => {
+          result.current.addAgentsToCanvas(agents)
+        })
+
+        const setNodesCall = mockSetNodes.mock.calls[0][0]
+        const newNodes = typeof setNodesCall === 'function' ? setNodesCall([]) : setNodesCall
+        
+        // Verify exact calculation: 250 + (index * 150)
+        expect(newNodes[0].position.y).toBe(250) // 250 + (0 * 150)
+        expect(newNodes[1].position.y).toBe(400) // 250 + (1 * 150)
+        expect(newNodes[2].position.y).toBe(550) // 250 + (2 * 150)
+        // Verify it's not 149 or 151 spacing
+        expect(newNodes[1].position.y - newNodes[0].position.y).toBe(150)
+        expect(newNodes[1].position.y - newNodes[0].position.y).not.toBe(149)
+        expect(newNodes[1].position.y - newNodes[0].position.y).not.toBe(151)
+      })
+
+      it('should verify exact string literal "agent-" prefix in node ID', () => {
+        mockSetNodes.mockImplementation((updater: any) => {
+          if (typeof updater === 'function') {
+            return updater([])
+          }
+          return updater
+        })
+
+        const { result } = renderHook(() =>
+          useMarketplaceIntegration({
+            tabId: 'tab-1',
+            storage: null,
+            setNodes: mockSetNodes,
+            notifyModified: mockNotifyModified,
+            localWorkflowId: null,
+            localWorkflowName: 'Test Workflow',
+            localWorkflowDescription: 'Test Description',
+            tabIsUnsaved: false,
+            tabDraftsRef: mockTabDraftsRef,
+            saveDraftsToStorage: mockSaveDraftsToStorage,
+          })
+        )
+
+        const agents = [{ id: 'agent-1', name: 'Agent' }]
+
+        act(() => {
+          result.current.addAgentsToCanvas(agents)
+        })
+
+        const setNodesCall = mockSetNodes.mock.calls[0][0]
+        const newNodes = typeof setNodesCall === 'function' ? setNodesCall([]) : setNodesCall
+        
+        // Verify node ID starts with exact "agent-" prefix
+        expect(newNodes[0].id).toMatch(/^agent-/)
+        expect(newNodes[0].id).not.toMatch(/^Agent-/)
+        expect(newNodes[0].id).not.toMatch(/^agent[^-]/)
+      })
+
+      it('should verify exact string literal "Agent Node" fallback value', () => {
+        mockSetNodes.mockImplementation((updater: any) => {
+          if (typeof updater === 'function') {
+            return updater([])
+          }
+          return updater
+        })
+
+        const { result } = renderHook(() =>
+          useMarketplaceIntegration({
+            tabId: 'tab-1',
+            storage: null,
+            setNodes: mockSetNodes,
+            notifyModified: mockNotifyModified,
+            localWorkflowId: null,
+            localWorkflowName: 'Test Workflow',
+            localWorkflowDescription: 'Test Description',
+            tabIsUnsaved: false,
+            tabDraftsRef: mockTabDraftsRef,
+            saveDraftsToStorage: mockSaveDraftsToStorage,
+          })
+        )
+
+        // Test with null name and label
+        act(() => {
+          result.current.addAgentsToCanvas([{ id: 'agent-1', name: null, label: null }])
+        })
+
+        const setNodesCall = mockSetNodes.mock.calls[0][0]
+        const newNodes = typeof setNodesCall === 'function' ? setNodesCall([]) : setNodesCall
+        
+        // Verify exact string literal "Agent Node" (not "agent node", not "AgentNode", not "Agent")
+        expect(newNodes[0].data.label).toBe('Agent Node')
+        expect(newNodes[0].data.label).not.toBe('agent node')
+        expect(newNodes[0].data.label).not.toBe('AgentNode')
+        expect(newNodes[0].data.label).not.toBe('Agent')
+        expect(newNodes[0].data.name).toBe('Agent Node')
+      })
+
+      it('should verify exact setTimeout delay of 0 for draft update', () => {
+        mockSetNodes.mockImplementation((updater: any) => {
+          if (typeof updater === 'function') {
+            return updater([])
+          }
+          return updater
+        })
+
+        const setTimeoutSpy = jest.spyOn(global, 'setTimeout')
+
+        const { result } = renderHook(() =>
+          useMarketplaceIntegration({
+            tabId: 'tab-1',
+            storage: null,
+            setNodes: mockSetNodes,
+            notifyModified: mockNotifyModified,
+            localWorkflowId: null,
+            localWorkflowName: 'Test Workflow',
+            localWorkflowDescription: 'Test Description',
+            tabIsUnsaved: false,
+            tabDraftsRef: mockTabDraftsRef,
+            saveDraftsToStorage: mockSaveDraftsToStorage,
+          })
+        )
+
+        act(() => {
+          result.current.addAgentsToCanvas([{ id: 'agent-1', name: 'Agent' }])
+        })
+
+        // Verify setTimeout was called with exact delay of 0 for draft update
+        const setTimeoutCalls = setTimeoutSpy.mock.calls
+        const zeroDelayCalls = setTimeoutCalls.filter((call) => call[1] === 0)
+        expect(zeroDelayCalls.length).toBeGreaterThan(0)
+        // Verify at least one call has delay 0 (not 1, not -1)
+        expect(zeroDelayCalls.some(call => call[1] === 0)).toBe(true)
+        expect(setTimeoutCalls.some(call => call[1] === 1 && call[0].toString().includes('saveDraftsToStorage'))).toBe(false)
+
+        setTimeoutSpy.mockRestore()
+      })
     })
   })
 })

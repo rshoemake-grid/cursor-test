@@ -5481,6 +5481,206 @@ describe('useWorkflowExecution', () => {
           })
         )
       })
+
+      it('should verify exact number literal 6000 in showSuccess call', async () => {
+        mockWorkflowIdRef.current = 'workflow-id'
+        mockApi.executeWorkflow.mockResolvedValue({
+          execution_id: 'exec-123',
+        })
+
+        const { result } = renderHook(() =>
+          useWorkflowExecution({
+            isAuthenticated: true,
+            localWorkflowId: 'workflow-id',
+            workflowIdRef: mockWorkflowIdRef,
+            saveWorkflow: mockSaveWorkflow,
+            onExecutionStart: mockOnExecutionStart,
+          })
+        )
+
+        await act(async () => {
+          result.current.setExecutionInputs('{}')
+          await result.current.handleConfirmExecute()
+        })
+
+        await act(async () => {
+          jest.runAllTimers()
+          await Promise.resolve()
+          await Promise.resolve()
+          await waitForWithTimeout(() => {
+            expect(mockShowSuccess).toHaveBeenCalled()
+          })
+        })
+
+        // Verify exact number literal 6000 (not 0, not 1, not 5000, not 7000)
+        const successCall = mockShowSuccess.mock.calls[0]
+        expect(successCall[1]).toBe(6000)
+        expect(successCall[1]).not.toBe(0)
+        expect(successCall[1]).not.toBe(1)
+        expect(successCall[1]).not.toBe(5000)
+        expect(successCall[1]).not.toBe(7000)
+      })
+
+      it('should verify exact string literal "pending-" prefix in tempExecutionId', async () => {
+        mockWorkflowIdRef.current = 'workflow-id'
+        mockApi.executeWorkflow.mockResolvedValue({
+          execution_id: 'exec-123',
+        })
+
+        const { result } = renderHook(() =>
+          useWorkflowExecution({
+            isAuthenticated: true,
+            localWorkflowId: 'workflow-id',
+            workflowIdRef: mockWorkflowIdRef,
+            saveWorkflow: mockSaveWorkflow,
+            onExecutionStart: mockOnExecutionStart,
+          })
+        )
+
+        await act(async () => {
+          result.current.setExecutionInputs('{}')
+          await result.current.handleConfirmExecute()
+        })
+
+        await act(async () => {
+          jest.runAllTimers()
+          await Promise.resolve()
+          await waitForWithTimeout(() => {
+            expect(mockOnExecutionStart).toHaveBeenCalled()
+          })
+        })
+
+        // Verify temp ID starts with exact "pending-" prefix
+        const tempIdCall = mockOnExecutionStart.mock.calls.find(call => 
+          typeof call[0] === 'string' && call[0].startsWith('pending-')
+        )
+        expect(tempIdCall).toBeDefined()
+        expect(tempIdCall![0]).toMatch(/^pending-/)
+        // Verify it's not "pending" (without dash) or "Pending-" (capitalized)
+        expect(tempIdCall![0]).not.toMatch(/^pending[^-]/)
+        expect(tempIdCall![0]).not.toMatch(/^Pending-/)
+      })
+
+      it('should verify exact substr(2, 9) parameters in tempExecutionId generation', async () => {
+        mockWorkflowIdRef.current = 'workflow-id'
+        const mockSubstr = jest.spyOn(String.prototype, 'substr').mockImplementation(function(this: string, start: number, length?: number) {
+          return this.substring(start, length ? start + length : undefined)
+        })
+
+        mockApi.executeWorkflow.mockResolvedValue({
+          execution_id: 'exec-123',
+        })
+
+        const { result } = renderHook(() =>
+          useWorkflowExecution({
+            isAuthenticated: true,
+            localWorkflowId: 'workflow-id',
+            workflowIdRef: mockWorkflowIdRef,
+            saveWorkflow: mockSaveWorkflow,
+            onExecutionStart: mockOnExecutionStart,
+          })
+        )
+
+        await act(async () => {
+          result.current.setExecutionInputs('{}')
+          await result.current.handleConfirmExecute()
+        })
+
+        await act(async () => {
+          jest.runAllTimers()
+          await Promise.resolve()
+          await waitForWithTimeout(() => {
+            expect(mockSubstr).toHaveBeenCalled()
+          })
+        })
+
+        // Verify substr was called with exact parameters (2, 9)
+        const substrCalls = mockSubstr.mock.calls
+        const callWith29 = substrCalls.find(call => call[0] === 2 && call[1] === 9)
+        expect(callWith29).toBeDefined()
+        // Verify it's not called with (2, 8) or (2, 10) or (1, 9)
+        expect(substrCalls.some(call => call[0] === 2 && call[1] === 8)).toBe(false)
+        expect(substrCalls.some(call => call[0] === 2 && call[1] === 10)).toBe(false)
+        expect(substrCalls.some(call => call[0] === 1 && call[1] === 9)).toBe(false)
+        
+        mockSubstr.mockRestore()
+      })
+
+      it('should verify exact string literal "{}" reset value', async () => {
+        mockWorkflowIdRef.current = 'workflow-id'
+        mockApi.executeWorkflow.mockResolvedValue({
+          execution_id: 'exec-123',
+        })
+
+        const { result } = renderHook(() =>
+          useWorkflowExecution({
+            isAuthenticated: true,
+            localWorkflowId: 'workflow-id',
+            workflowIdRef: mockWorkflowIdRef,
+            saveWorkflow: mockSaveWorkflow,
+            onExecutionStart: mockOnExecutionStart,
+          })
+        )
+
+        await act(async () => {
+          result.current.setExecutionInputs('{"key": "value"}')
+        })
+
+        expect(result.current.executionInputs).toBe('{"key": "value"}')
+
+        await act(async () => {
+          await result.current.handleConfirmExecute()
+        })
+
+        await act(async () => {
+          jest.runAllTimers()
+          await Promise.resolve()
+          await waitForWithTimeout(() => {
+            expect(mockApi.executeWorkflow).toHaveBeenCalled()
+          })
+        })
+
+        // Verify exact string literal "{}" (not "", not "[]", not "{ }")
+        expect(result.current.executionInputs).toBe('{}')
+        expect(result.current.executionInputs).not.toBe('')
+        expect(result.current.executionInputs).not.toBe('[]')
+        expect(result.current.executionInputs).not.toBe('{ }')
+      })
+
+      it('should verify exact setTimeout delay of 0', async () => {
+        mockWorkflowIdRef.current = 'workflow-id'
+        const setTimeoutSpy = jest.spyOn(global, 'setTimeout')
+
+        mockApi.executeWorkflow.mockResolvedValue({
+          execution_id: 'exec-123',
+        })
+
+        const { result } = renderHook(() =>
+          useWorkflowExecution({
+            isAuthenticated: true,
+            localWorkflowId: 'workflow-id',
+            workflowIdRef: mockWorkflowIdRef,
+            saveWorkflow: mockSaveWorkflow,
+            onExecutionStart: mockOnExecutionStart,
+          })
+        )
+
+        await act(async () => {
+          result.current.setExecutionInputs('{}')
+          await result.current.handleConfirmExecute()
+        })
+
+        // Verify setTimeout was called with exact delay of 0
+        const setTimeoutCalls = setTimeoutSpy.mock.calls
+        const zeroDelayCall = setTimeoutCalls.find((call) => call[1] === 0)
+        expect(zeroDelayCall).toBeDefined()
+        expect(zeroDelayCall?.[1]).toBe(0)
+        // Verify it's not called with delay 1 or -1
+        expect(setTimeoutCalls.some(call => call[1] === 1)).toBe(false)
+        expect(setTimeoutCalls.some(call => call[1] === -1)).toBe(false)
+
+        setTimeoutSpy.mockRestore()
+      })
     })
   })
 })
