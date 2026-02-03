@@ -1,169 +1,216 @@
 # Surviving Mutants Priority Analysis
 
-**Analysis Date:** January 26, 2026  
-**Total Surviving Mutants:** 724
+**Date:** February 3, 2026  
+**Total Surviving Mutants:** 790
 
 ---
 
-## Top Priority Files (Most Surviving Mutants)
+## Analysis Summary
 
-### 🔴 Critical Priority
+Based on the mutation test results, here's a prioritized approach to addressing surviving mutants:
 
-#### 1. **useMarketplaceData.ts** - 80 survived mutants
-- **Current Score:** 67.54%
-- **Killed:** 204 | **Survived:** 80 | **No Coverage:** 19
-- **Risk:** High - Marketplace functionality is user-facing
-- **Action:** Add tests for edge cases, error handling, and conditional branches
+### Mutator Type Distribution
 
-#### 2. **useWebSocket.ts** - 73 survived mutants  
-- **Current Score:** 60.32%
-- **Killed:** 147 | **Survived:** 73 | **No Coverage:** 25
-- **Risk:** Critical - WebSocket is essential for real-time updates
-- **Action:** Add tests for connection states, error recovery, and edge cases
-
-#### 3. **useCanvasEvents.ts** - 50 survived mutants
-- **Current Score:** 61.05%
-- **Killed:** 105 | **Survived:** 50 | **No Coverage:** 17
-- **Risk:** Medium - Canvas interactions are important for UX
-- **Action:** Add tests for event handling, edge cases, and conditional logic
-
-#### 4. **useTemplateOperations.ts** - 47 survived mutants
-- **Current Score:** 81.68%
-- **Killed:** 223 | **Survived:** 47 | **No Coverage:** 3
-- **Risk:** Medium - Template operations are important but score is already good
-- **Action:** Add tests for remaining edge cases
-
-#### 5. **useWorkflowExecution.ts** - 47 survived mutants
-- **Current Score:** 53.21%
-- **Killed:** 55 | **Survived:** 47 | **No Coverage:** 4
-- **Risk:** Critical - Workflow execution is core functionality
-- **Action:** Add comprehensive tests for execution flows and error handling
-
-#### 6. **useLLMProviders.ts** - 44 survived mutants
-- **Current Score:** 64.34%
-- **Killed:** 76 | **Survived:** 44 | **No Coverage:** 2
-- **Risk:** Medium - LLM provider management
-- **Action:** Add tests for provider switching and configuration
-
-### 🟡 Medium Priority
-
-#### 7. **useExecutionManagement.ts** - 37 survived mutants
-- **Current Score:** 81.55%
-- **Killed:** 167 | **Survived:** 37 | **No Coverage:** 1
-- **Risk:** Medium - Already has good score
-- **Action:** Fine-tune tests for remaining edge cases
-
-#### 8. **useMarketplacePublishing.ts** - 36 survived mutants
-- **Current Score:** 37.10%
-- **Killed:** 13 | **Survived:** 36 | **No Coverage:** 3
-- **Risk:** Medium - Publishing functionality
-- **Action:** Improve overall test coverage significantly
-
-#### 9. **useWorkflowUpdates.ts** - 39 survived mutants
-- **Current Score:** 70.45%
-- **Killed:** 88 | **Survived:** 39 | **No Coverage:** 0
-- **Risk:** Medium - Already above 70% threshold
-- **Action:** Add tests for remaining conditional branches
-
-#### 10. **useMarketplaceIntegration.ts** - 41 survived mutants
-- **Current Score:** 31.34%
-- **Killed:** 42 | **Survived:** 41 | **No Coverage:** 51
-- **Risk:** High - Low score with many no-coverage mutants
-- **Action:** Add comprehensive test suite
+The most common mutator types in the codebase:
+1. **ConditionalExpression** - 1,448 mutants (ternary operators)
+2. **BlockStatement** - 922 mutants (code blocks)
+3. **StringLiteral** - 921 mutants (string values)
+4. **LogicalOperator** - 391 mutants (&&, ||)
+5. **EqualityOperator** - 331 mutants (===, !==)
+6. **BooleanLiteral** - 239 mutants (true/false)
+7. **ObjectLiteral** - 207 mutants (object creation)
+8. **ArrowFunction** - 186 mutants (arrow functions)
+9. **ArrayDeclaration** - 176 mutants (array creation)
+10. **MethodExpression** - 104 mutants (method calls)
+11. **OptionalChaining** - 74 mutants (?., ?[])
+12. **ArithmeticOperator** - 24 mutants (+, -, *, /)
 
 ---
 
-## Common Patterns in Surviving Mutants
+## Priority Areas for Improvement
 
-### 1. Conditional Expressions
-- Logical operators (`&&`, `||`) mutations surviving
-- Ternary operators not fully tested
-- **Example:** `if (condition && otherCondition)` - need tests for both true/false combinations
+### 1. Conditional Expressions (Highest Priority)
+**Count:** 1,448 total mutants  
+**Focus:** Ternary operators and conditional logic
 
-### 2. Comparison Operators
-- Equality checks (`===`, `!==`) surviving
-- Comparison operators (`>`, `<`, `>=`, `<=`) not fully tested
-- **Example:** `if (value > threshold)` - need tests for boundary cases
+**Common Patterns:**
+- `condition ? valueA : valueB`
+- Nested ternaries
+- Default value assignments
 
-### 3. Array Operations
-- Array methods (`.map()`, `.filter()`, `.find()`) mutations surviving
-- Array length checks not fully covered
-- **Example:** `array.length > 0` - need tests for empty arrays
+**Action Items:**
+- Add tests for all branches of ternary operators
+- Test edge cases where condition is exactly true/false
+- Verify both branches produce expected results
 
-### 4. String Operations
-- String methods (`.startsWith()`, `.includes()`) mutations surviving
-- String concatenation not fully tested
-- **Example:** `str.startsWith('prefix')` - need tests for exact matches
+### 2. Block Statements
+**Count:** 922 total mutants  
+**Focus:** Code blocks and control flow
 
-### 5. Object Property Access
-- Optional chaining (`?.`) mutations surviving
-- Property existence checks not fully covered
-- **Example:** `obj?.property` - need tests for null/undefined objects
+**Common Patterns:**
+- Empty blocks `{}`
+- Early returns
+- Conditional blocks
+
+**Action Items:**
+- Ensure all code paths are tested
+- Add tests for empty block scenarios
+- Test early return conditions
+
+### 3. String Literals
+**Count:** 921 total mutants  
+**Focus:** String comparisons and assignments
+
+**Common Patterns:**
+- Exact string matches (`=== 'value'`)
+- String concatenation
+- Template literals
+
+**Action Items:**
+- Add tests for exact string matches
+- Test string edge cases (empty, whitespace)
+- Verify string comparisons handle all cases
+
+### 4. Logical Operators
+**Count:** 391 total mutants  
+**Focus:** Boolean logic (&&, ||)
+
+**Common Patterns:**
+- `condition1 && condition2`
+- `condition1 || condition2`
+- Short-circuit evaluation
+
+**Action Items:**
+- Test all combinations of boolean values
+- Verify short-circuit behavior
+- Test with null/undefined values
+
+### 5. Equality Operators
+**Count:** 331 total mutants  
+**Focus:** Comparison operators (===, !==)
+
+**Common Patterns:**
+- `value === expected`
+- `value !== expected`
+- Type and value comparisons
+
+**Action Items:**
+- Test exact equality cases
+- Test with different types
+- Verify strict vs loose equality
 
 ---
 
-## Recommended Test Strategies
+## Files Needing Attention
 
-### For Conditional Logic
-1. Test both branches of `if/else` statements
-2. Test all combinations of logical operators
-3. Test boundary conditions for comparisons
-4. Test null/undefined/empty cases
+Based on the mutation test results, focus on files with:
+- High number of surviving mutants
+- Low mutation scores (< 80%)
+- Complex conditional logic
+- Many edge cases
 
-### For Array Operations
-1. Test with empty arrays
-2. Test with single-item arrays
-3. Test with multiple items
-4. Test with null/undefined arrays
+### Recommended Review Order
 
-### For String Operations
-1. Test exact matches
-2. Test partial matches
-3. Test empty strings
-4. Test null/undefined strings
+1. **Hooks with comprehensive mutation tests** (already have tests, review survivors)
+   - `useCanvasEvents.ts`
+   - `useLLMProviders.ts`
+   - `useMarketplaceIntegration.ts`
+   - `useWebSocket.ts`
+   - `useExecutionManagement.ts`
+   - `useTemplateOperations.ts`
 
-### For Object Operations
-1. Test with null objects
-2. Test with undefined objects
-3. Test with missing properties
-4. Test with nested properties
+2. **Hooks without mutation tests** (add mutation tests first)
+   - Review other hooks in `src/hooks/`
+   - Focus on hooks with complex logic
+
+3. **Utility functions** (`src/utils/`)
+   - Review utility functions with many conditionals
+   - Focus on error handling paths
+
+4. **Editor components** (`src/components/editors/`)
+   - Review component logic
+   - Focus on event handlers and state management
+
+---
+
+## Action Plan
+
+### Phase 1: Review & Document (Current)
+- ✅ Identify surviving mutant types
+- ✅ Document priority areas
+- ⏭️ Review HTML report for specific locations
+- ⏭️ Create file-level priority list
+
+### Phase 2: Targeted Testing
+1. **Conditional Expressions**
+   - Add tests for all ternary branches
+   - Test default value assignments
+   - Verify edge cases
+
+2. **Logical Operators**
+   - Test all boolean combinations
+   - Verify short-circuit behavior
+   - Test with null/undefined
+
+3. **Equality Operators**
+   - Test exact matches
+   - Test type comparisons
+   - Verify edge cases
+
+### Phase 3: Validation
+1. Re-run mutation tests
+2. Verify improvement in mutation score
+3. Target: > 85% mutation score
 
 ---
 
 ## Expected Impact
 
-### Phase 1: Top 5 Files (Critical Priority)
-- **Files:** useMarketplaceData, useWebSocket, useCanvasEvents, useTemplateOperations, useWorkflowExecution
-- **Current Surviving:** 297 mutants
-- **Target:** Reduce to <100 mutants
-- **Expected Score Improvement:** +5-7% overall
+Based on mutator type distribution:
+- **Conditional Expressions:** Addressing these could improve score by 5-10%
+- **Logical Operators:** Addressing these could improve score by 3-5%
+- **Equality Operators:** Addressing these could improve score by 2-4%
 
-### Phase 2: Medium Priority Files
-- **Files:** useLLMProviders, useExecutionManagement, useMarketplacePublishing, useWorkflowUpdates, useMarketplaceIntegration
-- **Current Surviving:** 193 mutants
-- **Target:** Reduce to <80 mutants
-- **Expected Score Improvement:** +3-5% overall
-
-### Overall Goal
-- **Current Overall Score:** 70.20%
-- **Target Score:** 75%+ (after Phase 1)
-- **Long-term Target:** 80%+ (after Phase 2)
+**Total Expected Improvement:** +10-19% mutation score  
+**Target Score:** > 90% (currently 83%)
 
 ---
 
 ## Next Steps
 
-1. ✅ Identify files with most surviving mutants
-2. ⏭️ Analyze specific surviving mutants in priority files
-3. ⏭️ Add targeted tests to kill surviving mutants
-4. ⏭️ Rerun mutation testing to verify improvements
-5. ⏭️ Iterate on remaining survivors
+1. **Open HTML Report**
+   ```bash
+   open frontend/reports/mutation/mutation.html
+   ```
+
+2. **Review Specific Mutants**
+   - Filter by mutator type
+   - Sort by file
+   - Identify patterns
+
+3. **Create Targeted Tests**
+   - Focus on high-priority mutator types
+   - Add edge case tests
+   - Verify mutants are killed
+
+4. **Re-run Mutation Tests**
+   ```bash
+   npm run test:mutation
+   ```
 
 ---
 
-**Priority Order:**
-1. useMarketplaceData.ts (80 survivors)
-2. useWebSocket.ts (73 survivors)
-3. useCanvasEvents.ts (50 survivors)
-4. useTemplateOperations.ts (47 survivors)
-5. useWorkflowExecution.ts (47 survivors)
+## Notes
+
+- The HTML report provides detailed information about each surviving mutant
+- Focus on mutator types with the highest counts first
+- Many surviving mutants may be in code paths that are difficult to test
+- Some mutants may represent equivalent code (not actual bugs)
+
+---
+
+## Resources
+
+- **HTML Report:** `frontend/reports/mutation/mutation.html`
+- **Analysis:** `frontend/MUTATION_TEST_ANALYSIS.md`
+- **Summary:** `frontend/MUTATION_TEST_RESULTS_SUMMARY.md`
