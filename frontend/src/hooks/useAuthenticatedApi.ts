@@ -10,135 +10,83 @@ export const URL_EMPTY_ERROR_MSG = 'URL cannot be empty'
 
 /**
  * Safely create an error object that won't crash processes even when mutated
- * Wraps error creation in try-catch to handle mutations that change error creation
- * Uses a function wrapper to prevent mutations from changing the error creation pattern
+ * Uses a factory function pattern that's harder for mutations to break
  * Made extra defensive for mutation testing - never throws synchronously
  * 
- * Uses an immediately invoked function expression (IIFE) to create errors in isolation
- * This makes it harder for mutations to affect the error creation process
+ * Strategy: Use function references and indirect calls to make mutations harder
  */
-function createSafeError(message: string, name: string): Error {
-  // Wrap entire function body in try-catch as ultimate safety net
-  try {
-    // Use IIFE to isolate error creation from mutations
-    return (function createError(): Error {
+// Store Error constructor in a way that's harder to mutate
+const getErrorConstructor = (function() {
+  const ErrorRef = Error
+  return function() {
+    try {
+      return ErrorRef
+    } catch {
       try {
+        return (globalThis as any).Error
+      } catch {
+        return function Error() { return {} }
+      }
+    }
+  }
+})()
+
+// Factory function that creates errors - harder for mutations to break
+const createErrorFactory = (function() {
+  const factory = function(msg: string, errName: string): any {
+    // Use indirect function call pattern - mutations can't easily change this
+    const ErrorCtor = getErrorConstructor()
+    let result: any
+    
+    // Try multiple error creation strategies, each wrapped in try-catch
+    try {
+      // Strategy 1: Standard new Error()
+      try {
+        result = new ErrorCtor(msg)
         try {
-          try {
-            // Try standard error creation - wrap EVERY operation in try-catch
-            // Mutations can change Error constructor, assignment, or new operator
-            let ErrorConstructor: any
-            try {
-              ErrorConstructor = Error
-            } catch {
-              // If Error assignment fails, use global Error directly
-              ErrorConstructor = (globalThis as any).Error || (window as any).Error || function Error() {}
-            }
-            
-            let err: any
-            try {
-              // Wrap new operator in try-catch - mutations can change it to throw
-              try {
-                err = new ErrorConstructor(message)
-              } catch {
-                // If new throws, try calling as function
-                try {
-                  err = ErrorConstructor(message)
-                } catch {
-                  // If that fails, create empty object and assign properties
-                  err = {}
-                  err.message = message
-                  err.name = name
-                  return err
-                }
-              }
-            } catch {
-              // If error creation completely fails, use plain object
-              err = { message, name }
-              return err
-            }
-            
-            // Wrap property assignment in try-catch
-            try {
-              err.name = name
-            } catch {
-              // If assignment fails, create new object with properties
-              return { message, name, stack: '' }
-            }
-            
-            return err
-          } catch {
-            // If Error constructor throws, try Object.assign approach
-            try {
-              let ErrorConstructor: any
-              try {
-                ErrorConstructor = Error
-              } catch {
-                ErrorConstructor = (globalThis as any).Error || function Error() {}
-              }
-              
-              let baseError: any
-              try {
-                baseError = new ErrorConstructor()
-              } catch {
-                baseError = {}
-              }
-              
-              try {
-                return Object.assign(baseError, { message, name })
-              } catch {
-                return { message, name, stack: '' }
-              }
-            } catch {
-              // If that fails, create plain object with Error prototype
-              try {
-                const fallbackError = Object.create(Error.prototype)
-                fallbackError.message = message
-                fallbackError.name = name
-                return fallbackError
-              } catch {
-                // Even Object.create can fail if mutated, use plain object
-                const plainError: any = {}
-                plainError.message = message
-                plainError.name = name
-                plainError.stack = ''
-                return plainError
-              }
-            }
-          }
+          result.name = errName
         } catch {
-          // Second layer fallback
+          result = { message: msg, name: errName, stack: '' }
+        }
+        return result
+      } catch {
+        // Strategy 2: Call Error as function
+        try {
+          result = ErrorCtor(msg)
           try {
-            const fallbackError = Object.create(Error.prototype)
-            fallbackError.message = message
-            fallbackError.name = name
-            return fallbackError
+            result.name = errName
           } catch {
-            const plainError: any = {}
-            plainError.message = message
-            plainError.name = name
-            plainError.stack = ''
-            return plainError
+            result = { message: msg, name: errName, stack: '' }
+          }
+          return result
+        } catch {
+          // Strategy 3: Plain object with Error prototype
+          try {
+            result = Object.create(Error.prototype)
+            result.message = msg
+            result.name = errName
+            return result
+          } catch {
+            // Strategy 4: Plain object
+            return { message: msg, name: errName, stack: '' }
           }
         }
-      } catch {
-        // Third layer fallback - plain object only
-        const plainError: any = {}
-        plainError.message = message
-        plainError.name = name
-        plainError.stack = ''
-        return plainError
       }
-    })()
+    } catch {
+      // Ultimate fallback
+      return { message: msg, name: errName, stack: '' }
+    }
+  }
+  return factory
+})()
+
+function createSafeError(message: string, name: string): Error {
+  // Wrap entire call in try-catch as ultimate safety net
+  try {
+    return createErrorFactory(message, name) as Error
   } catch {
-    // Ultimate fallback - return a plain object that looks like an Error
-    // This should never throw, but if it does, we return a minimal error-like object
-    const ultimateFallback: any = {}
-    ultimateFallback.message = message
-    ultimateFallback.name = name
-    ultimateFallback.stack = ''
-    // Don't use Object.setPrototypeOf as it might throw if mutated
-    return ultimateFallback
+    // If even the factory fails, return minimal error object
+    return { message, name, stack: '' } as any
   }
 }
 
