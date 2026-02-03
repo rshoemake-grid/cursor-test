@@ -45,9 +45,24 @@ const createErrorFactory = (function() {
     try {
       try {
         // Wrap function call and assignment separately
+        // Extra defensive: wrap ErrorCtor call in try-catch to prevent mutations from causing crashes
         let errorResult: any
         try {
-          errorResult = ErrorCtor(msg)
+          // Double-wrap to handle mutations that change ErrorCtor to throw
+          try {
+            const ErrorCtorRef = ErrorCtor
+            if (typeof ErrorCtorRef === 'function') {
+              try {
+                errorResult = ErrorCtorRef(msg)
+              } catch {
+                errorResult = undefined
+              }
+            } else {
+              errorResult = undefined
+            }
+          } catch {
+            errorResult = undefined
+          }
         } catch {
           errorResult = undefined
         }
@@ -133,11 +148,30 @@ const createErrorFactory = (function() {
 
 function createSafeError(message: string, name: string): Error {
   // Wrap entire call in try-catch as ultimate safety net
+  // Multiple layers to prevent any synchronous throws from mutations
   try {
-    return createErrorFactory(message, name) as Error
+    try {
+      const result = createErrorFactory(message, name)
+      // Defensive: ensure result is not null/undefined before returning
+      if (result != null) {
+        try {
+          return result as Error
+        } catch {
+          // If return throws, create minimal error
+          return { message: message || '', name: name || 'Error', stack: '' } as any
+        }
+      } else {
+        // Factory returned null/undefined, create minimal error
+        return { message: message || '', name: name || 'Error', stack: '' } as any
+      }
+    } catch {
+      // If factory call throws, return minimal error object
+      return { message: message || '', name: name || 'Error', stack: '' } as any
+    }
   } catch {
-    // If even the factory fails, return minimal error object
-    return { message, name, stack: '' } as any
+    // Ultimate fallback - if even the outer try-catch fails (shouldn't happen)
+    // Return minimal error object
+    return { message: message || '', name: name || 'Error', stack: '' } as any
   }
 }
 

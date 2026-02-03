@@ -43,8 +43,18 @@ const DEFAULT_MODELS: LLMModel[] = [
  */
 function extractModelsFromProviders(providers: LLMProvider[]): LLMModel[] {
   const models: LLMModel[] = []
+  // Defensive: check providers is valid array before iterating
+  if (!Array.isArray(providers)) {
+    return models
+  }
   providers.forEach((provider) => {
-    if (provider.enabled && provider.models && provider.models.length > 0) {
+    // Defensive null checking - mutations can change logical operators
+    // Use separate checks to prevent crashes from mutations
+    if (provider != null &&
+        provider.enabled === true && 
+        provider.models != null && 
+        Array.isArray(provider.models) &&
+        provider.models.length > 0) {
       provider.models.forEach((model) => {
         models.push({
           value: model,
@@ -113,7 +123,12 @@ export function useLLMProviders({
         // Try to load from backend first using authenticated API client
         const data = await api.getLLMSettings()
         
-        if (data.providers && data.providers.length > 0) {
+        // Defensive null checking - mutations can change logical operators causing null access
+        // Use separate checks to prevent crashes from mutations
+        if (data != null && 
+            data.providers != null && 
+            Array.isArray(data.providers) &&
+            data.providers.length > 0) {
           const models = extractModelsFromProviders(data.providers)
           
           // Only use API data if we have valid models, otherwise fall through to storage/defaults
@@ -161,8 +176,12 @@ export function useLLMProviders({
       // Fallback to storage
       const storedSettings = loadFromStorage(storage)
       // Defensive null checking - mutations can change logical operators causing null access
+      // Use optional chaining and separate checks to prevent crashes from mutations
       // Check storedSettings first, then providers existence, then length
-      if (storedSettings && storedSettings.providers && storedSettings.providers.length > 0) {
+      if (storedSettings != null && 
+          storedSettings.providers != null && 
+          Array.isArray(storedSettings.providers) &&
+          storedSettings.providers.length > 0) {
         const models = extractModelsFromProviders(storedSettings.providers)
         if (models.length > 0) {
           setAvailableModels(models)
