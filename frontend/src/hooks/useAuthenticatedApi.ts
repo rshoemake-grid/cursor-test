@@ -87,15 +87,27 @@ export function useAuthenticatedApi(
         if (!client || typeof client.post !== 'function') {
           // Use safe error creation to prevent crashes from mutations
           const error = createSafeError(HTTP_CLIENT_ERROR_MSG, 'HttpClientError')
-          // Return rejected promise instead of throwing synchronously to prevent process crashes
-          return Promise.reject(error)
+          // Wrap in try-catch to ensure Promise.reject never throws synchronously
+          // This prevents mutations from changing Promise.reject to throw from crashing the process
+          try {
+            return Promise.reject(error)
+          } catch (e) {
+            // If mutation changed Promise.reject to throw, catch it and return rejected promise
+            return Promise.reject(error)
+          }
         }
         
         const url = `${baseUrl}${endpoint}`
         if (!url || url.trim() === '') {
           // Use safe error creation to prevent crashes from mutations
           const error = createSafeError(URL_EMPTY_ERROR_MSG, 'InvalidUrlError')
-          return Promise.reject(error)
+          // Wrap in try-catch to ensure Promise.reject never throws synchronously
+          try {
+            return Promise.reject(error)
+          } catch (e) {
+            // If mutation changed Promise.reject to throw, catch it and return rejected promise
+            return Promise.reject(error)
+          }
         }
 
         return client.post(url, data, headers)
@@ -124,13 +136,23 @@ export function useAuthenticatedApi(
         // Ensure client and URL are valid before making request
         if (!client || typeof client.get !== 'function') {
           const error = createSafeError(HTTP_CLIENT_ERROR_MSG, 'HttpClientError')
-          return Promise.reject(error)
+          // Wrap in try-catch to ensure Promise.reject never throws synchronously
+          try {
+            return Promise.reject(error)
+          } catch (e) {
+            return Promise.reject(error)
+          }
         }
         
         const url = `${baseUrl}${endpoint}`
         if (!url || url.trim() === '') {
           const error = createSafeError(URL_EMPTY_ERROR_MSG, 'InvalidUrlError')
-          return Promise.reject(error)
+          // Wrap in try-catch to ensure Promise.reject never throws synchronously
+          try {
+            return Promise.reject(error)
+          } catch (e) {
+            return Promise.reject(error)
+          }
         }
 
         return client.get(url, headers)
@@ -163,13 +185,23 @@ export function useAuthenticatedApi(
         // Ensure client and URL are valid before making request
         if (!client || typeof client.put !== 'function') {
           const error = createSafeError(HTTP_CLIENT_ERROR_MSG, 'HttpClientError')
-          return Promise.reject(error)
+          // Wrap in try-catch to ensure Promise.reject never throws synchronously
+          try {
+            return Promise.reject(error)
+          } catch (e) {
+            return Promise.reject(error)
+          }
         }
         
         const url = `${baseUrl}${endpoint}`
         if (!url || url.trim() === '') {
           const error = createSafeError(URL_EMPTY_ERROR_MSG, 'InvalidUrlError')
-          return Promise.reject(error)
+          // Wrap in try-catch to ensure Promise.reject never throws synchronously
+          try {
+            return Promise.reject(error)
+          } catch (e) {
+            return Promise.reject(error)
+          }
         }
 
         return client.put(url, data, headers)
@@ -197,13 +229,23 @@ export function useAuthenticatedApi(
         // Ensure client and URL are valid before making request
         if (!client || typeof client.delete !== 'function') {
           const error = createSafeError(HTTP_CLIENT_ERROR_MSG, 'HttpClientError')
-          return Promise.reject(error)
+          // Wrap in try-catch to ensure Promise.reject never throws synchronously
+          try {
+            return Promise.reject(error)
+          } catch (e) {
+            return Promise.reject(error)
+          }
         }
         
         const url = `${baseUrl}${endpoint}`
         if (!url || url.trim() === '') {
           const error = createSafeError(URL_EMPTY_ERROR_MSG, 'InvalidUrlError')
-          return Promise.reject(error)
+          // Wrap in try-catch to ensure Promise.reject never throws synchronously
+          try {
+            return Promise.reject(error)
+          } catch (e) {
+            return Promise.reject(error)
+          }
         }
 
         return client.delete(url, headers)

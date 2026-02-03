@@ -2320,4 +2320,408 @@ describe('useLLMProviders', () => {
       })
     })
   })
+
+  describe('mutation killers - additional conditional expressions', () => {
+    describe('extractModelsFromProviders - complex conditional', () => {
+      it('should verify exact conditional: provider.enabled && provider.models && provider.models.length > 0 - all true', async () => {
+        mockApi.getLLMSettings.mockResolvedValue({
+          providers: [
+            {
+              id: 'openai',
+              name: 'OpenAI',
+              type: 'openai',
+              enabled: true, // First condition true
+              models: ['gpt-4'], // Second condition true, length > 0
+            },
+          ],
+        })
+
+        const { result } = renderHook(() =>
+          useLLMProviders({ storage: mockStorage, isAuthenticated: true })
+        )
+
+        await waitForWithTimeout(() => {
+          expect(result.current.isLoading).toBe(false)
+        })
+
+        // Should extract models
+        expect(result.current.availableModels.length).toBeGreaterThan(0)
+      })
+
+      it('should verify provider.enabled is false', async () => {
+        mockApi.getLLMSettings.mockResolvedValue({
+          providers: [
+            {
+              id: 'anthropic',
+              name: 'Anthropic',
+              type: 'anthropic',
+              enabled: false, // First condition false
+              models: ['claude-3-opus'],
+            },
+          ],
+        })
+
+        const { result } = renderHook(() =>
+          useLLMProviders({ storage: mockStorage, isAuthenticated: true })
+        )
+
+        await waitForWithTimeout(() => {
+          expect(result.current.isLoading).toBe(false)
+        })
+
+        // Should not extract models from disabled provider
+        // Falls back to default models (which are OpenAI)
+        const anthropicModels = result.current.availableModels.filter(m => m.provider === 'Anthropic')
+        expect(anthropicModels.length).toBe(0)
+        // Should have default models
+        expect(result.current.availableModels.length).toBeGreaterThan(0)
+      })
+
+      it('should verify provider.models is null', async () => {
+        mockApi.getLLMSettings.mockResolvedValue({
+          providers: [
+            {
+              id: 'anthropic',
+              name: 'Anthropic',
+              type: 'anthropic',
+              enabled: true,
+              models: null as any, // Second condition false
+            },
+          ],
+        })
+
+        const { result } = renderHook(() =>
+          useLLMProviders({ storage: mockStorage, isAuthenticated: true })
+        )
+
+        await waitForWithTimeout(() => {
+          expect(result.current.isLoading).toBe(false)
+        })
+
+        // Should not extract models (models is null)
+        // Falls back to default models
+        const anthropicModels = result.current.availableModels.filter(m => m.provider === 'Anthropic')
+        expect(anthropicModels.length).toBe(0)
+        // Should have default models
+        expect(result.current.availableModels.length).toBeGreaterThan(0)
+      })
+
+      it('should verify provider.models.length === 0', async () => {
+        mockApi.getLLMSettings.mockResolvedValue({
+          providers: [
+            {
+              id: 'anthropic',
+              name: 'Anthropic',
+              type: 'anthropic',
+              enabled: true,
+              models: [], // Third condition false (length === 0)
+            },
+          ],
+        })
+
+        const { result } = renderHook(() =>
+          useLLMProviders({ storage: mockStorage, isAuthenticated: true })
+        )
+
+        await waitForWithTimeout(() => {
+          expect(result.current.isLoading).toBe(false)
+        })
+
+        // Should not extract models (empty array)
+        // Falls back to default models
+        const anthropicModels = result.current.availableModels.filter(m => m.provider === 'Anthropic')
+        expect(anthropicModels.length).toBe(0)
+        // Should have default models
+        expect(result.current.availableModels.length).toBeGreaterThan(0)
+      })
+    })
+
+    describe('loadProviders - conditional chains', () => {
+      it('should verify exact conditional: data.providers && data.providers.length > 0 - both true', async () => {
+        mockApi.getLLMSettings.mockResolvedValue({
+          providers: [{ id: 'openai', name: 'OpenAI', type: 'openai', enabled: true, models: ['gpt-4'] }],
+        })
+
+        const { result } = renderHook(() =>
+          useLLMProviders({ storage: mockStorage, isAuthenticated: true })
+        )
+
+        await waitForWithTimeout(() => {
+          expect(result.current.isLoading).toBe(false)
+        })
+
+        // Should use API data
+        expect(result.current.providers.length).toBeGreaterThan(0)
+      })
+
+      it('should verify data.providers is null', async () => {
+        mockApi.getLLMSettings.mockResolvedValue({
+          providers: null as any,
+        })
+
+        const { result } = renderHook(() =>
+          useLLMProviders({ storage: mockStorage, isAuthenticated: true })
+        )
+
+        await waitForWithTimeout(() => {
+          expect(result.current.isLoading).toBe(false)
+        })
+
+        // Should fall back to storage/defaults
+        expect(result.current.providers.length).toBe(0)
+      })
+
+      it('should verify data.providers.length === 0', async () => {
+        mockApi.getLLMSettings.mockResolvedValue({
+          providers: [],
+        })
+
+        const { result } = renderHook(() =>
+          useLLMProviders({ storage: mockStorage, isAuthenticated: true })
+        )
+
+        await waitForWithTimeout(() => {
+          expect(result.current.isLoading).toBe(false)
+        })
+
+        // Should fall back to storage/defaults
+        expect(result.current.providers.length).toBe(0)
+      })
+
+      it('should verify models.length > 0 exact comparison - length is 0', async () => {
+        mockApi.getLLMSettings.mockResolvedValue({
+          providers: [
+            {
+              id: 'openai',
+              name: 'OpenAI',
+              type: 'openai',
+              enabled: true,
+              models: [], // No models extracted
+            },
+          ],
+        })
+
+        const { result } = renderHook(() =>
+          useLLMProviders({ storage: mockStorage, isAuthenticated: true })
+        )
+
+        await waitForWithTimeout(() => {
+          expect(result.current.isLoading).toBe(false)
+        })
+
+        // Should fall back to storage/defaults (models.length === 0)
+        expect(result.current.availableModels.length).toBeGreaterThan(0) // Default models
+      })
+    })
+
+    describe('loadFromStorage - conditional expressions', () => {
+      it('should verify exact conditional: storedSettings && storedSettings.providers.length > 0 - both true', async () => {
+        mockStorage.getItem.mockReturnValue(JSON.stringify({
+          providers: [
+            { id: 'openai', name: 'OpenAI', type: 'openai', enabled: true, models: ['gpt-4'] },
+          ],
+        }))
+        mockApi.getLLMSettings.mockRejectedValue(new Error('Network error'))
+
+        const { result } = renderHook(() =>
+          useLLMProviders({ storage: mockStorage })
+        )
+
+        await waitForWithTimeout(() => {
+          expect(result.current.isLoading).toBe(false)
+        })
+
+        // Should use stored settings
+        expect(result.current.providers.length).toBeGreaterThan(0)
+      })
+
+      it('should verify storedSettings is null', async () => {
+        mockStorage.getItem.mockReturnValue(null)
+        mockApi.getLLMSettings.mockRejectedValue(new Error('Network error'))
+
+        const { result } = renderHook(() =>
+          useLLMProviders({ storage: mockStorage })
+        )
+
+        await waitForWithTimeout(() => {
+          expect(result.current.isLoading).toBe(false)
+        })
+
+        // Should use default models
+        expect(result.current.providers.length).toBe(0)
+        expect(result.current.availableModels.length).toBeGreaterThan(0) // Default models
+      })
+
+      it('should verify storedSettings.providers.length === 0', async () => {
+        mockStorage.getItem.mockReturnValue(JSON.stringify({
+          providers: [],
+        }))
+        mockApi.getLLMSettings.mockRejectedValue(new Error('Network error'))
+
+        const { result } = renderHook(() =>
+          useLLMProviders({ storage: mockStorage })
+        )
+
+        await waitForWithTimeout(() => {
+          expect(result.current.isLoading).toBe(false)
+        })
+
+        // Should use default models
+        expect(result.current.providers.length).toBe(0)
+        expect(result.current.availableModels.length).toBeGreaterThan(0) // Default models
+      })
+    })
+
+    describe('type checks', () => {
+      it('should verify exact type check: typeof data.iteration_limit === "number" - is number', async () => {
+        mockApi.getLLMSettings.mockResolvedValue({
+          providers: [{ id: 'openai', name: 'OpenAI', type: 'openai', enabled: true, models: ['gpt-4'] }],
+          iteration_limit: 10, // Number
+        })
+
+        const { result } = renderHook(() =>
+          useLLMProviders({ storage: mockStorage, isAuthenticated: true })
+        )
+
+        await waitForWithTimeout(() => {
+          expect(result.current.isLoading).toBe(false)
+        })
+
+        // Should set iterationLimit
+        expect(result.current.iterationLimit).toBe(10)
+      })
+
+      it('should verify typeof data.iteration_limit !== "number" - is string', async () => {
+        mockApi.getLLMSettings.mockResolvedValue({
+          providers: [{ id: 'openai', name: 'OpenAI', type: 'openai', enabled: true, models: ['gpt-4'] }],
+          iteration_limit: '10' as any, // String, not number
+        })
+
+        const { result } = renderHook(() =>
+          useLLMProviders({ storage: mockStorage, isAuthenticated: true })
+        )
+
+        await waitForWithTimeout(() => {
+          expect(result.current.isLoading).toBe(false)
+        })
+
+        // Should not set iterationLimit (type check fails)
+        expect(result.current.iterationLimit).toBeUndefined()
+      })
+
+      it('should verify typeof storedSettings.iteration_limit === "number" - is number', async () => {
+        mockStorage.getItem.mockReturnValue(JSON.stringify({
+          providers: [{ id: 'openai', name: 'OpenAI', type: 'openai', enabled: true, models: ['gpt-4'] }],
+          iteration_limit: 15, // Number
+        }))
+        mockApi.getLLMSettings.mockRejectedValue(new Error('Network error'))
+
+        const { result } = renderHook(() =>
+          useLLMProviders({ storage: mockStorage })
+        )
+
+        await waitForWithTimeout(() => {
+          expect(result.current.isLoading).toBe(false)
+        })
+
+        // Should set iterationLimit
+        expect(result.current.iterationLimit).toBe(15)
+      })
+
+      it('should verify typeof storedSettings.iteration_limit !== "number" - is string', async () => {
+        mockStorage.getItem.mockReturnValue(JSON.stringify({
+          providers: [{ id: 'openai', name: 'OpenAI', type: 'openai', enabled: true, models: ['gpt-4'] }],
+          iteration_limit: '15', // String, not number
+        }))
+        mockApi.getLLMSettings.mockRejectedValue(new Error('Network error'))
+
+        const { result } = renderHook(() =>
+          useLLMProviders({ storage: mockStorage })
+        )
+
+        await waitForWithTimeout(() => {
+          expect(result.current.isLoading).toBe(false)
+        })
+
+        // Should not set iterationLimit (type check fails)
+        expect(result.current.iterationLimit).toBeUndefined()
+      })
+    })
+
+    describe('logical OR operators', () => {
+      it('should verify exact fallback: parsed.providers || [] - parsed.providers is null', async () => {
+        mockStorage.getItem.mockReturnValue(JSON.stringify({
+          providers: null,
+        }))
+        mockApi.getLLMSettings.mockRejectedValue(new Error('Network error'))
+
+        const { result } = renderHook(() =>
+          useLLMProviders({ storage: mockStorage })
+        )
+
+        await waitForWithTimeout(() => {
+          expect(result.current.isLoading).toBe(false)
+        })
+
+        // Should use empty array fallback
+        expect(result.current.providers).toEqual([])
+      })
+
+      it('should verify parsed.providers || [] - parsed.providers exists', async () => {
+        mockStorage.getItem.mockReturnValue(JSON.stringify({
+          providers: [{ id: 'openai', name: 'OpenAI', type: 'openai', enabled: true, models: ['gpt-4'] }],
+        }))
+        mockApi.getLLMSettings.mockRejectedValue(new Error('Network error'))
+
+        const { result } = renderHook(() =>
+          useLLMProviders({ storage: mockStorage })
+        )
+
+        await waitForWithTimeout(() => {
+          expect(result.current.isLoading).toBe(false)
+        })
+
+        // Should use parsed.providers
+        expect(result.current.providers.length).toBe(1)
+      })
+
+      it('should verify data.default_model || "" - default_model exists', async () => {
+        mockApi.getLLMSettings.mockResolvedValue({
+          providers: [{ id: 'openai', name: 'OpenAI', type: 'openai', enabled: true, models: ['gpt-4'] }],
+          default_model: 'gpt-4',
+        })
+
+        const { result } = renderHook(() =>
+          useLLMProviders({ storage: mockStorage, isAuthenticated: true })
+        )
+
+        await waitForWithTimeout(() => {
+          expect(result.current.isLoading).toBe(false)
+        })
+
+        // Should use default_model
+        expect(result.current.defaultModel).toBe('gpt-4')
+      })
+
+      it('should verify data.default_model || "" - default_model is null', async () => {
+        mockApi.getLLMSettings.mockResolvedValue({
+          providers: [{ id: 'openai', name: 'OpenAI', type: 'openai', enabled: true, models: ['gpt-4'] }],
+          default_model: null as any,
+        })
+
+        const { result } = renderHook(() =>
+          useLLMProviders({ storage: mockStorage, isAuthenticated: true })
+        )
+
+        await waitForWithTimeout(() => {
+          expect(result.current.isLoading).toBe(false)
+        })
+
+        // Should use empty string fallback when saving
+        expect(mockStorage.setItem).toHaveBeenCalled()
+        const savedData = JSON.parse(mockStorage.setItem.mock.calls[0][1])
+        expect(savedData.default_model).toBe('')
+      })
+    })
+  })
 })

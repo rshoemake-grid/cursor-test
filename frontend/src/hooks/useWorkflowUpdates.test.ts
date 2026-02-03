@@ -3074,7 +3074,8 @@ describe('useWorkflowUpdates', () => {
       // Since 'new-node' was added in the previous call, it should be in refs now
       // mockAddEdge might not be called if node1 doesn't exist, so we verify refs were updated instead
       // The test verifies that nodesRef.current assignment happens (implicit through functionality)
-      expect(mockSetNodes).toHaveBeenCalled() // nodes_to_add was called
+      // During Stryker instrumentation, the first call might not trigger setNodes, so we check if it was called at least once overall
+      expect(mockSetNodes.mock.calls.length).toBeGreaterThanOrEqual(1) // nodes_to_add was called at least once
       jest.useRealTimers()
     })
 
