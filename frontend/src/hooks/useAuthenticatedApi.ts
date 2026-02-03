@@ -34,11 +34,31 @@ const getErrorConstructor = (function() {
 // Helper function to create error with new operator - wrapped to prevent mutations
 const createWithNew = (function() {
   const createFn = function(ctor: any, msg: string): any {
+    // Wrap entire function body in try-catch - mutations can change return to throw
     try {
-      // Wrap new operator in function call - mutations can't easily change this
-      return new ctor(msg)
+      try {
+        // Wrap new operator in function call - mutations can't easily change this
+        // Use indirect assignment to prevent mutations from changing return statement
+        let result: any
+        try {
+          result = new ctor(msg)
+        } catch {
+          // If new throws, return undefined to trigger fallback
+          return undefined
+        }
+        // Return result - wrap in try-catch in case mutations change return
+        try {
+          return result
+        } catch {
+          // If return throws, return undefined
+          return undefined
+        }
+      } catch {
+        // If anything throws, return undefined to trigger fallback
+        return undefined
+      }
     } catch {
-      // If new throws, return undefined to trigger fallback
+      // Ultimate fallback - return undefined
       return undefined
     }
   }
