@@ -3614,4 +3614,624 @@ describe('useMarketplaceIntegration', () => {
       })
     })
   })
+
+  describe('mutation killers - no-coverage paths and exact operators', () => {
+    describe('addAgentsToCanvas - exact boundary conditions', () => {
+      it('should verify exact boundary: currentNodes.length === 0', () => {
+        mockSetNodes.mockImplementation((updater: any) => {
+          if (typeof updater === 'function') {
+            return updater([]) // Empty array - exact boundary
+          }
+          return updater
+        })
+
+        const { result } = renderHook(() =>
+          useMarketplaceIntegration({
+            tabId: 'tab-1',
+            storage: null,
+            setNodes: mockSetNodes,
+            notifyModified: mockNotifyModified,
+            localWorkflowId: null,
+            localWorkflowName: 'Test Workflow',
+            localWorkflowDescription: 'Test Description',
+            tabIsUnsaved: false,
+            tabDraftsRef: mockTabDraftsRef,
+            saveDraftsToStorage: mockSaveDraftsToStorage,
+          })
+        )
+
+        const agents = [{ id: 'agent-1', name: 'Agent' }]
+        act(() => {
+          result.current.addAgentsToCanvas(agents)
+        })
+
+        // Verify exact boundary: currentNodes.length === 0 uses default startX = 250
+        const setNodesCall = mockSetNodes.mock.calls[0][0]
+        const newNodes = typeof setNodesCall === 'function' ? setNodesCall([]) : setNodesCall
+        expect(newNodes[0].position.x).toBe(250) // Default when length === 0
+      })
+
+      it('should verify exact boundary: currentNodes.length > 0', () => {
+        const existingNodes = [
+          { id: 'node-1', position: { x: 100, y: 100 }, type: 'agent', data: {} },
+          { id: 'node-2', position: { x: 300, y: 200 }, type: 'agent', data: {} },
+        ]
+
+        mockSetNodes.mockImplementation((updater: any) => {
+          if (typeof updater === 'function') {
+            return updater(existingNodes)
+          }
+          return updater
+        })
+
+        const { result } = renderHook(() =>
+          useMarketplaceIntegration({
+            tabId: 'tab-1',
+            storage: null,
+            setNodes: mockSetNodes,
+            notifyModified: mockNotifyModified,
+            localWorkflowId: null,
+            localWorkflowName: 'Test Workflow',
+            localWorkflowDescription: 'Test Description',
+            tabIsUnsaved: false,
+            tabDraftsRef: mockTabDraftsRef,
+            saveDraftsToStorage: mockSaveDraftsToStorage,
+          })
+        )
+
+        const agents = [{ id: 'agent-1', name: 'Agent' }]
+        act(() => {
+          result.current.addAgentsToCanvas(agents)
+        })
+
+        // Verify exact boundary: currentNodes.length > 0 uses Math.max(...) + 200
+        const setNodesCall = mockSetNodes.mock.calls[0][0]
+        const newNodes = typeof setNodesCall === 'function' ? setNodesCall(existingNodes) : setNodesCall
+        // Math.max(100, 300) + 200 = 500
+        expect(newNodes[newNodes.length - 1].position.x).toBe(500)
+      })
+    })
+
+    describe('addAgentsToCanvas - exact logical OR operators', () => {
+      it('should verify exact logical OR: agent.name || agent.label || "Agent Node" - all combinations', () => {
+        mockSetNodes.mockImplementation((updater: any) => {
+          if (typeof updater === 'function') {
+            return updater([])
+          }
+          return updater
+        })
+
+        const { result } = renderHook(() =>
+          useMarketplaceIntegration({
+            tabId: 'tab-1',
+            storage: null,
+            setNodes: mockSetNodes,
+            notifyModified: mockNotifyModified,
+            localWorkflowId: null,
+            localWorkflowName: 'Test Workflow',
+            localWorkflowDescription: 'Test Description',
+            tabIsUnsaved: false,
+            tabDraftsRef: mockTabDraftsRef,
+            saveDraftsToStorage: mockSaveDraftsToStorage,
+          })
+        )
+
+        // Test combination 1: name exists, label exists
+        act(() => {
+          result.current.addAgentsToCanvas([{ id: 'agent-1', name: 'Name', label: 'Label' }])
+        })
+        let setNodesCall = mockSetNodes.mock.calls[0][0]
+        let newNodes = typeof setNodesCall === 'function' ? setNodesCall([]) : setNodesCall
+        expect(newNodes[0].data.name).toBe('Name') // Uses name (first truthy)
+
+        // Test combination 2: name exists, label null
+        act(() => {
+          result.current.addAgentsToCanvas([{ id: 'agent-2', name: 'Name', label: null }])
+        })
+        setNodesCall = mockSetNodes.mock.calls[1][0]
+        newNodes = typeof setNodesCall === 'function' ? setNodesCall([]) : setNodesCall
+        expect(newNodes[0].data.name).toBe('Name') // Uses name
+
+        // Test combination 3: name null, label exists
+        act(() => {
+          result.current.addAgentsToCanvas([{ id: 'agent-3', name: null, label: 'Label' }])
+        })
+        setNodesCall = mockSetNodes.mock.calls[2][0]
+        newNodes = typeof setNodesCall === 'function' ? setNodesCall([]) : setNodesCall
+        expect(newNodes[0].data.name).toBe('Label') // Uses label (name is falsy)
+
+        // Test combination 4: name null, label null
+        act(() => {
+          result.current.addAgentsToCanvas([{ id: 'agent-4', name: null, label: null }])
+        })
+        setNodesCall = mockSetNodes.mock.calls[3][0]
+        newNodes = typeof setNodesCall === 'function' ? setNodesCall([]) : setNodesCall
+        expect(newNodes[0].data.name).toBe('Agent Node') // Uses fallback
+
+        // Test combination 5: name undefined, label undefined
+        act(() => {
+          result.current.addAgentsToCanvas([{ id: 'agent-5', name: undefined, label: undefined }])
+        })
+        setNodesCall = mockSetNodes.mock.calls[4][0]
+        newNodes = typeof setNodesCall === 'function' ? setNodesCall([]) : setNodesCall
+        expect(newNodes[0].data.name).toBe('Agent Node') // Uses fallback
+      })
+
+      it('should verify exact logical OR: agent.description || ""', () => {
+        mockSetNodes.mockImplementation((updater: any) => {
+          if (typeof updater === 'function') {
+            return updater([])
+          }
+          return updater
+        })
+
+        const { result } = renderHook(() =>
+          useMarketplaceIntegration({
+            tabId: 'tab-1',
+            storage: null,
+            setNodes: mockSetNodes,
+            notifyModified: mockNotifyModified,
+            localWorkflowId: null,
+            localWorkflowName: 'Test Workflow',
+            localWorkflowDescription: 'Test Description',
+            tabIsUnsaved: false,
+            tabDraftsRef: mockTabDraftsRef,
+            saveDraftsToStorage: mockSaveDraftsToStorage,
+          })
+        )
+
+        // Test with description null
+        act(() => {
+          result.current.addAgentsToCanvas([{ id: 'agent-1', name: 'Agent', description: null }])
+        })
+        let setNodesCall = mockSetNodes.mock.calls[0][0]
+        let newNodes = typeof setNodesCall === 'function' ? setNodesCall([]) : setNodesCall
+        expect(newNodes[0].data.description).toBe('') // Uses fallback
+
+        // Test with description undefined
+        act(() => {
+          result.current.addAgentsToCanvas([{ id: 'agent-2', name: 'Agent', description: undefined }])
+        })
+        setNodesCall = mockSetNodes.mock.calls[1][0]
+        newNodes = typeof setNodesCall === 'function' ? setNodesCall([]) : setNodesCall
+        expect(newNodes[0].data.description).toBe('') // Uses fallback
+
+        // Test with description empty string
+        act(() => {
+          result.current.addAgentsToCanvas([{ id: 'agent-3', name: 'Agent', description: '' }])
+        })
+        setNodesCall = mockSetNodes.mock.calls[2][0]
+        newNodes = typeof setNodesCall === 'function' ? setNodesCall([]) : setNodesCall
+        expect(newNodes[0].data.description).toBe('') // Empty string is falsy, uses fallback
+      })
+
+      it('should verify exact logical OR: agent.agent_config || {}', () => {
+        mockSetNodes.mockImplementation((updater: any) => {
+          if (typeof updater === 'function') {
+            return updater([])
+          }
+          return updater
+        })
+
+        const { result } = renderHook(() =>
+          useMarketplaceIntegration({
+            tabId: 'tab-1',
+            storage: null,
+            setNodes: mockSetNodes,
+            notifyModified: mockNotifyModified,
+            localWorkflowId: null,
+            localWorkflowName: 'Test Workflow',
+            localWorkflowDescription: 'Test Description',
+            tabIsUnsaved: false,
+            tabDraftsRef: mockTabDraftsRef,
+            saveDraftsToStorage: mockSaveDraftsToStorage,
+          })
+        )
+
+        // Test with agent_config null
+        act(() => {
+          result.current.addAgentsToCanvas([{ id: 'agent-1', name: 'Agent', agent_config: null }])
+        })
+        let setNodesCall = mockSetNodes.mock.calls[0][0]
+        let newNodes = typeof setNodesCall === 'function' ? setNodesCall([]) : setNodesCall
+        expect(newNodes[0].data.agent_config).toEqual({}) // Uses fallback
+
+        // Test with agent_config undefined
+        act(() => {
+          result.current.addAgentsToCanvas([{ id: 'agent-2', name: 'Agent', agent_config: undefined }])
+        })
+        setNodesCall = mockSetNodes.mock.calls[1][0]
+        newNodes = typeof setNodesCall === 'function' ? setNodesCall([]) : setNodesCall
+        expect(newNodes[0].data.agent_config).toEqual({}) // Uses fallback
+      })
+
+      it('should verify exact optional chaining: currentDraft?.edges || []', () => {
+        mockSetNodes.mockImplementation((updater: any) => {
+          if (typeof updater === 'function') {
+            return updater([])
+          }
+          return updater
+        })
+
+        // Test with currentDraft null
+        const tabDraftsRefNull = { current: { 'tab-1': null } }
+        const { result: result1 } = renderHook(() =>
+          useMarketplaceIntegration({
+            tabId: 'tab-1',
+            storage: null,
+            setNodes: mockSetNodes,
+            notifyModified: mockNotifyModified,
+            localWorkflowId: null,
+            localWorkflowName: 'Test Workflow',
+            localWorkflowDescription: 'Test Description',
+            tabIsUnsaved: false,
+            tabDraftsRef: tabDraftsRefNull as any,
+            saveDraftsToStorage: mockSaveDraftsToStorage,
+          })
+        )
+
+        act(() => {
+          result1.current.addAgentsToCanvas([{ id: 'agent-1', name: 'Agent' }])
+        })
+
+        act(() => {
+          jest.advanceTimersByTime(0) // Advance setTimeout
+        })
+
+        // Verify optional chaining: currentDraft?.edges || []
+        expect(mockSaveDraftsToStorage).toHaveBeenCalled()
+        const savedDraft = tabDraftsRefNull.current['tab-1']
+        expect(savedDraft.edges).toEqual([]) // Uses fallback when currentDraft is null
+
+        // Test with currentDraft undefined
+        const tabDraftsRefUndefined = { current: { 'tab-1': undefined } }
+        const { result: result2 } = renderHook(() =>
+          useMarketplaceIntegration({
+            tabId: 'tab-1',
+            storage: null,
+            setNodes: mockSetNodes,
+            notifyModified: mockNotifyModified,
+            localWorkflowId: null,
+            localWorkflowName: 'Test Workflow',
+            localWorkflowDescription: 'Test Description',
+            tabIsUnsaved: false,
+            tabDraftsRef: tabDraftsRefUndefined as any,
+            saveDraftsToStorage: mockSaveDraftsToStorage,
+          })
+        )
+
+        act(() => {
+          result2.current.addAgentsToCanvas([{ id: 'agent-2', name: 'Agent' }])
+        })
+
+        act(() => {
+          jest.advanceTimersByTime(0) // Advance setTimeout
+        })
+
+        const savedDraft2 = tabDraftsRefUndefined.current['tab-1']
+        expect(savedDraft2.edges).toEqual([]) // Uses fallback when currentDraft is undefined
+      })
+    })
+
+    describe('checkPendingAgents - exact comparison operators', () => {
+      it('should verify exact comparison: pending.tabId === tabId && Date.now() - pending.timestamp < 10000 - both true', () => {
+        const mockStorage = {
+          getItem: jest.fn().mockReturnValue(JSON.stringify({
+            tabId: 'tab-1',
+            timestamp: Date.now() - 5000, // 5 seconds ago (< 10000)
+            agents: [{ id: 'agent-1', name: 'Agent' }],
+          })),
+          removeItem: jest.fn(),
+          setItem: jest.fn(),
+          addEventListener: jest.fn(),
+          removeEventListener: jest.fn(),
+        }
+
+        renderHook(() =>
+          useMarketplaceIntegration({
+            tabId: 'tab-1',
+            storage: mockStorage as any,
+            setNodes: mockSetNodes,
+            notifyModified: mockNotifyModified,
+            localWorkflowId: null,
+            localWorkflowName: 'Test Workflow',
+            localWorkflowDescription: 'Test Description',
+            tabIsUnsaved: false,
+            tabDraftsRef: mockTabDraftsRef,
+            saveDraftsToStorage: mockSaveDraftsToStorage,
+          })
+        )
+
+        act(() => {
+          jest.advanceTimersByTime(0)
+        })
+
+        // Both conditions true - should process agents
+        expect(mockSetNodes).toHaveBeenCalled()
+        expect(mockStorage.removeItem).toHaveBeenCalledWith('pendingAgentsToAdd')
+      })
+
+      it('should verify exact comparison: pending.tabId === tabId && Date.now() - pending.timestamp < 10000 - first true, second false', () => {
+        const mockStorage = {
+          getItem: jest.fn().mockReturnValue(JSON.stringify({
+            tabId: 'tab-1',
+            timestamp: Date.now() - 15000, // 15 seconds ago (>= 10000)
+            agents: [{ id: 'agent-1', name: 'Agent' }],
+          })),
+          removeItem: jest.fn(),
+          setItem: jest.fn(),
+          addEventListener: jest.fn(),
+          removeEventListener: jest.fn(),
+        }
+
+        renderHook(() =>
+          useMarketplaceIntegration({
+            tabId: 'tab-1',
+            storage: mockStorage as any,
+            setNodes: mockSetNodes,
+            notifyModified: mockNotifyModified,
+            localWorkflowId: null,
+            localWorkflowName: 'Test Workflow',
+            localWorkflowDescription: 'Test Description',
+            tabIsUnsaved: false,
+            tabDraftsRef: mockTabDraftsRef,
+            saveDraftsToStorage: mockSaveDraftsToStorage,
+          })
+        )
+
+        act(() => {
+          jest.advanceTimersByTime(0)
+        })
+
+        // First condition true, second false - should clear (too old)
+        expect(mockStorage.removeItem).toHaveBeenCalledWith('pendingAgentsToAdd')
+        expect(mockSetNodes).not.toHaveBeenCalled()
+      })
+
+      it('should verify exact comparison: pending.tabId === tabId && Date.now() - pending.timestamp < 10000 - first false', () => {
+        const mockStorage = {
+          getItem: jest.fn().mockReturnValue(JSON.stringify({
+            tabId: 'tab-2', // Different tab
+            timestamp: Date.now() - 5000,
+            agents: [{ id: 'agent-1', name: 'Agent' }],
+          })),
+          removeItem: jest.fn(),
+          setItem: jest.fn(),
+          addEventListener: jest.fn(),
+          removeEventListener: jest.fn(),
+        }
+
+        renderHook(() =>
+          useMarketplaceIntegration({
+            tabId: 'tab-1',
+            storage: mockStorage as any,
+            setNodes: mockSetNodes,
+            notifyModified: mockNotifyModified,
+            localWorkflowId: null,
+            localWorkflowName: 'Test Workflow',
+            localWorkflowDescription: 'Test Description',
+            tabIsUnsaved: false,
+            tabDraftsRef: mockTabDraftsRef,
+            saveDraftsToStorage: mockSaveDraftsToStorage,
+          })
+        )
+
+        act(() => {
+          jest.advanceTimersByTime(0)
+        })
+
+        // First condition false - should clear (different tab)
+        expect(mockStorage.removeItem).toHaveBeenCalledWith('pendingAgentsToAdd')
+        expect(mockSetNodes).not.toHaveBeenCalled()
+      })
+
+      it('should verify exact boundary: Date.now() - pending.timestamp === 10000', () => {
+        const mockStorage = {
+          getItem: jest.fn().mockReturnValue(JSON.stringify({
+            tabId: 'tab-1',
+            timestamp: Date.now() - 10000, // Exactly 10000ms ago
+            agents: [{ id: 'agent-1', name: 'Agent' }],
+          })),
+          removeItem: jest.fn(),
+          setItem: jest.fn(),
+          addEventListener: jest.fn(),
+          removeEventListener: jest.fn(),
+        }
+
+        renderHook(() =>
+          useMarketplaceIntegration({
+            tabId: 'tab-1',
+            storage: mockStorage as any,
+            setNodes: mockSetNodes,
+            notifyModified: mockNotifyModified,
+            localWorkflowId: null,
+            localWorkflowName: 'Test Workflow',
+            localWorkflowDescription: 'Test Description',
+            tabIsUnsaved: false,
+            tabDraftsRef: mockTabDraftsRef,
+            saveDraftsToStorage: mockSaveDraftsToStorage,
+          })
+        )
+
+        act(() => {
+          jest.advanceTimersByTime(0)
+        })
+
+        // Exact boundary: Date.now() - pending.timestamp === 10000
+        // Check: Date.now() - pending.timestamp < 10000 is false (10000 < 10000 is false)
+        // Then: Date.now() - pending.timestamp >= 10000 is true (10000 >= 10000 is true)
+        expect(mockStorage.removeItem).toHaveBeenCalledWith('pendingAgentsToAdd')
+        expect(mockSetNodes).not.toHaveBeenCalled()
+      })
+
+      it('should verify exact boundary: Date.now() - pending.timestamp === 9999', () => {
+        const mockStorage = {
+          getItem: jest.fn().mockReturnValue(JSON.stringify({
+            tabId: 'tab-1',
+            timestamp: Date.now() - 9999, // Exactly 9999ms ago (just under boundary)
+            agents: [{ id: 'agent-1', name: 'Agent' }],
+          })),
+          removeItem: jest.fn(),
+          setItem: jest.fn(),
+          addEventListener: jest.fn(),
+          removeEventListener: jest.fn(),
+        }
+
+        renderHook(() =>
+          useMarketplaceIntegration({
+            tabId: 'tab-1',
+            storage: mockStorage as any,
+            setNodes: mockSetNodes,
+            notifyModified: mockNotifyModified,
+            localWorkflowId: null,
+            localWorkflowName: 'Test Workflow',
+            localWorkflowDescription: 'Test Description',
+            tabIsUnsaved: false,
+            tabDraftsRef: mockTabDraftsRef,
+            saveDraftsToStorage: mockSaveDraftsToStorage,
+          })
+        )
+
+        act(() => {
+          jest.advanceTimersByTime(0)
+        })
+
+        // Exact boundary: Date.now() - pending.timestamp === 9999
+        // Check: Date.now() - pending.timestamp < 10000 is true (9999 < 10000 is true)
+        expect(mockSetNodes).toHaveBeenCalled()
+        expect(mockStorage.removeItem).toHaveBeenCalledWith('pendingAgentsToAdd')
+      })
+    })
+
+    describe('checkPendingAgents - exact comparison: pending.tabId !== tabId', () => {
+      it('should verify exact comparison: pending.tabId !== tabId - true', () => {
+        const mockStorage = {
+          getItem: jest.fn().mockReturnValue(JSON.stringify({
+            tabId: 'tab-2', // Different tab
+            timestamp: Date.now() - 5000,
+            agents: [{ id: 'agent-1', name: 'Agent' }],
+          })),
+          removeItem: jest.fn(),
+          setItem: jest.fn(),
+          addEventListener: jest.fn(),
+          removeEventListener: jest.fn(),
+        }
+
+        renderHook(() =>
+          useMarketplaceIntegration({
+            tabId: 'tab-1',
+            storage: mockStorage as any,
+            setNodes: mockSetNodes,
+            notifyModified: mockNotifyModified,
+            localWorkflowId: null,
+            localWorkflowName: 'Test Workflow',
+            localWorkflowDescription: 'Test Description',
+            tabIsUnsaved: false,
+            tabDraftsRef: mockTabDraftsRef,
+            saveDraftsToStorage: mockSaveDraftsToStorage,
+          })
+        )
+
+        act(() => {
+          jest.advanceTimersByTime(0)
+        })
+
+        // Verify exact comparison: pending.tabId !== tabId
+        expect(mockStorage.removeItem).toHaveBeenCalledWith('pendingAgentsToAdd')
+        expect(mockSetNodes).not.toHaveBeenCalled()
+      })
+
+      it('should verify exact comparison: pending.tabId !== tabId - false', () => {
+        const mockStorage = {
+          getItem: jest.fn().mockReturnValue(JSON.stringify({
+            tabId: 'tab-1', // Same tab
+            timestamp: Date.now() - 5000,
+            agents: [{ id: 'agent-1', name: 'Agent' }],
+          })),
+          removeItem: jest.fn(),
+          setItem: jest.fn(),
+          addEventListener: jest.fn(),
+          removeEventListener: jest.fn(),
+        }
+
+        renderHook(() =>
+          useMarketplaceIntegration({
+            tabId: 'tab-1',
+            storage: mockStorage as any,
+            setNodes: mockSetNodes,
+            notifyModified: mockNotifyModified,
+            localWorkflowId: null,
+            localWorkflowName: 'Test Workflow',
+            localWorkflowDescription: 'Test Description',
+            tabIsUnsaved: false,
+            tabDraftsRef: mockTabDraftsRef,
+            saveDraftsToStorage: mockSaveDraftsToStorage,
+          })
+        )
+
+        act(() => {
+          jest.advanceTimersByTime(0)
+        })
+
+        // Verify exact comparison: pending.tabId !== tabId is false
+        // Should process agents (not clear due to different tab)
+        expect(mockSetNodes).toHaveBeenCalled()
+      })
+    })
+
+    describe('interval check - exact boundary: checkCount >= maxChecks', () => {
+      it('should verify exact boundary: checkCount === maxChecks (10)', () => {
+        const mockStorage = {
+          getItem: jest.fn().mockReturnValue(null),
+          removeItem: jest.fn(),
+          setItem: jest.fn(),
+          addEventListener: jest.fn(),
+          removeEventListener: jest.fn(),
+        }
+
+        renderHook(() =>
+          useMarketplaceIntegration({
+            tabId: 'tab-1',
+            storage: mockStorage as any,
+            setNodes: mockSetNodes,
+            notifyModified: mockNotifyModified,
+            localWorkflowId: null,
+            localWorkflowName: 'Test Workflow',
+            localWorkflowDescription: 'Test Description',
+            tabIsUnsaved: false,
+            tabDraftsRef: mockTabDraftsRef,
+            saveDraftsToStorage: mockSaveDraftsToStorage,
+          })
+        )
+
+        // checkPendingAgents is called immediately on mount (1 call)
+        // Then the interval calls it every 1000ms
+        // checkCount starts at 0, increments after each interval call
+        // After 10 interval calls, checkCount reaches 10
+        // The code checks: if (checkCount >= maxChecks) { clearInterval(interval) }
+        // When checkCount === 10 and maxChecks === 10, the condition is true
+        
+        // Advance timers 10 times (checkCount reaches 10 after 10 intervals)
+        for (let i = 0; i < 10; i++) {
+          act(() => {
+            jest.advanceTimersByTime(1000)
+          })
+        }
+
+        // Verify exact boundary: checkCount >= maxChecks (10 >= 10 is true)
+        // Total calls: 1 initial + 10 intervals = 11 calls
+        // After the 10th interval call, checkCount === 10, so interval is cleared
+        expect(mockStorage.getItem).toHaveBeenCalledTimes(11)
+        
+        // Advance one more time - should not call again (interval cleared at checkCount === 10)
+        act(() => {
+          jest.advanceTimersByTime(1000)
+        })
+        
+        // Should still be 11 calls (not 12) because interval was cleared
+        // This verifies the exact comparison: checkCount >= maxChecks (10 >= 10 is true)
+        expect(mockStorage.getItem).toHaveBeenCalledTimes(11)
+      })
+    })
+  })
 })
