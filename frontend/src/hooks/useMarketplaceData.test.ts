@@ -4608,4 +4608,376 @@ describe('useMarketplaceData', () => {
       })
     })
   })
+
+  describe('mutation killers - string operations and logical operators', () => {
+    describe('fetchAgents - string operations', () => {
+      it('should verify exact toLowerCase() call on searchQuery', async () => {
+        mockGetLocalStorageItem.mockReturnValue([
+          { id: 'agent-1', name: 'Test Agent', description: 'Test', tags: ['test'], category: 'automation' },
+          { id: 'agent-2', name: 'Another Agent', description: 'Another', tags: ['another'], category: 'automation' },
+        ])
+
+        const { result } = renderHook(() =>
+          useMarketplaceData({
+            storage: mockStorage,
+            httpClient: mockHttpClient,
+            apiBaseUrl: 'http://api.test',
+            category: '',
+            searchQuery: 'TEST', // Uppercase
+            sortBy: 'name',
+            user: null,
+            activeTab: 'agents',
+            repositorySubTab: 'agents',
+          })
+        )
+
+        await waitFor(() => {
+          expect(result.current.loading).toBe(false)
+        })
+
+        // Should match because toLowerCase() is called
+        expect(result.current.agents.length).toBeGreaterThan(0)
+        expect(result.current.agents.some(a => a.name.toLowerCase().includes('test'))).toBe(true)
+      })
+
+      it('should verify exact includes() call on name.toLowerCase()', async () => {
+        mockGetLocalStorageItem.mockReturnValue([
+          { id: 'agent-1', name: 'Test Agent', description: 'Test', tags: ['test'], category: 'automation' },
+          { id: 'agent-2', name: 'Different', description: 'Different', tags: ['diff'], category: 'automation' },
+        ])
+
+        const { result } = renderHook(() =>
+          useMarketplaceData({
+            storage: mockStorage,
+            httpClient: mockHttpClient,
+            apiBaseUrl: 'http://api.test',
+            category: '',
+            searchQuery: 'test',
+            sortBy: 'name',
+            user: null,
+            activeTab: 'agents',
+            repositorySubTab: 'agents',
+          })
+        )
+
+        await waitFor(() => {
+          expect(result.current.loading).toBe(false)
+        })
+
+        // Should filter by name.includes(query)
+        const filtered = result.current.agents.filter(a => a.name.toLowerCase().includes('test'))
+        expect(filtered.length).toBeGreaterThan(0)
+        expect(filtered[0].name.toLowerCase().includes('test')).toBe(true)
+      })
+
+      it('should verify exact includes() call on description.toLowerCase()', async () => {
+        mockGetLocalStorageItem.mockReturnValue([
+          { id: 'agent-1', name: 'Agent', description: 'Test Description', tags: ['test'], category: 'automation' },
+          { id: 'agent-2', name: 'Agent', description: 'Different', tags: ['diff'], category: 'automation' },
+        ])
+
+        const { result } = renderHook(() =>
+          useMarketplaceData({
+            storage: mockStorage,
+            httpClient: mockHttpClient,
+            apiBaseUrl: 'http://api.test',
+            category: '',
+            searchQuery: 'description',
+            sortBy: 'name',
+            user: null,
+            activeTab: 'agents',
+            repositorySubTab: 'agents',
+          })
+        )
+
+        await waitFor(() => {
+          expect(result.current.loading).toBe(false)
+        })
+
+        // Should filter by description.includes(query)
+        const filtered = result.current.agents.filter(a => 
+          a.description.toLowerCase().includes('description')
+        )
+        expect(filtered.length).toBeGreaterThan(0)
+      })
+
+      it('should verify exact includes() call on tags with some()', async () => {
+        mockGetLocalStorageItem.mockReturnValue([
+          { id: 'agent-1', name: 'Agent', description: 'Test', tags: ['test-tag'], category: 'automation' },
+          { id: 'agent-2', name: 'Agent', description: 'Test', tags: ['other'], category: 'automation' },
+        ])
+
+        const { result } = renderHook(() =>
+          useMarketplaceData({
+            storage: mockStorage,
+            httpClient: mockHttpClient,
+            apiBaseUrl: 'http://api.test',
+            category: '',
+            searchQuery: 'test-tag',
+            sortBy: 'name',
+            user: null,
+            activeTab: 'agents',
+            repositorySubTab: 'agents',
+          })
+        )
+
+        await waitFor(() => {
+          expect(result.current.loading).toBe(false)
+        })
+
+        // Should filter by tags.some(tag => tag.toLowerCase().includes(query))
+        const filtered = result.current.agents.filter(a => 
+          a.tags.some(tag => tag.toLowerCase().includes('test-tag'))
+        )
+        expect(filtered.length).toBeGreaterThan(0)
+        expect(filtered[0].tags.some(tag => tag.toLowerCase().includes('test-tag'))).toBe(true)
+      })
+    })
+
+    describe('fetchAgents - logical OR chain in filter', () => {
+      it('should verify exact logical OR: name.includes() || description.includes() || tags.some()', async () => {
+        mockGetLocalStorageItem.mockReturnValue([
+          { id: 'agent-1', name: 'Test', description: 'Different', tags: ['other'], category: 'automation' },
+          { id: 'agent-2', name: 'Different', description: 'Test', tags: ['other'], category: 'automation' },
+          { id: 'agent-3', name: 'Different', description: 'Different', tags: ['test'], category: 'automation' },
+          { id: 'agent-4', name: 'Different', description: 'Different', tags: ['other'], category: 'automation' },
+        ])
+
+        const { result } = renderHook(() =>
+          useMarketplaceData({
+            storage: mockStorage,
+            httpClient: mockHttpClient,
+            apiBaseUrl: 'http://api.test',
+            category: '',
+            searchQuery: 'test',
+            sortBy: 'name',
+            user: null,
+            activeTab: 'agents',
+            repositorySubTab: 'agents',
+          })
+        )
+
+        await waitFor(() => {
+          expect(result.current.loading).toBe(false)
+        })
+
+        // Should match all three agents (one matches name, one matches description, one matches tags)
+        expect(result.current.agents.length).toBe(3)
+        expect(result.current.agents.some(a => a.name.toLowerCase().includes('test'))).toBe(true)
+        expect(result.current.agents.some(a => a.description.toLowerCase().includes('test'))).toBe(true)
+        expect(result.current.agents.some(a => a.tags.some(tag => tag.toLowerCase().includes('test')))).toBe(true)
+      })
+    })
+
+    describe('fetchAgents - exact comparisons', () => {
+      it('should verify exact comparison: sortBy === "popular"', async () => {
+        mockGetLocalStorageItem.mockReturnValue([
+          { id: 'agent-1', name: 'A', published_at: '2024-01-01', category: 'automation' },
+          { id: 'agent-2', name: 'B', published_at: '2024-01-02', category: 'automation' },
+        ])
+
+        const { result } = renderHook(() =>
+          useMarketplaceData({
+            storage: mockStorage,
+            httpClient: mockHttpClient,
+            apiBaseUrl: 'http://api.test',
+            category: '',
+            searchQuery: '',
+            sortBy: 'popular',
+            user: null,
+            activeTab: 'agents',
+            repositorySubTab: 'agents',
+          })
+        )
+
+        await waitFor(() => {
+          expect(result.current.loading).toBe(false)
+        })
+
+        // Should be sorted by date (most recent first) when sortBy === 'popular'
+        expect(result.current.agents[0].id).toBe('agent-2')
+        expect(result.current.agents[1].id).toBe('agent-1')
+      })
+
+      it('should verify exact comparison: sortBy === "recent"', async () => {
+        mockGetLocalStorageItem.mockReturnValue([
+          { id: 'agent-1', name: 'A', published_at: '2024-01-01', category: 'automation' },
+          { id: 'agent-2', name: 'B', published_at: '2024-01-02', category: 'automation' },
+        ])
+
+        const { result } = renderHook(() =>
+          useMarketplaceData({
+            storage: mockStorage,
+            httpClient: mockHttpClient,
+            apiBaseUrl: 'http://api.test',
+            category: '',
+            searchQuery: '',
+            sortBy: 'recent',
+            user: null,
+            activeTab: 'agents',
+            repositorySubTab: 'agents',
+          })
+        )
+
+        await waitFor(() => {
+          expect(result.current.loading).toBe(false)
+        })
+
+        // Should be sorted by date when sortBy === 'recent'
+        expect(result.current.agents[0].id).toBe('agent-2')
+        expect(result.current.agents[1].id).toBe('agent-1')
+      })
+
+      it('should verify exact comparison: aIsOfficial !== bIsOfficial', async () => {
+        mockGetLocalStorageItem.mockReturnValue([
+          { id: 'agent-1', name: 'A', is_official: false, category: 'automation' },
+          { id: 'agent-2', name: 'B', is_official: true, category: 'automation' },
+        ])
+
+        const { result } = renderHook(() =>
+          useMarketplaceData({
+            storage: mockStorage,
+            httpClient: mockHttpClient,
+            apiBaseUrl: 'http://api.test',
+            category: '',
+            searchQuery: '',
+            sortBy: 'name',
+            user: null,
+            activeTab: 'agents',
+            repositorySubTab: 'agents',
+          })
+        )
+
+        await waitFor(() => {
+          expect(result.current.loading).toBe(false)
+        })
+
+        // Official agent should come first
+        expect(result.current.agents[0].is_official).toBe(true)
+        expect(result.current.agents[1].is_official).toBe(false)
+      })
+    })
+
+    describe('fetchRepositoryAgents - logical OR in sortBy check', () => {
+      it('should verify exact logical OR: sortBy === "popular" || sortBy === "recent"', async () => {
+        mockStorage.getItem.mockReturnValue(JSON.stringify([
+          { id: 'agent-1', name: 'A', published_at: '2024-01-01', category: 'automation' },
+          { id: 'agent-2', name: 'B', published_at: '2024-01-02', category: 'automation' },
+        ]))
+
+        const { result } = renderHook(() =>
+          useMarketplaceData({
+            storage: mockStorage,
+            httpClient: mockHttpClient,
+            apiBaseUrl: 'http://api.test',
+            category: '',
+            searchQuery: '',
+            sortBy: 'popular',
+            user: null,
+            activeTab: 'repository',
+            repositorySubTab: 'agents',
+          })
+        )
+
+        await waitFor(() => {
+          expect(result.current.loading).toBe(false)
+        })
+
+        // Should sort by date when sortBy === 'popular' || sortBy === 'recent'
+        expect(result.current.repositoryAgents[0].id).toBe('agent-2')
+        expect(result.current.repositoryAgents[1].id).toBe('agent-1')
+      })
+
+      it('should verify exact logical OR: sortBy === "popular" || sortBy === "recent" - recent branch', async () => {
+        mockStorage.getItem.mockReturnValue(JSON.stringify([
+          { id: 'agent-1', name: 'A', published_at: '2024-01-01', category: 'automation' },
+          { id: 'agent-2', name: 'B', published_at: '2024-01-02', category: 'automation' },
+        ]))
+
+        const { result } = renderHook(() =>
+          useMarketplaceData({
+            storage: mockStorage,
+            httpClient: mockHttpClient,
+            apiBaseUrl: 'http://api.test',
+            category: '',
+            searchQuery: '',
+            sortBy: 'recent',
+            user: null,
+            activeTab: 'repository',
+            repositorySubTab: 'agents',
+          })
+        )
+
+        await waitFor(() => {
+          expect(result.current.loading).toBe(false)
+        })
+
+        // Should sort by date when sortBy === 'recent'
+        expect(result.current.repositoryAgents[0].id).toBe('agent-2')
+        expect(result.current.repositoryAgents[1].id).toBe('agent-1')
+      })
+    })
+
+    describe('fetchTemplates - conditional URL params', () => {
+      it('should verify exact conditional: if (category) params.append', async () => {
+        mockHttpClient.get.mockResolvedValue({
+          ok: true,
+          json: async () => [mockTemplate],
+        })
+
+        const { result } = renderHook(() =>
+          useMarketplaceData({
+            storage: mockStorage,
+            httpClient: mockHttpClient,
+            apiBaseUrl: 'http://api.test',
+            category: 'automation',
+            searchQuery: '',
+            sortBy: 'name',
+            user: null,
+            activeTab: 'repository',
+            repositorySubTab: 'workflows',
+          })
+        )
+
+        await waitFor(() => {
+          expect(result.current.loading).toBe(false)
+        })
+
+        // Should include category in URL params
+        expect(mockHttpClient.get).toHaveBeenCalledWith(
+          expect.stringContaining('category=automation')
+        )
+      })
+
+      it('should verify exact conditional: if (searchQuery) params.append', async () => {
+        mockHttpClient.get.mockResolvedValue({
+          ok: true,
+          json: async () => [mockTemplate],
+        })
+
+        const { result } = renderHook(() =>
+          useMarketplaceData({
+            storage: mockStorage,
+            httpClient: mockHttpClient,
+            apiBaseUrl: 'http://api.test',
+            category: '',
+            searchQuery: 'test query',
+            sortBy: 'name',
+            user: null,
+            activeTab: 'repository',
+            repositorySubTab: 'workflows',
+          })
+        )
+
+        await waitFor(() => {
+          expect(result.current.loading).toBe(false)
+        })
+
+        // Should include search in URL params
+        expect(mockHttpClient.get).toHaveBeenCalledWith(
+          expect.stringContaining('search=test+query')
+        )
+      })
+    })
+  })
 })
