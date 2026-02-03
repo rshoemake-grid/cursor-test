@@ -77,9 +77,7 @@ export function useAuthenticatedApi(
       delete: () => Promise.reject(new Error('HTTP client initialization failed')),
     }
   }
-  // Defensive baseUrl assignment - ensure it's never empty to prevent URL validation errors
-  // This prevents mutations from causing empty URLs that crash child processes
-  const baseUrl = (apiBaseUrl || API_CONFIG.BASE_URL || 'http://localhost:8000').trim()
+  const baseUrl = apiBaseUrl || API_CONFIG.BASE_URL
 
   /**
    * Make an authenticated POST request
@@ -116,22 +114,29 @@ export function useAuthenticatedApi(
           }
         }
         
-        // Defensive URL construction - ensure baseUrl and endpoint are valid
-        // This prevents mutations from causing empty URLs that trigger errors
-        const safeBaseUrl = (baseUrl || '').trim() || 'http://localhost:8000/api'
-        const safeEndpoint = (endpoint || '').trim() || '/'
-        const url = `${safeBaseUrl}${safeEndpoint}`
-        
-        // Additional validation - but mutations might bypass this, so we ensure URL is never empty
+        const url = `${baseUrl}${endpoint}`
         if (!url || url.trim() === '') {
           // Use safe error creation to prevent crashes from mutations
-          const error = createSafeError(URL_EMPTY_ERROR_MSG, 'InvalidUrlError')
+          // Wrap error creation in try-catch to handle mutations that change error creation
+          let error: Error
+          try {
+            error = createSafeError(URL_EMPTY_ERROR_MSG, 'InvalidUrlError')
+          } catch {
+            // If error creation fails due to mutations, create a minimal error object
+            error = Object.create(Error.prototype) as Error
+            error.message = URL_EMPTY_ERROR_MSG
+            error.name = 'InvalidUrlError'
+          }
+          
           // Wrap in try-catch to ensure Promise.reject never throws synchronously
           try {
             return Promise.reject(error)
           } catch (e) {
             // If mutation changed Promise.reject to throw, catch it and return rejected promise
-            return Promise.reject(error)
+            // Use setTimeout to defer rejection to next tick, preventing synchronous throws
+            return new Promise((_, reject) => {
+              setTimeout(() => reject(error), 0)
+            })
           }
         }
 
@@ -169,18 +174,23 @@ export function useAuthenticatedApi(
           }
         }
         
-        // Defensive URL construction - ensure baseUrl and endpoint are valid
-        const safeBaseUrl = (baseUrl || '').trim() || 'http://localhost:8000/api'
-        const safeEndpoint = (endpoint || '').trim() || '/'
-        const url = `${safeBaseUrl}${safeEndpoint}`
-        
+        const url = `${baseUrl}${endpoint}`
         if (!url || url.trim() === '') {
-          const error = createSafeError(URL_EMPTY_ERROR_MSG, 'InvalidUrlError')
-          // Wrap in try-catch to ensure Promise.reject never throws synchronously
+          let error: Error
+          try {
+            error = createSafeError(URL_EMPTY_ERROR_MSG, 'InvalidUrlError')
+          } catch {
+            error = Object.create(Error.prototype) as Error
+            error.message = URL_EMPTY_ERROR_MSG
+            error.name = 'InvalidUrlError'
+          }
+          
           try {
             return Promise.reject(error)
           } catch (e) {
-            return Promise.reject(error)
+            return new Promise((_, reject) => {
+              setTimeout(() => reject(error), 0)
+            })
           }
         }
 
@@ -222,18 +232,23 @@ export function useAuthenticatedApi(
           }
         }
         
-        // Defensive URL construction - ensure baseUrl and endpoint are valid
-        const safeBaseUrl = (baseUrl || '').trim() || 'http://localhost:8000/api'
-        const safeEndpoint = (endpoint || '').trim() || '/'
-        const url = `${safeBaseUrl}${safeEndpoint}`
-        
+        const url = `${baseUrl}${endpoint}`
         if (!url || url.trim() === '') {
-          const error = createSafeError(URL_EMPTY_ERROR_MSG, 'InvalidUrlError')
-          // Wrap in try-catch to ensure Promise.reject never throws synchronously
+          let error: Error
+          try {
+            error = createSafeError(URL_EMPTY_ERROR_MSG, 'InvalidUrlError')
+          } catch {
+            error = Object.create(Error.prototype) as Error
+            error.message = URL_EMPTY_ERROR_MSG
+            error.name = 'InvalidUrlError'
+          }
+          
           try {
             return Promise.reject(error)
           } catch (e) {
-            return Promise.reject(error)
+            return new Promise((_, reject) => {
+              setTimeout(() => reject(error), 0)
+            })
           }
         }
 
@@ -270,18 +285,23 @@ export function useAuthenticatedApi(
           }
         }
         
-        // Defensive URL construction - ensure baseUrl and endpoint are valid
-        const safeBaseUrl = (baseUrl || '').trim() || 'http://localhost:8000/api'
-        const safeEndpoint = (endpoint || '').trim() || '/'
-        const url = `${safeBaseUrl}${safeEndpoint}`
-        
+        const url = `${baseUrl}${endpoint}`
         if (!url || url.trim() === '') {
-          const error = createSafeError(URL_EMPTY_ERROR_MSG, 'InvalidUrlError')
-          // Wrap in try-catch to ensure Promise.reject never throws synchronously
+          let error: Error
+          try {
+            error = createSafeError(URL_EMPTY_ERROR_MSG, 'InvalidUrlError')
+          } catch {
+            error = Object.create(Error.prototype) as Error
+            error.message = URL_EMPTY_ERROR_MSG
+            error.name = 'InvalidUrlError'
+          }
+          
           try {
             return Promise.reject(error)
           } catch (e) {
-            return Promise.reject(error)
+            return new Promise((_, reject) => {
+              setTimeout(() => reject(error), 0)
+            })
           }
         }
 
