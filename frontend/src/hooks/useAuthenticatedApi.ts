@@ -103,14 +103,38 @@ export function useAuthenticatedApi(
         // Made mutation-resistant: return rejected promise instead of throwing synchronously
         if (!client || typeof client.post !== 'function') {
           // Use safe error creation to prevent crashes from mutations
-          const error = createSafeError(HTTP_CLIENT_ERROR_MSG, 'HttpClientError')
-          // Wrap in try-catch to ensure Promise.reject never throws synchronously
-          // This prevents mutations from changing Promise.reject to throw from crashing the process
+          // Wrap entire error creation and rejection in try-catch
           try {
-            return Promise.reject(error)
+            let error: Error
+            try {
+              error = createSafeError(HTTP_CLIENT_ERROR_MSG, 'HttpClientError')
+            } catch {
+              // If createSafeError throws due to mutations, create minimal error
+              try {
+                error = Object.create(Error.prototype) as Error
+                error.message = HTTP_CLIENT_ERROR_MSG
+                error.name = 'HttpClientError'
+              } catch {
+                error = { message: HTTP_CLIENT_ERROR_MSG, name: 'HttpClientError' } as any
+              }
+            }
+            
+            // Wrap in try-catch to ensure Promise.reject never throws synchronously
+            try {
+              return Promise.reject(error)
+            } catch (e) {
+              // If mutation changed Promise.reject to throw, defer rejection
+              return new Promise((_, reject) => {
+                setTimeout(() => reject(error), 0)
+              })
+            }
           } catch (e) {
-            // If mutation changed Promise.reject to throw, catch it and return rejected promise
-            return Promise.reject(error)
+            // Ultimate fallback - defer rejection to prevent any synchronous throws
+            return new Promise((_, reject) => {
+              setTimeout(() => {
+                reject(new Error(HTTP_CLIENT_ERROR_MSG))
+              }, 0)
+            })
           }
         }
         
@@ -179,12 +203,34 @@ export function useAuthenticatedApi(
 
         // Ensure client and URL are valid before making request
         if (!client || typeof client.get !== 'function') {
-          const error = createSafeError(HTTP_CLIENT_ERROR_MSG, 'HttpClientError')
-          // Wrap in try-catch to ensure Promise.reject never throws synchronously
+          // Wrap entire error creation and rejection in try-catch
           try {
-            return Promise.reject(error)
+            let error: Error
+            try {
+              error = createSafeError(HTTP_CLIENT_ERROR_MSG, 'HttpClientError')
+            } catch {
+              try {
+                error = Object.create(Error.prototype) as Error
+                error.message = HTTP_CLIENT_ERROR_MSG
+                error.name = 'HttpClientError'
+              } catch {
+                error = { message: HTTP_CLIENT_ERROR_MSG, name: 'HttpClientError' } as any
+              }
+            }
+            
+            try {
+              return Promise.reject(error)
+            } catch (e) {
+              return new Promise((_, reject) => {
+                setTimeout(() => reject(error), 0)
+              })
+            }
           } catch (e) {
-            return Promise.reject(error)
+            return new Promise((_, reject) => {
+              setTimeout(() => {
+                reject(new Error(HTTP_CLIENT_ERROR_MSG))
+              }, 0)
+            })
           }
         }
         
@@ -249,12 +295,34 @@ export function useAuthenticatedApi(
 
         // Ensure client and URL are valid before making request
         if (!client || typeof client.put !== 'function') {
-          const error = createSafeError(HTTP_CLIENT_ERROR_MSG, 'HttpClientError')
-          // Wrap in try-catch to ensure Promise.reject never throws synchronously
+          // Wrap entire error creation and rejection in try-catch
           try {
-            return Promise.reject(error)
+            let error: Error
+            try {
+              error = createSafeError(HTTP_CLIENT_ERROR_MSG, 'HttpClientError')
+            } catch {
+              try {
+                error = Object.create(Error.prototype) as Error
+                error.message = HTTP_CLIENT_ERROR_MSG
+                error.name = 'HttpClientError'
+              } catch {
+                error = { message: HTTP_CLIENT_ERROR_MSG, name: 'HttpClientError' } as any
+              }
+            }
+            
+            try {
+              return Promise.reject(error)
+            } catch (e) {
+              return new Promise((_, reject) => {
+                setTimeout(() => reject(error), 0)
+              })
+            }
           } catch (e) {
-            return Promise.reject(error)
+            return new Promise((_, reject) => {
+              setTimeout(() => {
+                reject(new Error(HTTP_CLIENT_ERROR_MSG))
+              }, 0)
+            })
           }
         }
         
@@ -314,12 +382,34 @@ export function useAuthenticatedApi(
 
         // Ensure client and URL are valid before making request
         if (!client || typeof client.delete !== 'function') {
-          const error = createSafeError(HTTP_CLIENT_ERROR_MSG, 'HttpClientError')
-          // Wrap in try-catch to ensure Promise.reject never throws synchronously
+          // Wrap entire error creation and rejection in try-catch
           try {
-            return Promise.reject(error)
+            let error: Error
+            try {
+              error = createSafeError(HTTP_CLIENT_ERROR_MSG, 'HttpClientError')
+            } catch {
+              try {
+                error = Object.create(Error.prototype) as Error
+                error.message = HTTP_CLIENT_ERROR_MSG
+                error.name = 'HttpClientError'
+              } catch {
+                error = { message: HTTP_CLIENT_ERROR_MSG, name: 'HttpClientError' } as any
+              }
+            }
+            
+            try {
+              return Promise.reject(error)
+            } catch (e) {
+              return new Promise((_, reject) => {
+                setTimeout(() => reject(error), 0)
+              })
+            }
           } catch (e) {
-            return Promise.reject(error)
+            return new Promise((_, reject) => {
+              setTimeout(() => {
+                reject(new Error(HTTP_CLIENT_ERROR_MSG))
+              }, 0)
+            })
           }
         }
         
