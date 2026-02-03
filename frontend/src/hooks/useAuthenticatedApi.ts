@@ -25,16 +25,70 @@ function createSafeError(message: string, name: string): Error {
       try {
         try {
           try {
-            // Try standard error creation - wrap in function call to isolate from mutations
-            const ErrorConstructor = Error
-            const err = new ErrorConstructor(message)
-            err.name = name
+            // Try standard error creation - wrap EVERY operation in try-catch
+            // Mutations can change Error constructor, assignment, or new operator
+            let ErrorConstructor: any
+            try {
+              ErrorConstructor = Error
+            } catch {
+              // If Error assignment fails, use global Error directly
+              ErrorConstructor = (globalThis as any).Error || (window as any).Error || function Error() {}
+            }
+            
+            let err: any
+            try {
+              // Wrap new operator in try-catch - mutations can change it to throw
+              try {
+                err = new ErrorConstructor(message)
+              } catch {
+                // If new throws, try calling as function
+                try {
+                  err = ErrorConstructor(message)
+                } catch {
+                  // If that fails, create empty object and assign properties
+                  err = {}
+                  err.message = message
+                  err.name = name
+                  return err
+                }
+              }
+            } catch {
+              // If error creation completely fails, use plain object
+              err = { message, name }
+              return err
+            }
+            
+            // Wrap property assignment in try-catch
+            try {
+              err.name = name
+            } catch {
+              // If assignment fails, create new object with properties
+              return { message, name, stack: '' }
+            }
+            
             return err
           } catch {
             // If Error constructor throws, try Object.assign approach
             try {
-              const ErrorConstructor = Error
-              return Object.assign(new ErrorConstructor(), { message, name })
+              let ErrorConstructor: any
+              try {
+                ErrorConstructor = Error
+              } catch {
+                ErrorConstructor = (globalThis as any).Error || function Error() {}
+              }
+              
+              let baseError: any
+              try {
+                baseError = new ErrorConstructor()
+              } catch {
+                baseError = {}
+              }
+              
+              try {
+                return Object.assign(baseError, { message, name })
+              } catch {
+                return { message, name, stack: '' }
+              }
             } catch {
               // If that fails, create plain object with Error prototype
               try {
