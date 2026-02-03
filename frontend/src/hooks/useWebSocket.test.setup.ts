@@ -47,26 +47,15 @@ export class MockWebSocket {
   constructor(url: string) {
     this.url = url
     // Simulate connection opening (but delay it to allow handler to be set)
-    // Use setImmediate or setTimeout with a small delay
-    if (typeof setImmediate !== 'undefined') {
-      setImmediate(() => {
-        if (this.readyState === MockWebSocket.CONNECTING) {
-          this.readyState = MockWebSocket.OPEN
-          if (this.onopen) {
-            this.onopen(new Event('open'))
-          }
+    // Use setTimeout - setImmediate is not available in Jest environment
+    setTimeout(() => {
+      if (this.readyState === MockWebSocket.CONNECTING) {
+        this.readyState = MockWebSocket.OPEN
+        if (this.onopen) {
+          this.onopen(new Event('open'))
         }
-      })
-    } else {
-      setTimeout(() => {
-        if (this.readyState === MockWebSocket.CONNECTING) {
-          this.readyState = MockWebSocket.OPEN
-          if (this.onopen) {
-            this.onopen(new Event('open'))
-          }
-        }
-      }, 10)
-    }
+      }
+    }, 10)
   }
 
   send(data: string) {
@@ -75,31 +64,18 @@ export class MockWebSocket {
 
   close(code?: number, reason?: string) {
     this.readyState = MockWebSocket.CLOSING
-    // Use setImmediate if available, otherwise setTimeout
-    // This ensures the close event fires synchronously in fake timer environment
-    if (typeof setImmediate !== 'undefined') {
-      setImmediate(() => {
-        this.readyState = MockWebSocket.CLOSED
-        if (this.onclose) {
-          // Use the provided code or default to 1000, and determine wasClean based on code
-          const closeCode = code || 1000
-          const wasClean = closeCode === 1000
-          const event = new CloseEvent('close', { code: closeCode, reason: reason || '', wasClean })
-          this.onclose(event)
-        }
-      })
-    } else {
-      setTimeout(() => {
-        this.readyState = MockWebSocket.CLOSED
-        if (this.onclose) {
-          // Use the provided code or default to 1000, and determine wasClean based on code
-          const closeCode = code || 1000
-          const wasClean = closeCode === 1000
-          const event = new CloseEvent('close', { code: closeCode, reason: reason || '', wasClean })
-          this.onclose(event)
-        }
-      }, 10)
-    }
+    // Use setTimeout - setImmediate is not available in Jest environment
+    // This ensures the close event fires in fake timer environment
+    setTimeout(() => {
+      this.readyState = MockWebSocket.CLOSED
+      if (this.onclose) {
+        // Use the provided code or default to 1000, and determine wasClean based on code
+        const closeCode = code || 1000
+        const wasClean = closeCode === 1000
+        const event = new CloseEvent('close', { code: closeCode, reason: reason || '', wasClean })
+        this.onclose(event)
+      }
+    }, 10)
   }
 
   // Helper methods for testing
