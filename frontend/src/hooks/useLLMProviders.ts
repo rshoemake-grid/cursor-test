@@ -160,7 +160,9 @@ export function useLLMProviders({
 
       // Fallback to storage
       const storedSettings = loadFromStorage(storage)
-      if (storedSettings && storedSettings.providers.length > 0) {
+      // Defensive null checking - mutations can change logical operators causing null access
+      // Check storedSettings first, then providers existence, then length
+      if (storedSettings && storedSettings.providers && storedSettings.providers.length > 0) {
         const models = extractModelsFromProviders(storedSettings.providers)
         if (models.length > 0) {
           setAvailableModels(models)

@@ -117,25 +117,39 @@ export function useAuthenticatedApi(
         const url = `${baseUrl}${endpoint}`
         if (!url || url.trim() === '') {
           // Use safe error creation to prevent crashes from mutations
-          // Wrap error creation in try-catch to handle mutations that change error creation
-          let error: Error
+          // Wrap entire error path in try-catch to handle any synchronous throws
           try {
-            error = createSafeError(URL_EMPTY_ERROR_MSG, 'InvalidUrlError')
-          } catch {
-            // If error creation fails due to mutations, create a minimal error object
-            error = Object.create(Error.prototype) as Error
-            error.message = URL_EMPTY_ERROR_MSG
-            error.name = 'InvalidUrlError'
-          }
-          
-          // Wrap in try-catch to ensure Promise.reject never throws synchronously
-          try {
-            return Promise.reject(error)
+            let error: Error
+            try {
+              error = createSafeError(URL_EMPTY_ERROR_MSG, 'InvalidUrlError')
+            } catch {
+              // If error creation fails due to mutations, create a minimal error object
+              try {
+                error = Object.create(Error.prototype) as Error
+                error.message = URL_EMPTY_ERROR_MSG
+                error.name = 'InvalidUrlError'
+              } catch {
+                // Ultimate fallback - plain object
+                error = { message: URL_EMPTY_ERROR_MSG, name: 'InvalidUrlError' } as any
+              }
+            }
+            
+            // Wrap in try-catch to ensure Promise.reject never throws synchronously
+            try {
+              return Promise.reject(error)
+            } catch (e) {
+              // If mutation changed Promise.reject to throw, catch it and return rejected promise
+              // Use setTimeout to defer rejection to next tick, preventing synchronous throws
+              return new Promise((_, reject) => {
+                setTimeout(() => reject(error), 0)
+              })
+            }
           } catch (e) {
-            // If mutation changed Promise.reject to throw, catch it and return rejected promise
-            // Use setTimeout to defer rejection to next tick, preventing synchronous throws
+            // If anything throws synchronously, wrap in setTimeout to defer
             return new Promise((_, reject) => {
-              setTimeout(() => reject(error), 0)
+              setTimeout(() => {
+                reject(new Error(URL_EMPTY_ERROR_MSG))
+              }, 0)
             })
           }
         }
@@ -176,20 +190,32 @@ export function useAuthenticatedApi(
         
         const url = `${baseUrl}${endpoint}`
         if (!url || url.trim() === '') {
-          let error: Error
           try {
-            error = createSafeError(URL_EMPTY_ERROR_MSG, 'InvalidUrlError')
-          } catch {
-            error = Object.create(Error.prototype) as Error
-            error.message = URL_EMPTY_ERROR_MSG
-            error.name = 'InvalidUrlError'
-          }
-          
-          try {
-            return Promise.reject(error)
+            let error: Error
+            try {
+              error = createSafeError(URL_EMPTY_ERROR_MSG, 'InvalidUrlError')
+            } catch {
+              try {
+                error = Object.create(Error.prototype) as Error
+                error.message = URL_EMPTY_ERROR_MSG
+                error.name = 'InvalidUrlError'
+              } catch {
+                error = { message: URL_EMPTY_ERROR_MSG, name: 'InvalidUrlError' } as any
+              }
+            }
+            
+            try {
+              return Promise.reject(error)
+            } catch (e) {
+              return new Promise((_, reject) => {
+                setTimeout(() => reject(error), 0)
+              })
+            }
           } catch (e) {
             return new Promise((_, reject) => {
-              setTimeout(() => reject(error), 0)
+              setTimeout(() => {
+                reject(new Error(URL_EMPTY_ERROR_MSG))
+              }, 0)
             })
           }
         }
@@ -234,20 +260,32 @@ export function useAuthenticatedApi(
         
         const url = `${baseUrl}${endpoint}`
         if (!url || url.trim() === '') {
-          let error: Error
           try {
-            error = createSafeError(URL_EMPTY_ERROR_MSG, 'InvalidUrlError')
-          } catch {
-            error = Object.create(Error.prototype) as Error
-            error.message = URL_EMPTY_ERROR_MSG
-            error.name = 'InvalidUrlError'
-          }
-          
-          try {
-            return Promise.reject(error)
+            let error: Error
+            try {
+              error = createSafeError(URL_EMPTY_ERROR_MSG, 'InvalidUrlError')
+            } catch {
+              try {
+                error = Object.create(Error.prototype) as Error
+                error.message = URL_EMPTY_ERROR_MSG
+                error.name = 'InvalidUrlError'
+              } catch {
+                error = { message: URL_EMPTY_ERROR_MSG, name: 'InvalidUrlError' } as any
+              }
+            }
+            
+            try {
+              return Promise.reject(error)
+            } catch (e) {
+              return new Promise((_, reject) => {
+                setTimeout(() => reject(error), 0)
+              })
+            }
           } catch (e) {
             return new Promise((_, reject) => {
-              setTimeout(() => reject(error), 0)
+              setTimeout(() => {
+                reject(new Error(URL_EMPTY_ERROR_MSG))
+              }, 0)
             })
           }
         }
@@ -287,20 +325,32 @@ export function useAuthenticatedApi(
         
         const url = `${baseUrl}${endpoint}`
         if (!url || url.trim() === '') {
-          let error: Error
           try {
-            error = createSafeError(URL_EMPTY_ERROR_MSG, 'InvalidUrlError')
-          } catch {
-            error = Object.create(Error.prototype) as Error
-            error.message = URL_EMPTY_ERROR_MSG
-            error.name = 'InvalidUrlError'
-          }
-          
-          try {
-            return Promise.reject(error)
+            let error: Error
+            try {
+              error = createSafeError(URL_EMPTY_ERROR_MSG, 'InvalidUrlError')
+            } catch {
+              try {
+                error = Object.create(Error.prototype) as Error
+                error.message = URL_EMPTY_ERROR_MSG
+                error.name = 'InvalidUrlError'
+              } catch {
+                error = { message: URL_EMPTY_ERROR_MSG, name: 'InvalidUrlError' } as any
+              }
+            }
+            
+            try {
+              return Promise.reject(error)
+            } catch (e) {
+              return new Promise((_, reject) => {
+                setTimeout(() => reject(error), 0)
+              })
+            }
           } catch (e) {
             return new Promise((_, reject) => {
-              setTimeout(() => reject(error), 0)
+              setTimeout(() => {
+                reject(new Error(URL_EMPTY_ERROR_MSG))
+              }, 0)
             })
           }
         }
