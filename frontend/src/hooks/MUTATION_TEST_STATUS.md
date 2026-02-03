@@ -22,19 +22,23 @@
 6. **useMarketplaceIntegration** - 37 no-coverage mutants
    - ✅ `useMarketplaceIntegration.mutation.test.ts` (32 tests)
 
+7. **useMarketplaceData** - 31 survivors, 88.5% score
+   - ✅ `useMarketplaceData.mutation.test.ts` (55 tests)
+
 ## Summary
 
-- **Total hooks with analysis**: 6
-- **Hooks with mutation tests**: 6 ✅
+- **Total hooks with analysis**: 7
+- **Hooks with mutation tests**: 7 ✅
 - **Hooks needing mutation tests**: 0 ✅
-- **Total mutation test files**: 8 files
-- **Total mutation test cases**: 459 tests (1 skipped)
+- **Total mutation test files**: 9 files
+- **Total mutation test cases**: 514 tests (1 skipped)
   - useWebSocket: 83 tests (3 files)
   - useExecutionManagement: 26 tests
   - useTemplateOperations: 23 tests
   - useCanvasEvents: 43 tests
   - useLLMProviders: 35 tests
   - useMarketplaceIntegration: 32 tests
+  - useMarketplaceData: 55 tests
 
 **All hooks with documented survivors now have comprehensive mutation tests!** 🎉
 
