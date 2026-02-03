@@ -23,7 +23,7 @@ module.exports = {
         jsx: 'react-jsx',
         target: 'ES2020',
         module: 'ESNext',
-        isolatedModules: true,
+        isolatedModules: true, // Required by ts-jest v30+, also set in tsconfig.json
       },
     }],
   },
