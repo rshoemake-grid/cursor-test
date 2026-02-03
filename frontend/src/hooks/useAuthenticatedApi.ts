@@ -280,9 +280,15 @@ export function useAuthenticatedApi(
               })
             }
           } catch (e) {
+            let fallbackErr: Error
+            try {
+              fallbackErr = createSafeError(HTTP_CLIENT_ERROR_MSG, 'HttpClientError')
+            } catch {
+              fallbackErr = { message: HTTP_CLIENT_ERROR_MSG, name: 'HttpClientError' } as any
+            }
             return new Promise((_, reject) => {
               setTimeout(() => {
-                reject(new Error(HTTP_CLIENT_ERROR_MSG))
+                reject(fallbackErr)
               }, 0)
             })
           }
@@ -312,9 +318,15 @@ export function useAuthenticatedApi(
               })
             }
           } catch (e) {
+            let fallbackErr: Error
+            try {
+              fallbackErr = createSafeError(URL_EMPTY_ERROR_MSG, 'InvalidUrlError')
+            } catch {
+              fallbackErr = { message: URL_EMPTY_ERROR_MSG, name: 'InvalidUrlError' } as any
+            }
             return new Promise((_, reject) => {
               setTimeout(() => {
-                reject(new Error(URL_EMPTY_ERROR_MSG))
+                reject(fallbackErr)
               }, 0)
             })
           }
@@ -372,9 +384,15 @@ export function useAuthenticatedApi(
               })
             }
           } catch (e) {
+            let fallbackErr: Error
+            try {
+              fallbackErr = createSafeError(HTTP_CLIENT_ERROR_MSG, 'HttpClientError')
+            } catch {
+              fallbackErr = { message: HTTP_CLIENT_ERROR_MSG, name: 'HttpClientError' } as any
+            }
             return new Promise((_, reject) => {
               setTimeout(() => {
-                reject(new Error(HTTP_CLIENT_ERROR_MSG))
+                reject(fallbackErr)
               }, 0)
             })
           }
@@ -404,9 +422,15 @@ export function useAuthenticatedApi(
               })
             }
           } catch (e) {
+            let fallbackErr: Error
+            try {
+              fallbackErr = createSafeError(URL_EMPTY_ERROR_MSG, 'InvalidUrlError')
+            } catch {
+              fallbackErr = { message: URL_EMPTY_ERROR_MSG, name: 'InvalidUrlError' } as any
+            }
             return new Promise((_, reject) => {
               setTimeout(() => {
-                reject(new Error(URL_EMPTY_ERROR_MSG))
+                reject(fallbackErr)
               }, 0)
             })
           }
@@ -459,9 +483,15 @@ export function useAuthenticatedApi(
               })
             }
           } catch (e) {
+            let fallbackErr: Error
+            try {
+              fallbackErr = createSafeError(HTTP_CLIENT_ERROR_MSG, 'HttpClientError')
+            } catch {
+              fallbackErr = { message: HTTP_CLIENT_ERROR_MSG, name: 'HttpClientError' } as any
+            }
             return new Promise((_, reject) => {
               setTimeout(() => {
-                reject(new Error(HTTP_CLIENT_ERROR_MSG))
+                reject(fallbackErr)
               }, 0)
             })
           }
@@ -491,9 +521,15 @@ export function useAuthenticatedApi(
               })
             }
           } catch (e) {
+            let fallbackErr: Error
+            try {
+              fallbackErr = createSafeError(URL_EMPTY_ERROR_MSG, 'InvalidUrlError')
+            } catch {
+              fallbackErr = { message: URL_EMPTY_ERROR_MSG, name: 'InvalidUrlError' } as any
+            }
             return new Promise((_, reject) => {
               setTimeout(() => {
-                reject(new Error(URL_EMPTY_ERROR_MSG))
+                reject(fallbackErr)
               }, 0)
             })
           }
