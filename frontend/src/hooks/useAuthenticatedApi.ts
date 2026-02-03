@@ -41,16 +41,33 @@ const createErrorFactory = (function() {
     
     // Try multiple error creation strategies, each wrapped in try-catch
     // Strategy 1: Call Error as function (avoid 'new' operator)
+    // Wrap assignment in try-catch - mutations can change assignment to throw
     try {
       try {
-        result = ErrorCtor(msg)
-        if (result) {
+        // Wrap function call and assignment separately
+        let errorResult: any
+        try {
+          errorResult = ErrorCtor(msg)
+        } catch {
+          errorResult = undefined
+        }
+        
+        if (errorResult) {
           try {
-            result.name = errName
+            result = errorResult
+            try {
+              result.name = errName
+            } catch {
+              result = { message: msg, name: errName, stack: '' }
+            }
+            try {
+              return result
+            } catch {
+              return { message: msg, name: errName, stack: '' }
+            }
           } catch {
-            result = { message: msg, name: errName, stack: '' }
+            // If assignment fails, fall through
           }
-          return result
         }
       } catch {
         // Fall through to next strategy
@@ -58,18 +75,44 @@ const createErrorFactory = (function() {
       
       // Strategy 2: Plain object with Error prototype
       try {
-        result = Object.create(Error.prototype)
-        result.message = msg
-        result.name = errName
-        return result
+        let protoResult: any
+        try {
+          protoResult = Object.create(Error.prototype)
+        } catch {
+          protoResult = undefined
+        }
+        
+        if (protoResult) {
+          try {
+            result = protoResult
+            try {
+              result.message = msg
+              result.name = errName
+            } catch {
+              result = { message: msg, name: errName, stack: '' }
+            }
+            try {
+              return result
+            } catch {
+              return { message: msg, name: errName, stack: '' }
+            }
+          } catch {
+            // Fall through
+          }
+        }
       } catch {
         // Fall through to Strategy 3
       }
       
-      // Strategy 3: Plain object (no prototype)
+      // Strategy 3: Plain object (no prototype) - this should never throw
       try {
         result = { message: msg, name: errName, stack: '' }
-        return result
+        try {
+          return result
+        } catch {
+          // If return throws, create new object
+          return { message: msg, name: errName, stack: '' }
+        }
       } catch {
         // Fall through to ultimate fallback
       }
@@ -77,8 +120,13 @@ const createErrorFactory = (function() {
       // Ultimate fallback - return plain object
     }
     
-    // Ultimate fallback - always return something
-    return { message: msg, name: errName, stack: '' }
+    // Ultimate fallback - always return something (should never throw)
+    try {
+      return { message: msg, name: errName, stack: '' }
+    } catch {
+      // If even this throws, return minimal object
+      return { message: msg || '', name: errName || 'Error', stack: '' }
+    }
   }
   return factory
 })()
