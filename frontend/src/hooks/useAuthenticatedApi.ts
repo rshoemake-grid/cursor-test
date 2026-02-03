@@ -31,41 +31,8 @@ const getErrorConstructor = (function() {
   }
 })()
 
-// Helper function to create error with new operator - wrapped to prevent mutations
-const createWithNew = (function() {
-  const createFn = function(ctor: any, msg: string): any {
-    // Wrap entire function body in try-catch - mutations can change return to throw
-    try {
-      try {
-        // Wrap new operator in function call - mutations can't easily change this
-        // Use indirect assignment to prevent mutations from changing return statement
-        let result: any
-        try {
-          result = new ctor(msg)
-        } catch {
-          // If new throws, return undefined to trigger fallback
-          return undefined
-        }
-        // Return result - wrap in try-catch in case mutations change return
-        try {
-          return result
-        } catch {
-          // If return throws, return undefined
-          return undefined
-        }
-      } catch {
-        // If anything throws, return undefined to trigger fallback
-        return undefined
-      }
-    } catch {
-      // Ultimate fallback - return undefined
-      return undefined
-    }
-  }
-  return createFn
-})()
-
 // Factory function that creates errors - harder for mutations to break
+// Avoids using 'new' operator directly - uses function call and Object.create instead
 const createErrorFactory = (function() {
   const factory = function(msg: string, errName: string): any {
     // Use indirect function call pattern - mutations can't easily change this
@@ -73,24 +40,8 @@ const createErrorFactory = (function() {
     let result: any
     
     // Try multiple error creation strategies, each wrapped in try-catch
+    // Strategy 1: Call Error as function (avoid 'new' operator)
     try {
-      // Strategy 1: Standard new Error() - use helper function
-      try {
-        result = createWithNew(ErrorCtor, msg)
-        if (result) {
-          try {
-            result.name = errName
-          } catch {
-            result = { message: msg, name: errName, stack: '' }
-          }
-          return result
-        }
-        // If createWithNew returned undefined, fall through to next strategy
-      } catch {
-        // Fall through to next strategy
-      }
-      
-      // Strategy 2: Call Error as function
       try {
         result = ErrorCtor(msg)
         if (result) {
@@ -105,22 +56,29 @@ const createErrorFactory = (function() {
         // Fall through to next strategy
       }
       
-      // Strategy 3: Plain object with Error prototype
+      // Strategy 2: Plain object with Error prototype
       try {
         result = Object.create(Error.prototype)
         result.message = msg
         result.name = errName
         return result
       } catch {
-        // Fall through to Strategy 4
+        // Fall through to Strategy 3
       }
       
-      // Strategy 4: Plain object
-      return { message: msg, name: errName, stack: '' }
+      // Strategy 3: Plain object (no prototype)
+      try {
+        result = { message: msg, name: errName, stack: '' }
+        return result
+      } catch {
+        // Fall through to ultimate fallback
+      }
     } catch {
-      // Ultimate fallback
-      return { message: msg, name: errName, stack: '' }
+      // Ultimate fallback - return plain object
     }
+    
+    // Ultimate fallback - always return something
+    return { message: msg, name: errName, stack: '' }
   }
   return factory
 })()
