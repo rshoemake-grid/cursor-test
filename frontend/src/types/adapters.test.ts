@@ -1133,6 +1133,92 @@ describe('defaultAdapters', () => {
         expect(putPromise).toBeInstanceOf(Promise)
         expect(deletePromise).toBeInstanceOf(Promise)
       })
+
+      it('should verify outer catch block in createHttpClient - triggers fallback client', async () => {
+        // To trigger the outer catch block, we need to make the try block throw
+        // We can do this by making the object literal creation throw
+        const originalFetch = global.fetch
+        const originalResponse = global.Response
+        
+        // Delete Response constructor to make object creation fail
+        delete (global as any).Response
+        
+        // Also make fetch throw to ensure we hit the catch
+        global.fetch = jest.fn(() => {
+          throw new Error('Fetch constructor failed')
+        }) as any
+        
+        const client = defaultAdapters.createHttpClient()
+        
+        // Should return fallback client with mockReject methods
+        expect(client).toBeDefined()
+        expect(typeof client.get).toBe('function')
+        expect(typeof client.post).toBe('function')
+        expect(typeof client.put).toBe('function')
+        expect(typeof client.delete).toBe('function')
+        
+        // All methods should reject with exact error message
+        await expect(client.get('https://api.test')).rejects.toThrow('HTTP client initialization failed')
+        await expect(client.post('https://api.test', {})).rejects.toThrow('HTTP client initialization failed')
+        await expect(client.put('https://api.test', {})).rejects.toThrow('HTTP client initialization failed')
+        await expect(client.delete('https://api.test')).rejects.toThrow('HTTP client initialization failed')
+        
+        // Restore
+        global.fetch = originalFetch
+        if (originalResponse) {
+          global.Response = originalResponse
+        }
+      })
+
+      it('should verify global.fetch fallback when fetch is undefined', async () => {
+        const originalFetch = global.fetch
+        const originalGlobalFetch = (global as any).global?.fetch
+        
+        // Delete fetch but set global.fetch
+        delete (global as any).fetch
+        const mockGlobalFetch = jest.fn().mockResolvedValue({ ok: true } as any)
+        ;(global as any).global = { fetch: mockGlobalFetch }
+        
+        const client = defaultAdapters.createHttpClient()
+        
+        // Should use global.fetch fallback
+        await client.get('https://api.test')
+        expect(mockGlobalFetch).toHaveBeenCalled()
+        
+        // Restore
+        global.fetch = originalFetch
+        if (originalGlobalFetch) {
+          (global as any).global.fetch = originalGlobalFetch
+        } else {
+          delete (global as any).global
+        }
+      })
+
+      it('should verify fallback function when both fetch and global.fetch are undefined', async () => {
+        const originalFetch = global.fetch
+        const originalResponse = global.Response
+        
+        delete (global as any).fetch
+        delete (global as any).global
+        
+        // Create a mock Response for the fallback
+        global.Response = class MockResponse {
+          ok = true
+          status = 200
+        } as any
+        
+        const client = defaultAdapters.createHttpClient()
+        
+        // Should use fallback function: () => Promise.resolve(new Response())
+        const response = await client.get('https://api.test')
+        expect(response).toBeInstanceOf(global.Response)
+        
+        // Restore
+        global.fetch = originalFetch
+        if (originalResponse) {
+          global.Response = originalResponse
+        }
+      })
     })
 
     describe('createWindowLocation - catch block fallback', () => {
@@ -1185,6 +1271,161 @@ describe('defaultAdapters', () => {
           expect(typeof location.search).toBe('string')
           expect(typeof location.hash).toBe('string')
         }
+      })
+
+      it('should verify catch block in createWindowLocation - window.location throws', () => {
+        // Mock window.location to throw when accessed
+        const originalLocation = window.location
+        const originalWindow = (global as any).window
+        
+        // Create a mock window with location that throws
+        const mockWindow = {
+          ...window,
+          get location() {
+            throw new Error('Location access failed')
+          }
+        }
+        
+        // Replace window temporarily
+        Object.defineProperty(global, 'window', {
+          value: mockWindow,
+          writable: true,
+          configurable: true
+        })
+        
+        const location = defaultAdapters.createWindowLocation()
+        
+        // Should return fallback values from catch block
+        expect(location).not.toBeNull()
+        expect(location?.protocol).toBe('http:')
+        expect(location?.host).toBe('localhost:8000')
+        expect(location?.hostname).toBe('localhost')
+        expect(location?.port).toBe('8000')
+        expect(location?.pathname).toBe('/')
+        expect(location?.search).toBe('')
+        expect(location?.hash).toBe('')
+        
+        // Restore
+        Object.defineProperty(global, 'window', {
+          value: originalWindow,
+          writable: true,
+          configurable: true
+        })
+      })
+
+      it('should verify optional chaining window.location?.protocol - protocol is undefined', () => {
+        const originalLocation = window.location
+        const mockLocation = {
+          ...window.location,
+          protocol: undefined as any
+        }
+        
+        Object.defineProperty(window, 'location', {
+          value: mockLocation,
+          writable: true,
+          configurable: true
+        })
+        
+        const location = defaultAdapters.createWindowLocation()
+        
+        // Should use fallback 'http:' when protocol is undefined
+        expect(location?.protocol).toBe('http:')
+        
+        // Restore
+        Object.defineProperty(window, 'location', {
+          value: originalLocation,
+          writable: true,
+          configurable: true
+        })
+      })
+
+      it('should verify optional chaining for all window.location properties', () => {
+        const originalLocation = window.location
+        const mockLocation = {
+          protocol: undefined,
+          host: undefined,
+          hostname: undefined,
+          port: undefined,
+          pathname: undefined,
+          search: undefined,
+          hash: undefined
+        }
+        
+        Object.defineProperty(window, 'location', {
+          value: mockLocation,
+          writable: true,
+          configurable: true
+        })
+        
+        const location = defaultAdapters.createWindowLocation()
+        
+        // Should use all fallback values
+        expect(location?.protocol).toBe('http:')
+        expect(location?.host).toBe('localhost:8000')
+        expect(location?.hostname).toBe('localhost')
+        expect(location?.port).toBe('8000')
+        expect(location?.pathname).toBe('/')
+        expect(location?.search).toBe('')
+        expect(location?.hash).toBe('')
+        
+        // Restore
+        Object.defineProperty(window, 'location', {
+          value: originalLocation,
+          writable: true,
+          configurable: true
+        })
+      })
+
+      it('should verify windowLocation?.protocol === https: branch - protocol is https:', () => {
+        const originalLocation = window.location
+        const mockLocation = {
+          ...window.location,
+          protocol: 'https:'
+        }
+        
+        Object.defineProperty(window, 'location', {
+          value: mockLocation,
+          writable: true,
+          configurable: true
+        })
+        
+        const location = defaultAdapters.createWindowLocation()
+        
+        // Verify protocol is https: (used in useWebSocket for wss:)
+        expect(location?.protocol).toBe('https:')
+        
+        // Restore
+        Object.defineProperty(window, 'location', {
+          value: originalLocation,
+          writable: true,
+          configurable: true
+        })
+      })
+
+      it('should verify windowLocation?.protocol === https: branch - protocol is http:', () => {
+        const originalLocation = window.location
+        const mockLocation = {
+          ...window.location,
+          protocol: 'http:'
+        }
+        
+        Object.defineProperty(window, 'location', {
+          value: mockLocation,
+          writable: true,
+          configurable: true
+        })
+        
+        const location = defaultAdapters.createWindowLocation()
+        
+        // Verify protocol is http: (used in useWebSocket for ws:)
+        expect(location?.protocol).toBe('http:')
+        
+        // Restore
+        Object.defineProperty(window, 'location', {
+          value: originalLocation,
+          writable: true,
+          configurable: true
+        })
       })
     })
   })
