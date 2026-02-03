@@ -673,4 +673,464 @@ describe('useMarketplacePublishing', () => {
       expect(payload.tags).not.toContain('  ')
     })
   })
+
+  describe('mutation killers - exact conditionals and operators', () => {
+    describe('openPublishModal - exact conditional checks', () => {
+      it('should verify exact conditional: if (!activeTab)', () => {
+        const { result } = renderHook(() =>
+          useMarketplacePublishing({
+            activeTab: undefined,
+            token: 'test-token',
+            httpClient: mockHttpClient,
+            apiBaseUrl: 'http://api.test',
+          })
+        )
+
+        act(() => {
+          result.current.openPublishModal()
+        })
+
+        // Verify exact falsy check: if (!activeTab)
+        expect(mockShowError).toHaveBeenCalledWith('Select a workflow tab before publishing.')
+        expect(result.current.showPublishModal).toBe(false)
+      })
+
+      it('should verify exact conditional: activeTab exists', () => {
+        const activeTab = {
+          id: 'tab-1',
+          workflowId: 'workflow-1',
+          name: 'Test Workflow',
+        }
+
+        const { result } = renderHook(() =>
+          useMarketplacePublishing({
+            activeTab,
+            token: 'test-token',
+            httpClient: mockHttpClient,
+            apiBaseUrl: 'http://api.test',
+          })
+        )
+
+        act(() => {
+          result.current.openPublishModal()
+        })
+
+        // Verify truthy check passes
+        expect(mockPublishForm.updateForm).toHaveBeenCalled()
+        expect(result.current.showPublishModal).toBe(true)
+      })
+    })
+
+    describe('handlePublish - exact logical OR checks', () => {
+      it('should verify exact logical OR: !activeTab || !activeTab.workflowId - both false', async () => {
+        const activeTab = {
+          id: 'tab-1',
+          workflowId: 'workflow-1',
+          name: 'Test Workflow',
+        }
+
+        const { result } = renderHook(() =>
+          useMarketplacePublishing({
+            activeTab,
+            token: 'test-token',
+            httpClient: mockHttpClient,
+            apiBaseUrl: 'http://api.test',
+          })
+        )
+
+        const mockEvent = { preventDefault: jest.fn() } as any
+
+        await act(async () => {
+          await result.current.handlePublish(mockEvent)
+        })
+
+        // Both conditions false - should proceed with publish
+        expect(mockHttpClient.post).toHaveBeenCalled()
+        expect(mockShowError).not.toHaveBeenCalledWith('Save the workflow before publishing to the marketplace.')
+      })
+
+      it('should verify exact logical OR: !activeTab || !activeTab.workflowId - first true', async () => {
+        const { result } = renderHook(() =>
+          useMarketplacePublishing({
+            activeTab: undefined,
+            token: 'test-token',
+            httpClient: mockHttpClient,
+            apiBaseUrl: 'http://api.test',
+          })
+        )
+
+        const mockEvent = { preventDefault: jest.fn() } as any
+
+        await act(async () => {
+          await result.current.handlePublish(mockEvent)
+        })
+
+        // First condition true - should show error
+        expect(mockShowError).toHaveBeenCalledWith('Save the workflow before publishing to the marketplace.')
+        expect(mockHttpClient.post).not.toHaveBeenCalled()
+      })
+
+      it('should verify exact logical OR: !activeTab || !activeTab.workflowId - second true', async () => {
+        const { result } = renderHook(() =>
+          useMarketplacePublishing({
+            activeTab: { id: 'tab-1', workflowId: null, name: 'Test' },
+            token: 'test-token',
+            httpClient: mockHttpClient,
+            apiBaseUrl: 'http://api.test',
+          })
+        )
+
+        const mockEvent = { preventDefault: jest.fn() } as any
+
+        await act(async () => {
+          await result.current.handlePublish(mockEvent)
+        })
+
+        // Second condition true - should show error
+        expect(mockShowError).toHaveBeenCalledWith('Save the workflow before publishing to the marketplace.')
+        expect(mockHttpClient.post).not.toHaveBeenCalled()
+      })
+    })
+
+    describe('handlePublish - exact ternary operator', () => {
+      it('should verify exact ternary: token ? { Authorization: ... } : {} - token exists', async () => {
+        const activeTab = {
+          id: 'tab-1',
+          workflowId: 'workflow-1',
+          name: 'Test Workflow',
+        }
+
+        const { result } = renderHook(() =>
+          useMarketplacePublishing({
+            activeTab,
+            token: 'test-token',
+            httpClient: mockHttpClient,
+            apiBaseUrl: 'http://api.test',
+          })
+        )
+
+        const mockEvent = { preventDefault: jest.fn() } as any
+
+        await act(async () => {
+          await result.current.handlePublish(mockEvent)
+        })
+
+        // Verify ternary: token ? { Authorization: ... } : {}
+        const postCall = mockHttpClient.post.mock.calls[0]
+        const headers = postCall[2]
+        expect(headers).toHaveProperty('Authorization', 'Bearer test-token')
+      })
+
+      it('should verify exact ternary: token ? { Authorization: ... } : {} - token is null', async () => {
+        const activeTab = {
+          id: 'tab-1',
+          workflowId: 'workflow-1',
+          name: 'Test Workflow',
+        }
+
+        const { result } = renderHook(() =>
+          useMarketplacePublishing({
+            activeTab,
+            token: null,
+            httpClient: mockHttpClient,
+            apiBaseUrl: 'http://api.test',
+          })
+        )
+
+        const mockEvent = { preventDefault: jest.fn() } as any
+
+        await act(async () => {
+          await result.current.handlePublish(mockEvent)
+        })
+
+        // Verify ternary: token ? { Authorization: ... } : {}
+        const postCall = mockHttpClient.post.mock.calls[0]
+        const headers = postCall[2]
+        expect(headers).not.toHaveProperty('Authorization')
+      })
+    })
+
+    describe('handlePublish - exact logical OR in payload', () => {
+      it('should verify exact logical OR: estimated_time || undefined - estimated_time is empty string', async () => {
+        const activeTab = {
+          id: 'tab-1',
+          workflowId: 'workflow-1',
+          name: 'Test Workflow',
+        }
+
+        mockPublishForm.form.estimated_time = ''
+
+        const { result } = renderHook(() =>
+          useMarketplacePublishing({
+            activeTab,
+            token: 'test-token',
+            httpClient: mockHttpClient,
+            apiBaseUrl: 'http://api.test',
+          })
+        )
+
+        const mockEvent = { preventDefault: jest.fn() } as any
+
+        await act(async () => {
+          await result.current.handlePublish(mockEvent)
+        })
+
+        // Verify exact logical OR: estimated_time || undefined
+        const postCall = mockHttpClient.post.mock.calls[0]
+        const payload = postCall[1]
+        expect(payload.estimated_time).toBeUndefined()
+      })
+
+      it('should verify exact logical OR: estimated_time || undefined - estimated_time has value', async () => {
+        const activeTab = {
+          id: 'tab-1',
+          workflowId: 'workflow-1',
+          name: 'Test Workflow',
+        }
+
+        mockPublishForm.form.estimated_time = '10 min'
+
+        const { result } = renderHook(() =>
+          useMarketplacePublishing({
+            activeTab,
+            token: 'test-token',
+            httpClient: mockHttpClient,
+            apiBaseUrl: 'http://api.test',
+          })
+        )
+
+        const mockEvent = { preventDefault: jest.fn() } as any
+
+        await act(async () => {
+          await result.current.handlePublish(mockEvent)
+        })
+
+        // Verify exact logical OR: estimated_time || undefined
+        const postCall = mockHttpClient.post.mock.calls[0]
+        const payload = postCall[1]
+        expect(payload.estimated_time).toBe('10 min')
+      })
+    })
+
+    describe('handlePublish - exact string operations', () => {
+      it('should verify exact string operations: tags.split().map().filter()', async () => {
+        const activeTab = {
+          id: 'tab-1',
+          workflowId: 'workflow-1',
+          name: 'Test Workflow',
+        }
+
+        mockPublishForm.form.tags = 'tag1,tag2,tag3'
+
+        const { result } = renderHook(() =>
+          useMarketplacePublishing({
+            activeTab,
+            token: 'test-token',
+            httpClient: mockHttpClient,
+            apiBaseUrl: 'http://api.test',
+          })
+        )
+
+        const mockEvent = { preventDefault: jest.fn() } as any
+
+        await act(async () => {
+          await result.current.handlePublish(mockEvent)
+        })
+
+        // Verify exact string operations: tags.split(',').map(tag => tag.trim()).filter(Boolean)
+        const postCall = mockHttpClient.post.mock.calls[0]
+        const payload = postCall[1]
+        expect(payload.tags).toEqual(['tag1', 'tag2', 'tag3'])
+      })
+
+      it('should verify exact string operations with whitespace', async () => {
+        const activeTab = {
+          id: 'tab-1',
+          workflowId: 'workflow-1',
+          name: 'Test Workflow',
+        }
+
+        mockPublishForm.form.tags = '  tag1  ,  tag2  ,  tag3  '
+
+        const { result } = renderHook(() =>
+          useMarketplacePublishing({
+            activeTab,
+            token: 'test-token',
+            httpClient: mockHttpClient,
+            apiBaseUrl: 'http://api.test',
+          })
+        )
+
+        const mockEvent = { preventDefault: jest.fn() } as any
+
+        await act(async () => {
+          await result.current.handlePublish(mockEvent)
+        })
+
+        // Verify trim() is called: tags.split(',').map(tag => tag.trim())
+        const postCall = mockHttpClient.post.mock.calls[0]
+        const payload = postCall[1]
+        expect(payload.tags).toEqual(['tag1', 'tag2', 'tag3'])
+      })
+
+      it('should verify exact filter(Boolean) removes empty strings', async () => {
+        const activeTab = {
+          id: 'tab-1',
+          workflowId: 'workflow-1',
+          name: 'Test Workflow',
+        }
+
+        mockPublishForm.form.tags = 'tag1,,tag2, ,tag3'
+
+        const { result } = renderHook(() =>
+          useMarketplacePublishing({
+            activeTab,
+            token: 'test-token',
+            httpClient: mockHttpClient,
+            apiBaseUrl: 'http://api.test',
+          })
+        )
+
+        const mockEvent = { preventDefault: jest.fn() } as any
+
+        await act(async () => {
+          await result.current.handlePublish(mockEvent)
+        })
+
+        // Verify filter(Boolean) removes empty strings
+        const postCall = mockHttpClient.post.mock.calls[0]
+        const payload = postCall[1]
+        expect(payload.tags).toEqual(['tag1', 'tag2', 'tag3'])
+        expect(payload.tags).not.toContain('')
+      })
+    })
+
+    describe('handlePublish - exact conditional: response.ok', () => {
+      it('should verify exact conditional: if (response.ok) - true branch', async () => {
+        const activeTab = {
+          id: 'tab-1',
+          workflowId: 'workflow-1',
+          name: 'Test Workflow',
+        }
+
+        mockHttpClient.post.mockResolvedValue({
+          ok: true,
+          json: async () => ({ name: 'Published Workflow' }),
+        })
+
+        const { result } = renderHook(() =>
+          useMarketplacePublishing({
+            activeTab,
+            token: 'test-token',
+            httpClient: mockHttpClient,
+            apiBaseUrl: 'http://api.test',
+          })
+        )
+
+        const mockEvent = { preventDefault: jest.fn() } as any
+
+        await act(async () => {
+          await result.current.handlePublish(mockEvent)
+        })
+
+        // Verify exact conditional: if (response.ok) - true branch
+        expect(mockShowSuccess).toHaveBeenCalled()
+        expect(result.current.showPublishModal).toBe(false)
+      })
+
+      it('should verify exact conditional: if (response.ok) - false branch', async () => {
+        const activeTab = {
+          id: 'tab-1',
+          workflowId: 'workflow-1',
+          name: 'Test Workflow',
+        }
+
+        mockHttpClient.post.mockResolvedValue({
+          ok: false,
+          text: async () => 'Error message',
+        })
+
+        const { result } = renderHook(() =>
+          useMarketplacePublishing({
+            activeTab,
+            token: 'test-token',
+            httpClient: mockHttpClient,
+            apiBaseUrl: 'http://api.test',
+          })
+        )
+
+        const mockEvent = { preventDefault: jest.fn() } as any
+
+        await act(async () => {
+          await result.current.handlePublish(mockEvent)
+        })
+
+        // Verify exact conditional: if (response.ok) - false branch
+        expect(mockShowError).toHaveBeenCalledWith('Failed to publish: Error message')
+        // Modal should remain in its current state (not explicitly closed on error)
+        // The modal state depends on whether it was opened before
+        expect(result.current.isPublishing).toBe(false)
+      })
+    })
+
+    describe('handlePublish - exact logical OR in error handling', () => {
+      it('should verify exact logical OR: error.message || "Unknown error" - error.message exists', async () => {
+        const activeTab = {
+          id: 'tab-1',
+          workflowId: 'workflow-1',
+          name: 'Test Workflow',
+        }
+
+        const error = new Error('Network error')
+        mockHttpClient.post.mockRejectedValue(error)
+
+        const { result } = renderHook(() =>
+          useMarketplacePublishing({
+            activeTab,
+            token: 'test-token',
+            httpClient: mockHttpClient,
+            apiBaseUrl: 'http://api.test',
+          })
+        )
+
+        const mockEvent = { preventDefault: jest.fn() } as any
+
+        await act(async () => {
+          await result.current.handlePublish(mockEvent)
+        })
+
+        // Verify exact logical OR: error.message || 'Unknown error'
+        expect(mockShowError).toHaveBeenCalledWith('Failed to publish workflow: Network error')
+      })
+
+      it('should verify exact logical OR: error.message || "Unknown error" - error.message is undefined', async () => {
+        const activeTab = {
+          id: 'tab-1',
+          workflowId: 'workflow-1',
+          name: 'Test Workflow',
+        }
+
+        const error: any = {}
+        mockHttpClient.post.mockRejectedValue(error)
+
+        const { result } = renderHook(() =>
+          useMarketplacePublishing({
+            activeTab,
+            token: 'test-token',
+            httpClient: mockHttpClient,
+            apiBaseUrl: 'http://api.test',
+          })
+        )
+
+        const mockEvent = { preventDefault: jest.fn() } as any
+
+        await act(async () => {
+          await result.current.handlePublish(mockEvent)
+        })
+
+        // Verify exact logical OR: error.message || 'Unknown error'
+        expect(mockShowError).toHaveBeenCalledWith('Failed to publish workflow: Unknown error')
+      })
+    })
+  })
 })
