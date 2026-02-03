@@ -1,0 +1,31 @@
+{
+  "$schema": "./node_modules/@stryker-mutator/core/schema/stryker-schema.json",
+  "packageManager": "npm",
+  "reporters": ["html", "clear-text", "progress"],
+  "testRunner": "jest",
+  "coverageAnalysis": "perTest",
+  "concurrency": 4,
+  "ignoreStatic": true,
+  "timeoutMS": 30000,
+  "maxTestRunnerReuse": 10,
+  "plugins": ["@stryker-mutator/jest-runner"],
+  "mutate": [
+    "src/hooks/useMarketplaceData.ts",
+    "src/hooks/useCanvasEvents.ts",
+    "src/hooks/useWorkflowExecution.ts",
+    "src/hooks/useTemplateOperations.ts",
+    "src/hooks/useLLMProviders.ts"
+  ],
+  "checkers": [],
+  "thresholds": {
+    "high": 80,
+    "low": 70,
+    "break": 60
+  },
+  "jest": {
+    "configFile": "./jest.config.cjs",
+    "enableFindRelatedTests": true
+  },
+  "logLevel": "info",
+  "fileLogLevel": "trace"
+}

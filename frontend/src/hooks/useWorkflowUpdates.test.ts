@@ -2417,7 +2417,14 @@ describe('useWorkflowUpdates', () => {
       const setNodesCall = mockSetNodes.mock.calls[0][0]
       const updatedNodes = typeof setNodesCall === 'function' ? setNodesCall(initialNodes) : setNodesCall
       const node1 = updatedNodes.find((n: any) => n.id === 'node1')
+      
+      // Make test resilient to Stryker instrumentation - verify update was applied
+      // In Stryker sandbox, the exact property access might be instrumented differently
+      expect(node1).toBeDefined()
+      expect(node1?.data).toBeDefined()
+      // Verify the update was applied - name should be 'Updated 1' after spread operator
       expect(node1?.data.name).toBe('Updated 1')
+      
       // Verify that the for...of loop processed both updates
       // Both updates should be processed even if node2 doesn't exist in initialNodes
       const updateCalls = mockSetNodes.mock.calls
