@@ -578,4 +578,454 @@ describe('useWorkflowLoader', () => {
       expect(mockIsLoadingRef.current).toBe(false)
     })
   })
+
+  describe('mutation killers - exact conditionals and operators', () => {
+    describe('useEffect - exact conditional checks', () => {
+      it('should verify exact conditional: if (workflowId && workflowId === lastLoadedWorkflowIdRef.current)', () => {
+        mockLastLoadedWorkflowIdRef.current = 'workflow-1'
+
+        renderHook(() =>
+          useWorkflowLoader({
+            workflowId: 'workflow-1',
+            tabIsUnsaved: false,
+            setNodes: mockSetNodes,
+            setEdges: mockSetEdges,
+            setLocalWorkflowId: mockSetLocalWorkflowId,
+            setLocalWorkflowName: mockSetLocalWorkflowName,
+            setLocalWorkflowDescription: mockSetLocalWorkflowDescription,
+            setVariables: mockSetVariables,
+            setSelectedNodeId: mockSetSelectedNodeId,
+            workflowNodeToNode: mockWorkflowNodeToNode,
+            onWorkflowLoaded: mockOnWorkflowLoaded,
+            isLoadingRef: mockIsLoadingRef,
+            lastLoadedWorkflowIdRef: mockLastLoadedWorkflowIdRef,
+          })
+        )
+
+        // Verify exact conditional: if (workflowId && workflowId === lastLoadedWorkflowIdRef.current)
+        // Both conditions true - should return early
+        expect(api.getWorkflow).not.toHaveBeenCalled()
+      })
+
+      it('should verify exact conditional: if (workflowId && workflowId === lastLoadedWorkflowIdRef.current) - workflowId different', () => {
+        mockLastLoadedWorkflowIdRef.current = 'workflow-1'
+
+        const mockWorkflow = {
+          id: 'workflow-2',
+          name: 'Workflow 2',
+          description: 'Description',
+          nodes: [],
+          edges: [],
+          variables: {},
+        }
+
+        ;(api.getWorkflow as jest.Mock).mockResolvedValue(mockWorkflow)
+
+        renderHook(() =>
+          useWorkflowLoader({
+            workflowId: 'workflow-2', // Different from lastLoaded
+            tabIsUnsaved: false,
+            setNodes: mockSetNodes,
+            setEdges: mockSetEdges,
+            setLocalWorkflowId: mockSetLocalWorkflowId,
+            setLocalWorkflowName: mockSetLocalWorkflowName,
+            setLocalWorkflowDescription: mockSetLocalWorkflowDescription,
+            setVariables: mockSetVariables,
+            setSelectedNodeId: mockSetSelectedNodeId,
+            workflowNodeToNode: mockWorkflowNodeToNode,
+            onWorkflowLoaded: mockOnWorkflowLoaded,
+            isLoadingRef: mockIsLoadingRef,
+            lastLoadedWorkflowIdRef: mockLastLoadedWorkflowIdRef,
+          })
+        )
+
+        act(() => {
+          jest.advanceTimersByTime(0)
+        })
+
+        // Verify exact conditional: workflowId === lastLoadedWorkflowIdRef.current is false
+        // Should load the workflow
+        expect(api.getWorkflow).toHaveBeenCalledWith('workflow-2')
+      })
+
+      it('should verify exact conditional: if (workflowId)', () => {
+        renderHook(() =>
+          useWorkflowLoader({
+            workflowId: null, // Falsy
+            tabIsUnsaved: false,
+            setNodes: mockSetNodes,
+            setEdges: mockSetEdges,
+            setLocalWorkflowId: mockSetLocalWorkflowId,
+            setLocalWorkflowName: mockSetLocalWorkflowName,
+            setLocalWorkflowDescription: mockSetLocalWorkflowDescription,
+            setVariables: mockSetVariables,
+            setSelectedNodeId: mockSetSelectedNodeId,
+            workflowNodeToNode: mockWorkflowNodeToNode,
+            onWorkflowLoaded: mockOnWorkflowLoaded,
+            isLoadingRef: mockIsLoadingRef,
+            lastLoadedWorkflowIdRef: mockLastLoadedWorkflowIdRef,
+          })
+        )
+
+        // Verify exact conditional: if (workflowId) - falsy branch
+        expect(api.getWorkflow).not.toHaveBeenCalled()
+        expect(mockLastLoadedWorkflowIdRef.current).toBeNull()
+        expect(mockIsLoadingRef.current).toBe(false)
+      })
+
+      it('should verify exact conditional: if (tabIsUnsaved)', () => {
+        const mockWorkflow = {
+          id: 'workflow-1',
+          name: 'Workflow 1',
+          description: 'Description',
+          nodes: [],
+          edges: [],
+          variables: {},
+        }
+
+        ;(api.getWorkflow as jest.Mock).mockResolvedValue(mockWorkflow)
+
+        renderHook(() =>
+          useWorkflowLoader({
+            workflowId: 'workflow-1',
+            tabIsUnsaved: true, // Unsaved - should not load
+            setNodes: mockSetNodes,
+            setEdges: mockSetEdges,
+            setLocalWorkflowId: mockSetLocalWorkflowId,
+            setLocalWorkflowName: mockSetLocalWorkflowName,
+            setLocalWorkflowDescription: mockSetLocalWorkflowDescription,
+            setVariables: mockSetVariables,
+            setSelectedNodeId: mockSetSelectedNodeId,
+            workflowNodeToNode: mockWorkflowNodeToNode,
+            onWorkflowLoaded: mockOnWorkflowLoaded,
+            isLoadingRef: mockIsLoadingRef,
+            lastLoadedWorkflowIdRef: mockLastLoadedWorkflowIdRef,
+          })
+        )
+
+        // Verify exact conditional: if (tabIsUnsaved) - true branch
+        expect(api.getWorkflow).not.toHaveBeenCalled()
+      })
+    })
+
+    describe('workflow processing - exact logical OR operators', () => {
+      it('should verify exact logical OR: workflow.description || ""', async () => {
+        const mockWorkflow = {
+          id: 'workflow-1',
+          name: 'Workflow 1',
+          description: null, // null - should use fallback
+          nodes: [],
+          edges: [],
+          variables: {},
+        }
+
+        ;(api.getWorkflow as jest.Mock).mockResolvedValue(mockWorkflow)
+
+        renderHook(() =>
+          useWorkflowLoader({
+            workflowId: 'workflow-1',
+            tabIsUnsaved: false,
+            setNodes: mockSetNodes,
+            setEdges: mockSetEdges,
+            setLocalWorkflowId: mockSetLocalWorkflowId,
+            setLocalWorkflowName: mockSetLocalWorkflowName,
+            setLocalWorkflowDescription: mockSetLocalWorkflowDescription,
+            setVariables: mockSetVariables,
+            setSelectedNodeId: mockSetSelectedNodeId,
+            workflowNodeToNode: mockWorkflowNodeToNode,
+            onWorkflowLoaded: mockOnWorkflowLoaded,
+            isLoadingRef: mockIsLoadingRef,
+            lastLoadedWorkflowIdRef: mockLastLoadedWorkflowIdRef,
+          })
+        )
+
+        await act(async () => {
+          jest.advanceTimersByTime(0)
+          await Promise.resolve()
+        })
+
+        // Verify exact logical OR: workflow.description || ""
+        expect(mockSetLocalWorkflowDescription).toHaveBeenCalledWith('')
+      })
+
+      it('should verify exact logical OR: workflow.variables || {}', async () => {
+        const mockWorkflow = {
+          id: 'workflow-1',
+          name: 'Workflow 1',
+          description: 'Description',
+          nodes: [],
+          edges: [],
+          variables: null, // null - should use fallback
+        }
+
+        ;(api.getWorkflow as jest.Mock).mockResolvedValue(mockWorkflow)
+
+        renderHook(() =>
+          useWorkflowLoader({
+            workflowId: 'workflow-1',
+            tabIsUnsaved: false,
+            setNodes: mockSetNodes,
+            setEdges: mockSetEdges,
+            setLocalWorkflowId: mockSetLocalWorkflowId,
+            setLocalWorkflowName: mockSetLocalWorkflowName,
+            setLocalWorkflowDescription: mockSetLocalWorkflowDescription,
+            setVariables: mockSetVariables,
+            setSelectedNodeId: mockSetSelectedNodeId,
+            workflowNodeToNode: mockWorkflowNodeToNode,
+            onWorkflowLoaded: mockOnWorkflowLoaded,
+            isLoadingRef: mockIsLoadingRef,
+            lastLoadedWorkflowIdRef: mockLastLoadedWorkflowIdRef,
+          })
+        )
+
+        await act(async () => {
+          jest.advanceTimersByTime(0)
+          await Promise.resolve()
+        })
+
+        // Verify exact logical OR: workflow.variables || {}
+        expect(mockSetVariables).toHaveBeenCalledWith({})
+      })
+
+      it('should verify exact logical OR: workflow.edges || []', async () => {
+        const mockWorkflow = {
+          id: 'workflow-1',
+          name: 'Workflow 1',
+          description: 'Description',
+          nodes: [],
+          edges: null, // null - should use fallback
+          variables: {},
+        }
+
+        ;(api.getWorkflow as jest.Mock).mockResolvedValue(mockWorkflow)
+
+        renderHook(() =>
+          useWorkflowLoader({
+            workflowId: 'workflow-1',
+            tabIsUnsaved: false,
+            setNodes: mockSetNodes,
+            setEdges: mockSetEdges,
+            setLocalWorkflowId: mockSetLocalWorkflowId,
+            setLocalWorkflowName: mockSetLocalWorkflowName,
+            setLocalWorkflowDescription: mockSetLocalWorkflowDescription,
+            setVariables: mockSetVariables,
+            setSelectedNodeId: mockSetSelectedNodeId,
+            workflowNodeToNode: mockWorkflowNodeToNode,
+            onWorkflowLoaded: mockOnWorkflowLoaded,
+            isLoadingRef: mockIsLoadingRef,
+            lastLoadedWorkflowIdRef: mockLastLoadedWorkflowIdRef,
+          })
+        )
+
+        await act(async () => {
+          jest.advanceTimersByTime(0)
+          await Promise.resolve()
+        })
+
+        // Verify exact logical OR: workflow.edges || []
+        // formatEdgesForReactFlow should be called with []
+        expect(formatEdgesForReactFlow).toHaveBeenCalledWith([])
+      })
+    })
+
+    describe('callback execution - exact conditional', () => {
+      it('should verify exact conditional: if (onWorkflowLoaded)', async () => {
+        const mockWorkflow = {
+          id: 'workflow-1',
+          name: 'Workflow 1',
+          description: 'Description',
+          nodes: [],
+          edges: [],
+          variables: {},
+        }
+
+        ;(api.getWorkflow as jest.Mock).mockResolvedValue(mockWorkflow)
+
+        renderHook(() =>
+          useWorkflowLoader({
+            workflowId: 'workflow-1',
+            tabIsUnsaved: false,
+            setNodes: mockSetNodes,
+            setEdges: mockSetEdges,
+            setLocalWorkflowId: mockSetLocalWorkflowId,
+            setLocalWorkflowName: mockSetLocalWorkflowName,
+            setLocalWorkflowDescription: mockSetLocalWorkflowDescription,
+            setVariables: mockSetVariables,
+            setSelectedNodeId: mockSetSelectedNodeId,
+            workflowNodeToNode: mockWorkflowNodeToNode,
+            onWorkflowLoaded: mockOnWorkflowLoaded,
+            isLoadingRef: mockIsLoadingRef,
+            lastLoadedWorkflowIdRef: mockLastLoadedWorkflowIdRef,
+          })
+        )
+
+        await act(async () => {
+          jest.advanceTimersByTime(0)
+          await Promise.resolve()
+        })
+
+        // Verify exact conditional: if (onWorkflowLoaded)
+        expect(mockOnWorkflowLoaded).toHaveBeenCalledWith('workflow-1', 'Workflow 1')
+      })
+
+      it('should verify exact conditional: if (onWorkflowLoaded) - undefined', async () => {
+        const mockWorkflow = {
+          id: 'workflow-1',
+          name: 'Workflow 1',
+          description: 'Description',
+          nodes: [],
+          edges: [],
+          variables: {},
+        }
+
+        ;(api.getWorkflow as jest.Mock).mockResolvedValue(mockWorkflow)
+
+        renderHook(() =>
+          useWorkflowLoader({
+            workflowId: 'workflow-1',
+            tabIsUnsaved: false,
+            setNodes: mockSetNodes,
+            setEdges: mockSetEdges,
+            setLocalWorkflowId: mockSetLocalWorkflowId,
+            setLocalWorkflowName: mockSetLocalWorkflowName,
+            setLocalWorkflowDescription: mockSetLocalWorkflowDescription,
+            setVariables: mockSetVariables,
+            setSelectedNodeId: mockSetSelectedNodeId,
+            workflowNodeToNode: mockWorkflowNodeToNode,
+            onWorkflowLoaded: undefined, // Undefined - should not call
+            isLoadingRef: mockIsLoadingRef,
+            lastLoadedWorkflowIdRef: mockLastLoadedWorkflowIdRef,
+          })
+        )
+
+        await act(async () => {
+          jest.advanceTimersByTime(0)
+          await Promise.resolve()
+        })
+
+        // Verify exact conditional: if (onWorkflowLoaded) - falsy branch
+        // Should not crash when onWorkflowLoaded is undefined
+        expect(mockSetLocalWorkflowId).toHaveBeenCalled()
+      })
+    })
+
+    describe('setTimeout - exact delays', () => {
+      it('should verify exact setTimeout delay: 50ms for setEdges', async () => {
+        const mockWorkflow = {
+          id: 'workflow-1',
+          name: 'Workflow 1',
+          description: 'Description',
+          nodes: [],
+          edges: [{ id: 'edge-1', source: 'node-1', target: 'node-2' }],
+          variables: {},
+        }
+
+        ;(api.getWorkflow as jest.Mock).mockResolvedValue(mockWorkflow)
+
+        const setTimeoutSpy = jest.spyOn(global, 'setTimeout')
+
+        renderHook(() =>
+          useWorkflowLoader({
+            workflowId: 'workflow-1',
+            tabIsUnsaved: false,
+            setNodes: mockSetNodes,
+            setEdges: mockSetEdges,
+            setLocalWorkflowId: mockSetLocalWorkflowId,
+            setLocalWorkflowName: mockSetLocalWorkflowName,
+            setLocalWorkflowDescription: mockSetLocalWorkflowDescription,
+            setVariables: mockSetVariables,
+            setSelectedNodeId: mockSetSelectedNodeId,
+            workflowNodeToNode: mockWorkflowNodeToNode,
+            onWorkflowLoaded: mockOnWorkflowLoaded,
+            isLoadingRef: mockIsLoadingRef,
+            lastLoadedWorkflowIdRef: mockLastLoadedWorkflowIdRef,
+          })
+        )
+
+        await act(async () => {
+          jest.advanceTimersByTime(0)
+          await Promise.resolve()
+        })
+
+        // Verify exact setTimeout delay: 50ms for setEdges
+        const setTimeoutCalls = setTimeoutSpy.mock.calls
+        const edgeCall = setTimeoutCalls.find((call: any[]) => call[1] === 50)
+        expect(edgeCall).toBeDefined()
+
+        setTimeoutSpy.mockRestore()
+      })
+
+      it('should verify exact setTimeout delay: 100ms for isLoadingRef', async () => {
+        const mockWorkflow = {
+          id: 'workflow-1',
+          name: 'Workflow 1',
+          description: 'Description',
+          nodes: [],
+          edges: [],
+          variables: {},
+        }
+
+        ;(api.getWorkflow as jest.Mock).mockResolvedValue(mockWorkflow)
+
+        const setTimeoutSpy = jest.spyOn(global, 'setTimeout')
+
+        renderHook(() =>
+          useWorkflowLoader({
+            workflowId: 'workflow-1',
+            tabIsUnsaved: false,
+            setNodes: mockSetNodes,
+            setEdges: mockSetEdges,
+            setLocalWorkflowId: mockSetLocalWorkflowId,
+            setLocalWorkflowName: mockSetLocalWorkflowName,
+            setLocalWorkflowDescription: mockSetLocalWorkflowDescription,
+            setVariables: mockSetVariables,
+            setSelectedNodeId: mockSetSelectedNodeId,
+            workflowNodeToNode: mockWorkflowNodeToNode,
+            onWorkflowLoaded: mockOnWorkflowLoaded,
+            isLoadingRef: mockIsLoadingRef,
+            lastLoadedWorkflowIdRef: mockLastLoadedWorkflowIdRef,
+          })
+        )
+
+        await act(async () => {
+          jest.advanceTimersByTime(0)
+          await Promise.resolve()
+        })
+
+        // Verify exact setTimeout delay: 100ms for isLoadingRef
+        const setTimeoutCalls = setTimeoutSpy.mock.calls
+        const loadingCall = setTimeoutCalls.find((call: any[]) => call[1] === 100)
+        expect(loadingCall).toBeDefined()
+
+        setTimeoutSpy.mockRestore()
+      })
+    })
+
+    describe('else branch - exact assignments', () => {
+      it('should verify exact assignments in else branch: lastLoadedWorkflowIdRef.current = null, isLoadingRef.current = false', () => {
+        renderHook(() =>
+          useWorkflowLoader({
+            workflowId: null, // Triggers else branch
+            tabIsUnsaved: false,
+            setNodes: mockSetNodes,
+            setEdges: mockSetEdges,
+            setLocalWorkflowId: mockSetLocalWorkflowId,
+            setLocalWorkflowName: mockSetLocalWorkflowName,
+            setLocalWorkflowDescription: mockSetLocalWorkflowDescription,
+            setVariables: mockSetVariables,
+            setSelectedNodeId: mockSetSelectedNodeId,
+            workflowNodeToNode: mockWorkflowNodeToNode,
+            onWorkflowLoaded: mockOnWorkflowLoaded,
+            isLoadingRef: mockIsLoadingRef,
+            lastLoadedWorkflowIdRef: mockLastLoadedWorkflowIdRef,
+          })
+        )
+
+        // Verify exact assignments in else branch
+        // The code: else { lastLoadedWorkflowIdRef.current = null; isLoadingRef.current = false; }
+        expect(mockLastLoadedWorkflowIdRef.current).toBeNull()
+        expect(mockIsLoadingRef.current).toBe(false)
+      })
+    })
+  })
 })
