@@ -382,4 +382,285 @@ describe('useWorkflowUpdateHandler', () => {
       )
     })
   })
+
+  describe('mutation killers - exact conditionals and operators', () => {
+    describe('handleWorkflowUpdate - exact conditional checks', () => {
+      it('should verify exact conditional: if (!changes)', () => {
+        const { result } = renderHook(() =>
+          useWorkflowUpdateHandler({
+            localWorkflowId: 'workflow-1',
+            setNodes: mockSetNodes,
+            setEdges: mockSetEdges,
+            workflowNodeToNode: mockWorkflowNodeToNode,
+            applyLocalChanges: mockApplyLocalChanges,
+          })
+        )
+
+        // Test with null
+        act(() => {
+          result.current.handleWorkflowUpdate(null)
+        })
+
+        // Verify exact falsy check: if (!changes)
+        expect(mockApplyLocalChanges).not.toHaveBeenCalled()
+        expect(api.getWorkflow).not.toHaveBeenCalled()
+
+        // Test with undefined
+        act(() => {
+          result.current.handleWorkflowUpdate(undefined as any)
+        })
+
+        expect(mockApplyLocalChanges).not.toHaveBeenCalled()
+        expect(api.getWorkflow).not.toHaveBeenCalled()
+      })
+
+      it('should verify exact conditional: if (hasDeletions && localWorkflowId) - both true', async () => {
+        const mockWorkflow = {
+          id: 'workflow-1',
+          name: 'Test Workflow',
+          nodes: [],
+          edges: [],
+        }
+
+        ;(api.getWorkflow as jest.Mock).mockResolvedValue(mockWorkflow)
+
+        const { result } = renderHook(() =>
+          useWorkflowUpdateHandler({
+            localWorkflowId: 'workflow-1', // Truthy
+            setNodes: mockSetNodes,
+            setEdges: mockSetEdges,
+            workflowNodeToNode: mockWorkflowNodeToNode,
+            applyLocalChanges: mockApplyLocalChanges,
+          })
+        )
+
+        const changes = {
+          nodes_to_delete: ['node-1'], // hasDeletions is true
+        }
+
+        act(() => {
+          result.current.handleWorkflowUpdate(changes)
+        })
+
+        // Advance timers to trigger setTimeout
+        act(() => {
+          jest.advanceTimersByTime(200)
+        })
+
+        await act(async () => {
+          await Promise.resolve()
+        })
+
+        // Verify exact conditional: if (hasDeletions && localWorkflowId) - both true
+        // Should reload from database
+        expect(mockApplyLocalChanges).not.toHaveBeenCalled()
+        expect(api.getWorkflow).toHaveBeenCalled()
+      })
+
+      it('should verify exact conditional: if (hasDeletions && localWorkflowId) - first true, second false', () => {
+        const { result } = renderHook(() =>
+          useWorkflowUpdateHandler({
+            localWorkflowId: null, // Falsy
+            setNodes: mockSetNodes,
+            setEdges: mockSetEdges,
+            workflowNodeToNode: mockWorkflowNodeToNode,
+            applyLocalChanges: mockApplyLocalChanges,
+          })
+        )
+
+        const changes = {
+          nodes_to_delete: ['node-1'], // hasDeletions is true
+        }
+
+        act(() => {
+          result.current.handleWorkflowUpdate(changes)
+        })
+
+        // Verify exact conditional: if (hasDeletions && localWorkflowId) - first true, second false
+        // Should apply local changes (not reload)
+        expect(mockApplyLocalChanges).toHaveBeenCalledWith(changes)
+        expect(api.getWorkflow).not.toHaveBeenCalled()
+      })
+
+      it('should verify exact conditional: if (hasDeletions && localWorkflowId) - first false', () => {
+        const { result } = renderHook(() =>
+          useWorkflowUpdateHandler({
+            localWorkflowId: 'workflow-1', // Truthy
+            setNodes: mockSetNodes,
+            setEdges: mockSetEdges,
+            workflowNodeToNode: mockWorkflowNodeToNode,
+            applyLocalChanges: mockApplyLocalChanges,
+          })
+        )
+
+        const changes = {
+          nodes_to_add: [{ id: 'node-1' }], // No deletions - hasDeletions is false
+        }
+
+        act(() => {
+          result.current.handleWorkflowUpdate(changes)
+        })
+
+        // Verify exact conditional: if (hasDeletions && localWorkflowId) - first false
+        // Should apply local changes (not reload)
+        expect(mockApplyLocalChanges).toHaveBeenCalledWith(changes)
+        expect(api.getWorkflow).not.toHaveBeenCalled()
+      })
+    })
+
+    describe('handleWorkflowUpdate - exact logical AND operator', () => {
+      it('should verify exact logical AND: changes.nodes_to_delete && changes.nodes_to_delete.length > 0', async () => {
+        const mockWorkflow = {
+          id: 'workflow-1',
+          name: 'Test Workflow',
+          nodes: [],
+          edges: [],
+        }
+
+        ;(api.getWorkflow as jest.Mock).mockResolvedValue(mockWorkflow)
+
+        const { result } = renderHook(() =>
+          useWorkflowUpdateHandler({
+            localWorkflowId: 'workflow-1',
+            setNodes: mockSetNodes,
+            setEdges: mockSetEdges,
+            workflowNodeToNode: mockWorkflowNodeToNode,
+            applyLocalChanges: mockApplyLocalChanges,
+          })
+        )
+
+        // Test branch 1: changes.nodes_to_delete exists and length > 0
+        const changes1 = {
+          nodes_to_delete: ['node-1'], // Both conditions true
+        }
+
+        act(() => {
+          result.current.handleWorkflowUpdate(changes1)
+        })
+
+        // Advance timers to trigger setTimeout
+        act(() => {
+          jest.advanceTimersByTime(200)
+        })
+
+        await act(async () => {
+          await Promise.resolve()
+        })
+
+        expect(api.getWorkflow).toHaveBeenCalled()
+
+        // Reset for next test
+        jest.clearAllMocks()
+
+        // Test branch 2: changes.nodes_to_delete exists but length === 0
+
+        const changes2 = {
+          nodes_to_delete: [], // First true, second false
+        }
+
+        act(() => {
+          result.current.handleWorkflowUpdate(changes2)
+        })
+
+        expect(mockApplyLocalChanges).toHaveBeenCalledWith(changes2)
+        expect(api.getWorkflow).not.toHaveBeenCalled()
+
+        // Test branch 3: changes.nodes_to_delete is null/undefined
+        mockApplyLocalChanges.mockClear()
+
+        const changes3 = {
+          nodes_to_add: [{ id: 'node-1' }], // First false
+        }
+
+        act(() => {
+          result.current.handleWorkflowUpdate(changes3)
+        })
+
+        expect(mockApplyLocalChanges).toHaveBeenCalledWith(changes3)
+        expect(api.getWorkflow).not.toHaveBeenCalled()
+      })
+    })
+
+    describe('handleWorkflowUpdate - exact logical OR operator', () => {
+      it('should verify exact logical OR: workflow.edges || []', async () => {
+        const mockWorkflow = {
+          id: 'workflow-1',
+          name: 'Test Workflow',
+          nodes: [],
+          edges: null, // null - should use fallback
+        }
+
+        ;(api.getWorkflow as jest.Mock).mockResolvedValue(mockWorkflow)
+
+        const { result } = renderHook(() =>
+          useWorkflowUpdateHandler({
+            localWorkflowId: 'workflow-1',
+            setNodes: mockSetNodes,
+            setEdges: mockSetEdges,
+            workflowNodeToNode: mockWorkflowNodeToNode,
+            applyLocalChanges: mockApplyLocalChanges,
+          })
+        )
+
+        const changes = {
+          nodes_to_delete: ['node-1'],
+        }
+
+        act(() => {
+          result.current.handleWorkflowUpdate(changes)
+        })
+
+        act(() => {
+          jest.advanceTimersByTime(200)
+        })
+
+        await act(async () => {
+          await Promise.resolve()
+        })
+
+        // Verify exact logical OR: workflow.edges || []
+        expect(formatEdgesForReactFlow).toHaveBeenCalledWith([])
+      })
+    })
+
+    describe('handleWorkflowUpdate - exact setTimeout delay', () => {
+      it('should verify exact setTimeout delay: 200ms', () => {
+        const mockWorkflow = {
+          id: 'workflow-1',
+          name: 'Test Workflow',
+          nodes: [],
+          edges: [],
+        }
+
+        ;(api.getWorkflow as jest.Mock).mockResolvedValue(mockWorkflow)
+
+        const setTimeoutSpy = jest.spyOn(global, 'setTimeout')
+
+        const { result } = renderHook(() =>
+          useWorkflowUpdateHandler({
+            localWorkflowId: 'workflow-1',
+            setNodes: mockSetNodes,
+            setEdges: mockSetEdges,
+            workflowNodeToNode: mockWorkflowNodeToNode,
+            applyLocalChanges: mockApplyLocalChanges,
+          })
+        )
+
+        const changes = {
+          nodes_to_delete: ['node-1'],
+        }
+
+        act(() => {
+          result.current.handleWorkflowUpdate(changes)
+        })
+
+        // Verify exact setTimeout delay: 200ms
+        const setTimeoutCalls = setTimeoutSpy.mock.calls
+        const delay200Call = setTimeoutCalls.find((call: any[]) => call[1] === 200)
+        expect(delay200Call).toBeDefined()
+
+        setTimeoutSpy.mockRestore()
+      })
+    })
+  })
 })
