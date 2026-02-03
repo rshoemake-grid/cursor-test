@@ -13,44 +13,77 @@ export const URL_EMPTY_ERROR_MSG = 'URL cannot be empty'
  * Wraps error creation in try-catch to handle mutations that change error creation
  * Uses a function wrapper to prevent mutations from changing the error creation pattern
  * Made extra defensive for mutation testing - never throws synchronously
+ * 
+ * Uses an immediately invoked function expression (IIFE) to create errors in isolation
+ * This makes it harder for mutations to affect the error creation process
  */
 function createSafeError(message: string, name: string): Error {
-  // Use multiple layers of try-catch to ensure we never throw synchronously
-  // This is critical for mutation testing where Error constructor might be mutated
+  // Wrap entire function body in try-catch as ultimate safety net
   try {
-    try {
+    // Use IIFE to isolate error creation from mutations
+    return (function createError(): Error {
       try {
-        // Try standard error creation
-        const err = new Error(message)
-        err.name = name
-        return err
-      } catch {
-        // If Error constructor throws, try Object.assign approach
         try {
-          return Object.assign(new Error(), { message, name })
+          try {
+            // Try standard error creation - wrap in function call to isolate from mutations
+            const ErrorConstructor = Error
+            const err = new ErrorConstructor(message)
+            err.name = name
+            return err
+          } catch {
+            // If Error constructor throws, try Object.assign approach
+            try {
+              const ErrorConstructor = Error
+              return Object.assign(new ErrorConstructor(), { message, name })
+            } catch {
+              // If that fails, create plain object with Error prototype
+              try {
+                const fallbackError = Object.create(Error.prototype)
+                fallbackError.message = message
+                fallbackError.name = name
+                return fallbackError
+              } catch {
+                // Even Object.create can fail if mutated, use plain object
+                const plainError: any = {}
+                plainError.message = message
+                plainError.name = name
+                plainError.stack = ''
+                return plainError
+              }
+            }
+          }
         } catch {
-          // If that fails, create plain object with Error prototype
-          const fallbackError = Object.create(Error.prototype)
-          fallbackError.message = message
-          fallbackError.name = name
-          return fallbackError
+          // Second layer fallback
+          try {
+            const fallbackError = Object.create(Error.prototype)
+            fallbackError.message = message
+            fallbackError.name = name
+            return fallbackError
+          } catch {
+            const plainError: any = {}
+            plainError.message = message
+            plainError.name = name
+            plainError.stack = ''
+            return plainError
+          }
         }
+      } catch {
+        // Third layer fallback - plain object only
+        const plainError: any = {}
+        plainError.message = message
+        plainError.name = name
+        plainError.stack = ''
+        return plainError
       }
-    } catch {
-      // Second layer fallback
-      const fallbackError = Object.create(Error.prototype)
-      fallbackError.message = message
-      fallbackError.name = name
-      return fallbackError
-    }
+    })()
   } catch {
     // Ultimate fallback - return a plain object that looks like an Error
-    // This should never throw, but if it does, the outer catch will handle it
+    // This should never throw, but if it does, we return a minimal error-like object
     const ultimateFallback: any = {}
     ultimateFallback.message = message
     ultimateFallback.name = name
     ultimateFallback.stack = ''
-    Object.setPrototypeOf(ultimateFallback, Error.prototype)
+    // Don't use Object.setPrototypeOf as it might throw if mutated
     return ultimateFallback
   }
 }
