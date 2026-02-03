@@ -105,11 +105,18 @@ export function useAuthenticatedApi(
     client = httpClient || defaultAdapters.createHttpClient()
   } catch (error) {
     // Fallback to a mock client if creation fails (due to mutations)
+    // Use createSafeError to prevent mutations from causing crashes
+    let fallbackError: Error
+    try {
+      fallbackError = createSafeError('HTTP client initialization failed', 'HttpClientInitError')
+    } catch {
+      fallbackError = { message: 'HTTP client initialization failed', name: 'HttpClientInitError' } as any
+    }
     client = {
-      get: () => Promise.reject(new Error('HTTP client initialization failed')),
-      post: () => Promise.reject(new Error('HTTP client initialization failed')),
-      put: () => Promise.reject(new Error('HTTP client initialization failed')),
-      delete: () => Promise.reject(new Error('HTTP client initialization failed')),
+      get: () => Promise.reject(fallbackError),
+      post: () => Promise.reject(fallbackError),
+      put: () => Promise.reject(fallbackError),
+      delete: () => Promise.reject(fallbackError),
     }
   }
   const baseUrl = apiBaseUrl || API_CONFIG.BASE_URL
@@ -165,9 +172,15 @@ export function useAuthenticatedApi(
             }
           } catch (e) {
             // Ultimate fallback - defer rejection to prevent any synchronous throws
+            let fallbackErr: Error
+            try {
+              fallbackErr = createSafeError(HTTP_CLIENT_ERROR_MSG, 'HttpClientError')
+            } catch {
+              fallbackErr = { message: HTTP_CLIENT_ERROR_MSG, name: 'HttpClientError' } as any
+            }
             return new Promise((_, reject) => {
               setTimeout(() => {
-                reject(new Error(HTTP_CLIENT_ERROR_MSG))
+                reject(fallbackErr)
               }, 0)
             })
           }
@@ -205,9 +218,15 @@ export function useAuthenticatedApi(
             }
           } catch (e) {
             // If anything throws synchronously, wrap in setTimeout to defer
+            let fallbackErr: Error
+            try {
+              fallbackErr = createSafeError(URL_EMPTY_ERROR_MSG, 'InvalidUrlError')
+            } catch {
+              fallbackErr = { message: URL_EMPTY_ERROR_MSG, name: 'InvalidUrlError' } as any
+            }
             return new Promise((_, reject) => {
               setTimeout(() => {
-                reject(new Error(URL_EMPTY_ERROR_MSG))
+                reject(fallbackErr)
               }, 0)
             })
           }
