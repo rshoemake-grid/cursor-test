@@ -101,7 +101,7 @@
   - Conditional check (if (updated && storage))
   - Array assignments (map, filter, sort)
 
-**Total Phase 4.2:** 161 tests
+**Total Phase 4.2:** 188 tests
 - Targeted tests: 14 tests
 - Assignment tests: 8 tests
 - URL parameter tests: 10 tests
@@ -118,6 +118,9 @@
 - Complex logical operator tests: 17 tests
 - Spread operator and return pattern tests: 10 tests
 - Logger map operation tests: 8 tests
+- useEffect routing tests: 10 tests
+- Workflow detection tests: 10 tests
+- Response.ok property tests: 7 tests
 
 **Status:** ✅ Phase 4.2 In Progress  
 **Next:** Continue with additional targeted tests or run mutation testing
