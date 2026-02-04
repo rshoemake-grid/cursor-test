@@ -101,13 +101,14 @@
   - Conditional check (if (updated && storage))
   - Array assignments (map, filter, sort)
 
-**Total Phase 4.2:** 61 tests
+**Total Phase 4.2:** 72 tests
 - Targeted tests: 14 tests
 - Assignment tests: 8 tests
 - URL parameter tests: 10 tests
 - HTTP method tests: 9 tests
 - Storage operation tests: 11 tests
 - State setter tests: 9 tests
+- Property access tests: 11 tests
 
 **Status:** ✅ Phase 4.2 In Progress  
 **Next:** Continue with additional targeted tests or run mutation testing
