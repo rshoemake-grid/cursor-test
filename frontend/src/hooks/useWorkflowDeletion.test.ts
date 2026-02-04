@@ -59,7 +59,7 @@ describe('useWorkflowDeletion', () => {
         useWorkflowDeletion({
           user: { id: 'user-1', username: 'testuser' },
           templates: mockTemplates,
-          workflowsOfWorkflows,
+          workflowsOfWorkflows: [],
           activeTab: 'repository',
           setTemplates: mockSetTemplates,
           setWorkflowsOfWorkflows: mockSetWorkflowsOfWorkflows,
@@ -84,7 +84,7 @@ describe('useWorkflowDeletion', () => {
         useWorkflowDeletion({
           user: { id: 'user-1', username: 'testuser' },
           templates: officialTemplates,
-          workflowsOfWorkflows,
+          workflowsOfWorkflows: [],
           activeTab: 'repository',
           setTemplates: mockSetTemplates,
           setWorkflowsOfWorkflows: mockSetWorkflowsOfWorkflows,
@@ -103,15 +103,15 @@ describe('useWorkflowDeletion', () => {
     })
 
     it('should show error when user owns no templates', async () => {
-      const templates = [
+      const testTemplates = [
         { ...mockTemplates[0], author_id: 'user-2' }, // Different user
       ]
 
       const { result } = renderHook(() =>
         useWorkflowDeletion({
           user: { id: 'user-1', username: 'testuser' },
-          templates,
-          workflowsOfWorkflows,
+          templates: testTemplates,
+          workflowsOfWorkflows: [],
           activeTab: 'repository',
           setTemplates: mockSetTemplates,
           setWorkflowsOfWorkflows: mockSetWorkflowsOfWorkflows,
@@ -130,7 +130,7 @@ describe('useWorkflowDeletion', () => {
     })
 
     it('should show error when user owns no templates and official templates exist', async () => {
-      const templates = [
+      const testTemplates = [
         { ...mockTemplates[0], id: 'template-1', is_official: true },
         { ...mockTemplates[0], id: 'template-2', author_id: 'user-2' },
       ]
@@ -138,8 +138,8 @@ describe('useWorkflowDeletion', () => {
       const { result } = renderHook(() =>
         useWorkflowDeletion({
           user: { id: 'user-1', username: 'testuser' },
-          templates,
-          workflowsOfWorkflows,
+          templates: testTemplates,
+          workflowsOfWorkflows: [],
           activeTab: 'repository',
           setTemplates: mockSetTemplates,
           setWorkflowsOfWorkflows: mockSetWorkflowsOfWorkflows,
@@ -157,7 +157,7 @@ describe('useWorkflowDeletion', () => {
     })
 
     it('should show partial delete confirmation when user owns some templates', async () => {
-      const templates = [
+      const testTemplates = [
         { ...mockTemplates[0], id: 'template-1', author_id: 'user-1' },
         { ...mockTemplates[0], id: 'template-2', author_id: 'user-2' },
       ]
@@ -165,8 +165,8 @@ describe('useWorkflowDeletion', () => {
       const { result } = renderHook(() =>
         useWorkflowDeletion({
           user: { id: 'user-1', username: 'testuser' },
-          templates,
-          workflowsOfWorkflows,
+          templates: testTemplates,
+          workflowsOfWorkflows: [],
           activeTab: 'repository',
           setTemplates: mockSetTemplates,
           setWorkflowsOfWorkflows: mockSetWorkflowsOfWorkflows,
@@ -190,7 +190,7 @@ describe('useWorkflowDeletion', () => {
     })
 
     it('should show full delete confirmation when user owns all templates', async () => {
-      const templates = [
+      const testTemplates = [
         { ...mockTemplates[0], id: 'template-1', author_id: 'user-1' },
         { ...mockTemplates[0], id: 'template-2', author_id: 'user-1' },
       ]
@@ -198,8 +198,8 @@ describe('useWorkflowDeletion', () => {
       const { result } = renderHook(() =>
         useWorkflowDeletion({
           user: { id: 'user-1', username: 'testuser' },
-          templates,
-          workflowsOfWorkflows,
+          templates: testTemplates,
+          workflowsOfWorkflows: [],
           activeTab: 'repository',
           setTemplates: mockSetTemplates,
           setWorkflowsOfWorkflows: mockSetWorkflowsOfWorkflows,
@@ -232,8 +232,8 @@ describe('useWorkflowDeletion', () => {
       const { result } = renderHook(() =>
         useWorkflowDeletion({
           user: { id: 'user-1', username: 'testuser' },
-          templates,
-          workflowsOfWorkflows,
+          templates: templates,
+          workflowsOfWorkflows: [],
           activeTab: 'repository',
           setTemplates: mockSetTemplates,
           setWorkflowsOfWorkflows: mockSetWorkflowsOfWorkflows,
@@ -256,8 +256,8 @@ describe('useWorkflowDeletion', () => {
       const { result } = renderHook(() =>
         useWorkflowDeletion({
           user: { id: 'user-1', username: 'testuser' },
-          templates,
-          workflowsOfWorkflows,
+          templates: templates,
+          workflowsOfWorkflows: [],
           activeTab: 'repository',
           setTemplates: mockSetTemplates,
           setWorkflowsOfWorkflows: mockSetWorkflowsOfWorkflows,
@@ -285,8 +285,8 @@ describe('useWorkflowDeletion', () => {
       const { result } = renderHook(() =>
         useWorkflowDeletion({
           user: { id: 'user-1', username: 'testuser' },
-          templates,
-          workflowsOfWorkflows,
+          templates: templates,
+          workflowsOfWorkflows: [],
           activeTab: 'repository',
           setTemplates: mockSetTemplates,
           setWorkflowsOfWorkflows: mockSetWorkflowsOfWorkflows,
@@ -307,12 +307,14 @@ describe('useWorkflowDeletion', () => {
       const workflowsOfWorkflows = [
         { ...mockTemplates[0], id: 'template-1', author_id: 'user-1' },
       ]
+      mockDeleteTemplate.mockResolvedValue(undefined)
+      mockShowConfirm.mockResolvedValue(true)
 
       const { result } = renderHook(() =>
         useWorkflowDeletion({
           user: { id: 'user-1', username: 'testuser' },
-          templates,
-          workflowsOfWorkflows,
+          templates: [],
+          workflowsOfWorkflows: workflowsOfWorkflows,
           activeTab: 'workflows-of-workflows',
           setTemplates: mockSetTemplates,
           setWorkflowsOfWorkflows: mockSetWorkflowsOfWorkflows,
@@ -335,8 +337,8 @@ describe('useWorkflowDeletion', () => {
       const { result } = renderHook(() =>
         useWorkflowDeletion({
           user: { id: '123', username: 'testuser' },
-          templates,
-          workflowsOfWorkflows,
+          templates: templates,
+          workflowsOfWorkflows: [],
           activeTab: 'repository',
           setTemplates: mockSetTemplates,
           setWorkflowsOfWorkflows: mockSetWorkflowsOfWorkflows,
@@ -359,8 +361,8 @@ describe('useWorkflowDeletion', () => {
       const { result } = renderHook(() =>
         useWorkflowDeletion({
           user: { id: 'user-1', username: 'testuser' },
-          templates,
-          workflowsOfWorkflows,
+          templates: templates,
+          workflowsOfWorkflows: [],
           activeTab: 'repository',
           setTemplates: mockSetTemplates,
           setWorkflowsOfWorkflows: mockSetWorkflowsOfWorkflows,
@@ -372,7 +374,7 @@ describe('useWorkflowDeletion', () => {
         await result.current.deleteSelectedWorkflows(new Set(['template-1']))
       })
 
-      expect(mockShowError).toHaveBeenCalled()
+      expect(mockShowError).toHaveBeenCalledWith('Cannot delete 1 official workflow(s). Official workflows cannot be deleted.')
       expect(mockDeleteTemplate).not.toHaveBeenCalled()
     })
   })
@@ -386,7 +388,7 @@ describe('useWorkflowDeletion', () => {
       const { result } = renderHook(() =>
         useWorkflowDeletion({
           user: { id: 'user-1', username: 'testuser' },
-          templates,
+          templates: [],
           workflowsOfWorkflows: workflows,
           activeTab: 'workflows-of-workflows',
           setTemplates: mockSetTemplates,
@@ -411,7 +413,7 @@ describe('useWorkflowDeletion', () => {
         useWorkflowDeletion({
           user: { id: '123', username: 'testuser' },
           templates: workflows,
-          workflowsOfWorkflows,
+          workflowsOfWorkflows: [],
           activeTab: 'repository',
           setTemplates: mockSetTemplates,
           setWorkflowsOfWorkflows: mockSetWorkflowsOfWorkflows,
@@ -439,7 +441,7 @@ describe('useWorkflowDeletion', () => {
         useWorkflowDeletion({
           user: { id: 'user-1', username: 'testuser' },
           templates: workflows,
-          workflowsOfWorkflows,
+          workflowsOfWorkflows: [],
           activeTab: 'repository',
           setTemplates: mockSetTemplates,
           setWorkflowsOfWorkflows: mockSetWorkflowsOfWorkflows,
@@ -466,7 +468,7 @@ describe('useWorkflowDeletion', () => {
         useWorkflowDeletion({
           user: { id: 'user-1', username: 'testuser' },
           templates: workflows,
-          workflowsOfWorkflows,
+          workflowsOfWorkflows: [],
           activeTab: 'repository',
           setTemplates: mockSetTemplates,
           setWorkflowsOfWorkflows: mockSetWorkflowsOfWorkflows,
@@ -494,7 +496,7 @@ describe('useWorkflowDeletion', () => {
         useWorkflowDeletion({
           user: { id: 'user-1', username: 'testuser' },
           templates: workflows,
-          workflowsOfWorkflows,
+          workflowsOfWorkflows: [],
           activeTab: 'repository',
           setTemplates: mockSetTemplates,
           setWorkflowsOfWorkflows: mockSetWorkflowsOfWorkflows,
@@ -519,7 +521,7 @@ describe('useWorkflowDeletion', () => {
         useWorkflowDeletion({
           user: { id: 'user-1', username: 'testuser' },
           templates: mockTemplates,
-          workflowsOfWorkflows,
+          workflowsOfWorkflows: [],
           activeTab: 'repository',
           setTemplates: mockSetTemplates,
           setWorkflowsOfWorkflows: mockSetWorkflowsOfWorkflows,
@@ -547,7 +549,7 @@ describe('useWorkflowDeletion', () => {
       const { result } = renderHook(() =>
         useWorkflowDeletion({
           user: { id: 'user-1', username: 'testuser' },
-          templates,
+          templates: [],
           workflowsOfWorkflows: workflows,
           activeTab: 'workflows-of-workflows',
           setTemplates: mockSetTemplates,
@@ -573,7 +575,7 @@ describe('useWorkflowDeletion', () => {
         useWorkflowDeletion({
           user: { id: 'user-1', username: 'testuser' },
           templates: workflows,
-          workflowsOfWorkflows,
+          workflowsOfWorkflows: [],
           activeTab: 'repository',
           setTemplates: mockSetTemplates,
           setWorkflowsOfWorkflows: mockSetWorkflowsOfWorkflows,
@@ -600,7 +602,7 @@ describe('useWorkflowDeletion', () => {
         useWorkflowDeletion({
           user: { id: 'user-1', username: 'testuser' },
           templates: workflows,
-          workflowsOfWorkflows,
+          workflowsOfWorkflows: [],
           activeTab: 'repository',
           setTemplates: mockSetTemplates,
           setWorkflowsOfWorkflows: mockSetWorkflowsOfWorkflows,
@@ -627,7 +629,7 @@ describe('useWorkflowDeletion', () => {
         useWorkflowDeletion({
           user: { id: 'user-1', username: 'testuser' },
           templates: workflows,
-          workflowsOfWorkflows,
+          workflowsOfWorkflows: [],
           activeTab: 'repository',
           setTemplates: mockSetTemplates,
           setWorkflowsOfWorkflows: mockSetWorkflowsOfWorkflows,
@@ -654,7 +656,7 @@ describe('useWorkflowDeletion', () => {
         useWorkflowDeletion({
           user: { id: 'user-1', username: 'testuser' },
           templates: workflows,
-          workflowsOfWorkflows,
+          workflowsOfWorkflows: [],
           activeTab: 'repository',
           setTemplates: mockSetTemplates,
           setWorkflowsOfWorkflows: mockSetWorkflowsOfWorkflows,
@@ -681,7 +683,7 @@ describe('useWorkflowDeletion', () => {
         useWorkflowDeletion({
           user: { id: 'user-1', username: 'testuser' },
           templates: workflows,
-          workflowsOfWorkflows,
+          workflowsOfWorkflows: [],
           activeTab: 'repository',
           setTemplates: mockSetTemplates,
           setWorkflowsOfWorkflows: mockSetWorkflowsOfWorkflows,
@@ -711,7 +713,7 @@ describe('useWorkflowDeletion', () => {
         useWorkflowDeletion({
           user: { id: 'user-1', username: 'testuser' },
           templates: workflows,
-          workflowsOfWorkflows,
+          workflowsOfWorkflows: [],
           activeTab: 'repository',
           setTemplates: mockSetTemplates,
           setWorkflowsOfWorkflows: mockSetWorkflowsOfWorkflows,
@@ -742,7 +744,7 @@ describe('useWorkflowDeletion', () => {
         useWorkflowDeletion({
           user: { id: 'user-1', username: 'testuser' },
           templates: workflows,
-          workflowsOfWorkflows,
+          workflowsOfWorkflows: [],
           activeTab: 'repository',
           setTemplates: mockSetTemplates,
           setWorkflowsOfWorkflows: mockSetWorkflowsOfWorkflows,
@@ -775,7 +777,7 @@ describe('useWorkflowDeletion', () => {
         useWorkflowDeletion({
           user: { id: 'user-1', username: 'testuser' },
           templates: workflows,
-          workflowsOfWorkflows,
+          workflowsOfWorkflows: [],
           activeTab: 'repository',
           setTemplates: mockSetTemplates,
           setWorkflowsOfWorkflows: mockSetWorkflowsOfWorkflows,
@@ -788,8 +790,9 @@ describe('useWorkflowDeletion', () => {
       })
 
       // Should show error with detail from response
+      // extractApiErrorMessage extracts from error.response.data.detail
       expect(mockShowError).toHaveBeenCalledWith(
-        'Failed to delete workflows: Custom error detail'
+        expect.stringContaining('Custom error detail')
       )
     })
   })
@@ -801,6 +804,8 @@ describe('useWorkflowDeletion', () => {
     describe('deleteSelectedWorkflows error handling', () => {
       it('should verify error.response - error without response property', async () => {
         const user = { id: 'user-1', username: 'test' }
+        const error = new Error('Network error')
+        mockDeleteTemplate.mockRejectedValue(error)
 
         const { result } = renderHook(() =>
         useWorkflowDeletion({
@@ -826,6 +831,7 @@ describe('useWorkflowDeletion', () => {
 
       it('should verify error.response.data - response without data property', async () => {
         const user = { id: 'user-1', username: 'test' }
+        const error: any = new Error('API error')
         error.response = { status: 500 }
         mockDeleteTemplate.mockRejectedValue(error)
 
@@ -833,7 +839,7 @@ describe('useWorkflowDeletion', () => {
         useWorkflowDeletion({
           user,
           templates: mockTemplates,
-          workflowsOfWorkflows,
+          workflowsOfWorkflows: [],
           activeTab: 'repository',
           setTemplates: jest.fn(),
           setWorkflowsOfWorkflows: jest.fn(),
@@ -853,6 +859,7 @@ describe('useWorkflowDeletion', () => {
 
       it('should verify error.response.data.detail - data without detail property', async () => {
         const user = { id: 'user-1', username: 'test' }
+        const error: any = new Error('API error')
         error.response = { data: { message: 'Error occurred' } }
         mockDeleteTemplate.mockRejectedValue(error)
 
@@ -860,7 +867,7 @@ describe('useWorkflowDeletion', () => {
         useWorkflowDeletion({
           user,
           templates: mockTemplates,
-          workflowsOfWorkflows,
+          workflowsOfWorkflows: [],
           activeTab: 'repository',
           setTemplates: jest.fn(),
           setWorkflowsOfWorkflows: jest.fn(),
@@ -872,14 +879,15 @@ describe('useWorkflowDeletion', () => {
           await result.current.deleteSelectedWorkflows(new Set(['template-1']), 'repository')
         })
 
-        // Should use error.message fallback
+        // Should use error.response.data.message (extractApiErrorMessage checks response.data.message before error.message)
         expect(mockShowError).toHaveBeenCalledWith(
-          expect.stringContaining('API error')
+          expect.stringContaining('Error occurred')
         )
       })
 
       it('should verify error.response.data.detail - detail is null', async () => {
         const user = { id: 'user-1', username: 'test' }
+        const error: any = new Error('API error')
         error.response = { data: { detail: null } }
         mockDeleteTemplate.mockRejectedValue(error)
 
@@ -887,7 +895,7 @@ describe('useWorkflowDeletion', () => {
         useWorkflowDeletion({
           user,
           templates: mockTemplates,
-          workflowsOfWorkflows,
+          workflowsOfWorkflows: [],
           activeTab: 'repository',
           setTemplates: jest.fn(),
           setWorkflowsOfWorkflows: jest.fn(),
@@ -907,14 +915,16 @@ describe('useWorkflowDeletion', () => {
 
       it('should verify error.response.data.detail - detail exists', async () => {
         const user = { id: 'user-1', username: 'test' }
+        const error: any = new Error('API error')
         error.response = { data: { detail: 'Template not found' } }
         mockDeleteTemplate.mockRejectedValue(error)
+        mockShowConfirm.mockResolvedValue(true)
 
         const { result } = renderHook(() =>
         useWorkflowDeletion({
           user,
           templates: mockTemplates,
-          workflowsOfWorkflows,
+          workflowsOfWorkflows: [],
           activeTab: 'repository',
           setTemplates: jest.fn(),
           setWorkflowsOfWorkflows: jest.fn(),
@@ -927,6 +937,7 @@ describe('useWorkflowDeletion', () => {
         })
 
         // Should use error.response.data.detail
+        // extractApiErrorMessage extracts from error.response.data.detail
         expect(mockShowError).toHaveBeenCalledWith(
           expect.stringContaining('Template not found')
         )
@@ -941,6 +952,7 @@ describe('useWorkflowDeletion', () => {
     it('should handle api.deleteTemplate throwing error', async () => {
       const mockDeleteTemplate = api.deleteTemplate as jest.MockedFunction<typeof api.deleteTemplate>
       mockDeleteTemplate.mockRejectedValue(new Error('Network error'))
+      mockShowConfirm.mockResolvedValue(true)
 
       const { result } = renderHook(() =>
         useWorkflowDeletion({
@@ -948,6 +960,9 @@ describe('useWorkflowDeletion', () => {
           templates: [
             {
               id: 'template-1',
+              author_id: 'user-123',
+            },
+          ],
           workflowsOfWorkflows: [],
           activeTab: 'agents',
           setTemplates: mockSetTemplates,
@@ -978,6 +993,9 @@ describe('useWorkflowDeletion', () => {
           templates: [
             {
               id: 'template-1',
+              is_official: true,
+            },
+          ],
           workflowsOfWorkflows: [],
           activeTab: 'repository',
           setTemplates: mockSetTemplates,
@@ -1004,7 +1022,16 @@ describe('useWorkflowDeletion', () => {
           templates: [
             {
               id: 'template-1',
-          workflowsOfWorkflows,
+              author_id: 'other-user', // Not owned by user-123
+              is_official: false,
+            },
+            {
+              id: 'template-2',
+              author_id: 'other-user',
+              is_official: true, // Official template
+            },
+          ],
+          workflowsOfWorkflows: [],
           activeTab: 'repository',
           setTemplates: mockSetTemplates,
           setWorkflowsOfWorkflows: mockSetWorkflowsOfWorkflows,
@@ -1016,7 +1043,7 @@ describe('useWorkflowDeletion', () => {
         await result.current.deleteSelectedWorkflows(new Set(['template-1', 'template-2']))
       })
 
-      // Should show error (lines 224-225)
+      // Should show error (lines 68-69) - when no user owned templates but official templates exist
       expect(showError).toHaveBeenCalledWith('You can only delete workflows that you published (official workflows cannot be deleted)')
     })
 
@@ -1027,7 +1054,9 @@ describe('useWorkflowDeletion', () => {
           templates: [
             {
               id: 'template-1',
-          workflowsOfWorkflows,
+            },
+          ],
+          workflowsOfWorkflows: [],
           activeTab: 'repository',
           setTemplates: mockSetTemplates,
           setWorkflowsOfWorkflows: mockSetWorkflowsOfWorkflows,
@@ -1054,7 +1083,9 @@ describe('useWorkflowDeletion', () => {
           templates: [
             {
               id: 'template-1',
-          workflowsOfWorkflows,
+            },
+          ],
+          workflowsOfWorkflows: [],
           activeTab: 'repository',
           setTemplates: mockSetTemplates,
           setWorkflowsOfWorkflows: mockSetWorkflowsOfWorkflows,
@@ -1079,7 +1110,9 @@ describe('useWorkflowDeletion', () => {
           templates: [
             {
               id: 'template-1',
-          workflowsOfWorkflows,
+            },
+          ],
+          workflowsOfWorkflows: [],
           activeTab: 'repository',
           setTemplates: mockSetTemplates,
           setWorkflowsOfWorkflows: mockSetWorkflowsOfWorkflows,
@@ -1107,7 +1140,11 @@ describe('useWorkflowDeletion', () => {
           templates: [
             {
               id: 'template-1',
-          workflowsOfWorkflows,
+              author_id: 'user-123', // Must match user id for filterUserOwnedDeletableItems
+              is_official: false,
+            },
+          ],
+          workflowsOfWorkflows: [],
           activeTab: 'repository',
           setTemplates: mockSetTemplates,
           setWorkflowsOfWorkflows: mockSetWorkflowsOfWorkflows,
@@ -1119,7 +1156,7 @@ describe('useWorkflowDeletion', () => {
         await result.current.deleteSelectedWorkflows(new Set(['template-1']))
       })
 
-      // Should successfully delete (lines 250-256)
+      // Should successfully delete (lines 92-100)
       expect(mockDeleteTemplate).toHaveBeenCalledWith('template-1')
       expect(mockSetTemplates).toHaveBeenCalled()
       expect(mockSetWorkflowsOfWorkflows).toHaveBeenCalled()
@@ -1138,6 +1175,10 @@ describe('useWorkflowDeletion', () => {
           workflowsOfWorkflows: [
             {
               id: 'template-1',
+              author_id: 'user-123', // Must match user id for filterUserOwnedDeletableItems
+              is_official: false,
+            },
+          ],
           activeTab: 'workflows-of-workflows',
           setTemplates: mockSetTemplates,
           setWorkflowsOfWorkflows: mockSetWorkflowsOfWorkflows,

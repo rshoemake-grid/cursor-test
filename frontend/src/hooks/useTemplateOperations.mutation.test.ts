@@ -449,9 +449,9 @@ describe('useTemplateOperations - Mutation Killers', () => {
           await result.current.deleteSelectedWorkflows(new Set(['template-1']), 'repository')
         })
 
-        // Should use error.message fallback
+        // Should use error.response.data.message (extractApiErrorMessage checks response.data.message before error.message)
         expect(mockShowError).toHaveBeenCalledWith(
-          expect.stringContaining('API error')
+          expect.stringContaining('Error occurred')
         )
       })
 
@@ -487,7 +487,10 @@ describe('useTemplateOperations - Mutation Killers', () => {
           await result.current.deleteSelectedWorkflows(new Set(['template-1']), 'repository')
         })
 
-        // Should use error.message fallback (null detail)
+        // Should use error.message fallback (null detail is falsy, so extractApiErrorMessage checks error.message)
+        expect(mockShowError).toHaveBeenCalledWith(
+          expect.stringContaining('Failed to delete workflows')
+        )
         expect(mockShowError).toHaveBeenCalledWith(
           expect.stringContaining('API error')
         )

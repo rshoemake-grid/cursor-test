@@ -168,6 +168,10 @@ describe('useDraftManagement', () => {
           workflowDescription: 'Test Description',
           isUnsaved: true,
         }),
+      }),
+      expect.objectContaining({
+        storage: undefined,
+        logger: expect.any(Object),
       })
     )
 
@@ -259,6 +263,10 @@ describe('useDraftManagement', () => {
         'tab-1': expect.objectContaining({
           nodes: [normalizedNode],
         }),
+      }),
+      expect.objectContaining({
+        storage: undefined,
+        logger: expect.any(Object),
       })
     )
   })
@@ -285,7 +293,7 @@ describe('loadDraftsFromStorage', () => {
     const result = loadDraftsFromStorage()
 
     expect(result).toEqual(drafts)
-    expect(mockGetLocalStorageItem).toHaveBeenCalledWith('workflowBuilderDrafts', {})
+    expect(mockGetLocalStorageItem).toHaveBeenCalledWith('workflowBuilderDrafts', {}, undefined)
   })
 
   it('should return empty object when storage returns null', () => {
@@ -324,6 +332,6 @@ describe('saveDraftsToStorage', () => {
 
     saveDraftsToStorage(drafts)
 
-    expect(mockSetLocalStorageItem).toHaveBeenCalledWith('workflowBuilderDrafts', drafts)
+    expect(mockSetLocalStorageItem).toHaveBeenCalledWith('workflowBuilderDrafts', drafts, undefined)
   })
 })

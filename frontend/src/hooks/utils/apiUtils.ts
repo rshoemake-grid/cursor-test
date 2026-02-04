@@ -78,17 +78,18 @@ export function extractApiErrorMessage(
     return error
   }
 
-  if (error instanceof Error) {
-    return error.message || defaultMessage
-  }
-
-  // Try to extract from API error response
+  // Try to extract from API error response first (before checking instanceof Error)
+  // This handles cases where Error objects have response.data.detail
   if (error?.response?.data?.detail) {
     return error.response.data.detail
   }
 
   if (error?.response?.data?.message) {
     return error.response.data.message
+  }
+
+  if (error instanceof Error) {
+    return error.message || defaultMessage
   }
 
   if (error?.message) {
