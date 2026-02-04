@@ -1,0 +1,78 @@
+# Phase 4 Plan - Targeted Improvements
+
+**Date:** 2026-02-04  
+**Status:** 🟡 In Progress
+
+---
+
+## Phase 4 Goals
+
+### Primary Targets
+1. **Eliminate No Coverage Mutants:** 5 → 0
+2. **Reduce Surviving Mutants:** 42 → <20 (reduce by 22+)
+3. **Improve Mutation Score:** 84.59% → 90%+ (gain 5.41%+)
+
+---
+
+## Current Status
+
+| Metric | Current | Target | Gap |
+|--------|---------|--------|-----|
+| Mutation Score | 84.59% | 90%+ | 5.41% |
+| Survived | 42 | <20 | 22 mutants |
+| No Coverage | 5 | 0 | 5 mutants |
+
+---
+
+## Strategy
+
+### Priority 1: No Coverage Mutants (5 mutants) 🔴 HIGHEST PRIORITY
+- These represent completely untested code paths
+- Should be easiest to address
+- Highest impact on mutation score
+
+**Approach:**
+1. Identify specific no-coverage mutants from HTML report
+2. Create targeted tests for each
+3. Verify coverage
+
+### Priority 2: Surviving Mutants (42 mutants) 🟡 HIGH PRIORITY
+- Need to reduce by 22+ mutants
+- May include equivalent mutations (acceptable)
+- Require targeted testing
+
+**Approach:**
+1. Analyze HTML report for specific surviving mutants
+2. Categorize by mutator type
+3. Identify patterns
+4. Create targeted tests for non-equivalent mutations
+5. Document equivalent mutations
+
+---
+
+## Test Files to Create
+
+### Phase 4.1: No Coverage Mutants
+- `useMarketplaceData.no-coverage.test.ts` - Targeted tests for 5 no-coverage mutants
+
+### Phase 4.2: Surviving Mutants Analysis
+- Analyze HTML report
+- Categorize mutants
+- Create targeted tests based on analysis
+
+### Phase 4.3: Targeted Improvements
+- Additional test files based on analysis
+- Focus on specific patterns identified
+
+---
+
+## Success Criteria
+
+- ✅ No Coverage: 5 → 0
+- ✅ Survived: 42 → <20
+- ✅ Mutation Score: 84.59% → 90%+
+
+---
+
+**Status:** 🟡 Planning  
+**Next:** Analyze HTML report and identify specific mutants
