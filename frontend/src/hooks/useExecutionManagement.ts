@@ -7,6 +7,8 @@ import { useCallback, useEffect } from 'react'
 import { api } from '../api/client'
 import { logger } from '../utils/logger'
 import type { WorkflowTabData, Execution } from '../contexts/WorkflowTabsContext'
+import { updateTabByWorkflowId } from './utils/tabUtils'
+import type { WorkflowAPIClient } from '../api/client'
 
 // Constants to prevent mutation issues
 const PENDING_EXECUTION_PREFIX = 'pending-'
@@ -17,6 +19,9 @@ interface UseExecutionManagementOptions {
   setTabs: React.Dispatch<React.SetStateAction<WorkflowTabData[]>>
   tabsRef: React.MutableRefObject<WorkflowTabData[]>
   onExecutionStart?: (executionId: string) => void
+  // Dependency injection
+  apiClient?: WorkflowAPIClient
+  logger?: typeof logger
 }
 
 /**
@@ -31,6 +36,8 @@ export function useExecutionManagement({
   setTabs,
   tabsRef,
   onExecutionStart,
+  apiClient = api,
+  logger: injectedLogger = logger,
 }: UseExecutionManagementOptions) {
   // Handle execution start - add to active tab's executions
   const handleExecutionStart = useCallback((executionId: string) => {
@@ -102,96 +109,83 @@ export function useExecutionManagement({
 
   // Handle clearing executions for a workflow
   const handleClearExecutions = useCallback((workflowId: string) => {
-    logger.debug('handleClearExecutions called for workflowId:', workflowId)
+    injectedLogger.debug('handleClearExecutions called for workflowId:', workflowId)
     setTabs(prev => {
-      const updated = prev.map(tab => 
-        tab.workflowId === workflowId
-          ? { ...tab, executions: [], activeExecutionId: null }
-          : tab
-      )
-      logger.debug('Updated tabs:', updated)
+      const updated = updateTabByWorkflowId(prev, workflowId, {
+        executions: [],
+        activeExecutionId: null
+      })
+      injectedLogger.debug('Updated tabs:', updated)
       return updated
     })
-  }, [setTabs])
+  }, [setTabs, injectedLogger])
 
   // Handle removing a single execution
   const handleRemoveExecution = useCallback((workflowId: string, executionId: string) => {
-    logger.debug('handleRemoveExecution called for workflowId:', workflowId, 'executionId:', executionId)
-    setTabs(prev => prev.map(tab => {
-      if (tab.workflowId !== workflowId) return tab
+    injectedLogger.debug('handleRemoveExecution called for workflowId:', workflowId, 'executionId:', executionId)
+    setTabs(prev => {
+      const tab = prev.find(t => t.workflowId === workflowId)
+      if (!tab) return prev
       
       const updatedExecutions = tab.executions.filter(exec => exec.id !== executionId)
       const newActiveExecutionId = tab.activeExecutionId === executionId 
         ? (updatedExecutions.length > 0 ? updatedExecutions[0].id : null)
         : tab.activeExecutionId
       
-      return {
-        ...tab,
+      return updateTabByWorkflowId(prev, workflowId, {
         executions: updatedExecutions,
         activeExecutionId: newActiveExecutionId
-      }
-    }))
+      })
+    })
   }, [setTabs])
 
   // Handle real-time log updates from WebSocket
   const handleExecutionLogUpdate = useCallback((workflowId: string, executionId: string, log: any) => {
-    setTabs(prev => prev.map(tab => 
-      tab.workflowId === workflowId
-        ? {
-            ...tab,
-            executions: tab.executions.map(exec =>
-              exec.id === executionId
-                ? {
-                    ...exec,
-                    logs: [...exec.logs, log]
-                  }
-                : exec
-            )
-          }
-        : tab
-    ))
+    setTabs(prev => updateTabByWorkflowId(prev, workflowId, {
+      executions: prev
+        .find(tab => tab.workflowId === workflowId)
+        ?.executions.map(exec =>
+          exec.id === executionId
+            ? { ...exec, logs: [...exec.logs, log] }
+            : exec
+        ) || []
+    }))
   }, [setTabs])
 
   // Handle execution status updates from WebSocket
   const handleExecutionStatusUpdate = useCallback((workflowId: string, executionId: string, status: 'running' | 'completed' | 'failed') => {
-    setTabs(prev => prev.map(tab => 
-      tab.workflowId === workflowId
-        ? {
-            ...tab,
-            executions: tab.executions.map(exec =>
-              exec.id === executionId
-                ? {
-                    ...exec,
-                    status,
-                    completedAt: (status === 'completed' || status === 'failed') ? new Date() : exec.completedAt
-                  }
-                : exec
-            )
-          }
-        : tab
-    ))
+    setTabs(prev => updateTabByWorkflowId(prev, workflowId, {
+      executions: prev
+        .find(tab => tab.workflowId === workflowId)
+        ?.executions.map(exec =>
+          exec.id === executionId
+            ? {
+                ...exec,
+                status,
+                completedAt: (status === 'completed' || status === 'failed') ? new Date() : exec.completedAt
+              }
+            : exec
+        ) || []
+    }))
   }, [setTabs])
 
   // Handle node state updates from WebSocket
   const handleExecutionNodeUpdate = useCallback((workflowId: string, executionId: string, nodeId: string, nodeState: any) => {
-    setTabs(prev => prev.map(tab => 
-      tab.workflowId === workflowId
-        ? {
-            ...tab,
-            executions: tab.executions.map(exec =>
-              exec.id === executionId
-                ? {
-                    ...exec,
-                    nodes: {
-                      ...exec.nodes,
-                      [nodeId]: nodeState
-                    }
-                  }
-                : exec
-            )
-          }
-        : tab
-    ))
+    setTabs(prev => updateTabByWorkflowId(prev, workflowId, {
+      executions: prev
+        .find(tab => tab.workflowId === workflowId)
+        ?.executions.map(exec =>
+          exec.id === executionId
+            ? {
+                ...exec,
+                nodes: {
+                  ...exec.nodes,
+                  [nodeId]: nodeState
+                }
+              }
+            : exec
+        ) || []
+    }))
   }, [setTabs])
 
   // Poll for execution updates (fallback when WebSocket not available)
@@ -211,20 +205,20 @@ export function useExecutionManagement({
       if (runningExecutions.length === 0) return
 
       // Only poll occasionally as fallback - WebSocket handles real-time updates
-      logger.debug(`[WorkflowTabs] Polling ${runningExecutions.length} running execution(s) (fallback)...`)
+      injectedLogger.debug(`[WorkflowTabs] Polling ${runningExecutions.length} running execution(s) (fallback)...`)
 
       // Update all running executions
       const updates = await Promise.all(
         runningExecutions.map(async (exec) => {
           try {
-            const execution = await api.getExecution(exec.id)
+            const execution = await apiClient.getExecution(exec.id)
             const newStatus = execution.status === 'completed' ? 'completed' as const :
                              execution.status === 'failed' ? 'failed' as const :
                              execution.status === 'paused' ? 'running' as const : // Keep as running if paused
                              'running' as const
             
             if (exec.status !== newStatus) {
-              logger.debug(`[WorkflowTabs] Execution ${exec.id} status changed: ${exec.status} → ${newStatus}`)
+              injectedLogger.debug(`[WorkflowTabs] Execution ${exec.id} status changed: ${exec.status} → ${newStatus}`)
             }
             
             return {
@@ -240,7 +234,7 @@ export function useExecutionManagement({
             // Don't log errors for pending executions
             // Add safety check to prevent crashes when mutations change exec structure
             if (exec && exec.id && exec.id.startsWith && !exec.id.startsWith(PENDING_EXECUTION_PREFIX)) {
-              logger.error(`[WorkflowTabs] Failed to fetch execution ${exec.id}:`, error)
+              injectedLogger.error(`[WorkflowTabs] Failed to fetch execution ${exec.id}:`, error)
             }
             return null
           }
@@ -262,7 +256,7 @@ export function useExecutionManagement({
     }, 2000) // Poll every 2 seconds
 
     return () => clearInterval(interval)
-  }, [tabsRef, setTabs]) // Empty dependency array - interval runs consistently
+  }, [tabsRef, setTabs, apiClient, injectedLogger]) // Empty dependency array - interval runs consistently
 
   return {
     handleExecutionStart,

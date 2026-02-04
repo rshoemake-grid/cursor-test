@@ -11,7 +11,6 @@ Quick reference guide to all files in the project.
 | **QUICKSTART.md** | Detailed setup, API usage, troubleshooting | Need detailed instructions |
 | **ARCHITECTURE.md** | System design, technical decisions, extensibility | Understanding how it works |
 | **WORKFLOW_EXAMPLES.md** | Pattern library, use cases, templates | Building your own workflows |
-| **PROJECT_SUMMARY.md** | Complete project overview, deliverables, metrics | Want the big picture |
 | **INDEX.md** | This file - navigation guide | Finding specific files |
 
 ## 🔧 Application Code

@@ -5,6 +5,11 @@
 
 import { useEffect } from 'react'
 import type { WorkflowTabData } from '../contexts/WorkflowTabsContext'
+import {
+  createNewTab,
+  createTabWithWorkflow,
+  tabExists
+} from './utils/tabUtils'
 
 interface UseTabInitializationOptions {
   tabs: WorkflowTabData[]
@@ -34,23 +39,15 @@ export function useTabInitialization({
 }: UseTabInitializationOptions) {
   // Validate that activeTabId still exists in tabs, reset if not
   useEffect(() => {
-    if (activeTabId && !tabs.some(tab => tab.id === activeTabId)) {
+    if (activeTabId && !tabExists(tabs, activeTabId)) {
       // Active tab no longer exists, switch to first tab or create new one
       if (tabs.length > 0) {
         setActiveTabId(tabs[0].id)
       } else {
         // No tabs left, create a new one
-        const newId = `workflow-${Date.now()}`
-        const newTab: WorkflowTabData = {
-          id: newId,
-          name: 'Untitled Workflow',
-          workflowId: null,
-          isUnsaved: true,
-          executions: [],
-          activeExecutionId: null
-        }
+        const newTab = createNewTab()
         setTabs([newTab])
-        setActiveTabId(newId)
+        setActiveTabId(newTab.id)
       }
     }
   }, [tabs, activeTabId, setTabs, setActiveTabId])
@@ -68,19 +65,11 @@ export function useTabInitialization({
         processedKeys.current.add(uniqueKey)
         
         // Always create a new tab, even if workflow is already open in another tab
-        const newId = `workflow-${Date.now()}`
-        const newTab: WorkflowTabData = {
-          id: newId,
-          name: 'Loading...',
-          workflowId: initialWorkflowId,
-          isUnsaved: false,
-          executions: [],
-          activeExecutionId: null
-        }
+        const newTab = createTabWithWorkflow(initialWorkflowId, 'Loading...')
         
         setTabs(prev => {
           // Double-check we're not adding a duplicate
-          const existingTab = prev.find(t => t.id === newId)
+          const existingTab = prev.find(t => t.id === newTab.id)
           if (existingTab) {
             return prev
           }
@@ -88,7 +77,7 @@ export function useTabInitialization({
           tabsRef.current = newTabs // Update ref immediately
           return newTabs
         })
-        setActiveTabId(newId)
+        setActiveTabId(newTab.id)
       }
     }
   }, [initialWorkflowId, workflowLoadKey, setTabs, setActiveTabId, tabsRef, processedKeys])

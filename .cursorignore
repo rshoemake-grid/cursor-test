@@ -1,0 +1,54 @@
+# Node modules - too many files, causes indexing issues
+**/node_modules/
+node_modules/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Virtual environments
+env/
+venv/
+ENV/
+.venv
+env.bak/
+venv.bak/
+
+# Build outputs
+dist/
+build/
+*.egg-info/
+.coverage
+coverage/
+*.lcov
+frontend/coverage/
+
+# Logs
+*.log
+logs/
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# IDE files
+.idea/
+.vscode/
+.DS_Store
+
+# Environment files
+.env
+.env.local
+
+# Mutation testing reports
+mutation_report*.html
+
+# Large generated files
+*.min.js
+*.min.css
+*.bundle.js

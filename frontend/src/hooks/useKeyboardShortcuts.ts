@@ -6,6 +6,11 @@
 import { useEffect } from 'react'
 import { useReactFlow } from '@xyflow/react'
 import type { Node } from '@xyflow/react'
+import {
+  isInputElement,
+  matchesKeyCombination,
+  isDeleteKey
+} from './useKeyboardShortcuts.utils'
 
 interface UseKeyboardShortcutsOptions {
   selectedNodeId: string | null
@@ -32,38 +37,41 @@ export function useKeyboardShortcuts({
     const handleKeyDown = (event: KeyboardEvent) => {
       // Don't handle shortcuts if user is typing in an input field
       const target = event.target as HTMLElement
-      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) {
+      if (isInputElement(target)) {
         return
       }
 
       // Handle Copy (Ctrl/Cmd + C)
-      if ((event.ctrlKey || event.metaKey) && event.key === 'c') {
+      if (matchesKeyCombination(event, 'c')) {
         const selectedNodes = getNodes().filter(node => node.selected)
         if (selectedNodes.length === 1) {
           event.preventDefault()
           onCopy(selectedNodes[0])
         }
+        return
       }
       
       // Handle Cut (Ctrl/Cmd + X)
-      if ((event.ctrlKey || event.metaKey) && event.key === 'x') {
+      if (matchesKeyCombination(event, 'x')) {
         const selectedNodes = getNodes().filter(node => node.selected)
         if (selectedNodes.length === 1) {
           event.preventDefault()
           onCut(selectedNodes[0])
         }
+        return
       }
       
       // Handle Paste (Ctrl/Cmd + V)
-      if ((event.ctrlKey || event.metaKey) && event.key === 'v') {
+      if (matchesKeyCombination(event, 'v')) {
         if (clipboardNode) {
           event.preventDefault()
           onPaste()
         }
+        return
       }
       
-      // Check if Delete or Backspace is pressed
-      if (event.key === 'Delete' || event.key === 'Backspace') {
+      // Handle Delete (Delete or Backspace)
+      if (isDeleteKey(event)) {
         // Get selected nodes and edges
         const selectedNodes = getNodes().filter(node => node.selected)
         const selectedEdges = getEdges().filter(edge => edge.selected)

@@ -6,15 +6,18 @@
 import { useCallback } from 'react'
 import { useReactFlow } from '@xyflow/react'
 import { showError } from '../utils/notifications'
-import { showConfirm } from '../utils/confirm'
 import { logger } from '../utils/logger'
 import { UI_CONSTANTS } from '../config/constants'
+import { confirmDelete } from './utils/confirmations'
 
 interface UseNodeOperationsOptions {
   selectedNode: any | null
   setSelectedNodeId: (id: string | null) => void
   onSave?: () => void
   onSaveWorkflow?: () => Promise<string | null>
+  // Dependency injection
+  showErrorNotification?: typeof showError
+  logger?: typeof logger
 }
 
 /**
@@ -28,6 +31,8 @@ export function useNodeOperations({
   setSelectedNodeId,
   onSave,
   onSaveWorkflow,
+  showErrorNotification = showError,
+  logger: injectedLogger = logger,
 }: UseNodeOperationsOptions) {
   const { setNodes, deleteElements } = useReactFlow()
 
@@ -71,15 +76,12 @@ export function useNodeOperations({
 
   const handleDelete = useCallback(async () => {
     if (!selectedNode) return
-    // Require confirmation before deleting
-    const confirmed = await showConfirm(
-      `Are you sure you want to delete "${selectedNode.data.name || selectedNode.data.label || selectedNode.id}"?`,
-      { title: 'Delete Node', confirmText: 'Delete', cancelText: 'Cancel', type: 'danger' }
-    )
-    if (confirmed) {
+    
+    const itemName = selectedNode.data.name || selectedNode.data.label || selectedNode.id
+    await confirmDelete(itemName, () => {
       deleteElements({ nodes: [{ id: selectedNode.id }] })
       setSelectedNodeId(null)
-    }
+    }, { title: 'Delete Node' })
   }, [selectedNode, deleteElements, setSelectedNodeId])
 
   const handleSave = useCallback(async (setSaveStatus: (status: 'idle' | 'saving' | 'saved') => void) => {
@@ -104,11 +106,11 @@ export function useNodeOperations({
         setSaveStatus('idle')
       }, UI_CONSTANTS.SAVE_STATUS_DELAY)
     } catch (error) {
-      logger.error('Save failed:', error)
+      injectedLogger.error('Save failed:', error)
       setSaveStatus('idle')
-      showError('Failed to save workflow: ' + (error instanceof Error ? error.message : 'Unknown error'))
+      showErrorNotification('Failed to save workflow: ' + (error instanceof Error ? error.message : 'Unknown error'))
     }
-  }, [selectedNode, onSave, onSaveWorkflow])
+  }, [selectedNode, onSave, onSaveWorkflow, showErrorNotification, injectedLogger])
 
   const handleAddInput = useCallback((inputName: string, sourceNode: string, sourceField: string, setShowAddInput: (show: boolean) => void) => {
     if (!selectedNode) return

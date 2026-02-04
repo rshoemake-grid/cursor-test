@@ -8,6 +8,11 @@ import { logger } from '../utils/logger'
 import { getLocalStorageItem } from './useLocalStorage'
 import { STORAGE_KEYS } from '../config/constants'
 import type { StorageAdapter, HttpClient } from '../types/adapters'
+import {
+  buildSearchParams,
+  applyFilters,
+  sortItems
+} from './useMarketplaceData.utils'
 
 interface Template {
   id: string
@@ -79,11 +84,7 @@ export function useMarketplaceData({
   const fetchTemplates = useCallback(async () => {
     setLoading(true)
     try {
-      const params = new URLSearchParams()
-      if (category) params.append('category', category)
-      if (searchQuery) params.append('search', searchQuery)
-      params.append('sort_by', sortBy)
-      
+      const params = buildSearchParams(category, searchQuery, sortBy)
       const response = await httpClient.get(`${apiBaseUrl}/templates/?${params}`)
       const data = await response.json() as Template[]
       setTemplates(data)
@@ -98,10 +99,7 @@ export function useMarketplaceData({
     setLoading(true)
     try {
       // Fetch all workflows
-      const params = new URLSearchParams()
-      if (category) params.append('category', category)
-      if (searchQuery) params.append('search', searchQuery)
-      params.append('sort_by', sortBy)
+      const params = buildSearchParams(category, searchQuery, sortBy)
       
       const response = await httpClient.get(`${apiBaseUrl}/templates/?${params}`)
       const allWorkflows = await response.json() as Template[]
@@ -200,43 +198,9 @@ export function useMarketplaceData({
         has_author_id: !!a.author_id
       })))
       
-      // Apply filters
-      if (category) {
-        agentsData = agentsData.filter(a => a.category === category)
-      }
-      if (searchQuery) {
-        const query = searchQuery.toLowerCase()
-        agentsData = agentsData.filter(a => 
-          a.name.toLowerCase().includes(query) || 
-          a.description.toLowerCase().includes(query) ||
-          a.tags.some(tag => tag.toLowerCase().includes(query))
-        )
-      }
-      
-      // Sort: Official agents first, then by selected sort order
-      agentsData.sort((a, b) => {
-        // First, prioritize official agents
-        const aIsOfficial = a.is_official ? 1 : 0
-        const bIsOfficial = b.is_official ? 1 : 0
-        if (aIsOfficial !== bIsOfficial) {
-          return bIsOfficial - aIsOfficial // Official first
-        }
-        
-        // If both are official or both are not, apply the selected sort
-        if (sortBy === 'popular') {
-          // For now, sort by published_at (most recent first)
-          const dateA = a.published_at ? new Date(a.published_at).getTime() : 0
-          const dateB = b.published_at ? new Date(b.published_at).getTime() : 0
-          return dateB - dateA
-        } else if (sortBy === 'recent') {
-          const dateA = a.published_at ? new Date(a.published_at).getTime() : 0
-          const dateB = b.published_at ? new Date(b.published_at).getTime() : 0
-          return dateB - dateA
-        }
-        
-        // Default: alphabetical by name
-        return (a.name || '').localeCompare(b.name || '')
-      })
+      // Apply filters and sort
+      agentsData = applyFilters(agentsData, category, searchQuery)
+      agentsData = sortItems(agentsData, sortBy, true) // Prioritize official agents
       
       setAgents(agentsData)
     } catch (error) {
@@ -265,28 +229,9 @@ export function useMarketplaceData({
         agentsData = []
       }
       
-      // Apply filters
-      if (category) {
-        agentsData = agentsData.filter(a => a.category === category)
-      }
-      if (searchQuery) {
-        const query = searchQuery.toLowerCase()
-        agentsData = agentsData.filter(a => 
-          a.name.toLowerCase().includes(query) || 
-          a.description.toLowerCase().includes(query) ||
-          a.tags.some(tag => tag.toLowerCase().includes(query))
-        )
-      }
-      
-      // Sort
-      agentsData.sort((a, b) => {
-        if (sortBy === 'popular' || sortBy === 'recent') {
-          const dateA = a.published_at ? new Date(a.published_at).getTime() : 0
-          const dateB = b.published_at ? new Date(b.published_at).getTime() : 0
-          return dateB - dateA
-        }
-        return (a.name || '').localeCompare(b.name || '')
-      })
+      // Apply filters and sort
+      agentsData = applyFilters(agentsData, category, searchQuery)
+      agentsData = sortItems(agentsData, sortBy)
       
       setRepositoryAgents(agentsData)
     } catch (error) {

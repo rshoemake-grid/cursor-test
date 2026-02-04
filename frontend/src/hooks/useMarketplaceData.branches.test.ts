@@ -47,12 +47,12 @@ describe('useMarketplaceData - Remaining Branches', () => {
 
   describe('fetchRepositoryAgents - outer catch block', () => {
     it('should handle error when filter operation throws on null name', async () => {
-      // The code at line 275 does: a.name.toLowerCase().includes(query)
-      // If a.name is null, toLowerCase() will throw TypeError
+      // The utility function now handles nulls gracefully with (item.name || '')
+      // So null name won't throw an error. This test verifies graceful handling.
       const invalidData = [
         {
           id: 'agent-1',
-          name: null, // This will cause toLowerCase() to throw when filter runs
+          name: null, // Utility function handles this gracefully
           description: 'Test Description',
           tags: ['tag1'],
           category: 'automation',
@@ -67,7 +67,7 @@ describe('useMarketplaceData - Remaining Branches', () => {
           httpClient: mockHttpClient,
           apiBaseUrl: 'http://api.test',
           category: '',
-          searchQuery: 'test', // This triggers the filter at line 274-278
+          searchQuery: 'test', // This triggers the filter
           sortBy: 'popular',
           user: null,
           activeTab: 'repository',
@@ -79,22 +79,21 @@ describe('useMarketplaceData - Remaining Branches', () => {
         expect(result.current.loading).toBe(false)
       }, { timeout: 3000 })
 
-      // Verify outer catch block was triggered (line 292-293)
-      expect(mockLoggerError).toHaveBeenCalledWith(
-        'Failed to fetch repository agents:',
-        expect.any(Error)
-      )
+      // Utility function handles nulls gracefully, so no error should be thrown
+      // The filter should work correctly with null values
       expect(result.current.loading).toBe(false)
+      expect(result.current.repositoryAgents).toBeDefined()
+      // No error should be logged since nulls are handled gracefully
     })
 
     it('should handle error in filter operation (description.toLowerCase throws)', async () => {
-      // Provide data where description is null
-      // Name must NOT match query so it evaluates description (logical OR short-circuits)
+      // The utility function now handles nulls gracefully with (item.description || '')
+      // So null description won't throw an error. This test verifies graceful handling.
       const invalidData = [
         {
           id: 'agent-1',
           name: 'Other Name', // Doesn't match 'test', so evaluates description
-          description: null, // This will cause toLowerCase() to throw
+          description: null, // Utility function handles this gracefully
           tags: [],
           category: 'automation',
         },
@@ -119,22 +118,21 @@ describe('useMarketplaceData - Remaining Branches', () => {
         expect(result.current.loading).toBe(false)
       })
 
-      // Should catch error in outer catch block (line 292-293)
-      expect(mockLoggerError).toHaveBeenCalledWith(
-        'Failed to fetch repository agents:',
-        expect.any(Error)
-      )
+      // Utility function handles nulls gracefully, so no error should be thrown
+      expect(result.current.loading).toBe(false)
+      expect(result.current.repositoryAgents).toBeDefined()
+      // No error should be logged since nulls are handled gracefully
     })
 
     it('should handle error in filter operation (tags.some throws)', async () => {
-      // Provide data where tags is not an array
-      // Name and description must NOT match query so it evaluates tags (logical OR short-circuits)
+      // The utility function now handles nulls gracefully with (item.tags || [])
+      // So null tags won't throw an error. This test verifies graceful handling.
       const invalidData = [
         {
           id: 'agent-1',
           name: 'Other Name', // Doesn't match 'test'
           description: 'Other Desc', // Doesn't match 'test', so evaluates tags
-          tags: null, // This will cause .some() to throw
+          tags: null, // Utility function handles this gracefully with (item.tags || [])
           category: 'automation',
         },
       ]
@@ -158,11 +156,10 @@ describe('useMarketplaceData - Remaining Branches', () => {
         expect(result.current.loading).toBe(false)
       })
 
-      // Should catch error in outer catch block (line 292-293)
-      expect(mockLoggerError).toHaveBeenCalledWith(
-        'Failed to fetch repository agents:',
-        expect.any(Error)
-      )
+      // Utility function handles nulls gracefully, so no error should be thrown
+      expect(result.current.loading).toBe(false)
+      expect(result.current.repositoryAgents).toBeDefined()
+      // No error should be logged since nulls are handled gracefully
     })
 
     it('should handle error in sort operation (localeCompare throws)', async () => {

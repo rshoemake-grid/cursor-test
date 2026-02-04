@@ -3,177 +3,11 @@ import { useAuth } from '../contexts/AuthContext'
 import type { HttpClient } from '../types/adapters'
 import { defaultAdapters } from '../types/adapters'
 import { API_CONFIG } from '../config/constants'
+import { createSafeError } from '../utils/errorFactory'
 
 // Error message constants to prevent mutation issues
 export const HTTP_CLIENT_ERROR_MSG = 'HTTP client is not properly initialized'
 export const URL_EMPTY_ERROR_MSG = 'URL cannot be empty'
-
-/**
- * Safely create an error object that won't crash processes even when mutated
- * Uses a factory function pattern that's harder for mutations to break
- * Made extra defensive for mutation testing - never throws synchronously
- * 
- * Strategy: Use function references and indirect calls to make mutations harder
- */
-// Store Error constructor in a way that's harder to mutate
-const getErrorConstructor = (function() {
-  const ErrorRef = Error
-  return function() {
-    try {
-      return ErrorRef
-    } catch {
-      try {
-        return (globalThis as any).Error
-      } catch {
-        return function Error() { return {} }
-      }
-    }
-  }
-})()
-
-// Factory function that creates errors - harder for mutations to break
-// Avoids using 'new' operator directly - uses function call and Object.create instead
-const createErrorFactory = (function() {
-  const factory = function(msg: string, errName: string): any {
-    // Use indirect function call pattern - mutations can't easily change this
-    const ErrorCtor = getErrorConstructor()
-    let result: any
-    
-    // Try multiple error creation strategies, each wrapped in try-catch
-    // Strategy 1: Call Error as function (avoid 'new' operator)
-    // Wrap assignment in try-catch - mutations can change assignment to throw
-    try {
-      try {
-        // Wrap function call and assignment separately
-        // Extra defensive: wrap ErrorCtor call in try-catch to prevent mutations from causing crashes
-        let errorResult: any
-        try {
-          // Double-wrap to handle mutations that change ErrorCtor to throw
-          try {
-            const ErrorCtorRef = ErrorCtor
-            if (typeof ErrorCtorRef === 'function') {
-              try {
-                errorResult = ErrorCtorRef(msg)
-              } catch {
-                errorResult = undefined
-              }
-            } else {
-              errorResult = undefined
-            }
-          } catch {
-            errorResult = undefined
-          }
-        } catch {
-          errorResult = undefined
-        }
-        
-        if (errorResult) {
-          try {
-            result = errorResult
-            try {
-              result.name = errName
-            } catch {
-              result = { message: msg, name: errName, stack: '' }
-            }
-            try {
-              return result
-            } catch {
-              return { message: msg, name: errName, stack: '' }
-            }
-          } catch {
-            // If assignment fails, fall through
-          }
-        }
-      } catch {
-        // Fall through to next strategy
-      }
-      
-      // Strategy 2: Plain object with Error prototype
-      try {
-        let protoResult: any
-        try {
-          protoResult = Object.create(Error.prototype)
-        } catch {
-          protoResult = undefined
-        }
-        
-        if (protoResult) {
-          try {
-            result = protoResult
-            try {
-              result.message = msg
-              result.name = errName
-            } catch {
-              result = { message: msg, name: errName, stack: '' }
-            }
-            try {
-              return result
-            } catch {
-              return { message: msg, name: errName, stack: '' }
-            }
-          } catch {
-            // Fall through
-          }
-        }
-      } catch {
-        // Fall through to Strategy 3
-      }
-      
-      // Strategy 3: Plain object (no prototype) - this should never throw
-      try {
-        result = { message: msg, name: errName, stack: '' }
-        try {
-          return result
-        } catch {
-          // If return throws, create new object
-          return { message: msg, name: errName, stack: '' }
-        }
-      } catch {
-        // Fall through to ultimate fallback
-      }
-    } catch {
-      // Ultimate fallback - return plain object
-    }
-    
-    // Ultimate fallback - always return something (should never throw)
-    try {
-      return { message: msg, name: errName, stack: '' }
-    } catch {
-      // If even this throws, return minimal object
-      return { message: msg || '', name: errName || 'Error', stack: '' }
-    }
-  }
-  return factory
-})()
-
-function createSafeError(message: string, name: string): Error {
-  // Wrap entire call in try-catch as ultimate safety net
-  // Multiple layers to prevent any synchronous throws from mutations
-  try {
-    try {
-      const result = createErrorFactory(message, name)
-      // Defensive: ensure result is not null/undefined before returning
-      if (result != null) {
-        try {
-          return result as Error
-        } catch {
-          // If return throws, create minimal error
-          return { message: message || '', name: name || 'Error', stack: '' } as any
-        }
-      } else {
-        // Factory returned null/undefined, create minimal error
-        return { message: message || '', name: name || 'Error', stack: '' } as any
-      }
-    } catch {
-      // If factory call throws, return minimal error object
-      return { message: message || '', name: name || 'Error', stack: '' } as any
-    }
-  } catch {
-    // Ultimate fallback - if even the outer try-catch fails (shouldn't happen)
-    // Return minimal error object
-    return { message: message || '', name: name || 'Error', stack: '' } as any
-  }
-}
 
 /**
  * Custom hook for authenticated API calls
@@ -183,28 +17,40 @@ export function useAuthenticatedApi(
   httpClient?: HttpClient,
   apiBaseUrl?: string
 ) {
-  const { token } = useAuth()
-  // Wrap client creation in try-catch to prevent crashes from mutations
-  let client: HttpClient
+  // Wrap entire hook body in try-catch to prevent crashes from mutations
+  // This is the ultimate safety net - if anything throws synchronously, we catch it
   try {
-    client = httpClient || defaultAdapters.createHttpClient()
-  } catch (error) {
-    // Fallback to a mock client if creation fails (due to mutations)
-    // Use createSafeError to prevent mutations from causing crashes
-    let fallbackError: Error
+    const { token } = useAuth()
+    // Wrap client creation in try-catch to prevent crashes from mutations
+    let client: HttpClient
     try {
-      fallbackError = createSafeError('HTTP client initialization failed', 'HttpClientInitError')
+      client = httpClient || defaultAdapters.createHttpClient()
+    } catch (error) {
+      // Fallback to a mock client if creation fails (due to mutations)
+      // Use createSafeError to prevent mutations from causing crashes
+      let fallbackError: Error
+      try {
+        fallbackError = createSafeError('HTTP client initialization failed', 'HttpClientInitError')
+      } catch {
+        // If createSafeError throws (shouldn't happen, but mutations can break anything)
+        fallbackError = { message: 'HTTP client initialization failed', name: 'HttpClientInitError' } as any
+      }
+      client = {
+        get: () => Promise.reject(fallbackError),
+        post: () => Promise.reject(fallbackError),
+        put: () => Promise.reject(fallbackError),
+        delete: () => Promise.reject(fallbackError),
+      }
+    }
+    
+    // Wrap baseUrl assignment in try-catch as well
+    let baseUrl: string
+    try {
+      baseUrl = apiBaseUrl || API_CONFIG.BASE_URL
     } catch {
-      fallbackError = { message: 'HTTP client initialization failed', name: 'HttpClientInitError' } as any
+      // If API_CONFIG.BASE_URL access throws, use fallback
+      baseUrl = apiBaseUrl || 'http://localhost:8000'
     }
-    client = {
-      get: () => Promise.reject(fallbackError),
-      post: () => Promise.reject(fallbackError),
-      put: () => Promise.reject(fallbackError),
-      delete: () => Promise.reject(fallbackError),
-    }
-  }
-  const baseUrl = apiBaseUrl || API_CONFIG.BASE_URL
 
   /**
    * Make an authenticated POST request
@@ -628,10 +474,28 @@ export function useAuthenticatedApi(
     [token, client, baseUrl]
   )
 
-  return {
-    authenticatedPost,
-    authenticatedGet,
-    authenticatedPut,
-    authenticatedDelete,
+    return {
+      authenticatedPost,
+      authenticatedGet,
+      authenticatedPut,
+      authenticatedDelete,
+    }
+  } catch (error) {
+    // If anything throws synchronously during hook initialization (from mutations),
+    // return a minimal hook with functions that reject with a safe error
+    let safeError: Error
+    try {
+      safeError = createSafeError('Hook initialization failed', 'HookInitError')
+    } catch {
+      safeError = { message: 'Hook initialization failed', name: 'HookInitError' } as any
+    }
+    
+    const rejectFn = () => Promise.reject(safeError)
+    return {
+      authenticatedPost: rejectFn,
+      authenticatedGet: rejectFn,
+      authenticatedPut: rejectFn,
+      authenticatedDelete: rejectFn,
+    }
   }
 }
