@@ -49,8 +49,9 @@
 11. `useMarketplaceData.edge-cases.test.ts` - 29 tests
 12. `useMarketplaceData.methods.test.ts` - 19 tests
 13. `useMarketplaceData.complex-patterns.test.ts` - 21 tests
+14. `useMarketplaceData.fallbacks.test.ts` - 16 tests
 
-**Total:** 243 tests covering:
+**Total:** 259 tests covering:
 - Error handling
 - Initialization
 - Logging
@@ -64,6 +65,7 @@
 - Edge cases
 - Method expressions
 - Complex patterns (OR chains, nested conditionals)
+- Fallback patterns (|| operators, default values)
 
 ---
 
