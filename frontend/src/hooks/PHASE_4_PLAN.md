@@ -84,5 +84,24 @@
   - Map operation for logging (agentsData.map())
   - Filter and sort chain operations
 
-**Status:** ✅ Phase 4.1 Complete  
-**Next:** Continue with Phase 4.2 - Surviving Mutants Analysis
+**Status:** ✅ Phase 4.1 Complete
+
+## Phase 4.2: Surviving Mutants Analysis ✅ IN PROGRESS
+
+**Test Files Created:**
+- `useMarketplaceData.targeted.test.ts` - 14 tests
+  - Sort comparison (aIsOfficial !== bIsOfficial)
+  - Subtraction operations (bIsOfficial - aIsOfficial, dateB - dateA)
+  - Ternary operators (is_official ? 1 : 0, published_at ? getTime() : 0)
+  - Boolean conversion (!!a.author_id)
+  - Array.isArray check
+
+- `useMarketplaceData.assignment.test.ts` - 8 tests
+  - Assignment operation (updated = true)
+  - Conditional check (if (updated && storage))
+  - Array assignments (map, filter, sort)
+
+**Total Phase 4.2:** 22 tests
+
+**Status:** ✅ Phase 4.2 In Progress  
+**Next:** Continue with additional targeted tests
