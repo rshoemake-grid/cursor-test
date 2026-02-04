@@ -568,6 +568,13 @@ describe('useMarketplaceData - Method Expressions', () => {
 
   describe('Array method - some() callback', () => {
     it('should verify some() callback is arrow function in workflow detection', async () => {
+      const mockTemplate: any = {
+        id: 'template-1',
+        name: 'Test Template',
+        description: 'Test Description',
+        category: 'automation',
+        tags: ['workflow', 'test'],
+      }
       const template = { ...mockTemplate, id: 'template-1', tags: ['workflow', 'test'] }
       mockHttpClient.get.mockResolvedValue({
         json: async () => [template],
