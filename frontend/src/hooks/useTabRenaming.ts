@@ -4,13 +4,16 @@
  */
 
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { showError } from '../utils/notifications'
-import { logger } from '../utils/logger'
+import { showError as defaultShowError } from '../utils/notifications'
+import { logger as defaultLogger } from '../utils/logger'
 import type { WorkflowTabData } from '../contexts/WorkflowTabsContext'
+import { validateWorkflowName, sanitizeName, hasNameChanged } from './utils/validation'
 
 interface UseTabRenamingOptions {
   tabs: WorkflowTabData[]
   onRename: (tabId: string, newName: string, previousName: string) => Promise<void> | void
+  showError?: typeof defaultShowError
+  logger?: typeof defaultLogger
 }
 
 /**
@@ -19,7 +22,12 @@ interface UseTabRenamingOptions {
  * @param options Configuration options
  * @returns Renaming state and handlers
  */
-export function useTabRenaming({ tabs, onRename }: UseTabRenamingOptions) {
+export function useTabRenaming({ 
+  tabs, 
+  onRename,
+  showError = defaultShowError,
+  logger = defaultLogger
+}: UseTabRenamingOptions) {
   const [editingTabId, setEditingTabId] = useState<string | null>(null)
   const [editingName, setEditingName] = useState('')
   const editingInputRef = useRef<HTMLInputElement>(null)
@@ -51,13 +59,14 @@ export function useTabRenaming({ tabs, onRename }: UseTabRenamingOptions) {
       return
     }
 
-    const trimmedName = requestedName.trim()
-    if (trimmedName === '') {
-      showError('Workflow name cannot be empty.')
+    const trimmedName = sanitizeName(requestedName)
+    const validation = validateWorkflowName(trimmedName)
+    if (!validation.isValid) {
+      showError(validation.error || 'Invalid workflow name.')
       return
     }
 
-    if (trimmedName === tab.name) {
+    if (!hasNameChanged(trimmedName, tab.name)) {
       setEditingTabId(null)
       setEditingName('')
       return
@@ -76,7 +85,7 @@ export function useTabRenaming({ tabs, onRename }: UseTabRenamingOptions) {
     } finally {
       renameInFlightRef.current = false
     }
-  }, [tabs, onRename])
+  }, [tabs, onRename, showError, logger])
 
   const cancelEditing = useCallback(() => {
     setEditingTabId(null)

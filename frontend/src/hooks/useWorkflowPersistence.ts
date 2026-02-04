@@ -4,11 +4,12 @@
  */
 
 import { useCallback } from 'react'
-import { api } from '../api/client'
-import { showSuccess, showError } from '../utils/notifications'
-import { logger } from '../utils/logger'
+import { api as defaultApi } from '../api/client'
+import { showSuccess as defaultShowSuccess, showError as defaultShowError } from '../utils/notifications'
+import { logger as defaultLogger } from '../utils/logger'
 import { createWorkflowDefinition } from '../utils/workflowFormat'
 import type { Node, Edge } from '@xyflow/react'
+import type { createApiClient } from '../api/client'
 
 interface UseWorkflowPersistenceOptions {
   isAuthenticated: boolean
@@ -22,6 +23,11 @@ interface UseWorkflowPersistenceOptions {
   onWorkflowSaved?: (workflowId: string, name: string) => void
   isSaving: boolean
   setIsSaving: (saving: boolean) => void
+  // Dependency injection
+  api?: ReturnType<typeof createApiClient>
+  showSuccess?: typeof defaultShowSuccess
+  showError?: typeof defaultShowError
+  logger?: typeof defaultLogger
 }
 
 export function useWorkflowPersistence({
@@ -36,6 +42,10 @@ export function useWorkflowPersistence({
   onWorkflowSaved,
   isSaving,
   setIsSaving,
+  api = defaultApi,
+  showSuccess = defaultShowSuccess,
+  showError = defaultShowError,
+  logger = defaultLogger,
 }: UseWorkflowPersistenceOptions) {
   const saveWorkflow = useCallback(async (): Promise<string | null> => {
     if (!isAuthenticated) {
@@ -74,9 +84,10 @@ export function useWorkflowPersistence({
         return created.id!
       }
     } catch (error: any) {
-      showError('Failed to save workflow: ' + (error.message || 'Unknown error'))
+      const errorMessage = 'Failed to save workflow: ' + (error.message || 'Unknown error')
+      showError(errorMessage)
       logger.error('Failed to save workflow:', error)
-      throw new Error('Failed to save workflow: ' + (error.message || 'Unknown error'))
+      throw new Error(errorMessage)
     } finally {
       setIsSaving(false)
     }
@@ -92,6 +103,10 @@ export function useWorkflowPersistence({
     setLocalWorkflowId,
     onWorkflowSaved,
     setIsSaving,
+    api,
+    showSuccess,
+    showError,
+    logger,
   ])
 
   const exportWorkflow = useCallback(() => {

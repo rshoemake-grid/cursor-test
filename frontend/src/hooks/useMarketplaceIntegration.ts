@@ -4,9 +4,10 @@
  */
 
 import { useEffect, useRef, useCallback } from 'react'
-import { logger } from '../utils/logger'
+import { logger as defaultLogger } from '../utils/logger'
 import type { StorageAdapter } from '../types/adapters'
 import type { Node } from '@xyflow/react'
+import { calculateMultipleNodePositions } from './utils/nodePositioning'
 
 interface UseMarketplaceIntegrationOptions {
   tabId: string
@@ -19,6 +20,7 @@ interface UseMarketplaceIntegrationOptions {
   tabIsUnsaved: boolean
   tabDraftsRef: React.MutableRefObject<Record<string, any>>
   saveDraftsToStorage: (drafts: Record<string, any>) => void
+  logger?: typeof defaultLogger
 }
 
 export function useMarketplaceIntegration({
@@ -32,12 +34,13 @@ export function useMarketplaceIntegration({
   tabIsUnsaved,
   tabDraftsRef,
   saveDraftsToStorage,
+  logger: injectedLogger = defaultLogger,
 }: UseMarketplaceIntegrationOptions) {
   const isAddingAgentsRef = useRef(false)
 
   const addAgentsToCanvas = useCallback((agentsToAdd: any[]) => {
-    logger.debug('[useMarketplaceIntegration] addAgentsToCanvas called with', agentsToAdd.length, 'agents')
-    logger.debug('[useMarketplaceIntegration] Current tabId:', tabId)
+    injectedLogger.debug('[useMarketplaceIntegration] addAgentsToCanvas called with', agentsToAdd.length, 'agents')
+    injectedLogger.debug('[useMarketplaceIntegration] Current tabId:', tabId)
     isAddingAgentsRef.current = true
     
     // Get current state values
@@ -50,20 +53,16 @@ export function useMarketplaceIntegration({
     // Add each agent as a node
     // Use functional update to get current nodes for positioning
     setNodes((currentNodes) => {
-      logger.debug('[useMarketplaceIntegration] Current nodes before adding:', currentNodes.length)
-      const startX = currentNodes.length > 0 
-        ? Math.max(...currentNodes.map(n => n.position.x)) + 200 
-        : 250
-      let currentY = 250
+      injectedLogger.debug('[useMarketplaceIntegration] Current nodes before adding:', currentNodes.length)
+      
+      // Calculate positions for all new nodes
+      const positions = calculateMultipleNodePositions(currentNodes, agentsToAdd.length)
       
       const newNodes = agentsToAdd.map((agent: any, index: number) => {
         const node = {
           id: `agent-${Date.now()}-${index}`,
           type: 'agent',
-          position: {
-            x: startX,
-            y: currentY + (index * 150)
-          },
+          position: positions[index],
           draggable: true,
           data: {
             label: agent.name || agent.label || 'Agent Node',
@@ -76,7 +75,7 @@ export function useMarketplaceIntegration({
       })
       
       const updatedNodes = [...currentNodes, ...newNodes]
-      logger.debug('[useMarketplaceIntegration] Total nodes after adding:', updatedNodes.length)
+      injectedLogger.debug('[useMarketplaceIntegration] Total nodes after adding:', updatedNodes.length)
       
       // Update draft storage immediately to persist the change
       setTimeout(() => {
@@ -91,25 +90,25 @@ export function useMarketplaceIntegration({
         }
         tabDraftsRef.current[currentTabId] = updatedDraft
         saveDraftsToStorage(tabDraftsRef.current)
-        logger.debug('[useMarketplaceIntegration] Draft updated with new nodes, total:', updatedNodes.length)
+        injectedLogger.debug('[useMarketplaceIntegration] Draft updated with new nodes, total:', updatedNodes.length)
       }, 0)
       
       // Reset flag after a delay to allow state update
       setTimeout(() => {
         isAddingAgentsRef.current = false
-        logger.debug('[useMarketplaceIntegration] Reset isAddingAgentsRef flag')
+        injectedLogger.debug('[useMarketplaceIntegration] Reset isAddingAgentsRef flag')
       }, 1000)
       
       return updatedNodes
     })
     
     notifyModified()
-  }, [tabId, localWorkflowId, localWorkflowName, localWorkflowDescription, tabIsUnsaved, setNodes, notifyModified, tabDraftsRef, saveDraftsToStorage])
+    }, [tabId, localWorkflowId, localWorkflowName, localWorkflowDescription, tabIsUnsaved, setNodes, notifyModified, tabDraftsRef, saveDraftsToStorage, injectedLogger])
 
   useEffect(() => {
     const handleAddAgentsToWorkflow = (event: CustomEvent) => {
       const { agents: agentsToAdd, tabId: targetTabId } = event.detail
-      logger.debug('[useMarketplaceIntegration] Received addAgentsToWorkflow event:', { 
+      injectedLogger.debug('[useMarketplaceIntegration] Received addAgentsToWorkflow event:', { 
         targetTabId, 
         currentTabId: tabId, 
         agentCount: agentsToAdd.length 
@@ -117,11 +116,11 @@ export function useMarketplaceIntegration({
       
       // Only process if this is the active tab
       if (targetTabId !== tabId) {
-        logger.debug('[useMarketplaceIntegration] Event for different tab, ignoring')
+        injectedLogger.debug('[useMarketplaceIntegration] Event for different tab, ignoring')
         return
       }
       
-      logger.debug('[useMarketplaceIntegration] Adding agents via event')
+      injectedLogger.debug('[useMarketplaceIntegration] Adding agents via event')
       addAgentsToCanvas(agentsToAdd)
     }
     
@@ -133,29 +132,29 @@ export function useMarketplaceIntegration({
         const pendingData = storage.getItem('pendingAgentsToAdd')
         if (pendingData) {
           const pending = JSON.parse(pendingData)
-          logger.debug('[useMarketplaceIntegration] Found pending agents:', {
+          injectedLogger.debug('[useMarketplaceIntegration] Found pending agents:', {
             pendingTabId: pending.tabId, 
             currentTabId: tabId, 
             age: Date.now() - pending.timestamp 
           })
           // Only process if it's for this tab and recent (within last 10 seconds)
           if (pending.tabId === tabId && Date.now() - pending.timestamp < 10000) {
-            logger.debug('[useMarketplaceIntegration] Adding agents to canvas:', pending.agents.length)
+            injectedLogger.debug('[useMarketplaceIntegration] Adding agents to canvas:', pending.agents.length)
             addAgentsToCanvas(pending.agents)
             // Clear after processing
             storage.removeItem('pendingAgentsToAdd')
           } else if (pending.tabId !== tabId) {
             // Clear if it's for a different tab
-            logger.debug('[useMarketplaceIntegration] Pending agents for different tab, clearing')
+            injectedLogger.debug('[useMarketplaceIntegration] Pending agents for different tab, clearing')
             storage.removeItem('pendingAgentsToAdd')
           } else if (Date.now() - pending.timestamp >= 10000) {
             // Clear if too old
-            logger.debug('[useMarketplaceIntegration] Pending agents too old, clearing')
+            injectedLogger.debug('[useMarketplaceIntegration] Pending agents too old, clearing')
             storage.removeItem('pendingAgentsToAdd')
           }
         }
       } catch (e) {
-        logger.error('Failed to process pending agents:', e)
+        injectedLogger.error('Failed to process pending agents:', e)
         if (storage) {
           storage.removeItem('pendingAgentsToAdd')
         }
@@ -187,7 +186,7 @@ export function useMarketplaceIntegration({
       }
       clearInterval(interval)
     }
-  }, [tabId, storage, addAgentsToCanvas])
+  }, [tabId, storage, addAgentsToCanvas, injectedLogger])
 
   return {
     isAddingAgentsRef,

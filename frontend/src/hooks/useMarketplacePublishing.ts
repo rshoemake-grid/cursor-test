@@ -4,7 +4,7 @@
  */
 
 import { useState, useCallback } from 'react'
-import { showError, showSuccess } from '../utils/notifications'
+import { showError as defaultShowError, showSuccess as defaultShowSuccess } from '../utils/notifications'
 import { usePublishForm } from './usePublishForm'
 import type { HttpClient } from '../types/adapters'
 
@@ -13,6 +13,9 @@ interface UseMarketplacePublishingOptions {
   token: string | null
   httpClient: HttpClient
   apiBaseUrl: string
+  // Dependency injection
+  showError?: typeof defaultShowError
+  showSuccess?: typeof defaultShowSuccess
 }
 
 /**
@@ -26,6 +29,8 @@ export function useMarketplacePublishing({
   token,
   httpClient,
   apiBaseUrl,
+  showError = defaultShowError,
+  showSuccess = defaultShowSuccess,
 }: UseMarketplacePublishingOptions) {
   const [showPublishModal, setShowPublishModal] = useState(false)
   const [isPublishing, setIsPublishing] = useState(false)

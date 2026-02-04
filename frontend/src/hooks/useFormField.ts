@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
+import { getNestedValue } from '../utils/formUtils'
 
 /**
  * Reusable form field hook
@@ -10,25 +11,6 @@ export interface UseFormFieldOptions<T> {
   nodeData?: any
   dataPath?: string | string[] // Path to value in nodeData (e.g., 'agent_config.model' or ['agent_config', 'model'])
   syncWithNodeData?: boolean // Whether to sync with nodeData changes
-}
-
-/**
- * Get nested value from object using path
- */
-function getNestedValue(obj: any, path: string | string[]): any {
-  if (!obj || !path) return undefined
-  
-  const keys = Array.isArray(path) ? path : path.split('.')
-  let value = obj
-  
-  for (const key of keys) {
-    if (value === null || value === undefined) {
-      return undefined
-    }
-    value = value[key]
-  }
-  
-  return value
 }
 
 /**

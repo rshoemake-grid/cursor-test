@@ -4,10 +4,10 @@
  */
 
 import { useState, useCallback } from 'react'
-import { showSuccess, showError } from '../utils/notifications'
-import { showConfirm } from '../utils/confirm'
-import { api } from '../api/client'
-import { logger } from '../utils/logger'
+import { showSuccess as defaultShowSuccess, showError as defaultShowError } from '../utils/notifications'
+import { showConfirm as defaultShowConfirm } from '../utils/confirm'
+import { api as defaultApi, createApiClient } from '../api/client'
+import { logger as defaultLogger } from '../utils/logger'
 
 interface UseWorkflowExecutionOptions {
   isAuthenticated: boolean
@@ -15,6 +15,12 @@ interface UseWorkflowExecutionOptions {
   workflowIdRef: React.MutableRefObject<string | null>
   saveWorkflow: () => Promise<string | null>
   onExecutionStart?: (executionId: string) => void
+  // Dependency injection
+  showSuccess?: typeof defaultShowSuccess
+  showError?: typeof defaultShowError
+  showConfirm?: typeof defaultShowConfirm
+  api?: ReturnType<typeof createApiClient>
+  logger?: typeof defaultLogger
 }
 
 export function useWorkflowExecution({
@@ -23,6 +29,11 @@ export function useWorkflowExecution({
   workflowIdRef,
   saveWorkflow,
   onExecutionStart,
+  showSuccess = defaultShowSuccess,
+  showError = defaultShowError,
+  showConfirm = defaultShowConfirm,
+  api = defaultApi,
+  logger = defaultLogger,
 }: UseWorkflowExecutionOptions) {
   const [showInputs, setShowInputs] = useState(false)
   const [executionInputs, setExecutionInputs] = useState<string>('{}')

@@ -5,8 +5,9 @@
 
 import { useEffect, useRef } from 'react'
 import { getLocalStorageItem, setLocalStorageItem } from './useLocalStorage'
-import { logger } from '../utils/logger'
+import { logger as defaultLogger } from '../utils/logger'
 import type { Node, Edge } from '@xyflow/react'
+import type { StorageAdapter } from '../types/adapters'
 
 export interface TabDraft {
   nodes: Node[]
@@ -19,13 +20,22 @@ export interface TabDraft {
 
 const DRAFT_STORAGE_KEY = 'workflowBuilderDrafts'
 
-export const loadDraftsFromStorage = (): Record<string, TabDraft> => {
-  const drafts = getLocalStorageItem<Record<string, TabDraft>>(DRAFT_STORAGE_KEY, {})
+export const loadDraftsFromStorage = (options?: {
+  storage?: StorageAdapter | null
+  logger?: typeof defaultLogger
+}): Record<string, TabDraft> => {
+  const drafts = getLocalStorageItem<Record<string, TabDraft>>(DRAFT_STORAGE_KEY, {}, options)
   return typeof drafts === 'object' && drafts !== null ? drafts : {}
 }
 
-export const saveDraftsToStorage = (drafts: Record<string, TabDraft>) => {
-  setLocalStorageItem(DRAFT_STORAGE_KEY, drafts)
+export const saveDraftsToStorage = (
+  drafts: Record<string, TabDraft>,
+  options?: {
+    storage?: StorageAdapter | null
+    logger?: typeof defaultLogger
+  }
+) => {
+  setLocalStorageItem(DRAFT_STORAGE_KEY, drafts, options)
 }
 
 interface UseDraftManagementOptions {
@@ -44,6 +54,8 @@ interface UseDraftManagementOptions {
   setLocalWorkflowDescription: (description: string) => void
   normalizeNodeForStorage: (node: Node) => Node
   isAddingAgentsRef?: React.MutableRefObject<boolean>
+  storage?: StorageAdapter | null
+  logger?: typeof defaultLogger
 }
 
 export function useDraftManagement({
@@ -62,8 +74,11 @@ export function useDraftManagement({
   setLocalWorkflowDescription,
   normalizeNodeForStorage,
   isAddingAgentsRef,
+  storage,
+  logger = defaultLogger,
 }: UseDraftManagementOptions) {
-  const tabDraftsRef = useRef<Record<string, TabDraft>>(loadDraftsFromStorage())
+  const storageOptions = { storage, logger }
+  const tabDraftsRef = useRef<Record<string, TabDraft>>(loadDraftsFromStorage(storageOptions))
 
   // Load draft when tab or workflow changes
   useEffect(() => {
@@ -105,8 +120,8 @@ export function useDraftManagement({
       workflowDescription: localWorkflowDescription,
       isUnsaved: tabIsUnsaved
     }
-    saveDraftsToStorage(tabDraftsRef.current)
-  }, [tabId, nodes, edges, localWorkflowId, localWorkflowName, localWorkflowDescription, tabIsUnsaved, normalizeNodeForStorage])
+    saveDraftsToStorage(tabDraftsRef.current, storageOptions)
+  }, [tabId, nodes, edges, localWorkflowId, localWorkflowName, localWorkflowDescription, tabIsUnsaved, normalizeNodeForStorage, storageOptions])
 
   return {
     tabDraftsRef,
