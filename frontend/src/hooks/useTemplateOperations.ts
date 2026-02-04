@@ -104,7 +104,7 @@ export function useTemplateOperations({
     // Debug logging
     logger.debug('[Marketplace] Delete agents check:', {
       selectedCount: deletableAgents.length,
-      user: user ? { id: user.id, username: user.username } : null,
+      user: user && user.id ? { id: user.id, username: user.username } : null,
       selectedAgents: deletableAgents.map(a => ({
         id: a.id,
         name: a.name,
@@ -116,7 +116,8 @@ export function useTemplateOperations({
     })
     
     const userOwnedAgents = deletableAgents.filter(a => {
-      if (!user || !a.author_id || !user.id) return false
+      // Add defensive checks to prevent crashes during mutation testing
+      if (!user || !a || !a.author_id || !user.id) return false
       const authorIdStr = String(a.author_id)
       const userIdStr = String(user.id)
       const isMatch = authorIdStr === userIdStr
@@ -174,17 +175,24 @@ export function useTemplateOperations({
       const publishedAgents = storage.getItem('publishedAgents')
       if (publishedAgents) {
         const allAgents: AgentTemplate[] = JSON.parse(publishedAgents)
-        const agentIdsToDelete = new Set(userOwnedAgents.map(a => a.id))
-        const filteredAgents = allAgents.filter(a => !agentIdsToDelete.has(a.id))
-        storage.setItem('publishedAgents', JSON.stringify(filteredAgents))
-        
-        // Update state
-        setAgents(prevAgents => prevAgents.filter(a => !agentIdsToDelete.has(a.id)))
-        setSelectedAgentIds(new Set())
-        showSuccess(`Successfully deleted ${userOwnedAgents.length} agent(s)`)
+        // Add defensive check to prevent crashes during mutation testing
+        if (userOwnedAgents && Array.isArray(userOwnedAgents)) {
+          const agentIdsToDelete = new Set(userOwnedAgents.map(a => a && a.id ? a.id : null).filter(Boolean))
+          const filteredAgents = allAgents.filter(a => !agentIdsToDelete.has(a.id))
+          storage.setItem('publishedAgents', JSON.stringify(filteredAgents))
+          
+          // Update state
+          setAgents(prevAgents => prevAgents.filter(a => !agentIdsToDelete.has(a.id)))
+          setSelectedAgentIds(new Set())
+          showSuccess(`Successfully deleted ${userOwnedAgents.length} agent(s)`)
+        }
       }
     } catch (error: any) {
-      showError(`Failed to delete agents: ${error?.message ?? 'Unknown error'}`)
+      // Add defensive check to prevent crashes during mutation testing
+      const errorMessage = error && typeof error === 'object' && 'message' in error 
+        ? String(error.message) 
+        : 'Unknown error'
+      showError(`Failed to delete agents: ${errorMessage}`)
     }
   }, [agents, user, storage, setAgents, setSelectedAgentIds])
 
@@ -209,7 +217,8 @@ export function useTemplateOperations({
       }
     }
     
-    const userOwnedTemplates = deletableTemplates.filter(t => user && t.author_id && String(t.author_id) === String(user.id))
+    // Add defensive check to prevent crashes during mutation testing
+    const userOwnedTemplates = deletableTemplates.filter(t => user && user.id && t && t.author_id && String(t.author_id) === String(user.id))
     
     if (userOwnedTemplates.length === 0) {
       if (officialTemplates.length > 0) {

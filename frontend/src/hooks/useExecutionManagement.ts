@@ -200,9 +200,13 @@ export function useExecutionManagement({
     const interval = setInterval(async () => {
       // Use ref to get current tabs without causing effect re-run
       const currentTabs = tabsRef.current
-      const runningExecutions = currentTabs.flatMap(tab => 
-        tab.executions.filter(e => e && e.id && e.status === 'running' && e.id.startsWith && !e.id.startsWith(PENDING_EXECUTION_PREFIX))
-      )
+      // Add defensive checks to prevent crashes during mutation testing
+      if (!currentTabs || !Array.isArray(currentTabs)) return
+      const runningExecutions = currentTabs.flatMap(tab => {
+        // Add defensive check for tab.executions
+        if (!tab || !tab.executions || !Array.isArray(tab.executions)) return []
+        return tab.executions.filter(e => e && e.id && e.status === 'running' && e.id.startsWith && !e.id.startsWith(PENDING_EXECUTION_PREFIX))
+      })
       
       if (runningExecutions.length === 0) return
 
@@ -247,10 +251,12 @@ export function useExecutionManagement({
       setTabs(prev => {
         return prev.map(tab => ({
           ...tab,
-          executions: tab.executions.map(exec => {
-            const update = updates.find(u => u && u.id === exec.id)
-            return update || exec
-          })
+          executions: (tab.executions && Array.isArray(tab.executions)) 
+            ? tab.executions.map(exec => {
+                const update = updates.find(u => u && u.id === exec.id)
+                return update || exec
+              })
+            : []
         }))
       })
     }, 2000) // Poll every 2 seconds
