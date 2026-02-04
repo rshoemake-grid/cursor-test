@@ -101,7 +101,7 @@
   - Conditional check (if (updated && storage))
   - Array assignments (map, filter, sort)
 
-**Total Phase 4.2:** 153 tests
+**Total Phase 4.2:** 161 tests
 - Targeted tests: 14 tests
 - Assignment tests: 8 tests
 - URL parameter tests: 10 tests
@@ -117,6 +117,7 @@
 - String comparison tests: 5 tests
 - Complex logical operator tests: 17 tests
 - Spread operator and return pattern tests: 10 tests
+- Logger map operation tests: 8 tests
 
 **Status:** ✅ Phase 4.2 In Progress  
 **Next:** Continue with additional targeted tests or run mutation testing
