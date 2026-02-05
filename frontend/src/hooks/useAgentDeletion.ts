@@ -119,9 +119,10 @@ export function useAgentDeletion({
         showError('Storage not available')
         return
       }
-      // Use extracted storage utility - mutation-resistant
-      const allAgents = getStorageItem<AgentTemplate[]>(storage, 'publishedAgents', [])
-      if (hasArrayItems(allAgents)) {
+      
+      const publishedAgents = storage.getItem('publishedAgents')
+      if (publishedAgents) {
+        const allAgents: AgentTemplate[] = JSON.parse(publishedAgents)
         // Use extracted validation function - mutation-resistant
         if (hasArrayItems(userOwnedAgents)) {
           const agentIdsToDelete = new Set(userOwnedAgents.map(a => a && a.id ? a.id : null).filter(Boolean))
