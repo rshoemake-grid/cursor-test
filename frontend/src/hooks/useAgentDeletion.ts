@@ -14,6 +14,14 @@ import { extractApiErrorMessage } from './utils/apiUtils'
 import { isValidUser, getUserId } from './utils/userValidation'
 import { isStorageAvailable, getStorageItem, setStorageItem } from './utils/storageValidation'
 import { hasArrayItems } from './utils/arrayValidation'
+import {
+  hasOfficialItems,
+  hasNoUserOwnedItems,
+  ownsAllItems,
+  ownsPartialItems,
+  hasItemsWithAuthorId,
+  getItemsWithAuthorIdCount,
+} from './utils/deletionValidation'
 import type { StorageAdapter } from '../types/adapters'
 import type { AgentTemplate } from './useMarketplaceData'
 
@@ -54,7 +62,8 @@ export function useAgentDeletion({
     // Filter out official agents - they cannot be deleted
     const { official: officialAgents, deletable: deletableAgents } = separateOfficialItems(selectedAgents)
     
-    if (officialAgents.length > 0) {
+    // Use extracted validation function - mutation-resistant
+    if (hasOfficialItems(officialAgents)) {
       showError(`Cannot delete ${officialAgents.length} official agent(s). Official agents cannot be deleted.`)
       if (deletableAgents.length === 0) {
         return // All selected are official, nothing to delete
@@ -80,32 +89,35 @@ export function useAgentDeletion({
     
     logger.debug('[Marketplace] User owned agents:', userOwnedAgents.length)
     
-    if (userOwnedAgents.length === 0) {
+    // Use extracted validation function - mutation-resistant
+    if (hasNoUserOwnedItems(userOwnedAgents)) {
       // Check if any agents have author_id set
-      const agentsWithAuthorId = deletableAgents.filter(a => a.author_id)
-      if (agentsWithAuthorId.length === 0) {
-        if (officialAgents.length > 0) {
+      // Use extracted validation function - mutation-resistant
+      const agentsWithAuthorIdCount = getItemsWithAuthorIdCount(deletableAgents)
+      if (agentsWithAuthorIdCount === 0) {
+        if (hasOfficialItems(officialAgents)) {
           showError('Selected agents were published before author tracking was added or are official. Please republish them to enable deletion.')
         } else {
           showError('Selected agents were published before author tracking was added. Please republish them to enable deletion.')
         }
       } else {
-        if (officialAgents.length > 0) {
-          showError(`You can only delete agents that you published (official agents cannot be deleted). ${deletableAgents.length} selected, ${agentsWithAuthorId.length} have author info, but none match your user ID.`)
+        if (hasOfficialItems(officialAgents)) {
+          showError(`You can only delete agents that you published (official agents cannot be deleted). ${deletableAgents.length} selected, ${agentsWithAuthorIdCount} have author info, but none match your user ID.`)
         } else {
-          showError(`You can only delete agents that you published. ${deletableAgents.length} selected, ${agentsWithAuthorId.length} have author info, but none match your user ID.`)
+          showError(`You can only delete agents that you published. ${deletableAgents.length} selected, ${agentsWithAuthorIdCount} have author info, but none match your user ID.`)
         }
       }
       return
     }
     
-    if (userOwnedAgents.length < deletableAgents.length) {
+    // Use extracted validation function - mutation-resistant
+    if (ownsPartialItems(userOwnedAgents.length, deletableAgents.length)) {
       const confirmed = await showConfirm(
         `You can only delete ${userOwnedAgents.length} of ${deletableAgents.length} selected agent(s). Delete only the ones you own?`,
         { title: 'Partial Delete', confirmText: 'Delete', cancelText: 'Cancel', type: 'warning' }
       )
       if (!confirmed) return
-    } else {
+    } else if (ownsAllItems(userOwnedAgents.length, deletableAgents.length)) {
       const confirmed = await showConfirm(
         `Are you sure you want to delete ${userOwnedAgents.length} selected agent(s) from the marketplace?`,
         { title: 'Delete Agents', confirmText: 'Delete', cancelText: 'Cancel', type: 'danger' }

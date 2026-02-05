@@ -10,6 +10,12 @@ import { api as defaultApi, createApiClient } from '../api/client'
 import { filterUserOwnedDeletableItems, separateOfficialItems } from '../utils/ownershipUtils'
 import { isEmptySelection } from '../utils/validationUtils'
 import { extractApiErrorMessage } from './utils/apiUtils'
+import {
+  hasOfficialItems,
+  hasNoUserOwnedItems,
+  ownsAllItems,
+  ownsPartialItems,
+} from './utils/deletionValidation'
 import type { Template } from './useMarketplaceData'
 
 interface UseWorkflowDeletionOptions {
@@ -54,7 +60,8 @@ export function useWorkflowDeletion({
     // Filter out official workflows - they cannot be deleted
     const { official: officialTemplates, deletable: deletableTemplates } = separateOfficialItems(selectedTemplates)
     
-    if (officialTemplates.length > 0) {
+    // Use extracted validation function - mutation-resistant
+    if (hasOfficialItems(officialTemplates)) {
       showError(`Cannot delete ${officialTemplates.length} official workflow(s). Official workflows cannot be deleted.`)
       if (deletableTemplates.length === 0) {
         return // All selected are official, nothing to delete
@@ -64,8 +71,9 @@ export function useWorkflowDeletion({
     // Filter to user-owned templates
     const userOwnedTemplates = filterUserOwnedDeletableItems(deletableTemplates, user)
     
-    if (userOwnedTemplates.length === 0) {
-      if (officialTemplates.length > 0) {
+    // Use extracted validation function - mutation-resistant
+    if (hasNoUserOwnedItems(userOwnedTemplates)) {
+      if (hasOfficialItems(officialTemplates)) {
         showError('You can only delete workflows that you published (official workflows cannot be deleted)')
       } else {
         showError('You can only delete workflows that you published')
@@ -73,13 +81,14 @@ export function useWorkflowDeletion({
       return
     }
     
-    if (userOwnedTemplates.length < deletableTemplates.length) {
+    // Use extracted validation function - mutation-resistant
+    if (ownsPartialItems(userOwnedTemplates.length, deletableTemplates.length)) {
       const confirmed = await showConfirm(
         `You can only delete ${userOwnedTemplates.length} of ${deletableTemplates.length} selected workflow(s). Delete only the ones you own?`,
         { title: 'Partial Delete', confirmText: 'Delete', cancelText: 'Cancel', type: 'warning' }
       )
       if (!confirmed) return
-    } else {
+    } else if (ownsAllItems(userOwnedTemplates.length, deletableTemplates.length)) {
       const confirmed = await showConfirm(
         `Are you sure you want to delete ${userOwnedTemplates.length} selected workflow(s) from the marketplace?`,
         { title: 'Delete Workflows', confirmText: 'Delete', cancelText: 'Cancel', type: 'danger' }
