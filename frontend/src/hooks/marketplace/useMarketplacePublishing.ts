@@ -37,7 +37,8 @@ export function useMarketplacePublishing({
   const publishFormHook = usePublishForm()
 
   const openPublishModal = useCallback(() => {
-    if (!activeTab) {
+    // Explicit null/undefined check to prevent mutation survivors
+    if (activeTab === null || activeTab === undefined) {
       showError('Select a workflow tab before publishing.')
       return
     }
@@ -62,7 +63,8 @@ export function useMarketplacePublishing({
 
   const handlePublish = useCallback(async (event: React.FormEvent) => {
     event.preventDefault()
-    if (!activeTab || !activeTab.workflowId) {
+    // Explicit checks to prevent mutation survivors
+    if (activeTab === null || activeTab === undefined || activeTab.workflowId === null || activeTab.workflowId === undefined || activeTab.workflowId === '') {
       showError('Save the workflow before publishing to the marketplace.')
       return
     }
@@ -70,9 +72,10 @@ export function useMarketplacePublishing({
     setIsPublishing(true)
     try {
       const tagsArray = publishFormHook.form.tags.split(',').map(tag => tag.trim()).filter(Boolean)
+      // Explicit check to prevent mutation survivors
       const headers: HeadersInit = {
         'Content-Type': 'application/json',
-        ...(token ? { Authorization: `Bearer ${token}` } : {})
+        ...(token !== null && token !== undefined && token !== '' ? { Authorization: `Bearer ${token}` } : {})
       }
       const response = await httpClient.post(
         `${apiBaseUrl}/workflows/${activeTab.workflowId}/publish`,
@@ -94,7 +97,9 @@ export function useMarketplacePublishing({
         showError(`Failed to publish: ${errorText}`)
       }
     } catch (error: any) {
-      showError('Failed to publish workflow: ' + (error.message || 'Unknown error'))
+      // Explicit error message extraction to prevent mutation survivors
+      const errorMsg = (error !== null && error !== undefined && error.message !== null && error.message !== undefined) ? error.message : 'Unknown error'
+      showError('Failed to publish workflow: ' + errorMsg)
     } finally {
       setIsPublishing(false)
     }

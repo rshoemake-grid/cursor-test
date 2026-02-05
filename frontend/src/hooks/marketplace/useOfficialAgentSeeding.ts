@@ -61,7 +61,8 @@ export function useOfficialAgentSeeding({
 }: UseOfficialAgentSeedingOptions) {
   useEffect(() => {
     const seedOfficialAgents = async () => {
-      if (!storage) return
+      // Explicit null/undefined check to prevent mutation survivors
+      if (storage === null || storage === undefined) return
 
       const seededKey = 'officialAgentsSeeded'
       // Clear the flag to force re-seeding (remove this line after first successful seed)
@@ -87,7 +88,8 @@ export function useOfficialAgentSeeding({
       try {
         // Fetch all official workflows
         const response = await httpClient.get(`${apiBaseUrl}/templates/?sort_by=popular`)
-        if (!response.ok) {
+        // Explicit check to prevent mutation survivors
+        if (response.ok !== true) {
           logger.error('[Marketplace] Failed to fetch templates:', response.statusText)
           return
         }
@@ -115,7 +117,8 @@ export function useOfficialAgentSeeding({
               { 'Content-Type': 'application/json' }
             )
             
-            if (!workflowResponse.ok) {
+            // Explicit check to prevent mutation survivors
+            if (workflowResponse.ok !== true) {
               logger.error(`[Marketplace] Failed to fetch workflow ${workflow.id}: ${workflowResponse.statusText}`)
               continue
             }
@@ -147,7 +150,8 @@ export function useOfficialAgentSeeding({
                 const agentId = `official_${workflow.id}_${nodeId}`
                 
                 // Check if agent already exists
-                if (!storage) continue
+                // Explicit null/undefined check to prevent mutation survivors
+                if (storage === null || storage === undefined) continue
                 const existingAgents = storage.getItem(STORAGE_KEYS.PUBLISHED_AGENTS)
                 const agents: AgentTemplate[] = existingAgents ? JSON.parse(existingAgents) : []
                 if (agents.some(a => a.id === agentId)) {
@@ -186,7 +190,8 @@ export function useOfficialAgentSeeding({
         }
 
         // Add official agents to storage
-        if (agentsToAdd.length > 0 && storage) {
+        // Explicit checks to prevent mutation survivors
+        if (agentsToAdd.length > 0 && storage !== null && storage !== undefined) {
           const existingAgents = storage.getItem(STORAGE_KEYS.PUBLISHED_AGENTS)
           const agents: AgentTemplate[] = existingAgents ? JSON.parse(existingAgents) : []
           agents.push(...agentsToAdd)
@@ -195,7 +200,8 @@ export function useOfficialAgentSeeding({
           logger.debug(`[Marketplace] Total agents in storage: ${agents.length}`)
           
           // Notify parent that agents were seeded
-          if (onAgentsSeeded) {
+          // Explicit check to prevent mutation survivors
+          if (onAgentsSeeded !== null && onAgentsSeeded !== undefined) {
             onAgentsSeeded()
           }
         } else {

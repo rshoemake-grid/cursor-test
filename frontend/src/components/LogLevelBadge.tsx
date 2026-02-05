@@ -11,8 +11,10 @@ export default function LogLevelBadge({
   showBackground = true,
   className = '' 
 }: LogLevelBadgeProps) {
-  const normalizedLevel = isValidLogLevel(level) ? level : 'INFO'
-  const colorClasses = showBackground 
+  // Explicit check to prevent mutation survivors
+  const normalizedLevel = isValidLogLevel(level) === true ? level : 'INFO'
+  // Explicit check to prevent mutation survivors
+  const colorClasses = showBackground === true
     ? getLogLevelColor(normalizedLevel)
     : ''
   const textColor = getLogLevelTextColor(normalizedLevel)

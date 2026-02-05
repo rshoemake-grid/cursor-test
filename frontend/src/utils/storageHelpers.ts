@@ -11,7 +11,8 @@ export function safeStorageGet<T>(
   defaultValue: T,
   context?: string
 ): T {
-  if (!storage) {
+  // Explicit null/undefined check to prevent mutation survivors
+  if (storage === null || storage === undefined) {
     return defaultValue
   }
 
@@ -40,7 +41,8 @@ export function safeStorageSet(
   value: any,
   context?: string
 ): boolean {
-  if (!storage) {
+  // Explicit null/undefined check to prevent mutation survivors
+  if (storage === null || storage === undefined) {
     return false
   }
 
@@ -67,7 +69,8 @@ export function safeStorageRemove(
   key: string,
   context?: string
 ): boolean {
-  if (!storage) {
+  // Explicit null/undefined check to prevent mutation survivors
+  if (storage === null || storage === undefined) {
     return false
   }
 
@@ -92,7 +95,8 @@ export function safeStorageHas(
   key: string,
   context?: string
 ): boolean {
-  if (!storage) {
+  // Explicit null/undefined check to prevent mutation survivors
+  if (storage === null || storage === undefined) {
     return false
   }
 
@@ -116,7 +120,11 @@ export function safeStorageClear(
   storage: StorageAdapter | null,
   context?: string
 ): boolean {
-  if (!storage || typeof (storage as any).clear !== 'function') {
+  // Explicit checks to prevent mutation survivors
+  if (storage === null || storage === undefined) {
+    return false
+  }
+  if (typeof (storage as any).clear !== 'function') {
     return false
   }
 

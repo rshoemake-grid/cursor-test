@@ -201,18 +201,32 @@ export class WebSocketConnectionManager {
       return
     }
 
-    this.reconnectAttempts++
-    const delay = calculateReconnectDelay(this.reconnectAttempts, 10000)
-    this.config.logger.debug(`[WebSocket] Reconnecting in ${delay}ms (attempt ${this.reconnectAttempts}/${this.config.maxReconnectAttempts})`)
-
-    this.reconnectTimeout = setTimeout(() => {
-      this.connect(callbacks)
-    }, delay)
-
+    // Guard: Prevent infinite reconnection loops
     if (this.reconnectAttempts >= this.config.maxReconnectAttempts) {
       this.config.logger.warn(`[WebSocket] Max reconnect attempts reached`)
       callbacks.onError?.(`WebSocket connection failed after ${this.config.maxReconnectAttempts} attempts`)
+      return
     }
+
+    this.reconnectAttempts++
+    const delay = calculateReconnectDelay(this.reconnectAttempts, 10000)
+    
+    // Guard: Ensure delay is valid to prevent timeout mutations
+    const safeDelay = delay > 0 && delay < 60000 ? delay : 1000
+    
+    this.config.logger.debug(`[WebSocket] Reconnecting in ${safeDelay}ms (attempt ${this.reconnectAttempts}/${this.config.maxReconnectAttempts})`)
+
+    // Guard: Clear existing timeout before setting new one
+    if (this.reconnectTimeout) {
+      clearTimeout(this.reconnectTimeout)
+    }
+    
+    this.reconnectTimeout = setTimeout(() => {
+      // Guard: Verify we should still reconnect
+      if (this.reconnectAttempts <= this.config.maxReconnectAttempts) {
+        this.connect(callbacks)
+      }
+    }, safeDelay)
   }
 
   /**

@@ -86,6 +86,16 @@ if (typeof global.TextEncoder === 'undefined') {
   global.TextDecoder = TextDecoder
 }
 
+// Polyfill setImmediate for jsdom environment (used by @testing-library/react waitFor)
+if (typeof global.setImmediate === 'undefined') {
+  global.setImmediate = (callback: (...args: any[]) => void, ...args: any[]) => {
+    return setTimeout(() => callback(...args), 0)
+  }
+  global.clearImmediate = (id: any) => {
+    clearTimeout(id)
+  }
+}
+
 // Ensure fetch is available globally for mutation testing
 // This prevents crashes when defaultAdapters.createHttpClient() is called during mutations
 if (typeof global.fetch === 'undefined') {

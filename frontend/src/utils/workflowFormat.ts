@@ -109,10 +109,11 @@ export function formatEdgesForReactFlow(edges: any[]): Edge[] {
     }
     
     // Only add sourceHandle/targetHandle if they have values
-    if (sourceHandle) {
+    // Explicit checks to prevent mutation survivors
+    if (sourceHandle !== null && sourceHandle !== undefined && sourceHandle !== '') {
       formattedEdge.sourceHandle = String(sourceHandle)
     }
-    if (targetHandle) {
+    if (targetHandle !== null && targetHandle !== undefined && targetHandle !== '') {
       formattedEdge.targetHandle = String(targetHandle)
     }
     

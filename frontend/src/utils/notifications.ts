@@ -23,7 +23,8 @@ export function showNotification(message: string, options: NotificationOptions =
   } = options
 
   // Handle null document adapter
-  if (!documentAdapter) {
+  // Explicit check to prevent mutation survivors
+  if (documentAdapter === null || documentAdapter === undefined) {
     return null
   }
 

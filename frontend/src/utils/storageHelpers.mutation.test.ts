@@ -289,6 +289,21 @@ describe('storageHelpers - Mutation Killers', () => {
         'key',
         expect.objectContaining({ context: 'TestContext' })
       )
+      // Verify exact context property access - mutation would change context to undefined
+      const callArgs = (handleStorageError as jest.Mock).mock.calls[0]
+      expect(callArgs[3]).toBeDefined()
+      expect(callArgs[3].context).toBe('TestContext')
+      expect(callArgs[3].context).not.toBeUndefined()
+      expect(callArgs[3].context).not.toBeNull()
+      // Kill mutation: context !== 'TestContext' should fail
+      expect(callArgs[3].context === 'TestContext').toBe(true)
+    })
+
+    it('should verify context is undefined when not provided in safeStorageGet', () => {
+      (mockStorage.getItem as jest.Mock).mockReturnValue('invalid json')
+      safeStorageGet(mockStorage, 'key', 'default')
+      const callArgs = (handleStorageError as jest.Mock).mock.calls[0]
+      expect(callArgs[3].context).toBeUndefined()
     })
 
     it('should verify context is passed to error handler in safeStorageSet', () => {
@@ -302,6 +317,23 @@ describe('storageHelpers - Mutation Killers', () => {
         'key',
         expect.objectContaining({ context: 'TestContext' })
       )
+      // Verify exact context property access
+      const callArgs = (handleStorageError as jest.Mock).mock.calls[0]
+      expect(callArgs[3]).toBeDefined()
+      expect(callArgs[3].context).toBe('TestContext')
+      expect(callArgs[3].context).not.toBeUndefined()
+      expect(callArgs[3].context).not.toBeNull()
+      // Kill mutation: context !== 'TestContext' should fail
+      expect(callArgs[3].context === 'TestContext').toBe(true)
+    })
+
+    it('should verify context is undefined when not provided in safeStorageSet', () => {
+      (mockStorage.setItem as jest.Mock).mockImplementation(() => {
+        throw new Error('Error')
+      })
+      safeStorageSet(mockStorage, 'key', 'value')
+      const callArgs = (handleStorageError as jest.Mock).mock.calls[0]
+      expect(callArgs[3].context).toBeUndefined()
     })
 
     it('should verify context is passed to error handler in safeStorageRemove', () => {
@@ -315,6 +347,23 @@ describe('storageHelpers - Mutation Killers', () => {
         'key',
         expect.objectContaining({ context: 'TestContext' })
       )
+      // Verify exact context property access
+      const callArgs = (handleStorageError as jest.Mock).mock.calls[0]
+      expect(callArgs[3]).toBeDefined()
+      expect(callArgs[3].context).toBe('TestContext')
+      expect(callArgs[3].context).not.toBeUndefined()
+      expect(callArgs[3].context).not.toBeNull()
+      // Kill mutation: context !== 'TestContext' should fail
+      expect(callArgs[3].context === 'TestContext').toBe(true)
+    })
+
+    it('should verify context is undefined when not provided in safeStorageRemove', () => {
+      (mockStorage.removeItem as jest.Mock).mockImplementation(() => {
+        throw new Error('Error')
+      })
+      safeStorageRemove(mockStorage, 'key')
+      const callArgs = (handleStorageError as jest.Mock).mock.calls[0]
+      expect(callArgs[3].context).toBeUndefined()
     })
 
     it('should verify context is passed to error handler in safeStorageHas', () => {
@@ -328,6 +377,24 @@ describe('storageHelpers - Mutation Killers', () => {
         'key',
         expect.objectContaining({ context: 'TestContext' })
       )
+      // Verify exact context property access
+      const callArgs = (handleStorageError as jest.Mock).mock.calls[0]
+      expect(callArgs[3]).toBeDefined()
+      expect(callArgs[3].context).toBe('TestContext')
+      expect(callArgs[3].context).not.toBeUndefined()
+      expect(callArgs[3].context).not.toBeNull()
+      // Kill mutation: context !== 'TestContext' should fail
+      expect(callArgs[3].context === 'TestContext').toBe(true)
+      expect(callArgs[3].context).not.toBeUndefined()
+    })
+
+    it('should verify context is undefined when not provided in safeStorageHas', () => {
+      (mockStorage.getItem as jest.Mock).mockImplementation(() => {
+        throw new Error('Error')
+      })
+      safeStorageHas(mockStorage, 'key')
+      const callArgs = (handleStorageError as jest.Mock).mock.calls[0]
+      expect(callArgs[3].context).toBeUndefined()
     })
 
     it('should verify context is passed to error handler in safeStorageClear', () => {
@@ -341,6 +408,24 @@ describe('storageHelpers - Mutation Killers', () => {
         'all',
         expect.objectContaining({ context: 'TestContext' })
       )
+      // Verify exact context property access
+      const callArgs = (handleStorageError as jest.Mock).mock.calls[0]
+      expect(callArgs[3]).toBeDefined()
+      expect(callArgs[3].context).toBe('TestContext')
+      expect(callArgs[3].context).not.toBeUndefined()
+      expect(callArgs[3].context).not.toBeNull()
+      // Kill mutation: context !== 'TestContext' should fail
+      expect(callArgs[3].context === 'TestContext').toBe(true)
+      expect(callArgs[3].context).not.toBeUndefined()
+    })
+
+    it('should verify context is undefined when not provided in safeStorageClear', () => {
+      (mockStorage.clear as jest.Mock).mockImplementation(() => {
+        throw new Error('Error')
+      })
+      safeStorageClear(mockStorage)
+      const callArgs = (handleStorageError as jest.Mock).mock.calls[0]
+      expect(callArgs[3].context).toBeUndefined()
     })
   })
 })

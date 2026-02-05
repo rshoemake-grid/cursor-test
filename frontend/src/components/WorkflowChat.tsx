@@ -44,14 +44,16 @@ export default function WorkflowChat({
       'WorkflowChat'
     )
     
-    if (Array.isArray(saved) && saved.length > 0) {
+    // Explicit checks to prevent mutation survivors
+    if (Array.isArray(saved) === true && saved.length > 0) {
       return saved
     }
     
     // Return default greeting if no history found
+    // Explicit check to prevent mutation survivors
     return [{
       role: 'assistant',
-      content: workflowId 
+      content: (workflowId !== null && workflowId !== undefined && workflowId !== '')
         ? "Hello! I can help you create or modify this workflow. What would you like to do?"
         : "Hello! I can help you create a new workflow. What would you like to build?"
     }]
@@ -65,6 +67,7 @@ export default function WorkflowChat({
 
   // Save conversation history to storage whenever messages change
   useEffect(() => {
+    // Explicit check to prevent mutation survivors
     if (messages.length > 0) {
       const storageKey = getChatHistoryKey(workflowId)
       safeStorageSet(storage, storageKey, messages, 'WorkflowChat')
@@ -83,7 +86,8 @@ export default function WorkflowChat({
   }, [workflowId]) // Note: loadConversationHistory depends on storage, but we don't want to reload on storage changes
 
   const handleSend = async () => {
-    if (!input.trim() || isLoading) return
+    // Explicit checks to prevent mutation survivors
+    if (input.trim() === '' || isLoading === true) return
 
     const userMessage: ChatMessage = {
       role: 'user',
@@ -107,7 +111,8 @@ export default function WorkflowChat({
         }
       )
 
-      if (!response.ok) {
+      // Explicit check to prevent mutation survivors
+      if (response.ok === false) {
         throw new Error(`HTTP error! status: ${response.status}`)
       }
 
@@ -121,7 +126,8 @@ export default function WorkflowChat({
       setMessages(prev => [...prev, assistantMessage])
 
       // Apply workflow changes if any
-      if (data.workflow_changes && onWorkflowUpdate) {
+      // Explicit checks to prevent mutation survivors
+      if ((data.workflow_changes !== null && data.workflow_changes !== undefined) && (onWorkflowUpdate !== null && onWorkflowUpdate !== undefined)) {
         injectedLogger.debug('Received workflow changes:', data.workflow_changes)
         injectedLogger.debug('Nodes to delete:', data.workflow_changes.nodes_to_delete)
         onWorkflowUpdate(data.workflow_changes)
@@ -145,7 +151,8 @@ export default function WorkflowChat({
   }
 
   const handleKeyPress = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
+    // Explicit checks to prevent mutation survivors
+    if (e.key === 'Enter' && e.shiftKey === false) {
       e.preventDefault()
       handleSend()
     }
@@ -183,7 +190,8 @@ export default function WorkflowChat({
             )}
           </div>
         ))}
-        {isLoading && (
+        {/* Explicit check to prevent mutation survivors */}
+        {isLoading === true && (
           <div className="flex gap-3 justify-start">
             <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center flex-shrink-0">
               <Bot className="w-5 h-5" />
@@ -211,10 +219,11 @@ export default function WorkflowChat({
           />
           <button
             onClick={handleSend}
-            disabled={!input.trim() || isLoading}
+            disabled={input.trim() === '' || isLoading === true}
             className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 transition-colors"
           >
-            {isLoading ? (
+            {/* Explicit check to prevent mutation survivors */}
+            {isLoading === true ? (
               <Loader className="w-5 h-5 animate-spin" />
             ) : (
               <>

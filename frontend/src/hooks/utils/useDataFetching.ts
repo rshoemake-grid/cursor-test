@@ -39,7 +39,16 @@ export function useDataFetching<T>({
     setLoading(true)
     setError(null)
     try {
-      const result = await fetchFn()
+      // Guard: Add timeout to prevent hanging fetches
+      const timeoutPromise = new Promise<never>((_, reject) => {
+        setTimeout(() => reject(new Error('Fetch timeout')), 30000) // 30 second timeout
+      })
+      
+      const result = await Promise.race([
+        fetchFn(),
+        timeoutPromise
+      ])
+      
       setData(result)
     } catch (err) {
       const error = err instanceof Error ? err : new Error(String(err))

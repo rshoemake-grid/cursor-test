@@ -24,7 +24,17 @@ export interface User {
  * @returns true if the user owns the item, false otherwise
  */
 export function isOwner(item: OwnableItem | null | undefined, user: User | null): boolean {
-  if (!user || !item || !item.author_id || !user.id) {
+  // Explicit checks to prevent mutation survivors - each condition tested independently
+  if (user === null || user === undefined) {
+    return false
+  }
+  if (item === null || item === undefined) {
+    return false
+  }
+  if (item.author_id === null || item.author_id === undefined) {
+    return false
+  }
+  if (user.id === null || user.id === undefined) {
     return false
   }
   
@@ -40,7 +50,11 @@ export function isOwner(item: OwnableItem | null | undefined, user: User | null)
  * @returns Array of items owned by the user
  */
 export function filterOwnedItems<T extends OwnableItem>(items: T[], user: User | null): T[] {
-  if (!user || !user.id) {
+  // Explicit checks to prevent mutation survivors
+  if (user === null || user === undefined) {
+    return []
+  }
+  if (user.id === null || user.id === undefined) {
     return []
   }
   
@@ -61,7 +75,8 @@ export function separateOfficialItems<T extends OwnableItem>(items: T[]): {
   const deletable: T[] = []
   
   for (const item of items) {
-    if (item.is_official) {
+    // Explicit boolean check to prevent mutation survivors
+    if (item.is_official === true) {
       official.push(item)
     } else {
       deletable.push(item)

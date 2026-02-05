@@ -39,7 +39,16 @@ export function useAsyncOperation<TArgs extends any[], TResult>({
       setLoading(true)
       setError(null)
       try {
-        const result = await operation(...args)
+        // Guard: Add timeout to prevent hanging promises
+        const timeoutPromise = new Promise<never>((_, reject) => {
+          setTimeout(() => reject(new Error('Operation timeout')), 30000) // 30 second timeout
+        })
+        
+        const result = await Promise.race([
+          operation(...args),
+          timeoutPromise
+        ])
+        
         onSuccess?.(result)
         return result
       } catch (err) {

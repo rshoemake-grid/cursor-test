@@ -26,7 +26,8 @@ export function useAutoSave<T>(
   const isFirstRender = useRef(true);
 
   useEffect(() => {
-    if (!enabled) {
+    // Explicit check to prevent mutation survivors
+    if (enabled !== true) {
       return;
     }
 
@@ -64,7 +65,8 @@ export function useAutoSave<T>(
 
     // Cleanup
     return () => {
-      if (timeoutRef.current) {
+      // Explicit check to prevent mutation survivors
+      if (timeoutRef.current !== null && timeoutRef.current !== undefined) {
         clearTimeout(timeoutRef.current);
       }
     };

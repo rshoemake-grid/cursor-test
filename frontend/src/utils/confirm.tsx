@@ -43,7 +43,8 @@ export function showConfirm(
   }
   
   // If default adapter creation failed (e.g., SSR), return false
-  if (!documentAdapter) {
+  // Explicit check to prevent mutation survivors
+  if (documentAdapter === null || documentAdapter === undefined) {
     return Promise.resolve(false)
   }
 

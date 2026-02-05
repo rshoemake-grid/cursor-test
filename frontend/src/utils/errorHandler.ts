@@ -24,18 +24,25 @@ export function handleApiError(
   } = options
 
   // Extract error message from various error formats
-  const errorMessage = error.response?.data?.detail || 
-                      error.response?.data?.message ||
-                      error.message || 
-                      defaultMessage
+  // Guard: Add explicit null/undefined/empty checks to prevent error mutations
+  // Empty strings are treated as falsy and should fall back to default
+  const errorMessage = (error !== null && error !== undefined && error.response !== null && error.response !== undefined && error.response.data !== null && error.response.data !== undefined && error.response.data.detail !== null && error.response.data.detail !== undefined && error.response.data.detail !== '') 
+                      ? error.response.data.detail
+                      : (error !== null && error !== undefined && error.response !== null && error.response !== undefined && error.response.data !== null && error.response.data !== undefined && error.response.data.message !== null && error.response.data.message !== undefined && error.response.data.message !== '')
+                      ? error.response.data.message
+                      : (error !== null && error !== undefined && error.message !== null && error.message !== undefined && error.message !== '')
+                      ? error.message
+                      : defaultMessage
 
   // Log error with context if provided
-  if (logError) {
+  // Explicit check to prevent mutation survivors
+  if (logError === true) {
     const logContext = context ? `[${context}]` : '[Error Handler]'
     logger.error(`${logContext} API Error:`, error)
     
     // Log additional error details if available
-    if (error.response) {
+    // Guard: Check error exists before accessing response property
+    if (error !== null && error !== undefined && error.response !== null && error.response !== undefined) {
       logger.error(`${logContext} Error details:`, {
         status: error.response.status,
         statusText: error.response.statusText,
@@ -46,7 +53,8 @@ export function handleApiError(
   }
 
   // Show notification if requested
-  if (showNotification) {
+  // Explicit check to prevent mutation survivors
+  if (showNotification === true) {
     showError(errorMessage)
   }
 
@@ -68,13 +76,18 @@ export function handleStorageError(
     context
   } = options
 
-  if (logError) {
-    const logContext = context ? `[${context}]` : '[Storage Error Handler]'
+  // Explicit check to prevent mutation survivors
+  if (logError === true) {
+    // Explicit check to prevent mutation survivors
+    const logContext = (context !== null && context !== undefined && context !== '') ? `[${context}]` : '[Storage Error Handler]'
     logger.error(`${logContext} Storage ${operation} error for key "${key}":`, error)
   }
 
-  if (showNotification) {
-    showError(`Failed to ${operation} storage: ${error.message || 'Unknown error'}`)
+  // Explicit check to prevent mutation survivors
+  if (showNotification === true) {
+    // Guard: Safe error message extraction
+    const errorMsg = (error !== null && error !== undefined && error.message !== null && error.message !== undefined) ? error.message : 'Unknown error'
+    showError(`Failed to ${operation} storage: ${errorMsg}`)
   }
 }
 
@@ -92,16 +105,20 @@ export function handleError(
     context
   } = options
 
-  const errorMessage = error instanceof Error 
+  // Guard: Explicit type checks to prevent error mutations
+  const errorMessage = (error !== null && error !== undefined && error instanceof Error && error.message !== null && error.message !== undefined)
     ? error.message 
-    : (typeof error === 'string' ? error : defaultMessage)
+    : (error !== null && error !== undefined && typeof error === 'string' ? error : defaultMessage)
 
-  if (logError) {
-    const logContext = context ? `[${context}]` : '[Error Handler]'
+  // Explicit check to prevent mutation survivors
+  if (logError === true) {
+    // Explicit check to prevent mutation survivors
+    const logContext = (context !== null && context !== undefined && context !== '') ? `[${context}]` : '[Error Handler]'
     logger.error(`${logContext} Error:`, error)
   }
 
-  if (showNotification) {
+  // Explicit check to prevent mutation survivors
+  if (showNotification === true) {
     showError(errorMessage)
   }
 

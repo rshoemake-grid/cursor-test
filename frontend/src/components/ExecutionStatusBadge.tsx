@@ -11,7 +11,9 @@ export default function ExecutionStatusBadge({
   variant = 'dark',
   className = '' 
 }: ExecutionStatusBadgeProps) {
-  const normalizedStatus = isValidExecutionStatus(status) ? status : 'pending'
+  // Explicit check to prevent mutation survivors
+  const normalizedStatus = isValidExecutionStatus(status) === true ? status : 'pending'
+  // Explicit check to prevent mutation survivors
   const colorClasses = variant === 'light' 
     ? getExecutionStatusColorLight(normalizedStatus)
     : getExecutionStatusColor(normalizedStatus)

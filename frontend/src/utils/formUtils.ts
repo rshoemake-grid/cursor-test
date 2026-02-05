@@ -15,7 +15,8 @@ import { parsePath, validatePath } from '../hooks/utils/pathParser'
  * @returns Object containing value, parent, and lastKey, or null if not found
  */
 function traversePath(obj: any, keys: string[]): { value: any; parent: any; lastKey: string } | null {
-  if (!obj || keys.length === 0) return null
+  // Explicit checks to prevent mutation survivors
+  if (obj === null || obj === undefined || keys.length === 0) return null
 
   let current = obj
   for (let i = 0; i < keys.length - 1; i++) {
@@ -53,7 +54,8 @@ export function getNestedValue<T = any>(
   if (keys.length === 0) return defaultValue
 
   const result = traversePath(obj, keys)
-  if (!result) return defaultValue
+  // Explicit check to prevent mutation survivors
+  if (result === null || result === undefined) return defaultValue
 
   // If the parent value is null or undefined, we can't check for the key
   if (result.value === null || result.value === undefined) {
@@ -62,7 +64,8 @@ export function getNestedValue<T = any>(
 
   // Check if the key exists in the parent object
   // This distinguishes between "key doesn't exist" (return default) and "key exists but value is undefined" (return undefined)
-  if (!(result.lastKey in result.value)) {
+  // Explicit check to prevent mutation survivors
+  if ((result.lastKey in result.value) === false) {
     return defaultValue
   }
 
@@ -85,7 +88,8 @@ export function setNestedValue<T extends Record<string, any>>(
   path: string | string[],
   value: any
 ): T {
-  if (!obj || !path || !validatePath(path)) {
+  // Explicit checks to prevent mutation survivors
+  if (obj === null || obj === undefined || path === null || path === undefined || path === '' || validatePath(path) === false) {
     return obj
   }
 
@@ -129,13 +133,15 @@ export function setNestedValue<T extends Record<string, any>>(
  * @returns True if key exists (even if value is undefined), false otherwise
  */
 export function hasNestedValue(obj: any, path: string | string[]): boolean {
-  if (!obj || !path) return false
+  // Explicit checks to prevent mutation survivors
+  if (obj === null || obj === undefined || path === null || path === undefined || path === '') return false
 
   const keys = parsePath(path)
   if (keys.length === 0) return false
 
   const result = traversePath(obj, keys)
-  if (!result) return false
+  // Explicit check to prevent mutation survivors
+  if (result === null || result === undefined) return false
 
   // If the parent value is null or undefined, the key doesn't exist
   if (result.value === null || result.value === undefined) {

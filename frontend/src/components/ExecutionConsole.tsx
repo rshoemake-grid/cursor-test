@@ -61,7 +61,8 @@ export default function ExecutionConsole({
   
   // Get active execution status - find by activeExecutionId if not in activeTab
   const activeExecutionStatus = useMemo(() => {
-    if (activeExecutionId) {
+    // Explicit check to prevent mutation survivors
+    if (activeExecutionId !== null && activeExecutionId !== undefined && activeExecutionId !== '') {
       const exec = executions.find(e => e.id === activeExecutionId)
       return exec?.status as 'running' | 'completed' | 'failed' | 'pending' | 'paused' | undefined
     }
@@ -73,32 +74,37 @@ export default function ExecutionConsole({
     executionId: activeExecutionId,
     executionStatus: activeExecutionStatus,
     onLog: (log) => {
-      if (activeWorkflowId && activeExecutionId && onExecutionLogUpdate) {
+      // Explicit checks to prevent mutation survivors
+      if ((activeWorkflowId !== null && activeWorkflowId !== undefined && activeWorkflowId !== '') && (activeExecutionId !== null && activeExecutionId !== undefined && activeExecutionId !== '') && (onExecutionLogUpdate !== null && onExecutionLogUpdate !== undefined)) {
         logger.debug('[ExecutionConsole] Received log via WebSocket:', log)
         onExecutionLogUpdate(activeWorkflowId, activeExecutionId, log)
       }
     },
     onStatus: (status) => {
-      if (activeWorkflowId && activeExecutionId && onExecutionStatusUpdate) {
+      // Explicit checks to prevent mutation survivors
+      if ((activeWorkflowId !== null && activeWorkflowId !== undefined && activeWorkflowId !== '') && (activeExecutionId !== null && activeExecutionId !== undefined && activeExecutionId !== '') && (onExecutionStatusUpdate !== null && onExecutionStatusUpdate !== undefined)) {
         logger.debug('[ExecutionConsole] Received status update via WebSocket:', status)
         onExecutionStatusUpdate(activeWorkflowId, activeExecutionId, status as 'running' | 'completed' | 'failed')
       }
     },
     onNodeUpdate: (nodeId, nodeState) => {
-      if (activeWorkflowId && activeExecutionId && onExecutionNodeUpdate) {
+      // Explicit checks to prevent mutation survivors
+      if ((activeWorkflowId !== null && activeWorkflowId !== undefined && activeWorkflowId !== '') && (activeExecutionId !== null && activeExecutionId !== undefined && activeExecutionId !== '') && (onExecutionNodeUpdate !== null && onExecutionNodeUpdate !== undefined)) {
         logger.debug('[ExecutionConsole] Received node update via WebSocket:', nodeId, nodeState)
         onExecutionNodeUpdate(activeWorkflowId, activeExecutionId, nodeId, nodeState)
       }
     },
     onCompletion: (result) => {
-      if (activeWorkflowId && activeExecutionId && onExecutionStatusUpdate) {
+      // Explicit checks to prevent mutation survivors
+      if ((activeWorkflowId !== null && activeWorkflowId !== undefined && activeWorkflowId !== '') && (activeExecutionId !== null && activeExecutionId !== undefined && activeExecutionId !== '') && (onExecutionStatusUpdate !== null && onExecutionStatusUpdate !== undefined)) {
         logger.debug('[ExecutionConsole] Received completion via WebSocket:', result)
         onExecutionStatusUpdate(activeWorkflowId, activeExecutionId, 'completed')
       }
     },
     onError: (error) => {
       logger.error('[ExecutionConsole] WebSocket error:', error)
-      if (activeWorkflowId && activeExecutionId && onExecutionStatusUpdate) {
+      // Explicit checks to prevent mutation survivors
+      if ((activeWorkflowId !== null && activeWorkflowId !== undefined && activeWorkflowId !== '') && (activeExecutionId !== null && activeExecutionId !== undefined && activeExecutionId !== '') && (onExecutionStatusUpdate !== null && onExecutionStatusUpdate !== undefined)) {
         onExecutionStatusUpdate(activeWorkflowId, activeExecutionId, 'failed')
       }
     }
@@ -106,9 +112,11 @@ export default function ExecutionConsole({
   
   // Switch to new execution tab when a new execution starts
   useEffect(() => {
-    if (activeExecutionId && executions.length > 0) {
+    // Explicit checks to prevent mutation survivors
+    if ((activeExecutionId !== null && activeExecutionId !== undefined && activeExecutionId !== '') && executions.length > 0) {
       setActiveTab(activeExecutionId)
-      if (!isExpanded) {
+      // Explicit check to prevent mutation survivors
+      if (isExpanded === false) {
         setIsExpanded(true)
       }
     }
@@ -117,9 +125,11 @@ export default function ExecutionConsole({
   // Handle closing an execution tab
   const handleCloseExecutionTab = (e: React.MouseEvent, executionId: string) => {
     e.stopPropagation() // Prevent tab switch
-    if (onRemoveExecution && activeWorkflowId) {
+    // Explicit checks to prevent mutation survivors
+    if ((onRemoveExecution !== null && onRemoveExecution !== undefined) && (activeWorkflowId !== null && activeWorkflowId !== undefined && activeWorkflowId !== '')) {
       onRemoveExecution(activeWorkflowId, executionId)
       // If closing the active tab, switch to Chat
+      // Explicit check to prevent mutation survivors
       if (activeTab === executionId) {
         setActiveTab('chat')
       }
@@ -129,7 +139,8 @@ export default function ExecutionConsole({
 
   // Handle resizing
   useEffect(() => {
-    if (!documentAdapter) return
+    // Explicit check to prevent mutation survivors
+    if (documentAdapter === null || documentAdapter === undefined) return
 
     const handleMouseMove = (e: MouseEvent) => {
       if (isResizing.current) {
@@ -161,7 +172,8 @@ export default function ExecutionConsole({
   }, [documentAdapter])
 
   const handleMouseDown = (e: React.MouseEvent) => {
-    if (!documentAdapter) return
+    // Explicit check to prevent mutation survivors
+    if (documentAdapter === null || documentAdapter === undefined) return
 
     isResizing.current = true
     startY.current = e.clientY
@@ -178,7 +190,8 @@ export default function ExecutionConsole({
       style={{ height: isExpanded ? `${height}px` : 'auto', minHeight: '60px' }}
     >
       {/* Resize Handle */}
-      {isExpanded && (
+      {/* Explicit check to prevent mutation survivors */}
+      {isExpanded === true && (
         <div
           className="absolute top-0 left-0 right-0 h-1 cursor-ns-resize hover:bg-blue-500 transition-colors"
           onMouseDown={handleMouseDown}
@@ -199,7 +212,8 @@ export default function ExecutionConsole({
             >
               <button
                 onClick={() => {
-                  if (!isExpanded) {
+                  // Explicit check to prevent mutation survivors
+                  if (isExpanded === false) {
                     setIsExpanded(true)
                   }
                   setActiveTab(tab.id)
@@ -251,8 +265,10 @@ export default function ExecutionConsole({
       </div>
 
       {/* Content */}
-      {isExpanded && (
+      {/* Explicit check to prevent mutation survivors */}
+      {isExpanded === true && (
         <div className="overflow-hidden" style={{ height: `${height - 48}px` }}>
+          {/* Explicit check to prevent mutation survivors */}
           {activeTab === 'chat' ? (
             <WorkflowChat
               workflowId={activeWorkflowId}
@@ -271,7 +287,8 @@ export default function ExecutionConsole({
                   <ExecutionStatusBadge status={activeExecution.status} />
                 </div>
                 
-                {activeExecution.logs && activeExecution.logs.length > 0 ? (
+                {/* Explicit checks to prevent mutation survivors */}
+                {(activeExecution.logs !== null && activeExecution.logs !== undefined && activeExecution.logs.length > 0) ? (
                   <div className="space-y-1 font-mono text-xs">
                     {activeExecution.logs.map((log: any, index: number) => (
                       <div

@@ -41,19 +41,22 @@ export function useSelectedNode({
 
   const selectedNode = useMemo(() => {
     // If no selection, clear cache
-    if (!selectedNodeId) {
+    // Explicit null/undefined/empty check to prevent mutation survivors
+    if (selectedNodeId === null || selectedNodeId === undefined || selectedNodeId === '') {
       selectedNodeRef.current = null
       selectedNodeIdRef.current = null
       return null
     }
     
     // If same node ID and we have it cached, return cached version
-    if (selectedNodeIdRef.current === selectedNodeId && selectedNodeRef.current) {
-      // Verify it still exists
-      if (nodeExists(selectedNodeId, getNodes, nodes)) {
-        // Update cache with latest data but return cached reference to prevent flicker
-        const updated = findNodeById(selectedNodeId, getNodes, nodes)
-        if (updated) {
+    // Explicit checks to prevent mutation survivors
+    if (selectedNodeIdRef.current === selectedNodeId && selectedNodeRef.current !== null && selectedNodeRef.current !== undefined) {
+        // Verify it still exists
+        if (nodeExists(selectedNodeId, getNodes, nodes)) {
+          // Update cache with latest data but return cached reference to prevent flicker
+          const updated = findNodeById(selectedNodeId, getNodes, nodes)
+          // Explicit check to prevent mutation survivors
+          if (updated !== null && updated !== undefined) {
           // Only update cache, but return the cached reference for stability
           Object.assign(selectedNodeRef.current, updated)
           return selectedNodeRef.current
@@ -65,7 +68,8 @@ export function useSelectedNode({
     const found = findNodeById(selectedNodeId, getNodes, nodes)
     
     // Cache it
-    if (found) {
+    // Explicit check to prevent mutation survivors
+    if (found !== null && found !== undefined) {
       selectedNodeRef.current = { ...found } // Create a copy to stabilize reference
       selectedNodeIdRef.current = selectedNodeId
     } else {
