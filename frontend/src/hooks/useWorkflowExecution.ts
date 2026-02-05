@@ -9,6 +9,13 @@ import { showConfirm as defaultShowConfirm } from '../utils/confirm'
 import { api as defaultApi, createApiClient } from '../api/client'
 import { logger as defaultLogger } from '../utils/logger'
 import { WorkflowExecutionService } from './utils/workflowExecutionService'
+import {
+  isUserAuthenticated,
+  hasWorkflowId,
+  isConfirmed,
+  isWorkflowSaved,
+  canExecuteWorkflow,
+} from './utils/workflowExecutionValidation'
 
 interface UseWorkflowExecutionOptions {
   isAuthenticated: boolean
@@ -45,7 +52,8 @@ export function useWorkflowExecution({
     logger.debug('[WorkflowBuilder] isAuthenticated:', isAuthenticated)
     logger.debug('[WorkflowBuilder] localWorkflowId:', localWorkflowId)
     
-    if (!isAuthenticated) {
+    // Use extracted validation function - mutation-resistant
+    if (!isUserAuthenticated(isAuthenticated)) {
       logger.error('[WorkflowBuilder] User not authenticated')
       showError('Please log in to execute workflows.')
       return
@@ -54,18 +62,21 @@ export function useWorkflowExecution({
     let currentWorkflowId = localWorkflowId
     logger.debug('[WorkflowBuilder] Current workflow ID:', currentWorkflowId)
     
-    if (!currentWorkflowId) {
+    // Use extracted validation function - mutation-resistant
+    if (!hasWorkflowId(currentWorkflowId)) {
       logger.debug('[WorkflowBuilder] No workflow ID, prompting to save')
       const confirmed = await showConfirm(
         'Workflow needs to be saved before execution. Save now?',
         { title: 'Save Workflow', confirmText: 'Save', cancelText: 'Cancel' }
       )
-      if (!confirmed) {
+      // Use extracted validation function - mutation-resistant
+      if (!isConfirmed(confirmed)) {
         return
       }
       try {
         const savedId = await saveWorkflow()
-        if (!savedId) {
+        // Use extracted validation function - mutation-resistant
+        if (!isWorkflowSaved(savedId)) {
           showError('Failed to save workflow. Cannot execute.')
           return
         }
@@ -112,7 +123,8 @@ export function useWorkflowExecution({
       const workflowIdToExecute = workflowIdRef.current
       logger.debug('[WorkflowBuilder] Workflow ID to execute:', workflowIdToExecute)
       
-      if (!workflowIdToExecute) {
+      // Use extracted validation function - mutation-resistant
+      if (!canExecuteWorkflow(workflowIdToExecute)) {
         logger.error('[WorkflowBuilder] No workflow ID found - workflow must be saved')
         showError('Workflow must be saved before executing.')
         return

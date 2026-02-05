@@ -7,6 +7,12 @@ import { useState, useEffect } from 'react'
 import { api } from '../api/client'
 import { logger } from '../utils/logger'
 import type { StorageAdapter } from '../types/adapters'
+import {
+  isValidProvidersArray,
+  canExtractModelsFromProvider,
+  isValidData,
+  hasProviders,
+} from './utils/providerValidation'
 
 export interface LLMProvider {
   id: string
@@ -40,26 +46,22 @@ const DEFAULT_MODELS: LLMModel[] = [
 
 /**
  * Extract models from providers array
+ * Uses extracted validation functions for better testability
  */
 function extractModelsFromProviders(providers: LLMProvider[]): LLMModel[] {
   const models: LLMModel[] = []
   // Defensive: check providers is valid array before iterating
-  if (!Array.isArray(providers)) {
+  if (!isValidProvidersArray(providers)) {
     return models
   }
   providers.forEach((provider) => {
-    // Defensive null checking - mutations can change logical operators
-    // Use separate checks to prevent crashes from mutations
-    if (provider != null &&
-        provider.enabled === true && 
-        provider.models != null && 
-        Array.isArray(provider.models) &&
-        provider.models.length > 0) {
-      provider.models.forEach((model) => {
+    // Use extracted validation function - mutation-resistant
+    if (canExtractModelsFromProvider(provider)) {
+      provider!.models!.forEach((model) => {
         models.push({
           value: model,
-          label: `${model} (${provider.name})`,
-          provider: provider.name
+          label: `${model} (${provider!.name})`,
+          provider: provider!.name
         })
       })
     }
@@ -123,12 +125,11 @@ export function useLLMProviders({
         // Try to load from backend first using authenticated API client
         const data = await api.getLLMSettings()
         
-        // Defensive null checking - mutations can change logical operators causing null access
-        // Use separate checks to prevent crashes from mutations
-        if (data != null && 
-            data.providers != null && 
-            Array.isArray(data.providers) &&
-            data.providers.length > 0) {
+        // Use extracted validation functions - mutation-resistant
+        if (isValidData(data) && 
+            isValidData(data.providers) && 
+            isValidProvidersArray(data.providers) &&
+            hasProviders(data.providers)) {
           const models = extractModelsFromProviders(data.providers)
           
           // Only use API data if we have valid models, otherwise fall through to storage/defaults
@@ -175,13 +176,11 @@ export function useLLMProviders({
 
       // Fallback to storage
       const storedSettings = loadFromStorage(storage)
-      // Defensive null checking - mutations can change logical operators causing null access
-      // Use optional chaining and separate checks to prevent crashes from mutations
-      // Check storedSettings first, then providers existence, then length
-      if (storedSettings != null && 
-          storedSettings.providers != null && 
-          Array.isArray(storedSettings.providers) &&
-          storedSettings.providers.length > 0) {
+      // Use extracted validation functions - mutation-resistant
+      if (isValidData(storedSettings) && 
+          isValidData(storedSettings.providers) && 
+          isValidProvidersArray(storedSettings.providers) &&
+          hasProviders(storedSettings.providers)) {
         const models = extractModelsFromProviders(storedSettings.providers)
         if (models.length > 0) {
           setAvailableModels(models)
