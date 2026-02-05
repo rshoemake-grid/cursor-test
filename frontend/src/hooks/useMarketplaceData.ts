@@ -1,18 +1,16 @@
 /**
  * Marketplace Data Hook
- * Manages data fetching, filtering, and sorting for marketplace templates and agents
+ * Composes individual data fetching hooks for marketplace templates and agents
+ * Follows Single Responsibility Principle by delegating to focused hooks
  */
 
-import { useState, useEffect, useCallback } from 'react'
-import { logger } from '../utils/logger'
-import { getLocalStorageItem } from './useLocalStorage'
-import { STORAGE_KEYS } from '../config/constants'
+import { useState, useEffect } from 'react'
 import type { StorageAdapter, HttpClient } from '../types/adapters'
-import {
-  buildSearchParams,
-  applyFilters,
-  sortItems
-} from './useMarketplaceData.utils'
+import { useTemplatesData } from './useTemplatesData'
+import { useAgentsData } from './useAgentsData'
+import { useRepositoryAgentsData } from './useRepositoryAgentsData'
+import { useWorkflowsOfWorkflowsData } from './useWorkflowsOfWorkflowsData'
+import { useDataFetching } from './utils/useDataFetching'
 
 interface Template {
   id: string
@@ -60,6 +58,7 @@ interface UseMarketplaceDataOptions {
 
 /**
  * Hook for managing marketplace data fetching, filtering, and sorting
+ * Composes individual data fetching hooks for better organization
  * 
  * @param options Configuration options
  * @returns Data state and fetch functions
@@ -75,186 +74,131 @@ export function useMarketplaceData({
   activeTab,
   repositorySubTab,
 }: UseMarketplaceDataOptions) {
-  const [templates, setTemplates] = useState<Template[]>([])
-  const [workflowsOfWorkflows, setWorkflowsOfWorkflows] = useState<Template[]>([])
-  const [agents, setAgents] = useState<AgentTemplate[]>([])
-  const [repositoryAgents, setRepositoryAgents] = useState<AgentTemplate[]>([])
-  const [loading, setLoading] = useState(true)
+  // Compose individual data fetching hooks
+  const { fetchTemplates: fetchTemplatesFn } = useTemplatesData({
+    httpClient,
+    apiBaseUrl,
+    category,
+    searchQuery,
+    sortBy,
+  })
 
-  const fetchTemplates = useCallback(async () => {
-    setLoading(true)
-    try {
-      const params = buildSearchParams(category, searchQuery, sortBy)
-      const response = await httpClient.get(`${apiBaseUrl}/templates/?${params}`)
-      const data = await response.json() as Template[]
-      setTemplates(data)
-    } catch (error) {
-      logger.error('Failed to fetch templates:', error)
-    } finally {
-      setLoading(false)
-    }
-  }, [httpClient, apiBaseUrl, category, searchQuery, sortBy])
+  const { fetchWorkflowsOfWorkflows: fetchWorkflowsOfWorkflowsFn } = useWorkflowsOfWorkflowsData({
+    httpClient,
+    apiBaseUrl,
+    category,
+    searchQuery,
+    sortBy,
+  })
 
-  const fetchWorkflowsOfWorkflows = useCallback(async () => {
-    setLoading(true)
-    try {
-      // Fetch all workflows
-      const params = buildSearchParams(category, searchQuery, sortBy)
-      
-      const response = await httpClient.get(`${apiBaseUrl}/templates/?${params}`)
-      const allWorkflows = await response.json() as Template[]
-      
-      // Filter workflows that contain references to other workflows
-      // A "workflow of workflows" is one that references other workflows in its definition
-      const workflowsOfWorkflows: Template[] = []
-      
-      for (const workflow of allWorkflows) {
-        try {
-          // Use the /use endpoint to get workflow details
-          const workflowResponse = await httpClient.post(
-            `${apiBaseUrl}/templates/${workflow.id}/use`,
-            {},
-            { 'Content-Type': 'application/json' }
-          )
-          
-          if (workflowResponse.ok) {
-            const workflowDetail = await workflowResponse.json()
-            
-            // Check if workflow has nodes that reference other workflows
-            if (workflowDetail.nodes && Array.isArray(workflowDetail.nodes)) {
-              const hasWorkflowReference = workflowDetail.nodes.some((node: any) => {
-                const nodeData = node.data || {}
-                const hasWorkflowId = node.workflow_id || nodeData.workflow_id
-                const description = (node.description || nodeData.description || '').toLowerCase()
-                const name = (node.name || nodeData.name || '').toLowerCase()
-                
-                return hasWorkflowId || 
-                       description.includes('workflow') || 
-                       name.includes('workflow') ||
-                       (workflow.tags && workflow.tags.some(tag => tag.toLowerCase().includes('workflow')))
-              })
-              
-              // Also check if workflow description or tags indicate it's a workflow of workflows
-              const workflowDescription = (workflow.description || '').toLowerCase()
-              const isWorkflowOfWorkflows = workflowDescription.includes('workflow of workflows') ||
-                                           workflowDescription.includes('composite workflow') ||
-                                           workflowDescription.includes('nested workflow') ||
-                                           (workflow.tags && workflow.tags.some(tag => 
-                                             tag.toLowerCase().includes('workflow-of-workflows') ||
-                                             tag.toLowerCase().includes('composite') ||
-                                             tag.toLowerCase().includes('nested')
-                                           ))
-              
-              if (hasWorkflowReference || isWorkflowOfWorkflows) {
-                workflowsOfWorkflows.push(workflow)
-              }
-            }
-          }
-        } catch (error) {
-          logger.error(`Failed to check workflow ${workflow.id}:`, error)
-        }
-      }
-      
-      setWorkflowsOfWorkflows(workflowsOfWorkflows)
-    } catch (error) {
-      logger.error('Failed to fetch workflows of workflows:', error)
-    } finally {
-      setLoading(false)
-    }
-  }, [httpClient, apiBaseUrl, category, searchQuery, sortBy])
+  const { fetchAgents: fetchAgentsFn } = useAgentsData({
+    storage,
+    category,
+    searchQuery,
+    sortBy,
+    user,
+  })
 
-  const fetchAgents = useCallback(async () => {
-    setLoading(true)
-    try {
-      // For now, load from localStorage (until backend API is ready)
-      let agentsData = getLocalStorageItem<AgentTemplate[]>(STORAGE_KEYS.PUBLISHED_AGENTS, [])
-      
-      // One-time migration: Set current user as author for all agents without author_id
-      if (user && user.id && agentsData.length > 0) {
-        let updated = false
-        agentsData = agentsData.map(agent => {
-          if (!agent.author_id) {
-            updated = true
-            return {
-              ...agent,
-              author_id: user.id,
-              author_name: user.username || user.email || null
-            }
-          }
-          return agent
-        })
-        
-        if (updated && storage) {
-          logger.debug('[Marketplace] Updated agents with author info:', user.id)
-          storage.setItem('publishedAgents', JSON.stringify(agentsData))
-        }
-      }
-      
-      // Debug: Log loaded agents with author info
-      logger.debug('[Marketplace] Loaded agents:', agentsData.map(a => ({
-        id: a.id,
-        name: a.name,
-        author_id: a.author_id,
-        has_author_id: !!a.author_id
-      })))
-      
-      // Apply filters and sort
-      agentsData = applyFilters(agentsData, category, searchQuery)
-      agentsData = sortItems(agentsData, sortBy, true) // Prioritize official agents
-      
-      setAgents(agentsData)
-    } catch (error) {
-      logger.error('Failed to fetch agents:', error)
-    } finally {
-      setLoading(false)
-    }
-  }, [category, searchQuery, sortBy, user?.id, user?.username, user?.email, storage])
+  const { fetchRepositoryAgents: fetchRepositoryAgentsFn } = useRepositoryAgentsData({
+    storage,
+    category,
+    searchQuery,
+    sortBy,
+  })
 
-  const fetchRepositoryAgents = useCallback(async () => {
-    setLoading(true)
-    try {
-      // Load from storage
-      if (!storage) {
-        setRepositoryAgents([])
-        setLoading(false)
-        return
-      }
-      
-      let agentsData: AgentTemplate[] = []
-      try {
-        const savedAgents = storage.getItem(STORAGE_KEYS.REPOSITORY_AGENTS)
-        agentsData = savedAgents ? JSON.parse(savedAgents) : []
-      } catch (error) {
-        logger.error('Failed to load repository agents from storage:', error)
-        agentsData = []
-      }
-      
-      // Apply filters and sort
-      agentsData = applyFilters(agentsData, category, searchQuery)
-      agentsData = sortItems(agentsData, sortBy)
-      
-      setRepositoryAgents(agentsData)
-    } catch (error) {
-      logger.error('Failed to fetch repository agents:', error)
-    } finally {
-      setLoading(false)
+  // Use generic data fetching hook for templates
+  const templatesFetching = useDataFetching({
+    fetchFn: fetchTemplatesFn,
+    initialData: [] as Template[],
+  })
+
+  // Use generic data fetching hook for workflows of workflows
+  const workflowsOfWorkflowsFetching = useDataFetching({
+    fetchFn: fetchWorkflowsOfWorkflowsFn,
+    initialData: [] as Template[],
+  })
+
+  // Use generic data fetching hook for agents
+  const agentsFetching = useDataFetching({
+    fetchFn: fetchAgentsFn,
+    initialData: [] as AgentTemplate[],
+  })
+
+  // Use generic data fetching hook for repository agents
+  const repositoryAgentsFetching = useDataFetching({
+    fetchFn: fetchRepositoryAgentsFn,
+    initialData: [] as AgentTemplate[],
+  })
+
+  // Local state for setters (for backward compatibility)
+  const [templates, setTemplates] = useState<Template[]>(templatesFetching.data || [])
+  const [workflowsOfWorkflows, setWorkflowsOfWorkflows] = useState<Template[]>(workflowsOfWorkflowsFetching.data || [])
+  const [agents, setAgents] = useState<AgentTemplate[]>(agentsFetching.data || [])
+  const [repositoryAgents, setRepositoryAgents] = useState<AgentTemplate[]>(repositoryAgentsFetching.data || [])
+
+  // Sync data fetching results to local state
+  useEffect(() => {
+    if (templatesFetching.data) {
+      setTemplates(templatesFetching.data)
     }
-  }, [storage, category, searchQuery, sortBy])
+  }, [templatesFetching.data])
+
+  useEffect(() => {
+    if (workflowsOfWorkflowsFetching.data) {
+      setWorkflowsOfWorkflows(workflowsOfWorkflowsFetching.data)
+    }
+  }, [workflowsOfWorkflowsFetching.data])
+
+  useEffect(() => {
+    if (agentsFetching.data) {
+      setAgents(agentsFetching.data)
+    }
+  }, [agentsFetching.data])
+
+  useEffect(() => {
+    if (repositoryAgentsFetching.data) {
+      setRepositoryAgents(repositoryAgentsFetching.data)
+    }
+  }, [repositoryAgentsFetching.data])
+
+  // Determine loading state based on active tab
+  const loading = 
+    (activeTab === 'repository' && repositorySubTab === 'workflows' && templatesFetching.loading) ||
+    (activeTab === 'repository' && repositorySubTab === 'agents' && repositoryAgentsFetching.loading) ||
+    (activeTab === 'workflows-of-workflows' && workflowsOfWorkflowsFetching.loading) ||
+    (activeTab === 'agents' && agentsFetching.loading)
 
   // Auto-fetch based on active tab
   useEffect(() => {
     if (activeTab === 'repository') {
       if (repositorySubTab === 'workflows') {
-        fetchTemplates()
+        templatesFetching.refetch()
       } else {
-        fetchRepositoryAgents()
+        repositoryAgentsFetching.refetch()
       }
     } else if (activeTab === 'workflows-of-workflows') {
-      fetchWorkflowsOfWorkflows()
+      workflowsOfWorkflowsFetching.refetch()
     } else {
-      fetchAgents()
+      agentsFetching.refetch()
     }
-  }, [activeTab, repositorySubTab, fetchTemplates, fetchWorkflowsOfWorkflows, fetchAgents, fetchRepositoryAgents])
+  }, [activeTab, repositorySubTab, templatesFetching.refetch, workflowsOfWorkflowsFetching.refetch, agentsFetching.refetch, repositoryAgentsFetching.refetch])
+
+  // Wrapper functions to match original API
+  const fetchTemplates = async () => {
+    await templatesFetching.refetch()
+  }
+
+  const fetchWorkflowsOfWorkflows = async () => {
+    await workflowsOfWorkflowsFetching.refetch()
+  }
+
+  const fetchAgents = async () => {
+    await agentsFetching.refetch()
+  }
+
+  const fetchRepositoryAgents = async () => {
+    await repositoryAgentsFetching.refetch()
+  }
 
   return {
     templates,

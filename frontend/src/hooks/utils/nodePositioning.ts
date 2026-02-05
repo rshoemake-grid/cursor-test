@@ -1,9 +1,11 @@
 /**
  * Node Positioning Utilities
  * Common utilities for calculating node positions on the canvas
+ * Refactored to use Strategy Pattern for extensibility
  */
 
 import type { Node } from '@xyflow/react'
+import { createPositioningStrategy } from './positioningStrategies'
 
 export interface Position {
   x: number
@@ -29,7 +31,19 @@ const DEFAULT_OPTIONS: Required<NodePositioningOptions> = {
 }
 
 /**
+ * Merge options with defaults
+ * DRY: Single source of truth for option merging
+ * 
+ * @param options Partial options
+ * @returns Complete options with defaults
+ */
+function mergeOptions(options: NodePositioningOptions = {}): Required<NodePositioningOptions> {
+  return { ...DEFAULT_OPTIONS, ...options }
+}
+
+/**
  * Get the maximum X position from an array of nodes
+ * Single Responsibility: Only calculates max X
  * 
  * @param nodes Array of nodes
  * @returns Maximum X position, or 0 if no nodes
@@ -44,6 +58,7 @@ export function getMaxNodeX(nodes: Node[]): number {
 
 /**
  * Get the maximum Y position from an array of nodes
+ * Single Responsibility: Only calculates max Y
  * 
  * @param nodes Array of nodes
  * @returns Maximum Y position, or 0 if no nodes
@@ -59,6 +74,7 @@ export function getMaxNodeY(nodes: Node[]): number {
 /**
  * Calculate the next position for a new node
  * Positions nodes horizontally after existing nodes
+ * Uses Strategy Pattern internally
  * 
  * @param existingNodes Array of existing nodes
  * @param options Positioning options
@@ -68,25 +84,16 @@ export function calculateNextNodePosition(
   existingNodes: Node[],
   options: NodePositioningOptions = {}
 ): Position {
-  const opts = { ...DEFAULT_OPTIONS, ...options }
-  
-  if (existingNodes.length === 0) {
-    return {
-      x: opts.defaultX,
-      y: opts.defaultY,
-    }
-  }
-  
-  const maxX = getMaxNodeX(existingNodes)
-  return {
-    x: maxX + opts.horizontalSpacing,
-    y: opts.defaultY,
-  }
+  const opts = mergeOptions(options)
+  const strategy = createPositioningStrategy('horizontal')
+  const positions = strategy.calculatePositions(existingNodes, 1, opts)
+  return positions[0]
 }
 
 /**
  * Calculate positions for multiple new nodes
  * Positions nodes vertically in a column
+ * Uses Strategy Pattern internally
  * 
  * @param existingNodes Array of existing nodes
  * @param count Number of nodes to position
@@ -98,29 +105,15 @@ export function calculateMultipleNodePositions(
   count: number,
   options: NodePositioningOptions = {}
 ): Position[] {
-  const opts = { ...DEFAULT_OPTIONS, ...options }
-  
-  if (existingNodes.length === 0) {
-    // Position all nodes vertically starting from default position
-    return Array.from({ length: count }, (_, index) => ({
-      x: opts.defaultX,
-      y: opts.defaultY + (index * opts.verticalSpacing),
-    }))
-  }
-  
-  // Position nodes in a column to the right of existing nodes
-  const startX = getMaxNodeX(existingNodes) + opts.horizontalSpacing
-  const startY = opts.defaultY
-  
-  return Array.from({ length: count }, (_, index) => ({
-    x: startX,
-    y: startY + (index * opts.verticalSpacing),
-  }))
+  const opts = mergeOptions(options)
+  const strategy = createPositioningStrategy('vertical')
+  return strategy.calculatePositions(existingNodes, count, opts)
 }
 
 /**
  * Calculate grid-based positioning for nodes
  * Arranges nodes in a grid pattern
+ * Uses Strategy Pattern internally
  * 
  * @param existingNodes Array of existing nodes
  * @param count Number of nodes to position
@@ -134,33 +127,14 @@ export function calculateGridPosition(
   columnsPerRow: number = 3,
   options: NodePositioningOptions = {}
 ): Position[] {
-  const opts = { ...DEFAULT_OPTIONS, ...options }
-  
-  // Calculate starting position
-  let startX = opts.defaultX
-  let startY = opts.defaultY
-  
-  if (existingNodes.length > 0) {
-    const maxX = getMaxNodeX(existingNodes)
-    const maxY = getMaxNodeY(existingNodes)
-    startX = maxX + opts.horizontalSpacing
-    startY = Math.max(opts.defaultY, maxY)
-  }
-  
-  // Calculate positions in grid
-  return Array.from({ length: count }, (_, index) => {
-    const row = Math.floor(index / columnsPerRow)
-    const col = index % columnsPerRow
-    
-    return {
-      x: startX + (col * opts.horizontalSpacing),
-      y: startY + (row * opts.verticalSpacing),
-    }
-  })
+  const opts = mergeOptions(options)
+  const strategy = createPositioningStrategy('grid', columnsPerRow)
+  return strategy.calculatePositions(existingNodes, count, opts)
 }
 
 /**
  * Calculate position relative to a reference node
+ * Single Responsibility: Only calculates relative position
  * 
  * @param referenceNode Reference node
  * @param offset Offset from reference node

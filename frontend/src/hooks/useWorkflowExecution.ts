@@ -8,6 +8,7 @@ import { showSuccess as defaultShowSuccess, showError as defaultShowError } from
 import { showConfirm as defaultShowConfirm } from '../utils/confirm'
 import { api as defaultApi, createApiClient } from '../api/client'
 import { logger as defaultLogger } from '../utils/logger'
+import { WorkflowExecutionService } from './utils/workflowExecutionService'
 
 interface UseWorkflowExecutionOptions {
   isAuthenticated: boolean
@@ -80,90 +81,59 @@ export function useWorkflowExecution({
   }, [isAuthenticated, localWorkflowId, saveWorkflow])
 
   const handleConfirmExecute = useCallback(async () => {
-    logger.debug('[WorkflowBuilder] ===== handleConfirmExecute CALLED =====')
+    logger.debug('[WorkflowBuilder] handleConfirmExecute called')
     logger.debug('[WorkflowBuilder] executionInputs:', executionInputs)
     logger.debug('[WorkflowBuilder] workflowIdRef.current:', workflowIdRef.current)
     
     setIsExecuting(true)
     
-    // Use setTimeout with delay 0 to defer execution to next tick
-    // This allows UI to update before starting execution
-    // Wrap async callback to ensure it always completes, preventing timeouts
-    const timeoutId = setTimeout(() => {
-      // Execute async operations in an immediately invoked async function
-      // This ensures the setTimeout callback completes even if mutations break await
-      (async () => {
-        try {
-          logger.debug('[WorkflowBuilder] Parsing execution inputs:', executionInputs)
-          const inputs = JSON.parse(executionInputs)
-          logger.debug('[WorkflowBuilder] Parsed inputs:', inputs)
-          setShowInputs(false)
-          setExecutionInputs('{}')
-
-          const tempExecutionId = `pending-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
-          logger.debug('[WorkflowBuilder] Created temp execution ID:', tempExecutionId)
-
-          if (onExecutionStart) {
-            logger.debug('[WorkflowBuilder] Calling onExecutionStart with temp ID')
-            onExecutionStart(tempExecutionId)
-          }
-
-          showSuccess('✅ Execution starting...\n\nCheck the console at the bottom of the screen to watch it run.', 6000)
-
-          const workflowIdToExecute = workflowIdRef.current
-          logger.debug('[WorkflowBuilder] Workflow ID to execute:', workflowIdToExecute)
-          
-          if (!workflowIdToExecute) {
-            logger.error('[WorkflowBuilder] No workflow ID found - workflow must be saved')
-            setIsExecuting(false)
-            showError('Workflow must be saved before executing.')
-            return
-          }
-
-          logger.debug('[WorkflowBuilder] Calling api.executeWorkflow with:', { workflowIdToExecute, inputs })
-          
-          // Use async/await with proper error handling to prevent timeouts
-          // Ensure the promise always resolves/rejects, even when mutations affect await handling
-          try {
-            const execution = await api.executeWorkflow(workflowIdToExecute, inputs)
-            logger.debug('[WorkflowBuilder] Execution response received:', execution)
-            // Add null check to prevent crashes when mutations change execution structure
-            if (execution && execution.execution_id && execution.execution_id !== tempExecutionId) {
-              logger.debug('[WorkflowBuilder] Updating execution ID:', execution.execution_id)
-              if (onExecutionStart) {
-                onExecutionStart(execution.execution_id)
-              }
-            }
-          } catch (error: any) {
-            logger.error('[WorkflowBuilder] Execution failed:', error)
-            logger.error('[WorkflowBuilder] Error details:', {
-              message: error?.message,
-              response: error?.response,
-              status: error?.response?.status,
-              data: error?.response?.data
-            })
-            // Use optional chaining to prevent crashes when mutations change error structure
-            const errorMessage = error?.response?.data?.detail || error?.message || 'Unknown error'
-            showError(`Failed to execute workflow: ${errorMessage}`)
-          } finally {
-            // Always reset executing state to prevent timeouts
-            // This ensures state is reset even if mutations affect the promise chain
-            setIsExecuting(false)
-          }
-        } catch (error: any) {
-          logger.error('Execution setup failed:', error)
-          setIsExecuting(false)
-          const errorMessage = error?.message || 'Unknown error'
-          showError(`Failed to execute workflow: ${errorMessage}`)
-        }
-      })().catch((error: any) => {
-        // Catch any unhandled promise rejections to prevent timeouts
-        logger.error('Unhandled error in execution callback:', error)
-        setIsExecuting(false)
-        showError(`Failed to execute workflow: ${error?.message || 'Unknown error'}`)
+    try {
+      // Parse inputs using execution service
+      const executionService = new WorkflowExecutionService({
+        api,
+        logger,
       })
-    }, 0)
-  }, [executionInputs, workflowIdRef, onExecutionStart])
+      
+      const inputs = executionService.parseExecutionInputs(executionInputs)
+      logger.debug('[WorkflowBuilder] Parsed inputs:', inputs)
+      
+      // Reset inputs UI
+      setShowInputs(false)
+      setExecutionInputs('{}')
+
+      // Create temp execution ID
+      const tempExecutionId = executionService.createTempExecutionId()
+      logger.debug('[WorkflowBuilder] Created temp execution ID:', tempExecutionId)
+
+      // Show success message
+      showSuccess('✅ Execution starting...\n\nCheck the console at the bottom of the screen to watch it run.', 6000)
+
+      // Get workflow ID
+      const workflowIdToExecute = workflowIdRef.current
+      logger.debug('[WorkflowBuilder] Workflow ID to execute:', workflowIdToExecute)
+      
+      if (!workflowIdToExecute) {
+        logger.error('[WorkflowBuilder] No workflow ID found - workflow must be saved')
+        showError('Workflow must be saved before executing.')
+        return
+      }
+
+      // Execute workflow
+      logger.debug('[WorkflowBuilder] Calling execution service')
+      await executionService.executeWorkflow({
+        workflowId: workflowIdToExecute,
+        inputs,
+        tempExecutionId,
+        onExecutionStart,
+      })
+    } catch (error: any) {
+      logger.error('[WorkflowBuilder] Execution failed:', error)
+      const errorMessage = error?.response?.data?.detail || error?.message || 'Unknown error'
+      showError(`Failed to execute workflow: ${errorMessage}`)
+    } finally {
+      setIsExecuting(false)
+    }
+  }, [executionInputs, workflowIdRef, onExecutionStart, api, logger, showSuccess, showError])
 
   return {
     showInputs,
