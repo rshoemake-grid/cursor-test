@@ -11,6 +11,7 @@ import type { StorageAdapter } from '../types/adapters'
 import { applyFilters, sortItems } from './useMarketplaceData.utils'
 import type { AgentTemplate } from './useMarketplaceData'
 import { canMigrateUserData, getUserDisplayName } from './utils/userValidation'
+import { canSaveToStorage } from './utils/storageValidation'
 
 interface UseAgentsDataOptions {
   storage: StorageAdapter | null
@@ -51,9 +52,10 @@ export function useAgentsData({
         return agent
       })
       
-      if (updated && storage) {
+      // Use extracted validation function - mutation-resistant
+      if (canSaveToStorage(storage, updated)) {
         logger.debug('[Marketplace] Updated agents with author info:', user!.id)
-        storage.setItem('publishedAgents', JSON.stringify(agentsData))
+        storage!.setItem('publishedAgents', JSON.stringify(agentsData))
       }
     }
     

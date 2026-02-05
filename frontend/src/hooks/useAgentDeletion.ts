@@ -9,9 +9,11 @@ import { showConfirm as defaultShowConfirm } from '../utils/confirm'
 import { logger as defaultLogger } from '../utils/logger'
 import { STORAGE_KEYS } from '../config/constants'
 import { filterUserOwnedDeletableItems, separateOfficialItems } from '../utils/ownershipUtils'
-import { isEmptySelection, isStorageAvailable } from '../utils/validationUtils'
+import { isEmptySelection } from '../utils/validationUtils'
 import { extractApiErrorMessage } from './utils/apiUtils'
 import { isValidUser, getUserId } from './utils/userValidation'
+import { isStorageAvailable, getStorageItem, setStorageItem } from './utils/storageValidation'
+import { hasArrayItems } from './utils/arrayValidation'
 import type { StorageAdapter } from '../types/adapters'
 import type { AgentTemplate } from './useMarketplaceData'
 
@@ -117,19 +119,23 @@ export function useAgentDeletion({
         showError('Storage not available')
         return
       }
-      const publishedAgents = storage.getItem('publishedAgents')
-      if (publishedAgents) {
-        const allAgents: AgentTemplate[] = JSON.parse(publishedAgents)
-        // Add defensive check to prevent crashes during mutation testing
-        if (userOwnedAgents && Array.isArray(userOwnedAgents)) {
+      // Use extracted storage utility - mutation-resistant
+      const allAgents = getStorageItem<AgentTemplate[]>(storage, 'publishedAgents', [])
+      if (hasArrayItems(allAgents)) {
+        // Use extracted validation function - mutation-resistant
+        if (hasArrayItems(userOwnedAgents)) {
           const agentIdsToDelete = new Set(userOwnedAgents.map(a => a && a.id ? a.id : null).filter(Boolean))
           const filteredAgents = allAgents.filter(a => !agentIdsToDelete.has(a.id))
-          storage.setItem('publishedAgents', JSON.stringify(filteredAgents))
           
-          // Update state
-          setAgents(prevAgents => prevAgents.filter(a => !agentIdsToDelete.has(a.id)))
-          setSelectedAgentIds(new Set())
-          showSuccess(`Successfully deleted ${userOwnedAgents.length} agent(s)`)
+          // Use extracted storage utility - mutation-resistant
+          if (setStorageItem(storage, 'publishedAgents', filteredAgents)) {
+            // Update state
+            setAgents(prevAgents => prevAgents.filter(a => !agentIdsToDelete.has(a.id)))
+            setSelectedAgentIds(new Set())
+            showSuccess(`Successfully deleted ${userOwnedAgents.length} agent(s)`)
+          } else {
+            showError('Failed to save to storage')
+          }
         }
       }
     } catch (error: any) {
