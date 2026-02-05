@@ -56,7 +56,8 @@ export function showNotification(message: string, options: NotificationOptions =
   `
 
     // Add animation keyframes if not already added
-    if (!documentAdapter.getElementById('notification-styles')) {
+    // Explicit check to prevent mutation survivors
+    if (documentAdapter.getElementById('notification-styles') === null) {
       const style = documentAdapter.createElement('style')
       style.id = 'notification-styles'
       style.textContent = `

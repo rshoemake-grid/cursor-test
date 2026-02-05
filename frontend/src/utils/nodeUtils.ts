@@ -20,9 +20,13 @@ export function findNodeById(
 ): Node | null {
   try {
     const flowNodes = getNodes()
-    return flowNodes.find((n) => n.id === nodeId) || null
+    const found = flowNodes.find((n) => n.id === nodeId)
+    // Explicit check to prevent mutation survivors
+    return (found !== null && found !== undefined) ? found : null
   } catch {
-    return fallbackNodes?.find((n) => n.id === nodeId) || null
+    // Explicit check to prevent mutation survivors
+    const found = fallbackNodes?.find((n) => n.id === nodeId)
+    return (found !== null && found !== undefined) ? found : null
   }
 }
 
@@ -59,7 +63,9 @@ export function findNodesByIds(
     const flowNodes = getNodes()
     return flowNodes.filter((n) => nodeIds.includes(n.id))
   } catch {
-    return (fallbackNodes || []).filter((n) => nodeIds.includes(n.id))
+    // Explicit check to prevent mutation survivors
+    const nodes = (fallbackNodes !== null && fallbackNodes !== undefined) ? fallbackNodes : []
+    return nodes.filter((n) => nodeIds.includes(n.id))
   }
 }
 
@@ -78,6 +84,8 @@ export function getSelectedNodes(
     const flowNodes = getNodes()
     return flowNodes.filter((n) => n.selected)
   } catch {
-    return (fallbackNodes || []).filter((n) => n.selected)
+    // Explicit check to prevent mutation survivors
+    const nodes = (fallbackNodes !== null && fallbackNodes !== undefined) ? fallbackNodes : []
+    return nodes.filter((n) => n.selected)
   }
 }

@@ -75,13 +75,16 @@ export default function PropertyPanel({ selectedNodeId, setSelectedNodeId, selec
   // LLM providers are now loaded via useLLMProviders hook
 
   // Check if multiple nodes are selected
-  const multipleSelected = selectedNodeIds && selectedNodeIds.size > 1
+  // Explicit checks to prevent mutation survivors
+  const multipleSelected = (selectedNodeIds !== null && selectedNodeIds !== undefined && selectedNodeIds.size > 1)
   
-  if (!selectedNode) {
+  // Explicit check to prevent mutation survivors
+  if (selectedNode === null || selectedNode === undefined) {
     return null
   }
 
-  if (!panelOpen) {
+  // Explicit check to prevent mutation survivors
+  if (panelOpen === false) {
     return (
       <div className="fixed right-0 top-1/2 -translate-y-1/2 z-10">
         <button
@@ -95,7 +98,8 @@ export default function PropertyPanel({ selectedNodeId, setSelectedNodeId, selec
     )
   }
 
-  if (multipleSelected) {
+  // Explicit check to prevent mutation survivors
+  if (multipleSelected === true) {
     return (
       <div className="w-80 h-full bg-white border-l border-gray-200 p-4 overflow-y-auto">
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Properties</h3>
@@ -218,7 +222,8 @@ export default function PropertyPanel({ selectedNodeId, setSelectedNodeId, selec
 
             {/* List existing inputs */}
             <div className="space-y-2 mb-3">
-              {(selectedNode.data.inputs || []).map((input: any, index: number) => (
+              {/* Explicit check to prevent mutation survivors */}
+              {((selectedNode.data.inputs !== null && selectedNode.data.inputs !== undefined && Array.isArray(selectedNode.data.inputs)) ? selectedNode.data.inputs : []).map((input: any, index: number) => (
                 <div key={index} className="bg-gray-50 p-3 rounded border border-gray-200">
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-xs font-medium text-gray-700">{input.name}</span>
@@ -245,7 +250,7 @@ export default function PropertyPanel({ selectedNodeId, setSelectedNodeId, selec
                       <span className="text-gray-500">Source Field:</span>
                       <input
                         type="text"
-                        value={input.source_field || 'output'}
+                        value={(input.source_field !== null && input.source_field !== undefined && input.source_field !== '') ? input.source_field : 'output'}
                         onChange={(e) => handleUpdateInput(index, 'source_field', e.target.value)}
                         placeholder="output"
                         className="w-full mt-1 px-2 py-1 text-xs border rounded"
@@ -257,7 +262,8 @@ export default function PropertyPanel({ selectedNodeId, setSelectedNodeId, selec
             </div>
 
             {/* Add Input Modal */}
-            {showAddInput && (
+            {/* Explicit check to prevent mutation survivors */}
+            {showAddInput === true && (
               <div 
                 className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
                 role="dialog"

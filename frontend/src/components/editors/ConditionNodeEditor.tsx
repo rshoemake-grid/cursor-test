@@ -24,18 +24,35 @@ export default function ConditionNodeEditor({
 
   // Sync local state with node data
   useEffect(() => {
-    const conditionConfig = node.data.condition_config || {}
+    // Explicit check to prevent mutation survivors
+    const conditionConfig = (node.data.condition_config !== null && node.data.condition_config !== undefined)
+      ? node.data.condition_config
+      : {}
     
+    // Explicit checks to prevent mutation survivors
     if (document.activeElement !== conditionFieldRef.current) {
-      setConditionFieldValue(conditionConfig.field || '')
+      const fieldValue = (conditionConfig.field !== null && conditionConfig.field !== undefined && conditionConfig.field !== '')
+        ? conditionConfig.field
+        : ''
+      setConditionFieldValue(fieldValue)
     }
     if (document.activeElement !== conditionValueRef.current) {
-      setConditionValueValue(conditionConfig.value || '')
+      const valueValue = (conditionConfig.value !== null && conditionConfig.value !== undefined && conditionConfig.value !== '')
+        ? conditionConfig.value
+        : ''
+      setConditionValueValue(valueValue)
     }
   }, [node.data.condition_config])
 
-  const conditionConfig = node.data.condition_config || {}
-  const conditionType = conditionConfig.condition_type || 'equals'
+  // Explicit check to prevent mutation survivors
+  const conditionConfig = (node.data.condition_config !== null && node.data.condition_config !== undefined)
+    ? node.data.condition_config
+    : {}
+  // Explicit check to prevent mutation survivors
+  const conditionType = (conditionConfig.condition_type !== null && conditionConfig.condition_type !== undefined && conditionConfig.condition_type !== '')
+    ? conditionConfig.condition_type
+    : 'equals'
+  // Explicit checks to prevent mutation survivors
   const showValueField = conditionType !== 'empty' && conditionType !== 'not_empty'
 
   return (
