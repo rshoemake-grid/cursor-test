@@ -8,9 +8,10 @@ import { useEffect } from 'react'
 import { logger } from '../../utils/logger'
 import type { WorkflowAPIClient } from '../../api/client'
 import type { Execution } from '../../contexts/WorkflowTabsContext'
-
-// Constants to prevent mutation issues
-const PENDING_EXECUTION_PREFIX = 'pending-'
+import {
+  isRealExecutionId,
+  shouldLogExecutionError,
+} from './executionIdValidation'
 
 interface UseExecutionPollingOptions {
   tabsRef: React.MutableRefObject<any[]>
@@ -45,8 +46,8 @@ export function useExecutionPolling({
           e && 
           e.id && 
           e.status === 'running' && 
-          e.id.startsWith && 
-          !e.id.startsWith(PENDING_EXECUTION_PREFIX)
+          // Use extracted validation function - mutation-resistant
+          isRealExecutionId(e.id)
         )
       })
       
@@ -80,9 +81,9 @@ export function useExecutionPolling({
           } catch (error: any) {
             // If execution not found (404), it might be a temp execution that failed
             // Don't log errors for pending executions
-            // Add safety check to prevent crashes when mutations change exec structure
-            if (exec && exec.id && exec.id.startsWith && !exec.id.startsWith(PENDING_EXECUTION_PREFIX)) {
-              injectedLogger.error(`[WorkflowTabs] Failed to fetch execution ${exec.id}:`, error)
+            // Use extracted validation function - mutation-resistant
+            if (shouldLogExecutionError(exec)) {
+              injectedLogger.error(`[WorkflowTabs] Failed to fetch execution ${exec!.id}:`, error)
             }
             return null
           }

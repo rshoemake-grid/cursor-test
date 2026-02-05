@@ -4,6 +4,7 @@
  */
 
 import type { WindowLocation } from '../types/adapters'
+import { isTemporaryExecutionId } from './utils/executionIdValidation'
 
 export type WebSocketState = 'CONNECTING' | 'OPEN' | 'CLOSING' | 'CLOSED' | 'UNKNOWN'
 
@@ -18,13 +19,6 @@ export function getWebSocketStateText(readyState: number): WebSocketState {
   if (readyState === WebSocket.CLOSING) return 'CLOSING'
   if (readyState === WebSocket.CLOSED) return 'CLOSED'
   return 'UNKNOWN'
-}
-
-/**
- * Check if execution ID is temporary (pending)
- */
-export function isTemporaryExecutionId(executionId: string | null): boolean {
-  return executionId !== null && executionId.startsWith('pending-')
 }
 
 /**

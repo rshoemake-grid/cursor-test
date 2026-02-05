@@ -16,6 +16,7 @@ import {
   isWorkflowSaved,
   canExecuteWorkflow,
 } from './utils/workflowExecutionValidation'
+import { extractApiErrorMessage } from './utils/apiUtils'
 
 interface UseWorkflowExecutionOptions {
   isAuthenticated: boolean
@@ -140,7 +141,8 @@ export function useWorkflowExecution({
       })
     } catch (error: any) {
       logger.error('[WorkflowBuilder] Execution failed:', error)
-      const errorMessage = error?.response?.data?.detail || error?.message || 'Unknown error'
+      // Use extracted error utility - mutation-resistant
+      const errorMessage = extractApiErrorMessage(error, 'Unknown error')
       showError(`Failed to execute workflow: ${errorMessage}`)
     } finally {
       setIsExecuting(false)

@@ -7,9 +7,12 @@
 import { logger } from '../../utils/logger'
 import type { WorkflowTabData, Execution } from '../../contexts/WorkflowTabsContext'
 import { updateTabByWorkflowId } from './tabUtils'
+import {
+  isRealExecutionId,
+  isPendingExecutionId,
+} from './executionIdValidation'
 
-// Constants to prevent mutation issues
-const PENDING_EXECUTION_PREFIX = 'pending-'
+// Import validation utilities instead of defining constants
 
 export interface ExecutionStateManagerOptions {
   logger?: typeof logger
@@ -43,12 +46,13 @@ export class ExecutionStateManager {
       
       // If this is a real execution ID (not pending), try to replace the oldest pending execution
       // This ensures we replace them in creation order, even if API responses come back out of order
-      if (!executionId.startsWith(PENDING_EXECUTION_PREFIX)) {
+      // Use extracted validation function - mutation-resistant
+      if (isRealExecutionId(executionId)) {
         // Find all pending executions
-        // Add safety checks to prevent crashes when mutations change exec structure
+        // Use extracted validation function - mutation-resistant
         const pendingExecutions = tab.executions
           .map((exec, idx) => ({ exec, idx }))
-          .filter(({ exec }) => exec && exec.id && exec.id.startsWith && exec.id.startsWith(PENDING_EXECUTION_PREFIX))
+          .filter(({ exec }) => exec && exec.id && isPendingExecutionId(exec.id))
         
         if (pendingExecutions.length > 0) {
           // Replace the oldest pending execution (last in array since new ones are prepended)
