@@ -10,6 +10,7 @@ import { STORAGE_KEYS } from '../config/constants'
 import type { StorageAdapter } from '../types/adapters'
 import { applyFilters, sortItems } from './useMarketplaceData.utils'
 import type { AgentTemplate } from './useMarketplaceData'
+import { canMigrateUserData, getUserDisplayName } from './utils/userValidation'
 
 interface UseAgentsDataOptions {
   storage: StorageAdapter | null
@@ -35,22 +36,23 @@ export function useAgentsData({
     let agentsData = getLocalStorageItem<AgentTemplate[]>(STORAGE_KEYS.PUBLISHED_AGENTS, [])
     
     // One-time migration: Set current user as author for all agents without author_id
-    if (user && user.id && agentsData.length > 0) {
+    // Use extracted validation function - mutation-resistant
+    if (canMigrateUserData(user, agentsData)) {
       let updated = false
       agentsData = agentsData.map(agent => {
         if (!agent.author_id) {
           updated = true
           return {
             ...agent,
-            author_id: user.id,
-            author_name: user.username || user.email || null
+            author_id: user!.id, // Safe: canMigrateUserData ensures user is valid
+            author_name: getUserDisplayName(user)
           }
         }
         return agent
       })
       
       if (updated && storage) {
-        logger.debug('[Marketplace] Updated agents with author info:', user.id)
+        logger.debug('[Marketplace] Updated agents with author info:', user!.id)
         storage.setItem('publishedAgents', JSON.stringify(agentsData))
       }
     }

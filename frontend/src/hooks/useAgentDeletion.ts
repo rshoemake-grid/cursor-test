@@ -11,6 +11,7 @@ import { STORAGE_KEYS } from '../config/constants'
 import { filterUserOwnedDeletableItems, separateOfficialItems } from '../utils/ownershipUtils'
 import { isEmptySelection, isStorageAvailable } from '../utils/validationUtils'
 import { extractApiErrorMessage } from './utils/apiUtils'
+import { isValidUser, getUserId } from './utils/userValidation'
 import type { StorageAdapter } from '../types/adapters'
 import type { AgentTemplate } from './useMarketplaceData'
 
@@ -59,16 +60,17 @@ export function useAgentDeletion({
     }
     
     // Debug logging
+    // Use extracted validation function - mutation-resistant
     logger.debug('[Marketplace] Delete agents check:', {
       selectedCount: deletableAgents.length,
-      user: user && user.id ? { id: user.id, username: user.username } : null,
+      user: isValidUser(user) ? { id: user.id, username: user.username } : null,
       selectedAgents: deletableAgents.map(a => ({
         id: a.id,
         name: a.name,
         author_id: a.author_id,
         author_id_type: typeof a.author_id,
-        user_id: user?.id,
-        user_id_type: typeof user?.id
+        user_id: getUserId(user),
+        user_id_type: typeof getUserId(user)
       }))
     })
     
