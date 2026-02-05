@@ -144,6 +144,38 @@ if (canExtractModelsFromProvider(provider)) {
 
 ---
 
+### Phase 4: Code Reorganization ✅
+
+#### ✅ User Validation Utilities
+
+**Completed:**
+1. **Created userValidation.ts utility module**
+   - `isValidUser()` - user existence and ID validation
+   - `canUserOperate()` - user operation permission check
+   - `canMigrateUserData()` - user data migration check
+   - `doesUserOwnItem()` - ownership validation
+   - `canUserDeleteItem()` - deletion permission check
+   - `getUserId()` - safe user ID extraction
+   - `getUserDisplayName()` - user display name extraction
+
+2. **Refactored Files:**
+   - `useAgentsData.ts` - uses `canMigrateUserData()` and `getUserDisplayName()`
+   - `useAgentDeletion.ts` - uses `isValidUser()` and `getUserId()`
+
+3. **Created comprehensive tests** (`userValidation.test.ts`)
+   - 29 test cases covering all validation functions
+   - Tests all edge cases and boundary conditions
+
+**Benefits:**
+- Mutation-resistant code through explicit function calls
+- Better testability - each condition tested independently
+- Reusable validation logic across multiple hooks
+- Improved readability and maintainability
+
+**Expected Impact:** Kill 2-3 additional mutants through better code organization
+
+---
+
 ### Phase 3: Utility Functions and Services ✅
 
 #### ✅ workflowExecutionService.ts (2 survived)
