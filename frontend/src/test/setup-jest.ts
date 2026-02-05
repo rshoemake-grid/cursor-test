@@ -103,7 +103,7 @@ if (typeof process !== 'undefined' && process.env.NODE_ENV === 'test') {
   // Handle unhandled promise rejections
   const originalUnhandledRejection = process.listeners('unhandledRejection')
   if (originalUnhandledRejection.length === 0) {
-    process.on('unhandledRejection', (reason, promise) => {
+    process.on('unhandledRejection', (reason) => {
       // Convert to handled rejection to prevent crashes
       // Only log if it's not an expected error from mutations
       const reasonStr = String(reason)
@@ -143,7 +143,17 @@ if (typeof process !== 'undefined' && process.env.NODE_ENV === 'test') {
     // For other errors, call original handlers
     originalUncaughtException.forEach(listener => {
       try {
-        listener(error)
+        // Node.js uncaughtException listeners take (error: Error, origin: string) => void
+        // But most handlers only use the error parameter
+        // Check listener signature and call appropriately
+        if (typeof listener === 'function') {
+          if (listener.length === 1) {
+            (listener as (error: Error) => void)(error)
+          } else {
+            // Some listeners might expect 2 parameters (error, origin)
+            (listener as (error: Error, origin: string) => void)(error, 'uncaughtException')
+          }
+        }
       } catch (e) {
         // Ignore errors in error handlers
       }
@@ -171,10 +181,6 @@ afterEach(() => {
     const duration = Date.now() - log.start
     console.log(`[TEST END] ${log.file} > ${log.name} (${duration}ms)`)
   }
-})
-
-// Log suite execution using describe hooks
-const suiteLogs: Array<{ file: string; name: string; start: number }> = []
-
+})// Log suite execution using describe hooks
 // Note: We can't easily wrap describe() without causing parsing issues,
 // so we'll rely on beforeEach/afterEach for test logging

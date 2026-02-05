@@ -1532,7 +1532,7 @@ describe('useCanvasEvents - Mutation Killers', () => {
         const dispatchEventSpy = jest.fn()
         
         if (typeof window !== 'undefined') {
-          ;(window as any).dispatchEvent = dispatchEventSpy
+          (window as any).dispatchEvent = dispatchEventSpy
         }
 
         act(() => {
@@ -1550,7 +1550,7 @@ describe('useCanvasEvents - Mutation Killers', () => {
 
         // Restore original dispatchEvent
         if (originalDispatchEvent && typeof window !== 'undefined') {
-          ;(window as any).dispatchEvent = originalDispatchEvent
+          (window as any).dispatchEvent = originalDispatchEvent
         }
       })
     })

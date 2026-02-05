@@ -163,7 +163,7 @@ export default function SettingsPage({
     { providers, iterationLimit, defaultModel },
     autoSaveSettings,
     500,
-    isAuthenticated && token && settingsLoaded
+    !!(isAuthenticated && token && settingsLoaded)
   )
 
   const toggleProviderModels = (providerId: string) => {

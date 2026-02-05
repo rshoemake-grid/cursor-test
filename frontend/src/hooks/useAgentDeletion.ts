@@ -12,14 +12,13 @@ import { filterUserOwnedDeletableItems, separateOfficialItems } from '../utils/o
 import { isEmptySelection } from '../utils/validationUtils'
 import { extractApiErrorMessage } from './utils/apiUtils'
 import { isValidUser, getUserId } from './utils/userValidation'
-import { isStorageAvailable, getStorageItem, setStorageItem } from './utils/storageValidation'
+import { isStorageAvailable, setStorageItem } from './utils/storageValidation'
 import { hasArrayItems } from './utils/arrayValidation'
 import {
   hasOfficialItems,
   hasNoUserOwnedItems,
   ownsAllItems,
   ownsPartialItems,
-  hasItemsWithAuthorId,
   getItemsWithAuthorIdCount,
 } from './utils/deletionValidation'
 import type { StorageAdapter } from '../types/adapters'

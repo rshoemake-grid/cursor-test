@@ -6,7 +6,7 @@
 
 import { useEffect } from 'react'
 import { logger } from '../../utils/logger'
-import type { WorkflowAPIClient } from '../../api/client'
+import type { WorkflowAPIClient } from '../useWorkflowAPI'
 import type { Execution } from '../../contexts/WorkflowTabsContext'
 import {
   isRealExecutionId,
@@ -42,7 +42,7 @@ export function useExecutionPolling({
       const runningExecutions = currentTabs.flatMap(tab => {
         // Add defensive check for tab.executions
         if (!tab || !tab.executions || !Array.isArray(tab.executions)) return []
-        return tab.executions.filter(e => 
+        return tab.executions.filter((e: Execution) => 
           e && 
           e.id && 
           e.status === 'running' && 

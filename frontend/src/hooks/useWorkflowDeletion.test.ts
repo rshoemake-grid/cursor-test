@@ -1075,7 +1075,7 @@ describe('useWorkflowDeletion', () => {
 
   describe('deleteSelectedWorkflows - confirmation cancellation branches', () => {
     it('should return early when partial delete confirmation is cancelled', async () => {
-      ;(showConfirm as jest.MockedFunction<typeof showConfirm>).mockResolvedValue(false)
+      (showConfirm as jest.MockedFunction<typeof showConfirm>).mockResolvedValue(false)
 
       const { result } = renderHook(() =>
         useWorkflowDeletion({
@@ -1102,7 +1102,7 @@ describe('useWorkflowDeletion', () => {
     })
 
     it('should return early when full delete confirmation is cancelled', async () => {
-      ;(showConfirm as jest.MockedFunction<typeof showConfirm>).mockResolvedValue(false)
+      (showConfirm as jest.MockedFunction<typeof showConfirm>).mockResolvedValue(false)
 
       const { result } = renderHook(() =>
         useWorkflowDeletion({

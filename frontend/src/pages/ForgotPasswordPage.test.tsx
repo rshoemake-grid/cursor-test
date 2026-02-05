@@ -43,7 +43,7 @@ describe('ForgotPasswordPage', () => {
   })
 
   it('should handle email submission', async () => {
-    ;(global.fetch as jest.Mock).mockResolvedValue({
+    (global.fetch as jest.Mock).mockResolvedValue({
       ok: true,
       json: async () => ({ token: 'reset-token-123' }),
     })
@@ -71,7 +71,7 @@ describe('ForgotPasswordPage', () => {
   })
 
   it('should show success message after submission', async () => {
-    ;(global.fetch as jest.Mock).mockResolvedValue({
+    (global.fetch as jest.Mock).mockResolvedValue({
       ok: true,
       json: async () => ({ token: 'reset-token-123' }),
     })
@@ -92,7 +92,7 @@ describe('ForgotPasswordPage', () => {
   })
 
   it('should show reset token in development mode', async () => {
-    ;(global.fetch as jest.Mock).mockResolvedValue({
+    (global.fetch as jest.Mock).mockResolvedValue({
       ok: true,
       json: async () => ({ token: 'reset-token-123' }),
     })
@@ -113,7 +113,7 @@ describe('ForgotPasswordPage', () => {
   })
 
   it('should handle API error', async () => {
-    ;(global.fetch as jest.Mock).mockResolvedValue({
+    (global.fetch as jest.Mock).mockResolvedValue({
       ok: false,
       json: async () => ({ detail: 'Email not found' }),
     })
@@ -145,7 +145,7 @@ describe('ForgotPasswordPage', () => {
   })
 
   it('should submit form when Enter key is pressed', async () => {
-    ;(global.fetch as jest.Mock).mockResolvedValue({
+    (global.fetch as jest.Mock).mockResolvedValue({
       ok: true,
       json: async () => ({ token: 'reset-token-123' }),
     })

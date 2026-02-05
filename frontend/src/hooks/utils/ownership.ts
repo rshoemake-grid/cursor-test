@@ -33,5 +33,6 @@ export function canUserDelete(item: OwnableItem | null | undefined, user: User |
     return false
   }
   
-  return isOwner(item, user)
+  // isOwner expects User | null, not undefined
+  return isOwner(item, user ?? null)
 }

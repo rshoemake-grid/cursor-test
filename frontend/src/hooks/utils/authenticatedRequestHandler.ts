@@ -65,7 +65,22 @@ export function buildRequestHeaders(
   method: string,
   additionalHeaders?: HeadersInit
 ): HeadersInit {
-  const headers: HeadersInit = { ...additionalHeaders }
+  const headers: Record<string, string> = {}
+  
+  // Copy additional headers if provided
+  if (additionalHeaders) {
+    if (additionalHeaders instanceof Headers) {
+      additionalHeaders.forEach((value, key) => {
+        headers[key] = value
+      })
+    } else if (Array.isArray(additionalHeaders)) {
+      additionalHeaders.forEach(([key, value]) => {
+        headers[key] = value
+      })
+    } else {
+      Object.assign(headers, additionalHeaders)
+    }
+  }
 
   // Add Content-Type for methods that send data (only if not already provided)
   if ((method === 'POST' || method === 'PUT') && !headers['Content-Type']) {

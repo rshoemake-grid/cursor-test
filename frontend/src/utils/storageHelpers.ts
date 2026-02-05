@@ -121,7 +121,7 @@ export function safeStorageClear(
   }
 
   try {
-    ;(storage as any).clear()
+    (storage as any).clear()
     return true
   } catch (error) {
     handleStorageError(error, 'clear', 'all', {

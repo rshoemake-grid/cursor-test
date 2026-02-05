@@ -1,15 +1,13 @@
 import React from 'react'
-import { render, screen, fireEvent, waitFor } from '@testing-library/react'
+import { render, waitFor } from '@testing-library/react'
 import { BrowserRouter } from 'react-router-dom'
-import SettingsPage from './SettingsPage'
 import { useAuth } from '../contexts/AuthContext'
 import { showSuccess, showError } from '../utils/notifications'
 import { showConfirm } from '../utils/confirm'
+import { api } from '../api/client'
 
 // Re-export showConfirm for use in tests
 export { showConfirm }
-import type { StorageAdapter, HttpClient, ConsoleAdapter } from '../types/adapters'
-import { api } from '../api/client'
 
 // Helper to ensure all waitFor calls have timeouts
 const waitForWithTimeout = async (callback: () => void | Promise<void>, timeout = 2000) => {

@@ -133,6 +133,9 @@ export function useWorkflowExecution({
 
       // Execute workflow
       logger.debug('[WorkflowBuilder] Calling execution service')
+      if (!workflowIdToExecute) {
+        throw new Error('Workflow ID is required for execution')
+      }
       await executionService.executeWorkflow({
         workflowId: workflowIdToExecute,
         inputs,

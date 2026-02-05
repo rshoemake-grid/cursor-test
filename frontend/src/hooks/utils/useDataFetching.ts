@@ -27,11 +27,11 @@ export interface UseDataFetchingResult<T> {
  */
 export function useDataFetching<T>({
   fetchFn,
-  initialData = null as T | null,
+  initialData,
   onError,
   logger: injectedLogger = logger,
 }: UseDataFetchingOptions<T>): UseDataFetchingResult<T> {
-  const [data, setData] = useState<T | null>(initialData)
+  const [data, setData] = useState<T | null>(initialData ?? null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<Error | null>(null)
 

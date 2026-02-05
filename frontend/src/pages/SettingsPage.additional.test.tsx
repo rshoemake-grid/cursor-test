@@ -314,7 +314,7 @@ describe('SettingsPage - Additional Coverage', () => {
     })
 
     it('should handle canceling delete provider', async () => {
-      ;(showConfirm as jest.Mock).mockResolvedValue(false)
+      (showConfirm as jest.Mock).mockResolvedValue(false)
 
       const savedProviders = [
         {

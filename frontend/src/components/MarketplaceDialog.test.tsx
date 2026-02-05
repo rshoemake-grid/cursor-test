@@ -130,7 +130,7 @@ describe('MarketplaceDialog', () => {
 
   it('should handle agent publishing', async () => {
     // Mock publishAgent to return a successful response
-    ;(mockApi.publishAgent as jest.Mock).mockResolvedValue({
+    (mockApi.publishAgent as jest.Mock).mockResolvedValue({
       id: 'agent-123',
       name: 'Test Agent',
       description: 'Test description',
@@ -410,7 +410,7 @@ describe('MarketplaceDialog', () => {
 
   it('should handle localStorage error when publishing agent', async () => {
     // Mock publishAgent to succeed but localStorage to fail
-    ;(mockApi.publishAgent as jest.Mock).mockResolvedValue({
+    (mockApi.publishAgent as jest.Mock).mockResolvedValue({
       id: 'agent-123',
       name: 'Test Agent',
       description: 'Test description',
@@ -468,7 +468,7 @@ describe('MarketplaceDialog', () => {
 
   it('should handle tags with spaces', async () => {
     // Mock publishAgent to succeed
-    ;(mockApi.publishAgent as jest.Mock).mockResolvedValue({
+    (mockApi.publishAgent as jest.Mock).mockResolvedValue({
       id: 'agent-123',
       name: 'Test Agent',
       description: 'Test description',
@@ -620,7 +620,7 @@ describe('MarketplaceDialog', () => {
 
     it('should handle storage errors gracefully', async () => {
       // Mock publishAgent to succeed
-      ;(mockApi.publishAgent as jest.Mock).mockResolvedValue({
+      (mockApi.publishAgent as jest.Mock).mockResolvedValue({
         id: 'agent-123',
         name: 'Test Agent',
         description: 'Test description',
@@ -662,7 +662,7 @@ describe('MarketplaceDialog', () => {
 
     it('should handle null storage adapter', async () => {
       // Mock publishAgent to succeed
-      ;(mockApi.publishAgent as jest.Mock).mockResolvedValue({
+      (mockApi.publishAgent as jest.Mock).mockResolvedValue({
         id: 'agent-123',
         name: 'Test Agent',
         description: 'Test description',

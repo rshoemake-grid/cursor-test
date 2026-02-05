@@ -26,12 +26,6 @@ export function isTemporaryExecutionId(executionId: string | null | undefined): 
 }
 
 /**
- * Alias for isPendingExecutionId - used by WebSocket utilities
- * Mutation-resistant: explicit prefix check
- */
-export const isTemporaryExecutionId = isPendingExecutionId
-
-/**
  * Check if execution ID is real (not pending)
  * Mutation-resistant: explicit prefix check
  */

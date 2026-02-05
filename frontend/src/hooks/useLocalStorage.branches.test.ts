@@ -34,7 +34,7 @@ describe('useLocalStorage - Remaining Branches', () => {
   describe('useLocalStorage hook - storage null branches', () => {
     it('should return initialValue when storage is null in useState initializer', () => {
       // Mock adapter to return null
-      ;(defaultAdapters.createLocalStorageAdapter as jest.Mock).mockReturnValue(null)
+      (defaultAdapters.createLocalStorageAdapter as jest.Mock).mockReturnValue(null)
       
       const { result } = renderHook(() =>
         useLocalStorage('test-key', 'initial-value')
@@ -161,7 +161,7 @@ describe('useLocalStorage - Remaining Branches', () => {
   describe('setLocalStorageItem - storage null branches', () => {
     it('should return false when storage is null', () => {
       // Mock adapter to return null
-      ;(defaultAdapters.createLocalStorageAdapter as jest.Mock).mockReturnValue(null)
+      (defaultAdapters.createLocalStorageAdapter as jest.Mock).mockReturnValue(null)
       
       const result = setLocalStorageItem('test-key', 'value')
 
@@ -189,7 +189,7 @@ describe('useLocalStorage - Remaining Branches', () => {
   describe('removeLocalStorageItem - storage null branches', () => {
     it('should return false when storage is null', () => {
       // Mock adapter to return null
-      ;(defaultAdapters.createLocalStorageAdapter as jest.Mock).mockReturnValue(null)
+      (defaultAdapters.createLocalStorageAdapter as jest.Mock).mockReturnValue(null)
       
       const result = removeLocalStorageItem('test-key')
 

@@ -4,7 +4,6 @@
  */
 
 import { useCallback } from 'react'
-import { logger } from '../utils/logger'
 import type { HttpClient } from '../types/adapters'
 import { buildSearchParams } from './useMarketplaceData.utils'
 import type { Template } from './useMarketplaceData'

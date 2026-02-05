@@ -135,7 +135,7 @@ describe('useWorkflowAPI', () => {
 
   describe('deleteWorkflow', () => {
     it('should call api.deleteWorkflow with id', async () => {
-      ;(api.deleteWorkflow as jest.Mock).mockResolvedValue(undefined)
+      (api.deleteWorkflow as jest.Mock).mockResolvedValue(undefined)
 
       const { result } = renderHook(() => useWorkflowAPI())
       await result.current.deleteWorkflow('1')

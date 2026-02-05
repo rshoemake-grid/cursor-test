@@ -528,7 +528,7 @@ describe('WorkflowTabs', () => {
   })
 
   it('should cancel tab close when user cancels confirmation', async () => {
-    ;(showConfirm as jest.Mock).mockResolvedValue(false)
+    (showConfirm as jest.Mock).mockResolvedValue(false)
 
     // Need at least 2 tabs for close button to appear
     const savedTabs = [
@@ -642,7 +642,7 @@ describe('WorkflowTabs', () => {
   })
 
   it('should switch to first tab when active tab is deleted', async () => {
-    ;(showConfirm as jest.Mock).mockResolvedValue(true)
+    (showConfirm as jest.Mock).mockResolvedValue(true)
 
     renderWithProvider()
 
@@ -1449,7 +1449,7 @@ describe('WorkflowTabs', () => {
     })
 
     it('should handle polling when execution fetch fails', async () => {
-      ;(mockApi.getExecution as jest.Mock).mockRejectedValue(new Error('Fetch failed'))
+      (mockApi.getExecution as jest.Mock).mockRejectedValue(new Error('Fetch failed'))
 
       const savedTabs = [
         { 
@@ -1658,7 +1658,7 @@ describe('WorkflowTabs', () => {
     })
 
     it('should handle polling when execution update is null', async () => {
-      ;(mockApi.getExecution as jest.Mock).mockResolvedValue(null as any)
+      (mockApi.getExecution as jest.Mock).mockResolvedValue(null as any)
 
       const savedTabs = [
         { 
@@ -1746,7 +1746,7 @@ describe('WorkflowTabs', () => {
     })
 
     it('should handle commitTabRename when getWorkflow fails', async () => {
-      ;(mockApi.getWorkflow as jest.Mock).mockRejectedValue(new Error('Get workflow failed'))
+      (mockApi.getWorkflow as jest.Mock).mockRejectedValue(new Error('Get workflow failed'))
 
       const savedTabs = [
         { id: 'tab-1', name: 'Test Workflow', workflowId: 'workflow-1', isUnsaved: false, executions: [], activeExecutionId: null },
@@ -2293,7 +2293,7 @@ describe('WorkflowTabs', () => {
 
   describe('Initial workflow loading edge cases', () => {
     it('should handle initialWorkflowId with same workflowLoadKey twice', async () => {
-      ;(mockApi.getWorkflow as jest.Mock).mockResolvedValue({
+      (mockApi.getWorkflow as jest.Mock).mockResolvedValue({
         id: 'workflow-1',
         name: 'Loaded Workflow',
         description: 'Test',
@@ -2321,7 +2321,7 @@ describe('WorkflowTabs', () => {
     })
 
     it('should handle initialWorkflowId with different workflowLoadKey', async () => {
-      ;(mockApi.getWorkflow as jest.Mock).mockResolvedValue({
+      (mockApi.getWorkflow as jest.Mock).mockResolvedValue({
         id: 'workflow-1',
         name: 'Loaded Workflow',
         description: 'Test',
@@ -2360,7 +2360,7 @@ describe('WorkflowTabs', () => {
     })
 
     it('should handle initialWorkflowId when prev.length === 1 and globalTabs.length > 1', async () => {
-      ;(mockApi.getWorkflow as jest.Mock).mockResolvedValue({
+      (mockApi.getWorkflow as jest.Mock).mockResolvedValue({
         id: 'workflow-1',
         name: 'Loaded Workflow',
         description: 'Test',

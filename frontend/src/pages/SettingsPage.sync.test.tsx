@@ -10,7 +10,7 @@ describe('SettingsPage - Manual Sync', () => {
   })
 
   it('should handle handleManualSync when authenticated', async () => {
-    ;(global.fetch as jest.Mock).mockResolvedValue({
+    (global.fetch as jest.Mock).mockResolvedValue({
       ok: true,
       json: async () => ({ success: true }),
     })
@@ -56,7 +56,7 @@ describe('SettingsPage - Manual Sync', () => {
   })
 
   it('should handle handleManualSync error', async () => {
-    ;(global.fetch as jest.Mock).mockRejectedValue(new Error('Sync failed'))
+    (global.fetch as jest.Mock).mockRejectedValue(new Error('Sync failed'))
 
     renderWithRouter(<SettingsPage />)
 

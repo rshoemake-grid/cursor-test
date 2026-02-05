@@ -1,10 +1,10 @@
-import React, { useState, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Bot, Workflow } from 'lucide-react';
 import { showError, showSuccess } from '../utils/notifications';
 import { useOfficialAgentSeeding } from '../hooks/useOfficialAgentSeeding';
-import { useMarketplaceData } from '../hooks/useMarketplaceData';
+import { useMarketplaceData, type Template } from '../hooks/useMarketplaceData';
 import { useTemplateOperations } from '../hooks/useTemplateOperations';
 import { useSelectionManager } from '../hooks/useSelectionManager';
 import { createCardClickHandler, shouldIgnoreClick } from '../utils/cardClickUtils';
@@ -92,11 +92,11 @@ export default function MarketplacePage({
     apiBaseUrl,
     storage,
     agents,
-    templates,
+    templates: templates ?? [],
     workflowsOfWorkflows,
     activeTab,
     setAgents,
-    setTemplates,
+    setTemplates: setTemplates as React.Dispatch<React.SetStateAction<Template[]>>,
     setWorkflowsOfWorkflows,
     setRepositoryAgents,
     setSelectedAgentIds: agentSelection.setSelectedIds,
@@ -202,8 +202,8 @@ export default function MarketplacePage({
 
   // Check if selected items have official items
   const hasOfficialWorkflows = templates
-    .filter(t => templateSelection.selectedIds.has(t.id))
-    .some(t => t.is_official);
+    ?.filter(t => templateSelection.selectedIds.has(t.id))
+    .some(t => t.is_official) ?? false;
 
   const hasOfficialAgents = agents
     .filter(a => agentSelection.selectedIds.has(a.id))
@@ -408,7 +408,7 @@ export default function MarketplacePage({
           />
         ) : activeTab === 'repository' && repositorySubTab === 'workflows' ? (
           <TemplateGrid
-            items={templates}
+            items={templates ?? []}
             selectedIds={templateSelection.selectedIds}
             type="template"
             onToggleSelect={templateSelection.toggle}

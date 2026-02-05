@@ -354,7 +354,7 @@ describe('defaultAdapters', () => {
       expect(mockWebSocket).toHaveBeenCalledWith('ws://localhost:8000')
 
       if (originalWebSocket) {
-        ;(global as any).WebSocket = originalWebSocket
+        (global as any).WebSocket = originalWebSocket
       }
     })
   })
@@ -543,7 +543,7 @@ describe('defaultAdapters', () => {
       expect(() => adapter.log('test')).not.toThrow()
 
       if (originalConsole) {
-        ;(global as any).console = originalConsole
+        (global as any).console = originalConsole
       }
     })
 

@@ -4,7 +4,6 @@
  * DRY: Reusable component for workflow and agent action buttons
  */
 
-import React from 'react'
 import { Download, Trash2 } from 'lucide-react'
 
 interface ActionButtonsProps {

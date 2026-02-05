@@ -84,7 +84,7 @@ describe('ResetPasswordPage', () => {
   })
 
   it('should handle password reset', async () => {
-    ;(global.fetch as jest.Mock).mockResolvedValue({
+    (global.fetch as jest.Mock).mockResolvedValue({
       ok: true,
       json: async () => ({}),
     })
@@ -163,7 +163,7 @@ describe('ResetPasswordPage', () => {
   })
 
   it('should show success message after successful reset', async () => {
-    ;(global.fetch as jest.Mock).mockResolvedValue({
+    (global.fetch as jest.Mock).mockResolvedValue({
       ok: true,
       json: async () => ({}),
     })
@@ -185,7 +185,7 @@ describe('ResetPasswordPage', () => {
   })
 
   it('should handle API error', async () => {
-    ;(global.fetch as jest.Mock).mockResolvedValue({
+    (global.fetch as jest.Mock).mockResolvedValue({
       ok: false,
       json: async () => ({ detail: 'Invalid token' }),
     })

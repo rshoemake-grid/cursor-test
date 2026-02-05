@@ -8,7 +8,6 @@
 import type { WebSocketFactory, WindowLocation } from '../../types/adapters'
 import {
   getWebSocketStateText,
-  isTemporaryExecutionId,
   isExecutionTerminated,
   shouldSkipConnection,
   buildWebSocketUrl,
@@ -19,6 +18,7 @@ import {
   type WebSocketMessage,
   type MessageHandlerOptions
 } from '../useWebSocket.utils'
+import { isTemporaryExecutionId } from './executionIdValidation'
 
 export interface WebSocketCallbacks {
   onLog?: (log: WebSocketMessage['log']) => void

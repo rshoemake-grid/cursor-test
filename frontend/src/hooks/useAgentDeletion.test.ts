@@ -1993,7 +1993,7 @@ describe('useAgentDeletion', () => {
 
   describe('deleteSelectedAgents - confirmation cancellation branches', () => {
     it('should return early when partial delete confirmation is cancelled', async () => {
-      ;(showConfirm as jest.MockedFunction<typeof showConfirm>).mockResolvedValue(false)
+      (showConfirm as jest.MockedFunction<typeof showConfirm>).mockResolvedValue(false)
 
       const { result } = renderHook(() =>
         useAgentDeletion({
@@ -2022,7 +2022,7 @@ describe('useAgentDeletion', () => {
     })
 
     it('should return early when full delete confirmation is cancelled', async () => {
-      ;(showConfirm as jest.MockedFunction<typeof showConfirm>).mockResolvedValue(false)
+      (showConfirm as jest.MockedFunction<typeof showConfirm>).mockResolvedValue(false)
 
       mockStorage.getItem.mockReturnValue(JSON.stringify([
         { id: 'agent-1', name: 'User Agent', author_id: 'user-123', is_official: false },
@@ -2311,7 +2311,7 @@ describe('useAgentDeletion', () => {
     })
 
     it('should return early when confirmation is cancelled for repository agents', async () => {
-      ;(showConfirm as jest.MockedFunction<typeof showConfirm>).mockResolvedValue(false)
+      (showConfirm as jest.MockedFunction<typeof showConfirm>).mockResolvedValue(false)
 
       const { result } = renderHook(() =>
         useRepositoryAgentDeletion({
@@ -2987,7 +2987,7 @@ describe('useAgentDeletion', () => {
 
   describe('deleteSelectedAgents - confirmation cancellation branches', () => {
     it('should return early when partial delete confirmation is cancelled', async () => {
-      ;(showConfirm as jest.MockedFunction<typeof showConfirm>).mockResolvedValue(false)
+      (showConfirm as jest.MockedFunction<typeof showConfirm>).mockResolvedValue(false)
 
       const { result } = renderHook(() =>
         useAgentDeletion({
@@ -3023,7 +3023,7 @@ describe('useAgentDeletion', () => {
     })
 
     it('should return early when full delete confirmation is cancelled', async () => {
-      ;(showConfirm as jest.MockedFunction<typeof showConfirm>).mockResolvedValue(false)
+      (showConfirm as jest.MockedFunction<typeof showConfirm>).mockResolvedValue(false)
 
       mockStorage.getItem.mockReturnValue(JSON.stringify([
         { id: 'agent-1', name: 'User Agent', author_id: 'user-123', is_official: false },

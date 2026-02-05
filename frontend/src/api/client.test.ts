@@ -150,7 +150,7 @@ describe('createApiClient', () => {
     })
 
     it('should delete workflow', async () => {
-      ;(mockInstance.delete as jest.Mock).mockResolvedValue({})
+      (mockInstance.delete as jest.Mock).mockResolvedValue({})
 
       const api = createApiClient()
       await api.deleteWorkflow('1')
@@ -209,7 +209,7 @@ describe('createApiClient', () => {
 
   describe('Templates', () => {
     it('should delete template', async () => {
-      ;(mockInstance.delete as jest.Mock).mockResolvedValue({})
+      (mockInstance.delete as jest.Mock).mockResolvedValue({})
 
       const api = createApiClient()
       await api.deleteTemplate('template-1')

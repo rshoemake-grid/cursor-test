@@ -1,6 +1,6 @@
 // Shared test setup for useWebSocket tests
 // Jest globals - no import needed
-import { renderHook, waitFor, act } from '@testing-library/react'
+import { waitFor, act } from '@testing-library/react'
 
 // Helper to ensure all waitFor calls have timeouts
 export const waitForWithTimeout = (callback: () => void | Promise<void>, timeout = 2000) => {
@@ -19,7 +19,6 @@ export const advanceTimersByTime = async (ms: number) => {
 
 import { useWebSocket } from './useWebSocket'
 import { logger } from '../utils/logger'
-import type { WindowLocation } from '../types/adapters'
 
 // Mock logger
 jest.mock('../utils/logger', () => ({
@@ -58,7 +57,7 @@ export class MockWebSocket {
     }, 10)
   }
 
-  send(data: string) {
+  send(_data: string) {
     // Mock send
   }
 
@@ -124,7 +123,7 @@ export class MockWebSocket {
 }
 
 // Store WebSocket instances for testing
-export let wsInstances: MockWebSocket[] = []
+export const wsInstances: MockWebSocket[] = []
 
 // Replace global WebSocket
 const OriginalWebSocket = global.WebSocket

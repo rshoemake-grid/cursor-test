@@ -44,25 +44,25 @@ describe('storageHelpers - Mutation Killers', () => {
     })
 
     it('should verify exact falsy check - storage exists (should not return default)', () => {
-      ;(mockStorage.getItem as jest.Mock).mockReturnValue('{"value": "test"}')
+      (mockStorage.getItem as jest.Mock).mockReturnValue('{"value": "test"}')
       const result = safeStorageGet(mockStorage, 'key', 'default')
       expect(result).toEqual({ value: 'test' })
     })
 
     it('should verify exact OR - item === null', () => {
-      ;(mockStorage.getItem as jest.Mock).mockReturnValue(null)
+      (mockStorage.getItem as jest.Mock).mockReturnValue(null)
       const result = safeStorageGet(mockStorage, 'key', 'default')
       expect(result).toBe('default')
     })
 
     it('should verify exact OR - item === undefined', () => {
-      ;(mockStorage.getItem as jest.Mock).mockReturnValue(undefined)
+      (mockStorage.getItem as jest.Mock).mockReturnValue(undefined)
       const result = safeStorageGet(mockStorage, 'key', 'default')
       expect(result).toBe('default')
     })
 
     it('should verify exact OR - item exists (should not return default)', () => {
-      ;(mockStorage.getItem as jest.Mock).mockReturnValue('{"value": "test"}')
+      (mockStorage.getItem as jest.Mock).mockReturnValue('{"value": "test"}')
       const result = safeStorageGet(mockStorage, 'key', 'default')
       expect(result).toEqual({ value: 'test' })
     })
@@ -131,31 +131,31 @@ describe('storageHelpers - Mutation Killers', () => {
     })
 
     it('should verify exact falsy check - storage exists (should check)', () => {
-      ;(mockStorage.getItem as jest.Mock).mockReturnValue('value')
+      (mockStorage.getItem as jest.Mock).mockReturnValue('value')
       const result = safeStorageHas(mockStorage, 'key')
       expect(result).toBe(true)
     })
 
     it('should verify exact AND - item !== null && item !== undefined (both true)', () => {
-      ;(mockStorage.getItem as jest.Mock).mockReturnValue('value')
+      (mockStorage.getItem as jest.Mock).mockReturnValue('value')
       const result = safeStorageHas(mockStorage, 'key')
       expect(result).toBe(true)
     })
 
     it('should verify exact AND - item === null (first false)', () => {
-      ;(mockStorage.getItem as jest.Mock).mockReturnValue(null)
+      (mockStorage.getItem as jest.Mock).mockReturnValue(null)
       const result = safeStorageHas(mockStorage, 'key')
       expect(result).toBe(false)
     })
 
     it('should verify exact AND - item === undefined (second false)', () => {
-      ;(mockStorage.getItem as jest.Mock).mockReturnValue(undefined)
+      (mockStorage.getItem as jest.Mock).mockReturnValue(undefined)
       const result = safeStorageHas(mockStorage, 'key')
       expect(result).toBe(false)
     })
 
     it('should verify exact AND - item is empty string (should be true - not null/undefined)', () => {
-      ;(mockStorage.getItem as jest.Mock).mockReturnValue('')
+      (mockStorage.getItem as jest.Mock).mockReturnValue('')
       const result = safeStorageHas(mockStorage, 'key')
       expect(result).toBe(true)
     })
@@ -208,14 +208,14 @@ describe('storageHelpers - Mutation Killers', () => {
 
   describe('Error handling - exact method calls', () => {
     it('should verify exact method call - JSON.parse in safeStorageGet', () => {
-      ;(mockStorage.getItem as jest.Mock).mockReturnValue('{"value": "test"}')
+      (mockStorage.getItem as jest.Mock).mockReturnValue('{"value": "test"}')
       safeStorageGet(mockStorage, 'key', 'default')
       // Should parse successfully
       expect(handleStorageError).not.toHaveBeenCalled()
     })
 
     it('should verify exact method call - JSON.parse throws (should handle error)', () => {
-      ;(mockStorage.getItem as jest.Mock).mockReturnValue('invalid json')
+      (mockStorage.getItem as jest.Mock).mockReturnValue('invalid json')
       const result = safeStorageGet(mockStorage, 'key', 'default')
       expect(result).toBe('default')
       expect(handleStorageError).toHaveBeenCalled()
@@ -227,7 +227,7 @@ describe('storageHelpers - Mutation Killers', () => {
     })
 
     it('should verify exact method call - storage.setItem throws (should handle error)', () => {
-      ;(mockStorage.setItem as jest.Mock).mockImplementation(() => {
+      (mockStorage.setItem as jest.Mock).mockImplementation(() => {
         throw new Error('Quota exceeded')
       })
       const result = safeStorageSet(mockStorage, 'key', 'value')
@@ -241,7 +241,7 @@ describe('storageHelpers - Mutation Killers', () => {
     })
 
     it('should verify exact method call - storage.removeItem throws (should handle error)', () => {
-      ;(mockStorage.removeItem as jest.Mock).mockImplementation(() => {
+      (mockStorage.removeItem as jest.Mock).mockImplementation(() => {
         throw new Error('Storage error')
       })
       const result = safeStorageRemove(mockStorage, 'key')
@@ -250,13 +250,13 @@ describe('storageHelpers - Mutation Killers', () => {
     })
 
     it('should verify exact method call - storage.getItem in safeStorageHas', () => {
-      ;(mockStorage.getItem as jest.Mock).mockReturnValue('value')
+      (mockStorage.getItem as jest.Mock).mockReturnValue('value')
       safeStorageHas(mockStorage, 'key')
       expect(mockStorage.getItem).toHaveBeenCalledWith('key')
     })
 
     it('should verify exact method call - storage.getItem throws (should handle error)', () => {
-      ;(mockStorage.getItem as jest.Mock).mockImplementation(() => {
+      (mockStorage.getItem as jest.Mock).mockImplementation(() => {
         throw new Error('Storage error')
       })
       const result = safeStorageHas(mockStorage, 'key')
@@ -270,7 +270,7 @@ describe('storageHelpers - Mutation Killers', () => {
     })
 
     it('should verify exact method call - storage.clear throws (should handle error)', () => {
-      ;(mockStorage.clear as jest.Mock).mockImplementation(() => {
+      (mockStorage.clear as jest.Mock).mockImplementation(() => {
         throw new Error('Clear error')
       })
       const result = safeStorageClear(mockStorage)
@@ -281,7 +281,7 @@ describe('storageHelpers - Mutation Killers', () => {
 
   describe('Context parameter - exact property access', () => {
     it('should verify context is passed to error handler in safeStorageGet', () => {
-      ;(mockStorage.getItem as jest.Mock).mockReturnValue('invalid json')
+      (mockStorage.getItem as jest.Mock).mockReturnValue('invalid json')
       safeStorageGet(mockStorage, 'key', 'default', 'TestContext')
       expect(handleStorageError).toHaveBeenCalledWith(
         expect.any(Error),
@@ -292,7 +292,7 @@ describe('storageHelpers - Mutation Killers', () => {
     })
 
     it('should verify context is passed to error handler in safeStorageSet', () => {
-      ;(mockStorage.setItem as jest.Mock).mockImplementation(() => {
+      (mockStorage.setItem as jest.Mock).mockImplementation(() => {
         throw new Error('Error')
       })
       safeStorageSet(mockStorage, 'key', 'value', 'TestContext')
@@ -305,7 +305,7 @@ describe('storageHelpers - Mutation Killers', () => {
     })
 
     it('should verify context is passed to error handler in safeStorageRemove', () => {
-      ;(mockStorage.removeItem as jest.Mock).mockImplementation(() => {
+      (mockStorage.removeItem as jest.Mock).mockImplementation(() => {
         throw new Error('Error')
       })
       safeStorageRemove(mockStorage, 'key', 'TestContext')
@@ -318,7 +318,7 @@ describe('storageHelpers - Mutation Killers', () => {
     })
 
     it('should verify context is passed to error handler in safeStorageHas', () => {
-      ;(mockStorage.getItem as jest.Mock).mockImplementation(() => {
+      (mockStorage.getItem as jest.Mock).mockImplementation(() => {
         throw new Error('Error')
       })
       safeStorageHas(mockStorage, 'key', 'TestContext')
@@ -331,7 +331,7 @@ describe('storageHelpers - Mutation Killers', () => {
     })
 
     it('should verify context is passed to error handler in safeStorageClear', () => {
-      ;(mockStorage.clear as jest.Mock).mockImplementation(() => {
+      (mockStorage.clear as jest.Mock).mockImplementation(() => {
         throw new Error('Error')
       })
       safeStorageClear(mockStorage, 'TestContext')

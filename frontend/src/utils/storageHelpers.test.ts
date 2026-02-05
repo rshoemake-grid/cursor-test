@@ -34,26 +34,26 @@ describe('storageHelpers', () => {
     })
 
     it('should return parsed value when item exists', () => {
-      ;(mockStorage.getItem as jest.Mock).mockReturnValue('{"value": "test"}')
+      (mockStorage.getItem as jest.Mock).mockReturnValue('{"value": "test"}')
       const result = safeStorageGet(mockStorage, 'key', 'default')
       expect(result).toEqual({ value: 'test' })
     })
 
     it('should return default value when item is null', () => {
-      ;(mockStorage.getItem as jest.Mock).mockReturnValue(null)
+      (mockStorage.getItem as jest.Mock).mockReturnValue(null)
       const result = safeStorageGet(mockStorage, 'key', 'default')
       expect(result).toBe('default')
     })
 
     it('should return default value on parse error', () => {
-      ;(mockStorage.getItem as jest.Mock).mockReturnValue('invalid json')
+      (mockStorage.getItem as jest.Mock).mockReturnValue('invalid json')
       const result = safeStorageGet(mockStorage, 'key', 'default')
       expect(result).toBe('default')
       expect(handleStorageError).toHaveBeenCalled()
     })
 
     it('should include context in error handling', () => {
-      ;(mockStorage.getItem as jest.Mock).mockReturnValue('invalid json')
+      (mockStorage.getItem as jest.Mock).mockReturnValue('invalid json')
       safeStorageGet(mockStorage, 'key', 'default', 'TestContext')
       expect(handleStorageError).toHaveBeenCalledWith(
         expect.any(Error),
@@ -82,7 +82,7 @@ describe('storageHelpers', () => {
     })
 
     it('should handle setItem errors', () => {
-      ;(mockStorage.setItem as jest.Mock).mockImplementation(() => {
+      (mockStorage.setItem as jest.Mock).mockImplementation(() => {
         throw new Error('Quota exceeded')
       })
       const result = safeStorageSet(mockStorage, 'key', 'value')
@@ -91,7 +91,7 @@ describe('storageHelpers', () => {
     })
 
     it('should include context in error handling', () => {
-      ;(mockStorage.setItem as jest.Mock).mockImplementation(() => {
+      (mockStorage.setItem as jest.Mock).mockImplementation(() => {
         throw new Error('Quota exceeded')
       })
       safeStorageSet(mockStorage, 'key', 'value', 'TestContext')
@@ -117,7 +117,7 @@ describe('storageHelpers', () => {
     })
 
     it('should handle removeItem errors', () => {
-      ;(mockStorage.removeItem as jest.Mock).mockImplementation(() => {
+      (mockStorage.removeItem as jest.Mock).mockImplementation(() => {
         throw new Error('Storage error')
       })
       const result = safeStorageRemove(mockStorage, 'key')
@@ -126,7 +126,7 @@ describe('storageHelpers', () => {
     })
 
     it('should include context in error handling', () => {
-      ;(mockStorage.removeItem as jest.Mock).mockImplementation(() => {
+      (mockStorage.removeItem as jest.Mock).mockImplementation(() => {
         throw new Error('Storage error')
       })
       safeStorageRemove(mockStorage, 'key', 'TestContext')
@@ -146,19 +146,19 @@ describe('storageHelpers', () => {
     })
 
     it('should return true when item exists', () => {
-      ;(mockStorage.getItem as jest.Mock).mockReturnValue('value')
+      (mockStorage.getItem as jest.Mock).mockReturnValue('value')
       const result = safeStorageHas(mockStorage, 'key')
       expect(result).toBe(true)
     })
 
     it('should return false when item does not exist', () => {
-      ;(mockStorage.getItem as jest.Mock).mockReturnValue(null)
+      (mockStorage.getItem as jest.Mock).mockReturnValue(null)
       const result = safeStorageHas(mockStorage, 'key')
       expect(result).toBe(false)
     })
 
     it('should handle getItem errors', () => {
-      ;(mockStorage.getItem as jest.Mock).mockImplementation(() => {
+      (mockStorage.getItem as jest.Mock).mockImplementation(() => {
         throw new Error('Storage error')
       })
       const result = safeStorageHas(mockStorage, 'key')
@@ -167,13 +167,13 @@ describe('storageHelpers', () => {
     })
 
     it('should return false when item is undefined', () => {
-      ;(mockStorage.getItem as jest.Mock).mockReturnValue(undefined)
+      (mockStorage.getItem as jest.Mock).mockReturnValue(undefined)
       const result = safeStorageHas(mockStorage, 'key')
       expect(result).toBe(false)
     })
 
     it('should include context in error handling', () => {
-      ;(mockStorage.getItem as jest.Mock).mockImplementation(() => {
+      (mockStorage.getItem as jest.Mock).mockImplementation(() => {
         throw new Error('Storage error')
       })
       safeStorageHas(mockStorage, 'key', 'TestContext')
@@ -211,7 +211,7 @@ describe('storageHelpers', () => {
     })
 
     it('should handle clear errors', () => {
-      ;((mockStorage as any).clear as jest.Mock).mockImplementation(() => {
+      ((mockStorage as any).clear as jest.Mock).mockImplementation(() => {
         throw new Error('Clear error')
       })
       const result = safeStorageClear(mockStorage)
@@ -220,7 +220,7 @@ describe('storageHelpers', () => {
     })
 
     it('should include context in error handling', () => {
-      ;((mockStorage as any).clear as jest.Mock).mockImplementation(() => {
+      ((mockStorage as any).clear as jest.Mock).mockImplementation(() => {
         throw new Error('Clear error')
       })
       safeStorageClear(mockStorage, 'TestContext')
@@ -235,44 +235,44 @@ describe('storageHelpers', () => {
 
   describe('edge cases', () => {
     it('should handle safeStorageGet with undefined item', () => {
-      ;(mockStorage.getItem as jest.Mock).mockReturnValue(undefined)
+      (mockStorage.getItem as jest.Mock).mockReturnValue(undefined)
       const result = safeStorageGet(mockStorage, 'key', 'default')
       expect(result).toBe('default')
     })
 
     it('should handle safeStorageGet with empty string item', () => {
-      ;(mockStorage.getItem as jest.Mock).mockReturnValue('')
+      (mockStorage.getItem as jest.Mock).mockReturnValue('')
       const result = safeStorageGet(mockStorage, 'key', 'default')
       // Empty string is falsy, should return default
       expect(result).toBe('default')
     })
 
     it('should handle safeStorageGet with valid JSON string "null"', () => {
-      ;(mockStorage.getItem as jest.Mock).mockReturnValue('null')
+      (mockStorage.getItem as jest.Mock).mockReturnValue('null')
       const result = safeStorageGet(mockStorage, 'key', 'default')
       expect(result).toBe(null)
     })
 
     it('should handle safeStorageGet with valid JSON string "false"', () => {
-      ;(mockStorage.getItem as jest.Mock).mockReturnValue('false')
+      (mockStorage.getItem as jest.Mock).mockReturnValue('false')
       const result = safeStorageGet(mockStorage, 'key', 'default')
       expect(result).toBe(false)
     })
 
     it('should handle safeStorageGet with valid JSON string "0"', () => {
-      ;(mockStorage.getItem as jest.Mock).mockReturnValue('0')
+      (mockStorage.getItem as jest.Mock).mockReturnValue('0')
       const result = safeStorageGet(mockStorage, 'key', 'default')
       expect(result).toBe(0)
     })
 
     it('should handle safeStorageGet with valid JSON string empty array', () => {
-      ;(mockStorage.getItem as jest.Mock).mockReturnValue('[]')
+      (mockStorage.getItem as jest.Mock).mockReturnValue('[]')
       const result = safeStorageGet(mockStorage, 'key', 'default')
       expect(result).toEqual([])
     })
 
     it('should handle safeStorageGet with valid JSON string empty object', () => {
-      ;(mockStorage.getItem as jest.Mock).mockReturnValue('{}')
+      (mockStorage.getItem as jest.Mock).mockReturnValue('{}')
       const result = safeStorageGet(mockStorage, 'key', 'default')
       expect(result).toEqual({})
     })
@@ -314,7 +314,7 @@ describe('storageHelpers', () => {
     })
 
     it('should handle safeStorageHas with empty string', () => {
-      ;(mockStorage.getItem as jest.Mock).mockReturnValue('')
+      (mockStorage.getItem as jest.Mock).mockReturnValue('')
       const result = safeStorageHas(mockStorage, 'key')
       // Empty string is truthy, so should return true
       expect(result).toBe(true)
