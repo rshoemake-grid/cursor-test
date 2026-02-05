@@ -11,6 +11,13 @@ import { useAgentsData } from './useAgentsData'
 import { useRepositoryAgentsData } from './useRepositoryAgentsData'
 import { useWorkflowsOfWorkflowsData } from './useWorkflowsOfWorkflowsData'
 import { useDataFetching } from './utils/useDataFetching'
+import {
+  shouldLoadTemplates,
+  shouldLoadRepositoryAgents,
+  shouldLoadWorkflowsOfWorkflows,
+  shouldLoadAgents,
+  calculateLoadingState,
+} from './utils/marketplaceTabValidation'
 
 interface Template {
   id: string
@@ -160,23 +167,26 @@ export function useMarketplaceData({
   }, [repositoryAgentsFetching.data])
 
   // Determine loading state based on active tab
-  const loading = 
-    (activeTab === 'repository' && repositorySubTab === 'workflows' && templatesFetching.loading) ||
-    (activeTab === 'repository' && repositorySubTab === 'agents' && repositoryAgentsFetching.loading) ||
-    (activeTab === 'workflows-of-workflows' && workflowsOfWorkflowsFetching.loading) ||
-    (activeTab === 'agents' && agentsFetching.loading)
+  // Use extracted validation functions - mutation-resistant
+  const loading = calculateLoadingState(
+    activeTab,
+    repositorySubTab,
+    templatesFetching.loading,
+    repositoryAgentsFetching.loading,
+    workflowsOfWorkflowsFetching.loading,
+    agentsFetching.loading
+  )
 
   // Auto-fetch based on active tab
+  // Use extracted validation functions - mutation-resistant
   useEffect(() => {
-    if (activeTab === 'repository') {
-      if (repositorySubTab === 'workflows') {
-        templatesFetching.refetch()
-      } else {
-        repositoryAgentsFetching.refetch()
-      }
-    } else if (activeTab === 'workflows-of-workflows') {
+    if (shouldLoadTemplates(activeTab, repositorySubTab)) {
+      templatesFetching.refetch()
+    } else if (shouldLoadRepositoryAgents(activeTab, repositorySubTab)) {
+      repositoryAgentsFetching.refetch()
+    } else if (shouldLoadWorkflowsOfWorkflows(activeTab)) {
       workflowsOfWorkflowsFetching.refetch()
-    } else {
+    } else if (shouldLoadAgents(activeTab)) {
       agentsFetching.refetch()
     }
   }, [activeTab, repositorySubTab, templatesFetching.refetch, workflowsOfWorkflowsFetching.refetch, agentsFetching.refetch, repositoryAgentsFetching.refetch])
