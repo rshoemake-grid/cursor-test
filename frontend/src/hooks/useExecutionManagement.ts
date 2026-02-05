@@ -45,11 +45,17 @@ export function useExecutionManagement({
 
   // Handle execution start - add to active tab's executions
   const handleExecutionStart = useCallback((executionId: string) => {
-    setTabs(prev => stateManager.handleExecutionStart(prev, activeTabId, executionId))
+    // Early return if no active tab - state manager will return tabs unchanged
+    const updatedTabs = stateManager.handleExecutionStart(tabs, activeTabId, executionId)
+    
+    // Only call setTabs if tabs actually changed (active tab was found)
+    if (updatedTabs !== tabs) {
+      setTabs(updatedTabs)
 
-    // Also call parent callback if provided
-    if (onExecutionStart) {
-      onExecutionStart(executionId)
+      // Also call parent callback if provided
+      if (onExecutionStart) {
+        onExecutionStart(executionId)
+      }
     }
   }, [tabs, activeTabId, setTabs, onExecutionStart, stateManager])
 

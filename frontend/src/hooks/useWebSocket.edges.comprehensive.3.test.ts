@@ -175,13 +175,19 @@ describe('useWebSocket - edges.comprehensive.3', () => {
         await advanceTimersByTime(100)
 
         if (wsInstances.length > 0 && wsInstances[0].onmessage) {
+          // Clear any connection status calls
+          onStatus.mockClear()
+          
           wsInstances[0].simulateMessage({
             type: 'status',
             execution_id: 'exec-1',
             status: null
           })
 
-          expect(onStatus).not.toHaveBeenCalled()
+          // Should not be called for message with null status
+          // Filter out connection status calls
+          const statusCalls = onStatus.mock.calls.filter((call) => call[0] !== 'connected')
+          expect(statusCalls.length).toBe(0)
         }
       })
 

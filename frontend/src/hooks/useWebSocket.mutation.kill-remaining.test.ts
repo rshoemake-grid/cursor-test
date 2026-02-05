@@ -191,9 +191,9 @@ describe('useWebSocket - Kill Remaining Mutants', () => {
 
       await advanceTimersByTime(100)
 
-      // Verify exact logger.error call format: `[WebSocket] Failed to create connection for execution ${executionId}:`
+      // Verify exact logger.error call format: `Failed to create connection for execution ${executionId}`
       expect(logger.error).toHaveBeenCalledWith(
-        expect.stringContaining('[WebSocket] Failed to create connection for execution'),
+        expect.stringContaining('Failed to create connection for execution'),
         expect.anything()
       )
       expect(logger.error).toHaveBeenCalledWith(
@@ -1342,16 +1342,29 @@ describe('useWebSocket - Kill Remaining Mutants', () => {
             await advanceTimersByTime(50)
           })
 
+          // Clear logger before close to only check calls after close
+          ;(logger.debug as jest.Mock).mockClear()
+
           // Close with wasClean=true and code=1000
           await act(async () => {
-            ws.simulateClose({ code: 1000, wasClean: true, reason: 'Normal closure' })
-            await advanceTimersByTime(50)
+            ws.simulateClose(1000, 'Normal closure', true) // code, reason, wasClean
+            await advanceTimersByTime(200) // Wait for close event to be fully processed
           })
 
           // Should not reconnect when wasClean && code === 1000
-          expect(logger.debug).toHaveBeenCalledWith(
-            expect.stringContaining('Connection closed cleanly, not reconnecting')
+          // Check for exact message format
+          const cleanCalls = (logger.debug as jest.Mock).mock.calls.filter((call: any[]) => 
+            call[0] === '[WebSocket] Connection closed cleanly, not reconnecting'
           )
+          
+          // Verify the message was logged (mutation test for wasClean && code === 1000)
+          expect(cleanCalls.length).toBeGreaterThan(0)
+          
+          // Also verify no reconnection was attempted
+          const reconnectCalls = (logger.debug as jest.Mock).mock.calls.filter((call: any[]) => 
+            call[0]?.includes('Reconnecting in')
+          )
+          expect(reconnectCalls.length).toBe(0) // Should not reconnect when wasClean && code === 1000
         }
       })
 

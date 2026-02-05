@@ -250,9 +250,9 @@ describe('useMarketplaceData - Logging', () => {
         expect(mockLoggerError).toHaveBeenCalled()
       })
 
-      // Verify exact error message string
+      // Verify exact error message string (now uses generic useDataFetching hook)
       expect(mockLoggerError).toHaveBeenCalledWith(
-        'Failed to fetch templates:',
+        'Data fetch failed:',
         expect.any(Error)
       )
     })
@@ -278,9 +278,9 @@ describe('useMarketplaceData - Logging', () => {
         expect(mockLoggerError).toHaveBeenCalled()
       })
 
-      // Verify exact error message string
+      // Verify exact error message string (now uses generic useDataFetching hook)
       expect(mockLoggerError).toHaveBeenCalledWith(
-        'Failed to fetch workflows of workflows:',
+        'Data fetch failed:',
         expect.any(Error)
       )
     })
@@ -339,9 +339,9 @@ describe('useMarketplaceData - Logging', () => {
         expect(mockLoggerError).toHaveBeenCalled()
       })
 
-      // Verify exact error message string
+      // Verify exact error message string (now uses generic useDataFetching hook)
       expect(mockLoggerError).toHaveBeenCalledWith(
-        'Failed to fetch agents:',
+        'Data fetch failed:',
         expect.any(Error)
       )
     })

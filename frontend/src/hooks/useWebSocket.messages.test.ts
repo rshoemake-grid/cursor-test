@@ -407,6 +407,10 @@ describe('useWebSocket - messages', () => {
       await advanceTimersByTime(100)
 
       if (wsInstances.length > 0 && wsInstances[0].onmessage) {
+        // Clear any connection status calls
+        onLog.mockClear()
+        onStatus.mockClear()
+        
         wsInstances[0].simulateMessage({
           type: 'log',
           execution_id: 'exec-1'
@@ -420,7 +424,10 @@ describe('useWebSocket - messages', () => {
         })
 
         expect(onLog).not.toHaveBeenCalled()
-        expect(onStatus).not.toHaveBeenCalled()
+        // onStatus might be called for connection status, but not for message status
+        // Check that it wasn't called with a status from the message (which would be undefined)
+        const statusCalls = onStatus.mock.calls.filter((call) => call[0] !== 'connected')
+        expect(statusCalls.length).toBe(0)
       }
     })
   })

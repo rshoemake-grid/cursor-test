@@ -85,8 +85,8 @@ describe('useMarketplaceData - Error Handling', () => {
         expect(result.current.loading).toBe(false)
       })
 
-      // Verify error was logged with exact message
-      expect(mockLoggerError).toHaveBeenCalledWith('Failed to fetch templates:', networkError)
+      // Verify error was logged with exact message (now uses generic useDataFetching hook)
+      expect(mockLoggerError).toHaveBeenCalledWith('Data fetch failed:', networkError)
       expect(mockLoggerError).toHaveBeenCalledTimes(1)
 
       // Verify loading state is reset
@@ -121,8 +121,8 @@ describe('useMarketplaceData - Error Handling', () => {
         expect(result.current.loading).toBe(false)
       })
 
-      // Verify error was logged
-      expect(mockLoggerError).toHaveBeenCalledWith('Failed to fetch templates:', expect.any(Error))
+      // Verify error was logged (now uses generic useDataFetching hook)
+      expect(mockLoggerError).toHaveBeenCalledWith('Data fetch failed:', expect.any(Error))
       expect(result.current.loading).toBe(false)
     })
 
@@ -175,8 +175,8 @@ describe('useMarketplaceData - Error Handling', () => {
         expect(result.current.loading).toBe(false)
       })
 
-      // Verify outer error was logged with exact message
-      expect(mockLoggerError).toHaveBeenCalledWith('Failed to fetch workflows of workflows:', networkError)
+      // Verify outer error was logged with exact message (now uses generic useDataFetching hook)
+      expect(mockLoggerError).toHaveBeenCalledWith('Data fetch failed:', networkError)
       expect(result.current.loading).toBe(false)
       expect(result.current.workflowsOfWorkflows).toEqual([])
     })
@@ -317,8 +317,8 @@ describe('useMarketplaceData - Error Handling', () => {
         expect(result.current.loading).toBe(false)
       })
 
-      // Verify error was logged with exact message
-      expect(mockLoggerError).toHaveBeenCalledWith('Failed to fetch agents:', storageError)
+      // Verify error was logged with exact message (now uses generic useDataFetching hook)
+      expect(mockLoggerError).toHaveBeenCalledWith('Data fetch failed:', storageError)
       expect(result.current.loading).toBe(false)
     })
 
@@ -520,8 +520,8 @@ describe('useMarketplaceData - Error Handling', () => {
         expect(mockLoggerError).toHaveBeenCalled()
       })
 
-      // Verify exact error message string
-      expect(mockLoggerError).toHaveBeenCalledWith('Failed to fetch templates:', expect.any(Error))
+      // Verify exact error message string (now uses generic useDataFetching hook)
+      expect(mockLoggerError).toHaveBeenCalledWith('Data fetch failed:', expect.any(Error))
     })
 
     it('should log exact error message for fetchWorkflowsOfWorkflows', async () => {
@@ -545,8 +545,8 @@ describe('useMarketplaceData - Error Handling', () => {
         expect(mockLoggerError).toHaveBeenCalled()
       })
 
-      // Verify exact error message string
-      expect(mockLoggerError).toHaveBeenCalledWith('Failed to fetch workflows of workflows:', expect.any(Error))
+      // Verify exact error message string (now uses generic useDataFetching hook)
+      expect(mockLoggerError).toHaveBeenCalledWith('Data fetch failed:', expect.any(Error))
     })
 
     it('should log exact error message for fetchAgents', async () => {
@@ -572,8 +572,8 @@ describe('useMarketplaceData - Error Handling', () => {
         expect(mockLoggerError).toHaveBeenCalled()
       })
 
-      // Verify exact error message string
-      expect(mockLoggerError).toHaveBeenCalledWith('Failed to fetch agents:', expect.any(Error))
+      // Verify exact error message string (now uses generic useDataFetching hook)
+      expect(mockLoggerError).toHaveBeenCalledWith('Data fetch failed:', expect.any(Error))
     })
 
     it('should log exact error message for fetchRepositoryAgents storage error', async () => {

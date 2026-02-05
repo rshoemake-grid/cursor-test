@@ -662,7 +662,7 @@ describe('useWebSocket - No Coverage Paths', () => {
       await advanceTimersByTime(100)
       expect(result.current.isConnected).toBe(false)
       expect(logger.error).toHaveBeenCalledWith(
-        expect.stringContaining('[WebSocket] Failed to create connection'),
+        expect.stringContaining('Failed to create connection for execution'),
         expect.any(Error)
       )
     })

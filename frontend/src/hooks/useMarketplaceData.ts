@@ -131,16 +131,14 @@ export function useMarketplaceData({
   })
 
   // Local state for setters (for backward compatibility)
-  const [templates, setTemplates] = useState<Template[]>(templatesFetching.data || [])
+  const [templates, setTemplates] = useState<Template[] | null>(templatesFetching.data ?? null)
   const [workflowsOfWorkflows, setWorkflowsOfWorkflows] = useState<Template[]>(workflowsOfWorkflowsFetching.data || [])
   const [agents, setAgents] = useState<AgentTemplate[]>(agentsFetching.data || [])
   const [repositoryAgents, setRepositoryAgents] = useState<AgentTemplate[]>(repositoryAgentsFetching.data || [])
 
   // Sync data fetching results to local state
   useEffect(() => {
-    if (templatesFetching.data) {
-      setTemplates(templatesFetching.data)
-    }
+    setTemplates(templatesFetching.data ?? null)
   }, [templatesFetching.data])
 
   useEffect(() => {

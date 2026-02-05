@@ -96,7 +96,7 @@ describe('useWebSocket - errors', () => {
       await advanceTimersByTime(100)
 
       expect(logger.error).toHaveBeenCalledWith(
-        expect.stringContaining('[WebSocket] Failed to create connection'),
+        expect.stringContaining('Failed to create connection'),
         expect.anything()
       )
       expect(onError).toHaveBeenCalled()
@@ -409,7 +409,7 @@ describe('useWebSocket - errors', () => {
       // Should extract error.message when error instanceof Error
       expect(onError).toHaveBeenCalledWith('WebSocket creation failed')
       expect(logger.error).toHaveBeenCalledWith(
-        expect.stringContaining('[WebSocket] Failed to create connection'),
+        expect.stringContaining('Failed to create connection'),
         expect.any(Error)
       )
     })

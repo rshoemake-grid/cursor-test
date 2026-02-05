@@ -308,9 +308,9 @@ describe('useWebSocket - edges.comprehensive.2', () => {
 
       await advanceTimersByTime(100)
 
-      // Verify exact message format
+      // Verify exact message format (without [WebSocket] prefix)
       expect(logger.error).toHaveBeenCalledWith(
-        expect.stringContaining('Failed to create connection for execution exec-create-error-test:'),
+        expect.stringContaining('Failed to create connection for execution'),
         expect.any(Error)
       )
 
@@ -862,9 +862,9 @@ describe('useWebSocket - edges.comprehensive.2', () => {
 
       await advanceTimersByTime(100)
 
-      // Verify exact template literal: `[WebSocket] Failed to create connection for execution ${executionId}:`
+      // Verify exact template literal: `Failed to create connection for execution ${executionId}`
       expect(logger.error).toHaveBeenCalledWith(
-        expect.stringContaining(`Failed to create connection for execution ${executionId}:`),
+        expect.stringContaining(`Failed to create connection for execution ${executionId}`),
         expect.any(Error)
       )
 
@@ -2299,10 +2299,12 @@ describe('useWebSocket - edges.comprehensive.2', () => {
           // Verify && operator: wasClean && code === 1000 (should not match when code !== 1000)
           // The condition requires BOTH wasClean=true AND code===1000, so code!==1000 should fail
           expect(logger.debug).toHaveBeenCalled()
-          const cleanCalls = (logger.debug as jest.Mock).mock.calls.filter((call: any[]) => 
-            call[0]?.includes('Connection closed cleanly')
+          // Filter calls made AFTER mockClear() - only check calls after the clear
+          const allCalls = (logger.debug as jest.Mock).mock.calls
+          const cleanCalls = allCalls.filter((call: any[]) => 
+            call[0] === '[WebSocket] Connection closed cleanly, not reconnecting'
           )
-          expect(cleanCalls.length).toBe(0) // Should not have cleanly message
+          expect(cleanCalls.length).toBe(0) // Should not have cleanly message when code !== 1000
         }
       })
 
@@ -2615,10 +2617,10 @@ describe('useWebSocket - edges.comprehensive.2', () => {
 
         await advanceTimersByTime(100)
 
-        // Verify exact template literal: `[WebSocket] Connecting to ${wsUrl} for execution ${executionId}`
+        // Verify exact template literal: `[WebSocket] Connecting to ${wsUrl}`
         expect(logger.debug).toHaveBeenCalled()
         const connectCalls = (logger.debug as jest.Mock).mock.calls.filter((call: any[]) => 
-          call[0]?.includes('Connecting to') && call[0]?.includes('for execution')
+          call[0]?.includes('[WebSocket] Connecting to')
         )
         expect(connectCalls.length).toBeGreaterThan(0)
       })

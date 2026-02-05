@@ -103,10 +103,16 @@ describe('useWorkflowExecution - No Coverage Paths', () => {
         await new Promise(resolve => setTimeout(resolve, 10))
       })
 
-      // Should handle JSON.parse error in catch block (line 142)
+      // Should handle JSON.parse error in catch block
+      // The error is caught in WorkflowExecutionService.parseExecutionInputs
+      // and re-thrown as a new Error, which is then caught in handleConfirmExecute
       expect(showError).toHaveBeenCalled()
       expect(logger.error).toHaveBeenCalledWith(
-        'Execution setup failed:',
+        '[WorkflowExecution] Failed to parse inputs:',
+        expect.any(Error)
+      )
+      expect(logger.error).toHaveBeenCalledWith(
+        '[WorkflowBuilder] Execution failed:',
         expect.any(Error)
       )
     })

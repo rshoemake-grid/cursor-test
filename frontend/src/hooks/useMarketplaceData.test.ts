@@ -214,7 +214,7 @@ describe('useMarketplaceData', () => {
         await result.current.fetchTemplates()
       })
 
-      expect(mockLoggerError).toHaveBeenCalledWith('Failed to fetch templates:', error)
+      expect(mockLoggerError).toHaveBeenCalledWith('Data fetch failed:', error)
       expect(result.current.loading).toBe(false)
     })
 
