@@ -5,8 +5,9 @@
  */
 
 import type { StorageAdapter, HttpClient } from '../types/adapters'
+// Domain-based imports - Phase 7
 import { buildAuthHeaders } from '../hooks/utils/apiUtils'
-import type { LLMProvider } from '../hooks/useLLMProviders'
+import type { LLMProvider } from '../hooks/providers'
 
 export interface LLMSettings {
   providers: LLMProvider[]

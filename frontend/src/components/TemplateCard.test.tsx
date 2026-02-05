@@ -1,7 +1,8 @@
 import React from 'react'
 import { render, screen, fireEvent } from '@testing-library/react'
 import { TemplateCard } from './TemplateCard'
-import type { Template, AgentTemplate } from '../hooks/useMarketplaceData'
+// Domain-based imports - Phase 7
+import type { Template, AgentTemplate } from '../hooks/marketplace'
 
 describe('TemplateCard', () => {
   const mockTemplate: Template = {

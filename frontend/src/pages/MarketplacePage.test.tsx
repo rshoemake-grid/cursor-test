@@ -4,7 +4,10 @@ import { BrowserRouter } from 'react-router-dom'
 import MarketplacePage from './MarketplacePage'
 import { useAuth } from '../contexts/AuthContext'
 import { api } from '../api/client'
-import { getLocalStorageItem, setLocalStorageItem } from '../hooks/useLocalStorage'
+// Domain-based imports - Phase 7
+// Domain-based imports - Phase 7
+// Domain-based imports - Phase 7
+import { getLocalStorageItem, setLocalStorageItem } from '../hooks/storage'
 import { showSuccess, showError } from '../utils/notifications'
 import { showConfirm } from '../utils/confirm'
 import type { StorageAdapter, HttpClient } from '../types/adapters'
@@ -35,11 +38,15 @@ jest.mock('../utils/confirm', () => ({
   showConfirm: jest.fn(),
 }))
 
-jest.mock('../hooks/useLocalStorage', () => ({
+// Mock storage domain - Phase 7
+jest.mock('../hooks/storage', () => ({
   useLocalStorage: jest.fn(() => ['', jest.fn(), jest.fn()]),
   getLocalStorageItem: jest.fn(),
   setLocalStorageItem: jest.fn(),
   removeLocalStorageItem: jest.fn(),
+  useAutoSave: jest.fn(),
+  useDraftManagement: jest.fn(),
+  loadDraftsFromStorage: jest.fn(),
 }))
 
 const mockUseMarketplaceData = jest.fn(() => ({
@@ -58,21 +65,44 @@ const mockUseMarketplaceData = jest.fn(() => ({
   fetchRepositoryAgents: jest.fn(),
 }))
 
-jest.mock('../hooks/useMarketplaceData', () => ({
+// Mock marketplace domain - Phase 7
+jest.mock('../hooks/marketplace', () => ({
   useMarketplaceData: (...args: any[]) => mockUseMarketplaceData(...args),
-}))
-
-jest.mock('../hooks/useOfficialAgentSeeding', () => ({
   useOfficialAgentSeeding: jest.fn(),
-}))
-
-jest.mock('../hooks/useTemplateOperations', () => ({
   useTemplateOperations: jest.fn(() => ({
     useTemplate: jest.fn(),
     deleteSelectedAgents: jest.fn(),
     deleteSelectedWorkflows: jest.fn(),
     deleteSelectedRepositoryAgents: jest.fn(),
   })),
+  useMarketplaceIntegration: jest.fn(),
+  useMarketplacePublishing: jest.fn(),
+  useMarketplaceDialog: jest.fn(),
+  useTemplatesData: jest.fn(),
+  useAgentsData: jest.fn(),
+  useRepositoryAgentsData: jest.fn(),
+  useWorkflowsOfWorkflowsData: jest.fn(),
+  useTemplateUsage: jest.fn(),
+  useAgentDeletion: jest.fn(),
+  useWorkflowDeletion: jest.fn(),
+  // Export types
+  Template: {} as any,
+  AgentTemplate: {} as any,
+}))
+
+// Mock nodes domain - Phase 7
+jest.mock('../hooks/nodes', () => ({
+  useSelectionManager: jest.fn(() => ({
+    selectedIds: new Set(),
+    setSelectedIds: jest.fn(),
+    toggleSelection: jest.fn(),
+    clearSelection: jest.fn(),
+    isSelected: jest.fn(),
+  })),
+  useNodeSelection: jest.fn(),
+  useNodeOperations: jest.fn(),
+  useNodeForm: jest.fn(),
+  useSelectedNode: jest.fn(),
 }))
 
 const mockNavigate = jest.fn()

@@ -12,11 +12,13 @@ import {
   draftExists,
   type TabDraft,
 } from './draftStorage'
-import { getLocalStorageItem, setLocalStorageItem } from '../useLocalStorage'
+// Domain-based imports - Phase 7
+import { getLocalStorageItem, setLocalStorageItem } from '../storage'
 import { logger } from '../../utils/logger'
 
 // Mock with factory function to ensure fresh mocks per test file
-jest.mock('../useLocalStorage', () => ({
+// Domain-based imports - Phase 7
+jest.mock('../storage', () => ({
   getLocalStorageItem: jest.fn(),
   setLocalStorageItem: jest.fn(),
 }), { virtual: false })

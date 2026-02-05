@@ -7,12 +7,17 @@ const waitForWithTimeout = (callback: () => void | Promise<void>, timeout = 2000
 }
 
 import ExecutionConsole from './ExecutionConsole'
-import { useWebSocket } from '../hooks/useWebSocket'
+// Domain-based imports - Phase 7
+import { useWebSocket } from '../hooks/execution'
 import { logger } from '../utils/logger'
 import type { DocumentAdapter } from '../types/adapters'
 
-// Mock dependencies
-jest.mock('../hooks/useWebSocket')
+// Mock dependencies - Domain-based imports - Phase 7
+jest.mock('../hooks/execution', () => ({
+  useWebSocket: jest.fn(),
+  useWorkflowExecution: jest.fn(),
+  useExecutionManagement: jest.fn(),
+}))
 jest.mock('./WorkflowChat', () => {
   const React = require('react')
   return {

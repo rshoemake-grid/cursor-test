@@ -4,7 +4,8 @@
  */
 
 import { Clock, Heart, TrendingUp } from 'lucide-react'
-import type { Template, AgentTemplate } from '../hooks/useMarketplaceData'
+// Domain-based imports - Phase 7
+import type { Template, AgentTemplate } from '../hooks/marketplace'
 
 interface TemplateCardProps {
   item: Template | AgentTemplate

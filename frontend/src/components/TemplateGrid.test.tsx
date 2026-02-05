@@ -1,7 +1,8 @@
 import React from 'react'
 import { render, screen } from '@testing-library/react'
 import { TemplateGrid } from './TemplateGrid'
-import type { Template, AgentTemplate } from '../hooks/useMarketplaceData'
+// Domain-based imports - Phase 7
+import type { Template, AgentTemplate } from '../hooks/marketplace'
 
 jest.mock('./TemplateCard', () => ({
   TemplateCard: ({ item, isSelected }: { item: Template | AgentTemplate; isSelected: boolean }) => (

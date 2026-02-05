@@ -4,12 +4,13 @@ import React from 'react'
 import { screen, fireEvent, waitFor } from '@testing-library/react'
 import { showConfirm } from '../utils/confirm'
 import { SettingsService } from '../services/SettingsService'
-import { useProviderManagement } from '../hooks/useProviderManagement'
-import { useAutoSave } from '../hooks/useAutoSave'
+// Domain-based imports - Phase 7
+import { useProviderManagement } from '../hooks/providers'
+import { useAutoSave } from '../hooks/storage'
 
 jest.mock('../services/SettingsService')
-jest.mock('../hooks/useProviderManagement')
-jest.mock('../hooks/useAutoSave')
+// Domain-based mocks - Phase 7
+// Domain-based mocks - Phase 7
 const mockUseLLMProviders = jest.fn((options: any) => {
   // Call onLoadComplete immediately to set settingsLoaded to true
   if (options?.onLoadComplete) {
@@ -28,8 +29,16 @@ const mockUseLLMProviders = jest.fn((options: any) => {
     defaultModel: '',
   }
 })
-jest.mock('../hooks/useLLMProviders', () => ({
+
+jest.mock('../hooks/providers', () => ({
+  useProviderManagement: jest.fn(),
   useLLMProviders: (options: any) => mockUseLLMProviders(options),
+}))
+jest.mock('../hooks/storage', () => ({
+  useAutoSave: jest.fn(),
+  useLocalStorage: jest.fn(),
+  getLocalStorageItem: jest.fn(),
+  setLocalStorageItem: jest.fn(),
 }))
 
 const mockUseProviderManagement = useProviderManagement as jest.MockedFunction<typeof useProviderManagement>

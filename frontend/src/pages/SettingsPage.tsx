@@ -6,10 +6,10 @@ import { useAuth } from '../contexts/AuthContext'
 import { Save, Plus, Trash2, CheckCircle, XCircle, Loader, ArrowLeft, Eye, EyeOff, ChevronDown, ChevronRight } from 'lucide-react'
 import type { StorageAdapter, HttpClient, ConsoleAdapter } from '../types/adapters'
 import { defaultAdapters } from '../types/adapters'
-import { useLLMProviders, type LLMProvider } from '../hooks/useLLMProviders'
+// Domain-based imports - Phase 7
+import { useLLMProviders, useProviderManagement, type LLMProvider } from '../hooks/providers'
 import { SettingsService } from '../services/SettingsService'
-import { useProviderManagement } from '../hooks/useProviderManagement'
-import { useAutoSave } from '../hooks/useAutoSave'
+import { useAutoSave } from '../hooks/storage'
 
 const PROVIDER_TEMPLATES = {
   openai: {

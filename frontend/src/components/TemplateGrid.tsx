@@ -4,7 +4,8 @@
  */
 
 import { TemplateCard } from './TemplateCard'
-import type { Template, AgentTemplate } from '../hooks/useMarketplaceData'
+// Domain-based imports - Phase 7
+import type { Template, AgentTemplate } from '../hooks/marketplace'
 
 interface TemplateGridProps {
   items: (Template | AgentTemplate)[]

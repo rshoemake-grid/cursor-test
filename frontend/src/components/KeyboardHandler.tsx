@@ -4,7 +4,8 @@
  * Must be rendered inside ReactFlowProvider
  */
 
-import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts'
+// Domain-based imports - Phase 7
+import { useKeyboardShortcuts } from '../hooks/ui'
 import type { Node } from '@xyflow/react'
 
 interface KeyboardHandlerProps {

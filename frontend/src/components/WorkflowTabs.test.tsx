@@ -28,7 +28,8 @@ import { useAuth } from '../contexts/AuthContext'
 import { api } from '../api/client'
 import { showConfirm } from '../utils/confirm'
 import { showError, showSuccess } from '../utils/notifications'
-import { getLocalStorageItem, setLocalStorageItem } from '../hooks/useLocalStorage'
+// Domain-based imports - Phase 7
+import { getLocalStorageItem, setLocalStorageItem } from '../hooks/storage'
 import type { StorageAdapter, HttpClient } from '../types/adapters'
 
 // Mock dependencies
@@ -55,11 +56,14 @@ jest.mock('../utils/notifications', () => ({
   showSuccess: jest.fn(),
 }))
 
-jest.mock('../hooks/useLocalStorage', () => ({
+// Domain-based imports - Phase 7
+jest.mock('../hooks/storage', () => ({
   useLocalStorage: jest.fn(() => ['', jest.fn(), jest.fn()]),
   getLocalStorageItem: jest.fn(),
   setLocalStorageItem: jest.fn(),
   removeLocalStorageItem: jest.fn(),
+  useAutoSave: jest.fn(),
+  useDraftManagement: jest.fn(),
 }))
 
 jest.mock('./WorkflowBuilder', () => {

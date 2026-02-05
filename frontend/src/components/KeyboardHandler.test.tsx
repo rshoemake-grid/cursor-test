@@ -1,9 +1,16 @@
 import React from 'react'
 import { render } from '@testing-library/react'
 import { KeyboardHandler } from './KeyboardHandler'
-import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts'
+// Domain-based imports - Phase 7
+import { useKeyboardShortcuts } from '../hooks/ui'
 
-jest.mock('../hooks/useKeyboardShortcuts')
+// Domain-based imports - Phase 7
+jest.mock('../hooks/ui', () => ({
+  useKeyboardShortcuts: jest.fn(),
+  useClipboard: jest.fn(),
+  useContextMenu: jest.fn(),
+  useCanvasEvents: jest.fn(),
+}))
 
 const mockUseKeyboardShortcuts = useKeyboardShortcuts as jest.MockedFunction<typeof useKeyboardShortcuts>
 

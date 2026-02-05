@@ -6,7 +6,8 @@
 
 import { useEffect } from 'react'
 import { logger } from '../../utils/logger'
-import type { WorkflowAPIClient } from '../useWorkflowAPI'
+// Domain-based imports - Phase 7
+import type { WorkflowAPIClient } from '../workflow'
 import type { Execution } from '../../contexts/WorkflowTabsContext'
 import {
   isRealExecutionId,

@@ -1,7 +1,8 @@
 import { useState, useRef, useEffect, useMemo } from 'react'
 import { ChevronDown, ChevronUp, MessageSquare, Play, X } from 'lucide-react'
 import WorkflowChat from './WorkflowChat'
-import { useWebSocket } from '../hooks/useWebSocket'
+// Domain-based imports - Phase 7
+import { useWebSocket } from '../hooks/execution'
 import ExecutionStatusBadge from './ExecutionStatusBadge'
 import LogLevelBadge from './LogLevelBadge'
 import { logger } from '../utils/logger'

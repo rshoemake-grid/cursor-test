@@ -1,5 +1,6 @@
 import React, { useRef } from 'react'
-import { useFormField } from '../../hooks/useFormField'
+// Domain-based imports - Phase 7
+import { useFormField } from '../../hooks/forms'
 
 export interface FormFieldProps<T = any> {
   label: string

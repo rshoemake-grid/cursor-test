@@ -1,6 +1,7 @@
 import { SettingsService, type LLMSettings } from './SettingsService'
 import type { StorageAdapter, HttpClient } from '../types/adapters'
-import type { LLMProvider } from '../hooks/useLLMProviders'
+// Domain-based imports - Phase 7
+import type { LLMProvider } from '../hooks/providers'
 import { buildAuthHeaders } from '../hooks/utils/apiUtils'
 
 jest.mock('../hooks/utils/apiUtils', () => ({

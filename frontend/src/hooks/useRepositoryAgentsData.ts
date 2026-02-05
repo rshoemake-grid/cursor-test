@@ -9,7 +9,7 @@ import { STORAGE_KEYS } from '../config/constants'
 import type { StorageAdapter } from '../types/adapters'
 import { applyFilters, sortItems } from './useMarketplaceData.utils'
 import type { AgentTemplate } from './useMarketplaceData'
-import { isStorageAvailable, getStorageItem } from './utils/storageValidation'
+import { isStorageAvailable } from './utils/storageValidation'
 
 interface UseRepositoryAgentsDataOptions {
   storage: StorageAdapter | null
@@ -35,16 +35,15 @@ export function useRepositoryAgentsData({
       return []
     }
     
-    // Use extracted storage utility - mutation-resistant
-    let agentsData: AgentTemplate[] = getStorageItem<AgentTemplate[]>(
-      storage,
-      STORAGE_KEYS.REPOSITORY_AGENTS,
-      []
-    )
-    
-    // Log error if parsing failed (getStorageItem handles it, but we log for debugging)
-    if (agentsData.length === 0 && storage.getItem(STORAGE_KEYS.REPOSITORY_AGENTS)) {
-      logger.error('Failed to load repository agents from storage: invalid JSON')
+    // Try to parse storage data and catch JSON.parse errors
+    let agentsData: AgentTemplate[] = []
+    try {
+      const savedAgents = storage.getItem(STORAGE_KEYS.REPOSITORY_AGENTS)
+      agentsData = savedAgents ? JSON.parse(savedAgents) : []
+    } catch (error) {
+      // Log error with proper format (message + Error object)
+      logger.error('Failed to load repository agents from storage:', error as Error)
+      agentsData = []
     }
     
     // Apply filters and sort

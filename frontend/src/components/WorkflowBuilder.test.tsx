@@ -46,9 +46,13 @@ jest.mock('../utils/confirm', () => ({
   showConfirm: jest.fn(),
 }))
 
-jest.mock('../hooks/useLocalStorage', () => ({
+// Domain-based imports - Phase 7
+jest.mock('../hooks/storage', () => ({
+  useLocalStorage: jest.fn(() => ['', jest.fn(), jest.fn()]),
   getLocalStorageItem: jest.fn(() => ({})),
   setLocalStorageItem: jest.fn(),
+  useAutoSave: jest.fn(),
+  useDraftManagement: jest.fn(),
 }))
 
 jest.mock('./NodePanel', () => {

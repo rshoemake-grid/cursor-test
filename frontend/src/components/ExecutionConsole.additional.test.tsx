@@ -1,11 +1,17 @@
 import React from 'react'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import ExecutionConsole from './ExecutionConsole'
-import { useWebSocket } from '../hooks/useWebSocket'
+// Domain-based imports - Phase 7
+import { useWebSocket } from '../hooks/execution'
 import type { Execution } from '../contexts/WorkflowTabsContext'
 import type { DocumentAdapter } from '../types/adapters'
 
-jest.mock('../hooks/useWebSocket')
+// Domain-based imports - Phase 7
+jest.mock('../hooks/execution', () => ({
+  useWebSocket: jest.fn(),
+  useWorkflowExecution: jest.fn(),
+  useExecutionManagement: jest.fn(),
+}))
 jest.mock('./WorkflowChat', () => ({
   __esModule: true,
   default: function MockWorkflowChat({ workflowId }: { workflowId: string | null }) {

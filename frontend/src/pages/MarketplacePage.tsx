@@ -3,10 +3,9 @@ import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Bot, Workflow } from 'lucide-react';
 import { showError, showSuccess } from '../utils/notifications';
-import { useOfficialAgentSeeding } from '../hooks/useOfficialAgentSeeding';
-import { useMarketplaceData, type Template } from '../hooks/useMarketplaceData';
-import { useTemplateOperations } from '../hooks/useTemplateOperations';
-import { useSelectionManager } from '../hooks/useSelectionManager';
+// Domain-based imports - Phase 7
+import { useOfficialAgentSeeding, useMarketplaceData, useTemplateOperations, type Template } from '../hooks/marketplace';
+import { useSelectionManager } from '../hooks/nodes';
 import { createCardClickHandler, shouldIgnoreClick } from '../utils/cardClickUtils';
 import { MarketplaceActionButtons } from '../components/MarketplaceActionButtons';
 import { TemplateFilters } from '../components/TemplateFilters';

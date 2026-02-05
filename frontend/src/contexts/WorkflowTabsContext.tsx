@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useRef, useMemo, ReactNode, useCallback } from 'react'
-import { getLocalStorageItem } from '../hooks/useLocalStorage'
+// Domain-based imports - Phase 7
+import { getLocalStorageItem } from '../hooks/storage'
 import { showSuccess } from '../utils/notifications'
 import type { StorageAdapter } from '../types/adapters'
 

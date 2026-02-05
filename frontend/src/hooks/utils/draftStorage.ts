@@ -3,7 +3,8 @@
  * Common utilities for loading and saving workflow drafts
  */
 
-import { getLocalStorageItem, setLocalStorageItem } from '../useLocalStorage'
+// Domain-based imports - Phase 7
+import { getLocalStorageItem, setLocalStorageItem } from '../storage'
 import { logger as defaultLogger } from '../../utils/logger'
 import type { Node, Edge } from '@xyflow/react'
 import type { StorageAdapter } from '../../types/adapters'

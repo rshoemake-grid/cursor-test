@@ -15,11 +15,16 @@ const waitForWithTimeout = async (callback: () => void | Promise<void>, timeout 
 }
 
 import ExecutionViewer from './ExecutionViewer'
-import { useWorkflowAPI } from '../hooks/useWorkflowAPI'
+// Domain-based imports - Phase 7
+import { useWorkflowAPI } from '../hooks/workflow'
 import { logger } from '../utils/logger'
 
-// Mock dependencies
-jest.mock('../hooks/useWorkflowAPI')
+// Mock dependencies - Domain-based imports - Phase 7
+jest.mock('../hooks/workflow', () => ({
+  useWorkflowAPI: jest.fn(),
+  useWorkflowState: jest.fn(),
+  useWorkflowLoader: jest.fn(),
+}))
 jest.mock('../utils/logger', () => ({
   logger: {
     debug: jest.fn(),

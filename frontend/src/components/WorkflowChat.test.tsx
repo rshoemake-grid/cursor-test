@@ -20,8 +20,8 @@ jest.mock('../utils/logger', () => ({
   }
 }))
 
-// Mock new utilities
-jest.mock('../hooks/useAuthenticatedApi', () => ({
+// Mock new utilities - Domain-based imports - Phase 7
+jest.mock('../hooks/api', () => ({
   useAuthenticatedApi: jest.fn(() => ({
     authenticatedPost: jest.fn(),
     authenticatedGet: jest.fn(),

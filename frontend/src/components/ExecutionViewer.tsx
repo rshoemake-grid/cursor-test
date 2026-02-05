@@ -4,7 +4,8 @@ import { CheckCircle, XCircle, Clock, AlertCircle } from 'lucide-react'
 // import ExecutionStatusBadge from './ExecutionStatusBadge' // Unused
 import { getExecutionStatusColorLight } from '../utils/executionStatus'
 import { logger } from '../utils/logger'
-import { useWorkflowAPI } from '../hooks/useWorkflowAPI'
+// Domain-based imports - Phase 7
+import { useWorkflowAPI } from '../hooks/workflow'
 
 interface ExecutionViewerProps {
   executionId: string

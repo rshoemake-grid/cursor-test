@@ -23,7 +23,8 @@ interface MarketplaceDialogProps {
 type TabType = 'agents' | 'workflows'
 
 import { TEMPLATE_CATEGORIES, TEMPLATE_DIFFICULTIES, formatCategory, formatDifficulty } from '../config/templateConstants'
-import { usePublishForm } from '../hooks/usePublishForm'
+// Domain-based imports - Phase 7
+import { usePublishForm } from '../hooks/forms'
 
 export default function MarketplaceDialog({ 
   isOpen, 

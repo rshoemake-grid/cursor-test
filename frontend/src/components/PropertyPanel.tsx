@@ -10,11 +10,10 @@ import FirebaseNodeEditor from './editors/FirebaseNodeEditor'
 import BigQueryNodeEditor from './editors/BigQueryNodeEditor'
 import type { StorageAdapter } from '../types/adapters'
 import { defaultAdapters } from '../types/adapters'
-import { useNodeForm } from '../hooks/useNodeForm'
-import { useSelectedNode } from '../hooks/useSelectedNode'
-import { usePanelState } from '../hooks/usePanelState'
-import { useNodeOperations } from '../hooks/useNodeOperations'
-import { useLoopConfig } from '../hooks/useLoopConfig'
+// Domain-based imports - Phase 7
+import { useNodeForm, useSelectedNode, useNodeOperations } from '../hooks/nodes'
+import { usePanelState } from '../hooks/ui'
+import { useLoopConfig } from '../hooks/forms'
 
 interface PropertyPanelProps {
   selectedNodeId: string | null
@@ -26,9 +25,8 @@ interface PropertyPanelProps {
   // Dependency injection
   storage?: StorageAdapter | null
 }
-
-
-import { useLLMProviders } from '../hooks/useLLMProviders'
+// Domain-based imports - Phase 7
+import { useLLMProviders } from '../hooks/providers'
 import { useAuth } from '../contexts/AuthContext'
 
 export default function PropertyPanel({ selectedNodeId, setSelectedNodeId, selectedNodeIds, nodes: nodesProp, onSave, onSaveWorkflow, storage = defaultAdapters.createLocalStorageAdapter() }: PropertyPanelProps) {

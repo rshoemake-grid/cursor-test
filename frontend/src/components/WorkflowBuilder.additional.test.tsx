@@ -7,6 +7,8 @@ import { api } from '../api/client'
 import { showSuccess, showError } from '../utils/notifications'
 import { showConfirm } from '../utils/confirm'
 import type { StorageAdapter } from '../types/adapters'
+// Domain-based imports - Phase 7
+import * as executionHooks from '../hooks/execution'
 
 jest.mock('../utils/logger', () => ({
   logger: {
@@ -85,8 +87,18 @@ jest.mock('./ReactFlowInstanceCapture', () => ({
   ReactFlowInstanceCapture: () => null,
 }))
 
-jest.mock('../hooks/useKeyboardShortcuts', () => ({
+// Mock UI domain - Phase 7
+jest.mock('../hooks/ui', () => ({
   useKeyboardShortcuts: jest.fn(),
+  useClipboard: jest.fn(() => ({
+    clipboardNode: null,
+    onCopy: jest.fn(),
+    onCut: jest.fn(),
+    onPaste: jest.fn(),
+  })),
+  useContextMenu: jest.fn(),
+  useCanvasEvents: jest.fn(),
+  usePanelState: jest.fn(),
 }))
 
 jest.mock('./nodes', () => ({
@@ -106,76 +118,73 @@ jest.mock('@xyflow/react', () => {
   }
 })
 
-// Mock all custom hooks
-jest.mock('../hooks/useWorkflowState', () => ({
-  useWorkflowState: jest.fn(() => ({
-    localWorkflowId: null,
-    setLocalWorkflowId: jest.fn(),
-    localWorkflowName: '',
-    setLocalWorkflowName: jest.fn(),
-    localWorkflowDescription: '',
-    setLocalWorkflowDescription: jest.fn(),
-    variables: {},
-    setVariables: jest.fn(),
-  })),
+// Mock all custom hooks - Domain-based imports - Phase 7
+// These are already mocked above in the domain mocks section
+
+// Mock storage domain - Phase 7
+jest.mock('../hooks/storage', () => {
+  const mockLoadDraftsFromStorage = jest.fn(() => ({}))
+  return {
+    useDraftManagement: jest.fn(() => ({
+      loadDraft: jest.fn(),
+      saveDraft: jest.fn(),
+      clearDraft: jest.fn(),
+    })),
+    loadDraftsFromStorage: mockLoadDraftsFromStorage,
+    useLocalStorage: jest.fn(),
+    useAutoSave: jest.fn(),
+    getLocalStorageItem: jest.fn(),
+    setLocalStorageItem: jest.fn(),
+  }
+})
+
+// Mock workflow domain - Phase 7
+const mockUseWorkflowState = jest.fn(() => ({
+  localWorkflowId: null,
+  setLocalWorkflowId: jest.fn(),
+  localWorkflowName: '',
+  setLocalWorkflowName: jest.fn(),
+  localWorkflowDescription: '',
+  setLocalWorkflowDescription: jest.fn(),
+  variables: {},
+  setVariables: jest.fn(),
+}))
+const mockUseWorkflowPersistence = jest.fn(() => ({
+  saveWorkflow: jest.fn().mockResolvedValue('workflow-1'),
+  exportWorkflow: jest.fn(),
+}))
+const mockUseWorkflowUpdates = jest.fn(() => ({
+  workflowNodeToNode: jest.fn(),
 }))
 
-jest.mock('../hooks/useNodeSelection', () => ({
-  useNodeSelection: jest.fn(() => ({
-    selectedNodeId: null,
-    setSelectedNodeId: jest.fn(),
-    selectedNodeIds: [],
-    handleNodesChange: jest.fn(),
-  })),
-}))
-
-jest.mock('../hooks/useClipboard', () => ({
-  useClipboard: jest.fn(() => ({
-    clipboardNode: null,
-    onCopy: jest.fn(),
-    onCut: jest.fn(),
-    onPaste: jest.fn(),
-  })),
-}))
-
-jest.mock('../hooks/useWorkflowUpdates', () => ({
-  useWorkflowUpdates: jest.fn(() => ({
-    workflowNodeToNode: jest.fn(),
-  })),
-}))
-
-jest.mock('../hooks/useMarketplaceIntegration', () => ({
-  useMarketplaceIntegration: jest.fn(() => ({
-    isAddingAgentsRef: { current: false },
-  })),
-}))
-
-jest.mock('../hooks/useDraftManagement', () => ({
-  useDraftManagement: jest.fn(() => ({
-    saveDraftsToStorage: jest.fn(),
-  })),
-  loadDraftsFromStorage: jest.fn(() => ({})),
-}))
-
-jest.mock('../hooks/useWorkflowPersistence', () => ({
-  useWorkflowPersistence: jest.fn(() => ({
-    saveWorkflow: jest.fn().mockResolvedValue('workflow-1'),
-    exportWorkflow: jest.fn(),
-  })),
-}))
-
-jest.mock('../hooks/useWorkflowExecution', () => ({
-  useWorkflowExecution: jest.fn(() => ({
-    executeWorkflow: jest.fn(),
-    showInputs: false,
-  })),
-}))
-
-jest.mock('../hooks/useWorkflowLoader', () => ({
+jest.mock('../hooks/workflow', () => ({
+  useWorkflowPersistence: (...args: any[]) => mockUseWorkflowPersistence(...args),
   useWorkflowLoader: jest.fn(),
+  useWorkflowUpdateHandler: jest.fn(() => ({
+    handleWorkflowUpdate: jest.fn(),
+  })),
+  useWorkflowState: (...args: any[]) => mockUseWorkflowState(...args),
+  useWorkflowUpdates: (...args: any[]) => mockUseWorkflowUpdates(...args),
+  useWorkflowAPI: jest.fn(),
+  useWorkflowDeletion: jest.fn(),
 }))
 
-jest.mock('../hooks/useCanvasEvents', () => ({
+// Mock execution domain - Phase 7
+const mockUseWorkflowExecution = jest.fn(() => ({
+  executeWorkflow: jest.fn(),
+  showInputs: false,
+}))
+const mockUseExecutionManagement = jest.fn()
+const mockUseWebSocket = jest.fn()
+
+jest.mock('../hooks/execution', () => ({
+  useWorkflowExecution: (...args: any[]) => mockUseWorkflowExecution(...args),
+  useExecutionManagement: (...args: any[]) => mockUseExecutionManagement(...args),
+  useWebSocket: (...args: any[]) => mockUseWebSocket(...args),
+}))
+
+// Mock UI domain - Phase 7
+jest.mock('../hooks/ui', () => ({
   useCanvasEvents: jest.fn(() => ({
     onDrop: jest.fn(),
     onDragOver: jest.fn(),
@@ -185,28 +194,51 @@ jest.mock('../hooks/useCanvasEvents', () => ({
     onEdgeContextMenu: jest.fn(),
     onPaneClick: jest.fn(),
   })),
-}))
-
-jest.mock('../hooks/useContextMenu', () => ({
   useContextMenu: jest.fn(() => ({
     contextMenu: null,
     onClose: jest.fn(),
   })),
-}))
-
-jest.mock('../hooks/useWorkflowUpdateHandler', () => ({
-  useWorkflowUpdateHandler: jest.fn(() => ({
-    handleWorkflowUpdate: jest.fn(),
+  useClipboard: jest.fn(() => ({
+    clipboardNode: null,
+    onCopy: jest.fn(),
+    onCut: jest.fn(),
+    onPaste: jest.fn(),
   })),
+  usePanelState: jest.fn(),
+  useKeyboardShortcuts: jest.fn(),
 }))
 
-jest.mock('../hooks/useMarketplaceDialog', () => ({
+// Mock nodes domain - Phase 7
+const mockUseNodeSelection = jest.fn(() => ({
+  selectedNodeId: null,
+  setSelectedNodeId: jest.fn(),
+  selectedNodeIds: [],
+  handleNodesChange: jest.fn(),
+}))
+
+jest.mock('../hooks/nodes', () => ({
+  useNodeSelection: (...args: any[]) => mockUseNodeSelection(...args),
+  useNodeOperations: jest.fn(),
+  useNodeForm: jest.fn(),
+  useSelectedNode: jest.fn(),
+  useSelectionManager: jest.fn(),
+}))
+
+// Mock marketplace domain - Phase 7
+jest.mock('../hooks/marketplace', () => ({
   useMarketplaceDialog: jest.fn(() => ({
     showMarketplaceDialog: false,
     marketplaceNode: null,
     openDialog: jest.fn(),
     closeDialog: jest.fn(),
   })),
+  useMarketplaceIntegration: jest.fn(() => ({
+    isAddingAgentsRef: { current: false },
+  })),
+  useMarketplaceData: jest.fn(),
+  useMarketplacePublishing: jest.fn(),
+  useTemplateOperations: jest.fn(),
+  useOfficialAgentSeeding: jest.fn(),
 }))
 
 const mockUseAuth = useAuth as jest.MockedFunction<typeof useAuth>
@@ -444,8 +476,6 @@ describe('WorkflowBuilder - Additional Coverage', () => {
 
   describe('Hook Integration', () => {
     it('should call useWorkflowState hook', async () => {
-      const { useWorkflowState } = require('../hooks/useWorkflowState')
-      
       await act(async () => {
         render(
           <ReactFlowProvider>
@@ -454,12 +484,10 @@ describe('WorkflowBuilder - Additional Coverage', () => {
         )
       })
 
-      expect(useWorkflowState).toHaveBeenCalled()
+      expect(mockUseWorkflowState).toHaveBeenCalled()
     })
 
     it('should call useNodeSelection hook', async () => {
-      const { useNodeSelection } = require('../hooks/useNodeSelection')
-      
       await act(async () => {
         render(
           <ReactFlowProvider>
@@ -468,12 +496,10 @@ describe('WorkflowBuilder - Additional Coverage', () => {
         )
       })
 
-      expect(useNodeSelection).toHaveBeenCalled()
+      expect(mockUseNodeSelection).toHaveBeenCalled()
     })
 
     it('should call useWorkflowPersistence hook', async () => {
-      const { useWorkflowPersistence } = require('../hooks/useWorkflowPersistence')
-      
       await act(async () => {
         render(
           <ReactFlowProvider>
@@ -482,11 +508,12 @@ describe('WorkflowBuilder - Additional Coverage', () => {
         )
       })
 
-      expect(useWorkflowPersistence).toHaveBeenCalled()
+      expect(mockUseWorkflowPersistence).toHaveBeenCalled()
     })
 
     it('should call useWorkflowExecution hook', async () => {
-      const { useWorkflowExecution } = require('../hooks/useWorkflowExecution')
+      // Domain-based import - Phase 7
+      const { useWorkflowExecution } = require('../hooks/execution')
       
       await act(async () => {
         render(
@@ -496,7 +523,7 @@ describe('WorkflowBuilder - Additional Coverage', () => {
         )
       })
 
-      expect(useWorkflowExecution).toHaveBeenCalled()
+      expect(mockUseWorkflowExecution).toHaveBeenCalled()
     })
   })
 
