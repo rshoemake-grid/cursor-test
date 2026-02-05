@@ -114,6 +114,9 @@ describe('useWebSocket - mutation.advanced', () => {
           await advanceTimersByTime(50)
         })
 
+        // Clear the mock after the open event (which calls onStatus('connected'))
+        onStatus.mockClear()
+
         const message = {
           type: 'status',
           execution_id: 'exec-1',
@@ -2061,6 +2064,9 @@ describe('useWebSocket - mutation.advanced', () => {
           await advanceTimersByTime(50)
         })
 
+        // Clear the mock after the open event (which calls onStatus('connected'))
+        onStatus.mockClear()
+
         await act(async () => {
           ws.simulateMessage({
             type: 'status',
@@ -2982,10 +2988,11 @@ describe('useWebSocket - mutation.advanced', () => {
         })
       )
 
-      await advanceTimersByTime(100)
-
+      // Check immediately - before timers advance (which would auto-open MockWebSocket)
       // Initially should be false
       expect(result.current.isConnected).toBe(false)
+
+      await advanceTimersByTime(100)
 
       if (wsInstances.length > 0) {
         const ws = wsInstances[wsInstances.length - 1]
@@ -4861,8 +4868,10 @@ describe('useWebSocket - mutation.advanced', () => {
           logger.debug.mockClear()
           await act(async () => {
             rerender({ executionStatus: 'completed' as const })
-            await advanceTimersByTime(200)
           })
+          
+          // Advance timers to ensure the setTimeout in MockWebSocket.close() fires
+          await advanceTimersByTime(200)
 
           // Verify exact string literal 'Execution completed' is used in close call
           const debugCalls = (logger.debug as jest.Mock).mock.calls
@@ -5368,12 +5377,16 @@ describe('useWebSocket - mutation.advanced', () => {
             await advanceTimersByTime(50)
             // Change status to completed - this should trigger wsRef.current.close(1000, 'Execution completed')
             rerender({ executionStatus: 'completed' as const })
-            await advanceTimersByTime(200)
           })
+          
+          // Wait for close() setTimeout(10) to complete and set readyState to CLOSED
+          // Need to advance timers outside act to ensure setTimeout fires
+          await advanceTimersByTime(50)
 
           // Verify exact method call exists: wsRef.current.close(1000, 'Execution completed')
           // The method is called when executionStatus === 'completed' (line 219)
           // Verify the WebSocket was closed (the method call executed)
+          // MockWebSocket.close() uses setTimeout(10) to set readyState to CLOSED
           expect(ws.readyState).toBe(MockWebSocket.CLOSED)
           // The exact arguments (1000, 'Execution completed') are verified by:
           // 1. The close happening when executionStatus === 'completed'
