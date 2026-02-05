@@ -174,6 +174,27 @@ if (canExtractModelsFromProvider(provider)) {
 
 **Expected Impact:** Kill 2-3 additional mutants through better code organization
 
+#### ✅ Deletion Validation Utilities
+
+**Completed:**
+1. **Created deletionValidation.ts utility module**
+   - `hasOfficialItems()` - check for official items
+   - `hasUserOwnedItems()` - check if user owns items
+   - `hasNoUserOwnedItems()` - check if user owns no items
+   - `ownsAllItems()` - check if user owns all items
+   - `ownsPartialItems()` - check if user owns some but not all
+   - `hasItemsWithAuthorId()` - check if items have author_id
+   - `getItemsWithAuthorIdCount()` - count items with author_id
+
+2. **Refactored Files:**
+   - `useWorkflowDeletion.ts` - uses deletion validation functions
+   - `useAgentDeletion.ts` - uses deletion validation functions
+
+3. **Created comprehensive tests** (`deletionValidation.test.ts`)
+   - 20 test cases covering all validation functions
+
+**Expected Impact:** Kill 2-3 additional mutants through better code organization
+
 ---
 
 ### Phase 3: Utility Functions and Services ✅
