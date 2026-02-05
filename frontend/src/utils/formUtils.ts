@@ -55,7 +55,18 @@ export function getNestedValue<T = any>(
   const result = traversePath(obj, keys)
   if (!result) return defaultValue
 
-  return result.value?.[result.lastKey] as T
+  // If the parent value is null or undefined, we can't check for the key
+  if (result.value === null || result.value === undefined) {
+    return defaultValue
+  }
+
+  // Check if the key exists in the parent object
+  // This distinguishes between "key doesn't exist" (return default) and "key exists but value is undefined" (return undefined)
+  if (!(result.lastKey in result.value)) {
+    return defaultValue
+  }
+
+  return result.value[result.lastKey] as T
 }
 
 /**
@@ -91,11 +102,14 @@ export function setNestedValue<T extends Record<string, any>>(
     // Handle null/undefined intermediate values
     if (current[key] === null || current[key] === undefined) {
       current[key] = {}
-    } else if (typeof current[key] === 'object' && !Array.isArray(current[key])) {
+    } else if (Array.isArray(current[key])) {
+      // Clone array to avoid mutation
+      current[key] = [...current[key]]
+    } else if (typeof current[key] === 'object') {
       // Clone object to avoid mutation
       current[key] = { ...current[key] }
     } else {
-      // Invalid path - intermediate value is not an object
+      // Invalid path - intermediate value is not an object or array
       return obj
     }
     current = current[key]
@@ -108,13 +122,26 @@ export function setNestedValue<T extends Record<string, any>>(
 
 /**
  * Check if nested value exists in object
- * Uses composition - calls getNestedValue
- * DRY: Reuses existing logic
+ * Checks if the key exists in the object, regardless of its value
  * 
  * @param obj Object to check
  * @param path Path to value
- * @returns True if value exists, false otherwise
+ * @returns True if key exists (even if value is undefined), false otherwise
  */
 export function hasNestedValue(obj: any, path: string | string[]): boolean {
-  return getNestedValue(obj, path) !== undefined
+  if (!obj || !path) return false
+
+  const keys = parsePath(path)
+  if (keys.length === 0) return false
+
+  const result = traversePath(obj, keys)
+  if (!result) return false
+
+  // If the parent value is null or undefined, the key doesn't exist
+  if (result.value === null || result.value === undefined) {
+    return false
+  }
+
+  // Check if the key exists in the parent object (even if value is undefined)
+  return result.lastKey in result.value
 }
