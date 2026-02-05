@@ -115,12 +115,13 @@ export function useAgentDeletion({
 
     try {
       // Remove from storage
+      // Use extracted validation function - mutation-resistant
       if (!isStorageAvailable(storage)) {
         showError('Storage not available')
         return
       }
       
-      const publishedAgents = storage.getItem('publishedAgents')
+      const publishedAgents = storage!.getItem('publishedAgents')
       if (publishedAgents) {
         const allAgents: AgentTemplate[] = JSON.parse(publishedAgents)
         // Use extracted validation function - mutation-resistant
