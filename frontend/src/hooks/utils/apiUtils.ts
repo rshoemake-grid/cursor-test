@@ -1,32 +1,40 @@
 /**
  * API Utilities
  * Common utilities for API requests and headers
+ * Refactored to follow DRY and SOLID principles using composition
  */
 
 export interface AuthHeadersOptions {
   token?: string | null
-  contentType?: string
+  contentType?: string | null  // null means omit Content-Type header
   additionalHeaders?: Record<string, string>
 }
 
 /**
- * Build headers with authorization token
+ * Unified header builder using composition
+ * Single Responsibility: Only builds headers
+ * Open/Closed: Extensible without modification
+ * DRY: Single source of truth for header building
  * 
  * @param options Header options
- * @returns Headers object with authorization and content type
+ * @returns Headers object with authorization and content type (if specified)
  */
-export function buildAuthHeaders(options: AuthHeadersOptions = {}): HeadersInit {
+export function buildHeaders(options: AuthHeadersOptions = {}): HeadersInit {
   const {
     token,
-    contentType = 'application/json',
+    contentType,
     additionalHeaders = {},
   } = options
 
-  const headers: HeadersInit = {
-    'Content-Type': contentType,
-    ...additionalHeaders,
+  const headers: HeadersInit = { ...additionalHeaders }
+
+  // Only add Content-Type if specified (not null or undefined)
+  // null explicitly means "omit Content-Type" (useful for file uploads)
+  if (contentType !== null && contentType !== undefined) {
+    headers['Content-Type'] = contentType
   }
 
+  // Add authorization header if token provided
   if (token) {
     headers['Authorization'] = `Bearer ${token}`
   }
@@ -35,7 +43,22 @@ export function buildAuthHeaders(options: AuthHeadersOptions = {}): HeadersInit 
 }
 
 /**
+ * Build headers with authorization token
+ * Convenience function using composition (DRY)
+ * 
+ * @param options Header options
+ * @returns Headers object with authorization and JSON content type
+ */
+export function buildAuthHeaders(options: Omit<AuthHeadersOptions, 'contentType'> & { contentType?: string } = {}): HeadersInit {
+  return buildHeaders({
+    contentType: 'application/json',
+    ...options,
+  })
+}
+
+/**
  * Build JSON content-type headers
+ * Convenience function using composition (DRY)
  * 
  * @param additionalHeaders Additional headers to include
  * @returns Headers object with JSON content type
@@ -43,14 +66,16 @@ export function buildAuthHeaders(options: AuthHeadersOptions = {}): HeadersInit 
 export function buildJsonHeaders(
   additionalHeaders: Record<string, string> = {}
 ): HeadersInit {
-  return {
-    'Content-Type': 'application/json',
-    ...additionalHeaders,
-  }
+  return buildHeaders({
+    contentType: 'application/json',
+    additionalHeaders,
+  })
 }
 
 /**
  * Build headers for file uploads
+ * Convenience function using composition (DRY)
+ * null contentType means browser will set Content-Type automatically
  * 
  * @param additionalHeaders Additional headers to include
  * @returns Headers object without content type (browser will set it)
@@ -58,9 +83,10 @@ export function buildJsonHeaders(
 export function buildUploadHeaders(
   additionalHeaders: Record<string, string> = {}
 ): HeadersInit {
-  return {
-    ...additionalHeaders,
-  }
+  return buildHeaders({
+    contentType: null,  // Explicitly omit Content-Type for file uploads
+    additionalHeaders,
+  })
 }
 
 /**
