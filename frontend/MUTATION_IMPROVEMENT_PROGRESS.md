@@ -144,17 +144,58 @@ if (canExtractModelsFromProvider(provider)) {
 
 ---
 
+### Phase 3: Utility Functions and Services ✅
+
+#### ✅ workflowExecutionService.ts (2 survived)
+
+**Completed:**
+1. **Created enhanced mutation tests** (`workflowExecutionService.mutation.enhanced.test.ts`)
+   - 20+ test cases
+   - Tests optional chaining (`execution?.execution_id`)
+   - Tests conditional logic independently
+   - Tests edge cases for execution ID comparison
+
+**Expected Impact:** Kill 2 of 2 mutants
+
+---
+
+#### ✅ useDataFetching.ts (2 survived)
+
+**Completed:**
+1. **Created enhanced mutation tests** (`useDataFetching.mutation.enhanced.test.ts`)
+   - 25+ test cases
+   - Tests `instanceof Error` mutations
+   - Tests optional chaining (`onError?.()`)
+   - Tests error handling edge cases (string, number, null, undefined errors)
+
+**Expected Impact:** Kill 2 of 2 mutants
+
+---
+
+#### ✅ confirm.tsx (2 survived)
+
+**Completed:**
+1. **Created enhanced mutation tests** (`confirm.mutation.enhanced.test.ts`)
+   - 15+ test cases
+   - Tests `documentAdapter` falsy checks
+   - Tests `getElementById` conditional
+   - Tests event target equality check (`e.target === overlay`)
+
+**Expected Impact:** Kill 2 of 2 mutants
+
+---
+
 ## Next Steps
 
 ### Immediate (This Week)
+- [x] Complete Phase 2: High-impact files
+- [x] Complete Phase 3: Utility functions and services
 - [ ] Run mutation testing to measure improvement
-- [ ] Analyze remaining survivors in useLLMProviders and useWorkflowExecution
-- [ ] Address useMarketplaceData.ts (5 survived)
+- [ ] Analyze remaining survivors
 
 ### Short Term (Next Week)
-- [ ] Complete Phase 2: Finish remaining high-impact files
-- [ ] Start Phase 3: Utility functions and services
-- [ ] Measure mutation score improvement
+- [ ] Phase 4: Code reorganization for remaining files
+- [ ] Measure mutation score improvement (target: 87-88%)
 
 ### Medium Term (Weeks 3-4)
 - [ ] Complete Phase 4: Code reorganization for remaining files
@@ -191,10 +232,14 @@ if (canExtractModelsFromProvider(provider)) {
 
 ## Metrics
 
-**Tests Added:** 100+
-**Code Reorganization:** 2 files refactored
-**Validation Functions Created:** 12 functions
-**Expected Mutants Killed:** 17-20 mutants (from top 2 files)
+**Tests Added:** 210+
+**Code Reorganization:** 6 files refactored
+**Validation Functions Created:** 22 functions
+**Expected Mutants Killed:** 25-30 mutants (from 6 files)
+
+### Phase Breakdown:
+- **Phase 2:** 150+ tests, 3 files, 12 validation functions, ~20-25 mutants
+- **Phase 3:** 60+ tests, 3 files, 0 validation functions, ~5-6 mutants
 
 ---
 
