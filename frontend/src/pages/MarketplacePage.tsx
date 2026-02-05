@@ -1,11 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { Download, ArrowLeft, Trash2, Bot, Workflow } from 'lucide-react';
+import { ArrowLeft, Bot, Workflow } from 'lucide-react';
 import { showError, showSuccess } from '../utils/notifications';
 import { useOfficialAgentSeeding } from '../hooks/useOfficialAgentSeeding';
 import { useMarketplaceData } from '../hooks/useMarketplaceData';
 import { useTemplateOperations } from '../hooks/useTemplateOperations';
+import { useSelectionManager } from '../hooks/useSelectionManager';
+import { createCardClickHandler, shouldIgnoreClick } from '../utils/cardClickUtils';
+import { MarketplaceActionButtons } from '../components/MarketplaceActionButtons';
 import { TemplateFilters } from '../components/TemplateFilters';
 import { TemplateGrid } from '../components/TemplateGrid';
 import type { StorageAdapter, HttpClient } from '../types/adapters';
@@ -31,9 +34,11 @@ export default function MarketplacePage({
   const [category, setCategory] = useState<string>('');
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState('popular');
-  const [selectedTemplateIds, setSelectedTemplateIds] = useState<Set<string>>(new Set());
-  const [selectedAgentIds, setSelectedAgentIds] = useState<Set<string>>(new Set());
-  const [selectedRepositoryAgentIds, setSelectedRepositoryAgentIds] = useState<Set<string>>(new Set());
+  
+  // Use selection manager hooks (DRY)
+  const templateSelection = useSelectionManager<string>();
+  const agentSelection = useSelectionManager<string>();
+  const repositoryAgentSelection = useSelectionManager<string>();
   
   const { token, user } = useAuth();
   const navigate = useNavigate();
@@ -79,7 +84,6 @@ export default function MarketplacePage({
     },
   })
 
-
   // Template operations hook
   const templateOperations = useTemplateOperations({
     token,
@@ -95,9 +99,9 @@ export default function MarketplacePage({
     setTemplates,
     setWorkflowsOfWorkflows,
     setRepositoryAgents,
-    setSelectedAgentIds,
-    setSelectedTemplateIds,
-    setSelectedRepositoryAgentIds,
+    setSelectedAgentIds: agentSelection.setSelectedIds,
+    setSelectedTemplateIds: templateSelection.setSelectedIds,
+    setSelectedRepositoryAgentIds: repositoryAgentSelection.setSelectedIds,
   })
   const {
     useTemplate,
@@ -106,117 +110,104 @@ export default function MarketplacePage({
     deleteSelectedRepositoryAgents,
   } = templateOperations
 
+  // Card click handlers using utility (DRY)
+  const handleCardClick = createCardClickHandler(templateSelection.toggle);
+  const handleAgentCardClick = createCardClickHandler(agentSelection.toggle);
+  const handleRepositoryAgentCardClick = createCardClickHandler(repositoryAgentSelection.toggle);
 
+  // Handle loading multiple workflows
+  const handleLoadWorkflows = useCallback(async () => {
+    for (const templateId of templateSelection.selectedIds) {
+      await useTemplate(templateId);
+      // Small delay between loads to avoid race conditions
+      await new Promise(resolve => setTimeout(resolve, 100));
+    }
+    templateSelection.clear();
+  }, [templateSelection, useTemplate]);
 
-
-  // Wrapper functions that pass selected IDs to the hook handlers
-  const deleteSelectedAgentsWrapper = async () => {
-    await deleteSelectedAgentsHandler(selectedAgentIds)
-  }
-
-  const deleteSelectedWorkflowsWrapper = async () => {
-    await deleteSelectedWorkflows(selectedTemplateIds)
-  }
-
-  const deleteSelectedRepositoryAgentsWrapper = async () => {
-    await deleteSelectedRepositoryAgents(selectedRepositoryAgentIds, fetchRepositoryAgents)
-  }
-
-  const handleCardClick = (e: React.MouseEvent, templateId: string) => {
-    // Prevent any default behavior
-    e.preventDefault();
-    e.stopPropagation();
+  // Handle adding agents to workflow
+  const handleUseAgents = useCallback(() => {
+    // Get selected agents based on active tab
+    const selectedAgents = activeTab === 'repository' && repositorySubTab === 'agents'
+      ? repositoryAgents.filter(a => repositoryAgentSelection.selectedIds.has(a.id))
+      : agents.filter(a => agentSelection.selectedIds.has(a.id));
     
-    // Don't toggle selection if clicking on interactive elements
-    const target = e.target as HTMLElement;
-    if (target.closest('input[type="checkbox"]') || 
-        target.closest('button') || 
-        target.tagName === 'BUTTON' ||
-        target.tagName === 'INPUT') {
+    // Get the active workflow tab ID
+    if (!storage) {
+      showError('Storage not available');
+      return;
+    }
+    const activeTabId = storage.getItem('activeWorkflowTabId');
+    
+    if (!activeTabId) {
+      showError('No active workflow found. Please open a workflow first.');
       return;
     }
     
-    // Toggle selection
-    setSelectedTemplateIds(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(templateId)) {
-        newSet.delete(templateId);
-      } else {
-        newSet.add(templateId);
+    // Store agents to add in storage (more reliable than events)
+    const pendingAgents = {
+      tabId: activeTabId,
+      agents: selectedAgents,
+      timestamp: Date.now()
+    };
+    storage.setItem('pendingAgentsToAdd', JSON.stringify(pendingAgents));
+    
+    // Dispatch event as backup
+    const event = new CustomEvent('addAgentsToWorkflow', {
+      detail: {
+        agents: selectedAgents,
+        tabId: activeTabId
       }
-      return newSet;
     });
-  };
-
-  const handleAgentCardClick = (e: React.MouseEvent, agentId: string) => {
-    e.preventDefault();
-    e.stopPropagation();
-    const target = e.target as HTMLElement;
-    if (target.closest('input[type="checkbox"]') || 
-        target.closest('button') || 
-        target.tagName === 'BUTTON' ||
-        target.tagName === 'INPUT') {
-      return;
+    window.dispatchEvent(event);
+    
+    const count = activeTab === 'repository' && repositorySubTab === 'agents' 
+      ? repositoryAgentSelection.size 
+      : agentSelection.size;
+    showSuccess(`${count} agent(s) added to workflow`);
+    
+    if (activeTab === 'repository' && repositorySubTab === 'agents') {
+      repositoryAgentSelection.clear();
+    } else {
+      agentSelection.clear();
     }
-    setSelectedAgentIds(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(agentId)) {
-        newSet.delete(agentId);
-      } else {
-        newSet.add(agentId);
-      }
-      return newSet;
-    });
-  };
+    
+    // Small delay to ensure localStorage is written before navigation
+    setTimeout(() => {
+      navigate('/');
+    }, 100);
+  }, [
+    activeTab,
+    repositorySubTab,
+    repositoryAgents,
+    agents,
+    repositoryAgentSelection,
+    agentSelection,
+    storage,
+    navigate
+  ]);
 
-  const handleToggleTemplate = (id: string) => {
-    setSelectedTemplateIds(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(id)) {
-        newSet.delete(id);
-      } else {
-        newSet.add(id);
-      }
-      return newSet;
-    });
-  };
+  // Delete handlers
+  const handleDeleteAgents = useCallback(async () => {
+    await deleteSelectedAgentsHandler(agentSelection.selectedIds);
+  }, [deleteSelectedAgentsHandler, agentSelection.selectedIds]);
 
-  const handleToggleAgent = (id: string) => {
-    setSelectedAgentIds(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(id)) {
-        newSet.delete(id);
-      } else {
-        newSet.add(id);
-      }
-      return newSet;
-    });
-  };
+  const handleDeleteWorkflows = useCallback(async () => {
+    await deleteSelectedWorkflows(templateSelection.selectedIds);
+  }, [deleteSelectedWorkflows, templateSelection.selectedIds]);
 
-  const handleToggleRepositoryAgent = (id: string) => {
-    setSelectedRepositoryAgentIds(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(id)) {
-        newSet.delete(id);
-      } else {
-        newSet.add(id);
-      }
-      return newSet;
-    });
-  };
+  const handleDeleteRepositoryAgents = useCallback(async () => {
+    await deleteSelectedRepositoryAgents(repositoryAgentSelection.selectedIds, fetchRepositoryAgents);
+  }, [deleteSelectedRepositoryAgents, repositoryAgentSelection.selectedIds, fetchRepositoryAgents]);
 
-  const handleRepositoryAgentCardClick = (e: React.MouseEvent, agentId: string) => {
-    e.preventDefault();
-    e.stopPropagation();
-    const target = e.target as HTMLElement;
-    if (target.closest('input[type="checkbox"]') || 
-        target.closest('button') || 
-        target.tagName === 'BUTTON' ||
-        target.tagName === 'INPUT') {
-      return;
-    }
-    handleToggleRepositoryAgent(agentId);
-  };
+  // Check if selected items have official items
+  const hasOfficialWorkflows = templates
+    .filter(t => templateSelection.selectedIds.has(t.id))
+    .some(t => t.is_official);
+
+  const hasOfficialAgents = agents
+    .filter(a => agentSelection.selectedIds.has(a.id))
+    .some(a => a.is_official);
 
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
@@ -226,6 +217,37 @@ export default function MarketplacePage({
       default: return 'bg-gray-100 text-gray-800';
     }
   };
+
+  // Handle deselecting on empty space click
+  const handleContentClick = useCallback((e: React.MouseEvent) => {
+    const target = e.target as HTMLElement;
+    const isCard = target.closest('[class*="bg-white"][class*="rounded-lg"][class*="shadow"]');
+    const isInteractive = shouldIgnoreClick(target) || 
+                          target.closest('select') !== null ||
+                          target.closest('a') !== null ||
+                          target.tagName === 'SELECT' ||
+                          target.tagName === 'A';
+    
+    if (!isCard && !isInteractive) {
+      if (activeTab === 'agents') {
+        agentSelection.clear();
+      } else if (activeTab === 'repository' || activeTab === 'workflows-of-workflows') {
+        if (activeTab === 'repository' && repositorySubTab === 'agents') {
+          repositoryAgentSelection.clear();
+        } else {
+          templateSelection.clear();
+        }
+      }
+    }
+  }, [activeTab, repositorySubTab, agentSelection, repositoryAgentSelection, templateSelection]);
+
+  // Determine which action buttons to show
+  const showWorkflowActions = (activeTab === 'repository' || activeTab === 'workflows-of-workflows') && 
+                              templateSelection.size > 0 && 
+                              (activeTab === 'workflows-of-workflows' || repositorySubTab === 'workflows');
+
+  const showAgentActions = (activeTab === 'agents' && agentSelection.size > 0) || 
+                           (activeTab === 'repository' && repositorySubTab === 'agents' && repositoryAgentSelection.size > 0);
 
   return (
     <div className="h-screen bg-gray-50 flex flex-col overflow-hidden">
@@ -245,142 +267,30 @@ export default function MarketplacePage({
               <p className="text-gray-600 mt-1">Discover and use pre-built agents and workflows</p>
             </div>
             <div className="flex items-center gap-3">
-              {(activeTab === 'repository' || activeTab === 'workflows-of-workflows') && selectedTemplateIds.size > 0 && (activeTab === 'workflows-of-workflows' || repositorySubTab === 'workflows') && (
-                <>
-                  <button
-                    onClick={async () => {
-                      // Load all selected workflows
-                      for (const templateId of selectedTemplateIds) {
-                        await useTemplate(templateId);
-                        // Small delay between loads to avoid race conditions
-                        await new Promise(resolve => setTimeout(resolve, 100));
-                      }
-                      // Clear selection after loading
-                      setSelectedTemplateIds(new Set());
-                    }}
-                    className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors flex items-center gap-2"
-                  >
-                    <Download className="w-4 h-4" />
-                    Load {selectedTemplateIds.size} Workflow{selectedTemplateIds.size > 1 ? 's' : ''}
-                  </button>
-                  {(() => {
-                    // Only show delete button for repository workflows, not workflows-of-workflows
-                    if (activeTab === 'repository' && repositorySubTab === 'workflows') {
-                      // Check if any selected workflows are official
-                      const selectedTemplates = templates.filter(t => selectedTemplateIds.has(t.id));
-                      const hasOfficialWorkflow = selectedTemplates.some(t => t.is_official);
-                      
-                      // Only show delete button if no official workflows are selected
-                      if (!hasOfficialWorkflow) {
-                        return (
-                          <button
-                            onClick={deleteSelectedWorkflowsWrapper}
-                            className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center gap-2"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                            Delete {selectedTemplateIds.size} Workflow{selectedTemplateIds.size > 1 ? 's' : ''}
-                          </button>
-                        );
-                      }
-                    }
-                    return null;
-                  })()}
-                </>
+              {showWorkflowActions && (
+                <MarketplaceActionButtons
+                  selectedCount={templateSelection.size}
+                  hasOfficial={hasOfficialWorkflows}
+                  onLoad={handleLoadWorkflows}
+                  onDelete={activeTab === 'repository' && repositorySubTab === 'workflows' ? handleDeleteWorkflows : undefined}
+                  type="workflow"
+                  showDelete={activeTab === 'repository' && repositorySubTab === 'workflows'}
+                />
               )}
-              {(activeTab === 'agents' && selectedAgentIds.size > 0) || (activeTab === 'repository' && repositorySubTab === 'agents' && selectedRepositoryAgentIds.size > 0) ? (
-                <>
-                  <button
-                    onClick={() => {
-                      // Get selected agents based on active tab
-                      const selectedAgents = activeTab === 'repository' && repositorySubTab === 'agents'
-                        ? repositoryAgents.filter(a => selectedRepositoryAgentIds.has(a.id))
-                        : agents.filter(a => selectedAgentIds.has(a.id));
-                      
-                      // Get the active workflow tab ID
-                      if (!storage) {
-                        showError('Storage not available');
-                        return;
-                      }
-                      const activeTabId = storage.getItem('activeWorkflowTabId');
-                      
-                      if (!activeTabId) {
-                        showError('No active workflow found. Please open a workflow first.');
-                        return;
-                      }
-                      
-                      // Store agents to add in storage (more reliable than events)
-                      const pendingAgents = {
-                        tabId: activeTabId,
-                        agents: selectedAgents,
-                        timestamp: Date.now()
-                      };
-                      storage.setItem('pendingAgentsToAdd', JSON.stringify(pendingAgents));
-                      
-                      // Dispatch event as backup
-                      const event = new CustomEvent('addAgentsToWorkflow', {
-                        detail: {
-                          agents: selectedAgents,
-                          tabId: activeTabId
-                        }
-                      });
-                      window.dispatchEvent(event);
-                      
-                      const count = activeTab === 'repository' && repositorySubTab === 'agents' 
-                        ? selectedRepositoryAgentIds.size 
-                        : selectedAgentIds.size;
-                      showSuccess(`${count} agent(s) added to workflow`);
-                      
-                      if (activeTab === 'repository' && repositorySubTab === 'agents') {
-                        setSelectedRepositoryAgentIds(new Set());
-                      } else {
-                        setSelectedAgentIds(new Set());
-                      }
-                      
-                      // Small delay to ensure localStorage is written before navigation
-                      setTimeout(() => {
-                        // Navigate back to workflow builder
-                        navigate('/');
-                      }, 100);
-                    }}
-                    className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors flex items-center gap-2"
-                  >
-                    <Download className="w-4 h-4" />
-                    Use {(activeTab === 'repository' && repositorySubTab === 'agents' ? selectedRepositoryAgentIds.size : selectedAgentIds.size)} Agent{(activeTab === 'repository' && repositorySubTab === 'agents' ? selectedRepositoryAgentIds.size : selectedAgentIds.size) > 1 ? 's' : ''}
-                  </button>
-                  {(() => {
-                    // Check if any selected agents are official (only for public marketplace)
-                    if (activeTab === 'agents') {
-                      const selectedAgents = agents.filter(a => selectedAgentIds.has(a.id));
-                      const hasOfficialAgent = selectedAgents.some(a => a.is_official);
-                      
-                      // Only show delete button if no official agents are selected
-                      if (!hasOfficialAgent) {
-                        return (
-                          <button
-                            onClick={deleteSelectedAgentsWrapper}
-                            className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center gap-2"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                            Delete {selectedAgentIds.size} Agent{selectedAgentIds.size > 1 ? 's' : ''}
-                          </button>
-                        );
-                      }
-                    } else if (activeTab === 'repository' && repositorySubTab === 'agents') {
-                      // Repository agents can always be deleted
-                      return (
-                        <button
-                          onClick={deleteSelectedRepositoryAgentsWrapper}
-                          className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center gap-2"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                          Delete {selectedRepositoryAgentIds.size} Agent{selectedRepositoryAgentIds.size > 1 ? 's' : ''}
-                        </button>
-                      );
-                    }
-                    return null;
-                  })()}
-                </>
-              ) : null}
+              {showAgentActions && (
+                <MarketplaceActionButtons
+                  selectedCount={activeTab === 'repository' && repositorySubTab === 'agents' 
+                    ? repositoryAgentSelection.size 
+                    : agentSelection.size}
+                  hasOfficial={hasOfficialAgents}
+                  onUse={handleUseAgents}
+                  onDelete={activeTab === 'agents' 
+                    ? handleDeleteAgents 
+                    : handleDeleteRepositoryAgents}
+                  type="agent"
+                  showDelete={activeTab === 'repository' && repositorySubTab === 'agents' || !hasOfficialAgents}
+                />
+              )}
             </div>
           </div>
 
@@ -478,32 +388,7 @@ export default function MarketplacePage({
       {/* Content Grid */}
       <div 
         className="max-w-7xl mx-auto px-4 py-8 flex-1 overflow-y-auto"
-        onClick={(e) => {
-          // Deselect if clicking on empty space (not on a card or interactive element)
-          const target = e.target as HTMLElement;
-          // Check if click is on a card (has the card classes) or interactive element
-          const isCard = target.closest('[class*="bg-white"][class*="rounded-lg"][class*="shadow"]');
-          const isInteractive = target.closest('button') || 
-                                target.closest('input') || 
-                                target.closest('select') ||
-                                target.closest('a') ||
-                                target.tagName === 'BUTTON' ||
-                                target.tagName === 'INPUT' ||
-                                target.tagName === 'SELECT' ||
-                                target.tagName === 'A';
-          
-          if (!isCard && !isInteractive) {
-            if (activeTab === 'agents') {
-              setSelectedAgentIds(new Set());
-            } else if (activeTab === 'repository' || activeTab === 'workflows-of-workflows') {
-              if (activeTab === 'repository' && repositorySubTab === 'agents') {
-                setSelectedRepositoryAgentIds(new Set());
-              } else {
-                setSelectedTemplateIds(new Set());
-              }
-            }
-          }
-        }}
+        onClick={handleContentClick}
       >
         {loading ? (
           <div className="text-center py-12">
@@ -513,9 +398,9 @@ export default function MarketplacePage({
         ) : activeTab === 'agents' ? (
           <TemplateGrid
             items={agents}
-            selectedIds={selectedAgentIds}
+            selectedIds={agentSelection.selectedIds}
             type="agent"
-            onToggleSelect={handleToggleAgent}
+            onToggleSelect={agentSelection.toggle}
             onCardClick={handleAgentCardClick}
             getDifficultyColor={getDifficultyColor}
             emptyMessage="No agents found. Try adjusting your filters."
@@ -524,9 +409,9 @@ export default function MarketplacePage({
         ) : activeTab === 'repository' && repositorySubTab === 'workflows' ? (
           <TemplateGrid
             items={templates}
-            selectedIds={selectedTemplateIds}
+            selectedIds={templateSelection.selectedIds}
             type="template"
-            onToggleSelect={handleToggleTemplate}
+            onToggleSelect={templateSelection.toggle}
             onCardClick={handleCardClick}
             getDifficultyColor={getDifficultyColor}
             emptyMessage="No workflows found. Try adjusting your filters."
@@ -535,9 +420,9 @@ export default function MarketplacePage({
         ) : activeTab === 'repository' && repositorySubTab === 'agents' ? (
           <TemplateGrid
             items={repositoryAgents}
-            selectedIds={selectedRepositoryAgentIds}
+            selectedIds={repositoryAgentSelection.selectedIds}
             type="agent"
-            onToggleSelect={handleToggleRepositoryAgent}
+            onToggleSelect={repositoryAgentSelection.toggle}
             onCardClick={handleRepositoryAgentCardClick}
             getDifficultyColor={getDifficultyColor}
             emptyMessage="No repository agents found. Try adjusting your filters."
@@ -546,9 +431,9 @@ export default function MarketplacePage({
         ) : (
           <TemplateGrid
             items={workflowsOfWorkflows}
-            selectedIds={selectedTemplateIds}
+            selectedIds={templateSelection.selectedIds}
             type="template"
-            onToggleSelect={handleToggleTemplate}
+            onToggleSelect={templateSelection.toggle}
             onCardClick={handleCardClick}
             getDifficultyColor={getDifficultyColor}
             emptyMessage="No workflows found. Try adjusting your filters."
@@ -559,4 +444,3 @@ export default function MarketplacePage({
     </div>
   );
 }
-

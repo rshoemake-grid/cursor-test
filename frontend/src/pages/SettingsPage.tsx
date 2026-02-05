@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { showSuccess, showError } from '../utils/notifications'
 import { showConfirm } from '../utils/confirm'
 import { useNavigate } from 'react-router-dom'
@@ -7,11 +7,9 @@ import { Save, Plus, Trash2, CheckCircle, XCircle, Loader, ArrowLeft, Eye, EyeOf
 import type { StorageAdapter, HttpClient, ConsoleAdapter } from '../types/adapters'
 import { defaultAdapters } from '../types/adapters'
 import { useLLMProviders, type LLMProvider } from '../hooks/useLLMProviders'
-
-interface TestResult {
-  status: 'success' | 'error'
-  message: string
-}
+import { SettingsService } from '../services/SettingsService'
+import { useProviderManagement } from '../hooks/useProviderManagement'
+import { useAutoSave } from '../hooks/useAutoSave'
 
 const PROVIDER_TEMPLATES = {
   openai: {
@@ -40,15 +38,13 @@ const PROVIDER_TEMPLATES = {
     baseUrl: 'https://generativelanguage.googleapis.com/v1beta',
     defaultModel: 'gemini-2.5-flash',
     models: [
-      // Gemini 3.0 models
       'gemini-3-pro-preview',
       'gemini-3-flash-preview',
-      'gemini-3-pro-image-preview', // Nano Banana Pro
-      // Gemini 2.5 models
+      'gemini-3-pro-image-preview',
       'gemini-2.5-pro',
       'gemini-2.5-flash',
       'gemini-2.5-flash-lite',
-      'gemini-2.5-flash-image', // Nano Banana
+      'gemini-2.5-flash-image',
       'gemini-2.5-flash-preview-09-2025'
     ]
   },
@@ -78,19 +74,11 @@ export default function SettingsPage({
   const { isAuthenticated, user, token } = useAuth()
   const navigate = useNavigate()
   
-  // Use refs to avoid stale closures in event handlers
-  const storageRef = useRef(storage)
-  const httpClientRef = useRef(httpClient)
-  const apiBaseUrlRef = useRef(apiBaseUrl)
-  const consoleAdapterRef = useRef(consoleAdapter)
-  
-  // Update refs when props change
-  useEffect(() => {
-    storageRef.current = storage
-    httpClientRef.current = httpClient
-    apiBaseUrlRef.current = apiBaseUrl
-    consoleAdapterRef.current = consoleAdapter
-  }, [storage, httpClient, apiBaseUrl, consoleAdapter])
+  // Create settings service (memoized to avoid recreating on each render)
+  const settingsService = useMemo(
+    () => new SettingsService(httpClient, storage, apiBaseUrl),
+    [httpClient, storage, apiBaseUrl]
+  )
   
   // Load LLM providers using centralized hook
   const { providers: loadedProviders, iterationLimit: loadedIterationLimit, defaultModel: loadedDefaultModel } = useLLMProviders({
@@ -112,14 +100,71 @@ export default function SettingsPage({
   const [providers, setProviders] = useState<LLMProvider[]>([])
   const [showAddProvider, setShowAddProvider] = useState(false)
   const [selectedTemplate, setSelectedTemplate] = useState<keyof typeof PROVIDER_TEMPLATES>('openai')
-  const [testingProvider, setTestingProvider] = useState<string | null>(null)
-  const [testResults, setTestResults] = useState<Record<string, TestResult>>({})
   const [showApiKeys, setShowApiKeys] = useState<Record<string, boolean>>({})
   const [expandedModels, setExpandedModels] = useState<Record<string, Set<string>>>({})
   const [expandedProviders, setExpandedProviders] = useState<Record<string, boolean>>({})
   const [iterationLimit, setIterationLimit] = useState(10)
   const [defaultModel, setDefaultModel] = useState<string>('')
   const [activeTab, setActiveTab] = useState<'llm' | 'workflow'>('llm')
+  const [settingsLoaded, setSettingsLoaded] = useState(false)
+
+  // Provider management hook
+  const {
+    saveProviders,
+    updateProvider,
+    testProvider,
+    addCustomModel,
+    testingProvider,
+    testResults,
+  } = useProviderManagement({
+    service: settingsService,
+    providers,
+    setProviders,
+    iterationLimit,
+    defaultModel,
+    token,
+  })
+
+  // Sync hook-loaded values to local state when they change
+  useEffect(() => {
+    if (loadedProviders.length > 0 && providers.length === 0) {
+      setProviders(loadedProviders)
+    }
+  }, [loadedProviders, providers.length])
+  
+  useEffect(() => {
+    if (typeof loadedIterationLimit === 'number' && iterationLimit === 10) {
+      setIterationLimit(loadedIterationLimit)
+    }
+  }, [loadedIterationLimit, iterationLimit])
+  
+  useEffect(() => {
+    if (loadedDefaultModel && !defaultModel) {
+      setDefaultModel(loadedDefaultModel)
+    }
+  }, [loadedDefaultModel, defaultModel])
+
+  // Auto-save settings when they change (after initial load)
+  const autoSaveSettings = useMemo(() => async () => {
+    if (!isAuthenticated || !token || !settingsLoaded) return
+    try {
+      await settingsService.saveSettings({
+        providers,
+        iteration_limit: iterationLimit,
+        default_model: defaultModel,
+      }, token)
+      consoleAdapter.log('Settings auto-saved to backend')
+    } catch (error) {
+      consoleAdapter.error('Failed to auto-save settings:', error)
+    }
+  }, [settingsService, providers, iterationLimit, defaultModel, isAuthenticated, token, settingsLoaded, consoleAdapter])
+
+  useAutoSave(
+    { providers, iterationLimit, defaultModel },
+    autoSaveSettings,
+    500,
+    isAuthenticated && token && settingsLoaded
+  )
 
   const toggleProviderModels = (providerId: string) => {
     setExpandedProviders(prev => ({
@@ -149,103 +194,7 @@ export default function SettingsPage({
     if (!providerSet) {
       return false
     }
-    const isExpanded = providerSet.has(modelName)
-    return isExpanded
-  }
-
-  // Track if settings have been loaded to prevent saving on initial mount
-  const [settingsLoaded, setSettingsLoaded] = useState(false)
-  
-  // Sync hook-loaded values to local state when they change (if not already set via onLoadComplete)
-  useEffect(() => {
-    if (loadedProviders.length > 0 && providers.length === 0) {
-      setProviders(loadedProviders)
-    }
-  }, [loadedProviders, providers.length])
-  
-  useEffect(() => {
-    if (typeof loadedIterationLimit === 'number' && iterationLimit === 10) {
-      setIterationLimit(loadedIterationLimit)
-    }
-  }, [loadedIterationLimit, iterationLimit])
-  
-  useEffect(() => {
-    if (loadedDefaultModel && !defaultModel) {
-      setDefaultModel(loadedDefaultModel)
-    }
-  }, [loadedDefaultModel, defaultModel])
-
-  // Auto-save iteration limit and default model when they change (after initial load)
-  useEffect(() => {
-    if (!isAuthenticated || !token || !settingsLoaded) return
-    
-    // Debounce: only save after user stops typing (500ms delay)
-    const timeoutId = setTimeout(() => {
-      const saveSettings = async () => {
-        const currentHttpClient = httpClientRef.current
-        const currentApiBaseUrl = apiBaseUrlRef.current
-        const currentStorage = storageRef.current
-        const currentConsole = consoleAdapterRef.current
-
-        try {
-          const headers: HeadersInit = { 'Content-Type': 'application/json' }
-          if (token) {
-            headers['Authorization'] = `Bearer ${token}`
-          }
-          await currentHttpClient.post(
-            `${currentApiBaseUrl}/settings/llm`,
-            { providers, iteration_limit: iterationLimit, default_model: defaultModel },
-            headers
-          )
-          // Update storage as well
-          if (currentStorage) {
-            currentStorage.setItem('llm_settings', JSON.stringify({
-              providers,
-              iteration_limit: iterationLimit,
-              default_model: defaultModel
-            }))
-          }
-          currentConsole.log('Settings auto-saved to backend')
-        } catch (error) {
-          currentConsole.error('Failed to auto-save settings:', error)
-        }
-      }
-      saveSettings()
-    }, 500)
-
-    return () => clearTimeout(timeoutId)
-  }, [iterationLimit, defaultModel, isAuthenticated, token, providers, settingsLoaded])
-
-  const saveProviders = async (newProviders: LLMProvider[]) => {
-    const currentStorage = storageRef.current
-    const currentHttpClient = httpClientRef.current
-    const currentApiBaseUrl = apiBaseUrlRef.current
-    const currentConsole = consoleAdapterRef.current
-
-    setProviders(newProviders)
-    if (currentStorage) {
-      currentStorage.setItem('llm_settings', JSON.stringify({
-        providers: newProviders,
-        iteration_limit: iterationLimit,
-        default_model: defaultModel
-      }))
-    }
-    
-    // Auto-save to backend
-    try {
-      const headers: HeadersInit = { 'Content-Type': 'application/json' }
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`
-      }
-      await currentHttpClient.post(
-        `${currentApiBaseUrl}/settings/llm`,
-        { providers: newProviders, iteration_limit: iterationLimit, default_model: defaultModel },
-        headers
-      )
-      currentConsole.log('Settings auto-synced to backend')
-    } catch (error) {
-      currentConsole.error('Failed to sync settings to backend:', error)
-    }
+    return providerSet.has(modelName)
   }
 
   const handleAddProvider = () => {
@@ -264,10 +213,6 @@ export default function SettingsPage({
     setShowAddProvider(false)
   }
 
-  const handleUpdateProvider = (id: string, updates: Partial<LLMProvider>) => {
-    saveProviders(providers.map(p => p.id === id ? { ...p, ...updates } : p))
-  }
-
   const handleDeleteProvider = async (id: string) => {
     const confirmed = await showConfirm(
       'Delete this provider?',
@@ -278,81 +223,26 @@ export default function SettingsPage({
     }
   }
 
-  const handleTestProvider = async (provider: LLMProvider) => {
-    const currentHttpClient = httpClientRef.current
-    const currentApiBaseUrl = apiBaseUrlRef.current
-
-    setTestingProvider(provider.id)
-    setTestResults({ ...testResults, [provider.id]: undefined as any })
-
-    try {
-      const response = await currentHttpClient.post(
-        `${currentApiBaseUrl}/settings/llm/test`,
-        {
-          type: provider.type,
-          api_key: provider.apiKey,
-          base_url: provider.baseUrl,
-          model: provider.defaultModel
-        },
-        { 'Content-Type': 'application/json' }
-      )
-
-      const data = await response.json()
-      
-      if (data.status === 'success') {
-        setTestResults({ ...testResults, [provider.id]: { status: 'success', message: data.message } })
-      } else {
-        setTestResults({ ...testResults, [provider.id]: { status: 'error', message: data.message || 'Connection failed' } })
-      }
-    } catch (error: any) {
-      setTestResults({ 
-        ...testResults, 
-        [provider.id]: { 
-          status: 'error', 
-          message: error.message || 'Network error - check if backend is running' 
-        } 
-      })
-    } finally {
-      setTestingProvider(null)
-    }
-  }
-
   const handleAddCustomModel = (providerId: string) => {
     const modelName = prompt('Enter custom model name:')
     if (modelName) {
-      const provider = providers.find(p => p.id === providerId)
-      if (provider) {
-        handleUpdateProvider(providerId, {
-          models: [...(provider.models || []), modelName]
-        })
-      }
+      addCustomModel(providerId, modelName)
     }
   }
 
   const handleManualSync = async () => {
-    const currentHttpClient = httpClientRef.current
-    const currentApiBaseUrl = apiBaseUrlRef.current
-
     if (!isAuthenticated) {
       showError('Sign in to sync your LLM settings with the server.')
       return
     }
 
     try {
-      const headers: HeadersInit = { 'Content-Type': 'application/json' }
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`
-      }
-      const response = await currentHttpClient.post(
-        `${currentApiBaseUrl}/settings/llm`,
-        { providers, iteration_limit: iterationLimit, default_model: defaultModel },
-        headers
-      )
-      if (response.ok) {
-        showSuccess('Settings synced to backend successfully!')
-      } else {
-        showError('Failed to sync settings')
-      }
+      await settingsService.saveSettings({
+        providers,
+        iteration_limit: iterationLimit,
+        default_model: defaultModel,
+      }, token)
+      showSuccess('Settings synced to backend successfully!')
     } catch (error) {
       showError('Error syncing settings: ' + error)
     }
@@ -519,7 +409,7 @@ export default function SettingsPage({
                         <input
                           type="checkbox"
                           checked={provider.enabled}
-                          onChange={(e) => handleUpdateProvider(provider.id, { enabled: e.target.checked })}
+                          onChange={(e) => updateProvider(provider.id, { enabled: e.target.checked })}
                           className="w-5 h-5 text-primary-600 rounded"
                         />
                         <div>
@@ -559,8 +449,8 @@ export default function SettingsPage({
                           <div className="relative">
                             <input
                               type={showApiKeys[provider.id] ? "text" : "password"}
-                              value={provider.apiKey}
-                              onChange={(e) => handleUpdateProvider(provider.id, { apiKey: e.target.value })}
+                              value={provider.apiKey || ''}
+                              onChange={(e) => updateProvider(provider.id, { apiKey: e.target.value })}
                               placeholder="sk-..."
                               className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                             />
@@ -587,7 +477,7 @@ export default function SettingsPage({
                           <input
                             type="text"
                             value={provider.baseUrl || ''}
-                            onChange={(e) => handleUpdateProvider(provider.id, { baseUrl: e.target.value })}
+                            onChange={(e) => updateProvider(provider.id, { baseUrl: e.target.value })}
                             placeholder="https://api.example.com/v1"
                             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                           />
@@ -600,8 +490,8 @@ export default function SettingsPage({
                           </label>
                           <div className="flex gap-2">
                             <select
-                              value={provider.defaultModel}
-                              onChange={(e) => handleUpdateProvider(provider.id, { defaultModel: e.target.value })}
+                              value={provider.defaultModel || ''}
+                              onChange={(e) => updateProvider(provider.id, { defaultModel: e.target.value })}
                               className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                             >
                               {(provider.models || []).map(model => (
@@ -664,7 +554,7 @@ export default function SettingsPage({
                                           onChange={(e) => {
                                             const newModels = (provider.models || []).map(m => m === model ? e.target.value : m)
                                             const newDefaultModel = provider.defaultModel === model ? e.target.value : provider.defaultModel
-                                            handleUpdateProvider(provider.id, {
+                                            updateProvider(provider.id, {
                                               models: newModels,
                                               defaultModel: newDefaultModel
                                             })
@@ -678,7 +568,7 @@ export default function SettingsPage({
                                           onClick={(e) => {
                                             e.stopPropagation()
                                             if (provider.defaultModel !== model) {
-                                              handleUpdateProvider(provider.id, { defaultModel: model })
+                                              updateProvider(provider.id, { defaultModel: model })
                                             }
                                           }}
                                           className={`text-xs px-3 py-1.5 rounded ${
@@ -698,7 +588,7 @@ export default function SettingsPage({
                                               const newDefaultModel = provider.defaultModel === model 
                                                 ? (newModels[0] || '')
                                                 : provider.defaultModel
-                                              handleUpdateProvider(provider.id, {
+                                              updateProvider(provider.id, {
                                                 models: newModels,
                                                 defaultModel: newDefaultModel
                                               })
@@ -728,7 +618,7 @@ export default function SettingsPage({
                     {/* Test Connection */}
                     <div className="flex items-center gap-3 pt-2">
                       <button
-                        onClick={() => handleTestProvider(provider)}
+                        onClick={() => testProvider(provider)}
                         disabled={!provider.apiKey || testingProvider === provider.id}
                         className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                       >
@@ -781,4 +671,3 @@ export default function SettingsPage({
     </div>
   )
 }
-

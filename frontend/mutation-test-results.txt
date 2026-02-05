@@ -1,0 +1,20 @@
+Mutation Testing Results Report
+Generated: Thu Feb  5 09:10:49 CST 2026
+Total execution time: 0h 5m
+
+==========================================
+FINAL SUMMARY
+==========================================
+
+--- Mutation Score & Statistics ---
+
+--- Detailed Results ---
+
+==========================================
+Report Files
+==========================================
+Mutation report directory: reports/mutation
+total 35840
+-rw-r--r--@ 1 rshoemake  staff    17M Feb  5 08:01 mutation.html
+
+HTML report available at: reports/mutation/mutation.html
