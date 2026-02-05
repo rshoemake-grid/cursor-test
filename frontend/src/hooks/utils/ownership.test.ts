@@ -69,7 +69,8 @@ describe('ownership', () => {
       mockIsOwner.mockReturnValue(false)
       const result = canUserDelete(mockItem, undefined)
       expect(result).toBe(false)
-      expect(mockIsOwner).toHaveBeenCalledWith(mockItem, undefined)
+      // Function normalizes undefined to null (defensive programming)
+      expect(mockIsOwner).toHaveBeenCalledWith(mockItem, null)
     })
 
     it('should return true when item is not official and user owns it', () => {

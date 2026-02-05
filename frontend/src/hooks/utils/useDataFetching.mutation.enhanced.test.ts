@@ -308,18 +308,18 @@ describe('useDataFetching - Enhanced Mutation Killers', () => {
         })
       )
 
-      // Start fetch
-      const refetchPromise = act(async () => {
-        await result.current.refetch()
+      // Start fetch - refetch sets loading synchronously before async work
+      act(() => {
+        result.current.refetch()
       })
 
-      // Should be loading initially
+      // Should be loading immediately (setLoading(true) is synchronous)
       expect(result.current.loading).toBe(true)
 
       // Complete fetch
       await act(async () => {
         resolvePromise!({ success: true })
-        await refetchPromise
+        await new Promise(resolve => setTimeout(resolve, 0)) // Allow promise to resolve
       })
 
       // Should not be loading after completion

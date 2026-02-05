@@ -4,7 +4,7 @@ import { FormField } from './FormField'
 
 // Mock useFormField hook to return a simple value
 // Note: React must be imported before the mock to ensure it's available
-jest.mock('../../hooks/useFormField', () => {
+jest.mock('../../hooks/forms', () => {
   return {
     useFormField: jest.fn((options: any) => {
       // Use React from the outer scope
@@ -380,7 +380,7 @@ describe('FormField', () => {
     })
 
     it('should use hook value when syncWithNodeData is true', () => {
-      const mockUseFormField = require('../../hooks/useFormField').useFormField as jest.Mock
+      const mockUseFormField = require('../../hooks/forms').useFormField as jest.Mock
       const React = require('react')
       mockUseFormField.mockReturnValueOnce({
         value: 'hook value',
@@ -713,7 +713,7 @@ describe('FormField', () => {
     })
 
     it('should handle select with array dataPath', () => {
-      const mockUseFormField = require('../../hooks/useFormField').useFormField as jest.Mock
+      const mockUseFormField = require('../../hooks/forms').useFormField as jest.Mock
       const React = require('react')
       mockUseFormField.mockReturnValueOnce({
         value: 'selected',

@@ -2576,7 +2576,7 @@ describe('WorkflowTabs', () => {
     })
 
     it('should handle saveActiveTabToStorage when activeTabId is null', async () => {
-      const { removeLocalStorageItem } = require('../hooks/useLocalStorage')
+      const { removeLocalStorageItem } = require('../hooks/storage')
       const mockRemoveLocalStorageItem = removeLocalStorageItem as jest.MockedFunction<typeof removeLocalStorageItem>
 
       renderWithProvider()

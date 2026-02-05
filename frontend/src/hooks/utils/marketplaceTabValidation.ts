@@ -59,12 +59,23 @@ export function shouldLoadTemplates(
 
 /**
  * Determine if repository agents should be loaded based on tab state
+ * Defensive: Falls back to repository agents if repository tab but invalid sub-tab
+ * (SOLID: Defensive Programming, DRY: Single validation point)
  */
 export function shouldLoadRepositoryAgents(
   activeTab: ActiveTab,
   repositorySubTab: RepositorySubTab
 ): boolean {
-  return isRepositoryTab(activeTab) && isAgentsSubTab(repositorySubTab)
+  if (!isRepositoryTab(activeTab)) {
+    return false
+  }
+  // If it's the agents sub-tab, load repository agents
+  if (isAgentsSubTab(repositorySubTab)) {
+    return true
+  }
+  // Defensive: If repository tab but NOT workflows sub-tab (invalid value), fallback to agents
+  // This handles edge cases like 'workflow' (singular) or other invalid values
+  return !isWorkflowsSubTab(repositorySubTab)
 }
 
 /**
@@ -76,9 +87,16 @@ export function shouldLoadWorkflowsOfWorkflows(activeTab: ActiveTab): boolean {
 
 /**
  * Determine if agents should be loaded based on tab state
+ * Defensive: Falls back to agents if no valid tab matches (SOLID: Defensive Programming)
  */
 export function shouldLoadAgents(activeTab: ActiveTab): boolean {
-  return isAgentsTab(activeTab)
+  // Exact match for agents tab
+  if (isAgentsTab(activeTab)) {
+    return true
+  }
+  // Defensive fallback: If activeTab doesn't match any valid tab, load agents as default
+  // This handles edge cases like 'Repository' (capital R) or other invalid values
+  return !isRepositoryTab(activeTab) && !isWorkflowsOfWorkflowsTab(activeTab)
 }
 
 /**

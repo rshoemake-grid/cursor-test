@@ -3,4 +3,4 @@
  * Centralized exports for API-related hooks
  */
 
-export { useAuthenticatedApi } from '../useAuthenticatedApi'
+export { useAuthenticatedApi } from './useAuthenticatedApi'

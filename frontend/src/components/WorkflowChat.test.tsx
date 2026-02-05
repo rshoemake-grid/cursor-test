@@ -103,7 +103,7 @@ describe('WorkflowChat', () => {
     localStorage.clear()
     
     // Reset mocks
-    const { useAuthenticatedApi } = require('../hooks/useAuthenticatedApi')
+    const { useAuthenticatedApi } = require('../hooks/api')
     const { safeStorageGet } = require('../utils/storageHelpers')
     const { safeStorageSet } = require('../utils/storageHelpers')
     const { handleApiError } = require('../utils/errorHandler')
@@ -197,7 +197,7 @@ describe('WorkflowChat', () => {
   })
 
   it('should send message when send button is clicked', async () => {
-    const { useAuthenticatedApi } = require('../hooks/useAuthenticatedApi')
+    const { useAuthenticatedApi } = require('../hooks/api')
     const mockAuthenticatedPost = jest.fn().mockResolvedValue({
       ok: true,
       json: async () => ({ message: 'Response message' }),
@@ -547,7 +547,7 @@ describe('WorkflowChat', () => {
     })
 
     it('should use injected HTTP client', async () => {
-      const { useAuthenticatedApi } = require('../hooks/useAuthenticatedApi')
+      const { useAuthenticatedApi } = require('../hooks/api')
       const injectedMockPost = jest.fn().mockResolvedValue({
         ok: true,
         json: async () => ({ message: 'Response from injected client' }),
@@ -580,7 +580,7 @@ describe('WorkflowChat', () => {
     })
 
     it('should use injected API base URL', async () => {
-      const { useAuthenticatedApi } = require('../hooks/useAuthenticatedApi')
+      const { useAuthenticatedApi } = require('../hooks/api')
       const customMockPost = jest.fn().mockResolvedValue({
         ok: true,
         json: async () => ({ message: 'Response' }),

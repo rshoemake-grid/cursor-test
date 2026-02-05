@@ -552,7 +552,7 @@ describe('MarketplacePage', () => {
         deleteSelectedRepositoryAgents: jest.fn(),
       }))
       
-      jest.doMock('../hooks/useTemplateOperations', () => ({
+      jest.doMock('../hooks/marketplace', () => ({
         useTemplateOperations: mockUseTemplateOperations,
       }))
 

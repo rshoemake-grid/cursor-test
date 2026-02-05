@@ -17,7 +17,7 @@ import {
   type ExecutionStatus,
   type WebSocketMessage,
   type MessageHandlerOptions
-} from '../useWebSocket.utils'
+} from '../execution/useWebSocket.utils'
 import { isTemporaryExecutionId } from './executionIdValidation'
 
 export interface WebSocketCallbacks {
