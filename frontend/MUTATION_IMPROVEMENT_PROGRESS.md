@@ -193,8 +193,40 @@ if (canExtractModelsFromProvider(provider)) {
 - [ ] Run mutation testing to measure improvement
 - [ ] Analyze remaining survivors
 
+### Phase 4: Code Reorganization ✅ (In Progress)
+
+#### ✅ User Validation Utilities
+
+**Completed:**
+1. **Created userValidation.ts utility module**
+   - 7 validation functions extracted
+   - `isValidUser()` - user existence and ID validation
+   - `canUserOperate()` - user operation permission check
+   - `canMigrateUserData()` - user data migration validation
+   - `doesUserOwnItem()` - ownership validation
+   - `canUserDeleteItem()` - deletion permission check
+   - `getUserId()` - safe user ID extraction
+   - `getUserDisplayName()` - display name extraction
+
+2. **Created comprehensive tests** (`userValidation.test.ts`)
+   - 29 test cases covering all validation functions
+   - Tests all edge cases and boundary conditions
+
+3. **Refactored files:**
+   - `useAgentsData.ts` - uses `canMigrateUserData()` and `getUserDisplayName()`
+   - `useAgentDeletion.ts` - uses `isValidUser()` and `getUserId()`
+
+**Benefits:**
+- Mutation-resistant through explicit function calls
+- Better testability (29 tests)
+- Reusable validation logic
+- Clearer intent in code
+
+---
+
 ### Short Term (Next Week)
-- [ ] Phase 4: Code reorganization for remaining files
+- [x] Phase 4: Code reorganization (in progress)
+- [ ] Complete remaining file refactoring
 - [ ] Measure mutation score improvement (target: 87-88%)
 
 ### Medium Term (Weeks 3-4)
@@ -232,10 +264,17 @@ if (canExtractModelsFromProvider(provider)) {
 
 ## Metrics
 
-**Tests Added:** 210+
-**Code Reorganization:** 6 files refactored
-**Validation Functions Created:** 22 functions
-**Expected Mutants Killed:** 25-30 mutants (from 6 files)
+**Tests Added:** 240+
+**Code Reorganization:** 8 files refactored
+**Validation Functions Created:** 29 functions across 5 modules
+**Expected Mutants Killed:** 30-35 mutants (from 8 files)
+
+### Validation Modules Created:
+1. **providerValidation.ts** - 7 functions (useLLMProviders)
+2. **workflowExecutionValidation.ts** - 5 functions (useWorkflowExecution)
+3. **marketplaceTabValidation.ts** - 10 functions (useMarketplaceData)
+4. **userValidation.ts** - 7 functions (useAgentsData, useAgentDeletion)
+5. **workflowExecutionService** - Already extracted (Phase 2)
 
 ### Phase Breakdown:
 - **Phase 2:** 150+ tests, 3 files, 12 validation functions, ~20-25 mutants
