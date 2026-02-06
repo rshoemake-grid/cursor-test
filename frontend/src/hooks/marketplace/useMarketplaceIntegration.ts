@@ -8,6 +8,7 @@ import { logger as defaultLogger } from '../../utils/logger'
 import type { StorageAdapter } from '../../types/adapters'
 import type { Node } from '@xyflow/react'
 import { calculateMultipleNodePositions } from '../utils/nodePositioning'
+import { logicalOr, logicalOrToEmptyObject, logicalOrToEmptyArray } from '../utils/logicalOr'
 
 interface UseMarketplaceIntegrationOptions {
   tabId: string
@@ -65,10 +66,10 @@ export function useMarketplaceIntegration({
           position: positions[index],
           draggable: true,
           data: {
-            label: agent.name || agent.label || 'Agent Node',
-            name: agent.name || agent.label || 'Agent Node',
-            description: agent.description || '',
-            agent_config: agent.agent_config || {},
+            label: logicalOr(agent.name, logicalOr(agent.label, 'Agent Node')),
+            name: logicalOr(agent.name, logicalOr(agent.label, 'Agent Node')),
+            description: logicalOr(agent.description, ''),
+            agent_config: logicalOrToEmptyObject(agent.agent_config),
           },
         }
         return node
@@ -82,7 +83,7 @@ export function useMarketplaceIntegration({
         const currentDraft = tabDraftsRef.current[currentTabId]
         const updatedDraft = {
           nodes: updatedNodes,
-          edges: currentDraft?.edges || [],
+          edges: logicalOrToEmptyArray(currentDraft?.edges),
           workflowId: currentWorkflowId,
           workflowName: currentWorkflowName,
           workflowDescription: currentWorkflowDescription,

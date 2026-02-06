@@ -18,6 +18,8 @@ import {
   shouldLoadAgents,
   calculateLoadingState,
 } from '../utils/marketplaceTabValidation'
+import { nullishCoalesce, nullishCoalesceToNull } from '../utils/nullishCoalescing'
+import { logicalOrToEmptyArray } from '../utils/logicalOr'
 
 interface Template {
   id: string
@@ -138,14 +140,14 @@ export function useMarketplaceData({
   })
 
   // Local state for setters (for backward compatibility)
-  const [templates, setTemplates] = useState<Template[] | null>(templatesFetching.data ?? null)
-  const [workflowsOfWorkflows, setWorkflowsOfWorkflows] = useState<Template[]>(workflowsOfWorkflowsFetching.data || [])
-  const [agents, setAgents] = useState<AgentTemplate[]>(agentsFetching.data || [])
-  const [repositoryAgents, setRepositoryAgents] = useState<AgentTemplate[]>(repositoryAgentsFetching.data || [])
+  const [templates, setTemplates] = useState<Template[] | null>(nullishCoalesceToNull(templatesFetching.data))
+  const [workflowsOfWorkflows, setWorkflowsOfWorkflows] = useState<Template[]>(logicalOrToEmptyArray(workflowsOfWorkflowsFetching.data))
+  const [agents, setAgents] = useState<AgentTemplate[]>(logicalOrToEmptyArray(agentsFetching.data))
+  const [repositoryAgents, setRepositoryAgents] = useState<AgentTemplate[]>(logicalOrToEmptyArray(repositoryAgentsFetching.data))
 
   // Sync data fetching results to local state
   useEffect(() => {
-    setTemplates(templatesFetching.data ?? null)
+    setTemplates(nullishCoalesceToNull(templatesFetching.data))
   }, [templatesFetching.data])
 
   useEffect(() => {

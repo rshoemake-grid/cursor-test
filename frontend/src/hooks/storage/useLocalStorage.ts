@@ -9,6 +9,7 @@ import {
   parseJsonSafely,
   shouldHandleStorageEvent
 } from './useLocalStorage.utils'
+import { nullishCoalesce } from '../utils/nullishCoalescing'
 
 /**
  * Custom hook for localStorage with consistent error handling
@@ -22,8 +23,8 @@ export function useLocalStorage<T>(
     logger?: typeof logger
   }
 ): [T, (value: T | ((val: T) => T)) => void, () => void] {
-  const storage = options?.storage ?? defaultAdapters.createLocalStorageAdapter()
-  const injectedLogger = options?.logger ?? logger
+  const storage = nullishCoalesce(options?.storage, defaultAdapters.createLocalStorageAdapter())
+  const injectedLogger = nullishCoalesce(options?.logger, logger)
 
   // State to store our value
   const [storedValue, setStoredValue] = useState<T>(() => {
@@ -87,8 +88,8 @@ export function getLocalStorageItem<T>(
     logger?: typeof logger
   }
 ): T {
-  const storage = options?.storage ?? defaultAdapters.createLocalStorageAdapter()
-  const injectedLogger = options?.logger ?? logger
+  const storage = nullishCoalesce(options?.storage, defaultAdapters.createLocalStorageAdapter())
+  const injectedLogger = nullishCoalesce(options?.logger, logger)
   return readStorageItem(storage, key, defaultValue, injectedLogger)
 }
 
@@ -103,8 +104,8 @@ export function setLocalStorageItem<T>(
     logger?: typeof logger
   }
 ): boolean {
-  const storage = options?.storage ?? defaultAdapters.createLocalStorageAdapter()
-  const injectedLogger = options?.logger ?? logger
+  const storage = nullishCoalesce(options?.storage, defaultAdapters.createLocalStorageAdapter())
+  const injectedLogger = nullishCoalesce(options?.logger, logger)
   return writeStorageItem(storage, key, value, injectedLogger)
 }
 
@@ -118,8 +119,8 @@ export function removeLocalStorageItem(
     logger?: typeof logger
   }
 ): boolean {
-  const storage = options?.storage ?? defaultAdapters.createLocalStorageAdapter()
-  const injectedLogger = options?.logger ?? logger
+  const storage = nullishCoalesce(options?.storage, defaultAdapters.createLocalStorageAdapter())
+  const injectedLogger = nullishCoalesce(options?.logger, logger)
   return deleteStorageItem(storage, key, injectedLogger)
 }
 

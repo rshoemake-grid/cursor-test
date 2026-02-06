@@ -8,6 +8,7 @@ import { logger } from '../../utils/logger'
 import type { HttpClient } from '../../types/adapters'
 import { buildSearchParams } from './useMarketplaceData.utils'
 import type { Template } from './useMarketplaceData'
+import { logicalOr, logicalOrToEmptyObject, logicalOrToEmptyArray } from '../utils/logicalOr'
 
 interface UseWorkflowsOfWorkflowsDataOptions {
   httpClient: HttpClient
@@ -54,10 +55,10 @@ export function useWorkflowsOfWorkflowsData({
           // Check if workflow has nodes that reference other workflows
           if (workflowDetail.nodes && Array.isArray(workflowDetail.nodes)) {
             const hasWorkflowReference = workflowDetail.nodes.some((node: any) => {
-              const nodeData = node.data || {}
-              const hasWorkflowId = node.workflow_id || nodeData.workflow_id
-              const description = (node.description || nodeData.description || '').toLowerCase()
-              const name = (node.name || nodeData.name || '').toLowerCase()
+              const nodeData = logicalOrToEmptyObject(node.data)
+              const hasWorkflowId = logicalOr(node.workflow_id, nodeData.workflow_id)
+              const description = (logicalOr(node.description, logicalOr(nodeData.description, ''))).toLowerCase()
+              const name = (logicalOr(node.name, logicalOr(nodeData.name, ''))).toLowerCase()
               
               return hasWorkflowId || 
                      description.includes('workflow') || 
@@ -66,7 +67,7 @@ export function useWorkflowsOfWorkflowsData({
             })
             
             // Also check if workflow description or tags indicate it's a workflow of workflows
-            const workflowDescription = (workflow.description || '').toLowerCase()
+            const workflowDescription = (logicalOr(workflow.description, '')).toLowerCase()
             const isWorkflowOfWorkflows = workflowDescription.includes('workflow of workflows') ||
                                          workflowDescription.includes('composite workflow') ||
                                          workflowDescription.includes('nested workflow') ||

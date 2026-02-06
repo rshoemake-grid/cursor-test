@@ -3,6 +3,8 @@
  * Extracted from useMarketplaceData.ts to improve testability
  */
 
+import { logicalOr, logicalOrToEmptyArray } from '../utils/logicalOr'
+
 export interface FilterableItem {
   category?: string
   name?: string
@@ -61,9 +63,9 @@ export function filterBySearchQuery<T extends FilterableItem>(
   
   const query = searchQuery.toLowerCase()
   return items.filter(item => 
-    (item.name || '').toLowerCase().includes(query) || 
-    (item.description || '').toLowerCase().includes(query) ||
-    (item.tags || []).some(tag => tag.toLowerCase().includes(query))
+    (logicalOr(item.name, '')).toLowerCase().includes(query) || 
+    (logicalOr(item.description, '')).toLowerCase().includes(query) ||
+    logicalOrToEmptyArray(item.tags).some(tag => tag.toLowerCase().includes(query))
   )
 }
 
@@ -101,8 +103,8 @@ export function compareByDate(a: SortableItem, b: SortableItem): number {
  * Compare items by name (alphabetical)
  */
 export function compareByName(a: SortableItem, b: SortableItem): number {
-  const nameA = a.name || ''
-  const nameB = b.name || ''
+  const nameA = logicalOr(a.name, '')
+  const nameB = logicalOr(b.name, '')
   return nameA.localeCompare(nameB)
 }
 

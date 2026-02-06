@@ -11,6 +11,7 @@ import {
   isRealExecutionId,
   isPendingExecutionId,
 } from './executionIdValidation'
+import { logicalOrToEmptyArray } from './logicalOr'
 
 // Import validation utilities instead of defining constants
 
@@ -152,13 +153,15 @@ export class ExecutionStateManager {
     log: any
   ): WorkflowTabData[] {
     return updateTabByWorkflowId(tabs, workflowId, {
-      executions: tabs
-        .find(tab => tab.workflowId === workflowId)
-        ?.executions.map(exec =>
-          exec.id === executionId
-            ? { ...exec, logs: [...exec.logs, log] }
-            : exec
-        ) || []
+      executions: logicalOrToEmptyArray(
+        tabs
+          .find(tab => tab.workflowId === workflowId)
+          ?.executions.map(exec =>
+            exec.id === executionId
+              ? { ...exec, logs: [...exec.logs, log] }
+              : exec
+          )
+      )
     })
   }
 
@@ -173,17 +176,19 @@ export class ExecutionStateManager {
     status: 'running' | 'completed' | 'failed'
   ): WorkflowTabData[] {
     return updateTabByWorkflowId(tabs, workflowId, {
-      executions: tabs
-        .find(tab => tab.workflowId === workflowId)
-        ?.executions.map(exec =>
-          exec.id === executionId
-            ? {
-                ...exec,
-                status,
-                completedAt: (status === 'completed' || status === 'failed') ? new Date() : exec.completedAt
-              }
-            : exec
-        ) || []
+      executions: logicalOrToEmptyArray(
+        tabs
+          .find(tab => tab.workflowId === workflowId)
+          ?.executions.map(exec =>
+            exec.id === executionId
+              ? {
+                  ...exec,
+                  status,
+                  completedAt: (status === 'completed' || status === 'failed') ? new Date() : exec.completedAt
+                }
+              : exec
+          )
+      )
     })
   }
 
@@ -199,19 +204,21 @@ export class ExecutionStateManager {
     nodeState: any
   ): WorkflowTabData[] {
     return updateTabByWorkflowId(tabs, workflowId, {
-      executions: tabs
-        .find(tab => tab.workflowId === workflowId)
-        ?.executions.map(exec =>
-          exec.id === executionId
-            ? {
-                ...exec,
-                nodes: {
-                  ...exec.nodes,
-                  [nodeId]: nodeState
+      executions: logicalOrToEmptyArray(
+        tabs
+          .find(tab => tab.workflowId === workflowId)
+          ?.executions.map(exec =>
+            exec.id === executionId
+              ? {
+                  ...exec,
+                  nodes: {
+                    ...exec.nodes,
+                    [nodeId]: nodeState
+                  }
                 }
-              }
-            : exec
-        ) || []
+              : exec
+          )
+      )
     })
   }
 }
