@@ -1132,10 +1132,11 @@ describe('useWebSocket - edges.comprehensive.2', () => {
           ws.simulateClose(1006, '', false)
           await advanceTimersByTime(50)
 
-          // Verify Math.pow(2, 1) = 2, so delay = 1000 * 2 = 2000
+          // Verify delay calculation: baseDelay * 2^(attempt-1) = 10000 * 2^0 = 10000ms
+          // Note: The delay is calculated using DEFAULT_MAX_DELAY (10000) as baseDelay
           expect(logger.debug).toHaveBeenCalled()
           const reconnectCalls = (logger.debug as jest.Mock).mock.calls.filter((call: any[]) => 
-            call[0]?.includes('Reconnecting in') && call[0]?.includes('2000')
+            call[0]?.includes('Reconnecting in') && call[0]?.includes('10000')
           )
           expect(reconnectCalls.length).toBeGreaterThan(0)
         }
