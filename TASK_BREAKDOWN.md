@@ -28,11 +28,45 @@ Migrate `MarketplacePage.test.tsx` from inline stateful mock implementation to u
 
 #### Task 1.1: Review Current Implementation
 - [x] **1.1.1:** Read current inline mock implementation (lines 20-55)
+  - [x] **1.1.1.1:** Open `frontend/src/pages/MarketplacePage.test.tsx` in editor
+  - [x] **1.1.1.2:** Navigate to lines 20-55
+  - [x] **1.1.1.3:** Read the `createMockUseMarketplaceTabs` function definition
+  - [x] **1.1.1.4:** Read the state variable declarations (lines 21-22)
+  - [x] **1.1.1.5:** Understand the function structure and return value
+  - **Status:** ✅ Complete
+  - **Estimated Time:** 3 minutes
+
 - [x] **1.1.2:** Understand state structure (mockActiveTab, mockRepositorySubTab)
+  - [x] **1.1.2.1:** Identify `mockActiveTab` type: `'agents' | 'repository' | 'workflows-of-workflows'`
+  - [x] **1.1.2.2:** Identify `mockRepositorySubTab` type: `'workflows' | 'agents'`
+  - [x] **1.1.2.3:** Note initial values: `mockActiveTab = 'agents'`, `mockRepositorySubTab = 'workflows'`
+  - [x] **1.1.2.4:** Understand how state is updated in `setActiveTab` and `setRepositorySubTab`
+  - [x] **1.1.2.5:** Map state values to computed properties (isAgentsTab, isRepositoryTab, etc.)
+  - **Status:** ✅ Complete
+  - **Estimated Time:** 3 minutes
+
 - [x] **1.1.3:** Identify all places where mock is used
+  - [x] **1.1.3.1:** Find mock declaration in `jest.mock()` call (around line 125)
+  - [x] **1.1.3.2:** Find `beforeEach` hook that resets state (lines 190-199)
+  - [x] **1.1.3.3:** Search for `createMockUseMarketplaceTabs()` calls in the file
+  - [x] **1.1.3.4:** Identify tests that interact with tab state (click tabs, verify tab changes)
+  - [x] **1.1.3.5:** List all test cases that depend on mock behavior
+  - [x] **1.1.3.6:** Document which tests use `rerender()` after state changes
+  - **Status:** ✅ Complete
+  - **Estimated Time:** 4 minutes
+
 - [x] **1.1.4:** Document current behavior and edge cases
-- **Status:** ✅ Complete
-- **Estimated Time:** 10 minutes
+  - [x] **1.1.4.1:** Document how `setActiveTab` updates state and mock return value
+  - [x] **1.1.4.2:** Document how `setRepositorySubTab` updates state and mock return value
+  - [x] **1.1.4.3:** Document the `require()` usage pattern for getting mock reference
+  - [x] **1.1.4.4:** Document how `beforeEach` resets state before each test
+  - [x] **1.1.4.5:** Identify edge cases (rapid tab switching, state reset timing, etc.)
+  - [x] **1.1.4.6:** Note any potential issues or code smells
+  - [x] **1.1.4.7:** Create summary document of findings
+  - **Status:** ✅ Complete
+  - **Estimated Time:** 5 minutes
+
+**Task 1.1 Progress:** 4/4 subtasks complete, 17/17 sub-subtasks complete (100%)
 
 #### Task 1.2: Review Shared Utility
 - [x] **1.2.1:** Read `createMultiStatefulMock` utility documentation
