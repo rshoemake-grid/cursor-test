@@ -66,7 +66,7 @@ export default function AWSS3Editor({
         <select
           id="aws-s3-mode"
           value={modeValue}
-          onChange={createSelectHandler(setModeValue, onConfigUpdate, CONFIG_FIELD, 'mode')}
+          onChange={createSelectHandler(setModeValue as (value: string) => void, onConfigUpdate, CONFIG_FIELD, 'mode')}
           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
           aria-label="Select S3 operation mode"
         >

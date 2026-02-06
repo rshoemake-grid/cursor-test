@@ -9,6 +9,7 @@ __pycache__/
 *.pyo
 *.pyd
 .Python
+.pytest_cache/
 
 # Virtual environments
 env/
@@ -17,6 +18,10 @@ ENV/
 .venv
 env.bak/
 venv.bak/
+
+examples/
+examples-*/
+
 
 # Build outputs
 dist/
@@ -52,3 +57,24 @@ mutation_report*.html
 *.min.js
 *.min.css
 *.bundle.js
+
+.stryker-tmp/
+.coverage/
+coverage/
+
+# Cosmic Ray reports
+cosmic-ray-reports/
+cosmic-ray-reports-*/
+cosmic-ray-reports-*/
+
+backend/backend/
+backend/backend-*/
+backend/backend-*/
+
+backend/tests/
+backend/tests-*/
+backend/tests-*/
+
+backend/tests/test_tools_base.py
+backend/tests/test_tools_registry.py
+backend/tests/test_tools_base.py

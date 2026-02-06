@@ -87,6 +87,29 @@ jest.mock('./ReactFlowInstanceCapture', () => ({
   ReactFlowInstanceCapture: () => null,
 }))
 
+jest.mock('./WorkflowBuilder/WorkflowBuilderLayout', () => ({
+  __esModule: true,
+  WorkflowBuilderLayout: ({ children, ...props }: any) => (
+    <div data-testid="workflow-builder-layout">
+      <div data-testid="node-panel">NodePanel</div>
+      <div data-testid="workflow-canvas">WorkflowCanvas</div>
+      <div data-testid="execution-console">ExecutionConsole</div>
+      <div data-testid="property-panel">PropertyPanel</div>
+    </div>
+  ),
+}))
+
+jest.mock('./WorkflowBuilder/WorkflowBuilderDialogs', () => ({
+  __esModule: true,
+  WorkflowBuilderDialogs: () => (
+    <>
+      <div data-testid="execution-input-dialog">ExecutionInputDialog</div>
+      <div data-testid="node-context-menu">NodeContextMenu</div>
+      <div data-testid="marketplace-dialog">MarketplaceDialog</div>
+    </>
+  ),
+}))
+
 // Mock UI domain - Phase 7
 jest.mock('../hooks/ui', () => ({
   useKeyboardShortcuts: jest.fn(),

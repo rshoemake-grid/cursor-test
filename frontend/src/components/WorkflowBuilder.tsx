@@ -1,6 +1,5 @@
 import React, { useCallback, useEffect, useState, useRef, forwardRef, useImperativeHandle } from 'react'
 import {
-  ReactFlowProvider,
   useNodesState,
   useEdgesState,
   type Node,
@@ -9,15 +8,7 @@ import {
 } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
 
-// nodeTypes moved to WorkflowCanvas component
-import NodePanel from './NodePanel'
-import ExecutionInputDialog from './ExecutionInputDialog'
-import PropertyPanel from './PropertyPanel'
-import ExecutionConsole from './ExecutionConsole'
-import ContextMenu from './NodeContextMenu'
-import MarketplaceDialog from './MarketplaceDialog'
-import { ReactFlowInstanceCapture } from './ReactFlowInstanceCapture'
-import { KeyboardHandler } from './KeyboardHandler'
+// Components moved to extracted layout/dialog components
 // api, showSuccess, showError moved to hooks
 import { useAuth } from '../contexts/AuthContext'
 // getLocalStorageItem and setLocalStorageItem moved to useDraftManagement hook
@@ -35,6 +26,8 @@ import { useMarketplaceIntegration, useMarketplaceDialog } from '../hooks/market
 import { useNodeSelection } from '../hooks/nodes'
 import { convertNodesForExecutionInput } from '../utils/nodeConversion'
 import WorkflowCanvas from './WorkflowCanvas'
+import { WorkflowBuilderLayout } from './WorkflowBuilder/WorkflowBuilderLayout'
+import { WorkflowBuilderDialogs } from './WorkflowBuilder/WorkflowBuilderDialogs'
 import type { WorkflowBuilderProps } from '../types/workflowBuilder'
 
 // TabDraft interface and storage functions moved to useDraftManagement hook
@@ -283,120 +276,78 @@ const WorkflowBuilder = forwardRef<WorkflowBuilderHandle, WorkflowBuilderProps>(
     openMarketplaceDialog(node)
   }, [openMarketplaceDialog])
 
+  const handleDeleteNode = useCallback(() => {
+    // Clear selection if deleted node was selected
+    if (contextMenuState?.nodeId && selectedNodeId === contextMenuState.nodeId) {
+      setSelectedNodeId(null)
+    }
+    notifyModified()
+  }, [contextMenuState?.nodeId, selectedNodeId, setSelectedNodeId, notifyModified])
+
+  const handleConfirmExecute = useCallback((inputs: Record<string, any>) => {
+    execution.setExecutionInputs(JSON.stringify(inputs))
+    execution.handleConfirmExecute()
+  }, [execution])
+
+  const executions = workflowTabs?.find(t => t.workflowId === localWorkflowId)?.executions || []
+  const activeExecutionId = workflowTabs?.find(t => t.workflowId === localWorkflowId)?.activeExecutionId || null
+
   return (
-    <ReactFlowProvider>
-      <div className="flex-1 flex overflow-hidden">
-        {/* Left Panel - Node Palette (Full Height) */}
-        <NodePanel />
-
-        {/* Middle Section - Workflow Canvas + Console */}
-        <div className="flex-1 flex flex-col overflow-hidden">
-          {/* Canvas Area */}
-          <div className="flex-1 relative">
-            <KeyboardHandler
-              selectedNodeId={selectedNodeId}
-              setSelectedNodeId={setSelectedNodeId}
-              notifyModified={notifyModified}
-              clipboardNode={clipboard.clipboardNode}
-              onCopy={clipboard.copy}
-              onCut={clipboard.cut}
-              onPaste={clipboard.paste}
-            />
-            <ReactFlowInstanceCapture instanceRef={reactFlowInstanceRef} />
-            <WorkflowCanvas
-              nodes={nodes}
-              edges={edges}
-              onNodesChange={onNodesChange}
-              onEdgesChange={onEdgesChange}
-              onConnect={onConnect}
-              onDrop={onDrop}
-              onDragOver={onDragOver}
-              onNodeClick={onNodeClick}
-              onNodeContextMenu={onNodeContextMenu}
-              onEdgeContextMenu={onEdgeContextMenu}
-              onPaneClick={onPaneClick}
-              nodeExecutionStates={nodeExecutionStates}
-            />
-          </div>
-
-          {/* Bottom: Chat Console */}
-          <ExecutionConsole 
-            activeWorkflowId={localWorkflowId || null}
-            executions={workflowTabs?.find(t => t.workflowId === localWorkflowId)?.executions || []}
-            activeExecutionId={workflowTabs?.find(t => t.workflowId === localWorkflowId)?.activeExecutionId || null}
-            onWorkflowUpdate={handleWorkflowUpdate}
-            onExecutionLogUpdate={onExecutionLogUpdate}
-            onExecutionStatusUpdate={onExecutionStatusUpdate}
-            onExecutionNodeUpdate={onExecutionNodeUpdate}
-            onRemoveExecution={onRemoveExecution}
-          />
-        </div>
-
-        {/* Right Panel - Properties (Full Height) */}
-        <PropertyPanel 
-          selectedNodeId={selectedNodeId} 
-          setSelectedNodeId={setSelectedNodeId}
-          selectedNodeIds={selectedNodeIds}
-          nodes={nodes}
-          onSaveWorkflow={saveWorkflow}
-        />
-      </div>
+    <>
+      <WorkflowBuilderLayout
+        nodes={nodes}
+        edges={edges}
+        onNodesChange={onNodesChange}
+        onEdgesChange={onEdgesChange}
+        onConnect={onConnect}
+        onDrop={onDrop}
+        onDragOver={onDragOver}
+        onNodeClick={onNodeClick}
+        onNodeContextMenu={onNodeContextMenu}
+        onEdgeContextMenu={onEdgeContextMenu}
+        onPaneClick={onPaneClick}
+        nodeExecutionStates={nodeExecutionStates}
+        reactFlowInstanceRef={reactFlowInstanceRef}
+        selectedNodeId={selectedNodeId}
+        setSelectedNodeId={setSelectedNodeId}
+        selectedNodeIds={selectedNodeIds}
+        notifyModified={notifyModified}
+        clipboardNode={clipboard.clipboardNode}
+        onCopy={clipboard.copy}
+        onCut={clipboard.cut}
+        onPaste={clipboard.paste}
+        activeWorkflowId={localWorkflowId || null}
+        executions={executions}
+        activeExecutionId={activeExecutionId}
+        onWorkflowUpdate={handleWorkflowUpdate}
+        onExecutionLogUpdate={onExecutionLogUpdate}
+        onExecutionStatusUpdate={onExecutionStatusUpdate}
+        onExecutionNodeUpdate={onExecutionNodeUpdate}
+        onRemoveExecution={onRemoveExecution}
+        onSaveWorkflow={saveWorkflow}
+      />
       
-      {/* Execution Input Dialog - Using extracted component (SRP compliance) */}
-      <ExecutionInputDialog
-        isOpen={execution.showInputs}
-        onClose={() => {
-          execution.setShowInputs(false)
-        }}
-        onSubmit={(inputs) => {
-          execution.setExecutionInputs(JSON.stringify(inputs))
-          execution.handleConfirmExecute()
-        }}
-        nodes={convertNodesForExecutionInput(nodes)}
+      <WorkflowBuilderDialogs
+        showInputs={execution.showInputs}
+        onCloseInputs={() => execution.setShowInputs(false)}
+        onConfirmExecute={handleConfirmExecute}
+        executionNodes={convertNodesForExecutionInput(nodes)}
         workflowName={localWorkflowName}
-      />
-
-      {/* Context Menu */}
-      {contextMenuState && (
-        <>
-          {/* Backdrop to close menu when clicking outside */}
-          <div
-            className="fixed inset-0 z-40"
-            onClick={contextMenu.closeContextMenu}
-          />
-          <ContextMenu
-            nodeId={contextMenuState.nodeId}
-            edgeId={contextMenuState.edgeId}
-            node={contextMenuState.node}
-            x={contextMenuState.x}
-            y={contextMenuState.y}
-            onClose={contextMenu.closeContextMenu}
-            onDelete={() => {
-              // Clear selection if deleted node was selected
-              if (contextMenuState.nodeId && selectedNodeId === contextMenuState.nodeId) {
-                setSelectedNodeId(null)
-              }
-              notifyModified()
-            }}
-            onCopy={clipboard.copy}
-            onCut={clipboard.cut}
-            onPaste={clipboard.paste}
-            onAddToAgentNodes={handleAddToAgentNodes}
-            onSendToMarketplace={handleSendToMarketplace}
-            canPaste={!!clipboard.clipboardNode}
-          />
-        </>
-      )}
-
-      {/* Marketplace Dialog */}
-      <MarketplaceDialog
-        isOpen={showMarketplaceDialog}
-        onClose={closeMarketplaceDialog}
-        node={marketplaceNode}
+        contextMenu={contextMenuState}
+        onCloseContextMenu={contextMenu.closeContextMenu}
+        onDeleteNode={handleDeleteNode}
+        onCopy={clipboard.copy}
+        onCut={clipboard.cut}
+        onPaste={clipboard.paste}
+        onAddToAgentNodes={handleAddToAgentNodes}
+        onSendToMarketplace={handleSendToMarketplace}
+        canPaste={!!clipboard.clipboardNode}
+        showMarketplaceDialog={showMarketplaceDialog}
+        onCloseMarketplaceDialog={closeMarketplaceDialog}
+        marketplaceNode={marketplaceNode}
         workflowId={localWorkflowId}
-        workflowName={localWorkflowName}
       />
-    </ReactFlowProvider>
+    </>
   )
 })
 

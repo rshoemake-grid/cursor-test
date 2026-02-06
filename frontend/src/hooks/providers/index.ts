@@ -3,5 +3,5 @@
  * Centralized exports for provider-related hooks
  */
 
-export { useLLMProviders } from './useLLMProviders'
+export { useLLMProviders, type LLMProvider } from './useLLMProviders'
 export { useProviderManagement } from './useProviderManagement'

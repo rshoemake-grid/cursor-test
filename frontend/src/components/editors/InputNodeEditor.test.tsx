@@ -2601,7 +2601,7 @@ describe('InputNodeEditor', () => {
       
       // Verify exact text content (kills template literal mutants)
       const configText = screen.getByText(/Configuration for database nodes/i)
-      expect(configText.textContent).toBe('Configuration for database nodes is handled in PropertyPanel. Consider extracting to a separate component for better organization.')
+      expect(configText.textContent).toBe('Configuration for database nodes is handled in PropertyPanel.')
     })
 
     it('should verify exact text for firebase configuration message', () => {
@@ -2616,7 +2616,7 @@ describe('InputNodeEditor', () => {
       
       // Verify exact text content
       const configText = screen.getByText(/Configuration for firebase nodes/i)
-      expect(configText.textContent).toBe('Configuration for firebase nodes is handled in PropertyPanel. Consider extracting to a separate component for better organization.')
+      expect(configText.textContent).toBe('Configuration for firebase nodes is handled in PropertyPanel.')
     })
 
     it('should verify exact text for bigquery configuration message', () => {
@@ -2631,7 +2631,7 @@ describe('InputNodeEditor', () => {
       
       // Verify exact text content
       const configText = screen.getByText(/Configuration for bigquery nodes/i)
-      expect(configText.textContent).toBe('Configuration for bigquery nodes is handled in PropertyPanel. Consider extracting to a separate component for better organization.')
+      expect(configText.textContent).toBe('Configuration for bigquery nodes is handled in PropertyPanel.')
     })
 
     it('should verify exact title text for database', () => {
@@ -2855,9 +2855,9 @@ describe('InputNodeEditor', () => {
     it('should verify exact template literal string for configuration message', () => {
       const types: Array<'database' | 'firebase' | 'bigquery'> = ['database', 'firebase', 'bigquery']
       const expectedMessages = {
-        database: 'Configuration for database nodes is handled in PropertyPanel. Consider extracting to a separate component for better organization.',
-        firebase: 'Configuration for firebase nodes is handled in PropertyPanel. Consider extracting to a separate component for better organization.',
-        bigquery: 'Configuration for bigquery nodes is handled in PropertyPanel. Consider extracting to a separate component for better organization.'
+        database: 'Configuration for database nodes is handled in PropertyPanel.',
+        firebase: 'Configuration for firebase nodes is handled in PropertyPanel.',
+        bigquery: 'Configuration for bigquery nodes is handled in PropertyPanel.'
       }
 
       for (const type of types) {
@@ -2870,7 +2870,7 @@ describe('InputNodeEditor', () => {
 
         const { unmount } = render(<InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />)
         
-        // Verify exact template literal: `Configuration for {node.type} nodes is handled in PropertyPanel. Consider extracting to a separate component for better organization.`
+        // Verify exact template literal: `Configuration for {node.type} nodes is handled in PropertyPanel.`
         const configText = screen.getByText(new RegExp(`Configuration for ${type} nodes`, 'i'))
         expect(configText.textContent).toBe(expectedMessages[type])
         

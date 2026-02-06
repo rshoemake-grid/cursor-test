@@ -14,6 +14,7 @@ export interface UseSettingsStateSyncOptions {
   providers: LLMProvider[]
   iterationLimit: number
   defaultModel: string
+  settingsLoaded: boolean
   setProviders: React.Dispatch<React.SetStateAction<LLMProvider[]>>
   setIterationLimit: React.Dispatch<React.SetStateAction<number>>
   setDefaultModel: React.Dispatch<React.SetStateAction<string>>

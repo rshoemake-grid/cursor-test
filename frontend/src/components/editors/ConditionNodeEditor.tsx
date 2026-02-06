@@ -52,7 +52,7 @@ export default function ConditionNodeEditor({
     : {}
   // Explicit check to prevent mutation survivors
   // Use constants to kill StringLiteral mutations
-  const conditionType = (conditionConfig.condition_type !== null && conditionConfig.condition_type !== undefined && conditionConfig.condition_type !== '' && isValidConditionType(conditionConfig.condition_type))
+  const conditionType = (conditionConfig.condition_type != null && isValidConditionType(conditionConfig.condition_type))
     ? conditionConfig.condition_type
     : CONDITION_TYPES.EQUALS
   // Explicit checks to prevent mutation survivors

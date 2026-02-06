@@ -23,3 +23,4 @@ export type { TabType, RepositorySubTabType, UseMarketplaceTabsReturn } from './
 export type { UseMarketplaceSelectionsReturn } from './useMarketplaceSelections'
 export type { UseMarketplaceActionsReturn } from './useMarketplaceActions'
 export type { UseOfficialItemsReturn } from './useOfficialItems'
+export type { Template, AgentTemplate } from './useMarketplaceData'
