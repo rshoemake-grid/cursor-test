@@ -6,3 +6,4 @@
 export { useFormField } from './useFormField'
 export { usePublishForm } from './usePublishForm'
 export { useLoopConfig } from './useLoopConfig'
+export { useInputTypeHandler, type FormFieldType } from './useInputTypeHandler'

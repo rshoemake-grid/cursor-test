@@ -3,6 +3,9 @@ import type { WorkflowDefinition, ExecutionState } from '../types/workflow'
 import type { StorageAdapter } from '../types/adapters'
 import { defaultAdapters } from '../types/adapters'
 import { logger } from '../utils/logger'
+// DRY: Use extracted utilities
+import { extractData } from './responseHandlers'
+import { workflowEndpoints, templateEndpoints, executionEndpoints, marketplaceEndpoints, settingsEndpoints } from './endpoints'
 
 const API_BASE_URL = '/api'
 
@@ -76,48 +79,43 @@ export function createApiClient(options?: {
   return {
   // Workflows
   async getWorkflows(): Promise<WorkflowDefinition[]> {
-    const response = await instance.get('/workflows')
-    return response.data
+    return extractData(await instance.get(workflowEndpoints.list()))
   },
 
   async getWorkflow(id: string): Promise<WorkflowDefinition> {
-    const response = await instance.get(`/workflows/${id}`)
-    return response.data
+    return extractData(await instance.get(workflowEndpoints.detail(id)))
   },
 
   async createWorkflow(workflow: Omit<WorkflowDefinition, 'id'>): Promise<WorkflowDefinition> {
-    const response = await instance.post('/workflows', workflow)
-    return response.data
+    return extractData(await instance.post(workflowEndpoints.list(), workflow))
   },
 
   async updateWorkflow(id: string, workflow: Partial<WorkflowDefinition>): Promise<WorkflowDefinition> {
-    const response = await instance.put(`/workflows/${id}`, workflow)
-    return response.data
+    return extractData(await instance.put(workflowEndpoints.detail(id), workflow))
   },
 
   async deleteWorkflow(id: string): Promise<void> {
-    await instance.delete(`/workflows/${id}`)
+    await instance.delete(workflowEndpoints.detail(id))
   },
 
   async bulkDeleteWorkflows(ids: string[]): Promise<{ message: string; deleted_count: number; failed_ids?: string[] }> {
-    const response = await instance.post('/workflows/bulk-delete', {
+    return extractData(await instance.post(workflowEndpoints.bulkDelete(), {
       workflow_ids: ids
-    })
-    return response.data
+    }))
   },
 
   async duplicateWorkflow(id: string): Promise<WorkflowDefinition> {
-    // Get the workflow first - need to use the instance methods directly
-    const getWorkflowResponse = await instance.get(`/workflows/${id}`)
-    const workflow = getWorkflowResponse.data
+    // Get the workflow first
+    const getResponse = await instance.get(workflowEndpoints.detail(id))
+    const workflow = extractData(getResponse)
     // Create a new workflow with "-copy" appended to the name
     const duplicated = {
       ...workflow,
       id: undefined, // Remove ID so it creates a new one
       name: `${workflow.name}-copy`,
     }
-    const createResponse = await instance.post('/workflows', duplicated)
-    return createResponse.data
+    const postResponse = await instance.post(workflowEndpoints.list(), duplicated)
+    return extractData(postResponse)
   },
 
   async publishWorkflow(
@@ -129,8 +127,7 @@ export function createApiClient(options?: {
       estimated_time?: string
     }
   ): Promise<any> {
-    const response = await instance.post(`/workflows/${workflowId}/publish`, publishData)
-    return response.data
+    return extractData(await instance.post(workflowEndpoints.publish(workflowId), publishData))
   },
 
   async publishAgent(
@@ -144,13 +141,12 @@ export function createApiClient(options?: {
       agent_config: any
     }
   ): Promise<any> {
-    const response = await instance.post('/marketplace/agents', agentData)
-    return response.data
+    return extractData(await instance.post(marketplaceEndpoints.agents(), agentData))
   },
 
   // Templates
   async deleteTemplate(templateId: string): Promise<void> {
-    await instance.delete(`/templates/${templateId}`)
+    await instance.delete(templateEndpoints.delete(templateId))
   },
 
   // Executions
@@ -160,7 +156,7 @@ export function createApiClient(options?: {
   ): Promise<ExecutionState> {
     injectedLogger.debug('[API Client] executeWorkflow called with:', { workflowId, inputs })
     try {
-      const url = `/workflows/${workflowId}/execute`
+      const url = workflowEndpoints.execute(workflowId)
       const payload = {
         workflow_id: workflowId,
         inputs,
@@ -172,7 +168,7 @@ export function createApiClient(options?: {
         status: response.status,
         data: response.data
       })
-      return response.data
+      return extractData(response)
     } catch (error: any) {
       injectedLogger.error('[API Client] executeWorkflow error:', error)
       injectedLogger.error('[API Client] Error details:', {
@@ -187,15 +183,13 @@ export function createApiClient(options?: {
   },
 
   async getExecution(executionId: string): Promise<ExecutionState> {
-    const response = await instance.get(`/executions/${executionId}`)
-    return response.data
+    return extractData(await instance.get(executionEndpoints.detail(executionId)))
   },
 
   // Settings
   async getLLMSettings(): Promise<any> {
     try {
-      const response = await instance.get('/settings/llm')
-      return response.data
+      return extractData(await instance.get(settingsEndpoints.llm()))
     } catch (error: any) {
       // Return empty settings if not authenticated or error
       if (error.response?.status === 401) {

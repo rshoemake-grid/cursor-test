@@ -1,13 +1,15 @@
-import React, { useRef } from 'react'
+import { useRef } from 'react'
 // Domain-based imports - Phase 7
 import { useFormField } from '../../hooks/forms'
+// DRY: Use centralized input type handler
+import { useInputTypeHandler, type FormFieldType } from '../../hooks/forms/useInputTypeHandler'
 
 export interface FormFieldProps<T = any> {
   label: string
   id: string
   value: T
   onChange: (value: T) => void
-  type?: 'text' | 'textarea' | 'select' | 'number' | 'checkbox' | 'email' | 'password'
+  type?: FormFieldType
   placeholder?: string
   description?: string
   options?: Array<{ value: string; label: string }>
@@ -64,6 +66,9 @@ export function FormField<T = any>({
   const value = useHook ? fieldHook!.value : controlledValue
   const inputRef = useHook ? fieldHook!.inputRef : useRef<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>(null)
 
+  // DRY: Use centralized input type handler
+  const handleInputChange = useInputTypeHandler(type, onChange)
+
   const baseInputClasses = 'w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent'
   const disabledClasses = disabled ? 'bg-gray-100 cursor-not-allowed' : ''
 
@@ -72,15 +77,7 @@ export function FormField<T = any>({
       id,
       ref: inputRef as any,
       value: value as any,
-      onChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-        if (type === 'checkbox') {
-          onChange((e.target as HTMLInputElement).checked as T)
-        } else if (type === 'number') {
-          onChange(Number(e.target.value) as T)
-        } else {
-          onChange(e.target.value as T)
-        }
-      },
+      onChange: handleInputChange,
       disabled,
       required,
       'aria-label': ariaLabel || label,
