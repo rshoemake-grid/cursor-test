@@ -428,37 +428,60 @@ Evaluate if using the real `useMarketplaceTabs` hook would be better than mockin
 **Task 4.1 Progress:** 4/4 subtasks complete, 15/15 sub-subtasks complete (100%)
 
 #### Task 4.2: Create Proof of Concept
-- [x] **4.2.1:** Remove mock for `useMarketplaceTabs`
-  - [x] **4.2.1.1:** Identify mock declaration location (jest.mock block)
-  - [x] **4.2.1.2:** Plan removal of mock line
-  - [x] **4.2.1.3:** Document what needs to be removed
-  - **Status:** ✅ Complete (Planning done, ready to implement)
-  - **Time Taken:** 3 minutes
+- [ ] **4.2.1:** Remove mock for `useMarketplaceTabs`
+  - [ ] **4.2.1.1:** Open `MarketplacePage.test.tsx`
+  - [ ] **4.2.1.2:** Locate jest.mock('../hooks/marketplace') block (around line 69)
+  - [ ] **4.2.1.3:** Find `useMarketplaceTabs: jest.fn(...)` line (around line 121)
+  - [ ] **4.2.1.4:** Remove the mock line for useMarketplaceTabs
+  - [ ] **4.2.1.5:** Keep other mocks intact
+  - [ ] **4.2.1.6:** Verify import still works (useMarketplaceTabs from actual module)
+  - **Status:** ⏳ Pending
+  - **Estimated Time:** 5 minutes
 
-- [x] **4.2.2:** Mock only hook dependencies if needed
-  - [x] **4.2.2.1:** Check React useState (no mock needed)
-  - [x] **4.2.2.2:** Check constants (no mock needed)
-  - [x] **4.2.2.3:** Verify no other dependencies
-  - **Status:** ✅ Complete
-  - **Findings:** No dependencies to mock
-  - **Time Taken:** 2 minutes
+- [ ] **4.2.2:** Remove stateful mock setup
+  - [ ] **4.2.2.1:** Remove `createMultiStatefulMock` import (line 15)
+  - [ ] **4.2.2.2:** Remove `marketplaceTabsMock` declaration (lines 27-51)
+  - [ ] **4.2.2.3:** Remove `UseMarketplaceTabsReturn` import if unused
+  - [ ] **4.2.2.4:** Clean up any unused imports
+  - **Status:** ⏳ Pending
+  - **Estimated Time:** 3 minutes
 
-- [x] **4.2.3:** Update tests to work with real hook
-  - [x] **4.2.3.1:** Analyze current test structure
-  - [x] **4.2.3.2:** Check if tests need changes (likely no changes)
-  - [x] **4.2.3.3:** Identify potential issues (state persistence)
-  - [x] **4.2.3.4:** Plan solutions if needed
-  - **Status:** ✅ Complete (Analysis done, ready to implement)
-  - **Findings:** Tests should work without changes, current structure handles state
-  - **Time Taken:** 5 minutes
+- [ ] **4.2.3:** Update beforeEach hook
+  - [ ] **4.2.3.1:** Remove `marketplaceTabsMock.resetState()` call (line 188)
+  - [ ] **4.2.3.2:** Remove mock re-initialization (lines 193-194)
+  - [ ] **4.2.3.3:** Keep other beforeEach setup intact
+  - [ ] **4.2.3.4:** Verify beforeEach still works correctly
+  - **Status:** ⏳ Pending
+  - **Estimated Time:** 3 minutes
 
-- [x] **4.2.4:** Run tests to verify functionality
-  - [x] **4.2.4.1:** Document test command
-  - [x] **4.2.4.2:** Document expected results
-  - **Status:** ✅ Complete (Planning done, ready to verify)
-  - **Time Taken:** 2 minutes
+- [ ] **4.2.4:** Verify no other dependencies need mocking
+  - [ ] **4.2.4.1:** Check React useState (built-in, no mock needed)
+  - [ ] **4.2.4.2:** Check constants (exported, no mock needed)
+  - [ ] **4.2.4.3:** Verify no API/storage/context dependencies
+  - [ ] **4.2.4.4:** Confirm hook can be used as-is
+  - **Status:** ⏳ Pending
+  - **Estimated Time:** 2 minutes
 
-**Task 4.2 Progress:** 4/4 subtasks complete, 11/11 sub-subtasks complete (100%) - Ready for implementation
+- [ ] **4.2.5:** Run tests to verify functionality
+  - [ ] **4.2.5.1:** Run: `npm test -- MarketplacePage.test.tsx`
+  - [ ] **4.2.5.2:** Verify all 50 tests pass
+  - [ ] **4.2.5.3:** Check execution time (should be similar ~0.6s)
+  - [ ] **4.2.5.4:** Verify no new errors or warnings
+  - [ ] **4.2.5.5:** Test tab switching functionality
+  - [ ] **4.2.5.6:** Test state persistence between renders
+  - **Status:** ⏳ Pending
+  - **Estimated Time:** 10 minutes
+
+- [ ] **4.2.6:** Fix any issues found
+  - [ ] **4.2.6.1:** Document any test failures
+  - [ ] **4.2.6.2:** Investigate root cause
+  - [ ] **4.2.6.3:** Apply fixes (if needed)
+  - [ ] **4.2.6.4:** Re-run tests until all pass
+  - [ ] **4.2.6.5:** Document solutions
+  - **Status:** ⏳ Pending
+  - **Estimated Time:** Variable (15-30 minutes if issues found)
+
+**Task 4.2 Progress:** 0/6 subtasks complete, 28/28 sub-subtasks complete (0%)
 
 #### Task 4.3: Compare Approaches
 - [x] **4.3.1:** Compare test execution time
@@ -522,10 +545,13 @@ Evaluate if using the real `useMarketplaceTabs` hook would be better than mockin
 
 **Task 4.4 Progress:** 3/3 subtasks complete, 9/9 sub-subtasks complete (100%)
 
-**Phase 4 Progress:** 4/4 tasks complete (100%) ✅
-- **Recommendation:** Use Real Hook
-- **Documentation:** REAL_HOOK_EVALUATION.md created
-- **Status:** Ready for implementation
+**Phase 4 Progress:** 1/4 tasks complete (25%) 🔄
+- **Task 4.1:** ✅ Complete (Research done)
+- **Task 4.2:** ⏳ Pending (Ready for implementation)
+- **Task 4.3:** ✅ Complete (Comparison done)
+- **Task 4.4:** ✅ Complete (Decision made: Use Real Hook)
+- **Recommendation:** ✅ Use Real Hook
+- **Status:** Ready for implementation (Task 4.2)
 
 ---
 
@@ -543,24 +569,109 @@ Ensure tests continue to pass and catch any regressions early.
 
 #### Task 5.1: Set Up Monitoring
 - [ ] **5.1.1:** Set up automated test runs (if CI/CD exists)
+  - [ ] **5.1.1.1:** Check if CI/CD pipeline exists (GitHub Actions, GitLab CI, etc.)
+  - [ ] **5.1.1.2:** Review existing CI/CD configuration files
+  - [ ] **5.1.1.3:** Identify test job/step in pipeline
+  - [ ] **5.1.1.4:** Verify MarketplacePage tests are included
+  - [ ] **5.1.1.5:** Check if tests run on every commit/PR
+  - [ ] **5.1.1.6:** Document CI/CD test execution
+  - **Status:** ⏳ Pending
+  - **Estimated Time:** 10 minutes
+
 - [ ] **5.1.2:** Document manual test run process
+  - [ ] **5.1.2.1:** Document command to run MarketplacePage tests
+  - [ ] **5.1.2.2:** Document command to run full test suite
+  - [ ] **5.1.2.3:** Document how to run specific test
+  - [ ] **5.1.2.4:** Document how to run tests in watch mode
+  - [ ] **5.1.2.5:** Document expected output format
+  - [ ] **5.1.2.6:** Add troubleshooting section for common issues
+  - **Status:** ⏳ Pending
+  - **Estimated Time:** 10 minutes
+
 - [ ] **5.1.3:** Create test run schedule
-- **Status:** ⏳ Pending
-- **Estimated Time:** 15 minutes
+  - [ ] **5.1.3.1:** Define frequency for MarketplacePage tests (weekly)
+  - [ ] **5.1.3.2:** Define when to run full suite (after major changes)
+  - [ ] **5.1.3.3:** Document trigger conditions (PR, commit, manual)
+  - [ ] **5.1.3.4:** Create calendar reminder or task
+  - [ ] **5.1.3.5:** Document in team wiki/docs if applicable
+  - **Status:** ⏳ Pending
+  - **Estimated Time:** 5 minutes
+
+**Task 5.1 Progress:** 0/3 subtasks complete, 16/16 sub-subtasks complete (0%)
 
 #### Task 5.2: Regular Test Runs
 - [ ] **5.2.1:** Run MarketplacePage tests weekly
+  - [ ] **5.2.1.1:** Set up weekly reminder/calendar event
+  - [ ] **5.2.1.2:** Run: `npm test -- MarketplacePage.test.tsx`
+  - [ ] **5.2.1.3:** Verify all 50 tests pass
+  - [ ] **5.2.1.4:** Check execution time (~0.6s expected)
+  - [ ] **5.2.1.5:** Document results (pass/fail, time, date)
+  - [ ] **5.2.1.6:** Investigate any failures immediately
+  - **Status:** 🔄 Ongoing
+  - **Frequency:** Weekly
+  - **Estimated Time:** 5 minutes per run
+
 - [ ] **5.2.2:** Run full test suite after major changes
+  - [ ] **5.2.2.1:** Identify what constitutes "major changes"
+  - [ ] **5.2.2.2:** Run: `npm test`
+  - [ ] **5.2.2.3:** Verify MarketplacePage tests still pass
+  - [ ] **5.2.2.4:** Check for new failures in other tests
+  - [ ] **5.2.2.5:** Document results and any issues
+  - [ ] **5.2.2.6:** Investigate regressions if found
+  - **Status:** 🔄 Ongoing
+  - **Frequency:** After major changes
+  - **Estimated Time:** 15-30 minutes per run
+
 - [ ] **5.2.3:** Document any failures
-- **Status:** 🔄 Ongoing
-- **Estimated Time:** Ongoing
+  - [ ] **5.2.3.1:** Create failure log template
+  - [ ] **5.2.3.2:** Document failure details (test name, error message)
+  - [ ] **5.2.3.3:** Document failure context (what changed)
+  - [ ] **5.2.3.4:** Document resolution steps
+  - [ ] **5.2.3.5:** Track failure frequency
+  - [ ] **5.2.3.6:** Identify patterns if failures recur
+  - **Status:** 🔄 Ongoing
+  - **Frequency:** As needed
+  - **Estimated Time:** 10 minutes per failure
+
+**Task 5.2 Progress:** 0/3 subtasks complete, 18/18 sub-subtasks complete (0%) - Ongoing
 
 #### Task 5.3: Track Test Metrics
 - [ ] **5.3.1:** Track test execution time
+  - [ ] **5.3.1.1:** Create metrics tracking document/spreadsheet
+  - [ ] **5.3.1.2:** Record baseline execution time (~0.6s)
+  - [ ] **5.3.1.3:** Record execution time on each run
+  - [ ] **5.3.1.4:** Calculate average execution time
+  - [ ] **5.3.1.5:** Identify performance regressions (>20% increase)
+  - [ ] **5.3.1.6:** Document performance trends over time
+  - **Status:** ⏳ Pending
+  - **Frequency:** On each test run
+  - **Estimated Time:** 2 minutes per recording
+
 - [ ] **5.3.2:** Track test pass rate
+  - [ ] **5.3.2.1:** Record test results (pass/fail) for each run
+  - [ ] **5.3.2.2:** Calculate pass rate percentage
+  - [ ] **5.3.2.3:** Track pass rate over time
+  - [ ] **5.3.2.4:** Identify trends (improving/degrading)
+  - [ ] **5.3.2.5:** Set pass rate threshold (e.g., 95% minimum)
+  - [ ] **5.3.2.6:** Alert if pass rate drops below threshold
+  - **Status:** ⏳ Pending
+  - **Frequency:** On each test run
+  - **Estimated Time:** 2 minutes per recording
+
 - [ ] **5.3.3:** Track flaky tests
-- **Status:** ⏳ Pending
-- **Estimated Time:** Ongoing
+  - [ ] **5.3.3.1:** Identify tests that pass/fail inconsistently
+  - [ ] **5.3.3.2:** Document flaky test names
+  - [ ] **5.3.3.3:** Record failure frequency
+  - [ ] **5.3.3.4:** Investigate root causes of flakiness
+  - [ ] **5.3.3.5:** Fix or mark flaky tests appropriately
+  - [ ] **5.3.3.6:** Monitor if fixes resolve flakiness
+  - **Status:** ⏳ Pending
+  - **Frequency:** As flakiness is detected
+  - **Estimated Time:** Variable (investigation time)
+
+**Task 5.3 Progress:** 0/3 subtasks complete, 18/18 sub-subtasks complete (0%) - Ongoing
+
+**Phase 5 Progress:** 0/3 tasks complete (0%) - Ongoing
 
 **Phase 5 Progress:** 0/3 tasks complete (0%) - Ongoing
 
@@ -580,26 +691,122 @@ Identify and migrate other test files that could benefit from stateful mock patt
 
 #### Task 6.1: Identify Candidates
 - [ ] **6.1.1:** Search for test files with similar patterns
+  - [ ] **6.1.1.1:** Search for files using `jest.fn(() => ({` pattern
+  - [ ] **6.1.1.2:** Search for files with module-level state variables (`let mock...`)
+  - [ ] **6.1.1.3:** Search for files mocking hooks with state management
+  - [ ] **6.1.1.4:** Search for files using `createMock` or similar patterns
+  - [ ] **6.1.1.5:** List all candidate files found
+  - [ ] **6.1.1.6:** Count total candidates
+  - **Status:** ⏳ Pending
+  - **Estimated Time:** 15 minutes
+
 - [ ] **6.1.2:** Review test files that mock hooks with state
+  - [ ] **6.1.2.1:** Open each candidate file
+  - [ ] **6.1.2.2:** Review mock implementation pattern
+  - [ ] **6.1.2.3:** Identify if pattern matches stateful mock use case
+  - [ ] **6.1.2.4:** Check if hook has state that changes during tests
+  - [ ] **6.1.2.5:** Verify tests would benefit from stateful mock
+  - [ ] **6.1.2.6:** Document findings for each candidate
+  - **Status:** ⏳ Pending
+  - **Estimated Time:** 10 minutes per file
+
 - [ ] **6.1.3:** Prioritize candidates by impact
-- **Status:** ⏳ Pending
-- **Estimated Time:** 30 minutes
+  - [ ] **6.1.3.1:** Evaluate migration complexity (low/medium/high)
+  - [ ] **6.1.3.2:** Evaluate test count (more tests = higher impact)
+  - [ ] **6.1.3.3:** Evaluate current issues (failing/flaky tests)
+  - [ ] **6.1.3.4:** Calculate priority score for each candidate
+  - [ ] **6.1.3.5:** Sort candidates by priority
+  - [ ] **6.1.3.6:** Create prioritized list document
+  - **Status:** ⏳ Pending
+  - **Estimated Time:** 10 minutes
+
+**Task 6.1 Progress:** 0/3 subtasks complete, 17/17 sub-subtasks complete (0%)
 
 #### Task 6.2: Evaluate Each Candidate
 - [ ] **6.2.1:** Review test file structure
+  - [ ] **6.2.1.1:** Read test file to understand structure
+  - [ ] **6.2.1.2:** Identify mock implementation location
+  - [ ] **6.2.1.3:** Identify state variables and their types
+  - [ ] **6.2.1.4:** Identify how state is used in tests
+  - [ ] **6.2.1.5:** Check for beforeEach/afterEach hooks
+  - [ ] **6.2.1.6:** Document file structure and patterns
+  - **Status:** ⏳ Pending
+  - **Estimated Time:** 10 minutes per file
+
 - [ ] **6.2.2:** Assess migration complexity
+  - [ ] **6.2.2.1:** Map current state structure to utility format
+  - [ ] **6.2.2.2:** Identify required changes (single vs multi-state)
+  - [ ] **6.2.2.3:** Check for dependencies on current implementation
+  - [ ] **6.2.2.4:** Identify potential breaking changes
+  - [ ] **6.2.2.5:** Rate complexity (low/medium/high)
+  - [ ] **6.2.2.6:** Document complexity assessment
+  - **Status:** ⏳ Pending
+  - **Estimated Time:** 15 minutes per file
+
 - [ ] **6.2.3:** Estimate time required
+  - [ ] **6.2.3.1:** Estimate time to migrate mock (15-30 min)
+  - [ ] **6.2.3.2:** Estimate time to update tests (10-20 min)
+  - [ ] **6.2.3.3:** Estimate time to verify (10-15 min)
+  - [ ] **6.2.3.4:** Add buffer for troubleshooting (10-20 min)
+  - [ ] **6.2.3.5:** Calculate total estimated time
+  - [ ] **6.2.3.6:** Document time estimate
+  - **Status:** ⏳ Pending
+  - **Estimated Time:** 5 minutes per file
+
 - [ ] **6.2.4:** Prioritize by value
-- **Status:** ⏳ Pending
-- **Estimated Time:** Variable
+  - [ ] **6.2.4.1:** Calculate value score (impact / effort)
+  - [ ] **6.2.4.2:** Consider test count and complexity
+  - [ ] **6.2.4.3:** Consider current issues (failures, flakiness)
+  - [ ] **6.2.4.4:** Sort by value score
+  - [ ] **6.2.4.5:** Create prioritized migration plan
+  - [ ] **6.2.4.6:** Document prioritization rationale
+  - **Status:** ⏳ Pending
+  - **Estimated Time:** 10 minutes
+
+**Task 6.2 Progress:** 0/4 subtasks complete, 24/24 sub-subtasks complete (0%)
 
 #### Task 6.3: Migrate High-Priority Files
 - [ ] **6.3.1:** Migrate first candidate
+  - [ ] **6.3.1.1:** Import `createStatefulMock` or `createMultiStatefulMock`
+  - [ ] **6.3.1.2:** Define state type
+  - [ ] **6.3.1.3:** Replace inline mock with utility call
+  - [ ] **6.3.1.4:** Update mock declaration
+  - [ ] **6.3.1.5:** Update beforeEach to use resetState()
+  - [ ] **6.3.1.6:** Remove old inline implementation
+  - [ ] **6.3.1.7:** Fix any TypeScript errors
+  - **Status:** ⏳ Pending
+  - **Estimated Time:** 30-45 minutes per file
+
 - [ ] **6.3.2:** Verify tests pass
+  - [ ] **6.3.2.1:** Run test file: `npm test -- FileName.test.tsx`
+  - [ ] **6.3.2.2:** Verify all tests pass
+  - [ ] **6.3.2.3:** Check execution time (no regression)
+  - [ ] **6.3.2.4:** Run full test suite to check for regressions
+  - [ ] **6.3.2.5:** Fix any failures
+  - [ ] **6.3.2.6:** Re-run tests until all pass
+  - **Status:** ⏳ Pending
+  - **Estimated Time:** 15-30 minutes per file
+
 - [ ] **6.3.3:** Document migration
+  - [ ] **6.3.3.1:** Document which file was migrated
+  - [ ] **6.3.3.2:** Document changes made
+  - [ ] **6.3.3.3:** Document any issues encountered
+  - [ ] **6.3.3.4:** Document time taken
+  - [ ] **6.3.3.5:** Add to migration log
+  - [ ] **6.3.3.6:** Update task breakdown progress
+  - **Status:** ⏳ Pending
+  - **Estimated Time:** 10 minutes per file
+
 - [ ] **6.3.4:** Repeat for other candidates
-- **Status:** ⏳ Pending
-- **Estimated Time:** Variable
+  - [ ] **6.3.4.1:** Select next candidate from prioritized list
+  - [ ] **6.3.4.2:** Repeat migration process (6.3.1-6.3.3)
+  - [ ] **6.3.4.3:** Continue until all high-priority files migrated
+  - [ ] **6.3.4.4:** Update overall progress tracking
+  - [ ] **6.3.4.5:** Document completion status
+  - **Status:** ⏳ Pending
+  - **Estimated Time:** Variable (depends on number of candidates)
+
+**Task 6.3 Progress:** 0/4 subtasks complete, 23/23 sub-subtasks complete (0%)
 
 **Phase 6 Progress:** 0/3 tasks complete (0%)
 
