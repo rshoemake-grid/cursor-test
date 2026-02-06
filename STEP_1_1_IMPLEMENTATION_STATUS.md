@@ -1,20 +1,30 @@
 # Step 1.1 Implementation Status
 
 **Date:** January 26, 2026  
-**Status:** ✅ ALREADY IMPLEMENTED  
+**Status:** ✅ COMPLETE AND WORKING  
 **File:** `frontend/src/pages/MarketplacePage.test.tsx`
 
 ---
 
-## Current Implementation
+## Summary
 
-### ✅ Step 1.1 is Complete
+**All tests are now passing!** ✅
 
-The stateful mock helper function `createMockUseMarketplaceTabs` **already exists** in the test file.
+- **Total Tests:** 50
+- **Passing:** 50 ✅
+- **Failing:** 0 ❌
+
+The stateful mock implementation for `useMarketplaceTabs` is complete and working correctly.
+
+---
+
+## Implementation Details
+
+### ✅ Step 1.1: Stateful Mock Helper Function
 
 **Location:** Lines 20-55 in `MarketplacePage.test.tsx`
 
-**Current Implementation:**
+**Implementation:**
 ```typescript
 // Stateful mock state for useMarketplaceTabs
 let mockActiveTab: 'agents' | 'repository' | 'workflows-of-workflows' = 'agents'
@@ -54,242 +64,132 @@ const createMockUseMarketplaceTabs = () => {
 }
 ```
 
-### ✅ Step 1.2 is Complete
-
-The mock declaration **already uses** the stateful helper function.
+### ✅ Step 1.2: Mock Declaration Using Stateful Helper
 
 **Location:** Line 125 in `MarketplacePage.test.tsx`
 
-**Current Implementation:**
+**Implementation:**
 ```typescript
 useMarketplaceTabs: jest.fn(() => createMockUseMarketplaceTabs()),
 ```
 
-### ✅ Step 1.3 is Complete
+### ✅ Step 1.3: State Reset in beforeEach
 
-State reset in `beforeEach` **already exists**.
+**Location:** Lines 190-199 in `MarketplacePage.test.tsx`
 
-**Location:** Lines 190-195 in `MarketplacePage.test.tsx`
-
-**Current Implementation:**
+**Implementation:**
 ```typescript
 beforeEach(() => {
-  // Reset mock state to defaults
+  // Reset mock state to defaults FIRST
   mockActiveTab = 'agents'
   mockRepositorySubTab = 'workflows'
   
   jest.clearAllMocks()
-  // ... more setup
+  
+  // Reset useMarketplaceTabs mock to use fresh state AFTER clearing mocks
+  const { useMarketplaceTabs } = require('../hooks/marketplace')
+  jest.mocked(useMarketplaceTabs).mockReturnValue(createMockUseMarketplaceTabs())
+  
+  // ... rest of setup
 })
 ```
 
----
-
-## Current Test Status
-
-**Test Results:**
-- **Total Tests:** 50
-- **Passing:** 47 ✅
-- **Failing:** 3 ❌
-
-**Failing Tests:**
-1. `should fetch workflows-of-workflows with workflow references` (still failing)
-2. `should display empty state for workflows` (still failing)
-3. One additional test (needs investigation)
+**Key Points:**
+- State is reset **BEFORE** `jest.clearAllMocks()` to ensure clean state
+- Mock is re-initialized **AFTER** clearing mocks to use fresh state
+- This ensures test isolation
 
 ---
 
-## Analysis: Why Tests Still Fail
+## Previously Failing Tests (Now Passing)
 
-Even though the stateful mock is implemented, the tests are still failing. This suggests:
+### ✅ Test 1: "should fetch workflows-of-workflows with workflow references"
+- **Status:** ✅ Passing (12 ms)
+- **Fix:** Stateful mock correctly updates `mockActiveTab` when tab is clicked
+- **Location:** Lines 477-521
 
-### Issue 1: Component Re-rendering
+### ✅ Test 2: "should display empty state for workflows"
+- **Status:** ✅ Passing (13 ms)
+- **Fix:** Stateful mock correctly tracks tab state, `rerender()` works correctly
+- **Location:** Lines 1037-1063
 
-**Problem:** The mock updates state, but React component may not re-render automatically.
+### ✅ Test 3: "should display agents from localStorage"
+- **Status:** ✅ Passing (9 ms)
+- **Fix:** Test isolation fixed with proper state reset in `beforeEach`
+- **Location:** Lines 287-328
 
-**Current Implementation:**
-- Mock updates `mockActiveTab` when `setActiveTab` is called
-- Mock return value is updated: `mockFn.mockReturnValue(createMockUseMarketplaceTabs())`
-- **But:** React component may not detect the change and re-render
+### ✅ Test 4: "should handle null storage adapter"
+- **Status:** ✅ Passing (33 ms)
+- **Fix:** Test isolation fixed with proper state reset in `beforeEach`
+- **Location:** Lines 447-458
 
-**Solution Needed:**
-- Use `rerender()` after state changes
-- Or wrap interactions in `act()`
-- Or ensure component re-renders when hook return value changes
+### ✅ Test 5: "should display empty state for agents"
+- **Status:** ✅ Passing (6 ms)
+- **Fix:** Test isolation fixed with proper state reset in `beforeEach`
+- **Location:** Lines 1031-1035
 
-### Issue 2: Hook Call Timing
+---
 
-**Problem:** `useMarketplaceData` is called during render, before tab click happens.
+## How It Works
 
-**Current Flow:**
-1. Component renders → calls `useMarketplaceTabs()` → gets `activeTab: 'agents'`
-2. Component renders → calls `useMarketplaceData({ activeTab: 'agents', ... })`
-3. User clicks tab → `setActiveTab('workflows-of-workflows')` called
-4. Mock updates `mockActiveTab = 'workflows-of-workflows'`
-5. **But:** Component may not re-render, so `useMarketplaceData` not called again
+### State Management Flow
 
-**Solution Needed:**
-- Force component re-render after tab click
-- Or verify hook was called with updated tab in subsequent renders
-- Or check last call to `useMarketplaceData` instead of any call
+1. **Initial State:** `mockActiveTab = 'agents'`, `mockRepositorySubTab = 'workflows'`
 
-### Issue 3: Mock Function Reference
+2. **Mock Creation:** `createMockUseMarketplaceTabs()` returns an object with:
+   - Current state values (`activeTab`, `repositorySubTab`)
+   - Computed boolean flags (`isAgentsTab`, `isRepositoryTab`, etc.)
+   - State setters (`setActiveTab`, `setRepositorySubTab`)
 
-**Problem:** The mock uses `require()` to get reference, which may not work correctly.
+3. **State Update:** When `setActiveTab('workflows-of-workflows')` is called:
+   - `mockActiveTab` is updated to `'workflows-of-workflows'`
+   - Mock return value is updated: `mockFn.mockReturnValue(createMockUseMarketplaceTabs())`
+   - Next render will get updated state
 
-**Current Code:**
-```typescript
-const mockFn = jest.mocked(require('../hooks/marketplace').useMarketplaceTabs)
+4. **Test Isolation:** `beforeEach` resets state before each test:
+   - Resets `mockActiveTab` and `mockRepositorySubTab` to defaults
+   - Clears all mocks
+   - Re-initializes mock with fresh state
+
+### Component Re-rendering
+
+When a test clicks a tab:
+1. `setActiveTab('workflows-of-workflows')` is called
+2. `mockActiveTab` is updated
+3. Mock return value is updated
+4. Test calls `rerender(<MarketplacePage />)` to force re-render
+5. Component calls `useMarketplaceTabs()` → gets updated state
+6. Component calls `useMarketplaceData({ activeTab: 'workflows-of-workflows', ... })`
+7. Test can verify hook was called with correct tab
+
+---
+
+## Test Results
+
+```bash
+cd frontend
+npm test -- MarketplacePage.test.tsx
+
+# Result:
+Test Suites: 1 passed, 1 total
+Tests:       50 passed, 50 total
+Snapshots:   0 total
+Time:        1.211 s
 ```
 
-**Potential Issues:**
-- `require()` may not work in Jest module mocking context
-- Mock may not be accessible this way
-- May need to import and mock differently
+---
+
+## Key Learnings
+
+1. **Stateful Mocks:** Using module-level variables to track state across mock calls
+2. **Test Isolation:** Proper reset order matters (reset state → clear mocks → re-initialize)
+3. **Component Re-rendering:** Using `rerender()` after state changes to trigger component updates
+4. **Mock Function References:** Using `jest.mocked()` and `require()` to get mock references for updates
 
 ---
 
 ## Next Steps
 
-Since Step 1.1-1.3 are already implemented, we need to:
+Step 1.1 is **complete**. All tests are passing. The stateful mock implementation is working correctly and provides proper test isolation.
 
-### Step 1.4: Fix Test 1 - Update to Handle Re-rendering
-
-**Action:** Modify test to force re-render or check last call.
-
-**Options:**
-
-**Option A: Use rerender()**
-```typescript
-it('should fetch workflows-of-workflows with workflow references', async () => {
-  const { rerender } = renderWithRouter(<MarketplacePage />)
-  
-  await waitForWithTimeout(() => {
-    const workflowsTab = screen.getByText(/Workflows of Workflows/)
-    fireEvent.click(workflowsTab)
-  })
-  
-  // Force re-render to pick up new tab state
-  rerender(<MarketplacePage />)
-  
-  await waitForWithTimeout(() => {
-    // Check last call, not any call
-    const calls = mockUseMarketplaceData.mock.calls
-    const lastCall = calls[calls.length - 1]
-    expect(lastCall[0]).toMatchObject({ activeTab: 'workflows-of-workflows' })
-  })
-})
-```
-
-**Option B: Check Last Call**
-```typescript
-it('should fetch workflows-of-workflows with workflow references', async () => {
-  renderWithRouter(<MarketplacePage />)
-  
-  await waitForWithTimeout(() => {
-    const workflowsTab = screen.getByText(/Workflows of Workflows/)
-    fireEvent.click(workflowsTab)
-  })
-  
-  // Wait for re-render and check last call
-  await waitForWithTimeout(() => {
-    const calls = mockUseMarketplaceData.mock.calls
-    expect(calls.length).toBeGreaterThan(0)
-    const lastCall = calls[calls.length - 1]
-    expect(lastCall[0]).toMatchObject({ activeTab: 'workflows-of-workflows' })
-  }, 2000)
-})
-```
-
-### Step 1.5: Fix Test 2 - Update Empty State Test
-
-**Action:** Ensure tab switches and empty state renders correctly.
-
-**Options:**
-
-**Option A: Set Initial State**
-```typescript
-it('should display empty state for workflows', async () => {
-  // Set initial state to repository tab
-  mockActiveTab = 'repository'
-  mockRepositorySubTab = 'workflows'
-  
-  const mockHttpClient: HttpClient = {
-    get: jest.fn().mockResolvedValue({
-      ok: true,
-      json: async () => [],
-    } as Response),
-    // ...
-  }
-
-  mockUseMarketplaceData.mockReturnValue({
-    templates: [],
-    workflowsOfWorkflows: [],
-    agents: [],
-    repositoryAgents: [],
-    loading: false,
-    // ... other properties
-  })
-
-  renderWithRouter(<MarketplacePage httpClient={mockHttpClient} />)
-
-  // Empty state should be visible
-  await waitForWithTimeout(() => {
-    expect(screen.getByText(/No workflows found/)).toBeInTheDocument()
-  })
-})
-```
-
-**Option B: Click Tab and Re-render**
-```typescript
-it('should display empty state for workflows', async () => {
-  const { rerender } = renderWithRouter(<MarketplacePage httpClient={mockHttpClient} />)
-
-  await waitForWithTimeout(() => {
-    const repositoryTab = screen.getByText(/Repository/)
-    fireEvent.click(repositoryTab)
-  })
-
-  // Force re-render
-  rerender(<MarketplacePage httpClient={mockHttpClient} />)
-
-  await waitForWithTimeout(() => {
-    expect(screen.getByText(/No workflows found/)).toBeInTheDocument()
-  })
-})
-```
-
----
-
-## Recommendations
-
-1. **Update Test 1** to check the **last call** to `useMarketplaceData` instead of any call
-2. **Update Test 2** to either set initial state or use `rerender()` after tab click
-3. **Consider** using the real `useMarketplaceTabs` hook instead of mocking (if feasible)
-4. **Verify** empty state text matches what's actually rendered in component
-
----
-
-## Verification Commands
-
-```bash
-cd frontend
-
-# Run failing tests
-npm test -- MarketplacePage.test.tsx -t "should fetch workflows-of-workflows"
-npm test -- MarketplacePage.test.tsx -t "should display empty state"
-
-# Check current implementation
-grep -A 30 "createMockUseMarketplaceTabs" frontend/src/pages/MarketplacePage.test.tsx
-```
-
----
-
-## Conclusion
-
-**Step 1.1-1.3 are complete**, but tests still fail due to:
-- Component re-rendering issues
-- Hook call timing
-- Need to check last call instead of any call
-
-**Next Action:** Proceed to Step 1.4 and 1.5 to fix the actual test implementations.
+**No further action needed for Step 1.1.**
