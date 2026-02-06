@@ -58,7 +58,7 @@ export function useNodeOperations({
   const handleConfigUpdate = useCallback((configField: string, field: string, value: any) => {
     if (!selectedNode) return
     
-    const currentConfig = selectedNode.data[configField] || {}
+    const currentConfig = logicalOrToEmptyObject(selectedNode.data[configField])
     const updatedData = {
       ...selectedNode.data,
       [configField]: {

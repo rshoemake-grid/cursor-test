@@ -2240,6 +2240,11 @@ describe('useWebSocket - edges.comprehensive.2', () => {
         jest.clearAllMocks()
         wsInstances = []
         
+        // Ensure logger is fully reset before starting
+        if (logger.debug && typeof (logger.debug as jest.Mock).mockReset === 'function') {
+          (logger.debug as jest.Mock).mockReset()
+        }
+        
         const executionId = 'exec-wasclean-false-test'
         renderHook(() =>
           useWebSocket({
@@ -2251,15 +2256,18 @@ describe('useWebSocket - edges.comprehensive.2', () => {
         await advanceTimersByTime(100)
         await advanceTimersByTime(50) // Flush any pending timers
         await advanceTimersByTime(50) // Additional flush to ensure all previous test operations complete
+        await advanceTimersByTime(50) // Extra flush for test isolation
 
         if (wsInstances.length > 0) {
           const ws = wsInstances[wsInstances.length - 1] // Use the last instance (most recent)
           ws.simulateOpen()
           await advanceTimersByTime(50)
           await advanceTimersByTime(50) // Flush open event timers
+          await advanceTimersByTime(50) // Extra flush
           
           // Reset logger after all previous operations complete and before simulating close
           ;(logger.debug as jest.Mock).mockReset()
+          await advanceTimersByTime(10) // Small delay to ensure reset completes
           
           // Test wasClean && code === 1000 pattern with false wasClean
           // When wasClean is false, the condition wasClean && code === 1000 should be false
@@ -2267,6 +2275,7 @@ describe('useWebSocket - edges.comprehensive.2', () => {
           await advanceTimersByTime(50) // Wait for setTimeout(10) in simulateClose
           await advanceTimersByTime(50) // Flush any pending close events
           await advanceTimersByTime(50) // Additional flush to ensure all handlers complete
+          await advanceTimersByTime(50) // Extra flush for test isolation
 
           // Verify && operator: wasClean && code === 1000 (should not match when wasClean is false)
           // The condition requires BOTH wasClean=true AND code===1000, so wasClean=false should fail

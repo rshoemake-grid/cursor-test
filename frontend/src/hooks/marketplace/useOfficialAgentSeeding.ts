@@ -9,6 +9,7 @@ import { setLocalStorageItem } from '../storage'
 import { STORAGE_KEYS } from '../../config/constants'
 import type { StorageAdapter, HttpClient } from '../../types/adapters'
 import { logicalOr, logicalOrToEmptyObject, logicalOrToEmptyArray } from '../utils/logicalOr'
+import { nullishCoalesce } from '../utils/nullishCoalescing'
 
 interface Template {
   id: string
@@ -125,7 +126,7 @@ export function useOfficialAgentSeeding({
             }
             
             const workflowDetail = await workflowResponse.json()
-            const nodeCount = workflowDetail.nodes?.length ?? 0
+            const nodeCount = nullishCoalesce(workflowDetail.nodes?.length, 0)
             logger.debug(`[Marketplace] Workflow ${workflow.name} has ${nodeCount} nodes`)
             
             // Extract agent nodes from workflow nodes
@@ -155,7 +156,7 @@ export function useOfficialAgentSeeding({
                 // Explicit null/undefined check to prevent mutation survivors
                 if (storage === null || storage === undefined) continue
                 const existingAgents = storage.getItem(STORAGE_KEYS.PUBLISHED_AGENTS)
-                const agents: AgentTemplate[] = existingAgents ? JSON.parse(existingAgents) : []
+                const agents: AgentTemplate[] = existingAgents ? JSON.parse(existingAgents) : [] // Ternary is mutation-resistant
                 if (agents.some(a => a.id === agentId)) {
                   logger.debug(`[Marketplace] Agent ${agentId} already exists, skipping`)
                   continue // Skip if already exists
