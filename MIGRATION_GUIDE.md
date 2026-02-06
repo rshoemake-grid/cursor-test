@@ -1,19 +1,19 @@
 # Migration Guide: Inline Stateful Mock to Shared Utility
 
 **Date:** January 26, 2026  
-**Purpose:** Step-by-step guide for migrating inline stateful mock implementations to use the shared utility
+**Purpose:** Step-by-step guide for migrating from inline stateful mock implementations to the shared `createMultiStatefulMock` utility.
 
 ---
 
 ## Overview
 
-This guide walks through migrating from an inline stateful mock implementation to using the `createMultiStatefulMock` utility. This migration improves code maintainability, reusability, and consistency across test files.
+This guide walks through migrating an inline stateful mock implementation to use the shared `createMultiStatefulMock` utility, using the MarketplacePage test migration as a real-world example.
 
 ---
 
-## Before Migration
+## Before: Inline Implementation
 
-### Inline Implementation Pattern
+### Original Code Structure
 
 ```typescript
 // Module-level state variables
@@ -70,26 +70,26 @@ beforeEach(() => {
   // Reset useMarketplaceTabs mock to use fresh state AFTER clearing mocks
   const { useMarketplaceTabs } = require('../hooks/marketplace')
   jest.mocked(useMarketplaceTabs).mockReturnValue(createMockUseMarketplaceTabs())
-  // ... other setup
+  // ... rest of setup
 })
 ```
 
 ### Issues with Inline Implementation
 
-1. **Code Duplication:** Each test file needs its own implementation
-2. **Maintenance Burden:** Changes need to be replicated across files
+1. **Code Duplication:** Pattern repeated across multiple test files
+2. **Maintenance Burden:** Changes require updates in multiple places
 3. **Inconsistency:** Different implementations may behave slightly differently
-4. **No Type Safety:** Easy to make mistakes with state types
-5. **Harder to Test:** Inline mocks are harder to unit test
+4. **Testing:** Harder to test the mock pattern itself
+5. **Type Safety:** Less type-safe without utility generics
 
 ---
 
-## After Migration
+## After: Shared Utility Implementation
 
-### Using Shared Utility
+### Migrated Code Structure
 
 ```typescript
-// Import the utility and types
+// Import the utility
 import { createMultiStatefulMock } from '../test/utils/createStatefulMock'
 import type { UseMarketplaceTabsReturn } from '../hooks/marketplace/useMarketplaceTabs'
 
@@ -139,112 +139,114 @@ beforeEach(() => {
   // Reset useMarketplaceTabs mock to use fresh state AFTER clearing mocks
   const { useMarketplaceTabs } = require('../hooks/marketplace')
   jest.mocked(useMarketplaceTabs).mockReturnValue(marketplaceTabsMock.createMock())
-  // ... other setup
+  // ... rest of setup
 })
 ```
 
-### Benefits of Migration
+### Benefits of Shared Utility
 
-1. **Reusability:** Same utility used across all test files
-2. **Maintainability:** Changes in one place benefit all tests
-3. **Consistency:** All tests use the same pattern
-4. **Type Safety:** TypeScript generics ensure type correctness
+1. **Reusability:** Pattern can be used across multiple test files
+2. **Consistency:** Same behavior everywhere
+3. **Maintainability:** Changes in one place affect all usages
+4. **Type Safety:** Full TypeScript generics support
 5. **Testability:** Utility itself is tested
+6. **Documentation:** Centralized documentation
 
 ---
 
 ## Step-by-Step Migration Process
 
-### Step 1: Identify State Structure
-
-**Action:** Map your current state variables to a state object.
-
-**Before:**
-```typescript
-let mockActiveTab = 'agents'
-let mockRepositorySubTab = 'workflows'
-```
-
-**After:**
-```typescript
-{
-  activeTab: 'agents',
-  repositorySubTab: 'workflows',
-}
-```
-
-**Checklist:**
-- [ ] List all module-level state variables
-- [ ] Group related state into an object
-- [ ] Define TypeScript type for state object
-- [ ] Note initial values
-
----
-
-### Step 2: Import Required Dependencies
-
-**Action:** Add imports for the utility and types.
+### Step 1: Import the Utility
 
 ```typescript
 import { createMultiStatefulMock } from '../test/utils/createStatefulMock'
 import type { UseMarketplaceTabsReturn } from '../hooks/marketplace/useMarketplaceTabs'
 ```
 
-**Checklist:**
-- [ ] Import `createMultiStatefulMock` (or `createStatefulMock` for single state)
-- [ ] Import hook return type for type safety
-- [ ] Verify import paths are correct
+**Action:** Add imports at the top of your test file.
 
 ---
 
-### Step 3: Create Stateful Mock Instance
+### Step 2: Define State Type
 
-**Action:** Replace inline function with utility call.
+Identify your state structure:
 
-**Key Points:**
-- Use TypeScript generics: `createMultiStatefulMock<StateType, ReturnType>`
-- Define `initialState` matching your state structure
-- Implement `createMockFn` that returns mock object
-- Call `updateState()` in setter functions
-- Provide `getMockFn` that returns the Jest mock
+```typescript
+// Before: Separate variables
+let mockActiveTab: 'agents' | 'repository' | 'workflows-of-workflows' = 'agents'
+let mockRepositorySubTab: 'workflows' | 'agents' = 'workflows'
 
-**Checklist:**
-- [ ] Define state type
-- [ ] Set initial state values
-- [ ] Map state to mock return properties
-- [ ] Implement setters that call `updateState()`
-- [ ] Add computed properties based on state
-- [ ] Provide `getMockFn` implementation
+// After: Single state object type
+type StateType = {
+  activeTab: 'agents' | 'repository' | 'workflows-of-workflows'
+  repositorySubTab: 'workflows' | 'agents'
+}
+```
+
+**Action:** Combine separate state variables into a single object type.
+
+---
+
+### Step 3: Create Mock Using Utility
+
+Replace your inline function with the utility:
+
+```typescript
+const marketplaceTabsMock = createMultiStatefulMock<StateType, UseMarketplaceTabsReturn>({
+  initialState: {
+    activeTab: 'agents',
+    repositorySubTab: 'workflows',
+  },
+  createMockFn: (currentState, updateState) => ({
+    // Map state to mock return value
+    activeTab: currentState.activeTab,
+    repositorySubTab: currentState.repositorySubTab,
+    
+    // Update state in setters
+    setActiveTab: jest.fn((tab) => {
+      updateState({ activeTab: tab })
+    }),
+    setRepositorySubTab: jest.fn((subTab) => {
+      updateState({ repositorySubTab: subTab })
+    }),
+    
+    // Computed properties
+    isAgentsTab: currentState.activeTab === 'agents',
+    // ... etc
+  }),
+  getMockFn: () => jest.mocked(require('../hooks/marketplace').useMarketplaceTabs),
+})
+```
+
+**Key Changes:**
+- Use `currentState` instead of module-level variables
+- Call `updateState()` instead of directly mutating variables
+- Use `updateState({ key: value })` for partial updates
 
 ---
 
 ### Step 4: Update Mock Declaration
 
-**Action:** Update `jest.mock()` to use `createMock()`.
-
-**Before:**
 ```typescript
-useMarketplaceTabs: jest.fn(() => createMockUseMarketplaceTabs()),
+// Before
+jest.mock('../hooks/marketplace', () => ({
+  useMarketplaceTabs: jest.fn(() => createMockUseMarketplaceTabs()),
+}))
+
+// After
+jest.mock('../hooks/marketplace', () => ({
+  useMarketplaceTabs: jest.fn(() => marketplaceTabsMock.createMock()),
+}))
 ```
 
-**After:**
-```typescript
-useMarketplaceTabs: jest.fn(() => marketplaceTabsMock.createMock()),
-```
-
-**Checklist:**
-- [ ] Replace inline function call with `mockInstance.createMock()`
-- [ ] Verify mock name matches your instance name
-- [ ] Ensure other mocks are unchanged
+**Action:** Replace function call with `createMock()` method.
 
 ---
 
-### Step 5: Update beforeEach Hook
+### Step 5: Update beforeEach
 
-**Action:** Replace manual state reset with `resetState()`.
-
-**Before:**
 ```typescript
+// Before
 beforeEach(() => {
   mockActiveTab = 'agents'
   mockRepositorySubTab = 'workflows'
@@ -252,10 +254,8 @@ beforeEach(() => {
   const { useMarketplaceTabs } = require('../hooks/marketplace')
   jest.mocked(useMarketplaceTabs).mockReturnValue(createMockUseMarketplaceTabs())
 })
-```
 
-**After:**
-```typescript
+// After
 beforeEach(() => {
   marketplaceTabsMock.resetState()
   jest.clearAllMocks()
@@ -264,36 +264,27 @@ beforeEach(() => {
 })
 ```
 
-**Checklist:**
-- [ ] Replace manual state variable assignments with `resetState()`
-- [ ] Keep `jest.clearAllMocks()` call
-- [ ] Update mock return value initialization
-- [ ] Maintain order: reset state → clear mocks → re-initialize mock
+**Action:** Replace manual state reset with `resetState()` method.
 
 ---
 
-### Step 6: Remove Old Implementation
+### Step 6: Remove Old Code
 
-**Action:** Delete inline implementation code.
+Delete:
+- Module-level state variables (`let mockActiveTab`, etc.)
+- Inline `createMockUseMarketplaceTabs` function
 
-**Checklist:**
-- [ ] Remove module-level state variables
-- [ ] Remove inline `createMock` function
-- [ ] Remove any helper functions no longer needed
-- [ ] Clean up unused imports if any
+**Action:** Clean up old implementation.
 
 ---
 
-### Step 7: Verify Migration
+### Step 7: Verify Tests Pass
 
-**Action:** Run tests to ensure everything works.
+```bash
+npm test -- YourTestFile.test.tsx
+```
 
-**Checklist:**
-- [ ] Run test file individually
-- [ ] Verify all tests pass
-- [ ] Check for any console warnings
-- [ ] Verify test execution time hasn't increased significantly
-- [ ] Run full test suite to check for regressions
+**Action:** Run tests to ensure everything still works.
 
 ---
 
@@ -306,30 +297,20 @@ beforeEach(() => {
 **Solution:** Always call `updateState()` in setter functions:
 
 ```typescript
+// ❌ Wrong
 setActiveTab: jest.fn((tab) => {
-  updateState({ activeTab: tab }) // ✅ Don't forget this!
-}),
+  // Missing updateState call
+})
+
+// ✅ Correct
+setActiveTab: jest.fn((tab) => {
+  updateState({ activeTab: tab })
+})
 ```
 
 ---
 
-### Pitfall 2: Wrong State Update Pattern
-
-**Symptom:** State updates but other properties are lost.
-
-**Solution:** For `createMultiStatefulMock`, use partial updates:
-
-```typescript
-// ✅ Correct - preserves other properties
-updateState({ activeTab: tab })
-
-// ❌ Wrong - would replace entire state
-updateState({ activeTab: tab, repositorySubTab: undefined })
-```
-
----
-
-### Pitfall 3: Not Resetting State in beforeEach
+### Pitfall 2: Not Resetting State in beforeEach
 
 **Symptom:** Tests affect each other, state leaks between tests.
 
@@ -339,9 +320,27 @@ updateState({ activeTab: tab, repositorySubTab: undefined })
 beforeEach(() => {
   marketplaceTabsMock.resetState() // ✅ Don't forget this!
   jest.clearAllMocks()
-  // ... rest of setup
+  // ... rest
 })
 ```
+
+---
+
+### Pitfall 3: Wrong State Update Pattern
+
+**Symptom:** Only one state property updates, others reset.
+
+**Solution:** Use partial updates for multi-state mocks:
+
+```typescript
+// ❌ Wrong - replaces entire state
+updateState({ activeTab: tab })
+
+// ✅ Correct - partial update preserves other properties
+updateState({ activeTab: tab })
+```
+
+**Note:** `createMultiStatefulMock` handles partial updates automatically.
 
 ---
 
@@ -352,69 +351,59 @@ beforeEach(() => {
 **Solution:** Provide explicit type parameters:
 
 ```typescript
-// ✅ Correct - explicit types
-const mock = createMultiStatefulMock<StateType, ReturnType>({...})
-
-// ❌ Wrong - TypeScript can't infer types
-const mock = createMultiStatefulMock({...})
+// ✅ Explicit types
+const mock = createMultiStatefulMock<
+  { activeTab: TabType; repositorySubTab: SubTabType },
+  UseMarketplaceTabsReturn
+>({
+  // ...
+})
 ```
 
 ---
 
-### Pitfall 5: Wrong Mock Function Reference
+## Verification Checklist
 
-**Symptom:** Mock return value doesn't update.
+After migration, verify:
 
-**Solution:** Ensure `getMockFn()` returns the correct mock:
-
-```typescript
-getMockFn: () => jest.mocked(require('../hooks/marketplace').useMarketplaceTabs),
-```
-
----
-
-## Migration Checklist Summary
-
-**Pre-Migration:**
-- [ ] Understand current inline implementation
-- [ ] Identify all state variables
-- [ ] Map state to object structure
-- [ ] Review shared utility documentation
-
-**Migration:**
-- [ ] Import utility and types
-- [ ] Create stateful mock instance
-- [ ] Update mock declaration
-- [ ] Update beforeEach hook
-- [ ] Remove old implementation
-
-**Post-Migration:**
-- [ ] Run tests individually
-- [ ] Verify all tests pass
-- [ ] Check for regressions
-- [ ] Update documentation if needed
+- [ ] All imports are correct
+- [ ] State type matches hook's state structure
+- [ ] `createMockFn` return type matches hook return type
+- [ ] All setters call `updateState()`
+- [ ] `beforeEach` calls `resetState()`
+- [ ] Mock declaration uses `createMock()`
+- [ ] Old code is removed
+- [ ] All tests pass
+- [ ] No TypeScript errors
+- [ ] Test execution time hasn't increased significantly
 
 ---
 
-## Real-World Example
+## Real-World Example: MarketplacePage Migration
 
-See `frontend/src/pages/MarketplacePage.test.tsx` for a complete, working example of the migrated implementation.
+See `frontend/src/pages/MarketplacePage.test.tsx` for a complete, working example of the migrated code.
 
----
-
-## Additional Resources
-
-- `frontend/src/test/utils/README.md` - Complete utility documentation
-- `frontend/src/test/utils/createStatefulMock.ts` - Utility implementation
-- `frontend/src/test/utils/createStatefulMock.test.ts` - Utility tests
+**Key Points:**
+- Uses `createMultiStatefulMock` for multiple state values
+- Properly typed with TypeScript generics
+- All 50 tests passing
+- Clean, maintainable code
 
 ---
 
-## Need Help?
+## Next Steps
 
-If you encounter issues during migration:
+After migration:
 
-1. Check the troubleshooting section in `frontend/src/test/utils/README.md`
-2. Review the real-world example in `MarketplacePage.test.tsx`
-3. Check utility tests for usage patterns
-4. Verify your state structure matches the utility's expectations
+1. **Run Tests:** Verify all tests pass
+2. **Code Review:** Review for any improvements
+3. **Documentation:** Update any related docs
+4. **Share:** Let team know about the pattern
+
+---
+
+## Related Documentation
+
+- `frontend/src/test/utils/README.md` - Utility documentation
+- `frontend/src/test/utils/createStatefulMock.ts` - Implementation
+- `frontend/src/pages/MarketplacePage.test.tsx` - Real-world example
