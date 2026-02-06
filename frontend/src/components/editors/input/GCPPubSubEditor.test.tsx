@@ -16,7 +16,7 @@ describe('GCPPubSubEditor', () => {
     jest.clearAllMocks()
   })
 
-  const createPubSubNode = (overrides?: Partial<NodeWithData['data']['input_config']>): NodeWithData => ({
+  const createGCPPubSubNode = (overrides?: Partial<NodeWithData['data']['input_config']>): NodeWithData => ({
     id: '1',
     type: 'gcp_pubsub',
     position: { x: 0, y: 0 },
@@ -34,14 +34,14 @@ describe('GCPPubSubEditor', () => {
 
   describe('Component Rendering', () => {
     it('should render GCP Pub/Sub configuration section', () => {
-      const node = createPubSubNode()
+      const node = createGCPPubSubNode()
       render(<GCPPubSubEditor node={node} onConfigUpdate={mockOnConfigUpdate} />)
 
       expect(screen.getByText('GCP Pub/Sub Configuration')).toBeInTheDocument()
     })
 
     it('should render all input fields', () => {
-      const node = createPubSubNode()
+      const node = createGCPPubSubNode()
       render(<GCPPubSubEditor node={node} onConfigUpdate={mockOnConfigUpdate} />)
 
       expect(screen.getByLabelText('GCP project ID')).toBeInTheDocument()
@@ -52,7 +52,7 @@ describe('GCPPubSubEditor', () => {
     })
 
     it('should render mode select with options', () => {
-      const node = createPubSubNode()
+      const node = createGCPPubSubNode()
       render(<GCPPubSubEditor node={node} onConfigUpdate={mockOnConfigUpdate} />)
 
       const modeSelect = screen.getByLabelText('Select Pub/Sub operation mode') as HTMLSelectElement
@@ -62,7 +62,7 @@ describe('GCPPubSubEditor', () => {
     })
 
     it('should render credentials as textarea', () => {
-      const node = createPubSubNode()
+      const node = createGCPPubSubNode()
       render(<GCPPubSubEditor node={node} onConfigUpdate={mockOnConfigUpdate} />)
 
       const credentialsTextarea = screen.getByLabelText('GCP service account credentials') as HTMLTextAreaElement
@@ -73,7 +73,7 @@ describe('GCPPubSubEditor', () => {
 
   describe('Field Values', () => {
     it('should display current project ID value', () => {
-      const node = createPubSubNode({ project_id: 'my-gcp-project' })
+      const node = createGCPPubSubNode({ project_id: 'my-gcp-project' })
       render(<GCPPubSubEditor node={node} onConfigUpdate={mockOnConfigUpdate} />)
 
       const projectIdInput = screen.getByLabelText('GCP project ID') as HTMLInputElement
@@ -81,24 +81,24 @@ describe('GCPPubSubEditor', () => {
     })
 
     it('should display current topic name value', () => {
-      const node = createPubSubNode({ topic_name: 'my-topic-name' })
+      const node = createGCPPubSubNode({ topic_name: 'my-topic-name' })
       render(<GCPPubSubEditor node={node} onConfigUpdate={mockOnConfigUpdate} />)
 
-      const topicInput = screen.getByLabelText('Pub/Sub topic name') as HTMLInputElement
-      expect(topicInput.value).toBe('my-topic-name')
+      const topicNameInput = screen.getByLabelText('Pub/Sub topic name') as HTMLInputElement
+      expect(topicNameInput.value).toBe('my-topic-name')
     })
 
     it('should display current subscription name value', () => {
-      const node = createPubSubNode({ subscription_name: 'my-subscription-name' })
+      const node = createGCPPubSubNode({ subscription_name: 'my-subscription-name' })
       render(<GCPPubSubEditor node={node} onConfigUpdate={mockOnConfigUpdate} />)
 
-      const subscriptionInput = screen.getByLabelText('Pub/Sub subscription name') as HTMLInputElement
-      expect(subscriptionInput.value).toBe('my-subscription-name')
+      const subscriptionNameInput = screen.getByLabelText('Pub/Sub subscription name') as HTMLInputElement
+      expect(subscriptionNameInput.value).toBe('my-subscription-name')
     })
 
     it('should display current credentials value', () => {
       const credentials = '{"type":"service_account","project_id":"test"}'
-      const node = createPubSubNode({ credentials })
+      const node = createGCPPubSubNode({ credentials })
       render(<GCPPubSubEditor node={node} onConfigUpdate={mockOnConfigUpdate} />)
 
       const credentialsTextarea = screen.getByLabelText('GCP service account credentials') as HTMLTextAreaElement
@@ -106,7 +106,7 @@ describe('GCPPubSubEditor', () => {
     })
 
     it('should display current mode value', () => {
-      const node = createPubSubNode({ mode: INPUT_MODE.WRITE })
+      const node = createGCPPubSubNode({ mode: INPUT_MODE.WRITE })
       render(<GCPPubSubEditor node={node} onConfigUpdate={mockOnConfigUpdate} />)
 
       const modeSelect = screen.getByLabelText('Select Pub/Sub operation mode') as HTMLSelectElement
@@ -116,7 +116,7 @@ describe('GCPPubSubEditor', () => {
 
   describe('Default Values', () => {
     it('should use empty string default for project ID when not provided', () => {
-      const node = createPubSubNode({ project_id: undefined })
+      const node = createGCPPubSubNode({ project_id: undefined })
       render(<GCPPubSubEditor node={node} onConfigUpdate={mockOnConfigUpdate} />)
 
       const projectIdInput = screen.getByLabelText('GCP project ID') as HTMLInputElement
@@ -124,23 +124,23 @@ describe('GCPPubSubEditor', () => {
     })
 
     it('should use empty string default for topic name when not provided', () => {
-      const node = createPubSubNode({ topic_name: undefined })
+      const node = createGCPPubSubNode({ topic_name: undefined })
       render(<GCPPubSubEditor node={node} onConfigUpdate={mockOnConfigUpdate} />)
 
-      const topicInput = screen.getByLabelText('Pub/Sub topic name') as HTMLInputElement
-      expect(topicInput.value).toBe(EMPTY_STRING)
+      const topicNameInput = screen.getByLabelText('Pub/Sub topic name') as HTMLInputElement
+      expect(topicNameInput.value).toBe(EMPTY_STRING)
     })
 
     it('should use empty string default for subscription name when not provided', () => {
-      const node = createPubSubNode({ subscription_name: undefined })
+      const node = createGCPPubSubNode({ subscription_name: undefined })
       render(<GCPPubSubEditor node={node} onConfigUpdate={mockOnConfigUpdate} />)
 
-      const subscriptionInput = screen.getByLabelText('Pub/Sub subscription name') as HTMLInputElement
-      expect(subscriptionInput.value).toBe(EMPTY_STRING)
+      const subscriptionNameInput = screen.getByLabelText('Pub/Sub subscription name') as HTMLInputElement
+      expect(subscriptionNameInput.value).toBe(EMPTY_STRING)
     })
 
     it('should use empty string default for credentials when not provided', () => {
-      const node = createPubSubNode({ credentials: undefined })
+      const node = createGCPPubSubNode({ credentials: undefined })
       render(<GCPPubSubEditor node={node} onConfigUpdate={mockOnConfigUpdate} />)
 
       const credentialsTextarea = screen.getByLabelText('GCP service account credentials') as HTMLTextAreaElement
@@ -148,7 +148,7 @@ describe('GCPPubSubEditor', () => {
     })
 
     it('should use read mode default when not provided', () => {
-      const node = createPubSubNode({ mode: undefined })
+      const node = createGCPPubSubNode({ mode: undefined })
       render(<GCPPubSubEditor node={node} onConfigUpdate={mockOnConfigUpdate} />)
 
       const modeSelect = screen.getByLabelText('Select Pub/Sub operation mode') as HTMLSelectElement
@@ -158,7 +158,7 @@ describe('GCPPubSubEditor', () => {
 
   describe('Field Updates', () => {
     it('should call onConfigUpdate when project ID changes', () => {
-      const node = createPubSubNode()
+      const node = createGCPPubSubNode()
       render(<GCPPubSubEditor node={node} onConfigUpdate={mockOnConfigUpdate} />)
 
       const projectIdInput = screen.getByLabelText('GCP project ID')
@@ -168,27 +168,27 @@ describe('GCPPubSubEditor', () => {
     })
 
     it('should call onConfigUpdate when topic name changes', () => {
-      const node = createPubSubNode()
+      const node = createGCPPubSubNode()
       render(<GCPPubSubEditor node={node} onConfigUpdate={mockOnConfigUpdate} />)
 
-      const topicInput = screen.getByLabelText('Pub/Sub topic name')
-      fireEvent.change(topicInput, { target: { value: 'new-topic' } })
+      const topicNameInput = screen.getByLabelText('Pub/Sub topic name')
+      fireEvent.change(topicNameInput, { target: { value: 'new-topic' } })
 
       expect(mockOnConfigUpdate).toHaveBeenCalledWith('input_config', 'topic_name', 'new-topic')
     })
 
     it('should call onConfigUpdate when subscription name changes', () => {
-      const node = createPubSubNode()
+      const node = createGCPPubSubNode()
       render(<GCPPubSubEditor node={node} onConfigUpdate={mockOnConfigUpdate} />)
 
-      const subscriptionInput = screen.getByLabelText('Pub/Sub subscription name')
-      fireEvent.change(subscriptionInput, { target: { value: 'new-subscription' } })
+      const subscriptionNameInput = screen.getByLabelText('Pub/Sub subscription name')
+      fireEvent.change(subscriptionNameInput, { target: { value: 'new-subscription' } })
 
       expect(mockOnConfigUpdate).toHaveBeenCalledWith('input_config', 'subscription_name', 'new-subscription')
     })
 
     it('should call onConfigUpdate when credentials change', () => {
-      const node = createPubSubNode()
+      const node = createGCPPubSubNode()
       render(<GCPPubSubEditor node={node} onConfigUpdate={mockOnConfigUpdate} />)
 
       const credentialsTextarea = screen.getByLabelText('GCP service account credentials')
@@ -198,7 +198,7 @@ describe('GCPPubSubEditor', () => {
     })
 
     it('should call onConfigUpdate when mode changes', () => {
-      const node = createPubSubNode()
+      const node = createGCPPubSubNode()
       render(<GCPPubSubEditor node={node} onConfigUpdate={mockOnConfigUpdate} />)
 
       const modeSelect = screen.getByLabelText('Select Pub/Sub operation mode')
@@ -255,7 +255,7 @@ describe('GCPPubSubEditor', () => {
     })
 
     it('should handle empty string values', () => {
-      const node = createPubSubNode({
+      const node = createGCPPubSubNode({
         project_id: '',
         topic_name: '',
         subscription_name: '',
@@ -270,7 +270,7 @@ describe('GCPPubSubEditor', () => {
 
   describe('Placeholders', () => {
     it('should display correct placeholder for project ID', () => {
-      const node = createPubSubNode({ project_id: '' })
+      const node = createGCPPubSubNode({ project_id: '' })
       render(<GCPPubSubEditor node={node} onConfigUpdate={mockOnConfigUpdate} />)
 
       const projectIdInput = screen.getByLabelText('GCP project ID')
@@ -278,23 +278,23 @@ describe('GCPPubSubEditor', () => {
     })
 
     it('should display correct placeholder for topic name', () => {
-      const node = createPubSubNode({ topic_name: '' })
+      const node = createGCPPubSubNode({ topic_name: '' })
       render(<GCPPubSubEditor node={node} onConfigUpdate={mockOnConfigUpdate} />)
 
-      const topicInput = screen.getByLabelText('Pub/Sub topic name')
-      expect(topicInput).toHaveAttribute('placeholder', 'my-topic')
+      const topicNameInput = screen.getByLabelText('Pub/Sub topic name')
+      expect(topicNameInput).toHaveAttribute('placeholder', 'my-topic')
     })
 
     it('should display correct placeholder for subscription name', () => {
-      const node = createPubSubNode({ subscription_name: '' })
+      const node = createGCPPubSubNode({ subscription_name: '' })
       render(<GCPPubSubEditor node={node} onConfigUpdate={mockOnConfigUpdate} />)
 
-      const subscriptionInput = screen.getByLabelText('Pub/Sub subscription name')
-      expect(subscriptionInput).toHaveAttribute('placeholder', 'my-subscription')
+      const subscriptionNameInput = screen.getByLabelText('Pub/Sub subscription name')
+      expect(subscriptionNameInput).toHaveAttribute('placeholder', 'my-subscription')
     })
 
     it('should display correct placeholder for credentials', () => {
-      const node = createPubSubNode({ credentials: '' })
+      const node = createGCPPubSubNode({ credentials: '' })
       render(<GCPPubSubEditor node={node} onConfigUpdate={mockOnConfigUpdate} />)
 
       const credentialsTextarea = screen.getByLabelText('GCP service account credentials')
@@ -304,7 +304,7 @@ describe('GCPPubSubEditor', () => {
 
   describe('Helper Text', () => {
     it('should display mode description', () => {
-      const node = createPubSubNode()
+      const node = createGCPPubSubNode()
       render(<GCPPubSubEditor node={node} onConfigUpdate={mockOnConfigUpdate} />)
 
       expect(screen.getByText('Subscribe: Receive messages from topic. Publish: Send messages to topic.')).toBeInTheDocument()

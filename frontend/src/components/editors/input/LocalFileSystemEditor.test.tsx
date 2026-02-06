@@ -16,7 +16,7 @@ describe('LocalFileSystemEditor', () => {
     jest.clearAllMocks()
   })
 
-  const createFileSystemNode = (overrides?: Partial<NodeWithData['data']['input_config']>): NodeWithData => ({
+  const createLocalFileSystemNode = (overrides?: Partial<NodeWithData['data']['input_config']>): NodeWithData => ({
     id: '1',
     type: 'local_filesystem',
     position: { x: 0, y: 0 },
@@ -33,14 +33,14 @@ describe('LocalFileSystemEditor', () => {
 
   describe('Component Rendering', () => {
     it('should render Local File System configuration section', () => {
-      const node = createFileSystemNode()
+      const node = createLocalFileSystemNode()
       render(<LocalFileSystemEditor node={node} onConfigUpdate={mockOnConfigUpdate} />)
 
       expect(screen.getByText('Local File System Configuration')).toBeInTheDocument()
     })
 
     it('should render all input fields', () => {
-      const node = createFileSystemNode()
+      const node = createLocalFileSystemNode()
       render(<LocalFileSystemEditor node={node} onConfigUpdate={mockOnConfigUpdate} />)
 
       expect(screen.getByLabelText('File system path')).toBeInTheDocument()
@@ -48,7 +48,7 @@ describe('LocalFileSystemEditor', () => {
     })
 
     it('should render mode select with options', () => {
-      const node = createFileSystemNode()
+      const node = createLocalFileSystemNode()
       render(<LocalFileSystemEditor node={node} onConfigUpdate={mockOnConfigUpdate} />)
 
       const modeSelect = screen.getByLabelText('Select file system operation mode') as HTMLSelectElement
@@ -58,85 +58,94 @@ describe('LocalFileSystemEditor', () => {
     })
   })
 
-  describe('Read Mode Fields', () => {
+  describe('Read Mode', () => {
     it('should show file pattern field when mode is read', () => {
-      const node = createFileSystemNode({ mode: INPUT_MODE.READ })
+      const node = createLocalFileSystemNode({ mode: INPUT_MODE.READ })
       render(<LocalFileSystemEditor node={node} onConfigUpdate={mockOnConfigUpdate} />)
 
       expect(screen.getByLabelText('File pattern for matching')).toBeInTheDocument()
     })
 
-    it('should display current file pattern value in read mode', () => {
-      const node = createFileSystemNode({ mode: INPUT_MODE.READ, file_pattern: '*.json' })
+    it('should not show overwrite checkbox when mode is read', () => {
+      const node = createLocalFileSystemNode({ mode: INPUT_MODE.READ })
       render(<LocalFileSystemEditor node={node} onConfigUpdate={mockOnConfigUpdate} />)
 
-      const patternInput = screen.getByLabelText('File pattern for matching') as HTMLInputElement
-      expect(patternInput.value).toBe('*.json')
+      expect(screen.queryByLabelText(/Overwrite existing file/i)).not.toBeInTheDocument()
+    })
+
+    it('should display current file pattern value in read mode', () => {
+      const node = createLocalFileSystemNode({ 
+        mode: INPUT_MODE.READ,
+        file_pattern: '*.txt' 
+      })
+      render(<LocalFileSystemEditor node={node} onConfigUpdate={mockOnConfigUpdate} />)
+
+      const filePatternInput = screen.getByLabelText('File pattern for matching') as HTMLInputElement
+      expect(filePatternInput.value).toBe('*.txt')
     })
 
     it('should call onConfigUpdate when file pattern changes in read mode', () => {
-      const node = createFileSystemNode({ mode: INPUT_MODE.READ })
+      const node = createLocalFileSystemNode({ mode: INPUT_MODE.READ })
       render(<LocalFileSystemEditor node={node} onConfigUpdate={mockOnConfigUpdate} />)
 
-      const patternInput = screen.getByLabelText('File pattern for matching')
-      fireEvent.change(patternInput, { target: { value: '*.csv' } })
+      const filePatternInput = screen.getByLabelText('File pattern for matching')
+      fireEvent.change(filePatternInput, { target: { value: '*.json' } })
 
-      expect(mockOnConfigUpdate).toHaveBeenCalledWith('input_config', 'file_pattern', '*.csv')
-    })
-
-    it('should not show overwrite checkbox when mode is read', () => {
-      const node = createFileSystemNode({ mode: INPUT_MODE.READ })
-      render(<LocalFileSystemEditor node={node} onConfigUpdate={mockOnConfigUpdate} />)
-
-      expect(screen.queryByLabelText('Overwrite existing file')).not.toBeInTheDocument()
+      expect(mockOnConfigUpdate).toHaveBeenCalledWith('input_config', 'file_pattern', '*.json')
     })
   })
 
-  describe('Write Mode Fields', () => {
+  describe('Write Mode', () => {
     it('should show overwrite checkbox when mode is write', () => {
-      const node = createFileSystemNode({ mode: INPUT_MODE.WRITE })
+      const node = createLocalFileSystemNode({ mode: INPUT_MODE.WRITE })
       render(<LocalFileSystemEditor node={node} onConfigUpdate={mockOnConfigUpdate} />)
 
-      expect(screen.getByLabelText('Overwrite existing file')).toBeInTheDocument()
-    })
-
-    it('should display current overwrite value in write mode', () => {
-      const node = createFileSystemNode({ mode: INPUT_MODE.WRITE, overwrite: true })
-      render(<LocalFileSystemEditor node={node} onConfigUpdate={mockOnConfigUpdate} />)
-
-      const overwriteCheckbox = screen.getByLabelText('Overwrite existing file') as HTMLInputElement
-      expect(overwriteCheckbox.checked).toBe(true)
-    })
-
-    it('should call onConfigUpdate when overwrite changes in write mode', () => {
-      const node = createFileSystemNode({ mode: INPUT_MODE.WRITE, overwrite: false })
-      render(<LocalFileSystemEditor node={node} onConfigUpdate={mockOnConfigUpdate} />)
-
-      const overwriteCheckbox = screen.getByLabelText('Overwrite existing file')
-      fireEvent.click(overwriteCheckbox)
-
-      expect(mockOnConfigUpdate).toHaveBeenCalledWith('input_config', 'overwrite', true)
+      expect(screen.getByLabelText(/Overwrite existing file/i)).toBeInTheDocument()
     })
 
     it('should not show file pattern field when mode is write', () => {
-      const node = createFileSystemNode({ mode: INPUT_MODE.WRITE })
+      const node = createLocalFileSystemNode({ mode: INPUT_MODE.WRITE })
       render(<LocalFileSystemEditor node={node} onConfigUpdate={mockOnConfigUpdate} />)
 
-      expect(screen.queryByLabelText('File pattern for matching')).not.toBeInTheDocument()
+      expect(screen.queryByLabelText(/File pattern/i)).not.toBeInTheDocument()
+    })
+
+    it('should display current overwrite value in write mode', () => {
+      const node = createLocalFileSystemNode({ 
+        mode: INPUT_MODE.WRITE,
+        overwrite: true 
+      })
+      render(<LocalFileSystemEditor node={node} onConfigUpdate={mockOnConfigUpdate} />)
+
+      const overwriteCheckbox = screen.getByLabelText(/Overwrite existing file/i) as HTMLInputElement
+      expect(overwriteCheckbox.checked).toBe(true)
+    })
+
+    it('should call onConfigUpdate when overwrite checkbox changes in write mode', () => {
+      const node = createLocalFileSystemNode({ 
+        mode: INPUT_MODE.WRITE,
+        overwrite: false 
+      })
+      render(<LocalFileSystemEditor node={node} onConfigUpdate={mockOnConfigUpdate} />)
+
+      const overwriteCheckbox = screen.getByLabelText(/Overwrite existing file/i)
+      fireEvent.click(overwriteCheckbox)
+
+      expect(mockOnConfigUpdate).toHaveBeenCalledWith('input_config', 'overwrite', true)
     })
   })
 
   describe('Field Values', () => {
     it('should display current file path value', () => {
-      const node = createFileSystemNode({ file_path: '/custom/path/file.txt' })
+      const node = createLocalFileSystemNode({ file_path: '/home/user/file.txt' })
       render(<LocalFileSystemEditor node={node} onConfigUpdate={mockOnConfigUpdate} />)
 
       const filePathInput = screen.getByLabelText('File system path') as HTMLInputElement
-      expect(filePathInput.value).toBe('/custom/path/file.txt')
+      expect(filePathInput.value).toBe('/home/user/file.txt')
     })
 
     it('should display current mode value', () => {
-      const node = createFileSystemNode({ mode: INPUT_MODE.WRITE })
+      const node = createLocalFileSystemNode({ mode: INPUT_MODE.WRITE })
       render(<LocalFileSystemEditor node={node} onConfigUpdate={mockOnConfigUpdate} />)
 
       const modeSelect = screen.getByLabelText('Select file system operation mode') as HTMLSelectElement
@@ -146,7 +155,7 @@ describe('LocalFileSystemEditor', () => {
 
   describe('Default Values', () => {
     it('should use empty string default for file path when not provided', () => {
-      const node = createFileSystemNode({ file_path: undefined })
+      const node = createLocalFileSystemNode({ file_path: undefined })
       render(<LocalFileSystemEditor node={node} onConfigUpdate={mockOnConfigUpdate} />)
 
       const filePathInput = screen.getByLabelText('File system path') as HTMLInputElement
@@ -154,23 +163,29 @@ describe('LocalFileSystemEditor', () => {
     })
 
     it('should use empty string default for file pattern when not provided', () => {
-      const node = createFileSystemNode({ mode: INPUT_MODE.READ, file_pattern: undefined })
+      const node = createLocalFileSystemNode({ 
+        mode: INPUT_MODE.READ,
+        file_pattern: undefined 
+      })
       render(<LocalFileSystemEditor node={node} onConfigUpdate={mockOnConfigUpdate} />)
 
-      const patternInput = screen.getByLabelText('File pattern for matching') as HTMLInputElement
-      expect(patternInput.value).toBe(EMPTY_STRING)
+      const filePatternInput = screen.getByLabelText('File pattern for matching') as HTMLInputElement
+      expect(filePatternInput.value).toBe(EMPTY_STRING)
     })
 
     it('should use default overwrite value when not provided', () => {
-      const node = createFileSystemNode({ mode: INPUT_MODE.WRITE, overwrite: undefined })
+      const node = createLocalFileSystemNode({ 
+        mode: INPUT_MODE.WRITE,
+        overwrite: undefined 
+      })
       render(<LocalFileSystemEditor node={node} onConfigUpdate={mockOnConfigUpdate} />)
 
-      const overwriteCheckbox = screen.getByLabelText('Overwrite existing file') as HTMLInputElement
+      const overwriteCheckbox = screen.getByLabelText(/Overwrite existing file/i) as HTMLInputElement
       expect(overwriteCheckbox.checked).toBe(DEFAULT_OVERWRITE)
     })
 
     it('should use read mode default when not provided', () => {
-      const node = createFileSystemNode({ mode: undefined })
+      const node = createLocalFileSystemNode({ mode: undefined })
       render(<LocalFileSystemEditor node={node} onConfigUpdate={mockOnConfigUpdate} />)
 
       const modeSelect = screen.getByLabelText('Select file system operation mode') as HTMLSelectElement
@@ -180,17 +195,17 @@ describe('LocalFileSystemEditor', () => {
 
   describe('Field Updates', () => {
     it('should call onConfigUpdate when file path changes', () => {
-      const node = createFileSystemNode()
+      const node = createLocalFileSystemNode()
       render(<LocalFileSystemEditor node={node} onConfigUpdate={mockOnConfigUpdate} />)
 
       const filePathInput = screen.getByLabelText('File system path')
-      fireEvent.change(filePathInput, { target: { value: '/new/path/file.txt' } })
+      fireEvent.change(filePathInput, { target: { value: '/new/path.txt' } })
 
-      expect(mockOnConfigUpdate).toHaveBeenCalledWith('input_config', 'file_path', '/new/path/file.txt')
+      expect(mockOnConfigUpdate).toHaveBeenCalledWith('input_config', 'file_path', '/new/path.txt')
     })
 
     it('should call onConfigUpdate when mode changes', () => {
-      const node = createFileSystemNode()
+      const node = createLocalFileSystemNode()
       render(<LocalFileSystemEditor node={node} onConfigUpdate={mockOnConfigUpdate} />)
 
       const modeSelect = screen.getByLabelText('Select file system operation mode')
@@ -200,20 +215,20 @@ describe('LocalFileSystemEditor', () => {
     })
 
     it('should toggle between read and write mode fields when mode changes', () => {
-      const node = createFileSystemNode({ mode: INPUT_MODE.READ })
+      const node = createLocalFileSystemNode({ mode: INPUT_MODE.READ })
       const { rerender } = render(<LocalFileSystemEditor node={node} onConfigUpdate={mockOnConfigUpdate} />)
 
-      // Initially in read mode - should show pattern field
+      // Initially in read mode - should show file pattern
       expect(screen.getByLabelText('File pattern for matching')).toBeInTheDocument()
-      expect(screen.queryByLabelText('Overwrite existing file')).not.toBeInTheDocument()
+      expect(screen.queryByLabelText(/Overwrite existing file/i)).not.toBeInTheDocument()
 
       // Change to write mode
-      const updatedNode = createFileSystemNode({ mode: INPUT_MODE.WRITE })
+      const updatedNode = createLocalFileSystemNode({ mode: INPUT_MODE.WRITE })
       rerender(<LocalFileSystemEditor node={updatedNode} onConfigUpdate={mockOnConfigUpdate} />)
 
-      // Should show overwrite checkbox, hide pattern field
-      expect(screen.getByLabelText('Overwrite existing file')).toBeInTheDocument()
-      expect(screen.queryByLabelText('File pattern for matching')).not.toBeInTheDocument()
+      // Should show overwrite checkbox, not file pattern
+      expect(screen.getByLabelText(/Overwrite existing file/i)).toBeInTheDocument()
+      expect(screen.queryByLabelText(/File pattern/i)).not.toBeInTheDocument()
     })
   })
 
@@ -264,7 +279,7 @@ describe('LocalFileSystemEditor', () => {
     })
 
     it('should handle empty string values', () => {
-      const node = createFileSystemNode({
+      const node = createLocalFileSystemNode({
         file_path: '',
         file_pattern: '',
       })
@@ -273,19 +288,11 @@ describe('LocalFileSystemEditor', () => {
       const filePathInput = screen.getByLabelText('File system path') as HTMLInputElement
       expect(filePathInput.value).toBe('')
     })
-
-    it('should handle overwrite false value', () => {
-      const node = createFileSystemNode({ mode: INPUT_MODE.WRITE, overwrite: false })
-      render(<LocalFileSystemEditor node={node} onConfigUpdate={mockOnConfigUpdate} />)
-
-      const overwriteCheckbox = screen.getByLabelText('Overwrite existing file') as HTMLInputElement
-      expect(overwriteCheckbox.checked).toBe(false)
-    })
   })
 
   describe('Placeholders', () => {
     it('should display correct placeholder for file path', () => {
-      const node = createFileSystemNode({ file_path: '' })
+      const node = createLocalFileSystemNode({ file_path: '' })
       render(<LocalFileSystemEditor node={node} onConfigUpdate={mockOnConfigUpdate} />)
 
       const filePathInput = screen.getByLabelText('File system path')
@@ -293,11 +300,14 @@ describe('LocalFileSystemEditor', () => {
     })
 
     it('should display correct placeholder for file pattern', () => {
-      const node = createFileSystemNode({ mode: INPUT_MODE.READ, file_pattern: '' })
+      const node = createLocalFileSystemNode({ 
+        mode: INPUT_MODE.READ,
+        file_pattern: '' 
+      })
       render(<LocalFileSystemEditor node={node} onConfigUpdate={mockOnConfigUpdate} />)
 
-      const patternInput = screen.getByLabelText('File pattern for matching')
-      expect(patternInput).toHaveAttribute('placeholder', '*.txt or leave blank for exact match')
+      const filePatternInput = screen.getByLabelText('File pattern for matching')
+      expect(filePatternInput).toHaveAttribute('placeholder', '*.txt or leave blank for exact match')
     })
   })
 })
