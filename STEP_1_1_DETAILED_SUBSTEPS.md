@@ -2,8 +2,9 @@
 
 **Parent Step:** Step 1.1 from MARKETPLACE_TEST_FIXES_PLAN.md  
 **File:** `frontend/src/pages/MarketplacePage.test.tsx`  
-**Location:** After imports, before `describe` block (around line 20-50)  
-**Estimated Time:** 10-15 minutes
+**Location:** After imports, before `describe` block (lines 20-55)  
+**Estimated Time:** 10-15 minutes  
+**Status:** ⚠️ Partially Implemented - Needs Review
 
 ---
 
@@ -11,27 +12,35 @@
 
 Create a helper function that returns a stateful mock for `useMarketplaceTabs`. This mock will track state changes when `setActiveTab` and `setRepositorySubTab` are called, allowing tests to verify actual tab switching behavior.
 
+**Note:** A version of this function already exists in the file (lines 20-55). This document provides detailed substeps to verify and potentially improve the existing implementation.
+
 ---
 
 ## Pre-Step Verification
 
-### Substep 0.1: Locate Insertion Point
+### Substep 0.1: Check Current Implementation Status
 
-**Action:** Find where to add the helper function.
+**Action:** Verify if the function already exists and review its implementation.
 
 **Steps:**
 1. [ ] Open `frontend/src/pages/MarketplacePage.test.tsx`
-2. [ ] Find the imports section (lines 1-20)
-3. [ ] Find the first `describe` block (around line 120+)
-4. [ ] Identify the space between imports and describe block
+2. [ ] Check lines 20-55 for existing implementation
+3. [ ] Review the current `createMockUseMarketplaceTabs` function
+4. [ ] Note any issues or improvements needed
+
+**Current Status:**
+- ✅ State variables exist (lines 21-22)
+- ✅ Function exists (lines 28-55)
+- ⚠️ Function uses `require()` which may cause issues
+- ⚠️ Mock update logic may need refinement
 
 **Verification:**
 ```bash
-# Check file structure
-head -30 frontend/src/pages/MarketplacePage.test.tsx | tail -10
+# Check if function exists
+grep -A 30 "createMockUseMarketplaceTabs" frontend/src/pages/MarketplacePage.test.tsx | head -35
 ```
 
-**Expected:** Should see imports ending, then space before describe block.
+**Expected:** Function should be visible with all properties.
 
 ---
 
@@ -214,47 +223,62 @@ grep -A 5 "createMockUseMarketplaceTabs" frontend/src/pages/MarketplacePage.test
 
 ---
 
-### Substep 1.1.4: Add setActiveTab Function
+### Substep 1.1.4: Review/Improve setActiveTab Function
 
-**Location:** Inside returned object, after `repositorySubTab`
+**Location:** Inside returned object, after `repositorySubTab` (around line 35-41)
 
-**Action:** Create stateful `setActiveTab` function.
+**Action:** Review existing implementation and improve if needed.
 
-**Code to Add:**
+**Current Implementation (lines 35-41):**
 ```typescript
 setActiveTab: jest.fn((tab: typeof mockActiveTab) => {
   mockActiveTab = tab
-  // Update mock return value to trigger re-render
-  // Note: This may not automatically trigger React re-render
-  // Tests may need to use rerender() or act() for full integration
+  // Update mock return value for next render
+  const mockFn = jest.mocked(require('../hooks/marketplace').useMarketplaceTabs)
+  if (mockFn) {
+    mockFn.mockReturnValue(createMockUseMarketplaceTabs())
+  }
 }),
 ```
 
-**Step-by-step:**
-1. [ ] Add `setActiveTab: jest.fn((tab: typeof mockActiveTab) => {`
-2. [ ] Add state update: `mockActiveTab = tab`
-3. [ ] Add comment about re-rendering
-4. [ ] Close function: `}),`
+**Issues to Check:**
+1. [ ] `require()` may cause issues - should use import or jest.mocked differently
+2. [ ] Mock update happens but may not trigger React re-render
+3. [ ] Circular reference risk with `createMockUseMarketplaceTabs()` calling itself
 
-**Key Points:**
-- `jest.fn()` creates a mock function that can be spied on
-- `typeof mockActiveTab` ensures type safety
-- State update happens synchronously
-- Component re-render may need explicit handling
-
-**Advanced Version (with automatic mock update):**
+**Improved Version (Option 1 - Simpler):**
 ```typescript
 setActiveTab: jest.fn((tab: typeof mockActiveTab) => {
   mockActiveTab = tab
-  // Update the mock return value so next call returns new state
-  // This helps with re-rendering in some cases
+  // State updated - component will need rerender() to see changes
+}),
+```
+
+**Improved Version (Option 2 - With Import):**
+```typescript
+import { useMarketplaceTabs } from '../hooks/marketplace'
+
+// Then in function:
+setActiveTab: jest.fn((tab: typeof mockActiveTab) => {
+  mockActiveTab = tab
+  // Update mock if it's been mocked
   if (jest.isMockFunction(useMarketplaceTabs)) {
     jest.mocked(useMarketplaceTabs).mockReturnValue(createMockUseMarketplaceTabs())
   }
 }),
 ```
 
-**Note:** The advanced version may cause issues if `useMarketplaceTabs` isn't imported yet. Start with simple version, add advanced if needed.
+**Step-by-step:**
+1. [ ] Review current implementation
+2. [ ] Decide if `require()` approach is acceptable or needs change
+3. [ ] Test if current implementation works
+4. [ ] If issues, try simpler version first
+5. [ ] If needed, implement improved version with import
+
+**Key Points:**
+- Current implementation tries to auto-update mock
+- `require()` may work but is less type-safe
+- Simpler version may be sufficient if tests use `rerender()`
 
 **Verification:**
 ```bash
@@ -435,12 +459,40 @@ grep "isRepositoryAgentsSubTab:" frontend/src/pages/MarketplacePage.test.tsx
 
 **Action:** Review the complete function to ensure it's correct.
 
-**Complete Function Should Look Like:**
+**Current Function (lines 28-55):**
 ```typescript
-/**
- * Creates a stateful mock for useMarketplaceTabs
- * Tracks state changes when setActiveTab/setRepositorySubTab are called
- */
+const createMockUseMarketplaceTabs = () => {
+  // Get reference to the mocked function
+  const mockFn = jest.mocked(require('../hooks/marketplace').useMarketplaceTabs)
+  
+  return {
+    activeTab: mockActiveTab,
+    repositorySubTab: mockRepositorySubTab,
+    setActiveTab: jest.fn((tab: typeof mockActiveTab) => {
+      mockActiveTab = tab
+      // Update mock return value for next render
+      if (mockFn) {
+        mockFn.mockReturnValue(createMockUseMarketplaceTabs())
+      }
+    }),
+    setRepositorySubTab: jest.fn((subTab: typeof mockRepositorySubTab) => {
+      mockRepositorySubTab = subTab
+      // Update mock return value for next render
+      if (mockFn) {
+        mockFn.mockReturnValue(createMockUseMarketplaceTabs())
+      }
+    }),
+    isAgentsTab: mockActiveTab === 'agents',
+    isRepositoryTab: mockActiveTab === 'repository',
+    isWorkflowsOfWorkflowsTab: mockActiveTab === 'workflows-of-workflows',
+    isRepositoryWorkflowsSubTab: mockActiveTab === 'repository' && mockRepositorySubTab === 'workflows',
+    isRepositoryAgentsSubTab: mockActiveTab === 'repository' && mockRepositorySubTab === 'agents',
+  }
+}
+```
+
+**Simplified Alternative (if current has issues):**
+```typescript
 const createMockUseMarketplaceTabs = () => ({
   activeTab: mockActiveTab,
   repositorySubTab: mockRepositorySubTab,
@@ -463,8 +515,12 @@ const createMockUseMarketplaceTabs = () => ({
 - [ ] State variables referenced correctly
 - [ ] Computed properties use correct logic
 - [ ] Type annotations correct
-- [ ] Function returns object (arrow function with parentheses)
+- [ ] Function returns object
+- [ ] `setActiveTab` updates `mockActiveTab`
+- [ ] `setRepositorySubTab` updates `mockRepositorySubTab`
+- [ ] Mock update logic works (if using advanced version)
 - [ ] No syntax errors
+- [ ] No circular reference issues
 
 **Verification Commands:**
 ```bash
@@ -497,31 +553,62 @@ grep -A 15 "const createMockUseMarketplaceTabs" frontend/src/pages/MarketplacePa
 ```typescript
 // Temporary test - remove after verification
 describe('createMockUseMarketplaceTabs verification', () => {
-  it('should update state when setActiveTab is called', () => {
-    mockActiveTab = 'agents'  // Reset state
-    
+  beforeEach(() => {
+    mockActiveTab = 'agents'
+    mockRepositorySubTab = 'workflows'
+  })
+
+  it('should return initial state correctly', () => {
     const mock = createMockUseMarketplaceTabs()
     expect(mock.activeTab).toBe('agents')
     expect(mock.isAgentsTab).toBe(true)
+    expect(mock.isRepositoryTab).toBe(false)
+  })
+
+  it('should update state when setActiveTab is called', () => {
+    const mock = createMockUseMarketplaceTabs()
     
     mock.setActiveTab('workflows-of-workflows')
+    
+    // Verify state variable updated
     expect(mockActiveTab).toBe('workflows-of-workflows')
     
     // Create new mock instance to see updated state
     const updatedMock = createMockUseMarketplaceTabs()
     expect(updatedMock.activeTab).toBe('workflows-of-workflows')
     expect(updatedMock.isWorkflowsOfWorkflowsTab).toBe(true)
+    expect(updatedMock.isAgentsTab).toBe(false)
+  })
+
+  it('should update repositorySubTab when setRepositorySubTab is called', () => {
+    mockActiveTab = 'repository'  // Set to repository first
+    
+    const mock = createMockUseMarketplaceTabs()
+    expect(mock.isRepositoryWorkflowsSubTab).toBe(true)
+    expect(mock.isRepositoryAgentsSubTab).toBe(false)
+    
+    mock.setRepositorySubTab('agents')
+    expect(mockRepositorySubTab).toBe('agents')
+    
+    const updatedMock = createMockUseMarketplaceTabs()
+    expect(updatedMock.isRepositoryWorkflowsSubTab).toBe(false)
+    expect(updatedMock.isRepositoryAgentsSubTab).toBe(true)
   })
 })
 ```
 
 **Steps:**
-1. [ ] Add temporary test
+1. [ ] Add temporary test block
 2. [ ] Run test: `npm test -- MarketplacePage.test.tsx -t "createMockUseMarketplaceTabs verification"`
-3. [ ] Verify test passes
-4. [ ] Remove temporary test
+3. [ ] Verify all 3 tests pass
+4. [ ] Check for any errors with `require()` or mock updates
+5. [ ] Remove temporary test after verification
 
-**Expected:** Test passes, confirming state updates work.
+**Expected:** All tests pass, confirming:
+- ✅ Initial state is correct
+- ✅ State updates when `setActiveTab` is called
+- ✅ Sub-tab state updates when `setRepositorySubTab` is called
+- ✅ Computed properties reflect updated state
 
 ---
 
@@ -581,6 +668,20 @@ npm test -- MarketplacePage.test.tsx 2>&1 | tail -30
 - Verify `mockActiveTab = tab` assignment is present
 - Check function is actually being called
 - Ensure state variable is module-level (not function-scoped)
+- If using `require()`, verify it's getting the mocked function
+
+### Issue: Circular Reference or require() Issues
+
+**Symptoms:**
+- `require is not defined` error
+- Mock update causes infinite loop
+- TypeScript errors with `require()`
+
+**Solution:**
+- Try simpler version without `require()`
+- Use `jest.mocked()` with import instead
+- Or remove auto-update logic and use `rerender()` in tests
+- Check that mock is defined before function tries to update it
 
 ---
 
