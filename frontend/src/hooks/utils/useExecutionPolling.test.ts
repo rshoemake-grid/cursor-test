@@ -648,4 +648,133 @@ describe('useExecutionPolling', () => {
 
     expect(mockApi.getExecution).not.toHaveBeenCalled()
   })
+
+  describe('Timeout Guards', () => {
+    it('should stop polling after max iterations (1000)', async () => {
+      const execution: Execution = {
+        id: 'exec-1',
+        status: 'running',
+        startedAt: new Date(),
+        nodes: {},
+        logs: [],
+      }
+      mockTabsRef.current = [createMockTab('workflow-1', [execution])]
+
+      mockApi.getExecution.mockResolvedValue({ status: 'running' } as any)
+
+      renderHook(() =>
+        useExecutionPolling({
+          tabsRef: mockTabsRef,
+          setTabs: mockSetTabs,
+          apiClient: mockApi,
+          pollInterval: 1000,
+        })
+      )
+
+      // Advance timers to trigger 1001 iterations (one more than max)
+      const MAX_ITERATIONS = 1000
+      for (let i = 0; i <= MAX_ITERATIONS; i++) {
+        await act(async () => {
+          jest.advanceTimersByTime(1000)
+        })
+      }
+
+      // Should have been called MAX_ITERATIONS times, then stopped
+      expect(mockApi.getExecution).toHaveBeenCalledTimes(MAX_ITERATIONS)
+      expect(mockLoggerDebug).toHaveBeenCalledWith(
+        expect.stringContaining(`Max polling iterations (${MAX_ITERATIONS}) reached`)
+      )
+    })
+
+    it('should clamp invalid poll interval to safe range', async () => {
+      const execution: Execution = {
+        id: 'exec-1',
+        status: 'running',
+        startedAt: new Date(),
+        nodes: {},
+        logs: [],
+      }
+      mockTabsRef.current = [createMockTab('workflow-1', [execution])]
+
+      mockApi.getExecution.mockResolvedValue({ status: 'running' } as any)
+
+      // Test with negative interval
+      renderHook(() =>
+        useExecutionPolling({
+          tabsRef: mockTabsRef,
+          setTabs: mockSetTabs,
+          apiClient: mockApi,
+          pollInterval: -1000,
+        })
+      )
+
+      await act(async () => {
+        jest.advanceTimersByTime(2000) // Should use default 2000ms
+      })
+
+      expect(mockApi.getExecution).toHaveBeenCalled()
+    })
+
+    it('should clamp poll interval greater than 60000 to safe range', async () => {
+      const execution: Execution = {
+        id: 'exec-1',
+        status: 'running',
+        startedAt: new Date(),
+        nodes: {},
+        logs: [],
+      }
+      mockTabsRef.current = [createMockTab('workflow-1', [execution])]
+
+      mockApi.getExecution.mockResolvedValue({ status: 'running' } as any)
+
+      // Test with interval > 60000
+      renderHook(() =>
+        useExecutionPolling({
+          tabsRef: mockTabsRef,
+          setTabs: mockSetTabs,
+          apiClient: mockApi,
+          pollInterval: 100000,
+        })
+      )
+
+      await act(async () => {
+        jest.advanceTimersByTime(2000) // Should use default 2000ms
+      })
+
+      expect(mockApi.getExecution).toHaveBeenCalled()
+    })
+
+    it('should limit concurrent executions to 50', async () => {
+      // Create 60 running executions
+      const executions: Execution[] = Array.from({ length: 60 }, (_, i) => ({
+        id: `exec-${i}`,
+        status: 'running' as const,
+        startedAt: new Date(),
+        nodes: {},
+        logs: [],
+      }))
+      mockTabsRef.current = [createMockTab('workflow-1', executions)]
+
+      mockApi.getExecution.mockResolvedValue({ status: 'running' } as any)
+
+      renderHook(() =>
+        useExecutionPolling({
+          tabsRef: mockTabsRef,
+          setTabs: mockSetTabs,
+          apiClient: mockApi,
+          pollInterval: 1000,
+        })
+      )
+
+      await act(async () => {
+        jest.advanceTimersByTime(1000)
+      })
+
+      // Should only poll 50 executions, not all 60
+      expect(mockApi.getExecution).toHaveBeenCalledTimes(50)
+      expect(mockLoggerDebug).toHaveBeenCalledWith(
+        expect.stringContaining('Too many running executions (60), limiting to 50')
+      )
+    })
+  })
 })

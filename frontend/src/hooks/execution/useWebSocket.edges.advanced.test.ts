@@ -99,8 +99,8 @@ describe('useWebSocket - edges.advanced', () => {
           const delayMatch = firstCall[0].match(/Reconnecting in (\d+)ms/)
           if (delayMatch) {
             const delay = parseInt(delayMatch[1], 10)
-            // Should be 2000ms for attempt 1
-            expect(delay).toBe(2000)
+            // Should be 10000ms for attempt 1 (DEFAULT_MAX_DELAY * 2^0)
+            expect(delay).toBe(10000)
           }
         }
       }

@@ -340,5 +340,124 @@ describe('errorHandler', () => {
 
       expect(showError).toHaveBeenCalledWith('Failed to setItem storage: Unknown error')
     })
+
+    it('should handle null error.response', () => {
+      const error = { response: null, message: 'Network error' }
+
+      const message = handleApiError(error)
+
+      expect(message).toBe('Network error')
+    })
+
+    it('should handle undefined error.response', () => {
+      const error = { response: undefined, message: 'Network error' }
+
+      const message = handleApiError(error)
+
+      expect(message).toBe('Network error')
+    })
+
+    it('should handle null error.response.data', () => {
+      const error = { response: { data: null }, message: 'Network error' }
+
+      const message = handleApiError(error)
+
+      expect(message).toBe('Network error')
+    })
+
+    it('should handle undefined error.response.data', () => {
+      const error = { response: { data: undefined }, message: 'Network error' }
+
+      const message = handleApiError(error)
+
+      expect(message).toBe('Network error')
+    })
+
+    it('should handle null error.response.data.detail', () => {
+      const error = { response: { data: { detail: null } }, message: 'Network error' }
+
+      const message = handleApiError(error)
+
+      expect(message).toBe('Network error')
+    })
+
+    it('should handle undefined error.response.data.detail', () => {
+      const error = { response: { data: { detail: undefined } }, message: 'Network error' }
+
+      const message = handleApiError(error)
+
+      expect(message).toBe('Network error')
+    })
+
+    it('should handle null error.response.data.message', () => {
+      const error = { response: { data: { message: null } }, message: 'Network error' }
+
+      const message = handleApiError(error)
+
+      expect(message).toBe('Network error')
+    })
+
+    it('should handle undefined error.response.data.message', () => {
+      const error = { response: { data: { message: undefined } }, message: 'Network error' }
+
+      const message = handleApiError(error)
+
+      expect(message).toBe('Network error')
+    })
+
+    it('should handle null error.message', () => {
+      const error = { message: null }
+
+      const message = handleApiError(error, { defaultMessage: 'Default' })
+
+      expect(message).toBe('Default')
+    })
+
+    it('should handle undefined error.message', () => {
+      const error = { message: undefined }
+
+      const message = handleApiError(error, { defaultMessage: 'Default' })
+
+      expect(message).toBe('Default')
+    })
+
+    it('should handle null context', () => {
+      const error = { message: 'Error' }
+
+      handleApiError(error, { context: null as any })
+
+      expect(logger.error).toHaveBeenCalledWith('[Error Handler] API Error:', error)
+    })
+
+    it('should handle undefined context', () => {
+      const error = { message: 'Error' }
+
+      handleApiError(error, { context: undefined })
+
+      expect(logger.error).toHaveBeenCalledWith('[Error Handler] API Error:', error)
+    })
+
+    it('should handle empty string context', () => {
+      const error = { message: 'Error' }
+
+      handleApiError(error, { context: '' })
+
+      expect(logger.error).toHaveBeenCalledWith('[Error Handler] API Error:', error)
+    })
+
+    it('should handle handleError with undefined error', () => {
+      const message = handleError(undefined as any, { defaultMessage: 'Default' })
+
+      expect(message).toBe('Default')
+    })
+
+    it('should handle handleError with Error instance that has null message', () => {
+      const error = new Error('')
+      Object.defineProperty(error, 'message', { value: null, writable: true })
+
+      const message = handleError(error, { defaultMessage: 'Default' })
+
+      expect(message).toBe('Default')
+    })
   })
 })
