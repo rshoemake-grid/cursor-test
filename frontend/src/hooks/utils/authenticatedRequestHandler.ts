@@ -76,9 +76,19 @@ export function buildRequestHeaders(
     mergeHeaders(headers, additionalHeaders)
   }
   
-  // Merge base headers last to ensure token takes precedence
+  // Build base headers (Authorization and Content-Type if not already set)
+  // Authorization from token takes precedence, but Content-Type can be overridden by additional headers
   const baseHeaders = buildBaseHeaders(token, method)
-  Object.assign(headers, baseHeaders)
+  
+  // Merge Authorization (always takes precedence)
+  if (baseHeaders.Authorization) {
+    headers.Authorization = baseHeaders.Authorization
+  }
+  
+  // Only add Content-Type if not already set by additional headers
+  if (baseHeaders['Content-Type'] && !headers['Content-Type']) {
+    headers['Content-Type'] = baseHeaders['Content-Type']
+  }
   
   return headers
 }
