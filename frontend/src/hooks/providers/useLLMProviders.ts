@@ -14,7 +14,6 @@ import {
   hasProviders,
 } from '../utils/providerValidation'
 import { logicalOr, logicalOrToEmptyArray } from '../utils/logicalOr'
-import { logicalOr, logicalOrToEmptyArray } from '../utils/logicalOr'
 
 export interface LLMProvider {
   id: string

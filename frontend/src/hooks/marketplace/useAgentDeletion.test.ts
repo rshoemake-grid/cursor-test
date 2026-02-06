@@ -1320,11 +1320,15 @@ describe('useAgentDeletion', () => {
         await result.current.deleteSelectedRepositoryAgents(new Set(['agent-1', 'agent-2']))
       })
 
-      // Verify setRepositoryAgents was called with filter that removes agent-1 and agent-2
+      // Verify setRepositoryAgents was called with filter function that removes agent-1 and agent-2
       expect(mockSetRepositoryAgents).toHaveBeenCalled()
       const setRepositoryAgentsCall = mockSetRepositoryAgents.mock.calls[0][0]
-      expect(setRepositoryAgentsCall.length).toBe(1) // Only agent-3 should remain
-      expect(setRepositoryAgentsCall[0].id).toBe('agent-3')
+      // The setter is called with a function, so we need to call it with the initial agents
+      const filteredAgents = typeof setRepositoryAgentsCall === 'function' 
+        ? setRepositoryAgentsCall(agents) 
+        : setRepositoryAgentsCall
+      expect(filteredAgents.length).toBe(1) // Only agent-3 should remain
+      expect(filteredAgents[0].id).toBe('agent-3')
     })
 
   })

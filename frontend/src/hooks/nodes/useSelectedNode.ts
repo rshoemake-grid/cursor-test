@@ -1,12 +1,15 @@
 /**
  * Selected Node Hook
  * Manages node selection, caching, and finding logic for PropertyPanel
+ * Refactored to follow SOLID principles: Single Responsibility, DRY
  */
 
 import { useMemo, useRef } from 'react'
 import { useReactFlow } from '@xyflow/react'
-import { findNodeById, nodeExists } from '../../utils/nodeUtils'
+import { findNodeById, nodeExists as checkNodeExists } from '../../utils/nodeUtils'
 import { logicalOrToEmptyArray } from '../utils/logicalOr'
+import { isValidNodeId, hasValidCache, nodeExistsAndValid as isValidNode } from '../utils/nodeValidation'
+import { updateNodeCacheRefs, clearNodeCache, syncCacheData, nodeExistsAndValid } from '../utils/nodeCache'
 
 interface UseSelectedNodeOptions {
   selectedNodeId: string | null
@@ -16,6 +19,10 @@ interface UseSelectedNodeOptions {
 /**
  * Hook for managing selected node and caching
  * Used by PropertyPanel to find and cache selected nodes
+ * 
+ * Refactored to follow SOLID principles:
+ * - SRP: Uses extracted validation and cache utilities
+ * - DRY: Eliminates duplicate null checks using utilities
  * 
  * @param options Configuration options
  * @returns Selected node and nodes array
@@ -42,24 +49,23 @@ export function useSelectedNode({
 
   const selectedNode = useMemo(() => {
     // If no selection, clear cache
-    // Explicit null/undefined/empty check to prevent mutation survivors
-    if (selectedNodeId === null || selectedNodeId === undefined || selectedNodeId === '') {
-      selectedNodeRef.current = null
-      selectedNodeIdRef.current = null
+    // Use extracted validation function - mutation-resistant
+    if (!isValidNodeId(selectedNodeId)) {
+      clearNodeCache(selectedNodeRef, selectedNodeIdRef)
       return null
     }
     
     // If same node ID and we have it cached, return cached version
-    // Explicit checks to prevent mutation survivors
-    if (selectedNodeIdRef.current === selectedNodeId && selectedNodeRef.current !== null && selectedNodeRef.current !== undefined) {
-        // Verify it still exists
-        if (nodeExists(selectedNodeId, getNodes, nodes)) {
-          // Update cache with latest data but return cached reference to prevent flicker
-          const updated = findNodeById(selectedNodeId, getNodes, nodes)
-          // Explicit check to prevent mutation survivors
-          if (updated !== null && updated !== undefined) {
-          // Only update cache, but return the cached reference for stability
-          Object.assign(selectedNodeRef.current, updated)
+    // Use extracted validation function - mutation-resistant
+    if (hasValidCache(selectedNodeIdRef.current, selectedNodeId, selectedNodeRef.current)) {
+      // Verify it still exists
+      if (checkNodeExists(selectedNodeId, getNodes, nodes)) {
+        // Update cache with latest data but return cached reference to prevent flicker
+        const updated = findNodeById(selectedNodeId, getNodes, nodes)
+        // Use extracted validation function - mutation-resistant
+        if (isValidNode(updated)) {
+          // Sync cache data while preserving reference
+          syncCacheData(selectedNodeRef, updated)
           return selectedNodeRef.current
         }
       }
@@ -68,15 +74,8 @@ export function useSelectedNode({
     // Find the node
     const found = findNodeById(selectedNodeId, getNodes, nodes)
     
-    // Cache it
-    // Explicit check to prevent mutation survivors
-    if (found !== null && found !== undefined) {
-      selectedNodeRef.current = { ...found } // Create a copy to stabilize reference
-      selectedNodeIdRef.current = selectedNodeId
-    } else {
-      selectedNodeRef.current = null
-      selectedNodeIdRef.current = null
-    }
+    // Cache it using extracted utility - mutation-resistant
+    updateNodeCacheRefs(selectedNodeRef, selectedNodeIdRef, found, selectedNodeId)
     
     return found
   }, [selectedNodeId, getNodes, nodes])

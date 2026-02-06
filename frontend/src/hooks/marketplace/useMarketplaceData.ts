@@ -4,7 +4,8 @@
  * Follows Single Responsibility Principle by delegating to focused hooks
  */
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
+import { useSyncState, useSyncStateWithDefault } from '../utils/useSyncState'
 import type { StorageAdapter, HttpClient } from '../../types/adapters'
 import { useTemplatesData } from './useTemplatesData'
 import { useAgentsData } from './useAgentsData'
@@ -146,27 +147,14 @@ export function useMarketplaceData({
   const [repositoryAgents, setRepositoryAgents] = useState<AgentTemplate[]>(logicalOrToEmptyArray(repositoryAgentsFetching.data))
 
   // Sync data fetching results to local state
-  useEffect(() => {
-    setTemplates(nullishCoalesceToNull(templatesFetching.data))
-  }, [templatesFetching.data])
-
-  useEffect(() => {
-    if (workflowsOfWorkflowsFetching.data) {
-      setWorkflowsOfWorkflows(workflowsOfWorkflowsFetching.data)
-    }
-  }, [workflowsOfWorkflowsFetching.data])
-
-  useEffect(() => {
-    if (agentsFetching.data) {
-      setAgents(agentsFetching.data)
-    }
-  }, [agentsFetching.data])
-
-  useEffect(() => {
-    if (repositoryAgentsFetching.data) {
-      setRepositoryAgents(repositoryAgentsFetching.data)
-    }
-  }, [repositoryAgentsFetching.data])
+  // DRY: Use generic useSyncState hook instead of 4 duplicate useEffect blocks
+  // Matches original behavior: only sync when data exists (truthy check)
+  // Use stable condition functions to prevent unnecessary re-runs
+  const truthyCondition = useMemo(() => (data: any) => data !== null && data !== undefined, [])
+  useSyncStateWithDefault(templatesFetching.data, setTemplates, null)
+  useSyncState(workflowsOfWorkflowsFetching.data, setWorkflowsOfWorkflows, truthyCondition)
+  useSyncState(agentsFetching.data, setAgents, truthyCondition)
+  useSyncState(repositoryAgentsFetching.data, setRepositoryAgents, truthyCondition)
 
   // Determine loading state based on active tab
   // Use extracted validation functions - mutation-resistant
@@ -194,21 +182,22 @@ export function useMarketplaceData({
   }, [activeTab, repositorySubTab, templatesFetching.refetch, workflowsOfWorkflowsFetching.refetch, agentsFetching.refetch, repositoryAgentsFetching.refetch])
 
   // Wrapper functions to match original API
-  const fetchTemplates = async () => {
+  // DRY: Could be eliminated or use generic wrapper, but kept for backward compatibility
+  const fetchTemplates = useCallback(async () => {
     await templatesFetching.refetch()
-  }
+  }, [templatesFetching.refetch])
 
-  const fetchWorkflowsOfWorkflows = async () => {
+  const fetchWorkflowsOfWorkflows = useCallback(async () => {
     await workflowsOfWorkflowsFetching.refetch()
-  }
+  }, [workflowsOfWorkflowsFetching.refetch])
 
-  const fetchAgents = async () => {
+  const fetchAgents = useCallback(async () => {
     await agentsFetching.refetch()
-  }
+  }, [agentsFetching.refetch])
 
-  const fetchRepositoryAgents = async () => {
+  const fetchRepositoryAgents = useCallback(async () => {
     await repositoryAgentsFetching.refetch()
-  }
+  }, [repositoryAgentsFetching.refetch])
 
   return {
     templates,

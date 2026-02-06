@@ -10,10 +10,8 @@ import { logger as defaultLogger } from '../../utils/logger'
 import { STORAGE_KEYS } from '../../config/constants'
 import { filterUserOwnedDeletableItems, separateOfficialItems } from '../../utils/ownershipUtils'
 import { isEmptySelection } from '../../utils/validationUtils'
-import { extractApiErrorMessage } from '../utils/apiUtils'
+import { deleteAgentsFromStorage, extractAgentIds, updateStateAfterDeletion } from '../utils/agentDeletionService'
 import { isValidUser, getUserId } from '../utils/userValidation'
-import { isStorageAvailable, setStorageItem } from '../utils/storageValidation'
-import { hasArrayItems } from '../utils/arrayValidation'
 import {
   hasOfficialItems,
   hasNoUserOwnedItems,
@@ -124,37 +122,27 @@ export function useAgentDeletion({
       if (!confirmed) return
     }
 
-    try {
-      // Remove from storage
-      // Use extracted validation function - mutation-resistant
-      if (!isStorageAvailable(storage)) {
-        showError('Storage not available')
-        return
+    // Extract agent IDs to delete
+    const agentIdsToDelete = extractAgentIds(userOwnedAgents)
+    if (agentIdsToDelete.size === 0) {
+      return
+    }
+
+    // Delete from storage using shared service - SRP + DRY
+    const result = deleteAgentsFromStorage(
+      storage,
+      'publishedAgents',
+      agentIdsToDelete,
+      {
+        showError,
+        showSuccess,
+        errorPrefix: 'agents',
       }
-      
-      const publishedAgents = storage!.getItem('publishedAgents')
-      if (publishedAgents) {
-        const allAgents: AgentTemplate[] = JSON.parse(publishedAgents)
-        // Use extracted validation function - mutation-resistant
-        if (hasArrayItems(userOwnedAgents)) {
-          const agentIdsToDelete = new Set(userOwnedAgents.map(a => a && a.id ? a.id : null).filter(Boolean))
-          const filteredAgents = allAgents.filter(a => !agentIdsToDelete.has(a.id))
-          
-          // Use extracted storage utility - mutation-resistant
-          if (setStorageItem(storage, 'publishedAgents', filteredAgents)) {
-            // Update state
-            setAgents(prevAgents => prevAgents.filter(a => !agentIdsToDelete.has(a.id)))
-            setSelectedAgentIds(new Set())
-            showSuccess(`Successfully deleted ${userOwnedAgents.length} agent(s)`)
-          } else {
-            showError('Failed to save to storage')
-          }
-        }
-      }
-    } catch (error: any) {
-      // Add defensive check to prevent crashes during mutation testing
-      const errorMessage = extractApiErrorMessage(error, 'Unknown error')
-      showError(`Failed to delete agents: ${errorMessage}`)
+    )
+
+    // Update state if deletion was successful
+    if (result.success) {
+      updateStateAfterDeletion(agentIdsToDelete, setAgents, setSelectedAgentIds)
     }
   }, [agents, user, storage, setAgents, setSelectedAgentIds, showError, showSuccess, showConfirm, logger])
 
@@ -191,11 +179,6 @@ export function useRepositoryAgentDeletion({
     onRefresh?: () => void
   ) => {
     if (isEmptySelection(selectedRepositoryAgentIds)) return
-    
-    if (!isStorageAvailable(storage)) {
-      showError('Storage not available')
-      return
-    }
 
     const confirmed = await showConfirm(
       `Are you sure you want to delete ${selectedRepositoryAgentIds.size} selected agent(s) from your repository?`,
@@ -203,23 +186,22 @@ export function useRepositoryAgentDeletion({
     )
     if (!confirmed) return
 
-    try {
-      const repositoryAgents = storage.getItem(STORAGE_KEYS.REPOSITORY_AGENTS)
-      if (repositoryAgents) {
-        const allAgents: AgentTemplate[] = JSON.parse(repositoryAgents)
-        const remainingAgents = allAgents.filter(a => !selectedRepositoryAgentIds.has(a.id))
-        storage.setItem(STORAGE_KEYS.REPOSITORY_AGENTS, JSON.stringify(remainingAgents))
-        setRepositoryAgents(remainingAgents)
-        setSelectedRepositoryAgentIds(new Set())
-        showSuccess(`Successfully deleted ${selectedRepositoryAgentIds.size} agent(s)`)
-        // Refresh the list if callback provided
-        if (onRefresh) {
-          onRefresh()
-        }
+    // Delete from storage using shared service - SRP + DRY
+    const result = deleteAgentsFromStorage(
+      storage,
+      STORAGE_KEYS.REPOSITORY_AGENTS,
+      selectedRepositoryAgentIds,
+      {
+        showError,
+        showSuccess,
+        onComplete: onRefresh,
+        errorPrefix: 'repository agents',
       }
-    } catch (error: any) {
-      const errorMessage = extractApiErrorMessage(error, 'Unknown error')
-      showError(`Failed to delete repository agents: ${errorMessage}`)
+    )
+
+    // Update state if deletion was successful
+    if (result.success) {
+      updateStateAfterDeletion(selectedRepositoryAgentIds, setRepositoryAgents, setSelectedRepositoryAgentIds)
     }
   }, [storage, setRepositoryAgents, setSelectedRepositoryAgentIds, showError, showSuccess, showConfirm])
 
