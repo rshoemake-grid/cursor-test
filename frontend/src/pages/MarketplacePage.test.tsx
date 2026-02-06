@@ -17,6 +17,43 @@ const waitForWithTimeout = (callback: () => void | Promise<void>, timeout = 2000
   return waitFor(callback, { timeout })
 }
 
+// Stateful mock state for useMarketplaceTabs
+let mockActiveTab: 'agents' | 'repository' | 'workflows-of-workflows' = 'agents'
+let mockRepositorySubTab: 'workflows' | 'agents' = 'workflows'
+
+/**
+ * Creates a stateful mock for useMarketplaceTabs
+ * Tracks state changes when setActiveTab/setRepositorySubTab are called
+ */
+const createMockUseMarketplaceTabs = () => {
+  // Get reference to the mocked function
+  const mockFn = jest.mocked(require('../hooks/marketplace').useMarketplaceTabs)
+  
+  return {
+    activeTab: mockActiveTab,
+    repositorySubTab: mockRepositorySubTab,
+    setActiveTab: jest.fn((tab: typeof mockActiveTab) => {
+      mockActiveTab = tab
+      // Update mock return value for next render
+      if (mockFn) {
+        mockFn.mockReturnValue(createMockUseMarketplaceTabs())
+      }
+    }),
+    setRepositorySubTab: jest.fn((subTab: typeof mockRepositorySubTab) => {
+      mockRepositorySubTab = subTab
+      // Update mock return value for next render
+      if (mockFn) {
+        mockFn.mockReturnValue(createMockUseMarketplaceTabs())
+      }
+    }),
+    isAgentsTab: mockActiveTab === 'agents',
+    isRepositoryTab: mockActiveTab === 'repository',
+    isWorkflowsOfWorkflowsTab: mockActiveTab === 'workflows-of-workflows',
+    isRepositoryWorkflowsSubTab: mockActiveTab === 'repository' && mockRepositorySubTab === 'workflows',
+    isRepositoryAgentsSubTab: mockActiveTab === 'repository' && mockRepositorySubTab === 'agents',
+  }
+}
+
 // Mock dependencies
 jest.mock('../contexts/AuthContext', () => ({
   useAuth: jest.fn(),
@@ -85,6 +122,29 @@ jest.mock('../hooks/marketplace', () => ({
   useTemplateUsage: jest.fn(),
   useAgentDeletion: jest.fn(),
   useWorkflowDeletion: jest.fn(),
+  useMarketplaceTabs: jest.fn(() => createMockUseMarketplaceTabs()),
+  useMarketplaceSelections: jest.fn(() => ({
+    templateSelection: { selectedIds: new Set(), setSelectedIds: jest.fn(), toggleSelection: jest.fn(), clearSelection: jest.fn(), isSelected: jest.fn() },
+    agentSelection: { selectedIds: new Set(), setSelectedIds: jest.fn(), toggleSelection: jest.fn(), clearSelection: jest.fn(), isSelected: jest.fn() },
+    repositoryAgentSelection: { selectedIds: new Set(), setSelectedIds: jest.fn(), toggleSelection: jest.fn(), clearSelection: jest.fn(), isSelected: jest.fn() },
+    clearSelectionsForTab: jest.fn(),
+  })),
+  useMarketplaceActions: jest.fn(() => ({
+    handleDeleteSelected: jest.fn(),
+    handleDeleteTemplate: jest.fn(),
+    handleDeleteAgent: jest.fn(),
+    handleDeleteWorkflow: jest.fn(),
+    handleDeleteRepositoryAgent: jest.fn(),
+  })),
+  MARKETPLACE_TABS: {
+    AGENTS: 'agents',
+    REPOSITORY: 'repository',
+    WORKFLOWS_OF_WORKFLOWS: 'workflows-of-workflows',
+  },
+  REPOSITORY_SUB_TABS: {
+    WORKFLOWS: 'workflows',
+    AGENTS: 'agents',
+  },
   // Export types
   Template: {} as any,
   AgentTemplate: {} as any,
@@ -128,7 +188,15 @@ const renderWithRouter = (component: React.ReactElement) => {
 
 describe('MarketplacePage', () => {
   beforeEach(() => {
+    // Reset mock state to defaults FIRST
+    mockActiveTab = 'agents'
+    mockRepositorySubTab = 'workflows'
+    
     jest.clearAllMocks()
+    
+    // Reset useMarketplaceTabs mock to use fresh state AFTER clearing mocks
+    const { useMarketplaceTabs } = require('../hooks/marketplace')
+    jest.mocked(useMarketplaceTabs).mockReturnValue(createMockUseMarketplaceTabs())
     localStorage.clear()
     mockNavigate.mockClear()
     mockUseAuth.mockReturnValue({
@@ -437,12 +505,17 @@ describe('MarketplacePage', () => {
         fetchRepositoryAgents: jest.fn(),
       })
 
-      renderWithRouter(<MarketplacePage />)
+      const { rerender } = renderWithRouter(<MarketplacePage />)
 
+      // Click the workflows-of-workflows tab
       await waitForWithTimeout(() => {
         const workflowsOfWorkflowsTab = screen.getByText(/Workflows of Workflows/)
         fireEvent.click(workflowsOfWorkflowsTab)
       })
+
+      // Trigger re-render to apply tab state change
+      // The stateful mock should have updated mockActiveTab to 'workflows-of-workflows'
+      rerender(<MarketplacePage />)
 
       // Verify the hook was called with workflows-of-workflows tab
       await waitForWithTimeout(() => {
@@ -976,12 +1049,17 @@ describe('MarketplacePage', () => {
         delete: jest.fn(),
       }
 
-      renderWithRouter(<MarketplacePage httpClient={mockHttpClient} />)
+      const { rerender } = renderWithRouter(<MarketplacePage httpClient={mockHttpClient} />)
 
       await waitForWithTimeout(() => {
         const repositoryTab = screen.getByText(/Repository/)
         fireEvent.click(repositoryTab)
       })
+
+      // Trigger re-render to apply tab state change
+      // The stateful mock should have updated mockActiveTab to 'repository'
+      // Note: rerender maintains the BrowserRouter context from initial render
+      rerender(<MarketplacePage httpClient={mockHttpClient} />)
 
       await waitForWithTimeout(() => {
         expect(screen.getByText(/No workflows found/)).toBeInTheDocument()

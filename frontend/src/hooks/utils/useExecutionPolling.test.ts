@@ -18,12 +18,14 @@ jest.mock('../../utils/logger', () => ({
   logger: {
     debug: jest.fn(),
     error: jest.fn(),
+    warn: jest.fn(),
   },
 }))
 
 const mockApi = api as jest.Mocked<typeof api>
 const mockLoggerDebug = logger.debug as jest.MockedFunction<typeof logger.debug>
 const mockLoggerError = logger.error as jest.MockedFunction<typeof logger.error>
+const mockLoggerWarn = logger.warn as jest.MockedFunction<typeof logger.warn>
 
 describe('useExecutionPolling', () => {
   let mockTabsRef: React.MutableRefObject<WorkflowTabData[]>
@@ -681,7 +683,7 @@ describe('useExecutionPolling', () => {
 
       // Should have been called MAX_ITERATIONS times, then stopped
       expect(mockApi.getExecution).toHaveBeenCalledTimes(MAX_ITERATIONS)
-      expect(mockLoggerDebug).toHaveBeenCalledWith(
+      expect(mockLoggerWarn).toHaveBeenCalledWith(
         expect.stringContaining(`Max polling iterations (${MAX_ITERATIONS}) reached`)
       )
     })
@@ -772,7 +774,7 @@ describe('useExecutionPolling', () => {
 
       // Should only poll 50 executions, not all 60
       expect(mockApi.getExecution).toHaveBeenCalledTimes(50)
-      expect(mockLoggerDebug).toHaveBeenCalledWith(
+      expect(mockLoggerWarn).toHaveBeenCalledWith(
         expect.stringContaining('Too many running executions (60), limiting to 50')
       )
     })

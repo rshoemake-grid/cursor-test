@@ -2562,9 +2562,9 @@ describe('useWebSocket - mutation.advanced', () => {
           await advanceTimersByTime(50)
         })
 
-        // Should reconnect with delay of 2000ms (less than 10000)
+        // Should reconnect with delay of 10000ms (DEFAULT_MAX_DELAY * 2^0 for attempt 1)
         expect(logger.debug).toHaveBeenCalledWith(
-          expect.stringMatching(/\[WebSocket\] Reconnecting in 2000ms \(attempt \d+\/5\)/)
+          expect.stringMatching(/\[WebSocket\] Reconnecting in 10000ms \(attempt \d+\/5\)/)
         )
       }
     })

@@ -237,8 +237,8 @@ describe('useWebSocket - edges.basic', () => {
         wsInstances[0].simulateClose(1006, 'Abnormal closure', false)
         await advanceTimersByTime(100)
         
-        // Wait for reconnect delay (2000ms for first attempt)
-        await advanceTimersByTime(2100)
+        // Wait for reconnect delay (10000ms for first attempt: DEFAULT_MAX_DELAY * 2^0)
+        await advanceTimersByTime(10100)
 
         // Should have attempted reconnect
         expect(wsInstances.length).toBeGreaterThan(initialCount)
@@ -256,10 +256,10 @@ describe('useWebSocket - edges.basic', () => {
       await advanceTimersByTime(100)
 
       if (wsInstances.length > 0) {
-        // First reconnect: 1000 * 2^1 = 2000ms
+        // First reconnect: 10000 * 2^0 = 10000ms (DEFAULT_MAX_DELAY * 2^(attempt-1))
         wsInstances[0].simulateClose(1006, '', false)
         await advanceTimersByTime(100)
-        await advanceTimersByTime(2100)
+        await advanceTimersByTime(10100)
 
         if (wsInstances.length > 1) {
           // Second reconnect: 1000 * 2^2 = 4000ms

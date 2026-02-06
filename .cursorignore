@@ -22,6 +22,20 @@ venv.bak/
 examples/
 examples-*/
 
+frontend/coverage/
+frontend/coverage-*/
+frontend/coverage-*/
+frontend/reports/
+frontend/reports-*/
+frontend/reports-*/
+frontend/mutation_test.log
+frontend/mutation_test.pid
+frontend/mutation_test.status
+frontend/mutation_test.status-*/
+frontend/mutation_test.status-*/
+frontend/dist/
+frontend/dist-*/
+frontend/node_modules/
 
 # Build outputs
 dist/

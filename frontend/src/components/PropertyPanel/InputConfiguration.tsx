@@ -39,6 +39,7 @@ export function InputConfiguration({
           onClick={() => onShowAddInput(true)}
           className="text-xs px-2 py-1 bg-primary-100 text-primary-700 rounded hover:bg-primary-200 flex items-center gap-1"
           aria-label="Add input to node"
+          data-testid="add-input-button"
         >
           <Plus className="w-3 h-3" />
           Add Input
@@ -105,7 +106,7 @@ export function InputConfiguration({
           aria-labelledby="add-input-title"
         >
           <div className="bg-white rounded-lg p-4 w-96">
-            <h4 id="add-input-title" className="font-semibold mb-3">
+            <h4 id="add-input-title" className="font-semibold mb-3" data-testid="add-input-modal-title">
               Add Input
             </h4>
             <form
@@ -182,6 +183,7 @@ export function InputConfiguration({
                   type="submit"
                   className="px-3 py-1 text-sm bg-primary-600 text-white rounded hover:bg-primary-700"
                   aria-label="Add input to node"
+                  data-testid="add-input-submit-button"
                 >
                   Add Input
                 </button>
