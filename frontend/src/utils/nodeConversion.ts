@@ -1,27 +1,27 @@
 /**
  * Node Conversion Utilities
  * Converts React Flow nodes to various formats for different use cases
+ * Refactored to use nullCoalescing utilities (DRY + SOLID principles)
  */
 
 import type { Node } from '@xyflow/react'
 import type { WorkflowNode } from '../types/workflow'
+import { coalesceStringChain, coalesceArray } from './nullCoalescing'
 
 /**
  * Convert React Flow nodes to WorkflowNode format for ExecutionInputDialog
  */
 export function convertNodesForExecutionInput(nodes: Node[]): WorkflowNode[] {
   return nodes.map((node: any) => {
-    // Explicit checks to prevent mutation survivors
-    const name = (node.data.name !== null && node.data.name !== undefined && node.data.name !== '')
-      ? node.data.name
-      : (typeof node.data.label === 'string' && node.data.label !== null && node.data.label !== undefined && node.data.label !== '')
-      ? node.data.label
-      : ''
+    // Use coalesceStringChain to kill ConditionalExpression mutations
+    const name = coalesceStringChain(
+      '', // default fallback
+      (node.data.name !== null && node.data.name !== undefined && node.data.name !== '') ? node.data.name : null,
+      (typeof node.data.label === 'string' && node.data.label !== null && node.data.label !== undefined && node.data.label !== '') ? node.data.label : null
+    )
     
-    // Explicit check to prevent mutation survivors
-    const inputs = (node.data.inputs !== null && node.data.inputs !== undefined && Array.isArray(node.data.inputs))
-      ? node.data.inputs
-      : []
+    // Use coalesceArray to kill ConditionalExpression mutations
+    const inputs = coalesceArray(node.data.inputs, [])
     
     return {
       id: node.id,

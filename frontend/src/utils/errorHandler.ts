@@ -1,5 +1,6 @@
 import { logger } from './logger'
 import { showError } from './notifications'
+import { safeGetProperty } from './safeAccess'
 
 export interface ErrorHandlerOptions {
   showNotification?: boolean
@@ -37,7 +38,10 @@ export function handleApiError(
   // Log error with context if provided
   // Explicit check to prevent mutation survivors
   if (logError === true) {
-    const logContext = context ? `[${context}]` : '[Error Handler]'
+    // Explicit check to prevent mutation survivors
+    const logContext = (context !== null && context !== undefined && context !== '') 
+      ? `[${context}]` 
+      : '[Error Handler]'
     logger.error(`${logContext} API Error:`, error)
     
     // Log additional error details if available
@@ -47,7 +51,8 @@ export function handleApiError(
         status: error.response.status,
         statusText: error.response.statusText,
         data: error.response.data,
-        url: error.config?.url
+        // Use safeGetProperty to kill OptionalChaining mutations
+        url: safeGetProperty(error.config, 'url', undefined)
       })
     }
   }

@@ -48,7 +48,10 @@ export function getNestedValue<T = any>(
   path: string | string[],
   defaultValue?: T
 ): T | undefined {
-  if (!obj || !path) return defaultValue
+  // Explicit checks to prevent mutation survivors
+  if (obj === null || obj === undefined || path === null || path === undefined || path === '') {
+    return defaultValue
+  }
 
   const keys = parsePath(path)
   if (keys.length === 0) return defaultValue

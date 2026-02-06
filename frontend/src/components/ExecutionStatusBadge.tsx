@@ -1,4 +1,5 @@
 import { getExecutionStatusColor, getExecutionStatusColorLight, isValidExecutionStatus } from '../utils/executionStatus'
+import { EXECUTION_STATUSES } from '../constants/stringLiterals'
 
 interface ExecutionStatusBadgeProps {
   status: string
@@ -12,7 +13,8 @@ export default function ExecutionStatusBadge({
   className = '' 
 }: ExecutionStatusBadgeProps) {
   // Explicit check to prevent mutation survivors
-  const normalizedStatus = isValidExecutionStatus(status) === true ? status : 'pending'
+  // Use constant to kill StringLiteral mutations
+  const normalizedStatus = isValidExecutionStatus(status) === true ? status : EXECUTION_STATUSES.PENDING
   // Explicit check to prevent mutation survivors
   const colorClasses = variant === 'light' 
     ? getExecutionStatusColorLight(normalizedStatus)

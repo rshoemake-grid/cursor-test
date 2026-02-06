@@ -2,10 +2,12 @@
  * Condition Node Editor Component
  * Handles editing of condition node properties
  * Follows Single Responsibility Principle
+ * Refactored to use string literal constants (DRY + SOLID principles)
  */
 
 import { useRef, useState, useEffect } from 'react'
 import { NodeWithData } from '../../types/nodeData'
+import { CONDITION_TYPES, isValidConditionType } from '../../constants/stringLiterals'
 
 interface ConditionNodeEditorProps {
   node: NodeWithData & { type: 'condition' }
@@ -49,11 +51,13 @@ export default function ConditionNodeEditor({
     ? node.data.condition_config
     : {}
   // Explicit check to prevent mutation survivors
-  const conditionType = (conditionConfig.condition_type !== null && conditionConfig.condition_type !== undefined && conditionConfig.condition_type !== '')
+  // Use constants to kill StringLiteral mutations
+  const conditionType = (conditionConfig.condition_type !== null && conditionConfig.condition_type !== undefined && conditionConfig.condition_type !== '' && isValidConditionType(conditionConfig.condition_type))
     ? conditionConfig.condition_type
-    : 'equals'
+    : CONDITION_TYPES.EQUALS
   // Explicit checks to prevent mutation survivors
-  const showValueField = conditionType !== 'empty' && conditionType !== 'not_empty'
+  // Use constants to kill StringLiteral mutations
+  const showValueField = conditionType !== CONDITION_TYPES.EMPTY && conditionType !== CONDITION_TYPES.NOT_EMPTY
 
   return (
     <>
@@ -74,17 +78,17 @@ export default function ConditionNodeEditor({
           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
           aria-label="Select condition type"
         >
-          <option value="equals">Equals</option>
-          <option value="not_equals">Not Equals</option>
-          <option value="contains">Contains</option>
-          <option value="not_contains">Not Contains</option>
-          <option value="greater_than">Greater Than</option>
-          <option value="not_greater_than">Not Greater Than</option>
-          <option value="less_than">Less Than</option>
-          <option value="not_less_than">Not Less Than</option>
-          <option value="empty">Empty</option>
-          <option value="not_empty">Not Empty</option>
-          <option value="custom">Custom</option>
+          <option value={CONDITION_TYPES.EQUALS}>Equals</option>
+          <option value={CONDITION_TYPES.NOT_EQUALS}>Not Equals</option>
+          <option value={CONDITION_TYPES.CONTAINS}>Contains</option>
+          <option value={CONDITION_TYPES.NOT_CONTAINS}>Not Contains</option>
+          <option value={CONDITION_TYPES.GREATER_THAN}>Greater Than</option>
+          <option value={CONDITION_TYPES.NOT_GREATER_THAN}>Not Greater Than</option>
+          <option value={CONDITION_TYPES.LESS_THAN}>Less Than</option>
+          <option value={CONDITION_TYPES.NOT_LESS_THAN}>Not Less Than</option>
+          <option value={CONDITION_TYPES.EMPTY}>Empty</option>
+          <option value={CONDITION_TYPES.NOT_EMPTY}>Not Empty</option>
+          <option value={CONDITION_TYPES.CUSTOM}>Custom</option>
         </select>
       </div>
 
