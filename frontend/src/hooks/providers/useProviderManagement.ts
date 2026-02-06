@@ -7,6 +7,7 @@
 import { useState, useCallback } from 'react'
 import type { LLMProvider } from './useLLMProviders'
 import { SettingsService, type LLMSettings } from '../services/SettingsService'
+import { logicalOrToEmptyArray } from '../utils/logicalOr'
 
 interface UseProviderManagementOptions {
   service: SettingsService
@@ -64,7 +65,7 @@ export function useProviderManagement({
     const provider = providers.find(p => p.id === providerId)
     if (provider && modelName) {
       updateProvider(providerId, {
-        models: [...(provider.models || []), modelName]
+        models: [...logicalOrToEmptyArray(provider.models), modelName]
       })
     }
   }, [providers, updateProvider])

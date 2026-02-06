@@ -7,6 +7,7 @@
  */
 
 import { isOwner, type OwnableItem, type User } from '../../utils/ownershipUtils'
+import { nullishCoalesceToNull } from './nullishCoalescing'
 
 export type { OwnableItem, User }
 
@@ -34,5 +35,5 @@ export function canUserDelete(item: OwnableItem | null | undefined, user: User |
   }
   
   // isOwner expects User | null, not undefined
-  return isOwner(item, user ?? null)
+  return isOwner(item, nullishCoalesceToNull(user))
 }

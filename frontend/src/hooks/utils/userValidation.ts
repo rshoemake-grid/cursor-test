@@ -4,6 +4,8 @@
  * Single Responsibility: Only validates user data
  */
 
+import { logicalOr, logicalOrToNull } from './logicalOr'
+
 export interface User {
   id: string
   username?: string
@@ -93,5 +95,5 @@ export function getUserDisplayName(user: User | null | undefined): string | null
   if (!isValidUser(user)) {
     return null
   }
-  return user.username || user.email || null
+  return logicalOrToNull(logicalOr(user.username, user.email))
 }

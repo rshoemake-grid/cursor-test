@@ -166,10 +166,7 @@ export class WebSocketConnectionManager {
     }
 
     ws.onclose = (event) => {
-      const reason = logicalOr(
-        event.reason && event.reason.length > 0 ? event.reason : null,
-        'No reason provided'
-      ) as string
+      const reason = (event.reason && event.reason.length > 0) ? event.reason : 'No reason provided'
       this.config.logger.debug(`[WebSocket] Disconnected from execution ${this.config.executionId}`, {
         code: event.code,
         reason: reason,

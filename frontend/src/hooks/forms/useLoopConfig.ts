@@ -5,6 +5,7 @@
 
 import { useEffect } from 'react'
 import { useReactFlow } from '@xyflow/react'
+import { logicalOrToEmptyObject } from '../utils/logicalOr'
 
 interface UseLoopConfigOptions {
   selectedNode: any | null
@@ -21,7 +22,7 @@ export function useLoopConfig({ selectedNode }: UseLoopConfigOptions) {
   useEffect(() => {
     if (!selectedNode || selectedNode.type !== 'loop') return
     
-    const nodeData = selectedNode.data || {}
+    const nodeData = logicalOrToEmptyObject(selectedNode.data)
     if (!nodeData.loop_config || Object.keys(nodeData.loop_config).length === 0) {
       const defaultLoopConfig = {
         loop_type: 'for_each',

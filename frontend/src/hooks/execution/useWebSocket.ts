@@ -7,6 +7,7 @@ import {
   type WebSocketCallbacks
 } from '../utils/WebSocketConnectionManager'
 import type { ExecutionStatus } from './useWebSocket.utils'
+import { logicalOr } from '../utils/logicalOr'
 
 interface UseWebSocketOptions {
   executionId: string | null
@@ -36,9 +37,9 @@ export function useWebSocket(options: UseWebSocketOptions) {
       executionId: options.executionId,
       executionStatus: options.executionStatus,
       maxReconnectAttempts: 5,
-      webSocketFactory: options.webSocketFactory || defaultAdapters.createWebSocketFactory(),
+      webSocketFactory: logicalOr(options.webSocketFactory, defaultAdapters.createWebSocketFactory()),
       windowLocation: options.windowLocation !== undefined ? options.windowLocation : defaultAdapters.createWindowLocation(),
-      logger: options.logger || logger
+      logger: logicalOr(options.logger, logger)
     })
   }
 
