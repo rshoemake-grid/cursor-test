@@ -7,6 +7,7 @@ import { useState, useCallback } from 'react'
 import { showError as defaultShowError, showSuccess as defaultShowSuccess } from '../../utils/notifications'
 import { usePublishForm } from '../forms'
 import type { HttpClient } from '../../types/adapters'
+import { logicalOrToNull } from '../utils/logicalOr'
 
 interface UseMarketplacePublishingOptions {
   activeTab: { id: string; workflowId: string | null; name: string } | undefined
@@ -83,7 +84,7 @@ export function useMarketplacePublishing({
           category: publishFormHook.form.category,
           tags: tagsArray,
           difficulty: publishFormHook.form.difficulty,
-          estimated_time: publishFormHook.form.estimated_time || undefined
+          estimated_time: logicalOrToNull(publishFormHook.form.estimated_time) || undefined
         },
         headers
       )

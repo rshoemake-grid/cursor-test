@@ -6,6 +6,7 @@
 import { useState, useCallback } from 'react'
 import { showSuccess } from '../../utils/notifications'
 import type { Node } from '@xyflow/react'
+import { logicalOrToEmptyObject } from '../utils/logicalOr'
 
 interface UseClipboardReturn {
   clipboardNode: Node | null
@@ -38,7 +39,7 @@ export function useClipboard(
   const paste = useCallback((x?: number, y?: number) => {
     if (!clipboardNode) return
 
-    const { getNodes, screenToFlowPosition, addNodes, deleteElements } = reactFlowInstanceRef.current || {}
+    const { getNodes, screenToFlowPosition, addNodes, deleteElements } = logicalOrToEmptyObject(reactFlowInstanceRef.current)
     if (!getNodes || !screenToFlowPosition || !addNodes) return
 
     const position = x !== undefined && y !== undefined 

@@ -13,6 +13,7 @@ import {
   isRealExecutionId,
   shouldLogExecutionError,
 } from './executionIdValidation'
+import { logicalOrToEmptyObject, logicalOrToEmptyArray, logicalOr } from './logicalOr'
 
 interface UseExecutionPollingOptions {
   tabsRef: React.MutableRefObject<any[]>
@@ -101,8 +102,8 @@ export function useExecutionPolling({
               status: newStatus,
               startedAt: exec.startedAt,
               completedAt: execution.completed_at ? new Date(execution.completed_at) : undefined,
-              nodes: execution.node_states || {},
-              logs: execution.logs || []
+              nodes: logicalOrToEmptyObject(execution.node_states),
+              logs: logicalOrToEmptyArray(execution.logs)
             }
           } catch (error: any) {
             // If execution not found (404), it might be a temp execution that failed
@@ -123,7 +124,7 @@ export function useExecutionPolling({
           executions: (tab.executions && Array.isArray(tab.executions)) 
             ? tab.executions.map((exec: Execution) => {
                 const update = updates.find(u => u && u.id === exec.id)
-                return update || exec
+                return logicalOr(update, exec)
               })
             : []
         }))

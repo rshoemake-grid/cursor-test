@@ -5,6 +5,7 @@
 
 import { logger as defaultLogger } from '../../utils/logger'
 import { showError as defaultShowError } from '../../utils/notifications'
+import { logicalOr } from './logicalOr'
 
 export interface ErrorHandlerOptions {
   showNotification?: boolean
@@ -28,7 +29,7 @@ export function extractErrorMessage(error: any, defaultMessage: string = 'An err
   }
   
   if (error instanceof Error) {
-    return error.message || defaultMessage
+    return logicalOr(error.message, defaultMessage)
   }
   
   // Try to extract from API error response

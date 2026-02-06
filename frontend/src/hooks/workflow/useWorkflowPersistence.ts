@@ -10,6 +10,8 @@ import { logger as defaultLogger } from '../../utils/logger'
 import { createWorkflowDefinition } from '../../utils/workflowFormat'
 import type { Node, Edge } from '@xyflow/react'
 import type { createApiClient } from '../../api/client'
+import { nullishCoalesce } from '../utils/nullishCoalescing'
+import { logicalOr } from '../utils/logicalOr'
 
 interface UseWorkflowPersistenceOptions {
   isAuthenticated: boolean
@@ -54,7 +56,7 @@ export function useWorkflowPersistence({
     }
 
     if (isSaving) {
-      return localWorkflowId ?? null
+      return nullishCoalesce(localWorkflowId, null)
     }
 
     const workflowDef = createWorkflowDefinition({
@@ -84,7 +86,7 @@ export function useWorkflowPersistence({
         return created.id!
       }
     } catch (error: any) {
-      const errorMessage = 'Failed to save workflow: ' + (error.message || 'Unknown error')
+      const errorMessage = 'Failed to save workflow: ' + logicalOr(error.message, 'Unknown error')
       showError(errorMessage)
       logger.error('Failed to save workflow:', error)
       throw new Error(errorMessage)
@@ -118,7 +120,7 @@ export function useWorkflowPersistence({
       variables,
     })
     
-    const filename = (localWorkflowName.trim() || 'workflow').replace(/\s+/g, '-')
+    const filename = logicalOr(localWorkflowName.trim(), 'workflow').replace(/\s+/g, '-')
     const blob = new Blob([JSON.stringify(workflowDef, null, 2)], { type: 'application/json' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')

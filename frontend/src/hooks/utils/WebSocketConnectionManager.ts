@@ -19,6 +19,7 @@ import {
   type MessageHandlerOptions
 } from '../execution/useWebSocket.utils'
 import { isTemporaryExecutionId } from './executionIdValidation'
+import { logicalOr } from './logicalOr'
 
 export interface WebSocketCallbacks {
   onLog?: (log: WebSocketMessage['log']) => void
@@ -62,7 +63,7 @@ export class WebSocketConnectionManager {
    * Single Responsibility: Only updates status
    */
   updateStatus(status: ExecutionStatus | undefined): void {
-    this.lastKnownStatus = status || this.lastKnownStatus
+    this.lastKnownStatus = logicalOr(status, this.lastKnownStatus)
     this.config.executionStatus = status
 
     // Close connection if execution terminated
@@ -165,7 +166,10 @@ export class WebSocketConnectionManager {
     }
 
     ws.onclose = (event) => {
-      const reason = event.reason && event.reason.length > 0 ? event.reason : 'No reason provided'
+      const reason = logicalOr(
+        event.reason && event.reason.length > 0 ? event.reason : null,
+        'No reason provided'
+      ) as string
       this.config.logger.debug(`[WebSocket] Disconnected from execution ${this.config.executionId}`, {
         code: event.code,
         reason: reason,
@@ -269,7 +273,7 @@ export class WebSocketConnectionManager {
     if (isTemporaryExecutionId(this.config.executionId)) {
       this.config.logger.debug(`[WebSocket] Skipping connection to temporary execution ID: ${this.config.executionId}`)
     } else {
-      const status = this.config.executionStatus || this.lastKnownStatus
+      const status = logicalOr(this.config.executionStatus, this.lastKnownStatus)
       if (status === 'completed' || status === 'failed') {
         this.config.logger.debug(`[WebSocket] Skipping connection - execution ${this.config.executionId} is ${status}`)
       }
@@ -284,7 +288,7 @@ export class WebSocketConnectionManager {
     if (isTemporaryExecutionId(this.config.executionId)) {
       this.config.logger.debug(`[WebSocket] Skipping reconnect for temporary execution ID: ${this.config.executionId}`)
     } else {
-      const status = this.config.executionStatus || this.lastKnownStatus
+      const status = logicalOr(this.config.executionStatus, this.lastKnownStatus)
       if (status === 'completed' || status === 'failed') {
         this.config.logger.debug(`[WebSocket] Skipping reconnect - execution ${this.config.executionId} is ${status}`)
       } else if (event.wasClean && event.code === 1000) {

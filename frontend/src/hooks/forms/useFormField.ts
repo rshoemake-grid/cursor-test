@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { getNestedValue } from '../utils/formUtils'
+import { nullishCoalesce } from '../utils/nullishCoalescing'
 
 /**
  * Reusable form field hook
@@ -34,7 +35,7 @@ export function useFormField<T>(
   const [value, setValueState] = useState<T>(() => {
     if (nodeData && dataPath && syncWithNodeData) {
       const nodeValue = getNestedValue(nodeData, dataPath)
-      return nodeValue !== undefined ? nodeValue : initialValue
+      return nullishCoalesce(nodeValue, initialValue)
     }
     return initialValue
   })

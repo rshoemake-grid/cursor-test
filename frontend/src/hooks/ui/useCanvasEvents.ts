@@ -10,6 +10,7 @@ import { showSuccess, showError } from '../../utils/notifications'
 import { STORAGE_KEYS } from '../../config/constants'
 import type { Node, Edge } from '@xyflow/react'
 import type { StorageAdapter } from '../../types/adapters'
+import { logicalOr, logicalOrToEmptyObject } from '../utils/logicalOr'
 
 interface UseCanvasEventsOptions {
   reactFlowInstanceRef: React.MutableRefObject<any>
@@ -82,20 +83,21 @@ export function useCanvasEvents({
         }
       }
 
+      const defaultLabel = `${type.charAt(0).toUpperCase() + type.slice(1)} Node`
       const newNode = {
         id: `${type}-${Date.now()}`,
         type,
         position,
         draggable: true,
         data: customData ? {
-          label: customData.label || `${type.charAt(0).toUpperCase() + type.slice(1)} Node`,
-          name: customData.label || `${type.charAt(0).toUpperCase() + type.slice(1)} Node`,
-          description: customData.description || '',
-          agent_config: customData.agent_config || {},
+          label: logicalOr(customData.label, defaultLabel),
+          name: logicalOr(customData.label, defaultLabel),
+          description: logicalOr(customData.description, ''),
+          agent_config: logicalOrToEmptyObject(customData.agent_config),
           inputs: [],
         } : {
-          label: `${type.charAt(0).toUpperCase() + type.slice(1)} Node`,
-          name: `${type.charAt(0).toUpperCase() + type.slice(1)} Node`,
+          label: defaultLabel,
+          name: defaultLabel,
           inputs: [],
         },
       }
@@ -167,9 +169,9 @@ export function useCanvasEvents({
       // Create a template from the node
       const agentTemplate = {
         id: `agent_${Date.now()}`,
-        label: node.data.label || node.data.name || 'Custom Agent',
-        description: node.data.description || '',
-        agent_config: node.data.agent_config || {},
+        label: logicalOr(node.data.label, logicalOr(node.data.name, 'Custom Agent')),
+        description: logicalOr(node.data.description, ''),
+        agent_config: logicalOrToEmptyObject(node.data.agent_config),
         type: 'agent'
       }
       

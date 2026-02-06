@@ -10,6 +10,7 @@ import {
   HTTP_CLIENT_ERROR_MSG,
   URL_EMPTY_ERROR_MSG,
 } from '../utils/authenticatedRequestHandler'
+import { logicalOr } from '../utils/logicalOr'
 
 /**
  * Custom hook for authenticated API calls
@@ -28,7 +29,7 @@ export function useAuthenticatedApi(
     // Initialize client with fallback
     let client: HttpClient
     try {
-      client = httpClient || defaultAdapters.createHttpClient()
+      client = logicalOr(httpClient, defaultAdapters.createHttpClient())
     } catch (error) {
       // Fallback to a mock client if creation fails
       const fallbackError = createSafeError('HTTP client initialization failed', 'HttpClientInitError')
@@ -43,10 +44,10 @@ export function useAuthenticatedApi(
     // Initialize base URL with fallback
     let baseUrl: string
     try {
-      baseUrl = apiBaseUrl || API_CONFIG.BASE_URL
+      baseUrl = logicalOr(apiBaseUrl, API_CONFIG.BASE_URL)
     } catch {
       // If API_CONFIG.BASE_URL access throws, use fallback
-      baseUrl = apiBaseUrl || 'http://localhost:8000'
+      baseUrl = logicalOr(apiBaseUrl, 'http://localhost:8000')
     }
 
     // Create request context (shared across all methods)

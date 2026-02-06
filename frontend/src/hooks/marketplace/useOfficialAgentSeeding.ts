@@ -8,6 +8,7 @@ import { logger } from '../../utils/logger'
 import { setLocalStorageItem } from '../storage'
 import { STORAGE_KEYS } from '../../config/constants'
 import type { StorageAdapter, HttpClient } from '../../types/adapters'
+import { logicalOr, logicalOrToEmptyObject, logicalOrToEmptyArray } from '../utils/logicalOr'
 
 interface Template {
   id: string
@@ -124,19 +125,20 @@ export function useOfficialAgentSeeding({
             }
             
             const workflowDetail = await workflowResponse.json()
-            logger.debug(`[Marketplace] Workflow ${workflow.name} has ${workflowDetail.nodes?.length || 0} nodes`)
+            const nodeCount = workflowDetail.nodes?.length ?? 0
+            logger.debug(`[Marketplace] Workflow ${workflow.name} has ${nodeCount} nodes`)
             
             // Extract agent nodes from workflow nodes
             if (workflowDetail.nodes && Array.isArray(workflowDetail.nodes)) {
               const agentNodes = workflowDetail.nodes.filter((node: any) => {
-                const nodeType = node.type || node.data?.type
-                const hasAgentConfig = node.agent_config || node.data?.agent_config
+                const nodeType = logicalOr(node.type, node.data?.type)
+                const hasAgentConfig = logicalOr(node.agent_config, node.data?.agent_config)
                 const isAgent = nodeType === 'agent' && hasAgentConfig
                 if (isAgent) {
-                  logger.debug(`[Marketplace] Found agent node: ${node.id || node.data?.id}`, {
+                  logger.debug(`[Marketplace] Found agent node: ${logicalOr(node.id, node.data?.id)}`, {
                     type: nodeType,
                     hasConfig: !!hasAgentConfig,
-                    name: node.name || node.data?.name
+                    name: logicalOr(node.name, node.data?.name)
                   })
                 }
                 return isAgent
@@ -146,7 +148,7 @@ export function useOfficialAgentSeeding({
 
               for (const agentNode of agentNodes) {
                 // Create unique agent ID based on workflow and node
-                const nodeId = agentNode.id || agentNode.data?.id || `node_${Date.now()}`
+                const nodeId = logicalOr(agentNode.id, logicalOr(agentNode.data?.id, `node_${Date.now()}`))
                 const agentId = `official_${workflow.id}_${nodeId}`
                 
                 // Check if agent already exists
@@ -159,9 +161,9 @@ export function useOfficialAgentSeeding({
                   continue // Skip if already exists
                 }
 
-                const agentConfig = agentNode.agent_config || agentNode.data?.agent_config || {}
-                const nodeName = agentNode.name || agentNode.data?.name || agentNode.data?.label || 'Agent'
-                const nodeDescription = agentNode.description || agentNode.data?.description || `Agent from ${workflow.name}`
+                const agentConfig = logicalOrToEmptyObject(logicalOr(agentNode.agent_config, agentNode.data?.agent_config))
+                const nodeName = logicalOr(agentNode.name, logicalOr(agentNode.data?.name, logicalOr(agentNode.data?.label, 'Agent')))
+                const nodeDescription = logicalOr(agentNode.description, logicalOr(agentNode.data?.description, `Agent from ${workflow.name}`))
 
                 logger.debug(`[Marketplace] Creating official agent: ${nodeName} (${agentId})`)
 
@@ -170,14 +172,14 @@ export function useOfficialAgentSeeding({
                   name: nodeName,
                   label: nodeName,
                   description: nodeDescription,
-                  category: workflow.category || 'automation',
-                  tags: [...(workflow.tags || []), 'official', workflow.name.toLowerCase().replace(/\s+/g, '-')],
-                  difficulty: workflow.difficulty || 'intermediate',
-                  estimated_time: workflow.estimated_time || '5 min',
+                  category: logicalOr(workflow.category, 'automation'),
+                  tags: [...logicalOrToEmptyArray(workflow.tags), 'official', workflow.name.toLowerCase().replace(/\s+/g, '-')],
+                  difficulty: logicalOr(workflow.difficulty, 'intermediate'),
+                  estimated_time: logicalOr(workflow.estimated_time, '5 min'),
                   agent_config: agentConfig,
-                  published_at: (workflow as any).created_at || new Date().toISOString(),
-                  author_id: workflow.author_id || null,
-                  author_name: workflow.author_name || 'System',
+                  published_at: logicalOr((workflow as any).created_at, new Date().toISOString()),
+                  author_id: logicalOr(workflow.author_id, null),
+                  author_name: logicalOr(workflow.author_name, 'System'),
                   is_official: true
                 })
               }

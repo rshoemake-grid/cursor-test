@@ -8,6 +8,7 @@ import { logger } from '../../utils/logger'
 import { addEdge } from '@xyflow/react'
 import { initializeReactFlowNodes, workflowNodeToReactFlowNode } from '../../utils/workflowFormat'
 import type { Node, Edge, Connection } from '@xyflow/react'
+import { logicalOrToNull } from '../utils/logicalOr'
 
 interface UseWorkflowUpdatesOptions {
   nodes: Node[]
@@ -136,8 +137,8 @@ export function useWorkflowUpdates({
           const connection: Connection = {
             source: edgeToAdd.source,
             target: edgeToAdd.target,
-            sourceHandle: edgeToAdd.sourceHandle || null,
-            targetHandle: edgeToAdd.targetHandle || null,
+            sourceHandle: logicalOrToNull(edgeToAdd.sourceHandle),
+            targetHandle: logicalOrToNull(edgeToAdd.targetHandle),
           }
           logger.debug('Adding connection:', connection)
           // Use addEdge to properly format the edge - it returns the updated array

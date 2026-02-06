@@ -6,6 +6,7 @@
 
 import { useState, useCallback } from 'react'
 import { logger } from '../../utils/logger'
+import { nullishCoalesce } from './nullishCoalescing'
 
 export interface UseDataFetchingOptions<T> {
   fetchFn: () => Promise<T>
@@ -31,7 +32,7 @@ export function useDataFetching<T>({
   onError,
   logger: injectedLogger = logger,
 }: UseDataFetchingOptions<T>): UseDataFetchingResult<T> {
-  const [data, setData] = useState<T | null>(initialData ?? null)
+  const [data, setData] = useState<T | null>(nullishCoalesce(initialData, null))
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<Error | null>(null)
 

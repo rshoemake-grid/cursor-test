@@ -8,6 +8,7 @@ import { api } from '../../api/client'
 import { logger } from '../../utils/logger'
 import { initializeReactFlowNodes, formatEdgesForReactFlow } from '../../utils/workflowFormat'
 import type { Node, Edge } from '@xyflow/react'
+import { logicalOrToEmptyArray } from '../utils/logicalOr'
 
 interface UseWorkflowUpdateHandlerOptions {
   localWorkflowId: string | null
@@ -42,7 +43,7 @@ export function useWorkflowUpdateHandler({
           const convertedNodes = workflow.nodes.map(workflowNodeToNode)
           const initializedNodes = initializeReactFlowNodes(convertedNodes)
           setNodes(initializedNodes)
-          setEdges(formatEdgesForReactFlow(workflow.edges || []))
+          setEdges(formatEdgesForReactFlow(logicalOrToEmptyArray(workflow.edges)))
           logger.debug('Reloaded workflow after deletion, nodes:', initializedNodes.map(n => n.id))
           logger.debug('Expected deleted nodes:', changes.nodes_to_delete)
         }).catch(err => {

@@ -9,6 +9,7 @@ import { showError } from '../../utils/notifications'
 import { logger } from '../../utils/logger'
 import { UI_CONSTANTS } from '../../config/constants'
 import { confirmDelete } from '../utils/confirmations'
+import { logicalOr, logicalOrToEmptyObject, logicalOrToEmptyArray } from '../utils/logicalOr'
 
 interface UseNodeOperationsOptions {
   selectedNode: any | null
@@ -77,7 +78,7 @@ export function useNodeOperations({
   const handleDelete = useCallback(async () => {
     if (!selectedNode) return
     
-    const itemName = selectedNode.data.name || selectedNode.data.label || selectedNode.id
+    const itemName = logicalOr(selectedNode.data.name, logicalOr(selectedNode.data.label, selectedNode.id))
     await confirmDelete(itemName, () => {
       deleteElements({ nodes: [{ id: selectedNode.id }] })
       setSelectedNodeId(null)
@@ -115,11 +116,11 @@ export function useNodeOperations({
   const handleAddInput = useCallback((inputName: string, sourceNode: string, sourceField: string, setShowAddInput: (show: boolean) => void) => {
     if (!selectedNode) return
     
-    const currentInputs = selectedNode.data.inputs || []
+    const currentInputs = logicalOrToEmptyArray(selectedNode.data.inputs)
     const newInput = {
       name: inputName,
-      source_node: sourceNode || undefined,
-      source_field: sourceField || 'output'
+      source_node: logicalOr(sourceNode, undefined),
+      source_field: logicalOr(sourceField, 'output')
     }
     
     handleUpdate('inputs', [...currentInputs, newInput])
@@ -129,7 +130,7 @@ export function useNodeOperations({
   const handleRemoveInput = useCallback((index: number) => {
     if (!selectedNode) return
     
-    const currentInputs = selectedNode.data.inputs || []
+    const currentInputs = logicalOrToEmptyArray(selectedNode.data.inputs)
     const newInputs = currentInputs.filter((_: any, i: number) => i !== index)
     handleUpdate('inputs', newInputs)
   }, [selectedNode, handleUpdate])
@@ -137,7 +138,7 @@ export function useNodeOperations({
   const handleUpdateInput = useCallback((index: number, field: string, value: any) => {
     if (!selectedNode) return
     
-    const currentInputs = [...(selectedNode.data.inputs || [])]
+    const currentInputs = [...logicalOrToEmptyArray(selectedNode.data.inputs)]
     currentInputs[index] = { ...currentInputs[index], [field]: value }
     handleUpdate('inputs', currentInputs)
   }, [selectedNode, handleUpdate])

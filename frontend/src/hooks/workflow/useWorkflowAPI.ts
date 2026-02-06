@@ -2,6 +2,7 @@ import { useCallback } from 'react'
 import { api } from '../../api/client'
 import type { WorkflowDefinition, ExecutionState } from '../../types/workflow'
 import { logger } from '../../utils/logger'
+import { nullishCoalesce } from '../utils/nullishCoalescing'
 
 /**
  * Workflow API client interface
@@ -28,7 +29,7 @@ export function useWorkflowAPI(options?: {
   const {
     apiClient = api,
     logger: injectedLogger = logger
-  } = options ?? {}
+  } = nullishCoalesce(options, {})
 
   const getWorkflows = useCallback(async (): Promise<WorkflowDefinition[]> => {
     try {

@@ -8,6 +8,7 @@ import { showError as defaultShowError } from '../../utils/notifications'
 import { logger as defaultLogger } from '../../utils/logger'
 import type { WorkflowTabData } from '../../contexts/WorkflowTabsContext'
 import { validateWorkflowName, sanitizeName, hasNameChanged } from '../utils/validation'
+import { logicalOr } from '../utils/logicalOr'
 
 interface UseTabRenamingOptions {
   tabs: WorkflowTabData[]
@@ -62,7 +63,7 @@ export function useTabRenaming({
     const trimmedName = sanitizeName(requestedName)
     const validation = validateWorkflowName(trimmedName)
     if (!validation.isValid) {
-      showError(validation.error || 'Invalid workflow name.')
+      showError(logicalOr(validation.error, 'Invalid workflow name.'))
       return
     }
 

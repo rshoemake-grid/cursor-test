@@ -6,6 +6,7 @@
 import { useMemo, useRef } from 'react'
 import { useReactFlow } from '@xyflow/react'
 import { findNodeById, nodeExists } from '../../utils/nodeUtils'
+import { logicalOrToEmptyArray } from '../utils/logicalOr'
 
 interface UseSelectedNodeOptions {
   selectedNodeId: string | null
@@ -33,9 +34,9 @@ export function useSelectedNode({
   const nodes = useMemo(() => {
     try {
       const flowNodes = getNodes()
-      return flowNodes.length > 0 ? flowNodes : (nodesProp || [])
+      return flowNodes.length > 0 ? flowNodes : logicalOrToEmptyArray(nodesProp)
     } catch {
-      return nodesProp || []
+      return logicalOrToEmptyArray(nodesProp)
     }
   }, [getNodes, nodesProp])
 
