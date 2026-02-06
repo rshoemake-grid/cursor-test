@@ -213,6 +213,15 @@ export class WebSocketConnectionManager {
     event: CloseEvent,
     callbacks: WebSocketCallbacks
   ): void {
+    // Guard: Prevent infinite reconnection loops
+    // Check BEFORE incrementing to match original behavior
+    // Check BEFORE shouldReconnect so we can log the warning
+    if (this.reconnectAttempts >= this.config.maxReconnectAttempts) {
+      this.config.logger.warn(`[WebSocket] Max reconnect attempts reached`)
+      callbacks.onError?.(`WebSocket connection failed after ${this.config.maxReconnectAttempts} attempts`)
+      return
+    }
+
     if (!ExecutionStatusChecker.shouldReconnect(
       event.wasClean,
       event.code,
@@ -223,14 +232,6 @@ export class WebSocketConnectionManager {
       this.lastKnownStatus
     )) {
       this.logSkipReconnectReason(event)
-      return
-    }
-
-    // Guard: Prevent infinite reconnection loops
-    // Check BEFORE incrementing to match original behavior
-    if (this.reconnectAttempts >= this.config.maxReconnectAttempts) {
-      this.config.logger.warn(`[WebSocket] Max reconnect attempts reached`)
-      callbacks.onError?.(`WebSocket connection failed after ${this.config.maxReconnectAttempts} attempts`)
       return
     }
 
