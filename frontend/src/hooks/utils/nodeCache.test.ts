@@ -5,40 +5,87 @@
 
 import {
   updateNodeCache,
+  updateNodeCacheRefs,
+  updateCachedNodeData,
   clearNodeCache,
   syncCacheData,
 } from './nodeCache'
+import type { Node } from '@xyflow/react'
 
 describe('updateNodeCache', () => {
-  it('should update cache with node data', () => {
+  it('should return cache result with node data', () => {
+    const node: Node = { id: 'node-1', data: {}, position: { x: 0, y: 0 } }
+    
+    const result = updateNodeCache(node, 'node-1')
+    
+    expect(result.cached).toEqual(node)
+    expect(result.idCached).toBe('node-1')
+    expect(result.cached).not.toBe(node) // Should be a copy
+  })
+
+  it('should return null cache when node is null', () => {
+    const result = updateNodeCache(null, null)
+    
+    expect(result.cached).toBeNull()
+    expect(result.idCached).toBeNull()
+  })
+
+  it('should return null cache when node is undefined', () => {
+    const result = updateNodeCache(undefined, null)
+    
+    expect(result.cached).toBeNull()
+    expect(result.idCached).toBeNull()
+  })
+})
+
+describe('updateNodeCacheRefs', () => {
+  it('should update cache refs with node data', () => {
     const cacheRef = { current: null }
     const idRef = { current: null }
-    const node = { id: 'node-1', data: {} }
+    const node: Node = { id: 'node-1', data: {}, position: { x: 0, y: 0 } }
     
-    updateNodeCache(cacheRef, idRef, node, 'node-1')
+    updateNodeCacheRefs(cacheRef, idRef, node, 'node-1')
     
-    expect(cacheRef.current).toEqual({ id: 'node-1', data: {} })
+    expect(cacheRef.current).toEqual(node)
     expect(idRef.current).toBe('node-1')
   })
 
-  it('should clear cache when node is null', () => {
-    const cacheRef = { current: { id: 'old' } }
+  it('should clear cache refs when node is null', () => {
+    const cacheRef = { current: { id: 'old' } as any }
     const idRef = { current: 'old-id' }
     
-    updateNodeCache(cacheRef, idRef, null, null)
+    updateNodeCacheRefs(cacheRef, idRef, null, null)
     
     expect(cacheRef.current).toBeNull()
     expect(idRef.current).toBeNull()
   })
+})
 
-  it('should clear cache when node is undefined', () => {
-    const cacheRef = { current: { id: 'old' } }
-    const idRef = { current: 'old-id' }
+describe('updateCachedNodeData', () => {
+  it('should update cached node data', () => {
+    const cachedNode: Node = { id: 'node-1', data: { old: true }, position: { x: 0, y: 0 } }
+    const updatedNode: Node = { id: 'node-1', data: { new: true }, position: { x: 0, y: 0 } }
     
-    updateNodeCache(cacheRef, idRef, undefined, null)
+    const result = updateCachedNodeData(cachedNode, updatedNode)
     
-    expect(cacheRef.current).toBeNull()
-    expect(idRef.current).toBeNull()
+    expect(result).toBe(true)
+    expect(cachedNode.data).toEqual({ new: true })
+  })
+
+  it('should return false when cached node is null', () => {
+    const updatedNode: Node = { id: 'node-1', data: {}, position: { x: 0, y: 0 } }
+    
+    const result = updateCachedNodeData(null, updatedNode)
+    
+    expect(result).toBe(false)
+  })
+
+  it('should return false when updated node is null', () => {
+    const cachedNode: Node = { id: 'node-1', data: {}, position: { x: 0, y: 0 } }
+    
+    const result = updateCachedNodeData(cachedNode, null)
+    
+    expect(result).toBe(false)
   })
 })
 

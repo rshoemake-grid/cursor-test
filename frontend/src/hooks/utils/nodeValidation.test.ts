@@ -5,8 +5,8 @@
 
 import {
   isValidNodeId,
-  nodeExists,
   hasValidCache,
+  nodeExistsAndValid,
 } from './nodeValidation'
 
 describe('isValidNodeId', () => {
@@ -37,18 +37,18 @@ describe('isValidNodeId', () => {
   })
 })
 
-describe('nodeExists', () => {
+describe('nodeExistsAndValid', () => {
   it('should return true for existing nodes', () => {
-    expect(nodeExists({ id: '1' })).toBe(true)
-    expect(nodeExists({})).toBe(true)
+    expect(nodeExistsAndValid({ id: '1' })).toBe(true)
+    expect(nodeExistsAndValid({})).toBe(true)
   })
 
   it('should return false for null', () => {
-    expect(nodeExists(null)).toBe(false)
+    expect(nodeExistsAndValid(null)).toBe(false)
   })
 
   it('should return false for undefined', () => {
-    expect(nodeExists(undefined)).toBe(false)
+    expect(nodeExistsAndValid(undefined)).toBe(false)
   })
 })
 
