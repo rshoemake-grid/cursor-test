@@ -509,7 +509,7 @@ describe('MarketplacePage', () => {
       })
 
       // Trigger re-render to apply tab state change
-      // The stateful mock should have updated mockActiveTab to 'workflows-of-workflows'
+      // The stateful mock should have updated activeTab to 'workflows-of-workflows'
       rerender(<MarketplacePage />)
 
       // Verify the hook was called with workflows-of-workflows tab
@@ -1052,7 +1052,7 @@ describe('MarketplacePage', () => {
       })
 
       // Trigger re-render to apply tab state change
-      // The stateful mock should have updated mockActiveTab to 'repository'
+      // The stateful mock should have updated activeTab to 'repository'
       // Note: rerender maintains the BrowserRouter context from initial render
       rerender(<MarketplacePage httpClient={mockHttpClient} />)
 
