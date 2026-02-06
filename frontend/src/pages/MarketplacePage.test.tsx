@@ -20,10 +20,6 @@ const waitForWithTimeout = (callback: () => void | Promise<void>, timeout = 2000
   return waitFor(callback, { timeout })
 }
 
-// Import stateful mock utility
-import { createMultiStatefulMock } from '../test/utils/createStatefulMock'
-import type { UseMarketplaceTabsReturn } from '../hooks/marketplace/useMarketplaceTabs'
-
 /**
  * Stateful mock for useMarketplaceTabs hook
  * Uses shared utility for cleaner, maintainable code
