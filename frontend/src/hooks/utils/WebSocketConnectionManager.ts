@@ -3,22 +3,41 @@
  * Single Responsibility: Only manages WebSocket connection lifecycle
  * Separated from React lifecycle for better testability
  * Follows Separation of Concerns principle
+ * Refactored to use Strategy Pattern for reconnection (Open/Closed Principle)
  */
 
 import type { WebSocketFactory, WindowLocation } from '../../types/adapters'
+import { getWebSocketStateText } from './websocketStateUtils'
+import { ExecutionStatusChecker, type ExecutionStatus } from './executionStatusUtils'
+import { buildWebSocketUrl } from './websocketUrlBuilder'
 import {
-  getWebSocketStateText,
-  isExecutionTerminated,
-  shouldSkipConnection,
-  buildWebSocketUrl,
-  calculateReconnectDelay,
-  shouldReconnect,
   handleWebSocketMessage,
-  type ExecutionStatus,
   type WebSocketMessage,
   type MessageHandlerOptions
-} from '../execution/useWebSocket.utils'
+} from './websocketMessageHandler'
 import { isTemporaryExecutionId } from './executionIdValidation'
+import {
+  ExponentialBackoffStrategy,
+  type ReconnectionStrategy
+} from './websocketReconnectionStrategy'
+import {
+  WS_CLOSE_CODES,
+  WS_STATUS,
+  WS_CLOSE_REASONS,
+  WS_RECONNECT,
+  EXECUTION_STATUS
+} from './websocketConstants'
+import {
+  hasPendingReconnection,
+  sanitizeReconnectionDelay,
+  isCleanClosure,
+  getCloseReason
+} from './websocketValidation'
+import {
+  logSkipConnectionReason,
+  logSkipReconnectReason
+} from './websocketLogging'
+import { logicalOr } from './logicalOr'
 import { logicalOr } from './logicalOr'
 
 export interface WebSocketCallbacks {
@@ -40,6 +59,7 @@ export interface WebSocketManagerConfig {
     error: (message: string, ...args: any[]) => void
     warn: (message: string, ...args: any[]) => void
   }
+  reconnectionStrategy?: ReconnectionStrategy
 }
 
 /**
@@ -53,9 +73,12 @@ export class WebSocketConnectionManager {
   private reconnectAttempts = 0
   private lastKnownStatus?: ExecutionStatus
   private isConnectedState = false
+  private reconnectionStrategy: ReconnectionStrategy
 
   constructor(private config: WebSocketManagerConfig) {
     this.lastKnownStatus = config.executionStatus
+    // Use provided strategy or default to exponential backoff
+    this.reconnectionStrategy = config.reconnectionStrategy ?? new ExponentialBackoffStrategy()
   }
 
   /**
@@ -67,16 +90,16 @@ export class WebSocketConnectionManager {
     this.config.executionStatus = status
 
     // Close connection if execution terminated
-    if (status && isExecutionTerminated(status)) {
+    if (status && ExecutionStatusChecker.isTerminated(status)) {
       if (this.ws) {
         this.config.logger.debug(`[WebSocket] Closing connection - execution ${this.config.executionId} is ${status}`)
-        this.ws.close(1000, 'Execution completed')
+        this.ws.close(WS_CLOSE_CODES.NORMAL_CLOSURE, WS_CLOSE_REASONS.EXECUTION_COMPLETED)
         this.ws = null
       }
       this.isConnectedState = false
       // Clear any pending reconnection attempts
-      if (this.reconnectTimeout) {
-        clearTimeout(this.reconnectTimeout)
+      if (hasPendingReconnection(this.reconnectTimeout)) {
+        clearTimeout(this.reconnectTimeout!)
         this.reconnectTimeout = null
       }
     }
@@ -97,7 +120,7 @@ export class WebSocketConnectionManager {
    */
   connect(callbacks: WebSocketCallbacks): void {
     // Check if should skip
-    if (shouldSkipConnection(
+    if (ExecutionStatusChecker.shouldSkip(
       this.config.executionId,
       this.config.executionStatus,
       this.lastKnownStatus
@@ -135,7 +158,7 @@ export class WebSocketConnectionManager {
       this.config.logger.debug(`[WebSocket] Connected to execution ${this.config.executionId}`)
       this.isConnectedState = true
       this.reconnectAttempts = 0
-      callbacks.onStatus?.('connected')
+      callbacks.onStatus?.(WS_STATUS.CONNECTED)
     }
 
     ws.onmessage = (event) => {
@@ -162,11 +185,11 @@ export class WebSocketConnectionManager {
         url: wsUrl
       })
       this.isConnectedState = false
-      callbacks.onStatus?.('error')
+      callbacks.onStatus?.(WS_STATUS.ERROR)
     }
 
     ws.onclose = (event) => {
-      const reason = (event.reason && event.reason.length > 0) ? event.reason : 'No reason provided'
+      const reason = getCloseReason(event)
       this.config.logger.debug(`[WebSocket] Disconnected from execution ${this.config.executionId}`, {
         code: event.code,
         reason: reason,
@@ -175,7 +198,7 @@ export class WebSocketConnectionManager {
       })
       this.ws = null
       this.isConnectedState = false
-      callbacks.onStatus?.('disconnected')
+      callbacks.onStatus?.(WS_STATUS.DISCONNECTED)
 
       this.handleReconnection(event, callbacks)
     }
@@ -184,12 +207,13 @@ export class WebSocketConnectionManager {
   /**
    * Handle reconnection logic
    * Single Responsibility: Only handles reconnection
+   * Uses Strategy Pattern for extensible reconnection strategies
    */
   private handleReconnection(
     event: CloseEvent,
     callbacks: WebSocketCallbacks
   ): void {
-    if (!shouldReconnect(
+    if (!ExecutionStatusChecker.shouldReconnect(
       event.wasClean,
       event.code,
       this.reconnectAttempts,
@@ -203,6 +227,7 @@ export class WebSocketConnectionManager {
     }
 
     // Guard: Prevent infinite reconnection loops
+    // Check BEFORE incrementing to match original behavior
     if (this.reconnectAttempts >= this.config.maxReconnectAttempts) {
       this.config.logger.warn(`[WebSocket] Max reconnect attempts reached`)
       callbacks.onError?.(`WebSocket connection failed after ${this.config.maxReconnectAttempts} attempts`)
@@ -210,16 +235,22 @@ export class WebSocketConnectionManager {
     }
 
     this.reconnectAttempts++
-    const delay = calculateReconnectDelay(this.reconnectAttempts, 10000)
     
-    // Guard: Ensure delay is valid to prevent timeout mutations
-    const safeDelay = delay > 0 && delay < 60000 ? delay : 1000
+    // Use strategy to calculate delay (attempt is now incremented, so use current value)
+    const baseDelay = WS_RECONNECT.DEFAULT_MAX_DELAY
+    const calculatedDelay = this.reconnectionStrategy.calculateDelay(
+      this.reconnectAttempts,
+      baseDelay
+    )
+    
+    // Sanitize delay to prevent timeout mutations
+    const safeDelay = sanitizeReconnectionDelay(calculatedDelay)
     
     this.config.logger.debug(`[WebSocket] Reconnecting in ${safeDelay}ms (attempt ${this.reconnectAttempts}/${this.config.maxReconnectAttempts})`)
 
     // Guard: Clear existing timeout before setting new one
-    if (this.reconnectTimeout) {
-      clearTimeout(this.reconnectTimeout)
+    if (hasPendingReconnection(this.reconnectTimeout)) {
+      clearTimeout(this.reconnectTimeout!)
     }
     
     this.reconnectTimeout = setTimeout(() => {
@@ -235,13 +266,13 @@ export class WebSocketConnectionManager {
    * Single Responsibility: Only closes connection
    */
   close(reason?: string): void {
-    if (this.reconnectTimeout) {
-      clearTimeout(this.reconnectTimeout)
+    if (hasPendingReconnection(this.reconnectTimeout)) {
+      clearTimeout(this.reconnectTimeout!)
       this.reconnectTimeout = null
     }
 
     if (this.ws) {
-      this.ws.close(1000, reason)
+      this.ws.close(WS_CLOSE_CODES.NORMAL_CLOSURE, reason)
       this.ws = null
     }
 
@@ -250,9 +281,20 @@ export class WebSocketConnectionManager {
 
   /**
    * Get connection state
+   * Mutation-resistant: explicit state check
    */
   get isConnected(): boolean {
-    return this.isConnectedState && this.ws !== null && this.ws.readyState === WebSocket.OPEN
+    if (!this.isConnectedState) {
+      return false
+    }
+    if (this.ws === null || this.ws === undefined) {
+      return false
+    }
+    // Use explicit constant comparison to prevent mutation survivors
+    if (this.ws.readyState === WebSocket.OPEN) {
+      return true
+    }
+    return false
   }
 
   /**
@@ -264,34 +306,30 @@ export class WebSocketConnectionManager {
 
   /**
    * Log skip reason
-   * DRY: Centralized logging for skip reasons
+   * DRY: Uses extracted logging utility
    */
   private logSkipReason(): void {
-    if (isTemporaryExecutionId(this.config.executionId)) {
-      this.config.logger.debug(`[WebSocket] Skipping connection to temporary execution ID: ${this.config.executionId}`)
-    } else {
-      const status = logicalOr(this.config.executionStatus, this.lastKnownStatus)
-      if (status === 'completed' || status === 'failed') {
-        this.config.logger.debug(`[WebSocket] Skipping connection - execution ${this.config.executionId} is ${status}`)
-      }
-    }
+    logSkipConnectionReason(
+      this.config.executionId,
+      this.config.executionStatus,
+      this.lastKnownStatus,
+      this.config.logger
+    )
   }
 
   /**
    * Log skip reconnect reason
-   * DRY: Centralized logging for reconnect skip reasons
+   * DRY: Uses extracted logging utility
    */
   private logSkipReconnectReason(event: CloseEvent): void {
-    if (isTemporaryExecutionId(this.config.executionId)) {
-      this.config.logger.debug(`[WebSocket] Skipping reconnect for temporary execution ID: ${this.config.executionId}`)
-    } else {
-      const status = logicalOr(this.config.executionStatus, this.lastKnownStatus)
-      if (status === 'completed' || status === 'failed') {
-        this.config.logger.debug(`[WebSocket] Skipping reconnect - execution ${this.config.executionId} is ${status}`)
-      } else if (event.wasClean && event.code === 1000) {
-        this.config.logger.debug(`[WebSocket] Connection closed cleanly, not reconnecting`)
-      }
-    }
+    logSkipReconnectReason(
+      this.config.executionId,
+      this.config.executionStatus,
+      this.lastKnownStatus,
+      event,
+      isCleanClosure,
+      this.config.logger
+    )
   }
 
   /**
@@ -300,7 +338,7 @@ export class WebSocketConnectionManager {
    */
   private handleConnectionError(error: any, callbacks: WebSocketCallbacks): void {
     this.isConnectedState = false
-    callbacks.onStatus?.('error')
+    callbacks.onStatus?.(WS_STATUS.ERROR)
     callbacks.onError?.(error instanceof Error ? error.message : 'Failed to create WebSocket connection')
   }
 }

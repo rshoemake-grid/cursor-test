@@ -1,6 +1,7 @@
 /**
  * Marketplace Integration Hook
  * Handles adding agents from marketplace to workflow canvas
+ * Refactored to use extracted utilities for better SOLID compliance and mutation resistance
  */
 
 import { useEffect, useRef, useCallback } from 'react'
@@ -8,7 +9,30 @@ import { logger as defaultLogger } from '../../utils/logger'
 import type { StorageAdapter } from '../../types/adapters'
 import type { Node } from '@xyflow/react'
 import { calculateMultipleNodePositions } from '../utils/nodePositioning'
-import { logicalOr, logicalOrToEmptyObject, logicalOrToEmptyArray } from '../utils/logicalOr'
+import { logicalOrToEmptyArray } from '../utils/logicalOr'
+import {
+  convertAgentsToNodes,
+  type AgentTemplate
+} from '../utils/agentNodeConversion'
+import {
+  isValidPendingAgents,
+  isPendingAgentsValid,
+  isPendingAgentsForDifferentTab,
+  isPendingAgentsTooOld,
+  type PendingAgents
+} from '../utils/pendingAgentsValidation'
+import {
+  PENDING_AGENTS_STORAGE_KEY,
+  PENDING_AGENTS,
+  DRAFT_UPDATE
+} from '../utils/marketplaceConstants'
+import { MARKETPLACE_EVENTS } from '../utils/marketplaceEventConstants'
+import {
+  updateDraftStorage,
+  resetFlagAfterDelay
+} from '../utils/draftUpdateService'
+import { createPendingAgentsPolling } from '../utils/pendingAgentsPolling'
+import { clearPendingAgents } from '../utils/pendingAgentsStorage'
 
 interface UseMarketplaceIntegrationOptions {
   tabId: string
@@ -39,7 +63,7 @@ export function useMarketplaceIntegration({
 }: UseMarketplaceIntegrationOptions) {
   const isAddingAgentsRef = useRef(false)
 
-  const addAgentsToCanvas = useCallback((agentsToAdd: any[]) => {
+  const addAgentsToCanvas = useCallback((agentsToAdd: AgentTemplate[]) => {
     injectedLogger.debug('[useMarketplaceIntegration] addAgentsToCanvas called with', agentsToAdd.length, 'agents')
     injectedLogger.debug('[useMarketplaceIntegration] Current tabId:', tabId)
     isAddingAgentsRef.current = true
@@ -59,46 +83,27 @@ export function useMarketplaceIntegration({
       // Calculate positions for all new nodes
       const positions = calculateMultipleNodePositions(currentNodes, agentsToAdd.length)
       
-      const newNodes = agentsToAdd.map((agent: any, index: number) => {
-        const node = {
-          id: `agent-${Date.now()}-${index}`,
-          type: 'agent',
-          position: positions[index],
-          draggable: true,
-          data: {
-            label: logicalOr(agent.name, logicalOr(agent.label, 'Agent Node')),
-            name: logicalOr(agent.name, logicalOr(agent.label, 'Agent Node')),
-            description: logicalOr(agent.description, ''),
-            agent_config: logicalOrToEmptyObject(agent.agent_config),
-          },
-        }
-        return node
-      })
+      // Use extracted conversion utility - mutation-resistant
+      const newNodes = convertAgentsToNodes(agentsToAdd, positions)
       
       const updatedNodes = [...currentNodes, ...newNodes]
       injectedLogger.debug('[useMarketplaceIntegration] Total nodes after adding:', updatedNodes.length)
       
-      // Update draft storage immediately to persist the change
-      setTimeout(() => {
-        const currentDraft = tabDraftsRef.current[currentTabId]
-        const updatedDraft = {
-          nodes: updatedNodes,
-          edges: logicalOrToEmptyArray(currentDraft?.edges),
-          workflowId: currentWorkflowId,
-          workflowName: currentWorkflowName,
-          workflowDescription: currentWorkflowDescription,
-          isUnsaved: currentTabIsUnsaved
-        }
-        tabDraftsRef.current[currentTabId] = updatedDraft
-        saveDraftsToStorage(tabDraftsRef.current)
-        injectedLogger.debug('[useMarketplaceIntegration] Draft updated with new nodes, total:', updatedNodes.length)
-      }, 0)
+      // Use extracted draft update service - mutation-resistant and DRY
+      updateDraftStorage(
+        tabDraftsRef,
+        currentTabId,
+        updatedNodes,
+        currentWorkflowId,
+        currentWorkflowName,
+        currentWorkflowDescription,
+        currentTabIsUnsaved,
+        saveDraftsToStorage,
+        injectedLogger
+      )
       
       // Reset flag after a delay to allow state update
-      setTimeout(() => {
-        isAddingAgentsRef.current = false
-        injectedLogger.debug('[useMarketplaceIntegration] Reset isAddingAgentsRef flag')
-      }, 1000)
+      resetFlagAfterDelay(isAddingAgentsRef, injectedLogger)
       
       return updatedNodes
     })
@@ -109,7 +114,7 @@ export function useMarketplaceIntegration({
   useEffect(() => {
     const handleAddAgentsToWorkflow = (event: CustomEvent) => {
       const { agents: agentsToAdd, tabId: targetTabId } = event.detail
-      injectedLogger.debug('[useMarketplaceIntegration] Received addAgentsToWorkflow event:', { 
+      injectedLogger.debug(`[useMarketplaceIntegration] Received ${MARKETPLACE_EVENTS.ADD_AGENTS_TO_WORKFLOW} event:`, { 
         targetTabId, 
         currentTabId: tabId, 
         agentCount: agentsToAdd.length 
@@ -130,35 +135,44 @@ export function useMarketplaceIntegration({
       if (!storage) return
       
       try {
-        const pendingData = storage.getItem('pendingAgentsToAdd')
+        const pendingData = storage.getItem(PENDING_AGENTS_STORAGE_KEY)
         if (pendingData) {
-          const pending = JSON.parse(pendingData)
+          const parsed = JSON.parse(pendingData)
+          
+          // Use extracted validation utility - mutation-resistant
+          if (!isValidPendingAgents(parsed)) {
+            injectedLogger.debug('[useMarketplaceIntegration] Invalid pending agents data, clearing')
+            clearPendingAgents(storage)
+            return
+          }
+
+          const pending = parsed as PendingAgents
           injectedLogger.debug('[useMarketplaceIntegration] Found pending agents:', {
             pendingTabId: pending.tabId, 
             currentTabId: tabId, 
             age: Date.now() - pending.timestamp 
           })
-          // Only process if it's for this tab and recent (within last 10 seconds)
-          if (pending.tabId === tabId && Date.now() - pending.timestamp < 10000) {
+          
+          // Use extracted validation utilities - mutation-resistant
+          if (isPendingAgentsValid(pending, tabId, PENDING_AGENTS.MAX_AGE)) {
             injectedLogger.debug('[useMarketplaceIntegration] Adding agents to canvas:', pending.agents.length)
             addAgentsToCanvas(pending.agents)
-            // Clear after processing
-            storage.removeItem('pendingAgentsToAdd')
-          } else if (pending.tabId !== tabId) {
-            // Clear if it's for a different tab
+            // Clear after processing - use extracted utility (DRY)
+            clearPendingAgents(storage)
+          } else if (isPendingAgentsForDifferentTab(pending, tabId)) {
+            // Clear if it's for a different tab - use extracted utility (DRY)
             injectedLogger.debug('[useMarketplaceIntegration] Pending agents for different tab, clearing')
-            storage.removeItem('pendingAgentsToAdd')
-          } else if (Date.now() - pending.timestamp >= 10000) {
-            // Clear if too old
+            clearPendingAgents(storage)
+          } else if (isPendingAgentsTooOld(pending, PENDING_AGENTS.MAX_AGE)) {
+            // Clear if too old - use extracted utility (DRY)
             injectedLogger.debug('[useMarketplaceIntegration] Pending agents too old, clearing')
-            storage.removeItem('pendingAgentsToAdd')
+            clearPendingAgents(storage)
           }
         }
       } catch (e) {
         injectedLogger.error('Failed to process pending agents:', e)
-        if (storage) {
-          storage.removeItem('pendingAgentsToAdd')
-        }
+        // Use extracted utility (DRY)
+        clearPendingAgents(storage)
       }
     }
     
@@ -167,25 +181,20 @@ export function useMarketplaceIntegration({
     
     // Also listen for events
     if (typeof window !== 'undefined') {
-      window.addEventListener('addAgentsToWorkflow', handleAddAgentsToWorkflow as EventListener)
+      window.addEventListener(MARKETPLACE_EVENTS.ADD_AGENTS_TO_WORKFLOW, handleAddAgentsToWorkflow as EventListener)
     }
     
-    // Check periodically in case we missed the event (check every 1 second for 10 seconds)
-    let checkCount = 0
-    const maxChecks = 10
-    const interval = setInterval(() => {
-      checkPendingAgents()
-      checkCount++
-      if (checkCount >= maxChecks) {
-        clearInterval(interval)
-      }
-    }, 1000)
+    // Use extracted polling service - mutation-resistant and DRY
+    const { cleanup: cleanupPolling } = createPendingAgentsPolling(
+      checkPendingAgents,
+      injectedLogger
+    )
     
     return () => {
       if (typeof window !== 'undefined') {
-        window.removeEventListener('addAgentsToWorkflow', handleAddAgentsToWorkflow as EventListener)
+        window.removeEventListener(MARKETPLACE_EVENTS.ADD_AGENTS_TO_WORKFLOW, handleAddAgentsToWorkflow as EventListener)
       }
-      clearInterval(interval)
+      cleanupPolling()
     }
   }, [tabId, storage, addAgentsToCanvas, injectedLogger])
 

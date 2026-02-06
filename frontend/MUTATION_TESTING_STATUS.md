@@ -1,89 +1,85 @@
 # Mutation Testing Status
 
-## 🚀 Mutation Testing Started
+## Current Status: ✅ RUNNING
 
-**Start Time:** 2026-02-05 17:18:02  
-**Process ID:** 42619  
-**Status:** ✅ RUNNING
+**Started:** Fri Feb 6 13:17:51 CST 2026  
+**Status:** Mutation testing is currently running  
+**Phase:** Initial test run (DryRunExecutor)
 
-## Initial Metrics
+## Issue Fixed
 
-- **Files to mutate:** 116 of 919 files
-- **Total mutants created:** 6,368 mutants
-- **Test runners:** 8 concurrent processes
-- **Coverage analysis:** Per-test coverage analysis enabled
+**Problem:** One test was failing, preventing mutation testing from starting:
+- `useAuthenticatedApi › should handle additional headers overriding Content-Type`
+
+**Solution:** Modified `buildRequestHeaders` in `authenticatedRequestHandler.ts` to:
+- Check if Content-Type is already set by additional headers
+- Only add default Content-Type if not already present
+- Allow additional headers to override Content-Type
+- Authorization header still takes precedence (as intended)
+
+**Result:** All tests now passing (6712/6712)
 
 ## Monitoring Setup
 
-### Automatic Monitoring
-- **Monitor Script:** `monitor_loop.sh` (running in background)
-- **Monitor PID:** 43099
-- **Check Interval:** Every 5 minutes
-- **Monitor Output:** `monitor_output.log`
+### Active Monitoring Scripts:
 
-### Manual Progress Check
-Run this command anytime to check progress:
+1. **Main Monitor:** `run_and_monitor_mutation.sh`
+   - Checks every 5 minutes
+   - Log: `mutation_monitor.log`
+   - PID: 11316
+
+2. **Status Checker:** `check_mutation_status.sh`
+   - Run manually: `./check_mutation_status.sh`
+   - Shows current progress and metrics
+
+3. **Auto-Reporter:** `wait_and_report_mutation.sh`
+   - Background process
+   - Checks every 5 minutes
+   - Will report results when complete
+   - Log: `mutation_wait_report.log`
+
+## How to Check Progress
+
 ```bash
-cd frontend && ./check_mutation_progress.sh
+# Quick status check
+cd frontend && ./check_mutation_status.sh
+
+# View main mutation log
+tail -f frontend/mutation_output.log
+
+# View monitor log
+tail -f frontend/mutation_monitor.log
+
+# View reporter log
+tail -f frontend/mutation_wait_report.log
 ```
 
-### View Live Log
-```bash
-cd frontend && tail -f mutation_test.log
-```
+## Expected Timeline
 
-## Files Created
+Mutation testing typically takes:
+- **Initial test run:** 5-15 minutes
+- **Mutation testing:** 30-120 minutes (depending on codebase size)
+- **Total:** 35-135 minutes
 
-1. `mutation_test.log` - Main mutation testing log
-2. `mutation_test.pid` - Process ID file
-3. `monitor_output.log` - Monitor script output
-4. `check_mutation_progress.sh` - Manual progress checker
-5. `monitor_loop.sh` - Continuous monitoring script
+Current codebase stats:
+- 129 files to be mutated
+- 6,601 mutants generated
+- 8 concurrent test runners
 
-## Expected Duration
+## Completion Detection
 
-Mutation testing with 6,368 mutants typically takes:
-- **Estimated time:** 30-90 minutes (depending on test execution speed)
-- **With 8 concurrent runners:** Should complete faster
+The system will automatically detect completion when:
+- Process stops running
+- Log contains "Mutation test report" or "Mutation score"
+- Final results are extracted and saved
 
-## What to Expect
+## Final Report Location
 
-The mutation testing will:
-1. ✅ Run initial test suite (dry run) - IN PROGRESS
-2. ⏳ Test each mutant against the test suite
-3. ⏳ Generate mutation score report
-4. ⏳ Show killed/survived/timeout/error counts
-
-## Phase 4 Enhancements Being Tested
-
-The following enhanced files are being tested:
-- Phase 4a: confirm.tsx, errorHandler.ts, formUtils.ts, workflowFormat.ts, WorkflowChat.tsx, ExecutionConsole.tsx
-- Phase 4b: nodeUtils.ts, nodeConversion.ts, ConditionNodeEditor.tsx, notifications.ts, PropertyPanel.tsx
-
-**Expected improvement:** +10.4% to +13.0% mutation score (600-700+ mutations killed)
+When complete, results will be in:
+- `frontend/mutation_final_report.txt` - Summary report
+- `frontend/mutation_output.log` - Full detailed log  
+- `frontend/reports/mutation/html/index.html` - HTML report (if generated)
 
 ## Next Steps
 
-1. Monitor progress every 5 minutes (automatic)
-2. Check `mutation_test.log` for detailed progress
-3. Review final mutation score when complete
-4. Compare against baseline to measure Phase 4 improvements
-
-## Commands Reference
-
-```bash
-# Check current progress
-cd frontend && ./check_mutation_progress.sh
-
-# View live log
-cd frontend && tail -f mutation_test.log
-
-# View monitor output
-cd frontend && tail -f monitor_output.log
-
-# Stop monitoring (won't stop mutation testing)
-pkill -f monitor_loop.sh
-
-# Check if mutation testing is still running
-ps -p $(cat frontend/mutation_test.pid)
-```
+The monitoring will continue automatically. Results will be reported when mutation testing completes.

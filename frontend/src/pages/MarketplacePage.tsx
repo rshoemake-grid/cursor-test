@@ -2,19 +2,28 @@ import { useState, useCallback } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Bot, Workflow } from 'lucide-react';
-import { showError, showSuccess } from '../utils/notifications';
 // Domain-based imports - Phase 7
-import { useOfficialAgentSeeding, useMarketplaceData, useTemplateOperations, type Template } from '../hooks/marketplace';
-import { useSelectionManager } from '../hooks/nodes';
+import { 
+  useOfficialAgentSeeding, 
+  useMarketplaceData, 
+  useTemplateOperations,
+  useMarketplaceTabs,
+  useMarketplaceSelections,
+  useMarketplaceActions,
+  MARKETPLACE_TABS,
+  REPOSITORY_SUB_TABS,
+  type Template 
+} from '../hooks/marketplace';
 import { createCardClickHandler, shouldIgnoreClick } from '../utils/cardClickUtils';
 import { MarketplaceActionButtons } from '../components/MarketplaceActionButtons';
 import { TemplateFilters } from '../components/TemplateFilters';
-import { TemplateGrid } from '../components/TemplateGrid';
+import { MarketplaceTabButton } from '../components/marketplace/MarketplaceTabButton';
+import { MarketplaceTabContent } from '../components/marketplace/MarketplaceTabContent';
+import { getDifficultyColor } from '../utils/difficultyColors';
+import { useOfficialItems } from '../hooks/marketplace/useOfficialItems';
+import { DEFAULT_SORT } from '../constants/settingsConstants';
 import type { StorageAdapter, HttpClient } from '../types/adapters';
 import { defaultAdapters } from '../types/adapters';
-
-type TabType = 'agents' | 'repository' | 'workflows-of-workflows'
-type RepositorySubTabType = 'workflows' | 'agents'
 
 interface MarketplacePageProps {
   // Dependency injection
@@ -28,16 +37,32 @@ export default function MarketplacePage({
   httpClient = defaultAdapters.createHttpClient(),
   apiBaseUrl = 'http://localhost:8000/api'
 }: MarketplacePageProps = {}) {
-  const [activeTab, setActiveTab] = useState<TabType>('agents');
-  const [repositorySubTab, setRepositorySubTab] = useState<RepositorySubTabType>('workflows');
+  // Tab management (extracted hook)
+  const tabs = useMarketplaceTabs();
+  const {
+    activeTab,
+    repositorySubTab,
+    setActiveTab,
+    setRepositorySubTab,
+    isAgentsTab,
+    isRepositoryTab,
+    isWorkflowsOfWorkflowsTab,
+    isRepositoryWorkflowsSubTab,
+    isRepositoryAgentsSubTab,
+  } = tabs;
+
   const [category, setCategory] = useState<string>('');
   const [searchQuery, setSearchQuery] = useState('');
-  const [sortBy, setSortBy] = useState('popular');
+  const [sortBy, setSortBy] = useState(DEFAULT_SORT);
   
-  // Use selection manager hooks (DRY)
-  const templateSelection = useSelectionManager<string>();
-  const agentSelection = useSelectionManager<string>();
-  const repositoryAgentSelection = useSelectionManager<string>();
+  // Selection management (extracted hook)
+  const selections = useMarketplaceSelections();
+  const {
+    templateSelection,
+    agentSelection,
+    repositoryAgentSelection,
+    clearSelectionsForTab,
+  } = selections;
   
   const { token, user } = useAuth();
   const navigate = useNavigate();
@@ -77,7 +102,7 @@ export default function MarketplacePage({
     apiBaseUrl,
     onAgentsSeeded: () => {
       // Refresh the agents list if we're on the agents tab
-      if (activeTab === 'agents') {
+      if (isAgentsTab) {
         fetchAgents();
       }
     },
@@ -109,113 +134,42 @@ export default function MarketplacePage({
     deleteSelectedRepositoryAgents,
   } = templateOperations
 
+  // Actions management (extracted hook)
+  const actions = useMarketplaceActions({
+    activeTab,
+    repositorySubTab,
+    templateSelection,
+    agentSelection,
+    repositoryAgentSelection,
+    agents,
+    repositoryAgents,
+    storage,
+    useTemplate,
+    deleteSelectedAgents: deleteSelectedAgentsHandler,
+    deleteSelectedWorkflows,
+    deleteSelectedRepositoryAgents,
+    fetchRepositoryAgents,
+  });
+  const {
+    handleLoadWorkflows,
+    handleUseAgents,
+    handleDeleteAgents,
+    handleDeleteWorkflows,
+    handleDeleteRepositoryAgents,
+  } = actions;
+
   // Card click handlers using utility (DRY)
   const handleCardClick = createCardClickHandler(templateSelection.toggle);
   const handleAgentCardClick = createCardClickHandler(agentSelection.toggle);
   const handleRepositoryAgentCardClick = createCardClickHandler(repositoryAgentSelection.toggle);
 
-  // Handle loading multiple workflows
-  const handleLoadWorkflows = useCallback(async () => {
-    for (const templateId of templateSelection.selectedIds) {
-      await useTemplate(templateId);
-      // Small delay between loads to avoid race conditions
-      await new Promise(resolve => setTimeout(resolve, 100));
-    }
-    templateSelection.clear();
-  }, [templateSelection, useTemplate]);
-
-  // Handle adding agents to workflow
-  const handleUseAgents = useCallback(() => {
-    // Get selected agents based on active tab
-    const selectedAgents = activeTab === 'repository' && repositorySubTab === 'agents'
-      ? repositoryAgents.filter(a => repositoryAgentSelection.selectedIds.has(a.id))
-      : agents.filter(a => agentSelection.selectedIds.has(a.id));
-    
-    // Get the active workflow tab ID
-    if (!storage) {
-      showError('Storage not available');
-      return;
-    }
-    const activeTabId = storage.getItem('activeWorkflowTabId');
-    
-    if (!activeTabId) {
-      showError('No active workflow found. Please open a workflow first.');
-      return;
-    }
-    
-    // Store agents to add in storage (more reliable than events)
-    const pendingAgents = {
-      tabId: activeTabId,
-      agents: selectedAgents,
-      timestamp: Date.now()
-    };
-    storage.setItem('pendingAgentsToAdd', JSON.stringify(pendingAgents));
-    
-    // Dispatch event as backup
-    const event = new CustomEvent('addAgentsToWorkflow', {
-      detail: {
-        agents: selectedAgents,
-        tabId: activeTabId
-      }
-    });
-    window.dispatchEvent(event);
-    
-    const count = activeTab === 'repository' && repositorySubTab === 'agents' 
-      ? repositoryAgentSelection.size 
-      : agentSelection.size;
-    showSuccess(`${count} agent(s) added to workflow`);
-    
-    if (activeTab === 'repository' && repositorySubTab === 'agents') {
-      repositoryAgentSelection.clear();
-    } else {
-      agentSelection.clear();
-    }
-    
-    // Small delay to ensure localStorage is written before navigation
-    setTimeout(() => {
-      navigate('/');
-    }, 100);
-  }, [
-    activeTab,
-    repositorySubTab,
-    repositoryAgents,
+  // Official items checking (extracted hook)
+  const { hasOfficialWorkflows, hasOfficialAgents } = useOfficialItems({
+    templates,
     agents,
-    repositoryAgentSelection,
+    templateSelection,
     agentSelection,
-    storage,
-    navigate
-  ]);
-
-  // Delete handlers
-  const handleDeleteAgents = useCallback(async () => {
-    await deleteSelectedAgentsHandler(agentSelection.selectedIds);
-  }, [deleteSelectedAgentsHandler, agentSelection.selectedIds]);
-
-  const handleDeleteWorkflows = useCallback(async () => {
-    await deleteSelectedWorkflows(templateSelection.selectedIds);
-  }, [deleteSelectedWorkflows, templateSelection.selectedIds]);
-
-  const handleDeleteRepositoryAgents = useCallback(async () => {
-    await deleteSelectedRepositoryAgents(repositoryAgentSelection.selectedIds, fetchRepositoryAgents);
-  }, [deleteSelectedRepositoryAgents, repositoryAgentSelection.selectedIds, fetchRepositoryAgents]);
-
-  // Check if selected items have official items
-  const hasOfficialWorkflows = templates
-    ?.filter(t => templateSelection.selectedIds.has(t.id))
-    .some(t => t.is_official) ?? false;
-
-  const hasOfficialAgents = agents
-    .filter(a => agentSelection.selectedIds.has(a.id))
-    .some(a => a.is_official);
-
-  const getDifficultyColor = (difficulty: string) => {
-    switch (difficulty) {
-      case 'beginner': return 'bg-green-100 text-green-800';
-      case 'intermediate': return 'bg-yellow-100 text-yellow-800';
-      case 'advanced': return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
-  };
+  });
 
   // Handle deselecting on empty space click
   const handleContentClick = useCallback((e: React.MouseEvent) => {
@@ -228,25 +182,17 @@ export default function MarketplacePage({
                           target.tagName === 'A';
     
     if (!isCard && !isInteractive) {
-      if (activeTab === 'agents') {
-        agentSelection.clear();
-      } else if (activeTab === 'repository' || activeTab === 'workflows-of-workflows') {
-        if (activeTab === 'repository' && repositorySubTab === 'agents') {
-          repositoryAgentSelection.clear();
-        } else {
-          templateSelection.clear();
-        }
-      }
+      clearSelectionsForTab(activeTab, repositorySubTab);
     }
-  }, [activeTab, repositorySubTab, agentSelection, repositoryAgentSelection, templateSelection]);
+  }, [activeTab, repositorySubTab, clearSelectionsForTab]);
 
   // Determine which action buttons to show
-  const showWorkflowActions = (activeTab === 'repository' || activeTab === 'workflows-of-workflows') && 
+  const showWorkflowActions = (isRepositoryTab || isWorkflowsOfWorkflowsTab) && 
                               templateSelection.size > 0 && 
-                              (activeTab === 'workflows-of-workflows' || repositorySubTab === 'workflows');
+                              (isWorkflowsOfWorkflowsTab || isRepositoryWorkflowsSubTab);
 
-  const showAgentActions = (activeTab === 'agents' && agentSelection.size > 0) || 
-                           (activeTab === 'repository' && repositorySubTab === 'agents' && repositoryAgentSelection.size > 0);
+  const showAgentActions = (isAgentsTab && agentSelection.size > 0) || 
+                           (isRepositoryAgentsSubTab && repositoryAgentSelection.size > 0);
 
   return (
     <div className="h-screen bg-gray-50 flex flex-col overflow-hidden">
@@ -271,23 +217,23 @@ export default function MarketplacePage({
                   selectedCount={templateSelection.size}
                   hasOfficial={hasOfficialWorkflows}
                   onLoad={handleLoadWorkflows}
-                  onDelete={activeTab === 'repository' && repositorySubTab === 'workflows' ? handleDeleteWorkflows : undefined}
+                  onDelete={isRepositoryWorkflowsSubTab ? handleDeleteWorkflows : undefined}
                   type="workflow"
-                  showDelete={activeTab === 'repository' && repositorySubTab === 'workflows'}
+                  showDelete={isRepositoryWorkflowsSubTab}
                 />
               )}
               {showAgentActions && (
                 <MarketplaceActionButtons
-                  selectedCount={activeTab === 'repository' && repositorySubTab === 'agents' 
+                  selectedCount={isRepositoryAgentsSubTab 
                     ? repositoryAgentSelection.size 
                     : agentSelection.size}
                   hasOfficial={hasOfficialAgents}
                   onUse={handleUseAgents}
-                  onDelete={activeTab === 'agents' 
+                  onDelete={isAgentsTab 
                     ? handleDeleteAgents 
                     : handleDeleteRepositoryAgents}
                   type="agent"
-                  showDelete={activeTab === 'repository' && repositorySubTab === 'agents' || !hasOfficialAgents}
+                  showDelete={isRepositoryAgentsSubTab || !hasOfficialAgents}
                 />
               )}
             </div>
@@ -295,66 +241,43 @@ export default function MarketplacePage({
 
           {/* Tabs */}
           <div className="flex border-b border-gray-200 mb-4">
-            <button
-              onClick={() => setActiveTab('agents')}
-              className={`px-6 py-3 text-sm font-medium flex items-center gap-2 transition-colors ${
-                activeTab === 'agents'
-                  ? 'text-primary-600 border-b-2 border-primary-600'
-                  : 'text-gray-600 hover:text-gray-900'
-              }`}
-            >
-              <Bot className="w-5 h-5" />
-              Agents
-            </button>
-            <button
-              onClick={() => setActiveTab('repository')}
-              className={`px-6 py-3 text-sm font-medium flex items-center gap-2 transition-colors ${
-                activeTab === 'repository'
-                  ? 'text-primary-600 border-b-2 border-primary-600'
-                  : 'text-gray-600 hover:text-gray-900'
-              }`}
-            >
-              <Workflow className="w-5 h-5" />
-              Repository
-            </button>
-            <button
-              onClick={() => setActiveTab('workflows-of-workflows')}
-              className={`px-6 py-3 text-sm font-medium flex items-center gap-2 transition-colors ${
-                activeTab === 'workflows-of-workflows'
-                  ? 'text-primary-600 border-b-2 border-primary-600'
-                  : 'text-gray-600 hover:text-gray-900'
-              }`}
-            >
-              <Workflow className="w-5 h-5" />
-              Workflows of Workflows
-            </button>
+            <MarketplaceTabButton
+              label="Agents"
+              icon={Bot}
+              isActive={isAgentsTab}
+              onClick={() => setActiveTab(MARKETPLACE_TABS.AGENTS)}
+            />
+            <MarketplaceTabButton
+              label="Repository"
+              icon={Workflow}
+              isActive={isRepositoryTab}
+              onClick={() => setActiveTab(MARKETPLACE_TABS.REPOSITORY)}
+            />
+            <MarketplaceTabButton
+              label="Workflows of Workflows"
+              icon={Workflow}
+              isActive={isWorkflowsOfWorkflowsTab}
+              onClick={() => setActiveTab(MARKETPLACE_TABS.WORKFLOWS_OF_WORKFLOWS)}
+            />
           </div>
 
           {/* Repository Sub-tabs */}
-          {activeTab === 'repository' && (
+          {isRepositoryTab && (
             <div className="flex border-b border-gray-200 mb-4">
-              <button
-                onClick={() => setRepositorySubTab('workflows')}
-                className={`px-6 py-3 text-sm font-medium flex items-center gap-2 transition-colors ${
-                  repositorySubTab === 'workflows'
-                    ? 'text-primary-600 border-b-2 border-primary-600'
-                    : 'text-gray-600 hover:text-gray-900'
-                }`}
-              >
-                <Workflow className="w-4 h-4" />
-                Workflows
-              </button>
-              <button
-                onClick={() => setRepositorySubTab('agents')}
-                className={`px-6 py-3 text-sm font-medium flex items-center gap-2 transition-colors ${
-                  repositorySubTab === 'agents'
-                    ? 'text-primary-600 border-b-2 border-primary-600'
-                    : 'text-gray-600 hover:text-gray-900'
-                }`}
-              >
-                <Bot className="w-4 h-4" />
-                Agents
-              </button>
+              <MarketplaceTabButton
+                label="Workflows"
+                icon={Workflow}
+                isActive={isRepositoryWorkflowsSubTab}
+                onClick={() => setRepositorySubTab(REPOSITORY_SUB_TABS.WORKFLOWS)}
+                iconSize="w-4 h-4"
+              />
+              <MarketplaceTabButton
+                label="Agents"
+                icon={Bot}
+                isActive={isRepositoryAgentsSubTab}
+                onClick={() => setRepositorySubTab(REPOSITORY_SUB_TABS.AGENTS)}
+                iconSize="w-4 h-4"
+              />
             </div>
           )}
 
@@ -368,13 +291,13 @@ export default function MarketplacePage({
             onSearchChange={setSearchQuery}
             onSortChange={setSortBy}
             onSearch={() => {
-              if (activeTab === 'repository') {
-                if (repositorySubTab === 'workflows') {
+              if (isRepositoryTab) {
+                if (isRepositoryWorkflowsSubTab) {
                   fetchTemplates();
                 } else {
                   fetchRepositoryAgents();
                 }
-              } else if (activeTab === 'workflows-of-workflows') {
+              } else if (isWorkflowsOfWorkflowsTab) {
                 fetchWorkflowsOfWorkflows();
               } else {
                 fetchAgents();
@@ -389,56 +312,24 @@ export default function MarketplacePage({
         className="max-w-7xl mx-auto px-4 py-8 flex-1 overflow-y-auto"
         onClick={handleContentClick}
       >
-        {loading ? (
-          <div className="text-center py-12">
-            <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
-            <p className="mt-4 text-gray-600">Loading {activeTab}...</p>
-          </div>
-        ) : activeTab === 'agents' ? (
-          <TemplateGrid
-            items={agents}
-            selectedIds={agentSelection.selectedIds}
-            type="agent"
-            onToggleSelect={agentSelection.toggle}
-            onCardClick={handleAgentCardClick}
-            getDifficultyColor={getDifficultyColor}
-            emptyMessage="No agents found. Try adjusting your filters."
-            footerText={'Selected - Click "Use Agent(s)" above to use'}
-          />
-        ) : activeTab === 'repository' && repositorySubTab === 'workflows' ? (
-          <TemplateGrid
-            items={templates ?? []}
-            selectedIds={templateSelection.selectedIds}
-            type="template"
-            onToggleSelect={templateSelection.toggle}
-            onCardClick={handleCardClick}
-            getDifficultyColor={getDifficultyColor}
-            emptyMessage="No workflows found. Try adjusting your filters."
-            footerText={'Selected - Click "Load Workflow(s)" above to use'}
-          />
-        ) : activeTab === 'repository' && repositorySubTab === 'agents' ? (
-          <TemplateGrid
-            items={repositoryAgents}
-            selectedIds={repositoryAgentSelection.selectedIds}
-            type="agent"
-            onToggleSelect={repositoryAgentSelection.toggle}
-            onCardClick={handleRepositoryAgentCardClick}
-            getDifficultyColor={getDifficultyColor}
-            emptyMessage="No repository agents found. Try adjusting your filters."
-            footerText={'Selected - Click "Use Agent(s)" above to use'}
-          />
-        ) : (
-          <TemplateGrid
-            items={workflowsOfWorkflows}
-            selectedIds={templateSelection.selectedIds}
-            type="template"
-            onToggleSelect={templateSelection.toggle}
-            onCardClick={handleCardClick}
-            getDifficultyColor={getDifficultyColor}
-            emptyMessage="No workflows found. Try adjusting your filters."
-            footerText={'Selected - Click "Load Workflow(s)" above to use'}
-          />
-        )}
+        <MarketplaceTabContent
+          loading={loading}
+          activeTab={activeTab}
+          isAgentsTab={isAgentsTab}
+          isRepositoryWorkflowsSubTab={isRepositoryWorkflowsSubTab}
+          isRepositoryAgentsSubTab={isRepositoryAgentsSubTab}
+          agents={agents}
+          templates={templates}
+          repositoryAgents={repositoryAgents}
+          workflowsOfWorkflows={workflowsOfWorkflows}
+          agentSelection={agentSelection}
+          templateSelection={templateSelection}
+          repositoryAgentSelection={repositoryAgentSelection}
+          handleAgentCardClick={handleAgentCardClick}
+          handleCardClick={handleCardClick}
+          handleRepositoryAgentCardClick={handleRepositoryAgentCardClick}
+          getDifficultyColor={getDifficultyColor}
+        />
       </div>
     </div>
   );
