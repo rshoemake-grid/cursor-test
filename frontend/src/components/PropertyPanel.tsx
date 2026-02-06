@@ -14,6 +14,8 @@ import { defaultAdapters } from '../types/adapters'
 import { useNodeForm, useSelectedNode, useNodeOperations } from '../hooks/nodes'
 import { usePanelState } from '../hooks/ui'
 import { useLoopConfig } from '../hooks/forms'
+// Mutation kill utilities
+import { coalesceString } from '../utils/nullCoalescing'
 
 interface PropertyPanelProps {
   selectedNodeId: string | null
@@ -240,8 +242,8 @@ export default function PropertyPanel({ selectedNodeId, setSelectedNodeId, selec
                       <span className="text-gray-500">Source Node:</span>
                       <input
                         type="text"
-                        value={input.source_node || '(workflow variable)'}
-                        onChange={(e) => handleUpdateInput(index, 'source_node', e.target.value || undefined)}
+                        value={coalesceString(input.source_node, '(workflow variable)')}
+                        onChange={(e) => handleUpdateInput(index, 'source_node', (e.target.value !== null && e.target.value !== undefined && e.target.value !== '') ? e.target.value : undefined)}
                         placeholder="node_id or leave blank"
                         className="w-full mt-1 px-2 py-1 text-xs border rounded"
                       />

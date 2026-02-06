@@ -10,6 +10,9 @@ import { getLogLevelColor } from '../utils/logLevel'
 import type { DocumentAdapter } from '../types/adapters'
 import { defaultAdapters } from '../types/adapters'
 import type { Execution } from '../contexts/WorkflowTabsContext'
+// Mutation kill utilities
+import { coalesceString } from '../utils/nullCoalescing'
+import { LOG_LEVELS } from '../constants/stringLiterals'
 
 interface ExecutionConsoleProps {
   activeWorkflowId: string | null
@@ -293,16 +296,17 @@ export default function ExecutionConsole({
                     {activeExecution.logs.map((log: any, index: number) => (
                       <div
                         key={index}
-                        className={`p-2 rounded ${getLogLevelColor(log.level || 'INFO')}`}
+                        className={`p-2 rounded ${getLogLevelColor(coalesceString(log.level, LOG_LEVELS.INFO))}`}
                       >
                         <span className="text-gray-500">
-                          {new Date(log.timestamp || Date.now()).toLocaleTimeString()}
+                          {new Date((log.timestamp !== null && log.timestamp !== undefined) ? log.timestamp : Date.now()).toLocaleTimeString()}
                         </span>
                         {' '}
-                        <LogLevelBadge level={log.level || 'INFO'} showBackground={false} />
-                        {log.node_id && <span className="text-gray-500"> [{log.node_id}]</span>}
+                        <LogLevelBadge level={coalesceString(log.level, LOG_LEVELS.INFO)} showBackground={false} />
+                        {/* Explicit check to prevent mutation survivors */}
+                        {(log.node_id !== null && log.node_id !== undefined && log.node_id !== '') && <span className="text-gray-500"> [{log.node_id}]</span>}
                         {' '}
-                        {log.message || JSON.stringify(log)}
+                        {coalesceString(log.message, JSON.stringify(log))}
                       </div>
                     ))}
                   </div>
