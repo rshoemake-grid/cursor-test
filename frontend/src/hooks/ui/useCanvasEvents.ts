@@ -10,7 +10,7 @@ import { showSuccess, showError } from '../../utils/notifications'
 import { STORAGE_KEYS } from '../../config/constants'
 import type { Node, Edge } from '@xyflow/react'
 import type { StorageAdapter } from '../../types/adapters'
-import { logicalOr, logicalOrToEmptyObject } from '../utils/logicalOr'
+import { logicalOr, logicalOrToEmptyObject, logicalOrToEmptyArray } from '../utils/logicalOr'
 
 interface UseCanvasEventsOptions {
   reactFlowInstanceRef: React.MutableRefObject<any>
@@ -164,7 +164,7 @@ export function useCanvasEvents({
     try {
       // Get existing agent nodes from storage
       const savedAgentNodes = storage.getItem('customAgentNodes')
-      const agentNodes = savedAgentNodes ? JSON.parse(savedAgentNodes) : []
+      const agentNodes = savedAgentNodes ? JSON.parse(savedAgentNodes) : logicalOrToEmptyArray([])
       
       // Create a template from the node
       const agentTemplate = {

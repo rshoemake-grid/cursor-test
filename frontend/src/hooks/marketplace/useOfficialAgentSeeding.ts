@@ -156,7 +156,7 @@ export function useOfficialAgentSeeding({
                 // Explicit null/undefined check to prevent mutation survivors
                 if (storage === null || storage === undefined) continue
                 const existingAgents = storage.getItem(STORAGE_KEYS.PUBLISHED_AGENTS)
-                const agents: AgentTemplate[] = existingAgents ? JSON.parse(existingAgents) : [] // Ternary is mutation-resistant
+                const agents: AgentTemplate[] = existingAgents ? JSON.parse(existingAgents) : logicalOrToEmptyArray([])
                 if (agents.some(a => a.id === agentId)) {
                   logger.debug(`[Marketplace] Agent ${agentId} already exists, skipping`)
                   continue // Skip if already exists
@@ -196,7 +196,7 @@ export function useOfficialAgentSeeding({
         // Explicit checks to prevent mutation survivors
         if (agentsToAdd.length > 0 && storage !== null && storage !== undefined) {
           const existingAgents = storage.getItem(STORAGE_KEYS.PUBLISHED_AGENTS)
-          const agents: AgentTemplate[] = existingAgents ? JSON.parse(existingAgents) : []
+          const agents: AgentTemplate[] = existingAgents ? JSON.parse(existingAgents) : logicalOrToEmptyArray([])
           agents.push(...agentsToAdd)
           storage.setItem(STORAGE_KEYS.PUBLISHED_AGENTS, JSON.stringify(agents))
           logger.debug(`[Marketplace] Seeded ${agentsToAdd.length} official agents from workflows`)

@@ -62,3 +62,18 @@ export function logicalOrToEmptyArray<T>(value: T[] | null | undefined): T[] {
   }
   return []
 }
+
+/**
+ * Get first truthy value or undefined
+ * Mutation-resistant: explicit checks
+ * Useful for omitting fields from JSON when falsy
+ * 
+ * @param value The value to check
+ * @returns value if truthy, otherwise undefined
+ */
+export function logicalOrToUndefined<T>(value: T | null | undefined): T | undefined {
+  if (value) {
+    return value
+  }
+  return undefined
+}

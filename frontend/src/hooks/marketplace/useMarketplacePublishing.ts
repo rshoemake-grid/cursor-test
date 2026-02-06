@@ -7,7 +7,7 @@ import { useState, useCallback } from 'react'
 import { showError as defaultShowError, showSuccess as defaultShowSuccess } from '../../utils/notifications'
 import { usePublishForm } from '../forms'
 import type { HttpClient } from '../../types/adapters'
-import { logicalOrToNull } from '../utils/logicalOr'
+import { logicalOrToNull, logicalOr, logicalOrToUndefined } from '../utils/logicalOr'
 
 interface UseMarketplacePublishingOptions {
   activeTab: { id: string; workflowId: string | null; name: string } | undefined
@@ -84,7 +84,7 @@ export function useMarketplacePublishing({
           category: publishFormHook.form.category,
           tags: tagsArray,
           difficulty: publishFormHook.form.difficulty,
-          estimated_time: logicalOrToNull(publishFormHook.form.estimated_time) || undefined
+          estimated_time: logicalOrToUndefined(publishFormHook.form.estimated_time)
         },
         headers
       )
@@ -99,7 +99,11 @@ export function useMarketplacePublishing({
       }
     } catch (error: any) {
       // Explicit error message extraction to prevent mutation survivors
-      const errorMsg = (error !== null && error !== undefined && error.message !== null && error.message !== undefined) ? error.message : 'Unknown error'
+      // Use logicalOr utility instead of || operator for mutation resistance
+      const errorMsg = logicalOr(
+        error?.message,
+        'Unknown error'
+      )
       showError('Failed to publish workflow: ' + errorMsg)
     } finally {
       setIsPublishing(false)
