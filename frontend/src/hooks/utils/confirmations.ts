@@ -4,6 +4,7 @@
  */
 
 import { showConfirm } from '../../utils/confirm'
+import { logicalOr } from './logicalOr'
 
 /**
  * Confirmation options for unsaved changes
@@ -54,9 +55,9 @@ export async function confirmDelete(
   const confirmed = await showConfirm(
     `Are you sure you want to delete "${itemName}"?`,
     { 
-      title: options?.title || 'Delete', 
-      confirmText: options?.confirmText || 'Delete', 
-      cancelText: options?.cancelText || 'Cancel', 
+      title: logicalOr(options?.title, 'Delete'), 
+      confirmText: logicalOr(options?.confirmText, 'Delete'), 
+      cancelText: logicalOr(options?.cancelText, 'Cancel'), 
       type: 'danger' 
     }
   )

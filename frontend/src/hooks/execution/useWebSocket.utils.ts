@@ -5,6 +5,7 @@
 
 import type { WindowLocation } from '../../types/adapters'
 import { isTemporaryExecutionId } from '../utils/executionIdValidation'
+import { logicalOr } from '../utils/logicalOr'
 
 export type WebSocketState = 'CONNECTING' | 'OPEN' | 'CLOSING' | 'CLOSED' | 'UNKNOWN'
 
@@ -28,7 +29,7 @@ export function isExecutionTerminated(
   status: ExecutionStatus | undefined,
   lastKnownStatus?: ExecutionStatus | undefined
 ): boolean {
-  const currentStatus = status || lastKnownStatus
+  const currentStatus = logicalOr(status, lastKnownStatus)
   return currentStatus === 'completed' || currentStatus === 'failed'
 }
 
@@ -54,7 +55,7 @@ export function buildWebSocketUrl(
   windowLocation?: WindowLocation | null
 ): string {
   const protocol = windowLocation?.protocol === 'https:' ? 'wss:' : 'ws:'
-  const host = windowLocation?.host || 'localhost:8000'
+  const host = logicalOr(windowLocation?.host, 'localhost:8000')
   return `${protocol}//${host}/ws/executions/${executionId}`
 }
 
@@ -157,7 +158,7 @@ export function handleWebSocketMessage(
     case 'node_update':
       if (message.node_state && onNodeUpdate) {
         // Extract node_id from message - backend sends it as top-level field or in node_state
-        const nodeId = (message as any).node_id || message.node_state.node_id
+        const nodeId = logicalOr((message as any).node_id, message.node_state.node_id)
         if (nodeId) {
           onNodeUpdate(nodeId, message.node_state)
         }

@@ -6,6 +6,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import type { Node } from '@xyflow/react'
+import { logicalOr, logicalOrToEmptyObject } from '../utils/logicalOr'
 
 interface UseNodeFormOptions {
   selectedNode: Node | null
@@ -32,11 +33,15 @@ export function useNodeForm({ selectedNode, onUpdate }: UseNodeFormOptions) {
       return
     }
 
-    const nodeData = selectedNode.data || {}
-    const nodeName = (typeof nodeData.name === 'string' ? nodeData.name : '') || 
-                    (typeof nodeData.label === 'string' ? nodeData.label : '') || 
-                    ''
-    const nodeDescription = (typeof nodeData.description === 'string' ? nodeData.description : '') || ''
+    const nodeData = logicalOrToEmptyObject(selectedNode.data)
+    const nodeName = logicalOr(
+      (typeof nodeData.name === 'string' ? nodeData.name : ''),
+      logicalOr(
+        (typeof nodeData.label === 'string' ? nodeData.label : ''),
+        ''
+      )
+    )
+    const nodeDescription = logicalOr((typeof nodeData.description === 'string' ? nodeData.description : ''), '')
 
     // Only sync if the input is not currently focused (user is not typing)
     if (document.activeElement !== nameInputRef.current) {

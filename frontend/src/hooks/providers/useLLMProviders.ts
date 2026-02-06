@@ -13,6 +13,8 @@ import {
   isValidData,
   hasProviders,
 } from '../utils/providerValidation'
+import { logicalOr, logicalOrToEmptyArray } from '../utils/logicalOr'
+import { logicalOr, logicalOrToEmptyArray } from '../utils/logicalOr'
 
 export interface LLMProvider {
   id: string
@@ -82,7 +84,7 @@ function loadFromStorage(storage: StorageAdapter | null): LLMSettings | null {
     if (saved) {
       const parsed = JSON.parse(saved)
       return {
-        providers: parsed.providers || [],
+        providers: logicalOrToEmptyArray(parsed.providers),
         iteration_limit: parsed.iteration_limit,
         default_model: parsed.default_model
       }
@@ -148,9 +150,9 @@ export function useLLMProviders({
             if (storage) {
               try {
                 storage.setItem('llm_settings', JSON.stringify({
-                  providers: data.providers || [],
+                  providers: logicalOrToEmptyArray(data.providers),
                   iteration_limit: data.iteration_limit,
-                  default_model: data.default_model || ''
+                  default_model: logicalOr(data.default_model, '')
                 }))
               } catch (e) {
                 logger.error('Failed to save LLM settings to storage:', e)

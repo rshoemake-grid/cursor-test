@@ -8,6 +8,7 @@ import { api } from '../../api/client'
 import { logger } from '../../utils/logger'
 import { initializeReactFlowNodes, formatEdgesForReactFlow } from '../../utils/workflowFormat'
 import type { Node, Edge } from '@xyflow/react'
+import { logicalOr, logicalOrToEmptyObject, logicalOrToEmptyArray } from '../utils/logicalOr'
 
 interface UseWorkflowLoaderOptions {
   workflowId: string | null
@@ -55,15 +56,15 @@ export function useWorkflowLoader({
         // Set local state for this tab
         setLocalWorkflowId(workflow.id!)
         setLocalWorkflowName(workflow.name)
-        setLocalWorkflowDescription(workflow.description || '')
-        setVariables(workflow.variables || {})
+        setLocalWorkflowDescription(logicalOr(workflow.description, ''))
+        setVariables(logicalOrToEmptyObject(workflow.variables))
         const convertedNodes = workflow.nodes.map(workflowNodeToNode)
         // Ensure all nodes have required React Flow properties
         const initializedNodes = initializeReactFlowNodes(convertedNodes)
         logger.debug('Loaded nodes:', initializedNodes.map(n => ({ id: n.id, type: n.type, position: n.position })))
         
         // Ensure edges preserve sourceHandle and targetHandle properties
-        const formattedEdges = formatEdgesForReactFlow(workflow.edges || [])
+        const formattedEdges = formatEdgesForReactFlow(logicalOrToEmptyArray(workflow.edges))
         
         // Set nodes first, then edges after a brief delay to ensure nodes are rendered
         setNodes(initializedNodes)
