@@ -6,7 +6,7 @@ import {
   WebSocketConnectionManager,
   type WebSocketCallbacks
 } from '../utils/WebSocketConnectionManager'
-import type { ExecutionStatus } from './useWebSocket.utils'
+import type { ExecutionStatus } from '../utils/executionStatusUtils'
 import { logicalOr } from '../utils/logicalOr'
 
 interface UseWebSocketOptions {

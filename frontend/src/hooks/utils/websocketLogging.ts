@@ -7,7 +7,7 @@
 import { isTemporaryExecutionId } from './executionIdValidation'
 import { logicalOr } from './logicalOr'
 import { EXECUTION_STATUS } from './websocketConstants'
-import type { ExecutionStatus } from '../execution/useWebSocket.utils'
+import type { ExecutionStatus } from '../utils/executionStatusUtils'
 
 /**
  * Log skip connection reason

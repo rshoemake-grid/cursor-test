@@ -1,3 +1,15 @@
+/**
+ * Node Components Barrel Export
+ * 
+ * This file exports:
+ * 1. `nodeTypes` object - Required by ReactFlow component for custom node rendering
+ *    Used in: WorkflowCanvas.tsx (line 17, 73)
+ * 2. Individual node components - Available for direct imports if needed
+ * 
+ * The `nodeTypes` object maps node type strings to their React component implementations.
+ * This is required by ReactFlow's `nodeTypes` prop.
+ */
+
 import AgentNode from './AgentNode'
 import ConditionNode from './ConditionNode'
 import LoopNode from './LoopNode'
@@ -11,6 +23,11 @@ import DatabaseNode from './DatabaseNode'
 import FirebaseNode from './FirebaseNode'
 import BigQueryNode from './BigQueryNode'
 
+/**
+ * Node types mapping for ReactFlow
+ * Maps node type identifiers to their React component implementations
+ * Required by ReactFlow component's nodeTypes prop
+ */
 export const nodeTypes = {
   agent: AgentNode,
   condition: ConditionNode,
