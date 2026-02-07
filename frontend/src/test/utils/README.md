@@ -289,3 +289,399 @@ const marketplaceTabsMock = createMultiStatefulMock({
 5. **Document Complex Mocks:** Add comments explaining complex state logic
 6. **Test State Transitions:** Verify state changes work correctly in tests
 7. **Keep Mocks Simple:** Don't over-complicate mock logic
+
+## Edge Cases
+
+### Rapid State Changes
+
+When state changes occur in quick succession (e.g., multiple clicks in rapid succession), the mock handles each update correctly:
+
+```typescript
+it('handles rapid state changes', () => {
+  const { result } = renderHook(() => useMyHook())
+  
+  // Rapid state changes
+  act(() => {
+    result.current.setTab('tab1')
+    result.current.setTab('tab2')
+    result.current.setTab('tab3')
+  })
+  
+  // Final state should be the last update
+  expect(result.current.activeTab).toBe('tab3')
+  
+  // All state transitions are tracked
+  expect(result.current.setTab).toHaveBeenCalledTimes(3)
+})
+```
+
+**Key Points:**
+- Each `updateState()` call immediately updates the internal state
+- The mock return value reflects the most recent state
+- Jest mock functions track all calls correctly
+- Use `act()` wrapper when testing rapid state changes in React components
+
+### Partial State Updates in Multi-State
+
+When updating only part of a multi-state object, other properties are preserved:
+
+```typescript
+const multiStateMock = createMultiStatefulMock<
+  { activeTab: TabType; repositorySubTab: SubTabType; filter: string },
+  UseMarketplaceTabsReturn
+>({
+  initialState: {
+    activeTab: 'agents',
+    repositorySubTab: 'workflows',
+    filter: '',
+  },
+  createMockFn: (currentState, updateState) => ({
+    activeTab: currentState.activeTab,
+    repositorySubTab: currentState.repositorySubTab,
+    filter: currentState.filter,
+    setActiveTab: jest.fn((tab) => {
+      // ✅ Partial update - preserves other properties
+      updateState({ ...currentState, activeTab: tab })
+    }),
+    setRepositorySubTab: jest.fn((subTab) => {
+      // ✅ Partial update - preserves other properties
+      updateState({ ...currentState, repositorySubTab: subTab })
+    }),
+    setFilter: jest.fn((filter) => {
+      // ✅ Partial update - preserves other properties
+      updateState({ ...currentState, filter })
+    }),
+  }),
+  getMockFn: () => jest.mocked(require('../hooks/marketplace').useMarketplaceTabs),
+})
+
+it('preserves other state when updating one property', () => {
+  // Set initial state
+  multiStateMock.updateState({ activeTab: 'repository', repositorySubTab: 'workflows', filter: 'test' })
+  
+  // Update only activeTab
+  const mock = multiStateMock.createMock()
+  act(() => {
+    mock.setActiveTab('agents')
+  })
+  
+  // repositorySubTab and filter should be preserved
+  expect(multiStateMock.state.repositorySubTab).toBe('workflows')
+  expect(multiStateMock.state.filter).toBe('test')
+  expect(multiStateMock.state.activeTab).toBe('agents')
+})
+```
+
+**Key Points:**
+- Always spread `currentState` when updating: `updateState({ ...currentState, property: value })`
+- `createMultiStatefulMock` handles partial updates correctly
+- Other state properties remain unchanged unless explicitly updated
+- This pattern matches React's `useState` behavior with object updates
+
+### State Reset Timing
+
+Understanding when state resets occur and ensuring proper test isolation:
+
+```typescript
+describe('State Reset Timing', () => {
+  beforeEach(() => {
+    // ✅ Correct order: Reset state BEFORE clearing mocks
+    multiStateMock.resetState()
+    jest.clearAllMocks()
+    
+    // Then re-initialize mock with reset state
+    jest.mocked(useMarketplaceTabs).mockReturnValue(multiStateMock.createMock())
+  })
+  
+  it('resets state between tests', () => {
+    // Modify state in first test
+    const mock = multiStateMock.createMock()
+    act(() => {
+      mock.setActiveTab('repository')
+    })
+    
+    expect(multiStateMock.state.activeTab).toBe('repository')
+  })
+  
+  it('state is reset for this test', () => {
+    // State should be back to initial value
+    expect(multiStateMock.state.activeTab).toBe('agents') // ✅ Initial state
+  })
+})
+```
+
+**Common Pitfall:**
+```typescript
+// ❌ Wrong - clearing mocks before reset can cause issues
+beforeEach(() => {
+  jest.clearAllMocks() // Clears mock return values
+  multiStateMock.resetState() // But mock still has old return value
+  // Mock return value doesn't reflect reset state!
+})
+```
+
+**Key Points:**
+- Always call `resetState()` before `jest.clearAllMocks()`
+- Re-initialize mock return value after reset: `mockReturnValue(createMock())`
+- State reset happens synchronously, so it's safe to use immediately after
+- Each test starts with clean state, ensuring test isolation
+
+### Nested State Updates
+
+When state updates trigger other state updates (e.g., changing tab resets sub-tab):
+
+```typescript
+const nestedStateMock = createMultiStatefulMock<
+  { activeTab: TabType; repositorySubTab: SubTabType },
+  UseMarketplaceTabsReturn
+>({
+  initialState: {
+    activeTab: 'agents',
+    repositorySubTab: 'workflows',
+  },
+  createMockFn: (currentState, updateState) => ({
+    activeTab: currentState.activeTab,
+    repositorySubTab: currentState.repositorySubTab,
+    setActiveTab: jest.fn((tab) => {
+      // Nested update: changing tab resets sub-tab
+      if (tab === 'repository') {
+        // ✅ Update multiple properties in one call
+        updateState({ activeTab: tab, repositorySubTab: 'workflows' })
+      } else {
+        // ✅ Single property update
+        updateState({ activeTab: tab })
+      }
+    }),
+    setRepositorySubTab: jest.fn((subTab) => {
+      updateState({ repositorySubTab: subTab })
+    }),
+  }),
+  getMockFn: () => jest.mocked(require('../hooks/marketplace').useMarketplaceTabs),
+})
+
+it('handles nested state updates correctly', () => {
+  // Set sub-tab to 'agents'
+  const mock = nestedStateMock.createMock()
+  act(() => {
+    mock.setRepositorySubTab('agents')
+  })
+  expect(nestedStateMock.state.repositorySubTab).toBe('agents')
+  
+  // Switch to different tab - should reset sub-tab
+  act(() => {
+    mock.setActiveTab('workflows-of-workflows')
+  })
+  expect(nestedStateMock.state.activeTab).toBe('workflows-of-workflows')
+  // Sub-tab unchanged (not repository tab)
+  
+  // Switch to repository tab - should reset sub-tab to default
+  act(() => {
+    mock.setActiveTab('repository')
+  })
+  expect(nestedStateMock.state.activeTab).toBe('repository')
+  expect(nestedStateMock.state.repositorySubTab).toBe('workflows') // ✅ Reset
+})
+```
+
+**Key Points:**
+- Multiple properties can be updated in a single `updateState()` call
+- Nested updates are handled synchronously - all changes apply immediately
+- The mock return value reflects all updates after the call completes
+- Use conditional logic in setters to implement dependent state updates
+- This pattern is useful for cascading state changes (e.g., form validation, dependent dropdowns)
+
+## Edge Cases
+
+### Rapid State Changes
+
+When multiple state updates happen in quick succession (e.g., rapid clicks or async operations), the mock handles them correctly:
+
+```typescript
+it('handles rapid state changes', () => {
+  const { result } = renderHook(() => useMyHook())
+  
+  // Rapid state changes
+  act(() => {
+    result.current.setTab('tab1')
+    result.current.setTab('tab2')
+    result.current.setTab('tab3')
+  })
+  
+  // Mock reflects the final state
+  expect(result.current.activeTab).toBe('tab3')
+  
+  // Each setter was called
+  expect(result.current.setTab).toHaveBeenCalledTimes(3)
+})
+```
+
+**Key Points:**
+- Each `updateState()` call immediately updates the mock return value
+- The final state is always reflected correctly
+- All setter calls are tracked by Jest mocks
+
+### Partial State Updates in Multi-State
+
+When updating only part of a multi-state object, other properties are preserved:
+
+```typescript
+const multiStateMock = createMultiStatefulMock<
+  { activeTab: string; subTab: string; filter: string },
+  UseMyHookReturn
+>({
+  initialState: {
+    activeTab: 'tab1',
+    subTab: 'sub1',
+    filter: 'all',
+  },
+  createMockFn: (currentState, updateState) => ({
+    activeTab: currentState.activeTab,
+    subTab: currentState.subTab,
+    filter: currentState.filter,
+    setActiveTab: jest.fn((tab) => {
+      // ✅ Partial update - preserves subTab and filter
+      updateState({ ...currentState, activeTab: tab })
+    }),
+    setSubTab: jest.fn((subTab) => {
+      // ✅ Partial update - preserves activeTab and filter
+      updateState({ ...currentState, subTab })
+    }),
+    setFilter: jest.fn((filter) => {
+      // ✅ Partial update - preserves activeTab and subTab
+      updateState({ ...currentState, filter })
+    }),
+  }),
+  getMockFn: () => jest.mocked(require('../hooks/myHook').useMyHook),
+})
+
+it('preserves other state when updating one property', () => {
+  const { result } = renderHook(() => useMyHook())
+  
+  // Initial state
+  expect(result.current.activeTab).toBe('tab1')
+  expect(result.current.subTab).toBe('sub1')
+  expect(result.current.filter).toBe('all')
+  
+  // Update only activeTab
+  act(() => {
+    result.current.setActiveTab('tab2')
+  })
+  
+  // ✅ Other properties preserved
+  expect(result.current.activeTab).toBe('tab2')
+  expect(result.current.subTab).toBe('sub1') // Still 'sub1'
+  expect(result.current.filter).toBe('all')  // Still 'all'
+})
+```
+
+**Key Points:**
+- Always use spread operator: `updateState({ ...currentState, property: value })`
+- `createMultiStatefulMock` handles partial updates correctly
+- Each update preserves all other state properties
+
+### State Reset Timing
+
+State reset must happen at the right time in `beforeEach` to ensure test isolation:
+
+```typescript
+beforeEach(() => {
+  // ✅ Correct order:
+  // 1. Clear all mocks first
+  jest.clearAllMocks()
+  
+  // 2. Reset state to initial values
+  myMock.resetState()
+  
+  // 3. Re-initialize mock with reset state
+  jest.mocked(useMyHook).mockReturnValue(myMock.createMock())
+})
+
+// ❌ Wrong order - state reset after mock initialization won't work
+beforeEach(() => {
+  jest.mocked(useMyHook).mockReturnValue(myMock.createMock()) // Uses old state
+  jest.clearAllMocks()
+  myMock.resetState() // Too late - mock already initialized
+})
+```
+
+**Key Points:**
+- Reset state AFTER clearing mocks but BEFORE re-initializing
+- The order ensures each test starts with clean state
+- Mock return value reflects the reset state
+
+### Nested State Updates
+
+When state updates trigger other state updates (e.g., cascading updates), handle them carefully:
+
+```typescript
+const cascadingMock = createMultiStatefulMock<
+  { tab: string; subTab: string; mode: 'view' | 'edit' },
+  UseMyHookReturn
+>({
+  initialState: {
+    tab: 'tab1',
+    subTab: 'sub1',
+    mode: 'view',
+  },
+  createMockFn: (currentState, updateState) => ({
+    tab: currentState.tab,
+    subTab: currentState.subTab,
+    mode: currentState.mode,
+    setTab: jest.fn((tab) => {
+      // Update tab
+      updateState({ ...currentState, tab })
+      
+      // ✅ Nested update: Reset subTab when tab changes
+      // Note: This creates a second updateState call
+      updateState({ ...currentState, tab, subTab: 'default' })
+    }),
+    setSubTab: jest.fn((subTab) => {
+      updateState({ ...currentState, subTab })
+    }),
+    setMode: jest.fn((mode) => {
+      updateState({ ...currentState, mode })
+    }),
+  }),
+  getMockFn: () => jest.mocked(require('../hooks/myHook').useMyHook),
+})
+
+it('handles nested state updates', () => {
+  const { result } = renderHook(() => useMyHook())
+  
+  // Set initial subTab
+  act(() => {
+    result.current.setSubTab('custom')
+  })
+  expect(result.current.subTab).toBe('custom')
+  
+  // Changing tab triggers nested update to reset subTab
+  act(() => {
+    result.current.setTab('tab2')
+  })
+  
+  // ✅ Both updates applied
+  expect(result.current.tab).toBe('tab2')
+  expect(result.current.subTab).toBe('default') // Reset by nested update
+})
+```
+
+**Alternative Approach (Better):**
+
+For cleaner code, handle cascading logic in a single update:
+
+```typescript
+setTab: jest.fn((tab) => {
+  // ✅ Single update with all changes
+  updateState({
+    ...currentState,
+    tab,
+    subTab: 'default', // Reset as part of same update
+  })
+}),
+```
+
+**Key Points:**
+- Multiple `updateState()` calls work but can be harder to reason about
+- Prefer single `updateState()` with all changes when possible
+- Each `updateState()` immediately updates the mock return value
+- Test that nested updates work as expected
