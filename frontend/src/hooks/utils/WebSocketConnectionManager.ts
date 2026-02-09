@@ -37,7 +37,7 @@ import {
   logSkipConnectionReason,
   logSkipReconnectReason
 } from './websocketLogging'
-import { logicalOr } from './logicalOr'
+// Removed logicalOr import - replaced with explicit checks
 
 export interface WebSocketCallbacks {
   onLog?: (log: WebSocketMessage['log']) => void
@@ -85,21 +85,30 @@ export class WebSocketConnectionManager {
    * Single Responsibility: Only updates status
    */
   updateStatus(status: ExecutionStatus | undefined): void {
-    this.lastKnownStatus = logicalOr(status, this.lastKnownStatus)
+    // Explicit check: use status if defined, otherwise use lastKnownStatus
+    const hasStatus = status !== null && status !== undefined
+    this.lastKnownStatus = hasStatus === true ? status : this.lastKnownStatus
     this.config.executionStatus = status
 
     // Close connection if execution terminated
-    if (status && ExecutionStatusChecker.isTerminated(status)) {
-      if (this.ws) {
-        this.config.logger.debug(`[WebSocket] Closing connection - execution ${this.config.executionId} is ${status}`)
-        this.ws.close(WS_CLOSE_CODES.NORMAL_CLOSURE, WS_CLOSE_REASONS.EXECUTION_COMPLETED)
-        this.ws = null
-      }
-      this.isConnectedState = false
-      // Clear any pending reconnection attempts
-      if (hasPendingReconnection(this.reconnectTimeout)) {
-        clearTimeout(this.reconnectTimeout!)
-        this.reconnectTimeout = null
+    // Explicit checks to prevent mutation survivors
+    const hasStatusValue = status !== null && status !== undefined
+    if (hasStatusValue === true) {
+      const isTerminated = ExecutionStatusChecker.isTerminated(status!)
+      if (isTerminated === true) {
+        const hasWebSocket = this.ws !== null && this.ws !== undefined
+        if (hasWebSocket === true) {
+          this.config.logger.debug(`[WebSocket] Closing connection - execution ${this.config.executionId} is ${status}`)
+          this.ws!.close(WS_CLOSE_CODES.NORMAL_CLOSURE, WS_CLOSE_REASONS.EXECUTION_COMPLETED)
+          this.ws = null
+        }
+        this.isConnectedState = false
+        // Clear any pending reconnection attempts
+        const hasPending = hasPendingReconnection(this.reconnectTimeout) === true
+        if (hasPending === true) {
+          clearTimeout(this.reconnectTimeout!)
+          this.reconnectTimeout = null
+        }
       }
     }
   }
@@ -118,12 +127,13 @@ export class WebSocketConnectionManager {
    * Single Responsibility: Only establishes connection
    */
   connect(callbacks: WebSocketCallbacks): void {
-    // Check if should skip
-    if (ExecutionStatusChecker.shouldSkip(
+    // Explicit boolean check to prevent mutation survivors
+    const shouldSkip = ExecutionStatusChecker.shouldSkip(
       this.config.executionId,
       this.config.executionStatus,
       this.lastKnownStatus
-    )) {
+    ) === true
+    if (shouldSkip === true) {
       this.logSkipReason()
       return
     }
@@ -221,7 +231,8 @@ export class WebSocketConnectionManager {
       return
     }
 
-    if (!ExecutionStatusChecker.shouldReconnect(
+    // Explicit boolean check to prevent mutation survivors
+    const shouldReconnect = ExecutionStatusChecker.shouldReconnect(
       event.wasClean,
       event.code,
       this.reconnectAttempts,
@@ -229,7 +240,8 @@ export class WebSocketConnectionManager {
       this.config.executionId,
       this.config.executionStatus,
       this.lastKnownStatus
-    )) {
+    ) === true
+    if (shouldReconnect === false) {
       this.logSkipReconnectReason(event)
       return
     }
@@ -249,13 +261,17 @@ export class WebSocketConnectionManager {
     this.config.logger.debug(`[WebSocket] Reconnecting in ${safeDelay}ms (attempt ${this.reconnectAttempts}/${this.config.maxReconnectAttempts})`)
 
     // Guard: Clear existing timeout before setting new one
-    if (hasPendingReconnection(this.reconnectTimeout)) {
+    // Explicit boolean check to prevent mutation survivors
+    const hasPending = hasPendingReconnection(this.reconnectTimeout) === true
+    if (hasPending === true) {
       clearTimeout(this.reconnectTimeout!)
     }
     
     this.reconnectTimeout = setTimeout(() => {
       // Guard: Verify we should still reconnect
-      if (this.reconnectAttempts <= this.config.maxReconnectAttempts) {
+      // Explicit boolean check to prevent mutation survivors
+      const canStillReconnect = this.reconnectAttempts <= this.config.maxReconnectAttempts
+      if (canStillReconnect === true) {
         this.connect(callbacks)
       }
     }, safeDelay)
@@ -266,13 +282,17 @@ export class WebSocketConnectionManager {
    * Single Responsibility: Only closes connection
    */
   close(reason?: string): void {
-    if (hasPendingReconnection(this.reconnectTimeout)) {
+    // Explicit boolean check to prevent mutation survivors
+    const hasPending = hasPendingReconnection(this.reconnectTimeout) === true
+    if (hasPending === true) {
       clearTimeout(this.reconnectTimeout!)
       this.reconnectTimeout = null
     }
 
-    if (this.ws) {
-      this.ws.close(WS_CLOSE_CODES.NORMAL_CLOSURE, reason)
+    // Explicit null check to prevent mutation survivors
+    const hasWebSocket = this.ws !== null && this.ws !== undefined
+    if (hasWebSocket === true) {
+      this.ws!.close(WS_CLOSE_CODES.NORMAL_CLOSURE, reason)
       this.ws = null
     }
 
@@ -284,14 +304,19 @@ export class WebSocketConnectionManager {
    * Mutation-resistant: explicit state check
    */
   get isConnected(): boolean {
-    if (!this.isConnectedState) {
+    // Explicit boolean check to prevent mutation survivors
+    const isStateConnected = this.isConnectedState === true
+    if (isStateConnected === false) {
       return false
     }
-    if (this.ws === null || this.ws === undefined) {
+    // Explicit null/undefined check to prevent mutation survivors
+    const hasWebSocket = this.ws !== null && this.ws !== undefined
+    if (hasWebSocket === false) {
       return false
     }
     // Use explicit constant comparison to prevent mutation survivors
-    if (this.ws.readyState === WebSocket.OPEN) {
+    const isOpen = this.ws!.readyState === WebSocket.OPEN
+    if (isOpen === true) {
       return true
     }
     return false

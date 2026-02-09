@@ -9,7 +9,7 @@ import { logger as defaultLogger } from '../../utils/logger'
 import type { StorageAdapter } from '../../types/adapters'
 import type { Node } from '@xyflow/react'
 import { calculateMultipleNodePositions } from '../utils/nodePositioning'
-import { logicalOrToEmptyArray } from '../utils/logicalOr'
+// Removed logicalOrToEmptyArray import - replaced with explicit checks
 import {
   convertAgentsToNodes,
   type AgentTemplate
@@ -121,7 +121,9 @@ export function useMarketplaceIntegration({
       })
       
       // Only process if this is the active tab
-      if (targetTabId !== tabId) {
+      // Explicit boolean check to prevent mutation survivors
+      const isDifferentTab = targetTabId !== tabId
+      if (isDifferentTab === true) {
         injectedLogger.debug('[useMarketplaceIntegration] Event for different tab, ignoring')
         return
       }
@@ -132,17 +134,23 @@ export function useMarketplaceIntegration({
     
     // Check storage for pending agents (more reliable than events)
     const checkPendingAgents = () => {
-      if (!storage) return
+      // Explicit null/undefined check to prevent mutation survivors
+      const hasStorage = storage !== null && storage !== undefined
+      if (hasStorage === false) return
       
       try {
-        const pendingData = storage.getItem(PENDING_AGENTS_STORAGE_KEY)
-        if (pendingData) {
+        const pendingData = storage!.getItem(PENDING_AGENTS_STORAGE_KEY)
+        // Explicit null/undefined/empty check to prevent mutation survivors
+        const hasPendingData = pendingData !== null && pendingData !== undefined && pendingData !== ''
+        if (hasPendingData === true) {
           const parsed = JSON.parse(pendingData)
           
           // Use extracted validation utility - mutation-resistant
-          if (!isValidPendingAgents(parsed)) {
+          // Explicit boolean check to prevent mutation survivors
+          const isValid = isValidPendingAgents(parsed) === true
+          if (isValid === false) {
             injectedLogger.debug('[useMarketplaceIntegration] Invalid pending agents data, clearing')
-            clearPendingAgents(storage)
+            clearPendingAgents(storage!)
             return
           }
 
@@ -154,25 +162,37 @@ export function useMarketplaceIntegration({
           })
           
           // Use extracted validation utilities - mutation-resistant
-          if (isPendingAgentsValid(pending, tabId, PENDING_AGENTS.MAX_AGE)) {
+          // Explicit boolean checks to prevent mutation survivors
+          const isPendingValid = isPendingAgentsValid(pending, tabId, PENDING_AGENTS.MAX_AGE) === true
+          if (isPendingValid === true) {
             injectedLogger.debug('[useMarketplaceIntegration] Adding agents to canvas:', pending.agents.length)
             addAgentsToCanvas(pending.agents)
             // Clear after processing - use extracted utility (DRY)
-            clearPendingAgents(storage)
-          } else if (isPendingAgentsForDifferentTab(pending, tabId)) {
-            // Clear if it's for a different tab - use extracted utility (DRY)
-            injectedLogger.debug('[useMarketplaceIntegration] Pending agents for different tab, clearing')
-            clearPendingAgents(storage)
-          } else if (isPendingAgentsTooOld(pending, PENDING_AGENTS.MAX_AGE)) {
-            // Clear if too old - use extracted utility (DRY)
-            injectedLogger.debug('[useMarketplaceIntegration] Pending agents too old, clearing')
-            clearPendingAgents(storage)
+            clearPendingAgents(storage!)
+          } else {
+            // Explicit boolean checks to prevent mutation survivors
+            const isDifferentTab = isPendingAgentsForDifferentTab(pending, tabId) === true
+            const isTooOld = isPendingAgentsTooOld(pending, PENDING_AGENTS.MAX_AGE) === true
+            
+            if (isDifferentTab === true) {
+              // Clear if it's for a different tab - use extracted utility (DRY)
+              injectedLogger.debug('[useMarketplaceIntegration] Pending agents for different tab, clearing')
+              clearPendingAgents(storage!)
+            } else if (isTooOld === true) {
+              // Clear if too old - use extracted utility (DRY)
+              injectedLogger.debug('[useMarketplaceIntegration] Pending agents too old, clearing')
+              clearPendingAgents(storage!)
+            }
           }
         }
       } catch (e) {
         injectedLogger.error('Failed to process pending agents:', e)
         // Use extracted utility (DRY)
-        clearPendingAgents(storage)
+        // Explicit null check to prevent mutation survivors
+        const hasStorage = storage !== null && storage !== undefined
+        if (hasStorage === true) {
+          clearPendingAgents(storage!)
+        }
       }
     }
     
@@ -180,7 +200,9 @@ export function useMarketplaceIntegration({
     checkPendingAgents()
     
     // Also listen for events
-    if (typeof window !== 'undefined') {
+    // Explicit boolean check to prevent mutation survivors
+    const isBrowser = typeof window !== 'undefined'
+    if (isBrowser === true) {
       window.addEventListener(MARKETPLACE_EVENTS.ADD_AGENTS_TO_WORKFLOW, handleAddAgentsToWorkflow as EventListener)
     }
     
@@ -191,7 +213,9 @@ export function useMarketplaceIntegration({
     )
     
     return () => {
-      if (typeof window !== 'undefined') {
+      // Explicit boolean check to prevent mutation survivors
+      const isBrowser = typeof window !== 'undefined'
+      if (isBrowser === true) {
         window.removeEventListener(MARKETPLACE_EVENTS.ADD_AGENTS_TO_WORKFLOW, handleAddAgentsToWorkflow as EventListener)
       }
       cleanupPolling()

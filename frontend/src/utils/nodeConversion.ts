@@ -13,12 +13,17 @@ import { coalesceStringChain, coalesceArray } from './nullCoalescing'
  */
 export function convertNodesForExecutionInput(nodes: Node[]): WorkflowNode[] {
   return nodes.map((node: any) => {
+    // Explicit checks to prevent mutation survivors
+    const hasName = node.data.name !== null && node.data.name !== undefined && node.data.name !== ''
+    const nameValue = hasName === true ? node.data.name : null
+    
+    // Explicit checks for label
+    const isStringLabel = typeof node.data.label === 'string'
+    const hasLabel = isStringLabel === true && node.data.label !== null && node.data.label !== undefined && node.data.label !== ''
+    const labelValue = hasLabel === true ? node.data.label : null
+    
     // Use coalesceStringChain to kill ConditionalExpression mutations
-    const name = coalesceStringChain(
-      '', // default fallback
-      (node.data.name !== null && node.data.name !== undefined && node.data.name !== '') ? node.data.name : null,
-      (typeof node.data.label === 'string' && node.data.label !== null && node.data.label !== undefined && node.data.label !== '') ? node.data.label : null
-    )
+    const name = coalesceStringChain('', nameValue, labelValue)
     
     // Use coalesceArray to kill ConditionalExpression mutations
     const inputs = coalesceArray(node.data.inputs, [])

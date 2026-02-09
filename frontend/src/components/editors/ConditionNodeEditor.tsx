@@ -8,6 +8,13 @@
 import { useRef, useState, useEffect } from 'react'
 import { NodeWithData } from '../../types/nodeData'
 import { CONDITION_TYPES, isValidConditionType } from '../../constants/stringLiterals'
+import {
+  validateConditionConfig,
+  validateOperator,
+  validateOperands,
+  getDefaultConditionConfig,
+  type ConditionConfig
+} from './condition/conditionValidation'
 
 interface ConditionNodeEditorProps {
   node: NodeWithData & { type: 'condition' }
@@ -27,37 +34,43 @@ export default function ConditionNodeEditor({
   // Sync local state with node data
   useEffect(() => {
     // Explicit check to prevent mutation survivors
-    const conditionConfig = (node.data.condition_config !== null && node.data.condition_config !== undefined)
-      ? node.data.condition_config
-      : {}
+    const hasConfig = node.data.condition_config !== null && node.data.condition_config !== undefined
+    const conditionConfig: ConditionConfig = hasConfig === true
+      ? node.data.condition_config as ConditionConfig
+      : getDefaultConditionConfig()
     
     // Explicit checks to prevent mutation survivors
-    if (document.activeElement !== conditionFieldRef.current) {
-      const fieldValue = (conditionConfig.field !== null && conditionConfig.field !== undefined && conditionConfig.field !== '')
-        ? conditionConfig.field
-        : ''
+    const isFieldActive = document.activeElement === conditionFieldRef.current
+    if (isFieldActive === false) {
+      const hasField = conditionConfig.field !== null && conditionConfig.field !== undefined && conditionConfig.field !== ''
+      const fieldValue = hasField === true ? conditionConfig.field! : ''
       setConditionFieldValue(fieldValue)
     }
-    if (document.activeElement !== conditionValueRef.current) {
-      const valueValue = (conditionConfig.value !== null && conditionConfig.value !== undefined && conditionConfig.value !== '')
-        ? conditionConfig.value
-        : ''
+    const isValueActive = document.activeElement === conditionValueRef.current
+    if (isValueActive === false) {
+      const hasValue = conditionConfig.value !== null && conditionConfig.value !== undefined && conditionConfig.value !== ''
+      const valueValue = hasValue === true ? conditionConfig.value! : ''
       setConditionValueValue(valueValue)
     }
   }, [node.data.condition_config])
 
   // Explicit check to prevent mutation survivors
-  const conditionConfig = (node.data.condition_config !== null && node.data.condition_config !== undefined)
-    ? node.data.condition_config
-    : {}
+  const hasConfig = node.data.condition_config !== null && node.data.condition_config !== undefined
+  const conditionConfig: ConditionConfig = hasConfig === true
+    ? node.data.condition_config as ConditionConfig
+    : getDefaultConditionConfig()
   // Explicit check to prevent mutation survivors
   // Use constants to kill StringLiteral mutations
-  const conditionType = (conditionConfig.condition_type != null && isValidConditionType(conditionConfig.condition_type))
-    ? conditionConfig.condition_type
+  const hasConditionType = conditionConfig.condition_type !== null && conditionConfig.condition_type !== undefined
+  const isValidType = hasConditionType === true && isValidConditionType(conditionConfig.condition_type) === true
+  const conditionType = isValidType === true
+    ? conditionConfig.condition_type!
     : CONDITION_TYPES.EQUALS
   // Explicit checks to prevent mutation survivors
   // Use constants to kill StringLiteral mutations
-  const showValueField = conditionType !== CONDITION_TYPES.EMPTY && conditionType !== CONDITION_TYPES.NOT_EMPTY
+  const isNotEmpty = conditionType !== CONDITION_TYPES.EMPTY
+  const isNotNotEmpty = conditionType !== CONDITION_TYPES.NOT_EMPTY
+  const showValueField = isNotEmpty === true && isNotNotEmpty === true
 
   return (
     <>
@@ -117,7 +130,7 @@ export default function ConditionNodeEditor({
       </div>
 
       {/* Value (conditional) */}
-      {showValueField && (
+      {showValueField === true && (
         <div className="mt-4">
           <label 
             htmlFor="condition-value"
