@@ -7,6 +7,9 @@
  * instead of optional chaining operators.
  */
 
+import { isNullOrUndefined, isDefined } from './typeGuards'
+import { coalesce } from './coalesce'
+
 /**
  * Safely get nested property value
  * Kills: OptionalChaining mutations (obj?.prop?.nested)
@@ -22,19 +25,19 @@ export function safeGet<T>(
   defaultValue: T
 ): T {
   // Explicit checks kill mutations
-  if (obj === null || obj === undefined) {
+  if (isNullOrUndefined(obj)) {
     return defaultValue
   }
   
   let current = obj
   for (const key of path) {
-    if (current === null || current === undefined) {
+    if (isNullOrUndefined(current)) {
       return defaultValue
     }
     current = current[key]
   }
   
-  return (current !== null && current !== undefined) ? current : defaultValue
+  return coalesce(current as T | null | undefined, defaultValue)
 }
 
 /**
@@ -52,12 +55,12 @@ export function safeGetProperty<T>(
   defaultValue: T
 ): T {
   // Explicit checks kill mutations
-  if (obj === null || obj === undefined) {
+  if (isNullOrUndefined(obj)) {
     return defaultValue
   }
   
   const value = obj[property]
-  return (value !== null && value !== undefined) ? value : defaultValue
+  return coalesce(value as T | null | undefined, defaultValue)
 }
 
 /**
@@ -77,7 +80,7 @@ export function safeCall<T>(
   defaultValue: T
 ): T {
   // Explicit checks kill mutations
-  if (obj === null || obj === undefined) {
+  if (isNullOrUndefined(obj)) {
     return defaultValue
   }
   
@@ -88,7 +91,7 @@ export function safeCall<T>(
   
   try {
     const result = method.apply(obj, args)
-    return (result !== null && result !== undefined) ? result : defaultValue
+    return coalesce(result, defaultValue)
   } catch {
     return defaultValue
   }
@@ -109,7 +112,7 @@ export function safeGetArrayElement<T>(
   defaultValue: T
 ): T {
   // Explicit checks kill mutations
-  if (arr === null || arr === undefined) {
+  if (isNullOrUndefined(arr)) {
     return defaultValue
   }
   
@@ -122,5 +125,5 @@ export function safeGetArrayElement<T>(
   }
   
   const value = arr[index]
-  return (value !== null && value !== undefined) ? value : defaultValue
+  return coalesce(value, defaultValue)
 }

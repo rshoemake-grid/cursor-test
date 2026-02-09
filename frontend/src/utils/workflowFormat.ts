@@ -8,6 +8,142 @@ import type { Node, Edge } from '@xyflow/react'
 import type { WorkflowNode, WorkflowEdge, WorkflowDefinition } from '../types/workflow'
 import { coalesceObject, coalesceArray, coalesceObjectChain, coalesceArrayChain, coalesceStringChain, coalesceChain } from './nullCoalescing'
 import { safeGetProperty, safeGet } from './safeAccess'
+import { isNullOrUndefined, isDefined } from './typeGuards'
+
+/**
+ * Interface for workflow node data
+ * Contains all possible config types and inputs
+ */
+export interface WorkflowNodeData {
+  agent_config?: Record<string, any>
+  condition_config?: Record<string, any>
+  loop_config?: Record<string, any>
+  input_config?: Record<string, any>
+  inputs?: any[]
+  name?: string
+  label?: string
+  description?: string
+  [key: string]: any // Allow additional properties
+}
+
+/**
+ * Interface for edge data
+ * Supports both camelCase and snake_case handle properties
+ */
+export interface EdgeData {
+  id?: string
+  source: string
+  target: string
+  sourceHandle?: string | boolean | number | null
+  source_handle?: string | boolean | number | null
+  targetHandle?: string | boolean | number | null
+  target_handle?: string | boolean | number | null
+  label?: string
+  [key: string]: any // Allow additional properties
+}
+
+/**
+ * Config type constants for workflow nodes
+ * Used to eliminate DRY violations in config merging
+ */
+const CONFIG_TYPES = ['agent_config', 'condition_config', 'loop_config', 'input_config'] as const
+
+/**
+ * Merge configs from data object and workflow node
+ * Follows Open/Closed Principle - can be extended without modifying existing code
+ * 
+ * @param data - Data object (may contain configs)
+ * @param wfNode - Workflow node (may contain configs)
+ * @returns Merged configs object
+ */
+function mergeConfigs(data: WorkflowNodeData | null | undefined, wfNode: WorkflowNodeData | null | undefined): Record<string, any> {
+  const configs: Record<string, any> = {}
+  for (const configType of CONFIG_TYPES) {
+    // Extract config values before coalescing for explicit handling
+    const dataConfig = safeGetProperty(data, configType, undefined)
+    const wfNodeConfig = safeGetProperty(wfNode, configType, undefined)
+    configs[configType] = coalesceObjectChain({}, dataConfig, wfNodeConfig)
+  }
+  return configs
+}
+
+/**
+ * Extract handle value from edge (supports both camelCase and snake_case)
+ * Handles false values specially - treats as falsy (like || operator)
+ * 
+ * @param edge - The edge object
+ * @param handleType - Either 'source' or 'target'
+ * @returns The handle value as string | null
+ */
+function extractHandle(edge: EdgeData, handleType: 'source' | 'target'): string | null {
+  const camelKey = `${handleType}Handle`
+  const snakeKey = `${handleType}_handle`
+  
+  // Check camelCase first, treating false as falsy
+  // Explicit boolean checks to prevent mutation survivors
+  const camelValue = edge[camelKey]
+  const isCamelDefined = isDefined(camelValue) === true
+  const isCamelNotFalse = camelValue !== false
+  if (isCamelDefined === true && isCamelNotFalse === true) {
+    return normalizeHandle(camelValue)
+  }
+  
+  // Check snake_case, treating false as falsy
+  const snakeValue = edge[snakeKey]
+  const isSnakeDefined = isDefined(snakeValue) === true
+  const isSnakeNotFalse = snakeValue !== false
+  if (isSnakeDefined === true && isSnakeNotFalse === true) {
+    return normalizeHandle(snakeValue)
+  }
+  
+  return null
+}
+
+/**
+ * Normalize handle value to string | null
+ * Converts boolean true to string "true", validates strings, handles numbers
+ * 
+ * @param handle - The handle value (any type)
+ * @returns Normalized handle as string | null
+ */
+function normalizeHandle(handle: any): string | null {
+  // Explicit boolean check
+  if (handle === true) return "true"
+  
+  // Explicit type and value checks
+  const isString = typeof handle === 'string'
+  const isNonEmptyString = isString === true && handle !== ''
+  if (isNonEmptyString === true) return handle
+  
+  // Explicit type check
+  const isNumber = typeof handle === 'number'
+  if (isNumber === true) return String(handle)
+  
+  return null
+}
+
+/**
+ * Generate edge ID with fallback logic
+ * 
+ * @param edge - The edge object
+ * @param sourceHandle - The source handle (may be null)
+ * @returns Generated edge ID string
+ */
+function generateEdgeId(edge: EdgeData, sourceHandle: string | null): string {
+  // Explicit checks to prevent mutation survivors
+  const hasId = isDefined(edge.id) === true && edge.id !== ''
+  if (hasId === true) {
+    return edge.id!
+  }
+  
+  // Explicit checks to prevent mutation survivors
+  const hasSourceHandle = isDefined(sourceHandle) === true && sourceHandle !== ''
+  if (hasSourceHandle === true) {
+    return `${edge.source}-${sourceHandle}-${edge.target}`
+  }
+  
+  return `${edge.source}-${edge.target}`
+}
 
 /**
  * Convert React Flow edges to WorkflowEdge format
@@ -77,11 +213,8 @@ export function initializeReactFlowNodes(nodes: Node[]): Node[] {
     selected: false,
     data: {
       ...node.data,
-      // Use coalesceObject to kill ConditionalExpression mutations
-      agent_config: coalesceObject(node.data.agent_config, {}),
-      condition_config: coalesceObject(node.data.condition_config, {}),
-      loop_config: coalesceObject(node.data.loop_config, {}),
-      input_config: coalesceObject(node.data.input_config, {}),
+      // Use mergeConfigs to eliminate DRY violation
+      ...mergeConfigs(node.data, {}),
       inputs: coalesceArray(node.data.inputs, []),
     }
   }))
@@ -90,39 +223,14 @@ export function initializeReactFlowNodes(nodes: Node[]): Node[] {
 /**
  * Format edges for React Flow, handling sourceHandle/targetHandle conversion
  */
-export function formatEdgesForReactFlow(edges: any[]): Edge[] {
-  return edges.map((edge: any) => {
-    // Get sourceHandle from either camelCase or snake_case - ensure it's a string, not boolean
-    // Handle boolean false specially - treat as falsy (like || operator) to kill ConditionalExpression mutations
-    // Use explicit checks but preserve || falsy behavior for false
-    let sourceHandle: string | null = null
-    // Explicit checks kill mutations, but treat false as falsy (like ||)
-    if (edge.sourceHandle !== null && edge.sourceHandle !== undefined && edge.sourceHandle !== false) {
-      sourceHandle = edge.sourceHandle
-    } else if (edge.source_handle !== null && edge.source_handle !== undefined && edge.source_handle !== false) {
-      sourceHandle = edge.source_handle
-    }
+export function formatEdgesForReactFlow(edges: EdgeData[]): Edge[] {
+  return edges.map((edge: EdgeData) => {
+    // Extract handles using utility functions
+    const sourceHandle = extractHandle(edge, 'source')
+    const targetHandle = extractHandle(edge, 'target')
     
-    let targetHandle: string | null = null
-    // Explicit checks kill mutations, but treat false as falsy (like ||)
-    if (edge.targetHandle !== null && edge.targetHandle !== undefined && edge.targetHandle !== false) {
-      targetHandle = edge.targetHandle
-    } else if (edge.target_handle !== null && edge.target_handle !== undefined && edge.target_handle !== false) {
-      targetHandle = edge.target_handle
-    }
-    
-    // Convert boolean true to string if needed (React Flow expects strings)
-    // Note: false values are already filtered out above (treated as falsy)
-    if (sourceHandle === true) sourceHandle = "true"
-    if (targetHandle === true) targetHandle = "true"
-    
-    // Generate unique ID that includes sourceHandle to differentiate edges from same source
-    // Explicit checks to kill ConditionalExpression mutations
-    const edgeId = (edge.id !== null && edge.id !== undefined && edge.id !== '')
-      ? edge.id
-      : (sourceHandle !== null && sourceHandle !== undefined && sourceHandle !== '')
-      ? `${edge.source}-${sourceHandle}-${edge.target}`
-      : `${edge.source}-${edge.target}`
+    // Generate edge ID using utility function
+    const edgeId = generateEdgeId(edge, sourceHandle)
     
     // Create edge object with sourceHandle/targetHandle set explicitly
     const formattedEdge: any = {
@@ -133,10 +241,12 @@ export function formatEdgesForReactFlow(edges: any[]): Edge[] {
     
     // Only add sourceHandle/targetHandle if they have values
     // Explicit checks to prevent mutation survivors
-    if (sourceHandle !== null && sourceHandle !== undefined && sourceHandle !== '') {
+    const hasSourceHandle = isDefined(sourceHandle) === true && sourceHandle !== ''
+    if (hasSourceHandle === true) {
       formattedEdge.sourceHandle = String(sourceHandle)
     }
-    if (targetHandle !== null && targetHandle !== undefined && targetHandle !== '') {
+    const hasTargetHandle = isDefined(targetHandle) === true && targetHandle !== ''
+    if (hasTargetHandle === true) {
       formattedEdge.targetHandle = String(targetHandle)
     }
     
@@ -159,27 +269,10 @@ export function normalizeNodeForStorage(node: Node): Node {
     ...node,
     data: {
       ...node.data,
-      // Use coalesceObjectChain to kill ConditionalExpression mutations
-      // Use safeGetProperty to kill OptionalChaining mutations
-      agent_config: coalesceObjectChain(
-        {},
-        safeGetProperty(node.data, 'agent_config', undefined),
-        safeGetProperty(node, 'agent_config', undefined)
-      ),
-      condition_config: coalesceObjectChain(
-        {},
-        safeGetProperty(node.data, 'condition_config', undefined),
-        safeGetProperty(node, 'condition_config', undefined)
-      ),
-      loop_config: coalesceObjectChain(
-        {},
-        safeGetProperty(node.data, 'loop_config', undefined),
-        safeGetProperty(node, 'loop_config', undefined)
-      ),
-      input_config: coalesceObjectChain(
-        {},
-        safeGetProperty(node.data, 'input_config', undefined),
-        safeGetProperty(node, 'input_config', undefined)
+      // Use mergeConfigs to eliminate DRY violation
+      ...mergeConfigs(
+        node.data,
+        node
       ),
     },
   }
@@ -220,11 +313,8 @@ export function workflowNodeToReactFlowNode(wfNode: any, nodeExecutionStates?: R
         wfNode.description
       ),
       // Merge configs - prefer data object, fallback to top-level
-      // Use coalesceObjectChain to kill all || mutations
-      agent_config: coalesceObjectChain({}, data.agent_config, wfNode.agent_config),
-      condition_config: coalesceObjectChain({}, data.condition_config, wfNode.condition_config),
-      loop_config: coalesceObjectChain({}, data.loop_config, wfNode.loop_config),
-      input_config: coalesceObjectChain({}, data.input_config, wfNode.input_config),
+      // Use mergeConfigs to eliminate DRY violation
+      ...mergeConfigs(data, wfNode),
       inputs: coalesceArrayChain([], data.inputs, wfNode.inputs),
       // Add execution state for visual feedback
       // Use safeGetProperty to kill OptionalChaining mutations

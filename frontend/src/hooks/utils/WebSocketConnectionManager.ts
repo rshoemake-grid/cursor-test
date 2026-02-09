@@ -38,7 +38,6 @@ import {
   logSkipReconnectReason
 } from './websocketLogging'
 import { logicalOr } from './logicalOr'
-import { logicalOr } from './logicalOr'
 
 export interface WebSocketCallbacks {
   onLog?: (log: WebSocketMessage['log']) => void

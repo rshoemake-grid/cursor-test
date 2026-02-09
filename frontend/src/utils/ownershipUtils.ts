@@ -16,8 +16,40 @@ export interface User {
 }
 
 /**
+ * Compare two IDs using string conversion for type safety
+ * Handles different ID types (string, number) by converting both to strings
+ * 
+ * @param id1 - First ID to compare (string | number | null | undefined)
+ * @param id2 - Second ID to compare (string | number | null | undefined)
+ * @returns True if IDs are equal after string conversion, false otherwise
+ */
+export function compareIds(
+  id1: string | number | null | undefined,
+  id2: string | number | null | undefined
+): boolean {
+  // Explicit null/undefined checks for both parameters
+  if (id1 === null || id1 === undefined) {
+    return false
+  }
+  if (id2 === null || id2 === undefined) {
+    return false
+  }
+  
+  // Explicit type checks before String conversion
+  const isId1Valid = typeof id1 === 'string' || typeof id1 === 'number'
+  const isId2Valid = typeof id2 === 'string' || typeof id2 === 'number'
+  
+  if (isId1Valid === false || isId2Valid === false) {
+    return false
+  }
+  
+  // Use explicit string comparison
+  return String(id1) === String(id2)
+}
+
+/**
  * Check if a user owns an item
- * Compares user.id with item.author_id using string comparison for safety
+ * Uses compareIds helper for consistent ID comparison
  * 
  * @param item - The item to check ownership for
  * @param user - The user to check ownership against
@@ -38,8 +70,8 @@ export function isOwner(item: OwnableItem | null | undefined, user: User | null)
     return false
   }
   
-  // Use string comparison to handle different types (number vs string)
-  return String(item.author_id) === String(user.id)
+  // Use compareIds helper for consistent ID comparison
+  return compareIds(item.author_id, user.id)
 }
 
 /**
@@ -76,7 +108,8 @@ export function separateOfficialItems<T extends OwnableItem>(items: T[]): {
   
   for (const item of items) {
     // Explicit boolean check to prevent mutation survivors
-    if (item.is_official === true) {
+    const isOfficial = item.is_official === true
+    if (isOfficial === true) {
       official.push(item)
     } else {
       deletable.push(item)

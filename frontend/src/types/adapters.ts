@@ -3,6 +3,17 @@
  * These interfaces abstract browser APIs and external dependencies to improve testability
  */
 
+import { isBrowserEnvironment } from '../utils/environment'
+import { isNullOrUndefined } from '../utils/typeGuards'
+import { StorageAdapterFactory } from '../adapters/storage'
+import { HttpClientFactory } from '../adapters/http'
+import { DocumentAdapterFactory } from '../adapters/document'
+import { TimerAdapterFactory } from '../adapters/timer'
+import { WebSocketFactoryFactory } from '../adapters/websocket'
+import { LocationAdapterFactory } from '../adapters/location'
+import { ConsoleAdapterFactory } from '../adapters/console'
+import { EnvironmentAdapterFactory } from '../adapters/environment'
+
 /**
  * Storage adapter for localStorage/sessionStorage abstraction
  */
@@ -91,216 +102,82 @@ export interface EnvironmentAdapter {
 export const defaultAdapters = {
   /**
    * Create default storage adapter (handles SSR)
+   * Delegates to StorageAdapterFactory for SRP compliance
    */
   createStorageAdapter(storage: Storage | null): StorageAdapter | null {
-    if (!storage) {
-      return null
-    }
-    return {
-      getItem: (key: string) => storage.getItem(key),
-      setItem: (key: string, value: string) => storage.setItem(key, value),
-      removeItem: (key: string) => storage.removeItem(key),
-      addEventListener: (type: string, listener: EventListener) =>
-        window.addEventListener(type, listener),
-      removeEventListener: (type: string, listener: EventListener) =>
-        window.removeEventListener(type, listener),
-    }
+    return StorageAdapterFactory.createStorageAdapter(storage)
   },
 
   /**
    * Create default localStorage adapter
+   * Delegates to StorageAdapterFactory for SRP compliance
    */
   createLocalStorageAdapter(): StorageAdapter | null {
-    if (typeof window === 'undefined') {
-      return null
-    }
-    return this.createStorageAdapter(window.localStorage)
+    return StorageAdapterFactory.createLocalStorageAdapter()
   },
 
   /**
    * Create default sessionStorage adapter
+   * Delegates to StorageAdapterFactory for SRP compliance
    */
   createSessionStorageAdapter(): StorageAdapter | null {
-    if (typeof window === 'undefined') {
-      return null
-    }
-    return this.createStorageAdapter(window.sessionStorage)
+    return StorageAdapterFactory.createSessionStorageAdapter()
   },
 
   /**
    * Create default HTTP client using fetch
-   * Made mutation-resistant: always returns a valid client even if fetch is mutated
+   * Delegates to HttpClientFactory for SRP compliance
    */
   createHttpClient(): HttpClient {
-    // Use a try-catch to ensure we always return a valid client
-    // This prevents crashes when mutations affect fetch or other dependencies
-    try {
-      const fetchFn = typeof fetch !== 'undefined' ? fetch : global.fetch || (() => Promise.resolve(new Response()))
-      
-      return {
-        get: (url: string, headers?: HeadersInit) => {
-          try {
-            return fetchFn(url, { method: 'GET', headers })
-          } catch (error) {
-            // Return a rejected promise instead of throwing synchronously
-            return Promise.reject(error)
-          }
-        },
-        post: (url: string, body: any, headers?: HeadersInit) => {
-          try {
-            return fetchFn(url, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json', ...headers },
-              body: JSON.stringify(body),
-            })
-          } catch (error) {
-            return Promise.reject(error)
-          }
-        },
-        put: (url: string, body: any, headers?: HeadersInit) => {
-          try {
-            return fetchFn(url, {
-              method: 'PUT',
-              headers: { 'Content-Type': 'application/json', ...headers },
-              body: JSON.stringify(body),
-            })
-          } catch (error) {
-            return Promise.reject(error)
-          }
-        },
-        delete: (url: string, headers?: HeadersInit) => {
-          try {
-            return fetchFn(url, { method: 'DELETE', headers })
-          } catch (error) {
-            return Promise.reject(error)
-          }
-        },
-      }
-    } catch (error) {
-      // Fallback: return a mock client that always rejects
-      // This prevents crashes but allows tests to handle errors
-      const mockReject = () => Promise.reject(new Error('HTTP client initialization failed'))
-      return {
-        get: mockReject,
-        post: mockReject,
-        put: mockReject,
-        delete: mockReject,
-      }
-    }
+    return HttpClientFactory.createHttpClient()
   },
 
   /**
    * Create default document adapter
+   * Delegates to DocumentAdapterFactory for SRP compliance
    */
   createDocumentAdapter(): DocumentAdapter | null {
-    if (typeof document === 'undefined') {
-      return null
-    }
-    return {
-      createElement: (tag: string) => document.createElement(tag),
-      getElementById: (id: string) => document.getElementById(id),
-      getActiveElement: () => document.activeElement,
-      head: document.head,
-      body: document.body,
-    }
+    return DocumentAdapterFactory.createDocumentAdapter()
   },
 
   /**
    * Create default timer adapter
+   * Delegates to TimerAdapterFactory for SRP compliance
    */
   createTimerAdapter(): TimerAdapter {
-    return {
-      setTimeout: ((callback: () => void, delay: number) => {
-        return setTimeout(callback, delay) as unknown as number
-      }) as TimerAdapter['setTimeout'],
-      clearTimeout: (id: number) => clearTimeout(id),
-      setInterval: ((callback: () => void, delay: number) => {
-        return setInterval(callback, delay) as unknown as number
-      }) as TimerAdapter['setInterval'],
-      clearInterval: (id: number) => clearInterval(id),
-    }
+    return TimerAdapterFactory.createTimerAdapter()
   },
 
   /**
    * Create default WebSocket factory
+   * Delegates to WebSocketFactoryFactory for SRP compliance
    */
   createWebSocketFactory(): WebSocketFactory {
-    return {
-      create: (url: string) => new WebSocket(url),
-    }
+    return WebSocketFactoryFactory.createWebSocketFactory()
   },
 
   /**
    * Create default window location adapter
+   * Delegates to LocationAdapterFactory for SRP compliance
    */
   createWindowLocation(): WindowLocation | null {
-    if (typeof window === 'undefined') {
-      return null
-    }
-    // Handle test environments where location might not be fully available
-    try {
-      return {
-        protocol: window.location?.protocol || 'http:',
-        host: window.location?.host || 'localhost:8000',
-        hostname: window.location?.hostname || 'localhost',
-        port: window.location?.port || '8000',
-        pathname: window.location?.pathname || '/',
-        search: window.location?.search || '',
-        hash: window.location?.hash || '',
-      }
-    } catch {
-      // Fallback for test environments
-      return {
-        protocol: 'http:',
-        host: 'localhost:8000',
-        hostname: 'localhost',
-        port: '8000',
-        pathname: '/',
-        search: '',
-        hash: '',
-      }
-    }
+    return LocationAdapterFactory.createWindowLocation()
   },
 
   /**
    * Create default console adapter
+   * Delegates to ConsoleAdapterFactory for SRP compliance
    */
   createConsoleAdapter(): ConsoleAdapter {
-    if (typeof console === 'undefined') {
-      return {
-        log: () => {},
-        info: () => {},
-        warn: () => {},
-        error: () => {},
-        debug: () => {},
-      }
-    }
-    return {
-      log: (...args: any[]) => console.log(...args),
-      info: (...args: any[]) => console.info(...args),
-      warn: (...args: any[]) => console.warn(...args),
-      error: (...args: any[]) => console.error(...args),
-      debug: (...args: any[]) => {
-        if (console.debug) {
-          console.debug(...args)
-        } else {
-          console.log(...args)
-        }
-      },
-    }
+    return ConsoleAdapterFactory.createConsoleAdapter()
   },
 
   /**
    * Create default environment adapter
+   * Delegates to EnvironmentAdapterFactory for SRP compliance
    */
   createEnvironmentAdapter(): EnvironmentAdapter {
-    return {
-      isDevelopment: () =>
-        process.env.NODE_ENV === 'development' ||
-        process.env.NODE_ENV !== 'production',
-      isProduction: () => process.env.NODE_ENV === 'production',
-      get: (key: string) => process.env[key],
-    }
+    return EnvironmentAdapterFactory.createEnvironmentAdapter()
   },
 }
 

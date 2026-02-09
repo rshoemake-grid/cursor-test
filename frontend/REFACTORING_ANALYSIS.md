@@ -1,820 +1,746 @@
-# Refactoring Analysis: Low Coverage Files
+# Refactoring Analysis: Top 5 Files with Most Surviving Mutants
 
-## Overview
-Analysis of 7 source files with low test coverage (< 80%) for refactoring opportunities, SOLID principles adherence, and DRY violations.
+**Date:** February 6, 2026  
+**Analysis Scope:** Files with highest mutation test survivors  
+**Focus:** SOLID principles, DRY violations, and refactoring opportunities
 
 ---
 
-## 1. MarketplacePage.tsx (53.83% coverage)
+## Executive Summary
 
-### Current State
-- **Lines**: 563
-- **Coverage**: 53.83%
-- **Uncovered Lines**: 75-78, 114-115, 118-119, 122-123, 126-148, 152-169, 173-181, 185-193, 197-205, 209-218, 249-288, 291-382, 462-472, 482-505, 509-512
+Analysis of the top 5 files with the most surviving mutants reveals:
+- **57 surviving mutants** across 5 files
+- **Common patterns:** Complex conditional logic, repeated null checks, type coercion
+- **Primary issues:** DRY violations, Single Responsibility violations, excessive complexity
+- **Impact:** Lower mutation scores (67-75%) indicate gaps in test coverage
+
+---
+
+## 1. workflowFormat.ts - 57 Surviving Mutants
+
+**Location:** `src/utils/workflowFormat.ts`  
+**Mutation Score:** 68.72%  
+**Survived:** 57 mutants
 
 ### SOLID Violations
 
-#### ❌ Single Responsibility Principle (SRP)
-**Violations:**
-- Component handles multiple responsibilities:
-  1. State management (8+ useState hooks)
-  2. Event handling (card clicks, toggles, deletions)
-  3. Business logic (agent selection, workflow loading)
-  4. UI rendering (large JSX tree)
-  5. Navigation logic
-  6. Storage operations
+#### ❌ Single Responsibility Principle (SRP) Violations
 
-**Evidence:**
+**Issue:** `formatEdgesForReactFlow()` does too many things:
+1. Handles camelCase/snake_case conversion
+2. Converts boolean to string
+3. Generates edge IDs
+4. Filters properties
+5. Type coercion
+
+**Lines 93-152:** Function is 60 lines with multiple responsibilities.
+
+**Recommendation:**
 ```typescript
-// Lines 113-123: Wrapper functions mixing concerns
-const deleteSelectedAgentsWrapper = async () => {
-  await deleteSelectedAgentsHandler(selectedAgentIds)
+// Split into focused functions
+function extractHandle(edge: any, handleType: 'source' | 'target'): string | null {
+  const camelKey = `${handleType}Handle`
+  const snakeKey = `${handleType}_handle`
+  
+  if (edge[camelKey] !== null && edge[camelKey] !== undefined && edge[camelKey] !== false) {
+    return normalizeHandle(edge[camelKey])
+  }
+  if (edge[snakeKey] !== null && edge[snakeKey] !== undefined && edge[snakeKey] !== false) {
+    return normalizeHandle(edge[snakeKey])
+  }
+  return null
 }
-// Similar wrappers for workflows and repository agents
+
+function normalizeHandle(handle: any): string | null {
+  if (handle === true) return "true"
+  if (typeof handle === 'string' && handle !== '') return handle
+  return null
+}
+
+function generateEdgeId(edge: any, sourceHandle: string | null): string {
+  if (edge.id && edge.id !== '') return edge.id
+  if (sourceHandle) return `${edge.source}-${sourceHandle}-${edge.target}`
+  return `${edge.source}-${edge.target}`
+}
 ```
 
-#### ⚠️ Open/Closed Principle (OCP)
-- Hard to extend without modification
-- Conditional rendering based on `activeTab` scattered throughout
-- New tab types require changes in multiple places
+#### ❌ Open/Closed Principle Violation
 
-#### ❌ Dependency Inversion Principle (DIP)
-- Direct dependency on `defaultAdapters` (concrete implementation)
-- Should depend on abstractions (interfaces)
+**Issue:** `workflowNodeToReactFlowNode()` has hardcoded config merging logic that must be modified for each new config type.
+
+**Lines 224-227:** Repeated pattern for each config type:
+```typescript
+agent_config: coalesceObjectChain({}, data.agent_config, wfNode.agent_config),
+condition_config: coalesceObjectChain({}, data.condition_config, wfNode.condition_config),
+loop_config: coalesceObjectChain({}, data.loop_config, wfNode.loop_config),
+input_config: coalesceObjectChain({}, data.input_config, wfNode.input_config),
+```
+
+**Recommendation:**
+```typescript
+const CONFIG_TYPES = ['agent_config', 'condition_config', 'loop_config', 'input_config'] as const
+
+function mergeConfigs(data: any, wfNode: any): Record<string, any> {
+  const configs: Record<string, any> = {}
+  for (const configType of CONFIG_TYPES) {
+    configs[configType] = coalesceObjectChain(
+      {},
+      safeGetProperty(data, configType, undefined),
+      safeGetProperty(wfNode, configType, undefined)
+    )
+  }
+  return configs
+}
+```
 
 ### DRY Violations
 
-#### 🔴 Critical Duplication
+#### ❌ Repeated Handle Extraction Logic
 
-1. **Selection Toggle Logic** (Lines 172-206)
-   - `handleToggleTemplate`, `handleToggleAgent`, `handleToggleRepositoryAgent` are identical
-   - Same pattern repeated 3 times
-
+**Lines 98-112:** Identical logic for `sourceHandle` and `targetHandle`:
 ```typescript
-// DUPLICATE PATTERN:
-const handleToggleTemplate = (id: string) => {
-  setSelectedTemplateIds(prev => {
-    const newSet = new Set(prev);
-    if (newSet.has(id)) {
-      newSet.delete(id);
-    } else {
-      newSet.add(id);
-    }
-    return newSet;
-  });
-};
-// Repeated for agents and repository agents
-```
-
-2. **Card Click Handlers** (Lines 125-219)
-   - `handleCardClick`, `handleAgentCardClick`, `handleRepositoryAgentCardClick` share 90% of logic
-   - Only difference is which state setter is called
-
-```typescript
-// DUPLICATE: Interactive element check logic
-const target = e.target as HTMLElement;
-if (target.closest('input[type="checkbox"]') || 
-    target.closest('button') || 
-    target.tagName === 'BUTTON' ||
-    target.tagName === 'INPUT') {
-  return;
+let sourceHandle: string | null = null
+if (edge.sourceHandle !== null && edge.sourceHandle !== undefined && edge.sourceHandle !== false) {
+  sourceHandle = edge.sourceHandle
+} else if (edge.source_handle !== null && edge.source_handle !== undefined && edge.source_handle !== false) {
+  sourceHandle = edge.source_handle
 }
-// Repeated in 3 handlers
+
+let targetHandle: string | null = null
+if (edge.targetHandle !== null && edge.targetHandle !== undefined && edge.targetHandle !== false) {
+  targetHandle = edge.targetHandle
+} else if (edge.target_handle !== null && edge.target_handle !== undefined && edge.target_handle !== false) {
+  targetHandle = edge.target_handle
+}
 ```
 
-3. **Delete Button Conditional Rendering** (Lines 248-288, 350-381)
-   - Complex nested IIFE logic repeated for workflows and agents
-   - Same pattern: check if official, show/hide delete button
+**Recommendation:** Extract to `extractHandle()` function (see above).
 
-4. **Wrapper Functions** (Lines 113-123)
-   - Unnecessary wrapper functions that just pass parameters
-   - Could be eliminated with better hook design
+#### ❌ Repeated Config Normalization
 
-### Refactoring Recommendations
+**Lines 81-85, 164-183:** Same pattern repeated for each config type:
+```typescript
+agent_config: coalesceObject(node.data.agent_config, {}),
+condition_config: coalesceObject(node.data.condition_config, {}),
+loop_config: coalesceObject(node.data.loop_config, {}),
+input_config: coalesceObject(node.data.input_config, {}),
+```
 
-#### High Priority
+**Recommendation:** Use loop-based approach (see above).
 
-1. **Extract Selection Management Hook**
-   ```typescript
-   // New hook: useSelectionManager.ts
-   function useSelectionManager<T extends string>() {
-     const [selectedIds, setSelectedIds] = useState<Set<T>>(new Set());
-     
-     const toggle = useCallback((id: T) => {
-       setSelectedIds(prev => {
-         const newSet = new Set(prev);
-         if (newSet.has(id)) newSet.delete(id);
-         else newSet.add(id);
-         return newSet;
-       });
-     }, []);
-     
-     const clear = useCallback(() => setSelectedIds(new Set()), []);
-     
-     return { selectedIds, toggle, clear, setSelectedIds };
-   }
-   ```
+### Refactoring Opportunities
 
-2. **Extract Card Click Handler Utility**
-   ```typescript
-   // New utility: cardClickUtils.ts
-   export function shouldIgnoreClick(target: HTMLElement): boolean {
-     return target.closest('input[type="checkbox"]') || 
-            target.closest('button') || 
-            target.tagName === 'BUTTON' ||
-            target.tagName === 'INPUT';
-   }
-   
-   export function createCardClickHandler<T>(
-     toggleFn: (id: T) => void
-   ) {
-     return (e: React.MouseEvent, id: T) => {
-       e.preventDefault();
-       e.stopPropagation();
-       if (shouldIgnoreClick(e.target as HTMLElement)) return;
-       toggleFn(id);
-     };
-   }
-   ```
+1. **Extract Handle Normalization:** Create `normalizeHandle()` utility
+2. **Extract Config Merging:** Create `mergeConfigs()` utility
+3. **Extract Edge ID Generation:** Create `generateEdgeId()` utility
+4. **Simplify Conditional Chains:** Use early returns and guard clauses
+5. **Type Safety:** Replace `as any` with proper type guards
 
-3. **Extract Action Buttons Component**
-   ```typescript
-   // New component: MarketplaceActionButtons.tsx
-   interface ActionButtonsProps {
-     selectedCount: number;
-     hasOfficial: boolean;
-     onLoad: () => void;
-     onDelete: () => void;
-     type: 'workflow' | 'agent';
-   }
-   ```
+### Complexity Issues
 
-4. **Split Component by Tab**
-   - Extract `AgentsTab`, `RepositoryTab`, `WorkflowsOfWorkflowsTab` components
-   - Each handles its own state and logic
-   - Main component becomes orchestrator
-
-#### Medium Priority
-
-5. **Extract Business Logic to Service**
-   ```typescript
-   // New service: MarketplaceService.ts
-   class MarketplaceService {
-     async addAgentsToWorkflow(
-       agents: Agent[],
-       storage: StorageAdapter,
-       navigate: NavigateFunction
-     ): Promise<void> {
-       // Move lines 293-343 logic here
-     }
-   }
-   ```
-
-6. **Use Composition for Delete Logic**
-   ```typescript
-   // Extract delete button rendering logic
-   const DeleteButton = ({ count, onDelete, disabled }) => (
-     <button onClick={onDelete} disabled={disabled}>
-       Delete {count} {type}
-     </button>
-   );
-   ```
-
-### Estimated Impact
-- **Lines Reduced**: ~150-200 lines
-- **Complexity Reduction**: High
-- **Testability**: Significantly improved
-- **Maintainability**: High improvement
+- **Cyclomatic Complexity:** `formatEdgesForReactFlow()` has complexity ~15
+- **Nested Conditionals:** Multiple levels of null checks
+- **Type Coercion:** Excessive `as any` casts
 
 ---
 
-## 2. errorFactory.ts (58.47% coverage)
+## 2. formUtils.ts - 55 Surviving Mutants
 
-### Current State
-- **Lines**: 290
-- **Coverage**: 58.47%
-- **Purpose**: Mutation-resistant error creation
+**Location:** `src/utils/formUtils.ts`  
+**Mutation Score:** 67.44%  
+**Survived:** 55 mutants
 
-### SOLID Analysis
+### SOLID Violations
 
-#### ✅ Single Responsibility Principle
-- **Adheres**: Single purpose - create error objects safely
+#### ✅ Single Responsibility Principle - COMPLIANT
 
-#### ✅ Open/Closed Principle
-- **Adheres**: Extensible via factory pattern
+**Good:** Each function has a single, clear responsibility:
+- `traversePath()` - Only traverses paths
+- `getNestedValue()` - Only gets values
+- `setNestedValue()` - Only sets values
+- `hasNestedValue()` - Only checks existence
 
-#### ⚠️ Dependency Inversion Principle
-- Uses global `Error` constructor (acceptable for this use case)
+#### ⚠️ Open/Closed Principle - PARTIAL VIOLATION
 
-### DRY Analysis
+**Issue:** `setNestedValue()` has hardcoded logic for handling different value types (object, array, primitive).
 
-#### 🔴 Critical Violation: Excessive Defensive Programming
-
-**Problem**: Extreme over-engineering with nested try-catch blocks
-- 5+ levels of nested try-catch
-- Same fallback logic repeated multiple times
-- Function constructor usage adds unnecessary complexity
-
-**Evidence:**
+**Lines 109-121:** Must modify function to handle new types:
 ```typescript
-// Lines 34-79: Overly complex safeErrorCtorCall
-const safeErrorCtorCall = (function() {
-  const safeCaller = function(ctor: any, message: string): any {
+if (current[key] === null || current[key] === undefined) {
+  current[key] = {}
+} else if (Array.isArray(current[key])) {
+  current[key] = [...current[key]]
+} else if (typeof current[key] === 'object') {
+  current[key] = { ...current[key] }
+} else {
+  return obj
+}
+```
+
+**Recommendation:**
+```typescript
+interface ValueCloner {
+  clone(value: any): any
+  canHandle(value: any): boolean
+}
+
+const cloners: ValueCloner[] = [
+  { canHandle: (v) => Array.isArray(v), clone: (v) => [...v] },
+  { canHandle: (v) => typeof v === 'object' && v !== null, clone: (v) => ({ ...v }) },
+  { canHandle: () => true, clone: (v) => v },
+]
+
+function cloneValue(value: any): any {
+  const cloner = cloners.find(c => c.canHandle(value))
+  return cloner ? cloner.clone(value) : value
+}
+```
+
+### DRY Violations
+
+#### ❌ Repeated Null/Undefined Checks
+
+**Lines 19, 24, 52, 61, 64, 71, 95, 110, 140, 147, 150:** Same pattern repeated:
+```typescript
+if (obj === null || obj === undefined || ...) return ...
+```
+
+**Recommendation:**
+```typescript
+function isNullOrUndefined(value: any): boolean {
+  return value === null || value === undefined
+}
+
+// Usage
+if (isNullOrUndefined(obj) || keys.length === 0) return null
+```
+
+#### ❌ Repeated Path Validation
+
+**Lines 95, 140:** Same validation logic:
+```typescript
+if (obj === null || obj === undefined || path === null || path === undefined || path === '' || validatePath(path) === false) {
+  return ...
+}
+```
+
+**Recommendation:**
+```typescript
+function validateInputs(obj: any, path: string | string[]): boolean {
+  return !isNullOrUndefined(obj) && 
+         !isNullOrUndefined(path) && 
+         path !== '' && 
+         validatePath(path) !== false
+}
+```
+
+### Refactoring Opportunities
+
+1. **Extract Null Checks:** Create `isNullOrUndefined()` utility
+2. **Extract Input Validation:** Create `validateInputs()` utility
+3. **Extract Value Cloning:** Use strategy pattern for cloning
+4. **Simplify Traverse Logic:** Use early returns more effectively
+5. **Add Type Guards:** Replace `any` with proper types
+
+### Complexity Issues
+
+- **Nested Conditionals:** Multiple levels of null checks create mutation survivors
+- **Path Traversal:** Complex logic for handling intermediate nulls
+- **Edge Cases:** Distinguishing between "key doesn't exist" vs "value is undefined"
+
+---
+
+## 3. storageHelpers.ts - 33 Surviving Mutants
+
+**Location:** `src/utils/storageHelpers.ts`  
+**Mutation Score:** 70.27%  
+**Survived:** 33 mutants
+
+### SOLID Violations
+
+#### ❌ Single Responsibility Principle Violation
+
+**Issue:** Each function handles:
+1. Null/undefined checks
+2. Error handling
+3. Storage operations
+4. Error reporting
+
+**Recommendation:** Extract error handling to decorator/wrapper:
+```typescript
+function withStorageErrorHandling<T>(
+  operation: (storage: StorageAdapter) => T,
+  operationName: string,
+  key: string,
+  defaultValue: T,
+  context?: string
+): T {
+  return (storage: StorageAdapter | null) => {
+    if (isNullOrUndefined(storage)) return defaultValue
     try {
-      const wrapper = new Function('ctor', 'msg', `
-        try {
-          try {
-            if (typeof ctor === 'function') {
-              try {
-                return ctor(msg);
-              } catch {
-                return undefined;
-              }
-            }
-            return undefined;
-          } catch {
-            return undefined;
-          }
-        } catch {
-          return undefined;
-        }
-      `)
-      return wrapper(ctor, message)
-    } catch {
-      // ... more nested try-catch
+      return operation(storage)
+    } catch (error) {
+      handleStorageError(error, operationName, key, {
+        context,
+        logError: true,
+        showNotification: false,
+      })
+      return defaultValue
     }
   }
-  return safeCaller
-})()
+}
+
+export const safeStorageGet = <T>(key: string, defaultValue: T, context?: string) =>
+  withStorageErrorHandling(
+    (storage) => {
+      const item = storage.getItem(key)
+      return isNullOrUndefined(item) ? defaultValue : JSON.parse(item) as T
+    },
+    'getItem',
+    key,
+    defaultValue,
+    context
+  )
 ```
-
-### Refactoring Recommendations
-
-#### High Priority
-
-1. **Simplify Error Creation Strategy**
-   ```typescript
-   // Simplified version
-   export function createSafeError(message: string, name: string): Error {
-     try {
-       const error = new Error(message);
-       error.name = name;
-       return error;
-     } catch {
-       // Fallback: plain object
-       return Object.assign(Object.create(Error.prototype), {
-         message: message || '',
-         name: name || 'Error',
-         stack: ''
-       });
-     }
-   }
-   ```
-
-2. **Remove Function Constructor Pattern**
-   - Unnecessary complexity
-   - Mutation testing shouldn't require this level of defense
-   - If needed, use simpler approach
-
-3. **Extract Strategy Pattern**
-   ```typescript
-   interface ErrorCreationStrategy {
-     create(message: string, name: string): Error;
-   }
-   
-   class StandardErrorStrategy implements ErrorCreationStrategy {
-     create(message: string, name: string): Error {
-       const error = new Error(message);
-       error.name = name;
-       return error;
-     }
-   }
-   
-   class FallbackErrorStrategy implements ErrorCreationStrategy {
-     create(message: string, name: string): Error {
-       return Object.assign(Object.create(Error.prototype), {
-         message: message || '',
-         name: name || 'Error',
-         stack: ''
-       });
-     }
-   }
-   ```
-
-### Estimated Impact
-- **Lines Reduced**: ~200 lines (from 290 to ~90)
-- **Complexity Reduction**: Very High
-- **Readability**: Significantly improved
-- **Performance**: Slight improvement (no Function constructor)
-
----
-
-## 3. positioningStrategies.ts (64.66% coverage)
-
-### Current State
-- **Lines**: 134
-- **Coverage**: 64.66%
-- **Uncovered**: Lines 28-46, 84-108, 125, 129, 131
-
-### SOLID Analysis
-
-#### ✅ Single Responsibility Principle
-- **Adheres**: Each strategy class has single responsibility
-
-#### ✅ Open/Closed Principle
-- **Adheres**: Strategy pattern allows extension without modification
-
-#### ✅ Dependency Inversion Principle
-- **Adheres**: Depends on interface `PositioningStrategy`
-
-### DRY Analysis
-
-#### ⚠️ Minor Duplication
-
-1. **Max X Calculation** (Lines 41, 68, 93)
-   ```typescript
-   // Repeated in 3 strategies
-   const maxX = Math.max(...existingNodes.map(n => n.position.x))
-   ```
-
-2. **Empty Nodes Check** (Lines 32-37, 59-64)
-   ```typescript
-   // Similar pattern in HorizontalStrategy and VerticalStrategy
-   if (existingNodes.length === 0) {
-     return Array.from({ length: count }, (_, i) => ({
-       x: options.defaultX + (i * spacing),
-       y: options.defaultY
-     }))
-   }
-   ```
-
-### Refactoring Recommendations
-
-#### Low Priority (Code is well-structured)
-
-1. **Extract Common Utilities**
-   ```typescript
-   // Add to nodePositioning.ts
-   export function getMaxNodeX(nodes: Node[]): number {
-     return nodes.length === 0 
-       ? 0 
-       : Math.max(...nodes.map(n => n.position.x));
-   }
-   
-   export function getDefaultPositions(
-     count: number,
-     options: Required<NodePositioningOptions>,
-     spacingFn: (i: number) => Position
-   ): Position[] {
-     return Array.from({ length: count }, (_, i) => spacingFn(i));
-   }
-   ```
-
-2. **Add Tests for Uncovered Lines**
-   - Test empty nodes case for GridStrategy
-   - Test default case in factory function
-   - Test columnsPerRow parameter
-
-### Estimated Impact
-- **Lines Reduced**: ~10-15 lines
-- **Complexity**: Minimal change
-- **Test Coverage**: Should reach 100% with tests
-
----
-
-## 4. pathParser.ts (70% coverage)
-
-### Current State
-- **Lines**: 51
-- **Coverage**: 70%
-- **Uncovered**: Lines 21-22, 31-39, 47-50
-
-### SOLID Analysis
-
-#### ✅ Single Responsibility Principle
-- **Adheres**: Each function has single responsibility
-
-#### ✅ Open/Closed Principle
-- **Adheres**: Functions are pure and extensible
-
-#### ✅ Dependency Inversion Principle
-- **Adheres**: No dependencies
-
-### DRY Analysis
-
-#### ✅ No Violations
-- Code is already DRY
-- Functions are focused and reusable
-
-### Refactoring Recommendations
-
-#### Low Priority (Code is good, just needs tests)
-
-1. **Add Edge Case Tests**
-   - Test `parsePath` with empty string
-   - Test `validatePath` with invalid formats
-   - Test `hasArrayIndices` with various inputs
-
-2. **Consider Type Guards**
-   ```typescript
-   export function isArrayPath(path: string | string[]): path is string[] {
-     return Array.isArray(path);
-   }
-   ```
-
-### Estimated Impact
-- **Lines Added**: ~5-10 (type guards)
-- **Test Coverage**: Should reach 100% with tests
-- **Type Safety**: Improved
-
----
-
-## 5. SettingsPage.tsx (72.79% coverage)
-
-### Current State
-- **Lines**: 785
-- **Coverage**: 72.79%
-- **Uncovered**: Many lines in complex UI logic
-
-### SOLID Violations
-
-#### ❌ Single Responsibility Principle
-**Violations:**
-- Component handles:
-  1. LLM provider management
-  2. Workflow settings (iteration limit, default model)
-  3. Provider testing
-  4. Model management (add, edit, delete)
-  5. UI state (expanded states, visibility)
-  6. Auto-save logic
-  7. Manual sync logic
-
-**Evidence:**
-```typescript
-// Lines 179-217: Auto-save logic mixed with component
-useEffect(() => {
-  if (!isAuthenticated || !token || !settingsLoaded) return;
-  const timeoutId = setTimeout(() => {
-    const saveSettings = async () => {
-      // Complex save logic
-    }
-    saveSettings()
-  }, 500)
-  return () => clearTimeout(timeoutId)
-}, [iterationLimit, defaultModel, isAuthenticated, token, providers, settingsLoaded])
-```
-
-#### ⚠️ Open/Closed Principle
-- Hard to extend with new provider types
-- Tab system requires modification to add new tabs
-
-#### ⚠️ Dependency Inversion Principle
-- Uses `defaultAdapters` directly (concrete implementation)
 
 ### DRY Violations
 
-#### 🔴 Critical Duplication
+#### ❌ Repeated Null Check Pattern
 
-1. **Save Logic** (Lines 179-217, 219-249, 332-359)
-   - Same save logic repeated 3 times:
-     - Auto-save useEffect
-     - `saveProviders` function
-     - `handleManualSync` function
-
+**Lines 15, 45, 73, 99, 124:** Identical pattern:
 ```typescript
-// DUPLICATE: Header building
-const headers: HeadersInit = { 'Content-Type': 'application/json' }
-if (token) {
-  headers['Authorization'] = `Bearer ${token}`
+if (storage === null || storage === undefined) {
+  return defaultValue // or false
 }
-// Repeated in 3 places
 ```
 
-2. **Storage Update Pattern** (Lines 201-207, 226-232)
-   ```typescript
-   // Repeated pattern
-   if (currentStorage) {
-     currentStorage.setItem('llm_settings', JSON.stringify({
-       providers,
-       iteration_limit: iterationLimit,
-       default_model: defaultModel
-     }))
-   }
-   ```
+**Recommendation:** Extract to utility (see above).
 
-3. **Model Update Logic** (Lines 664-671, 697-704)
-   - Similar logic for updating models and default model
-   - Could be extracted to utility function
+#### ❌ Repeated Error Handling Pattern
 
-### Refactoring Recommendations
-
-#### High Priority
-
-1. **Extract Settings Service**
-   ```typescript
-   // New service: SettingsService.ts
-   class SettingsService {
-     constructor(
-       private httpClient: HttpClient,
-       private storage: StorageAdapter,
-       private apiBaseUrl: string
-     ) {}
-     
-     async saveSettings(settings: LLMSettings, token?: string): Promise<void> {
-       const headers = buildAuthHeaders({ token });
-       await this.httpClient.post(
-         `${this.apiBaseUrl}/settings/llm`,
-         settings,
-         headers
-       );
-       this.storage.setItem('llm_settings', JSON.stringify(settings));
-     }
-   }
-   ```
-
-2. **Extract Provider Management Hook**
-   ```typescript
-   // New hook: useProviderManagement.ts
-   function useProviderManagement(service: SettingsService) {
-     const [providers, setProviders] = useState<LLMProvider[]>([]);
-     
-     const addProvider = useCallback((template: ProviderTemplate) => {
-       // Logic from handleAddProvider
-     }, []);
-     
-     const updateProvider = useCallback((id: string, updates: Partial<LLMProvider>) => {
-       // Logic from handleUpdateProvider
-     }, []);
-     
-     return { providers, addProvider, updateProvider, /* ... */ };
-   }
-   ```
-
-3. **Extract Model Management Component**
-   ```typescript
-   // New component: ModelList.tsx
-   interface ModelListProps {
-     models: string[];
-     defaultModel: string;
-     onUpdate: (models: string[], defaultModel: string) => void;
-   }
-   ```
-
-4. **Extract Auto-Save Hook**
-   ```typescript
-   // New hook: useAutoSave.ts
-   function useAutoSave<T>(
-     value: T,
-     saveFn: (value: T) => Promise<void>,
-     delay: number = 500
-   ) {
-     useEffect(() => {
-       const timeoutId = setTimeout(() => {
-         saveFn(value);
-       }, delay);
-       return () => clearTimeout(timeoutId);
-     }, [value, saveFn, delay]);
-   }
-   ```
-
-5. **Split into Tab Components**
-   - `LLMProvidersTab.tsx`
-   - `WorkflowSettingsTab.tsx`
-   - Main component orchestrates tabs
-
-### Estimated Impact
-- **Lines Reduced**: ~200-250 lines
-- **Complexity Reduction**: High
-- **Testability**: Significantly improved
-- **Reusability**: High improvement
-
----
-
-## 6. nodePositioning.ts (72.18% coverage)
-
-### Current State
-- **Lines**: 152
-- **Coverage**: 72.18%
-- **Uncovered**: Lines 51-57, 66-72, 83-91, 124-133, 143-151
-
-### SOLID Analysis
-
-#### ✅ Single Responsibility Principle
-- **Adheres**: Each function has single responsibility
-
-#### ✅ Open/Closed Principle
-- **Adheres**: Uses Strategy pattern for extensibility
-
-#### ✅ Dependency Inversion Principle
-- **Adheres**: Depends on strategy interface
-
-### DRY Analysis
-
-#### ⚠️ Minor Issues
-
-1. **Max Calculation** (Lines 51-57, 66-72)
-   - `getMaxNodeX` and `getMaxNodeY` are very similar
-   - Could use generic function
-
+**Lines 26-31, 55-60, 81-86, 107-112, 135-140:** Identical try-catch pattern:
 ```typescript
-// Current: Two separate functions
-export function getMaxNodeX(nodes: Node[]): number {
-  if (nodes.length === 0) return 0;
-  return Math.max(...nodes.map(n => n.position.x));
+try {
+  // operation
+} catch (error) {
+  handleStorageError(error, 'operationName', key, {
+    context,
+    logError: true,
+    showNotification: false,
+  })
+  return defaultValue
 }
-
-export function getMaxNodeY(nodes: Node[]): number {
-  if (nodes.length === 0) return 0;
-  return Math.max(...nodes.map(n => n.position.y));
-}
-
-// Refactored: Generic function
-function getMaxNodeValue(
-  nodes: Node[],
-  getter: (node: Node) => number
-): number {
-  return nodes.length === 0 
-    ? 0 
-    : Math.max(...nodes.map(getter));
-}
-
-export const getMaxNodeX = (nodes: Node[]) => 
-  getMaxNodeValue(nodes, n => n.position.x);
-
-export const getMaxNodeY = (nodes: Node[]) => 
-  getMaxNodeValue(nodes, n => n.position.y);
 ```
 
-### Refactoring Recommendations
+**Recommendation:** Use wrapper function (see above).
 
-#### Low Priority (Code is well-structured)
+#### ❌ Repeated Error Handling Options
 
-1. **Extract Generic Max Function**
-   - See example above
+**Lines 26-30, 55-59, 81-85, 107-111, 135-139:** Same options object:
+```typescript
+{
+  context,
+  logError: true,
+  showNotification: false,
+}
+```
 
-2. **Add Tests for Uncovered Lines**
-   - Test `getMaxNodeX` with empty array
-   - Test `getMaxNodeY` with empty array
-   - Test `calculateNextNodePosition` edge cases
-   - Test `calculateRelativePosition` with various offsets
+**Recommendation:** Extract to constant:
+```typescript
+const DEFAULT_ERROR_OPTIONS = {
+  logError: true,
+  showNotification: false,
+} as const
+```
 
-### Estimated Impact
-- **Lines Reduced**: ~5-10 lines
-- **Test Coverage**: Should reach 100% with tests
-- **Maintainability**: Slight improvement
+### Refactoring Opportunities
 
----
+1. **Extract Error Handling Wrapper:** Create `withStorageErrorHandling()` decorator
+2. **Extract Null Checks:** Create `validateStorage()` utility
+3. **Extract Default Options:** Create constants for repeated options
+4. **Simplify Functions:** Use higher-order functions
+5. **Add Type Safety:** Better typing for storage operations
 
-## 7. apiUtils.ts (77.56% coverage)
+### Complexity Issues
 
-### Current State
-- **Lines**: 157
-- **Coverage**: 77.56%
-- **Uncovered**: Lines 66-73, 83-90, 104-105, 122-123, 134-136, 145-156
-
-### SOLID Analysis
-
-#### ✅ Single Responsibility Principle
-- **Adheres**: Each function has single responsibility
-
-#### ✅ Open/Closed Principle
-- **Adheres**: Functions are composable and extensible
-
-#### ✅ Dependency Inversion Principle
-- **Adheres**: No concrete dependencies
-
-### DRY Analysis
-
-#### ✅ Well-Structured
-- Code follows DRY principles
-- Uses composition effectively
-- Convenience functions build on base function
-
-### Refactoring Recommendations
-
-#### Low Priority (Code is excellent, just needs tests)
-
-1. **Add Tests for Uncovered Lines**
-   - Test `buildJsonHeaders` with additional headers
-   - Test `buildUploadHeaders` with additional headers
-   - Test `extractApiErrorMessage` edge cases:
-     - String error
-     - Error with response.data.detail
-     - Error with response.data.message
-     - Error instance
-     - Plain object with message
-     - Fallback to default
-   - Test `isApiResponseOk` with various status codes
-   - Test `parseJsonResponse` with:
-     - Valid JSON
-     - Empty response
-     - Invalid JSON
-     - Null response
-
-2. **Consider Error Type Guards**
-   ```typescript
-   export function isApiError(error: any): error is ApiError {
-     return error?.response?.data !== undefined;
-   }
-   ```
-
-### Estimated Impact
-- **Lines Added**: ~5-10 (type guards)
-- **Test Coverage**: Should reach 100% with tests
-- **Type Safety**: Improved
+- **Repetitive Code:** 5 functions with nearly identical structure
+- **Error Handling:** Duplicated across all functions
+- **Type Coercion:** JSON.parse without proper error handling
 
 ---
 
-## Summary & Priority Matrix
+## 4. safeAccess.ts - 25 Surviving Mutants
 
-### High Priority Refactoring (Immediate Impact)
+**Location:** `src/utils/safeAccess.ts`  
+**Mutation Score:** 72.63%  
+**Survived:** 25 mutants
 
-| File | Priority | Impact | Effort | ROI |
-|------|----------|--------|--------|-----|
-| MarketplacePage.tsx | 🔴 Critical | Very High | High | Very High |
-| errorFactory.ts | 🔴 Critical | Very High | Medium | Very High |
-| SettingsPage.tsx | 🔴 Critical | High | High | High |
+### SOLID Violations
 
-### Medium Priority Refactoring
+#### ✅ Single Responsibility Principle - COMPLIANT
 
-| File | Priority | Impact | Effort | ROI |
-|------|----------|--------|--------|-----|
-| positioningStrategies.ts | 🟡 Medium | Low | Low | Medium |
-| nodePositioning.ts | 🟡 Medium | Low | Low | Medium |
+**Good:** Each function has a single, clear purpose:
+- `safeGet()` - Nested property access
+- `safeGetProperty()` - Single property access
+- `safeCall()` - Method invocation
+- `safeGetArrayElement()` - Array access
 
-### Low Priority (Mainly Need Tests)
+#### ⚠️ Open/Closed Principle - PARTIAL VIOLATION
 
-| File | Priority | Impact | Effort | ROI |
-|------|----------|--------|--------|-----|
-| pathParser.ts | 🟢 Low | Low | Low | Low |
-| apiUtils.ts | 🟢 Low | Low | Low | Low |
+**Issue:** Each function has hardcoded null check logic. Adding new access patterns requires new functions.
+
+**Recommendation:** Use strategy pattern:
+```typescript
+interface SafeAccessStrategy<T> {
+  access(obj: any, ...args: any[]): T
+  canHandle(obj: any, ...args: any[]): boolean
+}
+
+class SafePropertyAccess implements SafeAccessStrategy<any> {
+  canHandle(obj: any, path: string[]): boolean {
+    return Array.isArray(path)
+  }
+  access(obj: any, path: string[], defaultValue: any): any {
+    // Implementation
+  }
+}
+```
+
+### DRY Violations
+
+#### ❌ Repeated Null Check Pattern
+
+**Lines 25, 31, 37, 55, 60, 80, 112, 125:** Same pattern:
+```typescript
+if (obj === null || obj === undefined) {
+  return defaultValue
+}
+```
+
+**Recommendation:** Extract to utility (see formUtils.ts).
+
+#### ❌ Repeated Ternary Pattern
+
+**Lines 37, 60, 91, 125:** Same pattern:
+```typescript
+return (value !== null && value !== undefined) ? value : defaultValue
+```
+
+**Recommendation:**
+```typescript
+function coalesce<T>(value: T | null | undefined, defaultValue: T): T {
+  return (value !== null && value !== undefined) ? value : defaultValue
+}
+```
+
+### Refactoring Opportunities
+
+1. **Extract Null Checks:** Create `isNullOrUndefined()` utility
+2. **Extract Coalesce:** Create `coalesce()` utility
+3. **Use Strategy Pattern:** For extensibility
+4. **Simplify Conditionals:** Use early returns
+5. **Add Type Guards:** Better type safety
+
+### Complexity Issues
+
+- **Repetitive Patterns:** Same null checks across all functions
+- **Type Coercion:** Multiple `as T` casts
+- **Edge Cases:** Distinguishing null vs undefined
 
 ---
 
-## Overall Recommendations
+## 5. adapters.ts - 23 Surviving Mutants
 
-### Immediate Actions
+**Location:** `src/types/adapters.ts`  
+**Mutation Score:** 74.68%  
+**Survived:** 23 mutants
 
-1. **Refactor MarketplacePage.tsx**
-   - Extract selection management hook
-   - Extract card click handlers
-   - Split into tab components
-   - **Expected**: Coverage increase to 80%+
+### SOLID Violations
 
-2. **Simplify errorFactory.ts**
-   - Remove excessive defensive programming
-   - Use standard error creation with simple fallback
-   - **Expected**: Coverage increase to 90%+, code reduction by 70%
+#### ❌ Single Responsibility Principle Violation
 
-3. **Refactor SettingsPage.tsx**
-   - Extract settings service
-   - Extract provider management hook
-   - Split into tab components
-   - **Expected**: Coverage increase to 85%+
+**Issue:** `defaultAdapters` object contains:
+1. Storage adapter creation
+2. HTTP client creation
+3. Document adapter creation
+4. Timer adapter creation
+5. WebSocket factory creation
+6. Location adapter creation
+7. Console adapter creation
+8. Environment adapter creation
 
-### Testing Strategy
+**Recommendation:** Split into separate factory modules:
+```typescript
+// adapters/storage.ts
+export const StorageAdapterFactory = {
+  createStorageAdapter(storage: Storage | null): StorageAdapter | null { ... },
+  createLocalStorageAdapter(): StorageAdapter | null { ... },
+  createSessionStorageAdapter(): StorageAdapter | null { ... },
+}
 
-1. **Add Integration Tests**
-   - Test component interactions
-   - Test hook compositions
-   - Test service integrations
+// adapters/http.ts
+export const HttpClientFactory = {
+  createHttpClient(): HttpClient { ... },
+}
 
-2. **Add Unit Tests for Utilities**
-   - Test edge cases
-   - Test error paths
-   - Test boundary conditions
+// adapters/document.ts
+export const DocumentAdapterFactory = {
+  createDocumentAdapter(): DocumentAdapter | null { ... },
+}
+```
 
-3. **Add Component Tests**
-   - Test user interactions
-   - Test state changes
-   - Test conditional rendering
+#### ❌ Interface Segregation Principle Violation
 
-### Code Quality Metrics
+**Issue:** `StorageAdapter` interface includes event listener methods that may not be needed by all implementations.
 
-**Before Refactoring:**
-- Average Coverage: 68.5%
-- Total Lines: ~2,200
-- Complexity: High
+**Lines 13-14:** Event listeners may not be relevant for all storage types:
+```typescript
+addEventListener(type: string, listener: EventListener): void
+removeEventListener(type: string, listener: EventListener): void
+```
 
-**After Refactoring (Estimated):**
-- Average Coverage: 85%+
-- Total Lines: ~1,600 (-27%)
-- Complexity: Medium
-- Maintainability: Significantly improved
+**Recommendation:**
+```typescript
+interface StorageAdapter {
+  getItem(key: string): string | null
+  setItem(key: string, value: string): void
+  removeItem(key: string): void
+}
+
+interface EventEmitter {
+  addEventListener(type: string, listener: EventListener): void
+  removeEventListener(type: string, listener: EventListener): void
+}
+
+interface StorageAdapterWithEvents extends StorageAdapter, EventEmitter {}
+```
+
+### DRY Violations
+
+#### ❌ Repeated Null Checks
+
+**Lines 96, 114, 124, 196, 237:** Same pattern:
+```typescript
+if (typeof window === 'undefined') {
+  return null
+}
+```
+
+**Recommendation:**
+```typescript
+function isBrowserEnvironment(): boolean {
+  return typeof window !== 'undefined'
+}
+```
+
+#### ❌ Repeated Try-Catch in HTTP Client
+
+**Lines 142-147, 150-157, 161-168, 172-177:** Same pattern:
+```typescript
+try {
+  return fetchFn(url, { ... })
+} catch (error) {
+  return Promise.reject(error)
+}
+```
+
+**Recommendation:**
+```typescript
+function safeFetch(fetchFn: typeof fetch, url: string, options: RequestInit): Promise<Response> {
+  try {
+    return fetchFn(url, options)
+  } catch (error) {
+    return Promise.reject(error)
+  }
+}
+```
+
+#### ❌ Repeated Fallback Values in Location Adapter
+
+**Lines 243-249, 254-260:** Same fallback values:
+```typescript
+protocol: window.location?.protocol || 'http:',
+host: window.location?.host || 'localhost:8000',
+// ... repeated in catch block
+```
+
+**Recommendation:**
+```typescript
+const DEFAULT_LOCATION: WindowLocation = {
+  protocol: 'http:',
+  host: 'localhost:8000',
+  hostname: 'localhost',
+  port: '8000',
+  pathname: '/',
+  search: '',
+  hash: '',
+}
+```
+
+### Refactoring Opportunities
+
+1. **Split Factory Object:** Separate into focused factory modules
+2. **Extract Environment Checks:** Create `isBrowserEnvironment()` utility
+3. **Extract Safe Fetch:** Create `safeFetch()` wrapper
+4. **Extract Default Values:** Create constants for defaults
+5. **Split Interfaces:** Use Interface Segregation Principle
+
+### Complexity Issues
+
+- **Large Object:** `defaultAdapters` has 8+ methods
+- **Mixed Concerns:** Adapter creation mixed with default implementations
+- **Error Handling:** Inconsistent error handling patterns
+
+---
+
+## Cross-File Patterns
+
+### Common Issues Across All Files
+
+1. **Repeated Null Checks:** All files have `obj === null || obj === undefined` patterns
+2. **Repeated Error Handling:** Similar try-catch patterns
+3. **Type Coercion:** Excessive use of `as any` and type assertions
+4. **Complex Conditionals:** Multiple levels of nested conditionals
+5. **Lack of Type Guards:** Missing proper type checking utilities
+
+### Recommended Shared Utilities
+
+```typescript
+// utils/typeGuards.ts
+export function isNullOrUndefined(value: any): value is null | undefined {
+  return value === null || value === undefined
+}
+
+export function isDefined<T>(value: T | null | undefined): value is T {
+  return value !== null && value !== undefined
+}
+
+// utils/coalesce.ts
+export function coalesce<T>(value: T | null | undefined, defaultValue: T): T {
+  return isDefined(value) ? value : defaultValue
+}
+
+// utils/environment.ts
+export function isBrowserEnvironment(): boolean {
+  return typeof window !== 'undefined'
+}
+
+export function isServerEnvironment(): boolean {
+  return typeof window === 'undefined'
+}
+```
+
+---
+
+## Priority Recommendations
+
+### High Priority (Immediate Impact)
+
+1. **Extract Common Utilities:**
+   - `isNullOrUndefined()` - Used in all 5 files
+   - `coalesce()` - Used in 4 files
+   - `isBrowserEnvironment()` - Used in adapters.ts
+
+2. **Refactor workflowFormat.ts:**
+   - Split `formatEdgesForReactFlow()` into smaller functions
+   - Extract handle normalization logic
+   - Extract config merging logic
+
+3. **Refactor storageHelpers.ts:**
+   - Create error handling wrapper
+   - Extract null check utility
+   - Use higher-order functions
+
+### Medium Priority (Significant Impact)
+
+4. **Refactor formUtils.ts:**
+   - Extract input validation utility
+   - Use strategy pattern for value cloning
+   - Simplify traverse logic
+
+5. **Refactor adapters.ts:**
+   - Split into separate factory modules
+   - Extract environment checks
+   - Split interfaces using ISP
+
+### Low Priority (Quality Improvements)
+
+6. **Improve Type Safety:**
+   - Replace `as any` with proper type guards
+   - Add generic constraints
+   - Use discriminated unions
+
+7. **Add Documentation:**
+   - Document complex algorithms
+   - Add JSDoc for all public functions
+   - Document edge cases
+
+---
+
+## Expected Impact
+
+### Mutation Score Improvements
+
+- **workflowFormat.ts:** 68.72% → ~85% (extract functions, reduce complexity)
+- **formUtils.ts:** 67.44% → ~80% (extract utilities, simplify logic)
+- **storageHelpers.ts:** 70.27% → ~85% (DRY refactoring, wrapper pattern)
+- **safeAccess.ts:** 72.63% → ~85% (extract utilities, simplify)
+- **adapters.ts:** 74.68% → ~85% (split modules, extract utilities)
+
+### Code Quality Improvements
+
+- **Reduced Duplication:** ~200+ lines of duplicated code eliminated
+- **Improved Maintainability:** Smaller, focused functions
+- **Better Testability:** Isolated functions easier to test
+- **Enhanced Readability:** Clearer intent, less nesting
+
+---
+
+## Implementation Plan
+
+### Phase 1: Extract Common Utilities (Week 1)
+1. Create `utils/typeGuards.ts`
+2. Create `utils/coalesce.ts`
+3. Create `utils/environment.ts`
+4. Update all 5 files to use new utilities
+
+### Phase 2: Refactor workflowFormat.ts (Week 2)
+1. Extract handle normalization
+2. Extract config merging
+3. Split `formatEdgesForReactFlow()`
+4. Add comprehensive tests
+
+### Phase 3: Refactor storageHelpers.ts (Week 2)
+1. Create error handling wrapper
+2. Refactor all storage functions
+3. Add tests for edge cases
+
+### Phase 4: Refactor Remaining Files (Week 3)
+1. Refactor formUtils.ts
+2. Refactor safeAccess.ts
+3. Refactor adapters.ts
+
+### Phase 5: Validation (Week 4)
+1. Run mutation tests
+2. Verify mutation score improvements
+3. Update documentation
+4. Code review
 
 ---
 
 ## Conclusion
 
-The analysis reveals that most files are well-structured but suffer from:
-1. **Component bloat** (MarketplacePage, SettingsPage)
-2. **Over-engineering** (errorFactory)
-3. **Missing tests** (all files)
+The analysis reveals significant opportunities for improvement across all 5 files. The primary issues are:
 
-The highest ROI comes from refactoring the three large component files, which will:
-- Improve testability
-- Reduce complexity
-- Increase maintainability
-- Enable better test coverage
+1. **DRY Violations:** Repeated patterns that should be extracted to utilities
+2. **SRP Violations:** Functions doing too many things
+3. **Complex Conditionals:** Nested logic that creates mutation survivors
+4. **Type Safety:** Excessive use of `as any`
 
-The utility files (pathParser, apiUtils) are well-designed and primarily need additional test coverage rather than refactoring.
+Implementing these refactorings should:
+- **Improve mutation scores** by 10-15% across all files
+- **Reduce code duplication** by ~200+ lines
+- **Improve maintainability** through smaller, focused functions
+- **Enhance testability** through better isolation
+
+The refactoring effort is estimated at **3-4 weeks** with **high impact** on code quality and mutation test scores.
