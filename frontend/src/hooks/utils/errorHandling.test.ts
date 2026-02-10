@@ -51,6 +51,38 @@ describe('errorHandling', () => {
       expect(result).toBe('Default message')
     })
 
+    it('should handle case where logicalOr returns null and use defaultMessage', () => {
+      // Create an Error with empty message and pass null as defaultMessage
+      // logicalOr('', null) returns null, then defensive check returns defaultMessage (null)
+      // This tests the defensive check on line 33: (messageResult !== null && messageResult !== undefined) ? messageResult : defaultMessage
+      const error = new Error('')
+      const result = extractErrorMessage(error, null as any)
+      // When defaultMessage is null, the defensive check returns null (the defaultMessage)
+      expect(result).toBeNull()
+    })
+
+    it('should handle case where logicalOr returns undefined - uses default parameter', () => {
+      // When undefined is passed, JavaScript uses the default parameter value 'An error occurred'
+      // So logicalOr('', 'An error occurred') returns 'An error occurred'
+      // This tests that undefined uses the default parameter
+      const error = new Error('')
+      const result = extractErrorMessage(error, undefined as any)
+      // When undefined is passed, default parameter 'An error occurred' is used
+      expect(result).toBe('An error occurred')
+    })
+
+    it('should handle case where logicalOr returns null (defensive check)', () => {
+      // Create an Error with null message and pass null as defaultMessage
+      // This tests the defensive check on line 33
+      // When error.message is empty string (falsy) and defaultMessage is null,
+      // logicalOr returns null, triggering the defensive check
+      const error = Object.create(Error.prototype)
+      error.message = ''
+      const result = extractErrorMessage(error, null as any)
+      // Defensive check on line 33 returns defaultMessage when messageResult is null
+      expect(result).toBe(null)
+    })
+
     it('should extract from error.response.data.detail', () => {
       const error = {
         response: {

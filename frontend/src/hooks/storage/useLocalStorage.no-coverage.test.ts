@@ -300,4 +300,89 @@ describe('useLocalStorage - No Coverage Paths', () => {
       )
     })
   })
+
+  describe('useLocalStorage - storage event listener', () => {
+    it('should return early when storage is null (lines 60-61)', () => {
+      // Test the early return path when storage is null from the start
+      // This tests the useEffect early return: if (!storage) return
+      const { result, rerender } = renderHook(
+        ({ storage }) => useLocalStorage('test-key', 'default', { storage }),
+        {
+          initialProps: { storage: null },
+        }
+      )
+
+      // Hook should work with null storage (uses default value)
+      expect(result.current[0]).toBe('default')
+
+      // Verify no event listener was added (early return path taken)
+      // When storage is null, the useEffect returns early at line 60-61
+      expect(mockStorage.addEventListener).not.toHaveBeenCalled()
+
+      // Rerender with valid storage - should now set up listener
+      rerender({ storage: mockStorage })
+      expect(mockStorage.addEventListener).toHaveBeenCalledWith('storage', expect.any(Function))
+
+      // Rerender back to null - should trigger early return again
+      jest.clearAllMocks()
+      rerender({ storage: null })
+      
+      // Verify no new event listener was added (early return path taken)
+      const addEventListenerCalls = mockStorage.addEventListener.mock.calls.filter(
+        (call) => call[0] === 'storage'
+      )
+      expect(addEventListenerCalls.length).toBe(0)
+    })
+
+    it('should update storedValue when parsed value is not null (lines 67-68)', () => {
+      const { result } = renderHook(() =>
+        useLocalStorage('test-key', 'default', { storage: mockStorage })
+      )
+
+      // Simulate storage event with valid JSON value
+      const storageEvent = new StorageEvent('storage', {
+        key: 'test-key',
+        newValue: JSON.stringify({ data: 'updated' }),
+      })
+
+      act(() => {
+        // Trigger the storage event handler
+        const handler = mockStorage.addEventListener.mock.calls.find(
+          (call) => call[0] === 'storage'
+        )?.[1]
+        if (handler) {
+          handler(storageEvent)
+        }
+      })
+
+      // Should update storedValue when parsed value is not null
+      expect(result.current[0]).toEqual({ data: 'updated' })
+    })
+
+    it('should not update storedValue when parsed value is null', () => {
+      const { result } = renderHook(() =>
+        useLocalStorage('test-key', 'default', { storage: mockStorage })
+      )
+
+      const initialValue = result.current[0]
+
+      // Simulate storage event with invalid JSON (parsed as null)
+      const storageEvent = new StorageEvent('storage', {
+        key: 'test-key',
+        newValue: 'invalid-json',
+      })
+
+      act(() => {
+        const handler = mockStorage.addEventListener.mock.calls.find(
+          (call) => call[0] === 'storage'
+        )?.[1]
+        if (handler) {
+          handler(storageEvent)
+        }
+      })
+
+      // Should not update when parsed value is null
+      expect(result.current[0]).toBe(initialValue)
+    })
+  })
 })

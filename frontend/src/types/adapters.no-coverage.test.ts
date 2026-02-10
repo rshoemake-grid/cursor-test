@@ -273,4 +273,55 @@ describe('adapters - No Coverage Paths', () => {
       }
     })
   })
+
+  describe('defaultAdapters - delegation methods coverage', () => {
+    it('should call createStorageAdapter delegation', () => {
+      const storage = localStorage
+      const result = defaultAdapters.createStorageAdapter(storage)
+      // Method should delegate to StorageAdapterFactory
+      expect(result).not.toBeNull()
+    })
+
+    it('should call createLocalStorageAdapter delegation', () => {
+      const result = defaultAdapters.createLocalStorageAdapter()
+      // Method should delegate to StorageAdapterFactory
+      expect(result).not.toBeNull()
+    })
+
+    it('should call createSessionStorageAdapter delegation', () => {
+      const result = defaultAdapters.createSessionStorageAdapter()
+      // Method should delegate to StorageAdapterFactory
+      expect(result).not.toBeNull()
+    })
+
+    it('should call createDocumentAdapter delegation', () => {
+      const result = defaultAdapters.createDocumentAdapter()
+      // Method should delegate to DocumentAdapterFactory
+      expect(result).not.toBeNull()
+    })
+
+    it('should call createTimerAdapter delegation', () => {
+      const result = defaultAdapters.createTimerAdapter()
+      // Method should delegate to TimerAdapterFactory
+      expect(result).toBeDefined()
+      expect(typeof result.setTimeout).toBe('function')
+      expect(typeof result.clearTimeout).toBe('function')
+    })
+
+    it('should call createWebSocketFactory delegation', () => {
+      const result = defaultAdapters.createWebSocketFactory()
+      // Method should delegate to WebSocketFactoryFactory
+      // WebSocketFactory is an interface with a create method
+      expect(result).toBeDefined()
+      expect(typeof result.create).toBe('function')
+    })
+
+    it('should call createEnvironmentAdapter delegation', () => {
+      const result = defaultAdapters.createEnvironmentAdapter()
+      // Method should delegate to EnvironmentAdapterFactory
+      expect(result).toBeDefined()
+      expect(typeof result.isDevelopment).toBe('function')
+      expect(typeof result.isProduction).toBe('function')
+    })
+  })
 })

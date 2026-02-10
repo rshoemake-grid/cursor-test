@@ -1063,6 +1063,49 @@ describe('useAgentDeletion', () => {
       expect(filteredAgents.length).toBe(1)
       expect(filteredAgents[0].id).toBe('agent-3')
     })
+
+    it('should return early when extractAgentIds returns empty Set (agents without valid IDs)', async () => {
+      // Create agents that pass userOwnedAgents filter but have no valid IDs
+      const agentsWithoutIds = [
+        {
+          ...mockAgents[0],
+          id: null as any, // Invalid ID
+          author_id: 'user-1',
+        },
+        {
+          ...mockAgents[0],
+          id: undefined as any, // Invalid ID
+          author_id: 'user-1',
+        },
+        {
+          ...mockAgents[0],
+          id: '', // Empty string ID
+          author_id: 'user-1',
+        },
+      ]
+      mockStorage.getItem.mockReturnValue(JSON.stringify(agentsWithoutIds))
+
+      const { result } = renderHook(() =>
+        useAgentDeletion({
+          user: { id: 'user-1', username: 'testuser' },
+          storage: mockStorage as any,
+          agents: agentsWithoutIds,
+          setAgents: mockSetAgents,
+          setSelectedAgentIds: mockSetSelectedAgentIds,
+        })
+      )
+
+      await act(async () => {
+        await result.current.deleteSelectedAgents(new Set([null, undefined, ''] as any))
+      })
+
+      // Should have passed confirmation (if required)
+      // But should return early when extractAgentIds returns empty Set (lines 128-129)
+      // Verify no deletion was attempted
+      expect(mockStorage.setItem).not.toHaveBeenCalled()
+      expect(mockSetAgents).not.toHaveBeenCalled()
+      expect(mockSetSelectedAgentIds).not.toHaveBeenCalled()
+    })
   })
 
 

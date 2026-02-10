@@ -259,4 +259,50 @@ describe('useNodeForm', () => {
       expect(result.current.nameValue).toBe('')
     })
   })
+
+  it('should handle null/undefined nodeName and nodeDescription with defensive checks', async () => {
+    // Create a node where logicalOr might return null/undefined (defensive check coverage)
+    // This tests the defensive checks on lines 48 and 52
+    const node: Node = {
+      id: 'node1',
+      type: 'agent',
+      position: { x: 0, y: 0 },
+      data: {
+        name: null as any,
+        description: undefined as any,
+      },
+    }
+
+    // Mock document.activeElement to be different from refs so sync happens
+    const originalActiveElement = document.activeElement
+    Object.defineProperty(document, 'activeElement', {
+      writable: true,
+      value: null,
+    })
+
+    const { result, rerender } = renderHook(
+      ({ selectedNode }) =>
+        useNodeForm({
+          selectedNode,
+          onUpdate: mockOnUpdate,
+        }),
+      {
+        initialProps: { selectedNode: null },
+      }
+    )
+
+    rerender({ selectedNode: node })
+
+    await waitForWithTimeout(() => {
+      // Defensive checks should convert null/undefined to empty string
+      expect(result.current.nameValue).toBe('')
+      expect(result.current.descriptionValue).toBe('')
+    })
+
+    // Restore original activeElement
+    Object.defineProperty(document, 'activeElement', {
+      writable: true,
+      value: originalActiveElement,
+    })
+  })
 })

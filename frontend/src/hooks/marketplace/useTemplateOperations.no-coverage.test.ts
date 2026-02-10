@@ -10,6 +10,7 @@ import { useTemplateOperations } from './useTemplateOperations'
 import { logger } from '../../utils/logger'
 import { showConfirm } from '../../utils/confirm'
 import { api } from '../../api/client'
+import { showError } from '../../utils/notifications'
 
 jest.mock('../../utils/logger', () => ({
   logger: {
@@ -38,6 +39,8 @@ const mockNavigate = jest.fn()
 jest.mock('react-router-dom', () => ({
   useNavigate: () => mockNavigate,
 }))
+
+import { showError } from '../../utils/notifications'
 
 describe('useTemplateOperations - No Coverage Paths', () => {
   let mockHttpClient: any

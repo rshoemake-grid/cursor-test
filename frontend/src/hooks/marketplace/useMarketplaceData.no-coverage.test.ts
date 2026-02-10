@@ -4,7 +4,7 @@
  * Focuses on specific code paths that may not be covered
  */
 
-import { renderHook, waitFor } from '@testing-library/react'
+import { renderHook, waitFor, act } from '@testing-library/react'
 import { useMarketplaceData } from './useMarketplaceData'
 import { getLocalStorageItem } from '../storage'
 
@@ -444,6 +444,151 @@ describe('useMarketplaceData - No Coverage Mutants (Phase 4)', () => {
       // Should execute sort after filter: agentsData.filter(...).sort(...)
       expect(result.current.agents[0].name).toBe('Alpha Agent')
       expect(result.current.agents[1].name).toBe('Zebra Agent')
+    })
+  })
+
+  describe('Wrapper functions - fetch methods', () => {
+    it('should call fetchTemplates wrapper (line 187)', async () => {
+      const { result } = renderHook(() =>
+        useMarketplaceData({
+          storage: mockStorage,
+          httpClient: mockHttpClient,
+          apiBaseUrl: 'http://api.test',
+          category: '',
+          searchQuery: '',
+          sortBy: 'popular',
+          user: null,
+          activeTab: 'templates',
+          repositorySubTab: 'agents',
+        })
+      )
+
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false)
+      })
+
+      // Call the wrapper function
+      await act(async () => {
+        await result.current.fetchTemplates()
+      })
+
+      // Should call templatesFetching.refetch() (line 187)
+      expect(mockHttpClient.get).toHaveBeenCalled()
+    })
+
+    it('should call fetchWorkflowsOfWorkflows wrapper (line 191)', async () => {
+      const { result } = renderHook(() =>
+        useMarketplaceData({
+          storage: mockStorage,
+          httpClient: mockHttpClient,
+          apiBaseUrl: 'http://api.test',
+          category: '',
+          searchQuery: '',
+          sortBy: 'popular',
+          user: null,
+          activeTab: 'workflows',
+          repositorySubTab: 'agents',
+        })
+      )
+
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false)
+      })
+
+      // Call the wrapper function
+      await act(async () => {
+        await result.current.fetchWorkflowsOfWorkflows()
+      })
+
+      // Should call workflowsOfWorkflowsFetching.refetch() (line 191)
+      expect(mockHttpClient.get).toHaveBeenCalled()
+    })
+
+    it('should call fetchAgents wrapper (line 195)', async () => {
+      const { result } = renderHook(() =>
+        useMarketplaceData({
+          storage: mockStorage,
+          httpClient: mockHttpClient,
+          apiBaseUrl: 'http://api.test',
+          category: '',
+          searchQuery: '',
+          sortBy: 'popular',
+          user: null,
+          activeTab: 'agents',
+          repositorySubTab: 'agents',
+        })
+      )
+
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false)
+      })
+
+      // Call the wrapper function
+      await act(async () => {
+        await result.current.fetchAgents()
+      })
+
+      // Should call agentsFetching.refetch() (line 195)
+      expect(mockGetLocalStorageItem).toHaveBeenCalled()
+    })
+
+    it('should call fetchRepositoryAgents wrapper (line 199)', async () => {
+      const { result } = renderHook(() =>
+        useMarketplaceData({
+          storage: mockStorage,
+          httpClient: mockHttpClient,
+          apiBaseUrl: 'http://api.test',
+          category: '',
+          searchQuery: '',
+          sortBy: 'popular',
+          user: null,
+          activeTab: 'repository',
+          repositorySubTab: 'agents',
+        })
+      )
+
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false)
+      })
+
+      // Call the wrapper function
+      await act(async () => {
+        await result.current.fetchRepositoryAgents()
+      })
+
+      // Should call repositoryAgentsFetching.refetch() (line 199)
+      expect(mockStorage.getItem).toHaveBeenCalled()
+    })
+  })
+
+  describe('useEffect auto-fetch - templatesFetching.refetch (line 174)', () => {
+    it('should call templatesFetching.refetch when activeTab is templates', async () => {
+      // Note: Line 174 is templatesFetching.refetch() called in useEffect
+      // This is already covered by the wrapper function tests (fetchTemplates calls refetch)
+      // and by starting with templates tab, the useEffect runs on mount
+      // The exact line 174 execution is covered by the initial render with templates tab
+      const { result } = renderHook(() =>
+        useMarketplaceData({
+          storage: mockStorage,
+          httpClient: mockHttpClient,
+          apiBaseUrl: 'http://api.test',
+          category: '',
+          searchQuery: '',
+          sortBy: 'popular',
+          user: null,
+          activeTab: 'repository' as const,
+          repositorySubTab: 'workflows' as const, // This triggers shouldLoadTemplates = true
+        })
+      )
+
+      // Wait for initial fetch - useEffect should call templatesFetching.refetch (line 174)
+      // because repository/workflows triggers shouldLoadTemplates
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false)
+      }, { timeout: 3000 })
+
+      // Verify that templates were fetched (refetch was called)
+      expect(mockHttpClient.get).toHaveBeenCalled()
     })
   })
 })

@@ -186,6 +186,32 @@ describe('ExecutionStateManager', () => {
 
       expect(result).toEqual(tabs)
     })
+
+    it('should preserve activeExecutionId when removing non-active execution', () => {
+      const exec1: Execution = {
+        id: 'exec-1',
+        status: 'running',
+        startedAt: new Date(),
+        nodes: {},
+        logs: [],
+      }
+      const exec2: Execution = {
+        id: 'exec-2',
+        status: 'running',
+        startedAt: new Date(),
+        nodes: {},
+        logs: [],
+      }
+      const tabs = [createMockTab('workflow-1', [exec1, exec2])]
+      tabs[0].activeExecutionId = 'exec-1' // exec-1 is active
+
+      // Remove exec-2 (not the active one)
+      const result = manager.handleRemoveExecution(tabs, 'workflow-1', 'exec-2')
+
+      expect(result[0].executions).toHaveLength(1)
+      expect(result[0].executions[0].id).toBe('exec-1')
+      expect(result[0].activeExecutionId).toBe('exec-1') // Should remain exec-1 (line 137 branch)
+    })
   })
 
   describe('handleExecutionLogUpdate', () => {
@@ -363,6 +389,32 @@ describe('ExecutionStateManager', () => {
       const result = manager.handleExecutionStatusUpdate(tabs, 'non-existent-workflow', 'exec-1', 'completed')
 
       expect(result[0].executions).toEqual([])
+    })
+
+    it('should not modify executions that do not match executionId', () => {
+      const exec1: Execution = {
+        id: 'exec-1',
+        status: 'running',
+        startedAt: new Date(),
+        nodes: {},
+        logs: [],
+      }
+      const exec2: Execution = {
+        id: 'exec-2',
+        status: 'running',
+        startedAt: new Date(),
+        nodes: {},
+        logs: [],
+      }
+      const tabs = [createMockTab('workflow-1', [exec1, exec2])]
+
+      // Update status for exec-1, exec-2 should remain unchanged (line 189 branch)
+      const result = manager.handleExecutionStatusUpdate(tabs, 'workflow-1', 'exec-1', 'completed')
+
+      expect(result[0].executions[0].status).toBe('completed')
+      expect(result[0].executions[0].completedAt).toBeDefined()
+      expect(result[0].executions[1].status).toBe('running') // exec-2 unchanged
+      expect(result[0].executions[1].completedAt).toBeUndefined()
     })
   })
 

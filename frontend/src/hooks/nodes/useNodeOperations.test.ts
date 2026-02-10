@@ -105,6 +105,75 @@ describe('useNodeOperations', () => {
       expect(updatedNode.data.name).toBe('Updated Name')
     })
 
+    it('should not update other nodes (node.id !== selectedNode.id branch)', () => {
+      const otherNode = {
+        id: 'node-2',
+        data: {
+          name: 'Other Node',
+          label: 'Other Node',
+          inputs: [],
+        },
+      }
+      const nodes = [mockSelectedNode, otherNode]
+
+      const { result } = renderHook(() =>
+        useNodeOperations({
+          selectedNode: mockSelectedNode,
+          setSelectedNodeId: mockSetSelectedNodeId,
+        })
+      )
+
+      act(() => {
+        result.current.handleUpdate('name', 'Updated Name')
+      })
+
+      expect(mockSetNodes).toHaveBeenCalled()
+      const setNodesCall = mockSetNodes.mock.calls[0][0]
+      const updatedNodes = typeof setNodesCall === 'function' ? setNodesCall(nodes) : setNodesCall
+      
+      // Selected node should be updated
+      const updatedSelectedNode = updatedNodes.find((n: any) => n.id === 'node-1')
+      expect(updatedSelectedNode.data.name).toBe('Updated Name')
+      
+      // Other node should remain unchanged (tests line 73: node.id !== selectedNode.id branch)
+      const unchangedNode = updatedNodes.find((n: any) => n.id === 'node-2')
+      expect(unchangedNode.data.name).toBe('Other Node')
+    })
+
+    it('should only update selected node when multiple nodes exist (line 73 branch coverage)', () => {
+      const otherNode = {
+        id: 'node-2',
+        data: {
+          name: 'Other Node',
+          label: 'Other Node',
+        },
+      }
+      const allNodes = [mockSelectedNode, otherNode]
+
+      const { result } = renderHook(() =>
+        useNodeOperations({
+          selectedNode: mockSelectedNode,
+          setSelectedNodeId: mockSetSelectedNodeId,
+        })
+      )
+
+      act(() => {
+        result.current.handleUpdate('name', 'Updated Name')
+      })
+
+      expect(mockSetNodes).toHaveBeenCalled()
+      const setNodesCall = mockSetNodes.mock.calls[0][0]
+      const updatedNodes = typeof setNodesCall === 'function' ? setNodesCall(allNodes) : setNodesCall
+      
+      // Selected node should be updated
+      const updatedNode = updatedNodes.find((n: any) => n.id === 'node-1')
+      expect(updatedNode.data.name).toBe('Updated Name')
+      
+      // Other node should remain unchanged (line 73 false branch)
+      const unchangedNode = updatedNodes.find((n: any) => n.id === 'node-2')
+      expect(unchangedNode.data.name).toBe('Other Node')
+    })
+
     it('should update label when name changes', () => {
       const { result } = renderHook(() =>
         useNodeOperations({
@@ -392,6 +461,50 @@ describe('useNodeOperations', () => {
       expect(mockSetSaveStatus).toHaveBeenCalledWith('idle')
     })
 
+    it('should handle non-Error rejection (error instanceof Error false branch)', async () => {
+      // Test line 112: error instanceof Error ? error.message : 'Unknown error'
+      const mockOnSaveWorkflow = jest.fn().mockRejectedValue('String error')
+      const mockSetSaveStatus = jest.fn()
+
+      const { result } = renderHook(() =>
+        useNodeOperations({
+          selectedNode: mockSelectedNode,
+          setSelectedNodeId: mockSetSelectedNodeId,
+          onSaveWorkflow: mockOnSaveWorkflow,
+        })
+      )
+
+      await act(async () => {
+        await result.current.handleSave(mockSetSaveStatus)
+      })
+
+      expect(mockLoggerError).toHaveBeenCalled()
+      expect(mockShowError).toHaveBeenCalledWith('Failed to save workflow: Unknown error')
+      expect(mockSetSaveStatus).toHaveBeenCalledWith('idle')
+    })
+
+    it('should handle save error with non-Error object (line 112 branch coverage)', async () => {
+      // Test the branch where error is not an Error instance
+      const mockOnSaveWorkflow = jest.fn().mockRejectedValue('String error')
+      const mockSetSaveStatus = jest.fn()
+
+      const { result } = renderHook(() =>
+        useNodeOperations({
+          selectedNode: mockSelectedNode,
+          setSelectedNodeId: mockSetSelectedNodeId,
+          onSaveWorkflow: mockOnSaveWorkflow,
+        })
+      )
+
+      await act(async () => {
+        await result.current.handleSave(mockSetSaveStatus)
+      })
+
+      expect(mockLoggerError).toHaveBeenCalled()
+      expect(mockShowError).toHaveBeenCalledWith('Failed to save workflow: Unknown error')
+      expect(mockSetSaveStatus).toHaveBeenCalledWith('idle')
+    })
+
     it('should return early if no node selected', async () => {
       const mockSetSaveStatus = jest.fn()
 
@@ -543,6 +656,45 @@ describe('useNodeOperations', () => {
   })
 
   describe('handleUpdateInput', () => {
+    it('should expand array when index is beyond current length (while loop coverage)', () => {
+      const nodeWithShortInputs = {
+        ...mockSelectedNode,
+        data: {
+          ...mockSelectedNode.data,
+          inputs: [{ source_node: 'node1' }], // Only 1 input, but we'll update index 5
+        },
+      }
+
+      const { result } = renderHook(() =>
+        useNodeOperations({
+          selectedNode: nodeWithShortInputs,
+          setSelectedNodeId: mockSetSelectedNodeId,
+        })
+      )
+
+      act(() => {
+        // Update input at index 5, which is beyond the current array length
+        // This should trigger the while loop on lines 144-145 to expand the array
+        result.current.handleUpdateInput(5, 'source_node', 'node6')
+      })
+
+      expect(mockSetNodes).toHaveBeenCalled()
+      const setNodesCall = mockSetNodes.mock.calls[0][0]
+      const updatedNodes = typeof setNodesCall === 'function' ? setNodesCall([nodeWithShortInputs]) : setNodesCall
+      const updatedNode = updatedNodes.find((n: any) => n.id === 'node-1')
+      
+      // Array should be expanded to length 6 (indices 0-5)
+      expect(updatedNode.data.inputs.length).toBe(6)
+      // Index 5 should have the updated value
+      expect(updatedNode.data.inputs[5]).toEqual({ source_node: 'node6' })
+      // Previous inputs should be preserved
+      expect(updatedNode.data.inputs[0]).toEqual({ source_node: 'node1' })
+      // Indices 1-4 should be empty objects (from the while loop)
+      expect(updatedNode.data.inputs[1]).toEqual({})
+      expect(updatedNode.data.inputs[2]).toEqual({})
+      expect(updatedNode.data.inputs[3]).toEqual({})
+      expect(updatedNode.data.inputs[4]).toEqual({})
+    })
     it('should update input field', () => {
       const nodeWithInputs = {
         ...mockSelectedNode,
@@ -569,6 +721,67 @@ describe('useNodeOperations', () => {
       const updatedNodes = typeof setNodesCall === 'function' ? setNodesCall([nodeWithInputs]) : setNodesCall
       const updatedNode = updatedNodes.find((n: any) => n.id === 'node-1')
       expect(updatedNode.data.inputs[0].source_node).toBe('node2')
+    })
+
+    it('should handle non-array inputs (Array.isArray false branch)', () => {
+      // Test line 142: Array.isArray(inputsArray) ? [...inputsArray] : []
+      const nodeWithNonArrayInputs = {
+        ...mockSelectedNode,
+        data: {
+          ...mockSelectedNode.data,
+          inputs: 'not-an-array' as any, // Non-array value
+        },
+      }
+
+      const { result } = renderHook(() =>
+        useNodeOperations({
+          selectedNode: nodeWithNonArrayInputs,
+          setSelectedNodeId: mockSetSelectedNodeId,
+        })
+      )
+
+      act(() => {
+        result.current.handleUpdateInput(0, 'source_node', 'node1')
+      })
+
+      expect(mockSetNodes).toHaveBeenCalled()
+      const setNodesCall = mockSetNodes.mock.calls[0][0]
+      const updatedNodes = typeof setNodesCall === 'function' ? setNodesCall([nodeWithNonArrayInputs]) : setNodesCall
+      const updatedNode = updatedNodes.find((n: any) => n.id === 'node-1')
+      // Should create an empty array and then expand it
+      expect(Array.isArray(updatedNode.data.inputs)).toBe(true)
+      expect(updatedNode.data.inputs.length).toBeGreaterThanOrEqual(1)
+    })
+
+    it('should handle null inputs (line 142 branch coverage)', () => {
+      // Test the branch where inputs is null (not an array)
+      const nodeWithNullInputs = {
+        ...mockSelectedNode,
+        data: {
+          ...mockSelectedNode.data,
+          inputs: null as any, // Not an array
+        },
+      }
+
+      const { result } = renderHook(() =>
+        useNodeOperations({
+          selectedNode: nodeWithNullInputs,
+          setSelectedNodeId: mockSetSelectedNodeId,
+        })
+      )
+
+      act(() => {
+        result.current.handleUpdateInput(0, 'source_node', 'node1')
+      })
+
+      expect(mockSetNodes).toHaveBeenCalled()
+      const setNodesCall = mockSetNodes.mock.calls[0][0]
+      const updatedNodes = typeof setNodesCall === 'function' ? setNodesCall([nodeWithNullInputs]) : setNodesCall
+      const updatedNode = updatedNodes.find((n: any) => n.id === 'node-1')
+      // Should create an array with one element
+      expect(Array.isArray(updatedNode.data.inputs)).toBe(true)
+      expect(updatedNode.data.inputs.length).toBe(1)
+      expect(updatedNode.data.inputs[0].source_node).toBe('node1')
     })
 
     it('should return early if no node selected', () => {
