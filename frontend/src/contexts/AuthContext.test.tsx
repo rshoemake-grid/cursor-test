@@ -7,8 +7,7 @@ const waitForWithTimeout = (callback: () => void | Promise<void>, timeout = 2000
 }
 
 import { AuthProvider, useAuth } from './AuthContext'
-import type { StorageAdapter, HttpClient } from '../types/adapters'
-import { logger } from '../utils/logger'
+import type { StorageAdapter } from '../types/adapters'
 
 // Mock logger
 jest.mock('../utils/logger', () => ({

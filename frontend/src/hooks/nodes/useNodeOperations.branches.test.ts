@@ -9,7 +9,6 @@ import { renderHook, act } from '@testing-library/react'
 import { useNodeOperations } from './useNodeOperations'
 import { showError } from '../../utils/notifications'
 import { showConfirm } from '../../utils/confirm'
-import { logger } from '../../utils/logger'
 import { useReactFlow } from '@xyflow/react'
 
 jest.mock('../../utils/notifications', () => ({

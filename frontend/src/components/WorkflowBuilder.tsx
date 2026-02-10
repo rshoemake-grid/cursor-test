@@ -48,7 +48,9 @@ const WorkflowBuilder = forwardRef<WorkflowBuilderHandle, WorkflowBuilderProps>(
   onWorkflowSaved,
   onWorkflowModified,
   onWorkflowLoaded,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   onCloseWorkflow: _onCloseWorkflow,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   onClearExecutions: _onClearExecutions,
   onExecutionLogUpdate,
   onExecutionStatusUpdate,

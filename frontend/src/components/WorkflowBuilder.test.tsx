@@ -9,7 +9,6 @@ const waitForWithTimeout = (callback: () => void | Promise<void>, timeout = 2000
 import { ReactFlowProvider } from '@xyflow/react'
 import { useAuth } from '../contexts/AuthContext'
 import { api } from '../api/client'
-import { showSuccess, showError } from '../utils/notifications'
 import { showConfirm } from '../utils/confirm'
 import type { StorageAdapter } from '../types/adapters'
 

@@ -7,7 +7,6 @@
 
 import { renderHook, act } from '@testing-library/react'
 import { useLocalStorage, getLocalStorageItem, setLocalStorageItem, removeLocalStorageItem } from './useLocalStorage'
-import { logger } from '../../utils/logger'
 import { defaultAdapters } from '../../types/adapters'
 
 jest.mock('../../utils/logger', () => ({

@@ -14,7 +14,6 @@ import {
 } from './draftStorage'
 // Domain-based imports - Phase 7
 import { getLocalStorageItem, setLocalStorageItem } from '../storage'
-import { logger } from '../../utils/logger'
 
 // Mock with factory function to ensure fresh mocks per test file
 // Domain-based imports - Phase 7

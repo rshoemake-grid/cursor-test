@@ -10,7 +10,6 @@ import { renderHook } from '@testing-library/react'
 import { 
   advanceTimersByTime, 
   wsInstances, 
-  MockWebSocket, 
   useWebSocket, 
   logger 
 } from './useWebSocket.test.setup'

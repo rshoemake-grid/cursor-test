@@ -188,10 +188,6 @@ describe('useWebSocket - edges.basic', () => {
       await advanceTimersByTime(50) // Extra flush for any remaining constructor timers
 
       if (wsInstances.length > 0) {
-        // Capture count after all initial connections are established
-        // Note: MockWebSocket constructor uses setTimeout(10), so we need to flush those timers
-        const initialCount = wsInstances.length
-        
         // Clean close - should not reconnect
         // Clean close (wasClean=true, code=1000) should prevent reconnection per line 180-182 in useWebSocket.ts
         const ws = wsInstances[wsInstances.length - 1]

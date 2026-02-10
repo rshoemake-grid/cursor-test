@@ -51,6 +51,7 @@ jest.mock('../utils/workflowExecutionService', () => ({
 const mockShowSuccess = showSuccess as jest.MockedFunction<typeof showSuccess>
 const mockShowError = showError as jest.MockedFunction<typeof showError>
 const mockShowConfirm = showConfirm as jest.MockedFunction<typeof showConfirm>
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const mockApi = api as jest.Mocked<typeof api>
 const mockLogger = logger as jest.Mocked<typeof logger>
 

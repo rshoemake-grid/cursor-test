@@ -2,8 +2,7 @@ import React from 'react'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import WorkflowChat from './WorkflowChat'
 import { AuthProvider } from '../contexts/AuthContext'
-import { logger } from '../utils/logger'
-import type { StorageAdapter, HttpClient } from '../types/adapters'
+import type { StorageAdapter } from '../types/adapters'
 
 // Helper to ensure all waitFor calls have timeouts
 const waitForWithTimeout = (callback: () => void | Promise<void>, timeout = 2000) => {

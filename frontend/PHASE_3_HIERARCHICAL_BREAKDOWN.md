@@ -1068,15 +1068,29 @@ This document provides a complete hierarchical breakdown of Phase 3, organized i
   - **Issues Found**: 35+ `any` type warnings, 2 unused variable errors
 
 - **Subsubstep 5.2.1.2**: Fix linting errors 🔄 IN PROGRESS
-  - Fix errors systematically 🔄 (Fixed unused imports: waitFor, fireEvent, act in multiple test files)
+  - Fix errors systematically 🔄 (Fixed unused imports: waitFor, fireEvent, act, within, MockWebSocket in multiple test files)
   - Follow ESLint rules ✅
-  - Fix unused variables ✅ (Fixed mockOnNodeUpdate, removed unused imports)
+  - Fix unused variables ✅ (Fixed mockOnNodeUpdate, removed unused imports: showSuccess, showError, executionHooks, within, MockWebSocket)
   - Fix @ts-ignore → @ts-expect-error ✅ (Fixed in multiple test files)
   - Add eslint-disable for intentional require statements 🔄 (In progress - 73 require statements remain, mostly in test files for dynamic mocking)
-  - Verify no new errors ⏭️ (Pending - 381 errors remain, mostly require statements in test files)
+  - Verify no new errors ⏭️ (Pending - ~350 errors remain, mostly require statements in test files and unused variables)
   - **Status**: 🔄 IN PROGRESS
-  - **Progress**: Fixed ~15+ unused import/variable errors, converted @ts-ignore to @ts-expect-error
-  - **Remaining**: 381 errors (73 require statements in test files, ~308 other errors)
+  - **Progress**: Fixed ~25+ unused import/variable errors, converted @ts-ignore to @ts-expect-error
+  - **Remaining**: ~332 errors (73 require statements in test files, ~259 other errors - unused variables, unused parameters)
+  - **Recent fixes**: 
+    - Removed unused MockWebSocket imports (5 files)
+    - Removed unused within import from InputConfiguration.test.tsx
+    - Removed unused showSuccess/showError/executionHooks imports from WorkflowBuilder test files
+    - Fixed unused children/props parameters in WorkflowBuilder.additional.test.tsx
+    - Fixed unused _onCloseWorkflow/_onClearExecutions with eslint-disable comments
+    - Fixed unused mockApi with eslint-disable comment
+    - Removed unused imports: fireEvent, Node, Edge, screen, Connection, logger, HttpClient from multiple test files
+    - Removed unused logger imports from useNodeOperations.branches.test.ts, useLocalStorage.branches.test.ts, draftStorage.test.ts
+    - Removed unused initialCount variables from useWebSocket.edges.basic.test.ts and useWebSocket.reconnection.test.ts
+    - Fixed @ts-ignore → @ts-expect-error conversions
+    - Fixed unused _httpClient variable with eslint-disable comment
+  - **Progress**: Reduced from 381 to 332 errors (49 errors fixed, 12.9% reduction)
+  - **Current Status**: Many remaining errors are unused `result`/`rerender` variables from renderHook destructuring (may need eslint-disable comments) and require statements in test files (acceptable pattern)
 
 #### Substep 5.2.2: Code Formatting
 **Goal**: Ensure consistent code formatting

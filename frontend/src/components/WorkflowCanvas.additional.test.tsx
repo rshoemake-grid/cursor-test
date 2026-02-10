@@ -1,11 +1,11 @@
 import React from 'react'
-import { render, screen, fireEvent } from '@testing-library/react'
+import { render, fireEvent } from '@testing-library/react'
 import WorkflowCanvas from './WorkflowCanvas'
 import type { Node, Edge, Connection } from '@xyflow/react'
 
 // Mock ReactFlow components
 jest.mock('@xyflow/react', () => ({
-  ReactFlow: ({ children, onNodesChange, onEdgesChange, onConnect, onDrop, onDragOver, onNodeClick, onNodeContextMenu, onEdgeContextMenu, onPaneClick, ...props }: any) => (
+  ReactFlow: ({ children, onDrop, onDragOver, onNodeClick, onNodeContextMenu, onEdgeContextMenu, onPaneClick, ...props }: any) => (
     <div 
       data-testid="react-flow" 
       data-nodes={JSON.stringify(props.nodes)}

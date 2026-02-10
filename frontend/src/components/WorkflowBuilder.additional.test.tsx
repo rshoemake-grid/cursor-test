@@ -4,11 +4,8 @@ import { ReactFlowProvider } from '@xyflow/react'
 import WorkflowBuilder, { WorkflowBuilderHandle } from './WorkflowBuilder'
 import { useAuth } from '../contexts/AuthContext'
 import { api } from '../api/client'
-import { showSuccess, showError } from '../utils/notifications'
 import { showConfirm } from '../utils/confirm'
 import type { StorageAdapter } from '../types/adapters'
-// Domain-based imports - Phase 7
-import * as executionHooks from '../hooks/execution'
 
 jest.mock('../utils/logger', () => ({
   logger: {
@@ -89,7 +86,7 @@ jest.mock('./ReactFlowInstanceCapture', () => ({
 
 jest.mock('./WorkflowBuilder/WorkflowBuilderLayout', () => ({
   __esModule: true,
-  WorkflowBuilderLayout: ({ children, ...props }: any) => (
+  WorkflowBuilderLayout: ({ ...props }: any) => (
     <div data-testid="workflow-builder-layout">
       <div data-testid="node-panel">NodePanel</div>
       <div data-testid="workflow-canvas">WorkflowCanvas</div>

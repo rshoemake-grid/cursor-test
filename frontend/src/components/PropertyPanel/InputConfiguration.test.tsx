@@ -4,7 +4,7 @@
  */
 
 import React from 'react'
-import { render, screen, fireEvent, within, cleanup } from '@testing-library/react'
+import { render, screen, fireEvent, cleanup } from '@testing-library/react'
 import { InputConfiguration } from './InputConfiguration'
 
 describe('InputConfiguration', () => {
