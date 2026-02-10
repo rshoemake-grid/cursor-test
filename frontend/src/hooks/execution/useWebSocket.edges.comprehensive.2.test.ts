@@ -3620,7 +3620,7 @@ describe('useWebSocket - edges.comprehensive.2', () => {
 
       it('should verify setIsConnected(true) assignment', async () => {
         const executionId = 'exec-set-connected-true-test'
-        const { result } = renderHook(() =>
+        renderHook(() =>
           useWebSocket({
             executionId,
             executionStatus: 'running'

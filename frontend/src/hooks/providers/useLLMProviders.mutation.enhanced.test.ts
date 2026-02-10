@@ -7,9 +7,8 @@
  */
 
 import { renderHook, waitFor } from '@testing-library/react'
-import { useLLMProviders, type LLMProvider } from './useLLMProviders'
+import { useLLMProviders } from './useLLMProviders'
 import { api } from '../../api/client'
-import { logger } from '../../utils/logger'
 
 jest.mock('../../api/client', () => ({
   api: {
@@ -25,7 +24,6 @@ jest.mock('../../utils/logger', () => ({
 }))
 
 const mockApi = api as jest.Mocked<typeof api>
-const mockLoggerError = logger.error as jest.MockedFunction<typeof logger.error>
 
 const waitForWithTimeout = (callback: () => void | Promise<void>, timeout = 2000) => {
   return waitFor(callback, { timeout })

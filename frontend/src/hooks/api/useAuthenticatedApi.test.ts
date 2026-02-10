@@ -1448,11 +1448,11 @@ describe('useAuthenticatedApi', () => {
       it('should verify outer catch block in createSafeError - ultimate fallback', async () => {
         // This is hard to test directly, but we can verify the fallback path exists
         // by ensuring errors are still created even in edge cases
-        const { result } = renderHook(() => useAuthenticatedApi(mockHttpClient))
+        renderHook(() => useAuthenticatedApi(mockHttpClient))
         
         // Test with invalid client to trigger error creation
         const invalidClient = {} as HttpClient
-        const { result: result2 } = renderHook(() => useAuthenticatedApi(invalidClient))
+        renderHook(() => useAuthenticatedApi(invalidClient))
         
         // Should still work and create errors properly
         await expect(
@@ -1462,6 +1462,7 @@ describe('useAuthenticatedApi', () => {
 
       it('should verify catch block in httpClient creation - fallback client', async () => {
         // Mock defaultAdapters.createHttpClient to throw
+        // eslint-disable-next-line @typescript-eslint/no-var-requires -- Dynamic require needed for Jest mocking
         const { defaultAdapters } = require('../../types/adapters')
         const originalCreateHttpClient = defaultAdapters.createHttpClient
         
@@ -1481,6 +1482,7 @@ describe('useAuthenticatedApi', () => {
       })
 
       it('should verify fallback client methods - get', async () => {
+        // eslint-disable-next-line @typescript-eslint/no-var-requires -- Dynamic require needed for Jest mocking
         const { defaultAdapters } = require('../../types/adapters')
         const originalCreateHttpClient = defaultAdapters.createHttpClient
         
@@ -1498,6 +1500,7 @@ describe('useAuthenticatedApi', () => {
       })
 
       it('should verify fallback client methods - put', async () => {
+        // eslint-disable-next-line @typescript-eslint/no-var-requires -- Dynamic require needed for Jest mocking
         const { defaultAdapters } = require('../../types/adapters')
         const originalCreateHttpClient = defaultAdapters.createHttpClient
         
@@ -1515,6 +1518,7 @@ describe('useAuthenticatedApi', () => {
       })
 
       it('should verify fallback client methods - delete', async () => {
+        // eslint-disable-next-line @typescript-eslint/no-var-requires -- Dynamic require needed for Jest mocking
         const { defaultAdapters } = require('../../types/adapters')
         const originalCreateHttpClient = defaultAdapters.createHttpClient
         
@@ -1532,6 +1536,7 @@ describe('useAuthenticatedApi', () => {
       })
 
       it('should verify exact string literal in fallback client: "HTTP client initialization failed"', async () => {
+        // eslint-disable-next-line @typescript-eslint/no-var-requires -- Dynamic require needed for Jest mocking
         const { defaultAdapters } = require('../../types/adapters')
         const originalCreateHttpClient = defaultAdapters.createHttpClient
         
@@ -1552,6 +1557,7 @@ describe('useAuthenticatedApi', () => {
       })
 
       it('should verify catch block in httpClient creation - createSafeError throws', async () => {
+        // eslint-disable-next-line @typescript-eslint/no-var-requires -- Dynamic require needed for Jest mocking
         const { defaultAdapters } = require('../../types/adapters')
         const originalCreateHttpClient = defaultAdapters.createHttpClient
         
@@ -1808,11 +1814,11 @@ describe('useAuthenticatedApi', () => {
 
         it('should verify Promise.reject catch blocks - reject throws', async () => {
           // Test that error paths handle Promise.reject throwing
-          const { result } = renderHook(() => useAuthenticatedApi(mockHttpClient))
+          renderHook(() => useAuthenticatedApi(mockHttpClient))
 
           // Test with invalid client to trigger error path
           const invalidClient = null as any
-          const { result: result2 } = renderHook(() => useAuthenticatedApi(invalidClient))
+          renderHook(() => useAuthenticatedApi(invalidClient))
 
           // Should use setTimeout fallback if Promise.reject throws
           await expect(

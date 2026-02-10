@@ -42,7 +42,7 @@ export default function InputNodeEditor({
     }
     case 'database':
     case 'firebase':
-    case 'bigquery':
+    case 'bigquery': {
       // These are handled by separate editors in PropertyPanel
       // Use constants to prevent string literal mutations
       const displayName = node.type === 'database' ? NODE_TYPE_DISPLAY_NAMES.DATABASE :
@@ -58,6 +58,7 @@ export default function InputNodeEditor({
           </p>
         </div>
       )
+    }
     default:
       return null
   }

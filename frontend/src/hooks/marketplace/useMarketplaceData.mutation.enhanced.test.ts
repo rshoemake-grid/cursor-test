@@ -150,9 +150,7 @@ describe('useMarketplaceData - Enhanced Mutation Killers', () => {
       })
 
       it('should return loading false when repository but agents sub-tab', () => {
-        let callIndex = 0
         mockUseDataFetching.mockImplementation(({ initialData }) => {
-          callIndex++
           // Order: templates (1), workflows-of-workflows (2), agents (3), repository agents (4)
           // For repository/agents, we check repository agents (4th call) loading state
           // Mock all as false to verify it checks the correct one

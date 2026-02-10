@@ -10,7 +10,6 @@ import {
   isPendingAgentsTooOld,
   type PendingAgents
 } from './pendingAgentsValidation'
-import { PENDING_AGENTS } from './marketplaceConstants'
 
 describe('pendingAgentsValidation', () => {
   describe('isValidPendingAgents', () => {

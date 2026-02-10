@@ -6,8 +6,7 @@
 import {
   ExponentialBackoffStrategy,
   LinearBackoffStrategy,
-  FixedDelayStrategy,
-  type ReconnectionStrategy
+  FixedDelayStrategy
 } from './websocketReconnectionStrategy'
 import { WS_RECONNECT } from './websocketConstants'
 

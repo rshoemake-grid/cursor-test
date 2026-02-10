@@ -815,7 +815,6 @@ describe('useWorkflowExecution', () => {
     })
 
     it('should verify execution.execution_id && execution.execution_id !== tempExecutionId - both true', async () => {
-      const tempExecutionId = `pending-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
       mockApi.executeWorkflow.mockResolvedValue({
         execution_id: 'exec-123', // Different from tempExecutionId
         status: 'running',
@@ -1087,7 +1086,6 @@ describe('useWorkflowExecution', () => {
     })
 
     it('should verify error?.message || Unknown error in catch - error.message path', async () => {
-      const errorWithMessage = new Error('Parse error')
       // Simulate JSON.parse throwing an error with message
       const { result } = renderHook(() =>
         useWorkflowExecution({
@@ -1119,8 +1117,6 @@ describe('useWorkflowExecution', () => {
 
     it('should verify error?.message || Unknown error in catch - Unknown error fallback', async () => {
       // Simulate an error without message property
-      const errorWithoutMessage = {}
-      
       // We can't easily simulate JSON.parse throwing an error without message,
       // but we can verify the code path exists by testing with a different error type
       const { result } = renderHook(() =>
@@ -1263,7 +1259,6 @@ describe('useWorkflowExecution', () => {
     })
 
     it('should verify execution.execution_id && execution.execution_id !== tempExecutionId - both true', async () => {
-      const tempExecutionId = `pending-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
       mockApi.executeWorkflow.mockResolvedValue({
         execution_id: 'exec-123', // Different from tempExecutionId
         status: 'running',
@@ -2207,8 +2202,6 @@ describe('useWorkflowExecution', () => {
 
     it('should verify exact logical AND execution.execution_id && execution.execution_id !== tempExecutionId - both true', async () => {
       mockWorkflowIdRef.current = 'workflow-id'
-      const tempExecutionId = 'pending-123'
-      const realExecutionId = 'execution-456'
 
       const { result } = renderHook(() =>
         useWorkflowExecution({
@@ -2711,7 +2704,6 @@ describe('useWorkflowExecution', () => {
 
     it('should verify exact substr(2, 9) parameters in tempExecutionId generation', async () => {
       mockWorkflowIdRef.current = 'workflow-id'
-      const originalSubstr = String.prototype.substr
       
       // Mock substr to verify exact parameters
       const substrSpy = jest.spyOn(String.prototype, 'substr')
@@ -2748,7 +2740,6 @@ describe('useWorkflowExecution', () => {
 
     it('should verify exact toString(36) base in tempExecutionId generation', async () => {
       mockWorkflowIdRef.current = 'workflow-id'
-      const originalToString = Number.prototype.toString
       
       // Mock toString to verify exact base parameter
       const toStringSpy = jest.spyOn(Number.prototype, 'toString')
@@ -3759,7 +3750,8 @@ describe('useWorkflowExecution', () => {
 
     it('should verify exact useCallback dependencies - handleConfirmExecute', () => {
       const { result, rerender } = renderHook(
-        ({ executionInputs }) =>
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        ({ executionInputs: _executionInputs }) =>
           useWorkflowExecution({
             isAuthenticated: true,
             localWorkflowId: 'workflow-id',
@@ -4342,7 +4334,7 @@ describe('useWorkflowExecution', () => {
 
     it('should verify exact useCallback dependencies array - handleConfirmExecute', () => {
       const { result, rerender } = renderHook(
-        ({ executionInputs, workflowIdRef, onExecutionStart }) =>
+        ({ workflowIdRef, onExecutionStart }) =>
           useWorkflowExecution({
             isAuthenticated: true,
             localWorkflowId: 'workflow-id',
@@ -5988,11 +5980,9 @@ describe('useWorkflowExecution', () => {
     describe('handleConfirmExecute - complex conditional', () => {
       it('should verify exact conditional: execution && execution.execution_id && execution.execution_id !== tempExecutionId', async () => {
         mockWorkflowIdRef.current = 'workflow-id'
-        const tempExecutionId = `pending-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
-        const realExecutionId = 'exec-real-id'
 
         mockApi.executeWorkflow.mockResolvedValue({
-          execution_id: realExecutionId,
+          execution_id: 'exec-real-id',
         })
 
         const { result } = renderHook(() =>

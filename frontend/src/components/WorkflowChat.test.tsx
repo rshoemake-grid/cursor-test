@@ -102,9 +102,13 @@ describe('WorkflowChat', () => {
     localStorage.clear()
     
     // Reset mocks
+    // eslint-disable-next-line @typescript-eslint/no-var-requires -- Dynamic require needed for Jest mocking
     const { useAuthenticatedApi } = require('../hooks/api')
+    // eslint-disable-next-line @typescript-eslint/no-var-requires -- Dynamic require needed for Jest mocking
     const { safeStorageGet } = require('../utils/storageHelpers')
+    // eslint-disable-next-line @typescript-eslint/no-var-requires -- Dynamic require needed for Jest mocking
     const { safeStorageSet } = require('../utils/storageHelpers')
+    // eslint-disable-next-line @typescript-eslint/no-var-requires -- Dynamic require needed for Jest mocking
     const { handleApiError } = require('../utils/errorHandler')
     
     // Reset all mocks
@@ -184,6 +188,7 @@ describe('WorkflowChat', () => {
   })
 
   it('should handle invalid localStorage history gracefully', () => {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires -- Dynamic require needed for Jest mocking
     const { safeStorageGet } = require('../utils/storageHelpers')
     safeStorageGet.mockReturnValueOnce([]) // Return empty array on parse error
 
@@ -196,6 +201,7 @@ describe('WorkflowChat', () => {
   })
 
   it('should send message when send button is clicked', async () => {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires -- Dynamic require needed for Jest mocking
     const { useAuthenticatedApi } = require('../hooks/api')
     const mockAuthenticatedPost = jest.fn().mockResolvedValue({
       ok: true,
@@ -285,6 +291,7 @@ describe('WorkflowChat', () => {
   })
 
   it('should handle API error', async () => {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires -- Dynamic require needed for Jest mocking
     const { handleApiError } = require('../utils/errorHandler')
     handleApiError.mockReturnValue('HTTP error! status: 500')
     
@@ -368,7 +375,7 @@ describe('WorkflowChat', () => {
     ]
     localStorage.setItem('chat_history_workflow-1', JSON.stringify(history1))
 
-    const { rerender, unmount } = renderWithProvider(<WorkflowChat workflowId="workflow-1" />)
+    const { unmount } = renderWithProvider(<WorkflowChat workflowId="workflow-1" />)
 
     await waitForWithTimeout(() => {
       expect(screen.getByText('Message 1')).toBeInTheDocument()
@@ -419,6 +426,7 @@ describe('WorkflowChat', () => {
   })
 
   it('should handle non-Error exception', async () => {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires -- Dynamic require needed for Jest mocking
     const { handleApiError } = require('../utils/errorHandler')
     handleApiError.mockReturnValue('Unknown error')
     
@@ -468,6 +476,7 @@ describe('WorkflowChat', () => {
   })
 
   it('should handle network errors', async () => {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires -- Dynamic require needed for Jest mocking
     const { handleApiError } = require('../utils/errorHandler')
     handleApiError.mockReturnValue('Network error')
     
@@ -546,6 +555,7 @@ describe('WorkflowChat', () => {
     })
 
     it('should use injected HTTP client', async () => {
+      // eslint-disable-next-line @typescript-eslint/no-var-requires -- Dynamic require needed for Jest mocking
       const { useAuthenticatedApi } = require('../hooks/api')
       const injectedMockPost = jest.fn().mockResolvedValue({
         ok: true,
@@ -579,6 +589,7 @@ describe('WorkflowChat', () => {
     })
 
     it('should use injected API base URL', async () => {
+      // eslint-disable-next-line @typescript-eslint/no-var-requires -- Dynamic require needed for Jest mocking
       const { useAuthenticatedApi } = require('../hooks/api')
       const customMockPost = jest.fn().mockResolvedValue({
         ok: true,
@@ -657,6 +668,7 @@ describe('WorkflowChat', () => {
     })
 
     it('should handle storage errors gracefully', () => {
+      // eslint-disable-next-line @typescript-eslint/no-var-requires -- Dynamic require needed for Jest mocking
       const { safeStorageGet } = require('../utils/storageHelpers')
       safeStorageGet.mockReturnValueOnce([]) // Return empty array on error
 
@@ -682,6 +694,7 @@ describe('WorkflowChat', () => {
     })
 
     it('should handle storage setItem errors', async () => {
+      // eslint-disable-next-line @typescript-eslint/no-var-requires -- Dynamic require needed for Jest mocking
       const { safeStorageSet } = require('../utils/storageHelpers')
       safeStorageSet.mockReturnValue(false) // Simulate storage error
 
@@ -708,6 +721,7 @@ describe('WorkflowChat', () => {
     })
 
     it('should handle HTTP client errors', async () => {
+      // eslint-disable-next-line @typescript-eslint/no-var-requires -- Dynamic require needed for Jest mocking
       const { handleApiError } = require('../utils/errorHandler')
       handleApiError.mockReturnValue('Network error')
       

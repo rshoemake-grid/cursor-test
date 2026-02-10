@@ -32,7 +32,6 @@ describe('adapters - No Coverage Paths', () => {
     it('should return fallback client when initialization throws', async () => {
       // Make the try block throw by making the object literal creation throw
       const originalFetch = global.fetch
-      const originalObject = Object
       
       // Make Object creation throw to trigger catch block
       // This is tricky, so we'll test the fallback behavior directly

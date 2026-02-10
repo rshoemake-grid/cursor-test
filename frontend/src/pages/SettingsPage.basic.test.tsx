@@ -1,4 +1,4 @@
-import { setupMocks, mockUseAuth, mockShowSuccess, mockShowError, mockApi, renderWithRouter, waitForWithTimeout } from './SettingsPage.test.shared'
+import { setupMocks, mockUseAuth, renderWithRouter, waitForWithTimeout } from './SettingsPage.test.shared'
 import SettingsPage from './SettingsPage'
 import React from 'react'
 import { screen, fireEvent } from '@testing-library/react'

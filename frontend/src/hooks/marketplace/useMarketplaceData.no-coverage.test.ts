@@ -7,7 +7,6 @@
 import { renderHook, waitFor } from '@testing-library/react'
 import { useMarketplaceData } from './useMarketplaceData'
 import { getLocalStorageItem } from '../storage'
-import { STORAGE_KEYS } from '../../config/constants'
 
 jest.mock('../storage', () => ({
   getLocalStorageItem: jest.fn(),
@@ -269,6 +268,8 @@ describe('useMarketplaceData - No Coverage Mutants (Phase 4)', () => {
       ]
       mockGetLocalStorageItem.mockReturnValue(agents)
 
+       
+      // eslint-disable-next-line @typescript-eslint/no-var-requires -- Dynamic require needed for Jest mocking
       const { logger } = require('../../utils/logger')
       const debugSpy = jest.spyOn(logger, 'debug')
 
@@ -320,6 +321,8 @@ describe('useMarketplaceData - No Coverage Mutants (Phase 4)', () => {
       ]
       mockGetLocalStorageItem.mockReturnValue(agents)
 
+       
+      // eslint-disable-next-line @typescript-eslint/no-var-requires -- Dynamic require needed for Jest mocking
       const { logger } = require('../../utils/logger')
       const debugSpy = jest.spyOn(logger, 'debug')
 

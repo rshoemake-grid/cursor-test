@@ -23,6 +23,7 @@ export function useAuthenticatedApi(
   apiBaseUrl?: string
 ) {
   // Wrap hook initialization in try-catch to prevent crashes from mutations
+  // eslint-disable react-hooks/rules-of-hooks -- Intentional try-catch for mutation testing protection
   try {
     const { token } = useAuth()
     
@@ -141,6 +142,7 @@ export function useAuthenticatedApi(
       authenticatedDelete: rejectFn,
     }
   }
+  // eslint-enable react-hooks/rules-of-hooks
 }
 
 // Re-export error constants for backward compatibility

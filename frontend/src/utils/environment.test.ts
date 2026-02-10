@@ -21,12 +21,12 @@ describe('environment utilities', () => {
     })
 
     it('should return true even if window is an empty object', () => {
-      ;(global as any).window = {}
+      (global as any).window = {}
       expect(isBrowserEnvironment()).toBe(true)
     })
 
     it('should return true even if window has properties', () => {
-      ;(global as any).window = {
+      (global as any).window = {
         document: {},
         localStorage: {},
       }
@@ -48,12 +48,12 @@ describe('environment utilities', () => {
     })
 
     it('should return false even if window is an empty object', () => {
-      ;(global as any).window = {}
+      (global as any).window = {}
       expect(isServerEnvironment()).toBe(false)
     })
 
     it('should return false even if window has properties', () => {
-      ;(global as any).window = {
+      (global as any).window = {
         document: {},
         localStorage: {},
       }
@@ -64,7 +64,7 @@ describe('environment utilities', () => {
   describe('complementary behavior', () => {
     it('should be complementary - isServerEnvironment is opposite of isBrowserEnvironment', () => {
       // Test with window defined
-      ;(global as any).window = {}
+      (global as any).window = {}
       expect(isServerEnvironment()).toBe(!isBrowserEnvironment())
 
       // Test with window undefined

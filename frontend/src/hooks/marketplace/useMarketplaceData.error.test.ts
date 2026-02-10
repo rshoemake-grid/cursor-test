@@ -7,7 +7,6 @@ import { renderHook, waitFor } from '@testing-library/react'
 import { useMarketplaceData } from './useMarketplaceData'
 import { logger } from '../../utils/logger'
 import { getLocalStorageItem } from '../storage'
-import { STORAGE_KEYS } from '../../config/constants'
 
 jest.mock('../../utils/logger', () => ({
   logger: {

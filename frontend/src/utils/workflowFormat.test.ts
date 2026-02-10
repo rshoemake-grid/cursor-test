@@ -12,7 +12,6 @@ import {
   workflowNodeToReactFlowNode,
 } from './workflowFormat'
 import type { Node, Edge } from '@xyflow/react'
-import type { WorkflowNode, WorkflowEdge } from '../types/workflow'
 
 describe('workflowFormat utilities', () => {
   describe('convertEdgesToWorkflowFormat', () => {
@@ -1383,7 +1382,8 @@ describe('workflowFormat utilities', () => {
           sourceHandle: false,
           source_handle: false, // This will make sourceHandle = false || false || null = null
         }
-        const result = formatEdgesForReactFlow([edge])
+        // Call formatEdgesForReactFlow to verify the conversion logic
+        formatEdgesForReactFlow([edge])
         
         // Since false || null = null, the false check never executes
         // But we can verify the conversion logic exists by testing the true case

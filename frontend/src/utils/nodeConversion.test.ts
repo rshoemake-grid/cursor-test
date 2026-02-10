@@ -4,7 +4,6 @@
 
 import { convertNodesForExecutionInput } from './nodeConversion'
 import type { Node } from '@xyflow/react'
-import type { WorkflowNode } from '../types/workflow'
 
 describe('nodeConversion', () => {
   describe('convertNodesForExecutionInput', () => {

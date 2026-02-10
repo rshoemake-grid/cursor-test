@@ -1437,7 +1437,7 @@ describe('useExecutionManagement', () => {
 
   describe('mutation killers for polling useEffect', () => {
     it('should verify runningExecutions.length === 0 early return', async () => {
-      const { result } = renderHook(() =>
+      renderHook(() =>
         useExecutionManagement({
           tabs: [mockTab],
           activeTabId: 'tab-1',

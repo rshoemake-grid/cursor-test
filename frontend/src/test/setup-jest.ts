@@ -81,6 +81,8 @@ Object.defineProperty(global, 'import', {
 
 // Polyfill TextEncoder/TextDecoder for react-router-dom
 if (typeof global.TextEncoder === 'undefined') {
+   
+  // eslint-disable-next-line @typescript-eslint/no-var-requires -- Dynamic require needed for Jest setup
   const { TextEncoder, TextDecoder } = require('util')
   global.TextEncoder = TextEncoder
   global.TextDecoder = TextDecoder
@@ -246,6 +248,8 @@ afterEach(() => {
   try {
     // Try to access wsInstances from useWebSocket test setup
     // Use dynamic require to avoid import issues if module not available
+     
+    // eslint-disable-next-line @typescript-eslint/no-var-requires -- Dynamic require needed for Jest setup
     const wsSetupModule = require('./hooks/execution/useWebSocket.test.setup')
     if (wsSetupModule && wsSetupModule.wsInstances && Array.isArray(wsSetupModule.wsInstances)) {
       // Clear all WebSocket instances

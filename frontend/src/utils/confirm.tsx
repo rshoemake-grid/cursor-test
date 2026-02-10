@@ -23,6 +23,7 @@ export function showConfirm(
     cancelText = 'Cancel',
     type = 'warning',
     documentAdapter: providedDocumentAdapter,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     timerAdapter: _timerAdapter = defaultAdapters.createTimerAdapter()
   } = options
 

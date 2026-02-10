@@ -437,6 +437,7 @@ describe('NodeContextMenu', () => {
 
   it('should handle delete when both nodeId and edgeId are provided', () => {
     const mockDeleteElements = jest.fn()
+    // eslint-disable-next-line @typescript-eslint/no-var-requires -- Dynamic require needed for Jest mocking
     jest.spyOn(require('@xyflow/react'), 'useReactFlow').mockReturnValue({
       deleteElements: mockDeleteElements,
     })
@@ -464,6 +465,7 @@ describe('NodeContextMenu', () => {
 
   it('should handle delete when neither nodeId nor edgeId are provided', () => {
     const mockDeleteElements = jest.fn()
+    // eslint-disable-next-line @typescript-eslint/no-var-requires -- Dynamic require needed for Jest mocking
     jest.spyOn(require('@xyflow/react'), 'useReactFlow').mockReturnValue({
       deleteElements: mockDeleteElements,
     })
@@ -512,6 +514,7 @@ describe('NodeContextMenu', () => {
 
   it('should handle delete without onDelete callback', () => {
     const mockDeleteElements = jest.fn()
+    // eslint-disable-next-line @typescript-eslint/no-var-requires -- Dynamic require needed for Jest mocking
     jest.spyOn(require('@xyflow/react'), 'useReactFlow').mockReturnValue({
       deleteElements: mockDeleteElements,
     })

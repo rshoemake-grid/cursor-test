@@ -2,12 +2,7 @@
  * Tests for useWorkflowPersistence hook
  */
 
-import { renderHook, act, waitFor } from '@testing-library/react'
-
-// Helper to ensure all waitFor calls have timeouts
-const waitForWithTimeout = (callback: () => void | Promise<void>, timeout = 2000) => {
-  return waitFor(callback, { timeout })
-}
+import { renderHook, act } from '@testing-library/react'
 
 import { useWorkflowPersistence } from './useWorkflowPersistence'
 import { api } from '../../api/client'

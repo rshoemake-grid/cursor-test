@@ -103,7 +103,7 @@ describe('errorFactory', () => {
           global.Function = undefined
         },
         () => {
-          // @ts-ignore
+          // @ts-expect-error - Intentionally breaking Error for test
           global.Error = function() { throw new Error('Fail') }
         },
       ]

@@ -12,6 +12,7 @@ import type { Node } from '@xyflow/react'
 // Mock useReactFlow
 const mockUseReactFlow = jest.fn()
 jest.mock('@xyflow/react', () => {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires -- Dynamic require needed for Jest mocking
   const React = require('react')
   const actual = jest.requireActual('@xyflow/react')
   return {

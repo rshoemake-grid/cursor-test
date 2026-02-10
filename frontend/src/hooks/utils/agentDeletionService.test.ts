@@ -7,7 +7,6 @@ import {
   deleteAgentsFromStorage,
   extractAgentIds,
   updateStateAfterDeletion,
-  DeletionResult,
 } from './agentDeletionService'
 import type { StorageAdapter } from '../../types/adapters'
 import type { AgentTemplate } from '../marketplace/useMarketplaceData'

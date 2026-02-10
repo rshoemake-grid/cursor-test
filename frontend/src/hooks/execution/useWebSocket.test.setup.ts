@@ -65,6 +65,7 @@ export class MockWebSocket {
     this.timers.push(timer)
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   send(_data: string) {
     // Mock send
   }

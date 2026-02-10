@@ -7,7 +7,6 @@
 import { renderHook, waitFor } from '@testing-library/react'
 import { useMarketplaceData } from './useMarketplaceData'
 import { getLocalStorageItem } from '../storage'
-import { STORAGE_KEYS } from '../../config/constants'
 
 jest.mock('../storage', () => ({
   getLocalStorageItem: jest.fn(),
@@ -191,7 +190,7 @@ describe('useMarketplaceData - Conditional Expressions', () => {
 
       // URLSearchParams encodes spaces as +, not %20
       expect(mockHttpClient.get).toHaveBeenCalledWith(
-        expect.stringMatching(/search=test[\+%20]query/)
+        expect.stringMatching(/search=test[+%20]query/)
       )
     })
 

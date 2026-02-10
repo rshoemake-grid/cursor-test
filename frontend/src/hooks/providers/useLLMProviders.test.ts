@@ -1604,6 +1604,7 @@ describe('useLLMProviders', () => {
 
     it('should verify exact comparison provider.enabled && provider.models && provider.models.length > 0', async () => {
       // Import the function directly
+      // eslint-disable-next-line @typescript-eslint/no-var-requires -- Dynamic require needed for Jest mocking
       const { useLLMProviders } = require('./useLLMProviders')
       
       // We can't directly test extractModelsFromProviders as it's not exported
@@ -2048,16 +2049,6 @@ describe('useLLMProviders', () => {
       })
 
       it('should handle data.providers || [] in storage save', async () => {
-        const providers: LLMProvider[] = [
-          {
-            id: 'provider1',
-            name: 'OpenAI',
-            type: 'openai',
-            enabled: true,
-            models: ['gpt-4'],
-          },
-        ]
-
         mockApi.getLLMSettings.mockResolvedValue({
           providers: null, // Null providers
           iteration_limit: 10,
@@ -2077,18 +2068,16 @@ describe('useLLMProviders', () => {
       })
 
       it('should handle data.default_model || empty string in storage save', async () => {
-        const providers: LLMProvider[] = [
-          {
-            id: 'provider1',
-            name: 'OpenAI',
-            type: 'openai',
-            enabled: true,
-            models: ['gpt-4'],
-          },
-        ]
-
         mockApi.getLLMSettings.mockResolvedValue({
-          providers,
+          providers: [
+            {
+              id: 'provider1',
+              name: 'OpenAI',
+              type: 'openai',
+              enabled: true,
+              models: ['gpt-4'],
+            },
+          ],
           iteration_limit: 10,
           default_model: null, // Null default_model
         } as any)

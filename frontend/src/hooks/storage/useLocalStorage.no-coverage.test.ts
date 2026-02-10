@@ -160,7 +160,7 @@ describe('useLocalStorage - No Coverage Paths', () => {
         throw new Error('Error')
       })
 
-      const { result } = renderHook(() =>
+      renderHook(() =>
         useLocalStorage('test-key', 'default', {
           storage: mockStorage,
           logger: customLogger,

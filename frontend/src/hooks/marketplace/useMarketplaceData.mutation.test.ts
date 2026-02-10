@@ -7,7 +7,6 @@ import { renderHook, waitFor } from '@testing-library/react'
 import { useMarketplaceData } from './useMarketplaceData'
 import { logger } from '../../utils/logger'
 import { getLocalStorageItem } from '../storage'
-import { STORAGE_KEYS } from '../../config/constants'
 
 jest.mock('../../utils/logger', () => ({
   logger: {
@@ -20,7 +19,6 @@ jest.mock('../storage', () => ({
   getLocalStorageItem: jest.fn(),
 }))
 
-const mockLoggerError = logger.error as jest.MockedFunction<typeof logger.error>
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const mockLoggerDebug = logger.debug as jest.MockedFunction<typeof logger.debug>
 const mockGetLocalStorageItem = getLocalStorageItem as jest.MockedFunction<typeof getLocalStorageItem>

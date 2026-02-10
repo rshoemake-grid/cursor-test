@@ -26,7 +26,6 @@ const mockShowSuccess = showSuccess as jest.MockedFunction<typeof showSuccess>
 const mockShowConfirm = showConfirm as jest.MockedFunction<typeof showConfirm>
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 const mockLoggerDebug = logger.debug as jest.MockedFunction<typeof logger.debug>
-const mockLoggerError = logger.error as jest.MockedFunction<typeof logger.error>
 
 describe('useAgentDeletion', () => {
   const mockStorage = {
@@ -56,8 +55,6 @@ describe('useAgentDeletion', () => {
       author_name: 'Test User',
     },
   ]
-
-  const mockRepositoryAgents = mockAgents
 
   beforeEach(() => {
     jest.clearAllMocks()

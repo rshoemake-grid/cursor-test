@@ -14,6 +14,7 @@ jest.mock('@xyflow/react/dist/style.css', () => ({}))
 
 // Mock App component BEFORE importing main
 jest.mock('./App', () => {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires -- Dynamic require needed for Jest mocking
   const React = require('react')
   return {
     __esModule: true,
@@ -53,6 +54,7 @@ describe('main.tsx', () => {
     // Import the module to execute the code - this gives us 100% coverage
     // The code executes even if mocks aren't perfect, which is what we need for coverage
     try {
+       
       require('./main')
     } catch (e) {
       // If it fails due to mock issues, that's okay - the code was still executed

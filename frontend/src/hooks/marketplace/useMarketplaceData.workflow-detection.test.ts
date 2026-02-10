@@ -50,6 +50,7 @@ describe('useMarketplaceData - Workflow Detection (Phase 4.2)', () => {
         json: async () => ({ nodes: [] }),
       })
 
+      // eslint-disable-next-line @typescript-eslint/no-var-requires -- Dynamic require needed for Jest mocking
       const loggerSpy = jest.spyOn(require('../../utils/logger').logger, 'error')
 
       const { result } = renderHook(() =>

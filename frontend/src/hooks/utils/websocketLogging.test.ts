@@ -27,7 +27,7 @@ describe('websocketLogging', () => {
 
   describe('logSkipConnectionReason', () => {
     it('should log skip reason for temporary execution ID', () => {
-      ;(isTemporaryExecutionId as jest.Mock).mockReturnValue(true)
+      (isTemporaryExecutionId as jest.Mock).mockReturnValue(true)
       const executionId = 'pending-123'
 
       logSkipConnectionReason(
@@ -141,7 +141,7 @@ describe('websocketLogging', () => {
     })
 
     it('should log skip reason for temporary execution ID', () => {
-      ;(isTemporaryExecutionId as jest.Mock).mockReturnValue(true)
+      (isTemporaryExecutionId as jest.Mock).mockReturnValue(true)
       const executionId = 'pending-123'
       const event = new CloseEvent('close')
 

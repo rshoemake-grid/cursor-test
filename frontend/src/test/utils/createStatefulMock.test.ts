@@ -58,12 +58,11 @@ describe('createStatefulMock', () => {
   it('should work with setter functions', () => {
     const mockFn = jest.fn()
     mockFn.mockReturnValue = jest.fn()
-    let capturedUpdateFn: ((newState: string) => void) | undefined
     
     const mockInstance = createStatefulMock({
       initialState: 'tab1',
       createMockFn: (currentState, updateStateFn) => {
-        capturedUpdateFn = updateStateFn
+        // updateStateFn is captured but not used in this test
         return {
           activeTab: currentState,
           setActiveTab: jest.fn((tab: string) => {

@@ -486,6 +486,8 @@ describe('useMarketplaceData - Targeted Tests (Phase 4.2)', () => {
       ]
       mockGetLocalStorageItem.mockReturnValue(agents)
 
+       
+      // eslint-disable-next-line @typescript-eslint/no-var-requires -- Dynamic require needed for Jest mocking
       const { logger } = require('../../utils/logger')
       const debugSpy = jest.spyOn(logger, 'debug')
 
@@ -534,6 +536,8 @@ describe('useMarketplaceData - Targeted Tests (Phase 4.2)', () => {
       ]
       mockGetLocalStorageItem.mockReturnValue(agents)
 
+       
+      // eslint-disable-next-line @typescript-eslint/no-var-requires -- Dynamic require needed for Jest mocking
       const { logger } = require('../../utils/logger')
       const debugSpy = jest.spyOn(logger, 'debug')
 

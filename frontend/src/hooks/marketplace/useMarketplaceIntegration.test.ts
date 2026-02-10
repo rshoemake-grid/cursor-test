@@ -651,7 +651,7 @@ describe('useMarketplaceIntegration', () => {
 
   describe('useEffect event handling', () => {
     it('should verify targetTabId !== tabId check - different tab', () => {
-      const { result } = renderHook(() =>
+      renderHook(() =>
         useMarketplaceIntegration({
           tabId: 'tab-1',
           storage: null,
@@ -682,7 +682,7 @@ describe('useMarketplaceIntegration', () => {
     })
 
     it('should verify targetTabId !== tabId check - same tab', () => {
-      const { result } = renderHook(() =>
+      renderHook(() =>
         useMarketplaceIntegration({
           tabId: 'tab-1',
           storage: null,
@@ -3177,7 +3177,7 @@ describe('useMarketplaceIntegration', () => {
       })
 
       it('should verify exact targetTabId !== tabId comparison', () => {
-        const { result } = renderHook(() =>
+        renderHook(() =>
           useMarketplaceIntegration({
             tabId: 'tab-1',
             storage: null,

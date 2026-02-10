@@ -12,7 +12,6 @@ import SettingsPage from './SettingsPage'
 import { useAuth } from '../contexts/AuthContext'
 import { showConfirm } from '../utils/confirm'
 import { SETTINGS_TABS } from '../constants/settingsConstants'
-import type { LLMProvider } from '../hooks/providers'
 
 // Mock logger
 jest.mock('../utils/logger', () => ({

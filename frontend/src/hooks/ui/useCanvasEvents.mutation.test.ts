@@ -6,7 +6,6 @@
 import { renderHook, act } from '@testing-library/react'
 import { useCanvasEvents } from './useCanvasEvents'
 import { showSuccess, showError } from '../../utils/notifications'
-import { logger } from '../../utils/logger'
 import type { Node } from '@xyflow/react'
 
 jest.mock('../../utils/notifications', () => ({
@@ -22,7 +21,6 @@ jest.mock('../../utils/logger', () => ({
 
 const mockShowSuccess = showSuccess as jest.MockedFunction<typeof showSuccess>
 const mockShowError = showError as jest.MockedFunction<typeof showError>
-const mockLoggerError = logger.error as jest.MockedFunction<typeof logger.error>
 
 describe('useCanvasEvents - Mutation Killers', () => {
   const mockReactFlowInstanceRef = { current: { screenToFlowPosition: jest.fn() } }

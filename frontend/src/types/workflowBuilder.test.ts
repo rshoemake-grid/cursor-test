@@ -382,6 +382,8 @@ describe('types/workflowBuilder.ts', () => {
 
     it('should execute module via require', () => {
       // Force execution of the module to ensure coverage
+       
+      // eslint-disable-next-line @typescript-eslint/no-var-requires -- Dynamic require needed for Jest mocking
       const requiredModule = require('./workflowBuilder')
       expect(requiredModule.hasWorkflowBuilderCoreProps).toBeDefined()
       expect(requiredModule.hasWorkflowBuilderExecutionProps).toBeDefined()

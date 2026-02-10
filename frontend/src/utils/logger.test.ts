@@ -209,6 +209,7 @@ describe('logger', () => {
       
       // Reload logger to get new isDev value
       jest.resetModules()
+      // eslint-disable-next-line @typescript-eslint/no-var-requires -- Dynamic require needed for Jest mocking
       const { logger: newLogger } = require('./logger')
       
       // Should log (isDev = undefined === 'development' || undefined !== 'production' = false || true = true)
@@ -225,6 +226,7 @@ describe('logger', () => {
       
       // Reload logger to get new isDev value
       jest.resetModules()
+      // eslint-disable-next-line @typescript-eslint/no-var-requires -- Dynamic require needed for Jest mocking
       const { logger: newLogger } = require('./logger')
       
       // Should log (isDev = '' === 'development' || '' !== 'production' = false || true = true)
@@ -241,6 +243,7 @@ describe('logger', () => {
       
       // Reload logger to get new isDev value
       jest.resetModules()
+      // eslint-disable-next-line @typescript-eslint/no-var-requires -- Dynamic require needed for Jest mocking
       const { logger: newLogger } = require('./logger')
       
       // Should log (isDev = 'test' === 'development' || 'test' !== 'production' = false || true = true)
@@ -257,6 +260,7 @@ describe('logger', () => {
       
       // Reload logger to get new isDev value
       jest.resetModules()
+      // eslint-disable-next-line @typescript-eslint/no-var-requires -- Dynamic require needed for Jest mocking
       const { logger: newLogger } = require('./logger')
       
       // Should not log (isDev = 'production' === 'development' || 'production' !== 'production' = false || false = false)

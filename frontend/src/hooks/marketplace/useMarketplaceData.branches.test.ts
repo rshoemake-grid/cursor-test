@@ -7,9 +7,7 @@
 
 import { renderHook, waitFor } from '@testing-library/react'
 import { useMarketplaceData } from './useMarketplaceData'
-import { logger } from '../../utils/logger'
 import { getLocalStorageItem } from '../storage'
-import { STORAGE_KEYS } from '../../config/constants'
 
 jest.mock('../../utils/logger', () => ({
   logger: {
@@ -24,8 +22,6 @@ jest.mock('../storage', () => ({
 }))
 
 const mockGetLocalStorageItem = getLocalStorageItem as jest.MockedFunction<typeof getLocalStorageItem>
-
-const mockLoggerError = logger.error as jest.MockedFunction<typeof logger.error>
 
 describe('useMarketplaceData - Remaining Branches', () => {
   let mockHttpClient: any

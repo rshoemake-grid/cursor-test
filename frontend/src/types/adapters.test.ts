@@ -1,5 +1,4 @@
 import { defaultAdapters } from './adapters'
-import type { StorageAdapter, HttpClient, DocumentAdapter, TimerAdapter, WebSocketFactory, WindowLocation, ConsoleAdapter, EnvironmentAdapter } from './adapters'
 
 describe('defaultAdapters', () => {
   describe('createStorageAdapter', () => {
@@ -1182,7 +1181,8 @@ describe('defaultAdapters', () => {
           globalObj.Response = class MockResponse {
             ok = true
             status = 200
-            constructor(body?: any, init?: any) {}
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            constructor(_body?: any, _init?: any) {}
           } as any
         }
         
@@ -1221,7 +1221,8 @@ describe('defaultAdapters', () => {
           globalObj.Response = class MockResponse {
             ok = true
             status = 200
-            constructor(body?: any, init?: any) {
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            constructor(_body?: any, _init?: any) {
               // Mock Response constructor
             }
           } as any

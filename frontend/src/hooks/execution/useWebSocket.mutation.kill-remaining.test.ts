@@ -1072,7 +1072,7 @@ describe('useWebSocket - Kill Remaining Mutants', () => {
 
       it('should verify exact logical OR: executionStatus || lastKnownStatusRef.current', async () => {
         // Test when executionStatus is undefined - should use lastKnownStatusRef.current
-        const { result } = renderHook(() =>
+        renderHook(() =>
           useWebSocket({
             executionId: 'exec-1',
             executionStatus: undefined,
@@ -1153,7 +1153,7 @@ describe('useWebSocket - Kill Remaining Mutants', () => {
           hash: '',
         }
 
-        const { result } = renderHook(() =>
+        renderHook(() =>
           useWebSocket({
             executionId: 'exec-1',
             windowLocation,
@@ -1180,7 +1180,7 @@ describe('useWebSocket - Kill Remaining Mutants', () => {
           hash: '',
         }
 
-        const { result } = renderHook(() =>
+        renderHook(() =>
           useWebSocket({
             executionId: 'exec-1',
             windowLocation: windowLocationHttp,
@@ -1199,7 +1199,7 @@ describe('useWebSocket - Kill Remaining Mutants', () => {
       it('should verify exact optional chaining: windowLocation?.host || "localhost:8000"', async () => {
         const windowLocationNull = null
 
-        const { result } = renderHook(() =>
+        renderHook(() =>
           useWebSocket({
             executionId: 'exec-1',
             windowLocation: windowLocationNull,
@@ -1733,7 +1733,7 @@ describe('useWebSocket - Kill Remaining Mutants', () => {
 
     describe('reason && reason.length > 0 check', () => {
       it('should verify exact reason && reason.length > 0 - reason exists and has length', async () => {
-        const { result } = renderHook(() =>
+        renderHook(() =>
           useWebSocket({
             executionId: 'exec-1',
             executionStatus: 'running'
@@ -1763,7 +1763,7 @@ describe('useWebSocket - Kill Remaining Mutants', () => {
       })
 
       it('should verify exact reason && reason.length > 0 - reason is empty string', async () => {
-        const { result } = renderHook(() =>
+        renderHook(() =>
           useWebSocket({
             executionId: 'exec-1',
             executionStatus: 'running'
@@ -1794,7 +1794,7 @@ describe('useWebSocket - Kill Remaining Mutants', () => {
       })
 
       it('should verify exact reason && reason.length > 0 - reason is undefined', async () => {
-        const { result } = renderHook(() =>
+        renderHook(() =>
           useWebSocket({
             executionId: 'exec-1',
             executionStatus: 'running'
@@ -1827,7 +1827,7 @@ describe('useWebSocket - Kill Remaining Mutants', () => {
 
     describe('wasClean && code === 1000 check', () => {
       it('should verify exact wasClean && code === 1000 - both true', async () => {
-        const { result } = renderHook(() =>
+        renderHook(() =>
           useWebSocket({
             executionId: 'exec-1',
             executionStatus: 'running'
@@ -1852,7 +1852,7 @@ describe('useWebSocket - Kill Remaining Mutants', () => {
       })
 
       it('should verify exact wasClean && code === 1000 - wasClean is false', async () => {
-        const { result } = renderHook(() =>
+        renderHook(() =>
           useWebSocket({
             executionId: 'exec-1',
             executionStatus: 'running'
@@ -1887,7 +1887,7 @@ describe('useWebSocket - Kill Remaining Mutants', () => {
       })
 
       it('should verify exact wasClean && code === 1000 - code is not 1000', async () => {
-        const { result } = renderHook(() =>
+        renderHook(() =>
           useWebSocket({
             executionId: 'exec-1',
             executionStatus: 'running'
@@ -2058,7 +2058,7 @@ describe('useWebSocket - Kill Remaining Mutants', () => {
 
       it('should verify exact reconnectAttempts.current >= maxReconnectAttempts - greater than max', async () => {
         const onError = jest.fn()
-        const { result } = renderHook(() =>
+        renderHook(() =>
           useWebSocket({
             executionId: 'exec-1',
             executionStatus: 'running',
@@ -2094,7 +2094,7 @@ describe('useWebSocket - Kill Remaining Mutants', () => {
       })
 
       it('should verify exact reconnectAttempts.current < maxReconnectAttempts && executionId - executionId is null', async () => {
-        const { result, rerender } = renderHook(
+        const { rerender } = renderHook(
           ({ executionId }) => useWebSocket({
             executionId,
             executionStatus: 'running'
@@ -2105,7 +2105,6 @@ describe('useWebSocket - Kill Remaining Mutants', () => {
         await advanceTimersByTime(100)
         expect(wsInstances.length).toBeGreaterThan(0)
 
-        const ws = wsInstances[0]
         jest.clearAllMocks()
 
         // Set executionId to null - this should close the connection
@@ -2123,7 +2122,7 @@ describe('useWebSocket - Kill Remaining Mutants', () => {
 
     describe('WebSocket readyState comparisons', () => {
       it('should verify exact wsState === WebSocket.CONNECTING', async () => {
-        const { result } = renderHook(() =>
+        renderHook(() =>
           useWebSocket({
             executionId: 'exec-1',
             executionStatus: 'running'
@@ -2158,7 +2157,7 @@ describe('useWebSocket - Kill Remaining Mutants', () => {
       })
 
       it('should verify exact wsState === WebSocket.OPEN', async () => {
-        const { result } = renderHook(() =>
+        renderHook(() =>
           useWebSocket({
             executionId: 'exec-1',
             executionStatus: 'running'
@@ -2193,7 +2192,7 @@ describe('useWebSocket - Kill Remaining Mutants', () => {
       })
 
       it('should verify exact wsState === WebSocket.CLOSING', async () => {
-        const { result } = renderHook(() =>
+        renderHook(() =>
           useWebSocket({
             executionId: 'exec-1',
             executionStatus: 'running'
@@ -2228,7 +2227,7 @@ describe('useWebSocket - Kill Remaining Mutants', () => {
       })
 
       it('should verify exact wsState === WebSocket.CLOSED', async () => {
-        const { result } = renderHook(() =>
+        renderHook(() =>
           useWebSocket({
             executionId: 'exec-1',
             executionStatus: 'running'
@@ -2263,7 +2262,7 @@ describe('useWebSocket - Kill Remaining Mutants', () => {
       })
 
       it('should verify exact wsState === WebSocket.CLOSED - unknown state', async () => {
-        const { result } = renderHook(() =>
+        renderHook(() =>
           useWebSocket({
             executionId: 'exec-1',
             executionStatus: 'running'
@@ -2328,6 +2327,7 @@ describe('useWebSocket - Kill Remaining Mutants', () => {
 
       it('should verify exact error instanceof Error - error is not Error instance', async () => {
         const onError = jest.fn()
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars -- Stored for potential restore
         const OriginalWebSocket = global.WebSocket
         
         global.WebSocket = class {

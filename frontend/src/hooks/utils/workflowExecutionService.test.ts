@@ -16,7 +16,6 @@ jest.mock('../../utils/logger', () => ({
   },
 }))
 
-const mockLoggerDebug = logger.debug as jest.MockedFunction<typeof logger.debug>
 const mockLoggerError = logger.error as jest.MockedFunction<typeof logger.error>
 
 describe('WorkflowExecutionService', () => {

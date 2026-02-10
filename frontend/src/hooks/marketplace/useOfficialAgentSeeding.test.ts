@@ -1144,10 +1144,6 @@ describe('useOfficialAgentSeeding', () => {
 
       // Make storage null during the check
       const storageRef: StorageAdapter | null = mockStorage
-      const checkStorage = () => {
-        if (!storageRef) return
-        storageRef.getItem(STORAGE_KEYS.PUBLISHED_AGENTS)
-      }
 
       renderHook(() =>
         useOfficialAgentSeeding({

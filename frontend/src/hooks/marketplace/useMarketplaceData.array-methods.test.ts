@@ -414,6 +414,7 @@ describe('useMarketplaceData - Array Methods (Phase 4.2)', () => {
       ]
       mockGetLocalStorageItem.mockReturnValue(agents)
 
+      // eslint-disable-next-line @typescript-eslint/no-var-requires -- Dynamic require needed for Jest mocking
       const loggerSpy = jest.spyOn(require('../../utils/logger').logger, 'debug')
 
       renderHook(() =>

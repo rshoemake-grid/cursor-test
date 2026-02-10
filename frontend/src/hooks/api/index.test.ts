@@ -48,6 +48,7 @@ describe('hooks/api/index.ts', () => {
     it('should execute the export statement via require', () => {
       // Force execution of the export by requiring the module
       // This ensures coverage counts the export statement
+      // eslint-disable-next-line @typescript-eslint/no-var-requires -- Dynamic require needed for Jest mocking
       const requiredModule = require('./index')
       expect(requiredModule.useAuthenticatedApi).toBeDefined()
       expect(requiredModule.useAuthenticatedApi).toBe(useAuthenticatedApiDirect)

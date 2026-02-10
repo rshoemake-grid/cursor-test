@@ -53,11 +53,6 @@ describe('adapters - Mutation Killers', () => {
 
   describe('createLocalStorageAdapter - exact typeof check', () => {
     it('should verify exact typeof check - typeof window !== "undefined" (should create)', () => {
-      const mockLocalStorage = {
-        getItem: jest.fn(),
-        setItem: jest.fn(),
-        removeItem: jest.fn(),
-      }
       // In test environment, window exists, so we test the normal path
       const adapter = defaultAdapters.createLocalStorageAdapter()
       // Should create adapter if window.localStorage exists

@@ -41,6 +41,7 @@ describe('AuthPage', () => {
       logout: jest.fn(),
       register: mockRegister,
     } as any)
+    // eslint-disable-next-line @typescript-eslint/no-var-requires -- Dynamic require needed for Jest mocking
     jest.spyOn(require('react-router-dom'), 'useNavigate').mockReturnValue(mockNavigate)
   })
 
@@ -304,7 +305,6 @@ describe('AuthPage', () => {
     await waitForWithTimeout(() => {
       // Should handle non-Error - error.message will be undefined, so it might show empty or undefined
       // The component uses err.message, so non-Error will show undefined
-      const errorElement = screen.queryByText(/undefined/i)
       // Component might not show error for non-Error, so just verify it doesn't crash
       expect(screen.getByText('Welcome Back')).toBeInTheDocument()
     })

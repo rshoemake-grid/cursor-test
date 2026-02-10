@@ -37,12 +37,7 @@ export function useProviderManagement({
     }
     
     setProviders(newProviders)
-    try {
-      await service.saveSettings(settings, token)
-    } catch (error) {
-      // Error already logged in service
-      throw error
-    }
+    await service.saveSettings(settings, token)
   }, [service, token, iterationLimit, defaultModel, setProviders])
 
   const updateProvider = useCallback((id: string, updates: Partial<LLMProvider>) => {

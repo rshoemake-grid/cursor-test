@@ -92,6 +92,7 @@ class ObjectCloner implements ValueCloner {
  * Handles primitive values (returns as-is)
  */
 class DefaultCloner implements ValueCloner {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   canHandle(_value: any): boolean {
     return true // Always handles any value
   }

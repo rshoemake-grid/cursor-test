@@ -6,9 +6,7 @@
 
 import { act } from '@testing-library/react'
 import { WebSocketConnectionManager } from './WebSocketConnectionManager'
-import { ExponentialBackoffStrategy } from './websocketReconnectionStrategy'
-import { WS_CLOSE_CODES, WS_STATUS, EXECUTION_STATUS } from './websocketConstants'
-import { ExecutionStatusChecker } from './executionStatusUtils'
+import { WS_CLOSE_CODES, EXECUTION_STATUS } from './websocketConstants'
 
 // Mock WebSocket
 class MockWebSocket {
@@ -37,7 +35,8 @@ class MockWebSocket {
     }
   }
 
-  send(data: string) {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  send(_data: string) {
     // Mock implementation
   }
 }
@@ -127,7 +126,6 @@ describe('WebSocketConnectionManager - Timeout Guards', () => {
         expect(timeoutBefore).toBeTruthy()
         
         const factoryCallsBefore = mockWebSocketFactory.create.mock.calls.length
-        const reconnectAttemptsBefore = (manager as any).reconnectAttempts
         
         // Advance enough time for the reconnection delay
         // Use a large enough delay to ensure the timeout fires (exponential backoff can be large)
@@ -220,9 +218,6 @@ describe('WebSocketConnectionManager - Timeout Guards', () => {
       if (ws && ws.onclose) {
         ws.onclose(new CloseEvent('close', { code: 1006, wasClean: false }))
       }
-
-      // Get initial timeout
-      const firstTimeout = (manager as any).reconnectTimeout
 
       // Close again before timeout fires
       act(() => {

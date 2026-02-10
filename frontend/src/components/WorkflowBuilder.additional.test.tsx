@@ -86,7 +86,7 @@ jest.mock('./ReactFlowInstanceCapture', () => ({
 
 jest.mock('./WorkflowBuilder/WorkflowBuilderLayout', () => ({
   __esModule: true,
-  WorkflowBuilderLayout: ({}: any) => (
+  WorkflowBuilderLayout: () => (
     <div data-testid="workflow-builder-layout">
       <div data-testid="node-panel">NodePanel</div>
       <div data-testid="workflow-canvas">WorkflowCanvas</div>
@@ -129,8 +129,6 @@ jest.mock('@xyflow/react/dist/style.css', () => ({}))
 
 // Mock React Flow hooks
 jest.mock('@xyflow/react', () => {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const React = require('react')
   return {
     ...jest.requireActual('@xyflow/react'),
     ReactFlowProvider: ({ children }: any) => <div>{children}</div>,
@@ -535,7 +533,7 @@ describe('WorkflowBuilder - Additional Coverage', () => {
 
     it('should call useWorkflowExecution hook', async () => {
       // Domain-based import - Phase 7
-      // eslint-disable-next-line @typescript-eslint/no-var-requires
+       
       require('../hooks/execution')
       
       await act(async () => {

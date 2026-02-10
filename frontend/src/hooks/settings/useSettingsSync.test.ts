@@ -64,6 +64,7 @@ describe('useSettingsSync', () => {
   })
 
   it('should call useAutoSave hook', () => {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires -- Dynamic require needed for Jest mocking
     const { useAutoSave } = require('../storage')
     renderHook(() =>
       useSettingsSync({
@@ -82,6 +83,7 @@ describe('useSettingsSync', () => {
   })
 
   it('should enable auto-save when authenticated and settings loaded', () => {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires -- Dynamic require needed for Jest mocking
     const { useAutoSave } = require('../storage')
     renderHook(() =>
       useSettingsSync({
@@ -102,6 +104,7 @@ describe('useSettingsSync', () => {
   })
 
   it('should disable auto-save when not authenticated', () => {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires -- Dynamic require needed for Jest mocking
     const { useAutoSave } = require('../storage')
     renderHook(() =>
       useSettingsSync({
@@ -121,6 +124,7 @@ describe('useSettingsSync', () => {
   })
 
   it('should disable auto-save when settings not loaded', () => {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires -- Dynamic require needed for Jest mocking
     const { useAutoSave } = require('../storage')
     renderHook(() =>
       useSettingsSync({

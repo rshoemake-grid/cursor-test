@@ -294,7 +294,7 @@ describe('useMarketplaceData', () => {
       // Create stable user object reference to prevent infinite re-renders
       const user = { id: 'user-1', username: 'testuser' }
 
-      const { result } = renderHook(() =>
+      renderHook(() =>
         useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
@@ -1422,7 +1422,7 @@ describe('useMarketplaceData', () => {
         mockGetLocalStorageItem.mockReturnValue([agentWithoutAuthor])
         const user = { id: '', username: 'testuser' }
 
-        const { result } = renderHook(() =>
+        renderHook(() =>
           useMarketplaceData({
             storage: mockStorage,
             httpClient: mockHttpClient,
@@ -1448,7 +1448,7 @@ describe('useMarketplaceData', () => {
         mockGetLocalStorageItem.mockReturnValue([])
         const user = { id: 'user-1', username: 'testuser' }
 
-        const { result } = renderHook(() =>
+        renderHook(() =>
           useMarketplaceData({
             storage: mockStorage,
             httpClient: mockHttpClient,

@@ -137,7 +137,7 @@ describe('useMarketplaceIntegration - Mutation Killers', () => {
 
         mockStorage.getItem.mockReturnValue(JSON.stringify(pendingData))
 
-        const { result } = renderHook(() =>
+        renderHook(() =>
           useMarketplaceIntegration({
             tabId: 'tab-1',
             storage: mockStorage,
@@ -171,7 +171,7 @@ describe('useMarketplaceIntegration - Mutation Killers', () => {
 
         mockStorage.getItem.mockReturnValue(JSON.stringify(pendingData))
 
-        const { result } = renderHook(() =>
+        renderHook(() =>
           useMarketplaceIntegration({
             tabId: 'tab-1',
             storage: mockStorage,
@@ -205,7 +205,7 @@ describe('useMarketplaceIntegration - Mutation Killers', () => {
 
         mockStorage.getItem.mockReturnValue(JSON.stringify(pendingData))
 
-        const { result } = renderHook(() =>
+        renderHook(() =>
           useMarketplaceIntegration({
             tabId: 'tab-1',
             storage: mockStorage,
@@ -235,7 +235,7 @@ describe('useMarketplaceIntegration - Mutation Killers', () => {
       it('should verify exact boundary - checkCount === maxChecks', () => {
         mockStorage.getItem.mockReturnValue(null)
 
-        const { result, unmount } = renderHook(() =>
+        const { unmount } = renderHook(() =>
           useMarketplaceIntegration({
             tabId: 'tab-1',
             storage: mockStorage,
@@ -278,7 +278,7 @@ describe('useMarketplaceIntegration - Mutation Killers', () => {
       it('should verify exact boundary - checkCount < maxChecks', () => {
         mockStorage.getItem.mockReturnValue(null)
 
-        const { result } = renderHook(() =>
+        renderHook(() =>
           useMarketplaceIntegration({
             tabId: 'tab-1',
             storage: mockStorage,
@@ -805,7 +805,7 @@ describe('useMarketplaceIntegration - Mutation Killers', () => {
 
         mockStorage.getItem.mockReturnValue(JSON.stringify(pendingData))
 
-        const { result } = renderHook(() =>
+        renderHook(() =>
           useMarketplaceIntegration({
             tabId: 'tab-1',
             storage: mockStorage,
@@ -840,7 +840,7 @@ describe('useMarketplaceIntegration - Mutation Killers', () => {
 
         mockStorage.getItem.mockReturnValue(JSON.stringify(pendingData))
 
-        const { result } = renderHook(() =>
+        renderHook(() =>
           useMarketplaceIntegration({
             tabId: 'tab-1',
             storage: mockStorage,
@@ -875,7 +875,7 @@ describe('useMarketplaceIntegration - Mutation Killers', () => {
 
         mockStorage.getItem.mockReturnValue(JSON.stringify(pendingData))
 
-        const { result } = renderHook(() =>
+        renderHook(() =>
           useMarketplaceIntegration({
             tabId: 'tab-1',
             storage: mockStorage,
@@ -910,7 +910,7 @@ describe('useMarketplaceIntegration - Mutation Killers', () => {
 
         mockStorage.getItem.mockReturnValue(JSON.stringify(pendingData))
 
-        const { result } = renderHook(() =>
+        renderHook(() =>
           useMarketplaceIntegration({
             tabId: 'tab-1',
             storage: mockStorage,
@@ -943,7 +943,7 @@ describe('useMarketplaceIntegration - Mutation Killers', () => {
         const addEventListenerSpy = jest.spyOn(window, 'addEventListener')
         const removeEventListenerSpy = jest.spyOn(window, 'removeEventListener')
 
-        const { result, unmount } = renderHook(() =>
+        const { unmount } = renderHook(() =>
           useMarketplaceIntegration({
             tabId: 'tab-1',
             storage: mockStorage,
@@ -977,7 +977,7 @@ describe('useMarketplaceIntegration - Mutation Killers', () => {
       it('should verify error handling - JSON.parse throws SyntaxError', () => {
         mockStorage.getItem.mockReturnValue('invalid json')
 
-        const { result } = renderHook(() =>
+        renderHook(() =>
           useMarketplaceIntegration({
             tabId: 'tab-1',
             storage: mockStorage,
@@ -1007,7 +1007,7 @@ describe('useMarketplaceIntegration - Mutation Killers', () => {
       })
 
       it('should verify error handling - storage.removeItem when storage is null in catch', () => {
-        const { result } = renderHook(() =>
+        renderHook(() =>
           useMarketplaceIntegration({
             tabId: 'tab-1',
             storage: null, // Storage is null
@@ -1046,7 +1046,7 @@ describe('useMarketplaceIntegration - Mutation Killers', () => {
 
         mockStorage.getItem.mockReturnValue(JSON.stringify(pendingData))
 
-        const { result } = renderHook(() =>
+        renderHook(() =>
           useMarketplaceIntegration({
             tabId: 'tab-1',
             storage: mockStorage,
@@ -1081,7 +1081,7 @@ describe('useMarketplaceIntegration - Mutation Killers', () => {
 
         mockStorage.getItem.mockReturnValue(JSON.stringify(pendingData))
 
-        const { result } = renderHook(() =>
+        renderHook(() =>
           useMarketplaceIntegration({
             tabId: 'tab-1',
             storage: mockStorage,
@@ -1116,7 +1116,7 @@ describe('useMarketplaceIntegration - Mutation Killers', () => {
 
         mockStorage.getItem.mockReturnValue(JSON.stringify(pendingData))
 
-        const { result } = renderHook(() =>
+        renderHook(() =>
           useMarketplaceIntegration({
             tabId: 'tab-1',
             storage: mockStorage,

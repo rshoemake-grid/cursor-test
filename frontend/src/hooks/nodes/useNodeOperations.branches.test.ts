@@ -29,7 +29,6 @@ jest.mock('@xyflow/react', () => ({
   useReactFlow: jest.fn(),
 }))
 
-const mockShowError = showError as jest.MockedFunction<typeof showError>
 const mockShowConfirm = showConfirm as jest.MockedFunction<typeof showConfirm>
 const mockUseReactFlow = useReactFlow as jest.MockedFunction<typeof useReactFlow>
 

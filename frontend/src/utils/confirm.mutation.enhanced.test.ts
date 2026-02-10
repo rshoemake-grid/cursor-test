@@ -28,7 +28,6 @@ describe('showConfirm - Enhanced Mutation Killers', () => {
     jest.useFakeTimers() // Use fake timers to control setTimeout calls
     // Reset stylesMap for each test
     stylesMap = new Map<string, any>()
-    const elementsMap = new Map<string, any>()
 
     // Create mock document adapter
     // Note: We create fresh mocks each time to avoid interference between tests

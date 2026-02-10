@@ -1,7 +1,6 @@
 import { renderHook, act } from '@testing-library/react'
 import { useCanvasEvents } from './useCanvasEvents'
-import { addEdge } from '@xyflow/react'
-import type { Node, Edge, Connection } from '@xyflow/react'
+import type { Node, Connection } from '@xyflow/react'
 import { showSuccess, showError } from '../../utils/notifications'
 import { logger } from '../../utils/logger'
 
@@ -2698,7 +2697,6 @@ describe('useCanvasEvents', () => {
       it('should verify exact comparison typeof window !== undefined', () => {
         mockStorage.getItem = jest.fn().mockReturnValue(JSON.stringify([]))
 
-        const originalWindow = global.window
         const dispatchEventSpy = jest.spyOn(window, 'dispatchEvent')
 
         const { result } = renderHook(() =>

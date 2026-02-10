@@ -7,7 +7,6 @@
 import { renderHook, waitFor } from '@testing-library/react'
 import { useMarketplaceData } from './useMarketplaceData'
 import { getLocalStorageItem } from '../storage'
-import { STORAGE_KEYS } from '../../config/constants'
 
 jest.mock('../storage', () => ({
   getLocalStorageItem: jest.fn(),
@@ -18,14 +17,6 @@ const mockGetLocalStorageItem = getLocalStorageItem as jest.MockedFunction<typeo
 describe('useMarketplaceData - Method Expressions', () => {
   let mockHttpClient: any
   let mockStorage: any
-
-  const mockTemplate: any = {
-    id: 'template-1',
-    name: 'Test Template',
-    description: 'Test Description',
-    category: 'automation',
-    tags: ['test'],
-  }
 
   const mockAgent: any = {
     id: 'agent-1',

@@ -276,6 +276,7 @@ describe('LogLevelBadge', () => {
     })
 
     it('should verify exact isValidLogLevel call with level parameter', () => {
+      // eslint-disable-next-line @typescript-eslint/no-var-requires -- Dynamic require needed for Jest mocking
       const isValidLogLevelSpy = jest.spyOn(require('../utils/logLevel'), 'isValidLogLevel')
       
       render(<LogLevelBadge level="DEBUG" />)
@@ -287,6 +288,7 @@ describe('LogLevelBadge', () => {
     })
 
     it('should verify exact getLogLevelColor call when showBackground is true', () => {
+      // eslint-disable-next-line @typescript-eslint/no-var-requires -- Dynamic require needed for Jest mocking
       const getLogLevelColorSpy = jest.spyOn(require('../utils/logLevel'), 'getLogLevelColor')
       
       render(<LogLevelBadge level="ERROR" showBackground={true} />)
@@ -298,6 +300,7 @@ describe('LogLevelBadge', () => {
     })
 
     it('should verify exact getLogLevelTextColor call', () => {
+      // eslint-disable-next-line @typescript-eslint/no-var-requires -- Dynamic require needed for Jest mocking
       const getLogLevelTextColorSpy = jest.spyOn(require('../utils/logLevel'), 'getLogLevelTextColor')
       
       render(<LogLevelBadge level="WARNING" />)

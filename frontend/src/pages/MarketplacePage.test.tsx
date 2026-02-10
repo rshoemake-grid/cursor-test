@@ -7,8 +7,7 @@ import { api } from '../api/client'
 // Domain-based imports - Phase 7
 // Domain-based imports - Phase 7
 // Domain-based imports - Phase 7
-import { getLocalStorageItem, setLocalStorageItem } from '../hooks/storage'
-import { showSuccess, showError } from '../utils/notifications'
+import { getLocalStorageItem } from '../hooks/storage'
 import { showConfirm } from '../utils/confirm'
 import type { StorageAdapter, HttpClient } from '../types/adapters'
 // Helper to ensure all waitFor calls have timeouts
@@ -144,9 +143,6 @@ global.fetch = jest.fn()
 const mockUseAuth = useAuth as jest.MockedFunction<typeof useAuth>
 const mockApi = api as jest.Mocked<typeof api>
 const mockGetLocalStorageItem = getLocalStorageItem as jest.MockedFunction<typeof getLocalStorageItem>
-const mockSetLocalStorageItem = setLocalStorageItem as jest.MockedFunction<typeof setLocalStorageItem>
-const mockShowSuccess = showSuccess as jest.MockedFunction<typeof showSuccess>
-const mockShowError = showError as jest.MockedFunction<typeof showError>
 const mockShowConfirm = showConfirm as jest.MockedFunction<typeof showConfirm>
 
 const renderWithRouter = (component: React.ReactElement) => {

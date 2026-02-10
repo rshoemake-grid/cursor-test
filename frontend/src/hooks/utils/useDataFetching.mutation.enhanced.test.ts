@@ -6,7 +6,7 @@
  * 3. Testing error handling edge cases
  */
 
-import { renderHook, waitFor, act } from '@testing-library/react'
+import { renderHook, act } from '@testing-library/react'
 import { useDataFetching } from './useDataFetching'
 import { logger } from '../../utils/logger'
 
@@ -20,10 +20,6 @@ jest.mock('../../utils/logger', () => ({
 }))
 
 const mockLogger = logger as jest.Mocked<typeof logger>
-
-const waitForWithTimeout = (callback: () => void | Promise<void>, timeout = 2000) => {
-  return waitFor(callback, { timeout })
-}
 
 describe('useDataFetching - Enhanced Mutation Killers', () => {
   beforeEach(() => {

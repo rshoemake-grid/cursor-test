@@ -87,7 +87,7 @@ describe('useWebSocket - No Coverage Paths', () => {
     })
 
     it('should verify exact string comparison - executionId does not start with "pending-"', async () => {
-      const { result } = renderHook(() =>
+      renderHook(() =>
         useWebSocket({
           executionId: 'exec-123',
           windowLocation: mockWindowLocation,
@@ -103,7 +103,7 @@ describe('useWebSocket - No Coverage Paths', () => {
 
   describe('connect - logical operators', () => {
     it('should verify logical OR - executionStatus || lastKnownStatusRef.current', async () => {
-      const { result, rerender } = renderHook(
+      const { rerender } = renderHook(
         ({ executionStatus }) =>
           useWebSocket({
             executionId: 'exec-123',
@@ -169,7 +169,7 @@ describe('useWebSocket - No Coverage Paths', () => {
         protocol: 'https:',
       }
 
-      const { result } = renderHook(() =>
+      renderHook(() =>
         useWebSocket({
           executionId: 'exec-123',
           windowLocation: httpsLocation,
@@ -187,7 +187,7 @@ describe('useWebSocket - No Coverage Paths', () => {
     })
 
     it('should verify optional chaining - windowLocation?.protocol !== "https:"', async () => {
-      const { result } = renderHook(() =>
+      renderHook(() =>
         useWebSocket({
           executionId: 'exec-123',
           windowLocation: mockWindowLocation,
@@ -210,7 +210,7 @@ describe('useWebSocket - No Coverage Paths', () => {
         host: undefined,
       } as any
 
-      const { result } = renderHook(() =>
+      renderHook(() =>
         useWebSocket({
           executionId: 'exec-123',
           windowLocation: locationWithoutHost,
@@ -228,7 +228,7 @@ describe('useWebSocket - No Coverage Paths', () => {
     })
 
     it('should verify optional chaining - windowLocation is null', async () => {
-      const { result } = renderHook(() =>
+      renderHook(() =>
         useWebSocket({
           executionId: 'exec-123',
           windowLocation: null,
@@ -248,7 +248,7 @@ describe('useWebSocket - No Coverage Paths', () => {
 
   describe('connect - wsRef.current checks', () => {
     it('should verify exact truthy check - wsRef.current exists (should close)', async () => {
-      const { result, rerender } = renderHook(
+      const { rerender } = renderHook(
         ({ executionId }) =>
           useWebSocket({
             executionId,
@@ -280,7 +280,7 @@ describe('useWebSocket - No Coverage Paths', () => {
 
   describe('onclose - exact comparisons and logical operators', () => {
     it('should verify exact comparison - wasClean && code === 1000', async () => {
-      const { result } = renderHook(() =>
+      renderHook(() =>
         useWebSocket({
           executionId: 'exec-123',
           windowLocation: mockWindowLocation,
@@ -294,7 +294,6 @@ describe('useWebSocket - No Coverage Paths', () => {
       
       if (wsInstances.length > 0) {
         const ws = wsInstances[wsInstances.length - 1]
-        const wsCountBeforeClose = wsInstances.length
         
         // Simulate clean close
         // Code path: if (wasClean && code === 1000) return (no reconnect)
@@ -318,7 +317,7 @@ describe('useWebSocket - No Coverage Paths', () => {
     })
 
     it('should verify exact comparison - code !== 1000', async () => {
-      const { result } = renderHook(() =>
+      renderHook(() =>
         useWebSocket({
           executionId: 'exec-123',
           windowLocation: mockWindowLocation,
@@ -329,7 +328,6 @@ describe('useWebSocket - No Coverage Paths', () => {
 
       if (wsInstances.length > 0) {
         const ws = wsInstances[0]
-        const initialCount = wsInstances.length
 
         if (ws.onclose) {
           ws.onclose({
@@ -347,7 +345,7 @@ describe('useWebSocket - No Coverage Paths', () => {
     })
 
     it('should verify logical AND - reason && reason.length > 0', async () => {
-      const { result } = renderHook(() =>
+      renderHook(() =>
         useWebSocket({
           executionId: 'exec-123',
           windowLocation: mockWindowLocation,
@@ -381,7 +379,7 @@ describe('useWebSocket - No Coverage Paths', () => {
 
   describe('onerror - exact comparisons', () => {
     it('should verify instanceof check - error instanceof Error', async () => {
-      const { result } = renderHook(() =>
+      renderHook(() =>
         useWebSocket({
           executionId: 'exec-123',
           windowLocation: mockWindowLocation,
@@ -410,7 +408,7 @@ describe('useWebSocket - No Coverage Paths', () => {
     })
 
     it('should verify instanceof check - error is not Error instance', async () => {
-      const { result } = renderHook(() =>
+      renderHook(() =>
         useWebSocket({
           executionId: 'exec-123',
           windowLocation: mockWindowLocation,
@@ -439,7 +437,7 @@ describe('useWebSocket - No Coverage Paths', () => {
     })
 
     it('should verify exact WebSocket state comparisons', async () => {
-      const { result } = renderHook(() =>
+      renderHook(() =>
         useWebSocket({
           executionId: 'exec-123',
           windowLocation: mockWindowLocation,
@@ -499,7 +497,7 @@ describe('useWebSocket - No Coverage Paths', () => {
   describe('onmessage - exact logical operators', () => {
     it('should verify logical AND - message.log && onLog', async () => {
       const onLog = jest.fn()
-      const { result } = renderHook(() =>
+      renderHook(() =>
         useWebSocket({
           executionId: 'exec-123',
           onLog,
@@ -535,7 +533,7 @@ describe('useWebSocket - No Coverage Paths', () => {
 
     it('should verify logical AND - message.status && onStatus', async () => {
       const onStatus = jest.fn()
-      const { result } = renderHook(() =>
+      renderHook(() =>
         useWebSocket({
           executionId: 'exec-123',
           onStatus,
@@ -567,7 +565,7 @@ describe('useWebSocket - No Coverage Paths', () => {
 
     it('should verify logical OR - (message as any).node_id || message.node_state.node_id', async () => {
       const onNodeUpdate = jest.fn()
-      const { result } = renderHook(() =>
+      renderHook(() =>
         useWebSocket({
           executionId: 'exec-123',
           onNodeUpdate,
@@ -614,7 +612,7 @@ describe('useWebSocket - No Coverage Paths', () => {
 
   describe('catch blocks', () => {
     it('should handle JSON.parse throwing in onmessage', async () => {
-      const { result } = renderHook(() =>
+      renderHook(() =>
         useWebSocket({
           executionId: 'exec-123',
           windowLocation: mockWindowLocation,

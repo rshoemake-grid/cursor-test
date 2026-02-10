@@ -1750,7 +1750,7 @@ describe('useLocalStorage', () => {
           addEventListener: jest.fn(),
           removeEventListener: jest.fn(),
         }
-        const { result: result3 } = renderHook(() => useLocalStorage('test-key', 'initial', { storage: mockStorage }))
+        renderHook(() => useLocalStorage('test-key', 'initial', { storage: mockStorage }))
         expect(mockStorage.getItem).toHaveBeenCalled()
       })
 
@@ -1815,11 +1815,13 @@ describe('useLocalStorage', () => {
 
       it('should verify exact ternary protocol === https: ? wss: : ws:', () => {
         // Test: protocol is 'https:'
+        // eslint-disable-next-line no-constant-condition -- Intentional constant condition for test coverage
         const protocol1 = 'https:' === 'https:' ? 'wss:' : 'ws:'
         expect(protocol1).toBe('wss:')
         expect(protocol1).not.toBe('ws:')
 
         // Test: protocol is not 'https:'
+        // eslint-disable-next-line no-constant-condition -- Intentional constant condition for test coverage
         const protocol2 = 'http:' === 'https:' ? 'wss:' : 'ws:'
         expect(protocol2).toBe('ws:')
         expect(protocol2).not.toBe('wss:')
@@ -1831,6 +1833,7 @@ describe('useLocalStorage', () => {
         expect(reason1).toBe('Connection closed')
 
         // Test: reason is empty string
+        // eslint-disable-next-line no-constant-condition -- Intentional constant condition for test coverage
         const reason2 = '' && ''.length > 0 ? '' : 'No reason provided'
         expect(reason2).toBe('No reason provided')
         expect(reason2).not.toBe('')
@@ -1869,6 +1872,7 @@ describe('useLocalStorage', () => {
       })
 
       it('should verify exact string literal No reason provided', () => {
+        // eslint-disable-next-line no-constant-condition -- Intentional constant condition for test coverage
         const reason = '' && ''.length > 0 ? '' : 'No reason provided'
         expect(reason).toBe('No reason provided')
         expect(reason).not.toBe('no reason provided')

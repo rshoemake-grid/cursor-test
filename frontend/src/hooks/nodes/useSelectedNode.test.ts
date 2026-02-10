@@ -772,7 +772,6 @@ describe('useSelectedNode', () => {
 
 
     it('should verify Object.assign(selectedNodeRef.current, updated)', () => {
-      const node = { id: 'node-1', type: 'agent', position: { x: 0, y: 0 }, data: { label: 'Original' } }
       const updatedNode = { id: 'node-1', type: 'agent', position: { x: 0, y: 0 }, data: { label: 'Updated' } }
       mockGetNodes.mockReturnValue([updatedNode])
       mockFindNodeById.mockReturnValue(updatedNode)
@@ -979,7 +978,6 @@ describe('useSelectedNode', () => {
     })
 
     it('should verify Object.assign exact method call', () => {
-      const node = { id: 'node-1', type: 'agent', position: { x: 0, y: 0 }, data: { label: 'Original' } }
       const updatedNode = { id: 'node-1', type: 'agent', position: { x: 0, y: 0 }, data: { label: 'Updated' } }
       mockGetNodes.mockReturnValue([updatedNode])
       mockFindNodeById.mockReturnValue(updatedNode)
@@ -1468,7 +1466,6 @@ describe('useSelectedNode', () => {
     })
 
     it('should verify exact check if (updated) - updated exists', () => {
-      const node = { id: 'node-1', type: 'agent', position: { x: 0, y: 0 }, data: { label: 'Original' } }
       const updatedNode = { id: 'node-1', type: 'agent', position: { x: 0, y: 0 }, data: { label: 'Updated' } }
       mockGetNodes.mockReturnValue([updatedNode])
       mockFindNodeById.mockReturnValue(updatedNode)
@@ -1810,9 +1807,6 @@ describe('useSelectedNode', () => {
       const firstNodes = result.current.nodes
       expect(firstNodes.length).toBe(1)
       
-      // Track how many times getNodes was called
-      const initialCallCount = mockGetNodes.mock.calls.length
-
       // Create a new getNodes function to change the reference (useMemo depends on getNodes reference)
       const newGetNodes = jest.fn(() => [node, node2])
       
@@ -1929,8 +1923,6 @@ describe('useSelectedNode', () => {
         })
       )
 
-      const firstSelected = result.current.selectedNode
-
       // Change nodes
       const node1Updated = { id: 'node-1', type: 'agent', position: { x: 0, y: 0 }, data: { name: 'Updated' } }
       mockGetNodes.mockReturnValue([node1Updated])
@@ -2040,20 +2032,17 @@ describe('useSelectedNode', () => {
 
     it('should verify exact useMemo dependencies array - nodes', () => {
       const { result, rerender } = renderHook(
-        ({ getNodes, nodesProp }) =>
+        ({ nodesProp }) =>
           useSelectedNode({
             selectedNodeId: null,
             nodesProp,
           }),
         {
           initialProps: {
-            getNodes: mockGetNodes,
             nodesProp: undefined,
           },
         }
       )
-
-      const firstNodes = result.current.nodes
 
       // Change getNodes dependency
       const newGetNodes = jest.fn(() => [])
@@ -2096,7 +2085,7 @@ describe('useSelectedNode', () => {
       mockNodeExists.mockReturnValue(true)
 
       const { result, rerender } = renderHook(
-        ({ selectedNodeId, getNodes, nodes }) =>
+        ({ selectedNodeId }) =>
           useSelectedNode({
             selectedNodeId,
             nodesProp: undefined,
@@ -2104,19 +2093,13 @@ describe('useSelectedNode', () => {
         {
           initialProps: {
             selectedNodeId: 'node-1',
-            getNodes: mockGetNodes,
-            nodes: [node],
           },
         }
       )
 
-      const firstSelected = result.current.selectedNode
-
       // Change selectedNodeId dependency
       rerender({
         selectedNodeId: 'node-2',
-        getNodes: mockGetNodes,
-        nodes: [node],
       })
 
       // Should use new selectedNodeId (implicit through useMemo dependency)
@@ -2250,7 +2233,6 @@ describe('useSelectedNode', () => {
 
       it('should verify exact Object.assign call with correct parameters', () => {
         const assignSpy = jest.spyOn(Object, 'assign')
-        const node = { id: 'node-1', type: 'agent', data: { label: 'Original' } }
         const updatedNode = { id: 'node-1', type: 'agent', data: { label: 'Updated' } }
         
         mockGetNodes.mockReturnValue([updatedNode])

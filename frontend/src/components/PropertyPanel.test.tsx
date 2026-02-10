@@ -68,6 +68,7 @@ jest.mock('../utils/logger', () => ({
 }))
 
 jest.mock('./editors/AgentNodeEditor', () => {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires -- Dynamic require needed for Jest mocking
   const React = require('react')
   return {
     __esModule: true,
@@ -78,6 +79,7 @@ jest.mock('./editors/AgentNodeEditor', () => {
 })
 
 jest.mock('./editors/ConditionNodeEditor', () => {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires -- Dynamic require needed for Jest mocking
   const React = require('react')
   return {
     __esModule: true,
@@ -88,6 +90,7 @@ jest.mock('./editors/ConditionNodeEditor', () => {
 })
 
 jest.mock('./editors/LoopNodeEditor', () => {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires -- Dynamic require needed for Jest mocking
   const React = require('react')
   return {
     __esModule: true,
@@ -98,6 +101,7 @@ jest.mock('./editors/LoopNodeEditor', () => {
 })
 
 jest.mock('./editors/InputNodeEditor', () => {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires -- Dynamic require needed for Jest mocking
   const React = require('react')
   return {
     __esModule: true,
@@ -108,6 +112,7 @@ jest.mock('./editors/InputNodeEditor', () => {
 })
 
 jest.mock('./editors/DatabaseNodeEditor', () => {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires -- Dynamic require needed for Jest mocking
   const React = require('react')
   return {
     __esModule: true,
@@ -118,6 +123,7 @@ jest.mock('./editors/DatabaseNodeEditor', () => {
 })
 
 jest.mock('./editors/FirebaseNodeEditor', () => {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires -- Dynamic require needed for Jest mocking
   const React = require('react')
   return {
     __esModule: true,
@@ -128,6 +134,7 @@ jest.mock('./editors/FirebaseNodeEditor', () => {
 })
 
 jest.mock('./editors/BigQueryNodeEditor', () => {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires -- Dynamic require needed for Jest mocking
   const React = require('react')
   return {
     __esModule: true,
@@ -3223,7 +3230,7 @@ describe('PropertyPanel', () => {
       }
       mockGetNodes.mockReturnValue([mockNode])
 
-      const { rerender } = renderWithProvider(
+      renderWithProvider(
         <PropertyPanel
           selectedNodeId="node-1"
           setSelectedNodeId={mockSetSelectedNodeId}

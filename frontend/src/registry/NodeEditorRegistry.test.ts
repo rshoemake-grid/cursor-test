@@ -13,10 +13,12 @@ describe('NodeEditorRegistry', () => {
     })
 
     mockHandler = {
-      renderEditor: jest.fn((node: Node, onChange: (updates: Partial<Node>) => void) => 
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      renderEditor: jest.fn((_node: Node, _onChange: (updates: Partial<Node>) => void) => 
         ({ type: 'div', props: { children: 'Editor' } } as any)
       ),
-      validate: jest.fn((node: Node): ValidationResult => ({
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      validate: jest.fn((_node: Node): ValidationResult => ({
         isValid: true,
         errors: [],
       })),

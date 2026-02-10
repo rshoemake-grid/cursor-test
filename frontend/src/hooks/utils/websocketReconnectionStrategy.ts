@@ -126,6 +126,7 @@ export class LinearBackoffStrategy implements ReconnectionStrategy {
 export class FixedDelayStrategy implements ReconnectionStrategy {
   constructor(private fixedDelay: number = WS_RECONNECT.BASE_DELAY) {}
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   calculateDelay(_attempt: number, _baseDelay: number): number {
     // Use fixed delay, ignore attempt and baseDelay (prefixed with _ to indicate intentionally unused)
     if (this.fixedDelay < WS_RECONNECT.MIN_DELAY) {
