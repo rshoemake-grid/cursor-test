@@ -1,8 +1,10 @@
 /**
  * TemplateCard Component
  * Renders a single template or agent card in the marketplace
+ * Performance: Memoized to prevent unnecessary re-renders
  */
 
+import { memo } from 'react'
 import { Clock, Heart, TrendingUp } from 'lucide-react'
 // Domain-based imports - Phase 7
 import type { Template, AgentTemplate } from '../hooks/marketplace'
@@ -17,7 +19,7 @@ interface TemplateCardProps {
   footerText?: string
 }
 
-export function TemplateCard({
+export const TemplateCard = memo(function TemplateCard({
   item,
   isSelected,
   type,
@@ -152,4 +154,4 @@ export function TemplateCard({
       </div>
     </div>
   )
-}
+})

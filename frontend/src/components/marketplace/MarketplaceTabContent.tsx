@@ -2,8 +2,10 @@
  * Marketplace Tab Content Component
  * Extracted from MarketplacePage to improve DRY compliance and SRP
  * Single Responsibility: Only handles content rendering based on tab state
+ * Performance: Memoized to prevent unnecessary re-renders
  */
 
+import { memo } from 'react'
 import { TemplateGrid } from '../TemplateGrid'
 import type { Template } from '../../hooks/marketplace'
 
@@ -38,8 +40,9 @@ export interface MarketplaceTabContentProps {
 /**
  * Marketplace Tab Content Component
  * DRY: Centralized content rendering logic
+ * Performance: Memoized to prevent unnecessary re-renders
  */
-export function MarketplaceTabContent({
+export const MarketplaceTabContent = memo(function MarketplaceTabContent({
   loading,
   activeTab,
   isAgentsTab,
@@ -124,4 +127,4 @@ export function MarketplaceTabContent({
       footerText={'Selected - Click "Load Workflow(s)" above to use'}
     />
   )
-}
+})

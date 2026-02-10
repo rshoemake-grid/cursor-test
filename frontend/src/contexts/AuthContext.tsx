@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import type { StorageAdapter, HttpClient } from '../types/adapters';
 import { defaultAdapters } from '../types/adapters';
 import { logger } from '../utils/logger';
@@ -71,9 +71,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children, options })
         setUser(null);
       }
     }
-  }, [local, session]);
+  }, [local, session, injectedLogger]);
 
-  const login = async (username: string, password: string, rememberMe: boolean = false) => {
+  const login = useCallback(async (username: string, password: string, rememberMe: boolean = false) => {
     if (!local || !session) {
       throw new Error('Storage adapters not available');
     }
@@ -116,9 +116,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children, options })
       local.removeItem('auth_user');
       local.removeItem('auth_remember_me');
     }
-  };
+  }, [local, session, httpClient, apiBaseUrl, injectedLogger]);
 
-  const register = async (username: string, email: string, password: string, fullName?: string) => {
+  const register = useCallback(async (username: string, email: string, password: string, fullName?: string) => {
     const response = await httpClient.post(
       `${apiBaseUrl}/auth/register`,
       { username, email, password, full_name: fullName },
@@ -132,9 +132,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children, options })
 
     // Auto-login after registration
     await login(username, password);
-  };
+  }, [httpClient, apiBaseUrl, login]);
 
-  const logout = () => {
+  const logout = useCallback(() => {
     setToken(null);
     setUser(null);
     // Clear both localStorage and sessionStorage
@@ -147,17 +147,19 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children, options })
       session.removeItem('auth_token');
       session.removeItem('auth_user');
     }
-  };
+  }, [local, session]);
+
+  const value = useMemo(() => ({
+    user,
+    token,
+    login,
+    register,
+    logout,
+    isAuthenticated: !!token
+  }), [user, token, login, register, logout]);
 
   return (
-    <AuthContext.Provider value={{
-      user,
-      token,
-      login,
-      register,
-      logout,
-      isAuthenticated: !!token
-    }}>
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );

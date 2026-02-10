@@ -1,5 +1,5 @@
 import { BrowserRouter as Router, Routes, Route, Link, useNavigate, useSearchParams, useLocation } from 'react-router-dom'
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import WorkflowTabs from './components/WorkflowTabs'
 import WorkflowList from './components/WorkflowList'
 import ExecutionViewer from './components/ExecutionViewer'
@@ -16,9 +16,6 @@ import { logger } from './utils/logger'
 
 type View = 'builder' | 'list' | 'execution'
 
-// Module-level counter that persists across component remounts
-let globalWorkflowLoadKey = 0
-
 function AuthenticatedLayout() {
   const [currentView, setCurrentView] = useState<View>('builder')
   const [selectedWorkflowId, setSelectedWorkflowId] = useState<string | null>(null)
@@ -31,6 +28,7 @@ function AuthenticatedLayout() {
   const [searchParams] = useSearchParams()
   const location = useLocation()
   const processedWorkflowFromUrl = useRef<string | null>(null)
+  const workflowLoadKeyRef = useRef<number>(0)
 
   useEffect(() => {
     const workflowId = searchParams.get('workflow')
@@ -38,9 +36,9 @@ function AuthenticatedLayout() {
       logger.debug(`[App] Loading workflow ${workflowId} from URL`)
       processedWorkflowFromUrl.current = workflowId
 
-      globalWorkflowLoadKey += 1
-      const newKey = globalWorkflowLoadKey
-      logger.debug(`[App] Incrementing workflowLoadKey: ${newKey - 1} → ${newKey} (global: ${globalWorkflowLoadKey})`)
+      workflowLoadKeyRef.current += 1
+      const newKey = workflowLoadKeyRef.current
+      logger.debug(`[App] Incrementing workflowLoadKey: ${newKey - 1} → ${newKey}`)
 
       setSelectedWorkflowId(workflowId)
       setWorkflowLoadKey(newKey)
@@ -48,32 +46,47 @@ function AuthenticatedLayout() {
 
       navigate('/', { replace: true })
 
-      setTimeout(() => {
+      const timeoutId = setTimeout(() => {
         processedWorkflowFromUrl.current = null
       }, 500)
-    }
-  }, [searchParams, navigate])
 
-  const goToBuilder = () => {
+      return () => clearTimeout(timeoutId)
+    }
+  }, [searchParams, navigate, location])
+
+  const goToBuilder = useCallback(() => {
     setCurrentView('builder')
     if (location.pathname !== '/') {
       navigate('/')
     }
-  }
+  }, [location.pathname, navigate])
 
-  const goToList = () => {
+  const goToList = useCallback(() => {
     setCurrentView('list')
     if (location.pathname !== '/') {
       navigate('/')
     }
-  }
+  }, [location.pathname, navigate])
 
-  const goToExecution = () => {
+  const goToExecution = useCallback(() => {
     setCurrentView('execution')
     if (location.pathname !== '/') {
       navigate('/')
     }
-  }
+  }, [location.pathname, navigate])
+
+  const handleExecutionStart = useCallback((execId: string) => {
+    setExecutionId(execId)
+  }, [])
+
+  const handleSelectWorkflow = useCallback((id: string) => {
+    setSelectedWorkflowId(id)
+    setCurrentView('builder')
+  }, [])
+
+  const handleBackToList = useCallback(() => {
+    setCurrentView('builder')
+  }, [])
 
   const renderBuilderContent = () => (
     <WorkflowTabsProvider>
@@ -81,18 +94,13 @@ function AuthenticatedLayout() {
         <WorkflowTabs
           initialWorkflowId={selectedWorkflowId}
           workflowLoadKey={workflowLoadKey}
-          onExecutionStart={(execId) => {
-            setExecutionId(execId)
-          }}
+          onExecutionStart={handleExecutionStart}
         />
       )}
       {currentView === 'list' && (
         <WorkflowList
-          onSelectWorkflow={(id) => {
-            setSelectedWorkflowId(id)
-            setCurrentView('builder')
-          }}
-          onBack={() => setCurrentView('builder')}
+          onSelectWorkflow={handleSelectWorkflow}
+          onBack={handleBackToList}
         />
       )}
       {currentView === 'execution' && executionId && (

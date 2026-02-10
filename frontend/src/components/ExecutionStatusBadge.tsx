@@ -1,3 +1,4 @@
+import { memo } from 'react'
 import { getExecutionStatusColor, getExecutionStatusColorLight, isValidExecutionStatus } from '../utils/executionStatus'
 import { EXECUTION_STATUSES } from '../constants/stringLiterals'
 
@@ -7,7 +8,7 @@ interface ExecutionStatusBadgeProps {
   className?: string
 }
 
-export default function ExecutionStatusBadge({ 
+const ExecutionStatusBadge = memo(function ExecutionStatusBadge({ 
   status, 
   variant = 'dark',
   className = '' 
@@ -25,5 +26,7 @@ export default function ExecutionStatusBadge({
       {normalizedStatus}
     </div>
   )
-}
+})
+
+export default ExecutionStatusBadge
 

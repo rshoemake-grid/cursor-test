@@ -1,3 +1,4 @@
+import { memo } from 'react'
 import { getLogLevelColor, getLogLevelTextColor, isValidLogLevel } from '../utils/logLevel'
 import { LOG_LEVELS } from '../constants/stringLiterals'
 
@@ -7,7 +8,7 @@ interface LogLevelBadgeProps {
   className?: string
 }
 
-export default function LogLevelBadge({ 
+const LogLevelBadge = memo(function LogLevelBadge({ 
   level, 
   showBackground = true,
   className = '' 
@@ -26,5 +27,7 @@ export default function LogLevelBadge({
       {normalizedLevel}
     </span>
   )
-}
+})
+
+export default LogLevelBadge
 

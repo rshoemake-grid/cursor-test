@@ -1,9 +1,10 @@
 /**
  * Workflow Canvas Component
  * Encapsulates ReactFlow rendering and canvas event handling
+ * Performance: Memoized to prevent unnecessary re-renders
  */
 
-import React from 'react'
+import React, { useMemo, memo } from 'react'
 import {
   ReactFlow,
   MiniMap,
@@ -31,7 +32,7 @@ interface WorkflowCanvasProps {
   nodeExecutionStates?: Record<string, { status: string; error?: string }>
 }
 
-export default function WorkflowCanvas({
+const WorkflowCanvas = memo(function WorkflowCanvas({
   nodes,
   edges,
   onNodesChange,
@@ -45,21 +46,52 @@ export default function WorkflowCanvas({
   onPaneClick,
   nodeExecutionStates = {},
 }: WorkflowCanvasProps) {
+  // Memoize nodes transformation to prevent unnecessary recalculations
+  const nodesWithExecutionState = useMemo(() => {
+    return nodes.map((node: any) => {
+      // Update nodes with current execution state
+      const nodeExecutionState = nodeExecutionStates[node.id]
+      return {
+        ...node,
+        data: {
+          ...node.data,
+          executionStatus: nodeExecutionState?.status,
+          executionError: nodeExecutionState?.error,
+        }
+      }
+    })
+  }, [nodes, nodeExecutionStates])
+
+  // Memoize nodeColor function to prevent recreation on each render
+  const nodeColor = useMemo(() => (node: any) => {
+    switch (node.type) {
+      case 'agent':
+        return '#3b82f6'
+      case 'condition':
+        return '#a855f7'
+      case 'loop':
+        return '#22c55e'
+      case 'start':
+        return '#0ea5e9'
+      case 'end':
+        return '#6b7280'
+      case 'gcp_bucket':
+        return '#f97316'
+      case 'aws_s3':
+        return '#eab308'
+      case 'gcp_pubsub':
+        return '#a855f7'
+      case 'local_filesystem':
+        return '#22c55e'
+      default:
+        return '#94a3b8'
+    }
+  }, [])
+
   return (
     <div className="absolute inset-0">
       <ReactFlow
-        nodes={nodes.map((node: any) => {
-          // Update nodes with current execution state
-          const nodeExecutionState = nodeExecutionStates[node.id]
-          return {
-            ...node,
-            data: {
-              ...node.data,
-              executionStatus: nodeExecutionState?.status,
-              executionError: nodeExecutionState?.error,
-            }
-          }
-        })}
+        nodes={nodesWithExecutionState}
         edges={edges}
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
@@ -69,7 +101,7 @@ export default function WorkflowCanvas({
         onNodeClick={onNodeClick}
         onNodeContextMenu={onNodeContextMenu}
         onEdgeContextMenu={onEdgeContextMenu}
-        onPaneClick={(event) => onPaneClick(event)}
+        onPaneClick={onPaneClick}
         nodeTypes={nodeTypes}
         nodesDraggable={true}
         nodesConnectable={true}
@@ -88,33 +120,12 @@ export default function WorkflowCanvas({
         <Controls />
         <MiniMap
           className="border-2 border-gray-300 rounded-lg shadow-lg"
-          nodeColor={(node) => {
-            switch (node.type) {
-              case 'agent':
-                return '#3b82f6'
-              case 'condition':
-                return '#a855f7'
-              case 'loop':
-                return '#22c55e'
-              case 'start':
-                return '#0ea5e9'
-              case 'end':
-                return '#6b7280'
-              case 'gcp_bucket':
-                return '#f97316'
-              case 'aws_s3':
-                return '#eab308'
-              case 'gcp_pubsub':
-                return '#a855f7'
-              case 'local_filesystem':
-                return '#22c55e'
-              default:
-                return '#94a3b8'
-            }
-          }}
+          nodeColor={nodeColor}
         />
         <Background variant={BackgroundVariant.Dots} gap={12} size={1} />
       </ReactFlow>
     </div>
   )
-}
+})
+
+export default WorkflowCanvas

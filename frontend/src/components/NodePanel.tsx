@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef } from 'react'
+import { useState, useEffect, useMemo, useRef, useCallback } from 'react'
 import { Bot, GitBranch, RotateCw, Play, Flag, Database, Radio, Folder, ChevronDown, ChevronRight } from 'lucide-react'
 import { logger } from '../utils/logger'
 import { STORAGE_KEYS } from '../config/constants'
@@ -123,20 +123,20 @@ export default function NodePanel({
     } as any))]
   }, [customAgentNodes])
 
-  const toggleCategory = (category: string) => {
+  const toggleCategory = useCallback((category: string) => {
     setExpandedCategories(prev => ({
       ...prev,
       [category]: !prev[category]
     }))
-  }
+  }, [])
 
-  const onDragStart = (event: React.DragEvent, nodeType: string, customData?: any) => {
+  const onDragStart = useCallback((event: React.DragEvent, nodeType: string, customData?: any) => {
     event.dataTransfer.setData('application/reactflow', nodeType)
     if (customData) {
       event.dataTransfer.setData('application/custom-agent', JSON.stringify(customData))
     }
     event.dataTransfer.effectAllowed = 'move'
-  }
+  }, [])
 
   return (
     <div className="w-64 h-full bg-white border-r border-gray-200 p-4 overflow-y-auto">
