@@ -1455,6 +1455,7 @@ describe('useAuthenticatedApi', () => {
         renderHook(() => useAuthenticatedApi(invalidClient))
         
         // Should still work and create errors properly
+        const { result: result2 } = renderHook(() => useAuthenticatedApi(invalidClient))
         await expect(
           result2.current.authenticatedPost('/test', { data: 'test' })
         ).rejects.toThrow(HTTP_CLIENT_ERROR_MSG)
@@ -1818,7 +1819,7 @@ describe('useAuthenticatedApi', () => {
 
           // Test with invalid client to trigger error path
           const invalidClient = null as any
-          renderHook(() => useAuthenticatedApi(invalidClient))
+          const { result: result2 } = renderHook(() => useAuthenticatedApi(invalidClient))
 
           // Should use setTimeout fallback if Promise.reject throws
           await expect(

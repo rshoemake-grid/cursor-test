@@ -26,10 +26,22 @@ export function useAuthenticatedApi(
   const { token } = useAuth()
   
   // Initialize client with fallback
-  const clientResult = logicalOr(httpClient, defaultAdapters.createHttpClient())
-  const client: HttpClient = (clientResult !== null && clientResult !== undefined) 
-    ? clientResult 
-    : defaultAdapters.createHttpClient()
+  let client: HttpClient
+  try {
+    const clientResult = logicalOr(httpClient, defaultAdapters.createHttpClient())
+    client = (clientResult !== null && clientResult !== undefined) 
+      ? clientResult 
+      : defaultAdapters.createHttpClient()
+  } catch (error) {
+    // Fallback: create a mock client that rejects with initialization error
+    const initError = createSafeError('HTTP client initialization failed', 'HttpClientError')
+    client = {
+      get: () => Promise.reject(initError),
+      post: () => Promise.reject(initError),
+      put: () => Promise.reject(initError),
+      delete: () => Promise.reject(initError),
+    }
+  }
   
   // Initialize base URL with fallback
   const baseUrlResult = logicalOr(apiBaseUrl, API_CONFIG.BASE_URL)
@@ -64,7 +76,11 @@ export function useAuthenticatedApi(
           context
         )
       } catch (error) {
-        // Handle errors safely
+        // Preserve validation error names (HttpClientError, InvalidUrlError, etc.)
+        if (error instanceof Error && (error.name === 'HttpClientError' || error.name === 'InvalidUrlError' || error.name === 'UnsupportedMethodError')) {
+          throw error
+        }
+        // Handle other errors safely
         throw createSafeError(
           error instanceof Error ? error.message : 'Request failed',
           'RequestError'
@@ -89,7 +105,11 @@ export function useAuthenticatedApi(
           context
         )
       } catch (error) {
-        // Handle errors safely
+        // Preserve validation error names (HttpClientError, InvalidUrlError, etc.)
+        if (error instanceof Error && (error.name === 'HttpClientError' || error.name === 'InvalidUrlError' || error.name === 'UnsupportedMethodError')) {
+          throw error
+        }
+        // Handle other errors safely
         throw createSafeError(
           error instanceof Error ? error.message : 'Request failed',
           'RequestError'
@@ -119,7 +139,11 @@ export function useAuthenticatedApi(
           context
         )
       } catch (error) {
-        // Handle errors safely
+        // Preserve validation error names (HttpClientError, InvalidUrlError, etc.)
+        if (error instanceof Error && (error.name === 'HttpClientError' || error.name === 'InvalidUrlError' || error.name === 'UnsupportedMethodError')) {
+          throw error
+        }
+        // Handle other errors safely
         throw createSafeError(
           error instanceof Error ? error.message : 'Request failed',
           'RequestError'
@@ -144,7 +168,11 @@ export function useAuthenticatedApi(
           context
         )
       } catch (error) {
-        // Handle errors safely
+        // Preserve validation error names (HttpClientError, InvalidUrlError, etc.)
+        if (error instanceof Error && (error.name === 'HttpClientError' || error.name === 'InvalidUrlError' || error.name === 'UnsupportedMethodError')) {
+          throw error
+        }
+        // Handle other errors safely
         throw createSafeError(
           error instanceof Error ? error.message : 'Request failed',
           'RequestError'

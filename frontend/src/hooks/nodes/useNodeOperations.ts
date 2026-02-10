@@ -140,10 +140,12 @@ export function useNodeOperations({
     
     const inputsArray = logicalOrToEmptyArray(selectedNode.data.inputs)
     const currentInputs = Array.isArray(inputsArray) ? [...inputsArray] : []
-    if (currentInputs[index]) {
-      currentInputs[index] = { ...currentInputs[index], [field]: value }
-      handleUpdate('inputs', currentInputs)
+    // Ensure array is large enough for the index
+    while (currentInputs.length <= index) {
+      currentInputs.push({})
     }
+    currentInputs[index] = { ...currentInputs[index], [field]: value }
+    handleUpdate('inputs', currentInputs)
   }, [selectedNode, handleUpdate])
 
   return {
