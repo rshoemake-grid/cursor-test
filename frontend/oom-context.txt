@@ -1,0 +1,100 @@
+2479:  exitCode: 1,
+2480:  signal: null
+2481:}
+2482:[33m10:04:41 (78707) WARN ChildProcessProxy[39m Child process [pid 80616] exited unexpectedly with exit code 1 (without signal). Last part of stdout and stderr was:
+2483:	ts-jest[config] (WARN) [94mmessage[0m[90m TS151001: [0mIf you have issues related to imports, you should consider setting `esModuleInterop` to `true` in your TypeScript configuration file (usually `tsconfig.json`). See https://blogs.msdn.microsoft.com/typescript/2018/01/31/announcing-typescript-2-7/#easier-ecmascript-module-interoperability for more information.
+2484:	/Users/rshoemake/Documents/cursor/cursor-test/frontend/.stryker-tmp/sandbox-Wz71Ys/src/utils/errorFactory.ts:24
+2485:	        const error = new Error(message ?? '');
+2486:	                      ^
+2487:	
+2488:	[Error [HttpClientError]: HTTP client is not properly initialized]
+2489:	
+2490:	Node.js v25.2.1
+2491:	 ChildProcessCrashedError: Child process [pid 80616] exited unexpectedly with exit code 1 (without signal). Last part of stdout and stderr was:
+2492:	ts-jest[config] (WARN) [94mmessage[0m[90m TS151001: [0mIf you have issues related to imports, you should consider setting `esModuleInterop` to `true` in your TypeScript configuration file (usually `tsconfig.json`). See https://blogs.msdn.microsoft.com/typescript/2018/01/31/announcing-typescript-2-7/#easier-ecmascript-module-interoperability for more information.
+2493:	/Users/rshoemake/Documents/cursor/cursor-test/frontend/.stryker-tmp/sandbox-Wz71Ys/src/utils/errorFactory.ts:24
+2494:	        const error = new Error(message ?? '');
+2495:	                      ^
+2496:	
+2497:	[Error [HttpClientError]: HTTP client is not properly initialized]
+2498:	
+2499:	Node.js v25.2.1
+2500:	
+2501:    at ChildProcess.handleUnexpectedExit (file:///Users/rshoemake/Documents/cursor/cursor-test/frontend/node_modules/@stryker-mutator/core/dist/src/child-proxy/child-process-proxy.js:180:31)
+2502:    at ChildProcess.emit (node:events:508:28)
+2503:    at maybeClose (node:internal/child_process:1085:16)
+2504:    at Socket.<anonymous> (node:internal/child_process:456:11)
+2505:    at Socket.emit (node:events:508:28)
+2506:    at Pipe.<anonymous> (node:net:346:12) {
+2507:  innerError: undefined,
+2508:  pid: 80616,
+2509:  exitCode: 1,
+2510:  signal: null
+2511:}
+2512:[33m10:04:42 (78707) WARN ChildProcessProxy[39m Child process [pid 80792] exited unexpectedly with exit code 1 (without signal). Last part of stdout and stderr was:
+2513:	ts-jest[config] (WARN) [94mmessage[0m[90m TS151001: [0mIf you have issues related to imports, you should consider setting `esModuleInterop` to `true` in your TypeScript configuration file (usually `tsconfig.json`). See https://blogs.msdn.microsoft.com/typescript/2018/01/31/announcing-typescript-2-7/#easier-ecmascript-module-interoperability for more information.
+2514:	/Users/rshoemake/Documents/cursor/cursor-test/frontend/.stryker-tmp/sandbox-Wz71Ys/src/hooks/utils/authenticatedRequestHandler.ts:79
+2515:	        const methodName = config.method.toLowerCase();
+2516:	                                         ^
+2517:	
+2518:	[TypeError: Cannot read properties of undefined (reading 'toLowerCase')]
+2519:	
+2520:	Node.js v25.2.1
+2521:	 ChildProcessCrashedError: Child process [pid 80792] exited unexpectedly with exit code 1 (without signal). Last part of stdout and stderr was:
+2522:	ts-jest[config] (WARN) [94mmessage[0m[90m TS151001: [0mIf you have issues related to imports, you should consider setting `esModuleInterop` to `true` in your TypeScript configuration file (usually `tsconfig.json`). See https://blogs.msdn.microsoft.com/typescript/2018/01/31/announcing-typescript-2-7/#easier-ecmascript-module-interoperability for more information.
+2523:	/Users/rshoemake/Documents/cursor/cursor-test/frontend/.stryker-tmp/sandbox-Wz71Ys/src/hooks/utils/authenticatedRequestHandler.ts:79
+2524:	        const methodName = config.method.toLowerCase();
+2525:	                                         ^
+2526:	
+2527:	[TypeError: Cannot read properties of undefined (reading 'toLowerCase')]
+2528:	
+2480:	Node.js v25.2.1
+2481:	
+2482:    at ChildProcess.handleUnexpectedExit (file:///Users/rshoemake/Documents/cursor/cursor-test/frontend/node_modules/@stryker-mutator/core/dist/src/child-proxy/child-process-proxy.js:180:31)
+2483:    at ChildProcess.emit (node:events:508:28)
+2484:    at maybeClose (node:internal/child_process:1085:16)
+2485:    at Socket.<anonymous> (node:internal/child_process:456:11)
+2486:    at Socket.emit (node:events:508:28)
+2487:    at Pipe.<anonymous> (node:net:346:12) {
+2488:  innerError: undefined,
+2489:  pid: 80792,
+2490:  exitCode: 1,
+2491:  signal: null
+2492:}
+2493:[33m10:04:42 (78707) WARN ChildProcessProxy[39m Child process [pid 80559] exited unexpectedly with exit code 1 (without signal). Last part of stdout and stderr was:
+2494:	ts-jest[config] (WARN) [94mmessage[0m[90m TS151001: [0mIf you have issues related to imports, you should consider setting `esModuleInterop` to `true` in your TypeScript configuration file (usually `tsconfig.json`). See https://blogs.msdn.microsoft.com/typescript/2018/01/31/announcing-typescript-2-7/#easier-ecmascript-module-interoperability for more information.
+2495:	/Users/rshoemake/Documents/cursor/cursor-test/frontend/.stryker-tmp/sandbox-Wz71Ys/src/utils/errorFactory.ts:24
+2496:	        const error = new Error(message ?? '');
+2497:	                      ^
+2498:	
+2499:	[Error [HttpClientError]: HTTP client is not properly initialized]
+2500:	
+2501:	Node.js v25.2.1
+2502:	 ChildProcessCrashedError: Child process [pid 80559] exited unexpectedly with exit code 1 (without signal). Last part of stdout and stderr was:
+2503:	ts-jest[config] (WARN) [94mmessage[0m[90m TS151001: [0mIf you have issues related to imports, you should consider setting `esModuleInterop` to `true` in your TypeScript configuration file (usually `tsconfig.json`). See https://blogs.msdn.microsoft.com/typescript/2018/01/31/announcing-typescript-2-7/#easier-ecmascript-module-interoperability for more information.
+2504:	/Users/rshoemake/Documents/cursor/cursor-test/frontend/.stryker-tmp/sandbox-Wz71Ys/src/utils/errorFactory.ts:24
+2505:	        const error = new Error(message ?? '');
+2506:	                      ^
+2507:	
+2508:	[Error [HttpClientError]: HTTP client is not properly initialized]
+2509:	
+2510:	Node.js v25.2.1
+2511:	
+2512:    at ChildProcess.handleUnexpectedExit (file:///Users/rshoemake/Documents/cursor/cursor-test/frontend/node_modules/@stryker-mutator/core/dist/src/child-proxy/child-process-proxy.js:180:31)
+2513:    at ChildProcess.emit (node:events:508:28)
+2514:    at maybeClose (node:internal/child_process:1085:16)
+2515:    at Socket.<anonymous> (node:internal/child_process:456:11)
+2516:    at Socket.emit (node:events:508:28)
+2517:    at Pipe.<anonymous> (node:net:346:12) {
+2518:  innerError: undefined,
+2519:  pid: 80559,
+2520:  exitCode: 1,
+2521:  signal: null
+2522:}
+2523:[33m10:04:42 (78707) WARN ChildProcessProxy[39m Child process [pid 80634] exited unexpectedly with exit code 1 (without signal). Last part of stdout and stderr was:
+2524:	ts-jest[config] (WARN) [94mmessage[0m[90m TS151001: [0mIf you have issues related to imports, you should consider setting `esModuleInterop` to `true` in your TypeScript configuration file (usually `tsconfig.json`). See https://blogs.msdn.microsoft.com/typescript/2018/01/31/announcing-typescript-2-7/#easier-ecmascript-module-interoperability for more information.
+2525:	/Users/rshoemake/Documents/cursor/cursor-test/frontend/.stryker-tmp/sandbox-Wz71Ys/src/hooks/utils/authenticatedRequestHandler.ts:79
+2526:	        const methodName = config.method.toLowerCase();
+2527:	                                         ^
+2528:	
+2529:	[TypeError: Cannot read properties of undefined (reading 'toLowerCase')]

@@ -2,6 +2,7 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 
 // Helper to ensure all waitFor calls have timeouts
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const waitForWithTimeout = (callback: () => void | Promise<void>, timeout = 2000) => {
   return waitFor(callback, { timeout })
 }
@@ -370,6 +371,7 @@ describe('InputNodeEditor', () => {
       }
       
       rerender(<InputNodeEditor node={updatedNode} onConfigUpdate={mockOnConfigUpdate} />)
+      // rerender is used above
       
       const bucketInput = screen.getByLabelText(/GCP bucket name/i) as HTMLInputElement
       expect(bucketInput.value).toBe('updated-bucket')
@@ -402,6 +404,7 @@ describe('InputNodeEditor', () => {
       }
       
       rerender(<InputNodeEditor node={updatedNode} onConfigUpdate={mockOnConfigUpdate} />)
+      // rerender is used above
       
       // Value should not change when input is focused
       expect(bucketInput.value).toBe('initial-bucket')
@@ -452,7 +455,7 @@ describe('InputNodeEditor', () => {
         }
       } as NodeWithData
 
-      const { rerender } = render(<InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />)
+      render(<InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />)
       
       const modeSelect = screen.getByLabelText(/Select bucket operation mode/i) as HTMLSelectElement
       expect(modeSelect.value).toBe('read')
@@ -3619,7 +3622,7 @@ describe('InputNodeEditor', () => {
       expect(document.activeElement !== bucketNameInput).toBe(false)
       
       // Change inputConfig while focused
-      const { rerender } = render(
+      render(
         <InputNodeEditor 
           node={{
             ...node,
@@ -3662,7 +3665,6 @@ describe('InputNodeEditor', () => {
       // Verify exact comparison: modeValue === 'write'
       // When mode is 'write', overwrite checkbox should be shown
       // Note: The checkbox might be rendered but not visible, so we check for its existence
-      const overwriteCheckbox = screen.queryByLabelText(/Overwrite/i) || screen.queryByRole('checkbox', { name: /overwrite/i })
       // The comparison exists in code even if checkbox isn't found
       expect(node.data.input_config.mode).toBe('write')
     })

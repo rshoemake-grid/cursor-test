@@ -11,7 +11,6 @@ import { ReactFlowProvider } from '@xyflow/react'
 import WorkflowBuilder, { WorkflowBuilderHandle } from '../WorkflowBuilder'
 import { useAuth } from '../../contexts/AuthContext'
 import { api } from '../../api/client'
-import { showSuccess, showError } from '../../utils/notifications'
 import { showConfirm } from '../../utils/confirm'
 
 // Mock logger

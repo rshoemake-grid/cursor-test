@@ -301,7 +301,8 @@ describe('useWebSocket - edges.comprehensive.2', () => {
       // Mock WebSocket constructor to throw error
       const OriginalWebSocket = global.WebSocket
       global.WebSocket = class {
-        constructor(url: string) {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        constructor(_url: string) {
           throw new Error('Failed to create WebSocket')
         }
       } as any
@@ -406,7 +407,8 @@ describe('useWebSocket - edges.comprehensive.2', () => {
       const onError = jest.fn()
       
       global.WebSocket = class {
-        constructor(url: string) {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        constructor(_url: string) {
           throw new Error('Connection failed')
         }
       } as any
@@ -435,7 +437,8 @@ describe('useWebSocket - edges.comprehensive.2', () => {
       const onError = jest.fn()
       
       global.WebSocket = class {
-        constructor(url: string) {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        constructor(_url: string) {
           throw new Error('Test error')
         }
       } as any
@@ -464,7 +467,8 @@ describe('useWebSocket - edges.comprehensive.2', () => {
       const onError = jest.fn()
       
       global.WebSocket = class {
-        constructor(url: string) {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        constructor(_url: string) {
           throw 'String error'
         }
       } as any
@@ -607,7 +611,8 @@ describe('useWebSocket - edges.comprehensive.2', () => {
       const onError = jest.fn()
       
       global.WebSocket = class {
-        constructor(url: string) {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        constructor(_url: string) {
           throw null // Not an Error instance
         }
       } as any
@@ -636,7 +641,8 @@ describe('useWebSocket - edges.comprehensive.2', () => {
       const onError = jest.fn()
       
       global.WebSocket = class {
-        constructor(url: string) {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        constructor(_url: string) {
           throw 'String error'
         }
       } as any
@@ -855,7 +861,8 @@ describe('useWebSocket - edges.comprehensive.2', () => {
       // Mock WebSocket constructor to throw error
       const OriginalWebSocket = global.WebSocket
       global.WebSocket = class {
-        constructor(url: string) {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        constructor(_url: string) {
           throw new Error('Failed to create WebSocket')
         }
       } as any
@@ -2775,7 +2782,8 @@ describe('useWebSocket - edges.comprehensive.2', () => {
         const OriginalWebSocket = global.WebSocket
         
         global.WebSocket = class {
-          constructor(url: string) {
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          constructor(_url: string) {
             throw new Error('Connection failed')
           }
         } as any

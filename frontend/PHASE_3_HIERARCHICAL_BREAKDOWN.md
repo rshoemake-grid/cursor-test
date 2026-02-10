@@ -1089,8 +1089,19 @@ This document provides a complete hierarchical breakdown of Phase 3, organized i
     - Removed unused initialCount variables from useWebSocket.edges.basic.test.ts and useWebSocket.reconnection.test.ts
     - Fixed @ts-ignore → @ts-expect-error conversions
     - Fixed unused _httpClient variable with eslint-disable comment
-  - **Progress**: Reduced from 381 to 332 errors (49 errors fixed, 12.9% reduction)
-  - **Current Status**: Many remaining errors are unused `result`/`rerender` variables from renderHook destructuring (may need eslint-disable comments) and require statements in test files (acceptable pattern)
+  - **Progress**: Reduced from 381 to 320 errors (61 errors fixed, 16.0% reduction)
+  - **Latest fixes**: 
+    - Removed unused hasTestWorkflow variable
+    - Fixed unused mockRemoveLocalStorageItem
+    - Added eslint-disable for unused _storage parameter
+    - Removed unused HttpClient import
+    - Removed unused props parameter, added eslint-disable for React require
+    - Removed unused useWorkflowExecution variable
+    - Removed unused WorkflowNode import
+  - **Current Status**: 
+    - 73 require statements in test files (acceptable pattern for dynamic mocking)
+    - ~255 other errors (unused variables: result/rerender from renderHook, unused imports, unused parameters)
+  - **Recent fixes**: Removed unused showSuccess/showError imports, removed unused Connection import, fixed unused result variable
 
 #### Substep 5.2.2: Code Formatting
 **Goal**: Ensure consistent code formatting

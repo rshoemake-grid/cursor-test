@@ -111,7 +111,7 @@ describe('useLocalStorage - No Coverage Paths', () => {
     })
 
     it('should handle JSON.parse throwing in useEffect storage event handler', () => {
-      const { result } = renderHook(() =>
+      renderHook(() =>
         useLocalStorage('test-key', 'default', { storage: mockStorage })
       )
 

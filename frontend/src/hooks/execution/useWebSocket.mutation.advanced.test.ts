@@ -549,7 +549,7 @@ describe('useWebSocket - mutation.advanced', () => {
     })
 
     it('should verify currentStatus = executionStatus || lastKnownStatusRef.current - lastKnownStatusRef path', async () => {
-      const { rerender } = renderHook(
+      renderHook(
         ({ executionStatus }) =>
           useWebSocket({
             executionId: 'exec-1',
@@ -705,7 +705,7 @@ describe('useWebSocket - mutation.advanced', () => {
     it('should verify reconnectAttempts.current < maxReconnectAttempts && executionId - executionId is null', async () => {
       // Create a scenario where executionId becomes null during reconnection
       // This tests the && executionId check in the reconnect logic
-      const { rerender } = renderHook(
+      renderHook(
         ({ executionId }) =>
           useWebSocket({
             executionId,
@@ -3302,7 +3302,7 @@ describe('useWebSocket - mutation.advanced', () => {
     it('should verify executionStatus || lastKnownStatusRef.current - executionStatus is truthy', async () => {
       // This test verifies the exact logical OR operator ||
       // If || is mutated to &&, both would need to be truthy
-      const { result } = renderHook(() =>
+      renderHook(() =>
         useWebSocket({
           executionId: 'exec-1',
           executionStatus: 'running', // truthy
@@ -3318,7 +3318,7 @@ describe('useWebSocket - mutation.advanced', () => {
 
     it('should verify executionStatus || lastKnownStatusRef.current - executionStatus is falsy', async () => {
       // Verify || operator uses lastKnownStatusRef.current when executionStatus is falsy
-      const { result, rerender } = renderHook(
+      renderHook(
         ({ executionStatus }) =>
           useWebSocket({
             executionId: 'exec-1',
@@ -3489,7 +3489,7 @@ describe('useWebSocket - mutation.advanced', () => {
     it('should verify setIsConnected(false) exact function call in onerror', async () => {
       // This test verifies setIsConnected(false) is called exactly
       // If setIsConnected is mutated, the state wouldn't update
-      const { result } = renderHook(() =>
+      renderHook(() =>
         useWebSocket({
           executionId: 'exec-1',
           executionStatus: 'running',
@@ -4350,7 +4350,7 @@ describe('useWebSocket - mutation.advanced', () => {
 
   describe('additional edge cases for improved mutation coverage', () => {
     it('should verify exact wasClean && code === 1000 check - wasClean is false', async () => {
-      const { rerender } = renderHook(
+      renderHook(
         ({ executionId }) =>
           useWebSocket({
             executionId,
@@ -4383,7 +4383,7 @@ describe('useWebSocket - mutation.advanced', () => {
     })
 
     it('should verify exact wasClean && code === 1000 check - code is not 1000', async () => {
-      const { rerender } = renderHook(
+      renderHook(
         ({ executionId }) =>
           useWebSocket({
             executionId,
@@ -4467,10 +4467,6 @@ describe('useWebSocket - mutation.advanced', () => {
         // This verifies: else if (reconnectAttempts.current >= maxReconnectAttempts)
         // The exact assertion depends on whether onError was called
         // At minimum, verify logger.warn was called (which happens in the else if branch)
-        const warnCalls = (logger.warn as jest.Mock).mock.calls.filter((call: any[]) =>
-          call[0]?.includes('Max reconnect attempts')
-        )
-        
         // The code path exists - verify it was executed or at least the condition was checked
         // If warn wasn't called, it means we didn't reach max attempts, but the code path still exists
         expect(true).toBe(true) // Test passes - code path verified to exist
@@ -4478,7 +4474,7 @@ describe('useWebSocket - mutation.advanced', () => {
     })
 
     it('should verify exact Math.min(1000 * Math.pow(2, reconnectAttempts.current), 10000) calculation', async () => {
-      const { rerender } = renderHook(
+      renderHook(
         ({ executionId }) =>
           useWebSocket({
             executionId,
@@ -4509,7 +4505,7 @@ describe('useWebSocket - mutation.advanced', () => {
     })
 
     it('should verify exact reason && reason.length > 0 check - reason is empty', async () => {
-      const { rerender } = renderHook(
+      renderHook(
         ({ executionId }) =>
           useWebSocket({
             executionId,
@@ -4542,7 +4538,7 @@ describe('useWebSocket - mutation.advanced', () => {
     })
 
     it('should verify exact wsState === WebSocket.CONNECTING check', async () => {
-      const { rerender } = renderHook(
+      renderHook(
         ({ executionId }) =>
           useWebSocket({
             executionId,
@@ -4569,7 +4565,7 @@ describe('useWebSocket - mutation.advanced', () => {
     })
 
     it('should verify exact wsState === WebSocket.OPEN check', async () => {
-      const { rerender } = renderHook(
+      renderHook(
         ({ executionId }) =>
           useWebSocket({
             executionId,
@@ -4597,7 +4593,7 @@ describe('useWebSocket - mutation.advanced', () => {
     })
 
     it('should verify exact wsState === WebSocket.CLOSING check', async () => {
-      const { rerender } = renderHook(
+      renderHook(
         ({ executionId }) =>
           useWebSocket({
             executionId,
@@ -4625,7 +4621,7 @@ describe('useWebSocket - mutation.advanced', () => {
     })
 
     it('should verify exact wsState === WebSocket.CLOSED check', async () => {
-      const { rerender } = renderHook(
+      renderHook(
         ({ executionId }) =>
           useWebSocket({
             executionId,
@@ -4655,7 +4651,7 @@ describe('useWebSocket - mutation.advanced', () => {
     })
 
     it('should verify exact error instanceof Error check - error is not Error', async () => {
-      const { rerender } = renderHook(
+      renderHook(
         ({ executionId }) =>
           useWebSocket({
             executionId,
@@ -4874,10 +4870,6 @@ describe('useWebSocket - mutation.advanced', () => {
           await advanceTimersByTime(200)
 
           // Verify exact string literal 'Execution completed' is used in close call
-          const debugCalls = (logger.debug as jest.Mock).mock.calls
-          const executionCompletedCall = debugCalls.find((call: any[]) =>
-            call[0] && typeof call[0] === 'string' && call[0].includes('Execution completed')
-          )
           // The close method is called with 'Execution completed' as second argument
           expect(ws.readyState).toBe(MockWebSocket.CLOSED)
         }

@@ -1,0 +1,15 @@
+src/types/adapters.test.ts
+src/types/workflowBuilder.test.ts
+src/utils/storageHelpers.test.ts
+src/utils/storageHelpers.mutation.test.ts
+src/components/WorkflowChat.test.tsx
+src/components/TabBar.test.tsx
+src/components/PropertyPanel.test.tsx
+src/components/NodePanel.test.tsx
+src/components/WorkflowTabs.test.tsx
+src/components/MarketplaceDialog.test.tsx
+src/components/WorkflowBuilder.test.tsx
+src/hooks/ui/useCanvasEvents.test.ts
+src/hooks/ui/useKeyboardShortcuts.test.ts
+src/hooks/ui/useCanvasEvents.mutation.test.ts
+src/hooks/providers/useLLMProviders.mutation.enhanced.test.ts

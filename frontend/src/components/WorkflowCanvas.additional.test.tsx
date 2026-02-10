@@ -1,7 +1,7 @@
 import React from 'react'
 import { render, fireEvent } from '@testing-library/react'
 import WorkflowCanvas from './WorkflowCanvas'
-import type { Node, Edge, Connection } from '@xyflow/react'
+import type { Node, Edge } from '@xyflow/react'
 
 // Mock ReactFlow components
 jest.mock('@xyflow/react', () => ({

@@ -748,7 +748,6 @@ describe('useAuthenticatedApi', () => {
     it('should verify useCallback dependencies - token change triggers update', () => {
       const { result, rerender } = renderHook(() => useAuthenticatedApi(mockHttpClient))
 
-      const firstCall = result.current.authenticatedGet
       result.current.authenticatedGet('/test1')
 
       mockUseAuth.mockReturnValue({
@@ -1132,7 +1131,6 @@ describe('useAuthenticatedApi', () => {
     it('should verify exact useCallback dependencies - token change', () => {
       const { result, rerender } = renderHook(() => useAuthenticatedApi(mockHttpClient))
 
-      const firstCall = result.current.authenticatedPost
       result.current.authenticatedPost('/test1', { data: 'test1' })
 
       mockUseAuth.mockReturnValue({

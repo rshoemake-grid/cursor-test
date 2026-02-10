@@ -8,7 +8,6 @@
 import { renderHook, act } from '@testing-library/react'
 import { useTemplateOperations } from './useTemplateOperations'
 import { logger } from '../../utils/logger'
-import { showError, showSuccess } from '../../utils/notifications'
 import { showConfirm } from '../../utils/confirm'
 import { api } from '../../api/client'
 

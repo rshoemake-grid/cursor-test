@@ -86,7 +86,7 @@ jest.mock('./ReactFlowInstanceCapture', () => ({
 
 jest.mock('./WorkflowBuilder/WorkflowBuilderLayout', () => ({
   __esModule: true,
-  WorkflowBuilderLayout: ({ ...props }: any) => (
+  WorkflowBuilderLayout: ({}: any) => (
     <div data-testid="workflow-builder-layout">
       <div data-testid="node-panel">NodePanel</div>
       <div data-testid="workflow-canvas">WorkflowCanvas</div>
@@ -129,6 +129,7 @@ jest.mock('@xyflow/react/dist/style.css', () => ({}))
 
 // Mock React Flow hooks
 jest.mock('@xyflow/react', () => {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const React = require('react')
   return {
     ...jest.requireActual('@xyflow/react'),
@@ -262,6 +263,7 @@ jest.mock('../hooks/marketplace', () => ({
 }))
 
 const mockUseAuth = useAuth as jest.MockedFunction<typeof useAuth>
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const mockApi = api as jest.Mocked<typeof api>
 
 describe('WorkflowBuilder - Additional Coverage', () => {
@@ -533,7 +535,8 @@ describe('WorkflowBuilder - Additional Coverage', () => {
 
     it('should call useWorkflowExecution hook', async () => {
       // Domain-based import - Phase 7
-      const { useWorkflowExecution } = require('../hooks/execution')
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      require('../hooks/execution')
       
       await act(async () => {
         render(

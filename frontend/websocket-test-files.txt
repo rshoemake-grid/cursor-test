@@ -1,0 +1,10 @@
+src/types/adapters.test.ts
+src/hooks/utils/websocketValidation.test.ts
+src/hooks/utils/websocketConstants.test.ts
+src/hooks/utils/websocketReconnectionStrategy.test.ts
+src/hooks/utils/WebSocketConnectionManager.test.ts
+src/hooks/utils/websocketUrlBuilder.test.ts
+src/hooks/utils/websocketLogging.test.ts
+src/hooks/storage/useLocalStorage.test.ts
+src/hooks/execution/useWebSocket.messages.test.ts
+src/hooks/execution/useWebSocket.errors.test.ts

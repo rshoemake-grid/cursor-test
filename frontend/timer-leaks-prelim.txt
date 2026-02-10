@@ -1,0 +1,4 @@
+src/utils/confirm.mutation.enhanced.test.ts
+src/components/ExecutionConsole.additional.test.tsx
+src/hooks/providers/useProviderManagement.test.ts
+src/hooks/marketplace/useMarketplaceData.test.ts

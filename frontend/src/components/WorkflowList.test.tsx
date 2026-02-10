@@ -10,7 +10,7 @@ import { BrowserRouter } from 'react-router-dom'
 import WorkflowList from './WorkflowList'
 import { api } from '../api/client'
 import { useAuth } from '../contexts/AuthContext'
-import { showError, showSuccess, showWarning } from '../utils/notifications'
+import { showError, showSuccess } from '../utils/notifications'
 import { showConfirm } from '../utils/confirm'
 
 // Mock dependencies

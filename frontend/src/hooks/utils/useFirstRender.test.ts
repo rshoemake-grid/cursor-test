@@ -43,7 +43,7 @@ describe('useFirstRender', () => {
   })
 
   it('should maintain state across rerenders when markAsRendered is called', () => {
-    const { result, rerender } = renderHook(() => useFirstRender())
+    const { result } = renderHook(() => useFirstRender())
 
     expect(result.current.isFirstRender).toBe(true)
 

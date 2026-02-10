@@ -10,19 +10,12 @@ import {
   wsInstances, 
   MockWebSocket, 
   useWebSocket, 
-  logger,
-  OriginalWebSocket
+  logger
 } from './useWebSocket.test.setup'
-
-// Get reference to the MockWebSocket wrapper that should be global.WebSocket
-const getMockWebSocketWrapper = () => {
-  // Create a test instance to see what the wrapper looks like
-  const testWs = new (global.WebSocket as any)('ws://test')
-  return global.WebSocket
-}
 
 describe('useWebSocket - Kill Remaining Mutants', () => {
   // Store the MockWebSocket wrapper to restore it if tests modify global.WebSocket
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   let mockWebSocketWrapper: typeof global.WebSocket
 
   beforeEach(() => {
@@ -634,9 +627,6 @@ describe('useWebSocket - Kill Remaining Mutants', () => {
         await advanceTimersByTime(100)
         // Verify the conditional logic exists (the >= check is tested)
         // The warn may or may not be called depending on timing, but the logic path is tested
-        const warnCalls = (logger.warn as jest.Mock).mock.calls.filter((call: any[]) => 
-          call[0]?.includes('[WebSocket] Max reconnect attempts')
-        )
         // Verify logger.warn exists and can be called (the code path is tested)
         expect(typeof logger.warn).toBe('function')
       }

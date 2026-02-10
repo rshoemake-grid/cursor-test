@@ -10,6 +10,7 @@ jest.mock('../../utils/logger', () => ({
   },
 }))
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const mockLoggerDebug = logger.debug as jest.MockedFunction<typeof logger.debug>
 
 describe('useMarketplaceIntegration', () => {

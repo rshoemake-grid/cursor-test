@@ -2,7 +2,6 @@ import React from 'react'
 import { render, screen, fireEvent } from '@testing-library/react'
 
 import ExecutionInputDialog from './ExecutionInputDialog'
-import type { WorkflowNode } from '../types/workflow'
 
 describe('ExecutionInputDialog', () => {
   const mockOnClose = jest.fn()

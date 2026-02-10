@@ -21,6 +21,7 @@ jest.mock('../storage', () => ({
 }))
 
 const mockLoggerError = logger.error as jest.MockedFunction<typeof logger.error>
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const mockLoggerDebug = logger.debug as jest.MockedFunction<typeof logger.debug>
 const mockGetLocalStorageItem = getLocalStorageItem as jest.MockedFunction<typeof getLocalStorageItem>
 

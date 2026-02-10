@@ -24,6 +24,7 @@ jest.mock('../../utils/logger', () => ({
 const mockShowError = showError as jest.MockedFunction<typeof showError>
 const mockShowSuccess = showSuccess as jest.MockedFunction<typeof showSuccess>
 const mockShowConfirm = showConfirm as jest.MockedFunction<typeof showConfirm>
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const mockLoggerDebug = logger.debug as jest.MockedFunction<typeof logger.debug>
 const mockLoggerError = logger.error as jest.MockedFunction<typeof logger.error>
 

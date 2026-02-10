@@ -219,7 +219,8 @@ function ModelList({
   onUpdateProvider,
   onToggleModel,
   isModelExpanded,
-  expandedModels: _expandedModels // Unused but part of interface - prefix with underscore to indicate intentionally unused - prefix with _ to indicate intentionally unused
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  expandedModels: _expandedModels // Unused but part of interface - prefix with underscore to indicate intentionally unused
 }: ModelListProps) {
   const handleDeleteModel = (model: string) => {
     if ((provider.models || []).length > 1) {

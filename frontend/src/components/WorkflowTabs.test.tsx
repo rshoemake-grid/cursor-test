@@ -27,7 +27,7 @@ import { WorkflowTabsProvider } from '../contexts/WorkflowTabsContext'
 import { useAuth } from '../contexts/AuthContext'
 import { api } from '../api/client'
 import { showConfirm } from '../utils/confirm'
-import { showError, showSuccess } from '../utils/notifications'
+import { showError } from '../utils/notifications'
 // Domain-based imports - Phase 7
 import { getLocalStorageItem, setLocalStorageItem } from '../hooks/storage'
 import type { StorageAdapter, HttpClient } from '../types/adapters'
@@ -84,6 +84,7 @@ jest.mock('./WorkflowBuilder', () => {
 const mockUseAuth = useAuth as jest.MockedFunction<typeof useAuth>
 const mockApi = api as jest.Mocked<typeof api>
 const mockGetLocalStorageItem = getLocalStorageItem as jest.MockedFunction<typeof getLocalStorageItem>
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const mockSetLocalStorageItem = setLocalStorageItem as jest.MockedFunction<typeof setLocalStorageItem>
 
 describe('WorkflowTabs', () => {
@@ -2030,7 +2031,6 @@ describe('WorkflowTabs', () => {
       // Wait for the component to render with the correct tab
       await waitForWithTimeout(() => {
         const buttons = screen.getAllByRole('button')
-        const hasTestWorkflow = buttons.some(btn => btn.textContent?.includes('Test Workflow'))
         const hasPublishButton = buttons.some(btn => btn.getAttribute('title') === 'Publish workflow')
         expect(hasPublishButton).toBe(true)
       }, 2000)
@@ -2576,8 +2576,8 @@ describe('WorkflowTabs', () => {
     })
 
     it('should handle saveActiveTabToStorage when activeTabId is null', async () => {
-      const { removeLocalStorageItem } = require('../hooks/storage')
-      const mockRemoveLocalStorageItem = removeLocalStorageItem as jest.MockedFunction<typeof removeLocalStorageItem>
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      require('../hooks/storage')
 
       renderWithProvider()
 

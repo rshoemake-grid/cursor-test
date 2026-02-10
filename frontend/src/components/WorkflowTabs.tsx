@@ -5,7 +5,7 @@ import { useWorkflowTabs, type WorkflowTabData } from '../contexts/WorkflowTabsC
 import WorkflowBuilder, { WorkflowBuilderHandle } from './WorkflowBuilder'
 import { api } from '../api/client'
 import { showError } from '../utils/notifications'
-import type { StorageAdapter, HttpClient } from '../types/adapters'
+import type { StorageAdapter } from '../types/adapters'
 import { defaultAdapters } from '../types/adapters'
 // Domain-based imports - Phase 7
 import { useTabRenaming, useTabOperations, useTabInitialization } from '../hooks/tabs'
@@ -32,6 +32,7 @@ export default function WorkflowTabs({
   workflowLoadKey, 
   onExecutionStart,
   // storage is now handled by WorkflowTabsContext, but kept for API compatibility
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   storage: _storage = defaultAdapters.createLocalStorageAdapter(),
   httpClient = defaultAdapters.createHttpClient(),
   apiBaseUrl = 'http://localhost:8000/api'

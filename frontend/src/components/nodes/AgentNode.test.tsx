@@ -18,7 +18,7 @@ describe('AgentNode', () => {
       name: 'Test Agent',
     }
 
-    const { container } = renderWithProvider(
+    renderWithProvider(
       <AgentNode data={nodeData} selected={false} id="node-1" />
     )
 

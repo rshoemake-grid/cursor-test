@@ -41,6 +41,7 @@ const mockShowError = showError as jest.MockedFunction<typeof showError>
 const mockShowSuccess = showSuccess as jest.MockedFunction<typeof showSuccess>
 const mockShowConfirm = showConfirm as jest.MockedFunction<typeof showConfirm>
 const mockDeleteTemplate = api.deleteTemplate as jest.MockedFunction<typeof api.deleteTemplate>
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const mockLoggerDebug = logger.debug as jest.MockedFunction<typeof logger.debug>
 const mockLoggerError = logger.error as jest.MockedFunction<typeof logger.error>
 
