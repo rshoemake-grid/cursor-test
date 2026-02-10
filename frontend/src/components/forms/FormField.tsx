@@ -51,20 +51,20 @@ export function FormField<T = any>({
   rows = 4,
   'aria-label': ariaLabel,
 }: FormFieldProps<T>) {
+  // Always call hooks unconditionally - React Hooks rules
   // Use controlled value if provided, otherwise use hook for node data sync
   const useHook = syncWithNodeData && nodeData && dataPath
-  const fieldHook = useHook
-    ? useFormField({
-        initialValue: controlledValue as T,
-        onUpdate: onChange,
-        nodeData,
-        dataPath,
-        syncWithNodeData: true,
-      })
-    : null
+  const fieldHook = useFormField({
+    initialValue: controlledValue as T,
+    onUpdate: onChange,
+    nodeData: useHook ? nodeData : undefined,
+    dataPath: useHook ? dataPath : undefined,
+    syncWithNodeData: useHook ? true : false,
+  })
+  const fallbackRef = useRef<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>(null)
 
-  const value = useHook ? fieldHook!.value : controlledValue
-  const inputRef = useHook ? fieldHook!.inputRef : useRef<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>(null)
+  const value = useHook ? fieldHook.value : controlledValue
+  const inputRef = useHook ? fieldHook.inputRef : fallbackRef
 
   // DRY: Use centralized input type handler
   const handleInputChange = useInputTypeHandler(type, onChange)

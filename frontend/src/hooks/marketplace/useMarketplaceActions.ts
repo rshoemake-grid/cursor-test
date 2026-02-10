@@ -64,7 +64,7 @@ export function useMarketplaceActions(
     agents,
     repositoryAgents,
     storage,
-    useTemplate,
+    useTemplate: loadTemplate, // Rename to avoid false positive from ESLint hook detection
     deleteSelectedAgents,
     deleteSelectedWorkflows,
     deleteSelectedRepositoryAgents,
@@ -76,15 +76,18 @@ export function useMarketplaceActions(
   /**
    * Handle loading multiple workflows
    * DRY: Extracted from component
+   * Note: loadTemplate is a function prop (not a React hook), so it's safe to call in a loop
    */
   const handleLoadWorkflows = useCallback(async () => {
-    for (const templateId of templateSelection.selectedIds) {
-      await useTemplate(templateId)
+    // Convert Set to Array to iterate safely
+    const templateIds = Array.from(templateSelection.selectedIds)
+    for (const templateId of templateIds) {
+      await loadTemplate(templateId)
       // Small delay between loads to avoid race conditions
       await new Promise(resolve => setTimeout(resolve, 100))
     }
     templateSelection.clear()
-  }, [templateSelection, useTemplate])
+  }, [templateSelection, loadTemplate])
 
   /**
    * Handle adding agents to workflow
