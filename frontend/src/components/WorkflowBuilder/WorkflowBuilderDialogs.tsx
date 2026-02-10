@@ -4,7 +4,6 @@
  * Single Responsibility: Only handles dialog rendering
  */
 
-import React from 'react'
 import ExecutionInputDialog from '../ExecutionInputDialog'
 import ContextMenu from '../NodeContextMenu'
 import MarketplaceDialog from '../MarketplaceDialog'
@@ -20,9 +19,9 @@ export interface WorkflowBuilderDialogsProps {
   
   // Context menu
   contextMenu: {
-    nodeId: string | null
-    edgeId: string | null
-    node: Node | null
+    nodeId?: string
+    edgeId?: string
+    node?: Node
     x: number
     y: number
   } | null

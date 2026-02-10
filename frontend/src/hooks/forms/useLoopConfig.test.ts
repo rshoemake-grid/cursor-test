@@ -1,4 +1,4 @@
-import { renderHook, act } from '@testing-library/react'
+import { renderHook } from '@testing-library/react'
 import { useLoopConfig } from './useLoopConfig'
 import { useReactFlow } from '@xyflow/react'
 

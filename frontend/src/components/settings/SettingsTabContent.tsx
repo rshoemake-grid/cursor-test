@@ -4,7 +4,6 @@
  * Single Responsibility: Only handles tab content rendering
  */
 
-import React from 'react'
 import { ProviderForm } from './ProviderForm'
 import { WorkflowSettingsTab } from './WorkflowSettingsTab'
 import { AddProviderForm } from './AddProviderForm'

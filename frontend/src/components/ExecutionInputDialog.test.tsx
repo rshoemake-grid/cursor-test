@@ -1,10 +1,5 @@
 import React from 'react'
-import { render, screen, fireEvent, waitFor } from '@testing-library/react'
-
-// Helper to ensure all waitFor calls have timeouts
-const waitForWithTimeout = (callback: () => void | Promise<void>, timeout = 2000) => {
-  return waitFor(callback, { timeout })
-}
+import { render, screen, fireEvent } from '@testing-library/react'
 
 import ExecutionInputDialog from './ExecutionInputDialog'
 import type { WorkflowNode } from '../types/workflow'

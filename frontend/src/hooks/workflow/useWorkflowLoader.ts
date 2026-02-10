@@ -54,9 +54,11 @@ export function useWorkflowLoader({
       isLoadingRef.current = true // Prevent marking as modified during load
       api.getWorkflow(workflowId).then((workflow) => {
         // Set local state for this tab
-        setLocalWorkflowId(workflow.id!)
+        if (workflow.id) {
+          setLocalWorkflowId(workflow.id)
+        }
         setLocalWorkflowName(workflow.name)
-        setLocalWorkflowDescription(logicalOr(workflow.description, ''))
+        setLocalWorkflowDescription(logicalOr(workflow.description, '') || '')
         setVariables(logicalOrToEmptyObject(workflow.variables))
         const convertedNodes = workflow.nodes.map(workflowNodeToNode)
         // Ensure all nodes have required React Flow properties

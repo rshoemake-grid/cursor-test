@@ -4,7 +4,7 @@
  * Single Responsibility: Only handles agent-to-node conversion
  */
 
-import type { Node, Position } from '@xyflow/react'
+import type { Node, XYPosition } from '@xyflow/react'
 import { AGENT_NODE } from './marketplaceConstants'
 import { EMPTY_STRING } from './inputDefaults'
 
@@ -97,7 +97,7 @@ export function getAgentConfig(agent: AgentTemplate): Record<string, any> {
  */
 export function convertAgentToNode(
   agent: AgentTemplate,
-  position: Position,
+  position: XYPosition,
   index: number
 ): Node {
   const nodeId = `agent-${Date.now()}-${index}`
@@ -122,7 +122,7 @@ export function convertAgentToNode(
  */
 export function convertAgentsToNodes(
   agents: AgentTemplate[],
-  positions: Position[]
+  positions: XYPosition[]
 ): Node[] {
   return agents.map((agent, index) => {
     return convertAgentToNode(agent, positions[index], index)

@@ -4,7 +4,7 @@
  */
 
 import React from 'react'
-import { render, screen, fireEvent, waitFor } from '@testing-library/react'
+import { render, screen, fireEvent } from '@testing-library/react'
 import { ProviderForm } from './ProviderForm'
 import { showError } from '../../utils/notifications'
 import type { LLMProvider } from '../../hooks/providers'

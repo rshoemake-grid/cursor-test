@@ -29,9 +29,9 @@ export interface MarketplaceTabContentProps {
     selectedIds: Set<string>
     toggle: (id: string) => void
   }
-  handleAgentCardClick: (e: React.MouseEvent) => void
-  handleCardClick: (e: React.MouseEvent) => void
-  handleRepositoryAgentCardClick: (e: React.MouseEvent) => void
+  handleAgentCardClick: (e: React.MouseEvent, id: string) => void
+  handleCardClick: (e: React.MouseEvent, id: string) => void
+  handleRepositoryAgentCardClick: (e: React.MouseEvent, id: string) => void
   getDifficultyColor: (difficulty: string) => string
 }
 

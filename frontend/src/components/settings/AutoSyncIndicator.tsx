@@ -4,7 +4,6 @@
  * Single Responsibility: Only handles auto-sync status display
  */
 
-import React from 'react'
 
 /**
  * Auto Sync Indicator Component

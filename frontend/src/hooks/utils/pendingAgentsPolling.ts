@@ -12,7 +12,7 @@ import { PENDING_AGENTS } from './marketplaceConstants'
  */
 export function createPendingAgentsPolling(
   checkPendingAgents: () => void,
-  logger: { debug: (message: string, ...args: any[]) => void }
+  _logger: { debug: (message: string, ...args: any[]) => void } // Prefixed with _ to indicate intentionally unused
 ): { interval: ReturnType<typeof setInterval>, cleanup: () => void } {
   let checkCount = 0
   const maxChecks = PENDING_AGENTS.MAX_CHECKS

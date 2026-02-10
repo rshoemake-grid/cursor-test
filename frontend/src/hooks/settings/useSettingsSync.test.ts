@@ -3,7 +3,7 @@
  * Tests for settings synchronization hook
  */
 
-import { renderHook, waitFor } from '@testing-library/react'
+import { renderHook } from '@testing-library/react'
 import { useSettingsSync } from './useSettingsSync'
 import { SettingsService } from '../../services/SettingsService'
 import type { LLMProvider } from '../providers'

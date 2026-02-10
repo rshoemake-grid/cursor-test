@@ -9,7 +9,7 @@ import { useReactFlow } from '@xyflow/react'
 import { findNodeById, nodeExists as checkNodeExists } from '../../utils/nodeUtils'
 import { logicalOrToEmptyArray } from '../utils/logicalOr'
 import { isValidNodeId, hasValidCache, nodeExistsAndValid as isValidNode } from '../utils/nodeValidation'
-import { updateNodeCacheRefs, clearNodeCache, syncCacheData, nodeExistsAndValid } from '../utils/nodeCache'
+import { updateNodeCacheRefs, clearNodeCache, syncCacheData } from '../utils/nodeCache'
 
 interface UseSelectedNodeOptions {
   selectedNodeId: string | null

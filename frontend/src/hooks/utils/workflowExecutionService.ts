@@ -5,7 +5,7 @@
  */
 
 import { logger } from '../../utils/logger'
-import type { WorkflowAPIClient } from '../useWorkflowAPI'
+import type { WorkflowAPIClient } from '../workflow/useWorkflowAPI'
 
 export interface ExecutionServiceOptions {
   api: WorkflowAPIClient

@@ -20,7 +20,13 @@ const mockLoggerError = logger.error as jest.MockedFunction<typeof logger.error>
 
 describe('useAsyncOperation', () => {
   beforeEach(() => {
+    jest.useFakeTimers()
     jest.clearAllMocks()
+  })
+
+  afterEach(() => {
+    jest.runOnlyPendingTimers()
+    jest.useRealTimers()
   })
 
   describe('initial state', () => {
@@ -83,7 +89,7 @@ describe('useAsyncOperation', () => {
       expect(result.current.loading).toBe(true)
 
       await act(async () => {
-        await new Promise((resolve) => setTimeout(resolve, 150))
+        jest.advanceTimersByTime(150)
       })
 
       expect(result.current.loading).toBe(false)

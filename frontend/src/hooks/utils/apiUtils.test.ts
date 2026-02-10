@@ -193,6 +193,34 @@ describe('apiUtils', () => {
       }
       expect(extractApiErrorMessage(error)).toBe('An error occurred')
     })
+
+    it('should handle Error object with no message property', () => {
+      const error = new Error()
+      delete (error as any).message
+      expect(extractApiErrorMessage(error, 'Default')).toBe('Default')
+    })
+
+    it('should handle Error object that is not instanceof Error but has message', () => {
+      const error = Object.create(null)
+      error.message = 'Custom message'
+      expect(extractApiErrorMessage(error)).toBe('Custom message')
+    })
+
+    it('should handle error with response.data but no detail or message', () => {
+      const error = {
+        response: {
+          data: {},
+        },
+      }
+      expect(extractApiErrorMessage(error)).toBe('An error occurred')
+    })
+
+    it('should handle error with response but no data', () => {
+      const error = {
+        response: {},
+      }
+      expect(extractApiErrorMessage(error)).toBe('An error occurred')
+    })
   })
 
   describe('isApiResponseOk', () => {
@@ -229,6 +257,36 @@ describe('apiUtils', () => {
     it('should handle response with ok=false even if status is 200', () => {
       const response = { ok: false, status: 200 } as Response
       expect(isApiResponseOk(response)).toBe(false)
+    })
+
+    it('should return true for 201 status (created)', () => {
+      const response = { ok: true, status: 201 } as Response
+      expect(isApiResponseOk(response)).toBe(true)
+    })
+
+    it('should return true for 204 status (no content)', () => {
+      const response = { ok: true, status: 204 } as Response
+      expect(isApiResponseOk(response)).toBe(true)
+    })
+
+    it('should return false for 400 status (bad request)', () => {
+      const response = { ok: false, status: 400 } as Response
+      expect(isApiResponseOk(response)).toBe(false)
+    })
+
+    it('should return false for 401 status (unauthorized)', () => {
+      const response = { ok: false, status: 401 } as Response
+      expect(isApiResponseOk(response)).toBe(false)
+    })
+
+    it('should return false for 404 status (not found)', () => {
+      const response = { ok: false, status: 404 } as Response
+      expect(isApiResponseOk(response)).toBe(false)
+    })
+
+    it('should return true for 202 status (accepted)', () => {
+      const response = { ok: true, status: 202 } as Response
+      expect(isApiResponseOk(response)).toBe(true)
     })
   })
 
@@ -302,6 +360,51 @@ describe('apiUtils', () => {
 
       const result = await parseJsonResponse(response)
       expect(result).toEqual([1, 2, 3])
+    })
+
+    it('should handle whitespace-only response', async () => {
+      const response = {
+        text: async () => '   ',
+      } as Response
+
+      const result = await parseJsonResponse(response)
+      expect(result).toBeNull()
+    })
+
+    it('should handle response with only newlines', async () => {
+      const response = {
+        text: async () => '\n\n',
+      } as Response
+
+      const result = await parseJsonResponse(response)
+      expect(result).toBeNull()
+    })
+
+    it('should handle malformed JSON with trailing comma', async () => {
+      const response = {
+        text: async () => '{"key": "value",}',
+      } as Response
+
+      const result = await parseJsonResponse(response)
+      expect(result).toBeNull()
+    })
+
+    it('should handle JSON with escaped characters', async () => {
+      const response = {
+        text: async () => JSON.stringify({ message: 'Hello\nWorld\tTest' }),
+      } as Response
+
+      const result = await parseJsonResponse(response)
+      expect(result).toEqual({ message: 'Hello\nWorld\tTest' })
+    })
+
+    it('should handle response.text() returning undefined', async () => {
+      const response = {
+        text: async () => undefined as any,
+      } as Response
+
+      const result = await parseJsonResponse(response)
+      expect(result).toBeNull()
     })
   })
 })

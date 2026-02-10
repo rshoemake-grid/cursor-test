@@ -306,14 +306,13 @@ describe('createApiClient', () => {
 
   describe('Custom options', () => {
     it('should use custom baseURL', () => {
-      const api = createApiClient({ baseURL: 'https://custom.api.com' })
+      createApiClient({ baseURL: 'https://custom.api.com' })
       
       expect(mockedAxios.create).toHaveBeenCalledWith({ baseURL: 'https://custom.api.com' })
     })
 
     it('should use custom axios instance', () => {
-      const customInstance = mockInstance
-      const api = createApiClient({ axiosInstance: customInstance })
+      createApiClient({ axiosInstance: mockInstance })
       
       expect(mockedAxios.create).not.toHaveBeenCalled()
     })

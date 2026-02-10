@@ -4,7 +4,6 @@
  * Single Responsibility: Only handles add provider form rendering
  */
 
-import React from 'react'
 import { Plus } from 'lucide-react'
 import { PROVIDER_TEMPLATES } from '../../constants/settingsConstants'
 

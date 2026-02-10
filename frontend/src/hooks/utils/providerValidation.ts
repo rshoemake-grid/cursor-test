@@ -4,7 +4,7 @@
  * Single Responsibility: Only validates provider data
  */
 
-import type { LLMProvider } from '../useLLMProviders'
+import type { LLMProvider } from '../providers/useLLMProviders'
 
 /**
  * Check if provider is valid (not null/undefined)

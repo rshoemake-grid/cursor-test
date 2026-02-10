@@ -5,7 +5,8 @@
  * DRY: Reusable pattern for all input field synchronization
  */
 
-import { useRef, useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
+// useRef intentionally not imported - not needed for this implementation
 
 /**
  * Sync input field value with config value

@@ -12,7 +12,6 @@ import WorkflowBuilder from './WorkflowBuilder'
 import SettingsPage from '../pages/SettingsPage'
 import { useAuth } from '../contexts/AuthContext'
 import type { StorageAdapter } from '../types/adapters'
-import { defaultAdapters } from '../types/adapters'
 
 // Mock logger
 jest.mock('../utils/logger', () => ({
@@ -366,7 +365,7 @@ describe('Cross-Component Integration Tests', () => {
     })
 
     it('should use shared storage adapter across components', async () => {
-      const storageGetItemSpy = jest.spyOn(mockStorage, 'getItem')
+      jest.spyOn(mockStorage, 'getItem')
 
       // Render WorkflowBuilder
       await act(async () => {
@@ -485,9 +484,6 @@ describe('Cross-Component Integration Tests', () => {
     })
 
     it('should use storage adapter consistently across components', async () => {
-      const storageSetItemSpy = jest.spyOn(mockStorage, 'setItem')
-      const storageGetItemSpy = jest.spyOn(mockStorage, 'getItem')
-
       // Render WorkflowBuilder
       await act(async () => {
         render(
@@ -1044,9 +1040,6 @@ describe('Cross-Component Integration Tests', () => {
     })
 
     it('should handle storage operations affecting both components', async () => {
-      const storageSetItemSpy = jest.spyOn(mockStorage, 'setItem')
-      const storageGetItemSpy = jest.spyOn(mockStorage, 'getItem')
-
       await act(async () => {
         render(
           <BrowserRouter>
@@ -1187,8 +1180,6 @@ describe('Cross-Component Integration Tests', () => {
 
   describe('Step 1.3.3.2: Shared Resource Handling', () => {
     it('should allow both components to read from same storage', async () => {
-      const storageGetItemSpy = jest.spyOn(mockStorage, 'getItem')
-
       await act(async () => {
         render(
           <BrowserRouter>
@@ -1211,8 +1202,6 @@ describe('Cross-Component Integration Tests', () => {
     })
 
     it('should allow both components to write to same storage', async () => {
-      const storageSetItemSpy = jest.spyOn(mockStorage, 'setItem')
-
       await act(async () => {
         render(
           <BrowserRouter>

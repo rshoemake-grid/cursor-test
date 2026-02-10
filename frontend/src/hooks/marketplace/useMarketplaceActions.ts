@@ -12,7 +12,6 @@ import { STORAGE_KEYS } from '../../config/constants'
 import { PENDING_AGENTS_STORAGE_KEY } from '../utils/marketplaceConstants'
 import { MARKETPLACE_EVENTS } from '../utils/marketplaceEventConstants'
 import { MARKETPLACE_TABS, REPOSITORY_SUB_TABS } from './useMarketplaceTabs'
-import type { Template } from './index'
 
 export interface UseMarketplaceActionsOptions {
   activeTab: string

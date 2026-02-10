@@ -45,10 +45,12 @@ export function useNodeForm({ selectedNode, onUpdate }: UseNodeFormOptions) {
 
     // Only sync if the input is not currently focused (user is not typing)
     if (document.activeElement !== nameInputRef.current) {
-      setNameValue(nodeName)
+      const nameStr = (nodeName !== null && nodeName !== undefined) ? nodeName : ''
+      setNameValue(nameStr)
     }
     if (document.activeElement !== descriptionInputRef.current) {
-      setDescriptionValue(nodeDescription)
+      const descStr = (nodeDescription !== null && nodeDescription !== undefined) ? nodeDescription : ''
+      setDescriptionValue(descStr)
     }
   }, [selectedNode])
 

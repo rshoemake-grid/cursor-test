@@ -173,10 +173,19 @@ export function useOfficialAgentSeeding({
                   name: nodeName,
                   label: nodeName,
                   description: nodeDescription,
-                  category: logicalOr(workflow.category, 'automation'),
-                  tags: [...logicalOrToEmptyArray(workflow.tags), 'official', workflow.name.toLowerCase().replace(/\s+/g, '-')],
-                  difficulty: logicalOr(workflow.difficulty, 'intermediate'),
-                  estimated_time: logicalOr(workflow.estimated_time, '5 min'),
+                  category: (() => {
+                    const cat = logicalOr(workflow.category, 'automation')
+                    return (cat !== null && cat !== undefined && typeof cat === 'string') ? cat : 'automation'
+                  })(),
+                  tags: [...logicalOrToEmptyArray(workflow.tags), 'official', (workflow.name || '').toLowerCase().replace(/\s+/g, '-')],
+                  difficulty: (() => {
+                    const diff = logicalOr(workflow.difficulty, 'intermediate')
+                    return (diff !== null && diff !== undefined && typeof diff === 'string') ? diff : 'intermediate'
+                  })(),
+                  estimated_time: (() => {
+                    const est = logicalOr(workflow.estimated_time, '5 min')
+                    return (est !== null && est !== undefined && typeof est === 'string') ? est : '5 min'
+                  })(),
                   agent_config: agentConfig,
                   published_at: logicalOr((workflow as any).created_at, new Date().toISOString()),
                   author_id: logicalOr(workflow.author_id, null),

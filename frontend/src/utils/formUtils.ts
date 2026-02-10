@@ -5,7 +5,8 @@
  */
 
 import { parsePath, validatePath } from '../hooks/utils/pathParser'
-import { isNullOrUndefined, isDefined } from './typeGuards'
+import { isNullOrUndefined } from './typeGuards'
+// isDefined intentionally not imported - not used in this file
 import { coalesce } from './coalesce'
 
 /**
@@ -202,7 +203,7 @@ export function getNestedValue<T = any>(
   const keys = parsePath(path)
   if (keys.length === 0) return defaultValue
 
-  const result = traversePath(obj, keys)
+  const result = traversePath(obj as NestedObject, keys)
   // Explicit check to prevent mutation survivors
   if (isNullOrUndefined(result) === true) return defaultValue
 
@@ -294,7 +295,7 @@ export function hasNestedValue(obj: NestedObject | null | undefined, path: PathI
   const keys = parsePath(path)
   if (keys.length === 0) return false
 
-  const result = traversePath(obj, keys)
+  const result = traversePath(obj as NestedObject, keys)
   // Explicit check to prevent mutation survivors
   if (isNullOrUndefined(result) === true) return false
 

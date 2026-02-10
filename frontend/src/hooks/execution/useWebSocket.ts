@@ -7,7 +7,7 @@ import {
   type WebSocketCallbacks
 } from '../utils/WebSocketConnectionManager'
 import type { ExecutionStatus } from '../utils/executionStatusUtils'
-import { logicalOr } from '../utils/logicalOr'
+// logicalOr intentionally not imported - not used after refactoring
 
 interface UseWebSocketOptions {
   executionId: string | null
@@ -37,9 +37,13 @@ export function useWebSocket(options: UseWebSocketOptions) {
       executionId: options.executionId,
       executionStatus: options.executionStatus,
       maxReconnectAttempts: 5,
-      webSocketFactory: logicalOr(options.webSocketFactory, defaultAdapters.createWebSocketFactory()),
+      webSocketFactory: (options.webSocketFactory !== null && options.webSocketFactory !== undefined)
+        ? options.webSocketFactory
+        : defaultAdapters.createWebSocketFactory(),
       windowLocation: options.windowLocation !== undefined ? options.windowLocation : defaultAdapters.createWindowLocation(),
-      logger: logicalOr(options.logger, logger)
+      logger: (options.logger !== null && options.logger !== undefined)
+        ? options.logger
+        : logger
     })
   }
 

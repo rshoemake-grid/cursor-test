@@ -34,6 +34,7 @@ export default function MarketplaceDialog({
   workflowName,
   storage = defaultAdapters.createLocalStorageAdapter(),
   // httpClient is currently unused but kept for future API integration
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   httpClient: _httpClient = defaultAdapters.createHttpClient()
 }: MarketplaceDialogProps) {
   const [activeTab, setActiveTab] = useState<TabType>('agents')

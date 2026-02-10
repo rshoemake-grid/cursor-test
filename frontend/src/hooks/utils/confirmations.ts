@@ -55,9 +55,9 @@ export async function confirmDelete(
   const confirmed = await showConfirm(
     `Are you sure you want to delete "${itemName}"?`,
     { 
-      title: logicalOr(options?.title, 'Delete'), 
-      confirmText: logicalOr(options?.confirmText, 'Delete'), 
-      cancelText: logicalOr(options?.cancelText, 'Cancel'), 
+      title: (logicalOr(options?.title, 'Delete') !== null && logicalOr(options?.title, 'Delete') !== undefined) ? logicalOr(options?.title, 'Delete')! : 'Delete', 
+      confirmText: (logicalOr(options?.confirmText, 'Delete') !== null && logicalOr(options?.confirmText, 'Delete') !== undefined) ? logicalOr(options?.confirmText, 'Delete')! : 'Delete', 
+      cancelText: (logicalOr(options?.cancelText, 'Cancel') !== null && logicalOr(options?.cancelText, 'Cancel') !== undefined) ? logicalOr(options?.cancelText, 'Cancel')! : 'Cancel', 
       type: 'danger' 
     }
   )

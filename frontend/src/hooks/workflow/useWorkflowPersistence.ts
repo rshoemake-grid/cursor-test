@@ -120,7 +120,8 @@ export function useWorkflowPersistence({
       variables,
     })
     
-    const filename = logicalOr(localWorkflowName.trim(), 'workflow').replace(/\s+/g, '-')
+    const workflowName = (localWorkflowName || '').trim()
+    const filename = (logicalOr(workflowName, 'workflow') || 'workflow').replace(/\s+/g, '-')
     const blob = new Blob([JSON.stringify(workflowDef, null, 2)], { type: 'application/json' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')

@@ -6,7 +6,7 @@
 
 import { useState, useCallback } from 'react'
 import type { LLMProvider } from './useLLMProviders'
-import { SettingsService, type LLMSettings } from '../services/SettingsService'
+import { SettingsService, type LLMSettings } from '../../services/SettingsService'
 import { logicalOrToEmptyArray } from '../utils/logicalOr'
 
 interface UseProviderManagementOptions {

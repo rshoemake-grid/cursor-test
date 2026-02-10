@@ -2652,7 +2652,7 @@ describe('useMarketplaceIntegration', () => {
 
       it('should handle typeof window !== undefined check - window is undefined', () => {
         const originalWindow = global.window
-        // @ts-ignore
+        // @ts-expect-error - window is intentionally undefined for this test
         delete global.window
 
         const mockStorage = {

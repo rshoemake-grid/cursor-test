@@ -27,28 +27,16 @@ export function useAuthenticatedApi(
     const { token } = useAuth()
     
     // Initialize client with fallback
-    let client: HttpClient
-    try {
-      client = logicalOr(httpClient, defaultAdapters.createHttpClient())
-    } catch (error) {
-      // Fallback to a mock client if creation fails
-      const fallbackError = createSafeError('HTTP client initialization failed', 'HttpClientInitError')
-      client = {
-        get: () => Promise.reject(fallbackError),
-        post: () => Promise.reject(fallbackError),
-        put: () => Promise.reject(fallbackError),
-        delete: () => Promise.reject(fallbackError),
-      }
-    }
+    const clientResult = logicalOr(httpClient, defaultAdapters.createHttpClient())
+    const client: HttpClient = (clientResult !== null && clientResult !== undefined) 
+      ? clientResult 
+      : defaultAdapters.createHttpClient()
     
     // Initialize base URL with fallback
-    let baseUrl: string
-    try {
-      baseUrl = logicalOr(apiBaseUrl, API_CONFIG.BASE_URL)
-    } catch {
-      // If API_CONFIG.BASE_URL access throws, use fallback
-      baseUrl = logicalOr(apiBaseUrl, 'http://localhost:8000')
-    }
+    const baseUrlResult = logicalOr(apiBaseUrl, API_CONFIG.BASE_URL)
+    const baseUrl: string = (baseUrlResult !== null && baseUrlResult !== undefined && typeof baseUrlResult === 'string')
+      ? baseUrlResult
+      : API_CONFIG.BASE_URL
 
     // Create request context (shared across all methods)
     const context: RequestContext = {

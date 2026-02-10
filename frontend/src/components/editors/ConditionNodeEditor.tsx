@@ -9,9 +9,6 @@ import { useRef, useState, useEffect } from 'react'
 import { NodeWithData } from '../../types/nodeData'
 import { CONDITION_TYPES, isValidConditionType } from '../../constants/stringLiterals'
 import {
-  validateConditionConfig,
-  validateOperator,
-  validateOperands,
   getDefaultConditionConfig,
   type ConditionConfig
 } from './condition/conditionValidation'
@@ -62,9 +59,10 @@ export default function ConditionNodeEditor({
   // Explicit check to prevent mutation survivors
   // Use constants to kill StringLiteral mutations
   const hasConditionType = conditionConfig.condition_type !== null && conditionConfig.condition_type !== undefined
-  const isValidType = hasConditionType === true && isValidConditionType(conditionConfig.condition_type) === true
+  const conditionTypeValue: string = hasConditionType === true ? conditionConfig.condition_type! : ''
+  const isValidType = hasConditionType === true && isValidConditionType(conditionTypeValue) === true
   const conditionType = isValidType === true
-    ? conditionConfig.condition_type!
+    ? conditionTypeValue
     : CONDITION_TYPES.EQUALS
   // Explicit checks to prevent mutation survivors
   // Use constants to kill StringLiteral mutations

@@ -4,7 +4,7 @@
  */
 
 import React from 'react'
-import { renderHook, act } from '@testing-library/react'
+import { renderHook } from '@testing-library/react'
 import { ReactFlowProvider } from '@xyflow/react'
 import { useKeyboardShortcuts } from './useKeyboardShortcuts'
 import type { Node } from '@xyflow/react'

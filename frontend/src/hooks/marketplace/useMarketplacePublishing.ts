@@ -7,7 +7,8 @@ import { useState, useCallback } from 'react'
 import { showError as defaultShowError, showSuccess as defaultShowSuccess } from '../../utils/notifications'
 import { usePublishForm } from '../forms'
 import type { HttpClient } from '../../types/adapters'
-import { logicalOrToNull, logicalOr, logicalOrToUndefined } from '../utils/logicalOr'
+import { logicalOr, logicalOrToUndefined } from '../utils/logicalOr'
+// logicalOrToNull intentionally not imported - not used in this file
 
 interface UseMarketplacePublishingOptions {
   activeTab: { id: string; workflowId: string | null; name: string } | undefined

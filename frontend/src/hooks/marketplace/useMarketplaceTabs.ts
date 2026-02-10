@@ -4,7 +4,8 @@
  * Single Responsibility: Only manages tab state and switching logic
  */
 
-import { useState, useCallback } from 'react'
+import { useState } from 'react'
+// useCallback intentionally not imported - not needed for this implementation
 
 export type TabType = 'agents' | 'repository' | 'workflows-of-workflows'
 export type RepositorySubTabType = 'workflows' | 'agents'

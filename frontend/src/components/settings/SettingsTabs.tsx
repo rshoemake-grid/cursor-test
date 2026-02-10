@@ -4,7 +4,6 @@
  * Single Responsibility: Only handles tab navigation
  */
 
-import React from 'react'
 import { SettingsTabButton } from './SettingsTabButton'
 import { SETTINGS_TABS } from '../../constants/settingsConstants'
 

@@ -42,19 +42,27 @@ export class MockWebSocket {
   onmessage: ((event: MessageEvent) => void) | null = null
   onerror: ((event: Event) => void) | null = null
   onclose: ((event: CloseEvent) => void) | null = null
+  private timers: ReturnType<typeof setTimeout>[] = []
 
   constructor(url: string) {
     this.url = url
     // Simulate connection opening (but delay it to allow handler to be set)
     // Use setTimeout - setImmediate is not available in Jest environment
-    setTimeout(() => {
+    // Track timer for cleanup to prevent memory leaks
+    const timer = setTimeout(() => {
       if (this.readyState === MockWebSocket.CONNECTING) {
         this.readyState = MockWebSocket.OPEN
         if (this.onopen) {
           this.onopen(new Event('open'))
         }
       }
+      // Remove timer from array after execution
+      const index = this.timers.indexOf(timer)
+      if (index > -1) {
+        this.timers.splice(index, 1)
+      }
     }, 10)
+    this.timers.push(timer)
   }
 
   send(_data: string) {
@@ -62,10 +70,14 @@ export class MockWebSocket {
   }
 
   close(code?: number, reason?: string) {
+    // Clear any pending timers to prevent memory leaks
+    this.clearTimers()
+    
     this.readyState = MockWebSocket.CLOSING
     // Use setTimeout - setImmediate is not available in Jest environment
     // This ensures the close event fires in fake timer environment
-    setTimeout(() => {
+    // Track timer for cleanup
+    const timer = setTimeout(() => {
       this.readyState = MockWebSocket.CLOSED
       if (this.onclose) {
         // Use the provided code or default to 1000, and determine wasClean based on code
@@ -74,7 +86,21 @@ export class MockWebSocket {
         const event = new CloseEvent('close', { code: closeCode, reason: reason || '', wasClean })
         this.onclose(event)
       }
+      // Remove timer from array after execution
+      const index = this.timers.indexOf(timer)
+      if (index > -1) {
+        this.timers.splice(index, 1)
+      }
     }, 10)
+    this.timers.push(timer)
+  }
+
+  // Clear all pending timers to prevent memory leaks
+  clearTimers() {
+    this.timers.forEach(timer => {
+      clearTimeout(timer)
+    })
+    this.timers = []
   }
 
   // Helper methods for testing
@@ -100,6 +126,9 @@ export class MockWebSocket {
   }
 
   simulateClose(code: number = 1000, reason: string = '', wasClean: boolean = true) {
+    // Clear timers when simulating close
+    this.clearTimers()
+    
     if (this.onclose) {
       // Create event object that properly preserves reason
       // jsdom's CloseEvent constructor may not preserve reason correctly

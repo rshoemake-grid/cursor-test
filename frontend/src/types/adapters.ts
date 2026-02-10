@@ -3,8 +3,7 @@
  * These interfaces abstract browser APIs and external dependencies to improve testability
  */
 
-import { isBrowserEnvironment } from '../utils/environment'
-import { isNullOrUndefined } from '../utils/typeGuards'
+// isBrowserEnvironment and isNullOrUndefined intentionally not imported - not used in this file
 import { StorageAdapterFactory } from '../adapters/storage'
 import { HttpClientFactory } from '../adapters/http'
 import { DocumentAdapterFactory } from '../adapters/document'

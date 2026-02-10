@@ -19,7 +19,7 @@ import {
   shouldLoadAgents,
   calculateLoadingState,
 } from '../utils/marketplaceTabValidation'
-import { nullishCoalesce, nullishCoalesceToNull } from '../utils/nullishCoalescing'
+import { nullishCoalesceToNull } from '../utils/nullishCoalescing'
 import { logicalOrToEmptyArray } from '../utils/logicalOr'
 
 interface Template {

@@ -144,7 +144,7 @@ describe('adapters - No Coverage Paths', () => {
   describe('createConsoleAdapter - console undefined path', () => {
     it('should return no-op adapter when console is undefined', () => {
       const originalConsole = global.console
-      // @ts-ignore
+      // @ts-expect-error - intentionally setting console to undefined for test
       delete global.console
 
       try {
@@ -172,7 +172,7 @@ describe('adapters - No Coverage Paths', () => {
     it('should fallback to console.log when console.debug is undefined', () => {
       const originalDebug = console.debug
       const mockLog = jest.fn()
-      // @ts-ignore
+      // @ts-expect-error - intentionally setting console to undefined for test
       console.debug = undefined
       console.log = mockLog
 
@@ -189,7 +189,7 @@ describe('adapters - No Coverage Paths', () => {
 
     it('should use console.debug when available', () => {
       const mockDebug = jest.fn()
-      // @ts-ignore
+      // @ts-expect-error - intentionally setting console to undefined for test
       console.debug = mockDebug
 
       try {

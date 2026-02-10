@@ -25,6 +25,7 @@ describe('showConfirm - Enhanced Mutation Killers', () => {
   let stylesMap: Map<string, any>
 
   beforeEach(() => {
+    jest.useFakeTimers() // Use fake timers to control setTimeout calls
     // Reset stylesMap for each test
     stylesMap = new Map<string, any>()
     const elementsMap = new Map<string, any>()
@@ -527,5 +528,19 @@ describe('showConfirm - Enhanced Mutation Killers', () => {
 
       await promise
     })
+  })
+
+  afterEach(() => {
+    // Clean up any pending timers to prevent memory leaks
+    if (jest.isMockFunction(setTimeout)) {
+      try {
+        while (jest.getTimerCount() > 0) {
+          jest.runOnlyPendingTimers()
+        }
+      } catch (e) {
+        // Ignore errors - timers might already be cleared
+      }
+    }
+    jest.useRealTimers()
   })
 })

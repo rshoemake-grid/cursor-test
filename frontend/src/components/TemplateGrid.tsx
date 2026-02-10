@@ -1,8 +1,10 @@
 /**
  * TemplateGrid Component
  * Renders a grid of template/agent cards with empty state handling
+ * Performance: Memoized to prevent unnecessary re-renders when parent updates
  */
 
+import { memo } from 'react'
 import { TemplateCard } from './TemplateCard'
 // Domain-based imports - Phase 7
 import type { Template, AgentTemplate } from '../hooks/marketplace'
@@ -18,7 +20,7 @@ interface TemplateGridProps {
   footerText?: string
 }
 
-export function TemplateGrid({
+export const TemplateGrid = memo(function TemplateGrid({
   items,
   selectedIds,
   type,
@@ -55,4 +57,4 @@ export function TemplateGrid({
       })}
     </div>
   )
-}
+})

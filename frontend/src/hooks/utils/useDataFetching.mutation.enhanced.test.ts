@@ -27,7 +27,13 @@ const waitForWithTimeout = (callback: () => void | Promise<void>, timeout = 2000
 
 describe('useDataFetching - Enhanced Mutation Killers', () => {
   beforeEach(() => {
+    jest.useFakeTimers()
     jest.clearAllMocks()
+  })
+
+  afterEach(() => {
+    jest.runOnlyPendingTimers()
+    jest.useRealTimers()
   })
 
   describe('Error Handling - instanceof Error', () => {
@@ -319,7 +325,7 @@ describe('useDataFetching - Enhanced Mutation Killers', () => {
       // Complete fetch
       await act(async () => {
         resolvePromise!({ success: true })
-        await new Promise(resolve => setTimeout(resolve, 0)) // Allow promise to resolve
+        jest.advanceTimersByTime(0) // Allow promise to resolve
       })
 
       // Should not be loading after completion

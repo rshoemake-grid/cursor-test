@@ -474,7 +474,7 @@ describe('NodePanel', () => {
 
     it('should handle window being undefined', () => {
       const originalWindow = global.window
-      // @ts-ignore
+      // @ts-expect-error - window is intentionally undefined for this test
       delete global.window
 
       // Should not crash

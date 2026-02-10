@@ -63,7 +63,9 @@ export function useTabRenaming({
     const trimmedName = sanitizeName(requestedName)
     const validation = validateWorkflowName(trimmedName)
     if (!validation.isValid) {
-      showError(logicalOr(validation.error, 'Invalid workflow name.'))
+      const errorMsg = logicalOr(validation.error, 'Invalid workflow name.')
+      const errorStr = (errorMsg !== null && errorMsg !== undefined) ? errorMsg : 'Invalid workflow name.'
+      showError(errorStr)
       return
     }
 

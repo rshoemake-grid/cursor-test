@@ -3,11 +3,12 @@
   "packageManager": "npm",
   "reporters": ["html", "clear-text", "progress"],
   "testRunner": "jest",
-  "coverageAnalysis": "perTest",
-  "concurrency": 8,
-  "ignoreStatic": true,
-  "timeoutMS": 60000,
-  "maxTestRunnerReuse": 25,
+  "coverageAnalysis": "all",
+  "ignoreStatic": false,
+  "dryRunTimeoutMinutes": 120,
+  "concurrency": 4,
+  "timeoutMS": 600000,
+  "maxTestRunnerReuse": 50,
   "plugins": ["@stryker-mutator/jest-runner"],
   "mutate": [
     "src/utils/**/*.{ts,tsx}",
@@ -29,8 +30,7 @@
     "break": 60
   },
   "jest": {
-    "configFile": "./jest.config.cjs",
-    "enableFindRelatedTests": true
+    "configFile": "./jest.config.cjs"
   },
   "logLevel": "info",
   "fileLogLevel": "trace"

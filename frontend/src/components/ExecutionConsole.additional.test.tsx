@@ -40,6 +40,16 @@ jest.mock('../utils/logger', () => ({
 const mockUseWebSocket = useWebSocket as jest.MockedFunction<typeof useWebSocket>
 
 describe('ExecutionConsole - Additional Coverage', () => {
+  beforeEach(() => {
+    jest.useFakeTimers()
+    jest.clearAllMocks()
+  })
+
+  afterEach(() => {
+    jest.runOnlyPendingTimers()
+    jest.useRealTimers()
+  })
+
   const mockExecution: Execution = {
     id: 'exec-123',
     status: 'running',
@@ -230,7 +240,6 @@ describe('ExecutionConsole - Additional Coverage', () => {
     })
 
     it('should call onExecutionLogUpdate when log received', () => {
-      const mockOnLog = jest.fn()
       mockUseWebSocket.mockImplementation((options: any) => {
         // Simulate log callback
         setTimeout(() => {
@@ -261,7 +270,6 @@ describe('ExecutionConsole - Additional Coverage', () => {
     })
 
     it('should call onExecutionStatusUpdate when status received', () => {
-      const mockOnStatus = jest.fn()
       mockUseWebSocket.mockImplementation((options: any) => {
         setTimeout(() => {
           if (options.onStatus) {
@@ -290,7 +298,6 @@ describe('ExecutionConsole - Additional Coverage', () => {
     })
 
     it('should call onExecutionNodeUpdate when node update received', () => {
-      const mockOnNodeUpdate = jest.fn()
       mockUseWebSocket.mockImplementation((options: any) => {
         setTimeout(() => {
           if (options.onNodeUpdate) {
@@ -320,7 +327,6 @@ describe('ExecutionConsole - Additional Coverage', () => {
     })
 
     it('should call onExecutionStatusUpdate on completion', () => {
-      const mockOnCompletion = jest.fn()
       mockUseWebSocket.mockImplementation((options: any) => {
         setTimeout(() => {
           if (options.onCompletion) {
@@ -349,7 +355,6 @@ describe('ExecutionConsole - Additional Coverage', () => {
     })
 
     it('should handle WebSocket errors', () => {
-      const mockOnError = jest.fn()
       mockUseWebSocket.mockImplementation((options: any) => {
         setTimeout(() => {
           if (options.onError) {

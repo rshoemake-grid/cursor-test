@@ -28,9 +28,17 @@ export function updateNodeCache(
   node: Node | null | undefined,
   nodeId: string | null
 ): CacheUpdateResult {
-  if (nodeExistsAndValid(node)) {
+  if (nodeExistsAndValid(node) && node !== null && node !== undefined) {
+    // Create a copy to stabilize reference - ensure all required Node properties
+    const nodeCopy: Node = {
+      ...node,
+      id: node.id,
+      type: node.type,
+      position: node.position,
+      data: node.data,
+    }
     return {
-      cached: { ...node }, // Create a copy to stabilize reference
+      cached: nodeCopy,
       idCached: nodeId,
     }
   } else {
@@ -53,15 +61,16 @@ export function updateCachedNodeData(
   cachedNode: Node | null | undefined,
   updatedNode: Node | null | undefined
 ): boolean {
-  if (!nodeExistsAndValid(cachedNode)) {
+  if (!nodeExistsAndValid(cachedNode) || cachedNode === null || cachedNode === undefined) {
     return false
   }
-  if (!nodeExistsAndValid(updatedNode)) {
+  if (!nodeExistsAndValid(updatedNode) || updatedNode === null || updatedNode === undefined) {
     return false
   }
   
   // Update cache with latest data but preserve reference
-  Object.assign(cachedNode, updatedNode)
+  // Type assertion needed because Object.assign doesn't preserve exact Node type
+  Object.assign(cachedNode as Partial<Node>, updatedNode)
   return true
 }
 

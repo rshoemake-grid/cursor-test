@@ -7,7 +7,7 @@ import { useCallback, useMemo } from 'react'
 import { api } from '../../api/client'
 import { logger } from '../../utils/logger'
 import type { WorkflowTabData } from '../../contexts/WorkflowTabsContext'
-import type { WorkflowAPIClient } from '../workflow'
+import type { WorkflowAPIClient } from '../workflow/useWorkflowAPI'
 import { useExecutionPolling } from '../utils/useExecutionPolling'
 import { ExecutionStateManager } from '../utils/executionStateManager'
 

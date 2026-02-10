@@ -8,7 +8,8 @@ import { logger } from '../../utils/logger'
 import type { HttpClient } from '../../types/adapters'
 import { buildSearchParams } from './useMarketplaceData.utils'
 import type { Template } from './useMarketplaceData'
-import { logicalOr, logicalOrToEmptyObject, logicalOrToEmptyArray } from '../utils/logicalOr'
+import { logicalOr, logicalOrToEmptyObject } from '../utils/logicalOr'
+// logicalOrToEmptyArray intentionally not imported - not used in this file
 
 interface UseWorkflowsOfWorkflowsDataOptions {
   httpClient: HttpClient
@@ -67,9 +68,11 @@ export function useWorkflowsOfWorkflowsData({
             })
             
             // Also check if workflow description or tags indicate it's a workflow of workflows
-            const workflowDescription = (logicalOr(workflow.description, '')).toLowerCase()
-            const isWorkflowOfWorkflows = workflowDescription.includes('workflow of workflows') ||
-                                         workflowDescription.includes('composite workflow') ||
+            const descResult = logicalOr(workflow.description, '')
+            const workflowDescription = (descResult !== null && descResult !== undefined) ? descResult : ''
+            const descLower = workflowDescription.toLowerCase()
+            const isWorkflowOfWorkflows = descLower.includes('workflow of workflows') ||
+                                         descLower.includes('composite workflow') ||
                                          workflowDescription.includes('nested workflow') ||
                                          (workflow.tags && workflow.tags.some(tag => 
                                            tag.toLowerCase().includes('workflow-of-workflows') ||

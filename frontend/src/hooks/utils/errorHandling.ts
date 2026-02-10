@@ -29,7 +29,8 @@ export function extractErrorMessage(error: any, defaultMessage: string = 'An err
   }
   
   if (error instanceof Error) {
-    return logicalOr(error.message, defaultMessage)
+    const messageResult = logicalOr(error.message, defaultMessage)
+    return (messageResult !== null && messageResult !== undefined) ? messageResult : defaultMessage
   }
   
   // Try to extract from API error response

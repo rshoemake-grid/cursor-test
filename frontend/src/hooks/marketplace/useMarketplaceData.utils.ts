@@ -62,11 +62,19 @@ export function filterBySearchQuery<T extends FilterableItem>(
   }
   
   const query = searchQuery.toLowerCase()
-  return items.filter(item => 
-    (logicalOr(item.name, '')).toLowerCase().includes(query) || 
-    (logicalOr(item.description, '')).toLowerCase().includes(query) ||
-    logicalOrToEmptyArray(item.tags).some(tag => tag.toLowerCase().includes(query))
-  )
+  return items.filter(item => {
+    const itemName = logicalOr(item.name, '')
+    const itemDescription = logicalOr(item.description, '')
+    const nameStr = (itemName !== null && itemName !== undefined && typeof itemName === 'string') ? itemName : ''
+    const descStr = (itemDescription !== null && itemDescription !== undefined && typeof itemDescription === 'string') ? itemDescription : ''
+    const queryLower = query.toLowerCase()
+    return nameStr.toLowerCase().includes(queryLower) || 
+           descStr.toLowerCase().includes(queryLower) ||
+           logicalOrToEmptyArray(item.tags).some(tag => {
+             const tagStr = (tag !== null && tag !== undefined && typeof tag === 'string') ? tag : ''
+             return tagStr.toLowerCase().includes(queryLower)
+           })
+  })
 }
 
 /**
@@ -103,8 +111,10 @@ export function compareByDate(a: SortableItem, b: SortableItem): number {
  * Compare items by name (alphabetical)
  */
 export function compareByName(a: SortableItem, b: SortableItem): number {
-  const nameA = logicalOr(a.name, '')
-  const nameB = logicalOr(b.name, '')
+  const nameAResult = logicalOr(a.name, '')
+  const nameBResult = logicalOr(b.name, '')
+  const nameA = (nameAResult !== null && nameAResult !== undefined && typeof nameAResult === 'string') ? nameAResult : ''
+  const nameB = (nameBResult !== null && nameBResult !== undefined && typeof nameBResult === 'string') ? nameBResult : ''
   return nameA.localeCompare(nameB)
 }
 

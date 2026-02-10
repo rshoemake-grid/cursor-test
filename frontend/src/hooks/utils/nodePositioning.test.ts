@@ -229,4 +229,74 @@ describe('nodePositioning', () => {
       expect(position).toEqual({ x: 1100, y: 2200 })
     })
   })
+
+  describe('mergeOptions edge cases', () => {
+    // Test mergeOptions indirectly through functions that use it
+    it('should handle partial options in calculateNextNodePosition', () => {
+      const position = calculateNextNodePosition([], {
+        defaultX: 500,
+        // Other options should use defaults
+      })
+      expect(position.x).toBe(500)
+      expect(position.y).toBe(250) // defaultY from defaults
+    })
+
+    it('should handle partial options in calculateMultipleNodePositions', () => {
+      const positions = calculateMultipleNodePositions([], 2, {
+        verticalSpacing: 500,
+        // Other options should use defaults
+      })
+      expect(positions[0].x).toBe(250) // defaultX from defaults
+      expect(positions[1].y - positions[0].y).toBe(500) // custom spacing
+    })
+
+    it('should handle partial options in calculateGridPosition', () => {
+      const positions = calculateGridPosition([], 2, 2, {
+        defaultX: 100,
+        defaultY: 200,
+        // Other options should use defaults
+      })
+      expect(positions[0].x).toBe(100) // custom defaultX
+      expect(positions[0].y).toBe(200) // custom defaultY
+    })
+
+    it('should handle empty options object', () => {
+      const position = calculateNextNodePosition([], {})
+      expect(position).toEqual({ x: 250, y: 250 }) // All defaults
+    })
+
+    it('should handle undefined options', () => {
+      const position = calculateNextNodePosition([], undefined as any)
+      expect(position).toEqual({ x: 250, y: 250 }) // All defaults
+    })
+
+    it('should handle zero spacing values', () => {
+      const nodes: Node[] = [
+        { id: '1', position: { x: 100, y: 100 }, data: {}, type: 'agent' },
+      ]
+      const position = calculateNextNodePosition(nodes, {
+        horizontalSpacing: 0,
+      })
+      expect(position.x).toBe(100) // maxX + 0 spacing
+      expect(position.y).toBe(250) // defaultY
+    })
+
+    it('should handle very large spacing values', () => {
+      const nodes: Node[] = [
+        { id: '1', position: { x: 100, y: 100 }, data: {}, type: 'agent' },
+      ]
+      const position = calculateNextNodePosition(nodes, {
+        horizontalSpacing: 10000,
+      })
+      expect(position.x).toBe(100 + 10000)
+    })
+
+    it('should handle negative default positions', () => {
+      const position = calculateNextNodePosition([], {
+        defaultX: -100,
+        defaultY: -200,
+      })
+      expect(position).toEqual({ x: -100, y: -200 })
+    })
+  })
 })

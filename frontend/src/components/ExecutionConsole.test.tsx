@@ -1,10 +1,5 @@
 import React from 'react'
-import { render, screen, fireEvent, waitFor, queryAllByTitle } from '@testing-library/react'
-
-// Helper to ensure all waitFor calls have timeouts
-const waitForWithTimeout = (callback: () => void | Promise<void>, timeout = 2000) => {
-  return waitFor(callback, { timeout })
-}
+import { render, screen, fireEvent } from '@testing-library/react'
 
 import ExecutionConsole from './ExecutionConsole'
 // Domain-based imports - Phase 7
@@ -18,33 +13,24 @@ jest.mock('../hooks/execution', () => ({
   useWorkflowExecution: jest.fn(),
   useExecutionManagement: jest.fn(),
 }))
-jest.mock('./WorkflowChat', () => {
-  const React = require('react')
-  return {
-    __esModule: true,
-    default: function MockWorkflowChat({ workflowId }: { workflowId: string | null }) {
-      return React.createElement('div', { 'data-testid': 'workflow-chat' }, `WorkflowChat: ${workflowId || 'null'}`)
-    },
-  }
-})
-jest.mock('./ExecutionStatusBadge', () => {
-  const React = require('react')
-  return {
-    __esModule: true,
-    default: function MockExecutionStatusBadge({ status }: { status: string }) {
-      return React.createElement('div', { 'data-testid': 'execution-status-badge' }, status)
-    },
-  }
-})
-jest.mock('./LogLevelBadge', () => {
-  const React = require('react')
-  return {
-    __esModule: true,
-    default: function MockLogLevelBadge({ level }: { level: string }) {
-      return React.createElement('span', { 'data-testid': 'log-level-badge' }, level)
-    },
-  }
-})
+jest.mock('./WorkflowChat', () => ({
+  __esModule: true,
+  default: function MockWorkflowChat({ workflowId }: { workflowId: string | null }) {
+    return <div data-testid="workflow-chat">WorkflowChat: {workflowId || 'null'}</div>
+  },
+}))
+jest.mock('./ExecutionStatusBadge', () => ({
+  __esModule: true,
+  default: function MockExecutionStatusBadge({ status }: { status: string }) {
+    return <div data-testid="execution-status-badge">{status}</div>
+  },
+}))
+jest.mock('./LogLevelBadge', () => ({
+  __esModule: true,
+  default: function MockLogLevelBadge({ level }: { level: string }) {
+    return <span data-testid="log-level-badge">{level}</span>
+  },
+}))
 jest.mock('../utils/logger', () => ({
   logger: {
     debug: jest.fn(),
@@ -59,7 +45,6 @@ describe('ExecutionConsole', () => {
   const mockOnExecutionStatusUpdate = jest.fn()
   const mockOnExecutionNodeUpdate = jest.fn()
   const mockOnRemoveExecution = jest.fn()
-  const mockOnWorkflowUpdate = jest.fn()
 
   const mockExecution = {
     id: 'exec-123',

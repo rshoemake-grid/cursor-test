@@ -138,7 +138,7 @@ describe('useFormField', () => {
       // Simulate input being focused
       act(() => {
         input.focus()
-        // @ts-ignore - accessing private ref for testing
+        // @ts-expect-error - accessing private ref for testing
         result.current.inputRef.current = input
       })
 

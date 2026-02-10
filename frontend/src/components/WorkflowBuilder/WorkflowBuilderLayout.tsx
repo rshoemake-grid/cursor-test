@@ -34,8 +34,8 @@ export interface WorkflowBuilderLayoutProps {
   setSelectedNodeId: (id: string | null) => void
   notifyModified: () => void
   clipboardNode: Node | null
-  onCopy: () => void
-  onCut: () => void
+  onCopy: (node: Node) => void
+  onCut: (node: Node) => void
   onPaste: () => void
   
   // ReactFlow instance ref
@@ -49,10 +49,10 @@ export interface WorkflowBuilderLayoutProps {
   executions: any[]
   activeExecutionId: string | null
   onWorkflowUpdate: (update: any) => void
-  onExecutionLogUpdate: (executionId: string, log: string) => void
-  onExecutionStatusUpdate: (executionId: string, status: string) => void
-  onExecutionNodeUpdate: (executionId: string, nodeId: string, status: string) => void
-  onRemoveExecution: (executionId: string) => void
+  onExecutionLogUpdate?: (workflowId: string, executionId: string, log: any) => void
+  onExecutionStatusUpdate?: (workflowId: string, executionId: string, status: 'running' | 'completed' | 'failed') => void
+  onExecutionNodeUpdate?: (workflowId: string, executionId: string, nodeId: string, nodeState: any) => void
+  onRemoveExecution?: (workflowId: string, executionId: string) => void
   
   // Save workflow callback
   onSaveWorkflow: () => Promise<string | null>

@@ -35,7 +35,7 @@ describe('errorFactory', () => {
 
     it('should handle Error constructor being undefined', () => {
       const OriginalError = global.Error
-      // @ts-ignore
+      // @ts-expect-error - intentionally setting Error to undefined for test
       global.Error = undefined
       
       try {
@@ -51,7 +51,7 @@ describe('errorFactory', () => {
     it('should handle Error constructor throwing', () => {
       const OriginalError = global.Error
       let callCount = 0
-      // @ts-ignore
+      // @ts-expect-error - intentionally replacing Error constructor for testing
       global.Error = function(this: any, message?: string) {
         callCount++
         if (callCount === 1) {
@@ -59,7 +59,7 @@ describe('errorFactory', () => {
         }
         return new OriginalError(message)
       } as any
-      // @ts-ignore
+      // @ts-expect-error - intentionally modifying Error prototype for testing
       global.Error.prototype = OriginalError.prototype
       
       try {
@@ -74,7 +74,7 @@ describe('errorFactory', () => {
 
     it('should handle Function constructor being unavailable', () => {
       const OriginalFunction = global.Function
-      // @ts-ignore
+      // @ts-expect-error - intentionally setting Function to undefined for test
       global.Function = undefined
       
       try {
@@ -95,11 +95,11 @@ describe('errorFactory', () => {
       // Try various combinations of breaking things
       const scenarios = [
         () => {
-          // @ts-ignore
+          // @ts-expect-error - intentionally setting Error to undefined for test
           global.Error = undefined
         },
         () => {
-          // @ts-ignore
+          // @ts-expect-error - intentionally setting Function to undefined for test
           global.Function = undefined
         },
         () => {
@@ -126,7 +126,7 @@ describe('errorFactory', () => {
 
     it('should create error-like object even when Error constructor completely fails', () => {
       const OriginalError = global.Error
-      // @ts-ignore
+      // @ts-expect-error - intentionally replacing Error constructor for testing
       global.Error = function() {
         throw new Error('Complete failure')
       }
@@ -146,7 +146,7 @@ describe('errorFactory', () => {
 
     it('should handle Object.create failing', () => {
       const OriginalObjectCreate = Object.create
-      // @ts-ignore
+      // @ts-expect-error - intentionally replacing Object.create for test
       Object.create = function() {
         throw new Error('Object.create failed')
       }

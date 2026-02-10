@@ -289,7 +289,7 @@ export default function MarketplacePage({
             activeTab={activeTab}
             onCategoryChange={setCategory}
             onSearchChange={setSearchQuery}
-            onSortChange={setSortBy}
+            onSortChange={(sortBy: string) => setSortBy(sortBy as typeof DEFAULT_SORT)}
             onSearch={() => {
               if (isRepositoryTab) {
                 if (isRepositoryWorkflowsSubTab) {

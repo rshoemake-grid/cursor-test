@@ -57,6 +57,7 @@ describe('useMarketplaceData', () => {
 
   beforeEach(() => {
     jest.clearAllMocks()
+    jest.useFakeTimers() // Use fake timers to control setTimeout calls
     mockHttpClient = {
       get: jest.fn().mockResolvedValue({ json: async () => [] }),
       post: jest.fn().mockResolvedValue({ ok: true, json: async () => ({ nodes: [] }) }),
@@ -4979,5 +4980,20 @@ describe('useMarketplaceData', () => {
         )
       })
     })
+  })
+
+  afterEach(() => {
+    // Clean up any pending timers to prevent memory leaks
+    // This is especially important for mutation testing where many tests run
+    if (jest.isMockFunction(setTimeout)) {
+      try {
+        while (jest.getTimerCount() > 0) {
+          jest.runOnlyPendingTimers()
+        }
+      } catch (e) {
+        // Ignore errors - timers might already be cleared
+      }
+    }
+    jest.useRealTimers()
   })
 })

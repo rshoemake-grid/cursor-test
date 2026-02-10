@@ -24,14 +24,22 @@ export default function InputNodeEditor({
   // Route to type-specific editor
   // Single Responsibility: Only routes to appropriate editor
   switch (node.type) {
-    case 'gcp_bucket':
-      return <GCPBucketEditor node={node} onConfigUpdate={onConfigUpdate} />
-    case 'aws_s3':
-      return <AWSS3Editor node={node} onConfigUpdate={onConfigUpdate} />
-    case 'gcp_pubsub':
-      return <GCPPubSubEditor node={node} onConfigUpdate={onConfigUpdate} />
-    case 'local_filesystem':
-      return <LocalFileSystemEditor node={node} onConfigUpdate={onConfigUpdate} />
+    case 'gcp_bucket': {
+      const typedNode = node as NodeWithData & { type: 'gcp_bucket' }
+      return <GCPBucketEditor node={typedNode} onConfigUpdate={onConfigUpdate} />
+    }
+    case 'aws_s3': {
+      const typedNode = node as NodeWithData & { type: 'aws_s3' }
+      return <AWSS3Editor node={typedNode} onConfigUpdate={onConfigUpdate} />
+    }
+    case 'gcp_pubsub': {
+      const typedNode = node as NodeWithData & { type: 'gcp_pubsub' }
+      return <GCPPubSubEditor node={typedNode} onConfigUpdate={onConfigUpdate} />
+    }
+    case 'local_filesystem': {
+      const typedNode = node as NodeWithData & { type: 'local_filesystem' }
+      return <LocalFileSystemEditor node={typedNode} onConfigUpdate={onConfigUpdate} />
+    }
     case 'database':
     case 'firebase':
     case 'bigquery':

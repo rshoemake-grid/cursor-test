@@ -138,9 +138,12 @@ export function useNodeOperations({
   const handleUpdateInput = useCallback((index: number, field: string, value: any) => {
     if (!selectedNode) return
     
-    const currentInputs = [...logicalOrToEmptyArray(selectedNode.data.inputs)]
-    currentInputs[index] = { ...currentInputs[index], [field]: value }
-    handleUpdate('inputs', currentInputs)
+    const inputsArray = logicalOrToEmptyArray(selectedNode.data.inputs)
+    const currentInputs = Array.isArray(inputsArray) ? [...inputsArray] : []
+    if (currentInputs[index]) {
+      currentInputs[index] = { ...currentInputs[index], [field]: value }
+      handleUpdate('inputs', currentInputs)
+    }
   }, [selectedNode, handleUpdate])
 
   return {

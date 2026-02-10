@@ -2,7 +2,7 @@
  * Tests for useDataFetching Hook
  */
 
-import { renderHook, act, waitFor } from '@testing-library/react'
+import { renderHook, act } from '@testing-library/react'
 import { useDataFetching } from './useDataFetching'
 import { logger } from '../../utils/logger'
 

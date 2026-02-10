@@ -6,9 +6,9 @@
 
 import type { Node, Edge } from '@xyflow/react'
 import type { WorkflowNode, WorkflowEdge, WorkflowDefinition } from '../types/workflow'
-import { coalesceObject, coalesceArray, coalesceObjectChain, coalesceArrayChain, coalesceStringChain, coalesceChain } from './nullCoalescing'
-import { safeGetProperty, safeGet } from './safeAccess'
-import { isNullOrUndefined, isDefined } from './typeGuards'
+import { coalesceObject, coalesceArray, coalesceObjectChain, coalesceArrayChain, coalesceStringChain } from './nullCoalescing'
+import { safeGetProperty } from './safeAccess'
+import { isDefined } from './typeGuards'
 
 /**
  * Interface for workflow node data
@@ -178,7 +178,7 @@ export function convertNodesToWorkflowFormat(nodes: Node[]): WorkflowNode[] {
       condition_config: (node.data as any).condition_config,
       loop_config: (node.data as any).loop_config,
       input_config: (node.data as any).input_config,
-      inputs: coalesceArray(node.data.inputs, []),
+      inputs: coalesceArray(node.data.inputs as any[] | null | undefined, []),
       position: node.position,
     } as WorkflowNode
   })
@@ -215,7 +215,7 @@ export function initializeReactFlowNodes(nodes: Node[]): Node[] {
       ...node.data,
       // Use mergeConfigs to eliminate DRY violation
       ...mergeConfigs(node.data, {}),
-      inputs: coalesceArray(node.data.inputs, []),
+      inputs: coalesceArray(node.data.inputs as any[] | null | undefined, []),
     }
   }))
 }

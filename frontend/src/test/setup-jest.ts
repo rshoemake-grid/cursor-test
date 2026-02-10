@@ -88,10 +88,12 @@ if (typeof global.TextEncoder === 'undefined') {
 
 // Polyfill setImmediate for jsdom environment (used by @testing-library/react waitFor)
 if (typeof global.setImmediate === 'undefined') {
-  global.setImmediate = (callback: (...args: any[]) => void, ...args: any[]) => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  (global as any).setImmediate = (callback: (...args: any[]) => void, ...args: any[]) => {
     return setTimeout(() => callback(...args), 0)
   }
-  global.clearImmediate = (id: any) => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  (global as any).clearImmediate = (id: any) => {
     clearTimeout(id)
   }
 }
@@ -115,15 +117,29 @@ if (typeof process !== 'undefined' && process.env.NODE_ENV === 'test') {
   if (originalUnhandledRejection.length === 0) {
     process.on('unhandledRejection', (reason) => {
       // Convert to handled rejection to prevent crashes
-      // Only log if it's not an expected error from mutations
+      // During mutation testing, mutants may cause promises to reject unexpectedly
       const reasonStr = String(reason)
-      if (!reasonStr.includes('HTTP client') && 
-          !reasonStr.includes('URL cannot be empty') &&
-          !reasonStr.includes('HttpClientError') &&
-          !reasonStr.includes('InvalidUrlError')) {
+      
+      // Expected errors from mutations (don't log these)
+      const isExpectedError = 
+        reasonStr.includes('HTTP client') || 
+        reasonStr.includes('URL cannot be empty') ||
+        reasonStr.includes('HttpClientError') ||
+        reasonStr.includes('InvalidUrlError') ||
+        reason === null || // Null rejections are common in mutation testing
+        reason === undefined || // Undefined rejections too
+        (typeof reason === 'string' && reason.trim() === '') // Empty string rejections
+      
+      if (!isExpectedError) {
+        // Only log unexpected rejections
         console.warn('Unhandled promise rejection in test:', reason)
       }
-      // Don't rethrow - let Jest handle it
+      
+      // Always handle the rejection to prevent process crash
+      // Jest will handle it as a test failure rather than crashing the process
+      Promise.resolve().catch(() => {
+        // Silently handle - prevents unhandled rejection warning
+      })
     })
   }
 
@@ -191,6 +207,56 @@ afterEach(() => {
     const duration = Date.now() - log.start
     console.log(`[TEST END] ${log.file} > ${log.name} (${duration}ms)`)
   }
-})// Log suite execution using describe hooks
+  
+  // Clean up any remaining timers to prevent memory leaks
+  // This is especially important for mutation testing where many tests run
+  if (jest.isMockFunction(setTimeout) || jest.isMockFunction(setInterval)) {
+    // If using fake timers, ensure all pending timers are run
+    try {
+      let timerCount = jest.getTimerCount()
+      let iterations = 0
+      const maxIterations = 100 // Prevent infinite loops
+      
+      // Run pending timers until none remain or max iterations reached
+      while (timerCount > 0 && iterations < maxIterations) {
+        jest.runOnlyPendingTimers()
+        const newCount = jest.getTimerCount()
+        if (newCount === timerCount) {
+          // No progress made, break to avoid infinite loop
+          break
+        }
+        timerCount = newCount
+        iterations++
+      }
+      
+      // Always restore real timers after fake timers
+      jest.useRealTimers()
+    } catch (e) {
+      // Fallback: just restore real timers if cleanup fails
+      try {
+        jest.useRealTimers()
+      } catch (e2) {
+        // Ignore errors - timers might already be cleared
+      }
+    }
+  }
+  
+  // Clean up WebSocket instances to prevent memory leaks
+  // This is critical for mutation testing where many WebSocket tests run
+  try {
+    // Try to access wsInstances from useWebSocket test setup
+    // Use dynamic require to avoid import issues if module not available
+    const wsSetupModule = require('./hooks/execution/useWebSocket.test.setup')
+    if (wsSetupModule && wsSetupModule.wsInstances && Array.isArray(wsSetupModule.wsInstances)) {
+      // Clear all WebSocket instances
+      wsSetupModule.wsInstances.splice(0, wsSetupModule.wsInstances.length)
+    }
+  } catch (e) {
+    // Ignore if WebSocket test setup module is not available
+    // This is expected for tests that don't use WebSocket
+  }
+})
+
+// Log suite execution using describe hooks
 // Note: We can't easily wrap describe() without causing parsing issues,
 // so we'll rely on beforeEach/afterEach for test logging

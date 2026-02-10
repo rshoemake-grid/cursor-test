@@ -2,7 +2,7 @@
  * Tests for useMarketplacePublishing hook
  */
 
-import { renderHook, act, waitFor } from '@testing-library/react'
+import { renderHook, act } from '@testing-library/react'
 import { useMarketplacePublishing } from './useMarketplacePublishing'
 import { showSuccess, showError } from '../../utils/notifications'
 import { usePublishForm } from '../forms'

@@ -15,7 +15,7 @@ import {
   type WebSocketMessage,
   type MessageHandlerOptions
 } from './websocketMessageHandler'
-import { isTemporaryExecutionId } from './executionIdValidation'
+// isTemporaryExecutionId and EXECUTION_STATUS used via dynamic require() calls - intentionally not imported
 import {
   ExponentialBackoffStrategy,
   type ReconnectionStrategy
@@ -24,8 +24,7 @@ import {
   WS_CLOSE_CODES,
   WS_STATUS,
   WS_CLOSE_REASONS,
-  WS_RECONNECT,
-  EXECUTION_STATUS
+  WS_RECONNECT
 } from './websocketConstants'
 import {
   hasPendingReconnection,

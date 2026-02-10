@@ -1,4 +1,4 @@
-import { renderHook, act } from '@testing-library/react'
+import { renderHook } from '@testing-library/react'
 import { useDraftManagement, loadDraftsFromStorage, saveDraftsToStorage } from './useDraftManagement'
 import type { Node, Edge } from '@xyflow/react'
 import { getLocalStorageItem, setLocalStorageItem } from './useLocalStorage'

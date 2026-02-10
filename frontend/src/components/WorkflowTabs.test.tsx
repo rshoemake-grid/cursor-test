@@ -2485,7 +2485,7 @@ describe('WorkflowTabs', () => {
     it('should handle saveTabsToStorage when storage is null and window is undefined', async () => {
       // Mock window as undefined
       const originalWindow = global.window
-      // @ts-ignore
+      // @ts-expect-error - window is intentionally undefined for this test
       delete global.window
 
       renderWithProvider({ storage: null })

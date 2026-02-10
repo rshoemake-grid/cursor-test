@@ -83,7 +83,7 @@ export function useAutoSave<T>(
 
   // Debounce the save operation only when value actually changed
   // Use the value itself as trigger, but only save if shouldSaveRef indicates a change
-  useDebounce(value, delay, (val) => {
+  useDebounce(value, delay, () => {
     // Only call if we should save (value changed) and it's enabled and not first render
     if (shouldSaveRef.current && enabled && !isFirstRender && valueToDebounceRef.current !== null) {
       debouncedSaveFn(valueToDebounceRef.current) // Use ref value to ensure we have latest

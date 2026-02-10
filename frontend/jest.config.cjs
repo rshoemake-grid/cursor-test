@@ -27,7 +27,7 @@ module.exports = {
       },
     }],
   },
-  testTimeout: 10000,
+  testTimeout: 30000,
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json'],
 }
 

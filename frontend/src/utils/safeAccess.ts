@@ -7,7 +7,8 @@
  * instead of optional chaining operators.
  */
 
-import { isNullOrUndefined, isDefined } from './typeGuards'
+import { isNullOrUndefined } from './typeGuards'
+// isDefined intentionally not imported - not used in this file
 import { coalesce } from './coalesce'
 
 /**

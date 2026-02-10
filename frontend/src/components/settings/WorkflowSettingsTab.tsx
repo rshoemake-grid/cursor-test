@@ -4,7 +4,6 @@
  * Single Responsibility: Only handles workflow settings rendering
  */
 
-import React from 'react'
 import type { LLMProvider } from '../../hooks/providers'
 
 export interface WorkflowSettingsTabProps {

@@ -1,4 +1,4 @@
-import { renderHook, act, waitFor } from '@testing-library/react'
+import { renderHook, act } from '@testing-library/react'
 import { useProviderManagement } from './useProviderManagement'
 import { SettingsService } from '../../services/SettingsService'
 import type { LLMProvider } from './useLLMProviders'
@@ -14,6 +14,7 @@ describe('useProviderManagement', () => {
   let providers: LLMProvider[]
 
   beforeEach(() => {
+    jest.useFakeTimers()
     jest.clearAllMocks()
 
     mockHttpClient = {
@@ -198,10 +199,7 @@ describe('useProviderManagement', () => {
 
       // Wait for React to process the state update
       await act(async () => {
-        await new Promise(resolve => {
-          // Use requestAnimationFrame or setTimeout to let React process
-          setTimeout(resolve, 0)
-        })
+        jest.advanceTimersByTime(0)
       })
 
       // Check that testingProvider is set during the test

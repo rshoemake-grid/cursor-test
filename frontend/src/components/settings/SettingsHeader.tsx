@@ -4,7 +4,6 @@
  * Single Responsibility: Only handles header rendering and navigation
  */
 
-import React from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Save, ArrowLeft } from 'lucide-react'
 import { useAuth } from '../../contexts/AuthContext'

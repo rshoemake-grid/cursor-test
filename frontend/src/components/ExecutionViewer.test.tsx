@@ -1,6 +1,5 @@
 import React from 'react'
 import { render, screen, waitFor } from '@testing-library/react'
-import { act } from '@testing-library/react'
 
 // Helper to ensure all waitFor calls have timeouts
 // When using fake timers, we need to advance timers and use real timers for waitFor

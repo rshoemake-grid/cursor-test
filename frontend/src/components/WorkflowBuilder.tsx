@@ -25,7 +25,6 @@ import { useDraftManagement, loadDraftsFromStorage } from '../hooks/storage'
 import { useMarketplaceIntegration, useMarketplaceDialog } from '../hooks/marketplace'
 import { useNodeSelection } from '../hooks/nodes'
 import { convertNodesForExecutionInput } from '../utils/nodeConversion'
-import WorkflowCanvas from './WorkflowCanvas'
 import { WorkflowBuilderLayout } from './WorkflowBuilder/WorkflowBuilderLayout'
 import { WorkflowBuilderDialogs } from './WorkflowBuilder/WorkflowBuilderDialogs'
 import type { WorkflowBuilderProps } from '../types/workflowBuilder'
@@ -272,7 +271,7 @@ const WorkflowBuilder = forwardRef<WorkflowBuilderHandle, WorkflowBuilderProps>(
     canvasOnPaneClick(event)
   }, [canvasOnPaneClick, contextMenu])
 
-  const handleSendToMarketplace = useCallback((node: any) => {
+  const handleSendToMarketplace = useCallback((node: Node) => {
     openMarketplaceDialog(node)
   }, [openMarketplaceDialog])
 
@@ -333,13 +332,31 @@ const WorkflowBuilder = forwardRef<WorkflowBuilderHandle, WorkflowBuilderProps>(
         onConfirmExecute={handleConfirmExecute}
         executionNodes={convertNodesForExecutionInput(nodes)}
         workflowName={localWorkflowName}
-        contextMenu={contextMenuState}
+        contextMenu={contextMenuState ? {
+          nodeId: contextMenuState.nodeId,
+          edgeId: contextMenuState.edgeId,
+          node: contextMenuState.node,
+          x: contextMenuState.x,
+          y: contextMenuState.y,
+        } : null}
         onCloseContextMenu={contextMenu.closeContextMenu}
         onDeleteNode={handleDeleteNode}
-        onCopy={clipboard.copy}
-        onCut={clipboard.cut}
-        onPaste={clipboard.paste}
-        onAddToAgentNodes={handleAddToAgentNodes}
+        onCopy={() => {
+          if (contextMenuState?.node) {
+            clipboard.copy(contextMenuState.node)
+          }
+        }}
+        onCut={() => {
+          if (contextMenuState?.node) {
+            clipboard.cut(contextMenuState.node)
+          }
+        }}
+        onPaste={() => clipboard.paste()}
+        onAddToAgentNodes={() => {
+          if (contextMenuState?.node) {
+            handleAddToAgentNodes(contextMenuState.node)
+          }
+        }}
         onSendToMarketplace={handleSendToMarketplace}
         canPaste={!!clipboard.clipboardNode}
         showMarketplaceDialog={showMarketplaceDialog}

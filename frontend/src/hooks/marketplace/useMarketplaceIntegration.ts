@@ -7,7 +7,7 @@
 import { useEffect, useRef, useCallback } from 'react'
 import { logger as defaultLogger } from '../../utils/logger'
 import type { StorageAdapter } from '../../types/adapters'
-import type { Node } from '@xyflow/react'
+import type { Node, XYPosition } from '@xyflow/react'
 import { calculateMultipleNodePositions } from '../utils/nodePositioning'
 // Removed logicalOrToEmptyArray import - replaced with explicit checks
 import {
@@ -23,8 +23,7 @@ import {
 } from '../utils/pendingAgentsValidation'
 import {
   PENDING_AGENTS_STORAGE_KEY,
-  PENDING_AGENTS,
-  DRAFT_UPDATE
+  PENDING_AGENTS
 } from '../utils/marketplaceConstants'
 import { MARKETPLACE_EVENTS } from '../utils/marketplaceEventConstants'
 import {
@@ -83,8 +82,12 @@ export function useMarketplaceIntegration({
       // Calculate positions for all new nodes
       const positions = calculateMultipleNodePositions(currentNodes, agentsToAdd.length)
       
+      // Convert Position[] from nodePositioning to XYPosition[] from @xyflow/react
+      // Both have same structure (x, y) but TypeScript sees them as different types
+      const xyPositions: XYPosition[] = positions.map(p => ({ x: p.x, y: p.y }))
+      
       // Use extracted conversion utility - mutation-resistant
-      const newNodes = convertAgentsToNodes(agentsToAdd, positions)
+      const newNodes = convertAgentsToNodes(agentsToAdd, xyPositions)
       
       const updatedNodes = [...currentNodes, ...newNodes]
       injectedLogger.debug('[useMarketplaceIntegration] Total nodes after adding:', updatedNodes.length)
