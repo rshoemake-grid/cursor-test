@@ -400,6 +400,7 @@ describe('useAuthenticatedApi', () => {
       )
     })
 
+
     it('should verify !client || typeof client.post !== function - client is null', async () => {
       const nullClient = null as any
       const { result } = renderHook(() => useAuthenticatedApi(nullClient))
@@ -1970,6 +1971,352 @@ describe('useAuthenticatedApi', () => {
 
           expect(mockPost).toHaveBeenCalled()
         })
+      })
+    })
+
+    describe('baseUrl fallback paths', () => {
+      it('should handle when apiBaseUrl is null', () => {
+        const { result } = renderHook(() => useAuthenticatedApi(mockHttpClient, null as any))
+        
+        result.current.authenticatedGet('/test')
+        
+        // Should use API_CONFIG.BASE_URL when apiBaseUrl is null
+        expect(mockGet).toHaveBeenCalledWith(
+          `${API_CONFIG.BASE_URL}/test`,
+          expect.any(Object)
+        )
+      })
+
+      it('should handle when apiBaseUrl is not a string', () => {
+        const { result } = renderHook(() => useAuthenticatedApi(mockHttpClient, 123 as any))
+        
+        result.current.authenticatedGet('/test')
+        
+        // Should use API_CONFIG.BASE_URL when apiBaseUrl is not a string
+        expect(mockGet).toHaveBeenCalledWith(
+          `${API_CONFIG.BASE_URL}/test`,
+          expect.any(Object)
+        )
+      })
+
+      it('should handle when apiBaseUrl is empty string', () => {
+        const { result } = renderHook(() => useAuthenticatedApi(mockHttpClient, ''))
+        
+        result.current.authenticatedGet('/test')
+        
+        // Should use API_CONFIG.BASE_URL when apiBaseUrl is empty (falsy)
+        expect(mockGet).toHaveBeenCalledWith(
+          `${API_CONFIG.BASE_URL}/test`,
+          expect.any(Object)
+        )
+      })
+    })
+
+    describe('client initialization fallback paths', () => {
+      it('should handle when clientResult is null', () => {
+        // Mock logicalOr to return null
+        jest.spyOn(require('../utils/logicalOr'), 'logicalOr').mockReturnValueOnce(null)
+        
+        const { result } = renderHook(() => useAuthenticatedApi(undefined))
+        
+        // Should still work with fallback client
+        expect(result.current.authenticatedGet).toBeDefined()
+        expect(result.current.authenticatedPost).toBeDefined()
+      })
+
+      it('should handle when clientResult is undefined', () => {
+        // Mock logicalOr to return undefined
+        jest.spyOn(require('../utils/logicalOr'), 'logicalOr').mockReturnValueOnce(undefined)
+        
+        const { result } = renderHook(() => useAuthenticatedApi(undefined))
+        
+        // Should still work with fallback client
+        expect(result.current.authenticatedGet).toBeDefined()
+        expect(result.current.authenticatedPost).toBeDefined()
+      })
+    })
+
+    describe('error handling - non-Error objects', () => {
+      it('should handle when error is not an Error instance in POST', async () => {
+        const errorClient = {
+          post: jest.fn().mockRejectedValue('string error'),
+          get: mockGet,
+          put: mockPut,
+          delete: mockDelete,
+        } as any
+
+        const { result } = renderHook(() => useAuthenticatedApi(errorClient))
+
+        await expect(
+          result.current.authenticatedPost('/test', { data: 'test' })
+        ).rejects.toThrow('Request failed')
+      })
+
+      it('should handle when error is not an Error instance in GET', async () => {
+        const errorClient = {
+          get: jest.fn().mockRejectedValue({ message: 'object error' }),
+          post: mockPost,
+          put: mockPut,
+          delete: mockDelete,
+        } as any
+
+        const { result } = renderHook(() => useAuthenticatedApi(errorClient))
+
+        await expect(
+          result.current.authenticatedGet('/test')
+        ).rejects.toThrow('Request failed')
+      })
+
+      it('should handle when error is not an Error instance in PUT', async () => {
+        const errorClient = {
+          put: jest.fn().mockRejectedValue(null),
+          get: mockGet,
+          post: mockPost,
+          delete: mockDelete,
+        } as any
+
+        const { result } = renderHook(() => useAuthenticatedApi(errorClient))
+
+        await expect(
+          result.current.authenticatedPut('/test', { data: 'test' })
+        ).rejects.toThrow('Request failed')
+      })
+
+      it('should handle when error is not an Error instance in DELETE', async () => {
+        const errorClient = {
+          delete: jest.fn().mockRejectedValue(undefined),
+          get: mockGet,
+          post: mockPost,
+          put: mockPut,
+        } as any
+
+        const { result } = renderHook(() => useAuthenticatedApi(errorClient))
+
+        await expect(
+          result.current.authenticatedDelete('/test')
+        ).rejects.toThrow('Request failed')
+      })
+    })
+
+    describe('error wrapping - non-preserved Error instances', () => {
+      it('should wrap Error instance with non-preserved name as RequestError in POST', async () => {
+        const genericError = new Error('Network error')
+        genericError.name = 'NetworkError' // Not one of the preserved names
+        
+        jest.spyOn(require('../utils/authenticatedRequestHandler'), 'executeAuthenticatedRequest')
+          .mockRejectedValueOnce(genericError)
+        
+        const { result } = renderHook(() => useAuthenticatedApi(mockHttpClient))
+        
+        try {
+          await result.current.authenticatedPost('/test', { data: 'test' })
+          fail('Should have thrown an error')
+        } catch (error: any) {
+          expect(error.name).toBe('RequestError')
+          expect(error.message).toBe('Network error') // Message should be preserved
+        }
+      })
+
+      it('should wrap Error instance with non-preserved name as RequestError in GET', async () => {
+        const genericError = new Error('Timeout error')
+        genericError.name = 'TimeoutError' // Not one of the preserved names
+        
+        jest.spyOn(require('../utils/authenticatedRequestHandler'), 'executeAuthenticatedRequest')
+          .mockRejectedValueOnce(genericError)
+        
+        const { result } = renderHook(() => useAuthenticatedApi(mockHttpClient))
+        
+        try {
+          await result.current.authenticatedGet('/test')
+          fail('Should have thrown an error')
+        } catch (error: any) {
+          expect(error.name).toBe('RequestError')
+          expect(error.message).toBe('Timeout error') // Message should be preserved
+        }
+      })
+
+      it('should wrap Error instance with non-preserved name as RequestError in PUT', async () => {
+        const genericError = new Error('Server error')
+        genericError.name = 'ServerError' // Not one of the preserved names
+        
+        jest.spyOn(require('../utils/authenticatedRequestHandler'), 'executeAuthenticatedRequest')
+          .mockRejectedValueOnce(genericError)
+        
+        const { result } = renderHook(() => useAuthenticatedApi(mockHttpClient))
+        
+        try {
+          await result.current.authenticatedPut('/test', { data: 'test' })
+          fail('Should have thrown an error')
+        } catch (error: any) {
+          expect(error.name).toBe('RequestError')
+          expect(error.message).toBe('Server error') // Message should be preserved
+        }
+      })
+
+      it('should wrap Error instance with non-preserved name as RequestError in DELETE', async () => {
+        const genericError = new Error('Connection error')
+        genericError.name = 'ConnectionError' // Not one of the preserved names
+        
+        jest.spyOn(require('../utils/authenticatedRequestHandler'), 'executeAuthenticatedRequest')
+          .mockRejectedValueOnce(genericError)
+        
+        const { result } = renderHook(() => useAuthenticatedApi(mockHttpClient))
+        
+        try {
+          await result.current.authenticatedDelete('/test')
+          fail('Should have thrown an error')
+        } catch (error: any) {
+          expect(error.name).toBe('RequestError')
+          expect(error.message).toBe('Connection error') // Message should be preserved
+        }
+      })
+    })
+
+    describe('error preservation - UnsupportedMethodError', () => {
+      it('should preserve UnsupportedMethodError name in POST', async () => {
+        const unsupportedError = new Error('Unsupported HTTP method: PATCH')
+        unsupportedError.name = 'UnsupportedMethodError'
+        
+        jest.spyOn(require('../utils/authenticatedRequestHandler'), 'executeAuthenticatedRequest')
+          .mockRejectedValueOnce(unsupportedError)
+        
+        const { result } = renderHook(() => useAuthenticatedApi(mockHttpClient))
+        
+        try {
+          await result.current.authenticatedPost('/test', { data: 'test' })
+          fail('Should have thrown an error')
+        } catch (error: any) {
+          expect(error.name).toBe('UnsupportedMethodError')
+          expect(error.message).toBe('Unsupported HTTP method: PATCH')
+        }
+      })
+
+      it('should preserve UnsupportedMethodError name in GET', async () => {
+        const unsupportedError = new Error('Unsupported HTTP method: PATCH')
+        unsupportedError.name = 'UnsupportedMethodError'
+        
+        jest.spyOn(require('../utils/authenticatedRequestHandler'), 'executeAuthenticatedRequest')
+          .mockRejectedValueOnce(unsupportedError)
+        
+        const { result } = renderHook(() => useAuthenticatedApi(mockHttpClient))
+        
+        try {
+          await result.current.authenticatedGet('/test')
+          fail('Should have thrown an error')
+        } catch (error: any) {
+          expect(error.name).toBe('UnsupportedMethodError')
+          expect(error.message).toBe('Unsupported HTTP method: PATCH')
+        }
+      })
+
+      it('should preserve UnsupportedMethodError name in PUT', async () => {
+        const unsupportedError = new Error('Unsupported HTTP method: PATCH')
+        unsupportedError.name = 'UnsupportedMethodError'
+        
+        jest.spyOn(require('../utils/authenticatedRequestHandler'), 'executeAuthenticatedRequest')
+          .mockRejectedValueOnce(unsupportedError)
+        
+        const { result } = renderHook(() => useAuthenticatedApi(mockHttpClient))
+        
+        try {
+          await result.current.authenticatedPut('/test', { data: 'test' })
+          fail('Should have thrown an error')
+        } catch (error: any) {
+          expect(error.name).toBe('UnsupportedMethodError')
+          expect(error.message).toBe('Unsupported HTTP method: PATCH')
+        }
+      })
+
+      it('should preserve UnsupportedMethodError name in DELETE', async () => {
+        const unsupportedError = new Error('Unsupported HTTP method: PATCH')
+        unsupportedError.name = 'UnsupportedMethodError'
+        
+        jest.spyOn(require('../utils/authenticatedRequestHandler'), 'executeAuthenticatedRequest')
+          .mockRejectedValueOnce(unsupportedError)
+        
+        const { result } = renderHook(() => useAuthenticatedApi(mockHttpClient))
+        
+        try {
+          await result.current.authenticatedDelete('/test')
+          fail('Should have thrown an error')
+        } catch (error: any) {
+          expect(error.name).toBe('UnsupportedMethodError')
+          expect(error.message).toBe('Unsupported HTTP method: PATCH')
+        }
+      })
+    })
+
+    describe('error wrapping - non-preserved Error instances', () => {
+      it('should wrap Error instance with different name as RequestError in POST', async () => {
+        const customError = new Error('Custom error message')
+        customError.name = 'CustomError'
+        
+        jest.spyOn(require('../utils/authenticatedRequestHandler'), 'executeAuthenticatedRequest')
+          .mockRejectedValueOnce(customError)
+        
+        const { result } = renderHook(() => useAuthenticatedApi(mockHttpClient))
+        
+        try {
+          await result.current.authenticatedPost('/test', { data: 'test' })
+          fail('Should have thrown an error')
+        } catch (error: any) {
+          expect(error.name).toBe('RequestError')
+          expect(error.message).toBe('Custom error message')
+        }
+      })
+
+      it('should wrap Error instance with different name as RequestError in GET', async () => {
+        const customError = new Error('Network error')
+        customError.name = 'NetworkError'
+        
+        jest.spyOn(require('../utils/authenticatedRequestHandler'), 'executeAuthenticatedRequest')
+          .mockRejectedValueOnce(customError)
+        
+        const { result } = renderHook(() => useAuthenticatedApi(mockHttpClient))
+        
+        try {
+          await result.current.authenticatedGet('/test')
+          fail('Should have thrown an error')
+        } catch (error: any) {
+          expect(error.name).toBe('RequestError')
+          expect(error.message).toBe('Network error')
+        }
+      })
+
+      it('should wrap Error instance with different name as RequestError in PUT', async () => {
+        const customError = new Error('Server error')
+        customError.name = 'ServerError'
+        
+        jest.spyOn(require('../utils/authenticatedRequestHandler'), 'executeAuthenticatedRequest')
+          .mockRejectedValueOnce(customError)
+        
+        const { result } = renderHook(() => useAuthenticatedApi(mockHttpClient))
+        
+        try {
+          await result.current.authenticatedPut('/test', { data: 'test' })
+          fail('Should have thrown an error')
+        } catch (error: any) {
+          expect(error.name).toBe('RequestError')
+          expect(error.message).toBe('Server error')
+        }
+      })
+
+      it('should wrap Error instance with different name as RequestError in DELETE', async () => {
+        const customError = new Error('Timeout error')
+        customError.name = 'TimeoutError'
+        
+        jest.spyOn(require('../utils/authenticatedRequestHandler'), 'executeAuthenticatedRequest')
+          .mockRejectedValueOnce(customError)
+        
+        const { result } = renderHook(() => useAuthenticatedApi(mockHttpClient))
+        
+        try {
+          await result.current.authenticatedDelete('/test')
+          fail('Should have thrown an error')
+        } catch (error: any) {
+          expect(error.name).toBe('RequestError')
+          expect(error.message).toBe('Timeout error')
+        }
       })
     })
   })
