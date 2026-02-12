@@ -4,9 +4,13 @@
  * Tests sort callbacks, filter callbacks, and method chaining
  */
 
-import { renderHook, waitFor } from '@testing-library/react'
+import { renderHook } from '@testing-library/react'
+import { waitForWithTimeoutFakeTimers } from '../../test/utils/waitForWithTimeout'
 import { useMarketplaceData } from './useMarketplaceData'
 import { getLocalStorageItem } from '../storage'
+
+// Use fake timers version since this test suite uses jest.useFakeTimers()
+const waitForWithTimeout = waitForWithTimeoutFakeTimers
 
 jest.mock('../storage', () => ({
   getLocalStorageItem: jest.fn(),
@@ -67,7 +71,7 @@ describe('useMarketplaceData - Method Expressions', () => {
         })
       )
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(result.current.loading).toBe(false)
       })
 
@@ -97,7 +101,7 @@ describe('useMarketplaceData - Method Expressions', () => {
         })
       )
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(result.current.loading).toBe(false)
       })
 
@@ -127,7 +131,7 @@ describe('useMarketplaceData - Method Expressions', () => {
         })
       )
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(result.current.loading).toBe(false)
       })
 
@@ -156,7 +160,7 @@ describe('useMarketplaceData - Method Expressions', () => {
         })
       )
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(result.current.loading).toBe(false)
       })
 
@@ -186,7 +190,7 @@ describe('useMarketplaceData - Method Expressions', () => {
         })
       )
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(result.current.loading).toBe(false)
       })
 
@@ -218,7 +222,7 @@ describe('useMarketplaceData - Method Expressions', () => {
         })
       )
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(result.current.loading).toBe(false)
       })
 
@@ -247,7 +251,7 @@ describe('useMarketplaceData - Method Expressions', () => {
         })
       )
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(result.current.loading).toBe(false)
       })
 
@@ -275,7 +279,7 @@ describe('useMarketplaceData - Method Expressions', () => {
         })
       )
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(result.current.loading).toBe(false)
       })
 
@@ -304,7 +308,7 @@ describe('useMarketplaceData - Method Expressions', () => {
         })
       )
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(result.current.loading).toBe(false)
       })
 
@@ -335,7 +339,7 @@ describe('useMarketplaceData - Method Expressions', () => {
         })
       )
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(mockStorage.setItem).toHaveBeenCalled()
       })
 
@@ -366,7 +370,7 @@ describe('useMarketplaceData - Method Expressions', () => {
         })
       )
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(mockStorage.setItem).toHaveBeenCalled()
       })
 
@@ -399,7 +403,7 @@ describe('useMarketplaceData - Method Expressions', () => {
         })
       )
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(result.current.loading).toBe(false)
       })
 
@@ -427,7 +431,7 @@ describe('useMarketplaceData - Method Expressions', () => {
         })
       )
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(result.current.loading).toBe(false)
       })
 
@@ -458,7 +462,7 @@ describe('useMarketplaceData - Method Expressions', () => {
         })
       )
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(result.current.loading).toBe(false)
       })
 
@@ -487,7 +491,7 @@ describe('useMarketplaceData - Method Expressions', () => {
         })
       )
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(result.current.loading).toBe(false)
       })
 
@@ -518,7 +522,7 @@ describe('useMarketplaceData - Method Expressions', () => {
         })
       )
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(result.current.loading).toBe(false)
       })
 
@@ -548,7 +552,7 @@ describe('useMarketplaceData - Method Expressions', () => {
         })
       )
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(result.current.loading).toBe(false)
       })
 
@@ -595,7 +599,7 @@ describe('useMarketplaceData - Method Expressions', () => {
         })
       )
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(result.current.loading).toBe(false)
       }, { timeout: 3000 })
 
@@ -628,7 +632,7 @@ describe('useMarketplaceData - Method Expressions', () => {
         })
       )
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(result.current.loading).toBe(false)
       })
 

@@ -1,12 +1,8 @@
 import React from 'react'
-import { render, screen, fireEvent, waitFor } from '@testing-library/react'
+import { render, screen, fireEvent } from '@testing-library/react'
+import { waitForWithTimeout } from '../test/utils/waitForWithTimeout'
 
 import ExecutionConsole from './ExecutionConsole'
-
-// Helper to ensure all waitFor calls have timeouts
-const waitForWithTimeout = (callback: () => void | Promise<void>, timeout = 2000) => {
-  return waitFor(callback, { timeout })
-}
 
 // Domain-based imports - Phase 7
 import { useWebSocket } from '../hooks/execution'

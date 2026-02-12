@@ -1,8 +1,12 @@
-import { renderHook, act, waitFor } from '@testing-library/react'
+import { renderHook, act } from '@testing-library/react'
+import { waitForWithTimeoutFakeTimers } from '../../test/utils/waitForWithTimeout'
 import { useMarketplaceData } from './useMarketplaceData'
 import { logger } from '../../utils/logger'
 import { getLocalStorageItem } from '../storage'
 import { STORAGE_KEYS } from '../../config/constants'
+
+// Use fake timers version since this test suite uses jest.useFakeTimers()
+const waitForWithTimeout = waitForWithTimeoutFakeTimers
 
 jest.mock('../../utils/logger', () => ({
   logger: {
@@ -93,7 +97,7 @@ describe('useMarketplaceData', () => {
       )
 
       // Wait for initial effect to complete
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(result.current.loading).toBe(false)
       })
 
@@ -238,7 +242,7 @@ describe('useMarketplaceData', () => {
         })
       )
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(result.current.loading).toBe(false)
       })
 
@@ -274,7 +278,7 @@ describe('useMarketplaceData', () => {
       )
 
       // Wait for initial effect to complete
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(result.current.loading).toBe(false)
       })
 
@@ -653,7 +657,7 @@ describe('useMarketplaceData', () => {
       )
 
       // Wait for initial effect to complete
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(result.current.loading).toBe(false)
       })
 
@@ -1028,7 +1032,7 @@ describe('useMarketplaceData', () => {
         })
       )
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(mockGetLocalStorageItem).toHaveBeenCalled()
       }, { timeout: 3000 })
     })
@@ -1052,7 +1056,7 @@ describe('useMarketplaceData', () => {
         })
       )
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(mockHttpClient.get).toHaveBeenCalled()
       }, { timeout: 2000 })
     })
@@ -1074,7 +1078,7 @@ describe('useMarketplaceData', () => {
         })
       )
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(mockStorage.getItem).toHaveBeenCalled()
       }, { timeout: 2000 })
     })
@@ -1098,7 +1102,7 @@ describe('useMarketplaceData', () => {
         })
       )
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(mockHttpClient.get).toHaveBeenCalled()
       }, { timeout: 2000 })
     })
@@ -1121,7 +1125,7 @@ describe('useMarketplaceData', () => {
       )
 
       // Wait for initial effect to complete
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(result.current.loading).toBe(false)
       })
 
@@ -1878,7 +1882,7 @@ describe('useMarketplaceData', () => {
         })
       )
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(result.current.loading).toBe(false)
       })
 
@@ -1911,7 +1915,7 @@ describe('useMarketplaceData', () => {
         })
       )
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(result.current.loading).toBe(false)
       })
 
@@ -1950,7 +1954,7 @@ describe('useMarketplaceData', () => {
         })
       )
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(result.current.loading).toBe(false)
       })
 
@@ -1989,7 +1993,7 @@ describe('useMarketplaceData', () => {
         })
       )
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(result.current.loading).toBe(false)
       })
 
@@ -2027,7 +2031,7 @@ describe('useMarketplaceData', () => {
         })
       )
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(result.current.loading).toBe(false)
       })
 
@@ -2065,7 +2069,7 @@ describe('useMarketplaceData', () => {
         })
       )
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(result.current.loading).toBe(false)
       })
 
@@ -2102,7 +2106,7 @@ describe('useMarketplaceData', () => {
         })
       )
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(result.current.loading).toBe(false)
       })
 
@@ -2139,7 +2143,7 @@ describe('useMarketplaceData', () => {
         })
       )
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(result.current.loading).toBe(false)
       })
 
@@ -2176,7 +2180,7 @@ describe('useMarketplaceData', () => {
         })
       )
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(result.current.loading).toBe(false)
       })
 
@@ -2213,7 +2217,7 @@ describe('useMarketplaceData', () => {
         })
       )
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(result.current.loading).toBe(false)
       })
 
@@ -2250,7 +2254,7 @@ describe('useMarketplaceData', () => {
         })
       )
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(result.current.loading).toBe(false)
       })
 
@@ -2284,7 +2288,7 @@ describe('useMarketplaceData', () => {
         })
       )
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(result.current.loading).toBe(false)
       })
 
@@ -2316,7 +2320,7 @@ describe('useMarketplaceData', () => {
         })
       )
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(result.current.loading).toBe(false)
       })
 
@@ -2345,7 +2349,7 @@ describe('useMarketplaceData', () => {
         })
       )
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(result.current.loading).toBe(false)
       })
 
@@ -2374,7 +2378,7 @@ describe('useMarketplaceData', () => {
         })
       )
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(result.current.loading).toBe(false)
       })
 
@@ -2400,7 +2404,7 @@ describe('useMarketplaceData', () => {
         })
       )
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(result.current.loading).toBe(false)
       })
 
@@ -2426,7 +2430,7 @@ describe('useMarketplaceData', () => {
         })
       )
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(result.current.loading).toBe(false)
       })
 
@@ -2452,7 +2456,7 @@ describe('useMarketplaceData', () => {
         })
       )
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(result.current.loading).toBe(false)
       })
 
@@ -2482,7 +2486,7 @@ describe('useMarketplaceData', () => {
         })
       )
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(result.current.loading).toBe(false)
       })
 
@@ -2509,7 +2513,7 @@ describe('useMarketplaceData', () => {
         })
       )
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(result.current.loading).toBe(false)
       })
 
@@ -2536,7 +2540,7 @@ describe('useMarketplaceData', () => {
         })
       )
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(result.current.loading).toBe(false)
       })
 
@@ -2563,7 +2567,7 @@ describe('useMarketplaceData', () => {
         })
       )
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(result.current.loading).toBe(false)
       })
 
@@ -2590,7 +2594,7 @@ describe('useMarketplaceData', () => {
         })
       )
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(result.current.loading).toBe(false)
       })
 
@@ -2617,7 +2621,7 @@ describe('useMarketplaceData', () => {
         })
       )
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(result.current.loading).toBe(false)
       })
 
@@ -2644,7 +2648,7 @@ describe('useMarketplaceData', () => {
         })
       )
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(result.current.loading).toBe(false)
       })
 
@@ -2669,7 +2673,7 @@ describe('useMarketplaceData', () => {
         })
       )
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(result.current.loading).toBe(false)
       })
 
@@ -2693,7 +2697,7 @@ describe('useMarketplaceData', () => {
         })
       )
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(result.current.loading).toBe(false)
       })
 
@@ -2717,7 +2721,7 @@ describe('useMarketplaceData', () => {
         })
       )
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(result.current.loading).toBe(false)
       })
 
@@ -2747,7 +2751,7 @@ describe('useMarketplaceData', () => {
         })
       )
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(result.current.loading).toBe(false)
       })
 
@@ -2776,7 +2780,7 @@ describe('useMarketplaceData', () => {
         })
       )
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(result.current.loading).toBe(false)
       })
 
@@ -2801,7 +2805,7 @@ describe('useMarketplaceData', () => {
         })
       )
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(result.current.loading).toBe(false)
       })
 
@@ -2831,7 +2835,7 @@ describe('useMarketplaceData', () => {
         })
       )
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(result.current.loading).toBe(false)
       })
 
@@ -2855,7 +2859,7 @@ describe('useMarketplaceData', () => {
         })
       )
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(result.current.loading).toBe(false)
       })
 
@@ -3086,7 +3090,7 @@ describe('useMarketplaceData', () => {
           })
         )
 
-        await waitFor(() => {
+        await waitForWithTimeout(() => {
           expect(result.current.loading).toBe(false)
         })
 
@@ -3123,7 +3127,7 @@ describe('useMarketplaceData', () => {
           })
         )
 
-        await waitFor(() => {
+        await waitForWithTimeout(() => {
           expect(result.current.loading).toBe(false)
         })
 
@@ -3159,7 +3163,7 @@ describe('useMarketplaceData', () => {
           })
         )
 
-        await waitFor(() => {
+        await waitForWithTimeout(() => {
           expect(result.current.loading).toBe(false)
         })
 
@@ -3195,7 +3199,7 @@ describe('useMarketplaceData', () => {
           })
         )
 
-        await waitFor(() => {
+        await waitForWithTimeout(() => {
           expect(result.current.loading).toBe(false)
         })
 
@@ -3231,7 +3235,7 @@ describe('useMarketplaceData', () => {
           })
         )
 
-        await waitFor(() => {
+        await waitForWithTimeout(() => {
           expect(result.current.loading).toBe(false)
         })
 
@@ -3267,7 +3271,7 @@ describe('useMarketplaceData', () => {
           })
         )
 
-        await waitFor(() => {
+        await waitForWithTimeout(() => {
           expect(result.current.loading).toBe(false)
         })
 
@@ -3303,7 +3307,7 @@ describe('useMarketplaceData', () => {
           })
         )
 
-        await waitFor(() => {
+        await waitForWithTimeout(() => {
           expect(result.current.loading).toBe(false)
         })
 
@@ -3343,7 +3347,7 @@ describe('useMarketplaceData', () => {
           })
         )
 
-        await waitFor(() => {
+        await waitForWithTimeout(() => {
           expect(result.current.loading).toBe(false)
         })
 
@@ -3383,7 +3387,7 @@ describe('useMarketplaceData', () => {
           })
         )
 
-        await waitFor(() => {
+        await waitForWithTimeout(() => {
           expect(result.current.loading).toBe(false)
         })
 
@@ -3423,7 +3427,7 @@ describe('useMarketplaceData', () => {
           })
         )
 
-        await waitFor(() => {
+        await waitForWithTimeout(() => {
           expect(result.current.loading).toBe(false)
         })
 
@@ -3459,7 +3463,7 @@ describe('useMarketplaceData', () => {
           })
         )
 
-        await waitFor(() => {
+        await waitForWithTimeout(() => {
           expect(result.current.loading).toBe(false)
         })
 
@@ -3486,7 +3490,7 @@ describe('useMarketplaceData', () => {
           })
         )
 
-        await waitFor(() => {
+        await waitForWithTimeout(() => {
           expect(result.current.loading).toBe(false)
         })
 
@@ -3512,7 +3516,7 @@ describe('useMarketplaceData', () => {
           })
         )
 
-        await waitFor(() => {
+        await waitForWithTimeout(() => {
           expect(result.current.loading).toBe(false)
         })
 
@@ -3538,7 +3542,7 @@ describe('useMarketplaceData', () => {
           })
         )
 
-        await waitFor(() => {
+        await waitForWithTimeout(() => {
           expect(result.current.loading).toBe(false)
         })
 
@@ -3565,7 +3569,7 @@ describe('useMarketplaceData', () => {
           })
         )
 
-        await waitFor(() => {
+        await waitForWithTimeout(() => {
           expect(result.current.loading).toBe(false)
         })
 
@@ -3591,7 +3595,7 @@ describe('useMarketplaceData', () => {
           })
         )
 
-        await waitFor(() => {
+        await waitForWithTimeout(() => {
           expect(result.current.loading).toBe(false)
         })
 
@@ -3618,7 +3622,7 @@ describe('useMarketplaceData', () => {
           })
         )
 
-        await waitFor(() => {
+        await waitForWithTimeout(() => {
           expect(result.current.loading).toBe(false)
         })
 
@@ -3645,7 +3649,7 @@ describe('useMarketplaceData', () => {
           })
         )
 
-        await waitFor(() => {
+        await waitForWithTimeout(() => {
           expect(result.current.loading).toBe(false)
         })
 
@@ -3672,7 +3676,7 @@ describe('useMarketplaceData', () => {
           })
         )
 
-        await waitFor(() => {
+        await waitForWithTimeout(() => {
           expect(result.current.loading).toBe(false)
         })
 
@@ -3697,7 +3701,7 @@ describe('useMarketplaceData', () => {
           })
         )
 
-        await waitFor(() => {
+        await waitForWithTimeout(() => {
           expect(result.current.loading).toBe(false)
         })
 
@@ -3722,7 +3726,7 @@ describe('useMarketplaceData', () => {
           })
         )
 
-        await waitFor(() => {
+        await waitForWithTimeout(() => {
           expect(result.current.loading).toBe(false)
         })
 
@@ -3751,7 +3755,7 @@ describe('useMarketplaceData', () => {
           })
         )
 
-        await waitFor(() => {
+        await waitForWithTimeout(() => {
           expect(result.current.loading).toBe(false)
         })
 
@@ -3782,7 +3786,7 @@ describe('useMarketplaceData', () => {
           })
         )
 
-        await waitFor(() => {
+        await waitForWithTimeout(() => {
           expect(result.current.loading).toBe(false)
         })
 
@@ -3814,7 +3818,7 @@ describe('useMarketplaceData', () => {
           })
         )
 
-        await waitFor(() => {
+        await waitForWithTimeout(() => {
           expect(result.current.loading).toBe(false)
         })
 
@@ -3845,7 +3849,7 @@ describe('useMarketplaceData', () => {
           })
         )
 
-        await waitFor(() => {
+        await waitForWithTimeout(() => {
           expect(result.current.loading).toBe(false)
         })
 
@@ -3876,7 +3880,7 @@ describe('useMarketplaceData', () => {
           })
         )
 
-        await waitFor(() => {
+        await waitForWithTimeout(() => {
           expect(result.current.loading).toBe(false)
         })
 
@@ -3919,7 +3923,7 @@ describe('useMarketplaceData', () => {
           })
         )
 
-        await waitFor(() => {
+        await waitForWithTimeout(() => {
           expect(result.current.loading).toBe(false)
         })
 
@@ -3956,7 +3960,7 @@ describe('useMarketplaceData', () => {
           })
         )
 
-        await waitFor(() => {
+        await waitForWithTimeout(() => {
           expect(result.current.loading).toBe(false)
         })
 
@@ -3991,7 +3995,7 @@ describe('useMarketplaceData', () => {
           })
         )
 
-        await waitFor(() => {
+        await waitForWithTimeout(() => {
           expect(result.current.loading).toBe(false)
         })
 
@@ -4027,7 +4031,7 @@ describe('useMarketplaceData', () => {
           })
         )
 
-        await waitFor(() => {
+        await waitForWithTimeout(() => {
           expect(result.current.loading).toBe(false)
         })
 
@@ -4063,7 +4067,7 @@ describe('useMarketplaceData', () => {
           })
         )
 
-        await waitFor(() => {
+        await waitForWithTimeout(() => {
           expect(result.current.loading).toBe(false)
         })
 
@@ -4098,7 +4102,7 @@ describe('useMarketplaceData', () => {
           })
         )
 
-        await waitFor(() => {
+        await waitForWithTimeout(() => {
           expect(result.current.loading).toBe(false)
         })
 
@@ -4133,7 +4137,7 @@ describe('useMarketplaceData', () => {
           })
         )
 
-        await waitFor(() => {
+        await waitForWithTimeout(() => {
           expect(result.current.loading).toBe(false)
         })
 
@@ -4167,7 +4171,7 @@ describe('useMarketplaceData', () => {
           })
         )
 
-        await waitFor(() => {
+        await waitForWithTimeout(() => {
           expect(result.current.loading).toBe(false)
         })
 
@@ -4201,7 +4205,7 @@ describe('useMarketplaceData', () => {
           })
         )
 
-        await waitFor(() => {
+        await waitForWithTimeout(() => {
           expect(result.current.loading).toBe(false)
         })
 
@@ -4230,7 +4234,7 @@ describe('useMarketplaceData', () => {
           })
         )
 
-        await waitFor(() => {
+        await waitForWithTimeout(() => {
           expect(result.current.loading).toBe(false)
         })
 
@@ -4258,7 +4262,7 @@ describe('useMarketplaceData', () => {
           })
         )
 
-        await waitFor(() => {
+        await waitForWithTimeout(() => {
           expect(result.current.loading).toBe(false)
         })
 
@@ -4286,7 +4290,7 @@ describe('useMarketplaceData', () => {
           })
         )
 
-        await waitFor(() => {
+        await waitForWithTimeout(() => {
           expect(result.current.loading).toBe(false)
         })
 
@@ -4314,7 +4318,7 @@ describe('useMarketplaceData', () => {
           })
         )
 
-        await waitFor(() => {
+        await waitForWithTimeout(() => {
           expect(result.current.loading).toBe(false)
         })
 
@@ -4342,7 +4346,7 @@ describe('useMarketplaceData', () => {
           })
         )
 
-        await waitFor(() => {
+        await waitForWithTimeout(() => {
           expect(result.current.loading).toBe(false)
         })
 
@@ -4370,7 +4374,7 @@ describe('useMarketplaceData', () => {
           })
         )
 
-        await waitFor(() => {
+        await waitForWithTimeout(() => {
           expect(result.current.loading).toBe(false)
         })
 
@@ -4398,7 +4402,7 @@ describe('useMarketplaceData', () => {
           })
         )
 
-        await waitFor(() => {
+        await waitForWithTimeout(() => {
           expect(result.current.loading).toBe(false)
         })
 
@@ -4427,7 +4431,7 @@ describe('useMarketplaceData', () => {
           })
         )
 
-        await waitFor(() => {
+        await waitForWithTimeout(() => {
           expect(result.current.loading).toBe(false)
         })
 
@@ -4455,7 +4459,7 @@ describe('useMarketplaceData', () => {
           })
         )
 
-        await waitFor(() => {
+        await waitForWithTimeout(() => {
           expect(result.current.loading).toBe(false)
         })
 
@@ -4483,7 +4487,7 @@ describe('useMarketplaceData', () => {
           })
         )
 
-        await waitFor(() => {
+        await waitForWithTimeout(() => {
           expect(result.current.loading).toBe(false)
         })
 
@@ -4510,7 +4514,7 @@ describe('useMarketplaceData', () => {
           })
         )
 
-        await waitFor(() => {
+        await waitForWithTimeout(() => {
           expect(result.current.loading).toBe(false)
         })
 
@@ -4540,7 +4544,7 @@ describe('useMarketplaceData', () => {
           })
         )
 
-        await waitFor(() => {
+        await waitForWithTimeout(() => {
           expect(result.current.loading).toBe(false)
         })
 
@@ -4567,7 +4571,7 @@ describe('useMarketplaceData', () => {
           })
         )
 
-        await waitFor(() => {
+        await waitForWithTimeout(() => {
           expect(result.current.loading).toBe(false)
         })
 
@@ -4599,7 +4603,7 @@ describe('useMarketplaceData', () => {
           })
         )
 
-        await waitFor(() => {
+        await waitForWithTimeout(() => {
           expect(result.current.loading).toBe(false)
         })
 
@@ -4632,7 +4636,7 @@ describe('useMarketplaceData', () => {
           })
         )
 
-        await waitFor(() => {
+        await waitForWithTimeout(() => {
           expect(result.current.loading).toBe(false)
         })
 
@@ -4661,7 +4665,7 @@ describe('useMarketplaceData', () => {
           })
         )
 
-        await waitFor(() => {
+        await waitForWithTimeout(() => {
           expect(result.current.loading).toBe(false)
         })
 
@@ -4691,7 +4695,7 @@ describe('useMarketplaceData', () => {
           })
         )
 
-        await waitFor(() => {
+        await waitForWithTimeout(() => {
           expect(result.current.loading).toBe(false)
         })
 
@@ -4722,7 +4726,7 @@ describe('useMarketplaceData', () => {
           })
         )
 
-        await waitFor(() => {
+        await waitForWithTimeout(() => {
           expect(result.current.loading).toBe(false)
         })
 
@@ -4758,7 +4762,7 @@ describe('useMarketplaceData', () => {
           })
         )
 
-        await waitFor(() => {
+        await waitForWithTimeout(() => {
           expect(result.current.loading).toBe(false)
         })
 
@@ -4791,7 +4795,7 @@ describe('useMarketplaceData', () => {
           })
         )
 
-        await waitFor(() => {
+        await waitForWithTimeout(() => {
           expect(result.current.loading).toBe(false)
         })
 
@@ -4820,7 +4824,7 @@ describe('useMarketplaceData', () => {
           })
         )
 
-        await waitFor(() => {
+        await waitForWithTimeout(() => {
           expect(result.current.loading).toBe(false)
         })
 
@@ -4849,7 +4853,7 @@ describe('useMarketplaceData', () => {
           })
         )
 
-        await waitFor(() => {
+        await waitForWithTimeout(() => {
           expect(result.current.loading).toBe(false)
         })
 
@@ -4880,7 +4884,7 @@ describe('useMarketplaceData', () => {
           })
         )
 
-        await waitFor(() => {
+        await waitForWithTimeout(() => {
           expect(result.current.loading).toBe(false)
         })
 
@@ -4909,7 +4913,7 @@ describe('useMarketplaceData', () => {
           })
         )
 
-        await waitFor(() => {
+        await waitForWithTimeout(() => {
           expect(result.current.loading).toBe(false)
         })
 
@@ -4940,7 +4944,7 @@ describe('useMarketplaceData', () => {
           })
         )
 
-        await waitFor(() => {
+        await waitForWithTimeout(() => {
           expect(result.current.loading).toBe(false)
         })
 
@@ -4970,7 +4974,7 @@ describe('useMarketplaceData', () => {
           })
         )
 
-        await waitFor(() => {
+        await waitForWithTimeout(() => {
           expect(result.current.loading).toBe(false)
         })
 

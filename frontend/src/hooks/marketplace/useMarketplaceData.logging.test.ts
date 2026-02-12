@@ -3,10 +3,14 @@
  * Targets no-coverage mutants in logger.debug and logger.error calls
  */
 
-import { renderHook, waitFor } from '@testing-library/react'
+import { renderHook } from '@testing-library/react'
+import { waitForWithTimeoutFakeTimers } from '../../test/utils/waitForWithTimeout'
 import { useMarketplaceData } from './useMarketplaceData'
 import { logger } from '../../utils/logger'
 import { getLocalStorageItem } from '../storage'
+
+// Use fake timers version since this test suite uses jest.useFakeTimers()
+const waitForWithTimeout = waitForWithTimeoutFakeTimers
 
 jest.mock('../../utils/logger', () => ({
   logger: {
@@ -73,7 +77,7 @@ describe('useMarketplaceData - Logging', () => {
         })
       )
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(mockLoggerDebug).toHaveBeenCalled()
       })
 
@@ -107,7 +111,7 @@ describe('useMarketplaceData - Logging', () => {
         })
       )
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(mockLoggerDebug).toHaveBeenCalled()
       })
 
@@ -173,7 +177,7 @@ describe('useMarketplaceData - Logging', () => {
         })
       )
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(mockLoggerDebug).toHaveBeenCalled()
       })
 
@@ -209,7 +213,7 @@ describe('useMarketplaceData - Logging', () => {
         })
       )
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(mockLoggerDebug).toHaveBeenCalled()
       })
 
@@ -245,7 +249,7 @@ describe('useMarketplaceData - Logging', () => {
         })
       )
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(mockLoggerError).toHaveBeenCalled()
       })
 
@@ -273,7 +277,7 @@ describe('useMarketplaceData - Logging', () => {
         })
       )
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(mockLoggerError).toHaveBeenCalled()
       })
 
@@ -304,7 +308,7 @@ describe('useMarketplaceData - Logging', () => {
         })
       )
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(mockLoggerError).toHaveBeenCalled()
       })
 
@@ -334,7 +338,7 @@ describe('useMarketplaceData - Logging', () => {
         })
       )
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(mockLoggerError).toHaveBeenCalled()
       })
 
@@ -364,7 +368,7 @@ describe('useMarketplaceData - Logging', () => {
         })
       )
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(mockLoggerError).toHaveBeenCalled()
       })
 
@@ -395,7 +399,7 @@ describe('useMarketplaceData - Logging', () => {
         })
       )
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(mockLoggerError).toHaveBeenCalled()
       })
 
@@ -426,7 +430,7 @@ describe('useMarketplaceData - Logging', () => {
         })
       )
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(mockLoggerDebug).toHaveBeenCalled()
       })
 
@@ -467,7 +471,7 @@ describe('useMarketplaceData - Logging', () => {
         })
       )
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(mockLoggerError).toHaveBeenCalled()
       })
 

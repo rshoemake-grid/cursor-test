@@ -3,9 +3,13 @@
  * Targets no-coverage mutants in initialization and default values
  */
 
-import { renderHook, waitFor } from '@testing-library/react'
+import { renderHook } from '@testing-library/react'
+import { waitForWithTimeoutFakeTimers } from '../../test/utils/waitForWithTimeout'
 import { useMarketplaceData } from './useMarketplaceData'
 import { getLocalStorageItem } from '../storage'
+
+// Use fake timers version since this test suite uses jest.useFakeTimers()
+const waitForWithTimeout = waitForWithTimeoutFakeTimers
 
 jest.mock('../storage', () => ({
   getLocalStorageItem: jest.fn(),
@@ -155,7 +159,7 @@ describe('useMarketplaceData - Initialization', () => {
 
       // Resolve the promise to allow test to complete
       resolvePromise!({ json: async () => [] })
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(result.current.loading).toBe(false)
       })
     })
@@ -179,7 +183,7 @@ describe('useMarketplaceData - Initialization', () => {
         })
       )
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(result.current.loading).toBe(false)
       })
 
@@ -205,7 +209,7 @@ describe('useMarketplaceData - Initialization', () => {
         })
       )
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(result.current.loading).toBe(false)
       })
 
@@ -231,7 +235,7 @@ describe('useMarketplaceData - Initialization', () => {
         })
       )
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(result.current.loading).toBe(false)
       })
 
@@ -257,7 +261,7 @@ describe('useMarketplaceData - Initialization', () => {
         })
       )
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(result.current.loading).toBe(false)
       })
 
@@ -285,7 +289,7 @@ describe('useMarketplaceData - Initialization', () => {
         })
       )
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(result.current.loading).toBe(false)
       })
 
@@ -312,7 +316,7 @@ describe('useMarketplaceData - Initialization', () => {
         })
       )
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(result.current.loading).toBe(false)
       })
 
@@ -342,7 +346,7 @@ describe('useMarketplaceData - Initialization', () => {
         })
       )
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(result.current.loading).toBe(false)
       })
 
@@ -369,7 +373,7 @@ describe('useMarketplaceData - Initialization', () => {
         })
       )
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(result.current.loading).toBe(false)
       })
 

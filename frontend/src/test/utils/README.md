@@ -2,6 +2,55 @@
 
 Shared utilities for testing React components and hooks.
 
+## Async Testing Utilities
+
+### `waitForWithTimeout`
+
+Helpers for handling async operations in tests with timeout support.
+
+**Files:**
+- `waitForWithTimeout.ts` - Main utility file
+
+**Exports:**
+- `waitForWithTimeout` - Simple version for tests without fake timers
+- `waitForWithTimeoutFakeTimers` - Version that handles fake timers correctly
+- `waitForWithTimeoutAuto` - Auto-detecting version (alias for fake timers version)
+
+**Usage:**
+
+```typescript
+// For tests WITHOUT fake timers
+import { waitForWithTimeout } from '../test/utils/waitForWithTimeout'
+
+await waitForWithTimeout(() => {
+  expect(screen.getByText('Hello')).toBeInTheDocument()
+})
+
+// For tests WITH fake timers
+import { waitForWithTimeoutFakeTimers } from '../test/utils/waitForWithTimeout'
+
+beforeEach(() => {
+  jest.useFakeTimers()
+})
+
+await waitForWithTimeoutFakeTimers(() => {
+  expect(screen.getByText('Hello')).toBeInTheDocument()
+})
+
+// Auto-detecting version (works with or without fake timers)
+import { waitForWithTimeoutAuto } from '../test/utils/waitForWithTimeout'
+
+await waitForWithTimeoutAuto(() => {
+  expect(screen.getByText('Hello')).toBeInTheDocument()
+})
+```
+
+**Why use this?**
+- Ensures all `waitFor` calls have explicit timeouts
+- Handles fake timers correctly (temporarily switches to real timers)
+- Prevents timing conflicts between fake timers and React Testing Library
+- Consistent pattern across all test files
+
 ## Stateful Mock Utilities
 
 ### `createStatefulMock`

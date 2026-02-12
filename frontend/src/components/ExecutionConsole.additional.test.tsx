@@ -1,38 +1,14 @@
 import React from 'react'
-import { render, screen, fireEvent, waitFor, act } from '@testing-library/react'
+import { render, screen, fireEvent, act } from '@testing-library/react'
+import { waitForWithTimeoutFakeTimers } from '../test/utils/waitForWithTimeout'
 import ExecutionConsole from './ExecutionConsole'
 // Domain-based imports - Phase 7
 import { useWebSocket } from '../hooks/execution'
 import type { Execution } from '../contexts/WorkflowTabsContext'
 import type { DocumentAdapter } from '../types/adapters'
 
-// Helper to ensure all waitFor calls have timeouts
-// When using fake timers, we need to advance timers and use real timers for waitFor
-// This fixes timing conflicts between fake timers and waitFor's internal real timers
-const waitForWithTimeout = async (callback: () => void | Promise<void>, timeout = 2000) => {
-  // Check if fake timers are currently active by checking if jest.getRealSystemTime exists
-  // Note: This is a heuristic - if jest.getRealSystemTime exists, we're using fake timers
-  const wasUsingFakeTimers = typeof jest.getRealSystemTime === 'function'
-  
-  if (wasUsingFakeTimers) {
-    // Advance timers first to process any pending operations
-    jest.advanceTimersByTime(0)
-    jest.runOnlyPendingTimers()
-    
-    // Temporarily use real timers for waitFor, then restore fake timers
-    jest.useRealTimers()
-    try {
-      // Use a small delay to ensure React has processed updates
-      await new Promise(resolve => setTimeout(resolve, 10))
-      return await waitFor(callback, { timeout })
-    } finally {
-      jest.useFakeTimers()
-    }
-  } else {
-    // Not using fake timers, just use waitFor normally
-    return await waitFor(callback, { timeout })
-  }
-}
+// Use fake timers version since this test suite uses jest.useFakeTimers()
+const waitForWithTimeout = waitForWithTimeoutFakeTimers
 
 // Domain-based imports - Phase 7
 jest.mock('../hooks/execution', () => ({

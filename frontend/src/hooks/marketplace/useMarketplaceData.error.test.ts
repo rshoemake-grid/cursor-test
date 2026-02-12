@@ -3,10 +3,14 @@
  * Targets no-coverage mutants in error handling paths
  */
 
-import { renderHook, waitFor } from '@testing-library/react'
+import { renderHook } from '@testing-library/react'
+import { waitForWithTimeoutFakeTimers } from '../../test/utils/waitForWithTimeout'
 import { useMarketplaceData } from './useMarketplaceData'
 import { logger } from '../../utils/logger'
 import { getLocalStorageItem } from '../storage'
+
+// Use fake timers version since this test suite uses jest.useFakeTimers()
+const waitForWithTimeout = waitForWithTimeoutFakeTimers
 
 jest.mock('../../utils/logger', () => ({
   logger: {
@@ -81,7 +85,7 @@ describe('useMarketplaceData - Error Handling', () => {
         })
       )
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(result.current.loading).toBe(false)
       })
 
@@ -117,7 +121,7 @@ describe('useMarketplaceData - Error Handling', () => {
         })
       )
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(result.current.loading).toBe(false)
       })
 
@@ -143,7 +147,7 @@ describe('useMarketplaceData - Error Handling', () => {
         })
       )
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(result.current.loading).toBe(false)
       })
 
@@ -171,7 +175,7 @@ describe('useMarketplaceData - Error Handling', () => {
         })
       )
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(result.current.loading).toBe(false)
       })
 
@@ -201,7 +205,7 @@ describe('useMarketplaceData - Error Handling', () => {
         })
       )
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(result.current.loading).toBe(false)
       })
 
@@ -253,7 +257,7 @@ describe('useMarketplaceData - Error Handling', () => {
         })
       )
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(result.current.loading).toBe(false)
       })
 
@@ -284,7 +288,7 @@ describe('useMarketplaceData - Error Handling', () => {
         })
       )
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(result.current.loading).toBe(false)
       })
 
@@ -313,7 +317,7 @@ describe('useMarketplaceData - Error Handling', () => {
         })
       )
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(result.current.loading).toBe(false)
       })
 
@@ -341,7 +345,7 @@ describe('useMarketplaceData - Error Handling', () => {
         })
       )
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(result.current.loading).toBe(false)
       })
 
@@ -370,7 +374,7 @@ describe('useMarketplaceData - Error Handling', () => {
         })
       )
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(result.current.loading).toBe(false)
       })
 
@@ -400,7 +404,7 @@ describe('useMarketplaceData - Error Handling', () => {
         })
       )
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(result.current.loading).toBe(false)
       })
 
@@ -427,7 +431,7 @@ describe('useMarketplaceData - Error Handling', () => {
         })
       )
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(result.current.loading).toBe(false)
       })
 
@@ -461,7 +465,7 @@ describe('useMarketplaceData - Error Handling', () => {
         })
       )
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(result.current.loading).toBe(false)
       })
 
@@ -488,7 +492,7 @@ describe('useMarketplaceData - Error Handling', () => {
         })
       )
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(result.current.loading).toBe(false)
       })
 
@@ -516,7 +520,7 @@ describe('useMarketplaceData - Error Handling', () => {
         })
       )
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(mockLoggerError).toHaveBeenCalled()
       })
 
@@ -541,7 +545,7 @@ describe('useMarketplaceData - Error Handling', () => {
         })
       )
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(mockLoggerError).toHaveBeenCalled()
       })
 
@@ -568,7 +572,7 @@ describe('useMarketplaceData - Error Handling', () => {
         })
       )
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(mockLoggerError).toHaveBeenCalled()
       })
 
@@ -595,7 +599,7 @@ describe('useMarketplaceData - Error Handling', () => {
         })
       )
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(mockLoggerError).toHaveBeenCalled()
       })
 
@@ -621,7 +625,7 @@ describe('useMarketplaceData - Error Handling', () => {
         })
       )
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(mockLoggerError).toHaveBeenCalled()
       })
 
@@ -652,7 +656,7 @@ describe('useMarketplaceData - Error Handling', () => {
         })
       )
 
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(mockLoggerError).toHaveBeenCalled()
       })
 

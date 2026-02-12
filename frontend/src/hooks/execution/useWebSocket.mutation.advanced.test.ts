@@ -549,7 +549,7 @@ describe('useWebSocket - mutation.advanced', () => {
     })
 
     it('should verify currentStatus = executionStatus || lastKnownStatusRef.current - lastKnownStatusRef path', async () => {
-      renderHook(
+      const { rerender } = renderHook(
         ({ executionStatus }) =>
           useWebSocket({
             executionId: 'exec-1',
@@ -573,14 +573,20 @@ describe('useWebSocket - mutation.advanced', () => {
         rerender({ executionStatus: 'completed' })
         await advanceTimersByTime(50)
 
+        // Clear executionStatus to force use of lastKnownStatusRef
+        rerender({ executionStatus: undefined })
+        await advanceTimersByTime(50)
+
         // Now close - should use lastKnownStatusRef
         await act(async () => {
           ws.simulateClose(1001, 'Error', false)
           await advanceTimersByTime(50)
         })
 
-        // Should use lastKnownStatusRef.current
-        expect(logger.debug).toHaveBeenCalled()
+        // Should use lastKnownStatusRef.current (which is 'completed')
+        expect(logger.debug).toHaveBeenCalledWith(
+          expect.stringContaining('Skipping reconnect - execution exec-1 is completed')
+        )
       }
     })
 
@@ -705,7 +711,7 @@ describe('useWebSocket - mutation.advanced', () => {
     it('should verify reconnectAttempts.current < maxReconnectAttempts && executionId - executionId is null', async () => {
       // Create a scenario where executionId becomes null during reconnection
       // This tests the && executionId check in the reconnect logic
-      renderHook(
+      const { rerender } = renderHook(
         ({ executionId }) =>
           useWebSocket({
             executionId,
@@ -3318,7 +3324,7 @@ describe('useWebSocket - mutation.advanced', () => {
 
     it('should verify executionStatus || lastKnownStatusRef.current - executionStatus is falsy', async () => {
       // Verify || operator uses lastKnownStatusRef.current when executionStatus is falsy
-      renderHook(
+      const { rerender } = renderHook(
         ({ executionStatus }) =>
           useWebSocket({
             executionId: 'exec-1',
@@ -3336,8 +3342,28 @@ describe('useWebSocket - mutation.advanced', () => {
       await advanceTimersByTime(100)
 
       // Should use lastKnownStatusRef.current when executionStatus is falsy
-      // Code path verified - connection should still exist
-      expect(wsInstances.length).toBeGreaterThan(0)
+      // Verify that lastKnownStatus is being used by checking connection behavior
+      if (wsInstances.length > 0) {
+        const ws = wsInstances[0]
+        await act(async () => {
+          ws.simulateOpen()
+          await advanceTimersByTime(50)
+        })
+
+        // Close and verify reconnection uses lastKnownStatus ('running')
+        await act(async () => {
+          ws.simulateClose(1001, '', false)
+          await advanceTimersByTime(50)
+        })
+
+        // Should attempt reconnect because lastKnownStatus is 'running'
+        expect(logger.debug).toHaveBeenCalledWith(
+          expect.stringContaining('Reconnecting in')
+        )
+      } else {
+        // If no connection exists, verify it would connect (lastKnownStatus is 'running')
+        expect(wsInstances.length).toBeGreaterThan(0)
+      }
     })
 
     it('should verify currentStatus === completed || failed - first condition true', async () => {
