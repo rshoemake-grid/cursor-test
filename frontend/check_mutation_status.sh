@@ -1,60 +1,59 @@
 #!/bin/bash
 
-# Check mutation testing status and report results
+# Quick status check script for mutation tests
 
-FRONTEND_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-cd "$FRONTEND_DIR"
-
-LOG_FILE="mutation_output.log"
-MONITOR_LOG="mutation_monitor.log"
-
-echo "=========================================="
-echo "Mutation Testing Status Check"
+echo "=== Mutation Test Status Check ==="
 echo "Time: $(date)"
-echo "=========================================="
 echo ""
 
-# Check if mutation testing is running
-if pgrep -f "stryker run" > /dev/null 2>&1 || pgrep -f "run_and_monitor_mutation" > /dev/null 2>&1; then
-    echo "✅ Mutation testing is RUNNING"
-    echo ""
+# Check if Stryker is running
+STRYKER_PID=$(pgrep -f "stryker run" | head -1)
+if [ -n "$STRYKER_PID" ]; then
+    echo "✅ Stryker is RUNNING (PID: $STRYKER_PID)"
     
-    # Show recent progress
-    if [ -f "$LOG_FILE" ]; then
-        echo "--- Recent Progress (last 30 lines) ---"
-        tail -30 "$LOG_FILE" | grep -E "(Mutant|Killed|Survived|Timeout|No coverage|Mutation score|progress|Tested|DryRun|Initial test)" || tail -30 "$LOG_FILE"
-        echo ""
-        
-        # Extract key metrics if available
-        echo "--- Key Metrics ---"
-        tail -200 "$LOG_FILE" | grep -E "(Mutation score|Killed|Survived|Timeout|No coverage|Tested|mutants)" | tail -10 || echo "Metrics not yet available"
-    else
-        echo "Log file not found yet - mutation testing may be initializing..."
-    fi
+    # Check CPU and memory usage
+    ps -p $STRYKER_PID -o %cpu,%mem,etime,command 2>/dev/null | tail -1
     
-    echo ""
-    echo "--- Monitor Log (last 10 lines) ---"
-    tail -10 "$MONITOR_LOG" 2>/dev/null || echo "Monitor log not available"
-    
+    # Count worker processes
+    WORKER_COUNT=$(pgrep -f "child-process-proxy-worker" | wc -l | tr -d ' ')
+    echo "   Worker processes: $WORKER_COUNT"
 else
-    echo "❌ Mutation testing is NOT running"
-    echo ""
-    
-    # Check if it completed
-    if [ -f "$LOG_FILE" ]; then
-        echo "--- Checking for completion ---"
-        if tail -100 "$LOG_FILE" | grep -qE "(Mutation test report|Mutation score|All mutants)"; then
-            echo "✅ Mutation testing appears to have COMPLETED"
-            echo ""
-            echo "--- Final Results ---"
-            tail -100 "$LOG_FILE" | grep -A 20 -E "(Mutation score|Killed|Survived|Timeout|No coverage)" | head -30
-        else
-            echo "⚠️  Process stopped but no completion found in log"
-            echo "Last 20 lines:"
-            tail -20 "$LOG_FILE"
-        fi
-    fi
+    echo "❌ Stryker is NOT running"
 fi
 
 echo ""
-echo "=========================================="
+
+# Check monitor script
+MONITOR_PID=$(pgrep -f "monitor_mutation_continuous" | head -1)
+if [ -n "$MONITOR_PID" ]; then
+    echo "✅ Monitor script is RUNNING (PID: $MONITOR_PID)"
+else
+    echo "❌ Monitor script is NOT running"
+fi
+
+echo ""
+
+# Check log file for recent activity
+if [ -f "/tmp/stryker-dryrun.log" ]; then
+    LAST_LINE=$(tail -1 /tmp/stryker-dryrun.log 2>/dev/null)
+    LAST_MOD=$(stat -f %Sm -t "%Y-%m-%d %H:%M:%S" /tmp/stryker-dryrun.log 2>/dev/null || stat -c %y /tmp/stryker-dryrun.log 2>/dev/null | cut -d'.' -f1)
+    echo "📋 Log file last updated: $LAST_MOD"
+    echo "   Last log line: ${LAST_LINE:0:100}..."
+    
+    # Check for errors
+    ERROR_COUNT=$(grep -i "error\|fatal\|crash\|killed" /tmp/stryker-dryrun.log 2>/dev/null | wc -l | tr -d ' ')
+    if [ "$ERROR_COUNT" -gt 0 ]; then
+        echo "   ⚠️  Found $ERROR_COUNT potential error(s) in log"
+    fi
+else
+    echo "📋 Log file not found"
+fi
+
+echo ""
+
+# Check concurrency setting
+CONCURRENCY=$(cd /Users/rshoemake/Documents/cursor/cursor-test/frontend && cat stryker.conf.json 2>/dev/null | grep -o '"concurrency": [0-9]*' | grep -o '[0-9]*' || echo "unknown")
+echo "⚙️  Concurrency setting: $CONCURRENCY"
+
+echo ""
+echo "=== End Status Check ==="
