@@ -581,6 +581,9 @@ describe('useMarketplaceData - Method Expressions', () => {
             // Node with workflow reference via tags
             // The check includes: workflow.tags && workflow.tags.some(tag => tag.toLowerCase().includes('workflow'))
             // Since tags include 'workflow', this should match
+            // Need at least one node for the check to run
+            id: 'node-1',
+            data: {},
           }],
         }),
       })
@@ -605,10 +608,23 @@ describe('useMarketplaceData - Method Expressions', () => {
 
       // some() callback should be arrow function: tag => tag.toLowerCase().includes('workflow')
       // The workflow.tags.some() check should detect 'workflow' tag
-      // Even if node is empty, the tags check should trigger
+      // The tag check happens inside nodes.some() callback, checking workflow.tags (not node tags)
       expect(mockHttpClient.post).toHaveBeenCalled()
       
       // Verify workflow was added (tags include 'workflow')
+      // The tag check: workflow.tags.some(tag => tag.toLowerCase().includes('workflow'))
+      // happens inside workflowDetail.nodes.some() callback (line 67 in useWorkflowsOfWorkflowsData.ts)
+      // The check evaluates: (workflow.tags && workflow.tags.some(tag => tag.toLowerCase().includes('workflow')))
+      // Since template has tags: ['workflow', 'test'], this should return true
+      // And since hasWorkflowReference will be true, workflow should be added to workflowsOfWorkflows array
+      // Wait for the workflow to be added
+      await waitForWithTimeout(() => {
+        expect(result.current.workflowsOfWorkflows.length).toBeGreaterThan(0)
+      }, { timeout: 3000 })
+      // 2. Node exists (so nodes.some() runs)
+      // 3. Tag check: workflow.tags.some(tag => tag.toLowerCase().includes('workflow')) returns true
+      // 4. hasWorkflowReference becomes true
+      // 5. Workflow gets pushed to workflowsOfWorkflows array
       expect(result.current.workflowsOfWorkflows.length).toBeGreaterThan(0)
     })
 

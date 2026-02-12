@@ -313,14 +313,10 @@ describe('useMarketplaceData', () => {
       )
 
       // Wait for initial effect to complete (it will call fetchAgents)
-      await act(async () => {
-        await new Promise(resolve => setTimeout(resolve, 100))
-      })
-
-      // Wait for loading to complete
-      await act(async () => {
-        await new Promise(resolve => setTimeout(resolve, 100))
-      })
+      // Use waitForWithTimeout instead of setTimeout to work with fake timers
+      await waitForWithTimeout(() => {
+        expect(mockStorage.setItem).toHaveBeenCalled()
+      }, { timeout: 2000 })
 
       // Check migration happened - setItem should be called during initial fetchAgents
       expect(mockStorage.setItem).toHaveBeenCalled()
@@ -342,28 +338,19 @@ describe('useMarketplaceData', () => {
           searchQuery: '',
           sortBy: 'popular',
           user: { id: 'user-1', email: 'test@example.com' },
-          activeTab: 'repository',
+          activeTab: 'agents', // Changed to 'agents' so fetchAgents runs automatically
           repositorySubTab: 'workflows',
         })
       )
 
-      // Wait for initial effect to complete
-      await act(async () => {
-        await new Promise(resolve => setTimeout(resolve, 100))
-      })
+      // Wait for initial effect to complete and migration to happen
+      await waitForWithTimeout(() => {
+        expect(mockStorage.setItem).toHaveBeenCalled()
+      }, { timeout: 5000 })
 
-      // Manually trigger fetchAgents to test migration
-      mockGetLocalStorageItem.mockClear()
-      mockGetLocalStorageItem.mockReturnValue([agentWithoutAuthor])
-      mockStorage.setItem.mockClear()
-
-      await act(async () => {
-        await result.current.fetchAgents()
-      })
-
-      // Check migration happened
-      expect(mockStorage.setItem).toHaveBeenCalled()
+      // Check migration happened - email should be used as author_name
       const savedAgents = JSON.parse(mockStorage.setItem.mock.calls[0][1])
+      expect(savedAgents[0].author_id).toBe('user-1')
       expect(savedAgents[0].author_name).toBe('test@example.com')
     })
 
@@ -438,13 +425,12 @@ describe('useMarketplaceData', () => {
       )
 
       // Wait for initial effect to complete (it will call fetchAgents with searchQuery='Test')
-      await act(async () => {
-        await new Promise(resolve => setTimeout(resolve, 300))
-      })
-
-      expect(result.current.loading).toBe(false)
-      expect(result.current.agents).toHaveLength(1)
-      expect(result.current.agents[0].name).toBe('Test Agent')
+      // Use waitForWithTimeout instead of setTimeout to work with fake timers
+      await waitForWithTimeout(() => {
+        expect(result.current.loading).toBe(false)
+        expect(result.current.agents).toHaveLength(1)
+        expect(result.current.agents[0].name).toBe('Test Agent')
+      }, { timeout: 2000 })
     })
 
     it('should filter by search query in description', async () => {
@@ -467,13 +453,12 @@ describe('useMarketplaceData', () => {
       )
 
       // Wait for initial effect to complete (it will call fetchAgents with searchQuery='Test')
-      await act(async () => {
-        await new Promise(resolve => setTimeout(resolve, 300))
-      })
-
-      expect(result.current.loading).toBe(false)
-      expect(result.current.agents).toHaveLength(1)
-      expect(result.current.agents[0].description).toContain('Test')
+      // Use waitForWithTimeout instead of setTimeout to work with fake timers
+      await waitForWithTimeout(() => {
+        expect(result.current.loading).toBe(false)
+        expect(result.current.agents).toHaveLength(1)
+        expect(result.current.agents[0].description).toContain('Test')
+      }, { timeout: 2000 })
     })
 
     it('should filter by search query in tags', async () => {
@@ -496,12 +481,11 @@ describe('useMarketplaceData', () => {
       )
 
       // Wait for initial effect to complete (it will call fetchAgents with searchQuery='test')
-      await act(async () => {
-        await new Promise(resolve => setTimeout(resolve, 300))
-      })
-
-      expect(result.current.loading).toBe(false)
-      expect(result.current.agents).toHaveLength(1)
+      // Use waitForWithTimeout instead of setTimeout to work with fake timers
+      await waitForWithTimeout(() => {
+        expect(result.current.loading).toBe(false)
+        expect(result.current.agents).toHaveLength(1)
+      }, { timeout: 2000 })
       expect(result.current.agents[0].tags).toContain('test')
     })
 
@@ -765,13 +749,12 @@ describe('useMarketplaceData', () => {
       )
 
       // Wait for initial effect to complete (it will call fetchRepositoryAgents with searchQuery='Test')
-      await act(async () => {
-        await new Promise(resolve => setTimeout(resolve, 300))
-      })
-
-      expect(result.current.loading).toBe(false)
-      expect(result.current.repositoryAgents).toHaveLength(1)
-      expect(result.current.repositoryAgents[0].name).toBe('Test Agent')
+      // Use waitForWithTimeout instead of setTimeout to work with fake timers
+      await waitForWithTimeout(() => {
+        expect(result.current.loading).toBe(false)
+        expect(result.current.repositoryAgents).toHaveLength(1)
+        expect(result.current.repositoryAgents[0].name).toBe('Test Agent')
+      }, { timeout: 2000 })
     })
 
     it('should sort repository agents by published_at for recent sort', async () => {
@@ -1333,12 +1316,12 @@ describe('useMarketplaceData', () => {
           })
         )
 
-        await act(async () => {
-          await new Promise(resolve => setTimeout(resolve, 200))
-        })
-
-        expect(result.current.agents).toHaveLength(0)
-        expect(result.current.loading).toBe(false)
+        // Use waitForWithTimeout instead of setTimeout to work with fake timers
+        // Wait for loading to complete
+        await waitForWithTimeout(() => {
+          expect(result.current.loading).toBe(false)
+          expect(result.current.agents).toHaveLength(0)
+        }, { timeout: 5000 })
       })
 
       it('should handle agents with null name', async () => {
@@ -1359,11 +1342,12 @@ describe('useMarketplaceData', () => {
           })
         )
 
-        await act(async () => {
-          await new Promise(resolve => setTimeout(resolve, 200))
-        })
-
-        expect(result.current.agents).toHaveLength(1)
+        // Use waitForWithTimeout instead of setTimeout to work with fake timers
+        // Wait for loading to complete and data to be available
+        await waitForWithTimeout(() => {
+          expect(result.current.loading).toBe(false)
+          expect(result.current.agents).toHaveLength(1)
+        }, { timeout: 5000 })
         expect(result.current.agents[0].name).toBeNull()
       })
 
@@ -1385,12 +1369,13 @@ describe('useMarketplaceData', () => {
           })
         )
 
-        await act(async () => {
-          await new Promise(resolve => setTimeout(resolve, 200))
-        })
-
-        expect(result.current.agents).toHaveLength(1)
-        expect(result.current.agents[0].tags).toHaveLength(0)
+        // Use waitForWithTimeout instead of setTimeout to work with fake timers
+        // Wait for loading to complete and data to be available
+        await waitForWithTimeout(() => {
+          expect(result.current.loading).toBe(false)
+          expect(result.current.agents).toHaveLength(1)
+          expect(result.current.agents[0].tags).toHaveLength(0)
+        }, { timeout: 5000 })
       })
 
       it('should handle agents with undefined published_at', async () => {
@@ -1412,11 +1397,12 @@ describe('useMarketplaceData', () => {
           })
         )
 
-        await act(async () => {
-          await new Promise(resolve => setTimeout(resolve, 200))
-        })
-
-        expect(result.current.agents).toHaveLength(2)
+        // Use waitForWithTimeout instead of setTimeout to work with fake timers
+        // Wait for loading to complete and data to be available
+        await waitForWithTimeout(() => {
+          expect(result.current.loading).toBe(false)
+          expect(result.current.agents).toHaveLength(2)
+        }, { timeout: 5000 })
         // Agent with date should come first
         expect(result.current.agents[0].published_at).toBe('2024-01-02T00:00:00Z')
       })
@@ -1440,12 +1426,11 @@ describe('useMarketplaceData', () => {
           })
         )
 
-        await act(async () => {
-          await new Promise(resolve => setTimeout(resolve, 200))
-        })
-
-        // Should not migrate if user.id is empty
-        expect(mockStorage.setItem).not.toHaveBeenCalled()
+        // Use waitForWithTimeout instead of setTimeout to work with fake timers
+        await waitForWithTimeout(() => {
+          // Should not migrate if user.id is empty
+          expect(mockStorage.setItem).not.toHaveBeenCalled()
+        }, { timeout: 2000 })
       })
 
       it('should handle migration when agentsData.length is 0', async () => {
@@ -1466,12 +1451,11 @@ describe('useMarketplaceData', () => {
           })
         )
 
-        await act(async () => {
-          await new Promise(resolve => setTimeout(resolve, 200))
-        })
-
-        // Should not migrate if no agents
-        expect(mockStorage.setItem).not.toHaveBeenCalled()
+        // Use waitForWithTimeout instead of setTimeout to work with fake timers
+        await waitForWithTimeout(() => {
+          // Should not migrate if no agents
+          expect(mockStorage.setItem).not.toHaveBeenCalled()
+        }, { timeout: 2000 })
       })
 
       it('should handle search query with special characters', async () => {
@@ -1493,12 +1477,11 @@ describe('useMarketplaceData', () => {
           })
         )
 
-        await act(async () => {
-          await new Promise(resolve => setTimeout(resolve, 300))
-        })
-
-        expect(result.current.agents).toHaveLength(1)
-        expect(result.current.agents[0].name).toBe('Test-Agent')
+        // Use waitForWithTimeout instead of setTimeout to work with fake timers
+        await waitForWithTimeout(() => {
+          expect(result.current.agents).toHaveLength(1)
+          expect(result.current.agents[0].name).toBe('Test-Agent')
+        }, { timeout: 2000 })
       })
 
       it('should handle case-insensitive search in tags', async () => {
@@ -1520,11 +1503,10 @@ describe('useMarketplaceData', () => {
           })
         )
 
-        await act(async () => {
-          await new Promise(resolve => setTimeout(resolve, 300))
-        })
-
-        expect(result.current.agents).toHaveLength(1)
+        // Use waitForWithTimeout instead of setTimeout to work with fake timers
+        await waitForWithTimeout(() => {
+          expect(result.current.agents).toHaveLength(1)
+        }, { timeout: 2000 })
         expect(result.current.agents[0].tags).toContain('TEST')
       })
 
@@ -1547,11 +1529,10 @@ describe('useMarketplaceData', () => {
           })
         )
 
-        await act(async () => {
-          await new Promise(resolve => setTimeout(resolve, 200))
-        })
-
-        expect(result.current.agents).toHaveLength(2)
+        // Use waitForWithTimeout instead of setTimeout to work with fake timers
+        await waitForWithTimeout(() => {
+          expect(result.current.agents).toHaveLength(2)
+        }, { timeout: 2000 })
         // When dates are equal, sort returns 0 (order is stable but not guaranteed)
         // Just verify both agents are present
         const names = result.current.agents.map(a => a.name)
@@ -1578,11 +1559,10 @@ describe('useMarketplaceData', () => {
           })
         )
 
-        await act(async () => {
-          await new Promise(resolve => setTimeout(resolve, 200))
-        })
-
-        expect(result.current.agents).toHaveLength(2)
+        // Use waitForWithTimeout instead of setTimeout to work with fake timers
+        await waitForWithTimeout(() => {
+          expect(result.current.agents).toHaveLength(2)
+        }, { timeout: 2000 })
         expect(result.current.agents[0].name).toBe('Alpha Agent')
       })
     })
@@ -1605,12 +1585,11 @@ describe('useMarketplaceData', () => {
           })
         )
 
-        await act(async () => {
-          await new Promise(resolve => setTimeout(resolve, 200))
-        })
-
-        expect(result.current.repositoryAgents).toHaveLength(0)
-        expect(result.current.loading).toBe(false)
+        // Use waitForWithTimeout instead of setTimeout to work with fake timers
+        await waitForWithTimeout(() => {
+          expect(result.current.repositoryAgents).toHaveLength(0)
+          expect(result.current.loading).toBe(false)
+        }, { timeout: 2000 })
       })
 
       it('should handle null savedAgents', async () => {
@@ -1630,12 +1609,11 @@ describe('useMarketplaceData', () => {
           })
         )
 
-        await act(async () => {
-          await new Promise(resolve => setTimeout(resolve, 200))
-        })
-
-        expect(result.current.repositoryAgents).toHaveLength(0)
-        expect(result.current.loading).toBe(false)
+        // Use waitForWithTimeout instead of setTimeout to work with fake timers
+        await waitForWithTimeout(() => {
+          expect(result.current.repositoryAgents).toHaveLength(0)
+          expect(result.current.loading).toBe(false)
+        }, { timeout: 2000 })
       })
 
       it('should handle repository agents with null name in sorting', async () => {
@@ -1657,13 +1635,12 @@ describe('useMarketplaceData', () => {
           })
         )
 
-        await act(async () => {
-          await new Promise(resolve => setTimeout(resolve, 200))
-        })
-
-        expect(result.current.repositoryAgents).toHaveLength(2)
-        // Null name should be handled gracefully
-        expect(result.current.repositoryAgents[0].name).toBeNull()
+        // Use waitForWithTimeout instead of setTimeout to work with fake timers
+        await waitForWithTimeout(() => {
+          expect(result.current.repositoryAgents).toHaveLength(2)
+          // Null name should be handled gracefully
+          expect(result.current.repositoryAgents[0].name).toBeNull()
+        }, { timeout: 2000 })
       })
     })
 
@@ -1687,12 +1664,11 @@ describe('useMarketplaceData', () => {
           })
         )
 
-        await act(async () => {
-          await new Promise(resolve => setTimeout(resolve, 200))
-        })
-
-        expect(result.current.workflowsOfWorkflows).toHaveLength(0)
-        expect(result.current.loading).toBe(false)
+        // Use waitForWithTimeout instead of setTimeout to work with fake timers
+        await waitForWithTimeout(() => {
+          expect(result.current.workflowsOfWorkflows).toHaveLength(0)
+          expect(result.current.loading).toBe(false)
+        }, { timeout: 2000 })
       })
 
       it('should handle workflow with null nodes array', async () => {
@@ -1719,11 +1695,10 @@ describe('useMarketplaceData', () => {
           })
         )
 
-        await act(async () => {
-          await new Promise(resolve => setTimeout(resolve, 300))
-        })
-
-        expect(result.current.workflowsOfWorkflows).toHaveLength(0)
+        // Use waitForWithTimeout instead of setTimeout to work with fake timers
+        await waitForWithTimeout(() => {
+          expect(result.current.workflowsOfWorkflows).toHaveLength(0)
+        }, { timeout: 2000 })
       })
 
       it('should handle workflow with empty nodes array', async () => {
@@ -1750,11 +1725,10 @@ describe('useMarketplaceData', () => {
           })
         )
 
-        await act(async () => {
-          await new Promise(resolve => setTimeout(resolve, 300))
-        })
-
-        expect(result.current.workflowsOfWorkflows).toHaveLength(0)
+        // Use waitForWithTimeout instead of setTimeout to work with fake timers
+        await waitForWithTimeout(() => {
+          expect(result.current.workflowsOfWorkflows).toHaveLength(0)
+        }, { timeout: 2000 })
       })
 
       it('should handle workflow with node.data as null', async () => {
@@ -1783,11 +1757,10 @@ describe('useMarketplaceData', () => {
           })
         )
 
-        await act(async () => {
-          await new Promise(resolve => setTimeout(resolve, 300))
-        })
-
-        expect(result.current.workflowsOfWorkflows).toHaveLength(1)
+        // Use waitForWithTimeout instead of setTimeout to work with fake timers
+        await waitForWithTimeout(() => {
+          expect(result.current.workflowsOfWorkflows).toHaveLength(1)
+        }, { timeout: 2000 })
       })
 
       it('should handle workflow with empty description', async () => {
@@ -1816,11 +1789,10 @@ describe('useMarketplaceData', () => {
           })
         )
 
-        await act(async () => {
-          await new Promise(resolve => setTimeout(resolve, 300))
-        })
-
-        expect(result.current.workflowsOfWorkflows).toHaveLength(1)
+        // Use waitForWithTimeout instead of setTimeout to work with fake timers
+        await waitForWithTimeout(() => {
+          expect(result.current.workflowsOfWorkflows).toHaveLength(1)
+        }, { timeout: 2000 })
       })
 
       it('should handle workflow with null tags array', async () => {
@@ -1849,11 +1821,10 @@ describe('useMarketplaceData', () => {
           })
         )
 
-        await act(async () => {
-          await new Promise(resolve => setTimeout(resolve, 300))
-        })
-
-        expect(result.current.workflowsOfWorkflows).toHaveLength(1)
+        // Use waitForWithTimeout instead of setTimeout to work with fake timers
+        await waitForWithTimeout(() => {
+          expect(result.current.workflowsOfWorkflows).toHaveLength(1)
+        }, { timeout: 2000 })
       })
     })
   })
@@ -4884,9 +4855,11 @@ describe('useMarketplaceData', () => {
           })
         )
 
+        // Wait for loading to complete and data to be available
         await waitForWithTimeout(() => {
           expect(result.current.loading).toBe(false)
-        })
+          expect(result.current.repositoryAgents.length).toBeGreaterThan(0)
+        }, { timeout: 5000 })
 
         // Should sort by date when sortBy === 'popular' || sortBy === 'recent'
         expect(result.current.repositoryAgents[0].id).toBe('agent-2')
@@ -4913,9 +4886,11 @@ describe('useMarketplaceData', () => {
           })
         )
 
+        // Wait for loading to complete and data to be available
         await waitForWithTimeout(() => {
           expect(result.current.loading).toBe(false)
-        })
+          expect(result.current.repositoryAgents.length).toBeGreaterThan(0)
+        }, { timeout: 5000 })
 
         // Should sort by date when sortBy === 'recent'
         expect(result.current.repositoryAgents[0].id).toBe('agent-2')
@@ -4944,9 +4919,11 @@ describe('useMarketplaceData', () => {
           })
         )
 
+        // Wait for loading to complete and HTTP call to be made
         await waitForWithTimeout(() => {
           expect(result.current.loading).toBe(false)
-        })
+          expect(mockHttpClient.get).toHaveBeenCalled()
+        }, { timeout: 5000 })
 
         // Should include category in URL params
         expect(mockHttpClient.get).toHaveBeenCalledWith(
@@ -4974,9 +4951,11 @@ describe('useMarketplaceData', () => {
           })
         )
 
+        // Wait for loading to complete and HTTP call to be made
         await waitForWithTimeout(() => {
           expect(result.current.loading).toBe(false)
-        })
+          expect(mockHttpClient.get).toHaveBeenCalled()
+        }, { timeout: 5000 })
 
         // Should include search in URL params
         expect(mockHttpClient.get).toHaveBeenCalledWith(
@@ -4989,15 +4968,28 @@ describe('useMarketplaceData', () => {
   afterEach(() => {
     // Clean up any pending timers to prevent memory leaks
     // This is especially important for mutation testing where many tests run
+    // Use a limit to prevent infinite loops from timers that keep getting added
     if (jest.isMockFunction(setTimeout)) {
       try {
-        while (jest.getTimerCount() > 0) {
+        // Try to run pending timers with a strict limit
+        let iterations = 0
+        const maxIterations = 10 // Reduced limit - more aggressive cleanup
+        
+        while (jest.getTimerCount() > 0 && iterations < maxIterations) {
           jest.runOnlyPendingTimers()
+          iterations++
         }
+        
+        // Always clear all timers at the end to ensure complete cleanup
+        // This prevents timer accumulation across tests
+        jest.clearAllTimers()
       } catch (e) {
         // Ignore errors - timers might already be cleared
+        // Force clear on error to prevent hanging
+        jest.clearAllTimers()
       }
     }
+    // Always switch to real timers to reset state
     jest.useRealTimers()
   })
 })

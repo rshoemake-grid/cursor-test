@@ -11,7 +11,10 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
-    "test:mutation": "stryker run --dryRunTimeoutMinutes 120"
+    "test:mutation": "stryker run --dryRunTimeoutMinutes 120",
+    "test:quick": "./scripts/test-quick.sh",
+    "test:full": "./scripts/test-full.sh",
+    "test:watch-script": "./scripts/test-watch.sh"
   },
   "dependencies": {
     "@xyflow/react": "^12.0.0",

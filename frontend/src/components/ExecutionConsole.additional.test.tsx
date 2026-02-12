@@ -91,7 +91,7 @@ describe('ExecutionConsole - Additional Coverage', () => {
 
       // Console starts collapsed, need to expand it first
       // Look for buttons - the expand button should be one that's not a tab
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         const buttons = screen.getAllByRole('button')
         expect(buttons.length).toBeGreaterThan(0)
       })
@@ -114,30 +114,30 @@ describe('ExecutionConsole - Additional Coverage', () => {
       if (expandButton) {
         fireEvent.click(expandButton)
         // Wait for console to expand
-        await waitFor(() => {
+        await waitForWithTimeout(() => {
           // Should see either chat content or tab buttons
           const chatVisible = screen.queryByTestId('workflow-chat')
           const chatTab = screen.queryByText('Chat')
           expect(chatVisible || chatTab).toBeTruthy()
-        }, { timeout: 2000 })
+        }, 2000)
       }
 
       // Now find and click execution tab
       const executionTabText = mockExecution.id.slice(0, 8)
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         const executionTabs = screen.queryAllByText(executionTabText)
         if (executionTabs.length > 0) {
           fireEvent.click(executionTabs[0])
         }
-      }, { timeout: 2000 })
+      }, 2000)
       
       // After clicking execution tab, should see execution logs
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         const logMessage = screen.queryByText('Test log message')
         // If log message not found, at least verify we're not on chat tab
         const chatVisible = screen.queryByTestId('workflow-chat')
         expect(logMessage || !chatVisible).toBeTruthy()
-      }, { timeout: 2000 })
+      }, 2000)
     })
 
     it('should render chat tab by default', () => {
@@ -247,9 +247,9 @@ describe('ExecutionConsole - Additional Coverage', () => {
       )
 
       // Wait for component to render and WebSocket hook to be called
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(mockUseWebSocket).toHaveBeenCalled()
-      }, { timeout: 1000 })
+      })
 
       // Verify that useWebSocket was called with onStatus callback
       const useWebSocketCall = mockUseWebSocket.mock.calls[0]
@@ -280,13 +280,22 @@ describe('ExecutionConsole - Additional Coverage', () => {
         // The key behavior is that the component passes the callback to useWebSocket, which we verify above.
         // If the callback is called, verify the arguments; if not, that's acceptable under Stryker instrumentation.
         // Use waitForWithTimeout to handle fake timers correctly
-        const callbackWasCalled = await waitForWithTimeout(
-          async () => {
-            // Check if callback was called without throwing
-            return mockOnExecutionStatusUpdate.mock.calls.length > 0
-          },
-          2000
-        ).then(() => true).catch(() => false)
+        // waitForWithTimeout expects callback to throw if condition not met
+        let callbackWasCalled = false
+        try {
+          await waitForWithTimeout(
+            () => {
+              // Throw if callback was not called
+              if (mockOnExecutionStatusUpdate.mock.calls.length === 0) {
+                throw new Error('Callback not called yet')
+              }
+            },
+            2000
+          )
+          callbackWasCalled = true
+        } catch {
+          callbackWasCalled = false
+        }
         
         if (callbackWasCalled && mockOnExecutionStatusUpdate.mock.calls.length > 0) {
           // Verify the call arguments if callback was invoked
@@ -348,9 +357,9 @@ describe('ExecutionConsole - Additional Coverage', () => {
       )
 
       // Wait for component to render and WebSocket hook to be called
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(mockUseWebSocket).toHaveBeenCalled()
-      }, { timeout: 1000 })
+      })
 
       // Verify that useWebSocket was called with onLog callback
       const useWebSocketCall = mockUseWebSocket.mock.calls[0]
@@ -384,13 +393,22 @@ describe('ExecutionConsole - Additional Coverage', () => {
         // so we verify the callback was set up correctly rather than requiring it to be called.
         // The key behavior is that the component passes the callback to useWebSocket, which we verify above.
         // If the callback is called, verify the arguments; if not, that's acceptable under Stryker instrumentation.
-        const callbackWasCalled = await waitFor(
-          async () => {
-            // Check if callback was called without throwing
-            return mockOnExecutionLogUpdate.mock.calls.length > 0
-          },
-          { timeout: 2000 }
-        ).then(() => true).catch(() => false)
+        // Use waitForWithTimeout to handle fake timers correctly
+        let callbackWasCalled = false
+        try {
+          await waitForWithTimeout(
+            () => {
+              // Throw if callback was not called
+              if (mockOnExecutionLogUpdate.mock.calls.length === 0) {
+                throw new Error('Callback not called yet')
+              }
+            },
+            2000
+          )
+          callbackWasCalled = true
+        } catch {
+          callbackWasCalled = false
+        }
         
         if (callbackWasCalled && mockOnExecutionLogUpdate.mock.calls.length > 0) {
           // Verify the call arguments if callback was invoked
@@ -440,9 +458,9 @@ describe('ExecutionConsole - Additional Coverage', () => {
       )
 
       // Wait for component to render and WebSocket hook to be called
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(mockUseWebSocket).toHaveBeenCalled()
-      }, { timeout: 1000 })
+      })
 
       // Verify that useWebSocket was called with onNodeUpdate callback
       const useWebSocketCall = mockUseWebSocket.mock.calls[0]
@@ -462,7 +480,7 @@ describe('ExecutionConsole - Additional Coverage', () => {
       // causing the conditional check in ExecutionConsole.tsx line 95 to fail.
       // Make test resilient by verifying setup if callback wasn't called:
       try {
-        await waitFor(
+        await waitForWithTimeout(
           () => {
             expect(mockOnExecutionNodeUpdate).toHaveBeenCalledWith(
               'workflow-1',
@@ -471,7 +489,7 @@ describe('ExecutionConsole - Additional Coverage', () => {
               { status: 'running' }
             )
           },
-          { timeout: 2000 }
+          2000
         )
       } catch (error) {
         // Under Stryker instrumentation, the closure values in the callback might be evaluated differently.
@@ -501,9 +519,9 @@ describe('ExecutionConsole - Additional Coverage', () => {
       )
 
       // Wait for component to render and WebSocket hook to be called
-      await waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(mockUseWebSocket).toHaveBeenCalled()
-      }, { timeout: 1000 })
+      })
 
       // Verify that useWebSocket was called with onCompletion callback
       const useWebSocketCall = mockUseWebSocket.mock.calls[0]
@@ -525,13 +543,22 @@ describe('ExecutionConsole - Additional Coverage', () => {
         // causing them to behave differently. Make test resilient by verifying setup instead:
         // IMPORTANT: Under Stryker instrumentation, the conditional check may fail even with valid props,
         // so we verify the callback was set up correctly rather than requiring it to be called.
-        const callbackWasCalled = await waitFor(
-          async () => {
-            // Check if callback was called without throwing
-            return mockOnExecutionStatusUpdate.mock.calls.length > 0
-          },
-          { timeout: 2000 }
-        ).then(() => true).catch(() => false)
+        // Use waitForWithTimeout to handle fake timers correctly
+        let callbackWasCalled = false
+        try {
+          await waitForWithTimeout(
+            () => {
+              // Throw if callback was not called
+              if (mockOnExecutionStatusUpdate.mock.calls.length === 0) {
+                throw new Error('Callback not called yet')
+              }
+            },
+            2000
+          )
+          callbackWasCalled = true
+        } catch {
+          callbackWasCalled = false
+        }
         
         if (callbackWasCalled && mockOnExecutionStatusUpdate.mock.calls.length > 0) {
           // Verify the call arguments if callback was invoked
@@ -553,7 +580,7 @@ describe('ExecutionConsole - Additional Coverage', () => {
       }
     })
 
-    it('should handle WebSocket errors', () => {
+    it('should handle WebSocket errors', async () => {
       mockUseWebSocket.mockImplementation((options: any) => {
         setTimeout(() => {
           if (options.onError) {
@@ -572,7 +599,7 @@ describe('ExecutionConsole - Additional Coverage', () => {
         />
       )
 
-      waitFor(() => {
+      await waitForWithTimeout(() => {
         expect(mockOnExecutionStatusUpdate).toHaveBeenCalledWith(
           'workflow-1',
           'exec-123',
