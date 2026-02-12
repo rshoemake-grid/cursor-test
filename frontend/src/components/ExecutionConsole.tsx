@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useMemo } from 'react'
+import { useState, useRef, useEffect, useLayoutEffect, useMemo } from 'react'
 import { ChevronDown, ChevronUp, MessageSquare, Play, X } from 'lucide-react'
 import WorkflowChat from './WorkflowChat'
 // Domain-based imports - Phase 7
@@ -45,6 +45,15 @@ export default function ExecutionConsole({
   const startY = useRef(0)
   const startHeight = useRef(0)
   
+  // Refs for closure values to ensure they're always current under Stryker instrumentation
+  // This fixes the issue where closure values are evaluated as null/undefined when callbacks are invoked
+  // Initialize refs with current prop values so they're available immediately
+  const activeWorkflowIdRef = useRef<string | null>(activeWorkflowId)
+  const activeExecutionIdRef = useRef<string | null>(activeExecutionId)
+  const onExecutionStatusUpdateRef = useRef<((workflowId: string, executionId: string, status: 'running' | 'completed' | 'failed') => void) | undefined>(onExecutionStatusUpdate)
+  const onExecutionLogUpdateRef = useRef<((workflowId: string, executionId: string, log: any) => void) | undefined>(onExecutionLogUpdate)
+  const onExecutionNodeUpdateRef = useRef<((workflowId: string, executionId: string, nodeId: string, nodeState: any) => void) | undefined>(onExecutionNodeUpdate)
+  
   // Get all tabs: Chat + one per execution (memoized to prevent unnecessary re-renders)
   const allTabs = useMemo(() => [
     { id: 'chat', name: 'Chat', type: 'chat' as const },
@@ -72,43 +81,150 @@ export default function ExecutionConsole({
     return activeExecution?.status as 'running' | 'completed' | 'failed' | 'pending' | 'paused' | undefined
   }, [activeExecutionId, executions, activeExecution])
 
+  // Sync refs with props to ensure they're always current when callbacks are invoked
+  // This fixes Stryker instrumentation issues where closure values may be stale
+  // CRITICAL: Update refs synchronously on every render BEFORE useWebSocket is called
+  // This ensures refs are current when callbacks are created during render
+  // (useEffect runs after render, but we need refs current during render for callbacks)
+  activeWorkflowIdRef.current = activeWorkflowId
+  activeExecutionIdRef.current = activeExecutionId
+  onExecutionStatusUpdateRef.current = onExecutionStatusUpdate
+  onExecutionLogUpdateRef.current = onExecutionLogUpdate
+  onExecutionNodeUpdateRef.current = onExecutionNodeUpdate
+  
+  // Also sync in useLayoutEffect to ensure refs are set before browser paint
+  // This is critical for tests with fake timers where React's render cycle may differ
+  useLayoutEffect(() => {
+    activeWorkflowIdRef.current = activeWorkflowId
+    activeExecutionIdRef.current = activeExecutionId
+    onExecutionStatusUpdateRef.current = onExecutionStatusUpdate
+    onExecutionLogUpdateRef.current = onExecutionLogUpdate
+    onExecutionNodeUpdateRef.current = onExecutionNodeUpdate
+  }, [activeWorkflowId, activeExecutionId, onExecutionStatusUpdate, onExecutionLogUpdate, onExecutionNodeUpdate])
+  
+  // Also sync in useEffect to handle prop changes (defensive programming)
+  useEffect(() => {
+    activeWorkflowIdRef.current = activeWorkflowId
+  }, [activeWorkflowId])
+
+  useEffect(() => {
+    activeExecutionIdRef.current = activeExecutionId
+  }, [activeExecutionId])
+
+  useEffect(() => {
+    onExecutionStatusUpdateRef.current = onExecutionStatusUpdate
+  }, [onExecutionStatusUpdate])
+
+  useEffect(() => {
+    onExecutionLogUpdateRef.current = onExecutionLogUpdate
+  }, [onExecutionLogUpdate])
+
+  useEffect(() => {
+    onExecutionNodeUpdateRef.current = onExecutionNodeUpdate
+  }, [onExecutionNodeUpdate])
+
   // Set up WebSocket connection for active execution
   useWebSocket({
     executionId: activeExecutionId,
     executionStatus: activeExecutionStatus,
     onLog: (log) => {
-      // Explicit checks to prevent mutation survivors
-      if ((activeWorkflowId !== null && activeWorkflowId !== undefined && activeWorkflowId !== '') && (activeExecutionId !== null && activeExecutionId !== undefined && activeExecutionId !== '') && (onExecutionLogUpdate !== null && onExecutionLogUpdate !== undefined)) {
+      // Use refs instead of closure values to ensure values are always current under Stryker instrumentation
+      // Refs are updated synchronously on every render, so they're always current when callback is invoked
+      const workflowId = activeWorkflowIdRef.current
+      const executionId = activeExecutionIdRef.current
+      const callback = onExecutionLogUpdateRef.current
+      // Simplified check - refs are guaranteed to be set (initialized with prop values and synced on render)
+      if (workflowId && executionId && callback) {
         logger.debug('[ExecutionConsole] Received log via WebSocket:', log)
-        onExecutionLogUpdate(activeWorkflowId, activeExecutionId, log)
+        callback(workflowId, executionId, log)
       }
     },
     onStatus: (status) => {
-      // Explicit checks to prevent mutation survivors
-      if ((activeWorkflowId !== null && activeWorkflowId !== undefined && activeWorkflowId !== '') && (activeExecutionId !== null && activeExecutionId !== undefined && activeExecutionId !== '') && (onExecutionStatusUpdate !== null && onExecutionStatusUpdate !== undefined)) {
+      // Use refs instead of closure values to ensure values are always current under Stryker instrumentation
+      // Refs are updated synchronously on every render, so they're always current when callback is invoked
+      // Read refs fresh on each callback invocation to ensure we get the latest values
+      const workflowId = activeWorkflowIdRef.current
+      const executionId = activeExecutionIdRef.current
+      const callback = onExecutionStatusUpdateRef.current
+      // Explicit checks to handle Stryker instrumentation edge cases
+      // Check for null/undefined explicitly, and also check for empty strings
+      // Under Stryker, refs may be wrapped, so we need explicit checks
+      const hasWorkflowId = workflowId !== null && workflowId !== undefined && workflowId !== ''
+      const hasExecutionId = executionId !== null && executionId !== undefined && executionId !== ''
+      const hasCallback = callback !== null && callback !== undefined && typeof callback === 'function'
+      
+      // Debug logging to understand why conditional might fail in tests
+      if (!hasWorkflowId || !hasExecutionId || !hasCallback) {
+        logger.debug('[ExecutionConsole] onStatus callback conditional check failed:', {
+          workflowId,
+          executionId,
+          callback: callback ? 'function' : callback,
+          hasWorkflowId,
+          hasExecutionId,
+          hasCallback,
+          workflowIdType: typeof workflowId,
+          executionIdType: typeof executionId,
+          callbackType: typeof callback
+        })
+      }
+      
+      if (hasWorkflowId && hasExecutionId && hasCallback) {
         logger.debug('[ExecutionConsole] Received status update via WebSocket:', status)
-        onExecutionStatusUpdate(activeWorkflowId, activeExecutionId, status as 'running' | 'completed' | 'failed')
+        // Use non-null assertion since we've already checked above
+        callback(workflowId!, executionId!, status as 'running' | 'completed' | 'failed')
+      }
+      if (!hasWorkflowId || !hasExecutionId || !hasCallback) {
+        logger.debug('[ExecutionConsole] Skipping status update - missing required values:', {
+          hasWorkflowId,
+          hasExecutionId,
+          hasCallback,
+          workflowId,
+          executionId,
+          callbackType: typeof callback,
+          callbackValue: callback
+        })
+      }
+      
+      if (hasWorkflowId && hasExecutionId && hasCallback) {
+        logger.debug('[ExecutionConsole] Received status update via WebSocket:', status)
+        // Use non-null assertion since we've already checked above
+        callback(workflowId!, executionId!, status as 'running' | 'completed' | 'failed')
       }
     },
     onNodeUpdate: (nodeId, nodeState) => {
-      // Explicit checks to prevent mutation survivors
-      if ((activeWorkflowId !== null && activeWorkflowId !== undefined && activeWorkflowId !== '') && (activeExecutionId !== null && activeExecutionId !== undefined && activeExecutionId !== '') && (onExecutionNodeUpdate !== null && onExecutionNodeUpdate !== undefined)) {
+      // Use refs instead of closure values to ensure values are always current under Stryker instrumentation
+      // Refs are updated synchronously on every render, so they're always current when callback is invoked
+      const workflowId = activeWorkflowIdRef.current
+      const executionId = activeExecutionIdRef.current
+      const callback = onExecutionNodeUpdateRef.current
+      // Simplified check - refs are guaranteed to be set (initialized with prop values and synced on render)
+      if (workflowId && executionId && callback) {
         logger.debug('[ExecutionConsole] Received node update via WebSocket:', nodeId, nodeState)
-        onExecutionNodeUpdate(activeWorkflowId, activeExecutionId, nodeId, nodeState)
+        callback(workflowId, executionId, nodeId, nodeState)
       }
     },
     onCompletion: (result) => {
-      // Explicit checks to prevent mutation survivors
-      if ((activeWorkflowId !== null && activeWorkflowId !== undefined && activeWorkflowId !== '') && (activeExecutionId !== null && activeExecutionId !== undefined && activeExecutionId !== '') && (onExecutionStatusUpdate !== null && onExecutionStatusUpdate !== undefined)) {
+      // Use refs instead of closure values to ensure values are always current under Stryker instrumentation
+      // Refs are updated synchronously on every render, so they're always current when callback is invoked
+      const workflowId = activeWorkflowIdRef.current
+      const executionId = activeExecutionIdRef.current
+      const callback = onExecutionStatusUpdateRef.current
+      // Simplified check - refs are guaranteed to be set (initialized with prop values and synced on render)
+      if (workflowId && executionId && callback) {
         logger.debug('[ExecutionConsole] Received completion via WebSocket:', result)
-        onExecutionStatusUpdate(activeWorkflowId, activeExecutionId, 'completed')
+        callback(workflowId, executionId, 'completed')
       }
     },
     onError: (error) => {
       logger.error('[ExecutionConsole] WebSocket error:', error)
-      // Explicit checks to prevent mutation survivors
-      if ((activeWorkflowId !== null && activeWorkflowId !== undefined && activeWorkflowId !== '') && (activeExecutionId !== null && activeExecutionId !== undefined && activeExecutionId !== '') && (onExecutionStatusUpdate !== null && onExecutionStatusUpdate !== undefined)) {
-        onExecutionStatusUpdate(activeWorkflowId, activeExecutionId, 'failed')
+      // Use refs instead of closure values to ensure values are always current under Stryker instrumentation
+      // Refs are updated synchronously on every render, so they're always current when callback is invoked
+      const workflowId = activeWorkflowIdRef.current
+      const executionId = activeExecutionIdRef.current
+      const callback = onExecutionStatusUpdateRef.current
+      // Simplified check - refs are guaranteed to be set (initialized with prop values and synced on render)
+      if (workflowId && executionId && callback) {
+        callback(workflowId, executionId, 'failed')
       }
     }
   })
