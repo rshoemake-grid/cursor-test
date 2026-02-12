@@ -8,6 +8,10 @@
 
 import { showConfirm } from './confirm'
 import { defaultAdapters } from '../types/adapters'
+import { waitForWithTimeoutFakeTimers } from '../test/utils/waitForWithTimeout'
+
+// Use fake timers version since this test suite uses jest.useFakeTimers()
+const waitForWithTimeout = waitForWithTimeoutFakeTimers
 
 // Mock defaultAdapters
 jest.mock('../types/adapters', () => ({
@@ -131,12 +135,11 @@ describe('showConfirm - Enhanced Mutation Killers', () => {
           documentAdapter: mockDocumentAdapter, // Truthy
         })
 
-        // Promise executor runs synchronously - wait a microtask
-        await new Promise(resolve => setTimeout(resolve, 0))
-        
-        // Should create elements (documentAdapter is truthy)
-        expect(mockDocumentAdapter.createElement).toHaveBeenCalled()
-        expect(mockDocumentAdapter.body.appendChild).toHaveBeenCalled()
+        // Promise executor runs synchronously - wait for elements to be created
+        await waitForWithTimeout(() => {
+          expect(mockDocumentAdapter.createElement).toHaveBeenCalled()
+          expect(mockDocumentAdapter.body.appendChild).toHaveBeenCalled()
+        }, { timeout: 2000 })
 
         // Clean up - click cancel
         const overlay = mockDocumentAdapter.body.appendChild.mock.calls[0]?.[0]
@@ -165,12 +168,10 @@ describe('showConfirm - Enhanced Mutation Killers', () => {
           documentAdapter: mockDocumentAdapter,
         })
 
-        // Promise executor runs synchronously - elements are created immediately
-        // Wait a microtask to ensure all synchronous code completes
-        await new Promise(resolve => setTimeout(resolve, 0))
-
-        // Verify getElementById was called to check for existing styles
-        expect(mockDocumentAdapter.getElementById).toHaveBeenCalledWith('confirm-dialog-styles')
+        // Promise executor runs synchronously - wait for getElementById to be called
+        await waitForWithTimeout(() => {
+          expect(mockDocumentAdapter.getElementById).toHaveBeenCalledWith('confirm-dialog-styles')
+        }, { timeout: 2000 })
         
         // Should create style element (element not found)
         // The style element is created after overlay and dialog divs
@@ -220,11 +221,10 @@ describe('showConfirm - Enhanced Mutation Killers', () => {
           documentAdapter: mockDocumentAdapter,
         })
 
-        // Promise executor runs synchronously
-        await new Promise(resolve => setTimeout(resolve, 0))
-
-        // Should check for existing style element first
-        expect(mockDocumentAdapter.getElementById).toHaveBeenCalledWith('confirm-dialog-styles')
+        // Promise executor runs synchronously - wait for getElementById to be called
+        await waitForWithTimeout(() => {
+          expect(mockDocumentAdapter.getElementById).toHaveBeenCalledWith('confirm-dialog-styles')
+        }, { timeout: 2000 })
         
         // Should not create another style element (element exists)
         // Count style elements created during showConfirm (after clearing mocks)
@@ -259,16 +259,14 @@ describe('showConfirm - Enhanced Mutation Killers', () => {
           documentAdapter: mockDocumentAdapter,
         })
 
-        // Promise executor runs synchronously - all DOM operations happen immediately
-        // Wait a microtask to ensure all synchronous code completes
-        await new Promise(resolve => setTimeout(resolve, 0))
-
-        // Verify body.appendChild was called (overlay is appended to body)
-        // Check if it was called (might be from previous test, but that's OK)
-        const appendCalls = mockDocumentAdapter.body.appendChild.mock.calls
-        expect(appendCalls.length).toBeGreaterThan(0)
+        // Promise executor runs synchronously - wait for body.appendChild to be called
+        await waitForWithTimeout(() => {
+          const appendCalls = mockDocumentAdapter.body.appendChild.mock.calls
+          expect(appendCalls.length).toBeGreaterThan(0)
+        }, { timeout: 2000 })
         
         // Get overlay from the most recent call (last call)
+        const appendCalls = mockDocumentAdapter.body.appendChild.mock.calls
         const overlay = appendCalls[appendCalls.length - 1]?.[0]
         expect(overlay).toBeDefined()
         expect(overlay.tagName).toBe('DIV')
@@ -293,16 +291,22 @@ describe('showConfirm - Enhanced Mutation Killers', () => {
           documentAdapter: mockDocumentAdapter,
         })
 
-        // Promise executor runs synchronously, wait a tick for mocks
-        await new Promise(resolve => setTimeout(resolve, 0))
+        // Promise executor runs synchronously - wait for overlay and dialog to be created
+        await waitForWithTimeout(() => {
+          const overlay = mockDocumentAdapter.body.appendChild.mock.calls[0]?.[0]
+          expect(overlay).toBeDefined()
+          const dialogCall = overlay.appendChild.mock.calls.find(
+            (call: any[]) => call[0]?.tagName === 'DIV' && call[0] !== overlay
+          )
+          const dialog = dialogCall?.[0]
+          expect(dialog).toBeDefined()
+        }, { timeout: 2000 })
 
         const overlay = mockDocumentAdapter.body.appendChild.mock.calls[0]?.[0]
-        expect(overlay).toBeDefined()
         const dialogCall = overlay.appendChild.mock.calls.find(
           (call: any[]) => call[0]?.tagName === 'DIV' && call[0] !== overlay
         )
         const dialog = dialogCall?.[0]
-        expect(dialog).toBeDefined()
 
         // Simulate click on dialog (not overlay)
         if (overlay?.onclick) {
@@ -310,8 +314,10 @@ describe('showConfirm - Enhanced Mutation Killers', () => {
         }
 
         // Should not resolve yet (click was on dialog, not overlay)
-        // Wait a bit to see if it resolves
-        await new Promise(resolve => setTimeout(resolve, 50))
+        // Wait a bit to see if it resolves (use waitForWithTimeout for fake timers)
+        await waitForWithTimeout(() => {
+          // Promise should not have resolved yet
+        }, { timeout: 100 })
 
         // Clean up properly
         if (overlay?.onclick) {
@@ -330,11 +336,13 @@ describe('showConfirm - Enhanced Mutation Killers', () => {
           documentAdapter: mockDocumentAdapter,
         })
 
-        // Promise executor runs synchronously, wait a tick for mocks
-        await new Promise(resolve => setTimeout(resolve, 0))
+        // Promise executor runs synchronously - wait for overlay to be created
+        await waitForWithTimeout(() => {
+          const overlay = mockDocumentAdapter.body.appendChild.mock.calls[0]?.[0]
+          expect(overlay).toBeDefined()
+        }, { timeout: 2000 })
 
         const overlay = mockDocumentAdapter.body.appendChild.mock.calls[0]?.[0]
-        expect(overlay).toBeDefined()
 
         // Simulate click with null target
         if (overlay?.onclick) {
@@ -342,7 +350,9 @@ describe('showConfirm - Enhanced Mutation Killers', () => {
         }
 
         // Should not resolve (target !== overlay)
-        await new Promise(resolve => setTimeout(resolve, 50))
+        await waitForWithTimeout(() => {
+          // Promise should not have resolved yet
+        }, { timeout: 100 })
 
         // Clean up
         if (overlay?.onclick) {
@@ -365,12 +375,14 @@ describe('showConfirm - Enhanced Mutation Killers', () => {
       })
 
       // Wait for promise executor to run (creates elements synchronously)
-      await new Promise(resolve => setTimeout(resolve, 50))
+      await waitForWithTimeout(() => {
+        const overlay = mockDocumentAdapter.body.appendChild.mock.calls[0]?.[0]
+        expect(overlay).toBeDefined()
+      }, { timeout: 2000 })
 
       // Access elements from the mock structure
       // The overlay is appended to body
       const overlay = mockDocumentAdapter.body.appendChild.mock.calls[0]?.[0]
-      expect(overlay).toBeDefined()
       
       // Dialog is appended to overlay
       const dialogCall = overlay.appendChild.mock.calls.find(
@@ -412,10 +424,12 @@ describe('showConfirm - Enhanced Mutation Killers', () => {
       })
 
       // Wait for promise executor to run (creates elements synchronously)
-      await new Promise(resolve => setTimeout(resolve, 50))
+      await waitForWithTimeout(() => {
+        const overlay = mockDocumentAdapter.body.appendChild.mock.calls[0]?.[0]
+        expect(overlay).toBeDefined()
+      }, { timeout: 2000 })
 
       const overlay = mockDocumentAdapter.body.appendChild.mock.calls[0]?.[0]
-      expect(overlay).toBeDefined()
       
       // Dialog is appended to overlay
       const dialogCall = overlay.appendChild.mock.calls.find(
@@ -472,16 +486,26 @@ describe('showConfirm - Enhanced Mutation Killers', () => {
         documentAdapter: mockDocumentAdapter,
       })
 
-      // Promise executor runs synchronously, wait a tick for mocks
-      await new Promise(resolve => setTimeout(resolve, 0))
+      // Promise executor runs synchronously - wait for overlay, dialog, and title to be created
+      await waitForWithTimeout(() => {
+        const overlay = mockDocumentAdapter.body.appendChild.mock.calls[0]?.[0]
+        expect(overlay).toBeDefined()
+        const dialogCall = overlay.appendChild.mock.calls.find(
+          (call: any[]) => call[0]?.tagName === 'DIV' && call[0] !== overlay
+        )
+        const dialog = dialogCall?.[0]
+        expect(dialog).toBeDefined()
+        const titleEl = dialog.appendChild.mock.calls.find(
+          (call: any[]) => call[0]?.tagName === 'H3'
+        )
+        expect(titleEl).toBeDefined()
+      }, { timeout: 2000 })
 
       const overlay = mockDocumentAdapter.body.appendChild.mock.calls[0]?.[0]
-      expect(overlay).toBeDefined()
       const dialogCall = overlay.appendChild.mock.calls.find(
         (call: any[]) => call[0]?.tagName === 'DIV' && call[0] !== overlay
       )
       const dialog = dialogCall?.[0]
-      expect(dialog).toBeDefined()
       const titleEl = dialog.appendChild.mock.calls.find(
         (call: any[]) => call[0]?.tagName === 'H3'
       )?.[0]
@@ -506,11 +530,21 @@ describe('showConfirm - Enhanced Mutation Killers', () => {
         documentAdapter: mockDocumentAdapter,
       })
 
-      // Promise executor runs synchronously, wait a tick for mocks
-      await new Promise(resolve => setTimeout(resolve, 0))
+      // Promise executor runs synchronously - wait for overlay, dialog, buttonsContainer, and confirmBtn to be created
+      await waitForWithTimeout(() => {
+        const overlay = mockDocumentAdapter.body.appendChild.mock.calls[0]?.[0]
+        expect(overlay).toBeDefined()
+        const dialog = overlay?.appendChild?.mock?.calls?.[0]?.[0]
+        expect(dialog).toBeDefined()
+        const buttonsContainer = dialog?.appendChild?.mock?.calls?.find(
+          (call: any[]) => call[0]?.tagName === 'DIV'
+        )?.[0]
+        expect(buttonsContainer).toBeDefined()
+        const confirmBtn = buttonsContainer?.appendChild?.mock?.calls?.slice(-1)?.[0]?.[0]
+        expect(confirmBtn).toBeDefined()
+      }, { timeout: 2000 })
 
       const overlay = mockDocumentAdapter.body.appendChild.mock.calls[0]?.[0]
-      expect(overlay).toBeDefined()
       const dialog = overlay?.appendChild?.mock?.calls?.[0]?.[0]
       const buttonsContainer = dialog?.appendChild?.mock?.calls?.find(
         (call: any[]) => call[0]?.tagName === 'DIV'
@@ -531,15 +565,28 @@ describe('showConfirm - Enhanced Mutation Killers', () => {
 
   afterEach(() => {
     // Clean up any pending timers to prevent memory leaks
+    // Use a limit to prevent infinite loops from timers that keep getting added
     if (jest.isMockFunction(setTimeout)) {
       try {
-        while (jest.getTimerCount() > 0) {
+        // Try to run pending timers with a strict limit
+        let iterations = 0
+        const maxIterations = 10 // Reduced limit - more aggressive cleanup
+        
+        while (jest.getTimerCount() > 0 && iterations < maxIterations) {
           jest.runOnlyPendingTimers()
+          iterations++
         }
+        
+        // Always clear all timers at the end to ensure complete cleanup
+        // This prevents timer accumulation across tests
+        jest.clearAllTimers()
       } catch (e) {
         // Ignore errors - timers might already be cleared
+        // Force clear on error to prevent hanging
+        jest.clearAllTimers()
       }
     }
+    // Always switch to real timers to reset state
     jest.useRealTimers()
   })
 })
