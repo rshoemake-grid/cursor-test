@@ -13,6 +13,22 @@
  */
 
 /**
+ * Gets the type of the window object
+ * 
+ * This helper function eliminates DRY violation by centralizing the typeof window check.
+ * Both isBrowserEnvironment and isServerEnvironment use this to avoid duplication.
+ * 
+ * @returns The typeof window result ('undefined' | 'object')
+ * 
+ * @private
+ */
+function getWindowType(): 'undefined' | 'object' {
+  const windowType = typeof window
+  // TypeScript knows typeof window can only be 'undefined' or 'object' in practice
+  return windowType === 'undefined' ? 'undefined' : 'object'
+}
+
+/**
  * Checks if code is running in a browser environment
  * 
  * @returns True if running in browser (window is defined), false otherwise
@@ -26,7 +42,7 @@
  * ```
  */
 export function isBrowserEnvironment(): boolean {
-  return typeof window !== 'undefined'
+  return getWindowType() !== 'undefined'
 }
 
 /**
@@ -43,5 +59,5 @@ export function isBrowserEnvironment(): boolean {
  * ```
  */
 export function isServerEnvironment(): boolean {
-  return typeof window === 'undefined'
+  return getWindowType() === 'undefined'
 }
