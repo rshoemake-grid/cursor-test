@@ -25,11 +25,9 @@ export function useSyncState<T>(
   const setterRef = useRef(setter)
   const conditionRef = useRef(condition)
   
-  // Update refs when values change (use effect to avoid calling during render)
-  useEffect(() => {
-    setterRef.current = setter
-    conditionRef.current = condition
-  })
+  // Update refs when values change (safe to do during render)
+  setterRef.current = setter
+  conditionRef.current = condition
   
   useEffect(() => {
     if (conditionRef.current !== undefined) {
@@ -63,11 +61,9 @@ export function useSyncStateWithDefault<T>(
   const setterRef = useRef(setter)
   const defaultValueRef = useRef(defaultValue)
   
-  // Update refs when they change (use effect to avoid calling during render)
-  useEffect(() => {
-    setterRef.current = setter
-    defaultValueRef.current = defaultValue
-  })
+  // Update refs when they change (safe to do during render)
+  setterRef.current = setter
+  defaultValueRef.current = defaultValue
   
   useEffect(() => {
     if (source === null || source === undefined) {
