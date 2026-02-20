@@ -176,10 +176,10 @@ export function useMarketplaceData({
   const repositoryAgentsRefetchRef = useRef(repositoryAgentsFetching.refetch)
   
   // Update refs when refetch functions change (safe to do during render)
-  if (templatesFetching.refetch) templatesRefetchRef.current = templatesFetching.refetch
-  if (workflowsOfWorkflowsFetching.refetch) workflowsOfWorkflowsRefetchRef.current = workflowsOfWorkflowsFetching.refetch
-  if (agentsFetching.refetch) agentsRefetchRef.current = agentsFetching.refetch
-  if (repositoryAgentsFetching.refetch) repositoryAgentsRefetchRef.current = repositoryAgentsFetching.refetch
+  templatesRefetchRef.current = templatesFetching.refetch
+  workflowsOfWorkflowsRefetchRef.current = workflowsOfWorkflowsFetching.refetch
+  agentsRefetchRef.current = agentsFetching.refetch
+  repositoryAgentsRefetchRef.current = repositoryAgentsFetching.refetch
   
   useEffect(() => {
     if (shouldLoadTemplates(activeTab, repositorySubTab)) {
