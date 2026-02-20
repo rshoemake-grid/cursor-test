@@ -70,7 +70,15 @@ export class MockWebSocket {
     // Mock send
   }
 
-  close(code?: number, reason?: string) {
+  /**
+   * Closes the WebSocket connection.
+   * @param code - Optional close code (defaults to 1000)
+   * @param reason - Optional close reason string
+   * @param wasClean - Optional flag indicating if the connection closed cleanly.
+   *                   If not provided, will be calculated from code (code === 1000).
+   *                   Allows tests to control wasClean independently of code.
+   */
+  close(code?: number, reason?: string, wasClean?: boolean) {
     // Clear any pending timers to prevent memory leaks
     this.clearTimers()
     
@@ -81,10 +89,13 @@ export class MockWebSocket {
     const timer = setTimeout(() => {
       this.readyState = MockWebSocket.CLOSED
       if (this.onclose) {
-        // Use the provided code or default to 1000, and determine wasClean based on code
+        // Use the provided code or default to 1000
         const closeCode = code || 1000
-        const wasClean = closeCode === 1000
-        const event = new CloseEvent('close', { code: closeCode, reason: reason || '', wasClean })
+        // Use provided wasClean if available, otherwise calculate from code
+        const wasCleanValue = wasClean !== undefined 
+          ? wasClean 
+          : (closeCode === 1000)
+        const event = new CloseEvent('close', { code: closeCode, reason: reason || '', wasClean: wasCleanValue })
         this.onclose(event)
       }
       // Remove timer from array after execution
@@ -126,6 +137,14 @@ export class MockWebSocket {
     }
   }
 
+  /**
+   * Simulates a WebSocket close event for testing.
+   * Note: This method directly creates a CloseEvent and does not call close().
+   * This allows precise control over the close event properties for testing.
+   * @param code - Close code (defaults to 1000)
+   * @param reason - Close reason string (defaults to empty string)
+   * @param wasClean - Whether the connection closed cleanly (defaults to true)
+   */
   simulateClose(code: number = 1000, reason: string = '', wasClean: boolean = true) {
     // Clear timers when simulating close
     this.clearTimers()
@@ -133,6 +152,7 @@ export class MockWebSocket {
     if (this.onclose) {
       // Create event object that properly preserves reason
       // jsdom's CloseEvent constructor may not preserve reason correctly
+      // Note: This directly creates CloseEvent and does not call close() method
       const event = Object.create(CloseEvent.prototype)
       Object.defineProperties(event, {
         type: { value: 'close', enumerable: true },
