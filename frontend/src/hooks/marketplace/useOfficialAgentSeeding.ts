@@ -9,7 +9,6 @@ import { setLocalStorageItem } from '../storage'
 import { STORAGE_KEYS } from '../../config/constants'
 import type { StorageAdapter, HttpClient } from '../../types/adapters'
 import { logicalOr, logicalOrToEmptyObject, logicalOrToEmptyArray } from '../utils/logicalOr'
-import { nullishCoalesce } from '../utils/nullishCoalescing'
 
 interface Template {
   id: string

@@ -4,7 +4,6 @@
  */
 
 import { useCallback } from 'react'
-import { logger } from '../../utils/logger'
 import { getLocalStorageItem } from '../storage'
 import { STORAGE_KEYS } from '../../config/constants'
 import type { StorageAdapter } from '../../types/adapters'
