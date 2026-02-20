@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import type { StorageAdapter, HttpClient } from '../types/adapters';
 import { defaultAdapters } from '../types/adapters';
 import { logger } from '../utils/logger';
@@ -35,22 +35,24 @@ interface AuthProviderProps {
 }
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children, options }) => {
-  const {
-    localStorage: local = defaultAdapters.createLocalStorageAdapter(),
-    sessionStorage: session = defaultAdapters.createSessionStorageAdapter(),
-    httpClient = defaultAdapters.createHttpClient(),
-    apiBaseUrl = 'http://localhost:8000/api',
-    logger: injectedLogger = logger
-  } = options ?? {};
+  // Memoize adapters to prevent recreation on every render
+  const local = useMemo(() => options?.localStorage ?? defaultAdapters.createLocalStorageAdapter(), [options?.localStorage]);
+  const session = useMemo(() => options?.sessionStorage ?? defaultAdapters.createSessionStorageAdapter(), [options?.sessionStorage]);
+  const httpClient = useMemo(() => options?.httpClient ?? defaultAdapters.createHttpClient(), [options?.httpClient]);
+  const apiBaseUrl = options?.apiBaseUrl ?? 'http://localhost:8000/api';
+  const injectedLogger = options?.logger ?? logger;
 
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
+  const hasLoadedFromStorage = useRef(false);
 
   useEffect(() => {
-    // Load from storage on mount (check localStorage first for "remember me", then sessionStorage)
-    if (!local || !session) {
+    // Only load from storage once on mount
+    if (hasLoadedFromStorage.current || !local || !session) {
       return;
     }
+
+    hasLoadedFromStorage.current = true;
 
     const rememberMe = local.getItem('auth_remember_me') === 'true';
     const storage = rememberMe ? local : session;
@@ -71,7 +73,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children, options })
         setUser(null);
       }
     }
-  }, [local, session, injectedLogger]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Only run once on mount - use ref to prevent re-runs
 
   const login = useCallback(async (username: string, password: string, rememberMe: boolean = false) => {
     if (!local || !session) {

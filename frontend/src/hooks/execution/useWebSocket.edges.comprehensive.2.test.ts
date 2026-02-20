@@ -2297,6 +2297,7 @@ describe('useWebSocket - edges.comprehensive.2', () => {
       })
 
       it('should verify wasClean && code === 1000 pattern with different code', async () => {
+        // Fixed: Now uses improved timer handling under Stryker
         jest.clearAllMocks()
         wsInstances = []
         
