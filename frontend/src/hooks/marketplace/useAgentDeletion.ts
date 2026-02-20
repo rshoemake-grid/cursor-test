@@ -67,24 +67,7 @@ export function useAgentDeletion({
       }
     }
     
-    // Debug logging
-    // Use extracted validation function - mutation-resistant
-    logger.debug('[Marketplace] Delete agents check:', {
-      selectedCount: deletableAgents.length,
-      user: isValidUser(user) ? { id: user.id, username: user.username } : null,
-      selectedAgents: deletableAgents.map(a => ({
-        id: a.id,
-        name: a.name,
-        author_id: a.author_id,
-        author_id_type: typeof a.author_id,
-        user_id: getUserId(user),
-        user_id_type: typeof getUserId(user)
-      }))
-    })
-    
     const userOwnedAgents = filterUserOwnedDeletableItems(deletableAgents, user)
-    
-    logger.debug('[Marketplace] User owned agents:', userOwnedAgents.length)
     
     // Use extracted validation function - mutation-resistant
     if (hasNoUserOwnedItems(userOwnedAgents)) {

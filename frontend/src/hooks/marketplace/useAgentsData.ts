@@ -54,18 +54,9 @@ export function useAgentsData({
       
       // Use extracted validation function - mutation-resistant
       if (canSaveToStorage(storage, updated)) {
-        logger.debug('[Marketplace] Updated agents with author info:', user!.id)
         storage!.setItem('publishedAgents', JSON.stringify(agentsData))
       }
     }
-    
-    // Debug: Log loaded agents with author info
-    logger.debug('[Marketplace] Loaded agents:', agentsData.map(a => ({
-      id: a.id,
-      name: a.name,
-      author_id: a.author_id,
-      has_author_id: !!a.author_id
-    })))
     
     // Apply filters and sort
     agentsData = applyFilters(agentsData, category, searchQuery)

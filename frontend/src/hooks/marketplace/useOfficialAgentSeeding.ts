@@ -82,11 +82,9 @@ export function useOfficialAgentSeeding({
       }
       
       if (seeded) {
-        logger.debug('[Marketplace] Official agents already seeded, skipping')
         return // Already seeded
       }
 
-      logger.debug('[Marketplace] Starting to seed official agents...')
       try {
         // Fetch all official workflows
         const response = await httpClient.get(`${apiBaseUrl}/templates/?sort_by=popular`)
@@ -96,12 +94,9 @@ export function useOfficialAgentSeeding({
           return
         }
         const workflows = await response.json() as Template[]
-        logger.debug('[Marketplace] Fetched workflows:', workflows.length)
         const officialWorkflows = workflows.filter((w: Template) => w.is_official)
-        logger.debug('[Marketplace] Official workflows found:', officialWorkflows.length)
 
         if (officialWorkflows.length === 0) {
-          logger.debug('[Marketplace] No official workflows found, marking as seeded')
           setLocalStorageItem(seededKey, 'true')
           return
         }
@@ -111,7 +106,6 @@ export function useOfficialAgentSeeding({
         const agentsToAdd: AgentTemplate[] = []
         for (const workflow of officialWorkflows) {
           try {
-            logger.debug(`[Marketplace] Processing workflow: ${workflow.name} (${workflow.id})`)
             // Use the /use endpoint to get the full workflow with nodes
             const workflowResponse = await httpClient.post(
               `${apiBaseUrl}/templates/${workflow.id}/use`,
@@ -126,8 +120,6 @@ export function useOfficialAgentSeeding({
             }
             
             const workflowDetail = await workflowResponse.json()
-            const nodeCount = nullishCoalesce(workflowDetail.nodes?.length, 0)
-            logger.debug(`[Marketplace] Workflow ${workflow.name} has ${nodeCount} nodes`)
             
             // Extract agent nodes from workflow nodes
             if (workflowDetail.nodes && Array.isArray(workflowDetail.nodes)) {
@@ -135,17 +127,8 @@ export function useOfficialAgentSeeding({
                 const nodeType = logicalOr(node.type, node.data?.type)
                 const hasAgentConfig = logicalOr(node.agent_config, node.data?.agent_config)
                 const isAgent = nodeType === 'agent' && hasAgentConfig
-                if (isAgent) {
-                  logger.debug(`[Marketplace] Found agent node: ${logicalOr(node.id, node.data?.id)}`, {
-                    type: nodeType,
-                    hasConfig: !!hasAgentConfig,
-                    name: logicalOr(node.name, node.data?.name)
-                  })
-                }
                 return isAgent
               })
-
-              logger.debug(`[Marketplace] Found ${agentNodes.length} agent nodes in workflow ${workflow.name}`)
 
               for (const agentNode of agentNodes) {
                 // Create unique agent ID based on workflow and node
@@ -158,15 +141,12 @@ export function useOfficialAgentSeeding({
                 const existingAgents = storage.getItem(STORAGE_KEYS.PUBLISHED_AGENTS)
                 const agents: AgentTemplate[] = existingAgents ? JSON.parse(existingAgents) : logicalOrToEmptyArray([])
                 if (agents.some(a => a.id === agentId)) {
-                  logger.debug(`[Marketplace] Agent ${agentId} already exists, skipping`)
                   continue // Skip if already exists
                 }
 
                 const agentConfig = logicalOrToEmptyObject(logicalOr(agentNode.agent_config, agentNode.data?.agent_config))
                 const nodeName = logicalOr(agentNode.name, logicalOr(agentNode.data?.name, logicalOr(agentNode.data?.label, 'Agent')))
                 const nodeDescription = logicalOr(agentNode.description, logicalOr(agentNode.data?.description, `Agent from ${workflow.name}`))
-
-                logger.debug(`[Marketplace] Creating official agent: ${nodeName} (${agentId})`)
 
                 agentsToAdd.push({
                   id: agentId,
@@ -193,8 +173,6 @@ export function useOfficialAgentSeeding({
                   is_official: true
                 })
               }
-            } else {
-              logger.debug(`[Marketplace] Workflow ${workflow.name} has no nodes array`)
             }
           } catch (error) {
             logger.error(`[Marketplace] Failed to fetch workflow ${workflow.id}:`, error)
@@ -208,20 +186,15 @@ export function useOfficialAgentSeeding({
           const agents: AgentTemplate[] = existingAgents ? JSON.parse(existingAgents) : logicalOrToEmptyArray([])
           agents.push(...agentsToAdd)
           storage.setItem(STORAGE_KEYS.PUBLISHED_AGENTS, JSON.stringify(agents))
-          logger.debug(`[Marketplace] Seeded ${agentsToAdd.length} official agents from workflows`)
-          logger.debug(`[Marketplace] Total agents in storage: ${agents.length}`)
           
           // Notify parent that agents were seeded
           // Explicit check to prevent mutation survivors
           if (onAgentsSeeded !== null && onAgentsSeeded !== undefined) {
             onAgentsSeeded()
           }
-        } else {
-          logger.debug('[Marketplace] No agents to add')
         }
 
         setLocalStorageItem(seededKey, 'true')
-        logger.debug('[Marketplace] Seeding complete')
       } catch (error) {
         logger.error('[Marketplace] Failed to seed official agents:', error)
       }

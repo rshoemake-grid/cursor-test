@@ -4,7 +4,7 @@
  * Follows Single Responsibility Principle by delegating to focused hooks
  */
 
-import { useState, useEffect, useCallback, useMemo } from 'react'
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { useSyncState, useSyncStateWithDefault } from '../utils/useSyncState'
 import type { StorageAdapter, HttpClient } from '../../types/adapters'
 import { useTemplatesData } from './useTemplatesData'
@@ -169,17 +169,29 @@ export function useMarketplaceData({
 
   // Auto-fetch based on active tab
   // Use extracted validation functions - mutation-resistant
+  // Use refs to store stable refetch functions to prevent infinite loops
+  const templatesRefetchRef = useRef(templatesFetching.refetch)
+  const workflowsOfWorkflowsRefetchRef = useRef(workflowsOfWorkflowsFetching.refetch)
+  const agentsRefetchRef = useRef(agentsFetching.refetch)
+  const repositoryAgentsRefetchRef = useRef(repositoryAgentsFetching.refetch)
+  
+  // Update refs when refetch functions change
+  templatesRefetchRef.current = templatesFetching.refetch
+  workflowsOfWorkflowsRefetchRef.current = workflowsOfWorkflowsFetching.refetch
+  agentsRefetchRef.current = agentsFetching.refetch
+  repositoryAgentsRefetchRef.current = repositoryAgentsFetching.refetch
+  
   useEffect(() => {
     if (shouldLoadTemplates(activeTab, repositorySubTab)) {
-      templatesFetching.refetch()
+      templatesRefetchRef.current()
     } else if (shouldLoadRepositoryAgents(activeTab, repositorySubTab)) {
-      repositoryAgentsFetching.refetch()
+      repositoryAgentsRefetchRef.current()
     } else if (shouldLoadWorkflowsOfWorkflows(activeTab)) {
-      workflowsOfWorkflowsFetching.refetch()
+      workflowsOfWorkflowsRefetchRef.current()
     } else if (shouldLoadAgents(activeTab)) {
-      agentsFetching.refetch()
+      agentsRefetchRef.current()
     }
-  }, [activeTab, repositorySubTab, templatesFetching.refetch, workflowsOfWorkflowsFetching.refetch, agentsFetching.refetch, repositoryAgentsFetching.refetch])
+  }, [activeTab, repositorySubTab])
 
   // Wrapper functions to match original API
   // DRY: Could be eliminated or use generic wrapper, but kept for backward compatibility
