@@ -11,11 +11,26 @@ __pycache__/
 .Python
 .pytest_cache/
 
+#ignore logs
+*.log
+logs/
+
+#ignore mutation testing
+mutation_test.log
+mutation_test.pid
+mutation_test.status
+mutation_test.status-*/
+mutation_test.status-*/
+
+
+
 # Virtual environments
 env/
 venv/
 ENV/
 .venv
+./.venv
+.venv.bak/
 env.bak/
 venv.bak/
 
@@ -75,6 +90,22 @@ mutation_report*.html
 .stryker-tmp/
 .coverage/
 coverage/
+./frontend/.stryker-tmp/
+./frontend/.coverage/
+./frontend/coverage/
+./frontend/reports/
+./frontend/reports-*/
+./frontend/mutation_test.log
+./frontend/mutation_test.pid
+./frontend/mutation_test.status
+./frontend/mutation_test.status-*/
+./frontend/dist/
+./frontend/dist-*/
+./frontend/node_modules/
+./frontend/package-lock.json
+./frontend/package.json
+./frontend/package.json.lock
+./frontend/package.json.lock
 
 # Cosmic Ray reports
 cosmic-ray-reports/
