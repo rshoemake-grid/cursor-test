@@ -11,7 +11,6 @@ import { STORAGE_KEYS } from '../../config/constants'
 import { filterUserOwnedDeletableItems, separateOfficialItems } from '../../utils/ownershipUtils'
 import { isEmptySelection } from '../../utils/validationUtils'
 import { deleteAgentsFromStorage, extractAgentIds, updateStateAfterDeletion } from '../utils/agentDeletionService'
-import { isValidUser, getUserId } from '../utils/userValidation'
 import {
   hasOfficialItems,
   hasNoUserOwnedItems,
