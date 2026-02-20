@@ -13,6 +13,7 @@ import {
   isRealExecutionId,
   shouldLogExecutionError,
 } from './executionIdValidation'
+import { safeGetTabsRefCurrent } from './safeRefs'
 // Removed logicalOr imports - replaced with explicit checks
 
 interface UseExecutionPollingOptions {
@@ -57,13 +58,14 @@ export function useExecutionPolling({
         return
       }
       
-      // Use ref to get current tabs without causing effect re-run
-      const currentTabs = tabsRef.current
-      // Add defensive checks to prevent crashes during mutation testing
+      // Multi-layer defensive check to prevent crashes during mutation testing
+      const currentTabs = safeGetTabsRefCurrent(tabsRef)
+      if (currentTabs === null) {
+        return
+      }
       // Explicit boolean checks to prevent mutation survivors
-      const hasTabs = currentTabs !== null && currentTabs !== undefined
       const isArray = Array.isArray(currentTabs) === true
-      if (hasTabs === false || isArray === false) return
+      if (isArray === false) return
       
       // Guard: Prevent infinite loops - limit execution count
       const runningExecutions = currentTabs.flatMap(tab => {

@@ -1,6 +1,0 @@
-src/hooks/utils/websocketValidation.test.ts
-src/hooks/utils/websocketConstants.test.ts
-src/hooks/utils/websocketReconnectionStrategy.test.ts
-src/hooks/utils/websocketUrlBuilder.test.ts
-src/hooks/utils/websocketLogging.test.ts
-src/hooks/storage/useLocalStorage.test.ts

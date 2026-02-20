@@ -11,7 +11,8 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
-    "test:mutation": "stryker run --dryRunTimeoutMinutes 120",
+    "test:workers-8": "jest --maxWorkers=8",
+    "test:mutation": "STRYKER_RUNNING=1 stryker run --dryRunTimeoutMinutes 120",
     "test:quick": "./scripts/test-quick.sh",
     "test:full": "./scripts/test-full.sh",
     "test:watch-script": "./scripts/test-watch.sh"

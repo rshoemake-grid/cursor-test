@@ -40,41 +40,62 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children, options })
   const session = useMemo(() => options?.sessionStorage ?? defaultAdapters.createSessionStorageAdapter(), [options?.sessionStorage]);
   const httpClient = useMemo(() => options?.httpClient ?? defaultAdapters.createHttpClient(), [options?.httpClient]);
   const apiBaseUrl = options?.apiBaseUrl ?? 'http://localhost:8000/api';
-  const injectedLogger = options?.logger ?? logger;
+  const injectedLogger = useMemo(() => options?.logger ?? logger, [options?.logger]);
 
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const hasLoadedFromStorage = useRef(false);
+  
+  // Store stable references in refs to avoid dependency issues
+  const localRef = useRef(local);
+  const sessionRef = useRef(session);
+  const loggerRef = useRef(injectedLogger);
+  
+  // Update refs when values change
+  localRef.current = local;
+  sessionRef.current = session;
+  loggerRef.current = injectedLogger;
 
   useEffect(() => {
-    // Only load from storage once on mount
-    if (hasLoadedFromStorage.current || !local || !session) {
+    // Only load from storage once on mount - ref prevents re-execution
+    if (hasLoadedFromStorage.current) {
+      return;
+    }
+
+    const currentLocal = localRef.current;
+    const currentSession = sessionRef.current;
+    const currentLogger = loggerRef.current;
+
+    if (!currentLocal || !currentSession) {
       return;
     }
 
     hasLoadedFromStorage.current = true;
 
-    const rememberMe = local.getItem('auth_remember_me') === 'true';
-    const storage = rememberMe ? local : session;
+    const rememberMe = currentLocal.getItem('auth_remember_me') === 'true';
+    const storage = rememberMe ? currentLocal : currentSession;
     
     const savedToken = storage.getItem('auth_token');
     const savedUser = storage.getItem('auth_user');
     
     if (savedToken && savedUser) {
-      setToken(savedToken);
+      // Use functional updates to avoid dependency on token/user state
+      setToken(() => savedToken);
       try {
-        setUser(JSON.parse(savedUser));
+        const parsedUser = JSON.parse(savedUser);
+        setUser(() => parsedUser);
       } catch (error) {
         // Handle invalid JSON gracefully - clear corrupted data
-        injectedLogger.warn('Failed to parse saved user data, clearing auth state:', error);
+        currentLogger.warn('Failed to parse saved user data, clearing auth state:', error);
         storage.removeItem('auth_token');
         storage.removeItem('auth_user');
-        setToken(null);
-        setUser(null);
+        setToken(() => null);
+        setUser(() => null);
       }
     }
+    // Empty dependency array - effect only runs once on mount, refs provide latest values
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // Only run once on mount - use ref to prevent re-runs
+  }, []); // Only run once on mount
 
   const login = useCallback(async (username: string, password: string, rememberMe: boolean = false) => {
     if (!local || !session) {

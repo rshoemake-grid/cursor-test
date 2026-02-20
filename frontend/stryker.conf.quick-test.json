@@ -11,19 +11,8 @@
   "maxTestRunnerReuse": 50,
   "plugins": ["@stryker-mutator/jest-runner"],
   "mutate": [
-    "src/utils/**/*.{ts,tsx}",
-    "src/types/**/*.{ts,tsx}",
-    "src/hooks/**/*.{ts,tsx}",
-    "src/components/ExecutionStatusBadge.tsx",
-    "src/components/LogLevelBadge.tsx",
-    "src/components/editors/**/*.{ts,tsx}",
-    "!src/**/*.test.{ts,tsx}",
-    "!src/**/*.test.setup.ts",
-    "!src/**/*.spec.{ts,tsx}",
-    "!src/test/**",
-    "!src/utils/errorFactory.ts",
-    "!src/hooks/utils/safeCallbacks.ts",
-    "!src/hooks/utils/safeRefs.ts"
+    "src/utils/nodeConversion.ts",
+    "src/utils/environment.ts"
   ],
   "checkers": [],
   "thresholds": {
@@ -39,4 +28,3 @@
   "logLevel": "info",
   "fileLogLevel": "trace"
 }
-

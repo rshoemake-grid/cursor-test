@@ -7,7 +7,8 @@
  * @module test/utils/waitForWithTimeout
  */
 
-import { waitFor } from '@testing-library/react'
+import { waitFor, act } from '@testing-library/react'
+import { isRunningUnderStryker } from './detectStryker'
 
 /**
  * Simple waitFor wrapper with timeout (for tests without fake timers)
@@ -66,29 +67,81 @@ export const waitForWithTimeout = (
  */
 export const waitForWithTimeoutFakeTimers = async (
   callback: () => void | Promise<void>,
-  timeout = 2000
+  timeoutOrOptions: number | { timeout?: number } = 2000
 ): Promise<void> => {
+  // Extract timeout value - handle both number and object formats
+  const timeout = typeof timeoutOrOptions === 'number' 
+    ? timeoutOrOptions 
+    : (timeoutOrOptions?.timeout ?? 2000)
+  
+  // Check if running under Stryker - if so, use optimized strategy
+  const isStryker = isRunningUnderStryker()
+  
   // Check if fake timers are currently active by checking if jest.getRealSystemTime exists
   // Note: This is a heuristic - if jest.getRealSystemTime exists, we're using fake timers
   const wasUsingFakeTimers = typeof jest.getRealSystemTime === 'function'
   
   if (wasUsingFakeTimers) {
-    // Advance timers first to process any pending operations
-    jest.advanceTimersByTime(0)
-    jest.runOnlyPendingTimers()
+    // Under Stryker, use more aggressive timer advancement
+    const maxTimerIterations = isStryker ? 30 : 5
+    const timerAdvanceDelay = isStryker ? 50 : 10
     
-    // Temporarily use real timers for waitFor, then restore fake timers
+    // Wrap timer operations in act() to ensure React updates are flushed
+    await act(async () => {
+      // Advance timers first to process any pending operations
+      jest.advanceTimersByTime(0)
+      jest.runOnlyPendingTimers()
+    })
+    
+    // Use polling approach with fake timers (avoiding timer switching which waitFor doesn't like)
+    // Run all pending timers first to ensure async operations complete
+    // Under Stryker, be more aggressive with timer exhaustion
+    let timerIterations = 0
+    while (jest.getTimerCount() > 0 && timerIterations < maxTimerIterations) {
+      await act(async () => {
+        jest.runAllTimers()
+        
+        // Under Stryker, add exponential backoff for timer advancement
+        if (isStryker && timerIterations < maxTimerIterations - 1) {
+          const advanceAmount = Math.min(10 * Math.pow(2, timerIterations), 500)
+          jest.advanceTimersByTime(advanceAmount)
+        }
+      })
+      
+      // Allow promises to resolve between timer advances
+      await Promise.resolve()
+      timerIterations++
+    }
+    
+    // Switch to real timers for waitFor - this is necessary for waitFor to work
+    // The warning about switching timers is acceptable - waitFor needs real timers
+    // We've already exhausted fake timers above, so switching is safe
     jest.useRealTimers()
     try {
-      // Use a small delay to ensure React has processed updates
-      await new Promise(resolve => setTimeout(resolve, 10))
-      return await waitFor(callback, { timeout })
+      // Under Stryker, use longer delay to ensure React has processed updates
+      // Stryker instrumentation adds overhead, so state updates take longer
+      await act(async () => {
+        await new Promise(resolve => setTimeout(resolve, timerAdvanceDelay))
+      })
+      // Use waitFor with real timers - wrap in act() to ensure React updates are flushed
+      return await act(async () => {
+        return await waitFor(callback, { timeout })
+      })
     } finally {
+      // Restore fake timers after waitFor completes
       jest.useFakeTimers()
     }
   } else {
     // Not using fake timers, just use waitFor normally
-    return await waitFor(callback, { timeout })
+    // Under Stryker, still use longer timeout if needed
+    const adjustedTimeout = isStryker ? Math.max(timeout, 5000) : timeout
+    // Wrap in act() under Stryker to ensure React updates are flushed
+    if (isStryker) {
+      return await act(async () => {
+        return await waitFor(callback, { timeout: adjustedTimeout })
+      })
+    }
+    return await waitFor(callback, { timeout: adjustedTimeout })
   }
 }
 

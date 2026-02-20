@@ -10,6 +10,7 @@ import type { AgentTemplate } from '../marketplace/useMarketplaceData'
 import { isStorageAvailable, setStorageItem } from './storageValidation'
 import { hasArrayItems } from './arrayValidation'
 import { extractApiErrorMessage } from './apiUtils'
+import { safeShowError, safeShowSuccess, safeOnComplete } from './safeCallbacks'
 
 export interface DeletionResult {
   success: boolean
@@ -44,7 +45,7 @@ export function deleteAgentsFromStorage(
   // Validate storage
   if (!isStorageAvailable(storage)) {
     const error = 'Storage not available'
-    callbacks.showError(error)
+    safeShowError(callbacks, error)
     return { success: false, error, deletedCount: 0 }
   }
 
@@ -53,7 +54,7 @@ export function deleteAgentsFromStorage(
     const storedAgentsJson = storage!.getItem(storageKey)
     if (!storedAgentsJson) {
       const error = 'No agents found in storage'
-      callbacks.showError(error)
+      safeShowError(callbacks, error)
       return { success: false, error, deletedCount: 0 }
     }
 
@@ -65,19 +66,22 @@ export function deleteAgentsFromStorage(
 
     // Save back to storage
     if (setStorageItem(storage, storageKey, remainingAgents)) {
-      callbacks.showSuccess(`Successfully deleted ${deletedCount} agent(s)`)
-      callbacks.onComplete?.()
+      safeShowSuccess(callbacks, `Successfully deleted ${deletedCount} agent(s)`)
+      safeOnComplete(callbacks)
       return { success: true, deletedCount }
     } else {
       const error = 'Failed to save to storage'
-      callbacks.showError(error)
+      safeShowError(callbacks, error)
       return { success: false, error, deletedCount: 0 }
     }
   } catch (error: any) {
     const errorMessage = extractApiErrorMessage(error, 'Unknown error')
-    const itemType = callbacks.errorPrefix || 'agents'
+    // Safe access to errorPrefix with explicit checks
+    const hasCallbacks = callbacks !== null && callbacks !== undefined
+    const hasErrorPrefix = hasCallbacks === true && callbacks.errorPrefix !== null && callbacks.errorPrefix !== undefined
+    const itemType = hasErrorPrefix === true ? callbacks.errorPrefix : 'agents'
     const fullError = `Failed to delete ${itemType}: ${errorMessage}`
-    callbacks.showError(fullError)
+    safeShowError(callbacks, fullError)
     return { success: false, error: fullError, deletedCount: 0 }
   }
 }

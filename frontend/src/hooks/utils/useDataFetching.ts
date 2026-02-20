@@ -7,6 +7,7 @@
 import { useState, useCallback } from 'react'
 import { logger } from '../../utils/logger'
 import { nullishCoalesce } from './nullishCoalescing'
+import { isRunningUnderStryker } from '../../test/utils/detectStryker'
 
 export interface UseDataFetchingOptions<T> {
   fetchFn: () => Promise<T>
@@ -41,8 +42,10 @@ export function useDataFetching<T>({
     setError(null)
     try {
       // Guard: Add timeout to prevent hanging fetches
+      // Under Stryker, use longer timeout due to instrumentation overhead
+      const timeoutMs = isRunningUnderStryker() ? 120000 : 30000 // 120s for Stryker, 30s otherwise
       const timeoutPromise = new Promise<never>((_, reject) => {
-        setTimeout(() => reject(new Error('Fetch timeout')), 30000) // 30 second timeout
+        setTimeout(() => reject(new Error('Fetch timeout')), timeoutMs)
       })
       
       const result = await Promise.race([

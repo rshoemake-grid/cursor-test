@@ -1,2 +1,0 @@
-=== Mutation Test Results Summary ===
-Date: $(date)
