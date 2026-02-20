@@ -38,13 +38,19 @@ export const TemplateGrid = memo(function TemplateGrid({
     )
   }
 
+  // Filter out duplicates by ID to prevent React key warnings
+  const uniqueItems = items.filter((item, index, self) => 
+    index === self.findIndex((t) => t.id === item.id)
+  )
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {items.map((item) => {
+      {uniqueItems.map((item, index) => {
         const isSelected = selectedIds.has(item.id)
+        // Use combination of id and index to ensure unique keys even if duplicates slip through
         return (
           <TemplateCard
-            key={item.id}
+            key={`${item.id}-${index}`}
             item={item}
             isSelected={isSelected}
             type={type}
