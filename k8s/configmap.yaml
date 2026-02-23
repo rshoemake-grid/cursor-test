@@ -1,0 +1,26 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: workflow-builder-config
+  namespace: workflow-builder
+data:
+  # Database - UPDATE THIS with your database URL
+  DATABASE_URL: "postgresql+asyncpg://postgres:password@postgresql:5432/workflows"
+  
+  # Server
+  HOST: "0.0.0.0"
+  PORT: "8000"
+  
+  # Logging
+  LOG_LEVEL: "INFO"
+  
+  # CORS - UPDATE THIS with your frontend domain
+  CORS_ORIGINS: '["https://yourdomain.com"]'
+  
+  # Execution
+  EXECUTION_TIMEOUT: "300"
+  MAX_CONCURRENT_EXECUTIONS: "10"
+  
+  # WebSocket
+  WEBSOCKET_PING_INTERVAL: "20"
+  WEBSOCKET_TIMEOUT: "60"
