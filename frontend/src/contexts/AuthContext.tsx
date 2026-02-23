@@ -97,6 +97,22 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children, options })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Only run once on mount
 
+  // Listen for unauthorized events from API interceptor
+  useEffect(() => {
+    const handleUnauthorized = () => {
+      // Clear auth state when 401 is received
+      setToken(null);
+      setUser(null);
+    };
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener('auth:unauthorized', handleUnauthorized);
+      return () => {
+        window.removeEventListener('auth:unauthorized', handleUnauthorized);
+      };
+    }
+  }, []);
+
   const login = useCallback(async (username: string, password: string, rememberMe: boolean = false) => {
     if (!local || !session) {
       throw new Error('Storage adapters not available');

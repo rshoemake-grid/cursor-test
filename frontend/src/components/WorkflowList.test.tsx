@@ -554,10 +554,11 @@ describe('WorkflowList', () => {
     })
 
     it('should show error when trying to publish without authentication', async () => {
+      // Provide a token so workflows can load, but set isAuthenticated to false for publish check
       mockUseAuth.mockReturnValue({
         isAuthenticated: false,
         user: null,
-        token: null,
+        token: 'test-token', // Provide token so workflows load
         login: jest.fn(),
         logout: jest.fn(),
         register: jest.fn(),

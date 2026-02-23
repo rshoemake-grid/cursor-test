@@ -49,6 +49,32 @@ function createAxiosInstance(
     }
   )
 
+  // Add response interceptor to handle 401 errors globally
+  instance.interceptors.response.use(
+    (response) => response,
+    (error) => {
+      // Handle 401 Unauthorized errors
+      if (error.response?.status === 401) {
+        // Clear auth data from storage
+        if (local && session) {
+          local.removeItem('auth_token')
+          local.removeItem('auth_user')
+          local.removeItem('auth_remember_me')
+          session.removeItem('auth_token')
+          session.removeItem('auth_user')
+        }
+        
+        // Dispatch a custom event that AuthContext can listen to
+        // This allows components to react to authentication failures
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('auth:unauthorized'))
+        }
+      }
+      
+      return Promise.reject(error)
+    }
+  )
+
   return instance
 }
 

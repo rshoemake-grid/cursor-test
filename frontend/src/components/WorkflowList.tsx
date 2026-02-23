@@ -17,7 +17,7 @@ export default function WorkflowList({ onSelectWorkflow, onBack }: WorkflowListP
   const [workflows, setWorkflows] = useState<WorkflowDefinition[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
-  const { isAuthenticated } = useAuth()
+  const { isAuthenticated, token } = useAuth()
   const navigate = useNavigate()
   const [showPublishModal, setShowPublishModal] = useState(false)
   const [publishingWorkflowId, setPublishingWorkflowId] = useState<string | null>(null)
@@ -29,10 +29,29 @@ export default function WorkflowList({ onSelectWorkflow, onBack }: WorkflowListP
   })
   const [isPublishing, setIsPublishing] = useState(false)
 
-
+  // Wait for authentication to be ready before loading workflows
+  // This prevents race condition where API call happens before token is loaded from storage
   useEffect(() => {
-    loadWorkflows()
-  }, [])
+    // Only load workflows if we have a token (authenticated) or if we've determined auth state
+    // If token is null but we're checking auth, wait a bit for AuthContext to finish loading
+    if (token !== null || isAuthenticated) {
+      loadWorkflows()
+    } else {
+      // If no token and not authenticated, check again after a short delay
+      // This handles the case where AuthContext is still loading from storage
+      const timeoutId = setTimeout(() => {
+        // Only try to load if we still don't have a token after delay
+        // This prevents unnecessary API calls when user is not logged in
+        if (token === null && !isAuthenticated) {
+          setLoading(false)
+        } else if (token !== null || isAuthenticated) {
+          loadWorkflows()
+        }
+      }, 100)
+      
+      return () => clearTimeout(timeoutId)
+    }
+  }, [token, isAuthenticated])
 
   const loadWorkflows = async () => {
     setLoading(true)
@@ -40,7 +59,13 @@ export default function WorkflowList({ onSelectWorkflow, onBack }: WorkflowListP
       const data = await api.getWorkflows()
       setWorkflows(data)
     } catch (error: any) {
-      showError('Failed to load workflows: ' + error.message)
+      // Handle 401 errors specifically
+      if (error.response?.status === 401) {
+        showError('Authentication required. Please log in again.')
+        // Don't show generic error message for 401
+      } else {
+        showError('Failed to load workflows: ' + error.message)
+      }
     } finally {
       setLoading(false)
     }
