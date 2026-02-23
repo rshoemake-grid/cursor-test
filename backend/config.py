@@ -23,8 +23,12 @@ class Settings(BaseSettings):
     log_file: Optional[str] = "app.log"
     
     # CORS
-    cors_origins: List[str] = ["*"]
+    cors_origins: List[str] = ["*"]  # Restrict to specific domains in production
     cors_allow_credentials: bool = True
+    
+    # API Configuration
+    api_version: str = "v1"  # API version for Apigee compatibility
+    max_request_size: int = 10 * 1024 * 1024  # 10MB max request body size
     
     # Server
     host: str = "0.0.0.0"
