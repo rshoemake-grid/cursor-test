@@ -1,0 +1,47 @@
+{
+  "providers": [
+    {
+      "id": "openai-1",
+      "name": "OpenAI",
+      "type": "openai",
+      "apiKey": "sk-test-key-replace-with-real-key",
+      "baseUrl": "https://api.openai.com/v1",
+      "defaultModel": "gpt-4",
+      "models": [
+        "gpt-4",
+        "gpt-4-turbo",
+        "gpt-3.5-turbo"
+      ],
+      "enabled": true
+    },
+    {
+      "id": "anthropic-1",
+      "name": "Anthropic Claude",
+      "type": "anthropic",
+      "apiKey": "sk-ant-test-key-replace-with-real-key",
+      "baseUrl": "https://api.anthropic.com",
+      "defaultModel": "claude-3-opus-20240229",
+      "models": [
+        "claude-3-opus-20240229",
+        "claude-3-sonnet-20240229",
+        "claude-3-haiku-20240307"
+      ],
+      "enabled": false
+    },
+    {
+      "id": "gemini-1",
+      "name": "Google Gemini",
+      "type": "gemini",
+      "apiKey": "test-gemini-key-replace-with-real-key",
+      "baseUrl": "https://generativelanguage.googleapis.com/v1",
+      "defaultModel": "gemini-pro",
+      "models": [
+        "gemini-pro",
+        "gemini-pro-vision"
+      ],
+      "enabled": false
+    }
+  ],
+  "iteration_limit": 10,
+  "default_model": "gpt-4"
+}

@@ -1,0 +1,78 @@
+{
+  "name": "Sample Data Processing Workflow",
+  "description": "A comprehensive sample workflow for testing API endpoints",
+  "nodes": [
+    {
+      "id": "start-1",
+      "type": "start",
+      "name": "Start",
+      "position": {"x": 100, "y": 100}
+    },
+    {
+      "id": "agent-1",
+      "type": "agent",
+      "name": "Process Input",
+      "position": {"x": 300, "y": 100},
+      "agent_config": {
+        "prompt": "Process the following input data: {{input_data}}\n\nReturn a structured JSON response with status and result fields.",
+        "model": "gpt-4",
+        "temperature": 0.7,
+        "max_tokens": 1000
+      }
+    },
+    {
+      "id": "condition-1",
+      "type": "condition",
+      "name": "Check Status",
+      "position": {"x": 500, "y": 100},
+      "condition_config": {
+        "field": "result.status",
+        "operator": "equals",
+        "value": "success"
+      }
+    },
+    {
+      "id": "loop-1",
+      "type": "loop",
+      "name": "Process Items",
+      "position": {"x": 700, "y": 100},
+      "loop_config": {
+        "loop_type": "for_each",
+        "items_source": "result.items",
+        "max_iterations": 10
+      }
+    },
+    {
+      "id": "end-1",
+      "type": "end",
+      "name": "End",
+      "position": {"x": 900, "y": 100}
+    }
+  ],
+  "edges": [
+    {
+      "id": "e1",
+      "source": "start-1",
+      "target": "agent-1"
+    },
+    {
+      "id": "e2",
+      "source": "agent-1",
+      "target": "condition-1"
+    },
+    {
+      "id": "e3",
+      "source": "condition-1",
+      "target": "loop-1"
+    },
+    {
+      "id": "e4",
+      "source": "loop-1",
+      "target": "end-1"
+    }
+  ],
+  "variables": {
+    "input_data": "Sample input data for testing",
+    "processing_mode": "standard"
+  }
+}
