@@ -9,6 +9,9 @@ from fastapi import APIRouter, HTTPException, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
+from typing import Optional, List
+from fastapi import Query
+
 from ...models.schemas import ExecutionRequest, ExecutionResponse, WorkflowDefinition, ExecutionStatus
 from ...database import get_db, WorkflowDB, ExecutionDB
 from ...database.db import AsyncSessionLocal
@@ -16,9 +19,9 @@ from ...database.models import UserDB
 from ...engine import WorkflowExecutor
 from ...auth import get_optional_user
 from ...utils.logger import get_logger
-from ...dependencies import WorkflowServiceDep, SettingsServiceDep
+from ...dependencies import WorkflowServiceDep, SettingsServiceDep, ExecutionServiceDep
 from ...services.settings_service import ISettingsService
-from ...exceptions import WorkflowNotFoundError
+from ...exceptions import WorkflowNotFoundError, ExecutionNotFoundError
 
 logger = get_logger(__name__)
 
@@ -281,29 +284,109 @@ async def execute_workflow(
 @router.get("/executions/{execution_id}", response_model=ExecutionResponse)
 async def get_execution(
     execution_id: str,
-    db: AsyncSession = Depends(get_db)
+    execution_service: ExecutionServiceDep = ...
 ):
-    """Get execution by ID"""
-    result = await db.execute(
-        select(ExecutionDB).where(ExecutionDB.id == execution_id)
+    """
+    Get execution by ID
+    
+    Uses ExecutionService following SOLID principles (Dependency Inversion)
+    """
+    try:
+        return await execution_service.get_execution(execution_id)
+    except ExecutionNotFoundError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+
+
+@router.get("/executions", response_model=List[ExecutionResponse])
+async def list_executions(
+    workflow_id: Optional[str] = Query(None, description="Filter by workflow ID"),
+    user_id: Optional[str] = Query(None, description="Filter by user ID"),
+    status: Optional[str] = Query(None, description="Filter by status (running, completed, failed)"),
+    limit: Optional[int] = Query(None, ge=1, le=100, description="Maximum number of results"),
+    offset: int = Query(0, ge=0, description="Offset for pagination"),
+    execution_service: ExecutionServiceDep = ...,
+    current_user: Optional[UserDB] = Depends(get_optional_user)
+):
+    """
+    List executions with filtering and pagination
+    
+    If user_id is not provided and user is authenticated, filters by current user.
+    Follows SOLID principles with service layer abstraction.
+    """
+    # If user_id not provided but user is authenticated, use current user (DRY - avoid duplication)
+    effective_user_id = user_id if user_id else (current_user.id if current_user else None)
+    
+    executions = await execution_service.list_executions(
+        workflow_id=workflow_id,
+        user_id=effective_user_id,
+        status=status,
+        limit=limit,
+        offset=offset
     )
-    execution = result.scalar_one_or_none()
     
-    if not execution:
-        raise HTTPException(status_code=404, detail=f"Execution {execution_id} not found")
+    return executions
+
+
+@router.get("/workflows/{workflow_id}/executions", response_model=List[ExecutionResponse])
+async def list_workflow_executions(
+    workflow_id: str,
+    status: Optional[str] = Query(None, description="Filter by status (running, completed, failed)"),
+    limit: Optional[int] = Query(None, ge=1, le=100, description="Maximum number of results"),
+    offset: int = Query(0, ge=0, description="Offset for pagination"),
+    execution_service: ExecutionServiceDep = ...
+):
+    """
+    List executions for a specific workflow
     
-    # Extract state data if available
-    state_data = execution.state if execution.state else {}
-    
-    return ExecutionResponse(
-        execution_id=execution.id,
-        workflow_id=execution.workflow_id,
-        status=execution.status,
-        current_node=state_data.get('current_node'),
-        result=state_data.get('result'),
-        error=state_data.get('error'),
-        started_at=execution.started_at if execution.started_at else datetime.utcnow(),
-        completed_at=execution.completed_at,
-        logs=state_data.get('logs', [])
+    Follows Single Responsibility Principle - dedicated endpoint for workflow executions.
+    Uses ExecutionService for business logic (Dependency Inversion).
+    """
+    executions = await execution_service.list_executions(
+        workflow_id=workflow_id,
+        status=status,
+        limit=limit,
+        offset=offset
     )
+    
+    return executions
+
+
+@router.get("/users/{user_id}/executions", response_model=List[ExecutionResponse])
+async def list_user_executions(
+    user_id: str,
+    workflow_id: Optional[str] = Query(None, description="Filter by workflow ID"),
+    status: Optional[str] = Query(None, description="Filter by status (running, completed, failed)"),
+    limit: Optional[int] = Query(None, ge=1, le=100, description="Maximum number of results"),
+    offset: int = Query(0, ge=0, description="Offset for pagination"),
+    execution_service: ExecutionServiceDep = ...
+):
+    """
+    List executions for a specific user
+    
+    Follows Single Responsibility Principle - dedicated endpoint for user executions.
+    Uses ExecutionService for business logic (Dependency Inversion).
+    """
+    executions = await execution_service.list_executions(
+        workflow_id=workflow_id,
+        user_id=user_id,
+        status=status,
+        limit=limit,
+        offset=offset
+    )
+    
+    return executions
+
+
+@router.get("/executions/running", response_model=List[ExecutionResponse])
+async def list_running_executions(
+    execution_service: ExecutionServiceDep = ...
+):
+    """
+    List all currently running executions
+    
+    Follows Single Responsibility Principle - dedicated endpoint for running executions.
+    Uses ExecutionService for business logic (Dependency Inversion).
+    """
+    executions = await execution_service.get_running_executions()
+    return executions
 

@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from .database import get_db
 from .services.workflow_service import WorkflowService
+from .services.execution_service import ExecutionService
 from .services.settings_service import ISettingsService, SettingsService
 from .services.llm_client_factory import ILLMClientFactory, LLMClientFactory
 from .repositories.workflow_repository import WorkflowRepository
@@ -25,6 +26,14 @@ def get_workflow_service(db: DatabaseSession) -> WorkflowService:
 
 
 WorkflowServiceDep = Annotated[WorkflowService, Depends(get_workflow_service)]
+
+
+def get_execution_service(db: DatabaseSession) -> ExecutionService:
+    """Get execution service instance"""
+    return ExecutionService(db)
+
+
+ExecutionServiceDep = Annotated[ExecutionService, Depends(get_execution_service)]
 
 
 def get_settings_service() -> ISettingsService:
