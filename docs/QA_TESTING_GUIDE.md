@@ -16,6 +16,26 @@ Development: http://localhost:8000
 Production: https://api.yourdomain.com
 ```
 
+## Test Data Files
+
+Sample JSON files for testing are located in the `test-data/` directory:
+
+- `test-data/sample_workflow.json` - Complete workflow definition with all node types
+- `test-data/sample_llm_settings.json` - LLM provider configurations
+- `test-data/sample_execution_inputs.json` - Execution input examples
+- `test-data/sample_user_registration.json` - User registration data
+
+**Usage Example**:
+```bash
+# Use test data files in curl commands
+curl -X POST "${BASE_URL}/api/workflows" \
+  -H "Authorization: Bearer ${TOKEN}" \
+  -H "Content-Type: application/json" \
+  -d @test-data/sample_workflow.json
+```
+
+See `test-data/README.md` for more details on using these files.
+
 ## Authentication
 
 Most endpoints require authentication. Use the token from login:
@@ -228,13 +248,14 @@ curl -X POST "${BASE_URL}/api/auth/reset-password" \
 
 **curl Example**:
 ```bash
+# Using test data file from test-data/ directory
 curl -X POST "${BASE_URL}/api/workflows" \
   -H "Authorization: Bearer ${TOKEN}" \
   -H "Content-Type: application/json" \
-  -d @workflow_create.json
+  -d @test-data/sample_workflow.json
 ```
 
-**Request JSON** (`workflow_create.json`):
+**Request JSON** (from `test-data/sample_workflow.json`):
 ```json
 {
   "name": "Simple Data Processing",
@@ -388,13 +409,14 @@ curl -X GET "${BASE_URL}/api/workflows/workflow-123" \
 
 **curl Example**:
 ```bash
+# Using test data file from test-data/ directory (modify as needed)
 curl -X PUT "${BASE_URL}/api/workflows/workflow-123" \
   -H "Authorization: Bearer ${TOKEN}" \
   -H "Content-Type: application/json" \
-  -d @workflow_update.json
+  -d @test-data/sample_workflow.json
 ```
 
-**Request JSON** (`workflow_update.json`):
+**Request JSON** (modify `test-data/sample_workflow.json` as needed):
 ```json
 {
   "name": "Updated Workflow Name",
@@ -795,13 +817,14 @@ curl -X GET "${BASE_URL}/api/executions/running" \
 
 **curl Example**:
 ```bash
+# Using test data file from test-data/ directory
 curl -X POST "${BASE_URL}/api/settings/llm" \
   -H "Authorization: Bearer ${TOKEN}" \
   -H "Content-Type: application/json" \
-  -d @llm_settings.json
+  -d @test-data/sample_llm_settings.json
 ```
 
-**Request JSON** (`llm_settings.json`):
+**Request JSON** (from `test-data/sample_llm_settings.json`):
 ```json
 {
   "providers": [
@@ -1281,13 +1304,14 @@ curl -X GET "${BASE_URL}/api/import-export/export/workflow-123" \
 
 **curl Example**:
 ```bash
+# Using test data file from test-data/ directory
 curl -X POST "${BASE_URL}/api/import-export/import" \
   -H "Authorization: Bearer ${TOKEN}" \
   -H "Content-Type: application/json" \
-  -d @workflow_import.json
+  -d @test-data/sample_workflow.json
 ```
 
-**Request JSON** (`workflow_import.json`):
+**Request JSON** (from `test-data/sample_workflow.json` - format as import structure):
 ```json
 {
   "name": "Imported Workflow",
@@ -1399,9 +1423,42 @@ curl -X GET "${BASE_URL}/health"
 
 ---
 
-## Test Data Files
+## Test Data Files Reference
+
+**Location**: All test data files are located in the `test-data/` directory at the root of the repository.
+
+### Available Test Data Files
+
+- **`test-data/sample_workflow.json`** - Complete workflow with all node types (start, agent, condition, loop, end)
+- **`test-data/sample_llm_settings.json`** - LLM provider configurations for OpenAI, Anthropic, and Gemini
+- **`test-data/sample_execution_inputs.json`** - Sample execution inputs with various data types
+- **`test-data/sample_user_registration.json`** - Sample user registration data
+
+### Using Test Data Files
+
+Reference these files in curl commands using the `@` prefix:
+
+```bash
+# From repository root directory
+curl -X POST "${BASE_URL}/api/workflows" \
+  -H "Authorization: Bearer ${TOKEN}" \
+  -H "Content-Type: application/json" \
+  -d @test-data/sample_workflow.json
+
+curl -X POST "${BASE_URL}/api/settings/llm" \
+  -H "Authorization: Bearer ${TOKEN}" \
+  -H "Content-Type: application/json" \
+  -d @test-data/sample_llm_settings.json
+
+curl -X POST "${BASE_URL}/api/workflows/{workflow_id}/execute" \
+  -H "Authorization: Bearer ${TOKEN}" \
+  -H "Content-Type: application/json" \
+  -d @test-data/sample_execution_inputs.json
+```
 
 ### Sample Workflow JSON (`workflow_create.json`)
+
+**Note**: This is an example. Use `test-data/sample_workflow.json` for actual testing.
 
 ```json
 {
@@ -1467,6 +1524,8 @@ curl -X GET "${BASE_URL}/health"
 ```
 
 ### Sample LLM Settings (`llm_settings.json`)
+
+**Note**: This is an example. Use `test-data/sample_llm_settings.json` for actual testing.
 
 ```json
 {
