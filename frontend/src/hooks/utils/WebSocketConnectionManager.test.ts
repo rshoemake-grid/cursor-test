@@ -438,4 +438,539 @@ describe('WebSocketConnectionManager - Timeout Guards', () => {
       expect((manager as any).reconnectTimeout).toBeNull()
     })
   })
+
+  describe('Close Method - Explicit Boolean Checks', () => {
+    it('should verify hasPending === true check in close()', () => {
+      const manager = new WebSocketConnectionManager({
+        executionId: 'exec-123',
+        maxReconnectAttempts: 5,
+        webSocketFactory: mockWebSocketFactory,
+        windowLocation: { protocol: 'ws:', host: 'localhost:8000' } as any,
+        logger: mockLogger,
+      })
+
+      manager.connect(callbacks)
+      act(() => {
+        jest.advanceTimersByTime(20)
+      })
+
+      // Close connection to trigger reconnection timeout
+      const ws = (manager as any).ws
+      if (ws && ws.onclose) {
+        ws.onclose(new CloseEvent('close', { code: 1006, wasClean: false }))
+      }
+
+      // Verify timeout exists (hasPending === true)
+      const timeoutBefore = (manager as any).reconnectTimeout
+      expect(timeoutBefore).not.toBeNull()
+
+      // Call close() - should clear timeout because hasPending === true
+      manager.close()
+
+      // Verify timeout was cleared (hasPending check worked)
+      expect((manager as any).reconnectTimeout).toBeNull()
+    })
+
+    it('should verify hasWebSocket === true check in close()', () => {
+      const manager = new WebSocketConnectionManager({
+        executionId: 'exec-123',
+        maxReconnectAttempts: 5,
+        webSocketFactory: mockWebSocketFactory,
+        windowLocation: { protocol: 'ws:', host: 'localhost:8000' } as any,
+        logger: mockLogger,
+      })
+
+      manager.connect(callbacks)
+      act(() => {
+        jest.advanceTimersByTime(20)
+      })
+
+      // Verify WebSocket exists (hasWebSocket === true)
+      const ws = (manager as any).ws
+      expect(ws).not.toBeNull()
+      expect(ws).not.toBeUndefined()
+
+      const closeSpy = jest.spyOn(ws, 'close')
+
+      // Call close() - should close WebSocket because hasWebSocket === true
+      manager.close()
+
+      // Verify close was called (hasWebSocket check worked)
+      expect(closeSpy).toHaveBeenCalledWith(
+        WS_CLOSE_CODES.NORMAL_CLOSURE,
+        undefined
+      )
+      expect((manager as any).ws).toBeNull()
+    })
+
+    it('should verify hasWebSocket === true check with reason in close()', () => {
+      const manager = new WebSocketConnectionManager({
+        executionId: 'exec-123',
+        maxReconnectAttempts: 5,
+        webSocketFactory: mockWebSocketFactory,
+        windowLocation: { protocol: 'ws:', host: 'localhost:8000' } as any,
+        logger: mockLogger,
+      })
+
+      manager.connect(callbacks)
+      act(() => {
+        jest.advanceTimersByTime(20)
+      })
+
+      const ws = (manager as any).ws
+      const closeSpy = jest.spyOn(ws, 'close')
+
+      // Call close() with reason - should close WebSocket because hasWebSocket === true
+      manager.close('Test reason')
+
+      // Verify close was called with reason (hasWebSocket check worked)
+      expect(closeSpy).toHaveBeenCalledWith(
+        WS_CLOSE_CODES.NORMAL_CLOSURE,
+        'Test reason'
+      )
+    })
+
+    it('should verify close() when hasPending === false', () => {
+      const manager = new WebSocketConnectionManager({
+        executionId: 'exec-123',
+        maxReconnectAttempts: 5,
+        webSocketFactory: mockWebSocketFactory,
+        windowLocation: { protocol: 'ws:', host: 'localhost:8000' } as any,
+        logger: mockLogger,
+      })
+
+      manager.connect(callbacks)
+      act(() => {
+        jest.advanceTimersByTime(20)
+      })
+
+      // Open WebSocket to ensure it's connected
+      const ws = (manager as any).ws
+      if (ws && ws.onopen) {
+        ws.onopen(new Event('open'))
+      }
+
+      // Close cleanly so no reconnection timeout is set (hasPending === false)
+      if (ws && ws.onclose) {
+        ws.onclose(new CloseEvent('close', { code: WS_CLOSE_CODES.NORMAL_CLOSURE, wasClean: true }))
+      }
+
+      // Verify no reconnection timeout was set (hasPending === false)
+      expect((manager as any).reconnectTimeout).toBeNull()
+
+      // Call close() - should not try to clear timeout because hasPending === false
+      manager.close()
+
+      // Should still work without error
+      expect((manager as any).reconnectTimeout).toBeNull()
+    })
+
+    it('should verify close() when hasWebSocket === false', () => {
+      const manager = new WebSocketConnectionManager({
+        executionId: 'exec-123',
+        maxReconnectAttempts: 5,
+        webSocketFactory: mockWebSocketFactory,
+        windowLocation: { protocol: 'ws:', host: 'localhost:8000' } as any,
+        logger: mockLogger,
+      })
+
+      // No connection made (hasWebSocket === false)
+      expect((manager as any).ws).toBeNull()
+
+      // Call close() - should not try to close WebSocket because hasWebSocket === false
+      manager.close()
+
+      // Should still work without error
+      expect((manager as any).ws).toBeNull()
+    })
+  })
+
+  describe('isConnected Getter - Explicit Boolean Checks', () => {
+    it('should verify isStateConnected === true check in isConnected', () => {
+      const manager = new WebSocketConnectionManager({
+        executionId: 'exec-123',
+        maxReconnectAttempts: 5,
+        webSocketFactory: mockWebSocketFactory,
+        windowLocation: { protocol: 'ws:', host: 'localhost:8000' } as any,
+        logger: mockLogger,
+      })
+
+      manager.connect(callbacks)
+      act(() => {
+        jest.advanceTimersByTime(20)
+      })
+
+      // Open WebSocket
+      const ws = (manager as any).ws
+      if (ws && ws.onopen) {
+        ws.onopen(new Event('open'))
+      }
+
+      // isConnectedState should be true after onopen
+      expect((manager as any).isConnectedState).toBe(true)
+
+      // Set readyState to OPEN
+      ws.readyState = MockWebSocket.OPEN
+
+      // Verify isConnected returns true (isStateConnected === true check passed)
+      expect(manager.isConnected).toBe(true)
+    })
+
+    it('should verify isStateConnected === false check in isConnected', () => {
+      const manager = new WebSocketConnectionManager({
+        executionId: 'exec-123',
+        maxReconnectAttempts: 5,
+        webSocketFactory: mockWebSocketFactory,
+        windowLocation: { protocol: 'ws:', host: 'localhost:8000' } as any,
+        logger: mockLogger,
+      })
+
+      // No connection made (isStateConnected === false)
+      expect((manager as any).isConnectedState).toBe(false)
+
+      // Verify isConnected returns false (isStateConnected === false check passed)
+      expect(manager.isConnected).toBe(false)
+    })
+
+    it('should verify hasWebSocket === false check in isConnected', () => {
+      const manager = new WebSocketConnectionManager({
+        executionId: 'exec-123',
+        maxReconnectAttempts: 5,
+        webSocketFactory: mockWebSocketFactory,
+        windowLocation: { protocol: 'ws:', host: 'localhost:8000' } as any,
+        logger: mockLogger,
+      })
+
+      // Set isConnectedState to true but no WebSocket (hasWebSocket === false)
+      ;(manager as any).isConnectedState = true
+      ;(manager as any).ws = null
+
+      // Verify isConnected returns false (hasWebSocket === false check passed)
+      expect(manager.isConnected).toBe(false)
+    })
+
+    it('should verify isOpen === true check in isConnected', () => {
+      const manager = new WebSocketConnectionManager({
+        executionId: 'exec-123',
+        maxReconnectAttempts: 5,
+        webSocketFactory: mockWebSocketFactory,
+        windowLocation: { protocol: 'ws:', host: 'localhost:8000' } as any,
+        logger: mockLogger,
+      })
+
+      manager.connect(callbacks)
+      act(() => {
+        jest.advanceTimersByTime(20)
+      })
+
+      const ws = (manager as any).ws
+      ;(manager as any).isConnectedState = true
+      ws.readyState = MockWebSocket.OPEN
+
+      // Verify isConnected returns true (isOpen === true check passed)
+      expect(manager.isConnected).toBe(true)
+    })
+
+    it('should verify isOpen === false check in isConnected', () => {
+      const manager = new WebSocketConnectionManager({
+        executionId: 'exec-123',
+        maxReconnectAttempts: 5,
+        webSocketFactory: mockWebSocketFactory,
+        windowLocation: { protocol: 'ws:', host: 'localhost:8000' } as any,
+        logger: mockLogger,
+      })
+
+      manager.connect(callbacks)
+      act(() => {
+        jest.advanceTimersByTime(20)
+      })
+
+      const ws = (manager as any).ws
+      ;(manager as any).isConnectedState = true
+      ws.readyState = MockWebSocket.CONNECTING
+
+      // Verify isConnected returns false (isOpen === false check passed)
+      expect(manager.isConnected).toBe(false)
+    })
+  })
+
+  describe('handleConnectionError - Explicit Checks', () => {
+    it('should verify error instanceof Error check in handleConnectionError', () => {
+      const manager = new WebSocketConnectionManager({
+        executionId: 'exec-123',
+        maxReconnectAttempts: 5,
+        webSocketFactory: {
+          create: jest.fn(() => {
+            throw new Error('Connection failed')
+          }),
+        },
+        windowLocation: { protocol: 'ws:', host: 'localhost:8000' } as any,
+        logger: mockLogger,
+      })
+
+      manager.connect(callbacks)
+
+      // Verify error instanceof Error check worked
+      expect(callbacks.onError).toHaveBeenCalledWith('Connection failed')
+      expect(callbacks.onStatus).toHaveBeenCalledWith('error')
+    })
+
+    it('should verify non-Error error handling in handleConnectionError', () => {
+      const manager = new WebSocketConnectionManager({
+        executionId: 'exec-123',
+        maxReconnectAttempts: 5,
+        webSocketFactory: {
+          create: jest.fn(() => {
+            throw 'String error'
+          }),
+        },
+        windowLocation: { protocol: 'ws:', host: 'localhost:8000' } as any,
+        logger: mockLogger,
+      })
+
+      manager.connect(callbacks)
+
+      // Verify non-Error error handling (error instanceof Error === false)
+      expect(callbacks.onError).toHaveBeenCalledWith('Failed to create WebSocket connection')
+      expect(callbacks.onStatus).toHaveBeenCalledWith('error')
+    })
+  })
+
+  describe('updateStatus - Explicit Boolean Checks', () => {
+    it('should verify hasStatus === true check in updateStatus', () => {
+      const manager = new WebSocketConnectionManager({
+        executionId: 'exec-123',
+        maxReconnectAttempts: 5,
+        webSocketFactory: mockWebSocketFactory,
+        windowLocation: { protocol: 'ws:', host: 'localhost:8000' } as any,
+        logger: mockLogger,
+      })
+
+      const initialLastKnownStatus = (manager as any).lastKnownStatus
+
+      // Update with status (hasStatus === true)
+      manager.updateStatus(EXECUTION_STATUS.RUNNING)
+
+      // Verify lastKnownStatus was updated (hasStatus === true check worked)
+      expect((manager as any).lastKnownStatus).toBe(EXECUTION_STATUS.RUNNING)
+      expect((manager as any).lastKnownStatus).not.toBe(initialLastKnownStatus)
+    })
+
+    it('should verify hasStatus === false check in updateStatus', () => {
+      const manager = new WebSocketConnectionManager({
+        executionId: 'exec-123',
+        executionStatus: EXECUTION_STATUS.RUNNING,
+        maxReconnectAttempts: 5,
+        webSocketFactory: mockWebSocketFactory,
+        windowLocation: { protocol: 'ws:', host: 'localhost:8000' } as any,
+        logger: mockLogger,
+      })
+
+      const initialLastKnownStatus = (manager as any).lastKnownStatus
+
+      // Update with undefined (hasStatus === false)
+      manager.updateStatus(undefined)
+
+      // Verify lastKnownStatus was NOT updated (hasStatus === false check worked)
+      expect((manager as any).lastKnownStatus).toBe(initialLastKnownStatus)
+    })
+
+    it('should verify hasStatusValue === true check in updateStatus', () => {
+      const manager = new WebSocketConnectionManager({
+        executionId: 'exec-123',
+        maxReconnectAttempts: 5,
+        webSocketFactory: mockWebSocketFactory,
+        windowLocation: { protocol: 'ws:', host: 'localhost:8000' } as any,
+        logger: mockLogger,
+      })
+
+      manager.connect(callbacks)
+      act(() => {
+        jest.advanceTimersByTime(20)
+      })
+
+      const ws = (manager as any).ws
+      const closeSpy = jest.spyOn(ws, 'close')
+
+      // Update with completed status (hasStatusValue === true)
+      manager.updateStatus(EXECUTION_STATUS.COMPLETED)
+
+      // Verify close was called (hasStatusValue === true check worked)
+      expect(closeSpy).toHaveBeenCalled()
+    })
+
+    it('should verify hasStatusValue === false check in updateStatus', () => {
+      const manager = new WebSocketConnectionManager({
+        executionId: 'exec-123',
+        maxReconnectAttempts: 5,
+        webSocketFactory: mockWebSocketFactory,
+        windowLocation: { protocol: 'ws:', host: 'localhost:8000' } as any,
+        logger: mockLogger,
+      })
+
+      manager.connect(callbacks)
+      act(() => {
+        jest.advanceTimersByTime(20)
+      })
+
+      const ws = (manager as any).ws
+      const closeSpy = jest.spyOn(ws, 'close')
+
+      // Update with undefined (hasStatusValue === false)
+      manager.updateStatus(undefined)
+
+      // Verify close was NOT called (hasStatusValue === false check worked)
+      expect(closeSpy).not.toHaveBeenCalled()
+    })
+
+    it('should verify isTerminated === true check in updateStatus', () => {
+      const manager = new WebSocketConnectionManager({
+        executionId: 'exec-123',
+        maxReconnectAttempts: 5,
+        webSocketFactory: mockWebSocketFactory,
+        windowLocation: { protocol: 'ws:', host: 'localhost:8000' } as any,
+        logger: mockLogger,
+      })
+
+      manager.connect(callbacks)
+      act(() => {
+        jest.advanceTimersByTime(20)
+      })
+
+      const ws = (manager as any).ws
+      const closeSpy = jest.spyOn(ws, 'close')
+
+      // Update with completed status (isTerminated === true)
+      manager.updateStatus(EXECUTION_STATUS.COMPLETED)
+
+      // Verify close was called (isTerminated === true check worked)
+      expect(closeSpy).toHaveBeenCalled()
+    })
+
+    it('should verify isTerminated === false check in updateStatus', () => {
+      const manager = new WebSocketConnectionManager({
+        executionId: 'exec-123',
+        maxReconnectAttempts: 5,
+        webSocketFactory: mockWebSocketFactory,
+        windowLocation: { protocol: 'ws:', host: 'localhost:8000' } as any,
+        logger: mockLogger,
+      })
+
+      manager.connect(callbacks)
+      act(() => {
+        jest.advanceTimersByTime(20)
+      })
+
+      const ws = (manager as any).ws
+      const closeSpy = jest.spyOn(ws, 'close')
+
+      // Update with running status (isTerminated === false)
+      manager.updateStatus(EXECUTION_STATUS.RUNNING)
+
+      // Verify close was NOT called (isTerminated === false check worked)
+      expect(closeSpy).not.toHaveBeenCalled()
+    })
+
+    it('should verify hasWebSocket === true check in updateStatus', () => {
+      const manager = new WebSocketConnectionManager({
+        executionId: 'exec-123',
+        maxReconnectAttempts: 5,
+        webSocketFactory: mockWebSocketFactory,
+        windowLocation: { protocol: 'ws:', host: 'localhost:8000' } as any,
+        logger: mockLogger,
+      })
+
+      manager.connect(callbacks)
+      act(() => {
+        jest.advanceTimersByTime(20)
+      })
+
+      // Verify WebSocket exists (hasWebSocket === true)
+      const ws = (manager as any).ws
+      expect(ws).not.toBeNull()
+      expect(ws).not.toBeUndefined()
+
+      const closeSpy = jest.spyOn(ws, 'close')
+
+      // Update with completed status - should close WebSocket (hasWebSocket === true)
+      manager.updateStatus(EXECUTION_STATUS.COMPLETED)
+
+      // Verify close was called (hasWebSocket === true check worked)
+      expect(closeSpy).toHaveBeenCalled()
+    })
+
+    it('should verify hasWebSocket === false check in updateStatus', () => {
+      const manager = new WebSocketConnectionManager({
+        executionId: 'exec-123',
+        maxReconnectAttempts: 5,
+        webSocketFactory: mockWebSocketFactory,
+        windowLocation: { protocol: 'ws:', host: 'localhost:8000' } as any,
+        logger: mockLogger,
+      })
+
+      // No connection made (hasWebSocket === false)
+      expect((manager as any).ws).toBeNull()
+
+      // Update with completed status - should not try to close WebSocket (hasWebSocket === false)
+      manager.updateStatus(EXECUTION_STATUS.COMPLETED)
+
+      // Should still work without error
+      expect((manager as any).ws).toBeNull()
+    })
+
+    it('should verify hasPending === true check in updateStatus', () => {
+      const manager = new WebSocketConnectionManager({
+        executionId: 'exec-123',
+        maxReconnectAttempts: 5,
+        webSocketFactory: mockWebSocketFactory,
+        windowLocation: { protocol: 'ws:', host: 'localhost:8000' } as any,
+        logger: mockLogger,
+      })
+
+      manager.connect(callbacks)
+      act(() => {
+        jest.advanceTimersByTime(20)
+      })
+
+      // Close connection to trigger reconnection timeout
+      const ws = (manager as any).ws
+      if (ws && ws.onclose) {
+        ws.onclose(new CloseEvent('close', { code: 1006, wasClean: false }))
+      }
+
+      // Verify timeout exists (hasPending === true)
+      const timeoutBefore = (manager as any).reconnectTimeout
+      expect(timeoutBefore).not.toBeNull()
+
+      // Update with completed status - should clear timeout (hasPending === true)
+      manager.updateStatus(EXECUTION_STATUS.COMPLETED)
+
+      // Verify timeout was cleared (hasPending === true check worked)
+      expect((manager as any).reconnectTimeout).toBeNull()
+    })
+
+    it('should verify hasPending === false check in updateStatus', () => {
+      const manager = new WebSocketConnectionManager({
+        executionId: 'exec-123',
+        maxReconnectAttempts: 5,
+        webSocketFactory: mockWebSocketFactory,
+        windowLocation: { protocol: 'ws:', host: 'localhost:8000' } as any,
+        logger: mockLogger,
+      })
+
+      manager.connect(callbacks)
+      act(() => {
+        jest.advanceTimersByTime(20)
+      })
+
+      // No reconnection timeout set (hasPending === false)
+      expect((manager as any).reconnectTimeout).toBeNull()
+
+      // Update with completed status - should not try to clear timeout (hasPending === false)
+      manager.updateStatus(EXECUTION_STATUS.COMPLETED)
+
+      // Should still work without error
+      expect((manager as any).reconnectTimeout).toBeNull()
+    })
+  })
 })

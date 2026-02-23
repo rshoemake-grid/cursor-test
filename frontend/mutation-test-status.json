@@ -1,7 +1,7 @@
 {
-  "timestamp": "2026-02-20 16:38:34",
+  "timestamp": "2026-02-23 16:15:39",
   "process_status": "STOPPED",
-  "progress": "Log file not found",
-  "has_errors": "false",
-  "log_stats": "Log file not found"
+  "progress": "INITIAL_TEST_RUN:16:15:32 (39508) ERROR Stryker There were failed tests in the initial test run.",
+  "has_errors": "true",
+  "log_stats": "Lines:     2950 | Size: 224K | Modified: Feb 23 16:15:32 2026"
 }
