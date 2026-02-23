@@ -5,10 +5,15 @@ Apigee-ready API with standardized error handling and security headers.
 from fastapi import FastAPI, Request, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from fastapi.middleware.gzip import GZipMiddleware
 from datetime import datetime
 import time
+import uuid
+from typing import Dict, Any
 from backend.config import settings
-from backend.database.db import init_db
+from backend.database.db import init_db, engine, AsyncSessionLocal
+from backend.utils.metrics import metrics_collector
+from sqlalchemy import text
 from backend.api import router as api_router
 from backend.api.auth_routes import router as auth_router
 from backend.api.websocket_routes import router as websocket_router
@@ -56,6 +61,70 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Request ID and metrics middleware (must be first to track all requests)
+@app.middleware("http")
+async def add_request_id_and_metrics(request: Request, call_next):
+    """Add request ID and track metrics for monitoring"""
+    # Generate request ID if not present (Apigee may add one)
+    request_id = (
+        request.headers.get("X-Request-ID") 
+        or request.headers.get("X-Correlation-ID")
+        or str(uuid.uuid4())
+    )
+    request.state.request_id = request_id
+    
+    # Track request start time for latency
+    start_time = time.time()
+    
+    try:
+        response = await call_next(request)
+        
+        # Calculate latency
+        latency_ms = (time.time() - start_time) * 1000
+        
+        # Record metrics
+        endpoint = f"{request.method} {request.url.path}"
+        metrics_collector.record_request(
+            endpoint=endpoint,
+            status_code=response.status_code,
+            latency_ms=latency_ms
+        )
+        
+        response.headers["X-Request-ID"] = request_id
+        return response
+    except Exception as e:
+        # Record error metrics
+        latency_ms = (time.time() - start_time) * 1000
+        endpoint = f"{request.method} {request.url.path}"
+        metrics_collector.record_request(
+            endpoint=endpoint,
+            status_code=500,
+            latency_ms=latency_ms
+        )
+        raise
+
+# Request size limit middleware
+@app.middleware("http")
+async def validate_request_size(request: Request, call_next):
+    """Validate request body size to prevent large payloads"""
+    if request.method in ["POST", "PUT", "PATCH"]:
+        content_length = request.headers.get("content-length")
+        if content_length:
+            try:
+                size = int(content_length)
+                if size > settings.max_request_size:
+                    raise HTTPException(
+                        status_code=413,
+                        detail=f"Request body too large. Maximum size: {settings.max_request_size / (1024 * 1024):.1f}MB"
+                    )
+            except ValueError:
+                pass  # Invalid content-length, let it pass (will fail later)
+    
+    return await call_next(request)
+
+# Response compression middleware
+app.add_middleware(GZipMiddleware, minimum_size=1000)
+
 # Security and Apigee-compatible headers middleware
 @app.middleware("http")
 async def add_security_headers(request: Request, call_next):
@@ -72,11 +141,6 @@ async def add_security_headers(request: Request, call_next):
     response.headers["X-RateLimit-Limit"] = "1000"
     response.headers["X-RateLimit-Remaining"] = "999"
     response.headers["X-RateLimit-Reset"] = str(int(time.time()) + 3600)
-    
-    # Request ID for tracing (preserve if Apigee adds it)
-    request_id = request.headers.get("X-Request-ID") or request.headers.get("X-Correlation-ID")
-    if request_id:
-        response.headers["X-Request-ID"] = request_id
     
     return response
 
@@ -96,16 +160,49 @@ async def http_exception_handler(request: Request, exc: HTTPException):
         }
     )
 
-# Health check endpoint
+# Health check endpoint with dependency checks
 @app.get("/health")
 async def health_check():
-    """Health check endpoint for Kubernetes and Apigee"""
-    return {
+    """
+    Comprehensive health check endpoint for Kubernetes and Apigee.
+    Checks database connectivity and other dependencies.
+    """
+    checks: Dict[str, Any] = {
         "status": "healthy",
         "service": "workflow-builder-backend",
         "version": "1.0.0",
-        "timestamp": datetime.utcnow().isoformat()
+        "timestamp": datetime.utcnow().isoformat(),
+        "checks": {}
     }
+    
+    # Check database connectivity
+    db_status = "healthy"
+    db_error = None
+    try:
+        async with AsyncSessionLocal() as session:
+            result = await session.execute(text("SELECT 1"))
+            result.scalar()
+            checks["checks"]["database"] = {
+                "status": "healthy",
+                "message": "Database connection successful"
+            }
+    except Exception as e:
+        db_status = "unhealthy"
+        db_error = str(e)
+        checks["checks"]["database"] = {
+            "status": "unhealthy",
+            "message": f"Database connection failed: {db_error}"
+        }
+    
+    # Determine overall status
+    if db_status == "unhealthy":
+        checks["status"] = "unhealthy"
+        return JSONResponse(
+            status_code=503,
+            content=checks
+        )
+    
+    return checks
 
 # Include routers with API versioning for Apigee compatibility
 # Version prefix: /api/v1
@@ -121,6 +218,15 @@ app.include_router(sharing_router, prefix=API_VERSION)
 app.include_router(import_export_router, prefix=API_VERSION)
 app.include_router(workflow_chat_router, prefix=API_VERSION)
 app.include_router(debug_router, prefix=f"{API_VERSION}/debug")
+
+# Metrics endpoint for monitoring
+@app.get("/metrics")
+async def get_metrics():
+    """
+    Prometheus-compatible metrics endpoint for API monitoring.
+    Returns API usage statistics including request counts, error rates, and latency.
+    """
+    return metrics_collector.get_metrics()
 
 # Initialize database on startup
 @app.on_event("startup")
