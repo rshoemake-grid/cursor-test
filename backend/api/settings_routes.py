@@ -43,25 +43,15 @@ class LLMTestRequest(BaseModel):
     model: str
 
 
-# In-memory cache (for quick access, backed by database)
-_settings_cache: Dict[str, LLMSettings] = {}
+# Import shared cache (DIP compliance - no direct cache definition)
+from ..utils.settings_cache import get_settings_cache
+
+# Get reference to shared cache
+_settings_cache = get_settings_cache()
 
 
-async def load_settings_into_cache(db: AsyncSession):
-    """Load all settings from database into cache (called on server startup)"""
-    try:
-        result = await db.execute(select(SettingsDB))
-        all_settings = result.scalars().all()
-        
-        for settings_db in all_settings:
-            if settings_db.settings_data:
-                settings = LLMSettings(**settings_db.settings_data)
-                _settings_cache[settings_db.user_id] = settings
-                logger.info(f"Loaded settings for user: {settings_db.user_id} ({len(settings.providers)} providers)")
-        
-        logger.info(f"Loaded {len(_settings_cache)} user settings into cache")
-    except Exception as e:
-        logger.error(f"Failed to load settings into cache: {e}", exc_info=True)
+# load_settings_into_cache moved to SettingsService.load_settings_into_cache()
+# This function is deprecated - use SettingsService instead
 
 
 @router.post("/llm")
@@ -311,133 +301,58 @@ from ..utils.settings_utils import is_valid_api_key as _is_valid_api_key
 
 
 def get_active_llm_config(user_id: Optional[str] = None) -> Optional[Dict[str, Any]]:
-    """Get the first enabled LLM provider for a user
-    
-    For authenticated users, only returns their own settings (no anonymous fallback).
-    For unauthenticated users (user_id=None), returns anonymous settings.
-    Also tries to load from database if cache is empty.
     """
-    uid = user_id if user_id else "anonymous"
+    Get the first enabled LLM provider for a user.
     
-    logger.debug(f"Getting LLM config for user: {uid}, cache keys: {list(_settings_cache.keys())}")
+    DEPRECATED: This function is kept for backward compatibility.
+    New code should use SettingsService directly via dependency injection.
     
-    # Try user-specific settings
-    settings = None
-    if uid in _settings_cache:
-        settings = _settings_cache[uid]
-        logger.debug(f"Found user-specific settings with {len(settings.providers)} providers")
-    elif not _settings_cache:
-        # Cache is empty - try to load from database synchronously (fallback)
-        logger.warning(f"Settings cache is empty, attempting to load from database")
-        try:
-            import asyncio
-            from ..database.db import AsyncSessionLocal
-            from sqlalchemy import select
-            
-            # Try to load settings from database
-            loop = None
-            try:
-                loop = asyncio.get_event_loop()
-            except RuntimeError:
-                loop = asyncio.new_event_loop()
-                asyncio.set_event_loop(loop)
-            
-            async def load_from_db():
-                async with AsyncSessionLocal() as db:
-                    result = await db.execute(select(SettingsDB))
-                    all_settings = result.scalars().all()
-                    for settings_db in all_settings:
-                        if settings_db.settings_data:
-                            settings_obj = LLMSettings(**settings_db.settings_data)
-                            _settings_cache[settings_db.user_id] = settings_obj
-                            logger.info(f"Loaded settings for user: {settings_db.user_id} from database")
-            
-            if loop.is_running():
-                # Can't run async code in sync context if loop is running
-                logger.warning("Cannot load settings from database synchronously - event loop is running")
-            else:
-                loop.run_until_complete(load_from_db())
-                
-                # Try again after loading
-                if uid in _settings_cache:
-                    settings = _settings_cache[uid]
-                elif user_id and "anonymous" in _settings_cache:
-                    settings = _settings_cache["anonymous"]
-        except Exception as e:
-            logger.error(f"Failed to load settings from database: {e}", exc_info=True)
-    
-    # Delegate to SettingsService for the core logic
+    Args:
+        user_id: User ID, or None for anonymous user
+        
+    Returns:
+        Dict with 'type', 'api_key', 'base_url', 'model' keys, or None if not found
+    """
+    # Delegate to SettingsService (thin wrapper for backward compatibility)
     from ..services.settings_service import SettingsService
     service = SettingsService()
     return service.get_active_llm_config(user_id)
 
 
 def get_provider_for_model(model_name: str, user_id: Optional[str] = None) -> Optional[Dict[str, Any]]:
-    """Find the provider that owns the given model name
-    
-    Note: This function delegates to SettingsService for the core logic.
     """
-    uid = user_id if user_id else "anonymous"
+    Find the provider that owns the given model name.
     
-    if uid not in _settings_cache:
-        logger.warning(f"No settings found in cache for user '{uid}' - settings need to be loaded from database via API")
-        return None
+    DEPRECATED: This function is kept for backward compatibility.
+    New code should use SettingsService directly via dependency injection.
     
-    # Delegate to SettingsService for the core logic
+    Args:
+        model_name: Name of the model to find
+        user_id: User ID, or None for anonymous user
+        
+    Returns:
+        Dict with provider config, or None if not found
+    """
+    # Delegate to SettingsService (thin wrapper for backward compatibility)
     from ..services.settings_service import SettingsService
     service = SettingsService()
     return service.get_provider_for_model(model_name, user_id)
 
 
 def get_user_settings(user_id: Optional[str] = None) -> Optional[LLMSettings]:
-    """Get full LLM settings (including iteration_limit) for a user
+    """
+    Get full LLM settings (including iteration_limit) for a user.
+    
+    DEPRECATED: This function is kept for backward compatibility.
+    New code should use SettingsService directly via dependency injection.
     
     Args:
         user_id: User ID, or None for anonymous user
         
     Returns:
         LLMSettings object if found, None otherwise
-        
-    Note: This function delegates to SettingsService for the core logic, but includes
-    additional logic to load from database if cache is empty (for backward compatibility).
     """
-    uid = user_id if user_id else "anonymous"
-    
-    # If cache is empty, try to load from database (fallback for backward compatibility)
-    if not _settings_cache:
-        logger.warning(f"Settings cache is empty, attempting to load from database for user: {uid}")
-        try:
-            import asyncio
-            from ..database.db import AsyncSessionLocal
-            from sqlalchemy import select
-            
-            # Try to load settings from database
-            loop = None
-            try:
-                loop = asyncio.get_event_loop()
-            except RuntimeError:
-                loop = asyncio.new_event_loop()
-                asyncio.set_event_loop(loop)
-            
-            async def load_from_db():
-                async with AsyncSessionLocal() as db:
-                    result = await db.execute(select(SettingsDB))
-                    all_settings = result.scalars().all()
-                    for settings_db in all_settings:
-                        if settings_db.settings_data:
-                            settings_obj = LLMSettings(**settings_db.settings_data)
-                            _settings_cache[settings_db.user_id] = settings_obj
-                            logger.info(f"Loaded settings for user: {settings_db.user_id} from database (iteration_limit: {settings_obj.iteration_limit})")
-            
-            if loop.is_running():
-                # Can't run async code in sync context if loop is running
-                logger.warning("Cannot load settings from database synchronously - event loop is running")
-            else:
-                loop.run_until_complete(load_from_db())
-        except Exception as e:
-            logger.error(f"Failed to load settings from database: {e}", exc_info=True)
-    
-    # Delegate to SettingsService for the core logic
+    # Delegate to SettingsService (thin wrapper for backward compatibility)
     from ..services.settings_service import SettingsService
     service = SettingsService()
     return service.get_user_settings(user_id)
