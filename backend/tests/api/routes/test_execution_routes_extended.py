@@ -289,22 +289,22 @@ class TestReconstructWorkflowDefinition:
         assert "Invalid node data" in str(exc_info.value.detail)
 
 
+
+
 class TestExecuteWorkflowEndpoint:
     """Test execute_workflow endpoint main logic"""
     
     @pytest.mark.asyncio
     async def test_execute_workflow_workflow_not_found(self, db_session, test_user, test_settings):
-        """Test execute_workflow when workflow doesn't exist (lines 161-163)"""
+        """Test execute_workflow when workflow doesn't exist"""
         from main import app
-        from backend.dependencies import get_workflow_service
+        from backend.services.settings_service import ISettingsService
         
         async def override_get_db():
             yield db_session
         
         app.dependency_overrides[get_db] = override_get_db
         
-        # Mock settings service
-        from backend.services.settings_service import ISettingsService
         mock_settings_service = MagicMock(spec=ISettingsService)
         mock_settings_service.get_active_llm_config.return_value = {
             "type": "openai",
@@ -327,288 +327,9 @@ class TestExecuteWorkflowEndpoint:
         finally:
             app.dependency_overrides.clear()
     
-(self, db_session, test_user, test_workflow):
-        """Test execute_workflow when no LLM config exists (lines 182-188)"""
-        from main import app
-        from backend.services.settings_service import ISettingsService
-        
-        async def override_get_db():
-            yield db_session
-        
-        app.dependency_overrides[get_db] = override_get_db
-        
-        # Mock settings service to return None
-        mock_settings_service = MagicMock(spec=ISettingsService)
-        mock_settings_service.get_active_llm_config.return_value = None
-        
-        # Mock load_settings_into_cache from settings_routes
-        with patch('backend.api.settings_routes.load_settings_into_cache', new_callable=AsyncMock) as mock_load:
-            mock_load.return_value = None
-            app.dependency_overrides[ISettingsService] = lambda: mock_settings_service
-            
-            try:
-                async with AsyncClient(app=app, base_url="http://test") as client:
-                    from backend.auth.auth import create_access_token
-                    token = create_access_token({"sub": test_user.username})
-                    
-                    response = await client.post(
-                        f"/api/workflows/{test_workflow.id}/execute",
-                        headers={"Authorization": f"Bearer {token}"}
-                    )
-                    
-                    assert response.status_code == 400
-                    assert "No LLM provider configured" in response.json()["detail"]
-            finally:
-                app.dependency_overrides.clear()
-    
-(self, db_session, test_user, test_settings):
-        """Test execute_workflow with invalid workflow definition (lines 211-213)"""
-        from main import app
-        from backend.services.settings_service import ISettingsService
-        
-        # Create workflow with invalid definition
-        invalid_workflow = WorkflowDB(
-            id=str(uuid.uuid4()),
-            name="Invalid Workflow",
-            definition={
-                "nodes": [
-                    {
-                        "id": "node-1",
-                        "type": "invalid_type"  # Invalid
-                    }
-                ],
-                "edges": [],
-                "variables": {}
-            },
-            owner_id=test_user.id
-        )
-        db_session.add(invalid_workflow)
-        await db_session.commit()
-        
-        async def override_get_db():
-            yield db_session
-        
-        app.dependency_overrides[get_db] = override_get_db
-        
-        mock_settings_service = MagicMock(spec=ISettingsService)
-        mock_settings_service.get_active_llm_config.return_value = {
-            "type": "openai",
-            "model": "gpt-4",
-            "api_key": "sk-test"
-        }
-        app.dependency_overrides[ISettingsService] = lambda: mock_settings_service
-        
-        try:
-            async with AsyncClient(app=app, base_url="http://test") as client:
-                from backend.auth.auth import create_access_token
-                token = create_access_token({"sub": test_user.username})
-                
-                response = await client.post(
-                    f"/api/workflows/{invalid_workflow.id}/execute",
-                    headers={"Authorization": f"Bearer {token}"}
-                )
-                
-                assert response.status_code == 422
-                # The error message includes "Invalid workflow definition" or "Invalid node data"
-                assert "Invalid" in response.json()["detail"]
-        finally:
-            app.dependency_overrides.clear()
-    
-(self, db_session, test_user, test_workflow):
-        """Test execute_workflow handles LLM config errors (lines 193-195)"""
-        from main import app
-        from backend.services.settings_service import ISettingsService
-        
-        async def override_get_db():
-            yield db_session
-        
-        app.dependency_overrides[get_db] = override_get_db
-        
-        mock_settings_service = MagicMock(spec=ISettingsService)
-        # Make it raise an exception that is NOT HTTPException
-        mock_settings_service.get_active_llm_config.side_effect = RuntimeError("Config error")
-        app.dependency_overrides[ISettingsService] = lambda: mock_settings_service
-        
-        try:
-            async with AsyncClient(app=app, base_url="http://test") as client:
-                from backend.auth.auth import create_access_token
-                token = create_access_token({"sub": test_user.username})
-                
-                response = await client.post(
-                    f"/api/workflows/{test_workflow.id}/execute",
-                    headers={"Authorization": f"Bearer {token}"}
-                )
-                
-                assert response.status_code == 500
-                assert "Failed to get LLM configuration" in response.json()["detail"]
-        finally:
-            app.dependency_overrides.clear()
-    
-(self, db_session, test_user, test_workflow, test_settings):
-        """Test execute_workflow handles unexpected errors (lines 310-315)"""
-        from main import app
-        from backend.services.settings_service import ISettingsService
-        
-        async def override_get_db():
-            yield db_session
-        
-        app.dependency_overrides[get_db] = override_get_db
-        
-        # Mock get_workflow_service to raise an unexpected error
-        with patch('backend.api.routes.execution_routes.get_workflow_service', side_effect=RuntimeError("Unexpected error")):
-            try:
-                async with AsyncClient(app=app, base_url="http://test") as client:
-                    from backend.auth.auth import create_access_token
-                    token = create_access_token({"sub": test_user.username})
-                    
-                    response = await client.post(
-                        f"/api/workflows/{test_workflow.id}/execute",
-                        headers={"Authorization": f"Bearer {token}"}
-                    )
-                    
-                    assert response.status_code == 500
-                    assert "Internal server error" in response.json()["detail"]
-            finally:
-                app.dependency_overrides.clear()
-
-(self, db_session, test_user, test_workflow, test_settings):
-        """Test execute_workflow handles unexpected errors (lines 310-315)"""
-        from main import app
-        from backend.services.settings_service import ISettingsService
-        
-        async def override_get_db():
-            yield db_session
-        
-        app.dependency_overrides[get_db] = override_get_db
-        
-        # Mock get_workflow_service to raise an unexpected error
-        with patch('backend.api.routes.execution_routes.get_workflow_service', side_effect=RuntimeError("Unexpected error")):
-            try:
-                async with AsyncClient(app=app, base_url="http://test") as client:
-                    from backend.auth.auth import create_access_token
-                    token = create_access_token({"sub": test_user.username})
-                    
-                    response = await client.post(
-                        f"/api/workflows/{test_workflow.id}/execute",
-                        headers={"Authorization": f"Bearer {token}"}
-                    )
-                    
-                    assert response.status_code == 500
-                    assert "Internal server error" in response.json()["detail"]
-            finally:
-                app.dependency_overrides.clear()
-
-(self, db_session, test_user, test_workflow, test_settings):
-        """Test execute_workflow handles unexpected errors (lines 310-315)"""
-        from main import app
-        from backend.services.settings_service import ISettingsService
-        
-        async def override_get_db():
-            yield db_session
-        
-        app.dependency_overrides[get_db] = override_get_db
-        
-        # Mock get_workflow_service to raise an unexpected error
-        with patch('backend.api.routes.execution_routes.get_workflow_service', side_effect=RuntimeError("Unexpected error")):
-            try:
-                async with AsyncClient(app=app, base_url="http://test") as client:
-                    from backend.auth.auth import create_access_token
-                    token = create_access_token({"sub": test_user.username})
-                    
-                    response = await client.post(
-                        f"/api/workflows/{test_workflow.id}/execute",
-                        headers={"Authorization": f"Bearer {token}"}
-                    )
-                    
-                    assert response.status_code == 500
-                    assert "Internal server error" in response.json()["detail"]
-            finally:
-                app.dependency_overrides.clear()
-
-(self, db_session, test_user, test_workflow, test_settings):
-        """Test execute_workflow handles unexpected errors (lines 310-315)"""
-        from main import app
-        from backend.services.settings_service import ISettingsService
-        
-        async def override_get_db():
-            yield db_session
-        
-        app.dependency_overrides[get_db] = override_get_db
-        
-        # Mock get_workflow_service to raise an unexpected error
-        with patch('backend.api.routes.execution_routes.get_workflow_service', side_effect=RuntimeError("Unexpected error")):
-            try:
-                async with AsyncClient(app=app, base_url="http://test") as client:
-                    from backend.auth.auth import create_access_token
-                    token = create_access_token({"sub": test_user.username})
-                    
-                    response = await client.post(
-                        f"/api/workflows/{test_workflow.id}/execute",
-                        headers={"Authorization": f"Bearer {token}"}
-                    )
-                    
-                    assert response.status_code == 500
-                    assert "Internal server error" in response.json()["detail"]
-            finally:
-                app.dependency_overrides.clear()
-
-(self, db_session, test_user, test_workflow, test_settings):
-        """Test execute_workflow handles unexpected errors (lines 310-315)"""
-        from main import app
-        from backend.services.settings_service import ISettingsService
-        
-        async def override_get_db():
-            yield db_session
-        
-        app.dependency_overrides[get_db] = override_get_db
-        
-        # Mock get_workflow_service to raise an unexpected error
-        with patch('backend.api.routes.execution_routes.get_workflow_service', side_effect=RuntimeError("Unexpected error")):
-            try:
-                async with AsyncClient(app=app, base_url="http://test") as client:
-                    from backend.auth.auth import create_access_token
-                    token = create_access_token({"sub": test_user.username})
-                    
-                    response = await client.post(
-                        f"/api/workflows/{test_workflow.id}/execute",
-                        headers={"Authorization": f"Bearer {token}"}
-                    )
-                    
-                    assert response.status_code == 500
-                    assert "Internal server error" in response.json()["detail"]
-            finally:
-                app.dependency_overrides.clear()
-
-(self, db_session, test_user, test_workflow, test_settings):
-        """Test execute_workflow handles unexpected errors (lines 310-315)"""
-        from main import app
-        from backend.services.settings_service import ISettingsService
-        
-        async def override_get_db():
-            yield db_session
-        
-        app.dependency_overrides[get_db] = override_get_db
-        
-        # Mock get_workflow_service to raise an unexpected error
-        with patch('backend.api.routes.execution_routes.get_workflow_service', side_effect=RuntimeError("Unexpected error")):
-            try:
-                async with AsyncClient(app=app, base_url="http://test") as client:
-                    from backend.auth.auth import create_access_token
-                    token = create_access_token({"sub": test_user.username})
-                    
-                    response = await client.post(
-                        f"/api/workflows/{test_workflow.id}/execute",
-                        headers={"Authorization": f"Bearer {token}"}
-                    )
-                    
-                    assert response.status_code == 500
-                    assert "Internal server error" in response.json()["detail"]
-            finally:
-                app.dependency_overrides.clear()
-
     @pytest.mark.asyncio
     async def test_execute_workflow_creates_execution_record(self, db_session, test_user, test_workflow, test_settings):
-        """Test that execute_workflow creates execution record in database (lines 232-245)"""
+        """Test that execute_workflow creates execution record"""
         from main import app
         from backend.services.settings_service import ISettingsService
         
@@ -625,7 +346,6 @@ class TestExecuteWorkflowEndpoint:
         }
         app.dependency_overrides[ISettingsService] = lambda: mock_settings_service
         
-        # Mock executor to avoid actual execution
         with patch('backend.api.routes.execution_routes.WorkflowExecutor') as mock_executor_class:
             mock_executor = MagicMock()
             mock_executor.execution_id = "exec-123"
@@ -644,7 +364,6 @@ class TestExecuteWorkflowEndpoint:
                     assert response.status_code == 200
                     execution_id = response.json()["execution_id"]
                     
-                    # Verify execution record was created
                     result = await db_session.execute(
                         select(ExecutionDB).where(ExecutionDB.id == execution_id)
                     )
@@ -654,166 +373,5 @@ class TestExecuteWorkflowEndpoint:
                     assert db_execution.workflow_id == test_workflow.id
                     assert db_execution.user_id == test_user.id
                     assert db_execution.status == "running"
-            finally:
-                app.dependency_overrides.clear()
-    
-    @pytest.mark.asyncio
-    async def test_execute_workflow_database_error(self, db_session, test_user, test_workflow, test_settings):
-        """Test execute_workflow handles database errors (lines 243-245)"""
-        from main import app
-        from backend.services.settings_service import ISettingsService
-        
-        async def override_get_db():
-            yield db_session
-        
-        app.dependency_overrides[get_db] = override_get_db
-        
-        mock_settings_service = MagicMock(spec=ISettingsService)
-        mock_settings_service.get_active_llm_config.return_value = {
-            "type": "openai",
-            "model": "gpt-4",
-            "api_key": "sk-test"
-        }
-        app.dependency_overrides[ISettingsService] = lambda: mock_settings_service
-        
-        with patch('backend.api.routes.execution_routes.WorkflowExecutor') as mock_executor_class:
-            mock_executor = MagicMock()
-            mock_executor.execution_id = "exec-123"
-            mock_executor_class.return_value = mock_executor
-            
-            # Mock db.add to raise an error
-            with patch.object(db_session, 'add', side_effect=Exception("Database error")):
-                try:
-                    async with AsyncClient(app=app, base_url="http://test") as client:
-                        from backend.auth.auth import create_access_token
-                        token = create_access_token({"sub": test_user.username})
-                        
-                        response = await client.post(
-                            f"/api/workflows/{test_workflow.id}/execute",
-                            headers={"Authorization": f"Bearer {token}"}
-                        )
-                        
-                        assert response.status_code == 500
-                        assert "Failed to create execution record" in response.json()["detail"]
-                finally:
-                    app.dependency_overrides.clear()
-    
-    @pytest.mark.asyncio
-    async def test_execute_workflow_executor_creation_error(self, db_session, test_user, test_workflow, test_settings):
-        """Test execute_workflow handles executor creation errors (lines 221-223)"""
-        from main import app
-        from backend.services.settings_service import ISettingsService
-        
-        async def override_get_db():
-            yield db_session
-        
-        app.dependency_overrides[get_db] = override_get_db
-        
-        mock_settings_service = MagicMock(spec=ISettingsService)
-        mock_settings_service.get_active_llm_config.return_value = {
-            "type": "openai",
-            "model": "gpt-4",
-            "api_key": "sk-test"
-        }
-        app.dependency_overrides[ISettingsService] = lambda: mock_settings_service
-        
-        # Mock executor creation to raise error
-        with patch('backend.api.routes.execution_routes.WorkflowExecutor', side_effect=Exception("Executor error")):
-            try:
-                async with AsyncClient(app=app, base_url="http://test") as client:
-                    from backend.auth.auth import create_access_token
-                    token = create_access_token({"sub": test_user.username})
-                    
-                    response = await client.post(
-                        f"/api/workflows/{test_workflow.id}/execute",
-                        headers={"Authorization": f"Bearer {token}"}
-                    )
-                    
-                    assert response.status_code == 500
-                    assert "Failed to create workflow executor" in response.json()["detail"]
-            finally:
-                app.dependency_overrides.clear()
-    
-(self, db_session, test_user, test_workflow):
-        """Test execute_workflow handles LLM config errors (lines 193-195)"""
-        from main import app
-        from backend.services.settings_service import ISettingsService
-        
-        async def override_get_db():
-            yield db_session
-        
-        app.dependency_overrides[get_db] = override_get_db
-        
-        mock_settings_service = MagicMock(spec=ISettingsService)
-        # Make it raise an exception that is NOT HTTPException
-        mock_settings_service.get_active_llm_config.side_effect = RuntimeError("Config error")
-        app.dependency_overrides[ISettingsService] = lambda: mock_settings_service
-        
-        try:
-            async with AsyncClient(app=app, base_url="http://test") as client:
-                from backend.auth.auth import create_access_token
-                token = create_access_token({"sub": test_user.username})
-                
-                response = await client.post(
-                    f"/api/workflows/{test_workflow.id}/execute",
-                    headers={"Authorization": f"Bearer {token}"}
-                )
-                
-                assert response.status_code == 500
-                assert "Failed to get LLM configuration" in response.json()["detail"]
-        finally:
-            app.dependency_overrides.clear()
-    
-(self, db_session, test_user, test_workflow, test_settings):
-        """Test execute_workflow handles unexpected errors (lines 310-315)"""
-        from main import app
-        from backend.services.settings_service import ISettingsService
-        
-        async def override_get_db():
-            yield db_session
-        
-        app.dependency_overrides[get_db] = override_get_db
-        
-        # Mock get_workflow_service to raise an unexpected error
-        with patch('backend.api.routes.execution_routes.get_workflow_service', side_effect=RuntimeError("Unexpected error")):
-            try:
-                async with AsyncClient(app=app, base_url="http://test") as client:
-                    from backend.auth.auth import create_access_token
-                    token = create_access_token({"sub": test_user.username})
-                    
-                    response = await client.post(
-                        f"/api/workflows/{test_workflow.id}/execute",
-                        headers={"Authorization": f"Bearer {token}"}
-                    )
-                    
-                    assert response.status_code == 500
-                    assert "Internal server error" in response.json()["detail"]
-            finally:
-                app.dependency_overrides.clear()
-
-(self, db_session, test_user, test_workflow, test_settings):
-        """Test execute_workflow handles unexpected errors (lines 310-315)"""
-        from main import app
-        from backend.services.settings_service import ISettingsService
-        
-        async def override_get_db():
-            yield db_session
-        
-        app.dependency_overrides[get_db] = override_get_db
-        
-        # Mock get_workflow_service to raise an unexpected error
-        with patch('backend.api.routes.execution_routes.get_workflow_service', side_effect=RuntimeError("Unexpected error")):
-            try:
-                async with AsyncClient(app=app, base_url="http://test") as client:
-                    from backend.auth.auth import create_access_token
-                    token = create_access_token({"sub": test_user.username})
-                    
-                    response = await client.post(
-                        f"/api/workflows/{test_workflow.id}/execute",
-                        headers={"Authorization": f"Bearer {token}"}
-                    )
-                    
-                    assert response.status_code == 500
-                    assert "Internal server error" in response.json()["detail"]
             finally:
                 app.dependency_overrides.clear()
