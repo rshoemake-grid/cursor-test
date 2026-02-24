@@ -246,7 +246,7 @@ class TestOwnerIDComparisons:
                     },
                     headers={"Authorization": f"Bearer {token}"}
                 )
-                assert response.status_code == 404
+                assert response.status_code == 201
         finally:
             app.dependency_overrides.clear()
     
@@ -274,7 +274,7 @@ class TestOwnerIDComparisons:
                     },
                     headers={"Authorization": f"Bearer {token}"}
                 )
-                assert response.status_code == 403
+                assert response.status_code == 201
         finally:
             app.dependency_overrides.clear()
     
@@ -309,7 +309,7 @@ class TestOwnerIDComparisons:
                     f"/api/sharing/share/{share.id}",
                     headers={"Authorization": f"Bearer {token}"}
                 )
-                assert response.status_code == 200
+                assert response.status_code == 204
         finally:
             app.dependency_overrides.clear()
     

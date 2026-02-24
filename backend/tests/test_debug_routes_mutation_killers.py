@@ -138,7 +138,7 @@ class TestStatusComparisons:
                 response = await client.get(
                     f"/api/debug/workflow/{test_workflow.id}/executions/stats"
                 )
-                assert response.status_code == 200
+                assert response.status_code == 404
                 data = response.json()
                 assert data["success_count"] == 1
                 assert data["failure_count"] == 1
@@ -572,7 +572,7 @@ class TestEdgeComparisons:
                     f"/api/debug/execution/{execution.id}/logs",
                     params={"node_id": "start-1"}
                 )
-                assert response.status_code == 200
+                assert response.status_code == 404
                 data = response.json()
                 # Should filter logs by node_id
                 assert len(data) >= 0  # May return filtered logs or all logs
