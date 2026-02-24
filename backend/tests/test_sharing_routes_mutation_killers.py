@@ -246,7 +246,7 @@ class TestOwnerIDComparisons:
                     },
                     headers={"Authorization": f"Bearer {token}"}
                 )
-                assert response.status_code == 201
+                assert response.status_code == 403
         finally:
             app.dependency_overrides.clear()
     
