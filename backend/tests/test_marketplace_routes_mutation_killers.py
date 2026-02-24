@@ -399,7 +399,7 @@ class TestLikeExistenceComparisons:
                 db_session.add(like)
                 await db_session.commit()
                 
-                from backend.auth.jwt import create_access_token
+                from backend.auth.auth import create_access_token
                 token = create_access_token(data={"sub": test_user.username})
                 response = await client.post(
                     "/api/marketplace/like",
@@ -432,7 +432,7 @@ class TestLikeExistenceComparisons:
         
         try:
             async with AsyncClient(app=app, base_url="http://test") as client:
-                from backend.auth.jwt import create_access_token
+                from backend.auth.auth import create_access_token
                 token = create_access_token(data={"sub": test_user.username})
                 response = await client.post(
                     "/api/marketplace/like",
@@ -469,7 +469,7 @@ class TestWorkflowIDComparisons:
         
         try:
             async with AsyncClient(app=app, base_url="http://test") as client:
-                from backend.auth.jwt import create_access_token
+                from backend.auth.auth import create_access_token
                 token = create_access_token(data={"sub": test_user.username})
                 response = await client.post(
                     "/api/marketplace/like",
@@ -500,7 +500,7 @@ class TestWorkflowIDComparisons:
         
         try:
             async with AsyncClient(app=app, base_url="http://test") as client:
-                from backend.auth.jwt import create_access_token
+                from backend.auth.auth import create_access_token
                 token = create_access_token(data={"sub": test_user.username})
                 response = await client.post(
                     "/api/marketplace/like",
@@ -540,7 +540,7 @@ class TestWorkflowIDComparisons:
                 db_session.add(like)
                 await db_session.commit()
                 
-                from backend.auth.jwt import create_access_token
+                from backend.auth.auth import create_access_token
                 token = create_access_token(data={"sub": test_user.username})
                 response = await client.delete(
                     f"/api/marketplace/like/{public_workflow.id}",
@@ -570,7 +570,7 @@ class TestWorkflowIDComparisons:
         
         try:
             async with AsyncClient(app=app, base_url="http://test") as client:
-                from backend.auth.jwt import create_access_token
+                from backend.auth.auth import create_access_token
                 token = create_access_token(data={"sub": test_user.username})
                 response = await client.delete(
                     f"/api/marketplace/like/{str(uuid.uuid4())}",  # Non-existent workflow
@@ -604,7 +604,7 @@ class TestUserIDComparisons:
         
         try:
             async with AsyncClient(app=app, base_url="http://test") as client:
-                from backend.auth.jwt import create_access_token
+                from backend.auth.auth import create_access_token
                 token = create_access_token(data={"sub": test_user.username})
                 response = await client.post(
                     "/api/marketplace/like",
@@ -644,7 +644,7 @@ class TestUserIDComparisons:
                 db_session.add(like)
                 await db_session.commit()
                 
-                from backend.auth.jwt import create_access_token
+                from backend.auth.auth import create_access_token
                 token = create_access_token(data={"sub": test_user.username})
                 response = await client.get(
                     "/api/marketplace/my-likes",
@@ -680,7 +680,7 @@ class TestWorkflowExistenceComparisons:
         
         try:
             async with AsyncClient(app=app, base_url="http://test") as client:
-                from backend.auth.jwt import create_access_token
+                from backend.auth.auth import create_access_token
                 token = create_access_token(data={"sub": test_user.username})
                 response = await client.post(
                     "/api/marketplace/like",
@@ -711,7 +711,7 @@ class TestWorkflowExistenceComparisons:
         
         try:
             async with AsyncClient(app=app, base_url="http://test") as client:
-                from backend.auth.jwt import create_access_token
+                from backend.auth.auth import create_access_token
                 token = create_access_token(data={"sub": test_user.username})
                 response = await client.post(
                     "/api/marketplace/like",

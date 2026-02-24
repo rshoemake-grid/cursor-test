@@ -41,7 +41,7 @@ class TestStatusCodeComparisons:
     
     @pytest.mark.asyncio
     async def test_test_llm_connection_status_200(self, test_user, db_session):
-        """Test LLM connection test with status 200 (boundary: == 200)"""
+        token = create_access_token(data={"sub": "testuser"})
         from main import app
         from backend.database.db import get_db as get_db_func
         
@@ -75,7 +75,7 @@ class TestStatusCodeComparisons:
     
     @pytest.mark.asyncio
     async def test_test_llm_connection_status_401(self, test_user, db_session):
-        """Test LLM connection test with status 401 (boundary: == 401)"""
+        token = create_access_token(data={"sub": "testuser"})
         from main import app
         from backend.database.db import get_db as get_db_func
         
@@ -109,7 +109,7 @@ class TestStatusCodeComparisons:
     
     @pytest.mark.asyncio
     async def test_test_llm_connection_status_429(self, test_user, db_session):
-        """Test LLM connection test with status 429 (boundary: == 429)"""
+        token = create_access_token(data={"sub": "testuser"})
         from main import app
         from backend.database.db import get_db as get_db_func
         
@@ -143,7 +143,7 @@ class TestStatusCodeComparisons:
     
     @pytest.mark.asyncio
     async def test_test_llm_connection_status_404(self, test_user, db_session):
-        """Test LLM connection test with status 404 (boundary: == 404)"""
+        token = create_access_token(data={"sub": "testuser"})
         from main import app
         from backend.database.db import get_db as get_db_func
         
@@ -177,7 +177,7 @@ class TestStatusCodeComparisons:
     
     @pytest.mark.asyncio
     async def test_test_llm_connection_status_400(self, test_user, db_session):
-        """Test LLM connection test with status 400 (boundary: == 400)"""
+        token = create_access_token(data={"sub": "testuser"})
         from main import app
         from backend.database.db import get_db as get_db_func
         
@@ -216,7 +216,7 @@ class TestTypeComparisons:
     
     @pytest.mark.asyncio
     async def test_test_llm_connection_type_openai(self, test_user, db_session):
-        """Test LLM connection test with type 'openai' (boundary: == 'openai')"""
+        token = create_access_token(data={"sub": "testuser"})
         from main import app
         from backend.database.db import get_db as get_db_func
         
@@ -250,7 +250,7 @@ class TestTypeComparisons:
     
     @pytest.mark.asyncio
     async def test_test_llm_connection_type_anthropic(self, test_user, db_session):
-        """Test LLM connection test with type 'anthropic' (boundary: == 'anthropic')"""
+        token = create_access_token(data={"sub": "testuser"})
         from main import app
         from backend.database.db import get_db as get_db_func
         
@@ -284,7 +284,7 @@ class TestTypeComparisons:
     
     @pytest.mark.asyncio
     async def test_test_llm_connection_type_gemini(self, test_user, db_session):
-        """Test LLM connection test with type 'gemini' (boundary: == 'gemini')"""
+        token = create_access_token(data={"sub": "testuser"})
         from main import app
         from backend.database.db import get_db as get_db_func
         
@@ -318,7 +318,7 @@ class TestTypeComparisons:
     
     @pytest.mark.asyncio
     async def test_test_llm_connection_type_custom(self, test_user, db_session):
-        """Test LLM connection test with type 'custom' (boundary: == 'custom')"""
+        token = create_access_token(data={"sub": "testuser"})
         from main import app
         from backend.database.db import get_db as get_db_func
         
@@ -417,7 +417,7 @@ class TestLengthComparisons:
     
     @pytest.mark.asyncio
     async def test_save_llm_settings_providers_length_zero(self, test_user, db_session):
-        """Test save settings with 0 providers (boundary: len(providers) == 0)"""
+        token = create_access_token(data={"sub": "testuser"})
         from main import app
         from backend.database.db import get_db as get_db_func
         
@@ -444,7 +444,7 @@ class TestLengthComparisons:
     
     @pytest.mark.asyncio
     async def test_save_llm_settings_providers_length_one(self, test_user, db_session):
-        """Test save settings with 1 provider (boundary: len(providers) == 1)"""
+        token = create_access_token(data={"sub": "testuser"})
         from main import app
         from backend.database.db import get_db as get_db_func
         
@@ -479,7 +479,7 @@ class TestLengthComparisons:
     
     @pytest.mark.asyncio
     async def test_save_llm_settings_providers_length_two(self, test_user, db_session):
-        """Test save settings with 2 providers (boundary: len(providers) > 1)"""
+        token = create_access_token(data={"sub": "testuser"})
         from main import app
         from backend.database.db import get_db as get_db_func
         
@@ -580,7 +580,7 @@ class TestCacheComparisons:
                 )
                 _settings_cache[test_user.id] = settings
                 
-                from backend.auth.jwt import create_access_token
+                from backend.auth.auth import create_access_token
                 token = create_access_token({"sub": test_user.username})
                 headers = {"Authorization": f"Bearer {token}"}
                 
@@ -607,7 +607,7 @@ class TestCacheComparisons:
                 from backend.api.settings_routes import _settings_cache
                 _settings_cache.clear()
                 
-                from backend.auth.jwt import create_access_token
+                from backend.auth.auth import create_access_token
                 token = create_access_token({"sub": test_user.username})
                 headers = {"Authorization": f"Bearer {token}"}
                 
@@ -644,7 +644,7 @@ class TestEmptyChecks:
                 from backend.api.settings_routes import _settings_cache
                 _settings_cache.clear()
                 
-                from backend.auth.jwt import create_access_token
+                from backend.auth.auth import create_access_token
                 token = create_access_token({"sub": test_user.username})
                 headers = {"Authorization": f"Bearer {token}"}
                 
@@ -681,7 +681,7 @@ class TestEmptyChecks:
                 from backend.api.settings_routes import _settings_cache
                 _settings_cache.clear()
                 
-                from backend.auth.jwt import create_access_token
+                from backend.auth.auth import create_access_token
                 token = create_access_token({"sub": test_user.username})
                 headers = {"Authorization": f"Bearer {token}"}
                 
@@ -728,7 +728,7 @@ class TestEmptyChecks:
                 from backend.api.settings_routes import _settings_cache
                 _settings_cache.clear()
                 
-                from backend.auth.jwt import create_access_token
+                from backend.auth.auth import create_access_token
                 token = create_access_token({"sub": test_user.username})
                 headers = {"Authorization": f"Bearer {token}"}
                 
@@ -764,7 +764,7 @@ class TestSaveSettingsComparisons:
                 db_session.add(settings_db)
                 await db_session.commit()
                 
-                from backend.auth.jwt import create_access_token
+                from backend.auth.auth import create_access_token
                 token = create_access_token({"sub": test_user.username})
                 headers = {"Authorization": f"Bearer {token}"}
                 
@@ -807,7 +807,7 @@ class TestSaveSettingsComparisons:
                 await db_session.execute(delete(SettingsDB).where(SettingsDB.user_id == test_user.id))
                 await db_session.commit()
                 
-                from backend.auth.jwt import create_access_token
+                from backend.auth.auth import create_access_token
                 token = create_access_token({"sub": test_user.username})
                 headers = {"Authorization": f"Bearer {token}"}
                 

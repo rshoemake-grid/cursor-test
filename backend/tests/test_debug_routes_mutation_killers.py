@@ -71,12 +71,7 @@ class TestStatusComparisons:
         
         try:
             async with AsyncClient(app=app, base_url="http://test") as client:
-                execution = ExecutionDB(
-                    id=str(uuid.uuid4()),
-                    workflow_id=test_workflow.id,
-                    status="completed",
-                    started_at=datetime.utcnow(),
-                    completed_at=datetime.utcnow()
+                execution = ExecutionDB(id=str(uuid.uuid4()), workflow_id=test_workflow.id, state={}, status="completed", started_at=datetime.utcnow(), completed_at=datetime.utcnow()
                 )
                 db_session.add(execution)
                 await db_session.commit()
@@ -104,14 +99,7 @@ class TestStatusComparisons:
         
         try:
             async with AsyncClient(app=app, base_url="http://test") as client:
-                execution = ExecutionDB(
-                    id=str(uuid.uuid4()),
-                    workflow_id=test_workflow.id,
-                    status="failed",
-                    started_at=datetime.utcnow(),
-                    completed_at=datetime.utcnow(),
-                    error="Test error"
-                )
+                execution = ExecutionDB(id=str(uuid.uuid4()), workflow_id=test_workflow.id, state={}, status="failed", started_at=datetime.utcnow(), completed_at=datetime.utcnow())
                 db_session.add(execution)
                 await db_session.commit()
                 
@@ -139,19 +127,9 @@ class TestStatusComparisons:
         try:
             async with AsyncClient(app=app, base_url="http://test") as client:
                 # Create multiple executions with different statuses
-                execution1 = ExecutionDB(
-                    id=str(uuid.uuid4()),
-                    workflow_id=test_workflow.id,
-                    status="completed",
-                    started_at=datetime.utcnow(),
-                    completed_at=datetime.utcnow()
+                execution1 = ExecutionDB(id=str(uuid.uuid4()), workflow_id=test_workflow.id, state={}, status="completed", started_at=datetime.utcnow(), completed_at=datetime.utcnow()
                 )
-                execution2 = ExecutionDB(
-                    id=str(uuid.uuid4()),
-                    workflow_id=test_workflow.id,
-                    status="failed",
-                    started_at=datetime.utcnow(),
-                    completed_at=datetime.utcnow()
+                execution2 = ExecutionDB(id=str(uuid.uuid4()), workflow_id=test_workflow.id, state={}, status="failed", started_at=datetime.utcnow(), completed_at=datetime.utcnow()
                 )
                 db_session.add(execution1)
                 db_session.add(execution2)
@@ -586,25 +564,7 @@ class TestEdgeComparisons:
         
         try:
             async with AsyncClient(app=app, base_url="http://test") as client:
-                execution = ExecutionDB(
-                    id=str(uuid.uuid4()),
-                    workflow_id=test_workflow.id,
-                    status="completed",
-                    started_at=datetime.utcnow(),
-                    completed_at=datetime.utcnow(),
-                    logs=[
-                        {
-                            "level": "INFO",
-                            "node_id": "start-1",
-                            "message": "Test log"
-                        },
-                        {
-                            "level": "INFO",
-                            "node_id": "end-1",
-                            "message": "Another log"
-                        }
-                    ]
-                )
+                execution = ExecutionDB(id=str(uuid.uuid4()), workflow_id=test_workflow.id, state={}, status="completed", started_at=datetime.utcnow(), completed_at=datetime.utcnow())
                 db_session.add(execution)
                 await db_session.commit()
                 
