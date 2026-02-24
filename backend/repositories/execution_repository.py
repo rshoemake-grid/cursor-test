@@ -94,5 +94,6 @@ class ExecutionRepository(BaseRepository[ExecutionDB]):
         Returns:
             List of execution database entities with status 'running'
         """
-        return await self.list_executions(status='running')
+        from ..models.schemas import ExecutionStatus
+        return await self.list_executions(status=ExecutionStatus.RUNNING.value)
 

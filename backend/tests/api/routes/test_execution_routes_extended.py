@@ -16,9 +16,9 @@ import asyncio
 
 from backend.api.routes.execution_routes import (
     router,
-    reconstruct_workflow_definition,
     execute_workflow
 )
+from backend.utils.workflow_reconstruction import reconstruct_workflow_definition
 from backend.database.models import WorkflowDB, ExecutionDB, UserDB, SettingsDB
 from backend.database.db import get_db
 from backend.models.schemas import ExecutionStatus, ExecutionRequest
@@ -346,7 +346,7 @@ class TestExecuteWorkflowEndpoint:
         }
         app.dependency_overrides[ISettingsService] = lambda: mock_settings_service
         
-        with patch('backend.api.routes.execution_routes.WorkflowExecutor') as mock_executor_class:
+        with patch('backend.services.execution_orchestrator.WorkflowExecutor') as mock_executor_class:
             mock_executor = MagicMock()
             mock_executor.execution_id = "exec-123"
             mock_executor_class.return_value = mock_executor

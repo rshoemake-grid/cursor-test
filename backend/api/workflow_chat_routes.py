@@ -11,7 +11,7 @@ import traceback
 from openai import AsyncOpenAI
 
 from backend.database.db import get_db
-from backend.database.models import WorkflowDB, UserDB, SettingsDB
+from backend.database.models import WorkflowDB, UserDB
 from backend.models.schemas import Node, Edge, NodeType
 from backend.auth import get_optional_user
 from backend.utils.logger import get_logger
@@ -264,41 +264,14 @@ async def chat_with_workflow(
         llm_config = settings_service.get_active_llm_config(user_id)
         model = llm_config.get("model", "gpt-4") if llm_config else "gpt-4"
         
-        # Always query database directly to get latest iteration_limit (cache might be stale)
-        uid = user_id if user_id else "anonymous"
+        # Get iteration_limit from SettingsService (follows architecture layers)
         iteration_limit = 10  # default
-        user_settings = None
-        
-        try:
-            result = await db.execute(
-                select(SettingsDB).where(SettingsDB.user_id == uid)
-            )
-            settings_db = result.scalar_one_or_none()
-            if settings_db and settings_db.settings_data:
-                logger.debug(f"Found settings_db for {uid}, settings_data keys: {list(settings_db.settings_data.keys())}")
-                logger.debug(f"Raw iteration_limit in settings_data: {settings_db.settings_data.get('iteration_limit', 'NOT FOUND')}")
-                print(f"🔍 DEBUG: Found settings_db for {uid}, settings_data keys: {list(settings_db.settings_data.keys())}")
-                print(f"🔍 DEBUG: Raw iteration_limit in settings_data: {settings_db.settings_data.get('iteration_limit', 'NOT FOUND')}")
-                user_settings = LLMSettings(**settings_db.settings_data)
-                iteration_limit = user_settings.iteration_limit
-                logger.info(f"Loaded settings from database for {uid}, iteration_limit: {iteration_limit} (type: {type(iteration_limit).__name__})")
-                print(f"✅ Loaded settings from database for {uid}, iteration_limit: {iteration_limit} (type: {type(iteration_limit).__name__})")
-                # Update cache for future use
-                from .settings_routes import _settings_cache
-                _settings_cache[uid] = user_settings
-            else:
-                # Try cache as fallback using SettingsService
-                user_settings = settings_service.get_user_settings(user_id)
-                if user_settings:
-                    iteration_limit = user_settings.iteration_limit
-                    logger.debug(f"Using cached settings for {uid}, iteration_limit: {iteration_limit}")
-        except Exception as e:
-            logger.error(f"Failed to load settings from database: {e}", exc_info=True)
-            # Fallback to cache using SettingsService
-            user_settings = settings_service.get_user_settings(user_id)
-            if user_settings:
-                iteration_limit = user_settings.iteration_limit
-                logger.warning(f"Using cached settings as fallback for {uid}, iteration_limit: {iteration_limit}")
+        user_settings = settings_service.get_user_settings(user_id)
+        if user_settings:
+            iteration_limit = user_settings.iteration_limit
+            logger.debug(f"Using settings for user {user_id or 'anonymous'}, iteration_limit: {iteration_limit}")
+        else:
+            logger.debug(f"No settings found for user {user_id or 'anonymous'}, using default iteration_limit: {iteration_limit}")
         
         logger.info(f"Chat agent using iteration_limit: {iteration_limit} for user: {user_id or 'anonymous'}")
         print(f"🚀 Chat agent using iteration_limit: {iteration_limit} for user: {user_id or 'anonymous'}")

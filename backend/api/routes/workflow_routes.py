@@ -24,79 +24,11 @@ from ...dependencies import get_workflow_service
 from ...services.workflow_service import WorkflowService
 from ...database import get_db
 from ...exceptions import WorkflowNotFoundError, WorkflowValidationError
+from ...utils.workflow_reconstruction import reconstruct_nodes
 
 logger = get_logger(__name__)
 
 router = APIRouter()
-
-
-def reconstruct_nodes(nodes_data: List[dict]) -> List[Node]:
-    """Reconstruct Node objects from dictionary data"""
-    from ...models.schemas import Node, NodeType, AgentConfig, ConditionConfig, LoopConfig
-    
-    nodes = []
-    all_node_data = nodes_data if isinstance(nodes_data, list) else []
-    
-    logger.debug(f"Found {len(all_node_data)} nodes in workflow definition")
-    
-    for i, node_data in enumerate(all_node_data):
-        node_id = node_data.get('id', f'unknown-{i}')
-        node_type = node_data.get('type', 'unknown')
-        logger.debug(f"Node {i}: id={node_id}, type={node_type}")
-        
-        # Handle config extraction from data object if needed
-        # Extract configs from data object first, then check if still missing
-        if "data" in node_data and node_data.get("data") and isinstance(node_data.get("data"), dict):
-            data_obj = node_data.get("data")
-            
-            # Extract loop_config from data if missing at top level
-            if node_data.get('type') == 'loop' and not node_data.get('loop_config'):
-                data_loop_config = data_obj.get('loop_config')
-                if data_loop_config:
-                    logger.debug(f"Extracting loop_config from data object for node {node_id}")
-                    node_data['loop_config'] = data_loop_config
-            
-            # Extract condition_config from data if missing at top level
-            if node_data.get('type') == 'condition' and not node_data.get('condition_config'):
-                data_condition_config = data_obj.get('condition_config')
-                if data_condition_config:
-                    logger.debug(f"Extracting condition_config from data object for node {node_id}")
-                    node_data['condition_config'] = data_condition_config
-            
-            # Extract agent_config from data if missing at top level
-            if node_data.get('type') == 'agent' and not node_data.get('agent_config'):
-                data_agent_config = data_obj.get('agent_config')
-                if data_agent_config:
-                    logger.debug(f"Extracting agent_config from data object for node {node_id}")
-                    node_data['agent_config'] = data_agent_config
-        
-        # Log at debug level if config is still missing after extraction attempt
-        # These configs are optional in the Node model, so this is informational only
-        if node_data.get('type') == 'loop' and not node_data.get('loop_config'):
-            logger.debug(f"Loop node {node_id} missing loop_config after extraction attempt")
-        
-        if node_data.get('type') == 'condition' and not node_data.get('condition_config'):
-            logger.debug(f"Condition node {node_id} missing condition_config after extraction attempt")
-        
-        if node_data.get('type') == 'agent' and not node_data.get('agent_config'):
-            logger.debug(f"Agent node {node_id} missing agent_config after extraction attempt")
-        
-        try:
-            node = Node(**node_data)
-            logger.debug(f"Successfully reconstructed node {i}: {node.id} ({node.type})")
-            nodes.append(node)
-        except Exception as e:
-            from pydantic import ValidationError
-            node_id = node_data.get('id', f'unknown-{i}')
-            node_type = node_data.get('type', 'unknown')
-            error_detail = str(e)
-            if isinstance(e, ValidationError):
-                error_detail = f"Validation error: {e.errors()}"
-            logger.error(f"Error reconstructing node {i} (id={node_id}, type={node_type}): {error_detail}, node data: {json.dumps(node_data, indent=2, default=str)}", exc_info=True)
-            raise HTTPException(status_code=422, detail=f"Invalid node data at index {i} (id={node_id}, type={node_type}): {error_detail}")
-    
-    logger.info(f"Successfully reconstructed {len(nodes)} nodes")
-    return nodes
 
 
 @router.post(

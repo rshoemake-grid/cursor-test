@@ -144,7 +144,7 @@ async def test_execute_workflow_success(db_session: AsyncSession, test_workflow:
     app.dependency_overrides[get_db] = override_get_db
     
     # Mock the executor to avoid actual execution
-    with patch("backend.api.routes.execution_routes.WorkflowExecutor") as mock_executor_class:
+    with patch("backend.services.execution_orchestrator.WorkflowExecutor") as mock_executor_class:
         execution_id = str(uuid.uuid4())
         mock_executor = AsyncMock()
         mock_executor.execution_id = execution_id
