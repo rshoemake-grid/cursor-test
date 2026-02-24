@@ -4,7 +4,7 @@ Handles creation, reading, updating, and deletion of workflows.
 """
 import json
 from typing import List, Optional
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, Body
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -99,9 +99,86 @@ def reconstruct_nodes(nodes_data: List[dict]) -> List[Node]:
     return nodes
 
 
-@router.post("/workflows", response_model=WorkflowResponse)
+@router.post(
+    "/workflows",
+    response_model=WorkflowResponse,
+    summary="Create Workflow",
+    description="Create a new workflow with nodes, edges, and variables",
+    responses={
+        200: {
+            "description": "Workflow created successfully",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "id": "workflow-123",
+                        "name": "My Workflow",
+                        "description": "A sample workflow",
+                        "version": "1.0.0",
+                        "nodes": [
+                            {
+                                "id": "start-1",
+                                "type": "start",
+                                "position": {"x": 100, "y": 100},
+                                "data": {}
+                            }
+                        ],
+                        "edges": [],
+                        "variables": {},
+                        "created_at": "2026-02-23T12:00:00",
+                        "updated_at": "2026-02-23T12:00:00"
+                    }
+                }
+            }
+        }
+    }
+)
 async def create_workflow(
-    workflow: WorkflowCreate,
+    workflow: WorkflowCreate = Body(
+        ...,
+        example={
+            "name": "My Workflow",
+            "description": "A sample workflow for processing data",
+            "nodes": [
+                {
+                    "id": "start-1",
+                    "type": "start",
+                    "position": {"x": 100, "y": 100},
+                    "data": {}
+                },
+                {
+                    "id": "agent-1",
+                    "type": "agent",
+                    "position": {"x": 300, "y": 100},
+                    "data": {
+                        "model": "gpt-4o-mini",
+                        "system_prompt": "You are a helpful assistant",
+                        "temperature": 0.7
+                    }
+                },
+                {
+                    "id": "end-1",
+                    "type": "end",
+                    "position": {"x": 500, "y": 100},
+                    "data": {}
+                }
+            ],
+            "edges": [
+                {
+                    "id": "edge-1",
+                    "source": "start-1",
+                    "target": "agent-1"
+                },
+                {
+                    "id": "edge-2",
+                    "source": "agent-1",
+                    "target": "end-1"
+                }
+            ],
+            "variables": {
+                "input_data": "sample value"
+            }
+        }
+    ),
     db: AsyncSession = Depends(get_db),
     current_user: Optional[UserDB] = Depends(get_optional_user)
 ):

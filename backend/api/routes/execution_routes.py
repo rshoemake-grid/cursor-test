@@ -5,12 +5,11 @@ Handles workflow execution and execution history.
 import asyncio
 from datetime import datetime
 from typing import Optional, Annotated
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, Body, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
 from typing import Optional, List
-from fastapi import Query
 
 from ...models.schemas import ExecutionRequest, ExecutionResponse, WorkflowDefinition, ExecutionStatus
 from ...database import get_db, WorkflowDB, ExecutionDB
@@ -100,10 +99,45 @@ def reconstruct_workflow_definition(definition: dict) -> WorkflowDefinition:
     )
 
 
-@router.post("/workflows/{workflow_id}/execute", response_model=ExecutionResponse)
+@router.post(
+    "/workflows/{workflow_id}/execute",
+    response_model=ExecutionResponse,
+    summary="Execute Workflow",
+    description="Execute a workflow with optional input data",
+    responses={
+        200: {
+            "description": "Workflow execution started",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "execution_id": "exec-123",
+                        "workflow_id": "workflow-123",
+                        "status": "running",
+                        "current_node": "start-1",
+                        "result": None,
+                        "error": None,
+                        "started_at": "2026-02-23T12:00:00",
+                        "completed_at": None,
+                        "logs": []
+                    }
+                }
+            }
+        }
+    }
+)
 async def execute_workflow(
     workflow_id: str,
-    execution_request: Optional[ExecutionRequest] = None,
+    execution_request: Optional[ExecutionRequest] = Body(
+        None,
+        example={
+            "workflow_id": "workflow-123",
+            "inputs": {
+                "user_name": "John Doe",
+                "task": "Process data",
+                "priority": "high"
+            }
+        }
+    ),
     db: AsyncSession = Depends(get_db),
     current_user: Optional[UserDB] = Depends(get_optional_user),
     settings_service: SettingsServiceDep = ...

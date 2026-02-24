@@ -1,6 +1,6 @@
 """Authentication API routes for Phase 4"""
 from datetime import datetime, timedelta
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Body
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
@@ -8,8 +8,8 @@ import uuid
 import secrets
 
 from backend.database.db import get_db
-from backend.database.models import UserDB, PasswordResetTokenDB
-from backend.models.schemas import UserCreate, UserResponse, Token, UserLogin, PasswordResetRequest, PasswordReset
+from backend.database.models import UserDB, PasswordResetTokenDB, RefreshTokenDB
+from backend.models.schemas import UserCreate, UserResponse, Token, UserLogin, PasswordResetRequest, PasswordReset, RefreshTokenRequest
 from backend.auth import (
     get_password_hash,
     verify_password,
@@ -17,6 +17,7 @@ from backend.auth import (
     get_current_active_user,
     ACCESS_TOKEN_EXPIRE_MINUTES
 )
+from backend.auth.auth import create_refresh_token, verify_refresh_token, REFRESH_TOKEN_EXPIRE_DAYS
 
 router = APIRouter(prefix="/api/auth", tags=["Authentication"])
 
@@ -73,7 +74,36 @@ async def register_user(
     )
 
 
-@router.post("/token", response_model=Token)
+@router.post(
+    "/token",
+    response_model=Token,
+    summary="Login (OAuth2)",
+    description="Authenticate and receive access token and refresh token (OAuth2 password flow)",
+    responses={
+        200: {
+            "description": "Authentication successful",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+                        "token_type": "bearer",
+                        "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+                        "expires_in": 1800,
+                        "user": {
+                            "id": "user-123",
+                            "username": "johndoe",
+                            "email": "john@example.com",
+                            "full_name": "John Doe",
+                            "is_active": True,
+                            "is_admin": False,
+                            "created_at": "2026-02-23T12:00:00"
+                        }
+                    }
+                }
+            }
+        }
+    }
+)
 async def login(
     form_data: OAuth2PasswordRequestForm = Depends(),
     db: AsyncSession = Depends(get_db)
@@ -106,9 +136,29 @@ async def login(
         expires_delta=access_token_expires
     )
     
+    # Create refresh token
+    refresh_token_expires = timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
+    refresh_token_jwt = create_refresh_token(
+        data={"sub": user.username, "user_id": user.id},
+        expires_delta=refresh_token_expires
+    )
+    
+    # Store refresh token in database
+    refresh_token_db = RefreshTokenDB(
+        id=str(uuid.uuid4()),
+        user_id=user.id,
+        token=refresh_token_jwt,
+        expires_at=datetime.utcnow() + refresh_token_expires,
+        revoked=False
+    )
+    db.add(refresh_token_db)
+    await db.commit()
+    
     return Token(
         access_token=access_token,
         token_type="bearer",
+        refresh_token=refresh_token_jwt,
+        expires_in=ACCESS_TOKEN_EXPIRE_MINUTES * 60,  # seconds
         user=UserResponse(
             id=user.id,
             username=user.username,
@@ -166,10 +216,10 @@ async def login_json(
     
     # Create access token with longer expiration if "remember me" is checked
     if user_data.remember_me:
-        # 30 days for "remember me"
-        access_token_expires = timedelta(days=30)
+        # 7 days for "remember me" (still use refresh token for security)
+        access_token_expires = timedelta(days=7)
     else:
-        # Default expiration (usually 15 minutes or 1 day)
+        # Default expiration
         access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     
     access_token = create_access_token(
@@ -177,9 +227,29 @@ async def login_json(
         expires_delta=access_token_expires
     )
     
+    # Create refresh token
+    refresh_token_expires = timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
+    refresh_token_jwt = create_refresh_token(
+        data={"sub": user.username, "user_id": user.id},
+        expires_delta=refresh_token_expires
+    )
+    
+    # Store refresh token in database
+    refresh_token_db = RefreshTokenDB(
+        id=str(uuid.uuid4()),
+        user_id=user.id,
+        token=refresh_token_jwt,
+        expires_at=datetime.utcnow() + refresh_token_expires,
+        revoked=False
+    )
+    db.add(refresh_token_db)
+    await db.commit()
+    
     return Token(
         access_token=access_token,
         token_type="bearer",
+        refresh_token=refresh_token_jwt,
+        expires_in=int(access_token_expires.total_seconds()),
         user=UserResponse(
             id=user.id,
             username=user.username,
@@ -306,5 +376,140 @@ async def get_current_user_info(
         is_active=current_user.is_active,
         is_admin=current_user.is_admin,
         created_at=current_user.created_at
+    )
+
+
+@router.post("/refresh", response_model=Token)
+async def refresh_access_token(
+    refresh_request: RefreshTokenRequest,
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Refresh access token using refresh token (OAuth2 compatible)
+    
+    **Example Request**:
+    ```json
+    {
+      "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+    }
+    ```
+    
+    **Example Response**:
+    ```json
+    {
+      "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+      "token_type": "bearer",
+      "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+      "expires_in": 1800,
+      "user": {
+        "id": "user-123",
+        "username": "johndoe",
+        "email": "john@example.com"
+      }
+    }
+    ```
+    """
+    # Verify refresh token
+    payload = verify_refresh_token(refresh_request.refresh_token)
+    if not payload:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid refresh token",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    
+    username = payload.get("sub")
+    user_id = payload.get("user_id")
+    
+    if not username or not user_id:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid refresh token payload",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    
+    # Check if refresh token exists in database and is valid
+    result = await db.execute(
+        select(RefreshTokenDB).where(
+            RefreshTokenDB.token == refresh_request.refresh_token,
+            RefreshTokenDB.user_id == user_id,
+            RefreshTokenDB.revoked == False
+        )
+    )
+    refresh_token_db = result.scalar_one_or_none()
+    
+    if not refresh_token_db:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Refresh token not found or revoked",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    
+    # Check if token is expired
+    if refresh_token_db.expires_at < datetime.utcnow():
+        # Mark as revoked
+        refresh_token_db.revoked = True
+        await db.commit()
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Refresh token expired",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    
+    # Get user
+    result = await db.execute(
+        select(UserDB).where(UserDB.id == user_id)
+    )
+    user = result.scalar_one_or_none()
+    
+    if not user or not user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="User not found or inactive",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    
+    # Revoke old refresh token (token rotation for security)
+    refresh_token_db.revoked = True
+    
+    # Create new access token
+    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token = create_access_token(
+        data={"sub": user.username},
+        expires_delta=access_token_expires
+    )
+    
+    # Create new refresh token (token rotation)
+    refresh_token_expires = timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
+    new_refresh_token_jwt = create_refresh_token(
+        data={"sub": user.username, "user_id": user.id},
+        expires_delta=refresh_token_expires
+    )
+    
+    # Store new refresh token
+    new_refresh_token_db = RefreshTokenDB(
+        id=str(uuid.uuid4()),
+        user_id=user.id,
+        token=new_refresh_token_jwt,
+        expires_at=datetime.utcnow() + refresh_token_expires,
+        revoked=False
+    )
+    db.add(new_refresh_token_db)
+    await db.commit()
+    
+    return Token(
+        access_token=access_token,
+        token_type="bearer",
+        refresh_token=new_refresh_token_jwt,
+        expires_in=ACCESS_TOKEN_EXPIRE_MINUTES * 60,  # seconds
+        user=UserResponse(
+            id=user.id,
+            username=user.username,
+            email=user.email,
+            full_name=user.full_name,
+            is_active=user.is_active,
+            is_admin=user.is_admin,
+            created_at=user.created_at
+        )
     )
 

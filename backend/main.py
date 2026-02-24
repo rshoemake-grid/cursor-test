@@ -38,6 +38,10 @@ app = FastAPI(
         {"url": "https://api.yourdomain.com/api/v1", "description": "Production"},
         {"url": "http://localhost:8000/api/v1", "description": "Development"}
     ],
+    external_docs={
+        "description": "Full API Documentation and Developer Guide",
+        "url": "https://docs.yourdomain.com/api"
+    },
     openapi_tags=[
         {"name": "workflows", "description": "Workflow management operations"},
         {"name": "executions", "description": "Workflow execution operations"},

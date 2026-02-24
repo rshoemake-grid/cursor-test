@@ -274,10 +274,17 @@ class UserResponse(BaseModel):
 
 
 class Token(BaseModel):
-    """JWT token response"""
+    """JWT token response with refresh token support"""
     access_token: str
     token_type: str = "bearer"
+    refresh_token: Optional[str] = None
+    expires_in: Optional[int] = None  # seconds until expiration
     user: UserResponse
+
+
+class RefreshTokenRequest(BaseModel):
+    """Request model for refreshing access token"""
+    refresh_token: str
 
 
 # ============================================================================
