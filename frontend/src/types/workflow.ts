@@ -2,12 +2,23 @@ export type NodeType = 'agent' | 'condition' | 'loop' | 'start' | 'end'
 
 export type ExecutionStatus = 'pending' | 'running' | 'completed' | 'failed' | 'paused'
 
+export interface ADKAgentConfig {
+  name: string
+  description?: string
+  instruction?: string  // Maps to system_prompt
+  sub_agents?: string[]  // List of sub-agent config paths or IDs
+  adk_tools?: string[]  // ADK built-in tools (google_search, etc.)
+  yaml_config?: string  // Raw YAML config if provided
+}
+
 export interface AgentConfig {
+  agent_type?: 'workflow' | 'adk'  // Default: 'workflow'
   model: string
   system_prompt?: string
   temperature: number
   max_tokens?: number
   tools?: string[]
+  adk_config?: ADKAgentConfig  // ADK-specific configuration
 }
 
 export interface InputMapping {

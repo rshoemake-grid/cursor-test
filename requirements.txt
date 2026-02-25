@@ -29,3 +29,6 @@ google-cloud-storage
 # google-cloud-pubsub==2.24.1   # For GCP Pub/Sub input source
 # boto3==1.35.0                  # For AWS S3 input source
 
+# Google ADK (Agent Development Kit) - Optional for ADK agent support
+google-adk>=1.0.0
+

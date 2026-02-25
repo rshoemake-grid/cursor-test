@@ -22,9 +22,15 @@ class Settings(BaseSettings):
     log_level: str = "INFO"
     log_file: Optional[str] = "app.log"
     
-    # CORS
+    # CORS - Production-ready configuration
+    # Set CORS_ORIGINS environment variable in production (comma-separated list)
+    # Example: CORS_ORIGINS=https://app.yourdomain.com,https://admin.yourdomain.com
+    # Defaults to ["*"] for development, but should be restricted in production
     cors_origins: List[str] = ["*"]  # Restrict to specific domains in production
     cors_allow_credentials: bool = True
+    
+    # Environment
+    environment: str = "development"  # Set to "production" in production
     
     # API Configuration
     api_version: str = "v1"  # API version for Apigee compatibility

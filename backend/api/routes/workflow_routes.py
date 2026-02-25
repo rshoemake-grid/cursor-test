@@ -142,12 +142,46 @@ async def create_workflow(
     )
 
 
-@router.get("/workflows", response_model=List[WorkflowResponse])
+@router.get(
+    "/workflows",
+    response_model=List[WorkflowResponse],
+    summary="List Workflows",
+    description="List all workflows accessible to the current user (includes public workflows)",
+    responses={
+        200: {
+            "description": "List of workflows",
+            "content": {
+                "application/json": {
+                    "example": [
+                        {
+                            "id": "workflow-123",
+                            "name": "Data Processing Workflow",
+                            "description": "Processes and transforms data",
+                            "version": "1.0.0",
+                            "nodes": [
+                                {
+                                    "id": "start-1",
+                                    "type": "start",
+                                    "position": {"x": 100, "y": 100},
+                                    "data": {}
+                                }
+                            ],
+                            "edges": [],
+                            "variables": {},
+                            "created_at": "2026-02-23T12:00:00",
+                            "updated_at": "2026-02-23T12:00:00"
+                        }
+                    ]
+                }
+            }
+        }
+    }
+)
 async def list_workflows(
     db: AsyncSession = Depends(get_db),
     current_user: Optional[UserDB] = Depends(get_optional_user)
 ):
-    """List all workflows"""
+    """List all workflows accessible to the current user (includes public workflows)"""
     try:
         workflow_service = get_workflow_service(db)
         user_id = current_user.id if current_user else None
@@ -172,7 +206,54 @@ async def list_workflows(
         raise HTTPException(status_code=500, detail=f"Error loading workflows: {str(e)}")
 
 
-@router.get("/workflows/{workflow_id}", response_model=WorkflowResponse)
+@router.get(
+    "/workflows/{workflow_id}",
+    response_model=WorkflowResponse,
+    summary="Get Workflow",
+    description="Get a specific workflow by ID",
+    responses={
+        200: {
+            "description": "Workflow details",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "id": "workflow-123",
+                        "name": "My Workflow",
+                        "description": "A sample workflow",
+                        "version": "1.0.0",
+                        "nodes": [
+                            {
+                                "id": "start-1",
+                                "type": "start",
+                                "position": {"x": 100, "y": 100},
+                                "data": {}
+                            }
+                        ],
+                        "edges": [],
+                        "variables": {},
+                        "created_at": "2026-02-23T12:00:00",
+                        "updated_at": "2026-02-23T12:00:00"
+                    }
+                }
+            }
+        },
+        404: {
+            "description": "Workflow not found",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "error": {
+                            "code": "404",
+                            "message": "Workflow not found",
+                            "path": "/api/v1/workflows/workflow-123",
+                            "timestamp": "2026-02-23T12:00:00"
+                        }
+                    }
+                }
+            }
+        }
+    }
+)
 async def get_workflow(
     workflow_id: str,
     db: AsyncSession = Depends(get_db)

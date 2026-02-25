@@ -35,6 +35,12 @@ class UnifiedLLMAgent(BaseAgent):
         self.llm_config = llm_config or self._get_fallback_config()
         self.user_id = user_id
         
+        # Check if this should be an ADK agent
+        agent_type = getattr(agent_config, 'agent_type', 'workflow')
+        if agent_type == 'adk':
+            # Delegate to ADKAgent - this is handled by the registry, but we can check here too
+            logger.info(f"Node {node.id} configured as ADK agent, but UnifiedLLMAgent was called. This should be handled by registry.")
+        
         if not self.llm_config:
             raise ValueError(
                 "No LLM configuration found. Please configure an LLM provider in Settings "

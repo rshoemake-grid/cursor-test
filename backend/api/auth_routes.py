@@ -379,35 +379,65 @@ async def get_current_user_info(
     )
 
 
-@router.post("/refresh", response_model=Token)
+@router.post(
+    "/refresh",
+    response_model=Token,
+    summary="Refresh Access Token",
+    description="Refresh access token using refresh token (OAuth2 compatible). Returns new access token and refresh token.",
+    responses={
+        200: {
+            "description": "Token refreshed successfully",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+                        "token_type": "bearer",
+                        "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+                        "expires_in": 1800,
+                        "user": {
+                            "id": "user-123",
+                            "username": "johndoe",
+                            "email": "john@example.com",
+                            "full_name": "John Doe",
+                            "is_active": True,
+                            "is_admin": False,
+                            "created_at": "2026-02-23T12:00:00"
+                        }
+                    }
+                }
+            }
+        },
+        401: {
+            "description": "Invalid or expired refresh token",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "error": {
+                            "code": "401",
+                            "message": "Invalid refresh token",
+                            "path": "/api/v1/auth/refresh",
+                            "timestamp": "2026-02-23T12:00:00"
+                        }
+                    }
+                }
+            }
+        }
+    }
+)
 async def refresh_access_token(
-    refresh_request: RefreshTokenRequest,
+    refresh_request: RefreshTokenRequest = Body(
+        ...,
+        example={
+            "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        }
+    ),
     db: AsyncSession = Depends(get_db)
 ):
     """
-    Refresh access token using refresh token (OAuth2 compatible)
+    Refresh access token using refresh token (OAuth2 compatible).
     
-    **Example Request**:
-    ```json
-    {
-      "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-    }
-    ```
-    
-    **Example Response**:
-    ```json
-    {
-      "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-      "token_type": "bearer",
-      "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-      "expires_in": 1800,
-      "user": {
-        "id": "user-123",
-        "username": "johndoe",
-        "email": "john@example.com"
-      }
-    }
-    ```
+    This endpoint implements token rotation for enhanced security - the old refresh token
+    is revoked and a new refresh token is issued along with a new access token.
     """
     # Verify refresh token
     payload = verify_refresh_token(refresh_request.refresh_token)

@@ -28,13 +28,25 @@ class ExecutionStatus(str, Enum):
     CANCELLED = "cancelled"
 
 
+class ADKAgentConfig(BaseModel):
+    """Configuration for Google ADK agent"""
+    name: str
+    description: Optional[str] = None
+    instruction: Optional[str] = None  # Maps to system_prompt
+    sub_agents: List[str] = Field(default_factory=list)  # List of sub-agent config paths or IDs
+    adk_tools: List[str] = Field(default_factory=list)  # ADK built-in tools (google_search, etc.)
+    yaml_config: Optional[str] = None  # Raw YAML config if provided
+
+
 class AgentConfig(BaseModel):
     """Configuration for an agent node"""
+    agent_type: str = "workflow"  # "workflow" (default) or "adk"
     model: str = "gpt-4o-mini"
     system_prompt: Optional[str] = None
     temperature: float = 0.7
     max_tokens: Optional[int] = None
     tools: List[str] = Field(default_factory=list)
+    adk_config: Optional[ADKAgentConfig] = None  # ADK-specific configuration
 
 
 class InputMapping(BaseModel):

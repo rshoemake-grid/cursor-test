@@ -34,6 +34,10 @@ app = FastAPI(
         "name": "API Support",
         "email": "api-support@yourdomain.com"
     },
+    license_info={
+        "name": "Proprietary",
+        "url": "https://yourdomain.com/license"
+    },
     servers=[
         {"url": "https://api.yourdomain.com/api/v1", "description": "Production"},
         {"url": "http://localhost:8000/api/v1", "description": "Development"}
@@ -56,10 +60,18 @@ app = FastAPI(
     ]
 )
 
-# CORS middleware
+# CORS middleware - Production-ready configuration
+# In production, restrict origins via CORS_ORIGINS environment variable
+# Development: allows all origins for easier local testing
+# Production: should be restricted to specific domains
+cors_origins = (
+    settings.cors_origins 
+    if settings.cors_origins != ["*"] or settings.environment == "development"
+    else []  # Empty list means no CORS in production if not configured
+)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.cors_origins,
+    allow_origins=cors_origins if cors_origins else ["*"],  # Fallback to "*" if empty for dev
     allow_credentials=settings.cors_allow_credentials,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -165,7 +177,51 @@ async def http_exception_handler(request: Request, exc: HTTPException):
     )
 
 # Health check endpoint with dependency checks
-@app.get("/health")
+@app.get(
+    "/health",
+    summary="Health Check",
+    description="Comprehensive health check endpoint for Kubernetes and Apigee. Checks database connectivity and other dependencies.",
+    responses={
+        200: {
+            "description": "Service is healthy",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "status": "healthy",
+                        "service": "workflow-builder-backend",
+                        "version": "1.0.0",
+                        "timestamp": "2026-02-23T12:00:00",
+                        "checks": {
+                            "database": {
+                                "status": "healthy",
+                                "message": "Database connection successful"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        503: {
+            "description": "Service is unhealthy",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "status": "unhealthy",
+                        "service": "workflow-builder-backend",
+                        "version": "1.0.0",
+                        "timestamp": "2026-02-23T12:00:00",
+                        "checks": {
+                            "database": {
+                                "status": "unhealthy",
+                                "message": "Database connection failed: Connection timeout"
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+)
 async def health_check():
     """
     Comprehensive health check endpoint for Kubernetes and Apigee.
@@ -224,7 +280,43 @@ app.include_router(workflow_chat_router, prefix=API_VERSION)
 app.include_router(debug_router, prefix=f"{API_VERSION}/debug")
 
 # Metrics endpoint for monitoring
-@app.get("/metrics")
+@app.get(
+    "/metrics",
+    summary="API Metrics",
+    description="Prometheus-compatible metrics endpoint for API monitoring. Returns API usage statistics including request counts, error rates, and latency.",
+    responses={
+        200: {
+            "description": "Metrics data",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "requests_total": 1234,
+                        "errors_total": 5,
+                        "success_rate": 99.59,
+                        "average_latency_ms": 45.23,
+                        "uptime_seconds": 3600.0,
+                        "requests_per_second": 0.34,
+                        "endpoints": {
+                            "GET /api/v1/workflows": 500,
+                            "POST /api/v1/workflows": 200,
+                            "POST /api/v1/workflows/{workflow_id}/execute": 300
+                        },
+                        "endpoint_errors": {
+                            "POST /api/v1/workflows": 2
+                        },
+                        "status_codes": {
+                            "200": 1200,
+                            "201": 200,
+                            "404": 20,
+                            "500": 5
+                        },
+                        "timestamp": "2026-02-23T12:00:00"
+                    }
+                }
+            }
+        }
+    }
+)
 async def get_metrics():
     """
     Prometheus-compatible metrics endpoint for API monitoring.

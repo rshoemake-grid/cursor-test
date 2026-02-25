@@ -39,11 +39,132 @@ export default function AgentNodeEditor({
   }, [node.data.agent_config])
 
   const agentConfig = node.data.agent_config || {}
+  const agentType = agentConfig.agent_type || 'workflow'
   const currentModel = agentConfig.model || (availableModels.length > 0 ? availableModels[0].value : 'gpt-4o-mini')
+  const adkConfig = agentConfig.adk_config || {}
 
   return (
     <div className="border-t pt-4">
       <h4 className="text-sm font-semibold text-gray-900 mb-3">LLM Agent Configuration</h4>
+      
+      {/* Agent Type Selection */}
+      <div className="mb-4">
+        <label 
+          htmlFor="agent-type"
+          className="block text-sm font-medium text-gray-700 mb-1"
+        >
+          Agent Type
+        </label>
+        <select
+          id="agent-type"
+          value={agentType}
+          onChange={(e) =>
+            onUpdate('agent_config', {
+              ...agentConfig,
+              agent_type: e.target.value,
+            })
+          }
+          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+          aria-label="Select agent type"
+        >
+          <option value="workflow">Workflow Agent (Default)</option>
+          <option value="adk">ADK Agent (Google ADK)</option>
+        </select>
+        <p className="text-xs text-gray-500 mt-1">
+          {agentType === 'adk' 
+            ? 'Uses Google ADK for agent execution. Requires Gemini models.'
+            : 'Uses direct LLM API calls with workflow orchestration.'}
+        </p>
+      </div>
+
+      {/* ADK Configuration (shown when agent_type is 'adk') */}
+      {agentType === 'adk' && (
+        <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+          <h5 className="text-sm font-semibold text-blue-900 mb-2">ADK Configuration</h5>
+          
+          {/* Agent Name */}
+          <div className="mb-3">
+            <label 
+              htmlFor="adk-name"
+              className="block text-xs font-medium text-gray-700 mb-1"
+            >
+              Agent Name *
+            </label>
+            <input
+              id="adk-name"
+              type="text"
+              value={adkConfig.name || ''}
+              onChange={(e) =>
+                onUpdate('agent_config', {
+                  ...agentConfig,
+                  adk_config: {
+                    ...adkConfig,
+                    name: e.target.value,
+                  },
+                })
+              }
+              className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-primary-500"
+              placeholder="e.g., assistant_agent"
+              required
+            />
+          </div>
+
+          {/* Description */}
+          <div className="mb-3">
+            <label 
+              htmlFor="adk-description"
+              className="block text-xs font-medium text-gray-700 mb-1"
+            >
+              Description
+            </label>
+            <input
+              id="adk-description"
+              type="text"
+              value={adkConfig.description || ''}
+              onChange={(e) =>
+                onUpdate('agent_config', {
+                  ...agentConfig,
+                  adk_config: {
+                    ...adkConfig,
+                    description: e.target.value,
+                  },
+                })
+              }
+              className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-primary-500"
+              placeholder="Brief description of the agent"
+            />
+          </div>
+
+          {/* ADK Tools */}
+          <div className="mb-3">
+            <label 
+              htmlFor="adk-tools"
+              className="block text-xs font-medium text-gray-700 mb-1"
+            >
+              ADK Tools (comma-separated)
+            </label>
+            <input
+              id="adk-tools"
+              type="text"
+              value={adkConfig.adk_tools?.join(', ') || ''}
+              onChange={(e) =>
+                onUpdate('agent_config', {
+                  ...agentConfig,
+                  adk_config: {
+                    ...adkConfig,
+                    adk_tools: e.target.value.split(',').map(t => t.trim()).filter(t => t),
+                  },
+                })
+              }
+              className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-primary-500"
+              placeholder="google_search, load_web_page"
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              Available: google_search, load_web_page, enterprise_web_search
+            </p>
+          </div>
+        </div>
+      )}
       
       {/* Model Selection */}
       <div>
@@ -87,13 +208,13 @@ export default function AgentNodeEditor({
         </p>
       </div>
 
-      {/* System Prompt */}
+      {/* System Prompt / Instruction */}
       <div className="mt-4">
         <label 
           htmlFor="agent-system-prompt"
           className="block text-sm font-medium text-gray-700 mb-1"
         >
-          System Prompt
+          {agentType === 'adk' ? 'Instruction' : 'System Prompt'}
         </label>
         <textarea
           id="agent-system-prompt"
@@ -102,7 +223,22 @@ export default function AgentNodeEditor({
           onChange={(e) => {
             const newValue = e.target.value
             setSystemPromptValue(newValue)
+            const updatedConfig = {
+              ...agentConfig,
+              system_prompt: newValue,
+            }
+            // For ADK agents, also update instruction in adk_config
+            if (agentType === 'adk' && adkConfig) {
+              updatedConfig.adk_config = {
+                ...adkConfig,
+                instruction: newValue,
+              }
+            }
             onConfigUpdate('agent_config', 'system_prompt', newValue)
+            // Also update the full config to sync ADK config
+            if (agentType === 'adk') {
+              onUpdate('agent_config', updatedConfig)
+            }
           }}
           rows={4}
           placeholder="You are a helpful assistant that..."
