@@ -36,7 +36,8 @@ Quick reference guide to all files in the project.
 #### Engine (`backend/engine/`)
 | File | Purpose |
 |------|---------|
-| `executor.py` | Workflow execution engine, topological sort, state management |
+| `executor_v3.py` | Workflow execution engine with parallel execution, WebSocket streaming |
+| `legacy/executor.py` | Legacy executor (sequential only) |
 
 #### Agents (`backend/agents/`)
 | File | Purpose |
@@ -106,9 +107,10 @@ TOTAL: 27 files
 3. Run `examples/simple_workflow.py` (see it work)
 
 #### Understand the System
-1. Read **ARCHITECTURE.md** (design)
-2. Review `backend/engine/executor.py` (execution logic)
-3. Check `backend/agents/llm_agent.py` (LLM integration)
+1. Read **ARCHITECTURE.md** (high-level design)
+2. Read **docs/EXECUTION_SYSTEM_ARCHITECTURE.md** (detailed execution system)
+3. Review `backend/engine/executor_v3.py` (execution logic)
+4. Check `backend/agents/unified_llm_agent.py` (LLM integration)
 
 #### Build a Workflow
 1. Read **WORKFLOW_EXAMPLES.md** (patterns)
@@ -152,7 +154,8 @@ cursor-test/
 │       ├── database/
 │       │   ├── db.py              ← Connection
 │       │   └── models.py          ← ORM models
-│       ├── engine/executor.py      ← Execution logic
+│       ├── engine/executor_v3.py   ← Execution engine (parallel, WebSocket)
+│       ├── services/execution_orchestrator.py ← Execution orchestration
 │       ├── agents/
 │       │   ├── base.py            ← Agent interface
 │       │   ├── llm_agent.py       ← OpenAI integration
@@ -227,8 +230,11 @@ python test_api.py                 # Test API
 - Models: `backend/database/models.py`
 
 ### Workflow Execution
-- Algorithm: **ARCHITECTURE.md** > Workflow Engine
-- Implementation: `backend/engine/executor.py`
+- **Comprehensive Architecture**: **docs/EXECUTION_SYSTEM_ARCHITECTURE.md** (detailed execution system docs)
+- High-level overview: **ARCHITECTURE.md** > Workflow Engine
+- Technical details: **docs/TECHNICAL_DESIGN.md** > Execution Engine
+- Implementation: `backend/engine/executor_v3.py`
+- Orchestration: `backend/services/execution_orchestrator.py`
 - Examples: `examples/*.py`
 
 ### LLM Integration

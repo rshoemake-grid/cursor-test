@@ -313,6 +313,8 @@ Content-Type: application/json
 
 ## 5. Execution Engine
 
+> **Note**: For comprehensive execution system architecture documentation, see [Execution System Architecture](./EXECUTION_SYSTEM_ARCHITECTURE.md)
+
 ### 5.1 Architecture
 
 The execution engine (`WorkflowExecutorV3`) orchestrates workflow execution:
@@ -328,26 +330,40 @@ The execution engine (`WorkflowExecutorV3`) orchestrates workflow execution:
 ### 5.2 Execution Flow
 
 ```
-1. User requests execution
+1. User requests execution (POST /workflows/{id}/execute)
    ↓
-2. Create ExecutionDB record (status: running)
+2. ExecutionOrchestrator.prepare_execution():
+   - Get workflow from database
+   - Get LLM configuration
+   - Reconstruct workflow definition
+   - Create WorkflowExecutorV3
    ↓
-3. Load workflow definition
+3. Create ExecutionDB record (status: running)
    ↓
-4. Topological sort of nodes
+4. Start background execution task
    ↓
-5. For each node (in order):
+5. WorkflowExecutorV3.execute():
+   - Initialize execution state
+   - Build graph (adjacency, in-degree)
+   - Execute graph with parallel support
+   ↓
+6. For each node (in parallel batches):
    a. Resolve inputs from previous nodes/variables
-   b. Create agent instance
-   c. Execute agent
-   d. Store output in execution state
-   e. Stream updates via WebSocket
+   b. Execute via AgentRegistry:
+      - Storage nodes (read/write)
+      - Agent nodes (LLM calls)
+      - Condition nodes (branching)
+      - Loop nodes (iteration)
+   c. Store output in execution state
+   d. Broadcast updates via WebSocket
    ↓
-6. Handle errors (if any)
+7. Handle errors (if any)
    ↓
-7. Update ExecutionDB (status: completed/failed)
+8. Update ExecutionDB (status: completed/failed)
    ↓
-8. Return execution results
+9. Return execution_id to client (immediately)
+
+For detailed execution architecture, see [Execution System Architecture](./EXECUTION_SYSTEM_ARCHITECTURE.md)
 ```
 
 ### 5.3 Node Execution
@@ -389,10 +405,17 @@ The execution engine (`WorkflowExecutorV3`) orchestrates workflow execution:
 
 Execution state is managed in memory during execution and persisted to database:
 
-- **In-Memory State**: Fast access during execution
-- **Database Persistence**: Survives server restarts
-- **WebSocket Streaming**: Real-time updates to clients
+- **In-Memory State**: Fast access during execution (`ExecutionState` object)
+- **Database Persistence**: Survives server restarts (`ExecutionDB` model)
+- **WebSocket Streaming**: Real-time updates to clients (`ConnectionManager`)
 - **State Recovery**: Can resume failed executions (future)
+
+**State Structure:**
+- `ExecutionState`: Overall execution state with node states, variables, logs
+- `NodeState`: Individual node execution state (input, output, status)
+- `ExecutionDB`: Persisted execution record with full state serialized
+
+**For detailed state management, see [Execution System Architecture](./EXECUTION_SYSTEM_ARCHITECTURE.md)**
 
 ---
 

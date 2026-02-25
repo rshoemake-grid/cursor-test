@@ -114,28 +114,45 @@ cursor-test/
 - SQLite for simplicity (easily swappable to PostgreSQL)
 - JSON columns for flexible schema storage
 
-### 3. Workflow Engine (`backend/engine/executor.py`)
+### 3. Workflow Engine (`backend/engine/executor_v3.py`)
 
-#### WorkflowExecutor Class
+#### WorkflowExecutorV3 Class
+
+**Key Features:**
+- Parallel execution of independent nodes
+- Real-time WebSocket streaming
+- Conditional branching
+- Loop execution
+- Storage node support (read/write)
+- Comprehensive error handling
 
 **Key Methods:**
 - `execute(inputs)`: Main execution entry point
-- `_get_execution_order()`: Topological sort of workflow graph
+- `_build_graph()`: Build adjacency map and in-degree map
+- `_execute_graph()`: Execute graph with parallel support
 - `_execute_node(node)`: Execute a single node
 - `_prepare_node_inputs(node)`: Resolve node inputs from previous outputs
 - `_log(level, node_id, message)`: Add execution log entries
 
 **Execution Flow:**
 1. Initialize execution state
-2. Determine node execution order (topological sort)
-3. Execute nodes sequentially
+2. Build graph (adjacency, in-degree)
+3. Execute graph with parallel support:
+   - Find ready nodes (dependencies met)
+   - Execute ready nodes in parallel
+   - Handle conditional branching
+   - Continue until all nodes complete
 4. Handle errors and state transitions
 5. Return final execution state
 
 **Input Resolution:**
 - Nodes can receive inputs from:
-  - Previous node outputs (`source_node`)
-  - Workflow variables (`source_field`)
+  - Previous node outputs (`source_node` + `source_field`)
+  - Workflow variables (`source_field` without `source_node`)
+  - Execution inputs (passed in request)
+  - Auto-population from previous node
+
+**For detailed execution architecture, see [Execution System Architecture](./docs/EXECUTION_SYSTEM_ARCHITECTURE.md)**
 
 ### 4. Agent System (`backend/agents/`)
 
@@ -179,18 +196,28 @@ Client → API (POST /workflows) → Validate → Database → Response
 ### Workflow Execution
 ```
 1. Client → API (POST /workflows/{id}/execute)
-2. API → Load workflow from DB
-3. API → Create WorkflowExecutor
-4. Executor → Parse workflow graph
-5. Executor → Determine execution order
-6. For each node:
-   a. Prepare inputs from previous nodes/variables
-   b. Instantiate agent from registry
-   c. Execute agent (calls OpenAI API)
-   d. Store output in execution state
-7. Executor → Return final execution state
-8. API → Save execution to DB
-9. API → Return response to client
+2. ExecutionOrchestrator → Get workflow from DB
+3. ExecutionOrchestrator → Get LLM config
+4. ExecutionOrchestrator → Reconstruct workflow definition
+5. ExecutionOrchestrator → Create WorkflowExecutorV3
+6. ExecutionOrchestrator → Create execution record (status: RUNNING)
+7. Background Task → Executor.execute()
+8. Executor → Build graph (adjacency, in-degree)
+9. Executor → Execute graph (parallel support):
+   a. Find ready nodes (dependencies met)
+   b. Execute ready nodes in parallel
+   c. Handle conditional branching
+   d. Continue until complete
+10. For each node:
+    a. Prepare inputs from previous nodes/variables
+    b. Execute via AgentRegistry (agent/condition/loop/storage)
+    c. Store output in execution state
+    d. Broadcast updates via WebSocket
+11. Executor → Return final execution state
+12. ExecutionOrchestrator → Update execution record (status: COMPLETED/FAILED)
+13. API → Return execution_id to client (immediately)
+
+For detailed execution flow, see [Execution System Architecture](./docs/EXECUTION_SYSTEM_ARCHITECTURE.md)
 ```
 
 ## Key Design Decisions
