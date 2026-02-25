@@ -17,6 +17,9 @@ import type { ExecutionState } from '../../types/workflow'
 export interface ExecutionListItemProps {
   execution: ExecutionState
   onExecutionClick: (executionId: string) => void
+  isSelected?: boolean
+  onSelect?: (executionId: string) => void
+  showCheckbox?: boolean
 }
 
 /**
@@ -26,20 +29,53 @@ export interface ExecutionListItemProps {
 export default function ExecutionListItem({
   execution,
   onExecutionClick,
+  isSelected = false,
+  onSelect,
+  showCheckbox = false,
 }: ExecutionListItemProps) {
   const isActive = execution.status === 'running' || execution.status === 'pending'
   const progress = calculateExecutionProgress(execution.node_states)
 
+  const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    e.stopPropagation()
+    onSelect?.(execution.execution_id)
+  }
+
+  const handleCheckboxClick = (e: React.MouseEvent) => {
+    e.stopPropagation()
+  }
+
+  const handleItemClick = () => {
+    if (!showCheckbox) {
+      onExecutionClick(execution.execution_id)
+    }
+  }
+
   return (
     <div
-      onClick={() => onExecutionClick(execution.execution_id)}
+      onClick={handleItemClick}
       className={`
         bg-white rounded-lg shadow-sm border p-4 transition-all cursor-pointer
-        ${isActive ? 'border-blue-500 hover:border-blue-400' : 'border-gray-200 hover:border-gray-300'}
+        ${isSelected ? 'border-primary-500 bg-primary-50' : ''}
+        ${isActive && !isSelected ? 'border-blue-500 hover:border-blue-400' : ''}
+        ${!isActive && !isSelected ? 'border-gray-200 hover:border-gray-300' : ''}
         hover:shadow-md
       `}
     >
       <div className="flex items-start justify-between gap-4">
+        {/* Checkbox for bulk selection */}
+        {showCheckbox && (
+          <div className="flex-shrink-0 pt-1">
+            <input
+              type="checkbox"
+              checked={isSelected}
+              onChange={handleCheckboxChange}
+              onClick={handleCheckboxClick}
+              className="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
+              aria-label={`Select execution ${execution.execution_id}`}
+            />
+          </div>
+        )}
         {/* Left side: Execution info */}
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-2">
