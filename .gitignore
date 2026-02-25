@@ -19,6 +19,8 @@ ENV/
 
 # Mutation testing reports
 mutation_report*.html
+frontend/mutation-test-progress.txt
+frontend/mutation-test-status.json
 
 # Coverage reports
 frontend/coverage/
