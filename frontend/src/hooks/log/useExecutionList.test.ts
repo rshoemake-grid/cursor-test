@@ -152,6 +152,71 @@ describe('useExecutionList', () => {
     })
   })
 
+  it('should pass filters to API client', async () => {
+    mockApiClient.listExecutions.mockResolvedValue([mockExecution])
+
+    renderHook(() =>
+      useExecutionList({
+        apiClient: mockApiClient,
+        pollInterval: 0,
+        filters: {
+          status: 'completed',
+          workflow_id: 'workflow-123',
+        },
+      })
+    )
+
+    await waitFor(() => {
+      expect(mockApiClient.listExecutions).toHaveBeenCalledWith({
+        limit: 100,
+        status: 'completed',
+        workflow_id: 'workflow-123',
+      })
+    })
+  })
+
+  it('should pass single status filter', async () => {
+    mockApiClient.listExecutions.mockResolvedValue([mockExecution])
+
+    renderHook(() =>
+      useExecutionList({
+        apiClient: mockApiClient,
+        pollInterval: 0,
+        filters: {
+          status: 'running',
+        },
+      })
+    )
+
+    await waitFor(() => {
+      expect(mockApiClient.listExecutions).toHaveBeenCalledWith({
+        limit: 100,
+        status: 'running',
+      })
+    })
+  })
+
+  it('should pass workflow filter only', async () => {
+    mockApiClient.listExecutions.mockResolvedValue([mockExecution])
+
+    renderHook(() =>
+      useExecutionList({
+        apiClient: mockApiClient,
+        pollInterval: 0,
+        filters: {
+          workflow_id: 'workflow-456',
+        },
+      })
+    )
+
+    await waitFor(() => {
+      expect(mockApiClient.listExecutions).toHaveBeenCalledWith({
+        limit: 100,
+        workflow_id: 'workflow-456',
+      })
+    })
+  })
+
   it('should handle missing API client', () => {
     const { result } = renderHook(() =>
       useExecutionList({

@@ -7,12 +7,15 @@
 
 import { useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { AlertCircle } from 'lucide-react'
+import { AlertCircle, Download } from 'lucide-react'
 import ExecutionListItem from '../components/log/ExecutionListItem'
 import ExecutionFilters, { type ExecutionFiltersState } from '../components/log/ExecutionFilters'
-import { useExecutionList } from '../hooks/log/useExecutionList'
+import Pagination from '../components/ui/Pagination'
+import { useExecutionListQuery } from '../hooks/log/useExecutionListQuery'
+import { useExecutionPagination } from '../hooks/log/useExecutionPagination'
 import { applyExecutionFilters } from '../utils/executionFilters'
-import { apiClient } from '../api/client'
+import { exportExecutionsToJSON, exportExecutionsToCSV } from '../utils/exportFormatters'
+import { api } from '../api/client'
 
 export interface LogPageProps {
   apiClient?: {
@@ -32,18 +35,18 @@ export default function LogPage({ apiClient: injectedApiClient }: LogPageProps =
     sortOrder: 'desc',
   })
 
-  const { executions, loading, error } = useExecutionList({
-    apiClient: injectedApiClient || apiClient,
-    pollInterval: 5000,
-    limit: 100,
+  const { data: executions = [], isLoading: loading, error } = useExecutionListQuery({
+    apiClient: injectedApiClient || api,
+    refetchInterval: 5000,
     filters: filters.status
       ? {
           status: filters.status.join(','),
           workflow_id: filters.workflowId,
+          limit: 100,
         }
       : filters.workflowId
-      ? { workflow_id: filters.workflowId }
-      : undefined,
+      ? { workflow_id: filters.workflowId, limit: 100 }
+      : { limit: 100 },
   })
 
   const handleExecutionClick = (executionId: string) => {
@@ -54,6 +57,28 @@ export default function LogPage({ apiClient: injectedApiClient }: LogPageProps =
   const filteredExecutions = useMemo(() => {
     return applyExecutionFilters(executions, filters)
   }, [executions, filters])
+
+  // Pagination
+  const {
+    currentPage,
+    totalPages,
+    paginatedExecutions,
+    setCurrentPage,
+    setItemsPerPage,
+    itemsPerPage,
+    totalItems,
+  } = useExecutionPagination({
+    executions: filteredExecutions,
+    itemsPerPage: 25,
+  })
+
+  const handleExportJSON = () => {
+    exportExecutionsToJSON(filteredExecutions)
+  }
+
+  const handleExportCSV = () => {
+    exportExecutionsToCSV(filteredExecutions)
+  }
 
   if (loading) {
     return (
@@ -72,7 +97,7 @@ export default function LogPage({ apiClient: injectedApiClient }: LogPageProps =
       <div className="h-full overflow-auto bg-gray-50 p-8">
         <div className="max-w-6xl mx-auto">
           <div className="flex items-center justify-center h-64">
-            <div className="text-red-500">Error: {error}</div>
+            <div className="text-red-500">Error: {error?.message || String(error)}</div>
           </div>
         </div>
       </div>
@@ -82,12 +107,32 @@ export default function LogPage({ apiClient: injectedApiClient }: LogPageProps =
   return (
     <div className="h-full overflow-auto bg-gray-50 p-8">
       <div className="max-w-6xl mx-auto">
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Execution Log</h1>
-          <p className="text-gray-600">
-            {filteredExecutions.length} execution{filteredExecutions.length !== 1 ? 's' : ''} 
-            {filteredExecutions.length !== executions.length && ` of ${executions.length} total`}
-          </p>
+        <div className="mb-6 flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">Execution Log</h1>
+            <p className="text-gray-600">
+              {totalItems} execution{totalItems !== 1 ? 's' : ''}
+              {totalItems !== executions.length && ` of ${executions.length} total`}
+            </p>
+          </div>
+          {filteredExecutions.length > 0 && (
+            <div className="flex gap-2">
+              <button
+                onClick={handleExportJSON}
+                className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors flex items-center gap-2 text-sm"
+              >
+                <Download className="w-4 h-4" />
+                Export JSON
+              </button>
+              <button
+                onClick={handleExportCSV}
+                className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors flex items-center gap-2 text-sm"
+              >
+                <Download className="w-4 h-4" />
+                Export CSV
+              </button>
+            </div>
+          )}
         </div>
 
         <ExecutionFilters
@@ -102,15 +147,25 @@ export default function LogPage({ apiClient: injectedApiClient }: LogPageProps =
             <p className="text-sm text-gray-600">Execute a workflow to see execution logs here</p>
           </div>
         ) : (
-          <div className="space-y-3">
-            {filteredExecutions.map((execution) => (
-              <ExecutionListItem
-                key={execution.execution_id}
-                execution={execution}
-                onExecutionClick={handleExecutionClick}
-              />
-            ))}
-          </div>
+          <>
+            <div className="space-y-3 mb-6">
+              {paginatedExecutions.map((execution) => (
+                <ExecutionListItem
+                  key={execution.execution_id}
+                  execution={execution}
+                  onExecutionClick={handleExecutionClick}
+                />
+              ))}
+            </div>
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              totalItems={totalItems}
+              itemsPerPage={itemsPerPage}
+              onPageChange={setCurrentPage}
+              onItemsPerPageChange={setItemsPerPage}
+            />
+          </>
         )}
       </div>
     </div>

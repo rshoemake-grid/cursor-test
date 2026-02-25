@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, Link, useNavigate, useSearchParams, useLocation } from 'react-router-dom'
 import { useState, useEffect, useRef, useCallback } from 'react'
+import { QueryClientProvider } from '@tanstack/react-query'
 import WorkflowTabs from './components/WorkflowTabs'
 import WorkflowList from './components/WorkflowList'
 import ExecutionViewer from './components/ExecutionViewer'
@@ -10,9 +11,11 @@ import ResetPasswordPage from './pages/ResetPasswordPage'
 import MarketplacePage from './pages/MarketplacePage'
 import SettingsPage from './pages/SettingsPage'
 import LogPage from './pages/LogPage'
+import AnalyticsPage from './pages/AnalyticsPage'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
 import { WorkflowTabsProvider } from './contexts/WorkflowTabsContext'
-import { Play, List, Eye, Store, User, LogOut, LogIn, Settings, FileText } from 'lucide-react'
+import { queryClient } from './config/queryClient'
+import { Play, List, Eye, Store, User, LogOut, LogIn, Settings, FileText, BarChart3 } from 'lucide-react'
 import { showConfirm } from './utils/confirm'
 import { logger } from './utils/logger'
 
@@ -190,6 +193,17 @@ function AuthenticatedLayout() {
               Log
             </Link>
             <Link
+              to="/analytics"
+              className={`px-4 py-2 rounded-lg flex items-center gap-2 transition-colors ${
+                location.pathname === '/analytics'
+                  ? 'bg-primary-100 text-primary-700 font-medium'
+                  : 'text-gray-600 hover:bg-gray-100'
+              }`}
+            >
+              <BarChart3 className="w-4 h-4" />
+              Analytics
+            </Link>
+            <Link
               to="/settings"
               className={`px-4 py-2 rounded-lg flex items-center gap-2 transition-colors ${
                 location.pathname === '/settings'
@@ -248,6 +262,7 @@ function AuthenticatedLayout() {
           />
           <Route path="marketplace" element={<MarketplacePage />} />
           <Route path="log" element={<LogPage />} />
+          <Route path="analytics" element={<AnalyticsPage />} />
           <Route path="settings" element={<SettingsPage />} />
         </Routes>
       </main>
@@ -278,16 +293,18 @@ function App() {
         logger.error('ErrorBoundary caught error:', error, errorInfo)
       }}
     >
-      <Router>
-        <AuthProvider>
-          <Routes>
-            <Route path="/auth" element={<AuthPage />} />
-            <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-            <Route path="/reset-password" element={<ResetPasswordPage />} />
-            <Route path="/*" element={<AuthenticatedLayout />} />
-          </Routes>
-        </AuthProvider>
-      </Router>
+      <QueryClientProvider client={queryClient}>
+        <Router>
+          <AuthProvider>
+            <Routes>
+              <Route path="/auth" element={<AuthPage />} />
+              <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+              <Route path="/reset-password" element={<ResetPasswordPage />} />
+              <Route path="/*" element={<AuthenticatedLayout />} />
+            </Routes>
+          </AuthProvider>
+        </Router>
+      </QueryClientProvider>
     </ErrorBoundary>
   )
 }

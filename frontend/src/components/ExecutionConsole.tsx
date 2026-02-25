@@ -369,6 +369,7 @@ export default function ExecutionConsole({
                   <X className="w-3 h-3" />
                 </button>
               )}
+              {/* Log and Chat tabs don't have close buttons */}
             </div>
           ))}
         </div>

@@ -12,6 +12,10 @@ import type { ExecutionState } from '../types/workflow'
 
 // Mock dependencies
 jest.mock('../hooks/log/useExecutionList')
+const mockApplyExecutionFilters = jest.fn((executions) => executions)
+jest.mock('../utils/executionFilters', () => ({
+  applyExecutionFilters: (...args: any[]) => mockApplyExecutionFilters(...args),
+}))
 jest.mock('react-router-dom', () => ({
   ...jest.requireActual('react-router-dom'),
   useNavigate: () => jest.fn((path: string) => {
@@ -43,6 +47,7 @@ const renderWithRouter = (component: React.ReactElement) => {
 describe('LogPage', () => {
   beforeEach(() => {
     jest.clearAllMocks()
+    mockApplyExecutionFilters.mockImplementation((executions) => executions)
     jest.spyOn(require('react-router-dom'), 'useNavigate').mockReturnValue(mockNavigate)
   })
 
@@ -108,8 +113,36 @@ describe('LogPage', () => {
     renderWithRouter(<LogPage />)
 
     expect(screen.getByText('Execution Log')).toBeInTheDocument()
-    expect(screen.getByText(/1 execution total/)).toBeInTheDocument()
+    expect(screen.getByText(/1 execution/)).toBeInTheDocument()
     expect(screen.getByText(/exec-123/)).toBeInTheDocument()
+  })
+
+  it('should render filters component', () => {
+    mockUseExecutionList.mockReturnValue({
+      executions: [mockExecution],
+      loading: false,
+      error: null,
+      refresh: jest.fn(),
+    })
+
+    renderWithRouter(<LogPage />)
+
+    expect(screen.getByText('Filters')).toBeInTheDocument()
+  })
+
+  it('should show filtered count when filters are applied', () => {
+    mockApplyExecutionFilters.mockReturnValue([])
+
+    mockUseExecutionList.mockReturnValue({
+      executions: [mockExecution],
+      loading: false,
+      error: null,
+      refresh: jest.fn(),
+    })
+
+    renderWithRouter(<LogPage />)
+
+    expect(screen.getByText(/0 execution/)).toBeInTheDocument()
   })
 
   it('should display execution count correctly for multiple executions', () => {
@@ -126,9 +159,11 @@ describe('LogPage', () => {
       refresh: jest.fn(),
     })
 
+    mockApplyExecutionFilters.mockReturnValue(executions)
+
     renderWithRouter(<LogPage />)
 
-    expect(screen.getByText(/3 executions total/)).toBeInTheDocument()
+    expect(screen.getByText(/3 execution/)).toBeInTheDocument()
   })
 
   it('should navigate to execution when clicked', () => {
@@ -138,6 +173,8 @@ describe('LogPage', () => {
       error: null,
       refresh: jest.fn(),
     })
+
+    mockApplyExecutionFilters.mockReturnValue([mockExecution])
 
     renderWithRouter(<LogPage />)
 
@@ -192,12 +229,20 @@ describe('LogPage', () => {
       { ...mockExecution, execution_id: 'exec-3', started_at: '2024-01-01T11:00:00Z' },
     ]
 
+    const sortedExecutions = [
+      executions[1], // exec-2 (newest)
+      executions[2], // exec-3
+      executions[0], // exec-1 (oldest)
+    ]
+
     mockUseExecutionList.mockReturnValue({
       executions,
       loading: false,
       error: null,
       refresh: jest.fn(),
     })
+
+    mockApplyExecutionFilters.mockReturnValue(sortedExecutions)
 
     renderWithRouter(<LogPage />)
 
@@ -223,6 +268,8 @@ describe('LogPage', () => {
       error: null,
       refresh: jest.fn(),
     })
+
+    mockApplyExecutionFilters.mockReturnValue([runningExecution])
 
     renderWithRouter(<LogPage />)
 
