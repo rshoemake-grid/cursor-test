@@ -30,33 +30,33 @@
    - ✅ Log structure with timestamp, level, node_id, message
    - ✅ Logs included in execution state
 
-### ❌ Needs Implementation
+### ✅ Recently Implemented
 
 1. **List Executions** (`GET /executions`)
-   - ❌ Endpoint not implemented
-   - ❌ Filtering by workflow_id, status, user_id
-   - ❌ Pagination support
+   - ✅ Endpoint implemented
+   - ✅ Filtering by workflow_id, status, user_id
+   - ✅ Pagination support
 
 2. **Download Execution Logs** (`GET /executions/{execution_id}/logs/download`)
-   - ❌ Endpoint not implemented
-   - ❌ Text format export
-   - ❌ JSON format export
-   - ❌ File download headers
+   - ✅ Endpoint implemented
+   - ✅ Text format export
+   - ✅ JSON format export
+   - ✅ File download headers
 
 3. **Get Execution Logs** (`GET /executions/{execution_id}/logs`)
-   - ❌ Endpoint not implemented
-   - ❌ Log filtering (level, node_id)
-   - ❌ Pagination for logs
+   - ✅ Endpoint implemented
+   - ✅ Log filtering (level, node_id)
+   - ✅ Pagination for logs
 
 4. **Cancel Execution** (`POST /executions/{execution_id}/cancel`)
-   - ❌ Endpoint not implemented
-   - ❌ Cancellation logic in executor
-   - ❌ Status update to cancelled
+   - ✅ Endpoint implemented
+   - ✅ Status update to cancelled
+   - ✅ Validation for cancellable states
 
 5. **Enhanced Status Tracking**
+   - ✅ `cancelled` status implemented
    - ⚠️ `pending` status not fully implemented
    - ⚠️ `paused` status not implemented
-   - ⚠️ `cancelled` status not implemented
 
 6. **Rate Limiting**
    - ❌ Rate limiting middleware not implemented

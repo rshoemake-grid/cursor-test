@@ -61,7 +61,7 @@ Triggers a workflow execution and returns an execution ID for tracking.
 {
   execution_id: string          // UUID for tracking this execution
   workflow_id: string           // ID of the executed workflow
-  status: "pending" | "running" | "completed" | "failed" | "paused"
+  status: "pending" | "running" | "completed" | "failed" | "paused" | "cancelled"
   started_at: string            // ISO 8601 timestamp
 }
 ```
@@ -292,8 +292,6 @@ Retrieves execution logs in JSON format (useful for programmatic access).
 ```json
 {
   "execution_id": "550e8400-e29b-41d4-a716-446655440000",
-  "workflow_id": "workflow-123",
-  "total_logs": 150,
   "logs": [
     {
       "timestamp": "2026-02-23T16:30:00Z",
@@ -302,6 +300,7 @@ Retrieves execution logs in JSON format (useful for programmatic access).
       "message": "Workflow execution started"
     }
   ],
+  "total": 150,
   "limit": 1000,
   "offset": 0
 }
@@ -311,14 +310,13 @@ Retrieves execution logs in JSON format (useful for programmatic access).
 ```typescript
 {
   execution_id: string
-  workflow_id: string
-  total_logs: number
   logs: Array<{
     timestamp: string
     level: "INFO" | "WARNING" | "ERROR"
     node_id?: string | null
     message: string
   }>
+  total: number
   limit: number
   offset: number
 }
@@ -345,8 +343,14 @@ Cancels a running execution.
 ```json
 {
   "execution_id": "550e8400-e29b-41d4-a716-446655440000",
+  "workflow_id": "workflow-123",
   "status": "cancelled",
-  "cancelled_at": "2026-02-23T16:30:10Z"
+  "current_node": null,
+  "result": null,
+  "error": null,
+  "started_at": "2026-02-23T16:30:00Z",
+  "completed_at": "2026-02-23T16:30:10Z",
+  "logs": []
 }
 ```
 

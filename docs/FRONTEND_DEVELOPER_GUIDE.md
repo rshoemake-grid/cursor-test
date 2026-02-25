@@ -14,6 +14,7 @@ The frontend is a React-based visual workflow builder application built with Typ
 - **TailwindCSS** - Utility-first CSS framework
 - **Vite** - Fast build tool and dev server
 - **Axios** - HTTP client for API communication
+- **Recharts** - Chart library for analytics visualizations
 - **Jest/Vitest** - Testing framework
 
 ## Project Structure
@@ -31,7 +32,10 @@ frontend/src/
 │   ├── workflow/           # Workflow-related hooks
 │   ├── execution/          # Execution management hooks
 │   ├── log/                # Log page hooks
-│   │   └── useExecutionList.ts  # Execution list management
+│   │   ├── useExecutionList.ts  # Execution list management
+│   │   └── useExecutionListQuery.ts  # React Query hook for executions
+│   ├── analytics/          # Analytics hooks
+│   │   └── useExecutionAnalytics.ts  # Analytics calculations
 │   ├── marketplace/        # Marketplace hooks
 │   ├── nodes/              # Node-related hooks
 │   ├── forms/              # Form handling hooks
@@ -45,7 +49,8 @@ frontend/src/
 │   ├── AuthPage.tsx         # Login/Register page
 │   ├── MarketplacePage.tsx  # Marketplace/discovery page
 │   ├── SettingsPage.tsx     # Settings page
-│   └── LogPage.tsx         # Execution log page
+│   ├── LogPage.tsx         # Execution log page
+│   └── AnalyticsPage.tsx    # Analytics dashboard with charts
 ├── api/                 # API client and utilities
 │   └── client.ts           # Axios-based API client
 ├── types/               # TypeScript type definitions
@@ -118,6 +123,22 @@ Displays workflow execution results:
 - **Log Display**: Execution logs and node states
 - **Result Visualization**: Shows execution output
 - **Error Handling**: Displays errors and stack traces
+
+### 6. AnalyticsPage (`pages/AnalyticsPage.tsx`)
+
+Analytics dashboard with execution metrics and visualizations:
+- **Key Metrics**: Total executions, success rate, average duration, failed executions
+- **Charts**: Success rate over time, duration trends, status distribution, executions over time
+- **Data Visualization**: Uses Recharts library for interactive charts
+- **Real-time Updates**: Polls execution data and updates charts automatically
+
+### 7. ExecutionDetailsModal (`components/log/ExecutionDetailsModal.tsx`)
+
+Modal for viewing detailed execution information:
+- **Execution Details**: Status, timestamps, workflow ID, node states
+- **Log Display**: Formatted execution logs
+- **Download Functionality**: Download logs as text or JSON files
+- **Error Display**: Shows execution errors with formatting
 
 ## State Management
 

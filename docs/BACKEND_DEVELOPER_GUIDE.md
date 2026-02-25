@@ -21,7 +21,7 @@ backend/
 ├── api/                    # API routes and endpoints
 │   ├── routes/                # Organized route modules
 │   │   ├── workflow_routes.py    # Workflow CRUD endpoints
-│   │   └── execution_routes.py   # Execution endpoints
+│   │   └── execution_routes.py   # Execution endpoints (execute, list, logs, cancel)
 │   ├── auth_routes.py          # Authentication endpoints
 │   ├── websocket_routes.py     # WebSocket endpoints
 │   ├── settings_routes.py      # Settings/LLM configuration
@@ -123,6 +123,9 @@ async def get_workflow(
 - `GET /workflows/{id}/executions` - List workflow executions
 - `GET /users/{id}/executions` - List user executions
 - `GET /executions/running` - List running executions
+- `GET /executions/{id}/logs` - Get execution logs with filtering and pagination
+- `GET /executions/{id}/logs/download` - Download logs as text or JSON file
+- `POST /executions/{id}/cancel` - Cancel running execution
 
 **Pattern:**
 - Routes are thin controllers
@@ -142,6 +145,8 @@ async def get_workflow(
 - Manages execution lifecycle
 - Converts between DB models and response models
 - Provides filtering and pagination logic
+- `get_execution_logs()` - Retrieves and filters execution logs
+- `cancel_execution()` - Cancels running or pending executions
 
 **SettingsService** (`settings_service.py`):
 - Manages LLM provider settings

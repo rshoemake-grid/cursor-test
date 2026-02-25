@@ -17,6 +17,9 @@ Build complex multi-agent workflows where AI agents collaborate sequentially to 
 - 🧠 **Agent Memory** - Short-term and long-term memory with vector storage
 - 🛠️ **Tool Calling** - Agents can execute functions and use tools
 - 📊 **Enhanced Monitoring** - Live progress updates and detailed logging
+- 📈 **Analytics Dashboard** - Execution metrics with interactive charts (success rates, duration trends, status distribution)
+- 📥 **Log Management** - Download execution logs (text/JSON), filter and paginate logs
+- 🛑 **Execution Control** - Cancel running executions
 
 ### Phase 2 (Complete)
 - ✨ **Visual Workflow Builder** - Drag-and-drop UI with React Flow
