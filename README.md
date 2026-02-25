@@ -104,7 +104,10 @@ python examples/loop_workflow.py
 - **[PHASE2.md](PHASE2.md)** - Visual builder and advanced control flow
 - **[QUICKSTART.md](QUICKSTART.md)** - Detailed setup and CLI usage
 - **[ARCHITECTURE.md](ARCHITECTURE.md)** - System architecture and design
-- **[docs/EXECUTION_SYSTEM_ARCHITECTURE.md](docs/EXECUTION_SYSTEM_ARCHITECTURE.md)** - Detailed execution system architecture (NEW!)
+- **[docs/EXECUTION_SYSTEM_ARCHITECTURE.md](docs/EXECUTION_SYSTEM_ARCHITECTURE.md)** - Detailed execution system architecture
+- **[docs/CONFIGURATION_REFERENCE.md](docs/CONFIGURATION_REFERENCE.md)** - Complete configuration guide (NEW!)
+- **[docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md)** - Common issues and solutions (NEW!)
+- **[docs/NODE_TYPES_REFERENCE.md](docs/NODE_TYPES_REFERENCE.md)** - Complete node types reference (NEW!)
 - **[WORKFLOW_EXAMPLES.md](WORKFLOW_EXAMPLES.md)** - Pattern library and use cases
 - **[frontend/README.md](frontend/README.md)** - Frontend development guide
 

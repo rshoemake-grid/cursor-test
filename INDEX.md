@@ -237,6 +237,11 @@ python test_api.py                 # Test API
 - Orchestration: `backend/services/execution_orchestrator.py`
 - Examples: `examples/*.py`
 
+### Configuration & Troubleshooting
+- **Configuration Reference**: **docs/CONFIGURATION_REFERENCE.md** - All environment variables and settings
+- **Troubleshooting Guide**: **docs/TROUBLESHOOTING.md** - Common issues and solutions
+- **Node Types Reference**: **docs/NODE_TYPES_REFERENCE.md** - Complete node configuration guide
+
 ### LLM Integration
 - Design: **ARCHITECTURE.md** > Agent System
 - Implementation: `backend/agents/llm_agent.py`
