@@ -25,6 +25,7 @@ class ExecutionStatus(str, Enum):
     COMPLETED = "completed"
     FAILED = "failed"
     PAUSED = "paused"
+    CANCELLED = "cancelled"
 
 
 class AgentConfig(BaseModel):
@@ -212,6 +213,15 @@ class ExecutionResponse(BaseModel):
     started_at: datetime
     completed_at: Optional[datetime] = None
     logs: List[ExecutionLogEntry] = Field(default_factory=list)
+
+
+class ExecutionLogsResponse(BaseModel):
+    """Response model for execution logs with pagination"""
+    execution_id: str
+    logs: List[ExecutionLogEntry]
+    total: int
+    limit: int
+    offset: int
 
 
 # ============================================================================

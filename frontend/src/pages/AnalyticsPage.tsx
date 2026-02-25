@@ -7,6 +7,21 @@
 
 import { useMemo } from 'react'
 import { BarChart3, TrendingUp, Clock, CheckCircle, XCircle, AlertCircle } from 'lucide-react'
+import {
+  LineChart,
+  Line,
+  BarChart,
+  Bar,
+  PieChart,
+  Pie,
+  Cell,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+} from 'recharts'
 import { useExecutionListQuery } from '../hooks/log/useExecutionListQuery'
 import { useExecutionAnalytics } from '../hooks/analytics/useExecutionAnalytics'
 import { api } from '../api/client'
@@ -75,6 +90,59 @@ export default function AnalyticsPage({
       }))
   }, [analytics.executionsByWorkflow])
 
+  // Prepare chart data
+  const chartData = useMemo(() => {
+    // Group executions by day
+    const byDay: Record<string, { date: string; completed: number; failed: number; total: number; avgDuration: number; durations: number[] }> = {}
+    
+    executions.forEach((execution) => {
+      const date = new Date(execution.started_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+      if (!byDay[date]) {
+        byDay[date] = { date, completed: 0, failed: 0, total: 0, avgDuration: 0, durations: [] }
+      }
+      
+      byDay[date].total++
+      if (execution.status === 'completed') {
+        byDay[date].completed++
+      } else if (execution.status === 'failed') {
+        byDay[date].failed++
+      }
+      
+      if (execution.completed_at) {
+        const duration = (new Date(execution.completed_at).getTime() - new Date(execution.started_at).getTime()) / 1000
+        byDay[date].durations.push(duration)
+      }
+    })
+    
+    // Calculate average durations and success rates
+    return Object.values(byDay)
+      .map((day) => ({
+        ...day,
+        avgDuration: day.durations.length > 0 
+          ? Math.round(day.durations.reduce((a, b) => a + b, 0) / day.durations.length)
+          : 0,
+        successRate: day.total > 0 ? Math.round((day.completed / day.total) * 100) : 0,
+      }))
+      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+      .slice(-7) // Last 7 days
+  }, [executions])
+
+  // Status distribution for pie chart
+  const statusChartData = useMemo(() => {
+    return Object.entries(analytics.statusCounts).map(([name, value]) => ({
+      name: name.charAt(0).toUpperCase() + name.slice(1),
+      value,
+    }))
+  }, [analytics.statusCounts])
+
+  const COLORS = {
+    completed: '#10b981',
+    failed: '#ef4444',
+    running: '#3b82f6',
+    pending: '#f59e0b',
+    cancelled: '#6b7280',
+  }
+
   return (
     <div className="h-full overflow-auto bg-gray-50 p-8">
       <div className="max-w-7xl mx-auto">
@@ -129,10 +197,123 @@ export default function AnalyticsPage({
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Status Distribution */}
+        {/* Charts Section */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+          {/* Success Rate Over Time */}
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <h2 className="text-xl font-semibold text-gray-900 mb-4">Success Rate Over Time</h2>
+            {chartData.length > 0 ? (
+              <ResponsiveContainer width="100%" height={250}>
+                <LineChart data={chartData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="date" />
+                  <YAxis domain={[0, 100]} />
+                  <Tooltip formatter={(value: number) => `${value}%`} />
+                  <Legend />
+                  <Line
+                    type="monotone"
+                    dataKey="successRate"
+                    stroke="#10b981"
+                    strokeWidth={2}
+                    name="Success Rate (%)"
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="flex items-center justify-center h-64 text-gray-500">
+                No data available
+              </div>
+            )}
+          </div>
+
+          {/* Execution Time Trends */}
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <h2 className="text-xl font-semibold text-gray-900 mb-4">Average Duration Over Time</h2>
+            {chartData.length > 0 ? (
+              <ResponsiveContainer width="100%" height={250}>
+                <LineChart data={chartData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="date" />
+                  <YAxis />
+                  <Tooltip formatter={(value: number) => `${value}s`} />
+                  <Legend />
+                  <Line
+                    type="monotone"
+                    dataKey="avgDuration"
+                    stroke="#3b82f6"
+                    strokeWidth={2}
+                    name="Avg Duration (s)"
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="flex items-center justify-center h-64 text-gray-500">
+                No data available
+              </div>
+            )}
+          </div>
+
+          {/* Status Distribution Pie Chart */}
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
             <h2 className="text-xl font-semibold text-gray-900 mb-4">Status Distribution</h2>
+            {statusChartData.length > 0 ? (
+              <ResponsiveContainer width="100%" height={250}>
+                <PieChart>
+                  <Pie
+                    data={statusChartData}
+                    cx="50%"
+                    cy="50%"
+                    labelLine={false}
+                    label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                    outerRadius={80}
+                    fill="#8884d8"
+                    dataKey="value"
+                  >
+                    {statusChartData.map((entry, index) => (
+                      <Cell
+                        key={`cell-${index}`}
+                        fill={COLORS[entry.name.toLowerCase() as keyof typeof COLORS] || '#8884d8'}
+                      />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                </PieChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="flex items-center justify-center h-64 text-gray-500">
+                No data available
+              </div>
+            )}
+          </div>
+
+          {/* Executions Over Time */}
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <h2 className="text-xl font-semibold text-gray-900 mb-4">Executions Over Time</h2>
+            {chartData.length > 0 ? (
+              <ResponsiveContainer width="100%" height={250}>
+                <BarChart data={chartData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="date" />
+                  <YAxis />
+                  <Tooltip />
+                  <Legend />
+                  <Bar dataKey="completed" stackId="a" fill="#10b981" name="Completed" />
+                  <Bar dataKey="failed" stackId="a" fill="#ef4444" name="Failed" />
+                  <Bar dataKey="total" fill="#3b82f6" name="Total" />
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="flex items-center justify-center h-64 text-gray-500">
+                No data available
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Status Distribution List */}
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <h2 className="text-xl font-semibold text-gray-900 mb-4">Status Breakdown</h2>
             <div className="space-y-3">
               {Object.entries(analytics.statusCounts).map(([status, count]) => {
                 const percentage =

@@ -221,6 +221,48 @@ export function createApiClient(options?: {
     return extractData(await instance.get(executionEndpoints.list(), { params }))
   },
 
+  async getExecutionLogs(
+    executionId: string,
+    params?: {
+      level?: string
+      node_id?: string
+      limit?: number
+      offset?: number
+    }
+  ): Promise<{
+    execution_id: string
+    logs: Array<{
+      timestamp: string
+      level: string
+      node_id?: string
+      message: string
+    }>
+    total: number
+    limit: number
+    offset: number
+  }> {
+    return extractData(await instance.get(executionEndpoints.logs(executionId), { params }))
+  },
+
+  async downloadExecutionLogs(
+    executionId: string,
+    format: 'text' | 'json' = 'text',
+    params?: {
+      level?: string
+      node_id?: string
+    }
+  ): Promise<Blob> {
+    const response = await instance.get(executionEndpoints.downloadLogs(executionId), {
+      params: { format, ...params },
+      responseType: 'blob',
+    })
+    return response.data
+  },
+
+  async cancelExecution(executionId: string): Promise<ExecutionState> {
+    return extractData(await instance.post(executionEndpoints.cancel(executionId)))
+  },
+
   // Settings
   async getLLMSettings(): Promise<any> {
     try {

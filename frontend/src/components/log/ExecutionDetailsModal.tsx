@@ -5,15 +5,24 @@
  * DIP: Depends on abstractions
  */
 
-import { X, Clock, CheckCircle, XCircle, Play, AlertCircle } from 'lucide-react'
+import { X, Clock, CheckCircle, XCircle, Play, AlertCircle, Download } from 'lucide-react'
+import { useState } from 'react'
 import type { ExecutionState } from '../../types/workflow'
 import { formatExecutionDuration } from '../../utils/executionFormat'
 import ExecutionStatusBadge from '../ExecutionStatusBadge'
+import { api } from '../../api/client'
 
 export interface ExecutionDetailsModalProps {
   execution: ExecutionState | null
   isOpen: boolean
   onClose: () => void
+  apiClient?: {
+    downloadExecutionLogs(
+      executionId: string,
+      format: 'text' | 'json',
+      params?: { level?: string; node_id?: string }
+    ): Promise<Blob>
+  }
 }
 
 /**
@@ -24,9 +33,36 @@ export default function ExecutionDetailsModal({
   execution,
   isOpen,
   onClose,
+  apiClient = api,
 }: ExecutionDetailsModalProps) {
+  const [downloading, setDownloading] = useState(false)
+
   if (!isOpen || !execution) {
     return null
+  }
+
+  const handleDownloadLogs = async (format: 'text' | 'json') => {
+    if (!execution || downloading) return
+
+    try {
+      setDownloading(true)
+      const blob = await apiClient.downloadExecutionLogs(execution.execution_id, format)
+      
+      // Create download link
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `execution_${execution.execution_id}_logs.${format === 'json' ? 'json' : 'txt'}`
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      window.URL.revokeObjectURL(url)
+    } catch (error: any) {
+      console.error('Failed to download logs:', error)
+      alert(`Failed to download logs: ${error.message || 'Unknown error'}`)
+    } finally {
+      setDownloading(false)
+    }
   }
 
   const getStatusIcon = (status: string) => {
@@ -198,7 +234,29 @@ export default function ExecutionDetailsModal({
           </div>
 
           {/* Footer */}
-          <div className="flex items-center justify-end gap-3 p-6 border-t border-gray-200">
+          <div className="flex items-center justify-between p-6 border-t border-gray-200">
+            <div className="flex items-center gap-2">
+              {execution.logs && execution.logs.length > 0 && (
+                <>
+                  <button
+                    onClick={() => handleDownloadLogs('text')}
+                    disabled={downloading}
+                    className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <Download className="w-4 h-4" />
+                    {downloading ? 'Downloading...' : 'Download Logs (TXT)'}
+                  </button>
+                  <button
+                    onClick={() => handleDownloadLogs('json')}
+                    disabled={downloading}
+                    className="flex items-center gap-2 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <Download className="w-4 h-4" />
+                    {downloading ? 'Downloading...' : 'Download Logs (JSON)'}
+                  </button>
+                </>
+              )}
+            </div>
             <button
               onClick={onClose}
               className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"

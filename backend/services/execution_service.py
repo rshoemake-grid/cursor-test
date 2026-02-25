@@ -6,7 +6,7 @@ from typing import Optional, List
 from datetime import datetime
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from ..models.schemas import ExecutionResponse, ExecutionStatus
+from ..models.schemas import ExecutionResponse, ExecutionStatus, ExecutionLogsResponse, ExecutionLogEntry
 from ..database.models import ExecutionDB
 from ..repositories.execution_repository import ExecutionRepository
 from ..exceptions import ExecutionNotFoundError
@@ -152,3 +152,141 @@ class ExecutionService:
         executions = await self.repository.get_running_executions()
         logger.debug(f"Retrieved {len(executions)} running executions")
         return [self._db_to_response(execution) for execution in executions]
+    
+    async def get_execution_logs(
+        self,
+        execution_id: str,
+        level: Optional[str] = None,
+        node_id: Optional[str] = None,
+        limit: int = 1000,
+        offset: int = 0
+    ) -> ExecutionLogsResponse:
+        """
+        Get execution logs with filtering and pagination
+        
+        Args:
+            execution_id: Execution ID
+            level: Optional log level filter (INFO, WARNING, ERROR)
+            node_id: Optional node ID filter
+            limit: Maximum number of logs to return
+            offset: Offset for pagination
+            
+        Returns:
+            ExecutionLogsResponse with filtered logs
+            
+        Raises:
+            ExecutionNotFoundError: If execution not found
+        """
+        execution = await self.repository.get_by_id(execution_id)
+        if not execution:
+            raise ExecutionNotFoundError(execution_id)
+        
+        state_data = execution.state if execution.state else {}
+        all_logs = state_data.get('logs', [])
+        
+        # Convert log dicts to ExecutionLogEntry objects for filtering
+        log_entries = []
+        for log_dict in all_logs:
+            try:
+                if isinstance(log_dict, dict):
+                    # Handle timestamp conversion (might be string or datetime)
+                    log_data = log_dict.copy()
+                    if 'timestamp' in log_data:
+                        timestamp = log_data['timestamp']
+                        if isinstance(timestamp, str):
+                            try:
+                                # Try parsing ISO format
+                                log_data['timestamp'] = datetime.fromisoformat(timestamp.replace('Z', '+00:00'))
+                            except:
+                                try:
+                                    # Try parsing other common formats
+                                    log_data['timestamp'] = datetime.fromisoformat(timestamp)
+                                except:
+                                    # If all parsing fails, use current time as fallback
+                                    logger.warning(f"Could not parse timestamp: {timestamp}, using current time")
+                                    log_data['timestamp'] = datetime.utcnow()
+                        elif isinstance(timestamp, datetime):
+                            log_data['timestamp'] = timestamp
+                        else:
+                            log_data['timestamp'] = datetime.utcnow()
+                    else:
+                        log_data['timestamp'] = datetime.utcnow()
+                    
+                    log_entry = ExecutionLogEntry(**log_data)
+                elif isinstance(log_dict, ExecutionLogEntry):
+                    log_entry = log_dict
+                else:
+                    continue
+                log_entries.append(log_entry)
+            except Exception as e:
+                logger.warning(f"Failed to parse log entry: {e}, skipping entry: {log_dict}")
+                continue
+        
+        # Apply filters
+        filtered_logs = log_entries
+        if level:
+            filtered_logs = [log for log in filtered_logs if log.level.upper() == level.upper()]
+        if node_id:
+            filtered_logs = [log for log in filtered_logs if log.node_id == node_id]
+        
+        # Sort by timestamp (newest first)
+        filtered_logs.sort(key=lambda x: x.timestamp, reverse=True)
+        
+        # Apply pagination
+        total = len(filtered_logs)
+        paginated_logs = filtered_logs[offset:offset + limit]
+        
+        logger.debug(f"Retrieved {len(paginated_logs)} logs for execution {execution_id} (total: {total})")
+        
+        return ExecutionLogsResponse(
+            execution_id=execution_id,
+            logs=paginated_logs,
+            total=total,
+            limit=limit,
+            offset=offset
+        )
+    
+    async def cancel_execution(self, execution_id: str) -> ExecutionResponse:
+        """
+        Cancel a running execution
+        
+        Args:
+            execution_id: Execution ID to cancel
+            
+        Returns:
+            ExecutionResponse with cancelled status
+            
+        Raises:
+            ExecutionNotFoundError: If execution not found
+            ValueError: If execution is not in a cancellable state
+        """
+        execution = await self.repository.get_by_id(execution_id)
+        if not execution:
+            raise ExecutionNotFoundError(execution_id)
+        
+        # Check if execution is cancellable
+        if execution.status not in [ExecutionStatus.PENDING, ExecutionStatus.RUNNING]:
+            raise ValueError(f"Execution {execution_id} is not in a cancellable state (current status: {execution.status})")
+        
+        # Update execution status to cancelled
+        execution.status = ExecutionStatus.CANCELLED
+        execution.completed_at = datetime.utcnow()
+        
+        # Update state with cancellation log
+        state_data = execution.state if execution.state else {}
+        logs = state_data.get('logs', [])
+        logs.append({
+            'timestamp': datetime.utcnow().isoformat(),
+            'level': 'INFO',
+            'node_id': None,
+            'message': 'Execution cancelled by user'
+        })
+        state_data['status'] = ExecutionStatus.CANCELLED
+        state_data['logs'] = logs
+        execution.state = state_data
+        
+        await self.db.commit()
+        await self.db.refresh(execution)
+        
+        logger.info(f"Cancelled execution {execution_id}")
+        return self._db_to_response(execution)

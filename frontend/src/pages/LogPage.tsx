@@ -263,6 +263,7 @@ export default function LogPage({ apiClient: injectedApiClient }: LogPageProps =
           setIsDetailsModalOpen(false)
           setSelectedExecution(null)
         }}
+        apiClient={injectedApiClient || api}
       />
       <div className="h-full overflow-auto bg-gray-50 p-8">
         <div className="max-w-6xl mx-auto">

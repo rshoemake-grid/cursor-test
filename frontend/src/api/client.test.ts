@@ -283,6 +283,105 @@ describe('createApiClient', () => {
       expect(result).toEqual(executions)
     })
 
+    it('should get execution logs', async () => {
+      const logsResponse = {
+        execution_id: 'exec-1',
+        logs: [
+          { timestamp: '2026-02-23T12:00:00Z', level: 'INFO', message: 'Test log' }
+        ],
+        total: 1,
+        limit: 1000,
+        offset: 0
+      }
+      ;(mockInstance.get as jest.Mock).mockResolvedValue({ data: logsResponse })
+
+      const api = createApiClient()
+      const result = await api.getExecutionLogs('exec-1')
+
+      expect(mockInstance.get).toHaveBeenCalledWith('/executions/exec-1/logs', { params: undefined })
+      expect(result).toEqual(logsResponse)
+    })
+
+    it('should get execution logs with filters', async () => {
+      const logsResponse = {
+        execution_id: 'exec-1',
+        logs: [
+          { timestamp: '2026-02-23T12:00:00Z', level: 'ERROR', node_id: 'node-1', message: 'Error log' }
+        ],
+        total: 1,
+        limit: 1000,
+        offset: 0
+      }
+      ;(mockInstance.get as jest.Mock).mockResolvedValue({ data: logsResponse })
+
+      const api = createApiClient()
+      const result = await api.getExecutionLogs('exec-1', { level: 'ERROR', node_id: 'node-1' })
+
+      expect(mockInstance.get).toHaveBeenCalledWith('/executions/exec-1/logs', {
+        params: { level: 'ERROR', node_id: 'node-1' }
+      })
+      expect(result).toEqual(logsResponse)
+    })
+
+    it('should download execution logs as text', async () => {
+      const blob = new Blob(['Log content'], { type: 'text/plain' })
+      ;(mockInstance.get as jest.Mock).mockResolvedValue({ data: blob })
+
+      const api = createApiClient()
+      const result = await api.downloadExecutionLogs('exec-1', 'text')
+
+      expect(mockInstance.get).toHaveBeenCalledWith('/executions/exec-1/logs/download', {
+        params: { format: 'text' },
+        responseType: 'blob'
+      })
+      expect(result).toBe(blob)
+    })
+
+    it('should download execution logs as json', async () => {
+      const blob = new Blob(['{"logs": []}'], { type: 'application/json' })
+      ;(mockInstance.get as jest.Mock).mockResolvedValue({ data: blob })
+
+      const api = createApiClient()
+      const result = await api.downloadExecutionLogs('exec-1', 'json', { level: 'ERROR' })
+
+      expect(mockInstance.get).toHaveBeenCalledWith('/executions/exec-1/logs/download', {
+        params: { format: 'json', level: 'ERROR' },
+        responseType: 'blob'
+      })
+      expect(result).toBe(blob)
+    })
+
+    it('should cancel execution', async () => {
+      const executionState = { execution_id: 'exec-1', status: 'cancelled' }
+      ;(mockInstance.post as jest.Mock).mockResolvedValue({ data: executionState })
+
+      const api = createApiClient()
+      const result = await api.cancelExecution('exec-1')
+
+      expect(mockInstance.post).toHaveBeenCalledWith('/executions/exec-1/cancel')
+      expect(result).toEqual(executionState)
+    })
+
+    it('should handle getExecutionLogs error', async () => {
+      const error = new Error('Execution not found')
+      ;(mockInstance.get as jest.Mock).mockRejectedValue(error)
+
+      const api = createApiClient()
+      
+      await expect(api.getExecutionLogs('exec-1')).rejects.toThrow('Execution not found')
+      expect(logger.error).toHaveBeenCalled()
+    })
+
+    it('should handle cancelExecution error', async () => {
+      const error = new Error('Cannot cancel completed execution')
+      ;(mockInstance.post as jest.Mock).mockRejectedValue(error)
+
+      const api = createApiClient()
+      
+      await expect(api.cancelExecution('exec-1')).rejects.toThrow('Cannot cancel completed execution')
+      expect(logger.error).toHaveBeenCalled()
+    })
+
     it('should list executions with params', async () => {
       const executions = [{ execution_id: 'exec-1', status: 'completed' }]
       ;(mockInstance.get as jest.Mock).mockResolvedValue({ data: executions })

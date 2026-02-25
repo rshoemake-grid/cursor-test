@@ -11,7 +11,7 @@ from sqlalchemy import select
 
 from typing import Optional, List
 
-from ...models.schemas import ExecutionRequest, ExecutionResponse, ExecutionStatus
+from ...models.schemas import ExecutionRequest, ExecutionResponse, ExecutionStatus, ExecutionLogsResponse
 from ...database import get_db, ExecutionDB
 from ...database.models import UserDB
 from ...auth import get_optional_user
@@ -222,4 +222,117 @@ async def list_running_executions(
     """
     executions = await execution_service.get_running_executions()
     return executions
+
+
+@router.get("/executions/{execution_id}/logs", response_model=ExecutionLogsResponse)
+async def get_execution_logs(
+    execution_id: str,
+    level: Optional[str] = Query(None, description="Filter by log level (INFO, WARNING, ERROR)"),
+    node_id: Optional[str] = Query(None, description="Filter by node ID"),
+    limit: int = Query(1000, ge=1, le=10000, description="Maximum number of logs to return"),
+    offset: int = Query(0, ge=0, description="Offset for pagination"),
+    execution_service: ExecutionServiceDep = ...
+):
+    """
+    Get execution logs with filtering and pagination
+    
+    Uses ExecutionService for business logic (Dependency Inversion).
+    """
+    try:
+        return await execution_service.get_execution_logs(
+            execution_id=execution_id,
+            level=level,
+            node_id=node_id,
+            limit=limit,
+            offset=offset
+        )
+    except ExecutionNotFoundError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+
+
+@router.get("/executions/{execution_id}/logs/download")
+async def download_execution_logs(
+    execution_id: str,
+    format: str = Query("text", regex="^(text|json)$", description="Download format (text or json)"),
+    level: Optional[str] = Query(None, description="Filter by log level (INFO, WARNING, ERROR)"),
+    node_id: Optional[str] = Query(None, description="Filter by node ID"),
+    execution_service: ExecutionServiceDep = ...
+):
+    """
+    Download execution logs as a file
+    
+    Returns logs in text or JSON format with proper download headers.
+    Uses ExecutionService for business logic (Dependency Inversion).
+    """
+    from fastapi.responses import Response
+    from datetime import datetime
+    
+    try:
+        # Get all logs (no pagination for download)
+        logs_response = await execution_service.get_execution_logs(
+            execution_id=execution_id,
+            level=level,
+            node_id=node_id,
+            limit=100000,  # Large limit for downloads
+            offset=0
+        )
+        
+        if format == "json":
+            import json
+            content = json.dumps({
+                "execution_id": execution_id,
+                "logs": [log.model_dump(mode='json') if hasattr(log, 'model_dump') else log for log in logs_response.logs],
+                "total": logs_response.total
+            }, indent=2, default=str)
+            media_type = "application/json"
+            filename = f"execution_{execution_id}_logs.json"
+        else:  # text format
+            content_lines = []
+            content_lines.append(f"Execution Logs for {execution_id}")
+            content_lines.append(f"Total Logs: {logs_response.total}")
+            content_lines.append("=" * 80)
+            content_lines.append("")
+            
+            for log in logs_response.logs:
+                log_dict = log.model_dump(mode='json') if hasattr(log, 'model_dump') else log
+                timestamp = log_dict.get('timestamp', '')
+                log_level = log_dict.get('level', 'INFO')
+                node = log_dict.get('node_id', '')
+                message = log_dict.get('message', '')
+                
+                node_str = f" [{node}]" if node else ""
+                content_lines.append(f"[{timestamp}] {log_level}{node_str}: {message}")
+            
+            content = "\n".join(content_lines)
+            media_type = "text/plain"
+            filename = f"execution_{execution_id}_logs.txt"
+        
+        return Response(
+            content=content,
+            media_type=media_type,
+            headers={
+                "Content-Disposition": f'attachment; filename="{filename}"'
+            }
+        )
+    except ExecutionNotFoundError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+
+
+@router.post("/executions/{execution_id}/cancel", response_model=ExecutionResponse)
+async def cancel_execution(
+    execution_id: str,
+    execution_service: ExecutionServiceDep = ...
+):
+    """
+    Cancel a running execution
+    
+    Only executions with status 'pending' or 'running' can be cancelled.
+    Uses ExecutionService for business logic (Dependency Inversion).
+    """
+    try:
+        return await execution_service.cancel_execution(execution_id)
+    except ExecutionNotFoundError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
 

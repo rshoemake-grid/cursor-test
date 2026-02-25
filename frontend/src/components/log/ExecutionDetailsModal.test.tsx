@@ -184,4 +184,179 @@ describe('ExecutionDetailsModal', () => {
     expect(screen.getByText(/Started At/)).toBeInTheDocument()
     expect(screen.queryByText(/Completed At/)).not.toBeInTheDocument()
   })
+
+  describe('Download Logs Functionality', () => {
+    const mockApiClient = {
+      downloadExecutionLogs: jest.fn(),
+    }
+
+    beforeEach(() => {
+      jest.clearAllMocks()
+      global.URL.createObjectURL = jest.fn(() => 'blob:url')
+      global.URL.revokeObjectURL = jest.fn()
+      const mockCreateElement = jest.spyOn(document, 'createElement')
+      const mockAnchor = {
+        href: '',
+        download: '',
+        click: jest.fn(),
+      }
+      mockCreateElement.mockReturnValue(mockAnchor as any)
+      document.body.appendChild = jest.fn()
+      document.body.removeChild = jest.fn()
+    })
+
+    afterEach(() => {
+      jest.restoreAllMocks()
+    })
+
+    it('should render download buttons when execution has logs', () => {
+      const executionWithLogs = {
+        ...mockExecution,
+        logs: ['Log 1', 'Log 2'],
+      }
+
+      render(
+        <ExecutionDetailsModal
+          execution={executionWithLogs}
+          isOpen={true}
+          onClose={mockOnClose}
+          apiClient={mockApiClient as any}
+        />
+      )
+
+      expect(screen.getByText(/Download Logs \(TXT\)/i)).toBeInTheDocument()
+      expect(screen.getByText(/Download Logs \(JSON\)/i)).toBeInTheDocument()
+    })
+
+    it('should not render download buttons when execution has no logs', () => {
+      const executionWithoutLogs = {
+        ...mockExecution,
+        logs: [],
+      }
+
+      render(
+        <ExecutionDetailsModal
+          execution={executionWithoutLogs}
+          isOpen={true}
+          onClose={mockOnClose}
+          apiClient={mockApiClient as any}
+        />
+      )
+
+      expect(screen.queryByText(/Download Logs/i)).not.toBeInTheDocument()
+    })
+
+    it('should download logs as text when TXT button is clicked', async () => {
+      const blob = new Blob(['Log content'], { type: 'text/plain' })
+      mockApiClient.downloadExecutionLogs.mockResolvedValue(blob)
+
+      const executionWithLogs = {
+        ...mockExecution,
+        logs: ['Log 1'],
+      }
+
+      render(
+        <ExecutionDetailsModal
+          execution={executionWithLogs}
+          isOpen={true}
+          onClose={mockOnClose}
+          apiClient={mockApiClient as any}
+        />
+      )
+
+      const txtButton = screen.getByText(/Download Logs \(TXT\)/i)
+      fireEvent.click(txtButton)
+
+      await new Promise(resolve => setTimeout(resolve, 100))
+
+      expect(mockApiClient.downloadExecutionLogs).toHaveBeenCalledWith('exec-123', 'text', undefined)
+    })
+
+    it('should download logs as json when JSON button is clicked', async () => {
+      const blob = new Blob(['{"logs": []}'], { type: 'application/json' })
+      mockApiClient.downloadExecutionLogs.mockResolvedValue(blob)
+
+      const executionWithLogs = {
+        ...mockExecution,
+        logs: ['Log 1'],
+      }
+
+      render(
+        <ExecutionDetailsModal
+          execution={executionWithLogs}
+          isOpen={true}
+          onClose={mockOnClose}
+          apiClient={mockApiClient as any}
+        />
+      )
+
+      const jsonButton = screen.getByText(/Download Logs \(JSON\)/i)
+      fireEvent.click(jsonButton)
+
+      await new Promise(resolve => setTimeout(resolve, 100))
+
+      expect(mockApiClient.downloadExecutionLogs).toHaveBeenCalledWith('exec-123', 'json', undefined)
+    })
+
+    it('should show loading state during download', async () => {
+      const blob = new Blob(['Log content'], { type: 'text/plain' })
+      let resolveDownload: (value: Blob) => void
+      const downloadPromise = new Promise<Blob>(resolve => {
+        resolveDownload = resolve
+      })
+      mockApiClient.downloadExecutionLogs.mockReturnValue(downloadPromise)
+
+      const executionWithLogs = {
+        ...mockExecution,
+        logs: ['Log 1'],
+      }
+
+      render(
+        <ExecutionDetailsModal
+          execution={executionWithLogs}
+          isOpen={true}
+          onClose={mockOnClose}
+          apiClient={mockApiClient as any}
+        />
+      )
+
+      const txtButton = screen.getByText(/Download Logs \(TXT\)/i)
+      fireEvent.click(txtButton)
+
+      expect(txtButton).toBeDisabled()
+
+      resolveDownload!(blob)
+      await downloadPromise
+      await new Promise(resolve => setTimeout(resolve, 100))
+
+      expect(txtButton).not.toBeDisabled()
+    })
+
+    it('should handle download errors gracefully', async () => {
+      const error = new Error('Download failed')
+      mockApiClient.downloadExecutionLogs.mockRejectedValue(error)
+      global.alert = jest.fn()
+
+      const executionWithLogs = {
+        ...mockExecution,
+        logs: ['Log 1'],
+      }
+
+      render(
+        <ExecutionDetailsModal
+          execution={executionWithLogs}
+          isOpen={true}
+          onClose={mockOnClose}
+          apiClient={mockApiClient as any}
+        />
+      )
+
+      const txtButton = screen.getByText(/Download Logs \(TXT\)/i)
+      fireEvent.click(txtButton)
+
+      await new Promise(resolve => setTimeout(resolve, 100))
+
+      expect(global.alert).toHaveBeenCalledWith(expect.stringContaining('Failed to download logs'))
+    })
+  })
 })
