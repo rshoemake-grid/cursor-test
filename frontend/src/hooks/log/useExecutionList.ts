@@ -18,10 +18,18 @@ export interface ExecutionListAPI {
   }): Promise<ExecutionState[]>
 }
 
+export interface ExecutionFilters {
+  status?: string
+  workflow_id?: string
+  limit?: number
+  offset?: number
+}
+
 export interface UseExecutionListOptions {
   apiClient?: ExecutionListAPI
   pollInterval?: number
   limit?: number
+  filters?: ExecutionFilters
 }
 
 export interface UseExecutionListResult {
@@ -44,6 +52,7 @@ export function useExecutionList(
     apiClient,
     pollInterval = 5000,
     limit = 100,
+    filters,
   } = options
 
   const [executions, setExecutions] = useState<ExecutionState[]>([])
@@ -59,7 +68,13 @@ export function useExecutionList(
 
     try {
       setError(null)
-      const data = await apiClient.listExecutions({ limit })
+      const params = {
+        limit,
+        ...(filters?.status && { status: filters.status }),
+        ...(filters?.workflow_id && { workflow_id: filters.workflow_id }),
+        ...(filters?.offset && { offset: filters.offset }),
+      }
+      const data = await apiClient.listExecutions(params)
       setExecutions(data)
     } catch (err: any) {
       logger.error('Failed to load executions:', err)
@@ -67,7 +82,7 @@ export function useExecutionList(
     } finally {
       setLoading(false)
     }
-  }, [apiClient, limit])
+  }, [apiClient, limit, filters])
 
   useEffect(() => {
     loadExecutions()

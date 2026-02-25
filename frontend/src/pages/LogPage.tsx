@@ -5,11 +5,13 @@
  * DRY: Uses extracted utilities and reusable components
  */
 
+import { useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { AlertCircle } from 'lucide-react'
 import ExecutionListItem from '../components/log/ExecutionListItem'
+import ExecutionFilters, { type ExecutionFiltersState } from '../components/log/ExecutionFilters'
 import { useExecutionList } from '../hooks/log/useExecutionList'
-import { sortExecutionsByStartTime } from '../utils/executionFormat'
+import { applyExecutionFilters } from '../utils/executionFilters'
 import { apiClient } from '../api/client'
 
 export interface LogPageProps {
@@ -25,18 +27,33 @@ export interface LogPageProps {
 
 export default function LogPage({ apiClient: injectedApiClient }: LogPageProps = {}) {
   const navigate = useNavigate()
+  const [filters, setFilters] = useState<ExecutionFiltersState>({
+    sortBy: 'started_at',
+    sortOrder: 'desc',
+  })
+
   const { executions, loading, error } = useExecutionList({
     apiClient: injectedApiClient || apiClient,
     pollInterval: 5000,
     limit: 100,
+    filters: filters.status
+      ? {
+          status: filters.status.join(','),
+          workflow_id: filters.workflowId,
+        }
+      : filters.workflowId
+      ? { workflow_id: filters.workflowId }
+      : undefined,
   })
 
   const handleExecutionClick = (executionId: string) => {
     navigate(`/?execution=${executionId}`)
   }
 
-  // Sort executions by start time (newest first)
-  const sortedExecutions = sortExecutionsByStartTime(executions)
+  // Apply client-side filters (search, sorting)
+  const filteredExecutions = useMemo(() => {
+    return applyExecutionFilters(executions, filters)
+  }, [executions, filters])
 
   if (loading) {
     return (
@@ -68,11 +85,17 @@ export default function LogPage({ apiClient: injectedApiClient }: LogPageProps =
         <div className="mb-6">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Execution Log</h1>
           <p className="text-gray-600">
-            {sortedExecutions.length} execution{sortedExecutions.length !== 1 ? 's' : ''} total
+            {filteredExecutions.length} execution{filteredExecutions.length !== 1 ? 's' : ''} 
+            {filteredExecutions.length !== executions.length && ` of ${executions.length} total`}
           </p>
         </div>
 
-        {sortedExecutions.length === 0 ? (
+        <ExecutionFilters
+          filters={filters}
+          onFiltersChange={setFilters}
+        />
+
+        {filteredExecutions.length === 0 ? (
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-12 text-center">
             <AlertCircle className="w-12 h-12 mx-auto mb-4 text-gray-400" />
             <p className="text-lg font-medium text-gray-900 mb-2">No executions yet</p>
@@ -80,7 +103,7 @@ export default function LogPage({ apiClient: injectedApiClient }: LogPageProps =
           </div>
         ) : (
           <div className="space-y-3">
-            {sortedExecutions.map((execution) => (
+            {filteredExecutions.map((execution) => (
               <ExecutionListItem
                 key={execution.execution_id}
                 execution={execution}

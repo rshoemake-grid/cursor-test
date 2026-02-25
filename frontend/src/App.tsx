@@ -3,6 +3,7 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import WorkflowTabs from './components/WorkflowTabs'
 import WorkflowList from './components/WorkflowList'
 import ExecutionViewer from './components/ExecutionViewer'
+import ErrorBoundary from './components/ErrorBoundary'
 import AuthPage from './pages/AuthPage'
 import ForgotPasswordPage from './pages/ForgotPasswordPage'
 import ResetPasswordPage from './pages/ResetPasswordPage'
@@ -255,17 +256,39 @@ function AuthenticatedLayout() {
 }
 
 function App() {
+  // Global error handler for unhandled promise rejections
+  useEffect(() => {
+    const handleUnhandledRejection = (event: PromiseRejectionEvent) => {
+      logger.error('Unhandled promise rejection:', event.reason)
+      // Optionally show user notification
+      // showError('An unexpected error occurred. Please refresh the page.')
+    }
+
+    window.addEventListener('unhandledrejection', handleUnhandledRejection)
+
+    return () => {
+      window.removeEventListener('unhandledrejection', handleUnhandledRejection)
+    }
+  }, [])
+
   return (
-    <Router>
-      <AuthProvider>
-        <Routes>
-          <Route path="/auth" element={<AuthPage />} />
-          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-          <Route path="/reset-password" element={<ResetPasswordPage />} />
-          <Route path="/*" element={<AuthenticatedLayout />} />
-        </Routes>
-      </AuthProvider>
-    </Router>
+    <ErrorBoundary
+      onError={(error, errorInfo) => {
+        // Log to error reporting service (e.g., Sentry)
+        logger.error('ErrorBoundary caught error:', error, errorInfo)
+      }}
+    >
+      <Router>
+        <AuthProvider>
+          <Routes>
+            <Route path="/auth" element={<AuthPage />} />
+            <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+            <Route path="/reset-password" element={<ResetPasswordPage />} />
+            <Route path="/*" element={<AuthenticatedLayout />} />
+          </Routes>
+        </AuthProvider>
+      </Router>
+    </ErrorBoundary>
   )
 }
 
