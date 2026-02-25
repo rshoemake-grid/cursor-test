@@ -8,9 +8,10 @@ import ForgotPasswordPage from './pages/ForgotPasswordPage'
 import ResetPasswordPage from './pages/ResetPasswordPage'
 import MarketplacePage from './pages/MarketplacePage'
 import SettingsPage from './pages/SettingsPage'
+import LogPage from './pages/LogPage'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
 import { WorkflowTabsProvider } from './contexts/WorkflowTabsContext'
-import { Play, List, Eye, Store, User, LogOut, LogIn, Settings } from 'lucide-react'
+import { Play, List, Eye, Store, User, LogOut, LogIn, Settings, FileText } from 'lucide-react'
 import { showConfirm } from './utils/confirm'
 import { logger } from './utils/logger'
 
@@ -32,6 +33,8 @@ function AuthenticatedLayout() {
 
   useEffect(() => {
     const workflowId = searchParams.get('workflow')
+    const executionIdParam = searchParams.get('execution')
+    
     if (workflowId && workflowId !== processedWorkflowFromUrl.current) {
       logger.debug(`[App] Loading workflow ${workflowId} from URL`)
       processedWorkflowFromUrl.current = workflowId
@@ -52,7 +55,14 @@ function AuthenticatedLayout() {
 
       return () => clearTimeout(timeoutId)
     }
-  }, [searchParams, navigate, location])
+    
+    if (executionIdParam && executionIdParam !== executionId) {
+      logger.debug(`[App] Loading execution ${executionIdParam} from URL`)
+      setExecutionId(executionIdParam)
+      setCurrentView('execution')
+      navigate('/', { replace: true })
+    }
+  }, [searchParams, navigate, location, executionId])
 
   const goToBuilder = useCallback(() => {
     setCurrentView('builder')
@@ -168,8 +178,23 @@ function AuthenticatedLayout() {
               Marketplace
             </Link>
             <Link
+              to="/log"
+              className={`px-4 py-2 rounded-lg flex items-center gap-2 transition-colors ${
+                location.pathname === '/log'
+                  ? 'bg-primary-100 text-primary-700 font-medium'
+                  : 'text-gray-600 hover:bg-gray-100'
+              }`}
+            >
+              <FileText className="w-4 h-4" />
+              Log
+            </Link>
+            <Link
               to="/settings"
-              className="px-4 py-2 rounded-lg flex items-center gap-2 text-gray-600 hover:bg-gray-100 transition-colors"
+              className={`px-4 py-2 rounded-lg flex items-center gap-2 transition-colors ${
+                location.pathname === '/settings'
+                  ? 'bg-primary-100 text-primary-700 font-medium'
+                  : 'text-gray-600 hover:bg-gray-100'
+              }`}
             >
               <Settings className="w-4 h-4" />
               Settings
@@ -221,6 +246,7 @@ function AuthenticatedLayout() {
             element={renderBuilderContent()}
           />
           <Route path="marketplace" element={<MarketplacePage />} />
+          <Route path="log" element={<LogPage />} />
           <Route path="settings" element={<SettingsPage />} />
         </Routes>
       </main>

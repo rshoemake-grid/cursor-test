@@ -39,12 +39,24 @@ src/
 │   ├── Toolbar.tsx             # Top toolbar (save, execute, etc.)
 │   ├── WorkflowList.tsx        # Workflow grid view
 │   ├── ExecutionViewer.tsx    # Execution results view
+│   ├── log/                    # Log page components
+│   │   └── ExecutionListItem.tsx  # Execution list item component
 │   └── nodes/                  # Custom node components
 │       ├── AgentNode.tsx
 │       ├── ConditionNode.tsx
 │       ├── LoopNode.tsx
 │       ├── StartNode.tsx
 │       └── EndNode.tsx
+├── pages/
+│   ├── AuthPage.tsx            # Login/Register page
+│   ├── MarketplacePage.tsx     # Marketplace/discovery page
+│   ├── SettingsPage.tsx         # Settings page
+│   └── LogPage.tsx             # Execution log page
+├── hooks/
+│   └── log/
+│       └── useExecutionList.ts # Hook for execution list management
+├── utils/
+│   └── executionFormat.tsx     # Execution formatting utilities
 ├── store/
 │   └── workflowStore.ts        # Zustand state management
 ├── api/
@@ -102,6 +114,15 @@ Real-time execution monitoring:
 - Input/output for each step
 - Execution logs
 - Final result
+
+### LogPage
+Execution log page for viewing all executions:
+- List of all workflow executions
+- Status badges and icons
+- Execution details (ID, workflow, timestamps, duration)
+- Progress indicators for running executions
+- Click to view individual execution details
+- Auto-refresh every 5 seconds
 
 ## 🔧 Configuration
 

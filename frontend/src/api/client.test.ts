@@ -268,6 +268,33 @@ describe('createApiClient', () => {
       expect(mockInstance.get).toHaveBeenCalledWith('/executions/exec-1')
       expect(result).toEqual(executionState)
     })
+
+    it('should list executions', async () => {
+      const executions = [
+        { execution_id: 'exec-1', status: 'completed' },
+        { execution_id: 'exec-2', status: 'running' },
+      ]
+      ;(mockInstance.get as jest.Mock).mockResolvedValue({ data: executions })
+
+      const api = createApiClient()
+      const result = await api.listExecutions()
+
+      expect(mockInstance.get).toHaveBeenCalledWith('/executions', { params: undefined })
+      expect(result).toEqual(executions)
+    })
+
+    it('should list executions with params', async () => {
+      const executions = [{ execution_id: 'exec-1', status: 'completed' }]
+      ;(mockInstance.get as jest.Mock).mockResolvedValue({ data: executions })
+
+      const api = createApiClient()
+      const result = await api.listExecutions({ limit: 50, status: 'completed' })
+
+      expect(mockInstance.get).toHaveBeenCalledWith('/executions', {
+        params: { limit: 50, status: 'completed' },
+      })
+      expect(result).toEqual(executions)
+    })
   })
 
   describe('Settings', () => {

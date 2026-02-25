@@ -55,6 +55,11 @@ jest.mock('./pages/SettingsPage', () => ({
   default: () => <div>SettingsPage</div>,
 }))
 
+jest.mock('./pages/LogPage', () => ({
+  __esModule: true,
+  default: () => <div>LogPage</div>,
+}))
+
 jest.mock('./utils/confirm', () => ({
   showConfirm: jest.fn().mockResolvedValue(true),
 }))
@@ -95,6 +100,13 @@ describe('App', () => {
     renderApp()
 
     expect(screen.getByText(/Agentic Workflow Builder/)).toBeInTheDocument()
+  })
+
+  it('should render log page at /log route', () => {
+    window.history.pushState({}, '', '/log')
+    renderApp()
+
+    expect(screen.getByText('LogPage')).toBeInTheDocument()
   })
 
   it('should render marketplace page at /marketplace route', () => {
@@ -187,6 +199,15 @@ describe('App', () => {
       // Should switch back to builder view
       await waitForWithTimeout(() => {
         expect(screen.getByText('WorkflowTabs')).toBeInTheDocument()
+      })
+    })
+
+    it('should navigate to execution view when execution query param is present', async () => {
+      window.history.pushState({}, '', '/?execution=exec-123')
+      renderApp()
+
+      await waitForWithTimeout(() => {
+        expect(screen.getByText('ExecutionViewer: exec-123')).toBeInTheDocument()
       })
     })
 

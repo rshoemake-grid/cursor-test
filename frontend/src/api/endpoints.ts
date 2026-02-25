@@ -20,6 +20,7 @@ export const workflowEndpoints = {
  * Execution endpoints
  */
 export const executionEndpoints = {
+  list: () => '/executions',
   detail: (id: string) => `/executions/${id}`,
 } as const
 

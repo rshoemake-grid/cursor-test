@@ -212,6 +212,15 @@ export function createApiClient(options?: {
     return extractData(await instance.get(executionEndpoints.detail(executionId)))
   },
 
+  async listExecutions(params?: {
+    workflow_id?: string
+    status?: string
+    limit?: number
+    offset?: number
+  }): Promise<ExecutionState[]> {
+    return extractData(await instance.get(executionEndpoints.list(), { params }))
+  },
+
   // Settings
   async getLLMSettings(): Promise<any> {
     try {

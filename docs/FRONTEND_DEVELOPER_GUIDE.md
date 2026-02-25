@@ -30,6 +30,8 @@ frontend/src/
 ├── hooks/               # Custom React hooks
 │   ├── workflow/           # Workflow-related hooks
 │   ├── execution/          # Execution management hooks
+│   ├── log/                # Log page hooks
+│   │   └── useExecutionList.ts  # Execution list management
 │   ├── marketplace/        # Marketplace hooks
 │   ├── nodes/              # Node-related hooks
 │   ├── forms/              # Form handling hooks
@@ -42,7 +44,8 @@ frontend/src/
 ├── pages/               # Page-level components
 │   ├── AuthPage.tsx         # Login/Register page
 │   ├── MarketplacePage.tsx  # Marketplace/discovery page
-│   └── SettingsPage.tsx     # Settings page
+│   ├── SettingsPage.tsx     # Settings page
+│   └── LogPage.tsx         # Execution log page
 ├── api/                 # API client and utilities
 │   └── client.ts           # Axios-based API client
 ├── types/               # TypeScript type definitions
@@ -50,7 +53,8 @@ frontend/src/
 │   └── adapters.ts         # Adapter interfaces
 ├── utils/               # Utility functions
 │   ├── logger.ts           # Logging utility
-│   └── confirm.ts          # Confirmation dialogs
+│   ├── confirm.ts          # Confirmation dialogs
+│   └── executionFormat.tsx # Execution formatting utilities
 ├── adapters/            # Adapter implementations
 │   └── defaultAdapters.ts  # Default adapter factories
 ├── config/             # Configuration
