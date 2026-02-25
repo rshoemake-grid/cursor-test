@@ -13,8 +13,13 @@ import ExecutionListItem from '../components/log/ExecutionListItem'
 import ExecutionFilters, { type ExecutionFiltersState } from '../components/log/ExecutionFilters'
 import BulkActionsBar from '../components/log/BulkActionsBar'
 import ExecutionDetailsModal from '../components/log/ExecutionDetailsModal'
+import AdvancedSearch from '../components/log/AdvancedSearch'
+import AdvancedFiltersPanel from '../components/log/AdvancedFiltersPanel'
+import VirtualizedList from '../components/ui/VirtualizedList'
 import Pagination from '../components/ui/Pagination'
 import ToastContainer from '../components/ui/ToastContainer'
+import { useKeyboardShortcuts } from '../hooks/utils/useKeyboardShortcuts'
+import { useAdvancedFilters, type AdvancedFilterOptions } from '../hooks/log/useAdvancedFilters'
 import { useExecutionListQuery } from '../hooks/log/useExecutionListQuery'
 import { useExecutionPagination } from '../hooks/log/useExecutionPagination'
 import { useBulkOperations } from '../hooks/log/useBulkOperations'
@@ -46,6 +51,9 @@ export default function LogPage({ apiClient: injectedApiClient }: LogPageProps =
   const [bulkMode, setBulkMode] = useState(false)
   const [selectedExecution, setSelectedExecution] = useState<ExecutionState | null>(null)
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false)
+  const [advancedFilters, setAdvancedFilters] = useState<AdvancedFilterOptions>({})
 
   const { data: executions = [], isLoading: loading, error } = useExecutionListQuery({
     apiClient: injectedApiClient || api,
@@ -79,9 +87,33 @@ export default function LogPage({ apiClient: injectedApiClient }: LogPageProps =
   }
 
   // Apply client-side filters (search, sorting)
-  const filteredExecutions = useMemo(() => {
+  const baseFilteredExecutions = useMemo(() => {
     return applyExecutionFilters(executions, filters)
   }, [executions, filters])
+
+  // Apply advanced filters
+  const { filteredExecutions: advancedFilteredExecutions, filterCount } = useAdvancedFilters({
+    executions: baseFilteredExecutions,
+    filters: advancedFilters,
+  })
+
+  // Apply search query
+  const finalFilteredExecutions = useMemo(() => {
+    if (!searchQuery.trim()) {
+      return advancedFilteredExecutions
+    }
+
+    const query = searchQuery.toLowerCase()
+    return advancedFilteredExecutions.filter((execution) => {
+      return (
+        execution.execution_id.toLowerCase().includes(query) ||
+        execution.workflow_id.toLowerCase().includes(query) ||
+        execution.status.toLowerCase().includes(query) ||
+        (execution.current_node && execution.current_node.toLowerCase().includes(query)) ||
+        (execution.error && execution.error.toLowerCase().includes(query))
+      )
+    })
+  }, [advancedFilteredExecutions, searchQuery])
 
   // Pagination
   const {
@@ -93,17 +125,59 @@ export default function LogPage({ apiClient: injectedApiClient }: LogPageProps =
     itemsPerPage,
     totalItems,
   } = useExecutionPagination({
-    executions: filteredExecutions,
+    executions: finalFilteredExecutions,
     itemsPerPage: 25,
   })
 
+  // Keyboard shortcuts
+  useKeyboardShortcuts({
+    shortcuts: [
+      {
+        key: 'f',
+        ctrlKey: true,
+        handler: () => {
+          // Focus search input
+          const searchInput = document.querySelector('input[type="text"][placeholder*="Search"]') as HTMLInputElement
+          searchInput?.focus()
+        },
+        description: 'Focus search',
+      },
+      {
+        key: 'b',
+        ctrlKey: true,
+        handler: () => {
+          setBulkMode(!bulkMode)
+        },
+        description: 'Toggle bulk mode',
+      },
+      {
+        key: 'Escape',
+        handler: () => {
+          if (isDetailsModalOpen) {
+            setIsDetailsModalOpen(false)
+            setSelectedExecution(null)
+          }
+          if (showAdvancedFilters) {
+            setShowAdvancedFilters(false)
+          }
+          if (bulkMode) {
+            setBulkMode(false)
+            bulkOperations.clearSelection()
+          }
+        },
+        description: 'Close modals/clear selections',
+      },
+    ],
+    enabled: true,
+  })
+
   const handleExportJSON = () => {
-    exportExecutionsToJSON(filteredExecutions)
+    exportExecutionsToJSON(finalFilteredExecutions)
     toast.success('Executions exported to JSON')
   }
 
   const handleExportCSV = () => {
-    exportExecutionsToCSV(filteredExecutions)
+    exportExecutionsToCSV(finalFilteredExecutions)
     toast.success('Executions exported to CSV')
   }
 
@@ -197,10 +271,13 @@ export default function LogPage({ apiClient: injectedApiClient }: LogPageProps =
             <h1 className="text-3xl font-bold text-gray-900 mb-2">Execution Log</h1>
             <p className="text-gray-600">
               {totalItems} execution{totalItems !== 1 ? 's' : ''}
-              {totalItems !== executions.length && ` of ${executions.length} total`}
+              {totalItems !== finalFilteredExecutions.length &&
+                ` of ${finalFilteredExecutions.length} filtered`}
+              {finalFilteredExecutions.length !== executions.length &&
+                ` (${executions.length} total)`}
             </p>
           </div>
-          {filteredExecutions.length > 0 && (
+          {finalFilteredExecutions.length > 0 && (
             <div className="flex gap-2">
               <button
                 onClick={() => setBulkMode(!bulkMode)}
@@ -242,12 +319,37 @@ export default function LogPage({ apiClient: injectedApiClient }: LogPageProps =
           />
         )}
 
+        <div className="mb-4">
+          <AdvancedSearch
+            value={searchQuery}
+            onSearch={setSearchQuery}
+            onClear={() => setSearchQuery('')}
+            placeholder="Search by ID, workflow, status, node, or error..."
+            showAdvanced={showAdvancedFilters}
+            onToggleAdvanced={() => setShowAdvancedFilters(!showAdvancedFilters)}
+          />
+          {showAdvancedFilters && (
+            <div className="mt-4">
+              <AdvancedFiltersPanel
+                filters={advancedFilters}
+                onFiltersChange={setAdvancedFilters}
+                onClose={() => setShowAdvancedFilters(false)}
+              />
+            </div>
+          )}
+          {filterCount > 0 && (
+            <div className="mt-2 text-sm text-gray-600">
+              {filterCount} active filter{filterCount !== 1 ? 's' : ''}
+            </div>
+          )}
+        </div>
+
         <ExecutionFilters
           filters={filters}
           onFiltersChange={setFilters}
         />
 
-        {filteredExecutions.length === 0 ? (
+        {finalFilteredExecutions.length === 0 ? (
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-12 text-center">
             <AlertCircle className="w-12 h-12 mx-auto mb-4 text-gray-400" />
             <p className="text-lg font-medium text-gray-900 mb-2">No executions yet</p>
@@ -270,16 +372,36 @@ export default function LogPage({ apiClient: injectedApiClient }: LogPageProps =
                   </span>
                 </div>
               )}
-              {paginatedExecutions.map((execution) => (
-                <ExecutionListItem
-                  key={execution.execution_id}
-                  execution={execution}
-                  onExecutionClick={handleExecutionClick}
-                  isSelected={bulkOperations.selectedIds.has(execution.execution_id)}
-                  onSelect={bulkOperations.toggleSelection}
-                  showCheckbox={bulkMode}
+              {paginatedExecutions.length > 50 ? (
+                <VirtualizedList
+                  items={paginatedExecutions}
+                  itemHeight={120}
+                  containerHeight={600}
+                  renderItem={(execution) => (
+                    <div className="mb-3">
+                      <ExecutionListItem
+                        key={execution.execution_id}
+                        execution={execution}
+                        onExecutionClick={handleExecutionClick}
+                        isSelected={bulkOperations.selectedIds.has(execution.execution_id)}
+                        onSelect={bulkOperations.toggleSelection}
+                        showCheckbox={bulkMode}
+                      />
+                    </div>
+                  )}
                 />
-              ))}
+              ) : (
+                paginatedExecutions.map((execution) => (
+                  <ExecutionListItem
+                    key={execution.execution_id}
+                    execution={execution}
+                    onExecutionClick={handleExecutionClick}
+                    isSelected={bulkOperations.selectedIds.has(execution.execution_id)}
+                    onSelect={bulkOperations.toggleSelection}
+                    showCheckbox={bulkMode}
+                  />
+                ))
+              )}
             </div>
             <Pagination
               currentPage={currentPage}
