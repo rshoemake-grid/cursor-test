@@ -5,6 +5,7 @@ import {
   type Node,
   type Edge,
   type ReactFlowInstance,
+  ReactFlowProvider,
 } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
 
@@ -294,7 +295,7 @@ const WorkflowBuilder = forwardRef<WorkflowBuilderHandle, WorkflowBuilderProps>(
   const activeExecutionId = workflowTabs?.find(t => t.workflowId === localWorkflowId)?.activeExecutionId || null
 
   return (
-    <>
+    <ReactFlowProvider>
       <WorkflowBuilderLayout
         nodes={nodes}
         edges={edges}
@@ -366,7 +367,7 @@ const WorkflowBuilder = forwardRef<WorkflowBuilderHandle, WorkflowBuilderProps>(
         marketplaceNode={marketplaceNode}
         workflowId={localWorkflowId}
       />
-    </>
+    </ReactFlowProvider>
   )
 })
 

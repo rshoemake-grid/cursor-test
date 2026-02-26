@@ -5,7 +5,6 @@
  */
 
 import React from 'react'
-import { ReactFlowProvider } from '@xyflow/react'
 import NodePanel from '../NodePanel'
 import PropertyPanel from '../PropertyPanel'
 import WorkflowCanvas from '../WorkflowCanvas'
@@ -95,8 +94,7 @@ export function WorkflowBuilderLayout({
   onSaveWorkflow,
 }: WorkflowBuilderLayoutProps) {
   return (
-    <ReactFlowProvider>
-      <div className="flex-1 flex overflow-hidden">
+    <div className="flex-1 flex overflow-hidden">
         {/* Left Panel - Node Palette (Full Height) */}
         <NodePanel />
 
@@ -152,6 +150,5 @@ export function WorkflowBuilderLayout({
           onSaveWorkflow={onSaveWorkflow}
         />
       </div>
-    </ReactFlowProvider>
   )
 }

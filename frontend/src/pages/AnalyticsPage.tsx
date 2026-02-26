@@ -48,7 +48,7 @@ export default function AnalyticsPage({
   const { data: executions = [], isLoading: loading, error } = useExecutionListQuery({
     apiClient: injectedApiClient || api,
     refetchInterval: 10000, // Poll less frequently for analytics
-    filters: { limit: 1000 }, // Get more data for analytics
+    filters: { limit: 100 }, // Maximum allowed by API (le=100)
   })
 
   const analytics = useExecutionAnalytics({
