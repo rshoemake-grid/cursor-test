@@ -81,11 +81,11 @@ max_request_size: int = 10 * 1024 * 1024  # 10MB
   "uptime_seconds": 3600.0,
   "requests_per_second": 0.34,
   "endpoints": {
-    "GET /api/v1/workflows": 500,
-    "POST /api/v1/workflows": 200
+    "GET /api/workflows": 500,
+    "POST /api/workflows": 200
   },
   "endpoint_errors": {
-    "POST /api/v1/workflows": 2
+    "POST /api/workflows": 2
   },
   "status_codes": {
     "200": 1200,
@@ -137,12 +137,12 @@ The middleware is applied in the following order (important for proper functiona
 
 ## API Versioning
 
-All API endpoints now use `/api/v1` prefix for Apigee compatibility:
+All API endpoints use `/api` prefix for Apigee compatibility:
 
-- `/api/v1/workflows` - Workflow management
-- `/api/v1/executions` - Execution management
-- `/api/v1/auth/*` - Authentication
-- `/api/v1/metrics` - Metrics endpoint
+- `/api/workflows` - Workflow management
+- `/api/executions` - Execution management
+- `/api/auth/*` - Authentication
+- `/api/metrics` - Metrics endpoint
 - `/health` - Health check (no version prefix)
 
 ## Error Handling
@@ -154,7 +154,7 @@ Standardized error responses for Apigee compatibility:
   "error": {
     "code": "404",
     "message": "Resource not found",
-    "path": "/api/v1/workflows/123",
+    "path": "/api/workflows/123",
     "timestamp": "2026-02-23T12:00:00"
   }
 }
@@ -200,7 +200,7 @@ Expected: HTTP 200 with metrics JSON
 ```bash
 # Create large payload (>10MB)
 dd if=/dev/zero of=large.json bs=1M count=11
-curl -X POST http://localhost:8000/api/v1/workflows \
+curl -X POST http://localhost:8000/api/workflows \
   -H "Content-Type: application/json" \
   -d @large.json
 ```
@@ -210,7 +210,7 @@ Expected: HTTP 413 (Payload Too Large)
 ### Test Request ID
 
 ```bash
-curl -v http://localhost:8000/api/v1/workflows
+curl -v http://localhost:8000/api/workflows
 ```
 
 Expected: `X-Request-ID` header in response

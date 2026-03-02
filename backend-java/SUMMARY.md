@@ -46,16 +46,16 @@ A complete Spring Boot Java backend that serves as a **drop-in replacement** for
 ## API Endpoints Implemented
 
 ### Workflows
-- ✅ `POST /api/v1/workflows` - Create workflow
-- ✅ `GET /api/v1/workflows` - List workflows
-- ✅ `GET /api/v1/workflows/{id}` - Get workflow
-- ✅ `PUT /api/v1/workflows/{id}` - Update workflow
-- ✅ `DELETE /api/v1/workflows/{id}` - Delete workflow
+- ✅ `POST /api/workflows` - Create workflow
+- ✅ `GET /api/workflows` - List workflows
+- ✅ `GET /api/workflows/{id}` - Get workflow
+- ✅ `PUT /api/workflows/{id}` - Update workflow
+- ✅ `DELETE /api/workflows/{id}` - Delete workflow
 
 ### Authentication
-- ✅ `POST /api/v1/auth/register` - Register user
-- ✅ `POST /api/v1/auth/login` - Login
-- ✅ `POST /api/v1/auth/refresh` - Refresh token
+- ✅ `POST /api/auth/register` - Register user
+- ✅ `POST /api/auth/login` - Login
+- ✅ `POST /api/auth/refresh` - Refresh token
 
 ### Health
 - ✅ `GET /health` - Health check
@@ -76,7 +76,7 @@ See `IMPLEMENTATION_GUIDE.md` for detailed instructions on completing:
 ## Key Features
 
 ### Drop-in Replacement
-- ✅ Same API endpoints (`/api/v1/*`)
+- ✅ Same API endpoints (`/api/*`)
 - ✅ Same request/response formats
 - ✅ Same database schema (SQLite)
 - ✅ Same JWT authentication

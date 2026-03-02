@@ -50,7 +50,7 @@
 - [x] Comprehensive examples
 
 ### API Versioning ✅
-- [x] All endpoints use `/api/v1` prefix
+- [x] All endpoints use `/api` prefix
 - [x] Version in OpenAPI metadata
 - [x] Consistent versioning strategy
 
@@ -122,8 +122,8 @@ Before deploying to Apigee:
 
 4. **Test Through Apigee**:
    ```bash
-   curl https://apigee-proxy-url/api/v1/health
-   curl https://apigee-proxy-url/api/v1/workflows
+   curl https://apigee-proxy-url/api/health
+   curl https://apigee-proxy-url/api/workflows
    ```
 
 ---

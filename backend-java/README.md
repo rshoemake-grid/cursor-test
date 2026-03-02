@@ -31,7 +31,7 @@ backend-java/
 - **Drop-in Replacement**: Same API endpoints, request/response formats as Python backend
 - **JWT Authentication**: Matches Python backend auth flow
 - **SQLite Database**: Uses same database schema and file
-- **REST API**: All endpoints under `/api/v1` prefix
+- **REST API**: All endpoints under `/api` prefix
 - **WebSocket Support**: For real-time execution updates
 - **CORS Configuration**: Matches Python backend CORS settings
 
@@ -39,13 +39,13 @@ backend-java/
 
 All endpoints match the Python FastAPI backend:
 
-- `/api/v1/workflows` - Workflow CRUD operations
-- `/api/v1/workflows/{id}/execute` - Execute workflows
-- `/api/v1/executions` - Execution management
-- `/api/v1/auth/*` - Authentication endpoints
-- `/api/v1/settings` - LLM settings management
-- `/api/v1/marketplace` - Marketplace operations
-- `/api/v1/templates` - Template management
+- `/api/workflows` - Workflow CRUD operations
+- `/api/workflows/{id}/execute` - Execute workflows
+- `/api/executions` - Execution management
+- `/api/auth/*` - Authentication endpoints
+- `/api/settings` - LLM settings management
+- `/api/marketplace` - Marketplace operations
+- `/api/templates` - Template management
 - `/health` - Health check endpoint
 - `/metrics` - Metrics endpoint
 

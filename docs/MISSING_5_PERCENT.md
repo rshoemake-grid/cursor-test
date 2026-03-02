@@ -54,7 +54,7 @@ async def create_workflow(
 **Status**: ❌ Not Implemented
 
 **What's Missing**:
-- `/api/v1/auth/refresh` endpoint
+- `/api/auth/refresh` endpoint
 - Refresh token generation
 - Refresh token validation
 - Token rotation support

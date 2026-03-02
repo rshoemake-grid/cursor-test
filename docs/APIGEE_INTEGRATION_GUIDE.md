@@ -34,7 +34,7 @@ curl https://api.yourdomain.com/openapi.json > openapi-spec.json
    - Select "OpenAPI" as source
    - Upload `openapi-spec.json`
    - Set proxy name: `workflow-builder-api`
-   - Set base path: `/api/v1`
+   - Set base path: `/api`
 
 3. **Configure Target**
    - Target type: HTTP Target
@@ -161,7 +161,7 @@ curl -X POST \
 ### Test Health Check
 
 ```bash
-export APIGEE_URL="https://your-org-test.apigee.net/api/v1"
+export APIGEE_URL="https://your-org-test.apigee.net/api"
 
 curl -X GET "${APIGEE_URL}/health"
 ```

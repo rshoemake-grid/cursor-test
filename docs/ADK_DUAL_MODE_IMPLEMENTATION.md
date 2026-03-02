@@ -225,7 +225,7 @@ pip install -r requirements.txt
    python -m uvicorn backend.main:app --reload
    
    # Create workflow with ADK agent via API
-   curl -X POST http://localhost:8000/api/v1/workflows \
+   curl -X POST http://localhost:8000/api/workflows \
      -H "Content-Type: application/json" \
      -d @test_adk_workflow.json
    ```

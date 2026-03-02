@@ -23,7 +23,7 @@ This document assesses the readiness of the Agentic Workflow Builder API for dep
 ### ⚠️ Issues Found
 
 1. **Missing OpenAPI Metadata**:
-   - No API versioning strategy in URL (`/api/v1/...`)
+   - ✅ API uses `/api` prefix (consistent URL strategy)
    - No contact information
    - No license information
    - No external documentation links
@@ -78,9 +78,9 @@ app = FastAPI(
 
 **Option 1: URL Versioning (Recommended for Apigee)**
 ```python
-# Add version prefix
-app.include_router(api_router, prefix="/api/v1")
-app.include_router(auth_router, prefix="/api/v1")
+# API prefix (current implementation)
+app.include_router(api_router, prefix="/api")
+app.include_router(auth_router, prefix="/api")
 ```
 
 **Option 2: Header Versioning**
@@ -420,7 +420,7 @@ When creating Apigee proxy, you'll need:
 
 2. **API Proxy Base Path**:
    ```
-   /api/v1/*
+   /api/*
    ```
 
 3. **Policies to Add**:
@@ -438,7 +438,7 @@ When creating Apigee proxy, you'll need:
 
 ### High Priority
 
-1. **Add API Versioning** (URL prefix `/api/v1/`)
+1. ~~**Add API Versioning**~~ ✅ Implemented: API uses `/api` prefix
 2. **Standardize Error Responses** (ErrorResponse model)
 3. **Add Security Headers** (X-Content-Type-Options, etc.)
 4. **Restrict CORS Origins** (Remove `["*"]` in production)
@@ -487,14 +487,14 @@ When creating Apigee proxy, you'll need:
 2. **Test Through Apigee Proxy**:
    ```bash
    # Test health check
-   curl https://apigee-proxy-url/api/v1/health
+   curl https://apigee-proxy-url/api/health
    
    # Test authentication
-   curl -X POST https://apigee-proxy-url/api/v1/auth/token \
+   curl -X POST https://apigee-proxy-url/api/auth/token \
      -d "username=test&password=test"
    
    # Test authenticated endpoint
-   curl https://apigee-proxy-url/api/v1/workflows \
+   curl https://apigee-proxy-url/api/workflows \
      -H "Authorization: Bearer $TOKEN"
    ```
 
@@ -526,8 +526,8 @@ app = FastAPI(
         "email": "api-support@yourdomain.com"
     },
     servers=[
-        {"url": "https://api.yourdomain.com/api/v1", "description": "Production"},
-        {"url": "http://localhost:8000/api/v1", "description": "Development"}
+        {"url": "https://api.yourdomain.com/api", "description": "Production"},
+        {"url": "http://localhost:8000/api", "description": "Development"}
     ]
 )
 
@@ -567,8 +567,8 @@ async def http_exception_handler(request: Request, exc: HTTPException):
     )
 
 # Update router prefixes to include version
-app.include_router(api_router, prefix="/api/v1")
-app.include_router(auth_router, prefix="/api/v1")
+app.include_router(api_router, prefix="/api")
+app.include_router(auth_router, prefix="/api")
 # ... other routers
 ```
 
@@ -730,7 +730,7 @@ async def metrics():
 - ✅ Health check endpoint
 
 **What Needs Improvement**:
-- ⚠️ Add API versioning (`/api/v1/`)
+- ✅ API uses `/api` prefix
 - ⚠️ Standardize error responses
 - ⚠️ Add security headers
 - ⚠️ Restrict CORS origins

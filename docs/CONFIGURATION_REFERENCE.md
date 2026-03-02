@@ -93,12 +93,12 @@ CORS_ORIGINS=["https://app1.example.com", "https://app2.example.com"]
 
 | Variable | Type | Default | Description |
 |----------|------|---------|-------------|
-| `API_VERSION` | string | `v1` | API version for Apigee compatibility |
+| `API_VERSION` | string | (unused) | Legacy; API uses `/api` prefix (no version in path) |
 | `MAX_REQUEST_SIZE` | integer | `10485760` | Maximum request body size in bytes (10MB) |
 
 **Examples:**
 ```bash
-API_VERSION=v1
+# API uses /api prefix; API_VERSION is deprecated
 MAX_REQUEST_SIZE=20971520  # 20MB
 ```
 
@@ -522,7 +522,7 @@ WEBSOCKET_PING_INTERVAL=20
 WEBSOCKET_TIMEOUT=60
 
 # API
-API_VERSION=v1
+# API uses /api prefix; API_VERSION is deprecated
 MAX_REQUEST_SIZE=10485760
 
 # Security (don't set fallback keys in production - use user settings)
@@ -622,7 +622,7 @@ WEBSOCKET_PING_INTERVAL=30
 WEBSOCKET_TIMEOUT=120
 
 # API
-API_VERSION=v1
+# API uses /api prefix; API_VERSION is deprecated
 MAX_REQUEST_SIZE=20971520  # 20MB
 ```
 

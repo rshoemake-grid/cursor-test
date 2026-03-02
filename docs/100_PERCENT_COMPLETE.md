@@ -9,7 +9,7 @@ The API has reached **100/100** Apigee readiness score with all improvements imp
 ### 1. ✅ OAuth2 Refresh Token Endpoint (2%)
 
 **Implementation**:
-- New endpoint: `POST /api/v1/auth/refresh`
+- New endpoint: `POST /api/auth/refresh`
 - `RefreshTokenDB` model for secure token storage
 - Token rotation (new refresh token on each refresh)
 - Refresh token validation and expiration checking
@@ -41,11 +41,11 @@ The API has reached **100/100** Apigee readiness score with all improvements imp
 ### 2. ✅ OpenAPI Request/Response Examples (2%)
 
 **Endpoints Enhanced**:
-- `POST /api/v1/workflows` - Create workflow with full example
-- `POST /api/v1/workflows/{id}/execute` - Execute workflow with example
-- `POST /api/v1/auth/register` - User registration example
-- `POST /api/v1/auth/token` - Login example
-- `POST /api/v1/auth/refresh` - Refresh token example
+- `POST /api/workflows` - Create workflow with full example
+- `POST /api/workflows/{id}/execute` - Execute workflow with example
+- `POST /api/auth/register` - User registration example
+- `POST /api/auth/token` - Login example
+- `POST /api/auth/refresh` - Refresh token example
 
 **Benefits**:
 - Developers can test APIs directly from Swagger UI
@@ -100,14 +100,14 @@ The `Token` model now includes:
 
 ```bash
 # 1. Login to get tokens
-curl -X POST http://localhost:8000/api/v1/auth/login \
+curl -X POST http://localhost:8000/api/auth/login \
   -H "Content-Type: application/json" \
   -d '{"username": "testuser", "password": "password"}'
 
 # Save refresh_token from response
 
 # 2. Refresh access token
-curl -X POST http://localhost:8000/api/v1/auth/refresh \
+curl -X POST http://localhost:8000/api/auth/refresh \
   -H "Content-Type: application/json" \
   -d '{"refresh_token": "YOUR_REFRESH_TOKEN"}'
 ```
@@ -116,7 +116,7 @@ curl -X POST http://localhost:8000/api/v1/auth/refresh \
 
 ```bash
 # View OpenAPI schema
-curl http://localhost:8000/openapi.json | jq '.paths["/api/v1/workflows"].post.requestBody'
+curl http://localhost:8000/openapi.json | jq '.paths["/api/workflows"].post.requestBody'
 
 # View Swagger UI
 open http://localhost:8000/docs

@@ -47,7 +47,7 @@ Create `ExecutionController.java` matching Python `execution_routes.py`:
 
 ```java
 @RestController
-@RequestMapping("/api/v1")
+@RequestMapping("/api")
 public class ExecutionController {
     // POST /workflows/{workflow_id}/execute
     // GET /executions
@@ -65,7 +65,7 @@ Create `SettingsController.java` matching Python `settings_routes.py`:
 
 ```java
 @RestController
-@RequestMapping("/api/v1/settings")
+@RequestMapping("/api/settings")
 public class SettingsController {
     // GET /settings
     // PUT /settings
@@ -80,7 +80,7 @@ Create `MarketplaceController.java` matching Python `marketplace_routes.py`:
 
 ```java
 @RestController
-@RequestMapping("/api/v1/marketplace")
+@RequestMapping("/api/marketplace")
 public class MarketplaceController {
     // GET /marketplace/workflows
     // POST /marketplace/workflows/{workflow_id}/publish
@@ -95,7 +95,7 @@ Create `TemplateController.java` matching Python `template_routes.py`:
 
 ```java
 @RestController
-@RequestMapping("/api/v1/templates")
+@RequestMapping("/api/templates")
 public class TemplateController {
     // GET /templates
     // GET /templates/{template_id}
@@ -188,19 +188,19 @@ public class MetricsController {
 ### 9. Additional Features
 
 **Password Reset**
-- POST /api/v1/auth/password-reset-request
-- POST /api/v1/auth/password-reset
+- POST /api/auth/password-reset-request
+- POST /api/auth/password-reset
 
 **Import/Export**
-- POST /api/v1/workflows/import
-- GET /api/v1/workflows/{id}/export
+- POST /api/workflows/import
+- GET /api/workflows/{id}/export
 
 **Workflow Chat**
-- POST /api/v1/workflow-chat/generate
+- POST /api/workflow-chat/generate
 
 **Sharing**
-- POST /api/v1/workflows/{id}/share
-- GET /api/v1/workflows/shared
+- POST /api/workflows/{id}/share
+- GET /api/workflows/shared
 
 ## Database Compatibility
 
@@ -209,7 +209,7 @@ The Java backend uses the same SQLite database file (`workflows.db`) as the Pyth
 ## API Compatibility
 
 All endpoints match the Python backend:
-- Same URL paths (`/api/v1/*`)
+- Same URL paths (`/api/*`)
 - Same request/response formats
 - Same error response format
 - Same authentication (JWT tokens)

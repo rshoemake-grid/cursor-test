@@ -86,7 +86,7 @@ psql workflows < backup_before_migration.sql
 
 **Backend:** 1.0.0  
 **Frontend:** 1.0.0  
-**API Version:** v1
+**API Version:** All endpoints under `/api` (no version in path)
 
 ### Breaking Changes
 
@@ -243,11 +243,11 @@ alembic downgrade -1
 
 ### API Versioning
 
-**Current:** `/api/v1/...`
+**Current:** `/api/...` (all endpoints under `/api` prefix)
 
-**Future Versions:**
+**Future Versions (if needed):**
 - `/api/v2/...` - New version
-- `/api/v1/...` - Maintained for backward compatibility
+- `/api/...` - Current, maintained for backward compatibility
 
 ### Migrating API Clients
 
@@ -267,7 +267,7 @@ def get_workflow(workflow_id: str, api_version: str = 'v1'):
     if api_version == 'v2':
         return requests.get(f'/api/v2/workflows/{workflow_id}')
     else:
-        return requests.get(f'/api/v1/workflows/{workflow_id}')
+        return requests.get(f'/api/workflows/{workflow_id}')
 ```
 
 **2. Update to New Version:**

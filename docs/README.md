@@ -1,7 +1,9 @@
 # Documentation Index
 
 **Documentation Version:** 1.0.0  
-**Last Updated:** 2024-01-01
+**Last Updated:** 2026-02-23  
+
+**Recent changes:** API paths use `/api` prefix (no `/v1`). Templates: `/api/templates` (no trailing slash). Python and Java backends aligned.
 
 Welcome to the workflow engine documentation! This index helps you find the right documentation for your needs.
 
