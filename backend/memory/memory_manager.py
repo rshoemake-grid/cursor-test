@@ -81,7 +81,7 @@ class VectorMemory:
         self.collection.add(
             documents=[content],
             metadatas=[{
-                **metadata or {},
+                **(metadata or {}),
                 "timestamp": datetime.utcnow().isoformat()
             }],
             ids=[memory_id]
@@ -184,7 +184,7 @@ class MemoryManager:
             self.vector.add_memory(
                 combined,
                 metadata={
-                    **metadata or {},
+                    **(metadata or {}),
                     "agent_id": self.agent_id,
                     "type": "interaction"
                 }
@@ -196,7 +196,7 @@ class MemoryManager:
             self.vector.add_memory(
                 fact,
                 metadata={
-                    **metadata or {},
+                    **(metadata or {}),
                     "agent_id": self.agent_id,
                     "type": "fact"
                 }

@@ -17,7 +17,7 @@ import java.util.*;
  * Debug Controller - matches Python debug_routes.py
  */
 @RestController
-@RequestMapping("/api/v1/debug")
+@RequestMapping("/api/debug")
 @Tag(name = "Debug", description = "Debugging and validation endpoints")
 public class DebugController {
     private final WorkflowRepository workflowRepository;

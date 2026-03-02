@@ -1,7 +1,7 @@
 """Tests for template API routes"""
 import pytest
 from fastapi.testclient import TestClient
-from httpx import AsyncClient
+from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 import uuid
 
@@ -57,8 +57,8 @@ async def test_list_templates_empty(db_session: AsyncSession):
     app.dependency_overrides[get_db] = override_get_db
     
     try:
-        async with AsyncClient(app=app, base_url="http://test") as client:
-            response = await client.get("/api/templates/")
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+            response = await client.get("/api/templates")
             assert response.status_code == 200
             assert response.json() == []
     finally:
@@ -76,8 +76,8 @@ async def test_list_templates_with_data(db_session: AsyncSession, test_template:
     app.dependency_overrides[get_db] = override_get_db
     
     try:
-        async with AsyncClient(app=app, base_url="http://test") as client:
-            response = await client.get("/api/templates/")
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+            response = await client.get("/api/templates")
             assert response.status_code == 200
             data = response.json()
             assert len(data) == 1
@@ -98,13 +98,13 @@ async def test_list_templates_filter_by_category(db_session: AsyncSession, test_
     app.dependency_overrides[get_db] = override_get_db
     
     try:
-        async with AsyncClient(app=app, base_url="http://test") as client:
-            response = await client.get("/api/templates/?category=automation")
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+            response = await client.get("/api/templates?category=automation")
             assert response.status_code == 200
             data = response.json()
             assert len(data) == 1
             
-            response = await client.get("/api/templates/?category=data_processing")
+            response = await client.get("/api/templates?category=data_processing")
             assert response.status_code == 200
             assert len(response.json()) == 0
     finally:
@@ -122,13 +122,13 @@ async def test_list_templates_search(db_session: AsyncSession, test_template: Wo
     app.dependency_overrides[get_db] = override_get_db
     
     try:
-        async with AsyncClient(app=app, base_url="http://test") as client:
-            response = await client.get("/api/templates/?search=test")
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+            response = await client.get("/api/templates?search=test")
             assert response.status_code == 200
             data = response.json()
             assert len(data) == 1
             
-            response = await client.get("/api/templates/?search=nonexistent")
+            response = await client.get("/api/templates?search=nonexistent")
             assert response.status_code == 200
             assert len(response.json()) == 0
     finally:
@@ -146,7 +146,7 @@ async def test_get_template(db_session: AsyncSession, test_template: WorkflowTem
     app.dependency_overrides[get_db] = override_get_db
     
     try:
-        async with AsyncClient(app=app, base_url="http://test") as client:
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
             response = await client.get(f"/api/templates/{test_template.id}")
             assert response.status_code == 200
             data = response.json()
@@ -168,7 +168,7 @@ async def test_get_template_not_found(db_session: AsyncSession):
     app.dependency_overrides[get_db] = override_get_db
     
     try:
-        async with AsyncClient(app=app, base_url="http://test") as client:
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
             response = await client.get(f"/api/templates/{uuid.uuid4()}")
             assert response.status_code == 404
     finally:
@@ -180,7 +180,7 @@ async def test_list_categories():
     """Test listing template categories"""
     from main import app
     
-    async with AsyncClient(app=app, base_url="http://test") as client:
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
         response = await client.get("/api/templates/categories")
         assert response.status_code == 200
         categories = response.json()
@@ -193,7 +193,7 @@ async def test_list_difficulties():
     """Test listing difficulty levels"""
     from main import app
     
-    async with AsyncClient(app=app, base_url="http://test") as client:
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
         response = await client.get("/api/templates/difficulties")
         assert response.status_code == 200
         difficulties = response.json()

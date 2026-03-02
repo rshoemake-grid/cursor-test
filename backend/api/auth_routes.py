@@ -19,7 +19,7 @@ from backend.auth import (
 )
 from backend.auth.auth import create_refresh_token, verify_refresh_token, REFRESH_TOKEN_EXPIRE_DAYS
 
-router = APIRouter(prefix="/api/auth", tags=["Authentication"])
+router = APIRouter(prefix="/auth", tags=["Authentication"])
 
 
 @router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
@@ -69,7 +69,7 @@ async def register_user(
         email=db_user.email,
         full_name=db_user.full_name,
         is_active=db_user.is_active,
-        is_admin=db_user.is_admin,
+        is_admin=db_user.is_admin if db_user.is_admin is not None else False,
         created_at=db_user.created_at
     )
 
@@ -165,7 +165,7 @@ async def login(
             email=user.email,
             full_name=user.full_name,
             is_active=user.is_active,
-            is_admin=user.is_admin,
+            is_admin=user.is_admin if user.is_admin is not None else False,
             created_at=user.created_at
         )
     )
@@ -256,7 +256,7 @@ async def login_json(
             email=user.email,
             full_name=user.full_name,
             is_active=user.is_active,
-            is_admin=user.is_admin,
+            is_admin=user.is_admin if user.is_admin is not None else False,
             created_at=user.created_at
         )
     )
@@ -415,7 +415,7 @@ async def get_current_user_info(
                         "error": {
                             "code": "401",
                             "message": "Invalid refresh token",
-                            "path": "/api/v1/auth/refresh",
+                            "path": "/api/auth/refresh",
                             "timestamp": "2026-02-23T12:00:00"
                         }
                     }
@@ -538,7 +538,7 @@ async def refresh_access_token(
             email=user.email,
             full_name=user.full_name,
             is_active=user.is_active,
-            is_admin=user.is_admin,
+            is_admin=user.is_admin if user.is_admin is not None else False,
             created_at=user.created_at
         )
     )

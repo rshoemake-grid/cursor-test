@@ -1,6 +1,6 @@
 """Tests for execution API routes"""
 import pytest
-from httpx import AsyncClient
+from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 import uuid
 from unittest.mock import patch, AsyncMock, Mock
@@ -102,7 +102,7 @@ async def test_execute_workflow_not_found(db_session: AsyncSession):
     app.dependency_overrides[get_db] = override_get_db
     
     try:
-        async with AsyncClient(app=app, base_url="http://test") as client:
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
             response = await client.post(
                 f"/api/workflows/{uuid.uuid4()}/execute"
             )
@@ -122,7 +122,7 @@ async def test_execute_workflow_no_llm_config(db_session: AsyncSession, test_wor
     app.dependency_overrides[get_db] = override_get_db
     
     try:
-        async with AsyncClient(app=app, base_url="http://test") as client:
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
             response = await client.post(
                 f"/api/workflows/{test_workflow.id}/execute"
             )
@@ -168,7 +168,7 @@ async def test_execute_workflow_success(db_session: AsyncSession, test_workflow:
         app.dependency_overrides[get_settings_service] = lambda: mock_settings_service
         
         try:
-            async with AsyncClient(app=app, base_url="http://test") as client:
+            async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
                 # ExecutionRequest is optional, can send empty body or just inputs
                 response = await client.post(
                     f"/api/workflows/{test_workflow.id}/execute",
@@ -193,7 +193,7 @@ async def test_get_execution_not_found(db_session: AsyncSession):
     app.dependency_overrides[get_db] = override_get_db
     
     try:
-        async with AsyncClient(app=app, base_url="http://test") as client:
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
             response = await client.get(f"/api/executions/{uuid.uuid4()}")
             assert response.status_code == 404
     finally:
@@ -228,7 +228,7 @@ async def test_get_execution_success(db_session: AsyncSession, test_workflow: Wo
     app.dependency_overrides[get_db] = override_get_db
     
     try:
-        async with AsyncClient(app=app, base_url="http://test") as client:
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
             response = await client.get(f"/api/executions/{execution.id}")
             assert response.status_code == 200
             data = response.json()
@@ -277,7 +277,7 @@ async def test_execute_workflow_invalid_definition(db_session: AsyncSession, tes
     app.dependency_overrides[get_settings_service] = lambda: mock_settings_service
     
     try:
-        async with AsyncClient(app=app, base_url="http://test") as client:
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
             response = await client.post(
                 f"/api/workflows/{workflow.id}/execute",
                 json={"workflow_id": workflow.id, "inputs": {}}

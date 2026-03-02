@@ -13,7 +13,7 @@ from backend.database.models import WorkflowDB, UserDB
 from backend.models.schemas import WorkflowExport, WorkflowImport, WorkflowResponseV2
 from backend.auth import get_current_active_user, get_optional_user
 
-router = APIRouter(prefix="/api/import-export", tags=["Import/Export"])
+router = APIRouter(prefix="/import-export", tags=["Import/Export"])
 
 
 @router.get("/export/{workflow_id}")

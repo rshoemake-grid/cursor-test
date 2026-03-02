@@ -1,6 +1,6 @@
 """Tests for workflow chat routes error handling"""
 import pytest
-from httpx import AsyncClient
+from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 import uuid
 from unittest.mock import patch, AsyncMock, Mock
@@ -144,7 +144,7 @@ async def test_chat_invalid_json_tool_call(db_session: AsyncSession, test_user: 
         mock_openai_class.return_value = mock_client
         
         try:
-            async with AsyncClient(app=app, base_url="http://test") as client:
+            async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
                 response = await client.post(
                     "/api/workflow-chat/chat",
                     json={
@@ -209,7 +209,7 @@ async def test_chat_save_workflow_error(db_session: AsyncSession, test_user: Use
         mock_openai_class.return_value = mock_client
         
         try:
-            async with AsyncClient(app=app, base_url="http://test") as client:
+            async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
                 response = await client.post(
                     "/api/workflow-chat/chat",
                     json={
@@ -253,7 +253,7 @@ async def test_chat_no_response_from_llm(db_session: AsyncSession, test_user: Us
         mock_openai_class.return_value = mock_client
         
         try:
-            async with AsyncClient(app=app, base_url="http://test") as client:
+            async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
                 response = await client.post(
                     "/api/workflow-chat/chat",
                     json={
@@ -302,7 +302,7 @@ async def test_chat_empty_message_from_llm(db_session: AsyncSession, test_user: 
         mock_openai_class.return_value = mock_client
         
         try:
-            async with AsyncClient(app=app, base_url="http://test") as client:
+            async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
                 response = await client.post(
                     "/api/workflow-chat/chat",
                     json={
@@ -364,7 +364,7 @@ async def test_chat_add_node_missing_node_type(db_session: AsyncSession, test_us
         mock_openai_class.return_value = mock_client
         
         try:
-            async with AsyncClient(app=app, base_url="http://test") as client:
+            async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
                 response = await client.post(
                     "/api/workflow-chat/chat",
                     json={
@@ -425,7 +425,7 @@ async def test_chat_update_node_missing_node_id(db_session: AsyncSession, test_u
         mock_openai_class.return_value = mock_client
         
         try:
-            async with AsyncClient(app=app, base_url="http://test") as client:
+            async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
                 response = await client.post(
                     "/api/workflow-chat/chat",
                     json={
@@ -486,7 +486,7 @@ async def test_chat_save_workflow_no_workflow_id(db_session: AsyncSession, test_
         mock_openai_class.return_value = mock_client
         
         try:
-            async with AsyncClient(app=app, base_url="http://test") as client:
+            async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
                 response = await client.post(
                     "/api/workflow-chat/chat",
                     json={

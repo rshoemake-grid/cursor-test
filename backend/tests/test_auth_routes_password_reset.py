@@ -1,6 +1,6 @@
 """Tests for auth routes password reset functionality"""
 import pytest
-from httpx import AsyncClient
+from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 import uuid
 from datetime import datetime, timedelta
@@ -40,7 +40,7 @@ async def test_forgot_password_user_not_found(db_session: AsyncSession):
     app.dependency_overrides[get_db] = override_get_db
     
     try:
-        async with AsyncClient(app=app, base_url="http://test") as client:
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
             response = await client.post(
                 "/api/auth/forgot-password",
                 json={"email": "nonexistent@example.com"}
@@ -77,7 +77,7 @@ async def test_forgot_password_inactive_user(db_session: AsyncSession):
     app.dependency_overrides[get_db] = override_get_db
     
     try:
-        async with AsyncClient(app=app, base_url="http://test") as client:
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
             response = await client.post(
                 "/api/auth/forgot-password",
                 json={"email": "inactive@example.com"}
@@ -99,7 +99,7 @@ async def test_reset_password_token_not_found(db_session: AsyncSession):
     app.dependency_overrides[get_db] = override_get_db
     
     try:
-        async with AsyncClient(app=app, base_url="http://test") as client:
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
             response = await client.post(
                 "/api/auth/reset-password",
                 json={
@@ -134,7 +134,7 @@ async def test_reset_password_user_not_found(db_session: AsyncSession):
     app.dependency_overrides[get_db] = override_get_db
     
     try:
-        async with AsyncClient(app=app, base_url="http://test") as client:
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
             response = await client.post(
                 "/api/auth/reset-password",
                 json={

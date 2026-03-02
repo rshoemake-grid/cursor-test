@@ -57,15 +57,35 @@ public class MarketplaceService {
 
     public List<WorkflowResponseV2> discoverWorkflows(String category, String tags, String search,
                                                       String sortBy, int limit, int offset) {
-        var pageable = PageRequest.of(offset / limit, limit, sortBySort(sortBy));
+        int safeLimit = Math.max(1, Math.min(limit, 100));
+        int fetchSize = offset + safeLimit; // Fetch enough to support offset after filtering
+        var pageable = PageRequest.of(0, fetchSize, sortBySort(sortBy));
         List<Workflow> workflows = workflowRepository.findPublicOrTemplateWorkflows(pageable);
+        List<String> tagList = parseTagList(tags);
         return workflows.stream()
                 .filter(w -> category == null || category.equals(w.getCategory()))
+                .filter(w -> tagList == null || tagList.isEmpty() || matchesAllTags(w.getTags(), tagList))
                 .filter(w -> search == null || search.isBlank() ||
                         (w.getName() != null && w.getName().toLowerCase().contains(search.toLowerCase())) ||
                         (w.getDescription() != null && w.getDescription().toLowerCase().contains(search.toLowerCase())))
+                .skip(offset)
+                .limit(safeLimit)
                 .map(this::toV2)
                 .collect(Collectors.toList());
+    }
+
+    private List<String> parseTagList(String tags) {
+        if (tags == null || tags.isBlank()) return List.of();
+        return java.util.Arrays.stream(tags.split(","))
+                .map(String::trim)
+                .filter(s -> !s.isEmpty())
+                .toList();
+    }
+
+    private boolean matchesAllTags(List<String> workflowTags, List<String> requiredTags) {
+        if (workflowTags == null || workflowTags.isEmpty()) return requiredTags.isEmpty();
+        return requiredTags.stream().allMatch(tag -> workflowTags.stream()
+                .anyMatch(t -> t != null && t.equalsIgnoreCase(tag)));
     }
 
     private Sort sortBySort(String sortBy) {
@@ -185,9 +205,11 @@ public class MarketplaceService {
 
     public List<PublishedAgentResponse> listAgents(String category, String search, int limit, int offset) {
         int safeLimit = Math.max(1, Math.min(limit, 100));
-        int page = offset / safeLimit;
-        Pageable pageable = PageRequest.of(page, safeLimit, Sort.by(Sort.Direction.DESC, "createdAt"));
+        int fetchSize = offset + safeLimit;
+        Pageable pageable = PageRequest.of(0, fetchSize, Sort.by(Sort.Direction.DESC, "createdAt"));
         return publishedAgentRepository.findByFilters(category, search, pageable).stream()
+                .skip(offset)
+                .limit(safeLimit)
                 .map(this::toAgentResponse)
                 .collect(Collectors.toList());
     }

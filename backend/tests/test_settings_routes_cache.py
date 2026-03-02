@@ -1,6 +1,6 @@
 """Tests for settings routes cache functionality"""
 import pytest
-from httpx import AsyncClient
+from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 import uuid
 from backend.database.models import UserDB, SettingsDB
@@ -46,7 +46,7 @@ async def test_get_llm_settings_from_cache(db_session: AsyncSession, test_user: 
     app.dependency_overrides[get_current_active_user] = override_get_user
     token = create_access_token(data={"sub": test_user.username})
     try:
-        async with AsyncClient(app=app, base_url="http://test") as client:
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
             response = await client.get(
                 "/api/settings/llm",
                 headers={"Authorization": f"Bearer {token}"}

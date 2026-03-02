@@ -8,7 +8,7 @@ These tests target:
 - Like existence checks (existing_like is not None)
 """
 import pytest
-from httpx import AsyncClient
+from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 import uuid
 from datetime import datetime
@@ -81,7 +81,7 @@ class TestBooleanComparisons:
         app.dependency_overrides[get_db_func] = override_get_db
         
         try:
-            async with AsyncClient(app=app, base_url="http://test") as client:
+            async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
                 response = await client.get("/api/marketplace/discover")
                 assert response.status_code == 200
                 data = response.json()
@@ -102,7 +102,7 @@ class TestBooleanComparisons:
         app.dependency_overrides[get_db_func] = override_get_db
         
         try:
-            async with AsyncClient(app=app, base_url="http://test") as client:
+            async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
                 workflow = WorkflowDB(
                     id=str(uuid.uuid4()),
                     name="Private Workflow",
@@ -133,7 +133,7 @@ class TestBooleanComparisons:
         app.dependency_overrides[get_db_func] = override_get_db
         
         try:
-            async with AsyncClient(app=app, base_url="http://test") as client:
+            async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
                 workflow = WorkflowDB(
                     id=str(uuid.uuid4()),
                     name="Template Workflow",
@@ -165,7 +165,7 @@ class TestBooleanComparisons:
         app.dependency_overrides[get_db_func] = override_get_db
         
         try:
-            async with AsyncClient(app=app, base_url="http://test") as client:
+            async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
                 workflow = WorkflowDB(
                     id=str(uuid.uuid4()),
                     name="Non-Template Workflow",
@@ -200,7 +200,7 @@ class TestSortComparisons:
         app.dependency_overrides[get_db_func] = override_get_db
         
         try:
-            async with AsyncClient(app=app, base_url="http://test") as client:
+            async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
                 workflow1 = WorkflowDB(
                 id=str(uuid.uuid4()),
                 name="Popular Workflow",
@@ -240,7 +240,7 @@ class TestSortComparisons:
         app.dependency_overrides[get_db_func] = override_get_db
         
         try:
-            async with AsyncClient(app=app, base_url="http://test") as client:
+            async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
                 workflow = WorkflowDB(
                 id=str(uuid.uuid4()),
                 name="Recent Workflow",
@@ -271,7 +271,7 @@ class TestSortComparisons:
         app.dependency_overrides[get_db_func] = override_get_db
         
         try:
-            async with AsyncClient(app=app, base_url="http://test") as client:
+            async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
                 workflow1 = WorkflowDB(
                 id=str(uuid.uuid4()),
                 name="Liked Workflow",
@@ -315,7 +315,7 @@ class TestCategoryComparisons:
         app.dependency_overrides[get_db_func] = override_get_db
         
         try:
-            async with AsyncClient(app=app, base_url="http://test") as client:
+            async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
                 workflow = WorkflowDB(
                 id=str(uuid.uuid4()),
                 name="Category Workflow",
@@ -347,7 +347,7 @@ class TestCategoryComparisons:
         app.dependency_overrides[get_db_func] = override_get_db
         
         try:
-            async with AsyncClient(app=app, base_url="http://test") as client:
+            async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
                 workflow = WorkflowDB(
                 id=str(uuid.uuid4()),
                 name="Category Workflow",
@@ -389,7 +389,7 @@ class TestLikeExistenceComparisons:
         app.dependency_overrides[get_current_active_user] = override_get_user
         
         try:
-            async with AsyncClient(app=app, base_url="http://test") as client:
+            async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
                 # Create existing like
                 like = WorkflowLikeDB(
                     id=str(uuid.uuid4()),
@@ -431,7 +431,7 @@ class TestLikeExistenceComparisons:
         app.dependency_overrides[get_current_active_user] = override_get_user
         
         try:
-            async with AsyncClient(app=app, base_url="http://test") as client:
+            async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
                 from backend.auth.auth import create_access_token
                 token = create_access_token(data={"sub": test_user.username})
                 response = await client.post(
@@ -468,7 +468,7 @@ class TestWorkflowIDComparisons:
         app.dependency_overrides[get_current_active_user] = override_get_user
         
         try:
-            async with AsyncClient(app=app, base_url="http://test") as client:
+            async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
                 from backend.auth.auth import create_access_token
                 token = create_access_token(data={"sub": test_user.username})
                 response = await client.post(
@@ -499,7 +499,7 @@ class TestWorkflowIDComparisons:
         app.dependency_overrides[get_current_active_user] = override_get_user
         
         try:
-            async with AsyncClient(app=app, base_url="http://test") as client:
+            async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
                 from backend.auth.auth import create_access_token
                 token = create_access_token(data={"sub": test_user.username})
                 response = await client.post(
@@ -530,7 +530,7 @@ class TestWorkflowIDComparisons:
         app.dependency_overrides[get_current_active_user] = override_get_user
         
         try:
-            async with AsyncClient(app=app, base_url="http://test") as client:
+            async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
                 # Create like
                 like = WorkflowLikeDB(
                     id=str(uuid.uuid4()),
@@ -569,7 +569,7 @@ class TestWorkflowIDComparisons:
         app.dependency_overrides[get_current_active_user] = override_get_user
         
         try:
-            async with AsyncClient(app=app, base_url="http://test") as client:
+            async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
                 from backend.auth.auth import create_access_token
                 token = create_access_token(data={"sub": test_user.username})
                 response = await client.delete(
@@ -603,7 +603,7 @@ class TestUserIDComparisons:
         app.dependency_overrides[get_current_active_user] = override_get_user
         
         try:
-            async with AsyncClient(app=app, base_url="http://test") as client:
+            async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
                 from backend.auth.auth import create_access_token
                 token = create_access_token(data={"sub": test_user.username})
                 response = await client.post(
@@ -634,7 +634,7 @@ class TestUserIDComparisons:
         app.dependency_overrides[get_current_active_user] = override_get_user
         
         try:
-            async with AsyncClient(app=app, base_url="http://test") as client:
+            async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
                 # Create like
                 like = WorkflowLikeDB(
                     id=str(uuid.uuid4()),
@@ -679,7 +679,7 @@ class TestWorkflowExistenceComparisons:
         app.dependency_overrides[get_current_active_user] = override_get_user
         
         try:
-            async with AsyncClient(app=app, base_url="http://test") as client:
+            async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
                 from backend.auth.auth import create_access_token
                 token = create_access_token(data={"sub": test_user.username})
                 response = await client.post(
@@ -710,7 +710,7 @@ class TestWorkflowExistenceComparisons:
         app.dependency_overrides[get_current_active_user] = override_get_user
         
         try:
-            async with AsyncClient(app=app, base_url="http://test") as client:
+            async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
                 from backend.auth.auth import create_access_token
                 token = create_access_token(data={"sub": test_user.username})
                 response = await client.post(

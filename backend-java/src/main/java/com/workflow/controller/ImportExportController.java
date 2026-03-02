@@ -25,7 +25,7 @@ import java.util.UUID;
  * Import/Export Controller - matches Python import_export_routes.py
  */
 @RestController
-@RequestMapping("/api/v1/import-export")
+@RequestMapping("/api/import-export")
 @Tag(name = "Import/Export", description = "Workflow import and export")
 public class ImportExportController {
     private final WorkflowRepository workflowRepository;

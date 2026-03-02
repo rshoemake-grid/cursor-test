@@ -1,4 +1,8 @@
-"""Workflow template API routes for Phase 4"""
+"""Workflow template API routes for Phase 4.
+
+Note: Path variable naming (e.g. template_id vs templateId) differs from Java backend.
+This is an acceptable difference—URLs are identical, only internal parameter names differ.
+"""
 from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -17,10 +21,10 @@ from backend.models.schemas import (
 )
 from backend.auth import get_current_active_user, get_optional_user
 
-router = APIRouter(prefix="/api/templates", tags=["Templates"])
+router = APIRouter(prefix="/templates", tags=["Templates"])
 
 
-@router.post("/", response_model=WorkflowTemplateResponse, status_code=201)
+@router.post("", response_model=WorkflowTemplateResponse, status_code=201)
 async def create_template(
     template_data: WorkflowTemplateCreate,
     current_user: UserDB = Depends(get_current_active_user),
@@ -65,7 +69,7 @@ async def create_template(
     )
 
 
-@router.get("/", response_model=List[WorkflowTemplateResponse])
+@router.get("", response_model=List[WorkflowTemplateResponse])
 async def list_templates(
     category: Optional[str] = Query(None),
     difficulty: Optional[str] = Query(None),

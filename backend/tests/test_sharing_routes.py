@@ -1,6 +1,6 @@
 """Tests for sharing API routes"""
 import pytest
-from httpx import AsyncClient
+from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 import uuid
 
@@ -75,7 +75,7 @@ async def test_share_workflow_success(db_session: AsyncSession, test_user: UserD
     token = create_access_token(data={"sub": test_user.username})
     
     try:
-        async with AsyncClient(app=app, base_url="http://test") as client:
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
             response = await client.post(
                 "/api/sharing/share",
                 json={
@@ -111,7 +111,7 @@ async def test_share_workflow_not_found(db_session: AsyncSession, test_user: Use
     token = create_access_token(data={"sub": test_user.username})
     
     try:
-        async with AsyncClient(app=app, base_url="http://test") as client:
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
             response = await client.post(
                 "/api/sharing/share",
                 json={
@@ -143,7 +143,7 @@ async def test_share_workflow_unauthorized(db_session: AsyncSession, other_user:
     token = create_access_token(data={"sub": other_user.username})
     
     try:
-        async with AsyncClient(app=app, base_url="http://test") as client:
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
             response = await client.post(
                 "/api/sharing/share",
                 json={
@@ -175,7 +175,7 @@ async def test_share_workflow_user_not_found(db_session: AsyncSession, test_user
     token = create_access_token(data={"sub": test_user.username})
     
     try:
-        async with AsyncClient(app=app, base_url="http://test") as client:
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
             response = await client.post(
                 "/api/sharing/share",
                 json={
@@ -218,7 +218,7 @@ async def test_get_shared_workflows(db_session: AsyncSession, test_user: UserDB,
     token = create_access_token(data={"sub": other_user.username})
     
     try:
-        async with AsyncClient(app=app, base_url="http://test") as client:
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
             response = await client.get(
                 "/api/sharing/shared-with-me",
                 headers={"Authorization": f"Bearer {token}"}
@@ -242,7 +242,7 @@ async def test_get_shared_workflows_requires_auth(db_session: AsyncSession):
     app.dependency_overrides[get_db] = override_get_db
     
     try:
-        async with AsyncClient(app=app, base_url="http://test") as client:
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
             response = await client.get("/api/sharing/shared-with-me")
             assert response.status_code == 401
     finally:

@@ -17,14 +17,14 @@ class GlobalExceptionHandlerTest {
 
     private HttpServletRequest mockRequest(String path) {
         HttpServletRequest req = mock(HttpServletRequest.class);
-        when(req.getRequestURI()).thenReturn(path != null ? path : "/api/v1/workflows");
+        when(req.getRequestURI()).thenReturn(path != null ? path : "/api/workflows");
         return req;
     }
 
     @Test
     void handleResourceNotFound_Returns404() {
         ResourceNotFoundException ex = new ResourceNotFoundException("Workflow not found: 123");
-        HttpServletRequest request = mockRequest("/api/v1/workflows/123");
+        HttpServletRequest request = mockRequest("/api/workflows/123");
 
         ResponseEntity<Map<String, Object>> response = handler.handleResourceNotFound(ex, request);
 
@@ -36,13 +36,13 @@ class GlobalExceptionHandlerTest {
         Map<String, Object> error = (Map<String, Object>) response.getBody().get("error");
         assertEquals("404", error.get("code"));
         assertEquals("Workflow not found: 123", error.get("message"));
-        assertEquals("/api/v1/workflows/123", error.get("path"));
+        assertEquals("/api/workflows/123", error.get("path"));
     }
 
     @Test
     void handleValidation_Returns422() {
         ValidationException ex = new ValidationException("Username is required");
-        HttpServletRequest request = mockRequest("/api/v1/auth/register");
+        HttpServletRequest request = mockRequest("/api/auth/register");
 
         ResponseEntity<Map<String, Object>> response = handler.handleValidation(ex, request);
 
@@ -58,7 +58,7 @@ class GlobalExceptionHandlerTest {
     @Test
     void handleGenericException_Returns500() {
         Exception ex = new RuntimeException("Unexpected error");
-        HttpServletRequest request = mockRequest("/api/v1/workflows");
+        HttpServletRequest request = mockRequest("/api/workflows");
 
         ResponseEntity<Map<String, Object>> response = handler.handleGenericException(ex, request);
 
@@ -74,7 +74,7 @@ class GlobalExceptionHandlerTest {
     @Test
     void handleGenericException_NullMessage_ReturnsDefaultMessage() {
         Exception ex = new NullPointerException();
-        HttpServletRequest request = mockRequest("/api/v1/workflows");
+        HttpServletRequest request = mockRequest("/api/workflows");
 
         ResponseEntity<Map<String, Object>> response = handler.handleGenericException(ex, request);
 

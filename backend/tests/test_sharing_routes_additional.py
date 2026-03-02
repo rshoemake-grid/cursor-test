@@ -26,8 +26,24 @@ async def test_share_workflow_update_existing(db_session):
     workflow_id = str(uuid4())
     shared_with_user_id = str(uuid4())
     
-    user = MagicMock()
-    user.id = user_id
+    owner = UserDB(
+        id=user_id,
+        username="owner",
+        email="owner@example.com",
+        hashed_password="hashed",
+        is_active=True,
+        created_at=datetime.utcnow()
+    )
+    shared_with_user = UserDB(
+        id=shared_with_user_id,
+        username="shareduser",
+        email="shared@example.com",
+        hashed_password="hashed",
+        is_active=True,
+        created_at=datetime.utcnow()
+    )
+    db_session.add(owner)
+    db_session.add(shared_with_user)
     
     workflow = WorkflowDB(
         id=workflow_id,
@@ -37,24 +53,22 @@ async def test_share_workflow_update_existing(db_session):
         created_at=datetime.utcnow(),
         updated_at=datetime.utcnow()
     )
-    
-    shared_with_user = UserDB(
-        id=shared_with_user_id,
-        username="shareduser",
-        email="shared@example.com",
-        hashed_password="hashed",
-        is_active=True,
-        created_at=datetime.utcnow()
-    )
+    db_session.add(workflow)
     
     existing_share = WorkflowShareDB(
         id=str(uuid4()),
         workflow_id=workflow_id,
         shared_with_user_id=shared_with_user_id,
-        permission="read",
+        permission="view",
         shared_by=user_id,
         created_at=datetime.utcnow()
     )
+    db_session.add(existing_share)
+    await db_session.commit()
+    await db_session.refresh(owner)
+    await db_session.refresh(shared_with_user)
+    await db_session.refresh(workflow)
+    await db_session.refresh(existing_share)
     
     share_data = WorkflowShareCreate(
         workflow_id=workflow_id,
@@ -62,27 +76,15 @@ async def test_share_workflow_update_existing(db_session):
         permission="edit"
     )
     
-    with patch.object(db_session, 'execute', new_callable=AsyncMock) as mock_execute:
-        def execute_side_effect(query):
-            mock_result = MagicMock()
-            if "workflows" in str(query) and "users" not in str(query):
-                mock_result.scalar_one_or_none.return_value = workflow
-            elif "users" in str(query):
-                mock_result.scalar_one_or_none.return_value = shared_with_user
-            else:
-                mock_result.scalar_one_or_none.return_value = existing_share
-            return mock_result
-        
-        mock_execute.side_effect = execute_side_effect
-        
-        result = await share_workflow(
-            share_data=share_data,
-            current_user=user,
-            db=db_session
-        )
-        
-        assert result.permission == "write"
-        assert existing_share.permission == "write"
+    result = await share_workflow(
+        share_data=share_data,
+        current_user=owner,
+        db=db_session
+    )
+    
+    assert result.permission == "edit"
+    await db_session.refresh(existing_share)
+    assert existing_share.permission == "edit"
 
 
 @pytest.mark.asyncio
@@ -147,21 +149,21 @@ async def test_get_my_shares_success(db_session):
 async def test_revoke_share_success(db_session):
     """Test revoke_share success (lines 148-166)"""
     from uuid import uuid4
+    from sqlalchemy import select
     
     user_id = str(uuid4())
     workflow_id = str(uuid4())
+    share_id = str(uuid4())
     
-    user = MagicMock()
-    user.id = user_id
-    
-    share = WorkflowShareDB(
-        id="share-123",
-        workflow_id=workflow_id,
-        shared_with_user_id="other-user",
-        permission="read",
-        shared_by=user_id,
+    owner = UserDB(
+        id=user_id,
+        username="owner",
+        email="owner@example.com",
+        hashed_password="hashed",
+        is_active=True,
         created_at=datetime.utcnow()
     )
+    db_session.add(owner)
     
     workflow = WorkflowDB(
         id=workflow_id,
@@ -171,24 +173,23 @@ async def test_revoke_share_success(db_session):
         created_at=datetime.utcnow(),
         updated_at=datetime.utcnow()
     )
+    db_session.add(workflow)
     
-    with patch.object(db_session, 'execute', new_callable=AsyncMock) as mock_execute:
-        def execute_side_effect(query):
-            mock_result = MagicMock()
-            if "workflow_shares" in str(query):
-                mock_result.scalar_one_or_none.return_value = share
-            else:
-                mock_result.scalar_one_or_none.return_value = workflow
-            return mock_result
-        
-        mock_execute.side_effect = execute_side_effect
-        
-        # Should not raise exception
-        await revoke_share(share_id="share-123", current_user=user, db=db_session)
-        
-        # Verify share was deleted
-        db_session.delete.assert_called_once()
-        db_session.commit.assert_called_once()
+    share = WorkflowShareDB(
+        id=share_id,
+        workflow_id=workflow_id,
+        shared_with_user_id="other-user",
+        permission="read",
+        shared_by=user_id,
+        created_at=datetime.utcnow()
+    )
+    db_session.add(share)
+    await db_session.commit()
+    
+    await revoke_share(share_id=share_id, current_user=owner, db=db_session)
+    
+    result = await db_session.execute(select(WorkflowShareDB).where(WorkflowShareDB.id == share_id))
+    assert result.scalar_one_or_none() is None
 
 
 @pytest.mark.asyncio

@@ -20,7 +20,7 @@ from backend.api.settings_routes import LLMSettings
 
 logger = get_logger(__name__)
 
-router = APIRouter(prefix="/api/workflow-chat", tags=["Workflow Chat"])
+router = APIRouter(prefix="/workflow-chat", tags=["Workflow Chat"])
 
 
 class ChatMessage(BaseModel):

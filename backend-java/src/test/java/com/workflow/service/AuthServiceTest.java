@@ -213,7 +213,7 @@ class AuthServiceTest {
         lenient().when(authentication.isAuthenticated()).thenReturn(true);
         when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
             .thenReturn(authentication);
-        when(userDetailsService.loadUserByUsername(validUserCreate.getUsername())).thenReturn(userDetails);
+        lenient().when(userDetailsService.loadUserByUsername(validUserCreate.getUsername())).thenReturn(userDetails);
         when(userRepository.findByUsername(validUserCreate.getUsername())).thenReturn(Optional.of(userEntity));
         when(userRepository.save(userEntity)).thenReturn(userEntity);
 

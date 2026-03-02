@@ -31,10 +31,10 @@ class AuthControllerIntegrationTest {
         userCreate.setPassword("password123");
         userCreate.setFullName("New User");
 
-        mockMvc.perform(post("/api/v1/auth/register")
+        mockMvc.perform(post("/api/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(userCreate)))
-                .andExpect(status().isOk())
+                .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.username").value(userCreate.getUsername()))
                 .andExpect(jsonPath("$.email").value(userCreate.getEmail()))
                 .andExpect(jsonPath("$.id").exists());
@@ -51,12 +51,12 @@ class AuthControllerIntegrationTest {
         registerRequest.setPassword("password123");
         registerRequest.setFullName("Login User");
 
-        mockMvc.perform(post("/api/v1/auth/register")
+        mockMvc.perform(post("/api/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(registerRequest)))
-                .andExpect(status().isOk());
+                .andExpect(status().isCreated());
 
-        mockMvc.perform(post("/api/v1/auth/login")
+        mockMvc.perform(post("/api/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(registerRequest)))
                 .andExpect(status().isOk())

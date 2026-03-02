@@ -25,7 +25,7 @@ import java.util.List;
  * Endpoints: /api/v1/workflows/{id}/execute, /api/v1/executions
  */
 @RestController
-@RequestMapping("/api/v1")
+@RequestMapping("/api")
 @Tag(name = "Executions", description = "Workflow execution operations")
 public class ExecutionController {
     private static final Logger log = LoggerFactory.getLogger(ExecutionController.class);

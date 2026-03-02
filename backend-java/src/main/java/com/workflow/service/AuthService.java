@@ -1,5 +1,6 @@
 package com.workflow.service;
 
+import com.workflow.dto.LoginRequest;
 import com.workflow.dto.TokenResponse;
 import com.workflow.dto.UserCreate;
 import com.workflow.dto.UserResponse;
@@ -43,6 +44,7 @@ public class AuthService {
     
     private static final int REFRESH_TOKEN_EXPIRATION_DAYS = 7;
     private static final int PASSWORD_RESET_TOKEN_EXPIRATION_HOURS = 1;
+    private static final long REMEMBER_ME_EXPIRATION_MS = 7L * 24 * 60 * 60 * 1000; // 7 days
     
     private final UserRepository userRepository;
     private final RefreshTokenRepository refreshTokenRepository;
@@ -107,9 +109,9 @@ public class AuthService {
     }
     
     /**
-     * Authenticate user and generate tokens
+     * Authenticate user and generate tokens (JSON /login with optional remember_me)
      */
-    public TokenResponse login(UserCreate loginRequest) {
+    public TokenResponse login(LoginRequest loginRequest) {
         if (loginRequest == null || loginRequest.getUsername() == null || loginRequest.getPassword() == null) {
             throw new ValidationException("Username and password are required");
         }
@@ -123,25 +125,35 @@ public class AuthService {
             )
         );
         
-        UserDetails userDetails = userDetailsService.loadUserByUsername(loginRequest.getUsername());
         User user = userRepository.findByUsername(loginRequest.getUsername())
             .orElseThrow(() -> new ResourceNotFoundException("User not found"));
         
-        String accessToken = jwtUtil.generateToken(user.getUsername(), user.getId());
+        boolean rememberMe = Boolean.TRUE.equals(loginRequest.getRememberMe());
+        long accessTokenExpirationMs = rememberMe ? REMEMBER_ME_EXPIRATION_MS : jwtExpirationMs;
+        String accessToken = jwtUtil.generateToken(user.getUsername(), user.getId(), accessTokenExpirationMs);
         String refreshToken = jwtUtil.generateRefreshToken(user.getUsername(), user.getId());
         
-        // Save refresh token
         saveRefreshToken(user.getId(), refreshToken);
         
-        // Update last login
         user.setLastLogin(LocalDateTime.now());
         userRepository.save(user);
         
         log.debug("User {} logged in successfully", user.getUsername());
         
-        return buildTokenResponse(accessToken, refreshToken, user);
+        return buildTokenResponse(accessToken, refreshToken, user, accessTokenExpirationMs / 1000);
     }
-    
+
+    /**
+     * Authenticate user (OAuth2 /token or tests - no remember_me)
+     */
+    public TokenResponse login(UserCreate loginRequest) {
+        LoginRequest req = new LoginRequest();
+        req.setUsername(loginRequest.getUsername());
+        req.setPassword(loginRequest.getPassword());
+        req.setRememberMe(false);
+        return login(req);
+    }
+
     /**
      * Refresh access token using refresh token
      */
@@ -245,11 +257,15 @@ public class AuthService {
      * DRY: Centralizes token response building
      */
     private TokenResponse buildTokenResponse(String accessToken, String refreshToken, User user) {
+        return buildTokenResponse(accessToken, refreshToken, user, jwtExpirationMs / 1000);
+    }
+
+    private TokenResponse buildTokenResponse(String accessToken, String refreshToken, User user, long expiresInSeconds) {
         TokenResponse response = new TokenResponse();
         response.setAccessToken(accessToken);
         response.setRefreshToken(refreshToken);
         response.setTokenType(TOKEN_TYPE_BEARER);
-        response.setExpiresIn(jwtExpirationMs / 1000);
+        response.setExpiresIn(expiresInSeconds);
         response.setUser(toUserResponse(user));
         return response;
     }

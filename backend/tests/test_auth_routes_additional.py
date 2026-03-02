@@ -32,7 +32,8 @@ async def test_register_user_success(db_session):
         full_name="New User"
     )
     
-    result = await register_user(user_data=user_data, db=db_session)
+    with patch('backend.api.auth_routes.get_password_hash', return_value="$2b$12$mockedhash"):
+        result = await register_user(user_data=user_data, db=db_session)
     
     assert result.username == "newuser"
     assert result.email == "newuser@example.com"
@@ -57,7 +58,7 @@ async def test_login_oauth2_success(db_session):
     form_data.username = "testuser"
     form_data.password = "password123"
     
-    with patch('backend.api.auth_routes.db.execute') as mock_execute:
+    with patch.object(db_session, 'execute', new_callable=AsyncMock) as mock_execute:
         mock_result = MagicMock()
         mock_result.scalar_one_or_none.return_value = user
         mock_execute.return_value = mock_result
@@ -126,18 +127,19 @@ async def test_reset_password_success(db_session):
     
     reset_data = PasswordReset(token="valid-token", new_password="newpass123")
     
-    with patch.object(db_session, 'execute', new_callable=AsyncMock) as mock_execute:
-        def execute_side_effect(query):
-            mock_result = MagicMock()
-            if "password_reset_tokens" in str(query):
-                mock_result.scalar_one_or_none.return_value = reset_token_db
-            else:
-                mock_result.scalar_one_or_none.return_value = user
-            return mock_result
-        
-        mock_execute.side_effect = execute_side_effect
-        
-        result = await reset_password(reset_data=reset_data, db=db_session)
+    with patch('backend.api.auth_routes.get_password_hash', return_value="$2b$12$mockedhash"):
+        with patch.object(db_session, 'execute', new_callable=AsyncMock) as mock_execute:
+            def execute_side_effect(query):
+                mock_result = MagicMock()
+                if "password_reset_tokens" in str(query):
+                    mock_result.scalar_one_or_none.return_value = reset_token_db
+                else:
+                    mock_result.scalar_one_or_none.return_value = user
+                return mock_result
+            
+            mock_execute.side_effect = execute_side_effect
+            
+            result = await reset_password(reset_data=reset_data, db=db_session)
         
         assert "message" in result
         assert reset_token_db.used is True

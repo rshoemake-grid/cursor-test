@@ -1,6 +1,6 @@
 """Tests for authentication API routes"""
 import pytest
-from httpx import AsyncClient
+from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 import uuid
 from datetime import datetime, timedelta
@@ -43,7 +43,7 @@ async def test_register_user_success(db_session: AsyncSession):
     app.dependency_overrides[get_db] = override_get_db
     
     try:
-        async with AsyncClient(app=app, base_url="http://test") as client:
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
             response = await client.post(
                 "/api/auth/register",
                 json={
@@ -74,7 +74,7 @@ async def test_register_user_duplicate_username(db_session: AsyncSession, test_u
     app.dependency_overrides[get_db] = override_get_db
     
     try:
-        async with AsyncClient(app=app, base_url="http://test") as client:
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
             response = await client.post(
                 "/api/auth/register",
                 json={
@@ -100,7 +100,7 @@ async def test_register_user_duplicate_email(db_session: AsyncSession, test_user
     app.dependency_overrides[get_db] = override_get_db
     
     try:
-        async with AsyncClient(app=app, base_url="http://test") as client:
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
             response = await client.post(
                 "/api/auth/register",
                 json={
@@ -126,7 +126,7 @@ async def test_login_success(db_session: AsyncSession, test_user: UserDB):
     app.dependency_overrides[get_db] = override_get_db
     
     try:
-        async with AsyncClient(app=app, base_url="http://test") as client:
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
             response = await client.post(
                 "/api/auth/login",
                 json={
@@ -155,7 +155,7 @@ async def test_login_invalid_password(db_session: AsyncSession, test_user: UserD
     app.dependency_overrides[get_db] = override_get_db
     
     try:
-        async with AsyncClient(app=app, base_url="http://test") as client:
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
             response = await client.post(
                 "/api/auth/login",
                 json={
@@ -196,7 +196,7 @@ async def test_login_inactive_user(db_session: AsyncSession):
     app.dependency_overrides[get_db] = override_get_db
     
     try:
-        async with AsyncClient(app=app, base_url="http://test") as client:
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
             response = await client.post(
                 "/api/auth/login",
                 json={
@@ -222,7 +222,7 @@ async def test_login_remember_me(db_session: AsyncSession, test_user: UserDB):
     app.dependency_overrides[get_db] = override_get_db
     
     try:
-        async with AsyncClient(app=app, base_url="http://test") as client:
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
             response = await client.post(
                 "/api/auth/login",
                 json={
@@ -256,7 +256,7 @@ async def test_get_current_user(db_session: AsyncSession, test_user: UserDB):
     token = create_access_token(data={"sub": test_user.username})
     
     try:
-        async with AsyncClient(app=app, base_url="http://test") as client:
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
             response = await client.get(
                 "/api/auth/me",
                 headers={"Authorization": f"Bearer {token}"}
@@ -279,7 +279,7 @@ async def test_forgot_password(db_session: AsyncSession, test_user: UserDB):
     app.dependency_overrides[get_db] = override_get_db
     
     try:
-        async with AsyncClient(app=app, base_url="http://test") as client:
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
             response = await client.post(
                 "/api/auth/forgot-password",
                 json={"email": test_user.email}
@@ -312,7 +312,7 @@ async def test_reset_password(db_session: AsyncSession, test_user: UserDB):
     app.dependency_overrides[get_db] = override_get_db
     
     try:
-        async with AsyncClient(app=app, base_url="http://test") as client:
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
             response = await client.post(
                 "/api/auth/reset-password",
                 json={

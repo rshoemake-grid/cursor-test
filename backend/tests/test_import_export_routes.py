@@ -1,6 +1,6 @@
 """Tests for import/export API routes"""
 import pytest
-from httpx import AsyncClient
+from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 import uuid
 import json
@@ -64,7 +64,7 @@ async def test_export_workflow_success(db_session: AsyncSession, test_user: User
     token = create_access_token(data={"sub": test_user.username})
     
     try:
-        async with AsyncClient(app=app, base_url="http://test") as client:
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
             response = await client.get(
                 f"/api/import-export/export/{test_workflow.id}",
                 headers={"Authorization": f"Bearer {token}"}
@@ -94,7 +94,7 @@ async def test_export_workflow_not_found(db_session: AsyncSession, test_user: Us
     token = create_access_token(data={"sub": test_user.username})
     
     try:
-        async with AsyncClient(app=app, base_url="http://test") as client:
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
             response = await client.get(
                 f"/api/import-export/export/{uuid.uuid4()}",
                 headers={"Authorization": f"Bearer {token}"}
@@ -143,7 +143,7 @@ async def test_export_workflow_unauthorized(db_session: AsyncSession, test_user:
     token = create_access_token(data={"sub": test_user.username})
     
     try:
-        async with AsyncClient(app=app, base_url="http://test") as client:
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
             response = await client.get(
                 f"/api/import-export/export/{workflow.id}",
                 headers={"Authorization": f"Bearer {token}"}
@@ -180,7 +180,7 @@ async def test_import_workflow_success(db_session: AsyncSession, test_user: User
     }
     
     try:
-        async with AsyncClient(app=app, base_url="http://test") as client:
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
             response = await client.post(
                 "/api/import-export/import",
                 json=import_data,
@@ -215,7 +215,7 @@ async def test_import_workflow_invalid_definition(db_session: AsyncSession, test
     }
     
     try:
-        async with AsyncClient(app=app, base_url="http://test") as client:
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
             response = await client.post(
                 "/api/import-export/import",
                 json=import_data,

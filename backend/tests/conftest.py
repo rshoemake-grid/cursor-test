@@ -2,6 +2,14 @@
 Pytest configuration and fixtures for testing.
 """
 import pytest
+# Fix for openai/httpx compatibility: httpx 0.28+ removed 'proxies' kwarg
+import httpx
+_orig = httpx.AsyncClient.__init__
+def _patched(self, *a, **kw):
+    kw.pop("proxies", None)
+    _orig(self, *a, **kw)
+httpx.AsyncClient.__init__ = _patched
+
 import asyncio
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
 from sqlalchemy.orm import declarative_base

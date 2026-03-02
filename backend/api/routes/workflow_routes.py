@@ -245,7 +245,7 @@ async def list_workflows(
                         "error": {
                             "code": "404",
                             "message": "Workflow not found",
-                            "path": "/api/v1/workflows/workflow-123",
+                            "path": "/api/workflows/workflow-123",
                             "timestamp": "2026-02-23T12:00:00"
                         }
                     }

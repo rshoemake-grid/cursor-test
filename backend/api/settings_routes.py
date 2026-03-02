@@ -16,7 +16,7 @@ import httpx
 
 logger = get_logger(__name__)
 
-router = APIRouter(prefix="/api/settings", tags=["settings"])
+router = APIRouter(prefix="/settings", tags=["settings"])
 
 
 class LLMProvider(BaseModel):

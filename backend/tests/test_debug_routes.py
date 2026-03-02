@@ -1,6 +1,6 @@
 """Tests for debug API routes"""
 import pytest
-from httpx import AsyncClient
+from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 import uuid
 
@@ -61,7 +61,7 @@ async def test_validate_workflow_success(db_session: AsyncSession, test_workflow
     app.dependency_overrides[get_db] = override_get_db
     
     try:
-        async with AsyncClient(app=app, base_url="http://test") as client:
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
             response = await client.get(f"/api/debug/workflow/{test_workflow.id}/validate")
             assert response.status_code == 200
             data = response.json()
@@ -82,7 +82,7 @@ async def test_validate_workflow_not_found(db_session: AsyncSession):
     app.dependency_overrides[get_db] = override_get_db
     
     try:
-        async with AsyncClient(app=app, base_url="http://test") as client:
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
             response = await client.get(f"/api/debug/workflow/{uuid.uuid4()}/validate")
             assert response.status_code == 404
     finally:
@@ -118,7 +118,7 @@ async def test_validate_workflow_missing_start(db_session: AsyncSession, test_us
     app.dependency_overrides[get_db] = override_get_db
     
     try:
-        async with AsyncClient(app=app, base_url="http://test") as client:
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
             response = await client.get(f"/api/debug/workflow/{workflow.id}/validate")
             assert response.status_code == 200
             data = response.json()
@@ -161,7 +161,7 @@ async def test_validate_workflow_orphan_nodes(db_session: AsyncSession, test_use
     app.dependency_overrides[get_db] = override_get_db
     
     try:
-        async with AsyncClient(app=app, base_url="http://test") as client:
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
             response = await client.get(f"/api/debug/workflow/{workflow.id}/validate")
             assert response.status_code == 200
             data = response.json()

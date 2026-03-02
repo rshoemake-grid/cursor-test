@@ -24,10 +24,10 @@ import java.util.Map;
 /**
  * Workflow Controller - matches Python workflow_routes.py
  * SRP: Only handles HTTP requests/responses, delegates business logic to service
- * Endpoints: /api/v1/workflows
+ * Endpoints: /api/workflows
  */
 @RestController
-@RequestMapping("/api/v1/workflows")
+@RequestMapping("/api/workflows")
 @Tag(name = "Workflows", description = "Workflow management operations")
 public class WorkflowController {
     private static final Logger log = LoggerFactory.getLogger(WorkflowController.class);
@@ -49,7 +49,7 @@ public class WorkflowController {
     public ResponseEntity<WorkflowResponse> createWorkflow(
             @Valid @RequestBody WorkflowCreate workflowCreate,
             Authentication authentication) {
-        log.debug("POST /api/v1/workflows - Creating workflow: {}", workflowCreate.getName());
+        log.debug("POST /api/workflows - Creating workflow: {}", workflowCreate.getName());
         
         String userId = authenticationHelper.extractUserId(authentication);
         WorkflowResponse response = workflowService.createWorkflow(workflowCreate, userId);
@@ -63,7 +63,7 @@ public class WorkflowController {
         @ApiResponse(responseCode = "200", description = "Workflows retrieved successfully")
     })
     public ResponseEntity<List<WorkflowResponse>> listWorkflows(Authentication authentication) {
-        log.debug("GET /api/v1/workflows - Listing workflows");
+        log.debug("GET /api/workflows - Listing workflows");
         
         String userId = authenticationHelper.extractUserId(authentication);
         List<WorkflowResponse> workflows = workflowService.listWorkflows(userId);
@@ -78,7 +78,7 @@ public class WorkflowController {
         @ApiResponse(responseCode = "404", description = "Workflow not found")
     })
     public ResponseEntity<WorkflowResponse> getWorkflow(@PathVariable String id) {
-        log.debug("GET /api/v1/workflows/{} - Fetching workflow", id);
+        log.debug("GET /api/workflows/{} - Fetching workflow", id);
         
         WorkflowResponse workflow = workflowService.getWorkflow(id);
         return ResponseEntity.ok(workflow);
@@ -94,7 +94,7 @@ public class WorkflowController {
     public ResponseEntity<WorkflowResponse> updateWorkflow(
             @PathVariable String id,
             @Valid @RequestBody WorkflowCreate workflowCreate) {
-        log.debug("PUT /api/v1/workflows/{} - Updating workflow", id);
+        log.debug("PUT /api/workflows/{} - Updating workflow", id);
         
         WorkflowResponse response = workflowService.updateWorkflow(id, workflowCreate);
         return ResponseEntity.ok(response);
@@ -107,7 +107,7 @@ public class WorkflowController {
         @ApiResponse(responseCode = "404", description = "Workflow not found")
     })
     public ResponseEntity<Void> deleteWorkflow(@PathVariable String id) {
-        log.debug("DELETE /api/v1/workflows/{} - Deleting workflow", id);
+        log.debug("DELETE /api/workflows/{} - Deleting workflow", id);
         
         workflowService.deleteWorkflow(id);
         return ResponseEntity.noContent().build();

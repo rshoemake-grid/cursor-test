@@ -28,10 +28,10 @@ public class OpenApiConfig {
     @Value("${apigee.api-version:1.0.0}")
     private String apiVersion;
 
-    @Value("${apigee.production-url:https://api.yourdomain.com/api/v1}")
+    @Value("${apigee.production-url:https://api.yourdomain.com/api}")
     private String productionUrl;
 
-    @Value("${apigee.development-url:http://localhost:8000/api/v1}")
+    @Value("${apigee.development-url:http://localhost:8000/api}")
     private String developmentUrl;
 
     @Value("${apigee.docs-url:https://docs.yourdomain.com/api}")

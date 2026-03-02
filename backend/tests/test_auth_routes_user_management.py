@@ -1,6 +1,6 @@
 """Tests for auth routes user management"""
 import pytest
-from httpx import AsyncClient
+from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 import uuid
 
@@ -40,7 +40,7 @@ async def test_register_user_duplicate_email_different_username(db_session: Asyn
     app.dependency_overrides[get_db] = override_get_db
     
     try:
-        async with AsyncClient(app=app, base_url="http://test") as client:
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
             response = await client.post(
                 "/api/auth/register",
                 json={
@@ -66,7 +66,7 @@ async def test_register_user_duplicate_username_different_email(db_session: Asyn
     app.dependency_overrides[get_db] = override_get_db
     
     try:
-        async with AsyncClient(app=app, base_url="http://test") as client:
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
             response = await client.post(
                 "/api/auth/register",
                 json={
@@ -93,7 +93,7 @@ async def test_login_with_remember_me(db_session: AsyncSession, test_user: UserD
     app.dependency_overrides[get_db] = override_get_db
     
     try:
-        async with AsyncClient(app=app, base_url="http://test") as client:
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
             # Use JSON format (login_json endpoint)
             response = await client.post(
                 "/api/auth/login",
@@ -121,7 +121,7 @@ async def test_login_without_remember_me(db_session: AsyncSession, test_user: Us
     app.dependency_overrides[get_db] = override_get_db
     
     try:
-        async with AsyncClient(app=app, base_url="http://test") as client:
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
             # Use JSON format (login_json endpoint)
             response = await client.post(
                 "/api/auth/login",

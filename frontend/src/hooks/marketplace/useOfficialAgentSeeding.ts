@@ -86,7 +86,7 @@ export function useOfficialAgentSeeding({
 
       try {
         // Fetch all official workflows
-        const response = await httpClient.get(`${apiBaseUrl}/templates/?sort_by=popular`)
+        const response = await httpClient.get(`${apiBaseUrl}/templates?sort_by=popular`)
         // Explicit check to prevent mutation survivors
         if (response.ok !== true) {
           logger.error('[Marketplace] Failed to fetch templates:', response.statusText)

@@ -29,7 +29,7 @@ export function useTemplatesData({
 }: UseTemplatesDataOptions) {
   const fetchTemplates = useCallback(async (): Promise<Template[]> => {
     const params = buildSearchParams(category, searchQuery, sortBy)
-    const response = await httpClient.get(`${apiBaseUrl}/templates/?${params}`)
+    const response = await httpClient.get(`${apiBaseUrl}/templates?${params}`)
     const data = await response.json() as Template[]
     return data
   }, [httpClient, apiBaseUrl, category, searchQuery, sortBy])

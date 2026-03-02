@@ -1,5 +1,6 @@
 package com.workflow.controller;
 
+import com.workflow.dto.LoginRequest;
 import com.workflow.dto.PasswordReset;
 import com.workflow.dto.PasswordResetRequest;
 import com.workflow.dto.RefreshTokenRequest;
@@ -24,10 +25,10 @@ import java.util.Map;
 /**
  * Auth Controller - matches Python auth_routes.py
  * SRP: Only handles HTTP requests/responses, delegates business logic to service
- * Endpoints: /api/v1/auth/*
+ * Endpoints: /api/auth/*
  */
 @RestController
-@RequestMapping("/api/v1/auth")
+@RequestMapping("/api/auth")
 @Tag(name = "Authentication", description = "User authentication and authorization")
 public class AuthController {
     private static final Logger log = LoggerFactory.getLogger(AuthController.class);
@@ -48,7 +49,7 @@ public class AuthController {
         if (authentication == null || !authentication.isAuthenticated()) {
             return ResponseEntity.status(401).build();
         }
-        log.debug("GET /api/v1/auth/me - Current user: {}", authentication.getName());
+        log.debug("GET /api/auth/me - Current user: {}", authentication.getName());
         UserResponse response = authService.getCurrentUser(authentication.getName());
         return ResponseEntity.ok(response);
     }
@@ -62,10 +63,11 @@ public class AuthController {
     public ResponseEntity<TokenResponse> token(
             @RequestParam String username,
             @RequestParam String password) {
-        log.debug("POST /api/v1/auth/token - OAuth2 login for user: {}", username);
-        UserCreate loginRequest = new UserCreate();
+        log.debug("POST /api/auth/token - OAuth2 login for user: {}", username);
+        LoginRequest loginRequest = new LoginRequest();
         loginRequest.setUsername(username);
         loginRequest.setPassword(password);
+        loginRequest.setRememberMe(false);
         TokenResponse response = authService.login(loginRequest);
         return ResponseEntity.ok(response);
     }
@@ -73,24 +75,24 @@ public class AuthController {
     @PostMapping("/register")
     @Operation(summary = "Register User", description = "Register a new user account")
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "User registered successfully"),
+        @ApiResponse(responseCode = "201", description = "User registered successfully"),
         @ApiResponse(responseCode = "422", description = "Validation error (username/email already exists)")
     })
     public ResponseEntity<UserResponse> register(@Valid @RequestBody UserCreate userCreate) {
-        log.debug("POST /api/v1/auth/register - Registering user: {}", userCreate.getUsername());
+        log.debug("POST /api/auth/register - Registering user: {}", userCreate.getUsername());
         
         UserResponse response = authService.register(userCreate);
-        return ResponseEntity.ok(response);
+        return ResponseEntity.status(201).body(response);
     }
 
     @PostMapping("/login")
-    @Operation(summary = "Login", description = "Authenticate user and receive access/refresh tokens")
+    @Operation(summary = "Login", description = "Authenticate user and receive access/refresh tokens. Supports remember_me for 7-day token expiry.")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "Login successful"),
         @ApiResponse(responseCode = "401", description = "Invalid credentials")
     })
-    public ResponseEntity<TokenResponse> login(@Valid @RequestBody UserCreate loginRequest) {
-        log.debug("POST /api/v1/auth/login - Login attempt for user: {}", loginRequest.getUsername());
+    public ResponseEntity<TokenResponse> login(@Valid @RequestBody LoginRequest loginRequest) {
+        log.debug("POST /api/auth/login - Login attempt for user: {}", loginRequest.getUsername());
         
         TokenResponse response = authService.login(loginRequest);
         return ResponseEntity.ok(response);
@@ -103,7 +105,7 @@ public class AuthController {
         @ApiResponse(responseCode = "422", description = "Invalid or expired refresh token")
     })
     public ResponseEntity<TokenResponse> refresh(@Valid @RequestBody RefreshTokenRequest request) {
-        log.debug("POST /api/v1/auth/refresh - Refreshing token");
+        log.debug("POST /api/auth/refresh - Refreshing token");
         
         TokenResponse response = authService.refreshToken(request.getRefreshToken());
         return ResponseEntity.ok(response);
@@ -115,7 +117,7 @@ public class AuthController {
         @ApiResponse(responseCode = "200", description = "Reset request processed")
     })
     public ResponseEntity<Map<String, Object>> forgotPassword(@Valid @RequestBody PasswordResetRequest request) {
-        log.debug("POST /api/v1/auth/forgot-password - Request for email: {}", request.getEmail());
+        log.debug("POST /api/auth/forgot-password - Request for email: {}", request.getEmail());
         Map<String, Object> response = authService.forgotPassword(request.getEmail());
         return ResponseEntity.ok(response);
     }
@@ -127,7 +129,7 @@ public class AuthController {
         @ApiResponse(responseCode = "400", description = "Invalid or expired token")
     })
     public ResponseEntity<Map<String, Object>> resetPassword(@Valid @RequestBody PasswordReset request) {
-        log.debug("POST /api/v1/auth/reset-password - Reset with token");
+        log.debug("POST /api/auth/reset-password - Reset with token");
         Map<String, Object> response = authService.resetPassword(request.getToken(), request.getNewPassword());
         return ResponseEntity.ok(response);
     }

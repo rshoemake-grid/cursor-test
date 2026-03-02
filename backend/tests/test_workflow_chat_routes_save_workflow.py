@@ -1,6 +1,6 @@
 """Tests for workflow chat save_workflow functionality"""
 import pytest
-from httpx import AsyncClient
+from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 import uuid
 from unittest.mock import patch, AsyncMock, Mock
@@ -161,7 +161,7 @@ async def test_chat_save_workflow_with_changes(db_session: AsyncSession, test_us
         mock_openai_class.return_value = mock_client
         
         try:
-            async with AsyncClient(app=app, base_url="http://test") as client:
+            async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
                 response = await client.post(
                     "/api/workflow-chat/chat",
                     json={
@@ -224,7 +224,7 @@ async def test_chat_save_workflow_with_description(db_session: AsyncSession, tes
         mock_openai_class.return_value = mock_client
         
         try:
-            async with AsyncClient(app=app, base_url="http://test") as client:
+            async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
                 response = await client.post(
                     "/api/workflow-chat/chat",
                     json={
@@ -285,7 +285,7 @@ async def test_chat_save_workflow_workflow_not_found(db_session: AsyncSession, t
         mock_openai_class.return_value = mock_client
         
         try:
-            async with AsyncClient(app=app, base_url="http://test") as client:
+            async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
                 response = await client.post(
                     "/api/workflow-chat/chat",
                     json={

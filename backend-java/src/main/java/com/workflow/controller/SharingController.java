@@ -19,7 +19,7 @@ import java.util.Map;
  * Sharing Controller - matches Python sharing_routes.py
  */
 @RestController
-@RequestMapping("/api/v1/sharing")
+@RequestMapping("/api/sharing")
 @Tag(name = "Sharing", description = "Workflow sharing and versioning")
 public class SharingController {
     private final SharingService sharingService;

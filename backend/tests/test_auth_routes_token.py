@@ -1,6 +1,6 @@
 """Tests for auth routes token endpoint (OAuth2 form login)"""
 import pytest
-from httpx import AsyncClient
+from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 import uuid
 from unittest.mock import patch
@@ -42,7 +42,7 @@ async def test_token_endpoint_success(db_session: AsyncSession, test_user: UserD
     app.dependency_overrides[get_db] = override_get_db
     
     try:
-        async with AsyncClient(app=app, base_url="http://test") as client:
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
             # OAuth2 form data
             response = await client.post(
                 "/api/auth/token",
@@ -71,7 +71,7 @@ async def test_token_endpoint_invalid_credentials(db_session: AsyncSession, test
     app.dependency_overrides[get_db] = override_get_db
     
     try:
-        async with AsyncClient(app=app, base_url="http://test") as client:
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
             response = await client.post(
                 "/api/auth/token",
                 data={
@@ -100,7 +100,7 @@ async def test_token_endpoint_inactive_user(db_session: AsyncSession, test_user:
     app.dependency_overrides[get_db] = override_get_db
     
     try:
-        async with AsyncClient(app=app, base_url="http://test") as client:
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
             response = await client.post(
                 "/api/auth/token",
                 data={
@@ -125,7 +125,7 @@ async def test_token_endpoint_user_not_found(db_session: AsyncSession):
     app.dependency_overrides[get_db] = override_get_db
     
     try:
-        async with AsyncClient(app=app, base_url="http://test") as client:
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
             response = await client.post(
                 "/api/auth/token",
                 data={

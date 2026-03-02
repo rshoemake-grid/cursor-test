@@ -8,7 +8,7 @@ These tests target:
 - Node ID comparisons
 """
 import pytest
-from httpx import AsyncClient
+from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 import uuid
 from datetime import datetime
@@ -70,7 +70,7 @@ class TestStatusComparisons:
         app.dependency_overrides[get_db_func] = override_get_db
         
         try:
-            async with AsyncClient(app=app, base_url="http://test") as client:
+            async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
                 execution = ExecutionDB(id=str(uuid.uuid4()), workflow_id=test_workflow.id, state={}, status="completed", started_at=datetime.utcnow(), completed_at=datetime.utcnow()
                 )
                 db_session.add(execution)
@@ -98,7 +98,7 @@ class TestStatusComparisons:
         app.dependency_overrides[get_db_func] = override_get_db
         
         try:
-            async with AsyncClient(app=app, base_url="http://test") as client:
+            async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
                 execution = ExecutionDB(id=str(uuid.uuid4()), workflow_id=test_workflow.id, state={}, status="failed", started_at=datetime.utcnow(), completed_at=datetime.utcnow())
                 db_session.add(execution)
                 await db_session.commit()
@@ -125,7 +125,7 @@ class TestStatusComparisons:
         app.dependency_overrides[get_db_func] = override_get_db
         
         try:
-            async with AsyncClient(app=app, base_url="http://test") as client:
+            async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
                 # Create multiple executions with different statuses
                 execution1 = ExecutionDB(id=str(uuid.uuid4()), workflow_id=test_workflow.id, state={}, status="completed", started_at=datetime.utcnow(), completed_at=datetime.utcnow()
                 )
@@ -161,7 +161,7 @@ class TestLengthComparisons:
         app.dependency_overrides[get_db_func] = override_get_db
         
         try:
-            async with AsyncClient(app=app, base_url="http://test") as client:
+            async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
                 # Create valid workflow
                 workflow = WorkflowDB(
                     id=str(uuid.uuid4()),
@@ -200,7 +200,7 @@ class TestLengthComparisons:
         app.dependency_overrides[get_db_func] = override_get_db
         
         try:
-            async with AsyncClient(app=app, base_url="http://test") as client:
+            async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
                 # Create workflow without start node
                 workflow = WorkflowDB(
                     id=str(uuid.uuid4()),
@@ -236,7 +236,7 @@ class TestLengthComparisons:
         app.dependency_overrides[get_db_func] = override_get_db
         
         try:
-            async with AsyncClient(app=app, base_url="http://test") as client:
+            async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
                 # Create workflow with all nodes connected
                 workflow = WorkflowDB(
                     id=str(uuid.uuid4()),
@@ -276,7 +276,7 @@ class TestLengthComparisons:
         app.dependency_overrides[get_db_func] = override_get_db
         
         try:
-            async with AsyncClient(app=app, base_url="http://test") as client:
+            async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
                 # Create workflow with orphan node
                 workflow = WorkflowDB(
             id=str(uuid.uuid4()),
@@ -321,7 +321,7 @@ class TestTypeComparisons:
         app.dependency_overrides[get_db_func] = override_get_db
         
         try:
-            async with AsyncClient(app=app, base_url="http://test") as client:
+            async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
                 workflow = WorkflowDB(
                     id=str(uuid.uuid4()),
                     name="Agent Workflow",
@@ -370,7 +370,7 @@ class TestTypeComparisons:
         app.dependency_overrides[get_db_func] = override_get_db
         
         try:
-            async with AsyncClient(app=app, base_url="http://test") as client:
+            async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
                 workflow = WorkflowDB(
                     id=str(uuid.uuid4()),
                     name="Start Workflow",
@@ -409,7 +409,7 @@ class TestTypeComparisons:
         app.dependency_overrides[get_db_func] = override_get_db
         
         try:
-            async with AsyncClient(app=app, base_url="http://test") as client:
+            async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
                 workflow = WorkflowDB(
                     id=str(uuid.uuid4()),
                     name="End Workflow",
@@ -449,7 +449,7 @@ class TestTypeComparisons:
         app.dependency_overrides[get_db_func] = override_get_db
         
         try:
-            async with AsyncClient(app=app, base_url="http://test") as client:
+            async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
                 workflow = WorkflowDB(
                     id=str(uuid.uuid4()),
                     name="No Start Workflow",
@@ -485,7 +485,7 @@ class TestTypeComparisons:
         app.dependency_overrides[get_db_func] = override_get_db
         
         try:
-            async with AsyncClient(app=app, base_url="http://test") as client:
+            async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
                 workflow = WorkflowDB(
                     id=str(uuid.uuid4()),
                     name="No End Workflow",
@@ -525,7 +525,7 @@ class TestEdgeComparisons:
         app.dependency_overrides[get_db_func] = override_get_db
         
         try:
-            async with AsyncClient(app=app, base_url="http://test") as client:
+            async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
                 workflow = WorkflowDB(
                     id=str(uuid.uuid4()),
                     name="Edge Source Workflow",
@@ -563,7 +563,7 @@ class TestEdgeComparisons:
         app.dependency_overrides[get_db_func] = override_get_db
         
         try:
-            async with AsyncClient(app=app, base_url="http://test") as client:
+            async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
                 execution = ExecutionDB(id=str(uuid.uuid4()), workflow_id=test_workflow.id, state={}, status="completed", started_at=datetime.utcnow(), completed_at=datetime.utcnow())
                 db_session.add(execution)
                 await db_session.commit()
@@ -595,7 +595,7 @@ class TestNodeCountComparisons:
         app.dependency_overrides[get_db_func] = override_get_db
         
         try:
-            async with AsyncClient(app=app, base_url="http://test") as client:
+            async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
                 workflow = WorkflowDB(
                     id=str(uuid.uuid4()),
                     name="Empty Workflow",
@@ -627,7 +627,7 @@ class TestNodeCountComparisons:
         app.dependency_overrides[get_db_func] = override_get_db
         
         try:
-            async with AsyncClient(app=app, base_url="http://test") as client:
+            async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
                 workflow = WorkflowDB(
                     id=str(uuid.uuid4()),
                     name="Single Node Workflow",
@@ -661,7 +661,7 @@ class TestNodeCountComparisons:
         app.dependency_overrides[get_db_func] = override_get_db
         
         try:
-            async with AsyncClient(app=app, base_url="http://test") as client:
+            async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
                 workflow = WorkflowDB(
                     id=str(uuid.uuid4()),
                     name="No Edges Workflow",
@@ -695,7 +695,7 @@ class TestNodeCountComparisons:
         app.dependency_overrides[get_db_func] = override_get_db
         
         try:
-            async with AsyncClient(app=app, base_url="http://test") as client:
+            async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
                 workflow = WorkflowDB(
                     id=str(uuid.uuid4()),
                     name="Single Edge Workflow",
@@ -736,7 +736,7 @@ class TestAgentConfigComparisons:
         app.dependency_overrides[get_db_func] = override_get_db
         
         try:
-            async with AsyncClient(app=app, base_url="http://test") as client:
+            async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
                 workflow = WorkflowDB(
                     id=str(uuid.uuid4()),
                     name="Agent No Prompt Workflow",
@@ -787,7 +787,7 @@ class TestAgentConfigComparisons:
         app.dependency_overrides[get_db_func] = override_get_db
         
         try:
-            async with AsyncClient(app=app, base_url="http://test") as client:
+            async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
                 workflow = WorkflowDB(
                     id=str(uuid.uuid4()),
                     name="Agent With Prompt Workflow",

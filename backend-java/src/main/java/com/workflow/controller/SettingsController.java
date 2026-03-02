@@ -15,10 +15,10 @@ import java.util.Map;
 
 /**
  * Settings Controller - matches Python settings_routes.py
- * Endpoints: /api/v1/settings
+ * Endpoints: /api/settings
  */
 @RestController
-@RequestMapping("/api/v1/settings")
+@RequestMapping("/api/settings")
 @Tag(name = "Settings", description = "LLM provider settings")
 public class SettingsController {
     private static final Logger log = LoggerFactory.getLogger(SettingsController.class);

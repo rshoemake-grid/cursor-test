@@ -1,6 +1,6 @@
 """More tests for settings routes"""
 import pytest
-from httpx import AsyncClient
+from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 import uuid
 from unittest.mock import patch, AsyncMock
@@ -43,7 +43,7 @@ async def test_update_llm_settings_add_provider(db_session: AsyncSession, test_u
     token = create_access_token(data={"sub": test_user.username})
     
     try:
-        async with AsyncClient(app=app, base_url="http://test") as client:
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
             # Use the save_llm_settings endpoint
             response = await client.post(
                 "/api/settings/llm",
@@ -107,7 +107,7 @@ async def test_update_llm_settings_update_existing_provider(db_session: AsyncSes
     token = create_access_token(data={"sub": test_user.username})
     
     try:
-        async with AsyncClient(app=app, base_url="http://test") as client:
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
             response = await client.post(
                 "/api/settings/llm",
                 json={
@@ -150,7 +150,7 @@ async def test_update_llm_settings_multiple_providers(db_session: AsyncSession, 
     token = create_access_token(data={"sub": test_user.username})
     
     try:
-        async with AsyncClient(app=app, base_url="http://test") as client:
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
             response = await client.post(
                 "/api/settings/llm",
                 json={
@@ -223,7 +223,7 @@ async def test_test_llm_connection_gemini(db_session: AsyncSession, test_user: U
         mock_client_class.return_value = mock_client
         
         try:
-            async with AsyncClient(app=app, base_url="http://test") as client:
+            async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
                 response = await client.post(
                     "/api/settings/llm/test",
                     json={
@@ -276,7 +276,7 @@ async def test_test_llm_connection_custom(db_session: AsyncSession, test_user: U
         mock_client_class.return_value = mock_client
         
         try:
-            async with AsyncClient(app=app, base_url="http://test") as client:
+            async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
                 response = await client.post(
                     "/api/settings/llm/test",
                     json={
@@ -311,7 +311,7 @@ async def test_test_llm_connection_unknown_provider(db_session: AsyncSession, te
     token = create_access_token(data={"sub": test_user.username})
     
     try:
-        async with AsyncClient(app=app, base_url="http://test") as client:
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
             response = await client.post(
                 "/api/settings/llm/test",
                 json={

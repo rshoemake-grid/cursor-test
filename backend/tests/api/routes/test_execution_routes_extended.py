@@ -10,7 +10,7 @@ import pytest
 from unittest.mock import AsyncMock, MagicMock, patch, Mock
 from datetime import datetime
 from fastapi import HTTPException
-from httpx import AsyncClient
+from httpx import ASGITransport, AsyncClient
 import uuid
 import asyncio
 
@@ -314,7 +314,7 @@ class TestExecuteWorkflowEndpoint:
         app.dependency_overrides[ISettingsService] = lambda: mock_settings_service
         
         try:
-            async with AsyncClient(app=app, base_url="http://test") as client:
+            async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
                 from backend.auth.auth import create_access_token
                 token = create_access_token({"sub": test_user.username})
                 
@@ -352,7 +352,7 @@ class TestExecuteWorkflowEndpoint:
             mock_executor_class.return_value = mock_executor
             
             try:
-                async with AsyncClient(app=app, base_url="http://test") as client:
+                async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
                     from backend.auth.auth import create_access_token
                     token = create_access_token({"sub": test_user.username})
                     

@@ -1,6 +1,6 @@
 """Tests for marketplace API routes"""
 import pytest
-from httpx import AsyncClient
+from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 import uuid
 
@@ -57,7 +57,7 @@ async def test_discover_workflows_empty(db_session: AsyncSession):
     app.dependency_overrides[get_db] = override_get_db
     
     try:
-        async with AsyncClient(app=app, base_url="http://test") as client:
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
             response = await client.get("/api/marketplace/discover")
             assert response.status_code == 200
             assert response.json() == []
@@ -76,7 +76,7 @@ async def test_discover_workflows_with_data(db_session: AsyncSession, public_wor
     app.dependency_overrides[get_db] = override_get_db
     
     try:
-        async with AsyncClient(app=app, base_url="http://test") as client:
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
             response = await client.get("/api/marketplace/discover")
             assert response.status_code == 200
             data = response.json()
@@ -98,7 +98,7 @@ async def test_discover_workflows_filter_by_category(db_session: AsyncSession, p
     app.dependency_overrides[get_db] = override_get_db
     
     try:
-        async with AsyncClient(app=app, base_url="http://test") as client:
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
             response = await client.get("/api/marketplace/discover?category=automation")
             assert response.status_code == 200
             data = response.json()
@@ -122,7 +122,7 @@ async def test_discover_workflows_search(db_session: AsyncSession, public_workfl
     app.dependency_overrides[get_db] = override_get_db
     
     try:
-        async with AsyncClient(app=app, base_url="http://test") as client:
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
             response = await client.get("/api/marketplace/discover?search=Public")
             assert response.status_code == 200
             data = response.json()
@@ -146,7 +146,7 @@ async def test_discover_workflows_sort_by(db_session: AsyncSession, public_workf
     app.dependency_overrides[get_db] = override_get_db
     
     try:
-        async with AsyncClient(app=app, base_url="http://test") as client:
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
             response = await client.get("/api/marketplace/discover?sort_by=popular")
             assert response.status_code == 200
             
@@ -177,7 +177,7 @@ async def test_like_workflow(db_session: AsyncSession, test_user: UserDB, public
     token = create_access_token(data={"sub": test_user.username})
     
     try:
-        async with AsyncClient(app=app, base_url="http://test") as client:
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
             response = await client.post(
                 "/api/marketplace/like",
                 json={"workflow_id": public_workflow.id},
@@ -199,7 +199,7 @@ async def test_like_workflow_requires_auth(db_session: AsyncSession, public_work
     app.dependency_overrides[get_db] = override_get_db
     
     try:
-        async with AsyncClient(app=app, base_url="http://test") as client:
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
             response = await client.post(
                 "/api/marketplace/like",
                 json={"workflow_id": public_workflow.id}
@@ -236,7 +236,7 @@ async def test_unlike_workflow(db_session: AsyncSession, test_user: UserDB, publ
     token = create_access_token(data={"sub": test_user.username})
     
     try:
-        async with AsyncClient(app=app, base_url="http://test") as client:
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
             response = await client.delete(
                 f"/api/marketplace/like/{public_workflow.id}",
                 headers={"Authorization": f"Bearer {token}"}

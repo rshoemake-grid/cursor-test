@@ -20,7 +20,7 @@ import java.util.Map;
  * Marketplace Controller - matches Python marketplace_routes.py
  */
 @RestController
-@RequestMapping("/api/v1/marketplace")
+@RequestMapping("/api/marketplace")
 @Tag(name = "Marketplace", description = "Workflow discovery, likes, and published agents")
 public class MarketplaceController {
     private final MarketplaceService marketplaceService;

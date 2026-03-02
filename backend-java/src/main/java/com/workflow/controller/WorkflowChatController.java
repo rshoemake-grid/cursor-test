@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.*;
  * Workflow Chat Controller - matches Python workflow_chat_routes.py
  */
 @RestController
-@RequestMapping("/api/v1/workflow-chat")
+@RequestMapping("/api/workflow-chat")
 @Tag(name = "Workflow Chat", description = "LLM chat to create/edit workflows")
 public class WorkflowChatController {
     private final WorkflowChatService workflowChatService;

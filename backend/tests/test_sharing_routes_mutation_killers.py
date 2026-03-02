@@ -7,7 +7,7 @@ These tests target:
 - Share existence checks (existing_share is not None)
 """
 import pytest
-from httpx import AsyncClient
+from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 import uuid
 
@@ -83,7 +83,7 @@ class TestIDComparisons:
         token = create_access_token(data={"sub": test_user.username})
         
         try:
-            async with AsyncClient(app=app, base_url="http://test") as client:
+            async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
                 response = await client.post(
                     "/api/sharing/share",
                     json={
@@ -110,7 +110,7 @@ class TestIDComparisons:
         app.dependency_overrides[get_db] = override_get_db
         
         try:
-            async with AsyncClient(app=app, base_url="http://test") as client:
+            async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
                 response = await client.post(
                     "/api/sharing/share",
                     json={
@@ -136,7 +136,7 @@ class TestIDComparisons:
         app.dependency_overrides[get_db] = override_get_db
         
         try:
-            async with AsyncClient(app=app, base_url="http://test") as client:
+            async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
                 from backend.auth.auth import create_access_token
                 token = create_access_token({"sub": test_user.username})
                 response = await client.post(
@@ -164,7 +164,7 @@ class TestIDComparisons:
         app.dependency_overrides[get_db] = override_get_db
         
         try:
-            async with AsyncClient(app=app, base_url="http://test") as client:
+            async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
                 from backend.auth.auth import create_access_token
                 token = create_access_token({"sub": test_user.username})
                 response = await client.post(
@@ -196,7 +196,7 @@ class TestOwnerIDComparisons:
         app.dependency_overrides[get_db] = override_get_db
         
         try:
-            async with AsyncClient(app=app, base_url="http://test") as client:
+            async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
                 from backend.auth.auth import create_access_token
                 token = create_access_token({"sub": test_user.username})
                 response = await client.post(
@@ -223,7 +223,7 @@ class TestOwnerIDComparisons:
         app.dependency_overrides[get_db] = override_get_db
         
         try:
-            async with AsyncClient(app=app, base_url="http://test") as client:
+            async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
                 from backend.database.models import WorkflowDB
                 import uuid
                 workflow = WorkflowDB(
@@ -262,7 +262,7 @@ class TestOwnerIDComparisons:
         app.dependency_overrides[get_db] = override_get_db
         
         try:
-            async with AsyncClient(app=app, base_url="http://test") as client:
+            async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
                 from backend.auth.auth import create_access_token
                 token = create_access_token({"sub": test_user.username})
                 response = await client.post(
@@ -290,7 +290,7 @@ class TestOwnerIDComparisons:
         app.dependency_overrides[get_db] = override_get_db
         
         try:
-            async with AsyncClient(app=app, base_url="http://test") as client:
+            async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
                 from backend.database.models import WorkflowShareDB
                 import uuid
                 share = WorkflowShareDB(
@@ -324,7 +324,7 @@ class TestOwnerIDComparisons:
         app.dependency_overrides[get_db] = override_get_db
         
         try:
-            async with AsyncClient(app=app, base_url="http://test") as client:
+            async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
                 from backend.database.models import WorkflowShareDB, WorkflowDB
                 import uuid
                 workflow = WorkflowDB(
@@ -372,7 +372,7 @@ class TestShareExistenceComparisons:
         app.dependency_overrides[get_db] = override_get_db
         
         try:
-            async with AsyncClient(app=app, base_url="http://test") as client:
+            async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
                 from backend.database.models import WorkflowShareDB
                 import uuid
                 share = WorkflowShareDB(
@@ -413,7 +413,7 @@ class TestShareExistenceComparisons:
         app.dependency_overrides[get_db] = override_get_db
         
         try:
-            async with AsyncClient(app=app, base_url="http://test") as client:
+            async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
                 from backend.auth.auth import create_access_token
                 token = create_access_token({"sub": test_user.username})
                 response = await client.post(
@@ -452,7 +452,7 @@ class TestSharedWithUserIDComparisons:
         app.dependency_overrides[get_current_active_user] = override_get_user
         
         try:
-            async with AsyncClient(app=app, base_url="http://test") as client:
+            async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
                 from backend.database.models import WorkflowShareDB
                 import uuid
                 share = WorkflowShareDB(
@@ -495,7 +495,7 @@ class TestSharedWithUserIDComparisons:
         app.dependency_overrides[get_current_active_user] = override_get_user
         
         try:
-            async with AsyncClient(app=app, base_url="http://test") as client:
+            async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
                 from backend.database.models import WorkflowShareDB
                 import uuid
                 share = WorkflowShareDB(
@@ -543,7 +543,7 @@ class TestSharedByComparisons:
         app.dependency_overrides[get_current_active_user] = override_get_user
         
         try:
-            async with AsyncClient(app=app, base_url="http://test") as client:
+            async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
                 from backend.database.models import WorkflowShareDB
                 import uuid
                 share = WorkflowShareDB(
@@ -587,7 +587,7 @@ class TestSharedByComparisons:
         app.dependency_overrides[get_current_active_user] = override_get_user
         
         try:
-            async with AsyncClient(app=app, base_url="http://test") as client:
+            async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
                 from backend.database.models import WorkflowShareDB
                 import uuid
                 share = WorkflowShareDB(
@@ -635,7 +635,7 @@ class TestWorkflowExistenceComparisons:
         app.dependency_overrides[get_current_active_user] = override_get_user
         
         try:
-            async with AsyncClient(app=app, base_url="http://test") as client:
+            async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
                 from backend.database.models import WorkflowShareDB
                 import uuid
                 share = WorkflowShareDB(
@@ -677,7 +677,7 @@ class TestWorkflowExistenceComparisons:
         app.dependency_overrides[get_current_active_user] = override_get_user
         
         try:
-            async with AsyncClient(app=app, base_url="http://test") as client:
+            async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
                 from backend.database.models import WorkflowShareDB
                 import uuid
                 share = WorkflowShareDB(

@@ -15,7 +15,7 @@ from backend.models.schemas import (
 )
 from backend.auth import get_current_active_user
 
-router = APIRouter(prefix="/api/sharing", tags=["Sharing & Collaboration"])
+router = APIRouter(prefix="/sharing", tags=["Sharing & Collaboration"])
 
 
 @router.post("/share", response_model=WorkflowShareResponse, status_code=201)

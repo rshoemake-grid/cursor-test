@@ -1,6 +1,6 @@
 """Extended tests for settings API routes"""
 import pytest
-from httpx import AsyncClient
+from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 import uuid
 from unittest.mock import patch, AsyncMock
@@ -55,7 +55,7 @@ async def test_test_llm_connection_openai(db_session: AsyncSession, test_user: U
         mock_client_class.return_value = mock_client
         
         try:
-            async with AsyncClient(app=app, base_url="http://test") as client:
+            async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
                 response = await client.post(
                     "/api/settings/llm/test",
                     json={
@@ -102,7 +102,7 @@ async def test_test_llm_connection_anthropic(db_session: AsyncSession, test_user
         mock_client_class.return_value = mock_client
         
         try:
-            async with AsyncClient(app=app, base_url="http://test") as client:
+            async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
                 response = await client.post(
                     "/api/settings/llm/test",
                     json={
@@ -149,7 +149,7 @@ async def test_test_llm_connection_error(db_session: AsyncSession, test_user: Us
         mock_client_class.return_value = mock_client
         
         try:
-            async with AsyncClient(app=app, base_url="http://test") as client:
+            async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
                 response = await client.post(
                     "/api/settings/llm/test",
                     json={
@@ -201,7 +201,7 @@ async def test_get_user_settings(db_session: AsyncSession, test_user: UserDB):
     token = create_access_token(data={"sub": test_user.username})
     
     try:
-        async with AsyncClient(app=app, base_url="http://test") as client:
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
             response = await client.get(
                 "/api/settings/llm",
                 headers={"Authorization": f"Bearer {token}"}

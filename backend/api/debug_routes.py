@@ -11,7 +11,7 @@ from backend.database.models import WorkflowDB, ExecutionDB, UserDB
 from backend.models.schemas import ExecutionResponse, ExecutionStatus
 from backend.auth import get_optional_user
 
-router = APIRouter(prefix="/api/debug", tags=["Debugging"])
+router = APIRouter(prefix="/debug", tags=["Debugging"])
 
 
 @router.get("/workflow/{workflow_id}/validate")

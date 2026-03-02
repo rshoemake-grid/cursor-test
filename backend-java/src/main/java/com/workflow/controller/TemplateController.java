@@ -18,7 +18,7 @@ import java.util.List;
  * Template Controller - matches Python template_routes.py
  */
 @RestController
-@RequestMapping("/api/v1/templates")
+@RequestMapping("/api/templates")
 @Tag(name = "Templates", description = "Workflow templates")
 public class TemplateController {
     private final TemplateService templateService;

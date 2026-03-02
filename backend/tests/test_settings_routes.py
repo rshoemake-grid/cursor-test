@@ -1,6 +1,6 @@
 """Tests for settings API routes"""
 import pytest
-from httpx import AsyncClient
+from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 import uuid
 from unittest.mock import patch, AsyncMock
@@ -35,7 +35,7 @@ async def test_save_llm_settings_requires_auth(db_session: AsyncSession):
         "iteration_limit": 10
     }
     
-    async with AsyncClient(app=app, base_url="http://test") as client:
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
         response = await client.post("/api/settings/llm", json=settings_data)
         assert response.status_code == 401
 
@@ -74,7 +74,7 @@ async def test_save_and_get_llm_settings(db_session: AsyncSession, test_user: Us
     }
     
     try:
-        async with AsyncClient(app=app, base_url="http://test") as client:
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
             # Save settings
             response = await client.post(
                 "/api/settings/llm",
@@ -102,7 +102,7 @@ async def test_get_llm_settings_requires_auth(db_session: AsyncSession):
     """Test that getting settings requires authentication"""
     from main import app
     
-    async with AsyncClient(app=app, base_url="http://test") as client:
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
         response = await client.get("/api/settings/llm")
         assert response.status_code == 401
 
@@ -124,7 +124,7 @@ async def test_get_llm_settings_empty(db_session: AsyncSession, test_user: UserD
     token = create_access_token(data={"sub": test_user.id})
     
     try:
-        async with AsyncClient(app=app, base_url="http://test") as client:
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
             response = await client.get(
                 "/api/settings/llm",
                 headers={"Authorization": f"Bearer {token}"}
@@ -163,7 +163,7 @@ async def test_test_llm_connection_openai():
         mock_client.post = AsyncMock(return_value=mock_response)
         mock_client_class.return_value = mock_client
         
-        async with AsyncClient(app=app, base_url="http://test") as client:
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
             response = await client.post("/api/settings/llm/test", json=test_request)
             assert response.status_code == 200
             data = response.json()
@@ -194,7 +194,7 @@ async def test_test_llm_connection_anthropic():
         mock_client.post = AsyncMock(return_value=mock_response)
         mock_client_class.return_value = mock_client
         
-        async with AsyncClient(app=app, base_url="http://test") as client:
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
             response = await client.post("/api/settings/llm/test", json=test_request)
             assert response.status_code == 200
             data = response.json()
@@ -212,7 +212,7 @@ async def test_test_llm_connection_invalid_type():
         "model": "test-model"
     }
     
-    async with AsyncClient(app=app, base_url="http://test") as client:
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
         response = await client.post("/api/settings/llm/test", json=test_request)
         assert response.status_code == 200
         data = response.json()

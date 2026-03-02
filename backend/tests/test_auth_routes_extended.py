@@ -1,6 +1,6 @@
 """Extended tests for auth routes"""
 import pytest
-from httpx import AsyncClient
+from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 import uuid
 from datetime import datetime, timedelta
@@ -48,7 +48,7 @@ async def test_get_current_user_success(db_session: AsyncSession, test_user: Use
     token = create_access_token(data={"sub": test_user.username})
     
     try:
-        async with AsyncClient(app=app, base_url="http://test") as client:
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
             response = await client.get(
                 "/api/auth/me",
                 headers={"Authorization": f"Bearer {token}"}
@@ -72,7 +72,7 @@ async def test_get_current_user_unauthorized(db_session: AsyncSession):
     app.dependency_overrides[get_db] = override_get_db
     
     try:
-        async with AsyncClient(app=app, base_url="http://test") as client:
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
             response = await client.get("/api/auth/me")
             assert response.status_code == 401
     finally:
@@ -100,7 +100,7 @@ async def test_reset_password_token_expired(db_session: AsyncSession, test_user:
     app.dependency_overrides[get_db] = override_get_db
     
     try:
-        async with AsyncClient(app=app, base_url="http://test") as client:
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
             response = await client.post(
                 "/api/auth/reset-password",
                 json={
@@ -125,7 +125,7 @@ async def test_reset_password_invalid_token(db_session: AsyncSession):
     app.dependency_overrides[get_db] = override_get_db
     
     try:
-        async with AsyncClient(app=app, base_url="http://test") as client:
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
             response = await client.post(
                 "/api/auth/reset-password",
                 json={

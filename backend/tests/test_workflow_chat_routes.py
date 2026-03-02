@@ -1,6 +1,6 @@
 """Tests for workflow chat API routes"""
 import pytest
-from httpx import AsyncClient
+from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 import uuid
 from unittest.mock import patch, AsyncMock, Mock
@@ -91,7 +91,7 @@ async def test_chat_with_workflow_no_llm_config(db_session: AsyncSession, test_u
     token = create_access_token(data={"sub": test_user.username})
     
     try:
-        async with AsyncClient(app=app, base_url="http://test") as client:
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
             response = await client.post(
                 "/api/workflow-chat/chat",
                 json={
@@ -160,7 +160,7 @@ async def test_chat_with_workflow_success(db_session: AsyncSession, test_user: U
         mock_openai_class.return_value = mock_client
     
     try:
-        async with AsyncClient(app=app, base_url="http://test") as client:
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
             response = await client.post(
                 "/api/workflow-chat/chat",
                 json={
@@ -241,7 +241,7 @@ async def test_chat_with_workflow_tool_calls(db_session: AsyncSession, test_user
         mock_openai_class.return_value = mock_client
         
         try:
-            async with AsyncClient(app=app, base_url="http://test") as client:
+            async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
                 response = await client.post(
                     "/api/workflow-chat/chat",
                     json={
@@ -338,7 +338,7 @@ async def test_chat_with_workflow_max_iterations(db_session: AsyncSession, test_
         mock_openai_class.return_value = mock_client
         
         try:
-            async with AsyncClient(app=app, base_url="http://test") as client:
+            async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
                 response = await client.post(
                     "/api/workflow-chat/chat",
                     json={

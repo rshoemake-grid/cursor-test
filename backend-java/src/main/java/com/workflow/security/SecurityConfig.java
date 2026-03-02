@@ -11,6 +11,7 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
@@ -52,12 +53,13 @@ public class SecurityConfig {
                 .authenticationEntryPoint(authenticationEntryPoint)
                 .accessDeniedHandler(accessDeniedHandler))
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/v1/auth/**", "/health", "/metrics", "/api-docs/**", "/swagger-ui/**").permitAll()
+                .requestMatchers("/api/auth/**", "/health", "/metrics", "/api-docs/**", "/swagger-ui/**").permitAll()
                 .requestMatchers("/ws/**").permitAll()
-                .requestMatchers("/api/v1/workflows/*/execute", "/api/v1/executions/**").permitAll()
-                .requestMatchers("/api/v1/marketplace/discover", "/api/v1/marketplace/trending", "/api/v1/marketplace/stats").permitAll()
-                .requestMatchers("/api/v1/templates", "/api/v1/templates/categories", "/api/v1/templates/difficulties", "/api/v1/templates/*").permitAll()
-                .requestMatchers("/api/v1/debug/**").permitAll()
+                .requestMatchers("/api/workflows/*/execute", "/api/executions/**").permitAll()
+                .requestMatchers("/api/marketplace/discover", "/api/marketplace/trending", "/api/marketplace/stats").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/marketplace/agents").permitAll()
+                .requestMatchers("/api/templates", "/api/templates/categories", "/api/templates/difficulties", "/api/templates/*").permitAll()
+                .requestMatchers("/api/debug/**").permitAll()
                 .anyRequest().authenticated()
             )
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);

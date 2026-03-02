@@ -39,8 +39,8 @@ app = FastAPI(
         "url": "https://yourdomain.com/license"
     },
     servers=[
-        {"url": "https://api.yourdomain.com/api/v1", "description": "Production"},
-        {"url": "http://localhost:8000/api/v1", "description": "Development"}
+        {"url": "https://api.yourdomain.com/api", "description": "Production"},
+        {"url": "http://localhost:8000/api", "description": "Development"}
     ],
     external_docs={
         "description": "Full API Documentation and Developer Guide",
@@ -167,6 +167,7 @@ async def http_exception_handler(request: Request, exc: HTTPException):
     return JSONResponse(
         status_code=exc.status_code,
         content={
+            "detail": exc.detail,  # FastAPI default for test/client compatibility
             "error": {
                 "code": str(exc.status_code),
                 "message": str(exc.detail),
@@ -265,8 +266,8 @@ async def health_check():
     return checks
 
 # Include routers with API versioning for Apigee compatibility
-# Version prefix: /api/v1
-API_VERSION = "/api/v1"
+# API prefix: /api
+API_VERSION = "/api"
 
 app.include_router(api_router, prefix=API_VERSION)
 app.include_router(auth_router, prefix=API_VERSION)
@@ -277,7 +278,7 @@ app.include_router(template_router, prefix=API_VERSION)
 app.include_router(sharing_router, prefix=API_VERSION)
 app.include_router(import_export_router, prefix=API_VERSION)
 app.include_router(workflow_chat_router, prefix=API_VERSION)
-app.include_router(debug_router, prefix=f"{API_VERSION}/debug")
+app.include_router(debug_router, prefix=API_VERSION)
 
 # Metrics endpoint for monitoring
 @app.get(
@@ -297,12 +298,12 @@ app.include_router(debug_router, prefix=f"{API_VERSION}/debug")
                         "uptime_seconds": 3600.0,
                         "requests_per_second": 0.34,
                         "endpoints": {
-                            "GET /api/v1/workflows": 500,
-                            "POST /api/v1/workflows": 200,
-                            "POST /api/v1/workflows/{workflow_id}/execute": 300
+                            "GET /api/workflows": 500,
+                            "POST /api/workflows": 200,
+                            "POST /api/workflows/{workflow_id}/execute": 300
                         },
                         "endpoint_errors": {
-                            "POST /api/v1/workflows": 2
+                            "POST /api/workflows": 2
                         },
                         "status_codes": {
                             "200": 1200,

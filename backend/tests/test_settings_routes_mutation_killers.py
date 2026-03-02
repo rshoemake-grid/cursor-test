@@ -9,7 +9,7 @@ These tests target:
 - Empty checks (None, empty dict)
 """
 import pytest
-from httpx import AsyncClient
+from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 import uuid
 from unittest.mock import patch, AsyncMock, MagicMock
@@ -51,7 +51,7 @@ class TestStatusCodeComparisons:
         app.dependency_overrides[get_db_func] = override_get_db
         
         try:
-            async with AsyncClient(app=app, base_url="http://test") as client:
+            async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
                 headers = {"Authorization": f"Bearer {token}"}
                 
                 with patch("backend.api.settings_routes.httpx.AsyncClient") as mock_client:
@@ -85,7 +85,7 @@ class TestStatusCodeComparisons:
         app.dependency_overrides[get_db_func] = override_get_db
         
         try:
-            async with AsyncClient(app=app, base_url="http://test") as client:
+            async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
                 headers = {"Authorization": f"Bearer {token}"}
                 
                 with patch("backend.api.settings_routes.httpx.AsyncClient") as mock_client:
@@ -119,7 +119,7 @@ class TestStatusCodeComparisons:
         app.dependency_overrides[get_db_func] = override_get_db
         
         try:
-            async with AsyncClient(app=app, base_url="http://test") as client:
+            async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
                 headers = {"Authorization": f"Bearer {token}"}
                 
                 with patch("backend.api.settings_routes.httpx.AsyncClient") as mock_client:
@@ -153,7 +153,7 @@ class TestStatusCodeComparisons:
         app.dependency_overrides[get_db_func] = override_get_db
         
         try:
-            async with AsyncClient(app=app, base_url="http://test") as client:
+            async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
                 headers = {"Authorization": f"Bearer {token}"}
                 
                 with patch("backend.api.settings_routes.httpx.AsyncClient") as mock_client:
@@ -187,7 +187,7 @@ class TestStatusCodeComparisons:
         app.dependency_overrides[get_db_func] = override_get_db
         
         try:
-            async with AsyncClient(app=app, base_url="http://test") as client:
+            async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
                 headers = {"Authorization": f"Bearer {token}"}
                 
                 with patch("backend.api.settings_routes.httpx.AsyncClient") as mock_client:
@@ -226,7 +226,7 @@ class TestTypeComparisons:
         app.dependency_overrides[get_db_func] = override_get_db
         
         try:
-            async with AsyncClient(app=app, base_url="http://test") as client:
+            async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
                 headers = {"Authorization": f"Bearer {token}"}
                 
                 with patch("backend.api.settings_routes.httpx.AsyncClient") as mock_client:
@@ -260,7 +260,7 @@ class TestTypeComparisons:
         app.dependency_overrides[get_db_func] = override_get_db
         
         try:
-            async with AsyncClient(app=app, base_url="http://test") as client:
+            async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
                 headers = {"Authorization": f"Bearer {token}"}
                 
                 with patch("backend.api.settings_routes.httpx.AsyncClient") as mock_client:
@@ -294,7 +294,7 @@ class TestTypeComparisons:
         app.dependency_overrides[get_db_func] = override_get_db
         
         try:
-            async with AsyncClient(app=app, base_url="http://test") as client:
+            async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
                 headers = {"Authorization": f"Bearer {token}"}
                 
                 with patch("backend.api.settings_routes.httpx.AsyncClient") as mock_client:
@@ -328,7 +328,7 @@ class TestTypeComparisons:
         app.dependency_overrides[get_db_func] = override_get_db
         
         try:
-            async with AsyncClient(app=app, base_url="http://test") as client:
+            async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
                 headers = {"Authorization": f"Bearer {token}"}
                 
                 with patch("backend.api.settings_routes.httpx.AsyncClient") as mock_client:
@@ -427,7 +427,7 @@ class TestLengthComparisons:
         app.dependency_overrides[get_db_func] = override_get_db
         
         try:
-            async with AsyncClient(app=app, base_url="http://test") as client:
+            async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
                 headers = {"Authorization": f"Bearer {token}"}
                 
                 response = await client.post(
@@ -454,7 +454,7 @@ class TestLengthComparisons:
         app.dependency_overrides[get_db_func] = override_get_db
         
         try:
-            async with AsyncClient(app=app, base_url="http://test") as client:
+            async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
                 headers = {"Authorization": f"Bearer {token}"}
                 
                 response = await client.post(
@@ -489,7 +489,7 @@ class TestLengthComparisons:
         app.dependency_overrides[get_db_func] = override_get_db
         
         try:
-            async with AsyncClient(app=app, base_url="http://test") as client:
+            async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
                 headers = {"Authorization": f"Bearer {token}"}
                 
                 response = await client.post(
@@ -560,7 +560,7 @@ class TestCacheComparisons:
         app.dependency_overrides[get_db_func] = override_get_db
         
         try:
-            async with AsyncClient(app=app, base_url="http://test") as client:
+            async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
                 # Clear cache first
                 from backend.api.settings_routes import _settings_cache
                 _settings_cache.clear()
@@ -602,7 +602,7 @@ class TestCacheComparisons:
         app.dependency_overrides[get_db_func] = override_get_db
         
         try:
-            async with AsyncClient(app=app, base_url="http://test") as client:
+            async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
                 # Clear cache
                 from backend.api.settings_routes import _settings_cache
                 _settings_cache.clear()
@@ -633,7 +633,7 @@ class TestEmptyChecks:
         app.dependency_overrides[get_db_func] = override_get_db
         
         try:
-            async with AsyncClient(app=app, base_url="http://test") as client:
+            async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
                 # Ensure no settings in DB
                 from sqlalchemy import delete
                 from backend.database.models import SettingsDB
@@ -667,7 +667,7 @@ class TestEmptyChecks:
         app.dependency_overrides[get_db_func] = override_get_db
         
         try:
-            async with AsyncClient(app=app, base_url="http://test") as client:
+            async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
                 # Create settings DB record with None settings_data
                 from backend.database.models import SettingsDB
                 settings_db = SettingsDB(
@@ -703,7 +703,7 @@ class TestEmptyChecks:
         app.dependency_overrides[get_db_func] = override_get_db
         
         try:
-            async with AsyncClient(app=app, base_url="http://test") as client:
+            async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
                 # Create settings DB record with settings_data
                 from backend.database.models import SettingsDB
                 settings_db = SettingsDB(
@@ -754,7 +754,7 @@ class TestSaveSettingsComparisons:
         app.dependency_overrides[get_db_func] = override_get_db
         
         try:
-            async with AsyncClient(app=app, base_url="http://test") as client:
+            async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
                 # Create existing settings
                 from backend.database.models import SettingsDB
                 settings_db = SettingsDB(
@@ -800,7 +800,7 @@ class TestSaveSettingsComparisons:
         app.dependency_overrides[get_db_func] = override_get_db
         
         try:
-            async with AsyncClient(app=app, base_url="http://test") as client:
+            async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
                 # Ensure no settings in DB
                 from sqlalchemy import delete
                 from backend.database.models import SettingsDB

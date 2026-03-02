@@ -60,6 +60,15 @@ public class JwtUtil {
         return createToken(claims, username, expiration);
     }
 
+    /**
+     * Generate token with custom expiration (e.g. for remember_me = 7 days)
+     */
+    public String generateToken(String username, String userId, long expirationMs) {
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("userId", userId);
+        return createToken(claims, username, expirationMs);
+    }
+
     public String generateRefreshToken(String username, String userId) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("userId", userId);

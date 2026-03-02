@@ -46,7 +46,7 @@ class WorkflowControllerIntegrationTest {
     @Test
     @WithMockUser(username = "testuser")
     void createWorkflow_ReturnsOk() throws Exception {
-        mockMvc.perform(post("/api/v1/workflows")
+        mockMvc.perform(post("/api/workflows")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(workflowCreate)))
                 .andExpect(status().isOk())
@@ -57,7 +57,7 @@ class WorkflowControllerIntegrationTest {
     @Test
     @WithMockUser(username = "testuser")
     void listWorkflows_ReturnsOk() throws Exception {
-        mockMvc.perform(get("/api/v1/workflows"))
+        mockMvc.perform(get("/api/workflows"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray());
     }
@@ -65,7 +65,7 @@ class WorkflowControllerIntegrationTest {
     @Test
     @WithMockUser(username = "testuser")
     void createThenGetWorkflow_ReturnsWorkflow() throws Exception {
-        String createResult = mockMvc.perform(post("/api/v1/workflows")
+        String createResult = mockMvc.perform(post("/api/workflows")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(workflowCreate)))
                 .andExpect(status().isOk())
@@ -74,7 +74,7 @@ class WorkflowControllerIntegrationTest {
 
         String workflowId = objectMapper.readTree(createResult).get("id").asText();
 
-        mockMvc.perform(get("/api/v1/workflows/" + workflowId))
+        mockMvc.perform(get("/api/workflows/" + workflowId))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(workflowId))
                 .andExpect(jsonPath("$.name").value("Test Workflow"));
@@ -83,7 +83,7 @@ class WorkflowControllerIntegrationTest {
     @Test
     @WithMockUser(username = "testuser")
     void createUpdateDeleteWorkflow_FullCycle() throws Exception {
-        String createResult = mockMvc.perform(post("/api/v1/workflows")
+        String createResult = mockMvc.perform(post("/api/workflows")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(workflowCreate)))
                 .andExpect(status().isOk())
@@ -91,13 +91,13 @@ class WorkflowControllerIntegrationTest {
         String workflowId = objectMapper.readTree(createResult).get("id").asText();
 
         workflowCreate.setName("Updated Workflow");
-        mockMvc.perform(put("/api/v1/workflows/" + workflowId)
+        mockMvc.perform(put("/api/workflows/" + workflowId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(workflowCreate)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.name").value("Updated Workflow"));
 
-        mockMvc.perform(delete("/api/v1/workflows/" + workflowId))
+        mockMvc.perform(delete("/api/workflows/" + workflowId))
                 .andExpect(status().isNoContent());
     }
 }
