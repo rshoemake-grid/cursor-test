@@ -103,6 +103,8 @@ export function useMarketplaceData({
 
   const { fetchAgents: fetchAgentsFn } = useAgentsData({
     storage,
+    httpClient,
+    apiBaseUrl,
     category,
     searchQuery,
     sortBy,

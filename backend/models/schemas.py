@@ -470,6 +470,37 @@ class WorkflowLike(BaseModel):
     workflow_id: str
 
 
+# ============================================================================
+# Published Agents (marketplace)
+# ============================================================================
+
+class PublishedAgentCreate(BaseModel):
+    """Schema for publishing an agent to marketplace"""
+    name: str
+    description: Optional[str] = None
+    category: str
+    tags: List[str] = Field(default_factory=list)
+    difficulty: str = "beginner"
+    estimated_time: Optional[str] = None
+    agent_config: Dict[str, Any] = Field(default_factory=dict)
+
+
+class PublishedAgentResponse(BaseModel):
+    """Response schema for published agent"""
+    id: str
+    name: str
+    description: Optional[str] = None
+    category: str
+    tags: List[str]
+    difficulty: str
+    estimated_time: Optional[str] = None
+    agent_config: Dict[str, Any]
+    published_at: datetime
+    author_id: Optional[str] = None
+    author_name: Optional[str] = None
+    is_official: bool
+
+
 class MarketplaceFilters(BaseModel):
     """Filters for marketplace search"""
     category: Optional[str] = None

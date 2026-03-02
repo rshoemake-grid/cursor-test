@@ -1,16 +1,22 @@
 package com.workflow.service;
 
+import com.workflow.dto.PublishedAgentCreateRequest;
+import com.workflow.dto.PublishedAgentResponse;
 import com.workflow.dto.WorkflowResponseV2;
+import com.workflow.entity.PublishedAgent;
+import com.workflow.entity.User;
 import com.workflow.entity.Workflow;
 import com.workflow.entity.WorkflowLike;
 import com.workflow.entity.WorkflowTemplate;
 import com.workflow.exception.ResourceNotFoundException;
+import com.workflow.repository.PublishedAgentRepository;
 import com.workflow.repository.UserRepository;
 import com.workflow.repository.WorkflowLikeRepository;
 import com.workflow.repository.WorkflowRepository;
 import com.workflow.repository.WorkflowTemplateRepository;
 import com.workflow.util.WorkflowMapper;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,6 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -31,17 +38,20 @@ public class MarketplaceService {
     private final WorkflowLikeRepository workflowLikeRepository;
     private final WorkflowTemplateRepository templateRepository;
     private final UserRepository userRepository;
+    private final PublishedAgentRepository publishedAgentRepository;
     private final WorkflowMapper workflowMapper;
 
     public MarketplaceService(WorkflowRepository workflowRepository,
                               WorkflowLikeRepository workflowLikeRepository,
                               WorkflowTemplateRepository templateRepository,
                               UserRepository userRepository,
+                              PublishedAgentRepository publishedAgentRepository,
                               WorkflowMapper workflowMapper) {
         this.workflowRepository = workflowRepository;
         this.workflowLikeRepository = workflowLikeRepository;
         this.templateRepository = templateRepository;
         this.userRepository = userRepository;
+        this.publishedAgentRepository = publishedAgentRepository;
         this.workflowMapper = workflowMapper;
     }
 
@@ -137,5 +147,70 @@ public class MarketplaceService {
                 workflowMapper.extractVariables(def), w.getOwnerId(), w.getIsPublic(), w.getIsTemplate(),
                 w.getCategory(), w.getTags(), w.getLikesCount(), w.getViewsCount(), w.getUsesCount(),
                 w.getCreatedAt(), w.getUpdatedAt());
+    }
+
+    public PublishedAgentResponse publishAgent(PublishedAgentCreateRequest request, String userId, boolean isAdmin) {
+        PublishedAgent agent = new PublishedAgent();
+        agent.setId(UUID.randomUUID().toString());
+        agent.setName(request.getName());
+        agent.setDescription(request.getDescription());
+        agent.setCategory(request.getCategory());
+        agent.setTags(request.getTags() != null ? request.getTags() : List.of());
+        agent.setDifficulty(request.getDifficulty() != null ? request.getDifficulty() : "beginner");
+        agent.setEstimatedTime(request.getEstimatedTime());
+        agent.setAgentConfig(request.getAgentConfig() != null ? request.getAgentConfig() : Map.of());
+        agent.setAuthorId(userId);
+        agent.setIsOfficial(isAdmin);
+        publishedAgentRepository.save(agent);
+
+        String authorName = userRepository.findById(userId)
+                .map(u -> u.getUsername() != null ? u.getUsername() : u.getFullName() != null ? u.getFullName() : u.getEmail())
+                .orElse(null);
+
+        return PublishedAgentResponse.builder()
+                .id(agent.getId())
+                .name(agent.getName())
+                .description(agent.getDescription())
+                .category(agent.getCategory())
+                .tags(agent.getTags())
+                .difficulty(agent.getDifficulty())
+                .estimatedTime(agent.getEstimatedTime())
+                .agentConfig(agent.getAgentConfig())
+                .publishedAt(agent.getCreatedAt())
+                .authorId(agent.getAuthorId())
+                .authorName(authorName)
+                .isOfficial(agent.getIsOfficial())
+                .build();
+    }
+
+    public List<PublishedAgentResponse> listAgents(String category, String search, int limit, int offset) {
+        int safeLimit = Math.max(1, Math.min(limit, 100));
+        int page = offset / safeLimit;
+        Pageable pageable = PageRequest.of(page, safeLimit, Sort.by(Sort.Direction.DESC, "createdAt"));
+        return publishedAgentRepository.findByFilters(category, search, pageable).stream()
+                .map(this::toAgentResponse)
+                .collect(Collectors.toList());
+    }
+
+    private PublishedAgentResponse toAgentResponse(PublishedAgent a) {
+        String authorName = a.getAuthorId() != null
+                ? userRepository.findById(a.getAuthorId())
+                        .map(u -> u.getUsername() != null ? u.getUsername() : u.getFullName() != null ? u.getFullName() : u.getEmail())
+                        .orElse(null)
+                : null;
+        return PublishedAgentResponse.builder()
+                .id(a.getId())
+                .name(a.getName())
+                .description(a.getDescription())
+                .category(a.getCategory())
+                .tags(a.getTags() != null ? a.getTags() : List.of())
+                .difficulty(a.getDifficulty())
+                .estimatedTime(a.getEstimatedTime())
+                .agentConfig(a.getAgentConfig())
+                .publishedAt(a.getCreatedAt())
+                .authorId(a.getAuthorId())
+                .authorName(authorName)
+                .isOfficial(a.getIsOfficial() != null ? a.getIsOfficial() : false)
+                .build();
     }
 }

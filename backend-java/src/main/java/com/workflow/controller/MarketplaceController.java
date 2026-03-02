@@ -1,11 +1,14 @@
 package com.workflow.controller;
 
+import com.workflow.dto.PublishedAgentCreateRequest;
+import com.workflow.dto.PublishedAgentResponse;
 import com.workflow.dto.WorkflowLikeRequest;
 import com.workflow.dto.WorkflowResponseV2;
 import com.workflow.service.MarketplaceService;
 import com.workflow.util.AuthenticationHelper;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -18,7 +21,7 @@ import java.util.Map;
  */
 @RestController
 @RequestMapping("/api/v1/marketplace")
-@Tag(name = "Marketplace", description = "Workflow discovery and likes")
+@Tag(name = "Marketplace", description = "Workflow discovery, likes, and published agents")
 public class MarketplaceController {
     private final MarketplaceService marketplaceService;
     private final AuthenticationHelper authenticationHelper;
@@ -72,5 +75,25 @@ public class MarketplaceController {
     public ResponseEntity<List<WorkflowResponseV2>> myLikes(Authentication auth) {
         String userId = authenticationHelper.extractUserId(auth);
         return ResponseEntity.ok(marketplaceService.getMyLikes(userId));
+    }
+
+    @PostMapping("/agents")
+    @Operation(summary = "Publish Agent")
+    public ResponseEntity<PublishedAgentResponse> publishAgent(
+            @Valid @RequestBody PublishedAgentCreateRequest request,
+            Authentication auth) {
+        String userId = authenticationHelper.extractUserId(auth);
+        boolean isAdmin = authenticationHelper.extractUser(auth).map(u -> Boolean.TRUE.equals(u.getIsAdmin())).orElse(false);
+        return ResponseEntity.status(201).body(marketplaceService.publishAgent(request, userId, isAdmin));
+    }
+
+    @GetMapping("/agents")
+    @Operation(summary = "List Agents")
+    public ResponseEntity<List<PublishedAgentResponse>> listAgents(
+            @RequestParam(required = false) String category,
+            @RequestParam(required = false) String search,
+            @RequestParam(defaultValue = "50") int limit,
+            @RequestParam(defaultValue = "0") int offset) {
+        return ResponseEntity.ok(marketplaceService.listAgents(category, search, limit, offset));
     }
 }

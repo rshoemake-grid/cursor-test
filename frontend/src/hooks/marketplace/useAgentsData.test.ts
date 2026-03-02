@@ -6,27 +6,27 @@ import { renderHook } from '@testing-library/react'
 import { useAgentsData } from './useAgentsData'
 import { getLocalStorageItem } from '../storage'
 import { STORAGE_KEYS } from '../../config/constants'
-import { logger } from '../../utils/logger'
 import type { AgentTemplate } from './useMarketplaceData'
 
 jest.mock('../storage', () => ({
   getLocalStorageItem: jest.fn(),
 }))
 
-jest.mock('../../utils/logger', () => ({
-  logger: {
-    debug: jest.fn(),
-    error: jest.fn(),
-  },
-}))
-
 const mockGetLocalStorageItem = getLocalStorageItem as jest.MockedFunction<
   typeof getLocalStorageItem
 >
-const mockLoggerDebug = logger.debug as jest.MockedFunction<typeof logger.debug>
+
+const mockHttpClient = {
+  get: jest.fn().mockRejectedValue(new Error('API unavailable')),
+}
 
 describe('useAgentsData', () => {
   let mockStorage: any
+
+  const defaultOptions = {
+    httpClient: mockHttpClient,
+    apiBaseUrl: 'http://api.test',
+  }
 
   const mockAgent: AgentTemplate = {
     id: 'agent-1',
@@ -52,6 +52,7 @@ describe('useAgentsData', () => {
   it('should return fetchAgents function', () => {
     const { result } = renderHook(() =>
       useAgentsData({
+        ...defaultOptions,
         storage: mockStorage,
         category: '',
         searchQuery: '',
@@ -69,6 +70,7 @@ describe('useAgentsData', () => {
 
     const { result } = renderHook(() =>
       useAgentsData({
+        ...defaultOptions,
         storage: mockStorage,
         category: '',
         searchQuery: '',
@@ -92,6 +94,7 @@ describe('useAgentsData', () => {
 
     const { result } = renderHook(() =>
       useAgentsData({
+        ...defaultOptions,
         storage: mockStorage,
         category: '',
         searchQuery: '',
@@ -105,7 +108,6 @@ describe('useAgentsData', () => {
     expect(agents[0].author_id).toBe('user-1')
     expect(agents[0].author_name).toBe('testuser')
     expect(mockStorage.setItem).toHaveBeenCalled()
-    expect(mockLoggerDebug).toHaveBeenCalled()
   })
 
     it('should not migrate agents that already have author_id', async () => {
@@ -114,6 +116,7 @@ describe('useAgentsData', () => {
 
       const { result } = renderHook(() =>
         useAgentsData({
+          ...defaultOptions,
           storage: mockStorage,
           category: '',
           searchQuery: '',
@@ -134,6 +137,7 @@ describe('useAgentsData', () => {
 
       const { result } = renderHook(() =>
         useAgentsData({
+          ...defaultOptions,
           storage: mockStorage,
           category: '',
           searchQuery: '',
@@ -154,6 +158,7 @@ describe('useAgentsData', () => {
 
       const { result } = renderHook(() =>
         useAgentsData({
+          ...defaultOptions,
           storage: mockStorage,
           category: '',
           searchQuery: '',
@@ -177,6 +182,7 @@ describe('useAgentsData', () => {
 
     const { result } = renderHook(() =>
       useAgentsData({
+        ...defaultOptions,
         storage: mockStorage,
         category: 'automation',
         searchQuery: '',
@@ -194,6 +200,7 @@ describe('useAgentsData', () => {
   it('should handle null storage', async () => {
     const { result } = renderHook(() =>
       useAgentsData({
+        ...defaultOptions,
         storage: null,
         category: '',
         searchQuery: '',
@@ -205,5 +212,46 @@ describe('useAgentsData', () => {
     const agents = await result.current.fetchAgents()
 
     expect(agents).toEqual([])
+  })
+
+  it('should use API when available', async () => {
+    const apiAgents = [
+      {
+        id: 'api-1',
+        name: 'API Agent',
+        description: 'From API',
+        category: 'automation',
+        tags: [],
+        difficulty: 'beginner',
+        estimated_time: '5 min',
+        agent_config: {},
+        author_id: 'u1',
+        author_name: 'admin',
+        is_official: true,
+      },
+    ]
+    const mockFetch = jest.fn().mockResolvedValue({
+      json: () => Promise.resolve(apiAgents),
+    })
+    const okHttpClient = { get: mockFetch }
+
+    const { result } = renderHook(() =>
+      useAgentsData({
+        httpClient: okHttpClient,
+        apiBaseUrl: 'http://api.test',
+        storage: mockStorage,
+        category: '',
+        searchQuery: '',
+        sortBy: 'popular',
+        user: null,
+      })
+    )
+
+    const agents = await result.current.fetchAgents()
+
+    expect(mockFetch).toHaveBeenCalledWith('http://api.test/marketplace/agents')
+    expect(agents).toHaveLength(1)
+    expect(agents[0].name).toBe('API Agent')
+    expect(agents[0].label).toBe('API Agent')
   })
 })

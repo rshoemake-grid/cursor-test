@@ -6,11 +6,16 @@ from sqlalchemy import select, func, or_, and_, desc
 import uuid
 
 from backend.database.db import get_db
-from backend.database.models import WorkflowDB, WorkflowLikeDB, UserDB, WorkflowTemplateDB
-from backend.models.schemas import WorkflowLike, WorkflowResponseV2
+from backend.database.models import WorkflowDB, WorkflowLikeDB, UserDB, WorkflowTemplateDB, PublishedAgentDB
+from backend.models.schemas import (
+    WorkflowLike,
+    WorkflowResponseV2,
+    PublishedAgentCreate,
+    PublishedAgentResponse,
+)
 from backend.auth import get_current_active_user, get_optional_user
 
-router = APIRouter(prefix="/api/marketplace", tags=["Marketplace"])
+router = APIRouter(prefix="/marketplace", tags=["Marketplace"])
 
 
 @router.get("/discover", response_model=List[WorkflowResponseV2])
@@ -300,5 +305,87 @@ async def get_my_liked_workflows(
             updated_at=w.updated_at
         )
         for w in workflows
+    ]
+
+
+@router.post("/agents", response_model=PublishedAgentResponse, status_code=201)
+async def publish_agent(
+    agent_data: PublishedAgentCreate,
+    current_user: UserDB = Depends(get_current_active_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """Publish an agent to the marketplace"""
+    agent = PublishedAgentDB(
+        id=str(uuid.uuid4()),
+        name=agent_data.name,
+        description=agent_data.description,
+        category=agent_data.category,
+        tags=agent_data.tags,
+        difficulty=agent_data.difficulty or "beginner",
+        estimated_time=agent_data.estimated_time,
+        agent_config=agent_data.agent_config,
+        author_id=current_user.id,
+        is_official=current_user.is_admin
+    )
+    db.add(agent)
+    await db.commit()
+    await db.refresh(agent)
+    author_name = current_user.username or current_user.full_name or current_user.email
+    return PublishedAgentResponse(
+        id=agent.id,
+        name=agent.name,
+        description=agent.description,
+        category=agent.category,
+        tags=agent.tags or [],
+        difficulty=agent.difficulty,
+        estimated_time=agent.estimated_time,
+        agent_config=agent.agent_config,
+        published_at=agent.created_at,
+        author_id=agent.author_id,
+        author_name=author_name,
+        is_official=agent.is_official
+    )
+
+
+@router.get("/agents", response_model=List[PublishedAgentResponse])
+async def list_agents(
+    category: Optional[str] = Query(None),
+    search: Optional[str] = Query(None),
+    limit: int = Query(50, le=100),
+    offset: int = Query(0, ge=0),
+    db: AsyncSession = Depends(get_db)
+):
+    """List published agents from the marketplace"""
+    query = select(PublishedAgentDB, UserDB.username).join(
+        UserDB, PublishedAgentDB.author_id == UserDB.id, isouter=True
+    )
+    if category:
+        query = query.where(PublishedAgentDB.category == category)
+    if search:
+        query = query.where(
+            or_(
+                PublishedAgentDB.name.ilike(f"%{search}%"),
+                PublishedAgentDB.description.ilike(f"%{search}%")
+            )
+        )
+    query = query.order_by(desc(PublishedAgentDB.created_at)).limit(limit).offset(offset)
+    result = await db.execute(query)
+    rows = result.all()
+    return [
+        PublishedAgentResponse(
+            id=a.id,
+            name=a.name,
+            description=a.description,
+            category=a.category,
+            tags=a.tags or [],
+            difficulty=a.difficulty,
+            estimated_time=a.estimated_time,
+            agent_config=a.agent_config,
+            published_at=a.created_at,
+            author_id=a.author_id,
+            author_name=author_username if author_username else None,
+            is_official=a.is_official
+        )
+        for a, author_username in rows
     ]
 

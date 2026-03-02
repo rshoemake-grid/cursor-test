@@ -156,6 +156,15 @@ export function createApiClient(options?: {
     return extractData(await instance.post(workflowEndpoints.publish(workflowId), publishData))
   },
 
+  async getAgents(params?: {
+    category?: string
+    search?: string
+    limit?: number
+    offset?: number
+  }): Promise<any[]> {
+    return extractData(await instance.get(marketplaceEndpoints.agents(), { params }))
+  },
+
   async publishAgent(
     agentData: {
       name: string

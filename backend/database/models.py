@@ -167,3 +167,23 @@ class RefreshTokenDB(Base):
     revoked = Column(Boolean, default=False)
     created_at = Column(DateTime, default=datetime.utcnow)
 
+
+class PublishedAgentDB(Base):
+    """Database model for published agent nodes (marketplace)"""
+    __tablename__ = "published_agents"
+    
+    id = Column(String, primary_key=True, index=True)
+    name = Column(String, nullable=False)
+    description = Column(Text, nullable=True)
+    category = Column(String, nullable=False, index=True)
+    tags = Column(JSON, default=list)
+    difficulty = Column(String, default="beginner")
+    estimated_time = Column(String, nullable=True)
+    agent_config = Column(JSON, nullable=False)  # Agent node configuration
+    
+    author_id = Column(String, ForeignKey("users.id"), nullable=True, index=True)
+    is_official = Column(Boolean, default=False)
+    
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
