@@ -25,14 +25,20 @@ import java.util.List;
 @EnableMethodSecurity
 public class SecurityConfig {
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final ApigeeAuthenticationEntryPoint authenticationEntryPoint;
+    private final ApigeeAccessDeniedHandler accessDeniedHandler;
     private final String corsOrigins;
     private final boolean corsAllowCredentials;
     
     public SecurityConfig(
             JwtAuthenticationFilter jwtAuthenticationFilter,
+            ApigeeAuthenticationEntryPoint authenticationEntryPoint,
+            ApigeeAccessDeniedHandler accessDeniedHandler,
             @Value("${cors.allowed-origins:*}") String corsOrigins,
             @Value("${cors.allowed-credentials:true}") boolean corsAllowCredentials) {
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
+        this.authenticationEntryPoint = authenticationEntryPoint;
+        this.accessDeniedHandler = accessDeniedHandler;
         this.corsOrigins = corsOrigins;
         this.corsAllowCredentials = corsAllowCredentials;
     }
@@ -42,9 +48,16 @@ public class SecurityConfig {
         http.csrf(csrf -> csrf.disable())
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .exceptionHandling(ex -> ex
+                .authenticationEntryPoint(authenticationEntryPoint)
+                .accessDeniedHandler(accessDeniedHandler))
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/v1/auth/**", "/health", "/metrics", "/api-docs/**", "/swagger-ui/**").permitAll()
-                .requestMatchers("/ws/**").permitAll() // WebSocket endpoint
+                .requestMatchers("/ws/**").permitAll()
+                .requestMatchers("/api/v1/workflows/*/execute", "/api/v1/executions/**").permitAll()
+                .requestMatchers("/api/v1/marketplace/discover", "/api/v1/marketplace/trending", "/api/v1/marketplace/stats").permitAll()
+                .requestMatchers("/api/v1/templates", "/api/v1/templates/categories", "/api/v1/templates/difficulties", "/api/v1/templates/*").permitAll()
+                .requestMatchers("/api/v1/debug/**").permitAll()
                 .anyRequest().authenticated()
             )
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);

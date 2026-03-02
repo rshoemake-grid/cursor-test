@@ -1,11 +1,15 @@
 package com.workflow.service;
 
 import com.workflow.dto.WorkflowCreate;
+import com.workflow.dto.WorkflowPublishRequest;
 import com.workflow.dto.WorkflowResponse;
+import com.workflow.dto.WorkflowTemplateResponse;
 import com.workflow.entity.Workflow;
+import com.workflow.entity.WorkflowTemplate;
 import com.workflow.exception.ResourceNotFoundException;
 import com.workflow.exception.ValidationException;
 import com.workflow.repository.WorkflowRepository;
+import com.workflow.repository.WorkflowTemplateRepository;
 import com.workflow.util.WorkflowMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -29,10 +34,13 @@ public class WorkflowService {
     private static final Logger log = LoggerFactory.getLogger(WorkflowService.class);
     
     private final WorkflowRepository workflowRepository;
+    private final WorkflowTemplateRepository templateRepository;
     private final WorkflowMapper workflowMapper;
-    
-    public WorkflowService(WorkflowRepository workflowRepository, WorkflowMapper workflowMapper) {
+
+    public WorkflowService(WorkflowRepository workflowRepository, WorkflowTemplateRepository templateRepository,
+                          WorkflowMapper workflowMapper) {
         this.workflowRepository = workflowRepository;
+        this.templateRepository = templateRepository;
         this.workflowMapper = workflowMapper;
     }
     
@@ -129,7 +137,66 @@ public class WorkflowService {
         workflowRepository.deleteById(id);
         log.debug("Deleted workflow: {}", id);
     }
-    
+
+    /**
+     * Publish workflow as template
+     */
+    public WorkflowTemplateResponse publishWorkflow(String workflowId, WorkflowPublishRequest request, String userId, boolean isAdmin) {
+        Workflow w = workflowRepository.findById(workflowId)
+                .orElseThrow(() -> new ResourceNotFoundException("Workflow not found: " + workflowId));
+        if (!w.getOwnerId().equals(userId)) {
+            throw new com.workflow.exception.ForbiddenException("Not authorized to publish this workflow");
+        }
+        WorkflowTemplate t = new WorkflowTemplate();
+        t.setId(UUID.randomUUID().toString());
+        t.setName(w.getName());
+        t.setDescription(w.getDescription());
+        t.setCategory(request.getCategory() != null ? request.getCategory() : "custom");
+        t.setTags(request.getTags());
+        t.setDefinition(w.getDefinition());
+        t.setAuthorId(userId);
+        t.setIsOfficial(isAdmin);
+        t.setDifficulty(request.getDifficulty() != null ? request.getDifficulty() : "beginner");
+        t.setEstimatedTime(request.getEstimatedTime());
+        t = templateRepository.save(t);
+        return new WorkflowTemplateResponse(t.getId(), t.getName(), t.getDescription(), t.getCategory(), t.getTags(),
+                t.getDifficulty(), t.getEstimatedTime(), t.getIsOfficial(), t.getUsesCount(), t.getLikesCount(), t.getRating(),
+                t.getAuthorId(), null, t.getThumbnailUrl(), t.getPreviewImageUrl(), t.getCreatedAt(), t.getUpdatedAt());
+    }
+
+    /**
+     * Bulk delete workflows (only those owned by user)
+     */
+    public Map<String, Object> bulkDelete(List<String> workflowIds, String userId) {
+        if (workflowIds == null || workflowIds.isEmpty()) {
+            throw new ValidationException("No workflow IDs provided");
+        }
+        int deleted = 0;
+        List<String> failed = new java.util.ArrayList<>();
+        for (String id : workflowIds) {
+            try {
+                Workflow w = workflowRepository.findById(id).orElse(null);
+                if (w != null && userId != null && userId.equals(w.getOwnerId())) {
+                    workflowRepository.deleteById(id);
+                    deleted++;
+                } else {
+                    failed.add(id);
+                }
+            } catch (Exception e) {
+                failed.add(id);
+            }
+        }
+        Map<String, Object> result = new java.util.HashMap<>();
+        result.put("deleted_count", deleted);
+        if (!failed.isEmpty()) {
+            result.put("message", "Deleted " + deleted + " workflow(s). " + failed.size() + " could not be deleted.");
+            result.put("failed_ids", failed);
+        } else {
+            result.put("message", "Successfully deleted " + deleted + " workflow(s)");
+        }
+        return result;
+    }
+
     /**
      * Validate WorkflowCreate DTO
      */

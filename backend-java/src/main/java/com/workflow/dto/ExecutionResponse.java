@@ -5,6 +5,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -22,5 +23,5 @@ public class ExecutionResponse {
     private String error;
     private LocalDateTime startedAt;
     private LocalDateTime completedAt;
-    private Map<String, Object> logs;
+    private List<ExecutionLogEntry> logs;
 }

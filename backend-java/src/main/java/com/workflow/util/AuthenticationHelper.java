@@ -30,6 +30,18 @@ public class AuthenticationHelper {
             .map(User::getId)
             .orElse(null);
     }
+
+    /**
+     * Extract user ID from Authentication, safely handling null
+     * @param authentication Spring Security Authentication object (may be null)
+     * @return User ID or null if not authenticated or authentication is null
+     */
+    public String extractUserIdNullable(Authentication authentication) {
+        if (authentication == null) {
+            return null;
+        }
+        return extractUserId(authentication);
+    }
     
     /**
      * Extract User entity from Authentication

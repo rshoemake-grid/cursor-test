@@ -1,6 +1,7 @@
 package com.workflow.repository;
 
 import com.workflow.entity.Workflow;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -14,7 +15,12 @@ public interface WorkflowRepository extends JpaRepository<Workflow, String> {
     List<Workflow> findByIsPublicTrue();
     List<Workflow> findByIsTemplateTrue();
     List<Workflow> findByCategory(String category);
-    
+
     @Query("SELECT w FROM Workflow w WHERE w.ownerId = :ownerId OR w.isPublic = true")
     List<Workflow> findAccessibleWorkflows(@Param("ownerId") String ownerId);
+
+    @Query("SELECT w FROM Workflow w WHERE (w.isPublic = true OR w.isTemplate = true)")
+    List<Workflow> findPublicOrTemplateWorkflows(Pageable pageable);
+
+    List<Workflow> findByIdIn(List<String> ids);
 }

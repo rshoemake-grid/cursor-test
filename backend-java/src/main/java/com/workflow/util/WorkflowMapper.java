@@ -57,10 +57,10 @@ public class WorkflowMapper {
     }
     
     /**
-     * Safely extract nodes from definition map
+     * Safely extract nodes from definition map (public for MarketplaceService)
      */
     @SuppressWarnings("unchecked")
-    private List<Node> extractNodes(Map<String, Object> definition) {
+    public List<Node> extractNodes(Map<String, Object> definition) {
         Object nodesObj = definition.get("nodes");
         if (nodesObj == null) {
             return List.of();
@@ -74,10 +74,10 @@ public class WorkflowMapper {
     }
     
     /**
-     * Safely extract edges from definition map
+     * Safely extract edges from definition map (public for MarketplaceService)
      */
     @SuppressWarnings("unchecked")
-    private List<Edge> extractEdges(Map<String, Object> definition) {
+    public List<Edge> extractEdges(Map<String, Object> definition) {
         Object edgesObj = definition.get("edges");
         if (edgesObj == null) {
             return List.of();
@@ -91,10 +91,10 @@ public class WorkflowMapper {
     }
     
     /**
-     * Safely extract variables from definition map
+     * Safely extract variables from definition map (public for MarketplaceService)
      */
     @SuppressWarnings("unchecked")
-    private Map<String, Object> extractVariables(Map<String, Object> definition) {
+    public Map<String, Object> extractVariables(Map<String, Object> definition) {
         Object variablesObj = definition.get("variables");
         if (variablesObj == null) {
             return Map.of();

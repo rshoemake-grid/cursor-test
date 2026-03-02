@@ -1,7 +1,10 @@
 package com.workflow.controller;
 
+import com.workflow.dto.BulkDeleteRequest;
 import com.workflow.dto.WorkflowCreate;
+import com.workflow.dto.WorkflowPublishRequest;
 import com.workflow.dto.WorkflowResponse;
+import com.workflow.dto.WorkflowTemplateResponse;
 import com.workflow.service.WorkflowService;
 import com.workflow.util.AuthenticationHelper;
 import io.swagger.v3.oas.annotations.Operation;
@@ -16,6 +19,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * Workflow Controller - matches Python workflow_routes.py
@@ -107,5 +111,27 @@ public class WorkflowController {
         
         workflowService.deleteWorkflow(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/{id}/publish")
+    @Operation(summary = "Publish Workflow as Template")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "201", description = "Workflow published"),
+        @ApiResponse(responseCode = "404", description = "Workflow not found")
+    })
+    public ResponseEntity<WorkflowTemplateResponse> publishWorkflow(
+            @PathVariable String id,
+            @RequestBody WorkflowPublishRequest request,
+            Authentication authentication) {
+        String userId = authenticationHelper.extractUserId(authentication);
+        boolean isAdmin = authenticationHelper.extractUser(authentication).map(u -> u.getIsAdmin()).orElse(false);
+        return ResponseEntity.status(201).body(workflowService.publishWorkflow(id, request, userId, isAdmin));
+    }
+
+    @PostMapping("/bulk-delete")
+    @Operation(summary = "Bulk Delete Workflows")
+    public ResponseEntity<Map<String, Object>> bulkDelete(@RequestBody BulkDeleteRequest request, Authentication authentication) {
+        String userId = authenticationHelper.extractUserIdNullable(authentication);
+        return ResponseEntity.ok(workflowService.bulkDelete(request.getWorkflowIds(), userId));
     }
 }

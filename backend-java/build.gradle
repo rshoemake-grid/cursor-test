@@ -19,6 +19,12 @@ configurations {
     }
 }
 
+// Exclude javax JAXB jackson module - uses javax.xml.bind removed in Java 11+
+// Hibernate 6 / Spring Boot 3 use Jakarta; entities use Jackson/JPA annotations, not JAXB
+configurations.all {
+    exclude group: 'com.fasterxml.jackson.module', module: 'jackson-module-jaxb-annotations'
+}
+
 repositories {
     mavenCentral()
 }
@@ -55,7 +61,13 @@ dependencies {
 
     // OpenAPI/Swagger
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.3.0'
-    
+
+    // Google ADK (Agent Development Kit) - for building AI agents
+    implementation 'com.google.adk:google-adk:0.7.0'
+
+    // JAXB: jackson-module-jaxb-annotations (javax) excluded above - Hibernate 6 uses Jakarta (jakarta.xml.bind)
+    // from hibernate-core; no extra deps needed for Java 17+
+
     // Logging (SLF4J with Logback - included in Spring Boot Starter)
     // No additional dependency needed
 
@@ -72,7 +84,7 @@ dependencies {
 
 tasks.named('test') {
     useJUnitPlatform()
-    ignoreFailures = true  // Allow coverage report generation even with failures
+    ignoreFailures = false
     
     // Configure Mockito as Java agent for Java 17+ compatibility
     // This enables Mockito's inline mock maker to mock final classes and methods
@@ -101,22 +113,39 @@ jacoco {
     toolVersion = "0.8.11"
 }
 
-tasks.named('jacocoTestReport') {
+jacocoTestReport {
     dependsOn test
     reports {
         xml.required = true
         html.required = true
         csv.required = false
     }
+    classDirectories.setFrom(files(classDirectories.files.collect {
+        fileTree(dir: it, exclude: [
+            '**/dto/**',
+            '**/entity/**',
+            '**/config/**',
+            '**/WorkflowBuilderApplication.class'
+        ])
+    }))
     finalizedBy jacocoTestCoverageVerification
 }
 
-tasks.named('jacocoTestCoverageVerification') {
+jacocoTestCoverageVerification {
+    dependsOn jacocoTestReport
     violationRules {
         rule {
             limit {
-                minimum = 0.0 // Temporarily disabled due to Java 23 Mockito compatibility issues
+                minimum = 0.80
             }
         }
     }
+    classDirectories.setFrom(files(classDirectories.files.collect {
+        fileTree(dir: it, exclude: [
+            '**/dto/**',
+            '**/entity/**',
+            '**/config/**',
+            '**/WorkflowBuilderApplication.class'
+        ])
+    }))
 }

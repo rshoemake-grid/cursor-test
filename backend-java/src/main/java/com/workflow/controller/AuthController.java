@@ -1,5 +1,7 @@
 package com.workflow.controller;
 
+import com.workflow.dto.PasswordReset;
+import com.workflow.dto.PasswordResetRequest;
 import com.workflow.dto.RefreshTokenRequest;
 import com.workflow.dto.TokenResponse;
 import com.workflow.dto.UserCreate;
@@ -13,7 +15,10 @@ import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
 
 
 /**
@@ -31,6 +36,38 @@ public class AuthController {
     
     public AuthController(AuthService authService) {
         this.authService = authService;
+    }
+
+    @GetMapping("/me")
+    @Operation(summary = "Get Current User", description = "Get current authenticated user information")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Current user details"),
+        @ApiResponse(responseCode = "401", description = "Not authenticated")
+    })
+    public ResponseEntity<UserResponse> me(Authentication authentication) {
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return ResponseEntity.status(401).build();
+        }
+        log.debug("GET /api/v1/auth/me - Current user: {}", authentication.getName());
+        UserResponse response = authService.getCurrentUser(authentication.getName());
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/token")
+    @Operation(summary = "Login (OAuth2)", description = "Authenticate via OAuth2 password flow (form-urlencoded)")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Login successful"),
+        @ApiResponse(responseCode = "401", description = "Invalid credentials")
+    })
+    public ResponseEntity<TokenResponse> token(
+            @RequestParam String username,
+            @RequestParam String password) {
+        log.debug("POST /api/v1/auth/token - OAuth2 login for user: {}", username);
+        UserCreate loginRequest = new UserCreate();
+        loginRequest.setUsername(username);
+        loginRequest.setPassword(password);
+        TokenResponse response = authService.login(loginRequest);
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/register")
@@ -69,6 +106,29 @@ public class AuthController {
         log.debug("POST /api/v1/auth/refresh - Refreshing token");
         
         TokenResponse response = authService.refreshToken(request.getRefreshToken());
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/forgot-password")
+    @Operation(summary = "Forgot Password", description = "Request password reset - generates token (always returns success to avoid email enumeration)")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Reset request processed")
+    })
+    public ResponseEntity<Map<String, Object>> forgotPassword(@Valid @RequestBody PasswordResetRequest request) {
+        log.debug("POST /api/v1/auth/forgot-password - Request for email: {}", request.getEmail());
+        Map<String, Object> response = authService.forgotPassword(request.getEmail());
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/reset-password")
+    @Operation(summary = "Reset Password", description = "Reset password using reset token")
+    @ApiResponses(value = {
+        @ApiResponse(responseCode = "200", description = "Password reset successfully"),
+        @ApiResponse(responseCode = "400", description = "Invalid or expired token")
+    })
+    public ResponseEntity<Map<String, Object>> resetPassword(@Valid @RequestBody PasswordReset request) {
+        log.debug("POST /api/v1/auth/reset-password - Reset with token");
+        Map<String, Object> response = authService.resetPassword(request.getToken(), request.getNewPassword());
         return ResponseEntity.ok(response);
     }
 }

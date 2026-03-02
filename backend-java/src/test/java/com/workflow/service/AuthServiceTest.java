@@ -5,6 +5,7 @@ import com.workflow.entity.RefreshToken;
 import com.workflow.entity.User;
 import com.workflow.exception.ResourceNotFoundException;
 import com.workflow.exception.ValidationException;
+import com.workflow.repository.PasswordResetTokenRepository;
 import com.workflow.repository.RefreshTokenRepository;
 import com.workflow.repository.UserRepository;
 import com.workflow.security.JwtUtil;
@@ -31,6 +32,7 @@ import static com.workflow.constants.WorkflowConstants.TOKEN_TYPE_BEARER;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.lenient;
 
 @ExtendWith(MockitoExtension.class)
 class AuthServiceTest {
@@ -40,6 +42,9 @@ class AuthServiceTest {
 
     @Mock
     private RefreshTokenRepository refreshTokenRepository;
+
+    @Mock
+    private PasswordResetTokenRepository passwordResetTokenRepository;
 
     @Mock
     private PasswordEncoder passwordEncoder;
@@ -72,11 +77,14 @@ class AuthServiceTest {
         authService = new AuthService(
             userRepository,
             refreshTokenRepository,
+            passwordResetTokenRepository,
             passwordEncoder,
             jwtUtil,
             authenticationManager,
             userDetailsService
         );
+        setField(authService, "jwtExpirationMs", 3600000L);
+        setField(authService, "environment", "development");
         
         // Setup valid UserCreate
         validUserCreate = new UserCreate();
@@ -202,7 +210,7 @@ class AuthServiceTest {
     void login_Success() {
         // Given
         Authentication authentication = mock(Authentication.class);
-        when(authentication.isAuthenticated()).thenReturn(true);
+        lenient().when(authentication.isAuthenticated()).thenReturn(true);
         when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
             .thenReturn(authentication);
         when(userDetailsService.loadUserByUsername(validUserCreate.getUsername())).thenReturn(userDetails);
@@ -237,10 +245,10 @@ class AuthServiceTest {
     void login_UserNotFound_ThrowsResourceNotFoundException() {
         // Given
         Authentication authentication = mock(Authentication.class);
-        when(authentication.isAuthenticated()).thenReturn(true);
+        lenient().when(authentication.isAuthenticated()).thenReturn(true);
         when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
             .thenReturn(authentication);
-        when(userDetailsService.loadUserByUsername(validUserCreate.getUsername())).thenReturn(userDetails);
+        lenient().when(userDetailsService.loadUserByUsername(validUserCreate.getUsername())).thenReturn(userDetails);
         when(userRepository.findByUsername(validUserCreate.getUsername())).thenReturn(Optional.empty());
 
         // When/Then
