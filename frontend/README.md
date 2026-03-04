@@ -46,7 +46,8 @@ src/
 │       ├── ConditionNode.tsx
 │       ├── LoopNode.tsx
 │       ├── StartNode.tsx
-│       └── EndNode.tsx
+│       ├── EndNode.tsx
+│       └── ToolNode.tsx
 ├── pages/
 │   ├── AuthPage.tsx            # Login/Register page
 │   ├── MarketplacePage.tsx     # Marketplace/discovery page

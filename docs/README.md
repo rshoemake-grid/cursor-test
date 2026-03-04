@@ -18,7 +18,8 @@ Welcome to the workflow engine documentation! This index helps you find the righ
 
 #### Backend Development
 - **[Backend Developer Guide](./BACKEND_DEVELOPER_GUIDE.md)** - Backend architecture, patterns, and development
-- **[Testing Guide](./TESTING_GUIDE.md)** - Testing strategies and best practices
+- **[Java Backend README](../backend-java/README.md)** - Spring Boot Java backend setup and API
+- **[Testing Guide](./TESTING_GUIDE.md)** - Testing strategies (Python, Java, frontend)
 - **[API Reference](./API_REFERENCE.md)** - Complete API documentation
 
 #### Frontend Development

@@ -52,7 +52,7 @@ All endpoints match the Python FastAPI backend:
 ## Running the Application
 
 ### Prerequisites
-- Java 17+
+- Java 17+ (17, 21, 23, or 24 supported; Lombok 1.18.38 enables Java 23/24 compatibility)
 - Gradle 8.5+ (or use Gradle wrapper)
 
 ### Build and Run

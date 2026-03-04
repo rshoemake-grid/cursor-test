@@ -5,7 +5,7 @@
 
 ## Overview
 
-This guide covers testing strategies, tools, and best practices for the workflow engine. The project uses pytest for backend testing and Jest for frontend testing.
+This guide covers testing strategies, tools, and best practices for the workflow engine. The project uses pytest for the Python backend, JUnit 5 for the Java backend, and Jest for frontend testing.
 
 ## Real-World Testing Examples
 
@@ -113,20 +113,25 @@ async def test_execution_failure_handling():
 ```
 
 **Testing Stack:**
-- **Backend**: pytest, pytest-asyncio, pytest-cov
+- **Python Backend**: pytest, pytest-asyncio, pytest-cov
+- **Java Backend**: JUnit 5, Mockito, Spring Boot Test
 - **Frontend**: Jest, React Testing Library
 - **Coverage**: Aim for >80% on critical paths
 
 **Quick Start:**
 ```bash
-# Backend tests
+# Python backend tests
 pytest
+
+# Java backend tests
+cd backend-java && ./gradlew test
 
 # Frontend tests  
 cd frontend && npm test
 
 # With coverage
 pytest --cov=backend
+cd backend-java && ./gradlew test jacocoTestReport
 npm test -- --coverage
 ```
 
@@ -331,6 +336,34 @@ def sample_workflow():
 ```bash
 pytest --cov=backend --cov-report=term-missing
 ```
+
+## Java Backend Testing
+
+The Spring Boot Java backend (`backend-java/`) uses JUnit 5 and Gradle.
+
+### Prerequisites
+
+- Java 17+ (17, 21, 23, or 24 supported)
+- Gradle wrapper included (`./gradlew`)
+
+### Running Tests
+
+```bash
+cd backend-java
+./gradlew test
+```
+
+### With Coverage (JaCoCo)
+
+```bash
+./gradlew test jacocoTestReport
+```
+
+Reports are generated in `build/reports/jacoco/test/html/`.
+
+### Java Version Notes
+
+Lombok 1.18.38 is used for Java 23/24 compatibility. See `backend-java/JAVA_VERSION_AND_MOCKING.md` for details.
 
 ## Frontend Testing
 
