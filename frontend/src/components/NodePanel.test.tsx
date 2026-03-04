@@ -9,6 +9,12 @@ const waitForWithTimeout = (callback: () => void | Promise<void>, timeout = 2000
 import NodePanel from './NodePanel'
 import { logger } from '../utils/logger'
 import type { StorageAdapter } from '../types/adapters'
+import { showSuccess, showError } from '../utils/notifications'
+
+jest.mock('../utils/notifications', () => ({
+  showSuccess: jest.fn(),
+  showError: jest.fn(),
+}))
 
 // Mock logger
 jest.mock('../utils/logger', () => ({
@@ -67,9 +73,43 @@ describe('NodePanel', () => {
     render(<NodePanel />)
 
     const toggleButton = screen.getByText('Agent Nodes').closest('button')
+    // Agent nodes are expanded by default - click to collapse then expand
     fireEvent.click(toggleButton!)
-
+    expect(screen.queryByText('Agent')).not.toBeInTheDocument()
+    fireEvent.click(toggleButton!)
     expect(screen.getByText('Agent')).toBeInTheDocument()
+  })
+
+  it('should show ADK Agent in palette when agent nodes expanded', () => {
+    render(<NodePanel />)
+
+    // Agent nodes are expanded by default
+    expect(screen.getByText('ADK Agent')).toBeInTheDocument()
+    expect(screen.getByText(/Google ADK agent/)).toBeInTheDocument()
+  })
+
+  it('should handle drag start for ADK Agent with agent_type and adk_config', () => {
+    render(<NodePanel />)
+
+    const adkAgentNode = screen.getByText('ADK Agent').closest('div')
+    expect(adkAgentNode).toBeDefined()
+
+    const dragEvent = new Event('dragstart') as any
+    dragEvent.dataTransfer = {
+      setData: jest.fn(),
+      effectAllowed: '',
+    }
+
+    fireEvent.dragStart(adkAgentNode!, dragEvent)
+
+    expect(dragEvent.dataTransfer.setData).toHaveBeenCalledWith('application/reactflow', 'agent')
+    expect(dragEvent.dataTransfer.setData).toHaveBeenCalledWith('application/custom-agent', expect.any(String))
+    const customAgentJson = dragEvent.dataTransfer.setData.mock.calls.find(
+      (c: [string, string]) => c[0] === 'application/custom-agent'
+    )?.[1]
+    const parsed = JSON.parse(customAgentJson!)
+    expect(parsed.agent_config).toMatchObject({ agent_type: 'adk', adk_config: { name: 'adk_agent' } })
+    expect(parsed.label).toBe('ADK Agent')
   })
 
   it('should render data nodes category', () => {
@@ -101,9 +141,7 @@ describe('NodePanel', () => {
 
     render(<NodePanel />)
 
-    const toggleButton = screen.getByText('Agent Nodes').closest('button')
-    fireEvent.click(toggleButton!)
-
+    // Agent nodes are expanded by default
     expect(screen.getByText('Custom Agent 1')).toBeInTheDocument()
   })
 
@@ -145,9 +183,7 @@ describe('NodePanel', () => {
 
     render(<NodePanel />)
 
-    const toggleButton = screen.getByText('Agent Nodes').closest('button')
-    fireEvent.click(toggleButton!)
-
+    // Agent nodes are expanded by default
     await waitForWithTimeout(() => {
       const customAgentNode = screen.getByText('Custom Agent').closest('div')
       expect(customAgentNode).toBeDefined()
@@ -172,7 +208,7 @@ describe('NodePanel', () => {
     expect(screen.getByText(/Connect nodes by dragging/)).toBeInTheDocument()
   })
 
-  it('should update custom agent nodes when storage event fires', () => {
+  it('should update custom agent nodes when storage event fires', async () => {
     render(<NodePanel />)
 
     const newNodes = [{ id: 'custom-2', label: 'New Agent' }]
@@ -183,14 +219,13 @@ describe('NodePanel', () => {
 
     window.dispatchEvent(storageEvent)
 
-    const toggleButton = screen.getByText('Agent Nodes').closest('button')
-    fireEvent.click(toggleButton!)
-
-    // Should show updated nodes
-    expect(screen.getByText('New Agent')).toBeInTheDocument()
+    // Agent nodes are expanded by default; wait for state update
+    await waitForWithTimeout(() => {
+      expect(screen.getByText('New Agent')).toBeInTheDocument()
+    })
   })
 
-  it('should handle custom storage event for same-window updates', () => {
+  it('should handle custom storage event for same-window updates', async () => {
     render(<NodePanel />)
 
     const newNodes = [{ id: 'custom-3', label: 'Updated Agent' }]
@@ -199,10 +234,10 @@ describe('NodePanel', () => {
     const customEvent = new Event('customAgentNodesUpdated')
     window.dispatchEvent(customEvent)
 
-    const toggleButton = screen.getByText('Agent Nodes').closest('button')
-    fireEvent.click(toggleButton!)
-
-    expect(screen.getByText('Updated Agent')).toBeInTheDocument()
+    // Agent nodes are expanded by default; wait for state update
+    await waitForWithTimeout(() => {
+      expect(screen.getByText('Updated Agent')).toBeInTheDocument()
+    })
   })
 
   describe('Dependency Injection', () => {
@@ -301,7 +336,7 @@ describe('NodePanel', () => {
       removeEventListenerSpy.mockRestore()
     })
 
-    it('should handle storage event with injected storage', () => {
+    it('should handle storage event with injected storage', async () => {
       const mockStorage: StorageAdapter = {
         getItem: jest.fn()
           .mockReturnValueOnce(null) // Initial load
@@ -314,7 +349,7 @@ describe('NodePanel', () => {
 
       render(<NodePanel storage={mockStorage} />)
 
-      // Simulate storage event
+      // Simulate storage event (uses event.newValue, not getItem)
       const storageEvent = new StorageEvent('storage', {
         key: 'customAgentNodes',
         newValue: JSON.stringify([{ id: 'custom-1', label: 'New Agent' }]),
@@ -322,11 +357,10 @@ describe('NodePanel', () => {
 
       window.dispatchEvent(storageEvent)
 
-      const toggleButton = screen.getByText('Agent Nodes').closest('button')
-      fireEvent.click(toggleButton!)
-
-      // Should show updated nodes
-      expect(screen.getByText('New Agent')).toBeInTheDocument()
+      // Agent nodes are expanded by default; wait for state update
+      await waitForWithTimeout(() => {
+        expect(screen.getByText('New Agent')).toBeInTheDocument()
+      })
     })
   })
 
@@ -428,30 +462,91 @@ describe('NodePanel', () => {
       expect(screen.getByText('Node Palette')).toBeInTheDocument()
     })
 
+    it('should show Import Agent button when agent nodes expanded', () => {
+      render(<NodePanel />)
+
+      expect(screen.getByRole('button', { name: /import agent/i })).toBeInTheDocument()
+    })
+
+    it('should import agent config from JSON file', async () => {
+      const agentConfig = {
+        label: 'Imported ADK Agent',
+        description: 'Test import',
+        agent_config: {
+          agent_type: 'adk',
+          adk_config: { name: 'imported_agent', description: 'From file' },
+          model: 'gemini-1.5-pro',
+        },
+        type: 'agent',
+      }
+      const file = new File([JSON.stringify(agentConfig)], 'agent.json', { type: 'application/json' })
+
+      render(<NodePanel />)
+
+      const fileInput = screen.getByTestId('import-agent-file-input')
+      fireEvent.change(fileInput, { target: { files: [file] } })
+
+      await waitForWithTimeout(() => {
+        expect(showSuccess).toHaveBeenCalledWith(expect.stringContaining('Imported ADK Agent'))
+      })
+
+      expect(screen.getByText('Imported ADK Agent')).toBeInTheDocument()
+    })
+
+    it('should show error when importing invalid JSON', async () => {
+      const file = new File(['invalid json {'], 'agent.json', { type: 'application/json' })
+
+      render(<NodePanel />)
+
+      const fileInput = screen.getByTestId('import-agent-file-input')
+      fireEvent.change(fileInput, { target: { files: [file] } })
+
+      await waitForWithTimeout(() => {
+        expect(showError).toHaveBeenCalled()
+      })
+    })
+
+    it('should show error when importing JSON without agent_config', async () => {
+      const file = new File([JSON.stringify({ label: 'No config' })], 'agent.json', { type: 'application/json' })
+
+      render(<NodePanel />)
+
+      const fileInput = screen.getByTestId('import-agent-file-input')
+      fireEvent.change(fileInput, { target: { files: [file] } })
+
+      await waitForWithTimeout(() => {
+        expect(showError).toHaveBeenCalledWith('Invalid agent config: missing agent_config')
+      })
+    })
+
     it('should handle all categories being expanded', () => {
       render(<NodePanel />)
 
-      // Expand all categories
+      // Expand workflow and data; agent nodes are expanded by default
       const workflowToggle = screen.getByText('Workflow Nodes').closest('button')
-      const agentToggle = screen.getByText('Agent Nodes').closest('button')
       const dataToggle = screen.getByText('Data Nodes').closest('button')
 
       fireEvent.click(workflowToggle!)
-      fireEvent.click(agentToggle!)
       fireEvent.click(dataToggle!)
 
       // All should be visible
       expect(screen.getByText('Start')).toBeInTheDocument()
       expect(screen.getByText('Agent')).toBeInTheDocument()
+      expect(screen.getByText('ADK Agent')).toBeInTheDocument()
       expect(screen.getByText('GCP Bucket')).toBeInTheDocument()
     })
 
     it('should handle all categories being collapsed', () => {
       render(<NodePanel />)
 
-      // All categories start collapsed
+      // Collapse agent nodes (expanded by default)
+      const agentToggle = screen.getByText('Agent Nodes').closest('button')
+      fireEvent.click(agentToggle!)
+
+      // Workflow and data nodes start collapsed; agent nodes now collapsed
       expect(screen.queryByText('Start')).not.toBeInTheDocument()
       expect(screen.queryByText('Agent')).not.toBeInTheDocument()
+      expect(screen.queryByText('ADK Agent')).not.toBeInTheDocument()
       expect(screen.queryByText('GCP Bucket')).not.toBeInTheDocument()
     })
 

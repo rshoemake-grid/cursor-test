@@ -9,6 +9,17 @@ const waitForWithTimeout = (callback: () => void | Promise<void>, timeout = 2000
 import userEvent from '@testing-library/user-event'
 import AgentNodeEditor from './AgentNodeEditor'
 import { type NodeWithData } from '../../types/nodeData'
+import { showSuccess } from '../../utils/notifications'
+
+jest.mock('../../utils/notifications', () => ({
+  showSuccess: jest.fn(),
+}))
+
+// Mock URL.createObjectURL/revokeObjectURL for export test (not available in jsdom)
+const mockCreateObjectURL = jest.fn().mockReturnValue('blob:mock-url')
+const mockRevokeObjectURL = jest.fn()
+global.URL.createObjectURL = mockCreateObjectURL
+global.URL.revokeObjectURL = mockRevokeObjectURL
 
 const mockNode: NodeWithData & { type: 'agent' } = {
   id: 'test-agent',
@@ -170,6 +181,157 @@ describe('AgentNodeEditor', () => {
     )
 
     expect(screen.getByText(/This is a Real LLM Agent/i)).toBeInTheDocument()
+  })
+
+  describe('Agent Type and ADK', () => {
+    it('should show Agent Type dropdown with workflow and ADK options', () => {
+      render(
+        <AgentNodeEditor
+          node={mockNode}
+          availableModels={availableModels}
+          onUpdate={mockOnUpdate}
+          onConfigUpdate={mockOnConfigUpdate}
+        />
+      )
+
+      const agentTypeSelect = screen.getByLabelText(/select agent type/i)
+      expect(agentTypeSelect).toBeInTheDocument()
+      expect(screen.getByRole('option', { name: /workflow agent/i })).toBeInTheDocument()
+      expect(screen.getByRole('option', { name: /adk agent/i })).toBeInTheDocument()
+    })
+
+    it('should show ADK config panel when agent_type is adk', () => {
+      const adkNode: NodeWithData & { type: 'agent' } = {
+        ...mockNode,
+        data: {
+          ...mockNode.data,
+          agent_config: {
+            ...mockNode.data.agent_config!,
+            agent_type: 'adk',
+            adk_config: { name: 'my_adk_agent' },
+          },
+        },
+      }
+
+      render(
+        <AgentNodeEditor
+          node={adkNode}
+          availableModels={availableModels}
+          onUpdate={mockOnUpdate}
+          onConfigUpdate={mockOnConfigUpdate}
+        />
+      )
+
+      expect(screen.getByText(/ADK Configuration/i)).toBeInTheDocument()
+      expect(screen.getByLabelText(/agent name/i)).toBeInTheDocument()
+      expect(screen.getByLabelText(/description/i)).toBeInTheDocument()
+      expect(screen.getByLabelText(/adk tools/i)).toBeInTheDocument()
+      const nameInput = screen.getByPlaceholderText(/e\.g\., assistant_agent/i)
+      expect(nameInput).toHaveValue('my_adk_agent')
+    })
+
+    it('should call onUpdate when switching to ADK agent type', async () => {
+      const user = userEvent.setup()
+      render(
+        <AgentNodeEditor
+          node={mockNode}
+          availableModels={availableModels}
+          onUpdate={mockOnUpdate}
+          onConfigUpdate={mockOnConfigUpdate}
+        />
+      )
+
+      const agentTypeSelect = screen.getByLabelText(/select agent type/i)
+      await user.selectOptions(agentTypeSelect, 'adk')
+
+      expect(mockOnUpdate).toHaveBeenCalledWith('agent_config', expect.objectContaining({
+        agent_type: 'adk',
+      }))
+    })
+
+    it('should call onUpdate when changing ADK name', () => {
+      const adkNode: NodeWithData & { type: 'agent' } = {
+        ...mockNode,
+        data: {
+          ...mockNode.data,
+          agent_config: {
+            ...mockNode.data.agent_config!,
+            agent_type: 'adk',
+            adk_config: {},
+          },
+        },
+      }
+
+      render(
+        <AgentNodeEditor
+          node={adkNode}
+          availableModels={availableModels}
+          onUpdate={mockOnUpdate}
+          onConfigUpdate={mockOnConfigUpdate}
+        />
+      )
+
+      const nameInput = screen.getByPlaceholderText(/e\.g\., assistant_agent/i)
+      fireEvent.change(nameInput, { target: { value: 'test_agent' } })
+
+      expect(mockOnUpdate).toHaveBeenCalledWith('agent_config', expect.objectContaining({
+        adk_config: expect.objectContaining({ name: 'test_agent' }),
+      }))
+    })
+
+    it('should show Instruction label when agent_type is adk', () => {
+      const adkNode: NodeWithData & { type: 'agent' } = {
+        ...mockNode,
+        data: {
+          ...mockNode.data,
+          agent_config: {
+            ...mockNode.data.agent_config!,
+            agent_type: 'adk',
+          },
+        },
+      }
+
+      render(
+        <AgentNodeEditor
+          node={adkNode}
+          availableModels={availableModels}
+          onUpdate={mockOnUpdate}
+          onConfigUpdate={mockOnConfigUpdate}
+        />
+      )
+
+      expect(screen.getByLabelText(/instruction/i)).toBeInTheDocument()
+    })
+  })
+
+  describe('Export Agent Config', () => {
+    it('should render Export Agent Config button', () => {
+      render(
+        <AgentNodeEditor
+          node={mockNode}
+          availableModels={availableModels}
+          onUpdate={mockOnUpdate}
+          onConfigUpdate={mockOnConfigUpdate}
+        />
+      )
+
+      expect(screen.getByRole('button', { name: /export agent config/i })).toBeInTheDocument()
+    })
+
+    it('should call showSuccess when Export is clicked', () => {
+      render(
+        <AgentNodeEditor
+          node={mockNode}
+          availableModels={availableModels}
+          onUpdate={mockOnUpdate}
+          onConfigUpdate={mockOnConfigUpdate}
+        />
+      )
+
+      fireEvent.click(screen.getByRole('button', { name: /export agent config/i }))
+
+      expect(showSuccess).toHaveBeenCalledWith('Agent config exported')
+    })
   })
 
   it('should use default model when agent_config.model is missing', () => {

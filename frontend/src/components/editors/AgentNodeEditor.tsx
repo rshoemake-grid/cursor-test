@@ -4,8 +4,10 @@
  * Follows Single Responsibility Principle
  */
 
-import { useRef, useState, useEffect } from 'react'
+import { useRef, useState, useEffect, useCallback } from 'react'
+import { Download } from 'lucide-react'
 import { NodeWithData } from '../../types/nodeData'
+import { showSuccess } from '../../utils/notifications'
 
 interface AgentNodeEditorProps {
   node: NodeWithData & { type: 'agent' }
@@ -43,12 +45,30 @@ export default function AgentNodeEditor({
   const currentModel = agentConfig.model || (availableModels.length > 0 ? availableModels[0].value : 'gpt-4o-mini')
   const adkConfig = agentConfig.adk_config || {}
 
+  const handleExportConfig = useCallback(() => {
+    const exportData = {
+      label: node.data.label || node.data.name || 'Agent',
+      description: node.data.description || '',
+      agent_config: agentConfig,
+      type: 'agent',
+    }
+    const filename = `${(exportData.label || 'agent').replace(/\s+/g, '-')}-config.json`
+    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = filename
+    a.click()
+    URL.revokeObjectURL(url)
+    showSuccess('Agent config exported')
+  }, [node.data.label, node.data.name, node.data.description, agentConfig])
+
   return (
     <div className="border-t pt-4">
       <h4 className="text-sm font-semibold text-gray-900 mb-3">LLM Agent Configuration</h4>
       
-      {/* Agent Type Selection */}
-      <div className="mb-4">
+      {/* Agent Type Selection - Workflow vs ADK */}
+      <div className="mb-4 p-3 bg-gray-50 border border-gray-200 rounded-lg">
         <label 
           htmlFor="agent-type"
           className="block text-sm font-medium text-gray-700 mb-1"
@@ -319,6 +339,19 @@ export default function AgentNodeEditor({
           When executed, this agent will call OpenAI's API with your configured model and prompt.
           The agent receives data from its inputs and produces output for the next nodes.
         </p>
+      </div>
+
+      {/* Export Agent Config */}
+      <div className="mt-4">
+        <button
+          type="button"
+          onClick={handleExportConfig}
+          className="w-full flex items-center justify-center gap-2 px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-700 bg-white hover:bg-gray-50 focus:ring-2 focus:ring-primary-500 transition-colors"
+          aria-label="Export agent config to JSON file"
+        >
+          <Download className="w-4 h-4" />
+          Export Agent Config
+        </button>
       </div>
     </div>
   )

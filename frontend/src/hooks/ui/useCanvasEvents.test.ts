@@ -222,6 +222,67 @@ describe('useCanvasEvents', () => {
       }
     })
 
+    it('should create node with agent_type and adk_config when dropping ADK agent', () => {
+      mockReactFlowInstanceRef.current.screenToFlowPosition = jest.fn().mockReturnValue({ x: 100, y: 200 })
+
+      const { result } = renderHook(() =>
+        useCanvasEvents({
+          reactFlowInstanceRef: mockReactFlowInstanceRef as any,
+          setNodes: mockSetNodes,
+          setEdges: mockSetEdges,
+          setSelectedNodeId: mockSetSelectedNodeId,
+          notifyModified: mockNotifyModified,
+          clipboard: mockClipboard,
+        })
+      )
+
+      const adkAgentData = {
+        label: 'ADK Agent',
+        agent_config: {
+          agent_type: 'adk',
+          adk_config: { name: 'adk_agent', description: 'Test ADK agent' },
+        },
+      }
+
+      const mockEvent = {
+        preventDefault: jest.fn(),
+        clientX: 150,
+        clientY: 250,
+        dataTransfer: {
+          getData: jest.fn((type: string) => {
+            if (type === 'application/reactflow') return 'agent'
+            if (type === 'application/custom-agent') return JSON.stringify(adkAgentData)
+            return ''
+          }),
+        },
+        currentTarget: {
+          closest: jest.fn().mockReturnValue({
+            getBoundingClientRect: jest.fn().mockReturnValue({ left: 0, top: 0 }),
+          }),
+        },
+      } as unknown as React.DragEvent
+
+      act(() => {
+        result.current.onDrop(mockEvent)
+      })
+
+      expect(mockSetNodes).toHaveBeenCalled()
+      const setNodesCall = mockSetNodes.mock.calls[0][0]
+      const existingNodes: Node[] = []
+      const resultNodes = typeof setNodesCall === 'function' ? setNodesCall(existingNodes) : setNodesCall
+      const newNode = Array.isArray(resultNodes) ? resultNodes[0] : resultNodes
+      expect(newNode.data.label).toBe('ADK Agent')
+      expect(newNode.data.agent_config).toEqual(
+        expect.objectContaining({
+          agent_type: 'adk',
+          adk_config: expect.objectContaining({
+            name: 'adk_agent',
+            description: 'Test ADK agent',
+          }),
+        })
+      )
+    })
+
     it('should handle invalid custom agent data', () => {
       mockReactFlowInstanceRef.current.screenToFlowPosition = jest.fn().mockReturnValue({ x: 100, y: 200 })
 
