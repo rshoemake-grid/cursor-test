@@ -11,6 +11,7 @@ export interface UseMarketplaceSelectionsReturn {
   templateSelection: ReturnType<typeof useSelectionManager<string>>
   agentSelection: ReturnType<typeof useSelectionManager<string>>
   repositoryAgentSelection: ReturnType<typeof useSelectionManager<string>>
+  toolSelection: ReturnType<typeof useSelectionManager<string>>
   clearAllSelections: () => void
   clearSelectionsForTab: (activeTab: string, repositorySubTab?: string) => void
 }
@@ -23,6 +24,7 @@ export function useMarketplaceSelections(): UseMarketplaceSelectionsReturn {
   const templateSelection = useSelectionManager<string>()
   const agentSelection = useSelectionManager<string>()
   const repositoryAgentSelection = useSelectionManager<string>()
+  const toolSelection = useSelectionManager<string>()
 
   /**
    * Clear all selections
@@ -32,6 +34,7 @@ export function useMarketplaceSelections(): UseMarketplaceSelectionsReturn {
     templateSelection.clear()
     agentSelection.clear()
     repositoryAgentSelection.clear()
+    toolSelection.clear()
   }
 
   /**
@@ -41,6 +44,8 @@ export function useMarketplaceSelections(): UseMarketplaceSelectionsReturn {
   const clearSelectionsForTab = (activeTab: string, repositorySubTab?: string) => {
     if (activeTab === 'agents') {
       agentSelection.clear()
+    } else if (activeTab === 'tools') {
+      toolSelection.clear()
     } else if (activeTab === 'repository' || activeTab === 'workflows-of-workflows') {
       if (activeTab === 'repository' && repositorySubTab === 'agents') {
         repositoryAgentSelection.clear()
@@ -54,6 +59,7 @@ export function useMarketplaceSelections(): UseMarketplaceSelectionsReturn {
     templateSelection,
     agentSelection,
     repositoryAgentSelection,
+    toolSelection,
     clearAllSelections,
     clearSelectionsForTab,
   }

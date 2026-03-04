@@ -76,7 +76,14 @@ describe('useMarketplaceData', () => {
       jest.useFakeTimers() // Use fake timers to control setTimeout calls
     }
     mockHttpClient = {
-      get: jest.fn().mockResolvedValue({ json: async () => [] }),
+      get: jest.fn().mockImplementation((url: string) => {
+        // useAgentsData tries API first, then falls back to localStorage on error.
+        // Reject for agents endpoint so tests using mockGetLocalStorageItem get agent data.
+        if (typeof url === 'string' && url.includes('marketplace/agents')) {
+          return Promise.reject(new Error('API unavailable'))
+        }
+        return Promise.resolve({ json: async () => [] })
+      }),
       post: jest.fn().mockResolvedValue({ ok: true, json: async () => ({ nodes: [] }) }),
     }
     mockStorage = {
@@ -119,7 +126,7 @@ describe('useMarketplaceData', () => {
       })
 
       expect(mockHttpClient.get).toHaveBeenCalledWith(
-        expect.stringContaining('http://api.test/templates/')
+        expect.stringContaining('http://api.test/templates')
       )
       expect(result.current.templates).toHaveLength(1)
       expect(result.current.templates[0].id).toBe('template-1')
@@ -3742,7 +3749,8 @@ describe('useMarketplaceData', () => {
           await result.current.fetchTemplates()
         })
 
-        const callUrl = mockHttpClient.get.mock.calls[0][0]
+        const templatesCall = mockHttpClient.get.mock.calls.find((c: any) => String(c[0] || '').includes('templates'))
+        const callUrl = templatesCall ? templatesCall[0] : ''
         expect(callUrl).not.toContain('category=')
         expect(callUrl).toContain('sort_by=popular')
       })
@@ -3774,7 +3782,8 @@ describe('useMarketplaceData', () => {
           await result.current.fetchTemplates()
         })
 
-        const callUrl = mockHttpClient.get.mock.calls[0][0]
+        const templatesCall = mockHttpClient.get.mock.calls.find((c: any) => String(c[0] || '').includes('templates'))
+        const callUrl = templatesCall ? templatesCall[0] : ''
         expect(callUrl).toContain('category=automation')
       })
 
@@ -3805,7 +3814,8 @@ describe('useMarketplaceData', () => {
           await result.current.fetchTemplates()
         })
 
-        const callUrl = mockHttpClient.get.mock.calls[0][0]
+        const templatesCall = mockHttpClient.get.mock.calls.find((c: any) => String(c[0] || '').includes('templates'))
+        const callUrl = templatesCall ? templatesCall[0] : ''
         expect(callUrl).not.toContain('search=')
       })
 
@@ -3836,7 +3846,8 @@ describe('useMarketplaceData', () => {
           await result.current.fetchTemplates()
         })
 
-        const callUrl = mockHttpClient.get.mock.calls[0][0]
+        const templatesCall = mockHttpClient.get.mock.calls.find((c: any) => String(c[0] || '').includes('templates'))
+        const callUrl = templatesCall ? templatesCall[0] : ''
         expect(callUrl).toContain('search=test')
       })
     })

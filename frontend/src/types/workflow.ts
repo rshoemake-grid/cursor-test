@@ -50,6 +50,7 @@ export interface WorkflowNode {
   agent_config?: AgentConfig
   condition_config?: ConditionConfig
   loop_config?: LoopConfig
+  input_config?: Record<string, unknown>
   inputs: InputMapping[]
   position: { x: number; y: number }
 }

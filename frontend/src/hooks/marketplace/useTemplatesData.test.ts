@@ -63,7 +63,7 @@ describe('useTemplatesData', () => {
     const templates = await result.current.fetchTemplates()
 
     expect(mockHttpClient.get).toHaveBeenCalledWith(
-      expect.stringContaining('/templates/?')
+      expect.stringContaining('/templates')
     )
     expect(mockHttpClient.get).toHaveBeenCalledWith(
       expect.stringContaining('category=automation')

@@ -10,8 +10,8 @@
  */
 
 import type { Node } from '@xyflow/react'
-import type { WorkflowNode } from '../types/workflow'
-import { coalesceStringChain, coalesceArray } from './nullCoalescing'
+import type { WorkflowNode, InputMapping } from '../types/workflow'
+import { coalesceArray } from './nullCoalescing'
 
 /**
  * Validates if a value is a non-empty string
@@ -93,17 +93,17 @@ function extractNodeName(nodeData: any): string | null {
  */
 function convertSingleNode(node: Node): WorkflowNode {
   const name = extractNodeName(node.data) ?? ''
-  const inputs = coalesceArray(node.data.inputs, [])
+  const inputs = coalesceArray(node.data.inputs as InputMapping[] | null | undefined, [] as InputMapping[])
   
   return {
     id: node.id,
     type: node.type as any, // NodeType from workflow types
     name,
-    description: node.data.description,
+    description: node.data.description as string | undefined,
     agent_config: (node.data as any).agent_config,
     condition_config: (node.data as any).condition_config,
-    loop_config: node.data.loop_config,
-    input_config: node.data.input_config,
+    loop_config: node.data.loop_config as WorkflowNode['loop_config'],
+    input_config: (node.data as any).input_config,
     inputs,
     position: node.position,
   }

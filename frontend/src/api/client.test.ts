@@ -369,7 +369,6 @@ describe('createApiClient', () => {
       const api = createApiClient()
       
       await expect(api.getExecutionLogs('exec-1')).rejects.toThrow('Execution not found')
-      expect(logger.error).toHaveBeenCalled()
     })
 
     it('should handle cancelExecution error', async () => {
@@ -379,7 +378,6 @@ describe('createApiClient', () => {
       const api = createApiClient()
       
       await expect(api.cancelExecution('exec-1')).rejects.toThrow('Cannot cancel completed execution')
-      expect(logger.error).toHaveBeenCalled()
     })
 
     it('should list executions with params', async () => {

@@ -81,15 +81,16 @@ describe('AnalyticsPage', () => {
     render(<AnalyticsPage />)
 
     expect(screen.getByText('Status Breakdown')).toBeInTheDocument()
-    expect(screen.getByText(/completed/i)).toBeInTheDocument()
-    expect(screen.getByText(/failed/i)).toBeInTheDocument()
+    expect(screen.getAllByText(/completed/i).length).toBeGreaterThan(0)
+    expect(screen.getAllByText(/failed/i).length).toBeGreaterThan(0)
   })
 
   it('should render top workflows section', () => {
     render(<AnalyticsPage />)
 
     expect(screen.getByText('Top Workflows')).toBeInTheDocument()
-    expect(screen.getByText(/workflow-1/i)).toBeInTheDocument()
+    // workflow-1 is displayed as "workflow-..." (first 8 chars) + "2 executions"
+    expect(screen.getByText(/2 execution/)).toBeInTheDocument()
   })
 
   it('should render recent executions section', () => {
@@ -123,7 +124,7 @@ describe('AnalyticsPage', () => {
     render(<AnalyticsPage />)
 
     expect(screen.getByText(/Error:/i)).toBeInTheDocument()
-    expect(screen.getByText('Failed to load')).toBeInTheDocument()
+    expect(screen.getByText(/Failed to load/)).toBeInTheDocument()
   })
 
   it('should render charts when data is available', () => {
@@ -154,7 +155,7 @@ describe('AnalyticsPage', () => {
 
     render(<AnalyticsPage />)
 
-    expect(screen.getByText('0')).toBeInTheDocument()
+    expect(screen.getAllByText('0').length).toBeGreaterThan(0)
     expect(screen.getByText('No workflow data available')).toBeInTheDocument()
   })
 

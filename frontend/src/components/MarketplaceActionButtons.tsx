@@ -12,7 +12,7 @@ interface ActionButtonsProps {
   onLoad?: () => void
   onDelete?: () => void
   onUse?: () => void
-  type: 'workflow' | 'agent'
+  type: 'workflow' | 'agent' | 'tool'
   showDelete?: boolean
 }
 
@@ -29,8 +29,8 @@ export function MarketplaceActionButtons({
     return null
   }
 
-  const typeLabel = type === 'workflow' ? 'Workflow' : 'Agent'
-  const typeLabelPlural = type === 'workflow' ? 'Workflows' : 'Agents'
+  const typeLabel = type === 'workflow' ? 'Workflow' : type === 'tool' ? 'Tool' : 'Agent'
+  const typeLabelPlural = type === 'workflow' ? 'Workflows' : type === 'tool' ? 'Tools' : 'Agents'
 
   return (
     <>

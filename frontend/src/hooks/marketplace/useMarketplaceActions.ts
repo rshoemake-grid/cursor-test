@@ -9,7 +9,7 @@ import { useNavigate } from 'react-router-dom'
 import { showError, showSuccess } from '../../utils/notifications'
 import type { StorageAdapter } from '../../types/adapters'
 import { STORAGE_KEYS } from '../../config/constants'
-import { PENDING_AGENTS_STORAGE_KEY } from '../utils/marketplaceConstants'
+import { PENDING_AGENTS_STORAGE_KEY, PENDING_TOOLS_STORAGE_KEY } from '../utils/marketplaceConstants'
 import { MARKETPLACE_EVENTS } from '../utils/marketplaceEventConstants'
 import { MARKETPLACE_TABS, REPOSITORY_SUB_TABS } from './useMarketplaceTabs'
 
@@ -30,8 +30,14 @@ export interface UseMarketplaceActionsOptions {
     size: number
     clear: () => void
   }
+  toolSelection: {
+    selectedIds: Set<string>
+    size: number
+    clear: () => void
+  }
   agents: any[]
   repositoryAgents: any[]
+  tools: any[]
   storage: StorageAdapter | null
   useTemplate: (templateId: string) => Promise<void>
   deleteSelectedAgents: (ids: Set<string>) => Promise<void>
@@ -43,6 +49,7 @@ export interface UseMarketplaceActionsOptions {
 export interface UseMarketplaceActionsReturn {
   handleLoadWorkflows: () => Promise<void>
   handleUseAgents: () => void
+  handleUseTools: () => void
   handleDeleteAgents: () => Promise<void>
   handleDeleteWorkflows: () => Promise<void>
   handleDeleteRepositoryAgents: () => Promise<void>
@@ -61,8 +68,10 @@ export function useMarketplaceActions(
     templateSelection,
     agentSelection,
     repositoryAgentSelection,
+    toolSelection,
     agents,
     repositoryAgents,
+    tools,
     storage,
     useTemplate: loadTemplate, // Rename to avoid false positive from ESLint hook detection
     deleteSelectedAgents,
@@ -156,6 +165,35 @@ export function useMarketplaceActions(
   ])
 
   /**
+   * Handle adding tools to workflow
+   */
+  const handleUseTools = useCallback(() => {
+    const selectedTools = tools.filter(t => toolSelection.selectedIds.has(t.id))
+    if (!storage) {
+      showError('Storage not available')
+      return
+    }
+    const activeTabId = storage.getItem(STORAGE_KEYS.ACTIVE_TAB)
+    if (!activeTabId) {
+      showError('No active workflow found. Please open a workflow first.')
+      return
+    }
+    const pendingTools = {
+      tabId: activeTabId,
+      tools: selectedTools,
+      timestamp: Date.now()
+    }
+    storage.setItem(PENDING_TOOLS_STORAGE_KEY, JSON.stringify(pendingTools))
+    const event = new CustomEvent(MARKETPLACE_EVENTS.ADD_TOOLS_TO_WORKFLOW, {
+      detail: { tools: selectedTools, tabId: activeTabId }
+    })
+    window.dispatchEvent(event)
+    showSuccess(`${toolSelection.size} tool(s) added to workflow`)
+    toolSelection.clear()
+    setTimeout(() => navigate('/'), 100)
+  }, [tools, toolSelection, storage, navigate])
+
+  /**
    * Handle deleting agents
    * DRY: Extracted from component
    */
@@ -182,6 +220,7 @@ export function useMarketplaceActions(
   return {
     handleLoadWorkflows,
     handleUseAgents,
+    handleUseTools,
     handleDeleteAgents,
     handleDeleteWorkflows,
     handleDeleteRepositoryAgents,

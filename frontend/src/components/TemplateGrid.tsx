@@ -12,7 +12,7 @@ import type { Template, AgentTemplate } from '../hooks/marketplace'
 interface TemplateGridProps {
   items: (Template | AgentTemplate)[]
   selectedIds: Set<string>
-  type: 'template' | 'agent'
+  type: 'template' | 'agent' | 'tool'
   onToggleSelect: (id: string) => void
   onCardClick: (e: React.MouseEvent, id: string) => void
   getDifficultyColor: (difficulty: string) => string

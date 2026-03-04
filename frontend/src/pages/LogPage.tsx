@@ -38,6 +38,11 @@ export interface LogPageProps {
       limit?: number
       offset?: number
     }): Promise<any[]>
+    downloadExecutionLogs(
+      executionId: string,
+      format: 'text' | 'json',
+      params?: { level?: string; node_id?: string }
+    ): Promise<Blob>
   }
 }
 

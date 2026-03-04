@@ -168,7 +168,7 @@ export function safeOnComplete(
     
     // Layer 4: Call with nested try-catch
     try {
-      callbacks.onComplete()
+      callbacks.onComplete?.()
     } catch (e) {
       // Ignore callback execution errors
     }

@@ -144,7 +144,11 @@ export function useNodeOperations({
     while (currentInputs.length <= index) {
       currentInputs.push({})
     }
-    currentInputs[index] = { ...currentInputs[index], [field]: value }
+    const existing = currentInputs[index]
+    currentInputs[index] = {
+      ...(typeof existing === 'object' && existing !== null ? existing : {}),
+      [field]: value,
+    }
     handleUpdate('inputs', currentInputs)
   }, [selectedNode, handleUpdate])
 

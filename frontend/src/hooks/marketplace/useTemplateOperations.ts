@@ -24,7 +24,7 @@ interface UseTemplateOperationsOptions {
   agents: AgentTemplate[]
   templates: Template[]
   workflowsOfWorkflows: Template[]
-  activeTab: 'agents' | 'repository' | 'workflows-of-workflows'
+  activeTab: 'agents' | 'repository' | 'workflows-of-workflows' | 'tools'
   setAgents: React.Dispatch<React.SetStateAction<AgentTemplate[]>>
   setTemplates: React.Dispatch<React.SetStateAction<Template[]>>
   setWorkflowsOfWorkflows: React.Dispatch<React.SetStateAction<Template[]>>

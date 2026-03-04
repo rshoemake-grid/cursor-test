@@ -40,7 +40,12 @@ describe('useMarketplaceData - String Literals', () => {
   beforeEach(() => {
     jest.clearAllMocks()
     mockHttpClient = {
-      get: jest.fn().mockResolvedValue({ json: async () => [] }),
+      get: jest.fn().mockImplementation((url: string) => {
+        if (typeof url === 'string' && url.includes('marketplace/agents')) {
+          return Promise.reject(new Error('API unavailable'))
+        }
+        return Promise.resolve({ json: async () => [] })
+      }),
       post: jest.fn().mockResolvedValue({ ok: true, json: async () => ({ nodes: [] }) }),
     }
     mockStorage = {
@@ -365,9 +370,9 @@ describe('useMarketplaceData - String Literals', () => {
         expect(mockHttpClient.get).toHaveBeenCalled()
       })
 
-      // Verify exact URL path
+      // Verify exact URL path (format is /templates?params not /templates/)
       const callUrl = mockHttpClient.get.mock.calls[0][0]
-      expect(callUrl).toContain('/templates/')
+      expect(callUrl).toContain('/templates')
     })
 
     it('should construct exact URL path "/templates/{id}/use"', async () => {
@@ -564,9 +569,9 @@ describe('useMarketplaceData - String Literals', () => {
         expect(mockHttpClient.get).toHaveBeenCalled()
       })
 
-      // Verify exact URL path (mutation would break)
+      // Verify exact URL path (mutation would break) - format is /templates?params
       const callUrl = mockHttpClient.get.mock.calls[0][0]
-      expect(callUrl).toContain('/templates/')
+      expect(callUrl).toContain('/templates')
       expect(callUrl).not.toContain('/template/') // Singular would be wrong
     })
   })

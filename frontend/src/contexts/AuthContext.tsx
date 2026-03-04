@@ -36,8 +36,9 @@ interface AuthProviderProps {
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children, options }) => {
   // Memoize adapters to prevent recreation on every render
-  const local = useMemo(() => options?.localStorage ?? defaultAdapters.createLocalStorageAdapter(), [options?.localStorage]);
-  const session = useMemo(() => options?.sessionStorage ?? defaultAdapters.createSessionStorageAdapter(), [options?.sessionStorage]);
+  // Use explicit null when passed (for testing "storage not available"), default when undefined
+  const local = useMemo(() => (options?.localStorage !== undefined ? options.localStorage : defaultAdapters.createLocalStorageAdapter()), [options?.localStorage]);
+  const session = useMemo(() => (options?.sessionStorage !== undefined ? options.sessionStorage : defaultAdapters.createSessionStorageAdapter()), [options?.sessionStorage]);
   const httpClient = useMemo(() => options?.httpClient ?? defaultAdapters.createHttpClient(), [options?.httpClient]);
   const apiBaseUrl = options?.apiBaseUrl ?? 'http://localhost:8000/api';
   const injectedLogger = useMemo(() => options?.logger ?? logger, [options?.logger]);

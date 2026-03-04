@@ -21,7 +21,12 @@ describe('useMarketplaceData - useEffect Routing (Phase 4.2)', () => {
   beforeEach(() => {
     jest.clearAllMocks()
     mockHttpClient = {
-      get: jest.fn().mockResolvedValue({ json: async () => [] }),
+      get: jest.fn().mockImplementation((url: string) => {
+        if (typeof url === 'string' && url.includes('marketplace/agents')) {
+          return Promise.reject(new Error('API unavailable'))
+        }
+        return Promise.resolve({ json: async () => [] })
+      }),
       post: jest.fn().mockResolvedValue({ ok: true, json: async () => ({ nodes: [] }) }),
     }
     mockStorage = {
@@ -60,7 +65,7 @@ describe('useMarketplaceData - useEffect Routing (Phase 4.2)', () => {
 
       // Should call: if (activeTab === 'repository') { if (repositorySubTab === 'workflows') { fetchTemplates() } }
       expect(mockHttpClient.get).toHaveBeenCalledWith(
-        expect.stringContaining('/templates/')
+        expect.stringContaining('/templates')
       )
       expect(result.current.templates.length).toBeGreaterThan(0)
     })
@@ -292,7 +297,7 @@ describe('useMarketplaceData - useEffect Routing (Phase 4.2)', () => {
 
       // Should use: repositorySubTab === 'workflows' (strict equality)
       expect(mockHttpClient.get).toHaveBeenCalledWith(
-        expect.stringContaining('/templates/')
+        expect.stringContaining('/templates')
       )
     })
 
@@ -346,8 +351,12 @@ describe('useMarketplaceData - useEffect Routing (Phase 4.2)', () => {
         },
       ]
       mockGetLocalStorageItem.mockReturnValue(agents)
-      mockHttpClient.get.mockResolvedValue({
-        json: async () => [],
+      // Reject agents endpoint so we fall back to localStorage; resolve templates
+      mockHttpClient.get.mockImplementation((url: string) => {
+        if (typeof url === 'string' && url.includes('marketplace/agents')) {
+          return Promise.reject(new Error('API unavailable'))
+        }
+        return Promise.resolve({ json: async () => [] })
       })
 
       const { result, rerender } = renderHook(
@@ -392,7 +401,7 @@ describe('useMarketplaceData - useEffect Routing (Phase 4.2)', () => {
 
       // Should re-run useEffect when activeTab changes
       expect(mockHttpClient.get).toHaveBeenCalledWith(
-        expect.stringContaining('/templates/')
+        expect.stringContaining('/templates')
       )
     })
   })

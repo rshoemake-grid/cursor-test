@@ -15,6 +15,10 @@ import {
   type AgentTemplate
 } from '../utils/agentNodeConversion'
 import {
+  convertToolsToNodes,
+  type ToolTemplate
+} from '../utils/toolNodeConversion'
+import {
   isValidPendingAgents,
   isPendingAgentsValid,
   isPendingAgentsForDifferentTab,
@@ -23,6 +27,7 @@ import {
 } from '../utils/pendingAgentsValidation'
 import {
   PENDING_AGENTS_STORAGE_KEY,
+  PENDING_TOOLS_STORAGE_KEY,
   PENDING_AGENTS
 } from '../utils/marketplaceConstants'
 import { MARKETPLACE_EVENTS } from '../utils/marketplaceEventConstants'
@@ -61,6 +66,36 @@ export function useMarketplaceIntegration({
   logger: injectedLogger = defaultLogger,
 }: UseMarketplaceIntegrationOptions) {
   const isAddingAgentsRef = useRef(false)
+
+  const addToolsToCanvas = useCallback((toolsToAdd: ToolTemplate[]) => {
+    injectedLogger.debug('[useMarketplaceIntegration] addToolsToCanvas called with', toolsToAdd.length, 'tools')
+    isAddingAgentsRef.current = true
+    const currentTabId = tabId
+    const currentWorkflowId = localWorkflowId
+    const currentWorkflowName = localWorkflowName
+    const currentWorkflowDescription = localWorkflowDescription
+    const currentTabIsUnsaved = tabIsUnsaved
+    setNodes((currentNodes) => {
+      const positions = calculateMultipleNodePositions(currentNodes, toolsToAdd.length)
+      const xyPositions: XYPosition[] = positions.map(p => ({ x: p.x, y: p.y }))
+      const newNodes = convertToolsToNodes(toolsToAdd, xyPositions)
+      const updatedNodes = [...currentNodes, ...newNodes]
+      updateDraftStorage(
+        tabDraftsRef,
+        currentTabId,
+        updatedNodes,
+        currentWorkflowId,
+        currentWorkflowName,
+        currentWorkflowDescription,
+        currentTabIsUnsaved,
+        saveDraftsToStorage,
+        injectedLogger
+      )
+      resetFlagAfterDelay(isAddingAgentsRef, injectedLogger)
+      return updatedNodes
+    })
+    notifyModified()
+  }, [tabId, localWorkflowId, localWorkflowName, localWorkflowDescription, tabIsUnsaved, setNodes, notifyModified, tabDraftsRef, saveDraftsToStorage, injectedLogger])
 
   const addAgentsToCanvas = useCallback((agentsToAdd: AgentTemplate[]) => {
     injectedLogger.debug('[useMarketplaceIntegration] addAgentsToCanvas called with', agentsToAdd.length, 'agents')
@@ -135,6 +170,34 @@ export function useMarketplaceIntegration({
       addAgentsToCanvas(agentsToAdd)
     }
     
+    const handleAddToolsToWorkflow = (event: CustomEvent) => {
+      const { tools: toolsToAdd, tabId: targetTabId } = event.detail
+      if (targetTabId !== tabId) return
+      addToolsToCanvas(toolsToAdd)
+    }
+
+    const checkPendingTools = () => {
+      if (!storage) return
+      try {
+        const pendingData = storage.getItem(PENDING_TOOLS_STORAGE_KEY)
+        if (pendingData) {
+          const parsed = JSON.parse(pendingData)
+          if (parsed?.tabId === tabId && Array.isArray(parsed?.tools) && parsed.tools.length > 0) {
+            const age = Date.now() - (parsed.timestamp || 0)
+            if (age < PENDING_AGENTS.MAX_AGE) {
+              addToolsToCanvas(parsed.tools)
+              storage.removeItem(PENDING_TOOLS_STORAGE_KEY)
+            } else {
+              storage.removeItem(PENDING_TOOLS_STORAGE_KEY)
+            }
+          }
+        }
+      } catch (e) {
+        injectedLogger.error('Failed to process pending tools:', e)
+        storage.removeItem(PENDING_TOOLS_STORAGE_KEY)
+      }
+    }
+
     // Check storage for pending agents (more reliable than events)
     const checkPendingAgents = () => {
       // Explicit null/undefined check to prevent mutation survivors
@@ -201,29 +264,31 @@ export function useMarketplaceIntegration({
     
     // Check immediately when tab becomes active
     checkPendingAgents()
+    checkPendingTools()
     
     // Also listen for events
-    // Explicit boolean check to prevent mutation survivors
     const isBrowser = typeof window !== 'undefined'
     if (isBrowser === true) {
       window.addEventListener(MARKETPLACE_EVENTS.ADD_AGENTS_TO_WORKFLOW, handleAddAgentsToWorkflow as EventListener)
+      window.addEventListener(MARKETPLACE_EVENTS.ADD_TOOLS_TO_WORKFLOW, handleAddToolsToWorkflow as EventListener)
     }
     
-    // Use extracted polling service - mutation-resistant and DRY
     const { cleanup: cleanupPolling } = createPendingAgentsPolling(
-      checkPendingAgents,
+      () => {
+        checkPendingAgents()
+        checkPendingTools()
+      },
       injectedLogger
     )
     
     return () => {
-      // Explicit boolean check to prevent mutation survivors
-      const isBrowser = typeof window !== 'undefined'
       if (isBrowser === true) {
         window.removeEventListener(MARKETPLACE_EVENTS.ADD_AGENTS_TO_WORKFLOW, handleAddAgentsToWorkflow as EventListener)
+        window.removeEventListener(MARKETPLACE_EVENTS.ADD_TOOLS_TO_WORKFLOW, handleAddToolsToWorkflow as EventListener)
       }
       cleanupPolling()
     }
-  }, [tabId, storage, addAgentsToCanvas, injectedLogger])
+  }, [tabId, storage, addAgentsToCanvas, addToolsToCanvas, injectedLogger])
 
   return {
     isAddingAgentsRef,

@@ -4,7 +4,7 @@
  * Single Responsibility: Only validates tab and loading state logic
  */
 
-export type ActiveTab = 'agents' | 'repository' | 'workflows-of-workflows'
+export type ActiveTab = 'agents' | 'repository' | 'workflows-of-workflows' | 'tools'
 export type RepositorySubTab = 'workflows' | 'agents'
 
 /**
@@ -90,13 +90,14 @@ export function shouldLoadWorkflowsOfWorkflows(activeTab: ActiveTab): boolean {
  * Defensive: Falls back to agents if no valid tab matches (SOLID: Defensive Programming)
  */
 export function shouldLoadAgents(activeTab: ActiveTab): boolean {
-  // Exact match for agents tab
-  if (isAgentsTab(activeTab)) {
-    return true
-  }
-  // Defensive fallback: If activeTab doesn't match any valid tab, load agents as default
-  // This handles edge cases like 'Repository' (capital R) or other invalid values
-  return !isRepositoryTab(activeTab) && !isWorkflowsOfWorkflowsTab(activeTab)
+  return isAgentsTab(activeTab)
+}
+
+/**
+ * Determine if tools should be loaded based on tab state
+ */
+export function shouldLoadTools(activeTab: ActiveTab): boolean {
+  return activeTab === 'tools'
 }
 
 /**
@@ -109,7 +110,8 @@ export function calculateLoadingState(
   templatesLoading: boolean,
   repositoryAgentsLoading: boolean,
   workflowsOfWorkflowsLoading: boolean,
-  agentsLoading: boolean
+  agentsLoading: boolean,
+  toolsLoading?: boolean
 ): boolean {
   if (shouldLoadTemplates(activeTab, repositorySubTab)) {
     return templatesLoading
@@ -119,6 +121,9 @@ export function calculateLoadingState(
   }
   if (shouldLoadWorkflowsOfWorkflows(activeTab)) {
     return workflowsOfWorkflowsLoading
+  }
+  if (shouldLoadTools(activeTab)) {
+    return toolsLoading ?? false
   }
   if (shouldLoadAgents(activeTab)) {
     return agentsLoading

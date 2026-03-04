@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { X, Upload, Bot, Workflow } from 'lucide-react'
+import { X, Upload, Bot, Workflow, Wrench } from 'lucide-react'
 import { showSuccess, showError } from '../utils/notifications'
 import { api } from '../api/client'
 import { useAuth } from '../contexts/AuthContext'
@@ -20,7 +20,7 @@ interface MarketplaceDialogProps {
   httpClient?: HttpClient
 }
 
-type TabType = 'agents' | 'workflows'
+type TabType = 'agents' | 'workflows' | 'tools'
 
 import { TEMPLATE_CATEGORIES, TEMPLATE_DIFFICULTIES, formatCategory, formatDifficulty } from '../config/templateConstants'
 // Domain-based imports - Phase 7
@@ -37,7 +37,9 @@ export default function MarketplaceDialog({
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   httpClient: _httpClient = defaultAdapters.createHttpClient()
 }: MarketplaceDialogProps) {
-  const [activeTab, setActiveTab] = useState<TabType>('agents')
+  const [activeTab, setActiveTab] = useState<TabType>(() => 
+    node?.type === 'tool' ? 'tools' : 'agents'
+  )
   const [isPublishing, setIsPublishing] = useState(false)
   const publishFormHook = usePublishForm()
   const { isAuthenticated, user } = useAuth()
@@ -45,17 +47,29 @@ export default function MarketplaceDialog({
   // Update form when dialog opens or node changes
   useEffect(() => {
     if (isOpen && node) {
+      const defaultName = node.type === 'tool' 
+        ? (node.data?.label || node.data?.name || 'Untitled Tool')
+        : (node.data?.label || node.data?.name || 'Untitled Agent')
       publishFormHook.updateForm({
         category: 'automation',
         tags: '',
         difficulty: 'beginner',
         estimated_time: '',
-        name: node.data?.label || node.data?.name || 'Untitled Agent',
+        name: defaultName,
         description: node.data?.description || ''
       })
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, node]) // Only depend on isOpen and node, not publishFormHook (updateForm is stable)
+
+  // Reset active tab when node type changes
+  useEffect(() => {
+    if (isOpen && node?.type === 'tool') {
+      setActiveTab('tools')
+    } else if (isOpen && activeTab === 'tools' && node?.type !== 'tool') {
+      setActiveTab('agents')
+    }
+  }, [isOpen, node?.type, activeTab])
 
   if (!isOpen) return null
 
@@ -167,9 +181,55 @@ export default function MarketplaceDialog({
     }
   }
 
+  const handlePublishTool = async () => {
+    if (!node || node.type !== 'tool') {
+      showError('Invalid tool node')
+      return
+    }
+    if (!isAuthenticated) {
+      showError('Please sign in to publish to the marketplace')
+      return
+    }
+    setIsPublishing(true)
+    try {
+      const tagsArray = publishFormHook.form.tags.split(',').map((t: string) => t.trim()).filter((t: string) => t)
+      // Save to localStorage (backend API can be added when available)
+      if (storage) {
+        const toolTemplate = {
+          id: `tool_${Date.now()}`,
+          name: publishFormHook.form.name,
+          label: publishFormHook.form.name,
+          description: publishFormHook.form.description,
+          category: publishFormHook.form.category,
+          tags: tagsArray,
+          difficulty: publishFormHook.form.difficulty,
+          estimated_time: publishFormHook.form.estimated_time || '5 min',
+          tool_config: node.data.tool_config || { tool_name: 'calculator' },
+          type: 'tool',
+          published_at: new Date().toISOString(),
+          author_id: user?.id || null,
+          author_name: user?.username || user?.email || null,
+          is_official: false,
+        }
+        const publishedTools = storage.getItem(STORAGE_KEYS.PUBLISHED_TOOLS)
+        const tools = publishedTools ? JSON.parse(publishedTools) : []
+        tools.push(toolTemplate)
+        storage.setItem(STORAGE_KEYS.PUBLISHED_TOOLS, JSON.stringify(tools))
+      }
+      showSuccess('Tool published to marketplace successfully!')
+      onClose()
+    } catch (error: any) {
+      showError('Failed to publish tool: ' + (error?.message || 'Unknown error'))
+    } finally {
+      setIsPublishing(false)
+    }
+  }
+
   const handlePublish = () => {
     if (activeTab === 'agents') {
       handlePublishAgent()
+    } else if (activeTab === 'tools') {
+      handlePublishTool()
     } else {
       handlePublishWorkflow()
     }
@@ -220,11 +280,77 @@ export default function MarketplaceDialog({
             <Workflow className="w-5 h-5" />
             Workflows
           </button>
+          <button
+            onClick={() => setActiveTab('tools')}
+            className={`flex-1 px-6 py-4 text-sm font-medium flex items-center justify-center gap-2 transition-colors ${
+              activeTab === 'tools'
+                ? 'text-primary-600 border-b-2 border-primary-600 bg-primary-50'
+                : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+            }`}
+          >
+            <Wrench className="w-5 h-5" />
+            Tools
+          </button>
         </div>
 
         {/* Content */}
         <div className="flex-1 overflow-y-auto p-6">
-          {activeTab === 'agents' ? (
+          {activeTab === 'tools' ? (
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Tool Name
+                </label>
+                <input
+                  type="text"
+                  value={publishFormHook.form.name}
+                  onChange={(e) => publishFormHook.updateField('name', e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+                  placeholder="Enter tool name"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Description
+                </label>
+                <textarea
+                  value={publishFormHook.form.description}
+                  onChange={(e) => publishFormHook.updateField('description', e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+                  rows={3}
+                  placeholder="Describe what this tool does..."
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Category
+                </label>
+                <select
+                  value={publishFormHook.form.category}
+                  onChange={(e) => publishFormHook.updateField('category', e.target.value as any)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+                >
+                  {TEMPLATE_CATEGORIES.map(cat => (
+                    <option key={cat} value={cat}>
+                      {formatCategory(cat).split(' ').map((w: string) => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Tags (comma-separated)
+                </label>
+                <input
+                  type="text"
+                  value={publishFormHook.form.tags}
+                  onChange={(e) => publishFormHook.updateField('tags', e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+                  placeholder="e.g., calculator, search, automation"
+                />
+              </div>
+            </div>
+          ) : activeTab === 'agents' ? (
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -406,7 +532,7 @@ export default function MarketplaceDialog({
           </button>
           <button
             onClick={handlePublish}
-            disabled={isPublishing || (activeTab === 'agents' && !publishFormHook.form.name)}
+            disabled={isPublishing || ((activeTab === 'agents' || activeTab === 'tools') && !publishFormHook.form.name)}
             className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 transition-colors"
           >
             {isPublishing ? (

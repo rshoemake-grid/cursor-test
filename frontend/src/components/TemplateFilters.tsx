@@ -8,7 +8,7 @@ interface TemplateFiltersProps {
   category: string
   searchQuery: string
   sortBy: string
-  activeTab: 'agents' | 'repository' | 'workflows-of-workflows'
+  activeTab: 'agents' | 'repository' | 'workflows-of-workflows' | 'tools'
   onCategoryChange: (category: string) => void
   onSearchChange: (query: string) => void
   onSortChange: (sortBy: string) => void

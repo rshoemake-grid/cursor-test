@@ -17,8 +17,8 @@ export function convertNodesForExecutionInput(nodes: Node[]): WorkflowNode[] {
     // Use validation helper to extract valid strings (DRY - eliminates duplication)
     // Type assertion needed as node.data is typed as Record<string, unknown>
     const nodeData = node.data as Record<string, unknown>
-    const nameValue = isNonEmptyString(nodeData.name) ? nodeData.name as string : null
-    const labelValue = isNonEmptyString(nodeData.label) ? nodeData.label as string : null
+    const nameValue = isNonEmptyString(nodeData.name as string | null | undefined) ? nodeData.name as string : null
+    const labelValue = isNonEmptyString(nodeData.label as string | null | undefined) ? nodeData.label as string : null
     
     // Use coalesceStringChain to kill ConditionalExpression mutations
     const name = coalesceStringChain('', nameValue, labelValue)
@@ -35,7 +35,7 @@ export function convertNodesForExecutionInput(nodes: Node[]): WorkflowNode[] {
       agent_config: nodeData.agent_config as WorkflowNode['agent_config'],
       condition_config: nodeData.condition_config as WorkflowNode['condition_config'],
       loop_config: nodeData.loop_config as WorkflowNode['loop_config'],
-      input_config: nodeData.input_config,
+      input_config: nodeData.input_config as Record<string, unknown> | undefined,
       inputs,
       position: node.position,
     }

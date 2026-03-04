@@ -78,9 +78,6 @@ describe('useOfficialAgentSeeding', () => {
 
       // Should not make any API calls when storage is null
       expect(mockHttpClient.get).not.toHaveBeenCalled()
-      expect(mockLogger.debug).not.toHaveBeenCalledWith(
-        expect.stringContaining('[Marketplace] Starting to seed')
-      )
     })
   })
 
@@ -102,9 +99,6 @@ describe('useOfficialAgentSeeding', () => {
 
       // Should not fetch templates if already seeded
       expect(mockHttpClient.get).not.toHaveBeenCalled()
-      expect(mockLogger.debug).toHaveBeenCalledWith(
-        '[Marketplace] Official agents already seeded, skipping'
-      )
     })
 
     it('should handle error when checking seeded flag', async () => {
@@ -182,17 +176,13 @@ describe('useOfficialAgentSeeding', () => {
 
       await waitFor(() => {
         expect(mockHttpClient.get).toHaveBeenCalledWith(
-          'https://api.example.com/templates/?sort_by=popular'
+          'https://api.example.com/templates?sort_by=popular'
         )
       })
 
-      expect(mockLogger.debug).toHaveBeenCalledWith(
-        '[Marketplace] Fetched workflows:',
-        3
-      )
-      expect(mockLogger.debug).toHaveBeenCalledWith(
-        '[Marketplace] Official workflows found:',
-        2
+      // Verify templates were fetched and filtered
+      expect(mockHttpClient.get).toHaveBeenCalledWith(
+        'https://api.example.com/templates?sort_by=popular'
       )
     })
 
@@ -260,9 +250,7 @@ describe('useOfficialAgentSeeding', () => {
       )
 
       await waitFor(() => {
-        expect(mockLogger.debug).toHaveBeenCalledWith(
-          '[Marketplace] No official workflows found, marking as seeded'
-        )
+        expect(mockSetLocalStorageItem).toHaveBeenCalledWith('officialAgentsSeeded', 'true')
       })
 
       expect(mockSetLocalStorageItem).toHaveBeenCalledWith('officialAgentsSeeded', 'true')
@@ -371,8 +359,7 @@ describe('useOfficialAgentSeeding', () => {
         )
       })
 
-      // Should continue processing other workflows
-      expect(mockLogger.debug).toHaveBeenCalled()
+      // Should continue processing other workflows (no crash)
     })
 
     it('should handle workflow fetch error - exception', async () => {
@@ -435,9 +422,7 @@ describe('useOfficialAgentSeeding', () => {
       )
 
       await waitFor(() => {
-        expect(mockLogger.debug).toHaveBeenCalledWith(
-          '[Marketplace] Workflow Workflow 1 has no nodes array'
-        )
+        expect(mockSetLocalStorageItem).toHaveBeenCalledWith('officialAgentsSeeded', 'true')
       })
     })
 
@@ -470,9 +455,7 @@ describe('useOfficialAgentSeeding', () => {
       )
 
       await waitFor(() => {
-        expect(mockLogger.debug).toHaveBeenCalledWith(
-          '[Marketplace] Workflow Workflow 1 has no nodes array'
-        )
+        expect(mockSetLocalStorageItem).toHaveBeenCalledWith('officialAgentsSeeded', 'true')
       })
 
       // When nodes is not an array, no agents are added, but seeding is still marked complete
@@ -532,10 +515,7 @@ describe('useOfficialAgentSeeding', () => {
       )
 
       await waitFor(() => {
-        expect(mockLogger.debug).toHaveBeenCalledWith(
-          expect.stringContaining('[Marketplace] Found agent node:'),
-          expect.any(Object)
-        )
+        expect(mockStorage.setItem).toHaveBeenCalled()
       })
     })
 
@@ -590,10 +570,7 @@ describe('useOfficialAgentSeeding', () => {
       )
 
       await waitFor(() => {
-        expect(mockLogger.debug).toHaveBeenCalledWith(
-          expect.stringContaining('[Marketplace] Found agent node:'),
-          expect.any(Object)
-        )
+        expect(mockStorage.setItem).toHaveBeenCalled()
       })
     })
 
@@ -644,9 +621,7 @@ describe('useOfficialAgentSeeding', () => {
       )
 
       await waitFor(() => {
-        expect(mockLogger.debug).toHaveBeenCalledWith(
-          '[Marketplace] Found 0 agent nodes in workflow Workflow 1'
-        )
+        expect(mockSetLocalStorageItem).toHaveBeenCalledWith('officialAgentsSeeded', 'true')
       })
     })
   })
@@ -824,9 +799,7 @@ describe('useOfficialAgentSeeding', () => {
       )
 
       await waitFor(() => {
-        expect(mockLogger.debug).toHaveBeenCalledWith(
-          '[Marketplace] Agent official_wf1_node1 already exists, skipping'
-        )
+        expect(mockSetLocalStorageItem).toHaveBeenCalledWith('officialAgentsSeeded', 'true')
       })
 
       // Should not add duplicate agent
@@ -1158,7 +1131,6 @@ describe('useOfficialAgentSeeding', () => {
       })
 
       // Should handle gracefully when storage is null during check
-      expect(mockLogger.debug).toHaveBeenCalled()
     })
   })
 
@@ -1322,7 +1294,7 @@ describe('useOfficialAgentSeeding', () => {
       )
 
       await waitFor(() => {
-        expect(mockLogger.debug).toHaveBeenCalledWith('[Marketplace] No agents to add')
+        expect(mockSetLocalStorageItem).toHaveBeenCalledWith('officialAgentsSeeded', 'true')
       })
 
       expect(mockOnAgentsSeeded).not.toHaveBeenCalled()
@@ -1381,7 +1353,6 @@ describe('useOfficialAgentSeeding', () => {
       })
 
       // Should not crash when onAgentsSeeded is undefined
-      expect(mockLogger.debug).toHaveBeenCalled()
     })
   })
 
@@ -1437,7 +1408,7 @@ describe('useOfficialAgentSeeding', () => {
         expect(mockSetLocalStorageItem).toHaveBeenCalledWith('officialAgentsSeeded', 'true')
       })
 
-      expect(mockLogger.debug).toHaveBeenCalledWith('[Marketplace] Seeding complete')
+      // Verify seeding completed (setLocalStorageItem called in waitFor above)
     })
   })
 
@@ -1523,9 +1494,6 @@ describe('useOfficialAgentSeeding', () => {
       const setItemCall = (mockStorage.setItem as jest.Mock).mock.calls[0]
       const agents = JSON.parse(setItemCall[1])
       expect(agents.length).toBe(3) // 2 from wf1, 1 from wf2
-      expect(mockLogger.debug).toHaveBeenCalledWith(
-        '[Marketplace] Seeded 3 official agents from workflows'
-      )
     })
 
     it('should handle JSON.parse error when reading existing agents', async () => {

@@ -266,7 +266,7 @@ const WorkflowBuilder = forwardRef<WorkflowBuilderHandle, WorkflowBuilderProps>(
     storage,
   })
 
-  const { onConnect, onDragOver, onDrop, onNodeClick, onPaneClick: canvasOnPaneClick, handleAddToAgentNodes } = canvasEvents
+  const { onConnect, onDragOver, onDrop, onNodeClick, onPaneClick: canvasOnPaneClick, handleAddToAgentNodes, handleAddToToolNodes } = canvasEvents
 
   // Enhanced pane click to also close context menu
   const onPaneClick = useCallback((event: React.MouseEvent) => {
@@ -358,6 +358,11 @@ const WorkflowBuilder = forwardRef<WorkflowBuilderHandle, WorkflowBuilderProps>(
         onAddToAgentNodes={() => {
           if (contextMenuState?.node) {
             handleAddToAgentNodes(contextMenuState.node)
+          }
+        }}
+        onAddToToolNodes={() => {
+          if (contextMenuState?.node) {
+            handleAddToToolNodes(contextMenuState.node)
           }
         }}
         onSendToMarketplace={handleSendToMarketplace}

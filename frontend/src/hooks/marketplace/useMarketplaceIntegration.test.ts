@@ -1032,8 +1032,9 @@ describe('useMarketplaceIntegration', () => {
       })
 
       // After 10 checks, interval should be cleared
-      // Verify checkPendingAgents was called multiple times
-      expect(mockStorage.getItem).toHaveBeenCalledTimes(11) // Initial check + 10 interval checks
+      // Each polling tick calls checkPendingAgents + checkPendingTools (2 getItem calls each)
+      // 1 initial + 10 intervals = 11 ticks, 2 getItem per tick = 22 calls
+      expect(mockStorage.getItem).toHaveBeenCalledTimes(22)
     })
 
     it('should verify cleanup removes event listener', () => {
@@ -4220,18 +4221,17 @@ describe('useMarketplaceIntegration', () => {
         }
 
         // Verify exact boundary: checkCount >= maxChecks (10 >= 10 is true)
-        // Total calls: 1 initial + 10 intervals = 11 calls
-        // After the 10th interval call, checkCount === 10, so interval is cleared
-        expect(mockStorage.getItem).toHaveBeenCalledTimes(11)
+        // Each polling tick calls checkPendingAgents + checkPendingTools (2 getItem each)
+        // 1 initial + 10 intervals = 11 ticks, 2 getItem per tick = 22 calls
+        expect(mockStorage.getItem).toHaveBeenCalledTimes(22)
         
         // Advance one more time - should not call again (interval cleared at checkCount === 10)
         act(() => {
           jest.advanceTimersByTime(1000)
         })
         
-        // Should still be 11 calls (not 12) because interval was cleared
-        // This verifies the exact comparison: checkCount >= maxChecks (10 >= 10 is true)
-        expect(mockStorage.getItem).toHaveBeenCalledTimes(11)
+        // Should still be 22 calls (not 24) because interval was cleared
+        expect(mockStorage.getItem).toHaveBeenCalledTimes(22)
       })
     })
   })

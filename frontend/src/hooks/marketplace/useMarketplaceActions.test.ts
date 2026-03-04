@@ -7,7 +7,7 @@ import { renderHook, act } from '@testing-library/react'
 import { useMarketplaceActions } from './useMarketplaceActions'
 import { showError, showSuccess } from '../../utils/notifications'
 import { STORAGE_KEYS } from '../../config/constants'
-import { PENDING_AGENTS_STORAGE_KEY } from '../utils/marketplaceConstants'
+import { PENDING_AGENTS_STORAGE_KEY, PENDING_TOOLS_STORAGE_KEY } from '../utils/marketplaceConstants'
 import { MARKETPLACE_EVENTS } from '../utils/marketplaceEventConstants'
 import { MARKETPLACE_TABS, REPOSITORY_SUB_TABS } from './useMarketplaceTabs'
 
@@ -60,6 +60,14 @@ describe('useMarketplaceActions', () => {
     clear: jest.fn(),
   }
 
+  const mockToolSelection = {
+    selectedIds: new Set<string>(),
+    get size() {
+      return this.selectedIds.size
+    },
+    clear: jest.fn(),
+  }
+
   const mockAgents = [
     { id: 'agent-1', name: 'Agent 1' },
     { id: 'agent-2', name: 'Agent 2' },
@@ -70,14 +78,21 @@ describe('useMarketplaceActions', () => {
     { id: 'repo-agent-2', name: 'Repo Agent 2' },
   ]
 
+  const mockTools = [
+    { id: 'tool-1', name: 'Calculator', tool_config: { tool_name: 'calculator' } },
+    { id: 'tool-2', name: 'Web Search', tool_config: { tool_name: 'web_search' } },
+  ]
+
   const defaultOptions = {
     activeTab: MARKETPLACE_TABS.AGENTS,
     repositorySubTab: REPOSITORY_SUB_TABS.WORKFLOWS,
     templateSelection: mockTemplateSelection,
     agentSelection: mockAgentSelection,
     repositoryAgentSelection: mockRepositoryAgentSelection,
+    toolSelection: mockToolSelection,
     agents: mockAgents,
     repositoryAgents: mockRepositoryAgents,
+    tools: mockTools,
     storage: mockStorage as any,
     useTemplate: mockUseTemplate,
     deleteSelectedAgents: mockDeleteSelectedAgents,
@@ -92,9 +107,11 @@ describe('useMarketplaceActions', () => {
     mockTemplateSelection.selectedIds.clear()
     mockAgentSelection.selectedIds.clear()
     mockRepositoryAgentSelection.selectedIds.clear()
+    mockToolSelection.selectedIds.clear()
     mockTemplateSelection.clear.mockClear()
     mockAgentSelection.clear.mockClear()
     mockRepositoryAgentSelection.clear.mockClear()
+    mockToolSelection.clear.mockClear()
     mockStorage.getItem.mockReset()
     mockStorage.setItem.mockReset()
     jest.useFakeTimers()
@@ -121,6 +138,7 @@ describe('useMarketplaceActions', () => {
       expect(result.current).not.toBeNull()
       expect(result.current.handleLoadWorkflows).toBeDefined()
       expect(result.current.handleUseAgents).toBeDefined()
+      expect(result.current.handleUseTools).toBeDefined()
       expect(result.current.handleDeleteAgents).toBeDefined()
       expect(result.current.handleDeleteWorkflows).toBeDefined()
       expect(result.current.handleDeleteRepositoryAgents).toBeDefined()
@@ -307,6 +325,94 @@ describe('useMarketplaceActions', () => {
       expect(event.type).toBe(MARKETPLACE_EVENTS.ADD_AGENTS_TO_WORKFLOW)
       expect(event.detail.tabId).toBe('tab-123')
       expect(event.detail.agents).toEqual([mockAgents[0]])
+
+      dispatchEventSpy.mockRestore()
+    })
+  })
+
+  describe('handleUseTools', () => {
+    it('should add selected tools to workflow', () => {
+      mockToolSelection.selectedIds.add('tool-1')
+      mockToolSelection.selectedIds.add('tool-2')
+      mockStorage.getItem.mockReturnValue('tab-123')
+
+      const { result } = renderHook(() => useMarketplaceActions(defaultOptions))
+      expect(result.current).not.toBeNull()
+
+      act(() => {
+        result.current.handleUseTools()
+      })
+
+      act(() => {
+        jest.advanceTimersByTime(100)
+      })
+
+      expect(mockStorage.getItem).toHaveBeenCalledWith(STORAGE_KEYS.ACTIVE_TAB)
+      expect(mockStorage.setItem).toHaveBeenCalledWith(
+        PENDING_TOOLS_STORAGE_KEY,
+        expect.stringContaining('"tabId":"tab-123"')
+      )
+      expect(mockShowSuccess).toHaveBeenCalledWith('2 tool(s) added to workflow')
+      expect(mockToolSelection.clear).toHaveBeenCalled()
+      expect(mockNavigate).toHaveBeenCalledWith('/')
+    })
+
+    it('should show error when storage is not available', () => {
+      const options = {
+        ...defaultOptions,
+        storage: null,
+      }
+
+      const { result } = renderHook(() => useMarketplaceActions(options))
+      expect(result.current).not.toBeNull()
+
+      act(() => {
+        result.current.handleUseTools()
+      })
+
+      expect(mockShowError).toHaveBeenCalledWith('Storage not available')
+      expect(mockStorage.setItem).not.toHaveBeenCalled()
+    })
+
+    it('should show error when no active workflow tab', () => {
+      mockToolSelection.selectedIds.add('tool-1')
+      mockStorage.getItem.mockReturnValue(null)
+
+      const { result } = renderHook(() => useMarketplaceActions(defaultOptions))
+      expect(result.current).not.toBeNull()
+
+      act(() => {
+        result.current.handleUseTools()
+      })
+
+      expect(mockShowError).toHaveBeenCalledWith('No active workflow found. Please open a workflow first.')
+      expect(mockStorage.setItem).not.toHaveBeenCalled()
+    })
+
+    it('should dispatch ADD_TOOLS_TO_WORKFLOW event', () => {
+      mockToolSelection.selectedIds.add('tool-1')
+      mockStorage.getItem.mockReturnValue('tab-123')
+      const dispatchEventSpy = jest.spyOn(window, 'dispatchEvent')
+
+      const { result } = renderHook(() => useMarketplaceActions(defaultOptions))
+      expect(result.current).not.toBeNull()
+
+      act(() => {
+        result.current.handleUseTools()
+      })
+
+      act(() => {
+        jest.advanceTimersByTime(100)
+      })
+
+      expect(dispatchEventSpy).toHaveBeenCalled()
+      const event = dispatchEventSpy.mock.calls.find(
+        call => (call[0] as CustomEvent).type === MARKETPLACE_EVENTS.ADD_TOOLS_TO_WORKFLOW
+      )
+      expect(event).toBeDefined()
+      const eventDetail = (event![0] as CustomEvent).detail
+      expect(eventDetail.tabId).toBe('tab-123')
+      expect(eventDetail.tools).toEqual([mockTools[0]])
 
       dispatchEventSpy.mockRestore()
     })

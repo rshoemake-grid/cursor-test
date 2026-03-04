@@ -113,7 +113,7 @@ export default function AgentNodeEditor({
             <input
               id="adk-name"
               type="text"
-              value={adkConfig.name || ''}
+              value={typeof adkConfig.name === 'string' ? adkConfig.name : ''}
               onChange={(e) =>
                 onUpdate('agent_config', {
                   ...agentConfig,
@@ -140,7 +140,7 @@ export default function AgentNodeEditor({
             <input
               id="adk-description"
               type="text"
-              value={adkConfig.description || ''}
+              value={typeof adkConfig.description === 'string' ? adkConfig.description : ''}
               onChange={(e) =>
                 onUpdate('agent_config', {
                   ...agentConfig,
@@ -166,7 +166,7 @@ export default function AgentNodeEditor({
             <input
               id="adk-tools"
               type="text"
-              value={adkConfig.adk_tools?.join(', ') || ''}
+              value={Array.isArray(adkConfig.adk_tools) ? adkConfig.adk_tools.join(', ') : ''}
               onChange={(e) =>
                 onUpdate('agent_config', {
                   ...agentConfig,

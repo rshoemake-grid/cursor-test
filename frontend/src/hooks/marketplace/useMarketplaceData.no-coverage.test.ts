@@ -21,7 +21,12 @@ describe('useMarketplaceData - No Coverage Mutants (Phase 4)', () => {
   beforeEach(() => {
     jest.clearAllMocks()
     mockHttpClient = {
-      get: jest.fn().mockResolvedValue({ json: async () => [] }),
+      get: jest.fn().mockImplementation((url: string) => {
+        if (typeof url === 'string' && url.includes('marketplace/agents')) {
+          return Promise.reject(new Error('API unavailable'))
+        }
+        return Promise.resolve({ json: async () => [] })
+      }),
       post: jest.fn().mockResolvedValue({ ok: true, json: async () => ({ nodes: [] }) }),
     }
     mockStorage = {
@@ -253,8 +258,8 @@ describe('useMarketplaceData - No Coverage Mutants (Phase 4)', () => {
     })
   })
 
-  describe('Map operation for logging - agentsData.map(a => ({...}))', () => {
-    it('should execute map operation in logger.debug call', async () => {
+  describe('Map operation - agentsData mapping', () => {
+    it('should execute map operation on agentsData', async () => {
       const agents = [
         {
           id: 'agent-1',
@@ -268,12 +273,7 @@ describe('useMarketplaceData - No Coverage Mutants (Phase 4)', () => {
       ]
       mockGetLocalStorageItem.mockReturnValue(agents)
 
-       
-      // eslint-disable-next-line @typescript-eslint/no-var-requires -- Dynamic require needed for Jest mocking
-      const { logger } = require('../../utils/logger')
-      const debugSpy = jest.spyOn(logger, 'debug')
-
-      renderHook(() =>
+      const { result } = renderHook(() =>
         useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
@@ -288,26 +288,17 @@ describe('useMarketplaceData - No Coverage Mutants (Phase 4)', () => {
       )
 
       await waitFor(() => {
-        expect(debugSpy).toHaveBeenCalled()
+        expect(result.current.loading).toBe(false)
       })
 
-      // Should execute map: agentsData.map(a => ({ id, name, author_id, has_author_id }))
-      const mapCall = debugSpy.mock.calls.find(call => 
-        call[0] === '[Marketplace] Loaded agents:'
-      )
-      expect(mapCall).toBeDefined()
-      if (mapCall && Array.isArray(mapCall[1])) {
-        expect(mapCall[1].length).toBe(1)
-        expect(mapCall[1][0]).toHaveProperty('id')
-        expect(mapCall[1][0]).toHaveProperty('name')
-        expect(mapCall[1][0]).toHaveProperty('author_id')
-        expect(mapCall[1][0]).toHaveProperty('has_author_id')
-      }
-
-      debugSpy.mockRestore()
+      // Should map agents with id, name, author_id
+      expect(result.current.agents).toHaveLength(1)
+      expect(result.current.agents[0]).toHaveProperty('id')
+      expect(result.current.agents[0]).toHaveProperty('name')
+      expect(result.current.agents[0]).toHaveProperty('author_id')
     })
 
-    it('should verify map callback creates object with specific properties', async () => {
+    it('should map agent with null author_id', async () => {
       const agents = [
         {
           id: 'agent-1',
@@ -321,12 +312,7 @@ describe('useMarketplaceData - No Coverage Mutants (Phase 4)', () => {
       ]
       mockGetLocalStorageItem.mockReturnValue(agents)
 
-       
-      // eslint-disable-next-line @typescript-eslint/no-var-requires -- Dynamic require needed for Jest mocking
-      const { logger } = require('../../utils/logger')
-      const debugSpy = jest.spyOn(logger, 'debug')
-
-      renderHook(() =>
+      const { result } = renderHook(() =>
         useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
@@ -341,19 +327,10 @@ describe('useMarketplaceData - No Coverage Mutants (Phase 4)', () => {
       )
 
       await waitFor(() => {
-        expect(debugSpy).toHaveBeenCalled()
+        expect(result.current.loading).toBe(false)
       })
 
-      // Map callback should create: { id, name, author_id, has_author_id: !!a.author_id }
-      const mapCall = debugSpy.mock.calls.find(call => 
-        call[0] === '[Marketplace] Loaded agents:'
-      )
-      expect(mapCall).toBeDefined()
-      if (mapCall && Array.isArray(mapCall[1])) {
-        expect(mapCall[1][0].has_author_id).toBe(false) // author_id is null
-      }
-
-      debugSpy.mockRestore()
+      expect(result.current.agents[0].author_id).toBeNull()
     })
   })
 

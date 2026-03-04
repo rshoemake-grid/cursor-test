@@ -88,12 +88,25 @@ jest.mock('../hooks/marketplace', () => {
     useAgentDeletion: jest.fn(),
     useWorkflowDeletion: jest.fn(),
     // useMarketplaceTabs: Use real hook (from ...actual above)
-    useMarketplaceSelections: jest.fn(() => ({
-      templateSelection: { selectedIds: new Set(), setSelectedIds: jest.fn(), toggleSelection: jest.fn(), clearSelection: jest.fn(), isSelected: jest.fn() },
-      agentSelection: { selectedIds: new Set(), setSelectedIds: jest.fn(), toggleSelection: jest.fn(), clearSelection: jest.fn(), isSelected: jest.fn() },
-      repositoryAgentSelection: { selectedIds: new Set(), setSelectedIds: jest.fn(), toggleSelection: jest.fn(), clearSelection: jest.fn(), isSelected: jest.fn() },
-      clearSelectionsForTab: jest.fn(),
-    })),
+    useMarketplaceSelections: jest.fn(() => {
+      const createSelection = () => ({
+        selectedIds: new Set(),
+        setSelectedIds: jest.fn(),
+        toggle: jest.fn(),
+        clear: jest.fn(),
+        add: jest.fn(),
+        remove: jest.fn(),
+        has: jest.fn(),
+        size: 0,
+      })
+      return {
+        templateSelection: createSelection(),
+        agentSelection: createSelection(),
+        repositoryAgentSelection: createSelection(),
+        toolSelection: createSelection(),
+        clearSelectionsForTab: jest.fn(),
+      }
+    }),
     useMarketplaceActions: jest.fn(() => ({
       handleDeleteSelected: jest.fn(),
       handleDeleteTemplate: jest.fn(),

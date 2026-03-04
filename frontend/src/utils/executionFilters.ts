@@ -6,7 +6,6 @@
 
 import type { ExecutionState, ExecutionStatus } from '../types/workflow'
 import type { ExecutionFiltersState } from '../components/log/ExecutionFilters'
-import { formatExecutionDuration } from './executionFormat'
 
 /**
  * Filter executions by status

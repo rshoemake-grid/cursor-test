@@ -10,6 +10,7 @@ import type { StorageAdapter, HttpClient } from '../../types/adapters'
 import { useTemplatesData } from './useTemplatesData'
 import { useAgentsData } from './useAgentsData'
 import { useRepositoryAgentsData } from './useRepositoryAgentsData'
+import { useToolsData } from './useToolsData'
 import { useWorkflowsOfWorkflowsData } from './useWorkflowsOfWorkflowsData'
 import { useDataFetching } from '../utils/useDataFetching'
 import {
@@ -17,6 +18,7 @@ import {
   shouldLoadRepositoryAgents,
   shouldLoadWorkflowsOfWorkflows,
   shouldLoadAgents,
+  shouldLoadTools,
   calculateLoadingState,
 } from '../utils/marketplaceTabValidation'
 import { nullishCoalesceToNull } from '../utils/nullishCoalescing'
@@ -54,6 +56,22 @@ interface AgentTemplate {
   is_official?: boolean
 }
 
+export interface ToolTemplate {
+  id: string
+  name: string
+  label: string
+  description: string
+  category?: string
+  tags?: string[]
+  difficulty?: string
+  estimated_time?: string
+  tool_config: { tool_name: string }
+  published_at?: string
+  author_id?: string | null
+  author_name?: string | null
+  is_official?: boolean
+}
+
 interface UseMarketplaceDataOptions {
   storage: StorageAdapter | null
   httpClient: HttpClient
@@ -62,7 +80,7 @@ interface UseMarketplaceDataOptions {
   searchQuery: string
   sortBy: string
   user: { id: string; username?: string; email?: string } | null
-  activeTab: 'agents' | 'repository' | 'workflows-of-workflows'
+  activeTab: 'agents' | 'repository' | 'workflows-of-workflows' | 'tools'
   repositorySubTab: 'workflows' | 'agents'
 }
 
@@ -118,6 +136,13 @@ export function useMarketplaceData({
     sortBy,
   })
 
+  const { fetchTools: fetchToolsFn } = useToolsData({
+    storage,
+    category,
+    searchQuery,
+    sortBy,
+  })
+
   // Use generic data fetching hook for templates
   const templatesFetching = useDataFetching({
     fetchFn: fetchTemplatesFn,
@@ -142,11 +167,18 @@ export function useMarketplaceData({
     initialData: [] as AgentTemplate[],
   })
 
+  // Use generic data fetching hook for tools
+  const toolsFetching = useDataFetching({
+    fetchFn: fetchToolsFn,
+    initialData: [] as ToolTemplate[],
+  })
+
   // Local state for setters (for backward compatibility)
   const [templates, setTemplates] = useState<Template[] | null>(nullishCoalesceToNull(templatesFetching.data))
   const [workflowsOfWorkflows, setWorkflowsOfWorkflows] = useState<Template[]>(logicalOrToEmptyArray(workflowsOfWorkflowsFetching.data))
   const [agents, setAgents] = useState<AgentTemplate[]>(logicalOrToEmptyArray(agentsFetching.data))
   const [repositoryAgents, setRepositoryAgents] = useState<AgentTemplate[]>(logicalOrToEmptyArray(repositoryAgentsFetching.data))
+  const [tools, setTools] = useState<ToolTemplate[]>(logicalOrToEmptyArray(toolsFetching.data))
 
   // Sync data fetching results to local state
   // DRY: Use generic useSyncState hook instead of 4 duplicate useEffect blocks
@@ -157,6 +189,7 @@ export function useMarketplaceData({
   useSyncState(workflowsOfWorkflowsFetching.data, setWorkflowsOfWorkflows, truthyCondition)
   useSyncState(agentsFetching.data, setAgents, truthyCondition)
   useSyncState(repositoryAgentsFetching.data, setRepositoryAgents, truthyCondition)
+  useSyncState(toolsFetching.data, setTools, truthyCondition)
 
   // Determine loading state based on active tab
   // Use extracted validation functions - mutation-resistant
@@ -166,7 +199,8 @@ export function useMarketplaceData({
     templatesFetching.loading,
     repositoryAgentsFetching.loading,
     workflowsOfWorkflowsFetching.loading,
-    agentsFetching.loading
+    agentsFetching.loading,
+    toolsFetching.loading
   )
 
   // Auto-fetch based on active tab
@@ -176,12 +210,14 @@ export function useMarketplaceData({
   const workflowsOfWorkflowsRefetchRef = useRef(workflowsOfWorkflowsFetching.refetch)
   const agentsRefetchRef = useRef(agentsFetching.refetch)
   const repositoryAgentsRefetchRef = useRef(repositoryAgentsFetching.refetch)
+  const toolsRefetchRef = useRef(toolsFetching.refetch)
   
   // Update refs when refetch functions change (safe to do during render)
   templatesRefetchRef.current = templatesFetching.refetch
   workflowsOfWorkflowsRefetchRef.current = workflowsOfWorkflowsFetching.refetch
   agentsRefetchRef.current = agentsFetching.refetch
   repositoryAgentsRefetchRef.current = repositoryAgentsFetching.refetch
+  toolsRefetchRef.current = toolsFetching.refetch
   
   useEffect(() => {
     if (shouldLoadTemplates(activeTab, repositorySubTab)) {
@@ -190,6 +226,8 @@ export function useMarketplaceData({
       repositoryAgentsRefetchRef.current?.()
     } else if (shouldLoadWorkflowsOfWorkflows(activeTab)) {
       workflowsOfWorkflowsRefetchRef.current?.()
+    } else if (shouldLoadTools(activeTab)) {
+      toolsRefetchRef.current?.()
     } else if (shouldLoadAgents(activeTab)) {
       agentsRefetchRef.current?.()
     }
@@ -213,20 +251,27 @@ export function useMarketplaceData({
     await repositoryAgentsFetching.refetch()
   }, [repositoryAgentsFetching.refetch])
 
+  const fetchTools = useCallback(async () => {
+    await toolsFetching.refetch()
+  }, [toolsFetching.refetch])
+
   return {
     templates,
     workflowsOfWorkflows,
     agents,
     repositoryAgents,
+    tools,
     loading,
     setTemplates,
     setWorkflowsOfWorkflows,
     setAgents,
     setRepositoryAgents,
+    setTools,
     fetchTemplates,
     fetchWorkflowsOfWorkflows,
     fetchAgents,
     fetchRepositoryAgents,
+    fetchTools,
   }
 }
 

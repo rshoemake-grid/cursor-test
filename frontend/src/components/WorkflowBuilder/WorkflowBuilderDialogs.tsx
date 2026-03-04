@@ -31,6 +31,7 @@ export interface WorkflowBuilderDialogsProps {
   onCut: () => void
   onPaste: () => void
   onAddToAgentNodes: () => void
+  onAddToToolNodes?: () => void
   onSendToMarketplace: (node: Node) => void
   canPaste: boolean
   
@@ -58,6 +59,7 @@ export function WorkflowBuilderDialogs({
   onCut,
   onPaste,
   onAddToAgentNodes,
+  onAddToToolNodes,
   onSendToMarketplace,
   canPaste,
   showMarketplaceDialog,
@@ -96,6 +98,7 @@ export function WorkflowBuilderDialogs({
             onCut={onCut}
             onPaste={onPaste}
             onAddToAgentNodes={onAddToAgentNodes}
+            onAddToToolNodes={onAddToToolNodes}
             onSendToMarketplace={onSendToMarketplace}
             canPaste={canPaste}
           />

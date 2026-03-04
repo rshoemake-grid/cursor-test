@@ -32,7 +32,12 @@ describe('useMarketplaceData - Equality Operators', () => {
   beforeEach(() => {
     jest.clearAllMocks()
     mockHttpClient = {
-      get: jest.fn().mockResolvedValue({ json: async () => [] }),
+      get: jest.fn().mockImplementation((url: string) => {
+        if (typeof url === 'string' && url.includes('marketplace/agents')) {
+          return Promise.reject(new Error('API unavailable'))
+        }
+        return Promise.resolve({ json: async () => [] })
+      }),
       post: jest.fn().mockResolvedValue({ ok: true, json: async () => ({ nodes: [] }) }),
     }
     mockStorage = {
@@ -254,7 +259,7 @@ describe('useMarketplaceData - Equality Operators', () => {
     })
 
     it('should NOT match "Repository" (case sensitive)', async () => {
-      // When activeTab is not exactly 'repository', should fallback to agents tab
+      // When activeTab is not exactly 'repository', no tab matches so nothing is fetched
       mockGetLocalStorageItem.mockReturnValue([mockAgent])
 
       const { result } = renderHook(() =>
@@ -275,8 +280,8 @@ describe('useMarketplaceData - Equality Operators', () => {
         expect(result.current.loading).toBe(false)
       }, { timeout: 3000 })
 
-      // Should fetch agents (fallback when activeTab doesn't match exactly)
-      expect(result.current.agents.length).toBeGreaterThan(0)
+      // No tab matches 'Repository', so agents are not fetched (stays at initial empty)
+      expect(result.current.agents.length).toBe(0)
     })
   })
 

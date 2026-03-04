@@ -86,6 +86,11 @@ export const waitForWithTimeoutFakeTimers = async (
     const maxTimerIterations = isStryker ? 30 : 5
     const timerAdvanceDelay = isStryker ? 50 : 10
     
+    // Flush microtasks first so async fetches (e.g. useDataFetching) can resolve
+    // before we advance the 30s timeout - otherwise the timeout wins the race
+    await act(async () => {
+      await Promise.resolve()
+    })
     // Wrap timer operations in act() to ensure React updates are flushed
     await act(async () => {
       // Advance timers first to process any pending operations

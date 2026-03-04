@@ -13,6 +13,7 @@ interface ContextMenuProps {
   onCut?: (node: any) => void
   onPaste?: () => void
   onAddToAgentNodes?: (node: any) => void
+  onAddToToolNodes?: (node: any) => void
   onSendToMarketplace?: (node: any) => void
   canPaste?: boolean
 }
@@ -29,6 +30,7 @@ export default function ContextMenu({
   onCut,
   onPaste,
   onAddToAgentNodes,
+  onAddToToolNodes,
   onSendToMarketplace,
   canPaste = false
 }: ContextMenuProps) {
@@ -74,6 +76,13 @@ export default function ContextMenu({
     onClose()
   }
 
+  const handleAddToToolNodes = () => {
+    if (node && onAddToToolNodes) {
+      onAddToToolNodes(node)
+    }
+    onClose()
+  }
+
   const handleSendToMarketplace = () => {
     if (node && onSendToMarketplace) {
       onSendToMarketplace(node)
@@ -82,6 +91,7 @@ export default function ContextMenu({
   }
 
   const isAgentNode = node?.type === 'agent'
+  const isToolNode = node?.type === 'tool'
   const label = nodeId ? 'Delete Node' : 'Delete Connection'
 
   return (
@@ -126,6 +136,24 @@ export default function ContextMenu({
               >
                 <Plus className="w-4 h-4" />
                 Add to Agent Nodes
+              </button>
+              <button
+                onClick={handleSendToMarketplace}
+                className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2 transition-colors"
+              >
+                <Upload className="w-4 h-4" />
+                Send to Marketplace
+              </button>
+            </>
+          )}
+          {isToolNode && (
+            <>
+              <button
+                onClick={handleAddToToolNodes}
+                className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2 transition-colors border-t border-gray-200 mt-1 pt-2"
+              >
+                <Plus className="w-4 h-4" />
+                Add to Tool Nodes
               </button>
               <button
                 onClick={handleSendToMarketplace}

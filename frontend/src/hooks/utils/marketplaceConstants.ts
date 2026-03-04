@@ -10,6 +10,11 @@
 export const PENDING_AGENTS_STORAGE_KEY = 'pendingAgentsToAdd' as const
 
 /**
+ * Pending tools storage key
+ */
+export const PENDING_TOOLS_STORAGE_KEY = 'pendingToolsToAdd' as const
+
+/**
  * Pending agents validation constants
  */
 export const PENDING_AGENTS = {
@@ -25,6 +30,15 @@ export const AGENT_NODE = {
   DEFAULT_LABEL: 'Agent Node',
   SPACING: 150,
   TYPE: 'agent',
+} as const
+
+/**
+ * Tool node constants
+ */
+export const TOOL_NODE = {
+  DEFAULT_LABEL: 'Tool Node',
+  SPACING: 150,
+  TYPE: 'tool',
 } as const
 
 /**

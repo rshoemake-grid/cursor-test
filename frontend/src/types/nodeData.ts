@@ -10,6 +10,14 @@ export interface AgentConfig {
   system_prompt?: string
   max_tokens?: number
   temperature?: number
+  agent_type?: string
+  adk_config?: {
+    name?: string
+    description?: string
+    instruction?: string
+    adk_tools?: string[]
+    [key: string]: unknown
+  }
 }
 
 export interface ConditionConfig {
@@ -79,6 +87,10 @@ export interface InputConfig {
   }>
 }
 
+export interface ToolConfig {
+  tool_name?: string
+}
+
 export interface NodeData {
   name?: string
   label?: string
@@ -87,6 +99,7 @@ export interface NodeData {
   condition_config?: ConditionConfig
   loop_config?: LoopConfig
   input_config?: InputConfig
+  tool_config?: ToolConfig
   inputs?: InputMapping[]
   executionStatus?: 'running' | 'completed' | 'failed' | 'pending'
 }
@@ -126,5 +139,9 @@ export function isStartNode(node: NodeWithData | null): node is NodeWithData & {
 
 export function isEndNode(node: NodeWithData | null): node is NodeWithData & { type: 'end' } {
   return node?.type === 'end'
+}
+
+export function isToolNode(node: NodeWithData | null): node is NodeWithData & { type: 'tool' } {
+  return node?.type === 'tool'
 }
 

@@ -47,6 +47,8 @@ export const STORAGE_KEYS = {
   PUBLISHED_AGENTS: 'publishedAgents',
   REPOSITORY_AGENTS: 'repositoryAgents',
   CUSTOM_AGENT_NODES: 'customAgentNodes',
+  CUSTOM_TOOL_NODES: 'customToolNodes',
+  PUBLISHED_TOOLS: 'publishedTools',
   WORKFLOW_ID_PREFIX: 'workflow-',
 } as const
 

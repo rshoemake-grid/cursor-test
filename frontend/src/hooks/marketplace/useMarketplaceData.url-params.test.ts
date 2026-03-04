@@ -14,7 +14,12 @@ describe('useMarketplaceData - URL Parameters (Phase 4.2)', () => {
   beforeEach(() => {
     jest.clearAllMocks()
     mockHttpClient = {
-      get: jest.fn().mockResolvedValue({ json: async () => [] }),
+      get: jest.fn().mockImplementation((url: string) => {
+        if (typeof url === 'string' && url.includes('marketplace/agents')) {
+          return Promise.reject(new Error('API unavailable'))
+        }
+        return Promise.resolve({ json: async () => [] })
+      }),
       post: jest.fn().mockResolvedValue({ ok: true, json: async () => ({ nodes: [] }) }),
     }
     mockStorage = {
@@ -259,7 +264,7 @@ describe('useMarketplaceData - URL Parameters (Phase 4.2)', () => {
 
       // Should construct: `${apiBaseUrl}/templates/?${params}`
       const callUrl = mockHttpClient.get.mock.calls[0][0]
-      expect(callUrl).toContain('http://api.test/templates/')
+      expect(callUrl).toContain('http://api.test/templates')
       expect(callUrl).toContain('?')
       expect(callUrl).toContain('category=automation')
       expect(callUrl).toContain('search=test')
@@ -291,7 +296,7 @@ describe('useMarketplaceData - URL Parameters (Phase 4.2)', () => {
 
       // Should construct URL with only sort_by
       const callUrl = mockHttpClient.get.mock.calls[0][0]
-      expect(callUrl).toContain('http://api.test/templates/')
+      expect(callUrl).toContain('http://api.test/templates')
       expect(callUrl).toContain('sort_by=popular')
       expect(callUrl).not.toContain('category=')
       expect(callUrl).not.toContain('search=')

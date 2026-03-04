@@ -13,13 +13,19 @@ export interface MarketplaceTabContentProps {
   loading: boolean
   activeTab: string
   isAgentsTab: boolean
+  isToolsTab?: boolean
   isRepositoryWorkflowsSubTab: boolean
   isRepositoryAgentsSubTab: boolean
   agents: any[]
+  tools?: any[]
   templates: Template[] | null
   repositoryAgents: any[]
   workflowsOfWorkflows: Template[]
   agentSelection: {
+    selectedIds: Set<string>
+    toggle: (id: string) => void
+  }
+  toolSelection?: {
     selectedIds: Set<string>
     toggle: (id: string) => void
   }
@@ -32,6 +38,7 @@ export interface MarketplaceTabContentProps {
     toggle: (id: string) => void
   }
   handleAgentCardClick: (e: React.MouseEvent, id: string) => void
+  handleToolCardClick?: (e: React.MouseEvent, id: string) => void
   handleCardClick: (e: React.MouseEvent, id: string) => void
   handleRepositoryAgentCardClick: (e: React.MouseEvent, id: string) => void
   getDifficultyColor: (difficulty: string) => string
@@ -46,16 +53,20 @@ export const MarketplaceTabContent = memo(function MarketplaceTabContent({
   loading,
   activeTab,
   isAgentsTab,
+  isToolsTab = false,
   isRepositoryWorkflowsSubTab,
   isRepositoryAgentsSubTab,
   agents,
+  tools = [],
   templates,
   repositoryAgents,
   workflowsOfWorkflows,
   agentSelection,
+  toolSelection = { selectedIds: new Set(), toggle: () => {} },
   templateSelection,
   repositoryAgentSelection,
   handleAgentCardClick,
+  handleToolCardClick = () => {},
   handleCardClick,
   handleRepositoryAgentCardClick,
   getDifficultyColor,
@@ -80,6 +91,21 @@ export const MarketplaceTabContent = memo(function MarketplaceTabContent({
         getDifficultyColor={getDifficultyColor}
         emptyMessage="No agents found. Try adjusting your filters."
         footerText={'Selected - Click "Use Agent(s)" above to use'}
+      />
+    )
+  }
+
+  if (isToolsTab) {
+    return (
+      <TemplateGrid
+        items={tools}
+        selectedIds={toolSelection.selectedIds}
+        type="tool"
+        onToggleSelect={toolSelection.toggle}
+        onCardClick={handleToolCardClick}
+        getDifficultyColor={getDifficultyColor}
+        emptyMessage="No tools found. Publish tools from the workflow builder to share them here."
+        footerText={'Selected - Click "Use Tool(s)" above to use'}
       />
     )
   }

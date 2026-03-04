@@ -1,6 +1,6 @@
 import { X, Trash2, Save, Check } from 'lucide-react'
 import { useState } from 'react'
-import { isAgentNode, isConditionNode, isLoopNode, isInputNode } from '../types/nodeData'
+import { isAgentNode, isConditionNode, isLoopNode, isInputNode, isToolNode } from '../types/nodeData'
 import AgentNodeEditor from './editors/AgentNodeEditor'
 import ConditionNodeEditor from './editors/ConditionNodeEditor'
 import LoopNodeEditor from './editors/LoopNodeEditor'
@@ -8,6 +8,7 @@ import InputNodeEditor from './editors/InputNodeEditor'
 import DatabaseNodeEditor from './editors/DatabaseNodeEditor'
 import FirebaseNodeEditor from './editors/FirebaseNodeEditor'
 import BigQueryNodeEditor from './editors/BigQueryNodeEditor'
+import ToolNodeEditor from './editors/ToolNodeEditor'
 import type { StorageAdapter } from '../types/adapters'
 import { defaultAdapters } from '../types/adapters'
 // Domain-based imports - Phase 7
@@ -222,6 +223,15 @@ export default function PropertyPanel({ selectedNodeId, setSelectedNodeId, selec
             onRemoveInput={handleRemoveInput}
             onUpdateInput={handleUpdateInput}
             onShowAddInput={setShowAddInput}
+          />
+        )}
+
+        {/* Tool-specific properties */}
+        {isToolNode(selectedNode) && (
+          <ToolNodeEditor
+            node={selectedNode}
+            onUpdate={handleUpdate}
+            onConfigUpdate={handleConfigUpdate}
           />
         )}
 

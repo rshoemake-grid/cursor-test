@@ -734,6 +734,180 @@ describe('useCanvasEvents', () => {
     })
   })
 
+  describe('handleAddToToolNodes', () => {
+    it('should add tool node to storage', () => {
+      mockStorage.getItem = jest.fn().mockReturnValue(JSON.stringify([]))
+
+      const { result } = renderHook(() =>
+        useCanvasEvents({
+          reactFlowInstanceRef: mockReactFlowInstanceRef as any,
+          setNodes: mockSetNodes,
+          setEdges: mockSetEdges,
+          setSelectedNodeId: mockSetSelectedNodeId,
+          notifyModified: mockNotifyModified,
+          clipboard: mockClipboard,
+          storage: mockStorage as any,
+        })
+      )
+
+      const mockNode: Node = {
+        id: 'node-1',
+        type: 'tool',
+        position: { x: 0, y: 0 },
+        data: {
+          label: 'Test Tool',
+          description: 'Test Description',
+          tool_config: { tool_name: 'calculator' },
+        },
+      }
+
+      const dispatchEventSpy = jest.spyOn(window, 'dispatchEvent')
+
+      act(() => {
+        result.current.handleAddToToolNodes(mockNode)
+      })
+
+      expect(mockStorage.getItem).toHaveBeenCalledWith('customToolNodes')
+      expect(mockStorage.setItem).toHaveBeenCalled()
+      expect(dispatchEventSpy).toHaveBeenCalled()
+      expect(mockShowSuccess).toHaveBeenCalledWith('Tool node added to palette')
+
+      dispatchEventSpy.mockRestore()
+    })
+
+    it('should not add duplicate tool node', () => {
+      const existingTools = [
+        {
+          id: 'tool_1',
+          label: 'Test Tool',
+          description: 'Test Description',
+          tool_config: { tool_name: 'calculator' },
+          type: 'tool',
+        },
+      ]
+      mockStorage.getItem = jest.fn().mockReturnValue(JSON.stringify(existingTools))
+
+      const { result } = renderHook(() =>
+        useCanvasEvents({
+          reactFlowInstanceRef: mockReactFlowInstanceRef as any,
+          setNodes: mockSetNodes,
+          setEdges: mockSetEdges,
+          setSelectedNodeId: mockSetSelectedNodeId,
+          notifyModified: mockNotifyModified,
+          clipboard: mockClipboard,
+          storage: mockStorage as any,
+        })
+      )
+
+      const mockNode: Node = {
+        id: 'node-1',
+        type: 'tool',
+        position: { x: 0, y: 0 },
+        data: {
+          label: 'Test Tool',
+          description: 'Test Description',
+          tool_config: { tool_name: 'calculator' },
+        },
+      }
+
+      act(() => {
+        result.current.handleAddToToolNodes(mockNode)
+      })
+
+      expect(mockShowError).toHaveBeenCalledWith('This tool node already exists in the palette')
+      expect(mockStorage.setItem).not.toHaveBeenCalled()
+    })
+
+    it('should handle non-tool node', () => {
+      const { result } = renderHook(() =>
+        useCanvasEvents({
+          reactFlowInstanceRef: mockReactFlowInstanceRef as any,
+          setNodes: mockSetNodes,
+          setEdges: mockSetEdges,
+          setSelectedNodeId: mockSetSelectedNodeId,
+          notifyModified: mockNotifyModified,
+          clipboard: mockClipboard,
+          storage: mockStorage as any,
+        })
+      )
+
+      const mockNode: Node = {
+        id: 'node-1',
+        type: 'agent',
+        position: { x: 0, y: 0 },
+        data: {},
+      }
+
+      act(() => {
+        result.current.handleAddToToolNodes(mockNode)
+      })
+
+      expect(mockStorage.setItem).not.toHaveBeenCalled()
+    })
+
+    it('should handle missing storage', () => {
+      const { result } = renderHook(() =>
+        useCanvasEvents({
+          reactFlowInstanceRef: mockReactFlowInstanceRef as any,
+          setNodes: mockSetNodes,
+          setEdges: mockSetEdges,
+          setSelectedNodeId: mockSetSelectedNodeId,
+          notifyModified: mockNotifyModified,
+          clipboard: mockClipboard,
+          storage: null,
+        })
+      )
+
+      const mockNode: Node = {
+        id: 'node-1',
+        type: 'tool',
+        position: { x: 0, y: 0 },
+        data: {},
+      }
+
+      act(() => {
+        result.current.handleAddToToolNodes(mockNode)
+      })
+
+      expect(mockShowError).toHaveBeenCalledWith('Storage not available')
+    })
+
+    it('should use name as fallback when label is missing', () => {
+      mockStorage.getItem = jest.fn().mockReturnValue(JSON.stringify([]))
+
+      const { result } = renderHook(() =>
+        useCanvasEvents({
+          reactFlowInstanceRef: mockReactFlowInstanceRef as any,
+          setNodes: mockSetNodes,
+          setEdges: mockSetEdges,
+          setSelectedNodeId: mockSetSelectedNodeId,
+          notifyModified: mockNotifyModified,
+          clipboard: mockClipboard,
+          storage: mockStorage as any,
+        })
+      )
+
+      const mockNode: Node = {
+        id: 'node-1',
+        type: 'tool',
+        position: { x: 0, y: 0 },
+        data: {
+          name: 'Test Tool',
+          tool_config: { tool_name: 'web_search' },
+        },
+      }
+
+      act(() => {
+        result.current.handleAddToToolNodes(mockNode)
+      })
+
+      expect(mockStorage.setItem).toHaveBeenCalled()
+      const setItemCall = mockStorage.setItem.mock.calls[0]
+      const savedTools = JSON.parse(setItemCall[1])
+      expect(savedTools[0].label).toBe('Test Tool')
+    })
+  })
+
   describe('onNodeClick edge cases', () => {
     it('should not handle clicks during drag operations', () => {
       const { result } = renderHook(() =>

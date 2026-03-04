@@ -260,8 +260,9 @@ describe('useMarketplaceIntegration - Mutation Killers', () => {
           jest.advanceTimersByTime(10000) // 10 seconds = 10 interval checks
         })
 
-        // Verify checkPendingAgents was called: 1 initial + 10 interval = 11 total
-        expect(mockStorage.getItem).toHaveBeenCalledTimes(11)
+        // Each polling tick calls checkPendingAgents + checkPendingTools (2 getItem each)
+        // 1 initial + 10 intervals = 11 ticks, 2 getItem per tick = 22 total
+        expect(mockStorage.getItem).toHaveBeenCalledTimes(22)
 
         // Cleanup should clear interval
         unmount()
@@ -272,7 +273,7 @@ describe('useMarketplaceIntegration - Mutation Killers', () => {
         })
 
         // Should not call getItem after cleanup
-        expect(mockStorage.getItem).toHaveBeenCalledTimes(11) // No new calls
+        expect(mockStorage.getItem).toHaveBeenCalledTimes(22) // No new calls
       })
 
       it('should verify exact boundary - checkCount < maxChecks', () => {
@@ -304,7 +305,8 @@ describe('useMarketplaceIntegration - Mutation Killers', () => {
         })
 
         // Should still be checking (checkCount < maxChecks)
-        expect(mockStorage.getItem).toHaveBeenCalledTimes(6) // 1 initial + 5 interval checks
+        // 1 initial + 5 intervals = 6 ticks, 2 getItem per tick = 12
+        expect(mockStorage.getItem).toHaveBeenCalledTimes(12)
       })
     })
   })

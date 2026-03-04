@@ -190,19 +190,22 @@ describe('ExecutionDetailsModal', () => {
       downloadExecutionLogs: jest.fn(),
     }
 
+    let mockAnchor: { href: string; download: string; click: jest.Mock }
+
     beforeEach(() => {
-      jest.clearAllMocks()
-      global.URL.createObjectURL = jest.fn(() => 'blob:url')
-      global.URL.revokeObjectURL = jest.fn()
-      const mockCreateElement = jest.spyOn(document, 'createElement')
-      const mockAnchor = {
+      mockAnchor = {
         href: '',
         download: '',
         click: jest.fn(),
       }
-      mockCreateElement.mockReturnValue(mockAnchor as any)
-      document.body.appendChild = jest.fn()
-      document.body.removeChild = jest.fn()
+      jest.clearAllMocks()
+      global.URL.createObjectURL = jest.fn(() => 'blob:url')
+      global.URL.revokeObjectURL = jest.fn()
+      const originalCreateElement = document.createElement.bind(document)
+      jest.spyOn(document, 'createElement').mockImplementation((tagName: string) => {
+        if (tagName.toLowerCase() === 'a') return mockAnchor as any
+        return originalCreateElement(tagName)
+      })
     })
 
     afterEach(() => {
@@ -269,7 +272,7 @@ describe('ExecutionDetailsModal', () => {
 
       await new Promise(resolve => setTimeout(resolve, 100))
 
-      expect(mockApiClient.downloadExecutionLogs).toHaveBeenCalledWith('exec-123', 'text', undefined)
+      expect(mockApiClient.downloadExecutionLogs).toHaveBeenCalledWith('exec-123', 'text')
     })
 
     it('should download logs as json when JSON button is clicked', async () => {
@@ -295,7 +298,7 @@ describe('ExecutionDetailsModal', () => {
 
       await new Promise(resolve => setTimeout(resolve, 100))
 
-      expect(mockApiClient.downloadExecutionLogs).toHaveBeenCalledWith('exec-123', 'json', undefined)
+      expect(mockApiClient.downloadExecutionLogs).toHaveBeenCalledWith('exec-123', 'json')
     })
 
     it('should show loading state during download', async () => {

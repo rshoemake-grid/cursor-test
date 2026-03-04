@@ -19,6 +19,7 @@ export interface WorkflowNodeData {
   condition_config?: Record<string, any>
   loop_config?: Record<string, any>
   input_config?: Record<string, any>
+  tool_config?: Record<string, any>
   inputs?: any[]
   name?: string
   label?: string
@@ -46,7 +47,7 @@ export interface EdgeData {
  * Config type constants for workflow nodes
  * Used to eliminate DRY violations in config merging
  */
-const CONFIG_TYPES = ['agent_config', 'condition_config', 'loop_config', 'input_config'] as const
+const CONFIG_TYPES = ['agent_config', 'condition_config', 'loop_config', 'input_config', 'tool_config'] as const
 
 /**
  * Merge configs from data object and workflow node
@@ -178,6 +179,7 @@ export function convertNodesToWorkflowFormat(nodes: Node[]): WorkflowNode[] {
       condition_config: (node.data as any).condition_config,
       loop_config: (node.data as any).loop_config,
       input_config: (node.data as any).input_config,
+      tool_config: (node.data as any).tool_config,
       inputs: coalesceArray(node.data.inputs as any[] | null | undefined, []),
       position: node.position,
     } as WorkflowNode

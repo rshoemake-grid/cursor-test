@@ -7,7 +7,7 @@
 import { useState } from 'react'
 // useCallback intentionally not imported - not needed for this implementation
 
-export type TabType = 'agents' | 'repository' | 'workflows-of-workflows'
+export type TabType = 'agents' | 'repository' | 'workflows-of-workflows' | 'tools'
 export type RepositorySubTabType = 'workflows' | 'agents'
 
 /**
@@ -18,6 +18,7 @@ export const MARKETPLACE_TABS = {
   AGENTS: 'agents' as const,
   REPOSITORY: 'repository' as const,
   WORKFLOWS_OF_WORKFLOWS: 'workflows-of-workflows' as const,
+  TOOLS: 'tools' as const,
 } as const
 
 export const REPOSITORY_SUB_TABS = {
@@ -33,6 +34,7 @@ export interface UseMarketplaceTabsReturn {
   isAgentsTab: boolean
   isRepositoryTab: boolean
   isWorkflowsOfWorkflowsTab: boolean
+  isToolsTab: boolean
   isRepositoryWorkflowsSubTab: boolean
   isRepositoryAgentsSubTab: boolean
 }
@@ -50,6 +52,7 @@ export function useMarketplaceTabs(): UseMarketplaceTabsReturn {
   const isAgentsTab = activeTab === MARKETPLACE_TABS.AGENTS
   const isRepositoryTab = activeTab === MARKETPLACE_TABS.REPOSITORY
   const isWorkflowsOfWorkflowsTab = activeTab === MARKETPLACE_TABS.WORKFLOWS_OF_WORKFLOWS
+  const isToolsTab = activeTab === MARKETPLACE_TABS.TOOLS
   const isRepositoryWorkflowsSubTab = isRepositoryTab && repositorySubTab === REPOSITORY_SUB_TABS.WORKFLOWS
   const isRepositoryAgentsSubTab = isRepositoryTab && repositorySubTab === REPOSITORY_SUB_TABS.AGENTS
 
@@ -61,6 +64,7 @@ export function useMarketplaceTabs(): UseMarketplaceTabsReturn {
     isAgentsTab,
     isRepositoryTab,
     isWorkflowsOfWorkflowsTab,
+    isToolsTab,
     isRepositoryWorkflowsSubTab,
     isRepositoryAgentsSubTab,
   }

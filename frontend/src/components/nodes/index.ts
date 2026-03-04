@@ -22,6 +22,7 @@ import LocalFileSystemNode from './LocalFileSystemNode'
 import DatabaseNode from './DatabaseNode'
 import FirebaseNode from './FirebaseNode'
 import BigQueryNode from './BigQueryNode'
+import ToolNode from './ToolNode'
 
 /**
  * Node types mapping for ReactFlow
@@ -41,6 +42,7 @@ export const nodeTypes = {
   database: DatabaseNode,
   firebase: FirebaseNode,
   bigquery: BigQueryNode,
+  tool: ToolNode,
 }
 
 export { 
@@ -52,6 +54,7 @@ export {
   GCPBucketNode,
   AWSS3Node,
   GCPPubSubNode,
-  LocalFileSystemNode
+  LocalFileSystemNode,
+  ToolNode
 }
 

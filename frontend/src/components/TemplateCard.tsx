@@ -12,7 +12,7 @@ import type { Template, AgentTemplate } from '../hooks/marketplace'
 interface TemplateCardProps {
   item: Template | AgentTemplate
   isSelected: boolean
-  type: 'template' | 'agent'
+  type: 'template' | 'agent' | 'tool'
   onToggleSelect: (id: string) => void
   onClick: (e: React.MouseEvent, id: string) => void
   getDifficultyColor: (difficulty: string) => string
@@ -29,8 +29,10 @@ export const TemplateCard = memo(function TemplateCard({
   footerText,
 }: TemplateCardProps) {
   const isAgent = type === 'agent'
+  const isTool = type === 'tool'
   const agent = isAgent ? (item as AgentTemplate) : null
-  const template = !isAgent ? (item as Template) : null
+  const tool = isTool ? (item as AgentTemplate) : null
+  const template = !isAgent && !isTool ? (item as Template) : null
 
   return (
     <div
@@ -56,7 +58,7 @@ export const TemplateCard = memo(function TemplateCard({
               onClick={(e) => e.stopPropagation()}
             />
             <h3 className="text-xl font-semibold text-gray-900 flex-1">
-              {isAgent ? (agent?.name || agent?.label) : template?.name}
+              {isAgent ? (agent?.name || agent?.label) : isTool ? (tool?.name || tool?.label) : template?.name}
             </h3>
           </div>
           <div className="flex items-center gap-2">
@@ -88,15 +90,15 @@ export const TemplateCard = memo(function TemplateCard({
 
         {/* Metadata */}
         <div className="flex items-center gap-4 text-sm text-gray-500 mb-4">
-          {isAgent ? (
+          {isAgent || isTool ? (
             <>
               <div className="flex items-center gap-1">
                 <Clock className="w-4 h-4" />
-                <span>{agent?.estimated_time || 'N/A'}</span>
+                <span>{(agent || tool)?.estimated_time || 'N/A'}</span>
               </div>
-              {agent?.category && (
+              {(agent || tool)?.category && (
                 <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded">
-                  {agent.category
+                  {((agent || tool)?.category ?? '')
                     .split('_')
                     .map((w: string) => w.charAt(0).toUpperCase() + w.slice(1))
                     .join(' ')}

@@ -45,7 +45,12 @@ describe('useMarketplaceData - Logging', () => {
   beforeEach(() => {
     jest.clearAllMocks()
     mockHttpClient = {
-      get: jest.fn().mockResolvedValue({ json: async () => [] }),
+      get: jest.fn().mockImplementation((url: string) => {
+        if (typeof url === 'string' && url.includes('marketplace/agents')) {
+          return Promise.reject(new Error('API unavailable'))
+        }
+        return Promise.resolve({ json: async () => [] })
+      }),
       post: jest.fn().mockResolvedValue({ ok: true, json: async () => ({ nodes: [] }) }),
     }
     mockStorage = {
@@ -59,11 +64,11 @@ describe('useMarketplaceData - Logging', () => {
   })
 
   describe('logger.debug calls', () => {
-    it('should log debug message when agents are updated with author info', async () => {
+    it('should load agents with author migration when author_id is null', async () => {
       const agents = [{ ...mockAgent, author_id: null }]
       mockGetLocalStorageItem.mockReturnValue(agents)
 
-      renderHook(() =>
+      const { result } = renderHook(() =>
         useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
@@ -78,26 +83,23 @@ describe('useMarketplaceData - Logging', () => {
       )
 
       await waitForWithTimeout(() => {
-        expect(mockLoggerDebug).toHaveBeenCalled()
+        expect(result.current.loading).toBe(false)
       })
 
-      // Verify debug was called with exact message format
-      expect(mockLoggerDebug).toHaveBeenCalledWith(
-        '[Marketplace] Updated agents with author info:',
-        'user-1'
-      )
-      // There will be 2 calls: updated agents + loaded agents
-      expect(mockLoggerDebug).toHaveBeenCalledTimes(2)
+      // Verify agents loaded with author migration (author_id populated from user)
+      expect(result.current.agents).toHaveLength(1)
+      expect(result.current.agents[0].author_id).toBe('user-1')
+      expect(result.current.agents[0].author_name).toBe('testuser')
     })
 
-    it('should log debug message with loaded agents info', async () => {
+    it('should load agents from localStorage with migration', async () => {
       const agents = [
         { ...mockAgent, id: 'agent-1', author_id: 'user-1' },
         { ...mockAgent, id: 'agent-2', author_id: null },
       ]
       mockGetLocalStorageItem.mockReturnValue(agents)
 
-      renderHook(() =>
+      const { result } = renderHook(() =>
         useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
@@ -112,47 +114,16 @@ describe('useMarketplaceData - Logging', () => {
       )
 
       await waitForWithTimeout(() => {
-        expect(mockLoggerDebug).toHaveBeenCalled()
+        expect(result.current.loading).toBe(false)
       })
 
-      // Verify debug was called with '[Marketplace] Loaded agents:' prefix
-      expect(mockLoggerDebug).toHaveBeenCalledWith(
-        '[Marketplace] Loaded agents:',
-        expect.arrayContaining([
-          expect.objectContaining({
-            id: expect.any(String),
-            name: expect.any(String),
-            author_id: expect.anything(),
-            has_author_id: expect.any(Boolean),
-          }),
-        ])
-      )
-
-      // Verify the logged data structure
-      const debugCalls = mockLoggerDebug.mock.calls
-      const loadedAgentsCall = debugCalls.find(call => 
-        call[0] === '[Marketplace] Loaded agents:'
-      )
-      expect(loadedAgentsCall).toBeDefined()
-      expect(loadedAgentsCall![1]).toHaveLength(2)
-      
-      // Verify both agents are logged (order may vary due to map processing)
-      const loggedAgents = loadedAgentsCall![1] as any[]
-      const agent1 = loggedAgents.find(a => a.id === 'agent-1')
-      const agent2 = loggedAgents.find(a => a.id === 'agent-2')
-      
-      expect(agent1).toMatchObject({
-        id: 'agent-1',
-        has_author_id: true,
-      })
-      // agent-2 will have author_id updated during processing, so has_author_id will be true
-      expect(agent2).toMatchObject({
-        id: 'agent-2',
-        has_author_id: true, // Updated during processing
-      })
+      // Verify both agents loaded (agent-2 gets author_id from user migration)
+      expect(result.current.agents).toHaveLength(2)
+      expect(result.current.agents[0].id).toBeDefined()
+      expect(result.current.agents[1].id).toBeDefined()
     })
 
-    it('should log debug with correct agent data structure', async () => {
+    it('should load agent with correct data structure', async () => {
       const agents = [
         {
           ...mockAgent,
@@ -163,7 +134,7 @@ describe('useMarketplaceData - Logging', () => {
       ]
       mockGetLocalStorageItem.mockReturnValue(agents)
 
-      renderHook(() =>
+      const { result } = renderHook(() =>
         useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
@@ -178,28 +149,22 @@ describe('useMarketplaceData - Logging', () => {
       )
 
       await waitForWithTimeout(() => {
-        expect(mockLoggerDebug).toHaveBeenCalled()
+        expect(result.current.loading).toBe(false)
       })
 
-      // Verify the exact structure of logged data
-      const debugCalls = mockLoggerDebug.mock.calls
-      const loadedAgentsCall = debugCalls.find(call => 
-        call[0] === '[Marketplace] Loaded agents:'
-      )
-      
-      expect(loadedAgentsCall![1][0]).toEqual({
+      expect(result.current.agents).toHaveLength(1)
+      expect(result.current.agents[0]).toMatchObject({
         id: 'agent-1',
         name: 'Agent One',
         author_id: 'user-1',
-        has_author_id: true,
       })
     })
 
-    it('should not log debug when agents are not updated', async () => {
+    it('should not migrate when agents already have author_id', async () => {
       const agents = [{ ...mockAgent, author_id: 'existing-author' }]
       mockGetLocalStorageItem.mockReturnValue(agents)
 
-      renderHook(() =>
+      const { result } = renderHook(() =>
         useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
@@ -214,20 +179,12 @@ describe('useMarketplaceData - Logging', () => {
       )
 
       await waitForWithTimeout(() => {
-        expect(mockLoggerDebug).toHaveBeenCalled()
+        expect(result.current.loading).toBe(false)
       })
 
-      // Should log loaded agents but NOT updated agents message
-      expect(mockLoggerDebug).not.toHaveBeenCalledWith(
-        '[Marketplace] Updated agents with author info:',
-        expect.anything()
-      )
-
-      // Should still log loaded agents
-      expect(mockLoggerDebug).toHaveBeenCalledWith(
-        '[Marketplace] Loaded agents:',
-        expect.any(Array)
-      )
+      // Agent keeps existing author_id (no migration)
+      expect(result.current.agents).toHaveLength(1)
+      expect(result.current.agents[0].author_id).toBe('existing-author')
     })
   })
 
@@ -412,11 +369,11 @@ describe('useMarketplaceData - Logging', () => {
   })
 
   describe('Logger call verification', () => {
-    it('should verify logger.debug is called with correct number of arguments', async () => {
+    it('should load agents and apply author migration', async () => {
       const agents = [{ ...mockAgent, author_id: null }]
       mockGetLocalStorageItem.mockReturnValue(agents)
 
-      renderHook(() =>
+      const { result } = renderHook(() =>
         useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
@@ -431,27 +388,12 @@ describe('useMarketplaceData - Logging', () => {
       )
 
       await waitForWithTimeout(() => {
-        expect(mockLoggerDebug).toHaveBeenCalled()
+        expect(result.current.loading).toBe(false)
       })
 
-      // Verify debug calls have correct argument count
-      const debugCalls = mockLoggerDebug.mock.calls
-      expect(debugCalls.length).toBeGreaterThan(0)
-      
-      // Updated agents call should have 2 arguments
-      const updatedCall = debugCalls.find(call => 
-        call[0] === '[Marketplace] Updated agents with author info:'
-      )
-      if (updatedCall) {
-        expect(updatedCall.length).toBe(2)
-      }
-
-      // Loaded agents call should have 2 arguments
-      const loadedCall = debugCalls.find(call => 
-        call[0] === '[Marketplace] Loaded agents:'
-      )
-      expect(loadedCall).toBeDefined()
-      expect(loadedCall!.length).toBe(2)
+      // Verify agents loaded with migration
+      expect(result.current.agents).toHaveLength(1)
+      expect(result.current.agents[0].author_id).toBe('user-1')
     })
 
     it('should verify logger.error is called with correct number of arguments', async () => {

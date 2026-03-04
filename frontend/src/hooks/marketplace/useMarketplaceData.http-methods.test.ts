@@ -14,7 +14,12 @@ describe('useMarketplaceData - HTTP Methods (Phase 4.2)', () => {
   beforeEach(() => {
     jest.clearAllMocks()
     mockHttpClient = {
-      get: jest.fn().mockResolvedValue({ json: async () => [] }),
+      get: jest.fn().mockImplementation((url: string) => {
+        if (typeof url === 'string' && url.includes('marketplace/agents')) {
+          return Promise.reject(new Error('API unavailable'))
+        }
+        return Promise.resolve({ json: async () => [] })
+      }),
       post: jest.fn().mockResolvedValue({ ok: true, json: async () => ({ nodes: [] }) }),
     }
     mockStorage = {
@@ -53,7 +58,7 @@ describe('useMarketplaceData - HTTP Methods (Phase 4.2)', () => {
       // Should call: httpClient.get(`${apiBaseUrl}/templates/?${params}`)
       expect(mockHttpClient.get).toHaveBeenCalled()
       const callUrl = mockHttpClient.get.mock.calls[0][0]
-      expect(callUrl).toContain('http://api.test/templates/')
+      expect(callUrl).toContain('http://api.test/templates')
     })
 
     it('should verify get method is called (not post)', async () => {

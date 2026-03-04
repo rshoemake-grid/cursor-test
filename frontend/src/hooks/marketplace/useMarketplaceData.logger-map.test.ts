@@ -1,27 +1,18 @@
 /**
  * Logger Map Operation Tests for useMarketplaceData hook
- * Phase 4.2: Tests for logger calls with map operations
- * Targets surviving mutants in logger.debug calls with map
+ * Phase 4.2: Tests for agent data mapping (formerly logger.debug with map)
+ * Verifies agents are loaded and mapped correctly from localStorage
  */
 
 import { renderHook, waitFor } from '@testing-library/react'
 import { useMarketplaceData } from './useMarketplaceData'
 import { getLocalStorageItem } from '../storage'
-import { logger } from '../../utils/logger'
 
 jest.mock('../storage', () => ({
   getLocalStorageItem: jest.fn(),
 }))
 
-jest.mock('../../utils/logger', () => ({
-  logger: {
-    debug: jest.fn(),
-    error: jest.fn(),
-  },
-}))
-
 const mockGetLocalStorageItem = getLocalStorageItem as jest.MockedFunction<typeof getLocalStorageItem>
-const mockLoggerDebug = logger.debug as jest.MockedFunction<typeof logger.debug>
 
 describe('useMarketplaceData - Logger Map Operations (Phase 4.2)', () => {
   let mockHttpClient: any
@@ -30,7 +21,12 @@ describe('useMarketplaceData - Logger Map Operations (Phase 4.2)', () => {
   beforeEach(() => {
     jest.clearAllMocks()
     mockHttpClient = {
-      get: jest.fn().mockResolvedValue({ json: async () => [] }),
+      get: jest.fn().mockImplementation((url: string) => {
+        if (typeof url === 'string' && url.includes('marketplace/agents')) {
+          return Promise.reject(new Error('API unavailable'))
+        }
+        return Promise.resolve({ json: async () => [] })
+      }),
       post: jest.fn().mockResolvedValue({ ok: true, json: async () => ({ nodes: [] }) }),
     }
     mockStorage = {
@@ -43,8 +39,8 @@ describe('useMarketplaceData - Logger Map Operations (Phase 4.2)', () => {
     mockGetLocalStorageItem.mockReturnValue([])
   })
 
-  describe('Logger.debug with map - agentsData.map()', () => {
-    it('should call logger.debug with agentsData.map() result', async () => {
+  describe('Agent data mapping - agentsData', () => {
+    it('should load and map multiple agents from localStorage', async () => {
       const agents = [
         {
           id: 'agent-1',
@@ -67,7 +63,7 @@ describe('useMarketplaceData - Logger Map Operations (Phase 4.2)', () => {
       ]
       mockGetLocalStorageItem.mockReturnValue(agents)
 
-      renderHook(() =>
+      const { result } = renderHook(() =>
         useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
@@ -82,17 +78,13 @@ describe('useMarketplaceData - Logger Map Operations (Phase 4.2)', () => {
       )
 
       await waitFor(() => {
-        expect(mockLoggerDebug).toHaveBeenCalled()
+        expect(result.current.loading).toBe(false)
       })
 
-      // Should call: logger.debug('[Marketplace] Loaded agents:', agentsData.map(...))
-      expect(mockLoggerDebug).toHaveBeenCalledWith(
-        '[Marketplace] Loaded agents:',
-        expect.any(Array)
-      )
+      expect(result.current.agents).toHaveLength(2)
     })
 
-    it('should map agent properties in logger.debug call', async () => {
+    it('should map agent properties correctly', async () => {
       const agents = [
         {
           id: 'agent-1',
@@ -106,7 +98,7 @@ describe('useMarketplaceData - Logger Map Operations (Phase 4.2)', () => {
       ]
       mockGetLocalStorageItem.mockReturnValue(agents)
 
-      renderHook(() =>
+      const { result } = renderHook(() =>
         useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
@@ -121,22 +113,15 @@ describe('useMarketplaceData - Logger Map Operations (Phase 4.2)', () => {
       )
 
       await waitFor(() => {
-        expect(mockLoggerDebug).toHaveBeenCalled()
+        expect(result.current.loading).toBe(false)
       })
 
-      // Should map: { id: a.id, name: a.name, author_id: a.author_id, has_author_id: !!a.author_id }
-      const callArgs = mockLoggerDebug.mock.calls.find(
-        (call) => call[0] === '[Marketplace] Loaded agents:'
-      )
-      expect(callArgs).toBeDefined()
-      const mappedData = callArgs![1] as any[]
-      expect(mappedData[0]).toHaveProperty('id')
-      expect(mappedData[0]).toHaveProperty('name')
-      expect(mappedData[0]).toHaveProperty('author_id')
-      expect(mappedData[0]).toHaveProperty('has_author_id')
+      expect(result.current.agents[0]).toHaveProperty('id')
+      expect(result.current.agents[0]).toHaveProperty('name')
+      expect(result.current.agents[0]).toHaveProperty('author_id')
     })
 
-    it('should access a.id property in map callback', async () => {
+    it('should access a.id property in mapped agents', async () => {
       const agents = [
         {
           id: 'agent-1',
@@ -150,7 +135,7 @@ describe('useMarketplaceData - Logger Map Operations (Phase 4.2)', () => {
       ]
       mockGetLocalStorageItem.mockReturnValue(agents)
 
-      renderHook(() =>
+      const { result } = renderHook(() =>
         useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
@@ -165,18 +150,13 @@ describe('useMarketplaceData - Logger Map Operations (Phase 4.2)', () => {
       )
 
       await waitFor(() => {
-        expect(mockLoggerDebug).toHaveBeenCalled()
+        expect(result.current.loading).toBe(false)
       })
 
-      // Should access: a.id
-      const callArgs = mockLoggerDebug.mock.calls.find(
-        (call) => call[0] === '[Marketplace] Loaded agents:'
-      )
-      const mappedData = callArgs![1] as any[]
-      expect(mappedData[0].id).toBe('agent-1')
+      expect(result.current.agents[0].id).toBe('agent-1')
     })
 
-    it('should access a.name property in map callback', async () => {
+    it('should access a.name property in mapped agents', async () => {
       const agents = [
         {
           id: 'agent-1',
@@ -190,7 +170,7 @@ describe('useMarketplaceData - Logger Map Operations (Phase 4.2)', () => {
       ]
       mockGetLocalStorageItem.mockReturnValue(agents)
 
-      renderHook(() =>
+      const { result } = renderHook(() =>
         useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
@@ -205,18 +185,13 @@ describe('useMarketplaceData - Logger Map Operations (Phase 4.2)', () => {
       )
 
       await waitFor(() => {
-        expect(mockLoggerDebug).toHaveBeenCalled()
+        expect(result.current.loading).toBe(false)
       })
 
-      // Should access: a.name
-      const callArgs = mockLoggerDebug.mock.calls.find(
-        (call) => call[0] === '[Marketplace] Loaded agents:'
-      )
-      const mappedData = callArgs![1] as any[]
-      expect(mappedData[0].name).toBe('Test Agent')
+      expect(result.current.agents[0].name).toBe('Test Agent')
     })
 
-    it('should access a.author_id property in map callback', async () => {
+    it('should access a.author_id property in mapped agents', async () => {
       const agents = [
         {
           id: 'agent-1',
@@ -230,7 +205,7 @@ describe('useMarketplaceData - Logger Map Operations (Phase 4.2)', () => {
       ]
       mockGetLocalStorageItem.mockReturnValue(agents)
 
-      renderHook(() =>
+      const { result } = renderHook(() =>
         useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
@@ -245,18 +220,13 @@ describe('useMarketplaceData - Logger Map Operations (Phase 4.2)', () => {
       )
 
       await waitFor(() => {
-        expect(mockLoggerDebug).toHaveBeenCalled()
+        expect(result.current.loading).toBe(false)
       })
 
-      // Should access: a.author_id
-      const callArgs = mockLoggerDebug.mock.calls.find(
-        (call) => call[0] === '[Marketplace] Loaded agents:'
-      )
-      const mappedData = callArgs![1] as any[]
-      expect(mappedData[0].author_id).toBe('user-123')
+      expect(result.current.agents[0].author_id).toBe('user-123')
     })
 
-    it('should compute has_author_id with !!a.author_id', async () => {
+    it('should preserve author_id for agents with and without author', async () => {
       const agents = [
         {
           id: 'agent-1',
@@ -279,7 +249,7 @@ describe('useMarketplaceData - Logger Map Operations (Phase 4.2)', () => {
       ]
       mockGetLocalStorageItem.mockReturnValue(agents)
 
-      renderHook(() =>
+      const { result } = renderHook(() =>
         useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
@@ -294,19 +264,14 @@ describe('useMarketplaceData - Logger Map Operations (Phase 4.2)', () => {
       )
 
       await waitFor(() => {
-        expect(mockLoggerDebug).toHaveBeenCalled()
+        expect(result.current.loading).toBe(false)
       })
 
-      // Should compute: has_author_id: !!a.author_id
-      const callArgs = mockLoggerDebug.mock.calls.find(
-        (call) => call[0] === '[Marketplace] Loaded agents:'
-      )
-      const mappedData = callArgs![1] as any[]
-      expect(mappedData[0].has_author_id).toBe(true) // user-1 is truthy
-      expect(mappedData[1].has_author_id).toBe(false) // null is falsy
+      expect(result.current.agents[0].author_id).toBe('user-1')
+      expect(result.current.agents[1].author_id).toBeNull()
     })
 
-    it('should verify exact logger.debug message string', async () => {
+    it('should load agent with correct structure', async () => {
       const agents = [
         {
           id: 'agent-1',
@@ -320,7 +285,7 @@ describe('useMarketplaceData - Logger Map Operations (Phase 4.2)', () => {
       ]
       mockGetLocalStorageItem.mockReturnValue(agents)
 
-      renderHook(() =>
+      const { result } = renderHook(() =>
         useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
@@ -335,14 +300,14 @@ describe('useMarketplaceData - Logger Map Operations (Phase 4.2)', () => {
       )
 
       await waitFor(() => {
-        expect(mockLoggerDebug).toHaveBeenCalled()
+        expect(result.current.loading).toBe(false)
       })
 
-      // Should use exact string: '[Marketplace] Loaded agents:'
-      expect(mockLoggerDebug).toHaveBeenCalledWith(
-        '[Marketplace] Loaded agents:',
-        expect.any(Array)
-      )
+      expect(result.current.agents[0]).toMatchObject({
+        id: 'agent-1',
+        name: 'Agent',
+        author_id: null,
+      })
     })
 
     it('should map all agents in agentsData array', async () => {
@@ -377,7 +342,7 @@ describe('useMarketplaceData - Logger Map Operations (Phase 4.2)', () => {
       ]
       mockGetLocalStorageItem.mockReturnValue(agents)
 
-      renderHook(() =>
+      const { result } = renderHook(() =>
         useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
@@ -392,15 +357,10 @@ describe('useMarketplaceData - Logger Map Operations (Phase 4.2)', () => {
       )
 
       await waitFor(() => {
-        expect(mockLoggerDebug).toHaveBeenCalled()
+        expect(result.current.loading).toBe(false)
       })
 
-      // Should map all agents: agentsData.map(a => ({ ... }))
-      const callArgs = mockLoggerDebug.mock.calls.find(
-        (call) => call[0] === '[Marketplace] Loaded agents:'
-      )
-      const mappedData = callArgs![1] as any[]
-      expect(mappedData.length).toBe(3)
+      expect(result.current.agents).toHaveLength(3)
     })
   })
 })

@@ -4,7 +4,6 @@
  * SOLID: Single Responsibility - only handles formatting
  */
 
-import React from 'react'
 import { Clock, CheckCircle, XCircle, Play, AlertCircle } from 'lucide-react'
 import type { ReactNode } from 'react'
 

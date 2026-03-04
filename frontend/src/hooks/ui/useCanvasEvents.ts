@@ -72,8 +72,9 @@ export function useCanvasEvents({
         }
       }
 
-      // Check for custom agent node data
+      // Check for custom agent or tool node data
       const customAgentData = event.dataTransfer.getData('application/custom-agent')
+      const customToolData = event.dataTransfer.getData('application/custom-tool')
       let customData = null
       if (customAgentData) {
         try {
@@ -81,25 +82,46 @@ export function useCanvasEvents({
         } catch (e) {
           logger.error('Failed to parse custom agent data:', e)
         }
+      } else if (customToolData && type === 'tool') {
+        try {
+          customData = JSON.parse(customToolData)
+        } catch (e) {
+          logger.error('Failed to parse custom tool data:', e)
+        }
       }
 
       const defaultLabel = `${type.charAt(0).toUpperCase() + type.slice(1)} Node`
-      const newNode = {
-        id: `${type}-${Date.now()}`,
-        type,
-        position,
-        draggable: true,
-        data: customData ? {
+      let nodeData: Record<string, unknown>
+      if (type === 'tool' && customData) {
+        nodeData = {
+          label: logicalOr(customData.label, defaultLabel),
+          name: logicalOr(customData.label, defaultLabel),
+          description: logicalOr(customData.description, ''),
+          tool_config: logicalOrToEmptyObject(customData.tool_config),
+          inputs: [],
+        }
+      } else if (customData) {
+        nodeData = {
           label: logicalOr(customData.label, defaultLabel),
           name: logicalOr(customData.label, defaultLabel),
           description: logicalOr(customData.description, ''),
           agent_config: logicalOrToEmptyObject(customData.agent_config),
           inputs: [],
-        } : {
+        }
+      } else {
+        nodeData = {
           label: defaultLabel,
           name: defaultLabel,
           inputs: [],
-        },
+        }
+      }
+
+      const newNode = {
+        id: `${type}-${Date.now()}`,
+        type,
+        position,
+        draggable: true,
+        data: nodeData,
       }
 
       // Add to local nodes state
@@ -198,6 +220,44 @@ export function useCanvasEvents({
     }
   }, [storage])
 
+  const handleAddToToolNodes = useCallback((node: any) => {
+    if (node.type !== 'tool') return
+    if (!storage) {
+      showError('Storage not available')
+      return
+    }
+
+    try {
+      const saved = storage.getItem(STORAGE_KEYS.CUSTOM_TOOL_NODES)
+      const tools = saved ? JSON.parse(saved) : logicalOrToEmptyArray([])
+      const toolConfig = logicalOrToEmptyObject(node.data.tool_config)
+      const toolTemplate = {
+        id: `tool_${Date.now()}`,
+        label: logicalOr(node.data.label, logicalOr(node.data.name, 'Custom Tool')),
+        description: logicalOr(node.data.description, ''),
+        tool_config: toolConfig,
+        type: 'tool',
+      }
+      const exists = tools.some((n: any) =>
+        n.label === toolTemplate.label &&
+        JSON.stringify(n.tool_config) === JSON.stringify(toolTemplate.tool_config)
+      )
+      if (!exists) {
+        tools.push(toolTemplate)
+        storage.setItem(STORAGE_KEYS.CUSTOM_TOOL_NODES, JSON.stringify(tools))
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new Event('customToolNodesUpdated'))
+        }
+        showSuccess('Tool node added to palette')
+      } else {
+        showError('This tool node already exists in the palette')
+      }
+    } catch (error) {
+      logger.error('Failed to save tool node:', error)
+      showError('Failed to add tool node to palette')
+    }
+  }, [storage])
+
   return {
     onConnect,
     onDragOver,
@@ -205,6 +265,7 @@ export function useCanvasEvents({
     onNodeClick,
     onPaneClick,
     handleAddToAgentNodes,
+    handleAddToToolNodes,
     isDraggingRef,
   }
 }

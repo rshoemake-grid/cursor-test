@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Bot, Workflow } from 'lucide-react';
+import { ArrowLeft, Bot, Workflow, Wrench } from 'lucide-react';
 // Domain-based imports - Phase 7
 import { 
   useOfficialAgentSeeding, 
@@ -47,6 +47,7 @@ export default function MarketplacePage({
     isAgentsTab,
     isRepositoryTab,
     isWorkflowsOfWorkflowsTab,
+    isToolsTab,
     isRepositoryWorkflowsSubTab,
     isRepositoryAgentsSubTab,
   } = tabs;
@@ -61,6 +62,7 @@ export default function MarketplacePage({
     templateSelection,
     agentSelection,
     repositoryAgentSelection,
+    toolSelection,
     clearSelectionsForTab,
   } = selections;
   
@@ -84,6 +86,7 @@ export default function MarketplacePage({
     workflowsOfWorkflows,
     agents,
     repositoryAgents,
+    tools,
     loading,
     setTemplates,
     setWorkflowsOfWorkflows,
@@ -93,6 +96,7 @@ export default function MarketplacePage({
     fetchWorkflowsOfWorkflows,
     fetchAgents,
     fetchRepositoryAgents,
+    fetchTools,
   } = marketplaceData
 
   // Seed official agents from official workflows (one-time)
@@ -141,8 +145,10 @@ export default function MarketplacePage({
     templateSelection,
     agentSelection,
     repositoryAgentSelection,
+    toolSelection,
     agents,
     repositoryAgents,
+    tools,
     storage,
     useTemplate,
     deleteSelectedAgents: deleteSelectedAgentsHandler,
@@ -153,6 +159,7 @@ export default function MarketplacePage({
   const {
     handleLoadWorkflows,
     handleUseAgents,
+    handleUseTools,
     handleDeleteAgents,
     handleDeleteWorkflows,
     handleDeleteRepositoryAgents,
@@ -162,6 +169,7 @@ export default function MarketplacePage({
   const handleCardClick = createCardClickHandler(templateSelection.toggle);
   const handleAgentCardClick = createCardClickHandler(agentSelection.toggle);
   const handleRepositoryAgentCardClick = createCardClickHandler(repositoryAgentSelection.toggle);
+  const handleToolCardClick = createCardClickHandler(toolSelection.toggle);
 
   // Official items checking (extracted hook)
   const { hasOfficialWorkflows, hasOfficialAgents } = useOfficialItems({
@@ -193,6 +201,8 @@ export default function MarketplacePage({
 
   const showAgentActions = (isAgentsTab && agentSelection.size > 0) || 
                            (isRepositoryAgentsSubTab && repositoryAgentSelection.size > 0);
+
+  const showToolActions = isToolsTab && toolSelection.size > 0;
 
   return (
     <div className="h-screen bg-gray-50 flex flex-col overflow-hidden">
@@ -236,6 +246,15 @@ export default function MarketplacePage({
                   showDelete={isRepositoryAgentsSubTab || !hasOfficialAgents}
                 />
               )}
+              {showToolActions && (
+                <MarketplaceActionButtons
+                  selectedCount={toolSelection.size}
+                  hasOfficial={false}
+                  onUse={handleUseTools}
+                  type="tool"
+                  showDelete={false}
+                />
+              )}
             </div>
           </div>
 
@@ -258,6 +277,12 @@ export default function MarketplacePage({
               icon={Workflow}
               isActive={isWorkflowsOfWorkflowsTab}
               onClick={() => setActiveTab(MARKETPLACE_TABS.WORKFLOWS_OF_WORKFLOWS)}
+            />
+            <MarketplaceTabButton
+              label="Tools"
+              icon={Wrench}
+              isActive={isToolsTab}
+              onClick={() => setActiveTab(MARKETPLACE_TABS.TOOLS)}
             />
           </div>
 
@@ -299,6 +324,8 @@ export default function MarketplacePage({
                 }
               } else if (isWorkflowsOfWorkflowsTab) {
                 fetchWorkflowsOfWorkflows();
+              } else if (isToolsTab) {
+                fetchTools();
               } else {
                 fetchAgents();
               }
@@ -316,16 +343,20 @@ export default function MarketplacePage({
           loading={loading}
           activeTab={activeTab}
           isAgentsTab={isAgentsTab}
+          isToolsTab={isToolsTab}
           isRepositoryWorkflowsSubTab={isRepositoryWorkflowsSubTab}
           isRepositoryAgentsSubTab={isRepositoryAgentsSubTab}
           agents={agents}
+          tools={tools}
           templates={templates}
           repositoryAgents={repositoryAgents}
           workflowsOfWorkflows={workflowsOfWorkflows}
           agentSelection={agentSelection}
+          toolSelection={toolSelection}
           templateSelection={templateSelection}
           repositoryAgentSelection={repositoryAgentSelection}
           handleAgentCardClick={handleAgentCardClick}
+          handleToolCardClick={handleToolCardClick}
           handleCardClick={handleCardClick}
           handleRepositoryAgentCardClick={handleRepositoryAgentCardClick}
           getDifficultyColor={getDifficultyColor}

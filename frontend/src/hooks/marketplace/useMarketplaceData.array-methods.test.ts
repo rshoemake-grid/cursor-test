@@ -21,7 +21,12 @@ describe('useMarketplaceData - Array Methods (Phase 4.2)', () => {
   beforeEach(() => {
     jest.clearAllMocks()
     mockHttpClient = {
-      get: jest.fn().mockResolvedValue({ json: async () => [] }),
+      get: jest.fn().mockImplementation((url: string) => {
+        if (typeof url === 'string' && url.includes('marketplace/agents')) {
+          return Promise.reject(new Error('API unavailable'))
+        }
+        return Promise.resolve({ json: async () => [] })
+      }),
       post: jest.fn().mockResolvedValue({ ok: true, json: async () => ({ nodes: [] }) }),
     }
     mockStorage = {
@@ -399,7 +404,7 @@ describe('useMarketplaceData - Array Methods (Phase 4.2)', () => {
       expect(savedData[0].author_id).toBe('user-1')
     })
 
-    it('should call map() on agentsData for logging', async () => {
+    it('should map agentsData to agent objects with id, name, author_id', async () => {
       const agents = [
         {
           id: 'agent-1',
@@ -414,10 +419,7 @@ describe('useMarketplaceData - Array Methods (Phase 4.2)', () => {
       ]
       mockGetLocalStorageItem.mockReturnValue(agents)
 
-      // eslint-disable-next-line @typescript-eslint/no-var-requires -- Dynamic require needed for Jest mocking
-      const loggerSpy = jest.spyOn(require('../../utils/logger').logger, 'debug')
-
-      renderHook(() =>
+      const { result } = renderHook(() =>
         useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
@@ -432,16 +434,16 @@ describe('useMarketplaceData - Array Methods (Phase 4.2)', () => {
       )
 
       await waitFor(() => {
-        expect(loggerSpy).toHaveBeenCalled()
+        expect(result.current.loading).toBe(false)
       })
 
-      // Should call: agentsData.map(a => ({ id: a.id, name: a.name, author_id: a.author_id, author_name: a.author_name }))
-      expect(loggerSpy).toHaveBeenCalledWith(
-        expect.stringContaining('[Marketplace] Loaded agents:'),
-        expect.any(Array)
-      )
-
-      loggerSpy.mockRestore()
+      // Should map agents with id, name, author_id
+      expect(result.current.agents).toHaveLength(1)
+      expect(result.current.agents[0]).toMatchObject({
+        id: 'agent-1',
+        name: 'Agent',
+        author_id: 'user-1',
+      })
     })
   })
 

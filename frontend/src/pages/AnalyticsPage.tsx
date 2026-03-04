@@ -208,7 +208,7 @@ export default function AnalyticsPage({
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="date" />
                   <YAxis domain={[0, 100]} />
-                  <Tooltip formatter={(value: number) => `${value}%`} />
+                  <Tooltip formatter={(value: number | undefined) => `${value ?? 0}%`} />
                   <Legend />
                   <Line
                     type="monotone"
@@ -235,7 +235,7 @@ export default function AnalyticsPage({
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="date" />
                   <YAxis />
-                  <Tooltip formatter={(value: number) => `${value}s`} />
+                  <Tooltip formatter={(value: number | undefined) => `${value ?? 0}s`} />
                   <Legend />
                   <Line
                     type="monotone"
@@ -264,7 +264,7 @@ export default function AnalyticsPage({
                     cx="50%"
                     cy="50%"
                     labelLine={false}
-                    label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                    label={({ name, percent }) => `${name} ${((percent ?? 0) * 100).toFixed(0)}%`}
                     outerRadius={80}
                     fill="#8884d8"
                     dataKey="value"

@@ -22,7 +22,7 @@ interface UseWorkflowDeletionOptions {
   user: { id: string; username?: string; email?: string } | null
   templates: Template[]
   workflowsOfWorkflows: Template[]
-  activeTab: 'agents' | 'repository' | 'workflows-of-workflows'
+  activeTab: 'agents' | 'repository' | 'workflows-of-workflows' | 'tools'
   setTemplates: React.Dispatch<React.SetStateAction<Template[]>>
   setWorkflowsOfWorkflows: React.Dispatch<React.SetStateAction<Template[]>>
   setSelectedTemplateIds: React.Dispatch<React.SetStateAction<Set<string>>>
