@@ -20,6 +20,7 @@ from ...dependencies import WorkflowServiceDep, SettingsServiceDep, ExecutionSer
 from ...services.execution_orchestrator import ExecutionOrchestrator
 from ...exceptions import ExecutionNotFoundError
 from ...utils.log_utils import serialize_log_for_json
+from ...utils.error_handling import handle_execution_errors
 
 logger = get_logger(__name__)
 
@@ -72,47 +73,33 @@ async def execute_workflow(
 ):
     """
     Execute a workflow (optionally authenticated).
-    
-    Refactored to use ExecutionOrchestrator following SRP.
+    Error handling via @handle_execution_errors (DRY).
     """
-    try:
-        user_id = current_user.id if current_user else None
-        logger.info(f"Executing workflow {workflow_id} for user_id: {user_id}")
-        
-        # Create orchestrator
-        orchestrator = ExecutionOrchestrator(db, settings_service, workflow_service)
-        
-        # Prepare execution (validates workflow, gets LLM config, creates executor)
-        execution_id, workflow_def, inputs, executor = await orchestrator.prepare_execution(
-            workflow_id=workflow_id,
-            user_id=user_id,
-            execution_request=execution_request
-        )
-        
-        # Create execution record in database
-        await orchestrator.create_execution_record(
-            execution_id=execution_id,
-            workflow_id=workflow_id,
-            user_id=user_id
-        )
-        
-        # Start execution in background
-        task = asyncio.create_task(
-            orchestrator.run_execution_in_background(executor, execution_id, inputs)
-        )
-        logger.debug(f"Background task created for execution_id={execution_id}")
-        
-        # Return response
-        response = orchestrator.create_response(execution_id, workflow_id)
-        logger.info(f"Workflow execution started: execution_id={execution_id}")
-        return response
-        
-    except HTTPException:
-        # Re-raise HTTP exceptions (404, 422, etc.)
-        raise
-    except Exception as e:
-        logger.error(f"Unexpected error executing workflow: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
+    user_id = current_user.id if current_user else None
+    logger.info(f"Executing workflow {workflow_id} for user_id: {user_id}")
+
+    orchestrator = ExecutionOrchestrator(db, settings_service, workflow_service)
+
+    execution_id, workflow_def, inputs, executor = await orchestrator.prepare_execution(
+        workflow_id=workflow_id,
+        user_id=user_id,
+        execution_request=execution_request
+    )
+
+    await orchestrator.create_execution_record(
+        execution_id=execution_id,
+        workflow_id=workflow_id,
+        user_id=user_id
+    )
+
+    asyncio.create_task(
+        orchestrator.run_execution_in_background(executor, execution_id, inputs)
+    )
+    logger.debug(f"Background task created for execution_id={execution_id}")
+
+    response = orchestrator.create_response(execution_id, workflow_id)
+    logger.info(f"Workflow execution started: execution_id={execution_id}")
+    return response
 
 
 @router.get("/executions/{execution_id}", response_model=ExecutionResponse)

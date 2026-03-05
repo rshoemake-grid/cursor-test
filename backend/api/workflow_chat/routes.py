@@ -13,7 +13,7 @@ from backend.utils.error_handling import INVALID_API_KEY_MSG, is_api_key_error
 from .models import ChatRequest, ChatResponse
 from .tools import get_workflow_tools
 from .context import get_workflow_context
-from .service import create_changes_dict, run_chat_loop
+from .service import create_changes_dict, run_chat_loop, has_workflow_changes
 
 logger = get_logger(__name__)
 
@@ -91,16 +91,9 @@ async def chat_with_workflow(
             iteration_limit=iteration_limit,
         )
 
-        has_changes = any([
-            all_changes["nodes_to_add"],
-            all_changes["nodes_to_update"],
-            all_changes["nodes_to_delete"],
-            all_changes["edges_to_add"],
-            all_changes["edges_to_delete"],
-        ])
         return ChatResponse(
             message=assistant_message,
-            workflow_changes=all_changes if has_changes else None,
+            workflow_changes=all_changes if has_workflow_changes(all_changes) else None,
             workflow_id=request.workflow_id,
         )
 

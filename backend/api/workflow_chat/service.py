@@ -24,6 +24,14 @@ def create_changes_dict() -> Dict[str, List[Any]]:
     }
 
 
+def has_workflow_changes(changes: Dict[str, List[Any]]) -> bool:
+    """Check if workflow changes dict has any changes (DRY)."""
+    return any(
+        changes.get(key)
+        for key in ("nodes_to_add", "nodes_to_update", "nodes_to_delete", "edges_to_add", "edges_to_delete")
+    )
+
+
 async def run_chat_loop(
     client: Any,
     model: str,

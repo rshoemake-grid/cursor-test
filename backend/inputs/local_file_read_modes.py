@@ -9,18 +9,7 @@ from pathlib import Path
 from typing import Any, Dict, List
 
 from ..utils.image_utils import get_mimetype_from_bytes, bytes_to_data_url
-
-
-def _parse_json_line(line: str, line_number: int, parse_json: bool, **extra: Any) -> Dict[str, Any]:
-    """Parse a line, optionally as JSON."""
-    line = line.rstrip("\n\r")
-    if parse_json:
-        try:
-            parsed = json.loads(line)
-            return {"line_number": line_number, "content": parsed, "raw": line, **extra}
-        except json.JSONDecodeError:
-            return {"line_number": line_number, "content": line, "raw": line, **extra}
-    return {"line_number": line_number, "content": line, "raw": line, **extra}
+from ..utils.line_utils import parse_json_line
 
 
 def read_tail(path: Path, config: Dict[str, Any], encoding: str) -> Dict[str, Any]:
@@ -69,7 +58,7 @@ def read_tail(path: Path, config: Dict[str, Any], encoding: str) -> Dict[str, An
 
         for idx, line in enumerate(lines_found[-num_lines:]):
             ln = len(lines_found) - num_lines + idx + 1
-            lines.append(_parse_json_line(line, ln, parse_json))
+            lines.append(parse_json_line(line, ln, parse_json))
 
     if follow:
         initial_size = file_size
@@ -84,7 +73,7 @@ def read_tail(path: Path, config: Dict[str, Any], encoding: str) -> Dict[str, An
                     for new_line in new_content.split("\n"):
                         if new_line.strip():
                             lines.append(
-                                _parse_json_line(
+                                parse_json_line(
                                     new_line, len(lines) + 1, parse_json, is_new=True
                                 )
                             )
@@ -117,7 +106,7 @@ def read_lines(path: Path, config: Dict[str, Any], encoding: str) -> Dict[str, A
                 continue
             if max_lines and line_count >= max_lines:
                 break
-            lines.append(_parse_json_line(line, line_count + 1, parse_json))
+            lines.append(parse_json_line(line, line_count + 1, parse_json))
             line_count += 1
 
     return {
@@ -152,7 +141,7 @@ def read_batch(path: Path, config: Dict[str, Any], encoding: str) -> Dict[str, A
             if skip_empty and not line:
                 continue
             current_batch.append(
-                _parse_json_line(line, start_line + line_count + 1, parse_json)
+                parse_json_line(line, start_line + line_count + 1, parse_json)
             )
             line_count += 1
             if len(current_batch) >= batch_size:

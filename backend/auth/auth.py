@@ -12,9 +12,27 @@ import os
 from backend.database.models import UserDB
 from backend.database.db import get_db
 
-# Configuration
-SECRET_KEY = os.getenv("SECRET_KEY", "your-secret-key-change-in-production")
-REFRESH_TOKEN_SECRET_KEY = os.getenv("REFRESH_TOKEN_SECRET_KEY", SECRET_KEY)  # Can use same or different
+# Configuration - keys from environment only (never in code)
+# Set SECRET_KEY and REFRESH_TOKEN_SECRET_KEY in .env or environment (see .env.example)
+def _get_secret_key() -> str:
+    key = os.getenv("SECRET_KEY")
+    if not key or not key.strip():
+        if os.getenv("ENVIRONMENT") == "production":
+            raise RuntimeError(
+                "SECRET_KEY must be set in production. "
+                "Set it in .env or environment variables. See .env.example for required keys."
+            )
+        return "your-secret-key-change-in-production"
+    return key
+
+
+def _get_refresh_secret_key() -> str:
+    key = os.getenv("REFRESH_TOKEN_SECRET_KEY")
+    return key if key and key.strip() else _get_secret_key()
+
+
+SECRET_KEY = _get_secret_key()
+REFRESH_TOKEN_SECRET_KEY = _get_refresh_secret_key()
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 REFRESH_TOKEN_EXPIRE_DAYS = 30  # Refresh tokens last 30 days

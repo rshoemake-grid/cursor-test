@@ -26,20 +26,9 @@ except ImportError:
     AWS_AVAILABLE = False
 
 from ..utils.logger import get_logger
+from ..utils.path_utils import validate_path_within_base
 
 logger = get_logger(__name__)
-
-
-def _parse_json_line(line: str, line_number: int, parse_json: bool, **extra: Any) -> Dict[str, Any]:
-    """Parse a line, optionally as JSON. Returns dict with line_number, content, raw, and any extra keys."""
-    line = line.rstrip("\n\r")
-    if parse_json:
-        try:
-            parsed = json.loads(line)
-            return {"line_number": line_number, "content": parsed, "raw": line, **extra}
-        except json.JSONDecodeError:
-            return {"line_number": line_number, "content": line, "raw": line, **extra}
-    return {"line_number": line_number, "content": line, "raw": line, **extra}
 
 
 def _serialize_for_write(data: Any, as_bytes: bool = False, indent: int = 2) -> tuple[Any, str]:
@@ -333,6 +322,9 @@ class LocalFileSystemHandler(InputSourceHandler):
         file_path = os.path.expanduser(file_path)
         path = Path(file_path).resolve()
 
+        # Path traversal protection - ensure path is within allowed base
+        validate_path_within_base(path)
+
         # Check if file exists
         if not path.exists():
             raise FileNotFoundError(f"File not found: {file_path}. Please check that the file exists and the path is correct.")
@@ -401,10 +393,14 @@ class LocalFileSystemHandler(InputSourceHandler):
         # Expand user path (~) and resolve absolute path
         file_path = os.path.expanduser(file_path)
         path = Path(file_path).resolve()
-        
+
+        # Path traversal protection
+        validate_path_within_base(path)
+
         # If path is a directory and file_pattern is provided, combine them
         if path.is_dir() and file_pattern:
-            path = path / file_pattern
+            path = (path / file_pattern).resolve()
+            validate_path_within_base(path)
         elif path.is_dir():
             # If it's a directory without a pattern, use a default filename
             raise ValueError(f"file_path '{file_path}' is a directory. Please provide a file_pattern or use a full file path.")

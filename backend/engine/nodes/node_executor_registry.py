@@ -14,14 +14,11 @@ class NodeExecutorRegistry:
 
     _executors: Dict[NodeType, NodeExecutor] = {}
     _storage_types: Set[NodeType] = set()
-    _needs_input_prep: Set[NodeType] = set()  # Types that need shared input preparation
 
     @classmethod
-    def register(cls, node_type: NodeType, executor: NodeExecutor, needs_input_prep: bool = True) -> None:
+    def register(cls, node_type: NodeType, executor: NodeExecutor) -> None:
         """Register an executor for a node type."""
         cls._executors[node_type] = executor
-        if needs_input_prep:
-            cls._needs_input_prep.add(node_type)
 
     @classmethod
     def register_storage(cls, node_type: NodeType, executor: NodeExecutor) -> None:
@@ -39,11 +36,6 @@ class NodeExecutorRegistry:
         """Check if node type is a storage node."""
         return node_type in cls._storage_types
 
-    @classmethod
-    def needs_input_preparation(cls, node_type: NodeType) -> bool:
-        """Check if node type needs shared input preparation before execution."""
-        return node_type in cls._needs_input_prep
-
 
 def _bootstrap_registry() -> None:
     """Register default executors. Called on module import."""
@@ -55,7 +47,7 @@ def _bootstrap_registry() -> None:
     NodeExecutorRegistry.register(NodeType.AGENT, executors.execute_agent)
     NodeExecutorRegistry.register(NodeType.CONDITION, executors.execute_agent)
     NodeExecutorRegistry.register(NodeType.LOOP, executors.execute_agent)
-    NodeExecutorRegistry.register(NodeType.TOOL, executors.execute_tool, needs_input_prep=True)
+    NodeExecutorRegistry.register(NodeType.TOOL, executors.execute_tool)
     NodeExecutorRegistry.register(NodeType.START, executors.execute_passthrough)
     NodeExecutorRegistry.register(NodeType.END, executors.execute_passthrough)
 

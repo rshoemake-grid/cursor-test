@@ -13,6 +13,8 @@ def get_mimetype_from_bytes(data: bytes) -> Optional[str]:
         return "image/jpeg"
     if data[:4] == b"GIF8":
         return "image/gif"
+    if data[:4] == b"RIFF" and len(data) >= 12 and data[8:12] == b"WEBP":
+        return "image/webp"
     return None
 
 
