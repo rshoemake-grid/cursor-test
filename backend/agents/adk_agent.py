@@ -3,8 +3,9 @@ Google ADK Agent - Wrapper around Google Agent Development Kit
 Supports ADK agent configuration and execution
 """
 from typing import Any, Dict, Optional, Callable, Awaitable
-import os
 import asyncio
+
+from ..utils.env_config_utils import get_llm_fallback_config_from_env
 from .base import BaseAgent
 from ..models.schemas import Node, ADKAgentConfig
 from ..utils.logger import get_logger
@@ -52,7 +53,7 @@ class ADKAgent(BaseAgent):
         
         self.config = agent_config
         self.adk_config = agent_config.adk_config
-        self.llm_config = llm_config or self._get_fallback_config()
+        self.llm_config = llm_config or get_llm_fallback_config_from_env()
         self.user_id = user_id
         
         # Initialize ADK agent
@@ -60,18 +61,6 @@ class ADKAgent(BaseAgent):
             self._init_adk_agent()
         else:
             logger.warning("ADK agent initialized but ADK library not available")
-    
-    def _get_fallback_config(self) -> Optional[Dict[str, Any]]:
-        """Fallback to environment variables if no config provided"""
-        gemini_key = os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
-        if gemini_key:
-            return {
-                "type": "gemini",
-                "api_key": gemini_key,
-                "base_url": "https://generativelanguage.googleapis.com/v1beta",
-                "model": "gemini-2.5-flash"
-            }
-        return None
     
     def _init_adk_agent(self):
         """Initialize the ADK agent instance"""

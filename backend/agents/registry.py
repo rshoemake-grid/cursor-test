@@ -56,7 +56,7 @@ class AgentRegistry:
         if not agent_class:
             raise ValueError(f"No agent registered for node type: {node.type}")
         
-        if node.type == NodeType.AGENT and llm_config:
+        if node.type == NodeType.AGENT:
             return agent_class(
                 node,
                 llm_config=llm_config,

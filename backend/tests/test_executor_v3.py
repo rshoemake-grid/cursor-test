@@ -163,7 +163,7 @@ async def test_execute_with_agent_node(agent_workflow):
     executor = WorkflowExecutorV3(agent_workflow)
     
     # Mock agent execution
-    with patch("backend.engine.executor_v3.AgentRegistry.get_agent") as mock_get_agent:
+    with patch("backend.engine.nodes.executors.AgentRegistry.get_agent") as mock_get_agent:
         mock_agent = AsyncMock()
         mock_agent.execute = AsyncMock(return_value="Agent output")
         mock_get_agent.return_value = mock_agent
@@ -213,7 +213,7 @@ async def test_execute_with_condition_node():
     
     executor = WorkflowExecutorV3(workflow)
     
-    with patch("backend.engine.executor_v3.AgentRegistry.get_agent") as mock_get_agent:
+    with patch("backend.engine.nodes.executors.AgentRegistry.get_agent") as mock_get_agent:
         mock_condition = AsyncMock()
         mock_condition.execute = AsyncMock(return_value={"branch": "true"})
         mock_get_agent.return_value = mock_condition

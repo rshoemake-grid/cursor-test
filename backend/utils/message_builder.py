@@ -2,6 +2,7 @@
 import base64
 from typing import Any, Dict, Optional
 
+from .image_utils import bytes_to_data_url, get_mimetype_from_bytes
 from .logger import get_logger
 
 logger = get_logger(__name__)
@@ -57,7 +58,7 @@ def build_user_message(
 
 
 def _detect_image(value: Any, _key: str) -> tuple[bool, Optional[str]]:
-    """Detect if value is image data. Returns (is_image, image_data_or_none)."""
+    """Detect if value is image data. Returns (is_image, image_data_or_none). Uses image_utils (DRY)."""
     if isinstance(value, str):
         if value.startswith("data:image/"):
             return True, value
@@ -66,44 +67,32 @@ def _detect_image(value: Any, _key: str) -> tuple[bool, Optional[str]]:
         ):
             return True, value
     elif isinstance(value, bytes):
-        try:
-            if value[:4] == b"\x89PNG" or value[:2] == b"\xff\xd8" or value[:4] == b"GIF8":
-                mimetype = (
-                    "image/png"
-                    if value[:4] == b"\x89PNG"
-                    else ("image/jpeg" if value[:2] == b"\xff\xd8" else "image/gif")
-                )
-                b64 = base64.b64encode(value).decode("utf-8")
-                return True, f"data:{mimetype};base64,{b64}"
-        except Exception:
-            pass
+        mimetype = get_mimetype_from_bytes(value)
+        if mimetype:
+            try:
+                return True, bytes_to_data_url(value, mimetype)
+            except Exception:
+                pass
     elif isinstance(value, dict):
         if "image" in value:
             img = value["image"]
             if isinstance(img, str) and img.startswith("data:image/"):
                 return True, img
             if isinstance(img, bytes):
-                try:
-                    mimetype = (
-                        "image/png"
-                        if img[:4] == b"\x89PNG"
-                        else ("image/jpeg" if img[:2] == b"\xff\xd8" else "image/gif")
-                    )
-                    b64 = base64.b64encode(img).decode("utf-8")
-                    return True, f"data:{mimetype};base64,{b64}"
-                except Exception:
-                    pass
+                mimetype = get_mimetype_from_bytes(img)
+                if mimetype:
+                    try:
+                        return True, bytes_to_data_url(img, mimetype)
+                    except Exception:
+                        pass
         if "image_data" in value:
             img = value["image_data"]
             if isinstance(img, str):
                 try:
                     decoded = base64.b64decode(img)
-                    mimetype = (
-                        "image/png"
-                        if decoded[:4] == b"\x89PNG"
-                        else ("image/jpeg" if decoded[:2] == b"\xff\xd8" else "image/gif")
-                    )
-                    return True, f"data:{mimetype};base64,{img}"
+                    mimetype = get_mimetype_from_bytes(decoded)
+                    if mimetype:
+                        return True, f"data:{mimetype};base64,{img}"
                 except Exception:
                     pass
     return False, None

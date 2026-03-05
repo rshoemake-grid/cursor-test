@@ -1,5 +1,4 @@
 """Workflow chat API routes"""
-import json
 from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, HTTPException, Depends
@@ -9,11 +8,12 @@ from backend.database.models import UserDB
 from backend.auth import get_optional_user
 from backend.utils.logger import get_logger
 from backend.dependencies import SettingsServiceDep, LLMClientFactoryDep, WorkflowServiceDep
+from backend.utils.error_handling import INVALID_API_KEY_MSG, is_api_key_error
 
 from .models import ChatRequest, ChatResponse
-from .tools import get_workflow_tools, tool_response
+from .tools import get_workflow_tools
 from .context import get_workflow_context
-from .handlers import get_tool_handlers
+from .service import create_changes_dict, run_chat_loop
 
 logger = get_logger(__name__)
 
@@ -75,87 +75,21 @@ async def chat_with_workflow(
         messages.append({"role": "user", "content": request.message})
 
         tools = get_workflow_tools(request.workflow_id)
+        workflow_changes = create_changes_dict()
+        saved_changes = create_changes_dict()
 
-        workflow_changes: Dict[str, List[Any]] = {
-            "nodes_to_add": [],
-            "nodes_to_update": [],
-            "nodes_to_delete": [],
-            "edges_to_add": [],
-            "edges_to_delete": [],
-        }
-        saved_changes: Dict[str, List[Any]] = {
-            "nodes_to_add": [],
-            "nodes_to_update": [],
-            "nodes_to_delete": [],
-            "edges_to_add": [],
-            "edges_to_delete": [],
-        }
-
-        max_iterations = iteration_limit
-        iteration = 0
-        assistant_message = None
-
-        while iteration < max_iterations:
-            iteration += 1
-            response = await client.chat.completions.create(
-                model=model,
-                messages=messages,
-                tools=tools,
-                tool_choice="auto",
-                temperature=0.7,
-            )
-
-            if not response.choices or len(response.choices) == 0:
-                raise ValueError("No response from LLM")
-
-            message = response.choices[0].message
-            if not message:
-                raise ValueError("Empty message from LLM")
-
-            messages.append(message)
-
-            if not message.tool_calls or len(message.tool_calls) == 0:
-                assistant_message = message.content or "I've completed the requested changes to the workflow."
-                break
-
-            tool_handlers = get_tool_handlers(
-                workflow_changes, saved_changes, workflow_context,
-                request.workflow_id, workflow_service,
-            )
-            tool_messages = []
-            for tool_call in message.tool_calls:
-                try:
-                    function_name = tool_call.function.name
-                    function_args = json.loads(tool_call.function.arguments)
-
-                    handler = tool_handlers.get(function_name)
-                    if handler:
-                        msg = await handler(tool_call, function_args)
-                        tool_messages.append(msg)
-                    else:
-                        tool_messages.append(tool_response(tool_call, {"status": "error", "message": f"Unknown function: {function_name}"}))
-
-                except (json.JSONDecodeError, AttributeError) as e:
-                    logger.error(f"Error parsing tool call: {e}", exc_info=True)
-                    tool_messages.append(tool_response(tool_call, {"status": "error", "message": f"Invalid tool call: {str(e)}"}))
-                except Exception as tool_error:
-                    logger.error(f"Error processing tool call: {tool_error}", exc_info=True)
-                    tool_messages.append(tool_response(tool_call, {"status": "error", "message": f"Error executing tool: {str(tool_error)}"}))
-
-            messages.extend(tool_messages)
-
-        if iteration >= max_iterations and assistant_message is None:
-            assistant_message = f"I've processed your request and made changes to the workflow. (Stopped after {max_iterations} iterations)"
-        if assistant_message is None:
-            assistant_message = "I've completed the requested changes to the workflow."
-
-        all_changes = {
-            "nodes_to_add": workflow_changes["nodes_to_add"] + saved_changes["nodes_to_add"],
-            "nodes_to_update": workflow_changes["nodes_to_update"] + saved_changes["nodes_to_update"],
-            "nodes_to_delete": workflow_changes["nodes_to_delete"] + saved_changes["nodes_to_delete"],
-            "edges_to_add": workflow_changes["edges_to_add"] + saved_changes["edges_to_add"],
-            "edges_to_delete": workflow_changes["edges_to_delete"] + saved_changes["edges_to_delete"],
-        }
+        assistant_message, all_changes = await run_chat_loop(
+            client=client,
+            model=model,
+            messages=messages,
+            tools=tools,
+            workflow_changes=workflow_changes,
+            saved_changes=saved_changes,
+            workflow_context=workflow_context,
+            workflow_id=request.workflow_id,
+            workflow_service=workflow_service,
+            iteration_limit=iteration_limit,
+        )
 
         has_changes = any([
             all_changes["nodes_to_add"],
@@ -177,9 +111,6 @@ async def chat_with_workflow(
     except Exception as e:
         error_msg = str(e)
         logger.error(f"Error in workflow chat: {error_msg}", exc_info=True)
-        if "401" in error_msg or "invalid_api_key" in error_msg or "Incorrect API key" in error_msg or "AuthenticationError" in str(type(e)):
-            raise HTTPException(
-                status_code=400,
-                detail="Invalid API key. Please go to Settings, add an LLM provider with a valid API key, enable it, and click 'Sync Now'. Make sure the provider is enabled (checkbox checked) and has a valid API key.",
-            )
+        if is_api_key_error(error_msg, e):
+            raise HTTPException(status_code=400, detail=INVALID_API_KEY_MSG)
         raise HTTPException(status_code=500, detail=f"Chat error: {error_msg}")

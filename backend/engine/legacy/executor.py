@@ -11,6 +11,7 @@ from ..models.schemas import (
     ExecutionLogEntry
 )
 from ..agents import AgentRegistry
+from ..services.settings_service import SettingsService
 
 
 class WorkflowExecutor:
@@ -157,7 +158,7 @@ class WorkflowExecutor:
             
             # Execute based on node type
             if node.type == NodeType.AGENT:
-                agent = AgentRegistry.get_agent(node)
+                agent = AgentRegistry.get_agent(node, settings_service=SettingsService())
                 output = await agent.execute(node_inputs)
             elif node.type == NodeType.TOOL:
                 # Tool execution would go here (Phase 2+)

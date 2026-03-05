@@ -143,28 +143,32 @@ class TestADKAgentInitialization:
         with pytest.raises(ValueError, match="requires adk_config"):
             ADKAgent(node)
     
-    @patch.dict('os.environ', {'GEMINI_API_KEY': 'test-key'})
+    @patch.dict('os.environ', {'GEMINI_API_KEY': 'test-key'}, clear=True)
     @patch('google.adk.agents.llm_agent.Agent', new_callable=Mock)
     @patch('backend.agents.adk_agent.ADKAgent._init_adk_agent')
     def test_get_fallback_config_with_gemini_key(self, mock_adk_agent, mock_init):
         """Test fallback config uses GEMINI_API_KEY"""
+        from backend.utils.env_config_utils import get_llm_fallback_config_from_env
+
         node = self.create_adk_node()
         agent = ADKAgent(node)
-        
-        config = agent._get_fallback_config()
+
+        config = get_llm_fallback_config_from_env()
         assert config is not None
         assert config["type"] == "gemini"
         assert config["api_key"] == "test-key"
     
-    @patch.dict('os.environ', {'GOOGLE_API_KEY': 'google-key'})
+    @patch.dict('os.environ', {'GOOGLE_API_KEY': 'google-key'}, clear=True)
     @patch('google.adk.agents.llm_agent.Agent', new_callable=Mock)
     @patch('backend.agents.adk_agent.ADKAgent._init_adk_agent')
     def test_get_fallback_config_with_google_key(self, mock_adk_agent, mock_init):
         """Test fallback config uses GOOGLE_API_KEY"""
+        from backend.utils.env_config_utils import get_llm_fallback_config_from_env
+
         node = self.create_adk_node()
         agent = ADKAgent(node)
-        
-        config = agent._get_fallback_config()
+
+        config = get_llm_fallback_config_from_env()
         assert config is not None
         assert config["type"] == "gemini"
         assert config["api_key"] == "google-key"
@@ -174,10 +178,12 @@ class TestADKAgentInitialization:
     @patch('backend.agents.adk_agent.ADKAgent._init_adk_agent')
     def test_get_fallback_config_no_key(self, mock_adk_agent, mock_init):
         """Test fallback config returns None when no key"""
+        from backend.utils.env_config_utils import get_llm_fallback_config_from_env
+
         node = self.create_adk_node()
         agent = ADKAgent(node)
-        
-        config = agent._get_fallback_config()
+
+        config = get_llm_fallback_config_from_env()
         assert config is None
 
 

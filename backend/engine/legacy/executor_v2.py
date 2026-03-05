@@ -12,6 +12,7 @@ from ..models.schemas import (
     ExecutionLogEntry
 )
 from ..agents import AgentRegistry
+from ..services.settings_service import SettingsService
 
 
 class WorkflowExecutorV2:

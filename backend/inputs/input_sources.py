@@ -4,10 +4,8 @@ Supports GCP Buckets, AWS S3, GCP Pub/Sub, and Local File System.
 """
 import json
 import os
-import io
-import mimetypes
-import time
 import base64
+import mimetypes
 from typing import Dict, Any, Optional, List
 from pathlib import Path
 import glob
@@ -42,6 +40,21 @@ def _parse_json_line(line: str, line_number: int, parse_json: bool, **extra: Any
         except json.JSONDecodeError:
             return {"line_number": line_number, "content": line, "raw": line, **extra}
     return {"line_number": line_number, "content": line, "raw": line, **extra}
+
+
+def _serialize_for_write(data: Any, as_bytes: bool = False, indent: int = 2) -> tuple[Any, str]:
+    """Serialize data for write. Returns (content, content_type). DRY across handlers."""
+    if data is None:
+        content, content_type = "", "text/plain"
+    elif isinstance(data, (dict, list)):
+        content = json.dumps(data, indent=indent if indent else None)
+        content_type = "application/json"
+    else:
+        content = str(data)
+        content_type = "text/plain"
+    if as_bytes:
+        content = content.encode("utf-8")
+    return content, content_type
 
 
 def _parse_gcp_credentials(credentials_json: Optional[str]):
@@ -216,14 +229,7 @@ class AWSS3Handler(InputSourceHandler):
         else:
             s3_client = boto3.client('s3', region_name=region)
         
-        # Convert data to bytes (JSON if dict/list, otherwise string)
-        if isinstance(data, (dict, list)):
-            content = json.dumps(data, indent=2).encode('utf-8')
-            content_type = 'application/json'
-        else:
-            content = str(data).encode('utf-8')
-            content_type = 'text/plain'
-        
+        content, content_type = _serialize_for_write(data, as_bytes=True)
         s3_client.put_object(
             Bucket=bucket_name,
             Key=object_key,
@@ -300,12 +306,7 @@ class GCPPubSubHandler(InputSourceHandler):
         
         topic_path = publisher.topic_path(project_id, topic_name)
         
-        # Convert data to bytes (JSON if dict/list, otherwise string)
-        if isinstance(data, (dict, list)):
-            message_data = json.dumps(data).encode('utf-8')
-        else:
-            message_data = str(data).encode('utf-8')
-        
+        message_data, _ = _serialize_for_write(data, as_bytes=True, indent=0)
         # Publish message
         future = publisher.publish(topic_path, message_data)
         message_id = future.result()
@@ -313,271 +314,33 @@ class GCPPubSubHandler(InputSourceHandler):
         return {"status": "success", "topic": topic_name, "message_id": message_id}
 
 
+from .local_file_read_modes import READ_MODE_STRATEGIES, read_full
+
+
 class LocalFileSystemHandler(InputSourceHandler):
     """Handler for reading from local file system"""
-    
+
     @staticmethod
     def read(config: Dict[str, Any]) -> Any:
         file_path = config.get('file_path')
         file_pattern = config.get('file_pattern', '')
         encoding = config.get('encoding', 'utf-8')
-        
+
         if not file_path or file_path.strip() == '':
             raise ValueError("file_path is required for Local File System input. Please configure the file_path in the node's input_config or pass it as an execution input (e.g., {'file_path': '/path/to/file'}) before executing the workflow.")
-        
+
         # Expand user path (~) and resolve absolute path
         file_path = os.path.expanduser(file_path)
         path = Path(file_path).resolve()
-        
+
         # Check if file exists
         if not path.exists():
             raise FileNotFoundError(f"File not found: {file_path}. Please check that the file exists and the path is correct.")
-        
+
         if path.is_file():
-            # Check for read mode
-            read_mode = config.get('read_mode', 'full')  # 'full', 'lines', 'batch', or 'tail'
-            
-            if read_mode == 'tail':
-                # Tail mode: read from end of file (useful for files being written to)
-                num_lines = config.get('tail_lines', 10)  # Number of lines to read from end
-                follow = config.get('tail_follow', False)  # Follow file like tail -f
-                wait_timeout = config.get('tail_wait_timeout', 5.0)  # Seconds to wait for new content
-                parse_json = config.get('parse_json_lines', True)  # Auto-parse JSON lines
-                
-                lines = []
-                
-                # Read last N lines from file
-                # Use a buffer approach to efficiently read from end
-                with open(path, 'r', encoding=encoding) as f:
-                    # Seek to end
-                    f.seek(0, io.SEEK_END)
-                    file_size = f.tell()
-                    
-                    if file_size == 0:
-                        # Empty file
-                        return {
-                            'lines': [],
-                            'total_lines': 0,
-                            'file_path': str(path),
-                            'read_mode': 'tail',
-                            'tail_lines': num_lines,
-                            'follow': follow
-                        }
-                    
-                    # Read backwards in chunks to find last N lines
-                    chunk_size = min(8192, file_size)
-                    position = file_size
-                    buffer = ''
-                    lines_found = []
-                    
-                    while position > 0 and len(lines_found) < num_lines:
-                        # Read chunk
-                        read_size = min(chunk_size, position)
-                        position -= read_size
-                        f.seek(position)
-                        chunk = f.read(read_size) + buffer
-                        
-                        # Split into lines
-                        chunk_lines = chunk.split('\n')
-                        buffer = chunk_lines[0]  # First part might be incomplete
-                        
-                        # Add complete lines (in reverse order)
-                        for line in reversed(chunk_lines[1:]):
-                            if line.strip():  # Skip empty lines
-                                lines_found.insert(0, line)
-                                if len(lines_found) >= num_lines:
-                                    break
-                    
-                    # Add remaining buffer if we have space
-                    if buffer.strip() and len(lines_found) < num_lines:
-                        lines_found.insert(0, buffer)
-                    
-                    for idx, line in enumerate(lines_found[-num_lines:]):
-                        ln = len(lines_found) - num_lines + idx + 1
-                        lines.append(_parse_json_line(line, ln, parse_json))
-                
-                # If follow mode, wait for new content
-                if follow:
-                    initial_size = file_size
-                    start_time = time.time()
-                    
-                    while time.time() - start_time < wait_timeout:
-                        time.sleep(0.5)  # Check every 500ms
-                        current_size = path.stat().st_size
-                        
-                        if current_size > initial_size:
-                            # New content available, read it
-                            with open(path, 'r', encoding=encoding) as f:
-                                f.seek(initial_size)
-                                new_content = f.read()
-                                
-                                for new_line in new_content.split("\n"):
-                                    if new_line.strip():
-                                        lines.append(_parse_json_line(new_line, len(lines) + 1, parse_json, is_new=True))
-                            
-                            # Update initial size for next iteration
-                            initial_size = current_size
-                            start_time = time.time()  # Reset timeout when new content arrives
-                
-                return {
-                    'lines': lines,
-                    'total_lines': len(lines),
-                    'file_path': str(path),
-                    'read_mode': 'tail',
-                    'tail_lines': num_lines,
-                    'follow': follow,
-                    'file_size': file_size
-                }
-            
-            elif read_mode == 'lines':
-                # Read file line by line (memory efficient for large files)
-                skip_empty = config.get('skip_empty_lines', True)
-                parse_json = config.get('parse_json_lines', True)  # Auto-parse JSON lines
-                max_lines = config.get('max_lines')  # Optional limit
-                
-                lines = []
-                line_count = 0
-                with open(path, 'r', encoding=encoding) as f:
-                    for line in f:
-                        line = line.rstrip('\n\r')  # Remove trailing newline
-                        
-                        # Skip empty lines if configured
-                        if skip_empty and not line:
-                            continue
-                        
-                        # Apply max_lines limit if set
-                        if max_lines and line_count >= max_lines:
-                            break
-                        
-                        lines.append(_parse_json_line(line, line_count + 1, parse_json))
-                        
-                        line_count += 1
-                
-                # Return with metadata
-                return {
-                    'lines': lines,
-                    'total_lines': line_count,
-                    'file_path': str(path),
-                    'read_mode': 'lines'
-                }
-            
-            elif read_mode == 'batch':
-                # Read file in batches (for very large files)
-                batch_size = config.get('batch_size', 1000)
-                skip_empty = config.get('skip_empty_lines', True)
-                parse_json = config.get('parse_json_lines', True)
-                start_line = config.get('start_line', 0)  # Resume from line number
-                
-                batches = []
-                current_batch = []
-                line_count = 0
-                batch_number = 0
-                
-                with open(path, 'r', encoding=encoding) as f:
-                    # Skip to start_line if resuming
-                    for _ in range(start_line):
-                        try:
-                            next(f)
-                        except StopIteration:
-                            break
-                    
-                    for line in f:
-                        line = line.rstrip('\n\r')
-                        
-                        # Skip empty lines if configured
-                        if skip_empty and not line:
-                            continue
-                        
-                        current_batch.append(_parse_json_line(line, start_line + line_count + 1, parse_json))
-                        
-                        line_count += 1
-                        
-                        # Yield batch when full
-                        if len(current_batch) >= batch_size:
-                            batches.append({
-                                'batch_number': batch_number,
-                                'start_line': start_line + (batch_number * batch_size),
-                                'end_line': start_line + line_count,
-                                'lines': current_batch
-                            })
-                            batch_number += 1
-                            current_batch = []
-                
-                # Add final batch if any remaining lines
-                if current_batch:
-                    batches.append({
-                        'batch_number': batch_number,
-                        'start_line': start_line + (batch_number * batch_size),
-                        'end_line': start_line + line_count,
-                        'lines': current_batch
-                    })
-                
-                return {
-                    'batches': batches,
-                    'total_batches': len(batches),
-                    'total_lines': line_count,
-                    'batch_size': batch_size,
-                    'file_path': str(path),
-                    'read_mode': 'batch'
-                }
-            else:
-                # Read entire file (default behavior)
-                # First check if file is an image by extension or magic bytes
-                is_image = False
-                image_extensions = {'.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp', '.svg', '.ico', '.heic', '.heif'}
-                if path.suffix.lower() in image_extensions:
-                    is_image = True
-                else:
-                    # Check magic bytes to detect image files
-                    try:
-                        with open(path, 'rb') as f:
-                            magic_bytes = f.read(8)
-                            # PNG: \x89PNG\r\n\x1a\n
-                            # JPEG: \xff\xd8\xff
-                            # GIF: GIF87a or GIF89a
-                            # WebP: RIFF....WEBP
-                            if (magic_bytes[:4] == b'\x89PNG' or 
-                                magic_bytes[:3] == b'\xff\xd8\xff' or
-                                magic_bytes[:4] == b'GIF8' or
-                                (magic_bytes[:4] == b'RIFF' and b'WEBP' in magic_bytes)):
-                                is_image = True
-                    except Exception:
-                        pass
-                
-                # If it's an image, read as binary and convert to base64 data URL
-                if is_image:
-                    import base64
-                    with open(path, 'rb') as f:
-                        image_data = f.read()
-                    
-                    # Detect MIME type
-                    mimetype, _ = mimetypes.guess_type(str(path))
-                    if not mimetype:
-                        ext = path.suffix.lower()
-                        if ext in ['.jpg', '.jpeg']:
-                            mimetype = 'image/jpeg'
-                        elif ext == '.png':
-                            mimetype = 'image/png'
-                        elif ext == '.gif':
-                            mimetype = 'image/gif'
-                        elif ext == '.webp':
-                            mimetype = 'image/webp'
-                        else:
-                            mimetype = 'image/jpeg'  # Default
-                    
-                    # Convert to base64 data URL
-                    base64_data = base64.b64encode(image_data).decode('utf-8')
-                    return f"data:{mimetype};base64,{base64_data}"
-                
-                # Otherwise, read as text
-                with open(path, 'r', encoding=encoding) as f:
-                    content = f.read()
-                
-                # Try to parse as JSON, otherwise return as text
-                try:
-                    return json.loads(content)
-                except json.JSONDecodeError:
-                    return content
+            read_mode = config.get('read_mode', 'full')
+            strategy = READ_MODE_STRATEGIES.get(read_mode, read_full)
+            return strategy(path, config, encoding)
         
         elif path.is_dir():
             # Read directory with optional pattern
@@ -783,14 +546,7 @@ class LocalFileSystemHandler(InputSourceHandler):
             
             return {"status": "success", "file_path": str(path), "mimetype": detected_mimetype, "type": "image"}
         
-        # Otherwise, convert to string (JSON if dict/list, otherwise string)
-        if data is None:
-            content = ""
-        elif isinstance(data, (dict, list)):
-            content = json.dumps(data, indent=2)
-        else:
-            content = str(data)
-        
+        content, _ = _serialize_for_write(data)
         # Detect mimetype from file extension
         mimetype, _ = mimetypes.guess_type(str(path))
         if not mimetype:

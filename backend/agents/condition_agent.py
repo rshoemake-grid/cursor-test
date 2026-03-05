@@ -3,7 +3,7 @@ from .base import BaseAgent
 from ..models.schemas import Node
 from ..utils.agent_config_utils import get_node_config
 from ..utils.condition_evaluators import evaluate_condition
-from ..utils.field_utils import get_nested_field_value
+from ..utils.field_utils import resolve_condition_field_value
 
 
 class ConditionAgent(BaseAgent):
@@ -29,133 +29,9 @@ class ConditionAgent(BaseAgent):
                 f"Please configure the condition field in the node properties."
             )
         self.validate_inputs(inputs)
-        
-        # Get the field value to evaluate - support dot notation for nested access
-        field_value = self._get_nested_field_value(inputs, self.config.field)
-        
-        # If field_value is a list and we're looking for a nested field, try to get it from list items
-        if isinstance(field_value, list) and '.' in self.config.field:
-            # Try to get the nested field from the first item in the list
-            if len(field_value) > 0:
-                first_item = field_value[0]
-                # Parse JSON string if needed
-                if isinstance(first_item, str):
-                    try:
-                        import json
-                        first_item = json.loads(first_item)
-                    except:
-                        pass
-                
-                # Extract the nested path
-                # If field is 'description.value' and we have items list, check description.value in each item
-                parts = self.config.field.split('.')
-                
-                # If the field path doesn't start with 'items', try to access it directly on list items
-                if parts[0] != 'items':
-                    field_value = get_nested_field_value(first_item, self.config.field)
-                elif len(parts) > 1:
-                    nested_path = '.'.join(parts[1:])
-                    field_value = get_nested_field_value(first_item, nested_path)
-                else:
-                    # Just 'items', use the list itself
-                    pass
-        
-        if field_value is None:
-            # Try to auto-detect the field if not found
-            if self.config.field:
-                # Try common variations and mappings
-                # If looking for 'data' but loop outputs 'items', use 'items'
-                field_mappings = {
-                    'data': ['data', 'items', 'output', 'value', 'result'],
-                    'items': ['items', 'data', 'output'],
-                    'value': ['value', 'data', 'output', 'result'],
-                }
-                
-                # Get the search order for this field (without dot notation)
-                base_field = self.config.field.split('.')[0]
-                search_keys = field_mappings.get(base_field, [base_field, 'data', 'output', 'value', 'result', 'items'])
-                
-                # Try each key in order
-                for key in search_keys:
-                    if key in inputs:
-                        value = inputs[key]
-                        # If field has dot notation, try to get nested value
-                        if '.' in self.config.field:
-                            # If value is a list, parse first item and access nested field
-                            if isinstance(value, list) and len(value) > 0:
-                                first_item = value[0]
-                                # Parse JSON string if needed
-                                if isinstance(first_item, str):
-                                    try:
-                                        import json
-                                        first_item = json.loads(first_item)
-                                    except:
-                                        pass
-                                # If field path starts with the key (e.g., 'items.description.value'), remove the key prefix
-                                # Otherwise, use the field path as-is (e.g., 'description.value' is relative to each item)
-                                if self.config.field.startswith(key + '.'):
-                                    nested_path = self.config.field[len(key) + 1:]
-                                else:
-                                    nested_path = self.config.field
-                                field_value = get_nested_field_value(first_item, nested_path)
-                            elif isinstance(value, dict):
-                                nested_path = self.config.field.replace(key + '.', '') if self.config.field.startswith(key + '.') else self.config.field
-                                field_value = get_nested_field_value(value, nested_path)
-                            else:
-                                nested_path = self.config.field.replace(key + '.', '') if self.config.field.startswith(key + '.') else self.config.field
-                                field_value = get_nested_field_value(value, nested_path)
-                        else:
-                            field_value = value
-                        if field_value is not None:
-                            break
-                
-                if field_value is None:
-                    # If still not found and inputs has only one value, use it
-                    if len(inputs) == 1:
-                        base_value = list(inputs.values())[0]
-                        # If field has dot notation, try to get nested value from the single input
-                        if '.' in self.config.field:
-                            field_value = get_nested_field_value({'value': base_value}, self.config.field)
-                        else:
-                            field_value = base_value
-                    else:
-                        # Try to find any list/array-like value (common for loop outputs)
-                        for key, value in inputs.items():
-                            if isinstance(value, (list, tuple)) and len(value) > 0:
-                                # If we have a list and field has dot notation, try to access on list items
-                                if '.' in self.config.field:
-                                    # Parse first item if it's a JSON string
-                                    first_item = value[0]
-                                    if isinstance(first_item, str):
-                                        try:
-                                            import json
-                                            first_item = json.loads(first_item)
-                                        except:
-                                            pass
-                                    field_value = get_nested_field_value(first_item, self.config.field)
-                                    if field_value is not None:
-                                        break
-                                else:
-                                    field_value = value
-                                    if field_value is not None:
-                                        break
-                            elif isinstance(value, dict) and len(value) > 0:
-                                # If field has dot notation, try to get nested value from dict
-                                if '.' in self.config.field:
-                                    field_value = get_nested_field_value(value, self.config.field)
-                                else:
-                                    field_value = value
-                                if field_value is not None:
-                                    break
-                        
-                        if field_value is None:
-                            raise ValueError(
-                                f"Field '{self.config.field}' not found in inputs. "
-                                f"Available keys: {list(inputs.keys())}"
-                            )
-            else:
-                raise ValueError("Condition config requires 'field' to be set")
-        
+
+        field_value = resolve_condition_field_value(inputs, self.config.field)
+
         # Evaluate condition (OCP: uses registry)
         result = evaluate_condition(
             self.config.condition_type,

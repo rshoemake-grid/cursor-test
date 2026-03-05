@@ -2,13 +2,14 @@
 Unified LLM Agent - Supports OpenAI, Anthropic, Gemini, and Custom providers.
 Uses provider strategy pattern (OCP) and injectable provider resolution (DIP).
 """
-from typing import Any, Dict, Optional, Callable, Awaitable
-import os
 import asyncio
+from typing import Any, Awaitable, Callable, Dict, Optional
+
 from .base import BaseAgent
 from ..models.schemas import Node
-from ..utils.logger import get_logger
 from ..utils.agent_config_utils import get_node_config
+from ..utils.env_config_utils import get_llm_fallback_config_from_env
+from ..utils.logger import get_logger
 from ..utils.message_builder import build_user_message
 
 logger = get_logger(__name__)
@@ -36,7 +37,7 @@ class UnifiedLLMAgent(BaseAgent):
             raise ValueError(f"Node {node.id} requires agent_config. Please configure the agent settings in the node properties.")
 
         self.config = agent_config
-        self.llm_config = llm_config or self._get_fallback_config()
+        self.llm_config = llm_config or get_llm_fallback_config_from_env()
         self.user_id = user_id
         
         # Check if this should be an ADK agent
@@ -55,37 +56,6 @@ class UnifiedLLMAgent(BaseAgent):
         # which provider to use for the specific model. The default llm_config might not
         # be the correct provider for the model being used.
     
-    def _get_fallback_config(self) -> Optional[Dict[str, Any]]:
-        """Fallback to environment variables if no config provided"""
-        openai_key = os.getenv("OPENAI_API_KEY")
-        if openai_key:
-            return {
-                "type": "openai",
-                "api_key": openai_key,
-                "base_url": "https://api.openai.com/v1",
-                "model": "gpt-4"
-            }
-        
-        anthropic_key = os.getenv("ANTHROPIC_API_KEY")
-        if anthropic_key:
-            return {
-                "type": "anthropic",
-                "api_key": anthropic_key,
-                "base_url": "https://api.anthropic.com/v1",
-                "model": "claude-3-5-sonnet-20241022"
-            }
-        
-        gemini_key = os.getenv("GEMINI_API_KEY")
-        if gemini_key:
-            return {
-                "type": "gemini",
-                "api_key": gemini_key,
-                "base_url": "https://generativelanguage.googleapis.com/v1beta",
-                "model": "gemini-2.5-flash"
-            }
-        
-        return None
-    
     def _find_provider_for_model(self, model_name: str, user_id: Optional[str] = None) -> Optional[Dict[str, Any]]:
         """Find the provider that owns the given model name (DIP: uses injectable resolver or settings_service)."""
         lookup_user_id = self.user_id if hasattr(self, "user_id") and self.user_id else user_id
@@ -93,6 +63,11 @@ class UnifiedLLMAgent(BaseAgent):
             return self.provider_resolver(model_name, lookup_user_id)
         if self._settings_service:
             return self._settings_service.get_provider_for_model(model_name, lookup_user_id)
+        # Fallback for legacy callers that don't inject settings_service (DIP: prefer injection)
+        logger.warning(
+            "UnifiedLLMAgent: provider_resolver and settings_service not injected. "
+            "Using SettingsService() fallback. Pass settings_service via AgentRegistry.get_agent for DIP compliance."
+        )
         from ..services.settings_service import SettingsService
         return SettingsService().get_provider_for_model(model_name, lookup_user_id)
     

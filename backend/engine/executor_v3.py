@@ -11,10 +11,7 @@ from ..models.schemas import (
     Node,
     NodeType,
 )
-from ..agents import AgentRegistry
 from ..utils.logger import get_logger
-from ..utils.node_input_config_utils import get_node_input_config
-from ..utils.config_utils import resolve_config_variables
 from ..utils.node_input_utils import (
     prepare_node_inputs,
     get_previous_node_output,
@@ -23,11 +20,9 @@ from ..utils.node_input_utils import (
 )
 from .graph.workflow_graph_builder import build_graph
 from .execution.execution_broadcaster import ExecutionBroadcaster
-from .nodes.storage_node_executor import execute_storage_node
+from .nodes.node_executor_registry import NodeExecutorRegistry
 
 logger = get_logger(__name__)
-
-STORAGE_NODE_TYPES = {NodeType.GCP_BUCKET, NodeType.AWS_S3, NodeType.GCP_PUBSUB, NodeType.LOCAL_FILESYSTEM}
 
 
 class WorkflowExecutorV3:
@@ -270,160 +265,54 @@ class WorkflowExecutorV3:
         await self._broadcaster.broadcast_node_update(node.id, node_state)
         
         try:
-            # Execute based on node type
-            if node.type in STORAGE_NODE_TYPES:
-                input_config = get_node_input_config(node)
-                input_config = resolve_config_variables(input_config, self.execution_state.variables)
-                mode = input_config.get('mode', 'read')
+            # Execute via registry (OCP)
+            executor_fn = NodeExecutorRegistry.get(node.type)
 
-                node_has_inputs = len(node.inputs) > 0
-                incoming_edges = [e for e in self.workflow.edges if e.target == node.id]
-                data_producing_edges = [
-                    e for e in incoming_edges
-                    if e.source not in [n.id for n in self.workflow.nodes if n.type in [NodeType.START, NodeType.END]]
-                ]
-                has_data_producing_inputs = len(data_producing_edges) > 0
-
-                node_inputs = {}
-                data_to_write = None
-                if mode == 'write' or node_has_inputs or has_data_producing_inputs:
-                    node_inputs = prepare_node_inputs(
-                        node,
-                        self.execution_state.node_states,
-                        self.execution_state.variables,
-                        strict_variables=False,
-                    )
-                    if not node_inputs:
-                        previous_node_output = get_previous_node_output(
-                            node, self.workflow.edges, self.execution_state.node_states
-                        )
-                        if previous_node_output is not None:
-                            node_inputs = wrap_previous_output_to_inputs(previous_node_output)
-                    data_to_write = extract_data_to_write(node_inputs)
-
-                node_state.input = node_inputs if (mode == 'write' or node_has_inputs or has_data_producing_inputs) else {}
-                output = await execute_storage_node(
-                    node.id,
-                    node.type,
-                    input_config,
-                    mode,
-                    node_has_inputs,
-                    has_data_producing_inputs,
-                    node_inputs,
-                    data_to_write,
-                    self._broadcaster.log,
-                )
+            if NodeExecutorRegistry.is_storage(node.type) and executor_fn:
+                output = await executor_fn(self, node)
             else:
-                # Prepare inputs for this node (not needed for input sources)
+                # Prepare inputs for non-storage nodes
                 node_inputs = prepare_node_inputs(
                     node,
                     self.execution_state.node_states,
                     self.execution_state.variables,
                     strict_variables=False,
                 )
-                
-                # For loop, condition, and agent nodes, if no explicit inputs, try to get from previous node
+
+                # Auto-populate from previous node for agent/condition/loop
                 if node.type in [NodeType.LOOP, NodeType.CONDITION, NodeType.AGENT] and not node_inputs:
                     previous_node_output = get_previous_node_output(
                         node, self.workflow.edges, self.execution_state.node_states
                     )
                     if previous_node_output is not None:
-                        # Auto-populate inputs with previous node's output
                         if isinstance(previous_node_output, dict):
-                            # For loop nodes, check if output has 'items' field and extract it
-                            if node.type == NodeType.LOOP and 'items' in previous_node_output:
-                                node_inputs = {'data': previous_node_output.get('items'), 'items': previous_node_output.get('items')}
-                            # For agent nodes after loop, extract 'items' array from loop output
-                            elif node.type == NodeType.AGENT and 'items' in previous_node_output:
-                                # Loop outputs {'items': [...]}, agent needs the items array
-                                items = previous_node_output.get('items', [])
-                                # Pass first item or all items depending on context
-                                if items and len(items) > 0:
-                                    # For now, pass first item as 'data' and all items as 'items'
-                                    node_inputs = {
-                                        'data': items[0] if len(items) == 1 else items,
-                                        'items': items,
-                                        'item': items[0] if items else None,
-                                    }
-                                else:
-                                    node_inputs = previous_node_output
+                            if node.type == NodeType.LOOP and "items" in previous_node_output:
+                                node_inputs = {"data": previous_node_output.get("items"), "items": previous_node_output.get("items")}
+                            elif node.type == NodeType.AGENT and "items" in previous_node_output:
+                                items = previous_node_output.get("items", [])
+                                node_inputs = (
+                                    {"data": items[0] if len(items) == 1 else items, "items": items, "item": items[0] if items else None}
+                                    if items
+                                    else previous_node_output
+                                )
                             else:
                                 node_inputs = previous_node_output
                         else:
-                            # Wrap single value in dict with common keys
                             node_inputs = {
-                                'data': previous_node_output,
-                                'output': previous_node_output,
-                                'items': previous_node_output if isinstance(previous_node_output, (list, tuple)) else [previous_node_output]
+                                "data": previous_node_output,
+                                "output": previous_node_output,
+                                "items": previous_node_output if isinstance(previous_node_output, (list, tuple)) else [previous_node_output],
                             }
                         await self._broadcaster.log("DEBUG", node.id, f"Auto-populated inputs from previous node: {list(node_inputs.keys())}")
-                
+
                 node_state.input = node_inputs
-                
                 await self._broadcaster.log("INFO", node.id, f"Node inputs: {list(node_inputs.keys())}")
-                
-                # Execute based on node type
-                if node.type in [NodeType.AGENT, NodeType.CONDITION, NodeType.LOOP]:
-                    # Temporarily disable log callback to prevent hanging - use regular logger instead
-                    # TODO: Re-enable callback once we can ensure it doesn't block
-                    agent = AgentRegistry.get_agent(
-                        node,
-                        llm_config=self.llm_config,
-                        user_id=self.user_id,
-                        log_callback=None,
-                        provider_resolver=self.provider_resolver,
-                        settings_service=self.settings_service,
-                    )
-                    
-                    # Log input data for debugging
-                    await self._broadcaster.log("DEBUG", node.id, f"Agent received inputs: {list(node_inputs.keys())}")
-                    for key, value in node_inputs.items():
-                        if isinstance(value, str):
-                            preview = value[:200] + "..." if len(value) > 200 else value
-                            await self._broadcaster.log("DEBUG", node.id, f"   {key}: (str, length={len(value)}) {preview}")
-                        elif isinstance(value, dict):
-                            await self._broadcaster.log("DEBUG", node.id, f"   {key}: (dict, keys={list(value.keys())}, size={len(str(value))} chars)")
-                        else:
-                            value_str = str(value)
-                            preview = value_str[:200] + "..." if len(value_str) > 200 else value_str
-                            await self._broadcaster.log("DEBUG", node.id, f"   {key}: ({type(value).__name__}) {preview}")
-                    
-                    # Log agent configuration for debugging
-                    if hasattr(agent, 'config'):
-                        agent_config = agent.config
-                        if hasattr(agent_config, 'system_prompt') and agent_config.system_prompt:
-                            await self._broadcaster.log("INFO", node.id, f"Agent system prompt: {agent_config.system_prompt[:200]}...")
-                        else:
-                            await self._broadcaster.log("INFO", node.id, "Agent has no system prompt configured")
-                        if hasattr(agent_config, 'model'):
-                            await self._broadcaster.log("INFO", node.id, f"Agent model: {agent_config.model}")
-                    
-                    try:
-                        output = await agent.execute(node_inputs)
-                        
-                        # Log output details for debugging
-                        if output == "":
-                            await self._broadcaster.log("WARNING", node.id, f"Agent returned empty string - this may cause downstream nodes to fail. Input keys: {list(node_inputs.keys())}")
-                            # Try to get more info from agent if available
-                            if hasattr(agent, 'config'):
-                                await self._broadcaster.log("DEBUG", node.id, f"Agent model: {agent.config.model if hasattr(agent.config, 'model') else 'unknown'}")
-                                await self._broadcaster.log("DEBUG", node.id, f"Agent system prompt length: {len(agent.config.system_prompt) if hasattr(agent.config, 'system_prompt') and agent.config.system_prompt else 0}")
-                        elif output is None:
-                            await self._broadcaster.log("WARNING", node.id, f"Agent returned None, converting to empty string. Inputs were: {list(node_inputs.keys())}")
-                            output = ""
-                        else:
-                            output_type = type(output).__name__
-                            output_length = len(str(output)) if output else 0
-                            await self._broadcaster.log("DEBUG", node.id, f"Agent returned {output_type} with length {output_length}")
-                    except Exception as agent_error:
-                        import traceback
-                        await self._broadcaster.log("ERROR", node.id, f"Agent execution raised exception: {type(agent_error).__name__}: {str(agent_error)}")
-                        await self._broadcaster.log("DEBUG", node.id, f"Exception traceback: {traceback.format_exc()}")
-                        raise
-                elif node.type == NodeType.TOOL:
-                    output = node_inputs
+
+                if executor_fn:
+                    output = await executor_fn(self, node, node_inputs)
                 else:
-                    output = node_inputs
+                    from .nodes.executors import execute_passthrough
+                    output = await execute_passthrough(self, node, node_inputs)
             
             # Update node state
             node_state.status = ExecutionStatus.COMPLETED
@@ -456,7 +345,4 @@ class WorkflowExecutorV3:
             # Broadcast node failed
             await self._broadcaster.broadcast_node_update(node.id, node_state)
     
-    def _resolve_config_variables(self, config: Dict[str, Any]) -> Dict[str, Any]:
-        """Resolve variable references in config (e.g., ${variable_name}). Delegates to config_utils."""
-        return resolve_config_variables(config, self.execution_state.variables)
     

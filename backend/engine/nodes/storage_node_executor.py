@@ -35,6 +35,18 @@ def _read_mode_output(
     return result
 
 
+def _extract_read_mode_data(raw_output: Dict[str, Any], read_mode: str) -> tuple[List[Any], int, Optional[int]]:
+    """Extract items, total, and total_lines from raw_output for lines/batch modes (DRY)."""
+    if read_mode == "lines":
+        items = raw_output.get("lines", [])
+        total = raw_output.get("total_lines", len(items))
+        return items, total, None
+    items = raw_output.get("batches", [])
+    total = raw_output.get("total_batches", len(items))
+    total_lines = raw_output.get("total_lines", 0)
+    return items, total, total_lines
+
+
 async def execute_storage_node(
     node_id: str,
     node_type: str,
@@ -87,17 +99,15 @@ async def execute_storage_node(
 
     if isinstance(raw_output, dict) and "read_mode" in raw_output:
         read_mode = raw_output.get("read_mode")
-        if read_mode == "lines":
-            lines = raw_output.get("lines", [])
-            total_lines = raw_output.get("total_lines", len(lines))
-            await log_fn("INFO", node_id, f"Read {total_lines} lines from file (read_mode: lines)")
-            return _read_mode_output(lines, "lines", total_lines, raw_output, node_type)
-        if read_mode == "batch":
-            batches = raw_output.get("batches", [])
-            total_batches = raw_output.get("total_batches", len(batches))
-            total_lines = raw_output.get("total_lines", 0)
-            await log_fn("INFO", node_id, f"Read {total_lines} lines in {total_batches} batches (read_mode: batch)")
-            return _read_mode_output(batches, "batch", total_batches, raw_output, node_type, total_lines=total_lines)
+        if read_mode in ("lines", "batch"):
+            items, total, total_lines = _extract_read_mode_data(raw_output, read_mode)
+            log_msg = (
+                f"Read {total} lines from file (read_mode: lines)"
+                if read_mode == "lines"
+                else f"Read {total_lines or 0} lines in {total} batches (read_mode: batch)"
+            )
+            await log_fn("INFO", node_id, log_msg)
+            return _read_mode_output(items, read_mode, total, raw_output, node_type, total_lines=total_lines)
         return {"data": raw_output, "source": node_type}
 
     if isinstance(raw_output, dict):

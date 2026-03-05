@@ -3,11 +3,29 @@ Error handling utilities and decorators.
 Provides reusable error handling patterns following DRY principle.
 """
 from functools import wraps
-from typing import Callable, Any
+from typing import Any, Callable
+
 from fastapi import HTTPException
-from ..utils.logger import get_logger
+
+from .logger import get_logger
 
 logger = get_logger(__name__)
+
+INVALID_API_KEY_MSG = (
+    "Invalid API key. Please go to Settings, add an LLM provider with a valid API key, "
+    "enable it, and click 'Sync Now'. Make sure the provider is enabled (checkbox checked) "
+    "and has a valid API key."
+)
+
+
+def is_api_key_error(error_msg: str, exc: Exception) -> bool:
+    """Check if error indicates invalid/missing API key (DRY)."""
+    return (
+        "401" in error_msg
+        or "invalid_api_key" in error_msg
+        or "Incorrect API key" in error_msg
+        or "AuthenticationError" in str(type(exc))
+    )
 
 
 def handle_execution_errors(func: Callable) -> Callable:
