@@ -31,7 +31,7 @@ class TestOpenAIProviderStrategy:
         mock_response = Mock()
         mock_response.status_code = 200
         mock_response.json.return_value = {"choices": [{"message": {"content": "Hello"}}]}
-        with patch("backend.agents.llm_providers.openai_provider.httpx.AsyncClient") as m:
+        with patch("backend.agents.llm_providers.openai_compatible.httpx.AsyncClient") as m:
             mc = AsyncMock()
             mc.post = AsyncMock(return_value=mock_response)
             mc.__aenter__ = AsyncMock(return_value=mc)

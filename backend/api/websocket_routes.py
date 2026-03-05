@@ -1,6 +1,8 @@
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 from ..websocket.manager import manager
+from ..utils.logger import get_logger
 
+logger = get_logger(__name__)
 router = APIRouter()
 
 
@@ -30,6 +32,6 @@ async def websocket_execution_stream(websocket: WebSocket, execution_id: str):
     except WebSocketDisconnect:
         await manager.disconnect(websocket, execution_id)
     except Exception as e:
-        print(f"WebSocket error: {e}")
+        logger.error(f"WebSocket error: {e}")
         await manager.disconnect(websocket, execution_id)
 

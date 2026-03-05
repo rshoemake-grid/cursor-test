@@ -2,7 +2,7 @@
 Service layer for workflow business logic.
 Handles workflow CRUD operations and business rules.
 """
-from typing import Optional, List, Any
+from typing import Optional, List, Any, Dict
 from datetime import datetime
 from sqlalchemy.ext.asyncio import AsyncSession
 from uuid import uuid4
@@ -16,11 +16,54 @@ from ..utils.logger import get_logger
 logger = get_logger(__name__)
 
 
+def _apply_chat_changes_merge(
+    current_nodes: List[dict],
+    current_edges: List[dict],
+    nodes_to_add: List[dict],
+    nodes_to_update: List[Dict[str, Any]],
+    nodes_to_delete: List[str],
+    edges_to_add: List[dict],
+    edges_to_delete: List[Dict[str, str]],
+) -> tuple[List[dict], List[dict]]:
+    """Apply chat changes to nodes and edges (pure merge logic, no DB)."""
+    final_nodes = list(current_nodes)
+    final_edges = list(current_edges)
+    final_nodes.extend(nodes_to_add)
+
+    for update in nodes_to_update:
+        nid = update["node_id"]
+        updates = update["updates"]
+        for i, node in enumerate(final_nodes):
+            if node.get("id") == nid:
+                final_nodes[i] = {**node, **updates}
+                if "data" in node:
+                    final_nodes[i]["data"] = {**node.get("data", {}), **updates}
+                break
+
+    nodes_to_delete_set = set(nodes_to_delete)
+    final_nodes = [n for n in final_nodes if n.get("id") not in nodes_to_delete_set]
+    final_edges.extend(edges_to_add)
+
+    final_edges = [
+        e for e in final_edges
+        if not any(
+            del_edge.get("source") == e.get("source") and del_edge.get("target") == e.get("target")
+            for del_edge in edges_to_delete
+        )
+    ]
+    return final_nodes, final_edges
+
+
+def _to_dict(obj: Any) -> dict:
+    """Serialize Pydantic model or dict-like to dict (DRY)."""
+    return obj.model_dump() if hasattr(obj, "model_dump") else dict(obj)
+
+
 def _process_edges(edges: List[Any], start_index: int = 0) -> List[dict]:
     """Process edges - ensure all have IDs (DRY: shared by create and update)."""
     processed = []
     for i, edge in enumerate(edges):
-        edge_dict = edge.model_dump() if hasattr(edge, "model_dump") else dict(edge)
+        edge_dict = _to_dict(edge)
         if not edge_dict.get("id"):
             source = edge_dict.get("source", getattr(edge, "source", ""))
             target = edge_dict.get("target", getattr(edge, "target", ""))
@@ -31,7 +74,7 @@ def _process_edges(edges: List[Any], start_index: int = 0) -> List[dict]:
 
 def _serialize_node(node: Any) -> dict:
     """Serialize node to dict (DRY)."""
-    return node.model_dump() if hasattr(node, "model_dump") else dict(node)
+    return _to_dict(node)
 
 
 class WorkflowService:
@@ -203,6 +246,61 @@ class WorkflowService:
         except Exception as e:
             logger.error(f"Error updating workflow {workflow_id}: {e}", exc_info=True)
             raise WorkflowValidationError(f"Failed to update workflow: {str(e)}")
+
+    async def apply_chat_changes(
+        self,
+        workflow_id: str,
+        nodes_to_add: List[dict],
+        nodes_to_update: List[Dict[str, Any]],
+        nodes_to_delete: List[str],
+        edges_to_add: List[dict],
+        edges_to_delete: List[Dict[str, str]],
+        name: Optional[str] = None,
+        description: Optional[str] = None,
+    ) -> Dict[str, Any]:
+        """
+        Apply workflow chat changes (add/update/delete nodes and edges).
+        Used by workflow chat route to persist LLM-suggested changes.
+
+        Returns:
+            Dict with nodes_count, edges_count, final_nodes, final_edges.
+        """
+        workflow = await self.get_workflow(workflow_id)
+        current_definition = workflow.definition or {}
+        current_nodes = current_definition.get("nodes", [])
+        current_edges = current_definition.get("edges", [])
+
+        final_nodes, final_edges = _apply_chat_changes_merge(
+            current_nodes,
+            current_edges,
+            nodes_to_add,
+            nodes_to_update,
+            nodes_to_delete,
+            edges_to_add,
+            edges_to_delete,
+        )
+
+        update_kwargs: Dict[str, Any] = {
+            "definition": {
+                "nodes": final_nodes,
+                "edges": final_edges,
+                "variables": current_definition.get("variables", {}),
+            },
+            "updated_at": datetime.utcnow(),
+        }
+        if name is not None:
+            update_kwargs["name"] = name
+        if description is not None:
+            update_kwargs["description"] = description
+
+        await self.repository.update(workflow_id, **update_kwargs)
+        logger.info(f"Applied chat changes to workflow {workflow_id}")
+        return {
+            "nodes_count": len(final_nodes),
+            "edges_count": len(final_edges),
+            "final_nodes": final_nodes,
+            "final_edges": final_edges,
+        }
     
     async def delete_workflow(self, workflow_id: str, user_id: Optional[str] = None) -> bool:
         """

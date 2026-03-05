@@ -243,9 +243,9 @@ async def use_template(
     # Log condition edges for debugging
     condition_edges = [e for e in edges if e.get("source") == "condition-1"]
     if condition_edges:
-        print(f"Template edges for condition-1: {condition_edges}")
+        logger.debug(f"Template edges for condition-1: {condition_edges}")
         for edge in condition_edges:
-            print(f"  Edge {edge.get('id')}: sourceHandle={edge.get('sourceHandle')}, type={type(edge.get('sourceHandle'))}")
+            logger.debug(f"  Edge {edge.get('id')}: sourceHandle={edge.get('sourceHandle')}, type={type(edge.get('sourceHandle'))}")
     
     return WorkflowResponse(
         id=workflow.id,

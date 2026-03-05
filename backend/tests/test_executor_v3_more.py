@@ -139,15 +139,11 @@ async def test_broadcast_status():
     )
     
     executor = WorkflowExecutorV3(workflow, stream_updates=True)
-    # Execute first to initialize execution_state
     await executor.execute({})
     
-    # Mock websocket manager
-    with patch("backend.engine.executor_v3.ws_manager") as mock_ws_manager:
+    with patch("backend.engine.execution.execution_broadcaster.ws_manager") as mock_ws_manager:
         mock_ws_manager.broadcast_status = AsyncMock()
-        
-        await executor._broadcast_status("running")
-        # Should not raise error
+        await executor._broadcaster.broadcast_status("running")
 
 
 @pytest.mark.asyncio
@@ -167,6 +163,7 @@ async def test_broadcast_node_update():
     )
     
     executor = WorkflowExecutorV3(workflow, stream_updates=True)
+    await executor.execute({})
     
     from backend.models.schemas import NodeState
     
@@ -176,12 +173,9 @@ async def test_broadcast_node_update():
         started_at=datetime.utcnow()
     )
     
-    # Mock websocket manager
-    with patch("backend.engine.executor_v3.ws_manager") as mock_ws_manager:
+    with patch("backend.engine.execution.execution_broadcaster.ws_manager") as mock_ws_manager:
         mock_ws_manager.broadcast_node_update = AsyncMock()
-        
-        await executor._broadcast_node_update("start-1", node_state)
-        # Should not raise error
+        await executor._broadcaster.broadcast_node_update("start-1", node_state)
 
 
 @pytest.mark.asyncio
@@ -201,13 +195,11 @@ async def test_log_execution():
     )
     
     executor = WorkflowExecutorV3(workflow, stream_updates=True)
+    await executor.execute({})
     
-    # Mock websocket manager
-    with patch("backend.engine.executor_v3.ws_manager") as mock_ws_manager:
+    with patch("backend.engine.execution.execution_broadcaster.ws_manager") as mock_ws_manager:
         mock_ws_manager.broadcast_log = AsyncMock()
-        
-        await executor._log("INFO", "start-1", "Test message")
-        # Should not raise error
+        await executor._broadcaster.log("INFO", "start-1", "Test message")
 
 
 @pytest.mark.asyncio
@@ -242,9 +234,9 @@ async def test_get_previous_node_output():
         
         await executor.execute({})
         
-        # Test getting previous node output
+        from backend.utils.node_input_utils import get_previous_node_output
         end_node = next(n for n in workflow.nodes if n.id == "end-1")
-        output = executor._get_previous_node_output(end_node)
+        output = get_previous_node_output(end_node, workflow.edges, executor.execution_state.node_states)
         assert output == "Agent output"
 
 

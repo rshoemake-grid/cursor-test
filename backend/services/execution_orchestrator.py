@@ -244,6 +244,7 @@ class ExecutionOrchestrator:
             llm_config=llm_config,
             user_id=user_id,
             provider_resolver=provider_resolver,
+            settings_service=self.settings_service,
         )
         logger.info(f"Created executor with execution_id={executor.execution_id}")
         return executor

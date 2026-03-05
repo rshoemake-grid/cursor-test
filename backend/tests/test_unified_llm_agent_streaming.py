@@ -44,7 +44,7 @@ async def test_unified_llm_agent_openai_error_handling(mock_node, mock_llm_confi
     mock_http_response.status_code = 500
     mock_http_response.text = "Internal Server Error"
     
-    with patch("backend.agents.unified_llm_agent.httpx.AsyncClient") as mock_client_class:
+    with patch("backend.agents.llm_providers.openai_compatible.httpx.AsyncClient") as mock_client_class:
         mock_client = AsyncMock()
         mock_client.__aenter__ = AsyncMock(return_value=mock_client)
         mock_client.__aexit__ = AsyncMock(return_value=None)
@@ -67,7 +67,7 @@ async def test_unified_llm_agent_openai_empty_response(mock_node, mock_llm_confi
         "choices": [{"message": {"content": None}}]
     }
     
-    with patch("backend.agents.unified_llm_agent.httpx.AsyncClient") as mock_client_class:
+    with patch("backend.agents.llm_providers.openai_compatible.httpx.AsyncClient") as mock_client_class:
         mock_client = AsyncMock()
         mock_client.__aenter__ = AsyncMock(return_value=mock_client)
         mock_client.__aexit__ = AsyncMock(return_value=None)
@@ -106,7 +106,7 @@ async def test_unified_llm_agent_anthropic_error_handling(mock_node):
     mock_http_response.status_code = 400
     mock_http_response.text = "Bad Request"
     
-    with patch("backend.agents.unified_llm_agent.httpx.AsyncClient") as mock_client_class:
+    with patch("backend.agents.llm_providers.openai_compatible.httpx.AsyncClient") as mock_client_class:
         mock_client = AsyncMock()
         mock_client.__aenter__ = AsyncMock(return_value=mock_client)
         mock_client.__aexit__ = AsyncMock(return_value=None)
@@ -148,7 +148,7 @@ async def test_unified_llm_agent_custom_error_handling(mock_node):
     mock_http_response.status_code = 500
     mock_http_response.text = "Server Error"
     
-    with patch("backend.agents.unified_llm_agent.httpx.AsyncClient") as mock_client_class:
+    with patch("backend.agents.llm_providers.openai_compatible.httpx.AsyncClient") as mock_client_class:
         mock_client = AsyncMock()
         mock_client.__aenter__ = AsyncMock(return_value=mock_client)
         mock_client.__aexit__ = AsyncMock(return_value=None)
@@ -192,7 +192,7 @@ async def test_unified_llm_agent_custom_empty_response(mock_node):
         "choices": [{"message": {"content": None}}]
     }
     
-    with patch("backend.agents.unified_llm_agent.httpx.AsyncClient") as mock_client_class:
+    with patch("backend.agents.llm_providers.openai_compatible.httpx.AsyncClient") as mock_client_class:
         mock_client = AsyncMock()
         mock_client.__aenter__ = AsyncMock(return_value=mock_client)
         mock_client.__aexit__ = AsyncMock(return_value=None)

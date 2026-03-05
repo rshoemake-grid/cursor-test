@@ -362,7 +362,7 @@ class TestLengthComparisons:
         executor = WorkflowExecutorV3(workflow)
         
         with patch("backend.engine.executor_v3.AgentRegistry.get_agent") as mock_get_agent, \
-             patch("backend.engine.executor_v3.ws_manager") as mock_ws:
+             patch("backend.engine.execution.execution_broadcaster.ws_manager") as mock_ws:
             mock_ws.broadcast_status = AsyncMock()
             mock_ws.broadcast_completion = AsyncMock()
             mock_ws.broadcast_error = AsyncMock()
@@ -465,7 +465,7 @@ class TestLengthComparisons:
         executor = WorkflowExecutorV3(workflow)
         
         with patch("backend.engine.executor_v3.AgentRegistry.get_agent") as mock_get_agent, \
-             patch("backend.engine.executor_v3.write_to_input_source") as mock_write:
+             patch("backend.engine.nodes.storage_node_executor.write_to_input_source") as mock_write:
             mock_agent = AsyncMock()
             # Return dict with multiple values - executor will use filtered dict
             mock_agent.execute = AsyncMock(return_value={"source": "src", "data": "data"})
@@ -511,7 +511,7 @@ class TestLengthComparisons:
         executor = WorkflowExecutorV3(workflow)
         
         with patch("backend.engine.executor_v3.AgentRegistry.get_agent") as mock_get_agent, \
-             patch("backend.engine.executor_v3.write_to_input_source") as mock_write:
+             patch("backend.engine.nodes.storage_node_executor.write_to_input_source") as mock_write:
             mock_agent = AsyncMock()
             # Return dict with single 'data' key
             mock_agent.execute = AsyncMock(return_value={"data": "test_data"})
@@ -557,7 +557,7 @@ class TestLengthComparisons:
         executor = WorkflowExecutorV3(workflow)
         
         with patch("backend.engine.executor_v3.AgentRegistry.get_agent") as mock_get_agent, \
-             patch("backend.engine.executor_v3.write_to_input_source") as mock_write:
+             patch("backend.engine.nodes.storage_node_executor.write_to_input_source") as mock_write:
             mock_agent = AsyncMock()
             # Return a single string value - executor will wrap it and extract "data" key
             # The executor wraps single values as {"data": value, "output": value}
@@ -604,7 +604,7 @@ class TestLengthComparisons:
         executor = WorkflowExecutorV3(workflow)
         
         with patch("backend.engine.executor_v3.AgentRegistry.get_agent") as mock_get_agent, \
-             patch("backend.engine.executor_v3.write_to_input_source") as mock_write:
+             patch("backend.engine.nodes.storage_node_executor.write_to_input_source") as mock_write:
             mock_agent = AsyncMock()
             # Return dict with multiple values - executor will use filtered dict
             mock_agent.execute = AsyncMock(return_value={"source": "src", "data": "data"})
@@ -784,7 +784,7 @@ class TestDataToWriteComparisons:
         
         executor = WorkflowExecutorV3(workflow)
         
-        with patch("backend.engine.executor_v3.write_to_input_source") as mock_write:
+        with patch("backend.engine.nodes.storage_node_executor.write_to_input_source") as mock_write:
             result = await executor.execute({})
             # Should handle None data_to_write
             assert result.status in [ExecutionStatus.COMPLETED, ExecutionStatus.FAILED]
@@ -814,7 +814,7 @@ class TestDataToWriteComparisons:
         
         executor = WorkflowExecutorV3(workflow)
         
-        with patch("backend.engine.executor_v3.write_to_input_source") as mock_write:
+        with patch("backend.engine.nodes.storage_node_executor.write_to_input_source") as mock_write:
             result = await executor.execute({"data": {}})
             # Should handle empty dict
             assert result.status in [ExecutionStatus.COMPLETED, ExecutionStatus.FAILED]
@@ -844,7 +844,7 @@ class TestDataToWriteComparisons:
         
         executor = WorkflowExecutorV3(workflow)
         
-        with patch("backend.engine.executor_v3.write_to_input_source") as mock_write:
+        with patch("backend.engine.nodes.storage_node_executor.write_to_input_source") as mock_write:
             result = await executor.execute({"data": ""})
             # Should handle empty string
             assert result.status in [ExecutionStatus.COMPLETED, ExecutionStatus.FAILED]
@@ -878,7 +878,7 @@ class TestReadModeComparisons:
         
         executor = WorkflowExecutorV3(workflow)
         
-        with patch("backend.engine.executor_v3.read_from_input_source") as mock_read:
+        with patch("backend.engine.nodes.storage_node_executor.read_from_input_source") as mock_read:
             mock_read.return_value = {"lines": [{"content": "line1"}]}
             
             result = await executor.execute({})
@@ -909,7 +909,7 @@ class TestReadModeComparisons:
         
         executor = WorkflowExecutorV3(workflow)
         
-        with patch("backend.engine.executor_v3.read_from_input_source") as mock_read:
+        with patch("backend.engine.nodes.storage_node_executor.read_from_input_source") as mock_read:
             mock_read.return_value = {"batches": [{"lines": ["line1"]}]}
             
             result = await executor.execute({})
@@ -944,7 +944,7 @@ class TestRawOutputComparisons:
         
         executor = WorkflowExecutorV3(workflow)
         
-        with patch("backend.engine.executor_v3.read_from_input_source") as mock_read:
+        with patch("backend.engine.nodes.storage_node_executor.read_from_input_source") as mock_read:
             mock_read.return_value = {}
             
             result = await executor.execute({})

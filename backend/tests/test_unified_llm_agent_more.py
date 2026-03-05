@@ -136,7 +136,7 @@ async def test_unified_llm_agent_execute_gemini_vision(mock_node):
         }]
     }
     
-    with patch("backend.agents.llm_providers.openai_provider.httpx.AsyncClient") as mock_client_class:
+    with patch("backend.agents.llm_providers.openai_compatible.httpx.AsyncClient") as mock_client_class:
         mock_client = AsyncMock()
         mock_client.__aenter__ = AsyncMock(return_value=mock_client)
         mock_client.__aexit__ = AsyncMock(return_value=None)
@@ -194,7 +194,7 @@ async def test_unified_llm_agent_execute_gemini_image_generation(mock_node):
         }]
     }
     
-    with patch("backend.agents.llm_providers.openai_provider.httpx.AsyncClient") as mock_client_class:
+    with patch("backend.agents.llm_providers.openai_compatible.httpx.AsyncClient") as mock_client_class:
         mock_client = AsyncMock()
         mock_client.__aenter__ = AsyncMock(return_value=mock_client)
         mock_client.__aexit__ = AsyncMock(return_value=None)
@@ -239,7 +239,7 @@ async def test_unified_llm_agent_execute_custom_vision(mock_node):
         "choices": [{"message": {"content": "Vision response"}}]
     }
     
-    with patch("backend.agents.llm_providers.openai_provider.httpx.AsyncClient") as mock_client_class:
+    with patch("backend.agents.llm_providers.openai_compatible.httpx.AsyncClient") as mock_client_class:
         mock_client = AsyncMock()
         mock_client.__aenter__ = AsyncMock(return_value=mock_client)
         mock_client.__aexit__ = AsyncMock(return_value=None)
@@ -292,7 +292,7 @@ async def test_unified_llm_agent_execute_gemini_error_handling(mock_node):
         }
     }
     
-    with patch("backend.agents.llm_providers.openai_provider.httpx.AsyncClient") as mock_client_class:
+    with patch("backend.agents.llm_providers.openai_compatible.httpx.AsyncClient") as mock_client_class:
         mock_client = AsyncMock()
         mock_client.__aenter__ = AsyncMock(return_value=mock_client)
         mock_client.__aexit__ = AsyncMock(return_value=None)
@@ -336,7 +336,7 @@ async def test_unified_llm_agent_execute_gemini_no_candidates(mock_node):
         "candidates": []
     }
     
-    with patch("backend.agents.llm_providers.openai_provider.httpx.AsyncClient") as mock_client_class:
+    with patch("backend.agents.llm_providers.openai_compatible.httpx.AsyncClient") as mock_client_class:
         mock_client = AsyncMock()
         mock_client.__aenter__ = AsyncMock(return_value=mock_client)
         mock_client.__aexit__ = AsyncMock(return_value=None)

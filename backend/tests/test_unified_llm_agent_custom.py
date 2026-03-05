@@ -47,7 +47,7 @@ async def test_unified_llm_agent_custom_provider_text(mock_node):
     }
     
     with patch("backend.api.settings_routes.get_provider_for_model") as mock_get_provider, \
-         patch("backend.agents.llm_providers.custom_provider.httpx.AsyncClient") as mock_client_class:
+         patch("backend.agents.llm_providers.openai_compatible.httpx.AsyncClient") as mock_client_class:
         mock_get_provider.return_value = llm_config
         mock_client = AsyncMock()
         mock_client.__aenter__ = AsyncMock(return_value=mock_client)
@@ -90,7 +90,7 @@ async def test_unified_llm_agent_custom_provider_vision(mock_node):
     }
     
     with patch("backend.api.settings_routes.get_provider_for_model") as mock_get_provider, \
-         patch("backend.agents.llm_providers.custom_provider.httpx.AsyncClient") as mock_client_class:
+         patch("backend.agents.llm_providers.openai_compatible.httpx.AsyncClient") as mock_client_class:
         mock_get_provider.return_value = llm_config
         mock_client = AsyncMock()
         mock_client.__aenter__ = AsyncMock(return_value=mock_client)
@@ -148,7 +148,7 @@ async def test_unified_llm_agent_custom_provider_api_error(mock_node):
     mock_http_response.text = "Internal Server Error"
     
     with patch("backend.api.settings_routes.get_provider_for_model") as mock_get_provider, \
-         patch("backend.agents.llm_providers.custom_provider.httpx.AsyncClient") as mock_client_class:
+         patch("backend.agents.llm_providers.openai_compatible.httpx.AsyncClient") as mock_client_class:
         mock_get_provider.return_value = llm_config
         mock_client = AsyncMock()
         mock_client.__aenter__ = AsyncMock(return_value=mock_client)
@@ -184,7 +184,7 @@ async def test_unified_llm_agent_custom_provider_none_content(mock_node):
     }
     
     with patch("backend.api.settings_routes.get_provider_for_model") as mock_get_provider, \
-         patch("backend.agents.llm_providers.custom_provider.httpx.AsyncClient") as mock_client_class:
+         patch("backend.agents.llm_providers.openai_compatible.httpx.AsyncClient") as mock_client_class:
         mock_get_provider.return_value = llm_config
         mock_client = AsyncMock()
         mock_client.__aenter__ = AsyncMock(return_value=mock_client)
@@ -228,7 +228,7 @@ async def test_unified_llm_agent_custom_provider_with_system_prompt(mock_node):
     }
     
     with patch("backend.api.settings_routes.get_provider_for_model") as mock_get_provider, \
-         patch("backend.agents.llm_providers.custom_provider.httpx.AsyncClient") as mock_client_class:
+         patch("backend.agents.llm_providers.openai_compatible.httpx.AsyncClient") as mock_client_class:
         mock_get_provider.return_value = llm_config
         mock_client = AsyncMock()
         mock_client.__aenter__ = AsyncMock(return_value=mock_client)

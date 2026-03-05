@@ -125,7 +125,7 @@ async def test_unified_llm_agent_execute_openai(mock_node, mock_llm_config):
         "choices": [{"message": {"content": "Test response"}}]
     }
     
-    with patch("backend.agents.llm_providers.openai_provider.httpx.AsyncClient") as mock_client_class:
+    with patch("backend.agents.llm_providers.openai_compatible.httpx.AsyncClient") as mock_client_class:
         mock_client = AsyncMock()
         mock_client.__aenter__ = AsyncMock(return_value=mock_client)
         mock_client.__aexit__ = AsyncMock(return_value=None)

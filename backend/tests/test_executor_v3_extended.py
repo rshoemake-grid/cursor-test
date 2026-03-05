@@ -262,7 +262,7 @@ async def test_execute_with_storage_node_read():
     
     executor = WorkflowExecutorV3(workflow)
     
-    with patch("backend.engine.executor_v3.read_from_input_source") as mock_read:
+    with patch("backend.engine.nodes.storage_node_executor.read_from_input_source") as mock_read:
         mock_read.return_value = "File content"
         
         result = await executor.execute({})
@@ -302,7 +302,7 @@ async def test_execute_with_storage_node_write():
     executor = WorkflowExecutorV3(workflow)
     
     with patch("backend.engine.executor_v3.AgentRegistry.get_agent") as mock_get_agent, \
-         patch("backend.engine.executor_v3.write_to_input_source") as mock_write:
+         patch("backend.engine.nodes.storage_node_executor.write_to_input_source") as mock_write:
         mock_agent = AsyncMock()
         mock_agent.execute = AsyncMock(return_value="Data to write")
         mock_get_agent.return_value = mock_agent

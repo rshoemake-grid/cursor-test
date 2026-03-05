@@ -1,45 +1,30 @@
 # Remaining Refactoring Issues - Second Analysis
 
 ## Summary
-After second analysis, found **2 additional issues** that need attention.
+After second analysis, found **2 additional issues**. Both have been **RESOLVED** (March 2026).
 
 ---
 
-## 🔴 Critical Issues
+## ✅ Resolved Issues
 
 ### 1. Magic Strings: ExecutionStatus in debug_routes.py
-**Location**: `backend/api/debug_routes.py:261-262`
-**Problem**: 
-- Uses `"completed"` and `"failed"` strings instead of `ExecutionStatus` enum
-- Inconsistent with rest of codebase
-
-**Impact**: 
-- Type safety issue
-- Inconsistent code patterns
-
-**Fix**: Use `ExecutionStatus.COMPLETED.value` and `ExecutionStatus.FAILED.value`
+**Location**: `backend/api/debug_routes.py:261-263`
+**Status**: **RESOLVED**
+- Uses `ExecutionStatus.COMPLETED.value` and `ExecutionStatus.FAILED.value` (not magic strings)
 
 ---
-
-## 🟡 Medium Priority Issues
 
 ### 2. Direct Database Access in workflow_chat_routes.py
-**Location**: `backend/api/workflow_chat_routes.py:272-301`
-**Problem**: 
-- Directly queries `SettingsDB` instead of using `SettingsService`
-- Duplicates settings loading logic
-- Bypasses service layer
-
-**Impact**: 
-- Violates architecture layers
-- Code duplication
-- Harder to test
-
-**Fix**: Use `settings_service.get_user_settings()` instead of direct DB query
+**Location**: `backend/api/workflow_chat/` (refactored from workflow_chat_routes.py)
+**Status**: **RESOLVED**
+- `workflow_chat/routes.py` uses `settings_service.get_user_settings()` and `settings_service.get_active_llm_config()` via dependency injection
+- `workflow_chat/context.py` queries `WorkflowDB` for workflow definition (appropriate - workflow data, not settings)
+- Architecture layers respected: settings via SettingsService, workflow data via DB/repository
 
 ---
 
-## Priority Order
+## Additional Fixes (March 2026)
 
-1. **Fix magic strings in debug_routes.py** (Critical - Consistency)
-2. **Use SettingsService in workflow_chat_routes.py** (Medium - Architecture)
+- **DIP in unified_llm_agent**: Injects `settings_service` when `provider_resolver` not set; ExecutionOrchestrator passes both to executor
+- **DRY in workflow_service**: Added `_to_dict()` helper; `_serialize_node` and `_process_edges` use it
+- **Deprecated helpers**: `get_active_llm_config`, `get_provider_for_model`, `get_user_settings` already accept optional `settings_service`

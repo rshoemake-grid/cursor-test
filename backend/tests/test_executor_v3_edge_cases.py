@@ -116,11 +116,11 @@ async def test_executor_v3_broadcast_status():
     executor = WorkflowExecutorV3(workflow, stream_updates=True, llm_config=llm_config)
     
     with patch("backend.engine.executor_v3.AgentRegistry") as mock_registry, \
-         patch("backend.engine.executor_v3.ws_manager.broadcast_status", new_callable=AsyncMock), \
-         patch("backend.engine.executor_v3.ws_manager.broadcast_log", new_callable=AsyncMock), \
-         patch("backend.engine.executor_v3.ws_manager.broadcast_node_update", new_callable=AsyncMock), \
-         patch("backend.engine.executor_v3.ws_manager.broadcast_completion", new_callable=AsyncMock), \
-         patch("backend.engine.executor_v3.ws_manager.broadcast_error", new_callable=AsyncMock):
+         patch("backend.engine.execution.execution_broadcaster.ws_manager.broadcast_status", new_callable=AsyncMock), \
+         patch("backend.engine.execution.execution_broadcaster.ws_manager.broadcast_log", new_callable=AsyncMock), \
+         patch("backend.engine.execution.execution_broadcaster.ws_manager.broadcast_node_update", new_callable=AsyncMock), \
+         patch("backend.engine.execution.execution_broadcaster.ws_manager.broadcast_completion", new_callable=AsyncMock), \
+         patch("backend.engine.execution.execution_broadcaster.ws_manager.broadcast_error", new_callable=AsyncMock):
         mock_agent = AsyncMock()
         mock_agent.execute = AsyncMock(return_value="test output")
         mock_registry.get_agent.return_value = mock_agent

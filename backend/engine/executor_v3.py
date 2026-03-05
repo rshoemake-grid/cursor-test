@@ -14,6 +14,7 @@ from ..models.schemas import (
 from ..agents import AgentRegistry
 from ..utils.logger import get_logger
 from ..utils.node_input_config_utils import get_node_input_config
+from ..utils.config_utils import resolve_config_variables
 from ..utils.node_input_utils import (
     prepare_node_inputs,
     get_previous_node_output,
@@ -25,6 +26,8 @@ from .execution.execution_broadcaster import ExecutionBroadcaster
 from .nodes.storage_node_executor import execute_storage_node
 
 logger = get_logger(__name__)
+
+STORAGE_NODE_TYPES = {NodeType.GCP_BUCKET, NodeType.AWS_S3, NodeType.GCP_PUBSUB, NodeType.LOCAL_FILESYSTEM}
 
 
 class WorkflowExecutorV3:
@@ -46,6 +49,7 @@ class WorkflowExecutorV3:
         llm_config: Optional[Dict[str, Any]] = None,
         user_id: Optional[str] = None,
         provider_resolver: Optional[Any] = None,
+        settings_service: Optional[Any] = None,
     ):
         self.workflow = workflow
         self.execution_id = str(uuid.uuid4())
@@ -55,6 +59,7 @@ class WorkflowExecutorV3:
         self.llm_config = llm_config
         self.user_id = user_id
         self.provider_resolver = provider_resolver
+        self.settings_service = settings_service
         
     async def execute(self, inputs: Dict[str, Any]) -> ExecutionState:
         """
@@ -266,9 +271,9 @@ class WorkflowExecutorV3:
         
         try:
             # Execute based on node type
-            if node.type in ['gcp_bucket', 'aws_s3', 'gcp_pubsub', 'local_filesystem']:
+            if node.type in STORAGE_NODE_TYPES:
                 input_config = get_node_input_config(node)
-                input_config = self._resolve_config_variables(input_config)
+                input_config = resolve_config_variables(input_config, self.execution_state.variables)
                 mode = input_config.get('mode', 'read')
 
                 node_has_inputs = len(node.inputs) > 0
@@ -367,6 +372,7 @@ class WorkflowExecutorV3:
                         user_id=self.user_id,
                         log_callback=None,
                         provider_resolver=self.provider_resolver,
+                        settings_service=self.settings_service,
                     )
                     
                     # Log input data for debugging
@@ -451,42 +457,6 @@ class WorkflowExecutorV3:
             await self._broadcaster.broadcast_node_update(node.id, node_state)
     
     def _resolve_config_variables(self, config: Dict[str, Any]) -> Dict[str, Any]:
-        """Resolve variable references in config (e.g., ${variable_name})"""
-        import re
-        resolved_config = {}
-        
-        for key, value in config.items():
-            # Handle None or empty values
-            if value is None or (isinstance(value, str) and (not value or value.strip() == '')):
-                # If value is empty/None, check if there's a workflow variable with the same name
-                # But ignore empty {} from execution inputs
-                if key in self.execution_state.variables:
-                    resolved_value = self.execution_state.variables[key]
-                    # Ignore empty dicts from execution inputs
-                    if resolved_value == {}:
-                        resolved_config[key] = value if value is not None else ''
-                    else:
-                        resolved_config[key] = str(resolved_value) if resolved_value is not None else ''
-                else:
-                    resolved_config[key] = value if value is not None else ''
-            elif isinstance(value, str):
-                # Check for variable references like ${variable_name}
-                pattern = r'\$\{([^}]+)\}'
-                matches = re.findall(pattern, value)
-                
-                if matches:
-                    # Replace variables
-                    resolved_value = value
-                    for var_name in matches:
-                        if var_name in self.execution_state.variables:
-                            var_value = str(self.execution_state.variables[var_name])
-                            resolved_value = resolved_value.replace(f"${{{var_name}}}", var_value)
-                        # If variable not found, keep the placeholder (will fail validation with better error)
-                    resolved_config[key] = resolved_value
-                else:
-                    resolved_config[key] = value
-            else:
-                resolved_config[key] = value
-        
-        return resolved_config
+        """Resolve variable references in config (e.g., ${variable_name}). Delegates to config_utils."""
+        return resolve_config_variables(config, self.execution_state.variables)
     

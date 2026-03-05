@@ -26,6 +26,7 @@ class AgentRegistry:
         user_id: Optional[str] = None,
         log_callback: Optional[Callable[[str, str, str], Awaitable[None]]] = None,
         provider_resolver: Optional[Callable[[str, Optional[str]], Optional[Dict[str, Any]]]] = None,
+        settings_service: Optional[Any] = None,
     ) -> BaseAgent:
         """Get an agent instance for a node"""
         # For AGENT nodes, check if it should be ADK or workflow agent
@@ -62,6 +63,7 @@ class AgentRegistry:
                 user_id=user_id,
                 log_callback=log_callback,
                 provider_resolver=provider_resolver,
+                settings_service=settings_service,
             )
         return agent_class(node, log_callback=log_callback)
     

@@ -178,7 +178,7 @@ class TestStringLengthBoundaries:
             "choices": [{"message": {"content": "Response"}}]
         }
         
-        with patch('backend.agents.unified_llm_agent.httpx.AsyncClient') as mock_client_class, \
+        with patch('backend.agents.llm_providers.openai_compatible.httpx.AsyncClient') as mock_client_class, \
              patch.object(agent, '_find_provider_for_model', return_value=mock_llm_config):
             mock_client = AsyncMock()
             mock_client.__aenter__ = AsyncMock(return_value=mock_client)
@@ -204,7 +204,7 @@ class TestStringLengthBoundaries:
             "choices": [{"message": {"content": "Response"}}]
         }
         
-        with patch('backend.agents.unified_llm_agent.httpx.AsyncClient') as mock_client_class, \
+        with patch('backend.agents.llm_providers.openai_compatible.httpx.AsyncClient') as mock_client_class, \
              patch.object(agent, '_find_provider_for_model', return_value=mock_llm_config):
             mock_client = AsyncMock()
             mock_client.__aenter__ = AsyncMock(return_value=mock_client)
@@ -230,7 +230,7 @@ class TestStringLengthBoundaries:
             "choices": [{"message": {"content": "Response"}}]
         }
         
-        with patch('backend.agents.unified_llm_agent.httpx.AsyncClient') as mock_client_class, \
+        with patch('backend.agents.llm_providers.openai_compatible.httpx.AsyncClient') as mock_client_class, \
              patch.object(agent, '_find_provider_for_model', return_value=mock_llm_config):
             mock_client = AsyncMock()
             mock_client.__aenter__ = AsyncMock(return_value=mock_client)
@@ -256,7 +256,7 @@ class TestStringLengthBoundaries:
             "choices": [{"message": {"content": "Response"}}]
         }
         
-        with patch('backend.agents.unified_llm_agent.httpx.AsyncClient') as mock_client_class, \
+        with patch('backend.agents.llm_providers.openai_compatible.httpx.AsyncClient') as mock_client_class, \
              patch.object(agent, '_find_provider_for_model', return_value=mock_llm_config):
             mock_client = AsyncMock()
             mock_client.__aenter__ = AsyncMock(return_value=mock_client)
@@ -285,7 +285,7 @@ class TestStringLengthBoundaries:
             "choices": [{"message": {"content": "Response"}}]
         }
         
-        with patch('backend.agents.unified_llm_agent.httpx.AsyncClient') as mock_client_class, \
+        with patch('backend.agents.llm_providers.openai_compatible.httpx.AsyncClient') as mock_client_class, \
              patch.object(agent, '_find_provider_for_model', return_value=mock_llm_config):
             mock_client = AsyncMock()
             mock_client.__aenter__ = AsyncMock(return_value=mock_client)
@@ -313,7 +313,7 @@ class TestStringLengthBoundaries:
             "choices": [{"message": {"content": "Response"}}]
         }
         
-        with patch('backend.agents.unified_llm_agent.httpx.AsyncClient') as mock_client_class, \
+        with patch('backend.agents.llm_providers.openai_compatible.httpx.AsyncClient') as mock_client_class, \
              patch.object(agent, '_find_provider_for_model', return_value=mock_llm_config):
             mock_client = AsyncMock()
             mock_client.__aenter__ = AsyncMock(return_value=mock_client)
@@ -516,7 +516,7 @@ class TestBinaryOperators:
             "choices": [{"message": {"content": "Response"}}]
         }
         
-        with patch('backend.agents.unified_llm_agent.httpx.AsyncClient') as mock_client_class, \
+        with patch('backend.agents.llm_providers.openai_compatible.httpx.AsyncClient') as mock_client_class, \
              patch.object(agent, '_find_provider_for_model', return_value=mock_llm_config):
             mock_client = AsyncMock()
             mock_client.__aenter__ = AsyncMock(return_value=mock_client)

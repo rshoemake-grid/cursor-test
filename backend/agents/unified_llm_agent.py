@@ -9,6 +9,7 @@ from .base import BaseAgent
 from ..models.schemas import Node
 from ..utils.logger import get_logger
 from ..utils.agent_config_utils import get_node_config
+from ..utils.message_builder import build_user_message
 
 logger = get_logger(__name__)
 
@@ -23,9 +24,11 @@ class UnifiedLLMAgent(BaseAgent):
         user_id: Optional[str] = None,
         log_callback: Optional[Callable[[str, str, str], Awaitable[None]]] = None,
         provider_resolver: Optional[Callable[[str, Optional[str]], Optional[Dict[str, Any]]]] = None,
+        settings_service: Optional[Any] = None,
     ):
         super().__init__(node, log_callback=log_callback)
         self.provider_resolver = provider_resolver
+        self._settings_service = settings_service
 
         from ..models.schemas import AgentConfig
         agent_config = get_node_config(node, "agent_config", AgentConfig)
@@ -84,10 +87,12 @@ class UnifiedLLMAgent(BaseAgent):
         return None
     
     def _find_provider_for_model(self, model_name: str, user_id: Optional[str] = None) -> Optional[Dict[str, Any]]:
-        """Find the provider that owns the given model name (DIP: uses injectable resolver)."""
+        """Find the provider that owns the given model name (DIP: uses injectable resolver or settings_service)."""
         lookup_user_id = self.user_id if hasattr(self, "user_id") and self.user_id else user_id
         if self.provider_resolver:
             return self.provider_resolver(model_name, lookup_user_id)
+        if self._settings_service:
+            return self._settings_service.get_provider_for_model(model_name, lookup_user_id)
         from ..services.settings_service import SettingsService
         return SettingsService().get_provider_for_model(model_name, lookup_user_id)
     
@@ -153,7 +158,7 @@ class UnifiedLLMAgent(BaseAgent):
                 preview = value_str[:200] + "..." if len(value_str) > 200 else value_str
                 logger.info(f"   {key}: ({type(value).__name__}) {preview}")
         
-        # Build the prompt from inputs
+        # Build the prompt from inputs (SRP: delegated to message_builder)
         user_message = self._build_user_message(inputs)
         
         # Use model from agent config if specified, otherwise from LLM config
@@ -297,149 +302,6 @@ class UnifiedLLMAgent(BaseAgent):
             raise
 
     def _build_user_message(self, inputs: Dict[str, Any]) -> Any:
-        """Build user message from inputs - can return string or list for vision models"""
-        import base64
-
-        # Check if any input contains image data
-        has_images = False
-        image_content = []
-        text_parts = []
-        seen_images = set()  # Track seen images to prevent duplicates
-
-        logger.debug(f"_build_user_message: inputs keys={list(inputs.keys())}")
-
-        # Add system prompt as user instruction if provided (some models don't support system prompts)
-        if self.config.system_prompt:
-            text_parts.append(self.config.system_prompt)
-            logger.debug(f"   Added system prompt to user message: {len(self.config.system_prompt)} chars")
-
-        for key, value in inputs.items():
-            # Check if value is an image (base64, URL, or binary)
-            is_image = False
-            image_data = None
-            
-            if isinstance(value, str):
-                # Check for data URL format: data:image/png;base64,...
-                if value.startswith('data:image/'):
-                    is_image = True
-                    image_data = value
-                # Check if it's a URL to an image
-                elif value.startswith(('http://', 'https://')) and any(ext in value.lower() for ext in ['.png', '.jpg', '.jpeg', '.gif', '.webp']):
-                    is_image = True
-                    image_data = value
-            elif isinstance(value, bytes):
-                # Binary image data - convert to base64
-                try:
-                    # Check if it's an image by magic bytes
-                    if value[:4] == b'\x89PNG' or value[:2] == b'\xff\xd8' or value[:4] == b'GIF8':
-                        mimetype = 'image/png' if value[:4] == b'\x89PNG' else ('image/jpeg' if value[:2] == b'\xff\xd8' else 'image/gif')
-                        base64_data = base64.b64encode(value).decode('utf-8')
-                        image_data = f"data:{mimetype};base64,{base64_data}"
-                        is_image = True
-                except Exception:
-                    pass
-            elif isinstance(value, dict):
-                # Check for image keys in dict
-                if 'image' in value:
-                    image_value = value['image']
-                    if isinstance(image_value, str) and image_value.startswith('data:image/'):
-                        is_image = True
-                        image_data = image_value
-                    elif isinstance(image_value, bytes):
-                        try:
-                            mimetype = 'image/png' if image_value[:4] == b'\x89PNG' else ('image/jpeg' if image_value[:2] == b'\xff\xd8' else 'image/gif')
-                            base64_data = base64.b64encode(image_value).decode('utf-8')
-                            image_data = f"data:{mimetype};base64,{base64_data}"
-                            is_image = True
-                        except Exception:
-                            pass
-                elif 'image_data' in value:
-                    image_value = value['image_data']
-                    if isinstance(image_value, str):
-                        try:
-                            # Try to decode and re-encode as data URL
-                            decoded = base64.b64decode(image_value)
-                            mimetype = 'image/png' if decoded[:4] == b'\x89PNG' else ('image/jpeg' if decoded[:2] == b'\xff\xd8' else 'image/gif')
-                            image_data = f"data:{mimetype};base64,{image_value}"
-                            is_image = True
-                        except Exception:
-                            pass
-            
-            if is_image and image_data:
-                # Deduplicate: only add image if we haven't seen this exact image data before
-                if image_data not in seen_images:
-                    has_images = True
-                    seen_images.add(image_data)
-                    image_content.append({
-                        "type": "image_url",
-                        "image_url": {
-                            "url": image_data
-                        }
-                    })
-                    logger.debug(f"   Added image from key '{key}' (first occurrence)")
-                else:
-                    logger.debug(f"   Skipping duplicate image from key '{key}' (already added)")
-                # Add text description if key is descriptive (even if image was duplicate)
-                if key not in ['data', 'output', 'image', 'image_data']:
-                    text_parts.append(f"{key}:")
-            else:
-                # Regular text input - skip 'source' key when we have images (it's metadata)
-                if has_images and key == 'source':
-                    logger.debug(f"   Skipping 'source' key (metadata) when images present")
-                    continue
-                text_parts.append(f"{key}: {value}")
-                logger.debug(f"   Added text from key '{key}': {str(value)[:50]}...")
-        
-        # If we have images, return structured content for vision models
-        if has_images:
-            content = []
-            if text_parts:
-                # Combine all text parts (prompt + input data) with double newline to separate prompt from data
-                text_content = "\n\n".join(text_parts)
-                content.append({
-                    "type": "text",
-                    "text": text_content
-                })
-                logger.info(f"Built vision message: {len(image_content)} images, text length: {len(text_content)} (includes prompt: {bool(self.config.system_prompt)})")
-            else:
-                # If no text parts but we have a system prompt, use it
-                if self.config.system_prompt:
-                    content.append({
-                        "type": "text",
-                        "text": self.config.system_prompt
-                    })
-                    logger.info(f"Built vision message: {len(image_content)} images, using system prompt only")
-                else:
-                    content.append({
-                        "type": "text",
-                        "text": "Process this image"
-                    })
-                    logger.debug(f"Built vision message: {len(image_content)} images, no text (using default)")
-            content.extend(image_content)
-            return content
-        
-        # Otherwise, return plain text message
-        # Combine prompt with input data
-        if len(inputs) == 1:
-            input_value = str(list(inputs.values())[0])
-            if text_parts:
-                # We have a prompt, combine it with the input (prompt first, then data)
-                text_result = "\n\n".join(text_parts)
-            else:
-                text_result = input_value
-            logger.info(f"Built text message (single input): length={len(text_result)} (includes prompt: {bool(self.config.system_prompt)})")
-            return text_result
-        else:
-            # Multiple inputs - combine prompt with all inputs
-            if text_parts:
-                # text_parts already contains the prompt and input data
-                text_result = "\n\n".join(text_parts)
-            else:
-                # No prompt, just format inputs
-                parts = []
-                for key, value in inputs.items():
-                    parts.append(f"{key}: {value}")
-                text_result = "\n".join(parts)
-            logger.info(f"Built text message (multiple inputs): length={len(text_result)} (includes prompt: {bool(self.config.system_prompt)})")
-            return text_result
+        """Build user message from inputs. Delegates to message_builder (SRP)."""
+        return build_user_message(inputs, system_prompt=self.config.system_prompt)
 

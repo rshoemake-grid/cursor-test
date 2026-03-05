@@ -2,6 +2,9 @@ from typing import Any, Dict, List
 from .base import BaseAgent
 from ..models.schemas import Node
 from ..utils.agent_config_utils import get_node_config
+from ..utils.logger import get_logger
+
+logger = get_logger(__name__)
 
 # OCP: Registry - add new loop types without editing execute()
 _LOOP_EXECUTORS: Dict[str, Any] = {}
@@ -26,7 +29,7 @@ class LoopAgent(BaseAgent):
         from ..models.schemas import LoopConfig
         loop_config = get_node_config(node, "loop_config", LoopConfig)
         if not loop_config:
-            print(f"⚠️  WARNING: Loop node {node.id} has no loop_config, using defaults")
+            logger.warning(f"Loop node {node.id} has no loop_config, using defaults")
             loop_config = LoopConfig(loop_type="for_each", max_iterations=0)
         self.config = loop_config
         

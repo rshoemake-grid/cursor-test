@@ -46,7 +46,7 @@ async def test_unified_llm_agent_execute_openai_vision_with_multiple_images(visi
         "choices": [{"message": {"content": "I see multiple images"}}]
     }
     
-    with patch("backend.agents.unified_llm_agent.httpx.AsyncClient") as mock_client_class:
+    with patch("backend.agents.llm_providers.openai_compatible.httpx.AsyncClient") as mock_client_class:
         mock_client = AsyncMock()
         mock_client.__aenter__ = AsyncMock(return_value=mock_client)
         mock_client.__aexit__ = AsyncMock(return_value=None)
@@ -127,7 +127,7 @@ async def test_unified_llm_agent_execute_anthropic_vision(vision_node):
         "content": [{"text": "I see an image"}]
     }
     
-    with patch("backend.agents.unified_llm_agent.httpx.AsyncClient") as mock_client_class:
+    with patch("backend.agents.llm_providers.anthropic_provider.httpx.AsyncClient") as mock_client_class:
         mock_client = AsyncMock()
         mock_client.__aenter__ = AsyncMock(return_value=mock_client)
         mock_client.__aexit__ = AsyncMock(return_value=None)
@@ -182,7 +182,7 @@ async def test_unified_llm_agent_execute_gemini_multiple_images(vision_node):
         }]
     }
     
-    with patch("backend.agents.unified_llm_agent.httpx.AsyncClient") as mock_client_class:
+    with patch("backend.agents.llm_providers.gemini_provider.httpx.AsyncClient") as mock_client_class:
         mock_client = AsyncMock()
         mock_client.__aenter__ = AsyncMock(return_value=mock_client)
         mock_client.__aexit__ = AsyncMock(return_value=None)

@@ -203,7 +203,7 @@ async def test_chat_save_workflow_error(db_session: AsyncSession, test_user: Use
     setup_dependency_mocks(app, mock_client)
     
     with patch("backend.api.workflow_chat_routes.AsyncOpenAI") as mock_openai_class, \
-         patch("backend.api.workflow_chat_routes.select") as mock_select:
+         patch("backend.api.workflow_chat.routes.select") as mock_select:
         # Make select raise an error
         mock_select.side_effect = Exception("Database error")
         mock_openai_class.return_value = mock_client

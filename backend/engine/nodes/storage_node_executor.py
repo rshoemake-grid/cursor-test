@@ -1,11 +1,38 @@
 """Storage node execution (read/write to GCP, AWS, local filesystem)"""
 import asyncio
-from typing import Any, Callable, Awaitable, Dict, Optional
+from typing import Any, Callable, Awaitable, Dict, List, Optional
 
 from ...inputs import read_from_input_source, write_to_input_source
 from ...utils.logger import get_logger
 
 logger = get_logger(__name__)
+
+
+def _read_mode_output(
+    items: List[Any],
+    read_mode: str,
+    total: int,
+    raw_output: Dict[str, Any],
+    node_type: str,
+    total_lines: Optional[int] = None,
+) -> Dict[str, Any]:
+    """Build output dict for lines/batch read modes (DRY)."""
+    result: Dict[str, Any] = {
+        "data": items,
+        "items": items,
+        "file_path": raw_output.get("file_path"),
+        "read_mode": read_mode,
+        "source": node_type,
+    }
+    if read_mode == "lines":
+        result["lines"] = items
+        result["total_lines"] = total
+    else:
+        result["batches"] = items
+        result["total_batches"] = total
+        result["total_lines"] = total_lines or 0
+        result["batch_size"] = raw_output.get("batch_size")
+    return result
 
 
 async def execute_storage_node(
@@ -64,37 +91,14 @@ async def execute_storage_node(
             lines = raw_output.get("lines", [])
             total_lines = raw_output.get("total_lines", len(lines))
             await log_fn("INFO", node_id, f"Read {total_lines} lines from file (read_mode: lines)")
-            return {
-                "data": lines,
-                "lines": lines,
-                "items": lines,
-                "total_lines": total_lines,
-                "file_path": raw_output.get("file_path"),
-                "read_mode": "lines",
-                "source": node_type,
-            }
-        elif read_mode == "batch":
+            return _read_mode_output(lines, "lines", total_lines, raw_output, node_type)
+        if read_mode == "batch":
             batches = raw_output.get("batches", [])
             total_batches = raw_output.get("total_batches", len(batches))
             total_lines = raw_output.get("total_lines", 0)
-            await log_fn(
-                "INFO",
-                node_id,
-                f"Read {total_lines} lines in {total_batches} batches (read_mode: batch)",
-            )
-            return {
-                "data": batches,
-                "batches": batches,
-                "items": batches,
-                "total_batches": total_batches,
-                "total_lines": total_lines,
-                "batch_size": raw_output.get("batch_size"),
-                "file_path": raw_output.get("file_path"),
-                "read_mode": "batch",
-                "source": node_type,
-            }
-        else:
-            return {"data": raw_output, "source": node_type}
+            await log_fn("INFO", node_id, f"Read {total_lines} lines in {total_batches} batches (read_mode: batch)")
+            return _read_mode_output(batches, "batch", total_batches, raw_output, node_type, total_lines=total_lines)
+        return {"data": raw_output, "source": node_type}
 
     if isinstance(raw_output, dict):
         if raw_output == {}:

@@ -1,23 +1,19 @@
 """Workflow chat API routes"""
 import json
-import traceback
-import uuid
-from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, HTTPException, Depends
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
 
 from backend.database.db import get_db
-from backend.database.models import WorkflowDB, UserDB
+from backend.database.models import UserDB
 from backend.auth import get_optional_user
 from backend.utils.logger import get_logger
-from backend.dependencies import SettingsServiceDep, LLMClientFactoryDep
+from backend.dependencies import SettingsServiceDep, LLMClientFactoryDep, WorkflowServiceDep
 
-from .models import ChatRequest, ChatResponse, NODE_CONFIG_KEYS
+from .models import ChatRequest, ChatResponse
 from .tools import get_workflow_tools, tool_response
 from .context import get_workflow_context
+from .handlers import get_tool_handlers
 
 logger = get_logger(__name__)
 
@@ -47,10 +43,11 @@ After making changes to the workflow, use the save_workflow tool to persist them
 @router.post("/chat", response_model=ChatResponse)
 async def chat_with_workflow(
     request: ChatRequest,
-    db: AsyncSession = Depends(get_db),
+    db=Depends(get_db),
     current_user: Optional[UserDB] = Depends(get_optional_user),
     settings_service: SettingsServiceDep = ...,
     llm_client_factory: LLMClientFactoryDep = ...,
+    workflow_service: WorkflowServiceDep = ...,
 ):
     """Chat with LLM to create or update workflows"""
     try:
@@ -121,170 +118,28 @@ async def chat_with_workflow(
                 assistant_message = message.content or "I've completed the requested changes to the workflow."
                 break
 
+            tool_handlers = get_tool_handlers(
+                workflow_changes, saved_changes, workflow_context,
+                request.workflow_id, workflow_service,
+            )
             tool_messages = []
             for tool_call in message.tool_calls:
                 try:
                     function_name = tool_call.function.name
                     function_args = json.loads(tool_call.function.arguments)
 
-                    if function_name == "add_node":
-                        if "node_type" not in function_args:
-                            tool_messages.append(tool_response(tool_call, {"status": "error", "message": "node_type is required"}))
-                            continue
-                        node_id = f"{function_args['node_type']}-{uuid.uuid4().hex[:12]}"
-                        node_name = function_args.get("name") or f"{function_args['node_type']} Node"
-                        new_node = {
-                            "id": node_id,
-                            "type": function_args["node_type"],
-                            "name": node_name,
-                            "description": function_args.get("description", ""),
-                            "position": function_args.get("position", {"x": 100, "y": 100}),
-                            "data": {"label": node_name, "name": node_name, "description": function_args.get("description", "")},
-                        }
-                        if function_args.get("config"):
-                            config_key = NODE_CONFIG_KEYS.get(function_args["node_type"])
-                            if config_key:
-                                new_node[config_key] = function_args["config"]
-                                new_node["data"][config_key] = function_args["config"]
-                        workflow_changes["nodes_to_add"].append(new_node)
-                        tool_messages.append(tool_response(tool_call, {"status": "success", "action": "added_node", "node_id": node_id}))
-
-                    elif function_name == "update_node":
-                        workflow_changes["nodes_to_update"].append({
-                            "node_id": function_args["node_id"],
-                            "updates": {
-                                "name": function_args.get("name"),
-                                "description": function_args.get("description"),
-                                **function_args.get("config", {}),
-                            },
-                        })
-                        tool_messages.append(tool_response(tool_call, {"status": "success", "action": "updated_node", "node_id": function_args["node_id"]}))
-
-                    elif function_name == "delete_node":
-                        if "node_id" not in function_args:
-                            tool_messages.append(tool_response(tool_call, {"status": "error", "message": "node_id is required"}))
-                            continue
-                        workflow_changes["nodes_to_delete"].append(function_args["node_id"])
-                        tool_messages.append(tool_response(tool_call, {"status": "success", "action": "deleted_node", "node_id": function_args["node_id"]}))
-
-                    elif function_name == "connect_nodes":
-                        if "source_node_id" not in function_args or "target_node_id" not in function_args:
-                            tool_messages.append(tool_response(tool_call, {"status": "error", "message": "source_node_id and target_node_id are required"}))
-                            continue
-                        edge_id = f"e-{function_args['source_node_id']}-{function_args['target_node_id']}"
-                        workflow_changes["edges_to_add"].append({
-                            "id": edge_id,
-                            "source": function_args["source_node_id"],
-                            "target": function_args["target_node_id"],
-                            "sourceHandle": function_args.get("source_handle"),
-                        })
-                        tool_messages.append(tool_response(tool_call, {"status": "success", "action": "connected_nodes", "edge_id": edge_id}))
-
-                    elif function_name == "disconnect_nodes":
-                        if "source_node_id" not in function_args or "target_node_id" not in function_args:
-                            tool_messages.append(tool_response(tool_call, {"status": "error", "message": "source_node_id and target_node_id are required"}))
-                            continue
-                        workflow_changes["edges_to_delete"].append({
-                            "source": function_args["source_node_id"],
-                            "target": function_args["target_node_id"],
-                        })
-                        tool_messages.append(tool_response(tool_call, {"status": "success", "action": "disconnected_nodes"}))
-
-                    elif function_name == "get_workflow_info":
-                        tool_messages.append(tool_response(tool_call, workflow_context))
-
-                    elif function_name == "save_workflow":
-                        if not request.workflow_id:
-                            tool_messages.append(tool_response(tool_call, {"status": "error", "message": "No workflow ID provided. Cannot save workflow."}))
-                            continue
-                        try:
-                            result = await db.execute(select(WorkflowDB).where(WorkflowDB.id == request.workflow_id))
-                            db_workflow = result.scalar_one_or_none()
-                            if not db_workflow:
-                                tool_messages.append(tool_response(tool_call, {"status": "error", "message": f"Workflow {request.workflow_id} not found"}))
-                                continue
-
-                            current_definition = db_workflow.definition or {}
-                            current_nodes = current_definition.get("nodes", [])
-                            current_edges = current_definition.get("edges", [])
-
-                            final_nodes = list(current_nodes)
-                            final_edges = list(current_edges)
-                            final_nodes.extend(workflow_changes["nodes_to_add"])
-
-                            for update in workflow_changes["nodes_to_update"]:
-                                nid = update["node_id"]
-                                updates = update["updates"]
-                                for i, node in enumerate(final_nodes):
-                                    if node.get("id") == nid:
-                                        final_nodes[i] = {**node, **updates}
-                                        if "data" in node:
-                                            final_nodes[i]["data"] = {**node.get("data", {}), **updates}
-                                        break
-
-                            nodes_to_delete = set(workflow_changes["nodes_to_delete"])
-                            final_nodes = [n for n in final_nodes if n.get("id") not in nodes_to_delete]
-                            final_edges.extend(workflow_changes["edges_to_add"])
-
-                            edges_to_delete = workflow_changes["edges_to_delete"]
-                            final_edges = [
-                                e for e in final_edges
-                                if not any(
-                                    del_edge.get("source") == e.get("source") and del_edge.get("target") == e.get("target")
-                                    for del_edge in edges_to_delete
-                                )
-                            ]
-
-                            if function_args.get("name"):
-                                db_workflow.name = function_args["name"]
-                            if function_args.get("description") is not None:
-                                db_workflow.description = function_args.get("description")
-
-                            db_workflow.definition = {
-                                "nodes": final_nodes,
-                                "edges": final_edges,
-                                "variables": current_definition.get("variables", {}),
-                            }
-                            db_workflow.updated_at = datetime.utcnow()
-
-                            await db.commit()
-                            await db.refresh(db_workflow)
-
-                            tool_messages.append(tool_response(tool_call, {
-                                "status": "success",
-                                "action": "saved_workflow",
-                                "workflow_id": request.workflow_id,
-                                "nodes_count": len(final_nodes),
-                                "edges_count": len(final_edges),
-                            }))
-
-                            saved_changes["nodes_to_add"].extend(workflow_changes["nodes_to_add"])
-                            saved_changes["nodes_to_update"].extend(workflow_changes["nodes_to_update"])
-                            saved_changes["nodes_to_delete"].extend(workflow_changes["nodes_to_delete"])
-                            saved_changes["edges_to_add"].extend(workflow_changes["edges_to_add"])
-                            saved_changes["edges_to_delete"].extend(workflow_changes["edges_to_delete"])
-
-                            workflow_changes["nodes_to_add"].clear()
-                            workflow_changes["nodes_to_update"].clear()
-                            workflow_changes["nodes_to_delete"].clear()
-                            workflow_changes["edges_to_add"].clear()
-                            workflow_changes["edges_to_delete"].clear()
-
-                        except Exception as save_error:
-                            print(f"Error saving workflow: {save_error}")
-                            print(traceback.format_exc())
-                            tool_messages.append(tool_response(tool_call, {"status": "error", "message": f"Error saving workflow: {str(save_error)}"}))
-
+                    handler = tool_handlers.get(function_name)
+                    if handler:
+                        msg = await handler(tool_call, function_args)
+                        tool_messages.append(msg)
                     else:
                         tool_messages.append(tool_response(tool_call, {"status": "error", "message": f"Unknown function: {function_name}"}))
 
                 except (json.JSONDecodeError, AttributeError) as e:
-                    print(f"Error parsing tool call: {e}")
-                    print(traceback.format_exc())
+                    logger.error(f"Error parsing tool call: {e}", exc_info=True)
                     tool_messages.append(tool_response(tool_call, {"status": "error", "message": f"Invalid tool call: {str(e)}"}))
                 except Exception as tool_error:
-                    print(f"Error processing tool call: {tool_error}")
-                    print(traceback.format_exc())
+                    logger.error(f"Error processing tool call: {tool_error}", exc_info=True)
                     tool_messages.append(tool_response(tool_call, {"status": "error", "message": f"Error executing tool: {str(tool_error)}"}))
 
             messages.extend(tool_messages)
@@ -317,12 +172,11 @@ async def chat_with_workflow(
 
     except ValueError as e:
         error_msg = str(e)
-        print(f"Configuration error in workflow chat: {error_msg}")
+        logger.warning(f"Configuration error in workflow chat: {error_msg}")
         raise HTTPException(status_code=400, detail=error_msg)
     except Exception as e:
         error_msg = str(e)
-        print(f"Error in workflow chat: {error_msg}")
-        print(traceback.format_exc())
+        logger.error(f"Error in workflow chat: {error_msg}", exc_info=True)
         if "401" in error_msg or "invalid_api_key" in error_msg or "Incorrect API key" in error_msg or "AuthenticationError" in str(type(e)):
             raise HTTPException(
                 status_code=400,

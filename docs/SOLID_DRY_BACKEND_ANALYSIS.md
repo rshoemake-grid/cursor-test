@@ -134,6 +134,8 @@ Both backends show generally good structure with dependency injection and servic
 16. **Node config registry + tool response helper** – `workflow_chat_routes` uses `NODE_CONFIG_KEYS` and `_tool_response()` (OCP/DRY)
 17. **Break up `executor_v3.py`** – Extracted `workflow_graph_builder`, `ExecutionBroadcaster`, `storage_node_executor`; executor is slimmer orchestrator
 18. **Split `workflow_chat_routes.py`** – Package `backend/api/workflow_chat/` with `models`, `tools`, `context`, `routes`; `workflow_chat_routes.py` re-exports for compatibility
+19. **DIP in `unified_llm_agent`** – Injects `settings_service`; when `provider_resolver` not set, uses `settings_service.get_provider_for_model`; ExecutionOrchestrator passes both to executor
+20. **DRY in `workflow_service`** – `_to_dict()` helper used by `_serialize_node` and `_process_edges`
 
 ### Deferred
 - (None – executor and workflow chat refactors completed)

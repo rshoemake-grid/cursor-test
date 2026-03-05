@@ -27,6 +27,34 @@ try:
 except ImportError:
     AWS_AVAILABLE = False
 
+from ..utils.logger import get_logger
+
+logger = get_logger(__name__)
+
+
+def _parse_json_line(line: str, line_number: int, parse_json: bool, **extra: Any) -> Dict[str, Any]:
+    """Parse a line, optionally as JSON. Returns dict with line_number, content, raw, and any extra keys."""
+    line = line.rstrip("\n\r")
+    if parse_json:
+        try:
+            parsed = json.loads(line)
+            return {"line_number": line_number, "content": parsed, "raw": line, **extra}
+        except json.JSONDecodeError:
+            return {"line_number": line_number, "content": line, "raw": line, **extra}
+    return {"line_number": line_number, "content": line, "raw": line, **extra}
+
+
+def _parse_gcp_credentials(credentials_json: Optional[str]):
+    """Parse GCP credentials from JSON string. Returns credentials or None for default."""
+    if not credentials_json:
+        return None
+    try:
+        credentials_info = json.loads(credentials_json)
+        from google.oauth2 import service_account
+        return service_account.Credentials.from_service_account_info(credentials_info)
+    except json.JSONDecodeError:
+        raise ValueError("Invalid JSON credentials for GCP")
+
 
 class InputSourceHandler:
     """Base class for input source handlers"""
@@ -57,20 +85,11 @@ class GCPBucketHandler(InputSourceHandler):
         if not bucket_name:
             raise ValueError("bucket_name is required for GCP Bucket input")
         
-        # Initialize GCS client
-        if credentials_json:
-            try:
-                credentials_info = json.loads(credentials_json)
-                credentials = service_account.Credentials.from_service_account_info(credentials_info)
-                client = storage.Client(credentials=credentials)
-            except json.JSONDecodeError:
-                raise ValueError("Invalid JSON credentials for GCP")
-        else:
-            # Use default credentials (from environment or metadata service)
-            client = storage.Client()
-        
+        credentials = _parse_gcp_credentials(credentials_json)
+        client = storage.Client(credentials=credentials) if credentials else storage.Client()
+
         bucket = client.bucket(bucket_name)
-        
+
         if object_path:
             # Read specific object
             blob = bucket.blob(object_path)
@@ -103,18 +122,10 @@ class GCPBucketHandler(InputSourceHandler):
             raise ValueError("bucket_name is required for GCP Bucket write")
         if not object_path:
             raise ValueError("object_path is required for GCP Bucket write")
-        
-        # Initialize GCS client
-        if credentials_json:
-            try:
-                credentials_info = json.loads(credentials_json)
-                credentials = service_account.Credentials.from_service_account_info(credentials_info)
-                client = storage.Client(credentials=credentials)
-            except json.JSONDecodeError:
-                raise ValueError("Invalid JSON credentials for GCP")
-        else:
-            client = storage.Client()
-        
+
+        credentials = _parse_gcp_credentials(credentials_json)
+        client = storage.Client(credentials=credentials) if credentials else storage.Client()
+
         bucket = client.bucket(bucket_name)
         blob = bucket.blob(object_path)
         
@@ -238,17 +249,9 @@ class GCPPubSubHandler(InputSourceHandler):
         
         if not project_id or not subscription_name:
             raise ValueError("project_id and subscription_name are required for GCP Pub/Sub input")
-        
-        # Initialize Pub/Sub client
-        if credentials_json:
-            try:
-                credentials_info = json.loads(credentials_json)
-                credentials = service_account.Credentials.from_service_account_info(credentials_info)
-                subscriber = pubsub_v1.SubscriberClient(credentials=credentials)
-            except json.JSONDecodeError:
-                raise ValueError("Invalid JSON credentials for GCP")
-        else:
-            subscriber = pubsub_v1.SubscriberClient()
+
+        credentials = _parse_gcp_credentials(credentials_json)
+        subscriber = pubsub_v1.SubscriberClient(credentials=credentials) if credentials else pubsub_v1.SubscriberClient()
         
         subscription_path = subscriber.subscription_path(project_id, subscription_name)
         
@@ -291,17 +294,9 @@ class GCPPubSubHandler(InputSourceHandler):
         
         if not project_id or not topic_name:
             raise ValueError("project_id and topic_name are required for GCP Pub/Sub publish")
-        
-        # Initialize Pub/Sub client
-        if credentials_json:
-            try:
-                credentials_info = json.loads(credentials_json)
-                credentials = service_account.Credentials.from_service_account_info(credentials_info)
-                publisher = pubsub_v1.PublisherClient(credentials=credentials)
-            except json.JSONDecodeError:
-                raise ValueError("Invalid JSON credentials for GCP")
-        else:
-            publisher = pubsub_v1.PublisherClient()
+
+        credentials = _parse_gcp_credentials(credentials_json)
+        publisher = pubsub_v1.PublisherClient(credentials=credentials) if credentials else pubsub_v1.PublisherClient()
         
         topic_path = publisher.topic_path(project_id, topic_name)
         
@@ -397,29 +392,9 @@ class LocalFileSystemHandler(InputSourceHandler):
                     if buffer.strip() and len(lines_found) < num_lines:
                         lines_found.insert(0, buffer)
                     
-                    # Process lines (parse JSON if configured)
-                    for idx, line in enumerate(lines_found[-num_lines:]):  # Take last N lines
-                        line = line.rstrip('\n\r')
-                        if parse_json:
-                            try:
-                                parsed = json.loads(line)
-                                lines.append({
-                                    'line_number': len(lines_found) - num_lines + idx + 1,
-                                    'content': parsed,
-                                    'raw': line
-                                })
-                            except json.JSONDecodeError:
-                                lines.append({
-                                    'line_number': len(lines_found) - num_lines + idx + 1,
-                                    'content': line,
-                                    'raw': line
-                                })
-                        else:
-                            lines.append({
-                                'line_number': len(lines_found) - num_lines + idx + 1,
-                                'content': line,
-                                'raw': line
-                            })
+                    for idx, line in enumerate(lines_found[-num_lines:]):
+                        ln = len(lines_found) - num_lines + idx + 1
+                        lines.append(_parse_json_line(line, ln, parse_json))
                 
                 # If follow mode, wait for new content
                 if follow:
@@ -436,33 +411,9 @@ class LocalFileSystemHandler(InputSourceHandler):
                                 f.seek(initial_size)
                                 new_content = f.read()
                                 
-                                # Parse new lines
-                                for new_line in new_content.split('\n'):
-                                    new_line = new_line.rstrip('\n\r')
-                                    if new_line:
-                                        if parse_json:
-                                            try:
-                                                parsed = json.loads(new_line)
-                                                lines.append({
-                                                    'line_number': len(lines) + 1,
-                                                    'content': parsed,
-                                                    'raw': new_line,
-                                                    'is_new': True
-                                                })
-                                            except json.JSONDecodeError:
-                                                lines.append({
-                                                    'line_number': len(lines) + 1,
-                                                    'content': new_line,
-                                                    'raw': new_line,
-                                                    'is_new': True
-                                                })
-                                        else:
-                                            lines.append({
-                                                'line_number': len(lines) + 1,
-                                                'content': new_line,
-                                                'raw': new_line,
-                                                'is_new': True
-                                            })
+                                for new_line in new_content.split("\n"):
+                                    if new_line.strip():
+                                        lines.append(_parse_json_line(new_line, len(lines) + 1, parse_json, is_new=True))
                             
                             # Update initial size for next iteration
                             initial_size = current_size
@@ -498,28 +449,7 @@ class LocalFileSystemHandler(InputSourceHandler):
                         if max_lines and line_count >= max_lines:
                             break
                         
-                        # Try to parse each line as JSON (e.g., JSONL format)
-                        if parse_json:
-                            try:
-                                parsed = json.loads(line)
-                                lines.append({
-                                    'line_number': line_count + 1,
-                                    'content': parsed,
-                                    'raw': line
-                                })
-                            except json.JSONDecodeError:
-                                # If not JSON, keep as string
-                                lines.append({
-                                    'line_number': line_count + 1,
-                                    'content': line,
-                                    'raw': line
-                                })
-                        else:
-                            lines.append({
-                                'line_number': line_count + 1,
-                                'content': line,
-                                'raw': line
-                            })
+                        lines.append(_parse_json_line(line, line_count + 1, parse_json))
                         
                         line_count += 1
                 
@@ -558,27 +488,7 @@ class LocalFileSystemHandler(InputSourceHandler):
                         if skip_empty and not line:
                             continue
                         
-                        # Parse JSON if configured
-                        if parse_json:
-                            try:
-                                parsed = json.loads(line)
-                                current_batch.append({
-                                    'line_number': start_line + line_count + 1,
-                                    'content': parsed,
-                                    'raw': line
-                                })
-                            except json.JSONDecodeError:
-                                current_batch.append({
-                                    'line_number': start_line + line_count + 1,
-                                    'content': line,
-                                    'raw': line
-                                })
-                        else:
-                            current_batch.append({
-                                'line_number': start_line + line_count + 1,
-                                'content': line,
-                                'raw': line
-                            })
+                        current_batch.append(_parse_json_line(line, start_line + line_count + 1, parse_json))
                         
                         line_count += 1
                         
@@ -720,7 +630,7 @@ class LocalFileSystemHandler(InputSourceHandler):
         # Handle string "true"/"false" from JSON
         if isinstance(overwrite, str):
             overwrite = overwrite.lower() in ('true', '1', 'yes')
-        print(f"LocalFileSystemHandler.write: overwrite={overwrite} (type: {type(overwrite)}), config keys: {list(config.keys())}, full config: {config}")
+        logger.debug(f"LocalFileSystemHandler.write: overwrite={overwrite} (type: {type(overwrite)}), config keys: {list(config.keys())}, full config: {config}")
         
         if not file_path or file_path.strip() == '':
             raise ValueError("file_path is required for Local File System write. Please configure the file_path in the node's input_config or pass it as an execution input (e.g., {'file_path': '/path/to/file'}) before executing the workflow.")
@@ -738,7 +648,7 @@ class LocalFileSystemHandler(InputSourceHandler):
         
         # If overwrite is False and file exists, increment the filename
         file_exists = path.exists()
-        print(f"File path: {path}, exists: {file_exists}, overwrite: {overwrite}")
+        logger.debug(f"File path: {path}, exists: {file_exists}, overwrite: {overwrite}")
         if not overwrite and file_exists:
             # Split path into stem and suffix (e.g., "image.jpg" -> stem="image", suffix=".jpg")
             stem = path.stem
@@ -753,14 +663,14 @@ class LocalFileSystemHandler(InputSourceHandler):
                 new_path = parent / new_name
                 if not new_path.exists():
                     path = new_path
-                    print(f"File exists, using incremented filename: {path}")
+                    logger.debug(f"File exists, using incremented filename: {path}")
                     break
                 counter += 1
                 # Safety check to prevent infinite loop
                 if counter > 10000:
                     raise ValueError(f"Could not find available filename after 10000 attempts. Please clean up files or enable overwrite.")
         elif overwrite and file_exists:
-            print(f"Overwrite enabled: will overwrite existing file {path}")
+            logger.debug(f"Overwrite enabled: will overwrite existing file {path}")
         
         # Create parent directory if it doesn't exist
         path.parent.mkdir(parents=True, exist_ok=True)
@@ -782,7 +692,7 @@ class LocalFileSystemHandler(InputSourceHandler):
                     image_data = base64.b64decode(base64_data)
                     is_image = True
                 except Exception as e:
-                    print(f"Warning: Failed to decode base64 image data: {e}")
+                    logger.warning(f"Failed to decode base64 image data: {e}")
             
             # Check if it's a long base64 string (might be image without data URL prefix)
             elif len(data) > 1000 and all(c in 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=\n\r' for c in data[:1000]):
@@ -865,7 +775,7 @@ class LocalFileSystemHandler(InputSourceHandler):
                         detected_mimetype = 'image/jpeg'  # Default to JPEG
             
             # Log what we're writing
-            print(f"Writing image to {path}: {len(image_data)} bytes, mimetype: {detected_mimetype}")
+            logger.debug(f"Writing image to {path}: {len(image_data)} bytes, mimetype: {detected_mimetype}")
             
             # Write binary data
             with open(path, 'wb') as f:
@@ -898,7 +808,7 @@ class LocalFileSystemHandler(InputSourceHandler):
                 mimetype = 'application/octet-stream'
         
         # Log what we're writing for debugging
-        print(f"Writing to {path}: {len(content)} characters, data type: {type(data)}, mimetype: {mimetype}")
+        logger.debug(f"Writing to {path}: {len(content)} characters, data type: {type(data)}, mimetype: {mimetype}")
         
         # Write to file
         with open(path, 'w', encoding=encoding) as f:

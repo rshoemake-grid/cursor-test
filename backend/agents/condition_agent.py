@@ -3,6 +3,7 @@ from .base import BaseAgent
 from ..models.schemas import Node
 from ..utils.agent_config_utils import get_node_config
 from ..utils.condition_evaluators import evaluate_condition
+from ..utils.field_utils import get_nested_field_value
 
 
 class ConditionAgent(BaseAgent):
@@ -51,12 +52,10 @@ class ConditionAgent(BaseAgent):
                 
                 # If the field path doesn't start with 'items', try to access it directly on list items
                 if parts[0] != 'items':
-                    # The field path is relative to each item in the list
-                    field_value = self._get_nested_field_value(first_item, self.config.field)
+                    field_value = get_nested_field_value(first_item, self.config.field)
                 elif len(parts) > 1:
-                    # Field path starts with 'items', extract the nested path
                     nested_path = '.'.join(parts[1:])
-                    field_value = self._get_nested_field_value(first_item, nested_path)
+                    field_value = get_nested_field_value(first_item, nested_path)
                 else:
                     # Just 'items', use the list itself
                     pass
@@ -95,18 +94,16 @@ class ConditionAgent(BaseAgent):
                                 # If field path starts with the key (e.g., 'items.description.value'), remove the key prefix
                                 # Otherwise, use the field path as-is (e.g., 'description.value' is relative to each item)
                                 if self.config.field.startswith(key + '.'):
-                                    nested_path = self.config.field[len(key) + 1:]  # Remove 'items.' prefix
+                                    nested_path = self.config.field[len(key) + 1:]
                                 else:
-                                    nested_path = self.config.field  # Use field path as-is
-                                field_value = self._get_nested_field_value(first_item, nested_path)
+                                    nested_path = self.config.field
+                                field_value = get_nested_field_value(first_item, nested_path)
                             elif isinstance(value, dict):
-                                # If value is a dict, try to get nested value directly
                                 nested_path = self.config.field.replace(key + '.', '') if self.config.field.startswith(key + '.') else self.config.field
-                                field_value = self._get_nested_field_value(value, nested_path)
+                                field_value = get_nested_field_value(value, nested_path)
                             else:
-                                # Try to get nested value directly
                                 nested_path = self.config.field.replace(key + '.', '') if self.config.field.startswith(key + '.') else self.config.field
-                                field_value = self._get_nested_field_value(value, nested_path)
+                                field_value = get_nested_field_value(value, nested_path)
                         else:
                             field_value = value
                         if field_value is not None:
@@ -118,7 +115,7 @@ class ConditionAgent(BaseAgent):
                         base_value = list(inputs.values())[0]
                         # If field has dot notation, try to get nested value from the single input
                         if '.' in self.config.field:
-                            field_value = self._get_nested_field_value({'value': base_value}, self.config.field)
+                            field_value = get_nested_field_value({'value': base_value}, self.config.field)
                         else:
                             field_value = base_value
                     else:
@@ -135,8 +132,7 @@ class ConditionAgent(BaseAgent):
                                             first_item = json.loads(first_item)
                                         except:
                                             pass
-                                    # Access the nested field on the first item
-                                    field_value = self._get_nested_field_value(first_item, self.config.field)
+                                    field_value = get_nested_field_value(first_item, self.config.field)
                                     if field_value is not None:
                                         break
                                 else:
@@ -146,7 +142,7 @@ class ConditionAgent(BaseAgent):
                             elif isinstance(value, dict) and len(value) > 0:
                                 # If field has dot notation, try to get nested value from dict
                                 if '.' in self.config.field:
-                                    field_value = self._get_nested_field_value(value, self.config.field)
+                                    field_value = get_nested_field_value(value, self.config.field)
                                 else:
                                     field_value = value
                                 if field_value is not None:
@@ -174,51 +170,4 @@ class ConditionAgent(BaseAgent):
             "field_value": field_value,
             "evaluated_value": self.config.value
         }
-    
-    def _get_nested_field_value(self, data: Any, field_path: str) -> Any:
-        """Get nested field value using dot notation (e.g., 'description.value')
-        
-        Supports:
-        - Top-level keys: 'field'
-        - Nested object access: 'field.nested'
-        - Array index access: 'items.0.value'
-        - Deep nesting: 'data.items.0.description.value'
-        """
-        if not field_path or not data:
-            return None
-        
-        # Split the field path by dots
-        parts = field_path.split('.')
-        current = data
-        
-        for i, part in enumerate(parts):
-            if current is None:
-                return None
-                
-            if isinstance(current, dict):
-                current = current.get(part)
-            elif isinstance(current, list):
-                # Try to access by index if part is numeric
-                try:
-                    index = int(part)
-                    if 0 <= index < len(current):
-                        current = current[index]
-                    else:
-                        return None
-                except ValueError:
-                    # Not a numeric index, try to access each item in the list
-                    # Return first matching value if found
-                    found = False
-                    for item in current:
-                        if isinstance(item, dict) and part in item:
-                            current = item[part]
-                            found = True
-                            break
-                    if not found:
-                        return None
-            else:
-                # Can't traverse further
-                return None
-        
-        return current
 

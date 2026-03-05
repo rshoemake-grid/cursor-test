@@ -74,18 +74,19 @@ async def test_unified_llm_agent_find_provider_for_model(mock_node):
         "model": "gpt-4"
     }
     
-    agent = UnifiedLLMAgent(mock_node, llm_config=llm_config)
+    mock_settings_service = Mock()
+    mock_settings_service.get_provider_for_model.return_value = {
+        "type": "openai",
+        "api_key": "sk-provider-key",
+        "model": "gpt-4"
+    }
     
-    with patch("backend.api.settings_routes.get_provider_for_model") as mock_get_provider:
-        mock_get_provider.return_value = {
-            "type": "openai",
-            "api_key": "sk-provider-key",
-            "model": "gpt-4"
-        }
-        
-        # Should use provider from settings
-        provider = agent._find_provider_for_model("gpt-4")
-        assert provider is not None
+    agent = UnifiedLLMAgent(mock_node, llm_config=llm_config, settings_service=mock_settings_service)
+    
+    provider = agent._find_provider_for_model("gpt-4")
+    assert provider is not None
+    assert provider["type"] == "openai"
+    mock_settings_service.get_provider_for_model.assert_called_once_with("gpt-4", None)
 
 
 @pytest.mark.asyncio
@@ -107,7 +108,7 @@ async def test_unified_llm_agent_execute_none_result(mock_node):
         "choices": [{"message": {"content": None}}]
     }
     
-    with patch("backend.agents.unified_llm_agent.httpx.AsyncClient") as mock_client_class:
+    with patch("backend.agents.llm_providers.openai_compatible.httpx.AsyncClient") as mock_client_class:
         mock_client = AsyncMock()
         mock_client.__aenter__ = AsyncMock(return_value=mock_client)
         mock_client.__aexit__ = AsyncMock(return_value=None)

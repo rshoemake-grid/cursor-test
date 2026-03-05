@@ -69,7 +69,7 @@ async def test_unified_llm_agent_execute_gemini(mock_node):
         }]
     }
     
-    with patch("backend.agents.llm_providers.openai_provider.httpx.AsyncClient") as mock_client_class:
+    with patch("backend.agents.llm_providers.openai_compatible.httpx.AsyncClient") as mock_client_class:
         mock_client = AsyncMock()
         mock_client.__aenter__ = AsyncMock(return_value=mock_client)
         mock_client.__aexit__ = AsyncMock(return_value=None)
@@ -114,7 +114,7 @@ async def test_unified_llm_agent_execute_custom(mock_node):
         "choices": [{"message": {"content": "Test response"}}]
     }
     
-    with patch("backend.agents.llm_providers.openai_provider.httpx.AsyncClient") as mock_client_class:
+    with patch("backend.agents.llm_providers.openai_compatible.httpx.AsyncClient") as mock_client_class:
         mock_client = AsyncMock()
         mock_client.__aenter__ = AsyncMock(return_value=mock_client)
         mock_client.__aexit__ = AsyncMock(return_value=None)
@@ -139,7 +139,7 @@ async def test_unified_llm_agent_execute_openai_error(mock_node, mock_llm_config
     mock_http_response.status_code = 401
     mock_http_response.text = "Unauthorized"
     
-    with patch("backend.agents.llm_providers.openai_provider.httpx.AsyncClient") as mock_client_class:
+    with patch("backend.agents.llm_providers.openai_compatible.httpx.AsyncClient") as mock_client_class:
         mock_client = AsyncMock()
         mock_client.__aenter__ = AsyncMock(return_value=mock_client)
         mock_client.__aexit__ = AsyncMock(return_value=None)
@@ -178,7 +178,7 @@ async def test_unified_llm_agent_execute_anthropic_error(mock_node):
     mock_http_response.status_code = 401
     mock_http_response.text = "Unauthorized"
     
-    with patch("backend.agents.llm_providers.openai_provider.httpx.AsyncClient") as mock_client_class:
+    with patch("backend.agents.llm_providers.openai_compatible.httpx.AsyncClient") as mock_client_class:
         mock_client = AsyncMock()
         mock_client.__aenter__ = AsyncMock(return_value=mock_client)
         mock_client.__aexit__ = AsyncMock(return_value=None)
@@ -216,7 +216,7 @@ async def test_unified_llm_agent_execute_openai_vision(mock_node, mock_llm_confi
         "choices": [{"message": {"content": "I see an image"}}]
     }
     
-    with patch("backend.agents.llm_providers.openai_provider.httpx.AsyncClient") as mock_client_class:
+    with patch("backend.agents.llm_providers.openai_compatible.httpx.AsyncClient") as mock_client_class:
         mock_client = AsyncMock()
         mock_client.__aenter__ = AsyncMock(return_value=mock_client)
         mock_client.__aexit__ = AsyncMock(return_value=None)
@@ -244,7 +244,7 @@ async def test_unified_llm_agent_execute_openai_empty_response(mock_node, mock_l
         "choices": [{"message": {"content": None}}]
     }
     
-    with patch("backend.agents.llm_providers.openai_provider.httpx.AsyncClient") as mock_client_class:
+    with patch("backend.agents.llm_providers.openai_compatible.httpx.AsyncClient") as mock_client_class:
         mock_client = AsyncMock()
         mock_client.__aenter__ = AsyncMock(return_value=mock_client)
         mock_client.__aexit__ = AsyncMock(return_value=None)
@@ -300,7 +300,7 @@ async def test_unified_llm_agent_model_not_found_in_provider(mock_node):
     
     # Mock get_provider_for_model to return None and mock httpx to avoid actual API call
     with patch("backend.api.settings_routes.get_provider_for_model") as mock_get_provider, \
-         patch("backend.agents.llm_providers.openai_provider.httpx.AsyncClient") as mock_client_class:
+         patch("backend.agents.llm_providers.openai_compatible.httpx.AsyncClient") as mock_client_class:
         mock_get_provider.return_value = None
         
         # Mock httpx to avoid actual API call during error path

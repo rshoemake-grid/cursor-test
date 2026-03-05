@@ -100,7 +100,7 @@ async def test_unified_llm_agent_openai_api_error(mock_node):
     mock_http_response.text = '{"error": {"message": "Invalid API key"}}'
     
     with patch("backend.api.settings_routes.get_provider_for_model") as mock_get_provider, \
-         patch("backend.agents.llm_providers.openai_provider.httpx.AsyncClient") as mock_client_class:
+         patch("backend.agents.llm_providers.openai_compatible.httpx.AsyncClient") as mock_client_class:
         mock_get_provider.return_value = llm_config
         mock_client = AsyncMock()
         mock_client.__aenter__ = AsyncMock(return_value=mock_client)
@@ -142,7 +142,7 @@ async def test_unified_llm_agent_anthropic_api_error(mock_node):
     mock_http_response.text = '{"error": {"message": "Invalid API key"}}'
     
     with patch("backend.api.settings_routes.get_provider_for_model") as mock_get_provider, \
-         patch("backend.agents.llm_providers.openai_provider.httpx.AsyncClient") as mock_client_class:
+         patch("backend.agents.llm_providers.openai_compatible.httpx.AsyncClient") as mock_client_class:
         mock_get_provider.return_value = llm_config
         mock_client = AsyncMock()
         mock_client.__aenter__ = AsyncMock(return_value=mock_client)
@@ -183,7 +183,7 @@ async def test_unified_llm_agent_gemini_api_error(mock_node):
     }
     
     with patch("backend.api.settings_routes.get_provider_for_model") as mock_get_provider, \
-         patch("backend.agents.llm_providers.openai_provider.httpx.AsyncClient") as mock_client_class:
+         patch("backend.agents.llm_providers.openai_compatible.httpx.AsyncClient") as mock_client_class:
         mock_get_provider.return_value = llm_config
         mock_client = AsyncMock()
         mock_client.__aenter__ = AsyncMock(return_value=mock_client)
@@ -208,7 +208,7 @@ async def test_unified_llm_agent_network_error(mock_node):
     agent = UnifiedLLMAgent(mock_node, llm_config=llm_config)
     
     with patch("backend.api.settings_routes.get_provider_for_model") as mock_get_provider, \
-         patch("backend.agents.llm_providers.openai_provider.httpx.AsyncClient") as mock_client_class:
+         patch("backend.agents.llm_providers.openai_compatible.httpx.AsyncClient") as mock_client_class:
         mock_get_provider.return_value = llm_config
         mock_client = AsyncMock()
         mock_client.__aenter__ = AsyncMock(return_value=mock_client)
@@ -236,7 +236,7 @@ async def test_unified_llm_agent_timeout_error(mock_node):
     agent = UnifiedLLMAgent(mock_node, llm_config=llm_config)
     
     with patch("backend.api.settings_routes.get_provider_for_model") as mock_get_provider, \
-         patch("backend.agents.llm_providers.openai_provider.httpx.AsyncClient") as mock_client_class:
+         patch("backend.agents.llm_providers.openai_compatible.httpx.AsyncClient") as mock_client_class:
         mock_get_provider.return_value = llm_config
         mock_client = AsyncMock()
         mock_client.__aenter__ = AsyncMock(return_value=mock_client)
@@ -312,7 +312,7 @@ async def test_unified_llm_agent_gemini_no_candidates(mock_node):
     }
     
     with patch("backend.api.settings_routes.get_provider_for_model") as mock_get_provider, \
-         patch("backend.agents.llm_providers.openai_provider.httpx.AsyncClient") as mock_client_class:
+         patch("backend.agents.llm_providers.openai_compatible.httpx.AsyncClient") as mock_client_class:
         mock_get_provider.return_value = llm_config
         mock_client = AsyncMock()
         mock_client.__aenter__ = AsyncMock(return_value=mock_client)
@@ -353,7 +353,7 @@ async def test_unified_llm_agent_gemini_no_content(mock_node):
     }
     
     with patch("backend.api.settings_routes.get_provider_for_model") as mock_get_provider, \
-         patch("backend.agents.llm_providers.openai_provider.httpx.AsyncClient") as mock_client_class:
+         patch("backend.agents.llm_providers.openai_compatible.httpx.AsyncClient") as mock_client_class:
         mock_get_provider.return_value = llm_config
         mock_client = AsyncMock()
         mock_client.__aenter__ = AsyncMock(return_value=mock_client)

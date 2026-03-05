@@ -60,8 +60,8 @@ async def test_executor_v3_write_node_with_wrapped_data(mock_workflow):
     executor = WorkflowExecutorV3(mock_workflow, llm_config=llm_config)
     
     # Mock read_from_input_source to return wrapped output
-    with patch("backend.engine.executor_v3.read_from_input_source") as mock_read, \
-         patch("backend.engine.executor_v3.write_to_input_source") as mock_write:
+    with patch("backend.engine.nodes.storage_node_executor.read_from_input_source") as mock_read, \
+         patch("backend.engine.nodes.storage_node_executor.write_to_input_source") as mock_write:
         mock_read.return_value = {
             "data": "test content",
             "source": "local_filesystem"
@@ -87,8 +87,8 @@ async def test_executor_v3_write_node_with_single_data_key(mock_workflow):
     
     executor = WorkflowExecutorV3(mock_workflow, llm_config=llm_config)
     
-    with patch("backend.engine.executor_v3.read_from_input_source") as mock_read, \
-         patch("backend.engine.executor_v3.write_to_input_source") as mock_write:
+    with patch("backend.engine.nodes.storage_node_executor.read_from_input_source") as mock_read, \
+         patch("backend.engine.nodes.storage_node_executor.write_to_input_source") as mock_write:
         mock_read.return_value = {"data": "single data value"}
         mock_write.return_value = {"status": "success"}
         
@@ -112,8 +112,8 @@ async def test_executor_v3_write_node_with_image_data(mock_workflow):
     
     image_data = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhwGAWjR9awAAAABJRU5ErkJggg=="
     
-    with patch("backend.engine.executor_v3.read_from_input_source") as mock_read, \
-         patch("backend.engine.executor_v3.write_to_input_source") as mock_write:
+    with patch("backend.engine.nodes.storage_node_executor.read_from_input_source") as mock_read, \
+         patch("backend.engine.nodes.storage_node_executor.write_to_input_source") as mock_write:
         mock_read.return_value = {
             "text": "some text",
             "image": image_data
@@ -138,8 +138,8 @@ async def test_executor_v3_write_node_with_empty_data_error(mock_workflow):
     
     executor = WorkflowExecutorV3(mock_workflow, llm_config=llm_config)
     
-    with patch("backend.engine.executor_v3.read_from_input_source") as mock_read, \
-         patch("backend.engine.executor_v3.write_to_input_source") as mock_write:
+    with patch("backend.engine.nodes.storage_node_executor.read_from_input_source") as mock_read, \
+         patch("backend.engine.nodes.storage_node_executor.write_to_input_source") as mock_write:
         mock_read.return_value = {}  # Empty output
         
         inputs = {}
@@ -161,8 +161,8 @@ async def test_executor_v3_write_node_with_filtered_dict(mock_workflow):
     
     executor = WorkflowExecutorV3(mock_workflow, llm_config=llm_config)
     
-    with patch("backend.engine.executor_v3.read_from_input_source") as mock_read, \
-         patch("backend.engine.executor_v3.write_to_input_source") as mock_write:
+    with patch("backend.engine.nodes.storage_node_executor.read_from_input_source") as mock_read, \
+         patch("backend.engine.nodes.storage_node_executor.write_to_input_source") as mock_write:
         mock_read.return_value = {
             "data": "content",
             "empty": "",
