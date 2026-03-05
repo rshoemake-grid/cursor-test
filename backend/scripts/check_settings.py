@@ -9,7 +9,8 @@ sys.path.insert(0, project_root)
 from sqlalchemy import select
 from backend.database.db import AsyncSessionLocal
 from backend.database.models import SettingsDB, UserDB
-from backend.api.settings_routes import _settings_cache, get_active_llm_config
+from backend.api.settings_routes import get_active_llm_config
+from backend.utils.settings_cache import get_settings_cache
 
 async def check_settings():
     async with AsyncSessionLocal() as db:
@@ -33,6 +34,7 @@ async def check_settings():
             else:
                 print(f"    No settings data")
         
+        _settings_cache = get_settings_cache()
         print(f"\nSettings cache keys: {list(_settings_cache.keys())}")
         print(f"Cache size: {len(_settings_cache)}")
         

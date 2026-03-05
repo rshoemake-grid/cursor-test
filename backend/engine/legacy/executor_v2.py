@@ -234,38 +234,14 @@ class WorkflowExecutorV2:
             self._log("ERROR", node.id, f"Node failed: {str(e)}")
     
     def _prepare_node_inputs(self, node: Node) -> Dict[str, Any]:
-        """Prepare inputs for a node from previous nodes or workflow variables"""
-        inputs = {}
-        
-        for input_mapping in node.inputs:
-            if input_mapping.source_node:
-                # Get from previous node output
-                source_state = self.execution_state.node_states.get(input_mapping.source_node)
-                if source_state and source_state.output is not None:
-                    # Handle different output types
-                    if isinstance(source_state.output, dict):
-                        inputs[input_mapping.name] = source_state.output.get(
-                            input_mapping.source_field,
-                            source_state.output
-                        )
-                    else:
-                        inputs[input_mapping.name] = source_state.output
-                else:
-                    raise ValueError(
-                        f"Node {node.id} requires input '{input_mapping.name}' "
-                        f"from node '{input_mapping.source_node}' but it's not available"
-                    )
-            else:
-                # Get from workflow variables
-                if input_mapping.source_field in self.execution_state.variables:
-                    inputs[input_mapping.name] = self.execution_state.variables[input_mapping.source_field]
-                else:
-                    raise ValueError(
-                        f"Node {node.id} requires input '{input_mapping.name}' "
-                        f"from workflow variable '{input_mapping.source_field}' but it's not available"
-                    )
-        
-        return inputs
+        """Prepare inputs for a node - delegates to shared util (DRY)."""
+        from ...utils.node_input_utils import prepare_node_inputs
+        return prepare_node_inputs(
+            node,
+            self.execution_state.node_states,
+            self.execution_state.variables,
+            strict_variables=True,
+        )
     
     def _log(self, level: str, node_id: Optional[str], message: str):
         """Add a log entry"""

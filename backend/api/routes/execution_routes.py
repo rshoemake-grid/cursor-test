@@ -19,6 +19,7 @@ from ...utils.logger import get_logger
 from ...dependencies import WorkflowServiceDep, SettingsServiceDep, ExecutionServiceDep
 from ...services.execution_orchestrator import ExecutionOrchestrator
 from ...exceptions import ExecutionNotFoundError
+from ...utils.log_utils import serialize_log_for_json
 
 logger = get_logger(__name__)
 
@@ -281,7 +282,7 @@ async def download_execution_logs(
             import json
             content = json.dumps({
                 "execution_id": execution_id,
-                "logs": [log.model_dump(mode='json') if hasattr(log, 'model_dump') else log for log in logs_response.logs],
+                "logs": [serialize_log_for_json(log) for log in logs_response.logs],
                 "total": logs_response.total
             }, indent=2, default=str)
             media_type = "application/json"
@@ -294,7 +295,7 @@ async def download_execution_logs(
             content_lines.append("")
             
             for log in logs_response.logs:
-                log_dict = log.model_dump(mode='json') if hasattr(log, 'model_dump') else log
+                log_dict = serialize_log_for_json(log)
                 timestamp = log_dict.get('timestamp', '')
                 log_level = log_dict.get('level', 'INFO')
                 node = log_dict.get('node_id', '')

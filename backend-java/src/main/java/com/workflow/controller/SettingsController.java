@@ -1,5 +1,6 @@
 package com.workflow.controller;
 
+import com.workflow.service.LlmTestService;
 import com.workflow.service.SettingsService;
 import com.workflow.util.AuthenticationHelper;
 import io.swagger.v3.oas.annotations.Operation;
@@ -24,11 +25,14 @@ public class SettingsController {
     private static final Logger log = LoggerFactory.getLogger(SettingsController.class);
 
     private final SettingsService settingsService;
+    private final LlmTestService llmTestService;
     private final AuthenticationHelper authenticationHelper;
 
     public SettingsController(SettingsService settingsService,
+                             LlmTestService llmTestService,
                              AuthenticationHelper authenticationHelper) {
         this.settingsService = settingsService;
+        this.llmTestService = llmTestService;
         this.authenticationHelper = authenticationHelper;
     }
 
@@ -72,75 +76,11 @@ public class SettingsController {
         }
 
         try {
-            Map<String, String> result = switch (type) {
-                case "openai" -> testOpenAi(apiKey, baseUrl, model);
-                case "anthropic" -> testAnthropic(apiKey, baseUrl, model);
-                case "gemini" -> testGemini(apiKey, baseUrl, model);
-                case "custom" -> testCustom(apiKey, baseUrl, model);
-                default -> Map.of("status", "error", "message", "Unknown provider type: " + type);
-            };
+            Map<String, String> result = llmTestService.testProvider(type, apiKey, baseUrl, model);
             return ResponseEntity.ok(result);
         } catch (Exception e) {
             log.warn("LLM test failed: {}", e.getMessage());
             return ResponseEntity.ok(Map.of("status", "error", "message", e.getMessage()));
-        }
-    }
-
-    private Map<String, String> testOpenAi(String apiKey, String baseUrl, String model) {
-        String url = (baseUrl != null ? baseUrl : "https://api.openai.com/v1") + "/chat/completions";
-        return testOpenAiCompatible(url, apiKey, model);
-    }
-
-    private Map<String, String> testAnthropic(String apiKey, String baseUrl, String model) {
-        // Anthropic has different API - simplified stub
-        return Map.of("status", "success", "message", "Connection test not implemented for Anthropic");
-    }
-
-    private Map<String, String> testGemini(String apiKey, String baseUrl, String model) {
-        String bUrl = baseUrl != null ? baseUrl : "https://generativelanguage.googleapis.com/v1beta";
-        String url = bUrl + "/models/" + model + ":generateContent?key=" + apiKey;
-        try {
-            var client = java.net.http.HttpClient.newHttpClient();
-            var request = java.net.http.HttpRequest.newBuilder()
-                    .uri(java.net.URI.create(url))
-                    .header("Content-Type", "application/json")
-                    .POST(java.net.http.HttpRequest.BodyPublishers.ofString(
-                            "{\"contents\":[{\"parts\":[{\"text\":\"Hello\"}]}],\"generationConfig\":{\"maxOutputTokens\":5}}"))
-                    .build();
-            var response = client.send(request, java.net.http.HttpResponse.BodyHandlers.ofString());
-            if (response.statusCode() == 200) {
-                return Map.of("status", "success", "message", "Connected successfully!");
-            }
-            return Map.of("status", "error", "message", "API error " + response.statusCode() + ": " + response.body().substring(0, Math.min(200, response.body().length())));
-        } catch (Exception e) {
-            return Map.of("status", "error", "message", "Error: " + e.getMessage());
-        }
-    }
-
-    private Map<String, String> testCustom(String apiKey, String baseUrl, String model) {
-        if (baseUrl == null) {
-            return Map.of("status", "error", "message", "base_url is required for custom providers");
-        }
-        return testOpenAiCompatible(baseUrl + "/chat/completions", apiKey, model);
-    }
-
-    private Map<String, String> testOpenAiCompatible(String url, String apiKey, String model) {
-        try {
-            var client = java.net.http.HttpClient.newHttpClient();
-            var request = java.net.http.HttpRequest.newBuilder()
-                    .uri(java.net.URI.create(url))
-                    .header("Authorization", "Bearer " + apiKey)
-                    .header("Content-Type", "application/json")
-                    .POST(java.net.http.HttpRequest.BodyPublishers.ofString(
-                            "{\"model\":\"" + model + "\",\"messages\":[{\"role\":\"user\",\"content\":\"Hello\"}],\"max_tokens\":5}"))
-                    .build();
-            var response = client.send(request, java.net.http.HttpResponse.BodyHandlers.ofString());
-            if (response.statusCode() == 200) {
-                return Map.of("status", "success", "message", "Connected successfully!");
-            }
-            return Map.of("status", "error", "message", "API error " + response.statusCode());
-        } catch (Exception e) {
-            return Map.of("status", "error", "message", "Error: " + e.getMessage());
         }
     }
 }

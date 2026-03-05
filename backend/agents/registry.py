@@ -19,7 +19,14 @@ class AgentRegistry:
     }
     
     @classmethod
-    def get_agent(cls, node: Node, llm_config: Optional[Dict[str, Any]] = None, user_id: Optional[str] = None, log_callback: Optional[Callable[[str, str, str], Awaitable[None]]] = None) -> BaseAgent:
+    def get_agent(
+        cls,
+        node: Node,
+        llm_config: Optional[Dict[str, Any]] = None,
+        user_id: Optional[str] = None,
+        log_callback: Optional[Callable[[str, str, str], Awaitable[None]]] = None,
+        provider_resolver: Optional[Callable[[str, Optional[str]], Optional[Dict[str, Any]]]] = None,
+    ) -> BaseAgent:
         """Get an agent instance for a node"""
         # For AGENT nodes, check if it should be ADK or workflow agent
         if node.type == NodeType.AGENT:
@@ -48,11 +55,15 @@ class AgentRegistry:
         if not agent_class:
             raise ValueError(f"No agent registered for node type: {node.type}")
         
-        # Pass llm_config, user_id, and log_callback to UnifiedLLMAgent, others don't need it
         if node.type == NodeType.AGENT and llm_config:
-            return agent_class(node, llm_config=llm_config, user_id=user_id, log_callback=log_callback)
-        else:
-            return agent_class(node, log_callback=log_callback)
+            return agent_class(
+                node,
+                llm_config=llm_config,
+                user_id=user_id,
+                log_callback=log_callback,
+                provider_resolver=provider_resolver,
+            )
+        return agent_class(node, log_callback=log_callback)
     
     @classmethod
     def register_agent(cls, node_type: NodeType, agent_class: Type[BaseAgent]):

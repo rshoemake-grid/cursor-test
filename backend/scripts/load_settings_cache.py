@@ -13,9 +13,10 @@ async def load():
     async with AsyncSessionLocal() as db:
         settings_service = SettingsService()
         await settings_service.load_settings_into_cache(db)
-        from backend.api.settings_routes import _settings_cache
-        print(f"Loaded {len(_settings_cache)} settings into cache")
-        print(f"Cache keys: {list(_settings_cache.keys())}")
+        from backend.utils.settings_cache import get_settings_cache
+        cache = get_settings_cache()
+        print(f"Loaded {len(cache)} settings into cache")
+        print(f"Cache keys: {list(cache.keys())}")
 
 if __name__ == "__main__":
     asyncio.run(load())

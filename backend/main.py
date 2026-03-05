@@ -22,7 +22,7 @@ from backend.api.marketplace_routes import router as marketplace_router
 from backend.api.template_routes import router as template_router
 from backend.api.sharing_routes import router as sharing_router
 from backend.api.import_export_routes import router as import_export_router
-from backend.api.workflow_chat_routes import router as workflow_chat_router
+from backend.api.workflow_chat import router as workflow_chat_router
 from backend.api.debug_routes import router as debug_router
 
 # Create FastAPI app with Apigee-friendly metadata

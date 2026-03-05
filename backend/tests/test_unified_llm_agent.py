@@ -125,7 +125,7 @@ async def test_unified_llm_agent_execute_openai(mock_node, mock_llm_config):
         "choices": [{"message": {"content": "Test response"}}]
     }
     
-    with patch("backend.agents.unified_llm_agent.httpx.AsyncClient") as mock_client_class:
+    with patch("backend.agents.llm_providers.openai_provider.httpx.AsyncClient") as mock_client_class:
         mock_client = AsyncMock()
         mock_client.__aenter__ = AsyncMock(return_value=mock_client)
         mock_client.__aexit__ = AsyncMock(return_value=None)
@@ -166,7 +166,7 @@ async def test_unified_llm_agent_execute_anthropic(mock_node):
         "content": [{"text": "Test response"}]
     }
     
-    with patch("backend.agents.unified_llm_agent.httpx.AsyncClient") as mock_client_class:
+    with patch("backend.agents.llm_providers.anthropic_provider.httpx.AsyncClient") as mock_client_class:
         mock_client = AsyncMock()
         mock_client.__aenter__ = AsyncMock(return_value=mock_client)
         mock_client.__aexit__ = AsyncMock(return_value=None)
@@ -183,13 +183,11 @@ async def test_unified_llm_agent_execute_anthropic(mock_node):
 
 @pytest.mark.asyncio
 async def test_unified_llm_agent_find_provider_for_model(mock_node, mock_llm_config):
-    """Test finding provider for a model"""
-    agent = UnifiedLLMAgent(mock_node, llm_config=mock_llm_config)
-    
-    with patch("backend.api.settings_routes.get_provider_for_model") as mock_get_provider:
-        mock_get_provider.return_value = mock_llm_config
-        result = agent._find_provider_for_model("gpt-4", None)
-        assert result == mock_llm_config
+    """Test finding provider for a model - uses injectable provider_resolver (DIP)."""
+    provider_resolver = lambda model, user_id: mock_llm_config
+    agent = UnifiedLLMAgent(mock_node, llm_config=mock_llm_config, provider_resolver=provider_resolver)
+    result = agent._find_provider_for_model("gpt-4", None)
+    assert result == mock_llm_config
 
 
 @pytest.mark.asyncio

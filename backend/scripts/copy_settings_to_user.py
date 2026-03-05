@@ -60,10 +60,10 @@ async def copy_settings_to_user(username: str):
         
         # Update cache if it exists
         try:
-            from backend.api.settings_routes import _settings_cache
+            from backend.utils.settings_cache import get_settings_cache
             from backend.api.settings_routes import LLMSettings
             settings_obj = LLMSettings(**user_settings.settings_data)
-            _settings_cache[user.id] = settings_obj
+            get_settings_cache()[user.id] = settings_obj
             print(f"✅ Updated settings cache")
         except Exception as e:
             print(f"⚠️  Could not update cache: {e}")

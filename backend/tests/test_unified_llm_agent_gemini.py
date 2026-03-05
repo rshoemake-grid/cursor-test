@@ -69,7 +69,7 @@ async def test_unified_llm_agent_gemini_retry_on_rate_limit(gemini_node, mock_ge
             return mock_response_429
         return mock_response_200
     
-    with patch("backend.agents.unified_llm_agent.httpx.AsyncClient") as mock_client_class:
+    with patch("backend.agents.llm_providers.gemini_provider.httpx.AsyncClient") as mock_client_class:
         mock_client = AsyncMock()
         mock_client.__aenter__ = AsyncMock(return_value=mock_client)
         mock_client.__aexit__ = AsyncMock(return_value=None)
@@ -115,7 +115,7 @@ async def test_unified_llm_agent_gemini_image_generation_multiple(gemini_node, m
         }]
     }
     
-    with patch("backend.agents.unified_llm_agent.httpx.AsyncClient") as mock_client_class:
+    with patch("backend.agents.llm_providers.gemini_provider.httpx.AsyncClient") as mock_client_class:
         mock_client = AsyncMock()
         mock_client.__aenter__ = AsyncMock(return_value=mock_client)
         mock_client.__aexit__ = AsyncMock(return_value=None)
@@ -152,7 +152,7 @@ async def test_unified_llm_agent_gemini_snake_case_inline_data(gemini_node, mock
         }]
     }
     
-    with patch("backend.agents.unified_llm_agent.httpx.AsyncClient") as mock_client_class:
+    with patch("backend.agents.llm_providers.gemini_provider.httpx.AsyncClient") as mock_client_class:
         mock_client = AsyncMock()
         mock_client.__aenter__ = AsyncMock(return_value=mock_client)
         mock_client.__aexit__ = AsyncMock(return_value=None)
@@ -195,7 +195,7 @@ async def test_unified_llm_agent_gemini_system_instruction(gemini_node, mock_gem
         }]
     }
     
-    with patch("backend.agents.unified_llm_agent.httpx.AsyncClient") as mock_client_class:
+    with patch("backend.agents.llm_providers.gemini_provider.httpx.AsyncClient") as mock_client_class:
         mock_client = AsyncMock()
         mock_client.__aenter__ = AsyncMock(return_value=mock_client)
         mock_client.__aexit__ = AsyncMock(return_value=None)
@@ -242,7 +242,7 @@ async def test_unified_llm_agent_gemini_generation_config(gemini_node, mock_gemi
         }]
     }
     
-    with patch("backend.agents.unified_llm_agent.httpx.AsyncClient") as mock_client_class:
+    with patch("backend.agents.llm_providers.gemini_provider.httpx.AsyncClient") as mock_client_class:
         mock_client = AsyncMock()
         mock_client.__aenter__ = AsyncMock(return_value=mock_client)
         mock_client.__aexit__ = AsyncMock(return_value=None)

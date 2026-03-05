@@ -1,27 +1,21 @@
 from typing import Any, Dict
 from .base import BaseAgent
 from ..models.schemas import Node
+from ..utils.agent_config_utils import get_node_config
+from ..utils.condition_evaluators import evaluate_condition
 
 
 class ConditionAgent(BaseAgent):
     """Agent that evaluates conditions and returns branch information"""
-    
+
     def __init__(self, node: Node, log_callback=None):
         super().__init__(node, log_callback=log_callback)
-        
-        # Check both top-level and data object for condition_config
-        condition_config = node.condition_config
-        if not condition_config and hasattr(node, 'data') and node.data:
-            condition_config = node.data.get('condition_config') if isinstance(node.data, dict) else None
-        
+
+        from ..models.schemas import ConditionConfig
+        condition_config = get_node_config(node, "condition_config", ConditionConfig)
         if not condition_config:
             raise ValueError(f"Node {node.id} requires condition_config. Please configure the condition settings in the node properties.")
-        
-        # Convert dict to ConditionConfig if needed
-        if isinstance(condition_config, dict):
-            from ..models.schemas import ConditionConfig
-            condition_config = ConditionConfig(**condition_config)
-        
+
         self.config = condition_config
         
     async def execute(self, inputs: Dict[str, Any]) -> Dict[str, Any]:
@@ -166,8 +160,13 @@ class ConditionAgent(BaseAgent):
             else:
                 raise ValueError("Condition config requires 'field' to be set")
         
-        # Evaluate condition
-        result = self._evaluate_condition(field_value, self.config.value)
+        # Evaluate condition (OCP: uses registry)
+        result = evaluate_condition(
+            self.config.condition_type,
+            field_value,
+            self.config.value or "",
+            getattr(self.config, "custom_expression", None),
+        )
         
         return {
             "condition_result": result,
@@ -222,82 +221,4 @@ class ConditionAgent(BaseAgent):
                 return None
         
         return current
-    
-    def _evaluate_condition(self, field_value: Any, compare_value: str) -> bool:
-        """Evaluate the condition based on type"""
-        condition_type = self.config.condition_type
-        
-        # Convert values to string for comparison
-        field_str = str(field_value)
-        
-        if condition_type == "equals":
-            return field_str == compare_value
-        
-        elif condition_type == "not_equals":
-            return field_str != compare_value
-        
-        elif condition_type == "contains":
-            return compare_value.lower() in field_str.lower()
-        
-        elif condition_type == "not_contains":
-            return compare_value.lower() not in field_str.lower()
-        
-        elif condition_type == "greater_than":
-            try:
-                return float(field_value) > float(compare_value)
-            except (ValueError, TypeError):
-                return False
-        
-        elif condition_type == "not_greater_than":
-            try:
-                return float(field_value) <= float(compare_value)
-            except (ValueError, TypeError):
-                return False
-        
-        elif condition_type == "less_than":
-            try:
-                return float(field_value) < float(compare_value)
-            except (ValueError, TypeError):
-                return False
-        
-        elif condition_type == "not_less_than":
-            try:
-                return float(field_value) >= float(compare_value)
-            except (ValueError, TypeError):
-                return False
-        
-        elif condition_type == "empty" or condition_type == "is_empty":
-            # Check if field is empty
-            if field_value is None:
-                return True
-            if isinstance(field_value, (list, tuple, dict, str)):
-                return len(field_value) == 0
-            return False
-        
-        elif condition_type == "is_not_empty" or condition_type == "not_empty":
-            # Check if field is not empty
-            if field_value is None:
-                return False
-            if isinstance(field_value, (list, tuple, dict, str)):
-                return len(field_value) > 0
-            return True
-        
-        elif condition_type == "custom" and self.config.custom_expression:
-            # For custom expressions, use eval (in production, use safer alternatives)
-            try:
-                # Create safe namespace with limited functions
-                safe_dict = {
-                    "value": field_value,
-                    "compare": compare_value,
-                    "str": str,
-                    "int": int,
-                    "float": float,
-                    "len": len,
-                }
-                return bool(eval(self.config.custom_expression, {"__builtins__": {}}, safe_dict))
-            except Exception as e:
-                raise RuntimeError(f"Error evaluating custom expression: {str(e)}")
-        
-        else:
-            raise ValueError(f"Unknown condition type: {condition_type}")
 

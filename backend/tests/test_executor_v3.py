@@ -149,7 +149,8 @@ async def test_build_graph(simple_workflow):
     """Test building adjacency graph"""
     executor = WorkflowExecutorV3(simple_workflow)
     
-    adjacency, in_degree = executor._build_graph()
+    from backend.engine.graph.workflow_graph_builder import build_graph
+    adjacency, in_degree = build_graph(simple_workflow)
     
     assert "start-1" in adjacency
     assert "end-1" in adjacency
@@ -224,24 +225,21 @@ async def test_execute_with_condition_node():
 @pytest.mark.asyncio
 async def test_broadcast_status(simple_workflow):
     """Test broadcasting status updates"""
-    executor = WorkflowExecutorV3(simple_workflow, stream_updates=True)
-    executor.execution_id = "test-execution-1"
-    
-    # Initialize execution state
+    from backend.engine.execution.execution_broadcaster import ExecutionBroadcaster
     from backend.models.schemas import ExecutionState, ExecutionStatus
     from datetime import datetime
-    executor.execution_state = ExecutionState(
-        execution_id=executor.execution_id,
+
+    execution_state = ExecutionState(
+        execution_id="test-execution-1",
         workflow_id=simple_workflow.id or "test-workflow",
         status=ExecutionStatus.RUNNING,
-        started_at=datetime.utcnow()
+        started_at=datetime.utcnow(),
     )
-    
-    with patch("backend.engine.executor_v3.ws_manager") as mock_manager:
+    broadcaster = ExecutionBroadcaster("test-execution-1", execution_state, stream_updates=True)
+
+    with patch("backend.engine.execution.execution_broadcaster.ws_manager") as mock_manager:
         mock_manager.broadcast_status = AsyncMock()
-        
-        await executor._broadcast_status("running")
-        
+        await broadcaster.broadcast_status("running")
         mock_manager.broadcast_status.assert_called_once()
 
 
@@ -255,7 +253,7 @@ async def test_log_entry(simple_workflow):
     
     # Log should add entries
     initial_log_count = len(executor.execution_state.logs)
-    await executor._log("INFO", "test-node", "Test message")
+    await executor._broadcaster.log("INFO", "test-node", "Test message")
     
     assert executor.execution_state is not None
     assert len(executor.execution_state.logs) > initial_log_count

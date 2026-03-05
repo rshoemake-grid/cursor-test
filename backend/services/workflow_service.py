@@ -2,7 +2,7 @@
 Service layer for workflow business logic.
 Handles workflow CRUD operations and business rules.
 """
-from typing import Optional, List
+from typing import Optional, List, Any
 from datetime import datetime
 from sqlalchemy.ext.asyncio import AsyncSession
 from uuid import uuid4
@@ -14,6 +14,24 @@ from ..exceptions import WorkflowNotFoundError, WorkflowValidationError
 from ..utils.logger import get_logger
 
 logger = get_logger(__name__)
+
+
+def _process_edges(edges: List[Any], start_index: int = 0) -> List[dict]:
+    """Process edges - ensure all have IDs (DRY: shared by create and update)."""
+    processed = []
+    for i, edge in enumerate(edges):
+        edge_dict = edge.model_dump() if hasattr(edge, "model_dump") else dict(edge)
+        if not edge_dict.get("id"):
+            source = edge_dict.get("source", getattr(edge, "source", ""))
+            target = edge_dict.get("target", getattr(edge, "target", ""))
+            edge_dict["id"] = f"e-{source}-{target}-{start_index + i}"
+        processed.append(edge_dict)
+    return processed
+
+
+def _serialize_node(node: Any) -> dict:
+    """Serialize node to dict (DRY)."""
+    return node.model_dump() if hasattr(node, "model_dump") else dict(node)
 
 
 class WorkflowService:
@@ -45,16 +63,7 @@ class WorkflowService:
             workflow_id = str(uuid4())
             now = datetime.utcnow()
             
-            # Validate and process edges - ensure all have IDs
-            processed_edges = []
-            for i, edge in enumerate(workflow_data.edges):
-                if not hasattr(edge, 'id') or not edge.id:
-                    edge_id = f"e-{edge.source}-{edge.target}-{i}"
-                    edge_dict = edge.model_dump() if hasattr(edge, 'model_dump') else dict(edge)
-                    edge_dict['id'] = edge_id
-                    processed_edges.append(edge_dict)
-                else:
-                    processed_edges.append(edge.model_dump() if hasattr(edge, 'model_dump') else dict(edge))
+            processed_edges = _process_edges(workflow_data.edges)
             
             # Create workflow definition
             workflow_def = WorkflowDefinition(
@@ -74,7 +83,7 @@ class WorkflowService:
                 name=workflow_data.name,
                 description=workflow_data.description,
                 definition={
-                    "nodes": [node.model_dump() for node in workflow_data.nodes],
+                    "nodes": [_serialize_node(node) for node in workflow_data.nodes],
                     "edges": processed_edges,
                     "variables": workflow_data.variables
                 },
@@ -163,22 +172,15 @@ class WorkflowService:
         # TODO: Add authorization check (user_id must match owner_id)
         
         try:
-            # Process nodes and edges similar to create
             processed_nodes = []
             for i, node in enumerate(workflow_data.nodes):
                 try:
-                    node_dict = node.model_dump() if hasattr(node, 'model_dump') else dict(node)
-                    processed_nodes.append(node_dict)
+                    processed_nodes.append(_serialize_node(node))
                 except Exception as node_error:
                     logger.error(f"Error serializing node {i}: {node_error}", exc_info=True)
                     raise WorkflowValidationError(f"Invalid node at index {i}: {str(node_error)}")
-            
-            processed_edges = []
-            for i, edge in enumerate(workflow_data.edges):
-                edge_dict = edge.model_dump() if hasattr(edge, 'model_dump') else dict(edge)
-                if not edge_dict.get('id'):
-                    edge_dict['id'] = f"e-{edge.source}-{edge.target}-{i}"
-                processed_edges.append(edge_dict)
+
+            processed_edges = _process_edges(workflow_data.edges)
             
             # Update workflow
             updated_workflow = await self.repository.update(

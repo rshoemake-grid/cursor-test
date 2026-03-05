@@ -4,10 +4,37 @@ Tests basic API functionality without executing workflows
 """
 
 import asyncio
+import pytest
 import httpx
 
 
 BASE_URL = "http://localhost:8000"
+
+
+@pytest.fixture
+async def workflow_id():
+    """Create a workflow via API and return its ID for tests that need it."""
+    workflow = {
+        "name": "API Test Workflow",
+        "description": "Fixture workflow for testing",
+        "nodes": [
+            {
+                "id": "test_agent",
+                "type": "agent",
+                "name": "Test Agent",
+                "agent_config": {"model": "gpt-4o-mini", "system_prompt": "Test"},
+                "inputs": [{"name": "input", "source_field": "test_input"}],
+                "position": {"x": 100, "y": 100},
+            }
+        ],
+        "edges": [],
+        "variables": {},
+    }
+    async with httpx.AsyncClient() as client:
+        response = await client.post(f"{BASE_URL}/api/workflows", json=workflow)
+        if response.status_code != 200:
+            pytest.skip(f"Cannot create workflow (API may be down): {response.status_code}")
+        return response.json().get("id")
 
 
 async def test_health():

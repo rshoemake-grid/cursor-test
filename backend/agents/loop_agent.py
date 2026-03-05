@@ -1,61 +1,49 @@
 from typing import Any, Dict, List
 from .base import BaseAgent
 from ..models.schemas import Node
+from ..utils.agent_config_utils import get_node_config
+
+# OCP: Registry - add new loop types without editing execute()
+_LOOP_EXECUTORS: Dict[str, Any] = {}
+
+
+def _register_loop_executor(loop_type: str):
+    """Decorator to register a loop executor."""
+
+    def decorator(fn):
+        _LOOP_EXECUTORS[loop_type] = fn
+        return fn
+
+    return decorator
 
 
 class LoopAgent(BaseAgent):
     """Agent that manages loop iterations"""
-    
+
     def __init__(self, node: Node, log_callback=None):
         super().__init__(node, log_callback=log_callback)
-        
-        # Check both top-level and data object for loop_config
-        loop_config = node.loop_config
-        if not loop_config and hasattr(node, 'data') and node.data:
-            loop_config = node.data.get('loop_config') if isinstance(node.data, dict) else None
-        
-        # If still not found, provide defaults
+
+        from ..models.schemas import LoopConfig
+        loop_config = get_node_config(node, "loop_config", LoopConfig)
         if not loop_config:
             print(f"⚠️  WARNING: Loop node {node.id} has no loop_config, using defaults")
-            from ..models.schemas import LoopConfig
-            loop_config = LoopConfig(
-                loop_type="for_each",
-                max_iterations=0
-            )
-        # Convert dict to LoopConfig if needed
-        elif isinstance(loop_config, dict):
-            from ..models.schemas import LoopConfig
-            # Only create LoopConfig if dict has content
-            if len(loop_config) > 0:
-                loop_config = LoopConfig(**loop_config)
-            else:
-                # Empty dict, use defaults
-                loop_config = LoopConfig(
-                    loop_type="for_each",
-                    max_iterations=0
-                )
-        
+            loop_config = LoopConfig(loop_type="for_each", max_iterations=0)
         self.config = loop_config
         
     async def execute(self, inputs: Dict[str, Any]) -> Dict[str, Any]:
-        """Initialize loop state and return iteration information"""
+        """Initialize loop state and return iteration information (OCP: uses registry)."""
         self.validate_inputs(inputs)
-        
         loop_type = self.config.loop_type
-        
-        if loop_type == "for_each":
-            return await self._execute_for_each(inputs)
-        elif loop_type == "while":
-            return await self._execute_while(inputs)
-        elif loop_type == "until":
-            return await self._execute_until(inputs)
-        else:
+        executor = _LOOP_EXECUTORS.get(loop_type)
+        if executor is None:
             raise ValueError(f"Unknown loop type: {loop_type}")
+        return await executor(self, inputs)
     
-    async def _execute_for_each(self, inputs: Dict[str, Any]) -> Dict[str, Any]:
+@_register_loop_executor("for_each")
+async def _execute_for_each(agent: "LoopAgent", inputs: Dict[str, Any]) -> Dict[str, Any]:
         """Execute for-each loop"""
         # If items_source is not set, try to auto-detect from inputs
-        if not self.config.items_source:
+        if not agent.config.items_source:
             # Try common keys first
             for key in ['data', 'output', 'items', 'results']:
                 if key in inputs:
@@ -68,10 +56,10 @@ class LoopAgent(BaseAgent):
                 else:
                     raise ValueError("for_each loop requires items_source or inputs from previous node")
         else:
-            items = inputs.get(self.config.items_source)
+            items = inputs.get(agent.config.items_source)
         
         if items is None:
-            raise ValueError(f"Items source '{self.config.items_source if self.config.items_source else 'auto-detected'}' not found in inputs. Available keys: {list(inputs.keys())}")
+            raise ValueError(f"Items source '{agent.config.items_source if agent.config.items_source else 'auto-detected'}' not found in inputs. Available keys: {list(inputs.keys())}")
         
         if not isinstance(items, (list, tuple)):
             # Try to convert to list
@@ -108,8 +96,8 @@ class LoopAgent(BaseAgent):
                 items = [items]
         
         # Limit iterations (if max_iterations is None or 0, process all items)
-        if self.config.max_iterations and self.config.max_iterations > 0:
-            max_items = min(len(items), self.config.max_iterations)
+        if agent.config.max_iterations and agent.config.max_iterations > 0:
+            max_items = min(len(items), agent.config.max_iterations)
             items = items[:max_items]
         
         return {
@@ -120,27 +108,30 @@ class LoopAgent(BaseAgent):
             "status": "initialized"
         }
     
-    async def _execute_while(self, inputs: Dict[str, Any]) -> Dict[str, Any]:
-        """Execute while loop - returns initial state"""
-        condition = self.config.condition or "true"
-        
-        return {
-            "loop_type": "while",
-            "condition": condition,
-            "max_iterations": self.config.max_iterations,
-            "current_iteration": 0,
-            "status": "initialized"
-        }
-    
-    async def _execute_until(self, inputs: Dict[str, Any]) -> Dict[str, Any]:
-        """Execute until loop - returns initial state"""
-        condition = self.config.condition or "false"
-        
-        return {
-            "loop_type": "until",
-            "condition": condition,
-            "max_iterations": self.config.max_iterations,
-            "current_iteration": 0,
-            "status": "initialized"
-        }
+
+
+@_register_loop_executor("while")
+async def _execute_while(agent: LoopAgent, inputs: Dict[str, Any]) -> Dict[str, Any]:
+    """Execute while loop - returns initial state"""
+    condition = agent.config.condition or "true"
+    return {
+        "loop_type": "while",
+        "condition": condition,
+        "max_iterations": agent.config.max_iterations,
+        "current_iteration": 0,
+        "status": "initialized",
+    }
+
+
+@_register_loop_executor("until")
+async def _execute_until(agent: LoopAgent, inputs: Dict[str, Any]) -> Dict[str, Any]:
+    """Execute until loop - returns initial state"""
+    condition = agent.config.condition or "false"
+    return {
+        "loop_type": "until",
+        "condition": condition,
+        "max_iterations": agent.config.max_iterations,
+        "current_iteration": 0,
+        "status": "initialized",
+    }
 

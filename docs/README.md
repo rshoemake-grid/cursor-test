@@ -59,6 +59,7 @@ Welcome to the workflow engine documentation! This index helps you find the righ
 
 ### 📖 Technical Documentation
 
+- **[SOLID & DRY Backend Analysis](./SOLID_DRY_BACKEND_ANALYSIS.md)** - Code quality analysis for Python and Java backends
 - **[Technical Design](./TECHNICAL_DESIGN.md)** - Detailed technical specifications
 - **[Execution System Architecture](./EXECUTION_SYSTEM_ARCHITECTURE.md)** - Execution engine details
 - **[Business Requirements](./BUSINESS_REQUIREMENTS.md)** - Business logic and requirements

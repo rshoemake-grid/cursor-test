@@ -5,7 +5,7 @@ These tests target:
 - API key length comparisons (< 10, < 25, < 30)
 - Type comparisons (== "openai", == "anthropic", etc.)
 - Length comparisons (len(apiKey) > 0, len(providers))
-- Cache checks (user_id in _settings_cache)
+- Cache checks (user_id in get_settings_cache())
 - Empty checks (None, empty dict)
 """
 import pytest
@@ -17,7 +17,8 @@ from unittest.mock import patch, AsyncMock, MagicMock
 from backend.database.models import UserDB, SettingsDB
 from backend.database.db import get_db
 from backend.auth import create_access_token
-from backend.api.settings_routes import _settings_cache, _is_valid_api_key
+from backend.utils.settings_cache import get_settings_cache
+from backend.utils.settings_utils import is_valid_api_key
 
 
 @pytest.fixture
@@ -355,60 +356,60 @@ class TestTypeComparisons:
 class TestAPIKeyLengthComparisons:
     """Test API key length comparison boundaries"""
     
-    def test_is_valid_api_key_length_9(self):
+    def testis_valid_api_key_length_9(self):
         """Test API key validation with length exactly 9 (boundary: < 10 true)"""
-        from backend.api.settings_routes import _is_valid_api_key
-        result = _is_valid_api_key("123456789")  # Exactly 9 chars
+        from backend.api.settings_routes import is_valid_api_key
+        result = is_valid_api_key("123456789")  # Exactly 9 chars
         assert result is False
     
-    def test_is_valid_api_key_length_10(self):
+    def testis_valid_api_key_length_10(self):
         """Test API key validation with length exactly 10 (boundary: < 10 false)"""
-        from backend.api.settings_routes import _is_valid_api_key
-        result = _is_valid_api_key("1234567890")  # Exactly 10 chars
+        from backend.api.settings_routes import is_valid_api_key
+        result = is_valid_api_key("1234567890")  # Exactly 10 chars
         assert result is True
     
-    def test_is_valid_api_key_length_11(self):
+    def testis_valid_api_key_length_11(self):
         """Test API key validation with length exactly 11 (boundary: > 10)"""
-        from backend.api.settings_routes import _is_valid_api_key
-        result = _is_valid_api_key("12345678901")  # Exactly 11 chars
+        from backend.api.settings_routes import is_valid_api_key
+        result = is_valid_api_key("12345678901")  # Exactly 11 chars
         assert result is True
     
-    def test_is_valid_api_key_length_24_with_placeholder(self):
+    def testis_valid_api_key_length_24_with_placeholder(self):
         """Test API key validation with length 24 and placeholder (boundary: < 25)"""
-        from backend.api.settings_routes import _is_valid_api_key
-        result = _is_valid_api_key("your-api-key-here-123")  # Exactly 24 chars
+        from backend.api.settings_routes import is_valid_api_key
+        result = is_valid_api_key("your-api-key-here-123")  # Exactly 24 chars
         assert result is False
             
-    def test_is_valid_api_key_length_25_with_placeholder(self):
+    def testis_valid_api_key_length_25_with_placeholder(self):
         """Test API key validation with length 25 and placeholder (boundary: >= 25)"""
-        from backend.api.settings_routes import _is_valid_api_key
-        result = _is_valid_api_key("your-api-key-here-1234")  # Exactly 25 chars
+        from backend.api.settings_routes import is_valid_api_key
+        result = is_valid_api_key("your-api-key-here-1234")  # Exactly 25 chars
         # Should pass length check but fail placeholder check
         assert result is False
     
-    def test_is_valid_api_key_length_29_with_masked(self):
+    def testis_valid_api_key_length_29_with_masked(self):
         """Test API key validation with length 29 and masked pattern (boundary: < 30)"""
-        from backend.api.settings_routes import _is_valid_api_key
-        result = _is_valid_api_key("sk-test-*****here-123456")  # Exactly 29 chars
+        from backend.api.settings_routes import is_valid_api_key
+        result = is_valid_api_key("sk-test-*****here-123456")  # Exactly 29 chars
         assert result is False
     
-    def test_is_valid_api_key_length_30_with_masked(self):
+    def testis_valid_api_key_length_30_with_masked(self):
         """Test API key validation with length 30 and masked pattern (boundary: >= 30)"""
-        from backend.api.settings_routes import _is_valid_api_key
-        result = _is_valid_api_key("sk-test-*****here-1234567")  # Exactly 30 chars
+        from backend.api.settings_routes import is_valid_api_key
+        result = is_valid_api_key("sk-test-*****here-1234567")  # Exactly 30 chars
         # Should pass length check but fail masked pattern check
         assert result is False
     
-    def test_is_valid_api_key_empty_string(self):
+    def testis_valid_api_key_empty_string(self):
         """Test API key validation with empty string"""
-        from backend.api.settings_routes import _is_valid_api_key
-        result = _is_valid_api_key("")
+        from backend.api.settings_routes import is_valid_api_key
+        result = is_valid_api_key("")
         assert result is False
     
-    def test_is_valid_api_key_valid_long(self):
+    def testis_valid_api_key_valid_long(self):
         """Test API key validation with valid long key"""
-        from backend.api.settings_routes import _is_valid_api_key
-        result = _is_valid_api_key("sk-test-key-123456789012345678901234567890")
+        from backend.api.settings_routes import is_valid_api_key
+        result = is_valid_api_key("sk-test-key-123456789012345678901234567890")
         assert result is True
 
 
@@ -529,19 +530,19 @@ class TestAPIKeyLengthComparisonsStandalone:
     
     def test_api_key_length_zero(self):
         """Test API key length exactly 0 (boundary: len(apiKey) > 0 false)"""
-        from backend.api.settings_routes import _is_valid_api_key
-        result = _is_valid_api_key("")
+        from backend.api.settings_routes import is_valid_api_key
+        result = is_valid_api_key("")
         assert result is False
     
     def test_api_key_length_one(self):
         """Test API key length exactly 1 (boundary: len(apiKey) > 0 true)"""
-        from backend.api.settings_routes import _is_valid_api_key
-        result = _is_valid_api_key("x")
+        from backend.api.settings_routes import is_valid_api_key
+        result = is_valid_api_key("x")
         assert result is False  # Too short
     
     def test_api_key_length_ten(self):
         """Test API key length exactly 10 (boundary: len(apiKey) > 0 true)"""
-        result = _is_valid_api_key("1234567890")
+        result = is_valid_api_key("1234567890")
         assert result is True
 
 
@@ -550,7 +551,7 @@ class TestCacheComparisons:
     
     @pytest.mark.asyncio
     async def test_get_llm_settings_from_cache(self, test_user, db_session):
-        """Test get settings from cache (boundary: user_id in _settings_cache)"""
+        """Test get settings from cache (boundary: user_id in get_settings_cache())"""
         from main import app
         from backend.database.db import get_db as get_db_func
         
@@ -562,8 +563,8 @@ class TestCacheComparisons:
         try:
             async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
                 # Clear cache first
-                from backend.api.settings_routes import _settings_cache
-                _settings_cache.clear()
+                from backend.utils.settings_cache import get_settings_cache
+                get_settings_cache().clear()
                 
                 # Add to cache
                 from backend.api.settings_routes import LLMSettings, LLMProvider
@@ -578,7 +579,7 @@ class TestCacheComparisons:
                         enabled=True
                     )]
                 )
-                _settings_cache[test_user.id] = settings
+                get_settings_cache()[test_user.id] = settings
                 
                 from backend.auth.auth import create_access_token
                 token = create_access_token({"sub": test_user.username})
@@ -592,7 +593,7 @@ class TestCacheComparisons:
     
     @pytest.mark.asyncio
     async def test_get_llm_settings_not_in_cache(self, test_user, db_session):
-        """Test get settings not in cache (boundary: user_id not in _settings_cache)"""
+        """Test get settings not in cache (boundary: user_id not in get_settings_cache())"""
         from main import app
         from backend.database.db import get_db as get_db_func
         
@@ -604,8 +605,8 @@ class TestCacheComparisons:
         try:
             async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
                 # Clear cache
-                from backend.api.settings_routes import _settings_cache
-                _settings_cache.clear()
+                from backend.utils.settings_cache import get_settings_cache
+                get_settings_cache().clear()
                 
                 from backend.auth.auth import create_access_token
                 token = create_access_token({"sub": test_user.username})
@@ -641,8 +642,8 @@ class TestEmptyChecks:
                 await db_session.commit()
                 
                 # Clear cache
-                from backend.api.settings_routes import _settings_cache
-                _settings_cache.clear()
+                from backend.utils.settings_cache import get_settings_cache
+                get_settings_cache().clear()
                 
                 from backend.auth.auth import create_access_token
                 token = create_access_token({"sub": test_user.username})
@@ -678,8 +679,8 @@ class TestEmptyChecks:
                 await db_session.commit()
                 
                 # Clear cache
-                from backend.api.settings_routes import _settings_cache
-                _settings_cache.clear()
+                from backend.utils.settings_cache import get_settings_cache
+                get_settings_cache().clear()
                 
                 from backend.auth.auth import create_access_token
                 token = create_access_token({"sub": test_user.username})
@@ -725,8 +726,8 @@ class TestEmptyChecks:
                 await db_session.commit()
                 
                 # Clear cache
-                from backend.api.settings_routes import _settings_cache
-                _settings_cache.clear()
+                from backend.utils.settings_cache import get_settings_cache
+                get_settings_cache().clear()
                 
                 from backend.auth.auth import create_access_token
                 token = create_access_token({"sub": test_user.username})

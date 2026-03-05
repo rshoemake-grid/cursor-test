@@ -47,7 +47,7 @@ async def test_unified_llm_agent_openai_rate_limit_error(mock_node):
     )
     
     with patch("backend.api.settings_routes.get_provider_for_model") as mock_get_provider, \
-         patch("backend.agents.unified_llm_agent.httpx.AsyncClient") as mock_client_class:
+         patch("backend.agents.llm_providers.openai_provider.httpx.AsyncClient") as mock_client_class:
         mock_get_provider.return_value = llm_config
         mock_client = AsyncMock()
         mock_client.__aenter__ = AsyncMock(return_value=mock_client)
@@ -85,7 +85,7 @@ async def test_unified_llm_agent_openai_server_error(mock_node):
     )
     
     with patch("backend.api.settings_routes.get_provider_for_model") as mock_get_provider, \
-         patch("backend.agents.unified_llm_agent.httpx.AsyncClient") as mock_client_class:
+         patch("backend.agents.llm_providers.openai_provider.httpx.AsyncClient") as mock_client_class:
         mock_get_provider.return_value = llm_config
         mock_client = AsyncMock()
         mock_client.__aenter__ = AsyncMock(return_value=mock_client)
@@ -129,7 +129,7 @@ async def test_unified_llm_agent_anthropic_rate_limit_error(mock_node):
     )
     
     with patch("backend.api.settings_routes.get_provider_for_model") as mock_get_provider, \
-         patch("backend.agents.unified_llm_agent.httpx.AsyncClient") as mock_client_class:
+         patch("backend.agents.llm_providers.openai_provider.httpx.AsyncClient") as mock_client_class:
         mock_get_provider.return_value = llm_config
         mock_client = AsyncMock()
         mock_client.__aenter__ = AsyncMock(return_value=mock_client)

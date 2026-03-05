@@ -34,7 +34,33 @@ ANONYMOUS_USER_ID = "anonymous"
 
 class ISettingsService(ABC):
     """Interface for settings service operations"""
-    
+
+    @abstractmethod
+    async def save_settings(self, db: AsyncSession, user_id: str, settings: Any) -> None:
+        """
+        Save LLM settings to database and update cache.
+
+        Args:
+            db: Database session
+            user_id: User ID
+            settings: LLMSettings object (or dict)
+        """
+        pass
+
+    @abstractmethod
+    async def get_settings(self, db: AsyncSession, user_id: str) -> Optional[LLMSettingsType]:
+        """
+        Get LLM settings for user (cache first, then DB).
+
+        Args:
+            db: Database session
+            user_id: User ID
+
+        Returns:
+            LLMSettings or empty settings if not found
+        """
+        pass
+
     @abstractmethod
     async def load_settings_into_cache(self, db: AsyncSession) -> None:
         """
@@ -101,11 +127,63 @@ class SettingsService(ISettingsService):
     def _get_global_cache(self) -> Dict[str, Any]:
         """
         Get reference to global settings cache.
-        
+
         Uses shared cache module to avoid dependency on settings_routes (DIP compliance).
         """
         from ..utils.settings_cache import get_settings_cache
         return get_settings_cache()
+
+    async def save_settings(self, db: AsyncSession, user_id: str, settings: Any) -> None:
+        """
+        Save LLM settings to database and update cache (SRP - single place for save logic).
+        """
+        from ..api.settings_routes import LLMSettings
+        from datetime import datetime
+
+        settings_data = settings.model_dump(mode='json') if hasattr(settings, 'model_dump') else settings
+        if hasattr(settings, 'model_dump'):
+            settings_obj = settings
+        else:
+            settings_obj = LLMSettings(**settings_data)
+
+        result = await db.execute(select(SettingsDB).where(SettingsDB.user_id == user_id))
+        settings_db = result.scalar_one_or_none()
+
+        if settings_db:
+            settings_db.settings_data = settings_data
+            settings_db.updated_at = datetime.utcnow()
+        else:
+            settings_db = SettingsDB(
+                user_id=user_id,
+                settings_data=settings_data
+            )
+            db.add(settings_db)
+
+        await db.commit()
+        self._cache[user_id] = settings_obj
+        logger.info(
+            f"Saving LLM settings for user: {user_id}, providers count: "
+            f"{len(settings_obj.providers)}, iteration_limit: {settings_obj.iteration_limit}"
+        )
+
+    async def get_settings(self, db: AsyncSession, user_id: str) -> LLMSettingsType:
+        """
+        Get LLM settings for user (cache first, then DB with cache update).
+        """
+        from ..api.settings_routes import LLMSettings
+
+        if user_id in self._cache:
+            return self._cache[user_id]
+
+        result = await db.execute(select(SettingsDB).where(SettingsDB.user_id == user_id))
+        settings_db = result.scalar_one_or_none()
+
+        if settings_db and settings_db.settings_data:
+            settings = LLMSettings(**settings_db.settings_data)
+            self._cache[user_id] = settings
+            return settings
+
+        return LLMSettings(providers=[])
     
     def _normalize_user_id(self, user_id: Optional[str]) -> str:
         """

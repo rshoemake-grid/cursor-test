@@ -16,7 +16,8 @@ public interface NodeExecutor {
      * @param node  the node to execute
      * @param inputs inputs for the node (from previous nodes or workflow variables)
      * @param state current execution state (node_states, variables, logs)
+     * @param ctx   execution context (llmConfig, userId)
      * @return the output of the node (e.g. agent response, condition branch, loop last result)
      */
-    Object execute(Node node, Map<String, Object> inputs, ExecutionState state);
+    Object execute(Node node, Map<String, Object> inputs, ExecutionState state, NodeExecutionContext ctx);
 }

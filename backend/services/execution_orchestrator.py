@@ -233,11 +233,17 @@ class ExecutionOrchestrator:
         Returns:
             WorkflowExecutor instance
         """
+        provider_resolver = (
+            self.settings_service.get_provider_for_model
+            if self.settings_service
+            else None
+        )
         executor = WorkflowExecutor(
             workflow_def,
             stream_updates=True,
             llm_config=llm_config,
-            user_id=user_id
+            user_id=user_id,
+            provider_resolver=provider_resolver,
         )
         logger.info(f"Created executor with execution_id={executor.execution_id}")
         return executor
