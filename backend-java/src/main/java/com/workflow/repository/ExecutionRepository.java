@@ -20,6 +20,8 @@ public interface ExecutionRepository extends JpaRepository<Execution, String> {
     @Query("SELECT e FROM Execution e WHERE e.workflowId = :workflowId AND (:status IS NULL OR e.status = :status)")
     List<Execution> findByWorkflowIdAndStatus(@Param("workflowId") String workflowId, @Param("status") String status);
 
+    List<Execution> findByWorkflowIdAndStatusOrderByStartedAtDesc(String workflowId, String status, Pageable pageable);
+
     @Query("SELECT e FROM Execution e WHERE e.userId = :userId AND (:status IS NULL OR e.status = :status)")
     List<Execution> findByUserIdAndStatus(@Param("userId") String userId, @Param("status") String status);
 

@@ -9,6 +9,8 @@ import com.workflow.entity.WorkflowTemplate;
 import com.workflow.exception.ResourceNotFoundException;
 import com.workflow.exception.ValidationException;
 import com.workflow.repository.WorkflowRepository;
+import com.workflow.util.RepositoryUtils;
+import com.workflow.util.ValidationUtils;
 import com.workflow.repository.WorkflowTemplateRepository;
 import com.workflow.util.WorkflowMapper;
 import org.slf4j.Logger;
@@ -32,16 +34,18 @@ import static com.workflow.constants.WorkflowConstants.DEFAULT_VERSION;
 @Transactional
 public class WorkflowService {
     private static final Logger log = LoggerFactory.getLogger(WorkflowService.class);
-    
+
     private final WorkflowRepository workflowRepository;
     private final WorkflowTemplateRepository templateRepository;
     private final WorkflowMapper workflowMapper;
+    private final WorkflowOwnershipService ownershipService;
 
     public WorkflowService(WorkflowRepository workflowRepository, WorkflowTemplateRepository templateRepository,
-                          WorkflowMapper workflowMapper) {
+                          WorkflowMapper workflowMapper, WorkflowOwnershipService ownershipService) {
         this.workflowRepository = workflowRepository;
         this.templateRepository = templateRepository;
         this.workflowMapper = workflowMapper;
+        this.ownershipService = ownershipService;
     }
     
     /**
@@ -71,14 +75,13 @@ public class WorkflowService {
     }
     
     /**
-     * Get workflow by ID
+     * Get workflow by ID. S-C1: Requires ownership or public access.
      */
     @Transactional(readOnly = true)
-    public WorkflowResponse getWorkflow(String id) {
-        log.debug("Fetching workflow: {}", id);
-        Workflow workflow = workflowRepository.findById(id)
-            .orElseThrow(() -> new ResourceNotFoundException("Workflow not found: " + id));
-        
+    public WorkflowResponse getWorkflow(String id, String userId) {
+        log.debug("Fetching workflow: {} for user: {}", id, userId);
+        Workflow workflow = RepositoryUtils.findByIdOrThrow(workflowRepository, id, "Workflow not found: " + id);
+        ownershipService.assertCanRead(workflow, userId);
         return workflowMapper.toResponse(workflow);
     }
     
@@ -102,16 +105,15 @@ public class WorkflowService {
     }
     
     /**
-     * Update workflow
+     * Update workflow. S-C1: Requires ownership.
      */
-    public WorkflowResponse updateWorkflow(String id, WorkflowCreate workflowCreate) {
+    public WorkflowResponse updateWorkflow(String id, WorkflowCreate workflowCreate, String userId) {
         validateWorkflowCreate(workflowCreate);
-        
-        log.info("Updating workflow: {}", id);
-        
-        Workflow workflow = workflowRepository.findById(id)
-            .orElseThrow(() -> new ResourceNotFoundException("Workflow not found: " + id));
-        
+
+        log.info("Updating workflow: {} by user: {}", id, userId);
+
+        Workflow workflow = ownershipService.getWorkflowAndAssertOwner(id, userId);
+
         workflow.setName(workflowCreate.getName());
         workflow.setDescription(workflowCreate.getDescription());
         workflow.setVersion(workflowCreate.getVersion() != null ? workflowCreate.getVersion() : workflow.getVersion());
@@ -125,15 +127,13 @@ public class WorkflowService {
     }
     
     /**
-     * Delete workflow
+     * Delete workflow. S-C1: Requires ownership.
      */
-    public void deleteWorkflow(String id) {
-        log.info("Deleting workflow: {}", id);
-        
-        if (!workflowRepository.existsById(id)) {
-            throw new ResourceNotFoundException("Workflow not found: " + id);
-        }
-        
+    public void deleteWorkflow(String id, String userId) {
+        log.info("Deleting workflow: {} by user: {}", id, userId);
+
+        ownershipService.getWorkflowAndAssertOwner(id, userId);
+
         workflowRepository.deleteById(id);
         log.debug("Deleted workflow: {}", id);
     }
@@ -142,11 +142,7 @@ public class WorkflowService {
      * Publish workflow as template
      */
     public WorkflowTemplateResponse publishWorkflow(String workflowId, WorkflowPublishRequest request, String userId, boolean isAdmin) {
-        Workflow w = workflowRepository.findById(workflowId)
-                .orElseThrow(() -> new ResourceNotFoundException("Workflow not found: " + workflowId));
-        if (!w.getOwnerId().equals(userId)) {
-            throw new com.workflow.exception.ForbiddenException("Not authorized to publish this workflow");
-        }
+        Workflow w = ownershipService.getWorkflowAndAssertOwner(workflowId, userId);
         WorkflowTemplate t = new WorkflowTemplate();
         t.setId(UUID.randomUUID().toString());
         t.setName(w.getName());
@@ -201,17 +197,9 @@ public class WorkflowService {
      * Validate WorkflowCreate DTO
      */
     private void validateWorkflowCreate(WorkflowCreate workflowCreate) {
-        if (workflowCreate == null) {
-            throw new ValidationException("Workflow data is required");
-        }
-        if (workflowCreate.getName() == null || workflowCreate.getName().trim().isEmpty()) {
-            throw new ValidationException("Workflow name is required");
-        }
-        if (workflowCreate.getNodes() == null) {
-            throw new ValidationException("Workflow nodes are required");
-        }
-        if (workflowCreate.getEdges() == null) {
-            throw new ValidationException("Workflow edges are required");
-        }
+        ValidationUtils.requireNonNull(workflowCreate, "Workflow data");
+        ValidationUtils.requireNonEmpty(workflowCreate.getName(), "Workflow name");
+        ValidationUtils.requireNonNull(workflowCreate.getNodes(), "Workflow nodes");
+        ValidationUtils.requireNonNull(workflowCreate.getEdges(), "Workflow edges");
     }
 }

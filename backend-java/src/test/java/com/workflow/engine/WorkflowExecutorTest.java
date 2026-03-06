@@ -17,7 +17,14 @@ class WorkflowExecutorTest {
     @BeforeEach
     void setUp() {
         mockLlmClient = (baseUrl, apiKey, model, messages) -> "mocked response";
-        executor = new WorkflowExecutor(mockLlmClient);
+        NodeTypeParser nodeTypeParser = new NodeTypeParser();
+        NodeExecutorRegistry registry = new NodeExecutorRegistry(
+                new AgentNodeExecutor(mockLlmClient),
+                new ConditionNodeExecutor(),
+                new LoopNodeExecutor(),
+                new ToolNodeExecutor(),
+                nodeTypeParser);
+        executor = new WorkflowExecutor(registry);
     }
 
     @Test

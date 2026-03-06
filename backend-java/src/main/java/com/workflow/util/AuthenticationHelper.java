@@ -1,6 +1,7 @@
 package com.workflow.util;
 
 import com.workflow.entity.User;
+import com.workflow.exception.ForbiddenException;
 import com.workflow.repository.UserRepository;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -41,6 +42,18 @@ public class AuthenticationHelper {
             return null;
         }
         return extractUserId(authentication);
+    }
+
+    /**
+     * Extract user ID from Authentication; throws if not authenticated or user not found.
+     * Use for endpoints that require authentication.
+     */
+    public String extractUserIdRequired(Authentication authentication) {
+        String userId = extractUserId(authentication);
+        if (userId == null) {
+            throw new ForbiddenException("Authentication required");
+        }
+        return userId;
     }
     
     /**

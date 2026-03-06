@@ -10,9 +10,10 @@ import com.workflow.exception.ForbiddenException;
 import com.workflow.repository.UserRepository;
 import com.workflow.repository.WorkflowRepository;
 import com.workflow.repository.WorkflowTemplateRepository;
+import com.workflow.util.SortStrategy;
 import com.workflow.util.WorkflowMapper;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -34,14 +35,21 @@ public class TemplateService {
     private final UserRepository userRepository;
     private final WorkflowMapper workflowMapper;
 
+    private final TemplateOwnershipService templateOwnershipService;
+    private final SortStrategy templateSortStrategy;
+
     public TemplateService(WorkflowTemplateRepository templateRepository,
                            WorkflowRepository workflowRepository,
                            UserRepository userRepository,
-                           WorkflowMapper workflowMapper) {
+                           WorkflowMapper workflowMapper,
+                           TemplateOwnershipService templateOwnershipService,
+                           @Qualifier("templateSortStrategy") SortStrategy templateSortStrategy) {
         this.templateRepository = templateRepository;
         this.workflowRepository = workflowRepository;
         this.userRepository = userRepository;
         this.workflowMapper = workflowMapper;
+        this.templateOwnershipService = templateOwnershipService;
+        this.templateSortStrategy = templateSortStrategy;
     }
 
     public WorkflowTemplateResponse createTemplate(WorkflowTemplateCreate create, String userId, boolean isAdmin) {
@@ -62,10 +70,7 @@ public class TemplateService {
 
     public List<WorkflowTemplateResponse> listTemplates(String category, String difficulty, String search,
                                                         String sortBy, int limit, int offset) {
-        var sort = "recent".equals(sortBy) ? Sort.by(Sort.Direction.DESC, "createdAt")
-                : "rating".equals(sortBy) ? Sort.by(Sort.Direction.DESC, "rating")
-                : Sort.by(Sort.Direction.DESC, "usesCount");
-        var pageable = PageRequest.of(offset / limit, limit, sort);
+        var pageable = PageRequest.of(offset / limit, limit, templateSortStrategy.getSort(sortBy));
         List<WorkflowTemplate> templates = templateRepository.findWithFilters(category, difficulty, pageable);
         return templates.stream()
                 .filter(t -> search == null || search.isBlank() ||
@@ -108,26 +113,13 @@ public class TemplateService {
         w.setCategory(t.getCategory());
         w.setTags(t.getTags());
         w = workflowRepository.save(w);
-
-        com.workflow.dto.WorkflowResponse resp = new com.workflow.dto.WorkflowResponse();
-        resp.setId(w.getId());
-        resp.setName(w.getName());
-        resp.setDescription(w.getDescription());
-        resp.setVersion(w.getVersion());
-        resp.setNodes(workflowMapper.extractNodes(w.getDefinition()));
-        resp.setEdges(workflowMapper.extractEdges(w.getDefinition()));
-        resp.setVariables(workflowMapper.extractVariables(w.getDefinition()));
-        resp.setCreatedAt(w.getCreatedAt());
-        resp.setUpdatedAt(w.getUpdatedAt());
-        return resp;
+        return workflowMapper.toResponse(w);
     }
 
     public void deleteTemplate(String templateId, String userId, boolean isAdmin) {
         WorkflowTemplate t = templateRepository.findById(templateId)
                 .orElseThrow(() -> new ResourceNotFoundException("Template not found"));
-        if (!t.getAuthorId().equals(userId) && !isAdmin) {
-            throw new ForbiddenException("Not authorized to delete this template");
-        }
+        templateOwnershipService.assertCanDelete(t, userId, isAdmin);
         templateRepository.delete(t);
     }
 

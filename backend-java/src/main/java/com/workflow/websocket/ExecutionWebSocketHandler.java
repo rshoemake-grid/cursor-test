@@ -20,7 +20,11 @@ import java.util.concurrent.ConcurrentHashMap;
 @Component
 public class ExecutionWebSocketHandler extends TextWebSocketHandler {
     private static final Logger log = LoggerFactory.getLogger(ExecutionWebSocketHandler.class);
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper;
+
+    public ExecutionWebSocketHandler(ObjectMapper objectMapper) {
+        this.objectMapper = objectMapper;
+    }
 
     // executionId -> set of sessions
     private final Map<String, Map<String, WebSocketSession>> executionConnections = new ConcurrentHashMap<>();

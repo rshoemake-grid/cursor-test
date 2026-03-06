@@ -1,9 +1,10 @@
 package com.workflow.exception;
 
 import jakarta.servlet.http.HttpServletRequest;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.core.env.Environment;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.MethodArgumentNotValidException;
 
 import java.util.Map;
 
@@ -13,7 +14,14 @@ import static org.mockito.Mockito.when;
 
 class GlobalExceptionHandlerTest {
 
-    private final GlobalExceptionHandler handler = new GlobalExceptionHandler();
+    private GlobalExceptionHandler handler;
+
+    @BeforeEach
+    void setUp() {
+        Environment env = mock(Environment.class);
+        when(env.getActiveProfiles()).thenReturn(new String[0]);
+        handler = new GlobalExceptionHandler(env);
+    }
 
     private HttpServletRequest mockRequest(String path) {
         HttpServletRequest req = mock(HttpServletRequest.class);
@@ -81,6 +89,24 @@ class GlobalExceptionHandlerTest {
         assertEquals(500, response.getStatusCode().value());
         assertNotNull(response.getBody());
 
+        @SuppressWarnings("unchecked")
+        Map<String, Object> error = (Map<String, Object>) response.getBody().get("error");
+        assertEquals("500", error.get("code"));
+        assertEquals("An unexpected error occurred", error.get("message"));
+    }
+
+    @Test
+    void handleGenericException_Production_ReturnsGenericMessage() {
+        Environment prodEnv = mock(Environment.class);
+        when(prodEnv.getActiveProfiles()).thenReturn(new String[]{"production"});
+        GlobalExceptionHandler prodHandler = new GlobalExceptionHandler(prodEnv);
+
+        Exception ex = new RuntimeException("Sensitive internal error");
+        HttpServletRequest request = mockRequest("/api/workflows");
+
+        ResponseEntity<Map<String, Object>> response = prodHandler.handleGenericException(ex, request);
+
+        assertEquals(500, response.getStatusCode().value());
         @SuppressWarnings("unchecked")
         Map<String, Object> error = (Map<String, Object>) response.getBody().get("error");
         assertEquals("500", error.get("code"));

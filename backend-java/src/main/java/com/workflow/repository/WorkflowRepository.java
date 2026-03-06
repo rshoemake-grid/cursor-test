@@ -16,8 +16,9 @@ public interface WorkflowRepository extends JpaRepository<Workflow, String> {
     List<Workflow> findByIsTemplateTrue();
     List<Workflow> findByCategory(String category);
 
-    @Query("SELECT w FROM Workflow w WHERE w.ownerId = :ownerId OR w.isPublic = true")
-    List<Workflow> findAccessibleWorkflows(@Param("ownerId") String ownerId);
+    @Query("SELECT w FROM Workflow w WHERE w.ownerId = :userId OR w.isPublic = true " +
+           "OR EXISTS (SELECT 1 FROM WorkflowShare ws WHERE ws.workflowId = w.id AND ws.sharedWithUserId = :userId)")
+    List<Workflow> findAccessibleWorkflows(@Param("userId") String userId);
 
     @Query("SELECT w FROM Workflow w WHERE (w.isPublic = true OR w.isTemplate = true)")
     List<Workflow> findPublicOrTemplateWorkflows(Pageable pageable);

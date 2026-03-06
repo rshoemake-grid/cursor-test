@@ -3,13 +3,20 @@ package com.workflow.engine;
 import com.workflow.dto.AgentConfig;
 import com.workflow.dto.Node;
 
+import org.springframework.stereotype.Component;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 /**
  * Executes AGENT nodes - calls LLM API with system prompt and user content.
+ *
+ * S-L1: API key resolution order: (1) LLM config from Settings, (2) env vars OPENAI_API_KEY,
+ * GEMINI_API_KEY, GOOGLE_API_KEY. Env fallback supports local/dev without storing keys in DB.
+ * Validate that at least one source provides an API key before making requests.
  */
+@Component
 public class AgentNodeExecutor implements NodeExecutor {
 
     private final LlmApiClient llmClient;
@@ -38,14 +45,16 @@ public class AgentNodeExecutor implements NodeExecutor {
         if (apiKey == null) apiKey = System.getenv("OPENAI_API_KEY");
         if (apiKey == null) apiKey = System.getenv("GEMINI_API_KEY");
         if (apiKey == null) apiKey = System.getenv("GOOGLE_API_KEY");
+        if (apiKey == null || apiKey.isBlank()) {
+            throw new IllegalStateException(
+                    "No LLM API key configured. Set api_key in Settings or one of OPENAI_API_KEY, GEMINI_API_KEY, GOOGLE_API_KEY env vars.");
+        }
 
         String systemPrompt = cfg != null && cfg.getSystemPrompt() != null ? cfg.getSystemPrompt() : "";
 
         List<Map<String, Object>> messages = new ArrayList<>();
         messages.add(Map.of("role", "system", "content", systemPrompt));
-        Object userContent = inputs.get("message");
-        if (userContent == null) userContent = inputs.get("data");
-        if (userContent == null) userContent = inputs.get("output");
+        Object userContent = InputResolver.getFirstOf(inputs, "message", "data", "output");
         if (userContent == null) userContent = inputs.values().stream().findFirst().orElse("");
         messages.add(Map.of("role", "user", "content", String.valueOf(userContent)));
 

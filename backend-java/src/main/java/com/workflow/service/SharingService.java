@@ -7,11 +7,11 @@ import com.workflow.dto.WorkflowVersionResponse;
 import com.workflow.entity.WorkflowShare;
 import com.workflow.entity.WorkflowVersion;
 import com.workflow.exception.ForbiddenException;
-import com.workflow.exception.ResourceNotFoundException;
 import com.workflow.repository.UserRepository;
 import com.workflow.repository.WorkflowRepository;
 import com.workflow.repository.WorkflowShareRepository;
 import com.workflow.repository.WorkflowVersionRepository;
+import com.workflow.util.RepositoryUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -41,13 +41,11 @@ public class SharingService {
 
     @Transactional
     public WorkflowShareResponse shareWorkflow(WorkflowShareCreate create, String userId) {
-        var workflow = workflowRepository.findById(create.getWorkflowId())
-                .orElseThrow(() -> new ResourceNotFoundException("Workflow not found"));
+        var workflow = RepositoryUtils.findByIdOrThrow(workflowRepository, create.getWorkflowId(), "Workflow not found");
         if (!workflow.getOwnerId().equals(userId)) {
             throw new ForbiddenException("Not authorized to share this workflow");
         }
-        var sharedWith = userRepository.findByUsername(create.getSharedWithUsername())
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        var sharedWith = RepositoryUtils.orElseThrow(userRepository.findByUsername(create.getSharedWithUsername()), "User not found");
 
         var existing = shareRepository.findBySharedWithUserId(sharedWith.getId()).stream()
                 .filter(s -> s.getWorkflowId().equals(create.getWorkflowId()))
@@ -83,8 +81,7 @@ public class SharingService {
 
     @Transactional
     public void revokeShare(String shareId, String userId) {
-        WorkflowShare share = shareRepository.findById(shareId)
-                .orElseThrow(() -> new ResourceNotFoundException("Share not found"));
+        WorkflowShare share = RepositoryUtils.findByIdOrThrow(shareRepository, shareId, "Share not found");
         var workflow = workflowRepository.findById(share.getWorkflowId()).orElse(null);
         if (workflow == null || !workflow.getOwnerId().equals(userId)) {
             throw new ForbiddenException("Not authorized");
@@ -94,8 +91,7 @@ public class SharingService {
 
     @Transactional
     public WorkflowVersionResponse createVersion(WorkflowVersionCreate create, String userId) {
-        var workflow = workflowRepository.findById(create.getWorkflowId())
-                .orElseThrow(() -> new ResourceNotFoundException("Workflow not found"));
+        var workflow = RepositoryUtils.findByIdOrThrow(workflowRepository, create.getWorkflowId(), "Workflow not found");
         if (!workflow.getOwnerId().equals(userId)) {
             throw new ForbiddenException("Not authorized");
         }
@@ -116,8 +112,7 @@ public class SharingService {
     }
 
     public List<WorkflowVersionResponse> getVersions(String workflowId, String userId) {
-        var workflow = workflowRepository.findById(workflowId)
-                .orElseThrow(() -> new ResourceNotFoundException("Workflow not found"));
+        var workflow = RepositoryUtils.findByIdOrThrow(workflowRepository, workflowId, "Workflow not found");
         if (!workflow.getOwnerId().equals(userId)) {
             var hasShare = shareRepository.findBySharedWithUserId(userId).stream()
                     .anyMatch(s -> s.getWorkflowId().equals(workflowId));
@@ -131,10 +126,8 @@ public class SharingService {
 
     @Transactional
     public Map<String, String> restoreVersion(String versionId, String userId) {
-        WorkflowVersion v = versionRepository.findById(versionId)
-                .orElseThrow(() -> new ResourceNotFoundException("Version not found"));
-        var workflow = workflowRepository.findById(v.getWorkflowId())
-                .orElseThrow(() -> new ResourceNotFoundException("Workflow not found"));
+        WorkflowVersion v = RepositoryUtils.findByIdOrThrow(versionRepository, versionId, "Version not found");
+        var workflow = RepositoryUtils.findByIdOrThrow(workflowRepository, v.getWorkflowId(), "Workflow not found");
         if (!workflow.getOwnerId().equals(userId)) {
             throw new ForbiddenException("Not authorized");
         }

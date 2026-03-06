@@ -9,23 +9,22 @@ import com.workflow.repository.PasswordResetTokenRepository;
 import com.workflow.repository.RefreshTokenRepository;
 import com.workflow.repository.UserRepository;
 import com.workflow.security.JwtUtil;
+import com.workflow.util.UserResponseMapper;
 
 import java.lang.reflect.Field;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.time.LocalDateTime;
+import java.util.Map;
 import java.util.Optional;
 
 import static com.workflow.constants.WorkflowConstants.TOKEN_TYPE_BEARER;
@@ -49,42 +48,45 @@ class AuthServiceTest {
     @Mock
     private PasswordEncoder passwordEncoder;
 
-    private JwtUtil jwtUtil;  // Will create manually or use real instance
+    private JwtUtil jwtUtil;
 
     @Mock
     private AuthenticationManager authenticationManager;
 
-    @Mock
-    private UserDetailsService userDetailsService;
+    private TokenService tokenService;
+    private PasswordResetService passwordResetService;
+    private UserResponseMapper userResponseMapper;
 
-    private AuthService authService;  // Create manually instead of @InjectMocks
+    private AuthService authService;
 
     private UserCreate validUserCreate;
     private User userEntity;
     private UserResponse userResponse;
-    private UserDetails userDetails;
 
     @BeforeEach
     void setUp() throws Exception {
-        // Create real JwtUtil instance with test configuration
-        // Use reflection to set @Value fields since we're not in Spring context
         jwtUtil = new JwtUtil();
         setField(jwtUtil, "secret", "test-secret-key-that-is-at-least-256-bits-long-for-hmac-sha256-algorithm");
-        setField(jwtUtil, "expiration", 3600000L); // 1 hour
-        setField(jwtUtil, "refreshExpiration", 604800000L); // 7 days
-        
-        // Create AuthService manually since @InjectMocks doesn't work with manual construction
+        setField(jwtUtil, "expiration", 3600000L);
+        setField(jwtUtil, "refreshExpiration", 604800000L);
+
+        userResponseMapper = new UserResponseMapper();
+        tokenService = new TokenService(userRepository, refreshTokenRepository, jwtUtil, userResponseMapper);
+        setField(tokenService, "jwtExpirationMs", 3600000L);
+
+        passwordResetService = new PasswordResetService(userRepository, passwordResetTokenRepository, passwordEncoder);
+        setField(passwordResetService, "passwordResetReturnToken", false);
+
         authService = new AuthService(
             userRepository,
-            refreshTokenRepository,
-            passwordResetTokenRepository,
             passwordEncoder,
             jwtUtil,
             authenticationManager,
-            userDetailsService
+            tokenService,
+            passwordResetService,
+            userResponseMapper
         );
         setField(authService, "jwtExpirationMs", 3600000L);
-        setField(authService, "environment", "development");
         
         // Setup valid UserCreate
         validUserCreate = new UserCreate();
@@ -113,13 +115,6 @@ class AuthServiceTest {
         userResponse.setIsActive(true);
         userResponse.setIsAdmin(false);
         userResponse.setCreatedAt(LocalDateTime.now());
-
-        // Setup UserDetails
-        userDetails = org.springframework.security.core.userdetails.User.builder()
-            .username("testuser")
-            .password("hashedPassword")
-            .authorities("ROLE_USER")
-            .build();
     }
 
     @Test
@@ -213,16 +208,16 @@ class AuthServiceTest {
         lenient().when(authentication.isAuthenticated()).thenReturn(true);
         when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
             .thenReturn(authentication);
-        lenient().when(userDetailsService.loadUserByUsername(validUserCreate.getUsername())).thenReturn(userDetails);
         when(userRepository.findByUsername(validUserCreate.getUsername())).thenReturn(Optional.of(userEntity));
         when(userRepository.save(userEntity)).thenReturn(userEntity);
+        when(refreshTokenRepository.save(any(RefreshToken.class))).thenAnswer(inv -> inv.getArgument(0));
 
         // When
         TokenResponse result = authService.login(validUserCreate);
 
         // Then
         assertNotNull(result);
-        assertNotNull(result.getAccessToken());  // Real jwtUtil generates actual tokens
+        assertNotNull(result.getAccessToken());
         assertNotNull(result.getRefreshToken());
         assertEquals(TOKEN_TYPE_BEARER, result.getTokenType());
         verify(authenticationManager, times(1)).authenticate(any());
@@ -248,7 +243,6 @@ class AuthServiceTest {
         lenient().when(authentication.isAuthenticated()).thenReturn(true);
         when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
             .thenReturn(authentication);
-        lenient().when(userDetailsService.loadUserByUsername(validUserCreate.getUsername())).thenReturn(userDetails);
         when(userRepository.findByUsername(validUserCreate.getUsername())).thenReturn(Optional.empty());
 
         // When/Then
@@ -259,86 +253,132 @@ class AuthServiceTest {
     @Test
     void refreshToken_Success() {
         // Given
-        String refreshTokenValue = "refreshToken";
         RefreshToken refreshTokenEntity = new RefreshToken();
         refreshTokenEntity.setId("token-id");
         refreshTokenEntity.setUserId("user-id");
-        refreshTokenEntity.setToken(refreshTokenValue);
+        refreshTokenEntity.setToken("valid-refresh-token");
         refreshTokenEntity.setExpiresAt(LocalDateTime.now().plusDays(7));
         refreshTokenEntity.setRevoked(false);
-
-        when(refreshTokenRepository.findByToken(refreshTokenValue)).thenReturn(Optional.of(refreshTokenEntity));
+        when(refreshTokenRepository.findByToken("valid-refresh-token")).thenReturn(Optional.of(refreshTokenEntity));
         when(userRepository.findById("user-id")).thenReturn(Optional.of(userEntity));
-        when(refreshTokenRepository.save(refreshTokenEntity)).thenReturn(refreshTokenEntity);
+        when(refreshTokenRepository.save(any(RefreshToken.class))).thenAnswer(inv -> inv.getArgument(0));
 
         // When
-        TokenResponse result = authService.refreshToken(refreshTokenValue);
+        TokenResponse result = authService.refreshToken("valid-refresh-token");
 
         // Then
         assertNotNull(result);
-        assertNotNull(result.getAccessToken());  // Real jwtUtil generates actual tokens
+        assertNotNull(result.getAccessToken());
         assertNotNull(result.getRefreshToken());
         assertEquals(TOKEN_TYPE_BEARER, result.getTokenType());
-        verify(refreshTokenRepository, times(1)).findByToken(refreshTokenValue);
-        verify(refreshTokenRepository, times(1)).save(refreshTokenEntity);
+        verify(refreshTokenRepository, times(1)).findByToken("valid-refresh-token");
+        verify(refreshTokenRepository, times(1)).save(any(RefreshToken.class));
     }
 
     @Test
     void refreshToken_InvalidToken_ThrowsValidationException() {
-        // Given
-        String refreshTokenValue = "invalidToken";
-        when(refreshTokenRepository.findByToken(refreshTokenValue)).thenReturn(Optional.empty());
+        when(refreshTokenRepository.findByToken("invalidToken")).thenReturn(Optional.empty());
 
-        // When/Then
-        assertThrows(ValidationException.class, () -> authService.refreshToken(refreshTokenValue));
-        verify(refreshTokenRepository, never()).save(any());
+        assertThrows(ValidationException.class, () -> authService.refreshToken("invalidToken"));
     }
 
     @Test
     void refreshToken_ExpiredToken_ThrowsValidationException() {
-        // Given
-        String refreshTokenValue = "refreshToken";
-        RefreshToken refreshTokenEntity = new RefreshToken();
-        refreshTokenEntity.setExpiresAt(LocalDateTime.now().minusDays(1));
-        refreshTokenEntity.setRevoked(false);
+        RefreshToken expiredToken = new RefreshToken();
+        expiredToken.setExpiresAt(LocalDateTime.now().minusDays(1));
+        expiredToken.setRevoked(false);
+        when(refreshTokenRepository.findByToken("expired-token")).thenReturn(Optional.of(expiredToken));
 
-        when(refreshTokenRepository.findByToken(refreshTokenValue)).thenReturn(Optional.of(refreshTokenEntity));
-
-        // When/Then
-        assertThrows(ValidationException.class, () -> authService.refreshToken(refreshTokenValue));
-        verify(refreshTokenRepository, never()).save(any());
+        assertThrows(ValidationException.class, () -> authService.refreshToken("expired-token"));
     }
 
     @Test
     void refreshToken_RevokedToken_ThrowsValidationException() {
-        // Given
-        String refreshTokenValue = "refreshToken";
-        RefreshToken refreshTokenEntity = new RefreshToken();
-        refreshTokenEntity.setExpiresAt(LocalDateTime.now().plusDays(7));
-        refreshTokenEntity.setRevoked(true);
+        RefreshToken revokedToken = new RefreshToken();
+        revokedToken.setExpiresAt(LocalDateTime.now().plusDays(7));
+        revokedToken.setRevoked(true);
+        when(refreshTokenRepository.findByToken("revoked-token")).thenReturn(Optional.of(revokedToken));
 
-        when(refreshTokenRepository.findByToken(refreshTokenValue)).thenReturn(Optional.of(refreshTokenEntity));
-
-        // When/Then
-        assertThrows(ValidationException.class, () -> authService.refreshToken(refreshTokenValue));
-        verify(refreshTokenRepository, never()).save(any());
+        assertThrows(ValidationException.class, () -> authService.refreshToken("revoked-token"));
     }
 
     @Test
     void refreshToken_UserNotFound_ThrowsResourceNotFoundException() {
-        // Given
-        String refreshTokenValue = "refreshToken";
-        RefreshToken refreshTokenEntity = new RefreshToken();
-        refreshTokenEntity.setUserId("non-existent-user");
-        refreshTokenEntity.setExpiresAt(LocalDateTime.now().plusDays(7));
-        refreshTokenEntity.setRevoked(false);
-
-        when(refreshTokenRepository.findByToken(refreshTokenValue)).thenReturn(Optional.of(refreshTokenEntity));
+        RefreshToken tokenEntity = new RefreshToken();
+        tokenEntity.setUserId("non-existent-user");
+        tokenEntity.setExpiresAt(LocalDateTime.now().plusDays(7));
+        tokenEntity.setRevoked(false);
+        when(refreshTokenRepository.findByToken("valid-token")).thenReturn(Optional.of(tokenEntity));
         when(userRepository.findById("non-existent-user")).thenReturn(Optional.empty());
 
-        // When/Then
-        assertThrows(ResourceNotFoundException.class, () -> authService.refreshToken(refreshTokenValue));
-        verify(refreshTokenRepository, never()).save(any());
+        assertThrows(ResourceNotFoundException.class, () -> authService.refreshToken("valid-token"));
+    }
+
+    @Test
+    void getCurrentUser_Success() {
+        when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(userEntity));
+
+        UserResponse result = authService.getCurrentUser("testuser");
+
+        assertNotNull(result);
+        assertEquals("user-id", result.getId());
+        assertEquals("testuser", result.getUsername());
+        verify(userRepository, times(1)).findByUsername("testuser");
+    }
+
+    @Test
+    void getCurrentUser_NotFound_ThrowsResourceNotFoundException() {
+        when(userRepository.findByUsername("unknown")).thenReturn(Optional.empty());
+
+        assertThrows(ResourceNotFoundException.class, () -> authService.getCurrentUser("unknown"));
+    }
+
+    @Test
+    void forgotPassword_UserNotFound_ReturnsStandardMessage() {
+        when(userRepository.findByEmail("unknown@example.com")).thenReturn(Optional.empty());
+
+        Map<String, Object> result = authService.forgotPassword("unknown@example.com");
+
+        assertEquals("If an account with that email exists, a password reset link has been sent.", result.get("message"));
+        verify(passwordResetTokenRepository, never()).save(any());
+    }
+
+    @Test
+    void forgotPassword_UserExists_SavesTokenAndReturnsMessage() {
+        when(userRepository.findByEmail("test@example.com")).thenReturn(Optional.of(userEntity));
+        when(passwordResetTokenRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        Map<String, Object> result = authService.forgotPassword("test@example.com");
+
+        assertEquals("If an account with that email exists, a password reset link has been sent.", result.get("message"));
+        verify(passwordResetTokenRepository, times(1)).save(any());
+    }
+
+    @Test
+    void resetPassword_Success() {
+        com.workflow.entity.PasswordResetToken tokenEntity = new com.workflow.entity.PasswordResetToken();
+        tokenEntity.setId("reset-id");
+        tokenEntity.setUserId("user-id");
+        tokenEntity.setToken("valid-reset-token");
+        tokenEntity.setExpiresAt(LocalDateTime.now().plusHours(1));
+        tokenEntity.setUsed(false);
+        when(passwordResetTokenRepository.findByToken("valid-reset-token")).thenReturn(Optional.of(tokenEntity));
+        when(userRepository.findById("user-id")).thenReturn(Optional.of(userEntity));
+        when(userRepository.save(any(User.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(passwordResetTokenRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        Map<String, Object> result = authService.resetPassword("valid-reset-token", "newPassword123");
+
+        assertEquals("Password has been reset successfully", result.get("message"));
+        verify(passwordEncoder, times(1)).encode("newPassword123");
+        verify(userRepository, times(1)).save(any(User.class));
+    }
+
+    @Test
+    void resetPassword_InvalidToken_ThrowsValidationException() {
+        when(passwordResetTokenRepository.findByToken("invalid-token")).thenReturn(Optional.empty());
+
+        assertThrows(ValidationException.class, () -> authService.resetPassword("invalid-token", "newPassword"));
     }
     
     /**

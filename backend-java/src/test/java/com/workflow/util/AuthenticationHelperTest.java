@@ -1,6 +1,7 @@
 package com.workflow.util;
 
 import com.workflow.entity.User;
+import com.workflow.exception.ForbiddenException;
 import com.workflow.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -119,6 +120,35 @@ class AuthenticationHelperTest {
         // Then
         assertNull(result);
         verify(userRepository, times(1)).findByUsername("testuser");
+    }
+
+    @Test
+    void extractUserIdRequired_AuthenticatedUser_Success() {
+        // Given
+        authentication = mock(Authentication.class);
+        when(authentication.isAuthenticated()).thenReturn(true);
+        when(authentication.getPrincipal()).thenReturn(userDetails);
+        when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(userEntity));
+
+        // When
+        String result = authenticationHelper.extractUserIdRequired(authentication);
+
+        // Then
+        assertEquals("user-id", result);
+    }
+
+    @Test
+    void extractUserIdRequired_NullAuthentication_ThrowsForbiddenException() {
+        assertThrows(ForbiddenException.class, () ->
+            authenticationHelper.extractUserIdRequired(null));
+    }
+
+    @Test
+    void extractUserIdRequired_NotAuthenticated_ThrowsForbiddenException() {
+        authentication = mock(Authentication.class);
+        when(authentication.isAuthenticated()).thenReturn(false);
+        assertThrows(ForbiddenException.class, () ->
+            authenticationHelper.extractUserIdRequired(authentication));
     }
 
     @Test

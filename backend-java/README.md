@@ -52,8 +52,26 @@ All endpoints match the Python FastAPI backend:
 ## Running the Application
 
 ### Prerequisites
-- Java 17+ (17, 21, 23, or 24 supported; Lombok 1.18.38 enables Java 23/24 compatibility)
+- **JDK 17** (required; Gradle toolchain enforces this)
 - Gradle 8.5+ (or use Gradle wrapper)
+
+**Installing and using JDK 17:**
+```bash
+# macOS (Homebrew)
+brew install openjdk@17
+export JAVA_HOME=$(/usr/libexec/java_home -v 17)
+
+# SDKMAN
+sdk install java 17.0.9-tem
+sdk use java 17.0.9-tem   # or run 'sdk env' in backend-java/ (uses .sdkmanrc)
+
+# asdf
+asdf plugin add java
+asdf install java temurin-17.0.9
+asdf local java temurin-17.0.9
+```
+
+Then run `./gradlew build` with `JAVA_HOME` pointing to JDK 17.
 
 ### Build and Run
 

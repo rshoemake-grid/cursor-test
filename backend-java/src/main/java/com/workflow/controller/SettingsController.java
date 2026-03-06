@@ -3,6 +3,7 @@ package com.workflow.controller;
 import com.workflow.service.LlmTestService;
 import com.workflow.service.SettingsService;
 import com.workflow.util.AuthenticationHelper;
+import com.workflow.util.LlmErrorResponseBuilder;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.slf4j.Logger;
@@ -64,15 +65,19 @@ public class SettingsController {
     }
 
     @PostMapping("/llm/test")
-    @Operation(summary = "Test LLM Connection", description = "Test LLM provider connection")
-    public ResponseEntity<Map<String, String>> testLlmConnection(@RequestBody Map<String, Object> testRequest) {
+    @Operation(summary = "Test LLM Connection", description = "Test LLM provider connection (S-H4: requires auth)")
+    public ResponseEntity<Map<String, String>> testLlmConnection(
+            @RequestBody Map<String, Object> testRequest,
+            Authentication authentication) {
+        authenticationHelper.extractUserIdRequired(authentication);
+
         String type = (String) testRequest.get("type");
         String apiKey = (String) testRequest.getOrDefault("api_key", testRequest.get("apiKey"));
         String baseUrl = (String) testRequest.getOrDefault("base_url", testRequest.get("baseUrl"));
         String model = (String) testRequest.get("model");
 
         if (type == null || apiKey == null || model == null) {
-            return ResponseEntity.badRequest().body(Map.of("status", "error", "message", "type, api_key, and model are required"));
+            return ResponseEntity.badRequest().body(LlmErrorResponseBuilder.error("type, api_key, and model are required"));
         }
 
         try {
@@ -80,7 +85,7 @@ public class SettingsController {
             return ResponseEntity.ok(result);
         } catch (Exception e) {
             log.warn("LLM test failed: {}", e.getMessage());
-            return ResponseEntity.ok(Map.of("status", "error", "message", e.getMessage()));
+            return ResponseEntity.ok(LlmErrorResponseBuilder.error(e));
         }
     }
 }

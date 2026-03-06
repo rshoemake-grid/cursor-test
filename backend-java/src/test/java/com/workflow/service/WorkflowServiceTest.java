@@ -34,7 +34,10 @@ class WorkflowServiceTest {
     private WorkflowTemplateRepository workflowTemplateRepository;
 
     private WorkflowMapper workflowMapper;  // Use real instance instead of mock
+    private WorkflowOwnershipService ownershipService;  // Real instance with mocked repo
     private WorkflowService workflowService;  // Create manually instead of @InjectMocks
+
+    private static final String TEST_USER_ID = "user-id";
 
     private WorkflowCreate validWorkflowCreate;
     private Workflow workflowEntity;
@@ -47,9 +50,10 @@ class WorkflowServiceTest {
         ObjectMapper objectMapper = new ObjectMapper();
         objectMapper.registerModule(new JavaTimeModule());
         workflowMapper = new WorkflowMapper(objectMapper);
-        
+        ownershipService = new WorkflowOwnershipService(workflowRepository);
+
         // Manually create service instance since @InjectMocks doesn't work with manual construction
-        workflowService = new WorkflowService(workflowRepository, workflowTemplateRepository, workflowMapper);
+        workflowService = new WorkflowService(workflowRepository, workflowTemplateRepository, workflowMapper, ownershipService);
         
         // Setup valid WorkflowCreate
         validWorkflowCreate = new WorkflowCreate();
@@ -187,7 +191,7 @@ class WorkflowServiceTest {
         when(workflowRepository.findById(workflowId)).thenReturn(Optional.of(workflowEntity));
 
         // When
-        WorkflowResponse result = workflowService.getWorkflow(workflowId);
+        WorkflowResponse result = workflowService.getWorkflow(workflowId, TEST_USER_ID);
 
         // Then
         assertNotNull(result);
@@ -203,8 +207,8 @@ class WorkflowServiceTest {
         when(workflowRepository.findById(workflowId)).thenReturn(Optional.empty());
 
         // When/Then
-        assertThrows(ResourceNotFoundException.class, () -> 
-            workflowService.getWorkflow(workflowId));
+        assertThrows(ResourceNotFoundException.class, () ->
+            workflowService.getWorkflow(workflowId, TEST_USER_ID));
         verify(workflowRepository, times(1)).findById(workflowId);
     }
 
@@ -266,7 +270,7 @@ class WorkflowServiceTest {
         when(workflowRepository.save(workflowEntity)).thenReturn(workflowEntity);
 
         // When
-        WorkflowResponse result = workflowService.updateWorkflow(workflowId, validWorkflowCreate);
+        WorkflowResponse result = workflowService.updateWorkflow(workflowId, validWorkflowCreate, TEST_USER_ID);
 
         // Then
         assertNotNull(result);
@@ -283,8 +287,8 @@ class WorkflowServiceTest {
         when(workflowRepository.findById(workflowId)).thenReturn(Optional.empty());
 
         // When/Then
-        assertThrows(ResourceNotFoundException.class, () -> 
-            workflowService.updateWorkflow(workflowId, validWorkflowCreate));
+        assertThrows(ResourceNotFoundException.class, () ->
+            workflowService.updateWorkflow(workflowId, validWorkflowCreate, TEST_USER_ID));
         verify(workflowRepository, never()).save(any());
     }
 
@@ -303,7 +307,7 @@ class WorkflowServiceTest {
         when(workflowRepository.save(workflowEntity)).thenReturn(workflowEntity);
 
         // When
-        WorkflowResponse result = workflowService.updateWorkflow(workflowId, validWorkflowCreate);
+        WorkflowResponse result = workflowService.updateWorkflow(workflowId, validWorkflowCreate, TEST_USER_ID);
 
         // Then
         assertNotNull(result);
@@ -314,13 +318,13 @@ class WorkflowServiceTest {
     void deleteWorkflow_Success() {
         // Given
         String workflowId = "test-id";
-        when(workflowRepository.existsById(workflowId)).thenReturn(true);
+        when(workflowRepository.findById(workflowId)).thenReturn(Optional.of(workflowEntity));
 
         // When
-        workflowService.deleteWorkflow(workflowId);
+        workflowService.deleteWorkflow(workflowId, TEST_USER_ID);
 
         // Then
-        verify(workflowRepository, times(1)).existsById(workflowId);
+        verify(workflowRepository, times(1)).findById(workflowId);
         verify(workflowRepository, times(1)).deleteById(workflowId);
     }
 
@@ -328,11 +332,11 @@ class WorkflowServiceTest {
     void deleteWorkflow_NotFound_ThrowsResourceNotFoundException() {
         // Given
         String workflowId = "non-existent-id";
-        when(workflowRepository.existsById(workflowId)).thenReturn(false);
+        when(workflowRepository.findById(workflowId)).thenReturn(Optional.empty());
 
         // When/Then
-        assertThrows(ResourceNotFoundException.class, () -> 
-            workflowService.deleteWorkflow(workflowId));
+        assertThrows(ResourceNotFoundException.class, () ->
+            workflowService.deleteWorkflow(workflowId, TEST_USER_ID));
         verify(workflowRepository, never()).deleteById(any());
     }
 }

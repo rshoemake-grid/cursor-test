@@ -33,6 +33,17 @@ public class JwtUtil {
         return extractClaim(token, Claims::getSubject);
     }
 
+    /** Extract userId from token claims (for WebSocket auth). Returns null if invalid/expired. */
+    public String extractUserId(String token) {
+        try {
+            Claims claims = extractAllClaims(token);
+            Object userId = claims.get("userId");
+            return userId != null ? userId.toString() : null;
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
     public Date extractExpiration(String token) {
         return extractClaim(token, Claims::getExpiration);
     }

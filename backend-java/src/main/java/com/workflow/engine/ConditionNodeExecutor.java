@@ -3,11 +3,14 @@ package com.workflow.engine;
 import com.workflow.dto.ConditionConfig;
 import com.workflow.dto.Node;
 
+import org.springframework.stereotype.Component;
+
 import java.util.Map;
 
 /**
  * Executes CONDITION nodes - evaluates field vs value and returns branch.
  */
+@Component
 public class ConditionNodeExecutor implements NodeExecutor {
 
     @Override

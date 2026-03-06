@@ -44,7 +44,22 @@ public class WorkflowMapper {
         
         return response;
     }
-    
+
+    /**
+     * DRY-9: Convert Workflow entity to WorkflowResponseV2 (marketplace/import-export).
+     */
+    public WorkflowResponseV2 toWorkflowResponseV2(Workflow workflow) {
+        if (workflow == null) return null;
+        Map<String, Object> def = workflow.getDefinition() != null ? workflow.getDefinition() : Map.of();
+        return new WorkflowResponseV2(
+                workflow.getId(), workflow.getName(), workflow.getDescription(), workflow.getVersion(),
+                extractNodes(def), extractEdges(def), extractVariables(def),
+                workflow.getOwnerId(), workflow.getIsPublic(), workflow.getIsTemplate(),
+                workflow.getCategory(), workflow.getTags(), workflow.getLikesCount(),
+                workflow.getViewsCount(), workflow.getUsesCount(),
+                workflow.getCreatedAt(), workflow.getUpdatedAt());
+    }
+
     /**
      * Build definition map from WorkflowCreate DTO
      */
@@ -58,52 +73,43 @@ public class WorkflowMapper {
     
     /**
      * Safely extract nodes from definition map (public for MarketplaceService)
+     * DRY-12: Uses convertValueOrCast helper
      */
     @SuppressWarnings("unchecked")
     public List<Node> extractNodes(Map<String, Object> definition) {
-        Object nodesObj = definition.get("nodes");
-        if (nodesObj == null) {
-            return List.of();
-        }
-        try {
-            return objectMapper.convertValue(nodesObj, new TypeReference<List<Node>>() {});
-        } catch (Exception e) {
-            // Fallback to direct cast if conversion fails
-            return (List<Node>) nodesObj;
-        }
+        Object nodesObj = definition != null ? definition.get("nodes") : null;
+        return nodesObj == null ? List.of() : convertValueOrCast(nodesObj, new TypeReference<List<Node>>() {});
     }
-    
+
     /**
      * Safely extract edges from definition map (public for MarketplaceService)
+     * DRY-12: Uses convertValueOrCast helper
      */
     @SuppressWarnings("unchecked")
     public List<Edge> extractEdges(Map<String, Object> definition) {
-        Object edgesObj = definition.get("edges");
-        if (edgesObj == null) {
-            return List.of();
-        }
-        try {
-            return objectMapper.convertValue(edgesObj, new TypeReference<List<Edge>>() {});
-        } catch (Exception e) {
-            // Fallback to direct cast if conversion fails
-            return (List<Edge>) edgesObj;
-        }
+        Object edgesObj = definition != null ? definition.get("edges") : null;
+        return edgesObj == null ? List.of() : convertValueOrCast(edgesObj, new TypeReference<List<Edge>>() {});
     }
-    
+
     /**
      * Safely extract variables from definition map (public for MarketplaceService)
+     * DRY-12: Uses convertValueOrCast helper
      */
     @SuppressWarnings("unchecked")
     public Map<String, Object> extractVariables(Map<String, Object> definition) {
-        Object variablesObj = definition.get("variables");
-        if (variablesObj == null) {
-            return Map.of();
-        }
+        Object variablesObj = definition != null ? definition.get("variables") : null;
+        return variablesObj == null ? Map.of() : convertValueOrCast(variablesObj, new TypeReference<Map<String, Object>>() {});
+    }
+
+    /**
+     * DRY-12: Convert value via ObjectMapper, fallback to cast on failure.
+     */
+    @SuppressWarnings("unchecked")
+    private <T> T convertValueOrCast(Object value, TypeReference<T> typeRef) {
         try {
-            return objectMapper.convertValue(variablesObj, new TypeReference<Map<String, Object>>() {});
+            return objectMapper.convertValue(value, typeRef);
         } catch (Exception e) {
-            // Fallback to direct cast if conversion fails
-            return (Map<String, Object>) variablesObj;
+            return (T) value;
         }
     }
 }

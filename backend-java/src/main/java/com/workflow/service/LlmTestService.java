@@ -1,5 +1,6 @@
 package com.workflow.service;
 
+import com.workflow.util.LlmErrorResponseBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -44,7 +45,7 @@ public class LlmTestService {
     public Map<String, String> testProvider(String type, String apiKey, String baseUrl, String model) {
         var tester = providerRegistry.get(type != null ? type.toLowerCase() : "");
         if (tester == null) {
-            return Map.of("status", "error", "message", "Unknown provider type: " + type);
+            return LlmErrorResponseBuilder.error("Unknown provider type: " + type);
         }
         return tester.test(apiKey, baseUrl, model);
     }
@@ -72,7 +73,7 @@ public class LlmTestService {
 
     public Map<String, String> testCustom(String apiKey, String baseUrl, String model) {
         if (baseUrl == null || baseUrl.isEmpty()) {
-            return Map.of("status", "error", "message", "base_url is required for custom providers");
+            return LlmErrorResponseBuilder.error("base_url is required for custom providers");
         }
         String url = baseUrl.endsWith("/") ? baseUrl + "chat/completions" : baseUrl + "/chat/completions";
         return testOpenAiCompatible(url, apiKey, model);
@@ -105,9 +106,9 @@ public class LlmTestService {
             String errMsg = errBody != null && !errBody.isEmpty()
                     ? errBody.substring(0, Math.min(200, errBody.length()))
                     : "";
-            return Map.of("status", "error", "message", "API error " + response.statusCode() + ": " + errMsg);
+            return LlmErrorResponseBuilder.error("API error " + response.statusCode() + ": " + errMsg);
         } catch (Exception e) {
-            return Map.of("status", "error", "message", "Error: " + e.getMessage());
+            return LlmErrorResponseBuilder.error("Error: " + (e.getMessage() != null ? e.getMessage() : "Unknown error"));
         }
     }
 }

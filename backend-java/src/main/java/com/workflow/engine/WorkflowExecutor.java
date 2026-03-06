@@ -19,8 +19,8 @@ public class WorkflowExecutor {
 
     private final NodeExecutorRegistry nodeRegistry;
 
-    public WorkflowExecutor(LlmApiClient llmClient) {
-        this.nodeRegistry = new NodeExecutorRegistry(llmClient);
+    public WorkflowExecutor(NodeExecutorRegistry nodeRegistry) {
+        this.nodeRegistry = nodeRegistry;
     }
 
     /**
@@ -71,7 +71,7 @@ public class WorkflowExecutor {
                 Node node = nodeMap.get(nodeId);
                 if (node == null) continue;
 
-                if (NodeType.START.equals(node.getType()) || NodeType.END.equals(node.getType())) {
+                if (NodeType.isSkip(node)) {
                     state.addLog("INFO", nodeId, "Skipping " + node.getType() + " node: " + nodeId);
                     completed.add(nodeId);
                     state.setCurrentNode(nodeId);
@@ -94,13 +94,7 @@ public class WorkflowExecutor {
                 try {
                     output = nodeRegistry.execute(node, nodeInputs, state, ctx);
                 } catch (Exception e) {
-                    nodeState.setStatus("failed");
-                    nodeState.setError(e.getMessage());
-                    nodeState.setCompletedAt(LocalDateTime.now());
-                    state.setStatus("failed");
-                    state.setError(e.getMessage());
-                    state.setCompletedAt(LocalDateTime.now());
-                    state.addLog("ERROR", nodeId, "Node failed: " + e.getMessage());
+                    handleNodeFailure(state, nodeState, nodeId, e);
                     return state.toStateMap();
                 }
 
@@ -109,7 +103,7 @@ public class WorkflowExecutor {
                 nodeState.setCompletedAt(LocalDateTime.now());
                 completed.add(nodeId);
 
-                if (NodeType.CONDITION.equals(node.getType()) && output instanceof Map) {
+                if (NodeType.isCondition(node) && output instanceof Map) {
                     Object b = ((Map<?, ?>) output).get("branch");
                     String branch = b != null ? b.toString() : "true";
                     addConditionNeighbors(queue, completed, edges, nodeId, branch);
@@ -127,13 +121,27 @@ public class WorkflowExecutor {
             state.addLog("INFO", null, "Workflow execution completed");
 
         } catch (Exception e) {
-            state.setStatus("failed");
-            state.setError(e.getMessage());
-            state.setCompletedAt(LocalDateTime.now());
-            state.addLog("ERROR", null, "Workflow execution failed: " + e.getMessage());
+            handleWorkflowFailure(state, e);
         }
 
         return state.toStateMap();
+    }
+
+    private void handleNodeFailure(ExecutionState state, NodeState nodeState, String nodeId, Exception e) {
+        nodeState.setStatus("failed");
+        nodeState.setError(e.getMessage());
+        nodeState.setCompletedAt(LocalDateTime.now());
+        state.setStatus("failed");
+        state.setError(e.getMessage());
+        state.setCompletedAt(LocalDateTime.now());
+        state.addLog("ERROR", nodeId, "Node failed: " + e.getMessage());
+    }
+
+    private void handleWorkflowFailure(ExecutionState state, Exception e) {
+        state.setStatus("failed");
+        state.setError(e.getMessage());
+        state.setCompletedAt(LocalDateTime.now());
+        state.addLog("ERROR", null, "Workflow execution failed: " + e.getMessage());
     }
 
     private void addReadyNeighbors(Deque<String> queue, Set<String> completed,

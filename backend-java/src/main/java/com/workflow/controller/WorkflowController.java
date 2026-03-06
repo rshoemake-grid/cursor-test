@@ -72,15 +72,17 @@ public class WorkflowController {
     }
 
     @GetMapping("/{id}")
-    @Operation(summary = "Get Workflow", description = "Get a workflow by ID")
+    @Operation(summary = "Get Workflow", description = "Get a workflow by ID (requires auth for non-public)")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "200", description = "Workflow retrieved successfully"),
-        @ApiResponse(responseCode = "404", description = "Workflow not found")
+        @ApiResponse(responseCode = "404", description = "Workflow not found"),
+        @ApiResponse(responseCode = "403", description = "Not authorized")
     })
-    public ResponseEntity<WorkflowResponse> getWorkflow(@PathVariable String id) {
+    public ResponseEntity<WorkflowResponse> getWorkflow(@PathVariable String id, Authentication authentication) {
         log.debug("GET /api/workflows/{} - Fetching workflow", id);
-        
-        WorkflowResponse workflow = workflowService.getWorkflow(id);
+
+        String userId = authenticationHelper.extractUserIdNullable(authentication);
+        WorkflowResponse workflow = workflowService.getWorkflow(id, userId);
         return ResponseEntity.ok(workflow);
     }
 
@@ -93,23 +95,27 @@ public class WorkflowController {
     })
     public ResponseEntity<WorkflowResponse> updateWorkflow(
             @PathVariable String id,
-            @Valid @RequestBody WorkflowCreate workflowCreate) {
+            @Valid @RequestBody WorkflowCreate workflowCreate,
+            Authentication authentication) {
         log.debug("PUT /api/workflows/{} - Updating workflow", id);
-        
-        WorkflowResponse response = workflowService.updateWorkflow(id, workflowCreate);
+
+        String userId = authenticationHelper.extractUserIdRequired(authentication);
+        WorkflowResponse response = workflowService.updateWorkflow(id, workflowCreate, userId);
         return ResponseEntity.ok(response);
     }
 
     @DeleteMapping("/{id}")
-    @Operation(summary = "Delete Workflow", description = "Delete a workflow by ID")
+    @Operation(summary = "Delete Workflow", description = "Delete a workflow by ID (owner only)")
     @ApiResponses(value = {
         @ApiResponse(responseCode = "204", description = "Workflow deleted successfully"),
-        @ApiResponse(responseCode = "404", description = "Workflow not found")
+        @ApiResponse(responseCode = "404", description = "Workflow not found"),
+        @ApiResponse(responseCode = "403", description = "Not authorized")
     })
-    public ResponseEntity<Void> deleteWorkflow(@PathVariable String id) {
+    public ResponseEntity<Void> deleteWorkflow(@PathVariable String id, Authentication authentication) {
         log.debug("DELETE /api/workflows/{} - Deleting workflow", id);
-        
-        workflowService.deleteWorkflow(id);
+
+        String userId = authenticationHelper.extractUserIdRequired(authentication);
+        workflowService.deleteWorkflow(id, userId);
         return ResponseEntity.noContent().build();
     }
 

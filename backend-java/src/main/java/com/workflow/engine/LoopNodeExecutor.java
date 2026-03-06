@@ -2,6 +2,8 @@ package com.workflow.engine;
 
 import com.workflow.dto.Node;
 
+import org.springframework.stereotype.Component;
+
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -9,15 +11,13 @@ import java.util.Map;
 /**
  * Executes LOOP nodes - extracts items and returns last item.
  */
+@Component
 public class LoopNodeExecutor implements NodeExecutor {
 
     @Override
     public Object execute(Node node, Map<String, Object> inputs, ExecutionState state,
                           NodeExecutionContext ctx) {
-        Object itemsObj = inputs.get("items");
-        if (itemsObj == null) itemsObj = inputs.get("data");
-        if (itemsObj == null) itemsObj = inputs.get("lines");
-        if (itemsObj == null) itemsObj = inputs.get("output");
+        Object itemsObj = InputResolver.getFirstOf(inputs, "items", "data", "lines", "output");
 
         List<?> items = Collections.emptyList();
         if (itemsObj instanceof List) {

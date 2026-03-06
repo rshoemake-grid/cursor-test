@@ -3,6 +3,7 @@ package com.workflow.service;
 import com.workflow.dto.*;
 import com.workflow.entity.Execution;
 import com.workflow.exception.ExecutionNotFoundException;
+import com.workflow.exception.ForbiddenException;
 import com.workflow.repository.ExecutionRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,10 +32,14 @@ public class ExecutionService {
         this.executionRepository = executionRepository;
     }
 
+    /**
+     * Get execution by ID. S-C2: Requires ownership (execution.userId == userId).
+     */
     @Transactional(readOnly = true)
-    public ExecutionResponse getExecution(String executionId) {
+    public ExecutionResponse getExecution(String executionId, String userId) {
         Execution execution = executionRepository.findById(executionId)
                 .orElseThrow(() -> new ExecutionNotFoundException("Execution not found: " + executionId));
+        assertExecutionOwner(execution, userId);
         return toResponse(execution);
     }
 
@@ -49,17 +54,26 @@ public class ExecutionService {
         return executions.stream().map(this::toResponse).collect(Collectors.toList());
     }
 
+    /**
+     * Get running executions for user. S-C2: Filter by userId.
+     */
     @Transactional(readOnly = true)
-    public List<ExecutionResponse> getRunningExecutions() {
-        List<Execution> executions = executionRepository.findByStatus(ExecutionStatus.RUNNING.getValue());
+    public List<ExecutionResponse> getRunningExecutions(String userId) {
+        List<Execution> executions = userId != null
+                ? executionRepository.findByUserIdAndStatus(userId, ExecutionStatus.RUNNING.getValue())
+                : executionRepository.findByStatus(ExecutionStatus.RUNNING.getValue());
         return executions.stream().map(this::toResponse).collect(Collectors.toList());
     }
 
+    /**
+     * Get execution logs. S-C2: Requires ownership.
+     */
     @Transactional(readOnly = true)
-    public ExecutionLogsResponse getExecutionLogs(String executionId, String level, String nodeId,
+    public ExecutionLogsResponse getExecutionLogs(String executionId, String userId, String level, String nodeId,
                                                   int limit, int offset) {
         Execution execution = executionRepository.findById(executionId)
                 .orElseThrow(() -> new ExecutionNotFoundException("Execution not found: " + executionId));
+        assertExecutionOwner(execution, userId);
 
         @SuppressWarnings("unchecked")
         List<Map<String, Object>> rawLogs = Optional.ofNullable(execution.getState())
@@ -82,9 +96,13 @@ public class ExecutionService {
         return new ExecutionLogsResponse(executionId, paginated, total, limit, offset);
     }
 
-    public ExecutionResponse cancelExecution(String executionId) {
+    /**
+     * Cancel execution. S-C2: Requires ownership.
+     */
+    public ExecutionResponse cancelExecution(String executionId, String userId) {
         Execution execution = executionRepository.findById(executionId)
                 .orElseThrow(() -> new ExecutionNotFoundException("Execution not found: " + executionId));
+        assertExecutionOwner(execution, userId);
 
         String status = execution.getStatus();
         if (!ExecutionStatus.PENDING.getValue().equals(status) && !ExecutionStatus.RUNNING.getValue().equals(status)) {
@@ -96,13 +114,14 @@ public class ExecutionService {
 
         Map<String, Object> state = execution.getState() != null ? new HashMap<>(execution.getState()) : new HashMap<>();
         @SuppressWarnings("unchecked")
-        List<Map<String, Object>> logs = (List<Map<String, Object>>) state.getOrDefault("logs", new ArrayList<>());
-        logs.add(Map.of(
-                "timestamp", LocalDateTime.now().toString(),
-                "level", "INFO",
-                "node_id", (Object) null,
-                "message", "Execution cancelled by user"
-        ));
+        List<Map<String, Object>> existingLogs = (List<Map<String, Object>>) state.getOrDefault("logs", new ArrayList<>());
+        List<Map<String, Object>> logs = new ArrayList<>(existingLogs);
+        Map<String, Object> cancelLogEntry = new HashMap<>();
+        cancelLogEntry.put("timestamp", LocalDateTime.now().toString());
+        cancelLogEntry.put("level", "INFO");
+        cancelLogEntry.put("node_id", null);
+        cancelLogEntry.put("message", "Execution cancelled by user");
+        logs.add(cancelLogEntry);
         state.put("logs", logs);
         state.put("status", ExecutionStatus.CANCELLED.getValue());
         execution.setState(state);
@@ -137,6 +156,22 @@ public class ExecutionService {
                 execution.getCompletedAt(),
                 logs
         );
+    }
+
+    /**
+     * Assert user owns the execution. Throws if not found or not owner.
+     * Used by DebugController and other callers requiring ownership.
+     */
+    public void requireExecutionOwner(String executionId, String userId) {
+        Execution execution = executionRepository.findById(executionId)
+                .orElseThrow(() -> new ExecutionNotFoundException("Execution not found: " + executionId));
+        assertExecutionOwner(execution, userId);
+    }
+
+    private void assertExecutionOwner(Execution execution, String userId) {
+        if (userId == null || !Objects.equals(userId, execution.getUserId())) {
+            throw new ForbiddenException("Not authorized to access this execution");
+        }
     }
 
     private ExecutionLogEntry toLogEntry(Map<String, Object> m) {

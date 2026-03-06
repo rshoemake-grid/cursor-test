@@ -4,20 +4,35 @@ import com.workflow.util.ErrorResponseBuilder;
 import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.core.env.Environment;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import java.util.Arrays;
 import java.util.Map;
 
 /**
  * Global exception handler - matches Python FastAPI / Apigee-compatible error response format
  * DRY: Uses ErrorResponseBuilder to avoid code duplication
+ * S-M1, S-M2: In production, avoid stack traces in logs and generic 500 message to client
  */
 @RestControllerAdvice
 public class GlobalExceptionHandler {
     private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
+    private static final String GENERIC_ERROR_MESSAGE = "An unexpected error occurred";
+
+    private final Environment environment;
+
+    public GlobalExceptionHandler(Environment environment) {
+        this.environment = environment;
+    }
+
+    private boolean isProduction() {
+        return Arrays.stream(environment.getActiveProfiles())
+                .anyMatch(p -> "production".equalsIgnoreCase(p));
+    }
 
     private static String getRequestPath(HttpServletRequest request) {
         return request != null ? request.getRequestURI() : null;
@@ -65,10 +80,13 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, Object>> handleGenericException(
             Exception e, HttpServletRequest request) {
-        log.error("Unexpected error occurred", e);
-        return ErrorResponseBuilder.internalServerError(
-            e.getMessage() != null ? e.getMessage() : "An unexpected error occurred",
-            getRequestPath(request)
-        );
+        if (isProduction()) {
+            log.error("Unexpected error: {}", e.getMessage());
+        } else {
+            log.error("Unexpected error occurred", e);
+        }
+        String clientMessage = isProduction() ? GENERIC_ERROR_MESSAGE
+                : (e.getMessage() != null ? e.getMessage() : GENERIC_ERROR_MESSAGE);
+        return ErrorResponseBuilder.internalServerError(clientMessage, getRequestPath(request));
     }
 }
