@@ -137,7 +137,7 @@ public class WorkflowController {
     @PostMapping("/bulk-delete")
     @Operation(summary = "Bulk Delete Workflows")
     public ResponseEntity<Map<String, Object>> bulkDelete(@RequestBody BulkDeleteRequest request, Authentication authentication) {
-        String userId = authenticationHelper.extractUserIdNullable(authentication);
+        String userId = authenticationHelper.extractUserIdRequired(authentication);
         return ResponseEntity.ok(workflowService.bulkDelete(request.getWorkflowIds(), userId));
     }
 }

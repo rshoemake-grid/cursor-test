@@ -2,6 +2,7 @@ package com.workflow.service;
 
 import com.workflow.entity.Settings;
 import com.workflow.repository.SettingsRepository;
+import com.workflow.util.JsonStateUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -39,9 +40,8 @@ public class SettingsService {
         if (settings.isEmpty()) {
             return Optional.empty();
         }
-        @SuppressWarnings("unchecked")
-        List<Map<String, Object>> providers = (List<Map<String, Object>>) settings.get().get("providers");
-        if (providers == null) {
+        List<Map<String, Object>> providers = JsonStateUtils.getListOfMaps(settings.get(), "providers");
+        if (providers.isEmpty()) {
             return Optional.empty();
         }
         return providers.stream()

@@ -5,6 +5,7 @@ import com.workflow.dto.ExecutionResponse;
 import com.workflow.dto.ExecutionStatus;
 import com.workflow.entity.Execution;
 import com.workflow.engine.WorkflowExecutor;
+import com.workflow.util.JsonStateUtils;
 import com.workflow.repository.ExecutionRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -118,8 +119,7 @@ public class ExecutionOrchestratorService {
             final String msg = logMessage;
             executionRepository.findById(executionId).ifPresent(exec -> {
                 Map<String, Object> state = exec.getState() != null ? new HashMap<>(exec.getState()) : new HashMap<>();
-                @SuppressWarnings("unchecked")
-                List<Map<String, Object>> logs = (List<Map<String, Object>>) state.getOrDefault("logs", new ArrayList<>());
+                List<Map<String, Object>> logs = new ArrayList<>(JsonStateUtils.getLogsList(state));
                 logs.add(Map.of(
                         "timestamp", LocalDateTime.now().toString(),
                         "level", "ERROR",

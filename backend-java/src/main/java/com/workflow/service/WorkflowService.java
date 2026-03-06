@@ -161,18 +161,22 @@ public class WorkflowService {
     }
 
     /**
-     * Bulk delete workflows (only those owned by user)
+     * Bulk delete workflows (only those owned by user).
+     * Requires non-null userId (caller must use extractUserIdRequired).
      */
     public Map<String, Object> bulkDelete(List<String> workflowIds, String userId) {
         if (workflowIds == null || workflowIds.isEmpty()) {
             throw new ValidationException("No workflow IDs provided");
+        }
+        if (userId == null) {
+            throw new ValidationException("Authentication required");
         }
         int deleted = 0;
         List<String> failed = new java.util.ArrayList<>();
         for (String id : workflowIds) {
             try {
                 Workflow w = workflowRepository.findById(id).orElse(null);
-                if (w != null && userId != null && userId.equals(w.getOwnerId())) {
+                if (w != null && userId.equals(w.getOwnerId())) {
                     workflowRepository.deleteById(id);
                     deleted++;
                 } else {

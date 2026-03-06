@@ -6,6 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.env.Environment;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -66,6 +67,16 @@ public class GlobalExceptionHandler {
         return ErrorResponseBuilder.forbidden(e.getMessage(), getRequestPath(request));
     }
     
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<Map<String, Object>> handleHttpMessageNotReadable(
+            HttpMessageNotReadableException e, HttpServletRequest request) {
+        String message = e.getMessage() != null && e.getMessage().contains("JSON")
+                ? "Invalid JSON"
+                : "Invalid request body";
+        log.debug("Bad request (malformed JSON/body): {}", message);
+        return ErrorResponseBuilder.badRequest(message, getRequestPath(request));
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Map<String, Object>> handleMethodArgumentNotValid(
             MethodArgumentNotValidException e, HttpServletRequest request) {

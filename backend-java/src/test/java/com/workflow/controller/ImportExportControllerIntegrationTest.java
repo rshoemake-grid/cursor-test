@@ -97,6 +97,15 @@ class ImportExportControllerIntegrationTest {
 
     @Test
     @WithMockUser(username = "testuser")
+    void importWorkflow_malformedJson_returns400() throws Exception {
+        mockMvc.perform(post("/api/import-export/import")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{ invalid json }"))
+                .andExpect(status().is4xxClientError());
+    }
+
+    @Test
+    @WithMockUser(username = "testuser")
     void importWorkflow_missingDefinition_returns400() throws Exception {
         Map<String, Object> body = Map.of(
                 "name", "Bad Import",
@@ -146,6 +155,39 @@ class ImportExportControllerIntegrationTest {
                 "application/json", json.getBytes());
 
         mockMvc.perform(multipart("/api/import-export/import/file").file(file))
+                .andExpect(status().is4xxClientError());
+    }
+
+    @Test
+    @WithMockUser(username = "testuser")
+    void importFile_malformedJson_returns400() throws Exception {
+        String json = "{ invalid json }";
+        MockMultipartFile file = new MockMultipartFile("file", "bad.json",
+                "application/json", json.getBytes());
+
+        mockMvc.perform(multipart("/api/import-export/import/file").file(file))
+                .andExpect(status().is4xxClientError());
+    }
+
+    @Test
+    @WithMockUser(username = "testuser")
+    void importWorkflow_oversizedDefinition_returns400() throws Exception {
+        Map<String, Object> definition = new java.util.HashMap<>();
+        for (int i = 0; i < 51; i++) {
+            definition.put("key" + i, "value" + i);
+        }
+        definition.put("nodes", List.of(Map.of("id", "n1", "type", "start")));
+        definition.put("edges", List.of());
+
+        Map<String, Object> body = Map.of(
+                "name", "Oversized Import",
+                "description", "Too many keys",
+                "definition", definition
+        );
+
+        mockMvc.perform(post("/api/import-export/import")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(body)))
                 .andExpect(status().is4xxClientError());
     }
 }

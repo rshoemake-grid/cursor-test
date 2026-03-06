@@ -91,7 +91,8 @@ dependencies {
 tasks.named('test') {
     useJUnitPlatform()
     ignoreFailures = false
-    // T-1: Provide LLM API key for ExecutionController integration tests (execute workflow)
+    // T-1: Provide LLM API key for ExecutionController integration tests (execute workflow).
+    // TEST-ONLY: Never used in production. Production uses user-configured API keys from settings.
     environment "GEMINI_API_KEY", "test-key-for-integration-tests"
 
     // Configure Mockito as Java agent for Java 17+ compatibility

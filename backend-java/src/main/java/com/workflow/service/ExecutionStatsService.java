@@ -3,6 +3,7 @@ package com.workflow.service;
 import com.workflow.entity.Execution;
 import com.workflow.exception.ResourceNotFoundException;
 import com.workflow.repository.ExecutionRepository;
+import com.workflow.util.JsonStateUtils;
 import com.workflow.util.RepositoryUtils;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
@@ -17,6 +18,8 @@ import java.util.*;
 @Service
 public class ExecutionStatsService {
     private static final int MAX_HISTORY_LIMIT = 500;
+    /** Code Review 2026 P-3: Cap stats to avoid loading unbounded rows. Stats are for most recent executions. */
+    private static final int MAX_STATS_LIMIT = 5000;
 
     private final ExecutionRepository executionRepository;
 
@@ -36,30 +39,25 @@ public class ExecutionStatsService {
     public Map<String, Object> getTimeline(String executionId) {
         Execution e = RepositoryUtils.findByIdOrThrow(executionRepository, executionId, "Execution not found");
         Map<String, Object> state = e.getState() != null ? e.getState() : Map.of();
-        @SuppressWarnings("unchecked")
-        List<Map<String, Object>> logs = (List<Map<String, Object>>) state.getOrDefault("logs", List.of());
         Map<String, Object> result = new HashMap<>();
         result.put("execution_id", executionId);
         result.put("status", e.getStatus());
         result.put("started_at", e.getStartedAt());
         result.put("completed_at", e.getCompletedAt());
-        result.put("timeline", logs);
-        result.put("node_states", state.getOrDefault("node_states", Map.of()));
+        result.put("timeline", JsonStateUtils.getLogsList(state));
+        result.put("node_states", JsonStateUtils.getMap(state, "node_states"));
         return result;
     }
 
     public Map<String, Object> getNodeDetails(String executionId, String nodeId) {
         Execution e = RepositoryUtils.findByIdOrThrow(executionRepository, executionId, "Execution not found");
         Map<String, Object> state = e.getState() != null ? e.getState() : Map.of();
-        @SuppressWarnings("unchecked")
-        Map<String, Object> nodeStates = (Map<String, Object>) state.getOrDefault("node_states", Map.of());
+        Map<String, Object> nodeStates = JsonStateUtils.getMap(state, "node_states");
         if (!nodeStates.containsKey(nodeId)) {
             throw new ResourceNotFoundException("Node not found in execution");
         }
-        @SuppressWarnings("unchecked")
-        Map<String, Object> nodeState = (Map<String, Object>) nodeStates.get(nodeId);
-        @SuppressWarnings("unchecked")
-        List<Map<String, Object>> logs = (List<Map<String, Object>>) state.getOrDefault("logs", List.of());
+        Map<String, Object> nodeState = JsonStateUtils.getMap(nodeStates, nodeId);
+        List<Map<String, Object>> logs = JsonStateUtils.getLogsList(state);
         List<Map<String, Object>> nodeLogs = logs.stream()
                 .filter(l -> nodeId.equals(l.get("node_id")))
                 .toList();
@@ -75,7 +73,8 @@ public class ExecutionStatsService {
     }
 
     public Map<String, Object> getWorkflowStats(String workflowId) {
-        List<Execution> executions = executionRepository.findByWorkflowId(workflowId);
+        var pageable = PageRequest.of(0, MAX_STATS_LIMIT);
+        List<Execution> executions = executionRepository.findByWorkflowIdOrderByStartedAtDesc(workflowId, pageable);
         long success = executions.stream().filter(e -> "completed".equals(e.getStatus())).count();
         long failure = executions.stream().filter(e -> "failed".equals(e.getStatus())).count();
         double avgDur = executions.stream()

@@ -1,9 +1,9 @@
 package com.workflow.exception;
 
 /**
- * Exception for 403 Forbidden - not authorized
+ * Thrown when user is not authorized. Maps to 403.
  */
-public class ForbiddenException extends RuntimeException {
+public class ForbiddenException extends ApplicationException {
     public ForbiddenException(String message) {
         super(message);
     }

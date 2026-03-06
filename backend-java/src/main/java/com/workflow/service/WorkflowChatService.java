@@ -5,6 +5,7 @@ import com.workflow.dto.WorkflowChatResponse;
 import com.workflow.entity.Workflow;
 import com.workflow.exception.ResourceNotFoundException;
 import com.workflow.repository.WorkflowRepository;
+import com.workflow.util.JsonStateUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -100,12 +101,8 @@ public class WorkflowChatService {
         Workflow w = workflowRepository.findById(workflowId)
                 .orElseThrow(() -> new ResourceNotFoundException("Workflow not found"));
         Map<String, Object> def = w.getDefinition();
-        @SuppressWarnings("unchecked")
-        List<Map<String, Object>> nodes = (List<Map<String, Object>>) (def != null ? def.get("nodes") : null);
-        @SuppressWarnings("unchecked")
-        List<Map<String, Object>> edges = (List<Map<String, Object>>) (def != null ? def.get("edges") : null);
-        nodes = nodes != null ? nodes : List.of();
-        edges = edges != null ? edges : List.of();
+        List<Map<String, Object>> nodes = JsonStateUtils.getListOfMaps(def, "nodes");
+        List<Map<String, Object>> edges = JsonStateUtils.getListOfMaps(def, "edges");
 
         StringBuilder sb = new StringBuilder();
         sb.append("Workflow: ").append(w.getName()).append("\n");

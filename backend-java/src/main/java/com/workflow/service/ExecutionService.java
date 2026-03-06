@@ -2,6 +2,7 @@ package com.workflow.service;
 
 import com.workflow.dto.*;
 import com.workflow.entity.Execution;
+import com.workflow.util.JsonStateUtils;
 import com.workflow.exception.ExecutionNotFoundException;
 import com.workflow.exception.ForbiddenException;
 import com.workflow.repository.ExecutionRepository;
@@ -56,12 +57,14 @@ public class ExecutionService {
 
     /**
      * Get running executions for user. S-C2: Filter by userId.
+     * Code Review 2026 (Low #13): Reject null userId to avoid returning all executions.
      */
     @Transactional(readOnly = true)
     public List<ExecutionResponse> getRunningExecutions(String userId) {
-        List<Execution> executions = userId != null
-                ? executionRepository.findByUserIdAndStatus(userId, ExecutionStatus.RUNNING.getValue())
-                : executionRepository.findByStatus(ExecutionStatus.RUNNING.getValue());
+        if (userId == null) {
+            throw new IllegalArgumentException("userId is required");
+        }
+        List<Execution> executions = executionRepository.findByUserIdAndStatus(userId, ExecutionStatus.RUNNING.getValue());
         return executions.stream().map(this::toResponse).collect(Collectors.toList());
     }
 
@@ -75,10 +78,7 @@ public class ExecutionService {
                 .orElseThrow(() -> new ExecutionNotFoundException("Execution not found: " + executionId));
         assertExecutionOwner(execution, userId);
 
-        @SuppressWarnings("unchecked")
-        List<Map<String, Object>> rawLogs = Optional.ofNullable(execution.getState())
-                .map(s -> (List<Map<String, Object>>) s.get("logs"))
-                .orElse(Collections.emptyList());
+        List<Map<String, Object>> rawLogs = JsonStateUtils.getLogsList(execution.getState());
 
         List<ExecutionLogEntry> logEntries = rawLogs.stream()
                 .map(this::toLogEntry)
@@ -113,9 +113,7 @@ public class ExecutionService {
         execution.setCompletedAt(LocalDateTime.now());
 
         Map<String, Object> state = execution.getState() != null ? new HashMap<>(execution.getState()) : new HashMap<>();
-        @SuppressWarnings("unchecked")
-        List<Map<String, Object>> existingLogs = (List<Map<String, Object>>) state.getOrDefault("logs", new ArrayList<>());
-        List<Map<String, Object>> logs = new ArrayList<>(existingLogs);
+        List<Map<String, Object>> logs = new ArrayList<>(JsonStateUtils.getLogsList(state));
         Map<String, Object> cancelLogEntry = new HashMap<>();
         cancelLogEntry.put("timestamp", LocalDateTime.now().toString());
         cancelLogEntry.put("level", "INFO");
@@ -134,16 +132,11 @@ public class ExecutionService {
     private ExecutionResponse toResponse(Execution execution) {
         Map<String, Object> state = execution.getState() != null ? execution.getState() : Collections.emptyMap();
 
-        List<ExecutionLogEntry> logs = Collections.emptyList();
-        Object logsObj = state.get("logs");
-        if (logsObj instanceof List) {
-            @SuppressWarnings("unchecked")
-            List<Map<String, Object>> rawLogs = (List<Map<String, Object>>) logsObj;
-            logs = rawLogs.stream()
-                    .map(this::toLogEntry)
-                    .filter(Objects::nonNull)
-                    .collect(Collectors.toList());
-        }
+        List<Map<String, Object>> rawLogs = JsonStateUtils.getLogsList(state);
+        List<ExecutionLogEntry> logs = rawLogs.stream()
+                .map(this::toLogEntry)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
 
         return new ExecutionResponse(
                 execution.getId(),
@@ -177,14 +170,19 @@ public class ExecutionService {
     private ExecutionLogEntry toLogEntry(Map<String, Object> m) {
         try {
             Object ts = m.get("timestamp");
-            LocalDateTime timestamp = LocalDateTime.now();
+            LocalDateTime timestamp = null;
             if (ts instanceof String) {
                 try {
                     String s = (String) ts;
                     timestamp = LocalDateTime.parse(s.replace("Z", ""), DateTimeFormatter.ISO_LOCAL_DATE_TIME);
-                } catch (DateTimeParseException ignored) {
-                    // fallback to now
+                } catch (DateTimeParseException e) {
+                    log.debug("Unparseable log timestamp '{}', skipping entry", ts);
+                    return null;
                 }
+            }
+            if (timestamp == null) {
+                log.debug("Log entry missing timestamp, skipping");
+                return null;
             }
             return new ExecutionLogEntry(
                     timestamp,

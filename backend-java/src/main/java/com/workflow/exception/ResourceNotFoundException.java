@@ -1,6 +1,9 @@
 package com.workflow.exception;
 
-public class ResourceNotFoundException extends RuntimeException {
+/**
+ * Thrown when a requested resource does not exist. Maps to 404.
+ */
+public class ResourceNotFoundException extends ApplicationException {
     public ResourceNotFoundException(String message) {
         super(message);
     }

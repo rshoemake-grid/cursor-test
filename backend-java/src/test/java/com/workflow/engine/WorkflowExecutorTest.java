@@ -1,6 +1,7 @@
 package com.workflow.engine;
 
 import com.workflow.dto.*;
+import com.workflow.engine.LlmApiClient;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -143,6 +144,106 @@ class WorkflowExecutorTest {
 
         assertEquals("failed", state.get("status"));
         assertNotNull(state.get("error"));
+    }
+
+    @Test
+    void execute_conditionNode_nullOrMissingInput_evaluatesFalse() {
+        Node start = node("start-1", NodeType.START);
+        Node cond = conditionNode("cond-1", "missingField", "expected");
+        Node end = node("end-1", NodeType.END);
+
+        Edge e1 = edge("start-1", "cond-1");
+        Edge e2 = edgeWithHandle("cond-1", "end-1", "false");
+
+        WorkflowResponse workflow = workflow("wf-1",
+                List.of(start, cond, end),
+                List.of(e1, e2));
+
+        Map<String, Object> inputs = Map.of();
+        Map<String, Object> state = executor.execute(workflow, inputs, Map.of(), "user-1");
+
+        assertEquals("completed", state.get("status"));
+        @SuppressWarnings("unchecked")
+        Map<String, Object> condState = (Map<String, Object>) ((Map<?, ?>) state.get("node_states")).get("cond-1");
+        assertEquals(Map.of("branch", "false"), condState.get("output"));
+    }
+
+    @Test
+    void execute_loopNode_emptyItems_returnsNull() {
+        Node start = node("start-1", NodeType.START);
+        Node loop = node("loop-1", NodeType.LOOP);
+        loop.setLoopConfig(new LoopConfig("for_each", null, null, 0));
+        Node end = node("end-1", NodeType.END);
+
+        Edge e1 = edge("start-1", "loop-1");
+        Edge e2 = edge("loop-1", "end-1");
+
+        WorkflowResponse workflow = workflow("wf-1",
+                List.of(start, loop, end),
+                List.of(e1, e2));
+
+        Map<String, Object> inputs = Map.of("items", List.of());
+        Map<String, Object> state = executor.execute(workflow, inputs, Map.of(), "user-1");
+
+        assertEquals("completed", state.get("status"));
+        @SuppressWarnings("unchecked")
+        Map<String, Object> loopState = (Map<String, Object>) ((Map<?, ?>) state.get("node_states")).get("loop-1");
+        assertNull(loopState.get("output"));
+    }
+
+    @Test
+    void execute_loopNode_singleItem_returnsThatItem() {
+        Node start = node("start-1", NodeType.START);
+        Node loop = node("loop-1", NodeType.LOOP);
+        loop.setLoopConfig(new LoopConfig("for_each", null, null, 0));
+        Node end = node("end-1", NodeType.END);
+
+        Edge e1 = edge("start-1", "loop-1");
+        Edge e2 = edge("loop-1", "end-1");
+
+        WorkflowResponse workflow = workflow("wf-1",
+                List.of(start, loop, end),
+                List.of(e1, e2));
+
+        Map<String, Object> inputs = Map.of("items", List.of("only"));
+        Map<String, Object> state = executor.execute(workflow, inputs, Map.of(), "user-1");
+
+        assertEquals("completed", state.get("status"));
+        @SuppressWarnings("unchecked")
+        Map<String, Object> loopState = (Map<String, Object>) ((Map<?, ?>) state.get("node_states")).get("loop-1");
+        assertEquals("only", loopState.get("output"));
+    }
+
+    @Test
+    void execute_agentNode_throws_failsWorkflow() {
+        LlmApiClient failingClient = (baseUrl, apiKey, model, messages) -> {
+            throw new RuntimeException("LLM API error");
+        };
+        NodeTypeParser nodeTypeParser = new NodeTypeParser();
+        NodeExecutorRegistry registry = new NodeExecutorRegistry(
+                new AgentNodeExecutor(failingClient),
+                new ConditionNodeExecutor(),
+                new LoopNodeExecutor(),
+                new ToolNodeExecutor(),
+                nodeTypeParser);
+        WorkflowExecutor failingExecutor = new WorkflowExecutor(registry);
+
+        Node start = node("start-1", NodeType.START);
+        Node agent = agentNode("agent-1", "gpt-4o-mini", "You are helpful.");
+        Node end = node("end-1", NodeType.END);
+
+        Edge e1 = edge("start-1", "agent-1");
+        Edge e2 = edge("agent-1", "end-1");
+
+        WorkflowResponse workflow = workflow("wf-1",
+                List.of(start, agent, end),
+                List.of(e1, e2));
+
+        Map<String, Object> state = failingExecutor.execute(workflow, Map.of(), Map.of("api_key", "sk-test"), "user-1");
+
+        assertEquals("failed", state.get("status"));
+        assertNotNull(state.get("error"));
+        assertTrue(state.get("error").toString().contains("LLM API error"));
     }
 
     private static Node node(String id, NodeType type) {

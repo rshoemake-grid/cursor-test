@@ -116,6 +116,13 @@ class ExecutionServiceTest {
     }
 
     @Test
+    void getRunningExecutions_nullUserId_throwsIllegalArgumentException() {
+        assertThrows(IllegalArgumentException.class, () ->
+                executionService.getRunningExecutions(null));
+        verify(executionRepository, never()).findByUserIdAndStatus(any(), any());
+    }
+
+    @Test
     void getExecutionLogs_success() {
         when(executionRepository.findById(EXEC_ID)).thenReturn(Optional.of(execution));
 

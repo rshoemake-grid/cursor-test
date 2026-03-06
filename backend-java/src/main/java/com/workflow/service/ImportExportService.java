@@ -5,6 +5,7 @@ import com.workflow.dto.WorkflowResponseV2;
 import com.workflow.entity.Workflow;
 import com.workflow.repository.WorkflowRepository;
 import com.workflow.exception.ValidationException;
+import com.workflow.util.JsonStateUtils;
 import com.workflow.util.RepositoryUtils;
 import com.workflow.util.WorkflowDefinitionValidator;
 import com.workflow.util.WorkflowMapper;
@@ -69,8 +70,7 @@ public class ImportExportService {
 
     public WorkflowResponseV2 importWorkflow(Map<String, Object> body, String userId) {
         validateImportBody(body);
-        @SuppressWarnings("unchecked")
-        Map<String, Object> definition = (Map<String, Object>) body.get("definition");
+        Map<String, Object> definition = JsonStateUtils.getMap(body, "definition");
         WorkflowDefinitionValidator.validate(definition);
         Workflow w = createWorkflowFromDefinition(
                 (String) body.get("name"),
@@ -98,8 +98,7 @@ public class ImportExportService {
         String category = null;
         List<String> tags = null;
         if (data.containsKey("workflow")) {
-            @SuppressWarnings("unchecked")
-            Map<String, Object> wf = (Map<String, Object>) data.get("workflow");
+            Map<String, Object> wf = JsonStateUtils.getMap(data, "workflow");
             definition = Map.of(
                     "nodes", wf.getOrDefault("nodes", List.of()),
                     "edges", wf.getOrDefault("edges", List.of()),
@@ -156,8 +155,7 @@ public class ImportExportService {
         if (!(def instanceof Map)) {
             throw new ValidationException("Import 'definition' must be an object");
         }
-        @SuppressWarnings("unchecked")
-        Map<String, Object> definition = (Map<String, Object>) def;
+        Map<String, Object> definition = JsonStateUtils.getMap(body, "definition");
         if (definition.size() > MAX_IMPORT_DEFINITION_KEYS) {
             throw new ValidationException("Import definition exceeds maximum size");
         }

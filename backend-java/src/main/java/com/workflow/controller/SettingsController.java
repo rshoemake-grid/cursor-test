@@ -42,11 +42,7 @@ public class SettingsController {
     public ResponseEntity<Map<String, String>> saveLlmSettings(
             @RequestBody Map<String, Object> settings,
             Authentication authentication) {
-        String userId = authenticationHelper.extractUserId(authentication);
-        if (userId == null) {
-            return ResponseEntity.status(401).body(Map.of("error", "Authentication required to save settings"));
-        }
-
+        String userId = authenticationHelper.extractUserIdRequired(authentication);
         settingsService.saveSettings(userId, settings);
         return ResponseEntity.ok(Map.of("status", "success", "message", "Settings saved successfully"));
     }
@@ -54,11 +50,7 @@ public class SettingsController {
     @GetMapping("/llm")
     @Operation(summary = "Get LLM Settings", description = "Get LLM provider settings")
     public ResponseEntity<?> getLlmSettings(Authentication authentication) {
-        String userId = authenticationHelper.extractUserId(authentication);
-        if (userId == null) {
-            return ResponseEntity.status(401).body(Map.of("error", "Authentication required to view settings"));
-        }
-
+        String userId = authenticationHelper.extractUserIdRequired(authentication);
         return settingsService.getSettings(userId)
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.ok(Map.of("providers", java.util.List.of())));
