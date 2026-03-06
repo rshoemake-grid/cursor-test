@@ -1,6 +1,8 @@
 package com.workflow.util;
 
+import java.time.LocalDateTime;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -65,5 +67,17 @@ public final class JsonStateUtils {
                     .toList();
         }
         return Collections.emptyList();
+    }
+
+    /**
+     * Create a log entry map for execution state. DRY: Used by ExecutionService and ExecutionOrchestratorService.
+     */
+    public static Map<String, Object> createLogEntry(String level, String nodeId, String message) {
+        Map<String, Object> entry = new HashMap<>();
+        entry.put("timestamp", LocalDateTime.now().toString());
+        entry.put("level", level != null ? level : "INFO");
+        entry.put("node_id", nodeId);
+        entry.put("message", message != null ? message : "");
+        return entry;
     }
 }

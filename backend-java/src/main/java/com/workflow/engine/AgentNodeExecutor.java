@@ -2,8 +2,11 @@ package com.workflow.engine;
 
 import com.workflow.dto.AgentConfig;
 import com.workflow.dto.Node;
+import com.workflow.dto.NodeType;
 
 import org.springframework.stereotype.Component;
+
+import java.util.Optional;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -23,6 +26,11 @@ public class AgentNodeExecutor implements NodeExecutor {
 
     public AgentNodeExecutor(LlmApiClient llmClient) {
         this.llmClient = llmClient;
+    }
+
+    @Override
+    public Optional<NodeType> getSupportedType() {
+        return Optional.of(NodeType.AGENT);
     }
 
     @Override

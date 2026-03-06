@@ -3,6 +3,7 @@ package com.workflow.security;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
+import com.workflow.util.EnvironmentUtils;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 
@@ -29,7 +30,7 @@ public class JwtSecretValidator implements ApplicationRunner {
 
     @Override
     public void run(ApplicationArguments args) {
-        if (!isProduction()) {
+        if (!EnvironmentUtils.isProduction(environment)) {
             return;
         }
         if (jwtSecret == null || jwtSecret.isBlank() || DEFAULT_SECRET.equals(jwtSecret)) {
@@ -43,14 +44,5 @@ public class JwtSecretValidator implements ApplicationRunner {
                     "S-M3: JWT_SECRET must be at least 256 bits (32 bytes) for HS256. " +
                     "Current length: " + byteLength + " bytes. Use a longer secret.");
         }
-    }
-
-    private boolean isProduction() {
-        for (String profile : environment.getActiveProfiles()) {
-            if ("production".equalsIgnoreCase(profile)) {
-                return true;
-            }
-        }
-        return false;
     }
 }

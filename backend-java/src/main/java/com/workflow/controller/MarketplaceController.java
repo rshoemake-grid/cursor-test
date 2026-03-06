@@ -83,7 +83,7 @@ public class MarketplaceController {
             @Valid @RequestBody PublishedAgentCreateRequest request,
             Authentication auth) {
         String userId = authenticationHelper.extractUserId(auth);
-        boolean isAdmin = authenticationHelper.extractUser(auth).map(u -> Boolean.TRUE.equals(u.getIsAdmin())).orElse(false);
+        boolean isAdmin = authenticationHelper.extractIsAdmin(auth);
         return ResponseEntity.status(201).body(marketplaceService.publishAgent(request, userId, isAdmin));
     }
 

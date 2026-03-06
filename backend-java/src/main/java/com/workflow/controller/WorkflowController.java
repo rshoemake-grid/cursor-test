@@ -130,7 +130,7 @@ public class WorkflowController {
             @RequestBody WorkflowPublishRequest request,
             Authentication authentication) {
         String userId = authenticationHelper.extractUserId(authentication);
-        boolean isAdmin = authenticationHelper.extractUser(authentication).map(u -> u.getIsAdmin()).orElse(false);
+        boolean isAdmin = authenticationHelper.extractIsAdmin(authentication);
         return ResponseEntity.status(201).body(workflowService.publishWorkflow(id, request, userId, isAdmin));
     }
 

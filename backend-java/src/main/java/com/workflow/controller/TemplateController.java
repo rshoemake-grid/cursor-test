@@ -3,7 +3,6 @@ package com.workflow.controller;
 import com.workflow.dto.WorkflowResponse;
 import com.workflow.dto.WorkflowTemplateCreate;
 import com.workflow.dto.WorkflowTemplateResponse;
-import com.workflow.entity.User;
 import com.workflow.service.TemplateService;
 import com.workflow.util.AuthenticationHelper;
 import io.swagger.v3.oas.annotations.Operation;
@@ -33,7 +32,7 @@ public class TemplateController {
     @Operation(summary = "Create Template")
     public ResponseEntity<WorkflowTemplateResponse> create(@RequestBody WorkflowTemplateCreate create, Authentication auth) {
         String userId = authenticationHelper.extractUserId(auth);
-        boolean isAdmin = authenticationHelper.extractUser(auth).map(User::getIsAdmin).orElse(false);
+        boolean isAdmin = authenticationHelper.extractIsAdmin(auth);
         return ResponseEntity.status(201).body(templateService.createTemplate(create, userId, isAdmin));
     }
 
@@ -82,7 +81,7 @@ public class TemplateController {
     @Operation(summary = "Delete Template")
     public ResponseEntity<Void> delete(@PathVariable String templateId, Authentication auth) {
         String userId = authenticationHelper.extractUserId(auth);
-        boolean isAdmin = authenticationHelper.extractUser(auth).map(User::getIsAdmin).orElse(false);
+        boolean isAdmin = authenticationHelper.extractIsAdmin(auth);
         templateService.deleteTemplate(templateId, userId, isAdmin);
         return ResponseEntity.noContent().build();
     }

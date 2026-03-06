@@ -76,6 +76,26 @@ public class AuthenticationHelper {
     }
     
     /**
+     * Extract username from Authentication.
+     * @return username or null if not authenticated
+     */
+    public String extractUsername(Authentication authentication) {
+        return extractUser(authentication)
+                .map(User::getUsername)
+                .orElse(null);
+    }
+
+    /**
+     * Check if the authenticated user is an admin.
+     * @return true if user is admin, false if not authenticated or not admin
+     */
+    public boolean extractIsAdmin(Authentication authentication) {
+        return extractUser(authentication)
+                .map(u -> Boolean.TRUE.equals(u.getIsAdmin()))
+                .orElse(false);
+    }
+
+    /**
      * Check if user is authenticated
      * @param authentication Spring Security Authentication object
      * @return true if authenticated, false otherwise

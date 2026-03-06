@@ -5,13 +5,13 @@ import com.workflow.dto.NodeType;
 import org.springframework.stereotype.Component;
 
 import java.util.EnumMap;
+import java.util.List;
 import java.util.Map;
 
 /**
  * Registry for node executors - OCP compliant.
- * New node types can be added by registering an executor without modifying callers.
- * DIP-2: Executors injected via constructor instead of direct instantiation.
- * OCP-3: NodeType parsing delegated to NodeTypeParser.
+ * New node types can be added by implementing NodeExecutor and getSupportedType() without modifying this class.
+ * DIP: Depends on List&lt;NodeExecutor&gt; abstraction instead of concrete implementations.
  */
 @Component
 public class NodeExecutorRegistry {
@@ -19,15 +19,10 @@ public class NodeExecutorRegistry {
     private final Map<NodeType, NodeExecutor> executors = new EnumMap<>(NodeType.class);
     private final NodeTypeParser nodeTypeParser;
 
-    public NodeExecutorRegistry(AgentNodeExecutor agentExecutor,
-                               ConditionNodeExecutor conditionExecutor,
-                               LoopNodeExecutor loopExecutor,
-                               ToolNodeExecutor toolExecutor,
-                               NodeTypeParser nodeTypeParser) {
-        executors.put(NodeType.AGENT, agentExecutor);
-        executors.put(NodeType.CONDITION, conditionExecutor);
-        executors.put(NodeType.LOOP, loopExecutor);
-        executors.put(NodeType.TOOL, toolExecutor);
+    public NodeExecutorRegistry(List<NodeExecutor> executorList, NodeTypeParser nodeTypeParser) {
+        for (NodeExecutor executor : executorList) {
+            executor.getSupportedType().ifPresent(type -> executors.put(type, executor));
+        }
         this.nodeTypeParser = nodeTypeParser;
     }
 

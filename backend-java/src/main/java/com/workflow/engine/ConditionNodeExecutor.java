@@ -2,16 +2,23 @@ package com.workflow.engine;
 
 import com.workflow.dto.ConditionConfig;
 import com.workflow.dto.Node;
+import com.workflow.dto.NodeType;
 
 import org.springframework.stereotype.Component;
 
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * Executes CONDITION nodes - evaluates field vs value and returns branch.
  */
 @Component
 public class ConditionNodeExecutor implements NodeExecutor {
+
+    @Override
+    public Optional<NodeType> getSupportedType() {
+        return Optional.of(NodeType.CONDITION);
+    }
 
     @Override
     public Object execute(Node node, Map<String, Object> inputs, ExecutionState state,

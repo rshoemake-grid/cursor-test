@@ -1,18 +1,25 @@
 package com.workflow.engine;
 
 import com.workflow.dto.Node;
+import com.workflow.dto.NodeType;
 
 import org.springframework.stereotype.Component;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * Executes LOOP nodes - extracts items and returns last item.
  */
 @Component
 public class LoopNodeExecutor implements NodeExecutor {
+
+    @Override
+    public Optional<NodeType> getSupportedType() {
+        return Optional.of(NodeType.LOOP);
+    }
 
     @Override
     public Object execute(Node node, Map<String, Object> inputs, ExecutionState state,

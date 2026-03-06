@@ -1,5 +1,6 @@
 package com.workflow.exception;
 
+import com.workflow.util.EnvironmentUtils;
 import com.workflow.util.ErrorResponseBuilder;
 import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
@@ -11,7 +12,6 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-import java.util.Arrays;
 import java.util.Map;
 
 /**
@@ -28,11 +28,6 @@ public class GlobalExceptionHandler {
 
     public GlobalExceptionHandler(Environment environment) {
         this.environment = environment;
-    }
-
-    private boolean isProduction() {
-        return Arrays.stream(environment.getActiveProfiles())
-                .anyMatch(p -> "production".equalsIgnoreCase(p));
     }
 
     private static String getRequestPath(HttpServletRequest request) {
@@ -91,12 +86,12 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, Object>> handleGenericException(
             Exception e, HttpServletRequest request) {
-        if (isProduction()) {
+        if (EnvironmentUtils.isProduction(environment)) {
             log.error("Unexpected error: {}", e.getMessage());
         } else {
             log.error("Unexpected error occurred", e);
         }
-        String clientMessage = isProduction() ? GENERIC_ERROR_MESSAGE
+        String clientMessage = EnvironmentUtils.isProduction(environment) ? GENERIC_ERROR_MESSAGE
                 : (e.getMessage() != null ? e.getMessage() : GENERIC_ERROR_MESSAGE);
         return ErrorResponseBuilder.internalServerError(clientMessage, getRequestPath(request));
     }

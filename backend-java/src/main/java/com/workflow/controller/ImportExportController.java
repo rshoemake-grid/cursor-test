@@ -45,7 +45,7 @@ public class ImportExportController {
         Workflow w = RepositoryUtils.findByIdOrThrow(workflowRepository, workflowId, "Workflow not found");
         String userId = authenticationHelper.extractUserIdNullable(auth);
         ownershipService.assertCanRead(w, userId);
-        String exportedBy = auth != null ? authenticationHelper.extractUser(auth).map(u -> u.getUsername()).orElse(null) : null;
+        String exportedBy = auth != null ? authenticationHelper.extractUsername(auth) : null;
         Map<String, Object> export = importExportService.exportWorkflow(workflowId, exportedBy);
         String filename = importExportService.getExportFilename(workflowId, w.getName());
         return ResponseEntity.ok()
@@ -74,7 +74,7 @@ public class ImportExportController {
     @Operation(summary = "Export All Workflows")
     public ResponseEntity<Map<String, Object>> exportAll(Authentication auth) {
         String userId = authenticationHelper.extractUserId(auth);
-        String exportedBy = authenticationHelper.extractUser(auth).map(u -> u.getUsername()).orElse(null);
+        String exportedBy = authenticationHelper.extractUsername(auth);
         Map<String, Object> result = importExportService.exportAll(userId, exportedBy);
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=workflows.json")

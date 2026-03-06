@@ -20,10 +20,11 @@ class WorkflowExecutorTest {
         mockLlmClient = (baseUrl, apiKey, model, messages) -> "mocked response";
         NodeTypeParser nodeTypeParser = new NodeTypeParser();
         NodeExecutorRegistry registry = new NodeExecutorRegistry(
-                new AgentNodeExecutor(mockLlmClient),
-                new ConditionNodeExecutor(),
-                new LoopNodeExecutor(),
-                new ToolNodeExecutor(),
+                List.of(
+                        new AgentNodeExecutor(mockLlmClient),
+                        new ConditionNodeExecutor(),
+                        new LoopNodeExecutor(),
+                        new ToolNodeExecutor()),
                 nodeTypeParser);
         executor = new WorkflowExecutor(registry);
     }
@@ -221,10 +222,11 @@ class WorkflowExecutorTest {
         };
         NodeTypeParser nodeTypeParser = new NodeTypeParser();
         NodeExecutorRegistry registry = new NodeExecutorRegistry(
-                new AgentNodeExecutor(failingClient),
-                new ConditionNodeExecutor(),
-                new LoopNodeExecutor(),
-                new ToolNodeExecutor(),
+                List.of(
+                        new AgentNodeExecutor(failingClient),
+                        new ConditionNodeExecutor(),
+                        new LoopNodeExecutor(),
+                        new ToolNodeExecutor()),
                 nodeTypeParser);
         WorkflowExecutor failingExecutor = new WorkflowExecutor(registry);
 

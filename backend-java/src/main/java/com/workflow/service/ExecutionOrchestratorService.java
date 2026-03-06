@@ -5,6 +5,7 @@ import com.workflow.dto.ExecutionResponse;
 import com.workflow.dto.ExecutionStatus;
 import com.workflow.entity.Execution;
 import com.workflow.engine.WorkflowExecutor;
+import com.workflow.util.EnvironmentUtils;
 import com.workflow.util.JsonStateUtils;
 import com.workflow.repository.ExecutionRepository;
 import org.slf4j.Logger;
@@ -43,11 +44,6 @@ public class ExecutionOrchestratorService {
         this.settingsService = settingsService;
         this.workflowExecutor = workflowExecutor;
         this.environment = environment;
-    }
-
-    private boolean isProduction() {
-        return Arrays.stream(environment.getActiveProfiles())
-                .anyMatch(p -> "production".equalsIgnoreCase(p));
     }
 
     @Transactional
@@ -112,7 +108,7 @@ public class ExecutionOrchestratorService {
             }
         } catch (Exception e) {
             log.error("Background execution {} failed: {}", executionId, e.getMessage(), e);
-            String errorMessage = isProduction() ? GENERIC_ERROR_MESSAGE
+            String errorMessage = EnvironmentUtils.isProduction(environment) ? GENERIC_ERROR_MESSAGE
                     : (e.getMessage() != null ? e.getMessage() : GENERIC_ERROR_MESSAGE);
             String logMessage = GENERIC_ERROR_MESSAGE.equals(errorMessage)
                     ? errorMessage : "Execution failed: " + errorMessage;
@@ -120,12 +116,7 @@ public class ExecutionOrchestratorService {
             executionRepository.findById(executionId).ifPresent(exec -> {
                 Map<String, Object> state = exec.getState() != null ? new HashMap<>(exec.getState()) : new HashMap<>();
                 List<Map<String, Object>> logs = new ArrayList<>(JsonStateUtils.getLogsList(state));
-                logs.add(Map.of(
-                        "timestamp", LocalDateTime.now().toString(),
-                        "level", "ERROR",
-                        "node_id", (Object) null,
-                        "message", msg
-                ));
+                logs.add(JsonStateUtils.createLogEntry("ERROR", null, msg));
                 state.put("logs", logs);
                 state.put("error", errorMessage);
                 exec.setStatus(ExecutionStatus.FAILED.getValue());

@@ -4,6 +4,7 @@ import com.workflow.exception.ResourceNotFoundException;
 import org.springframework.data.repository.CrudRepository;
 
 import java.util.Optional;
+import java.util.function.Supplier;
 
 /**
  * DRY-5: Centralizes findById-or-throw pattern.
@@ -36,5 +37,13 @@ public final class RepositoryUtils {
      */
     public static <T> T orElseThrow(Optional<T> optional, String message) {
         return optional.orElseThrow(() -> new ResourceNotFoundException(message));
+    }
+
+    /**
+     * Find entity by id or throw custom exception.
+     */
+    public static <T, ID> T findByIdOrThrow(CrudRepository<T, ID> repo, ID id,
+                                            Supplier<? extends RuntimeException> exceptionSupplier) {
+        return repo.findById(id).orElseThrow(exceptionSupplier);
     }
 }

@@ -1,8 +1,12 @@
 package com.workflow.util;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 
+import java.io.IOException;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
@@ -31,18 +35,34 @@ public class ErrorResponseBuilder {
      */
     public static ResponseEntity<Map<String, Object>> buildErrorResponse(
             String code, String message, HttpStatus status, String path) {
+        return ResponseEntity.status(status).body(buildErrorBody(code, message, path));
+    }
+
+    /**
+     * Build error response body map (Apigee-compatible). Use for servlet responses.
+     */
+    public static Map<String, Object> buildErrorBody(String code, String message, String path) {
         Map<String, Object> error = new HashMap<>();
         error.put("code", code);
-        error.put("message", message);
+        error.put("message", message != null ? message : "");
         error.put("timestamp", Instant.now().toString());
         if (path != null && !path.isBlank()) {
             error.put("path", path);
         }
-        
         Map<String, Object> response = new HashMap<>();
         response.put("error", error);
-        
-        return ResponseEntity.status(status).body(response);
+        return response;
+    }
+
+    /**
+     * Write error response to HttpServletResponse. Use for servlet entry points (401, 403).
+     */
+    public static void writeToServletResponse(HttpServletResponse response, ObjectMapper objectMapper,
+                                              String code, String message, int status, String path) throws IOException {
+        response.setStatus(status);
+        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+        response.setCharacterEncoding("UTF-8");
+        response.getWriter().write(objectMapper.writeValueAsString(buildErrorBody(code, message, path)));
     }
     
     /**
@@ -128,4 +148,5 @@ public class ErrorResponseBuilder {
     public static ResponseEntity<Map<String, Object>> forbidden(String message, String path) {
         return buildErrorResponse("403", message, HttpStatus.FORBIDDEN, path);
     }
+
 }

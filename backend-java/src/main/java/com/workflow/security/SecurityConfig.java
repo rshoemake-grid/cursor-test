@@ -95,8 +95,7 @@ public class SecurityConfig {
             log.warn("S-H2: CORS origins is '*' - setting allowCredentials to false (browsers reject * with credentials)");
             allowCreds = false;
         }
-        boolean isProduction = Arrays.stream(environment.getActiveProfiles())
-                .anyMatch(p -> "production".equalsIgnoreCase(p));
+        boolean isProduction = com.workflow.util.EnvironmentUtils.isProduction(environment);
         if (isProduction && origins.contains("*")) {
             throw new IllegalStateException(
                     "S-H2: In production, cors.allowed-origins must be explicit (e.g. https://yourdomain.com). " +
