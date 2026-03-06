@@ -49,6 +49,9 @@ def handle_execution_errors(func: Callable) -> Callable:
         except Exception as e:
             # Log unexpected errors and convert to HTTPException
             logger.error(f"Unexpected error in {func.__name__}: {e}", exc_info=True)
-            raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
+            # P2-7: In production, use generic message to avoid leaking internals
+            from ..config import get_settings
+            detail = "Internal server error" if get_settings().environment == "production" else f"Internal server error: {str(e)}"
+            raise HTTPException(status_code=500, detail=detail)
     
     return wrapper

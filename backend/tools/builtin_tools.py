@@ -1,5 +1,6 @@
 import ast
 import operator
+from pathlib import Path
 from typing import Any
 from .base import BaseTool, ToolParameter
 
@@ -129,8 +130,14 @@ class PythonExecutorTool(BaseTool):
         ]
     
     async def execute(self, code: str) -> Any:
-        """Execute Python code with safety restrictions"""
+        """Execute Python code with safety restrictions. Disabled in production."""
         try:
+            from backend.config import get_settings
+            if get_settings().environment == "production":
+                return {
+                    "error": "python_executor is disabled in production for security",
+                    "code": code
+                }
             # Create restricted globals
             safe_globals = {
                 "__builtins__": {
@@ -205,12 +212,12 @@ class FileReaderTool(BaseTool):
         ]
     
     async def execute(self, file_path: str, max_lines: int = 100) -> Any:
-        """Read file with safety checks"""
+        """Read file with safety checks. Validates path against LOCAL_FILE_BASE_PATH."""
         try:
-            # Safety: only allow reading from specific directories in production
-            # This is a simplified version
-            
-            with open(file_path, 'r', encoding='utf-8') as f:
+            from backend.utils.path_utils import validate_path_within_base, get_local_file_base_path
+            path = Path(file_path).expanduser().resolve()
+            validate_path_within_base(path, get_local_file_base_path())
+            with open(path, 'r', encoding='utf-8') as f:
                 lines = []
                 for i, line in enumerate(f):
                     if i >= max_lines:
@@ -218,15 +225,13 @@ class FileReaderTool(BaseTool):
                     lines.append(line.rstrip())
             
             return {
-                "file_path": file_path,
+                "file_path": str(path),
                 "lines_read": len(lines),
                 "content": "\n".join(lines),
                 "truncated": len(lines) >= max_lines
             }
-        
+        except ValueError as e:
+            return {"error": str(e), "file_path": file_path}
         except Exception as e:
-            return {
-                "error": str(e),
-                "file_path": file_path
-            }
+            return {"error": str(e), "file_path": file_path}
 

@@ -1,6 +1,11 @@
 from sqlalchemy import Column, String, Text, DateTime, JSON, Integer, Boolean, ForeignKey
-from datetime import datetime
+from datetime import datetime, timezone
 from .db import Base
+
+
+def _utc_now():
+    """P3-8: Use timezone-aware UTC. datetime.utcnow() is deprecated in Python 3.12+."""
+    return datetime.now(timezone.utc)
 
 
 class UserDB(Base):
@@ -14,7 +19,7 @@ class UserDB(Base):
     full_name = Column(String, nullable=True)
     is_active = Column(Boolean, default=True)
     is_admin = Column(Boolean, default=False)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=_utc_now)
     last_login = Column(DateTime, nullable=True)
 
 
@@ -40,8 +45,8 @@ class WorkflowDB(Base):
     views_count = Column(Integer, default=0)
     uses_count = Column(Integer, default=0)
     
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime, default=_utc_now)
+    updated_at = Column(DateTime, default=_utc_now, onupdate=_utc_now)
 
 
 class ExecutionDB(Base):
@@ -53,7 +58,7 @@ class ExecutionDB(Base):
     user_id = Column(String, ForeignKey("users.id"), nullable=True, index=True)  # Phase 4
     status = Column(String, nullable=False)
     state = Column(JSON, nullable=False)  # Stores full execution state
-    started_at = Column(DateTime, default=datetime.utcnow)
+    started_at = Column(DateTime, default=_utc_now)
     completed_at = Column(DateTime, nullable=True)
 
 
@@ -67,7 +72,7 @@ class WorkflowVersionDB(Base):
     definition = Column(JSON, nullable=False)
     change_notes = Column(Text, nullable=True)
     created_by = Column(String, ForeignKey("users.id"), nullable=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=_utc_now)
 
 
 class WorkflowShareDB(Base):
@@ -79,7 +84,7 @@ class WorkflowShareDB(Base):
     shared_with_user_id = Column(String, ForeignKey("users.id"), nullable=False, index=True)
     permission = Column(String, nullable=False)  # "view", "edit", "execute"
     shared_by = Column(String, ForeignKey("users.id"), nullable=False)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=_utc_now)
 
 
 class WorkflowTemplateDB(Base):
@@ -109,8 +114,8 @@ class WorkflowTemplateDB(Base):
     preview_image_url = Column(String, nullable=True)
     
     # Timestamps
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime, default=_utc_now)
+    updated_at = Column(DateTime, default=_utc_now, onupdate=_utc_now)
 
 
 class SettingsDB(Base):
@@ -119,7 +124,7 @@ class SettingsDB(Base):
     
     user_id = Column(String, primary_key=True, index=True)  # "anonymous" for unauthenticated users
     settings_data = Column(JSON, nullable=False)  # Stores LLMSettings as JSON
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    updated_at = Column(DateTime, default=_utc_now, onupdate=_utc_now)
     
     # Usage stats
     uses_count = Column(Integer, default=0)
@@ -130,8 +135,8 @@ class SettingsDB(Base):
     thumbnail_url = Column(String, nullable=True)
     preview_image_url = Column(String, nullable=True)
     
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime, default=_utc_now)
+    updated_at = Column(DateTime, default=_utc_now, onupdate=_utc_now)
 
 
 class WorkflowLikeDB(Base):
@@ -141,7 +146,7 @@ class WorkflowLikeDB(Base):
     id = Column(String, primary_key=True, index=True)
     workflow_id = Column(String, ForeignKey("workflows.id"), nullable=False, index=True)
     user_id = Column(String, ForeignKey("users.id"), nullable=False, index=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=_utc_now)
 
 
 class PasswordResetTokenDB(Base):
@@ -153,7 +158,7 @@ class PasswordResetTokenDB(Base):
     token = Column(String, unique=True, nullable=False, index=True)
     expires_at = Column(DateTime, nullable=False)
     used = Column(Boolean, default=False)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=_utc_now)
 
 
 class RefreshTokenDB(Base):
@@ -165,7 +170,7 @@ class RefreshTokenDB(Base):
     token = Column(String, unique=True, nullable=False, index=True)
     expires_at = Column(DateTime, nullable=False)
     revoked = Column(Boolean, default=False)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime, default=_utc_now)
 
 
 class PublishedAgentDB(Base):
@@ -184,6 +189,6 @@ class PublishedAgentDB(Base):
     author_id = Column(String, ForeignKey("users.id"), nullable=True, index=True)
     is_official = Column(Boolean, default=False)
     
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at = Column(DateTime, default=_utc_now)
+    updated_at = Column(DateTime, default=_utc_now, onupdate=_utc_now)
 

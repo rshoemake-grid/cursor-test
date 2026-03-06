@@ -1,5 +1,5 @@
 """Logging and WebSocket broadcasting for workflow execution (SRP)"""
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional
 
 from ...models.schemas import ExecutionState, ExecutionLogEntry, NodeState
@@ -23,7 +23,7 @@ class ExecutionBroadcaster:
         """Add a log entry and broadcast it"""
         if self.execution_state:
             log_entry = ExecutionLogEntry(
-                timestamp=datetime.utcnow(),
+                timestamp=datetime.now(timezone.utc),
                 level=level,
                 node_id=node_id,
                 message=message,

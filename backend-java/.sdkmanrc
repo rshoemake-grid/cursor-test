@@ -1,0 +1,2 @@
+# Use JDK 17 for this project (required for Gradle build compatibility)
+java=17.0.9-tem

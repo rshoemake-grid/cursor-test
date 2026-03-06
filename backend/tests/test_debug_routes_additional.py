@@ -4,12 +4,28 @@ Additional tests for debug_routes.py - workflow validation
 import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
 from backend.api.debug_routes import validate_workflow
-from backend.database.models import WorkflowDB
+from backend.database.models import WorkflowDB, UserDB
+import uuid
 from datetime import datetime
 
 
+@pytest.fixture
+async def test_user(db_session):
+    user = UserDB(
+        id=str(uuid.uuid4()),
+        username="testuser",
+        email="test@example.com",
+        hashed_password="hashed",
+        is_active=True,
+        is_admin=False
+    )
+    db_session.add(user)
+    await db_session.commit()
+    return user
+
+
 @pytest.mark.asyncio
-async def test_validate_workflow_orphan_nodes(db_session):
+async def test_validate_workflow_orphan_nodes(db_session, test_user):
     """Test validate_workflow with orphan nodes (lines 39-52)"""
     workflow = WorkflowDB(
         id="wf-123",
@@ -32,14 +48,14 @@ async def test_validate_workflow_orphan_nodes(db_session):
         mock_result.scalar_one_or_none.return_value = workflow
         mock_execute.return_value = mock_result
         
-        result = await validate_workflow(workflow_id="wf-123", db=db_session)
+        result = await validate_workflow(workflow_id="wf-123", db=db_session, current_user=test_user)
         
         assert len(result["warnings"]) > 0
         assert any(w["type"] == "orphan_nodes" for w in result["warnings"])
 
 
 @pytest.mark.asyncio
-async def test_validate_workflow_missing_start(db_session):
+async def test_validate_workflow_missing_start(db_session, test_user):
     """Test validate_workflow missing start node (lines 56-61)"""
     workflow = WorkflowDB(
         id="wf-123",
@@ -57,14 +73,14 @@ async def test_validate_workflow_missing_start(db_session):
         mock_result.scalar_one_or_none.return_value = workflow
         mock_execute.return_value = mock_result
         
-        result = await validate_workflow(workflow_id="wf-123", db=db_session)
+        result = await validate_workflow(workflow_id="wf-123", db=db_session, current_user=test_user)
         
         assert result["valid"] is False
         assert any(i["type"] == "missing_start" for i in result["issues"])
 
 
 @pytest.mark.asyncio
-async def test_validate_workflow_missing_end(db_session):
+async def test_validate_workflow_missing_end(db_session, test_user):
     """Test validate_workflow missing end node (lines 63-68)"""
     workflow = WorkflowDB(
         id="wf-123",
@@ -82,13 +98,13 @@ async def test_validate_workflow_missing_end(db_session):
         mock_result.scalar_one_or_none.return_value = workflow
         mock_execute.return_value = mock_result
         
-        result = await validate_workflow(workflow_id="wf-123", db=db_session)
+        result = await validate_workflow(workflow_id="wf-123", db=db_session, current_user=test_user)
         
         assert any(w["type"] == "missing_end" for w in result["warnings"])
 
 
 @pytest.mark.asyncio
-async def test_validate_workflow_cycle_detected(db_session):
+async def test_validate_workflow_cycle_detected(db_session, test_user):
     """Test validate_workflow with cycle (lines 98-103)"""
     workflow = WorkflowDB(
         id="wf-123",
@@ -112,14 +128,14 @@ async def test_validate_workflow_cycle_detected(db_session):
         mock_result.scalar_one_or_none.return_value = workflow
         mock_execute.return_value = mock_result
         
-        result = await validate_workflow(workflow_id="wf-123", db=db_session)
+        result = await validate_workflow(workflow_id="wf-123", db=db_session, current_user=test_user)
         
         assert result["valid"] is False
         assert any(i["type"] == "cycle_detected" for i in result["issues"])
 
 
 @pytest.mark.asyncio
-async def test_validate_workflow_missing_system_prompt(db_session):
+async def test_validate_workflow_missing_system_prompt(db_session, test_user):
     """Test validate_workflow missing system prompt (lines 106-116)"""
     workflow = WorkflowDB(
         id="wf-123",
@@ -144,6 +160,6 @@ async def test_validate_workflow_missing_system_prompt(db_session):
         mock_result.scalar_one_or_none.return_value = workflow
         mock_execute.return_value = mock_result
         
-        result = await validate_workflow(workflow_id="wf-123", db=db_session)
+        result = await validate_workflow(workflow_id="wf-123", db=db_session, current_user=test_user)
         
         assert any(w["type"] == "missing_system_prompt" for w in result["warnings"])

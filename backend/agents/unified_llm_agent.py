@@ -74,15 +74,8 @@ class UnifiedLLMAgent(BaseAgent):
     def _validate_api_key(self, api_key: str) -> None:
         """Validate that API key is not a placeholder - only flag obvious placeholders"""
         from ..utils.settings_utils import is_valid_api_key
-        
-        if not api_key:
-            raise ValueError(
-                "API key is empty. Please go to Settings, add an LLM provider with a valid API key, "
-                "enable it, and click 'Sync Now'."
-            )
-        
-        # Trim whitespace
-        api_key = api_key.strip()
+
+        api_key = (api_key or "").strip()
         if not api_key:
             raise ValueError(
                 "API key is empty. Please go to Settings, add an LLM provider with a valid API key, "
@@ -163,18 +156,14 @@ class UnifiedLLMAgent(BaseAgent):
                     "Please go to Settings, add a valid API key for this provider, enable it, and click 'Sync Now'."
                 )
             
-            # Debug logging
-            api_key_preview = api_key[:15] + "..." if len(api_key) > 15 else api_key
-            logger.debug(f"Using API key from provider '{provider_type}' for model '{model}': {api_key_preview} (length: {len(api_key)})")
+            # P2-4: Log provider/model only; never log API key fragments
+            logger.debug(f"Using API key from provider '{provider_type}' for model '{model}'")
             
             # Validate API key (should already be filtered, but double-check)
             try:
                 self._validate_api_key(api_key)
             except ValueError as e:
-                # Provide more helpful error message with debug info
                 logger.error(f"API key validation failed for provider '{provider_type}': {str(e)}")
-                logger.debug(f"   Key preview: {api_key_preview}")
-                logger.debug(f"   Key length: {len(api_key)}")
                 raise ValueError(
                     f"Provider '{provider_type}' for model '{model}' has an invalid API key. "
                     "Please go to Settings, update the API key for this provider with a valid key, enable it, and click 'Sync Now'."
@@ -245,10 +234,9 @@ class UnifiedLLMAgent(BaseAgent):
             # Forward key logs to execution logs if callback available (non-blocking)
             if self.log_callback:
                 try:
-                    # Don't await - let it run in background
                     asyncio.create_task(self.log_callback("INFO", self.node_id, f"Executing with provider '{provider_type}' and model '{model}'"))
-                except Exception:
-                    pass  # Don't let callback failures break execution
+                except Exception as e:
+                    logger.debug(f"Log callback failed (non-fatal): {e}")
             logger.info(f"Executing with provider '{provider_type}' and model '{model}'")
             
             from .llm_providers.registry import ProviderRegistry
@@ -258,8 +246,8 @@ class UnifiedLLMAgent(BaseAgent):
             if provider_type == "gemini" and self.log_callback:
                 try:
                     asyncio.create_task(self.log_callback("INFO", self.node_id, f"Calling Gemini API with model '{model}'"))
-                except Exception:
-                    pass
+                except Exception as e:
+                    logger.debug(f"Log callback failed (non-fatal): {e}")
             result = await strategy.execute(user_message, model, self.llm_config, self.config)
             
             # Ensure result is never None

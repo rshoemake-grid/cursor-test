@@ -23,7 +23,6 @@ def validate_path_within_base(resolved_path: Path, base_path: Optional[Path] = N
     Raises ValueError if path escapes base.
     """
     base = base_path or get_local_file_base_path()
-    # Skip validation when using default (cwd) - allows tests with temp dirs, backward compat
     if not os.getenv("LOCAL_FILE_BASE_PATH"):
         return
     resolved = resolved_path.resolve()

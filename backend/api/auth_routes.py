@@ -1,5 +1,5 @@
 """Authentication API routes for Phase 4"""
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from fastapi import APIRouter, Depends, HTTPException, status, Body
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -20,6 +20,46 @@ from backend.auth import (
 from backend.auth.auth import create_refresh_token, verify_refresh_token, REFRESH_TOKEN_EXPIRE_DAYS
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
+
+
+def _create_login_response(
+    user: UserDB,
+    db: AsyncSession,
+    access_token_expires: timedelta,
+) -> Token:
+    """P2-5: Shared helper for token creation and refresh. DRY for /token and /login."""
+    access_token = create_access_token(
+        data={"sub": user.username},
+        expires_delta=access_token_expires
+    )
+    refresh_token_expires = timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
+    refresh_token_jwt = create_refresh_token(
+        data={"sub": user.username, "user_id": user.id},
+        expires_delta=refresh_token_expires
+    )
+    refresh_token_db = RefreshTokenDB(
+        id=str(uuid.uuid4()),
+        user_id=user.id,
+        token=refresh_token_jwt,
+        expires_at=datetime.now(timezone.utc) + refresh_token_expires,
+        revoked=False
+    )
+    db.add(refresh_token_db)
+    return Token(
+        access_token=access_token,
+        token_type="bearer",
+        refresh_token=refresh_token_jwt,
+        expires_in=int(access_token_expires.total_seconds()),
+        user=UserResponse(
+            id=user.id,
+            username=user.username,
+            email=user.email,
+            full_name=user.full_name,
+            is_active=user.is_active,
+            is_admin=user.is_admin if user.is_admin is not None else False,
+            created_at=user.created_at
+        )
+    )
 
 
 @router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
@@ -128,47 +168,11 @@ async def login(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Inactive user"
         )
-    
-    # Create access token
+
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    access_token = create_access_token(
-        data={"sub": user.username},
-        expires_delta=access_token_expires
-    )
-    
-    # Create refresh token
-    refresh_token_expires = timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
-    refresh_token_jwt = create_refresh_token(
-        data={"sub": user.username, "user_id": user.id},
-        expires_delta=refresh_token_expires
-    )
-    
-    # Store refresh token in database
-    refresh_token_db = RefreshTokenDB(
-        id=str(uuid.uuid4()),
-        user_id=user.id,
-        token=refresh_token_jwt,
-        expires_at=datetime.utcnow() + refresh_token_expires,
-        revoked=False
-    )
-    db.add(refresh_token_db)
+    token = _create_login_response(user, db, access_token_expires)
     await db.commit()
-    
-    return Token(
-        access_token=access_token,
-        token_type="bearer",
-        refresh_token=refresh_token_jwt,
-        expires_in=ACCESS_TOKEN_EXPIRE_MINUTES * 60,  # seconds
-        user=UserResponse(
-            id=user.id,
-            username=user.username,
-            email=user.email,
-            full_name=user.full_name,
-            is_active=user.is_active,
-            is_admin=user.is_admin if user.is_admin is not None else False,
-            created_at=user.created_at
-        )
-    )
+    return token
 
 
 @router.post("/login", response_model=Token)
@@ -213,53 +217,11 @@ async def login_json(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Inactive user"
         )
-    
-    # Create access token with longer expiration if "remember me" is checked
-    if user_data.remember_me:
-        # 7 days for "remember me" (still use refresh token for security)
-        access_token_expires = timedelta(days=7)
-    else:
-        # Default expiration
-        access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    
-    access_token = create_access_token(
-        data={"sub": user.username},
-        expires_delta=access_token_expires
-    )
-    
-    # Create refresh token
-    refresh_token_expires = timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
-    refresh_token_jwt = create_refresh_token(
-        data={"sub": user.username, "user_id": user.id},
-        expires_delta=refresh_token_expires
-    )
-    
-    # Store refresh token in database
-    refresh_token_db = RefreshTokenDB(
-        id=str(uuid.uuid4()),
-        user_id=user.id,
-        token=refresh_token_jwt,
-        expires_at=datetime.utcnow() + refresh_token_expires,
-        revoked=False
-    )
-    db.add(refresh_token_db)
+
+    access_token_expires = timedelta(days=7) if user_data.remember_me else timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    token = _create_login_response(user, db, access_token_expires)
     await db.commit()
-    
-    return Token(
-        access_token=access_token,
-        token_type="bearer",
-        refresh_token=refresh_token_jwt,
-        expires_in=int(access_token_expires.total_seconds()),
-        user=UserResponse(
-            id=user.id,
-            username=user.username,
-            email=user.email,
-            full_name=user.full_name,
-            is_active=user.is_active,
-            is_admin=user.is_admin if user.is_admin is not None else False,
-            created_at=user.created_at
-        )
-    )
+    return token
 
 
 @router.post("/forgot-password", status_code=status.HTTP_200_OK)
@@ -282,7 +244,7 @@ async def forgot_password(
     reset_token = secrets.token_urlsafe(32)
     
     # Create reset token record (expires in 1 hour)
-    expires_at = datetime.utcnow() + timedelta(hours=1)
+    expires_at = datetime.now(timezone.utc) + timedelta(hours=1)
     reset_token_db = PasswordResetTokenDB(
         id=str(uuid.uuid4()),
         user_id=user.id,
@@ -294,17 +256,8 @@ async def forgot_password(
     db.add(reset_token_db)
     await db.commit()
     
-    # TODO: Send email with reset link
-    # For now, we'll return the token in development (remove in production!)
-    # In production, send email with link like: /reset-password?token=reset_token
-    import os
-    if os.getenv("ENVIRONMENT") != "production":
-        return {
-            "message": "Password reset token generated. In production, this would be sent via email.",
-            "token": reset_token,  # Remove this in production!
-            "reset_url": f"/reset-password?token={reset_token}"
-        }
-    
+    # TODO: Send email with reset link (use secure channel; never return token in API response)
+    # P2-1: Never return token/URL in response - prevents leakage if env misconfigured
     return {"message": "If an account with that email exists, a password reset link has been sent."}
 
 
@@ -327,7 +280,7 @@ async def reset_password(
         )
     
     # Check if token is expired
-    if datetime.utcnow() > reset_token_db.expires_at:
+    if datetime.now(timezone.utc) > reset_token_db.expires_at:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Reset token has expired"
@@ -476,7 +429,7 @@ async def refresh_access_token(
         )
     
     # Check if token is expired
-    if refresh_token_db.expires_at < datetime.utcnow():
+    if refresh_token_db.expires_at < datetime.now(timezone.utc):
         # Mark as revoked
         refresh_token_db.revoked = True
         await db.commit()
@@ -521,7 +474,7 @@ async def refresh_access_token(
         id=str(uuid.uuid4()),
         user_id=user.id,
         token=new_refresh_token_jwt,
-        expires_at=datetime.utcnow() + refresh_token_expires,
+        expires_at=datetime.now(timezone.utc) + refresh_token_expires,
         revoked=False
     )
     db.add(new_refresh_token_db)

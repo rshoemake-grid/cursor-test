@@ -1,5 +1,5 @@
 from typing import List, Dict, Any, Optional
-from datetime import datetime
+from datetime import datetime, timezone
 from collections import deque
 import chromadb
 from chromadb.config import Settings
@@ -21,7 +21,7 @@ class ConversationMemory:
         message = {
             "role": role,
             "content": content,
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             "metadata": metadata or {}
         }
         self.messages.append(message)
@@ -82,7 +82,7 @@ class VectorMemory:
             documents=[content],
             metadatas=[{
                 **(metadata or {}),
-                "timestamp": datetime.utcnow().isoformat()
+                "timestamp": datetime.now(timezone.utc).isoformat()
             }],
             ids=[memory_id]
         )

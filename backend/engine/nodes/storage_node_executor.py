@@ -1,11 +1,16 @@
 """Storage node execution (read/write to GCP, AWS, local filesystem)"""
 import asyncio
+import os
+from concurrent.futures import ThreadPoolExecutor
 from typing import Any, Callable, Awaitable, Dict, List, Optional
 
 from ...inputs import read_from_input_source, write_to_input_source
 from ...utils.logger import get_logger
 
 logger = get_logger(__name__)
+
+# P2-11: Bounded executor for blocking I/O (GCP, AWS, local filesystem)
+_STORAGE_EXECUTOR = ThreadPoolExecutor(max_workers=min(32, (os.cpu_count() or 4) + 4))
 
 
 def _read_mode_output(
@@ -72,7 +77,7 @@ async def execute_storage_node(
         await log_fn("INFO", node_id, f"Writing to {node_type} storage (mode: {mode})")
         loop = asyncio.get_event_loop()
         write_result = await loop.run_in_executor(
-            None,
+            _STORAGE_EXECUTOR,
             write_to_input_source,
             node_type,
             input_config,
@@ -85,7 +90,7 @@ async def execute_storage_node(
     await log_fn("INFO", node_id, f"Reading from {node_type} storage")
     loop = asyncio.get_event_loop()
     raw_output = await loop.run_in_executor(
-        None,
+        _STORAGE_EXECUTOR,
         read_from_input_source,
         node_type,
         input_config,

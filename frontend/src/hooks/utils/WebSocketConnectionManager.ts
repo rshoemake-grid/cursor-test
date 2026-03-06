@@ -52,6 +52,8 @@ export interface WebSocketManagerConfig {
   maxReconnectAttempts: number
   webSocketFactory: WebSocketFactory
   windowLocation: WindowLocation | null
+  /** S-H3: Auth token for WebSocket handshake (?token=xxx). When provided, backend validates ownership. */
+  getAuthToken?: () => string | null
   logger: {
     debug: (message: string, ...args: any[]) => void
     error: (message: string, ...args: any[]) => void
@@ -140,7 +142,8 @@ export class WebSocketConnectionManager {
     // Close existing connection
     this.close()
 
-    const wsUrl = buildWebSocketUrl(this.config.executionId!, this.config.windowLocation)
+    const authToken = this.config.getAuthToken?.() ?? null
+    const wsUrl = buildWebSocketUrl(this.config.executionId!, this.config.windowLocation, authToken)
     this.config.logger.debug(`[WebSocket] Connecting to ${wsUrl}`)
 
     try {

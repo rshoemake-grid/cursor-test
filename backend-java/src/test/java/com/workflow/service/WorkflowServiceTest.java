@@ -7,6 +7,7 @@ import com.workflow.entity.Workflow;
 import com.workflow.exception.ResourceNotFoundException;
 import com.workflow.exception.ValidationException;
 import com.workflow.repository.WorkflowRepository;
+import com.workflow.repository.WorkflowShareRepository;
 import com.workflow.repository.WorkflowTemplateRepository;
 import com.workflow.util.WorkflowMapper;
 import org.junit.jupiter.api.BeforeEach;
@@ -31,6 +32,9 @@ class WorkflowServiceTest {
     private WorkflowRepository workflowRepository;
 
     @Mock
+    private WorkflowShareRepository workflowShareRepository;
+
+    @Mock
     private WorkflowTemplateRepository workflowTemplateRepository;
 
     private WorkflowMapper workflowMapper;  // Use real instance instead of mock
@@ -50,7 +54,7 @@ class WorkflowServiceTest {
         ObjectMapper objectMapper = new ObjectMapper();
         objectMapper.registerModule(new JavaTimeModule());
         workflowMapper = new WorkflowMapper(objectMapper);
-        ownershipService = new WorkflowOwnershipService(workflowRepository);
+        ownershipService = new WorkflowOwnershipService(workflowRepository, workflowShareRepository);
 
         // Manually create service instance since @InjectMocks doesn't work with manual construction
         workflowService = new WorkflowService(workflowRepository, workflowTemplateRepository, workflowMapper, ownershipService);

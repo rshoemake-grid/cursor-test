@@ -1,10 +1,17 @@
 """
 Configuration management for the workflow engine.
 Uses Pydantic Settings for type-safe configuration with environment variable support.
+
+API keys (openai_api_key, anthropic_api_key, gemini_api_key) are never logged or exposed.
+Use model_dump(exclude={"openai_api_key", "anthropic_api_key", "gemini_api_key"}) when serializing.
 """
 from pydantic_settings import BaseSettings
 from typing import Optional, List
 from functools import lru_cache
+
+
+# Fields that must never be logged or serialized
+_SENSITIVE_FIELDS = frozenset({"openai_api_key", "anthropic_api_key", "gemini_api_key"})
 
 
 class Settings(BaseSettings):
@@ -39,7 +46,7 @@ class Settings(BaseSettings):
     # Server
     host: str = "0.0.0.0"
     port: int = 8000
-    reload: bool = True
+    reload: bool = True  # P3-6: Set reload=False in production via env (ENVIRONMENT=production)
     
     # Execution
     execution_timeout: int = 300  # seconds
@@ -54,11 +61,25 @@ class Settings(BaseSettings):
         env_file_encoding = "utf-8"
         case_sensitive = False
 
+    def model_dump_safe(self, **kwargs):
+        """Dump settings excluding API keys. Use when logging or serializing."""
+        return self.model_dump(exclude=_SENSITIVE_FIELDS, **kwargs)
+
+    def __repr__(self) -> str:
+        """Avoid exposing API keys in repr/logs."""
+        safe = self.model_dump_safe()
+        return f"Settings({', '.join(f'{k}={v!r}' for k, v in safe.items())})"
+
 
 @lru_cache()
 def get_settings() -> Settings:
     """Get cached settings instance"""
     return Settings()
+
+
+def clear_settings_cache() -> None:
+    """P2-10: Clear settings cache for tests. Call in conftest or before tests that need fresh env."""
+    get_settings.cache_clear()
 
 
 # Global settings instance

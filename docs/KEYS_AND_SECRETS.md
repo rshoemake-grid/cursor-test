@@ -30,4 +30,4 @@ The following are in `.gitignore` and will **not** be committed:
 1. Copy `.env.example` to `.env`
 2. Fill in required values (see `.env.example` comments)
 3. In production, set `SECRET_KEY` and `ENVIRONMENT=production`
-4. Optionally set `LOCAL_FILE_BASE_PATH` to restrict file system access
+4. **In production, set `LOCAL_FILE_BASE_PATH`** to restrict file system access. Path validation (path traversal protection) only runs when `LOCAL_FILE_BASE_PATH` is set. Without it, local file system nodes can access any path on the server.

@@ -6,6 +6,7 @@ import com.workflow.dto.WorkflowResponse;
 import com.workflow.dto.WorkflowTemplateResponse;
 import com.workflow.entity.Workflow;
 import com.workflow.entity.WorkflowTemplate;
+import com.workflow.exception.ForbiddenException;
 import com.workflow.exception.ResourceNotFoundException;
 import com.workflow.exception.ValidationException;
 import com.workflow.repository.WorkflowRepository;
@@ -176,12 +177,15 @@ public class WorkflowService {
         for (String id : workflowIds) {
             try {
                 Workflow w = workflowRepository.findById(id).orElse(null);
-                if (w != null && userId.equals(w.getOwnerId())) {
+                if (w != null) {
+                    ownershipService.assertOwner(w, userId);
                     workflowRepository.deleteById(id);
                     deleted++;
                 } else {
                     failed.add(id);
                 }
+            } catch (ForbiddenException e) {
+                failed.add(id);
             } catch (Exception e) {
                 failed.add(id);
             }

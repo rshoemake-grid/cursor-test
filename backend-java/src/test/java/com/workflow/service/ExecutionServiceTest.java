@@ -163,7 +163,7 @@ class ExecutionServiceTest {
 
         assertNotNull(result);
         assertEquals(ExecutionStatus.CANCELLED.getValue(), result.getStatus());
-        verify(executionRepository).findById(EXEC_ID);
+        verify(executionRepository, atLeast(2)).findById(EXEC_ID);
         verify(executionRepository).save(any(Execution.class));
     }
 

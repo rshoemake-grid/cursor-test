@@ -1,5 +1,5 @@
 """Authentication and authorization for Phase 4"""
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Optional
 from passlib.context import CryptContext
 from jose import JWTError, jwt
@@ -11,13 +11,17 @@ import os
 
 from backend.database.models import UserDB
 from backend.database.db import get_db
+from backend.config import get_settings
 
 # Configuration - keys from environment only (never in code)
 # Set SECRET_KEY and REFRESH_TOKEN_SECRET_KEY in .env or environment (see .env.example)
+# P3-1: Dev fallback below is insecure. Set SECRET_KEY in .env to avoid token forgery if env misconfigured.
+
+
 def _get_secret_key() -> str:
     key = os.getenv("SECRET_KEY")
     if not key or not key.strip():
-        if os.getenv("ENVIRONMENT") == "production":
+        if get_settings().environment == "production":
             raise RuntimeError(
                 "SECRET_KEY must be set in production. "
                 "Set it in .env or environment variables. See .env.example for required keys."
@@ -45,19 +49,21 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/token", auto_error=Fals
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
-    """Verify a password against its hash"""
-    # Try bcrypt directly first (more reliable with version issues)
+    """Verify a password against its hash. P2-6: Use specific exceptions."""
     try:
         import bcrypt
         return bcrypt.checkpw(plain_password.encode('utf-8'), hashed_password.encode('utf-8'))
-    except Exception:
-        pass
-    
-    # Fallback to passlib if bcrypt fails
-    try:
-        return pwd_context.verify(plain_password, hashed_password)
+    except (ValueError, TypeError, AttributeError):
+        pass  # Invalid hash format, try passlib
     except Exception:
         return False
+
+    try:
+        return pwd_context.verify(plain_password, hashed_password)
+    except (ValueError, TypeError, AttributeError):
+        return False
+    except Exception:
+        return False  # Verification failed
 
 
 def get_password_hash(password: str) -> str:
@@ -69,9 +75,9 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -
     """Create a JWT access token"""
     to_encode = data.copy()
     if expires_delta:
-        expire = datetime.utcnow() + expires_delta
+        expire = datetime.now(timezone.utc) + expires_delta
     else:
-        expire = datetime.utcnow() + timedelta(minutes=15)
+        expire = datetime.now(timezone.utc) + timedelta(minutes=15)
     to_encode.update({"exp": expire, "type": "access"})
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
@@ -81,9 +87,9 @@ def create_refresh_token(data: dict, expires_delta: Optional[timedelta] = None) 
     """Create a JWT refresh token"""
     to_encode = data.copy()
     if expires_delta:
-        expire = datetime.utcnow() + expires_delta
+        expire = datetime.now(timezone.utc) + expires_delta
     else:
-        expire = datetime.utcnow() + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
+        expire = datetime.now(timezone.utc) + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
     to_encode.update({"exp": expire, "type": "refresh"})
     encoded_jwt = jwt.encode(to_encode, REFRESH_TOKEN_SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt

@@ -4,7 +4,7 @@ Thread-safe metrics collection compatible with Apigee analytics.
 """
 from typing import Dict, Any
 from collections import defaultdict
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import threading
 import time
 
@@ -19,8 +19,8 @@ class MetricsCollector:
         self._endpoint_counts: Dict[str, int] = defaultdict(int)
         self._endpoint_errors: Dict[str, int] = defaultdict(int)
         self._status_codes: Dict[int, int] = defaultdict(int)
-        self._start_time = datetime.utcnow()
-        self._last_reset = datetime.utcnow()
+        self._start_time = datetime.now(timezone.utc)
+        self._last_reset = datetime.now(timezone.utc)
     
     def record_request(self, endpoint: str, status_code: int, latency_ms: float):
         """Record a request metric"""
@@ -37,7 +37,7 @@ class MetricsCollector:
     def get_metrics(self) -> Dict[str, Any]:
         """Get current metrics snapshot"""
         with self._lock:
-            uptime_seconds = (datetime.utcnow() - self._start_time).total_seconds()
+            uptime_seconds = (datetime.now(timezone.utc) - self._start_time).total_seconds()
             avg_latency_ms = (
                 self._total_latency_ms / self._request_count 
                 if self._request_count > 0 
@@ -64,7 +64,7 @@ class MetricsCollector:
                 "endpoint_errors": dict(self._endpoint_errors),
                 "status_codes": dict(self._status_codes),
                 "last_reset": self._last_reset.isoformat(),
-                "timestamp": datetime.utcnow().isoformat()
+                "timestamp": datetime.now(timezone.utc).isoformat()
             }
     
     def reset(self):
@@ -76,7 +76,7 @@ class MetricsCollector:
             self._endpoint_counts.clear()
             self._endpoint_errors.clear()
             self._status_codes.clear()
-            self._last_reset = datetime.utcnow()
+            self._last_reset = datetime.now(timezone.utc)
 
 # Global metrics instance
 metrics_collector = MetricsCollector()

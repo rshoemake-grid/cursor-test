@@ -15,7 +15,6 @@ import com.workflow.repository.WorkflowVersionRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -46,7 +45,7 @@ class SharingServiceTest {
     @Mock
     private UserRepository userRepository;
 
-    @InjectMocks
+    private WorkflowOwnershipService ownershipService;  // Real instance with mocked repos
     private SharingService sharingService;
 
     private static final String OWNER_ID = "owner-id";
@@ -86,6 +85,10 @@ class SharingServiceTest {
         version.setDefinition(Map.of("nodes", List.of(), "edges", List.of()));
         version.setCreatedBy(OWNER_ID);
         version.setCreatedAt(LocalDateTime.now());
+
+        ownershipService = new WorkflowOwnershipService(workflowRepository, shareRepository);
+        sharingService = new SharingService(shareRepository, versionRepository, workflowRepository,
+                userRepository, ownershipService);
     }
 
     @Test

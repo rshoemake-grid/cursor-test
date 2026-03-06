@@ -36,26 +36,8 @@ public class ImportExportService {
 
     public Map<String, Object> exportWorkflow(String workflowId, String exportedBy) {
         Workflow w = RepositoryUtils.findByIdOrThrow(workflowRepository, workflowId, "Workflow not found");
+        Map<String, Object> workflowData = toWorkflowExportMap(w, true);
         Map<String, Object> export = new HashMap<>();
-        Map<String, Object> workflowData = new HashMap<>();
-        workflowData.put("id", w.getId());
-        workflowData.put("name", w.getName());
-        workflowData.put("description", w.getDescription());
-        workflowData.put("version", w.getVersion());
-        Map<String, Object> definition = w.getDefinition();
-        workflowData.put("nodes", definition != null ? workflowMapper.extractNodes(definition) : List.of());
-        workflowData.put("edges", definition != null ? workflowMapper.extractEdges(definition) : List.of());
-        workflowData.put("variables", definition != null ? workflowMapper.extractVariables(definition) : Map.of());
-        workflowData.put("owner_id", w.getOwnerId());
-        workflowData.put("is_public", w.getIsPublic());
-        workflowData.put("is_template", w.getIsTemplate());
-        workflowData.put("category", w.getCategory());
-        workflowData.put("tags", w.getTags());
-        workflowData.put("likes_count", w.getLikesCount());
-        workflowData.put("views_count", w.getViewsCount());
-        workflowData.put("uses_count", w.getUsesCount());
-        workflowData.put("created_at", w.getCreatedAt());
-        workflowData.put("updated_at", w.getUpdatedAt());
         export.put("workflow", workflowData);
         export.put("version", "1.0");
         export.put("exported_at", LocalDateTime.now());
@@ -124,18 +106,9 @@ public class ImportExportService {
 
     public Map<String, Object> exportAll(String userId, String exportedBy) {
         List<Workflow> workflows = workflowRepository.findByOwnerId(userId);
-        List<Map<String, Object>> exports = new ArrayList<>();
-        for (Workflow w : workflows) {
-            Map<String, Object> item = new HashMap<>();
-            item.put("id", w.getId());
-            item.put("name", w.getName());
-            item.put("description", w.getDescription());
-            item.put("version", w.getVersion());
-            item.put("definition", w.getDefinition());
-            item.put("created_at", w.getCreatedAt());
-            item.put("updated_at", w.getUpdatedAt());
-            exports.add(item);
-        }
+        List<Map<String, Object>> exports = workflows.stream()
+                .map(w -> toWorkflowExportMap(w, false))
+                .toList();
         Map<String, Object> result = new HashMap<>();
         result.put("export_version", "1.0");
         result.put("exported_at", LocalDateTime.now());
@@ -159,6 +132,36 @@ public class ImportExportService {
         if (definition.size() > MAX_IMPORT_DEFINITION_KEYS) {
             throw new ValidationException("Import definition exceeds maximum size");
         }
+    }
+
+    /**
+     * DRY: Build workflow map for export. fullDefinition=true expands nodes/edges/variables; false uses raw definition.
+     */
+    private Map<String, Object> toWorkflowExportMap(Workflow w, boolean fullDefinition) {
+        Map<String, Object> m = new HashMap<>();
+        m.put("id", w.getId());
+        m.put("name", w.getName());
+        m.put("description", w.getDescription());
+        m.put("version", w.getVersion());
+        m.put("created_at", w.getCreatedAt());
+        m.put("updated_at", w.getUpdatedAt());
+        if (fullDefinition) {
+            Map<String, Object> definition = w.getDefinition();
+            m.put("nodes", definition != null ? workflowMapper.extractNodes(definition) : List.of());
+            m.put("edges", definition != null ? workflowMapper.extractEdges(definition) : List.of());
+            m.put("variables", definition != null ? workflowMapper.extractVariables(definition) : Map.of());
+            m.put("owner_id", w.getOwnerId());
+            m.put("is_public", w.getIsPublic());
+            m.put("is_template", w.getIsTemplate());
+            m.put("category", w.getCategory());
+            m.put("tags", w.getTags());
+            m.put("likes_count", w.getLikesCount());
+            m.put("views_count", w.getViewsCount());
+            m.put("uses_count", w.getUsesCount());
+        } else {
+            m.put("definition", w.getDefinition());
+        }
+        return m;
     }
 
     private static String sanitizeFilename(String name, String workflowId) {

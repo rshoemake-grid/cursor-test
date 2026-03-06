@@ -288,4 +288,49 @@ async def test_execute_workflow_invalid_definition(db_session: AsyncSession, tes
             assert response.status_code in [200, 422, 500]
     finally:
         app.dependency_overrides.clear()
+@pytest.fixture
+async def user_b(db_session: AsyncSession):
+    """Second user for IDOR test (T-5)."""
+    u = UserDB(
+        id=str(uuid.uuid4()),
+        username="userb",
+        email="userb@test.com",
+        hashed_password="hashed",
+        is_active=True,
+        is_admin=False,
+    )
+    db_session.add(u)
+    await db_session.commit()
+    return u
+
+
+@pytest.mark.asyncio
+async def test_list_user_executions_returns_403_when_requesting_other_users(db_session, test_user, user_b):
+    """T-5: GET /users/{user_id}/executions returns 403 when user_id != current_user (IDOR prevention)."""
+    from main import app
+    from backend.auth import create_access_token
+    from backend.dependencies import get_execution_service
+    from backend.services.execution_service import ExecutionService
+
+    async def override_get_db():
+        yield db_session
+
+    async def override_get_execution_service():
+        return ExecutionService(db_session)
+
+    app.dependency_overrides[get_db] = override_get_db
+    app.dependency_overrides[get_execution_service] = override_get_execution_service
+
+    token = create_access_token(data={"sub": test_user.username})
+
+    try:
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
+            # Request user_b's executions while authenticated as test_user
+            response = await client.get(
+                f"/api/users/{user_b.id}/executions",
+                headers={"Authorization": f"Bearer {token}"},
+            )
+            assert response.status_code == 403
+    finally:
+        app.dependency_overrides.clear()
 

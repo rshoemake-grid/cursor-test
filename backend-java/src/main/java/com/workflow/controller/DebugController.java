@@ -70,7 +70,7 @@ public class DebugController {
     public ResponseEntity<Map<String, Object>> timeline(@PathVariable String executionId, Authentication auth) {
         String userId = authenticationHelper.extractUserIdRequired(auth);
         executionService.requireExecutionOwner(executionId, userId);
-        return ResponseEntity.ok(executionStatsService.getTimeline(executionId));
+        return ResponseEntity.ok(executionStatsService.getTimeline(executionId, userId));
     }
 
     @GetMapping("/execution/{executionId}/node/{nodeId}")
@@ -81,7 +81,7 @@ public class DebugController {
             Authentication auth) {
         String userId = authenticationHelper.extractUserIdRequired(auth);
         executionService.requireExecutionOwner(executionId, userId);
-        return ResponseEntity.ok(executionStatsService.getNodeDetails(executionId, nodeId));
+        return ResponseEntity.ok(executionStatsService.getNodeDetails(executionId, nodeId, userId));
     }
 
     @GetMapping("/workflow/{workflowId}/stats")
@@ -97,6 +97,6 @@ public class DebugController {
     public ResponseEntity<Map<String, Object>> exportExecution(@PathVariable String executionId, Authentication auth) {
         String userId = authenticationHelper.extractUserIdRequired(auth);
         executionService.requireExecutionOwner(executionId, userId);
-        return ResponseEntity.ok(executionExportService.exportExecution(executionId));
+        return ResponseEntity.ok(executionExportService.exportExecution(executionId, userId));
     }
 }

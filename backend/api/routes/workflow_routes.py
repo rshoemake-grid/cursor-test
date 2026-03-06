@@ -23,7 +23,7 @@ from ...utils.logger import get_logger
 from ...dependencies import get_workflow_service
 from ...services.workflow_service import WorkflowService
 from ...database import get_db
-from ...exceptions import WorkflowNotFoundError, WorkflowValidationError
+from ...exceptions import WorkflowNotFoundError, WorkflowValidationError, WorkflowForbiddenError
 from ...utils.workflow_reconstruction import reconstruct_nodes
 
 logger = get_logger(__name__)
@@ -330,6 +330,8 @@ async def update_workflow(
         )
     except WorkflowNotFoundError as e:
         raise HTTPException(status_code=404, detail=str(e))
+    except WorkflowForbiddenError as e:
+        raise HTTPException(status_code=403, detail=str(e))
     except WorkflowValidationError as e:
         raise HTTPException(status_code=422, detail=str(e))
     except Exception as e:
@@ -353,6 +355,8 @@ async def delete_workflow(
             raise HTTPException(status_code=404, detail=f"Workflow {workflow_id} not found")
     except WorkflowNotFoundError as e:
         raise HTTPException(status_code=404, detail=str(e))
+    except WorkflowForbiddenError as e:
+        raise HTTPException(status_code=403, detail=str(e))
     except Exception as e:
         logger.error(f"Error deleting workflow: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Error deleting workflow: {str(e)}")
@@ -368,7 +372,8 @@ async def publish_workflow(
     """Publish a workflow as a marketplace template"""
     workflow_service = get_workflow_service(db)
     workflow = await workflow_service.get_workflow(workflow_id)
-    
+    if workflow.owner_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Not authorized to publish this workflow")
     template = WorkflowTemplateDB(
         id=str(uuid4()),
         name=workflow.name,

@@ -138,7 +138,7 @@ class SettingsService(ISettingsService):
         Save LLM settings to database and update cache (SRP - single place for save logic).
         """
         from ..api.settings_routes import LLMSettings
-        from datetime import datetime
+        from datetime import datetime, timezone
 
         settings_data = settings.model_dump(mode='json') if hasattr(settings, 'model_dump') else settings
         if hasattr(settings, 'model_dump'):
@@ -151,7 +151,7 @@ class SettingsService(ISettingsService):
 
         if settings_db:
             settings_db.settings_data = settings_data
-            settings_db.updated_at = datetime.utcnow()
+            settings_db.updated_at = datetime.now(timezone.utc)
         else:
             settings_db = SettingsDB(
                 user_id=user_id,

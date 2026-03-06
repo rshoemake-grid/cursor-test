@@ -16,6 +16,7 @@ from sqlalchemy.orm import declarative_base
 
 from backend.database.models import WorkflowDB, ExecutionDB, SettingsDB, UserDB
 from backend.database.db import Base
+from backend.config import clear_settings_cache
 
 
 # Test database URL (in-memory SQLite for fast tests)
@@ -33,6 +34,14 @@ TestSessionLocal = async_sessionmaker(
     class_=AsyncSession,
     expire_on_commit=False
 )
+
+
+@pytest.fixture(autouse=True)
+def clear_settings_cache_before_test():
+    """P2-10: Clear settings cache so tests get fresh env (e.g. ENVIRONMENT, LOCAL_FILE_BASE_PATH)."""
+    clear_settings_cache()
+    yield
+    clear_settings_cache()
 
 
 @pytest.fixture(scope="function")

@@ -50,3 +50,30 @@ def test_settings_websocket_config():
     assert settings.websocket_ping_interval > 0
     assert settings.websocket_timeout > 0
 
+
+
+def test_settings_model_dump_safe_excludes_api_keys():
+    """API keys must never appear in model_dump_safe (for logging/serialization)."""
+    settings = Settings(
+        openai_api_key="sk-secret-key",
+        anthropic_api_key="sk-ant-secret",
+        gemini_api_key="secret-gemini",
+    )
+    safe = settings.model_dump_safe()
+    assert "openai_api_key" not in safe
+    assert "anthropic_api_key" not in safe
+    assert "gemini_api_key" not in safe
+    assert "database_url" in safe
+
+
+def test_settings_repr_excludes_api_keys():
+    """repr(settings) must not expose API keys."""
+    settings = Settings(
+        openai_api_key="sk-secret-key",
+        anthropic_api_key="sk-ant-secret",
+        gemini_api_key="secret-gemini",
+    )
+    r = repr(settings)
+    assert "sk-secret-key" not in r
+    assert "sk-ant-secret" not in r
+    assert "secret-gemini" not in r

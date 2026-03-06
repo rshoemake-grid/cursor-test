@@ -1,9 +1,11 @@
 package com.workflow.service;
 
 import com.workflow.entity.Workflow;
+import com.workflow.entity.WorkflowShare;
 import com.workflow.exception.ForbiddenException;
 import com.workflow.exception.ResourceNotFoundException;
 import com.workflow.repository.WorkflowRepository;
+import com.workflow.repository.WorkflowShareRepository;
 import com.workflow.util.RepositoryUtils;
 import org.springframework.stereotype.Service;
 
@@ -14,9 +16,12 @@ import org.springframework.stereotype.Service;
 @Service
 public class WorkflowOwnershipService {
     private final WorkflowRepository workflowRepository;
+    private final WorkflowShareRepository shareRepository;
 
-    public WorkflowOwnershipService(WorkflowRepository workflowRepository) {
+    public WorkflowOwnershipService(WorkflowRepository workflowRepository,
+                                    WorkflowShareRepository shareRepository) {
         this.workflowRepository = workflowRepository;
+        this.shareRepository = shareRepository;
     }
 
     /**
@@ -51,6 +56,26 @@ public class WorkflowOwnershipService {
             return;
         }
         if (userId == null || !workflow.getOwnerId().equals(userId)) {
+            throw new ForbiddenException("Not authorized to access this workflow");
+        }
+    }
+
+    /**
+     * Assert user can read workflow (owner, public, or shared with user).
+     */
+    public void assertCanReadOrShare(Workflow workflow, String userId) {
+        if (workflow == null) {
+            throw new ResourceNotFoundException("Workflow not found");
+        }
+        if (Boolean.TRUE.equals(workflow.getIsPublic())) {
+            return;
+        }
+        if (workflow.getOwnerId() != null && workflow.getOwnerId().equals(userId)) {
+            return;
+        }
+        boolean hasShare = userId != null && shareRepository.findBySharedWithUserId(userId).stream()
+                .anyMatch(s -> workflow.getId().equals(s.getWorkflowId()));
+        if (!hasShare) {
             throw new ForbiddenException("Not authorized to access this workflow");
         }
     }

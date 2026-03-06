@@ -1,6 +1,6 @@
 import uuid
 import asyncio
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional, Set
 
 from ..models.schemas import (
@@ -80,7 +80,7 @@ class WorkflowExecutorV3:
             workflow_id=self.workflow.id or "unknown",
             status=ExecutionStatus.RUNNING,
             variables={**self.workflow.variables, **filtered_inputs},
-            started_at=datetime.utcnow()
+            started_at=datetime.now(timezone.utc)
         )
         
         self._broadcaster = ExecutionBroadcaster(
@@ -107,7 +107,7 @@ class WorkflowExecutorV3:
                 await self._broadcaster.log("ERROR", None, "No nodes found in workflow!")
                 self.execution_state.status = ExecutionStatus.FAILED
                 self.execution_state.error = "Workflow contains no nodes"
-                self.execution_state.completed_at = datetime.utcnow()
+                self.execution_state.completed_at = datetime.now(timezone.utc)
                 await self._broadcaster.broadcast_error("Workflow contains no nodes")
                 return self.execution_state
             
@@ -121,7 +121,7 @@ class WorkflowExecutorV3:
                     last_node_state = list(self.execution_state.node_states.values())[-1]
                     self.execution_state.result = last_node_state.output
             
-            self.execution_state.completed_at = datetime.utcnow()
+            self.execution_state.completed_at = datetime.now(timezone.utc)
             await self._broadcaster.log("INFO", None, f"Workflow execution {self.execution_state.status.value}")
             
             # Broadcast completion
@@ -130,7 +130,7 @@ class WorkflowExecutorV3:
         except Exception as e:
             self.execution_state.status = ExecutionStatus.FAILED
             self.execution_state.error = str(e)
-            self.execution_state.completed_at = datetime.utcnow()
+            self.execution_state.completed_at = datetime.now(timezone.utc)
             await self._broadcaster.log("ERROR", None, f"Workflow execution failed: {str(e)}")
             await self._broadcaster.broadcast_error(str(e))
         
@@ -256,7 +256,7 @@ class WorkflowExecutorV3:
         node_state = NodeState(
             node_id=node.id,
             status=ExecutionStatus.RUNNING,
-            started_at=datetime.utcnow()
+            started_at=datetime.now(timezone.utc)
         )
         self.execution_state.node_states[node.id] = node_state
         self.execution_state.current_node = node.id
@@ -317,7 +317,7 @@ class WorkflowExecutorV3:
             # Update node state
             node_state.status = ExecutionStatus.COMPLETED
             node_state.output = output
-            node_state.completed_at = datetime.utcnow()
+            node_state.completed_at = datetime.now(timezone.utc)
             
             output_summary = str(output)[:100] + "..." if len(str(output)) > 100 else str(output)
             await self._broadcaster.log("INFO", node.id, f"Node completed with output: {output_summary}")
@@ -327,7 +327,7 @@ class WorkflowExecutorV3:
             
         except Exception as e:
             node_state.status = ExecutionStatus.FAILED
-            node_state.completed_at = datetime.utcnow()
+            node_state.completed_at = datetime.now(timezone.utc)
             
             # Get error message, handling empty or None cases
             error_msg = str(e) if e else "Unknown error"

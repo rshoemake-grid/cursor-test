@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
 from fastapi.responses import JSONResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
-from datetime import datetime
+from datetime import datetime, timezone
 import uuid
 import json
 
@@ -57,7 +57,7 @@ async def export_workflow(
             updated_at=workflow.updated_at
         ),
         version="1.0",
-        exported_at=datetime.utcnow(),
+        exported_at=datetime.now(timezone.utc),
         exported_by=current_user.username if current_user else None
     )
     
@@ -234,7 +234,7 @@ async def export_all_workflows(
     return JSONResponse(
         content={
             "export_version": "1.0",
-            "exported_at": datetime.utcnow().isoformat(),
+            "exported_at": datetime.now(timezone.utc).isoformat(),
             "exported_by": current_user.username,
             "workflows": exports
         },

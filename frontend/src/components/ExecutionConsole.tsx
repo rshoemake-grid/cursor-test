@@ -3,6 +3,7 @@ import { ChevronDown, ChevronUp, MessageSquare, Play, X } from 'lucide-react'
 import WorkflowChat from './WorkflowChat'
 // Domain-based imports - Phase 7
 import { useWebSocket } from '../hooks/execution'
+import { useAuth } from '../contexts/AuthContext'
 import ExecutionStatusBadge from './ExecutionStatusBadge'
 import LogLevelBadge from './LogLevelBadge'
 import { logger } from '../utils/logger'
@@ -38,6 +39,9 @@ export default function ExecutionConsole({
   onRemoveExecution,
   documentAdapter = defaultAdapters.createDocumentAdapter()
 }: ExecutionConsoleProps) {
+  const { token: authToken } = useAuth()
+  const authTokenRef = useRef(authToken)
+  authTokenRef.current = authToken
   const [isExpanded, setIsExpanded] = useState(false)
   const [height, setHeight] = useState(300)
   const [activeTab, setActiveTab] = useState<string>('chat')
@@ -123,10 +127,11 @@ export default function ExecutionConsole({
     onExecutionNodeUpdateRef.current = onExecutionNodeUpdate
   }, [onExecutionNodeUpdate])
 
-  // Set up WebSocket connection for active execution
+  // Set up WebSocket connection for active execution (S-H3: token for auth)
   useWebSocket({
     executionId: activeExecutionId,
     executionStatus: activeExecutionStatus,
+    getAuthToken: () => authTokenRef.current ?? null,
     onLog: (log) => {
       // Use refs instead of closure values to ensure values are always current under Stryker instrumentation
       // Refs are updated synchronously on every render, so they're always current when callback is invoked

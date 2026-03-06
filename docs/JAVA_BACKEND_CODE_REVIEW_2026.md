@@ -190,10 +190,10 @@
 
 | # | Finding | Action |
 |---|---------|--------|
-| 10 | Password reset tests | Add unit tests for `PasswordResetService` |
-| 11 | WebSocket auth tests | Add tests for invalid token and wrong execution ownership |
-| 12 | Consistent auth checks | Use `extractUserIdRequired` in SettingsController |
-| 13 | `getRunningExecutions` null safety | Reject or handle `userId == null` explicitly |
+| 10 | Password reset tests | ✅ **FIXED** – Added `PasswordResetServiceTest` |
+| 11 | WebSocket auth tests | ✅ **FIXED** – Added `WebSocketAuthHandshakeInterceptorTest` |
+| 12 | Consistent auth checks | ✅ **FIXED** – SettingsController uses `extractUserIdRequired` |
+| 13 | `getRunningExecutions` null safety | ✅ **FIXED** – Throws `IllegalArgumentException` when `userId` is null |
 
 ---
 

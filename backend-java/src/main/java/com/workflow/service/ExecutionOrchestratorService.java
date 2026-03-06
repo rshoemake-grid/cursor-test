@@ -6,7 +6,6 @@ import com.workflow.dto.ExecutionStatus;
 import com.workflow.entity.Execution;
 import com.workflow.engine.WorkflowExecutor;
 import com.workflow.util.EnvironmentUtils;
-import com.workflow.util.JsonStateUtils;
 import com.workflow.repository.ExecutionRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,17 +29,20 @@ public class ExecutionOrchestratorService {
 
     private final WorkflowService workflowService;
     private final ExecutionRepository executionRepository;
+    private final ExecutionService executionService;
     private final SettingsService settingsService;
     private final WorkflowExecutor workflowExecutor;
     private final Environment environment;
 
     public ExecutionOrchestratorService(WorkflowService workflowService,
                                        ExecutionRepository executionRepository,
+                                       ExecutionService executionService,
                                        SettingsService settingsService,
                                        WorkflowExecutor workflowExecutor,
                                        Environment environment) {
         this.workflowService = workflowService;
         this.executionRepository = executionRepository;
+        this.executionService = executionService;
         this.settingsService = settingsService;
         this.workflowExecutor = workflowExecutor;
         this.environment = environment;
@@ -112,18 +114,8 @@ public class ExecutionOrchestratorService {
                     : (e.getMessage() != null ? e.getMessage() : GENERIC_ERROR_MESSAGE);
             String logMessage = GENERIC_ERROR_MESSAGE.equals(errorMessage)
                     ? errorMessage : "Execution failed: " + errorMessage;
-            final String msg = logMessage;
-            executionRepository.findById(executionId).ifPresent(exec -> {
-                Map<String, Object> state = exec.getState() != null ? new HashMap<>(exec.getState()) : new HashMap<>();
-                List<Map<String, Object>> logs = new ArrayList<>(JsonStateUtils.getLogsList(state));
-                logs.add(JsonStateUtils.createLogEntry("ERROR", null, msg));
-                state.put("logs", logs);
-                state.put("error", errorMessage);
-                exec.setStatus(ExecutionStatus.FAILED.getValue());
-                exec.setState(state);
-                exec.setCompletedAt(LocalDateTime.now());
-                executionRepository.save(exec);
-            });
+            executionService.appendLogAndUpdateExecutionState(executionId, userId, "ERROR", null, logMessage,
+                    ExecutionStatus.FAILED.getValue(), errorMessage);
         }
     }
 

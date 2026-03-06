@@ -18,13 +18,17 @@ import java.util.Map;
 public class ExecutionExportService {
     private final ExecutionRepository executionRepository;
     private final WorkflowRepository workflowRepository;
+    private final ExecutionService executionService;
 
-    public ExecutionExportService(ExecutionRepository executionRepository, WorkflowRepository workflowRepository) {
+    public ExecutionExportService(ExecutionRepository executionRepository, WorkflowRepository workflowRepository,
+                                  ExecutionService executionService) {
         this.executionRepository = executionRepository;
         this.workflowRepository = workflowRepository;
+        this.executionService = executionService;
     }
 
-    public Map<String, Object> exportExecution(String executionId) {
+    public Map<String, Object> exportExecution(String executionId, String userId) {
+        executionService.requireExecutionOwner(executionId, userId);
         Execution e = RepositoryUtils.findByIdOrThrow(executionRepository, executionId, "Execution not found");
         Workflow w = workflowRepository.findById(e.getWorkflowId()).orElse(null);
 

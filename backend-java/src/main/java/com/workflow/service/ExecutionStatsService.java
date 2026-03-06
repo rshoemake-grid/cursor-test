@@ -22,9 +22,11 @@ public class ExecutionStatsService {
     private static final int MAX_STATS_LIMIT = 5000;
 
     private final ExecutionRepository executionRepository;
+    private final ExecutionService executionService;
 
-    public ExecutionStatsService(ExecutionRepository executionRepository) {
+    public ExecutionStatsService(ExecutionRepository executionRepository, ExecutionService executionService) {
         this.executionRepository = executionRepository;
+        this.executionService = executionService;
     }
 
     public List<Map<String, Object>> getExecutionHistory(String workflowId, int limit, String status) {
@@ -36,7 +38,8 @@ public class ExecutionStatsService {
         return executions.stream().map(this::toHistoryEntry).toList();
     }
 
-    public Map<String, Object> getTimeline(String executionId) {
+    public Map<String, Object> getTimeline(String executionId, String userId) {
+        executionService.requireExecutionOwner(executionId, userId);
         Execution e = RepositoryUtils.findByIdOrThrow(executionRepository, executionId, "Execution not found");
         Map<String, Object> state = e.getState() != null ? e.getState() : Map.of();
         Map<String, Object> result = new HashMap<>();
@@ -49,7 +52,8 @@ public class ExecutionStatsService {
         return result;
     }
 
-    public Map<String, Object> getNodeDetails(String executionId, String nodeId) {
+    public Map<String, Object> getNodeDetails(String executionId, String nodeId, String userId) {
+        executionService.requireExecutionOwner(executionId, userId);
         Execution e = RepositoryUtils.findByIdOrThrow(executionRepository, executionId, "Execution not found");
         Map<String, Object> state = e.getState() != null ? e.getState() : Map.of();
         Map<String, Object> nodeStates = JsonStateUtils.getMap(state, "node_states");

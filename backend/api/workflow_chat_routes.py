@@ -1,4 +1,8 @@
-"""Re-export for backward compatibility. Use backend.api.workflow_chat instead."""
+"""
+P3-12: Re-export for backward compatibility. DEPRECATED.
+Use: from backend.api.workflow_chat import router, ...
+Migration: Replace workflow_chat_routes with workflow_chat. Removal planned v2.0.
+"""
 from openai import AsyncOpenAI  # For test patching
 
 from backend.api.workflow_chat import router

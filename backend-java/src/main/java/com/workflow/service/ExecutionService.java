@@ -110,17 +110,10 @@ public class ExecutionService {
             throw new IllegalArgumentException("Execution " + executionId + " is not in a cancellable state (current status: " + status + ")");
         }
 
-        execution.setStatus(ExecutionStatus.CANCELLED.getValue());
-        execution.setCompletedAt(LocalDateTime.now());
-
-        Map<String, Object> state = execution.getState() != null ? new HashMap<>(execution.getState()) : new HashMap<>();
-        List<Map<String, Object>> logs = new ArrayList<>(JsonStateUtils.getLogsList(state));
-        logs.add(JsonStateUtils.createLogEntry("INFO", null, "Execution cancelled by user"));
-        state.put("logs", logs);
-        state.put("status", ExecutionStatus.CANCELLED.getValue());
-        execution.setState(state);
-
-        execution = executionRepository.save(execution);
+        appendLogAndUpdateExecutionState(executionId, userId, "INFO", null, "Execution cancelled by user",
+                ExecutionStatus.CANCELLED.getValue(), null);
+        execution = executionRepository.findById(executionId)
+                .orElseThrow(() -> new ExecutionNotFoundException("Execution not found: " + executionId));
         log.info("Cancelled execution {}", executionId);
         return toResponse(execution);
     }
@@ -145,6 +138,26 @@ public class ExecutionService {
                 execution.getCompletedAt(),
                 logs
         );
+    }
+
+    /**
+     * Append log entry and update execution status. DRY: used by ExecutionOrchestratorService (failure) and cancelExecution.
+     */
+    public void appendLogAndUpdateExecutionState(String executionId, String userId, String level, String nodeId,
+                                                  String message, String newStatus, String errorMessage) {
+        Execution exec = RepositoryUtils.findByIdOrThrow(executionRepository, executionId,
+                () -> new ExecutionNotFoundException("Execution not found: " + executionId));
+        assertExecutionOwner(exec, userId);
+        Map<String, Object> state = exec.getState() != null ? new HashMap<>(exec.getState()) : new HashMap<>();
+        List<Map<String, Object>> logs = new ArrayList<>(JsonStateUtils.getLogsList(state));
+        logs.add(JsonStateUtils.createLogEntry(level, nodeId, message));
+        state.put("logs", logs);
+        state.put("status", newStatus);
+        if (errorMessage != null) state.put("error", errorMessage);
+        exec.setStatus(newStatus);
+        exec.setState(state);
+        exec.setCompletedAt(LocalDateTime.now());
+        executionRepository.save(exec);
     }
 
     /**

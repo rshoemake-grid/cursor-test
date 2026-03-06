@@ -30,6 +30,9 @@ from ..utils.path_utils import validate_path_within_base
 
 logger = get_logger(__name__)
 
+# P3-4: Named constant for filename increment safety cap
+MAX_FILENAME_INCREMENT_ATTEMPTS = 10000
+
 
 def _serialize_for_write(data: Any, as_bytes: bool = False, indent: int = 2) -> tuple[Any, str]:
     """Serialize data for write. Returns (content, content_type). DRY across handlers."""
@@ -106,8 +109,9 @@ class GCPBucketHandler(InputSourceHandler):
             except json.JSONDecodeError:
                 return content
         else:
-            # List all objects in bucket
-            blobs = bucket.list_blobs()
+            # P3-10: Limit list size to avoid memory issues with large buckets
+            _MAX_BLOB_LIST = 10000
+            blobs = bucket.list_blobs(max_results=_MAX_BLOB_LIST)
             return [blob.name for blob in blobs]
     
     @staticmethod
@@ -181,8 +185,15 @@ class AWSS3Handler(InputSourceHandler):
                     return json.loads(content)
                 except json.JSONDecodeError:
                     return content
-            except s3_client.exceptions.NoSuchKey:
-                raise FileNotFoundError(f"Object {object_key} not found in bucket {bucket_name}")
+            except Exception as e:
+                # P3-9: Use ClientError; s3_client.exceptions.NoSuchKey may not exist on all clients
+                try:
+                    from botocore.exceptions import ClientError
+                    if isinstance(e, ClientError) and e.response.get("Error", {}).get("Code") == "NoSuchKey":
+                        raise FileNotFoundError(f"Object {object_key} not found in bucket {bucket_name}")
+                except ImportError:
+                    pass
+                raise
         else:
             # List all objects in bucket
             response = s3_client.list_objects_v2(Bucket=bucket_name)
@@ -296,9 +307,9 @@ class GCPPubSubHandler(InputSourceHandler):
         topic_path = publisher.topic_path(project_id, topic_name)
         
         message_data, _ = _serialize_for_write(data, as_bytes=True, indent=0)
-        # Publish message
+        # P2-12: Add timeout to avoid indefinite block (caller runs in executor)
         future = publisher.publish(topic_path, message_data)
-        message_id = future.result()
+        message_id = future.result(timeout=60)
         
         return {"status": "success", "topic": topic_name, "message_id": message_id}
 
@@ -349,11 +360,20 @@ class LocalFileSystemHandler(InputSourceHandler):
             if not files:
                 raise FileNotFoundError(f"No files found in directory {file_path}" + (f" matching pattern '{file_pattern}'" if file_pattern else ""))
             
-            # Read all matching files
+            # Read all matching files (validate each path to prevent traversal via malicious file_pattern)
             results = []
+            base_dir = path.resolve()
             for file in files:
+                file_path = Path(file).resolve()
                 try:
-                    with open(file, 'r', encoding=encoding) as f:
+                    file_path.relative_to(base_dir)
+                except ValueError:
+                    raise ValueError(
+                        f"Path '{file_path}' is outside directory '{base_dir}'. "
+                        "Invalid file_pattern may contain path traversal."
+                    )
+                try:
+                    with open(file_path, 'r', encoding=encoding) as f:
                         content = f.read()
                         try:
                             results.append(json.loads(content))
@@ -385,7 +405,8 @@ class LocalFileSystemHandler(InputSourceHandler):
         # Handle string "true"/"false" from JSON
         if isinstance(overwrite, str):
             overwrite = overwrite.lower() in ('true', '1', 'yes')
-        logger.debug(f"LocalFileSystemHandler.write: overwrite={overwrite} (type: {type(overwrite)}), config keys: {list(config.keys())}, full config: {config}")
+        # P3-3: Never log full config (may contain credentials)
+        logger.debug(f"LocalFileSystemHandler.write: overwrite={overwrite} (type: {type(overwrite)}), config keys: {list(config.keys())}")
         
         if not file_path or file_path.strip() == '':
             raise ValueError("file_path is required for Local File System write. Please configure the file_path in the node's input_config or pass it as an execution input (e.g., {'file_path': '/path/to/file'}) before executing the workflow.")
@@ -426,8 +447,8 @@ class LocalFileSystemHandler(InputSourceHandler):
                     break
                 counter += 1
                 # Safety check to prevent infinite loop
-                if counter > 10000:
-                    raise ValueError(f"Could not find available filename after 10000 attempts. Please clean up files or enable overwrite.")
+                if counter > MAX_FILENAME_INCREMENT_ATTEMPTS:
+                    raise ValueError(f"Could not find available filename after {MAX_FILENAME_INCREMENT_ATTEMPTS} attempts. Please clean up files or enable overwrite.")
         elif overwrite and file_exists:
             logger.debug(f"Overwrite enabled: will overwrite existing file {path}")
         

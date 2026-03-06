@@ -1,7 +1,9 @@
 """
 Condition evaluators - OCP: registry for condition types.
 New condition types can be added by registering without editing ConditionAgent.
+Custom expressions use AST-based safe evaluation (no eval on user input).
 """
+import ast
 from typing import Any, Callable, Dict
 
 # Type: (field_value, compare_value) -> bool
@@ -68,6 +70,69 @@ def _eval_not_empty(field_value: Any, compare_value: str) -> bool:
     return True
 
 
+_ALLOWED_NAMES = frozenset({"value", "compare", "str", "int", "float", "len"})
+_ALLOWED_CALLS = frozenset({"str", "int", "float", "len"})
+
+
+def _validate_ast_safe(node: ast.AST) -> None:
+    """Ensure AST only contains safe operations. Raises ValueError if unsafe."""
+    if isinstance(node, ast.Expression):
+        _validate_ast_safe(node.body)
+    elif isinstance(node, ast.Compare):
+        _validate_ast_safe(node.left)
+        for c in node.comparators:
+            _validate_ast_safe(c)
+    elif isinstance(node, ast.BoolOp):
+        for v in node.values:
+            _validate_ast_safe(v)
+    elif isinstance(node, ast.BinOp):
+        if type(node.op) not in (ast.Add, ast.Sub, ast.Mult, ast.Div, ast.Mod, ast.FloorDiv):
+            raise ValueError("Unsupported operator")
+        _validate_ast_safe(node.left)
+        _validate_ast_safe(node.right)
+    elif isinstance(node, ast.UnaryOp):
+        if type(node.op) not in (ast.USub, ast.UAdd, ast.Not):
+            raise ValueError("Unsupported unary operator")
+        _validate_ast_safe(node.operand)
+    elif isinstance(node, ast.Call):
+        if not isinstance(node.func, ast.Name):
+            raise ValueError("Only simple function calls allowed")
+        if node.func.id not in _ALLOWED_CALLS:
+            raise ValueError(f"Function '{node.func.id}' not allowed")
+        for arg in node.args:
+            _validate_ast_safe(arg)
+    elif isinstance(node, ast.Name):
+        if node.id not in _ALLOWED_NAMES:
+            raise ValueError(f"Variable '{node.id}' not allowed")
+    elif isinstance(node, (ast.Constant, ast.Num, ast.Str)):
+        pass
+    elif isinstance(node, ast.Subscript):
+        _validate_ast_safe(node.value)
+        if isinstance(node.slice, ast.AST):
+            _validate_ast_safe(node.slice)
+    elif isinstance(node, ast.Attribute):
+        _validate_ast_safe(node.value)
+    elif isinstance(node, ast.Index):
+        _validate_ast_safe(node.value)
+    else:
+        raise ValueError(f"Unsupported expression type: {type(node).__name__}")
+
+
+def _safe_eval_custom(expr: str, field_value: Any, compare_value: str) -> bool:
+    """Safely evaluate custom condition expression using AST validation (no eval on raw string)."""
+    safe_dict = {
+        "value": field_value,
+        "compare": compare_value,
+        "str": str,
+        "int": int,
+        "float": float,
+        "len": len,
+    }
+    tree = ast.parse(expr.strip(), mode="eval")
+    _validate_ast_safe(tree)
+    return bool(eval(compile(tree, "<custom_condition>", "eval"), {"__builtins__": {}}, safe_dict))
+
+
 # OCP: Registry - add new types without editing callers
 CONDITION_EVALUATORS: Dict[str, ConditionEvaluator] = {
     "equals": _eval_equals,
@@ -113,15 +178,7 @@ def evaluate_condition(
 
     if condition_type == "custom" and custom_expression:
         try:
-            safe_dict = {
-                "value": field_value,
-                "compare": compare_value,
-                "str": str,
-                "int": int,
-                "float": float,
-                "len": len,
-            }
-            return bool(eval(custom_expression, {"__builtins__": {}}, safe_dict))
+            return _safe_eval_custom(custom_expression, field_value, compare_value)
         except Exception as e:
             raise RuntimeError(f"Error evaluating custom expression: {str(e)}")
 

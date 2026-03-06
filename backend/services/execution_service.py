@@ -3,13 +3,13 @@ Service layer for execution business logic.
 Handles execution CRUD operations and business rules following SOLID principles.
 """
 from typing import Optional, List
-from datetime import datetime
+from datetime import datetime, timezone
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..models.schemas import ExecutionResponse, ExecutionStatus, ExecutionLogsResponse, ExecutionLogEntry
 from ..database.models import ExecutionDB
 from ..repositories.execution_repository import ExecutionRepository
-from ..exceptions import ExecutionNotFoundError
+from ..exceptions import ExecutionNotFoundError, ExecutionForbiddenError
 from ..utils.logger import get_logger
 
 logger = get_logger(__name__)
@@ -47,27 +47,36 @@ class ExecutionService:
             current_node=state_data.get('current_node'),
             result=state_data.get('result'),
             error=state_data.get('error'),
-            started_at=execution.started_at if execution.started_at else datetime.utcnow(),
+            started_at=execution.started_at if execution.started_at else datetime.now(timezone.utc),
             completed_at=execution.completed_at,
             logs=state_data.get('logs', [])
         )
     
-    async def get_execution(self, execution_id: str) -> ExecutionResponse:
+    def _check_execution_ownership(self, execution: ExecutionDB, user_id: str) -> None:
+        """C-2: Ensure user is authorized to access execution. Raises ExecutionForbiddenError if not."""
+        if execution.user_id is None or execution.user_id != user_id:
+            raise ExecutionForbiddenError(execution.id)
+
+    async def get_execution(self, execution_id: str, user_id: Optional[str] = None) -> ExecutionResponse:
         """
         Get execution by ID
         
         Args:
             execution_id: Execution ID
+            user_id: If provided, enforce ownership (C-2)
             
         Returns:
             ExecutionResponse model
             
         Raises:
             ExecutionNotFoundError: If execution not found
+            ExecutionForbiddenError: If user_id provided and user does not own execution
         """
         execution = await self.repository.get_by_id(execution_id)
         if not execution:
             raise ExecutionNotFoundError(execution_id)
+        if user_id is not None:
+            self._check_execution_ownership(execution, user_id)
         
         logger.debug(f"Retrieved execution {execution_id}")
         return self._db_to_response(execution)
@@ -142,14 +151,19 @@ class ExecutionService:
         logger.debug(f"Retrieved {len(executions)} executions for user {user_id}")
         return [self._db_to_response(execution) for execution in executions]
     
-    async def get_running_executions(self) -> List[ExecutionResponse]:
+    async def get_running_executions(self, user_id: Optional[str] = None) -> List[ExecutionResponse]:
         """
-        Get all running executions
+        Get running executions, optionally filtered by user (C-2)
         
+        Args:
+            user_id: If provided, only return executions owned by this user
+            
         Returns:
             List of ExecutionResponse models with status 'running'
         """
         executions = await self.repository.get_running_executions()
+        if user_id is not None:
+            executions = [e for e in executions if e.user_id == user_id]
         logger.debug(f"Retrieved {len(executions)} running executions")
         return [self._db_to_response(execution) for execution in executions]
     
@@ -159,7 +173,8 @@ class ExecutionService:
         level: Optional[str] = None,
         node_id: Optional[str] = None,
         limit: int = 1000,
-        offset: int = 0
+        offset: int = 0,
+        user_id: Optional[str] = None
     ) -> ExecutionLogsResponse:
         """
         Get execution logs with filtering and pagination
@@ -170,16 +185,20 @@ class ExecutionService:
             node_id: Optional node ID filter
             limit: Maximum number of logs to return
             offset: Offset for pagination
+            user_id: If provided, enforce ownership (C-2)
             
         Returns:
             ExecutionLogsResponse with filtered logs
             
         Raises:
             ExecutionNotFoundError: If execution not found
+            ExecutionForbiddenError: If user_id provided and user does not own execution
         """
         execution = await self.repository.get_by_id(execution_id)
         if not execution:
             raise ExecutionNotFoundError(execution_id)
+        if user_id is not None:
+            self._check_execution_ownership(execution, user_id)
         
         state_data = execution.state if execution.state else {}
         all_logs = state_data.get('logs', [])
@@ -204,13 +223,13 @@ class ExecutionService:
                                 except:
                                     # If all parsing fails, use current time as fallback
                                     logger.warning(f"Could not parse timestamp: {timestamp}, using current time")
-                                    log_data['timestamp'] = datetime.utcnow()
+                                    log_data['timestamp'] = datetime.now(timezone.utc)
                         elif isinstance(timestamp, datetime):
                             log_data['timestamp'] = timestamp
                         else:
-                            log_data['timestamp'] = datetime.utcnow()
+                            log_data['timestamp'] = datetime.now(timezone.utc)
                     else:
-                        log_data['timestamp'] = datetime.utcnow()
+                        log_data['timestamp'] = datetime.now(timezone.utc)
                     
                     log_entry = ExecutionLogEntry(**log_data)
                 elif isinstance(log_dict, ExecutionLogEntry):
@@ -246,23 +265,27 @@ class ExecutionService:
             offset=offset
         )
     
-    async def cancel_execution(self, execution_id: str) -> ExecutionResponse:
+    async def cancel_execution(self, execution_id: str, user_id: Optional[str] = None) -> ExecutionResponse:
         """
         Cancel a running execution
         
         Args:
             execution_id: Execution ID to cancel
+            user_id: If provided, enforce ownership (C-2)
             
         Returns:
             ExecutionResponse with cancelled status
             
         Raises:
             ExecutionNotFoundError: If execution not found
+            ExecutionForbiddenError: If user_id provided and user does not own execution
             ValueError: If execution is not in a cancellable state
         """
         execution = await self.repository.get_by_id(execution_id)
         if not execution:
             raise ExecutionNotFoundError(execution_id)
+        if user_id is not None:
+            self._check_execution_ownership(execution, user_id)
         
         # Check if execution is cancellable
         if execution.status not in [ExecutionStatus.PENDING, ExecutionStatus.RUNNING]:
@@ -270,13 +293,13 @@ class ExecutionService:
         
         # Update execution status to cancelled
         execution.status = ExecutionStatus.CANCELLED
-        execution.completed_at = datetime.utcnow()
+        execution.completed_at = datetime.now(timezone.utc)
         
         # Update state with cancellation log
         state_data = execution.state if execution.state else {}
         logs = state_data.get('logs', [])
         logs.append({
-            'timestamp': datetime.utcnow().isoformat(),
+            'timestamp': datetime.now(timezone.utc).isoformat(),
             'level': 'INFO',
             'node_id': None,
             'message': 'Execution cancelled by user'

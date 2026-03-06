@@ -19,6 +19,8 @@ interface UseWebSocketOptions {
   onError?: (error: string) => void
   webSocketFactory?: WebSocketFactory
   windowLocation?: WindowLocation | null
+  /** S-H3: Auth token for WebSocket handshake. When provided, backend validates execution ownership. */
+  getAuthToken?: () => string | null
   logger?: typeof logger
 }
 
@@ -41,6 +43,7 @@ export function useWebSocket(options: UseWebSocketOptions) {
         ? options.webSocketFactory
         : defaultAdapters.createWebSocketFactory(),
       windowLocation: options.windowLocation !== undefined ? options.windowLocation : defaultAdapters.createWindowLocation(),
+      getAuthToken: options.getAuthToken,
       logger: (options.logger !== null && options.logger !== undefined)
         ? options.logger
         : logger

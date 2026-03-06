@@ -1,5 +1,5 @@
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 from ..models.schemas import (
     WorkflowDefinition,
@@ -14,11 +14,16 @@ from ..agents import AgentRegistry
 from ..services.settings_service import SettingsService
 
 
+# P3-13: Legacy executor - NOT used. Orchestrator uses WorkflowExecutorV3 (backend.engine).
+# Preserved for reference. Remove in v2.0 if no external dependencies.
+
+
 class WorkflowExecutor:
-    """Executes workflows sequentially"""
-    
-    def __init__(self, workflow: WorkflowDefinition):
+    """Executes workflows sequentially. DEPRECATED: Use WorkflowExecutorV3 (backend.engine)."""
+
+    def __init__(self, workflow: WorkflowDefinition, settings_service=None):
         self.workflow = workflow
+        self._settings_service = settings_service
         self.execution_id = str(uuid.uuid4())
         self.execution_state: Optional[ExecutionState] = None
         
@@ -38,7 +43,7 @@ class WorkflowExecutor:
             workflow_id=self.workflow.id or "unknown",
             status=ExecutionStatus.RUNNING,
             variables={**self.workflow.variables, **inputs},
-            started_at=datetime.utcnow()
+            started_at=datetime.now(timezone.utc)
         )
         
         self._log("INFO", None, "Workflow execution started")
@@ -70,13 +75,13 @@ class WorkflowExecutor:
                     if last_state:
                         self.execution_state.result = last_state.output
             
-            self.execution_state.completed_at = datetime.utcnow()
+            self.execution_state.completed_at = datetime.now(timezone.utc)
             self._log("INFO", None, f"Workflow execution {self.execution_state.status.value}")
             
         except Exception as e:
             self.execution_state.status = ExecutionStatus.FAILED
             self.execution_state.error = str(e)
-            self.execution_state.completed_at = datetime.utcnow()
+            self.execution_state.completed_at = datetime.now(timezone.utc)
             self._log("ERROR", None, f"Workflow execution failed: {str(e)}")
         
         return self.execution_state
@@ -144,7 +149,7 @@ class WorkflowExecutor:
         node_state = NodeState(
             node_id=node.id,
             status=ExecutionStatus.RUNNING,
-            started_at=datetime.utcnow()
+            started_at=datetime.now(timezone.utc)
         )
         self.execution_state.node_states[node.id] = node_state
         self.execution_state.current_node = node.id
@@ -158,7 +163,10 @@ class WorkflowExecutor:
             
             # Execute based on node type
             if node.type == NodeType.AGENT:
-                agent = AgentRegistry.get_agent(node, settings_service=SettingsService())
+                agent = AgentRegistry.get_agent(
+                    node,
+                    settings_service=self._settings_service or SettingsService(),
+                )
                 output = await agent.execute(node_inputs)
             elif node.type == NodeType.TOOL:
                 # Tool execution would go here (Phase 2+)
@@ -169,14 +177,14 @@ class WorkflowExecutor:
             # Update node state
             node_state.status = ExecutionStatus.COMPLETED
             node_state.output = output
-            node_state.completed_at = datetime.utcnow()
+            node_state.completed_at = datetime.now(timezone.utc)
             
             self._log("INFO", node.id, f"Node completed with output: {str(output)[:100]}")
             
         except Exception as e:
             node_state.status = ExecutionStatus.FAILED
             node_state.error = str(e)
-            node_state.completed_at = datetime.utcnow()
+            node_state.completed_at = datetime.now(timezone.utc)
             self._log("ERROR", node.id, f"Node failed: {str(e)}")
     
     def _prepare_node_inputs(self, node: Node) -> Dict[str, Any]:
@@ -193,7 +201,7 @@ class WorkflowExecutor:
         """Add a log entry"""
         if self.execution_state:
             log_entry = ExecutionLogEntry(
-                timestamp=datetime.utcnow(),
+                timestamp=datetime.now(timezone.utc),
                 level=level,
                 node_id=node_id,
                 message=message

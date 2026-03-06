@@ -105,4 +105,24 @@ describe('buildWebSocketUrl', () => {
     const url = buildWebSocketUrl('exec-123', windowLocation)
     expect(url).toBe('wss://api.example.com/ws/executions/exec-123')
   })
+
+  it('should append token query param when authToken provided (S-H3)', () => {
+    const windowLocation: WindowLocation = {
+      protocol: 'https:',
+      host: 'api.example.com',
+    } as WindowLocation
+
+    const url = buildWebSocketUrl('exec-123', windowLocation, 'jwt-token-xyz')
+    expect(url).toBe('wss://api.example.com/ws/executions/exec-123?token=jwt-token-xyz')
+  })
+
+  it('should not append token when authToken is null or empty', () => {
+    const windowLocation: WindowLocation = {
+      protocol: 'http:',
+      host: 'localhost:8000',
+    } as WindowLocation
+
+    expect(buildWebSocketUrl('exec-1', windowLocation, null)).toBe('ws://localhost:8000/ws/executions/exec-1')
+    expect(buildWebSocketUrl('exec-1', windowLocation, '')).toBe('ws://localhost:8000/ws/executions/exec-1')
+  })
 })

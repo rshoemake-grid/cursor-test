@@ -2,21 +2,22 @@ package com.workflow.service;
 
 import com.workflow.dto.WorkflowChatRequest;
 import com.workflow.dto.WorkflowChatResponse;
+import com.workflow.engine.LlmApiClient;
 import com.workflow.entity.Workflow;
 import com.workflow.exception.ResourceNotFoundException;
 import com.workflow.repository.WorkflowRepository;
 import com.workflow.util.JsonStateUtils;
+import com.workflow.util.LlmConfigUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.reactive.function.client.WebClient;
 
 import java.util.*;
 
 /**
  * Workflow Chat Service - matches Python workflow_chat_routes
- * Uses LLM with tool-calling to create/edit workflows (simplified - single response without tool loop)
+ * Uses LlmApiClient (DRY: same as AgentNodeExecutor) for chat completions.
  */
 @Service
 public class WorkflowChatService {
@@ -24,22 +25,20 @@ public class WorkflowChatService {
 
     private final WorkflowRepository workflowRepository;
     private final SettingsService settingsService;
-    private final WebClient.Builder webClientBuilder;
+    private final LlmApiClient llmApiClient;
 
     public WorkflowChatService(WorkflowRepository workflowRepository, SettingsService settingsService,
-                              WebClient.Builder webClientBuilder) {
+                              LlmApiClient llmApiClient) {
         this.workflowRepository = workflowRepository;
         this.settingsService = settingsService;
-        this.webClientBuilder = webClientBuilder;
+        this.llmApiClient = llmApiClient;
     }
 
     @Transactional(readOnly = true)
     public WorkflowChatResponse chat(WorkflowChatRequest request, String userId) {
-        Optional<Map<String, Object>> llmConfig = settingsService.getActiveLlmConfig(userId);
-        if (llmConfig.isEmpty()) {
-            throw new IllegalArgumentException(
-                    "No LLM provider configured. Please configure an LLM provider in Settings.");
-        }
+        Map<String, Object> llmConfig = settingsService.getActiveLlmConfig(userId)
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "No LLM provider configured. Please configure an LLM provider in Settings."));
 
         String workflowContext = getWorkflowContext(request.getWorkflowId());
         String systemPrompt = "You are an AI assistant that helps users create and modify workflow graphs. " +
@@ -55,37 +54,18 @@ public class WorkflowChatService {
         }
         messages.add(Map.of("role", "user", "content", request.getMessage()));
 
-        String model = (String) llmConfig.get().getOrDefault("model", "gpt-4o-mini");
-        String baseUrl = (String) llmConfig.get().getOrDefault("base_url", "https://api.openai.com/v1");
-        String apiKey = (String) llmConfig.get().get("api_key");
+        String baseUrl = LlmConfigUtils.getBaseUrl(llmConfig);
+        String apiKey = LlmConfigUtils.getApiKey(llmConfig);
+        if (apiKey == null || apiKey.isBlank()) {
+            throw new IllegalArgumentException("No LLM API key configured in Settings.");
+        }
+        String model = LlmConfigUtils.getModel(llmConfig);
+        String url = LlmConfigUtils.buildChatCompletionsUrl(baseUrl);
 
         try {
-            String responseContent = webClientBuilder.build()
-                    .post()
-                    .uri(baseUrl + (baseUrl.endsWith("/") ? "" : "/") + "chat/completions")
-                    .header("Authorization", "Bearer " + apiKey)
-                    .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
-                    .bodyValue(Map.of(
-                            "model", model,
-                            "messages", messages,
-                            "temperature", 0.7
-                    ))
-                    .retrieve()
-                    .bodyToMono(Map.class)
-                    .map(r -> {
-                        var choices = (List<?>) r.get("choices");
-                        if (choices != null && !choices.isEmpty()) {
-                            var msg = (Map<?, ?>) ((Map<?, ?>) choices.get(0)).get("message");
-                            if (msg != null) {
-                                return (String) msg.get("content");
-                            }
-                        }
-                        return "I couldn't generate a response.";
-                    })
-                    .block();
-
+            String responseContent = llmApiClient.chatCompletions(url, apiKey, model, messages);
             return new WorkflowChatResponse(
-                    responseContent != null ? responseContent : "I've processed your request.",
+                    responseContent != null && !responseContent.isBlank() ? responseContent : "I've processed your request.",
                     null,
                     request.getWorkflowId());
         } catch (Exception e) {

@@ -3,13 +3,13 @@ from typing import List, Optional, Dict, Any
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, desc
-from datetime import datetime
+from datetime import datetime, timezone
 import json
 
 from backend.database.db import get_db
 from backend.database.models import WorkflowDB, ExecutionDB, UserDB
 from backend.models.schemas import ExecutionResponse, ExecutionStatus
-from backend.auth import get_optional_user
+from backend.auth import get_current_active_user
 
 router = APIRouter(prefix="/debug", tags=["Debugging"])
 
@@ -17,7 +17,8 @@ router = APIRouter(prefix="/debug", tags=["Debugging"])
 @router.get("/workflow/{workflow_id}/validate")
 async def validate_workflow(
     workflow_id: str,
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    current_user: UserDB = Depends(get_current_active_user)
 ):
     """Validate a workflow for potential issues"""
     # Get workflow
@@ -130,7 +131,8 @@ async def get_execution_history(
     workflow_id: str,
     limit: int = Query(10, le=100),
     status: Optional[str] = Query(None),
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    current_user: UserDB = Depends(get_current_active_user)
 ):
     """Get execution history for a workflow"""
     query = select(ExecutionDB).where(ExecutionDB.workflow_id == workflow_id)
@@ -162,7 +164,8 @@ async def get_execution_history(
 @router.get("/execution/{execution_id}/timeline")
 async def get_execution_timeline(
     execution_id: str,
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    current_user: UserDB = Depends(get_current_active_user)
 ):
     """Get detailed timeline of execution"""
     result = await db.execute(
@@ -201,7 +204,8 @@ async def get_execution_timeline(
 async def get_node_execution_details(
     execution_id: str,
     node_id: str,
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    current_user: UserDB = Depends(get_current_active_user)
 ):
     """Get detailed execution information for a specific node"""
     result = await db.execute(
@@ -240,7 +244,8 @@ async def get_node_execution_details(
 @router.get("/workflow/{workflow_id}/stats")
 async def get_workflow_stats(
     workflow_id: str,
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    current_user: UserDB = Depends(get_current_active_user)
 ):
     """Get statistics for a workflow"""
     # Get all executions
@@ -283,7 +288,8 @@ async def get_workflow_stats(
 @router.post("/execution/{execution_id}/export")
 async def export_execution(
     execution_id: str,
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    current_user: UserDB = Depends(get_current_active_user)
 ):
     """Export execution data for debugging"""
     result = await db.execute(
@@ -302,7 +308,7 @@ async def export_execution(
     
     return {
         "export_version": "1.0",
-        "exported_at": datetime.utcnow().isoformat(),
+        "exported_at": datetime.now(timezone.utc).isoformat(),
         "execution": {
             "id": execution.id,
             "workflow_id": execution.workflow_id,

@@ -6,7 +6,7 @@ from fastapi import FastAPI, Request, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.middleware.gzip import GZipMiddleware
-from datetime import datetime
+from datetime import datetime, timezone
 import time
 import uuid
 from typing import Dict, Any
@@ -61,17 +61,22 @@ app = FastAPI(
 )
 
 # CORS middleware - Production-ready configuration
-# In production, restrict origins via CORS_ORIGINS environment variable
-# Development: allows all origins for easier local testing
-# Production: should be restricted to specific domains
+# P3-2, H-1: In production, restrict origins; never fall back to ["*"] when prod + cors_origins=["*"]
 cors_origins = (
-    settings.cors_origins 
+    settings.cors_origins
     if settings.cors_origins != ["*"] or settings.environment == "development"
-    else []  # Empty list means no CORS in production if not configured
+    else []  # Production with ["*"]: use [] until CORS_ORIGINS is set
 )
+if settings.environment == "production" and settings.cors_origins == ["*"]:
+    import logging
+    logging.getLogger("backend.main").warning(
+        "CORS_ORIGINS not restricted in production. Set CORS_ORIGINS env var to specific domains."
+    )
+# H-1: In production, do not fall back to ["*"] when cors_origins is []
+allow_origins = cors_origins if cors_origins else (["*"] if settings.environment != "production" else [])
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=cors_origins if cors_origins else ["*"],  # Fallback to "*" if empty for dev
+    allow_origins=allow_origins,
     allow_credentials=settings.cors_allow_credentials,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -172,7 +177,7 @@ async def http_exception_handler(request: Request, exc: HTTPException):
                 "code": str(exc.status_code),
                 "message": str(exc.detail),
                 "path": request.url.path,
-                "timestamp": datetime.utcnow().isoformat()
+                "timestamp": datetime.now(timezone.utc).isoformat()
             }
         }
     )
@@ -232,7 +237,7 @@ async def health_check():
         "status": "healthy",
         "service": "workflow-builder-backend",
         "version": "1.0.0",
-        "timestamp": datetime.utcnow().isoformat(),
+        "timestamp": datetime.now(timezone.utc).isoformat(),
         "checks": {}
     }
     
@@ -249,10 +254,17 @@ async def health_check():
             }
     except Exception as e:
         db_status = "unhealthy"
-        db_error = str(e)
+        # H-2: In production, do not leak exception details in response
+        from backend.config import get_settings
+        env = get_settings().environment
+        db_message = (
+            "Database connection failed"
+            if env == "production"
+            else f"Database connection failed: {str(e)}"
+        )
         checks["checks"]["database"] = {
             "status": "unhealthy",
-            "message": f"Database connection failed: {db_error}"
+            "message": db_message
         }
     
     # Determine overall status
@@ -329,13 +341,24 @@ async def get_metrics():
 @app.on_event("startup")
 async def startup_event():
     """Initialize database on application startup"""
+    # P1-3: Require LOCAL_FILE_BASE_PATH in production for path traversal protection
+    if settings.environment == "production":
+        import os
+        base_path = os.getenv("LOCAL_FILE_BASE_PATH")
+        if not base_path or not str(base_path).strip():
+            raise RuntimeError(
+                "LOCAL_FILE_BASE_PATH must be set in production to restrict file system access. "
+                "Set it in .env or environment variables. See docs/KEYS_AND_SECRETS.md."
+            )
     await init_db()
 
 if __name__ == "__main__":
     import uvicorn
+    # P3-6: Disable reload in production (security, stability)
+    use_reload = settings.reload and settings.environment != "production"
     uvicorn.run(
         "backend.main:app",
         host=settings.host,
         port=settings.port,
-        reload=settings.reload
+        reload=use_reload
     )

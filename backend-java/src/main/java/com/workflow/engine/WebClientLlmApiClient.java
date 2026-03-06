@@ -1,8 +1,8 @@
 package com.workflow.engine;
 
+import com.workflow.util.LlmConfigUtils;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
-import org.springframework.web.reactive.function.client.WebClientResponseException;
 
 import java.util.List;
 import java.util.Map;
@@ -22,8 +22,7 @@ public class WebClientLlmApiClient implements LlmApiClient {
     @Override
     public String chatCompletions(String baseUrl, String apiKey, String model,
                                    List<Map<String, Object>> messages) {
-        String url = baseUrl.contains("/chat/completions") ? baseUrl
-                : (baseUrl.endsWith("/") ? baseUrl + "chat/completions" : baseUrl + "/chat/completions");
+        String url = LlmConfigUtils.buildChatCompletionsUrl(baseUrl);
 
         Map<String, Object> body = Map.of(
                 "model", model != null ? model : "gpt-4o-mini",

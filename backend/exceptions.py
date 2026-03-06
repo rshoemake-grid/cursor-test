@@ -24,6 +24,14 @@ class WorkflowValidationError(WorkflowEngineException):
         super().__init__(message)
 
 
+class WorkflowForbiddenError(WorkflowEngineException):
+    """Raised when user is not authorized to perform action on workflow"""
+    def __init__(self, workflow_id: str, action: str = "access"):
+        self.workflow_id = workflow_id
+        self.action = action
+        super().__init__(f"Not authorized to {action} workflow {workflow_id}")
+
+
 class ExecutionError(WorkflowEngineException):
     """Base exception for execution-related errors"""
     def __init__(self, execution_id: str, message: str):
@@ -35,6 +43,12 @@ class ExecutionNotFoundError(ExecutionError):
     """Raised when an execution is not found"""
     def __init__(self, execution_id: str):
         super().__init__(execution_id, f"Execution not found: {execution_id}")
+
+
+class ExecutionForbiddenError(ExecutionError):
+    """C-2: Raised when user is not authorized to access an execution"""
+    def __init__(self, execution_id: str):
+        super().__init__(execution_id, "Not authorized to access this execution")
 
 
 class NodeExecutionError(ExecutionError):

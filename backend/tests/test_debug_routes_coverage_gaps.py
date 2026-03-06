@@ -5,12 +5,28 @@ import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
 from datetime import datetime
 from backend.api.debug_routes import get_execution_history, get_workflow_stats
-from backend.database.models import ExecutionDB
+from backend.database.models import ExecutionDB, UserDB
+import uuid
 from backend.models.schemas import ExecutionStatus
 
 
+@pytest.fixture
+async def test_user(db_session):
+    user = UserDB(
+        id=str(uuid.uuid4()),
+        username="testuser",
+        email="test@example.com",
+        hashed_password="hashed",
+        is_active=True,
+        is_admin=False
+    )
+    db_session.add(user)
+    await db_session.commit()
+    return user
+
+
 @pytest.mark.asyncio
-async def test_get_execution_history_with_status(db_session):
+async def test_get_execution_history_with_status(db_session, test_user):
     """Test get_execution_history with status filter"""
     workflow_id = "workflow-123"
     execution = ExecutionDB(
@@ -30,7 +46,8 @@ async def test_get_execution_history_with_status(db_session):
             workflow_id=workflow_id,
             limit=10,
             status=ExecutionStatus.COMPLETED.value,
-            db=db_session
+            db=db_session,
+            current_user=test_user
         )
         
         assert len(result) == 1
@@ -38,7 +55,7 @@ async def test_get_execution_history_with_status(db_session):
 
 
 @pytest.mark.asyncio
-async def test_get_workflow_stats_no_executions(db_session):
+async def test_get_workflow_stats_no_executions(db_session, test_user):
     """Test get_workflow_stats with no executions"""
     workflow_id = "workflow-123"
     
@@ -47,7 +64,7 @@ async def test_get_workflow_stats_no_executions(db_session):
         mock_result.scalars.return_value.all.return_value = []
         mock_execute.return_value = mock_result
         
-        result = await get_workflow_stats(workflow_id=workflow_id, db=db_session)
+        result = await get_workflow_stats(workflow_id=workflow_id, db=db_session, current_user=test_user)
         
         assert result["total_executions"] == 0
         assert result["success_count"] == 0

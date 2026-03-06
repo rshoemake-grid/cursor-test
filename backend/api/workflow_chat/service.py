@@ -43,6 +43,7 @@ async def run_chat_loop(
     workflow_id: str,
     workflow_service: Any,
     iteration_limit: int,
+    user_id: str | None = None,
 ) -> Tuple[str, Dict[str, List[Any]]]:
     """
     Run the LLM tool-calling loop until completion or iteration limit.
@@ -76,7 +77,7 @@ async def run_chat_loop(
 
         tool_handlers = get_tool_handlers(
             workflow_changes, saved_changes, workflow_context,
-            workflow_id, workflow_service,
+            workflow_id, workflow_service, user_id,
         )
         tool_messages = []
         for tool_call in message.tool_calls:

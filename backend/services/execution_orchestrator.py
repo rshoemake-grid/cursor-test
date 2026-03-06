@@ -2,7 +2,7 @@
 Execution Orchestrator Service - SRP Refactoring
 Extracts workflow execution orchestration logic from routes into a service layer.
 """
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional, Dict, Any, TYPE_CHECKING
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
@@ -288,7 +288,7 @@ class ExecutionOrchestrator:
                 user_id=user_id,
                 status=ExecutionStatus.RUNNING.value,
                 state={},
-                started_at=datetime.utcnow(),
+                started_at=datetime.now(timezone.utc),
                 completed_at=None
             )
             self.db.add(db_execution)
@@ -417,7 +417,7 @@ class ExecutionOrchestrator:
         await self.update_execution_status(
             execution_id=execution_id,
             status=ExecutionStatus.FAILED,
-            completed_at=datetime.utcnow()
+            completed_at=datetime.now(timezone.utc)
         )
     
     def create_response(
@@ -439,5 +439,5 @@ class ExecutionOrchestrator:
             execution_id=execution_id,
             workflow_id=workflow_id,
             status=ExecutionStatus.RUNNING,
-            started_at=datetime.utcnow()
+            started_at=datetime.now(timezone.utc)
         )

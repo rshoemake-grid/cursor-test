@@ -4,25 +4,26 @@ Handles workflow execution and execution history.
 """
 import asyncio
 from datetime import datetime
-from typing import Optional, Annotated
+from typing import Optional, List, Annotated
 from fastapi import APIRouter, HTTPException, Depends, Body, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
-from typing import Optional, List
-
 from ...models.schemas import ExecutionRequest, ExecutionResponse, ExecutionStatus, ExecutionLogsResponse
 from ...database import get_db, ExecutionDB
 from ...database.models import UserDB
-from ...auth import get_optional_user
+from ...auth import get_optional_user, get_current_active_user
 from ...utils.logger import get_logger
 from ...dependencies import WorkflowServiceDep, SettingsServiceDep, ExecutionServiceDep
 from ...services.execution_orchestrator import ExecutionOrchestrator
-from ...exceptions import ExecutionNotFoundError
+from ...exceptions import ExecutionNotFoundError, ExecutionForbiddenError, WorkflowNotFoundError
 from ...utils.log_utils import serialize_log_for_json
 from ...utils.error_handling import handle_execution_errors
 
 logger = get_logger(__name__)
+
+# P3-5, P3-11: Log download limit. Large values may use significant memory; consider streaming for 100k+ lines.
+LOG_DOWNLOAD_LIMIT = 100000
 
 router = APIRouter()
 
@@ -53,6 +54,7 @@ router = APIRouter()
         }
     }
 )
+@handle_execution_errors
 async def execute_workflow(
     workflow_id: str,
     execution_request: Optional[ExecutionRequest] = Body(
@@ -105,46 +107,40 @@ async def execute_workflow(
 @router.get("/executions/{execution_id}", response_model=ExecutionResponse)
 async def get_execution(
     execution_id: str,
-    execution_service: ExecutionServiceDep = ...
+    execution_service: ExecutionServiceDep = ...,
+    current_user: UserDB = Depends(get_current_active_user)
 ):
     """
-    Get execution by ID
-    
-    Uses ExecutionService following SOLID principles (Dependency Inversion)
+    Get execution by ID. C-2: Requires auth; users can only access their own executions.
     """
     try:
-        return await execution_service.get_execution(execution_id)
+        return await execution_service.get_execution(execution_id, user_id=current_user.id)
     except ExecutionNotFoundError as e:
         raise HTTPException(status_code=404, detail=str(e))
+    except ExecutionForbiddenError:
+        raise HTTPException(status_code=403, detail="Not authorized to access this execution")
 
 
 @router.get("/executions", response_model=List[ExecutionResponse])
 async def list_executions(
     workflow_id: Optional[str] = Query(None, description="Filter by workflow ID"),
-    user_id: Optional[str] = Query(None, description="Filter by user ID"),
     status: Optional[str] = Query(None, description="Filter by status (running, completed, failed)"),
     limit: Optional[int] = Query(None, ge=1, le=100, description="Maximum number of results"),
     offset: int = Query(0, ge=0, description="Offset for pagination"),
     execution_service: ExecutionServiceDep = ...,
-    current_user: Optional[UserDB] = Depends(get_optional_user)
+    current_user: UserDB = Depends(get_current_active_user)
 ):
     """
-    List executions with filtering and pagination
-    
-    If user_id is not provided and user is authenticated, filters by current user.
-    Follows SOLID principles with service layer abstraction.
+    List executions with filtering and pagination.
+    M-3/C-2: Requires auth; always filters by current user (user_id from query ignored).
     """
-    # If user_id not provided but user is authenticated, use current user (DRY - avoid duplication)
-    effective_user_id = user_id if user_id else (current_user.id if current_user else None)
-    
     executions = await execution_service.list_executions(
         workflow_id=workflow_id,
-        user_id=effective_user_id,
+        user_id=current_user.id,
         status=status,
         limit=limit,
         offset=offset
     )
-    
     return executions
 
 
@@ -154,21 +150,27 @@ async def list_workflow_executions(
     status: Optional[str] = Query(None, description="Filter by status (running, completed, failed)"),
     limit: Optional[int] = Query(None, ge=1, le=100, description="Maximum number of results"),
     offset: int = Query(0, ge=0, description="Offset for pagination"),
-    execution_service: ExecutionServiceDep = ...
+    execution_service: ExecutionServiceDep = ...,
+    workflow_service: WorkflowServiceDep = ...,
+    current_user: UserDB = Depends(get_current_active_user)
 ):
     """
-    List executions for a specific workflow
-    
-    Follows Single Responsibility Principle - dedicated endpoint for workflow executions.
-    Uses ExecutionService for business logic (Dependency Inversion).
+    List executions for a specific workflow.
+    C-2: Requires auth; only workflows owned by current user.
     """
+    try:
+        workflow = await workflow_service.get_workflow(workflow_id)
+    except WorkflowNotFoundError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    if getattr(workflow, "owner_id", None) != current_user.id:
+        raise HTTPException(status_code=403, detail="Not authorized to list executions for this workflow")
     executions = await execution_service.list_executions(
         workflow_id=workflow_id,
+        user_id=current_user.id,
         status=status,
         limit=limit,
         offset=offset
     )
-    
     return executions
 
 
@@ -179,14 +181,15 @@ async def list_user_executions(
     status: Optional[str] = Query(None, description="Filter by status (running, completed, failed)"),
     limit: Optional[int] = Query(None, ge=1, le=100, description="Maximum number of results"),
     offset: int = Query(0, ge=0, description="Offset for pagination"),
-    execution_service: ExecutionServiceDep = ...
+    execution_service: ExecutionServiceDep = ...,
+    current_user: UserDB = Depends(get_current_active_user)
 ):
     """
-    List executions for a specific user
-    
-    Follows Single Responsibility Principle - dedicated endpoint for user executions.
-    Uses ExecutionService for business logic (Dependency Inversion).
+    List executions for a specific user.
+    P2-2: Users can only list their own executions (IDOR prevention). Requires auth.
     """
+    if current_user.id != user_id:
+        raise HTTPException(status_code=403, detail="Not authorized to list executions for this user")
     executions = await execution_service.list_executions(
         workflow_id=workflow_id,
         user_id=user_id,
@@ -200,15 +203,13 @@ async def list_user_executions(
 
 @router.get("/executions/running", response_model=List[ExecutionResponse])
 async def list_running_executions(
-    execution_service: ExecutionServiceDep = ...
+    execution_service: ExecutionServiceDep = ...,
+    current_user: UserDB = Depends(get_current_active_user)
 ):
     """
-    List all currently running executions
-    
-    Follows Single Responsibility Principle - dedicated endpoint for running executions.
-    Uses ExecutionService for business logic (Dependency Inversion).
+    List currently running executions for the current user. C-2: Requires auth.
     """
-    executions = await execution_service.get_running_executions()
+    executions = await execution_service.get_running_executions(user_id=current_user.id)
     return executions
 
 
@@ -219,12 +220,11 @@ async def get_execution_logs(
     node_id: Optional[str] = Query(None, description="Filter by node ID"),
     limit: int = Query(1000, ge=1, le=10000, description="Maximum number of logs to return"),
     offset: int = Query(0, ge=0, description="Offset for pagination"),
-    execution_service: ExecutionServiceDep = ...
+    execution_service: ExecutionServiceDep = ...,
+    current_user: UserDB = Depends(get_current_active_user)
 ):
     """
-    Get execution logs with filtering and pagination
-    
-    Uses ExecutionService for business logic (Dependency Inversion).
+    Get execution logs. C-2: Requires auth; users can only access their own execution logs.
     """
     try:
         return await execution_service.get_execution_logs(
@@ -232,10 +232,13 @@ async def get_execution_logs(
             level=level,
             node_id=node_id,
             limit=limit,
-            offset=offset
+            offset=offset,
+            user_id=current_user.id
         )
     except ExecutionNotFoundError as e:
         raise HTTPException(status_code=404, detail=str(e))
+    except ExecutionForbiddenError:
+        raise HTTPException(status_code=403, detail="Not authorized to access this execution")
 
 
 @router.get("/executions/{execution_id}/logs/download")
@@ -244,7 +247,8 @@ async def download_execution_logs(
     format: str = Query("text", regex="^(text|json)$", description="Download format (text or json)"),
     level: Optional[str] = Query(None, description="Filter by log level (INFO, WARNING, ERROR)"),
     node_id: Optional[str] = Query(None, description="Filter by node ID"),
-    execution_service: ExecutionServiceDep = ...
+    execution_service: ExecutionServiceDep = ...,
+    current_user: UserDB = Depends(get_current_active_user)
 ):
     """
     Download execution logs as a file
@@ -256,13 +260,13 @@ async def download_execution_logs(
     from datetime import datetime
     
     try:
-        # Get all logs (no pagination for download)
         logs_response = await execution_service.get_execution_logs(
             execution_id=execution_id,
             level=level,
             node_id=node_id,
-            limit=100000,  # Large limit for downloads
-            offset=0
+            limit=LOG_DOWNLOAD_LIMIT,
+            offset=0,
+            user_id=current_user.id
         )
         
         if format == "json":
@@ -304,23 +308,25 @@ async def download_execution_logs(
         )
     except ExecutionNotFoundError as e:
         raise HTTPException(status_code=404, detail=str(e))
+    except ExecutionForbiddenError:
+        raise HTTPException(status_code=403, detail="Not authorized to access this execution")
 
 
 @router.post("/executions/{execution_id}/cancel", response_model=ExecutionResponse)
 async def cancel_execution(
     execution_id: str,
-    execution_service: ExecutionServiceDep = ...
+    execution_service: ExecutionServiceDep = ...,
+    current_user: UserDB = Depends(get_current_active_user)
 ):
     """
-    Cancel a running execution
-    
-    Only executions with status 'pending' or 'running' can be cancelled.
-    Uses ExecutionService for business logic (Dependency Inversion).
+    Cancel a running execution. C-2: Requires auth; users can only cancel their own executions.
     """
     try:
-        return await execution_service.cancel_execution(execution_id)
+        return await execution_service.cancel_execution(execution_id, user_id=current_user.id)
     except ExecutionNotFoundError as e:
         raise HTTPException(status_code=404, detail=str(e))
+    except ExecutionForbiddenError:
+        raise HTTPException(status_code=403, detail="Not authorized to cancel this execution")
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
 

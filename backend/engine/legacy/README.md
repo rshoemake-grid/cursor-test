@@ -1,6 +1,7 @@
-# Legacy Executors
+# Legacy Executors (P3-13: Not used in production)
 
 This directory contains older versions of the workflow executor that have been superseded by `executor_v3.py`.
+**The orchestrator uses WorkflowExecutorV3 only.** These files are preserved for reference.
 
 ## Files
 

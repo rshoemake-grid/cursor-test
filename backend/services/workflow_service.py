@@ -3,17 +3,33 @@ Service layer for workflow business logic.
 Handles workflow CRUD operations and business rules.
 """
 from typing import Optional, List, Any, Dict
-from datetime import datetime
+from datetime import datetime, timezone
 from sqlalchemy.ext.asyncio import AsyncSession
 from uuid import uuid4
 
 from ..models.schemas import WorkflowCreate, WorkflowDefinition, Edge
 from ..database.models import WorkflowDB
 from ..repositories.workflow_repository import WorkflowRepository
-from ..exceptions import WorkflowNotFoundError, WorkflowValidationError
+from ..exceptions import WorkflowNotFoundError, WorkflowValidationError, WorkflowForbiddenError
 from ..utils.logger import get_logger
 
 logger = get_logger(__name__)
+
+
+def _check_workflow_ownership(workflow: WorkflowDB, user_id: Optional[str], action: str) -> None:
+    """
+    Ensure user is authorized to perform action on workflow.
+    - Owned workflow: only owner (user_id == workflow.owner_id) can act
+    - Anonymous workflow (owner_id is None): only unauthenticated (user_id is None) can act
+    Raises WorkflowForbiddenError if not authorized.
+    """
+    owner_id = getattr(workflow, "owner_id", None)
+    if owner_id is not None:
+        if user_id != owner_id:
+            raise WorkflowForbiddenError(workflow.id, action)
+    else:
+        if user_id is not None:
+            raise WorkflowForbiddenError(workflow.id, action)
 
 
 def _apply_chat_changes_merge(
@@ -104,7 +120,7 @@ class WorkflowService:
         """
         try:
             workflow_id = str(uuid4())
-            now = datetime.utcnow()
+            now = datetime.now(timezone.utc)
             
             processed_edges = _process_edges(workflow_data.edges)
             
@@ -211,9 +227,8 @@ class WorkflowService:
             WorkflowValidationError: If update data is invalid
         """
         workflow = await self.get_workflow(workflow_id)
-        
-        # TODO: Add authorization check (user_id must match owner_id)
-        
+        _check_workflow_ownership(workflow, user_id, "update")
+
         try:
             processed_nodes = []
             for i, node in enumerate(workflow_data.nodes):
@@ -235,7 +250,7 @@ class WorkflowService:
                     "edges": processed_edges,
                     "variables": workflow_data.variables
                 },
-                updated_at=datetime.utcnow()
+                updated_at=datetime.now(timezone.utc)
             )
             
             logger.info(f"Updated workflow {workflow_id}")
@@ -257,6 +272,7 @@ class WorkflowService:
         edges_to_delete: List[Dict[str, str]],
         name: Optional[str] = None,
         description: Optional[str] = None,
+        user_id: Optional[str] = None,
     ) -> Dict[str, Any]:
         """
         Apply workflow chat changes (add/update/delete nodes and edges).
@@ -266,6 +282,7 @@ class WorkflowService:
             Dict with nodes_count, edges_count, final_nodes, final_edges.
         """
         workflow = await self.get_workflow(workflow_id)
+        _check_workflow_ownership(workflow, user_id, "update")
         current_definition = workflow.definition or {}
         current_nodes = current_definition.get("nodes", [])
         current_edges = current_definition.get("edges", [])
@@ -286,7 +303,7 @@ class WorkflowService:
                 "edges": final_edges,
                 "variables": current_definition.get("variables", {}),
             },
-            "updated_at": datetime.utcnow(),
+            "updated_at": datetime.now(timezone.utc),
         }
         if name is not None:
             update_kwargs["name"] = name
@@ -317,9 +334,8 @@ class WorkflowService:
             WorkflowNotFoundError: If workflow not found
         """
         workflow = await self.get_workflow(workflow_id)
-        
-        # TODO: Add authorization check
-        
+        _check_workflow_ownership(workflow, user_id, "delete")
+
         deleted = await self.repository.delete(workflow_id)
         if deleted:
             logger.info(f"Deleted workflow {workflow_id}")

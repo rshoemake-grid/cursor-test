@@ -1,7 +1,7 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum
 from typing import Any, Dict, List, Optional
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 
 class NodeType(str, Enum):
@@ -245,7 +245,7 @@ class ErrorDetail(BaseModel):
     code: str
     message: str
     path: Optional[str] = None
-    timestamp: datetime = Field(default_factory=datetime.utcnow)
+    timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     details: Optional[Dict[str, Any]] = None
 
 
@@ -259,11 +259,36 @@ class ErrorResponse(BaseModel):
 # ============================================================================
 
 class UserCreate(BaseModel):
-    """Schema for creating a new user"""
-    username: str
-    email: str
-    password: str
-    full_name: Optional[str] = None
+    """Schema for creating a new user. H-4: Input validation for username, email, password."""
+    username: str = Field(..., min_length=1, max_length=128)
+    email: str = Field(..., min_length=1, max_length=256)
+    password: str = Field(..., min_length=8, max_length=72)
+    full_name: Optional[str] = Field(None, max_length=256)
+
+    @field_validator("username")
+    @classmethod
+    def username_valid(cls, v: str) -> str:
+        if not v or not v.strip():
+            raise ValueError("Username cannot be empty")
+        if not v.replace("_", "").replace("-", "").replace(".", "").isalnum():
+            raise ValueError("Username must be alphanumeric (letters, numbers, underscores, hyphens, dots)")
+        return v.strip()
+
+    @field_validator("email")
+    @classmethod
+    def email_valid(cls, v: str) -> str:
+        if not v or not v.strip():
+            raise ValueError("Email cannot be empty")
+        if "@" not in v or "." not in v.split("@")[-1]:
+            raise ValueError("Invalid email format")
+        return v.strip().lower()
+
+    @field_validator("password")
+    @classmethod
+    def password_strength(cls, v: str) -> str:
+        if len(v) < 8:
+            raise ValueError("Password must be at least 8 characters")
+        return v
 
 
 class UserLogin(BaseModel):

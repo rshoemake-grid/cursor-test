@@ -1,4 +1,4 @@
-"""Tests for debug API routes"""
+"""Tests for debug API routes (P2-3: debug routes require auth)."""
 import pytest
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -6,6 +6,7 @@ import uuid
 
 from backend.database.models import WorkflowDB, UserDB
 from backend.database.db import get_db
+from backend.auth import get_current_active_user
 
 
 @pytest.fixture
@@ -51,15 +52,19 @@ async def test_workflow(db_session: AsyncSession, test_user: UserDB):
 
 
 @pytest.mark.asyncio
-async def test_validate_workflow_success(db_session: AsyncSession, test_workflow: WorkflowDB):
+async def test_validate_workflow_success(db_session: AsyncSession, test_workflow: WorkflowDB, test_user: UserDB):
     """Test validating a valid workflow"""
     from main import app
     
     async def override_get_db():
         yield db_session
-    
+
+    async def override_get_current_user():
+        return test_user
+
     app.dependency_overrides[get_db] = override_get_db
-    
+    app.dependency_overrides[get_current_active_user] = override_get_current_user
+
     try:
         async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
             response = await client.get(f"/api/debug/workflow/{test_workflow.id}/validate")
@@ -72,15 +77,19 @@ async def test_validate_workflow_success(db_session: AsyncSession, test_workflow
 
 
 @pytest.mark.asyncio
-async def test_validate_workflow_not_found(db_session: AsyncSession):
+async def test_validate_workflow_not_found(db_session: AsyncSession, test_user: UserDB):
     """Test validating a non-existent workflow"""
     from main import app
     
     async def override_get_db():
         yield db_session
-    
+
+    async def override_get_current_user():
+        return test_user
+
     app.dependency_overrides[get_db] = override_get_db
-    
+    app.dependency_overrides[get_current_active_user] = override_get_current_user
+
     try:
         async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
             response = await client.get(f"/api/debug/workflow/{uuid.uuid4()}/validate")
@@ -114,9 +123,13 @@ async def test_validate_workflow_missing_start(db_session: AsyncSession, test_us
     
     async def override_get_db():
         yield db_session
-    
+
+    async def override_get_current_user():
+        return test_user
+
     app.dependency_overrides[get_db] = override_get_db
-    
+    app.dependency_overrides[get_current_active_user] = override_get_current_user
+
     try:
         async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
             response = await client.get(f"/api/debug/workflow/{workflow.id}/validate")
@@ -157,9 +170,13 @@ async def test_validate_workflow_orphan_nodes(db_session: AsyncSession, test_use
     
     async def override_get_db():
         yield db_session
-    
+
+    async def override_get_current_user():
+        return test_user
+
     app.dependency_overrides[get_db] = override_get_db
-    
+    app.dependency_overrides[get_current_active_user] = override_get_current_user
+
     try:
         async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
             response = await client.get(f"/api/debug/workflow/{workflow.id}/validate")

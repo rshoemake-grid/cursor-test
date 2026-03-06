@@ -115,6 +115,7 @@ async def handle_save_workflow(
     workflow_changes: Dict[str, List[Any]],
     saved_changes: Dict[str, List[Any]],
     workflow_service: Any,
+    user_id: Optional[str] = None,
 ) -> Any:
     """Handle save_workflow tool call. Persists via WorkflowService."""
     if not workflow_id:
@@ -129,6 +130,7 @@ async def handle_save_workflow(
             edges_to_delete=workflow_changes["edges_to_delete"],
             name=function_args.get("name") or None,
             description=function_args.get("description") if "description" in function_args else None,
+            user_id=user_id,
         )
         saved_changes["nodes_to_add"].extend(workflow_changes["nodes_to_add"])
         saved_changes["nodes_to_update"].extend(workflow_changes["nodes_to_update"])
@@ -158,6 +160,7 @@ def get_tool_handlers(
     workflow_context: str,
     workflow_id: Optional[str],
     workflow_service: Any,
+    user_id: Optional[str] = None,
 ) -> Dict[str, Callable]:
     """Build tool handler registry with context."""
     return {
@@ -168,6 +171,6 @@ def get_tool_handlers(
         "disconnect_nodes": lambda tc, fa: handle_disconnect_nodes(tc, fa, workflow_changes),
         "get_workflow_info": lambda tc, fa: handle_get_workflow_info(tc, fa, workflow_context),
         "save_workflow": lambda tc, fa: handle_save_workflow(
-            tc, fa, workflow_id, workflow_changes, saved_changes, workflow_service
+            tc, fa, workflow_id, workflow_changes, saved_changes, workflow_service, user_id
         ),
     }

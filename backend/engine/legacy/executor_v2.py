@@ -1,6 +1,6 @@
 import uuid
 import asyncio
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional, Set
 from ..models.schemas import (
     WorkflowDefinition,
@@ -39,7 +39,7 @@ class WorkflowExecutorV2:
             workflow_id=self.workflow.id or "unknown",
             status=ExecutionStatus.RUNNING,
             variables={**self.workflow.variables, **inputs},
-            started_at=datetime.utcnow()
+            started_at=datetime.now(timezone.utc)
         )
         
         self._log("INFO", None, "Workflow execution started (Enhanced Mode)")
@@ -59,13 +59,13 @@ class WorkflowExecutorV2:
                     last_node_state = list(self.execution_state.node_states.values())[-1]
                     self.execution_state.result = last_node_state.output
             
-            self.execution_state.completed_at = datetime.utcnow()
+            self.execution_state.completed_at = datetime.now(timezone.utc)
             self._log("INFO", None, f"Workflow execution {self.execution_state.status.value}")
             
         except Exception as e:
             self.execution_state.status = ExecutionStatus.FAILED
             self.execution_state.error = str(e)
-            self.execution_state.completed_at = datetime.utcnow()
+            self.execution_state.completed_at = datetime.now(timezone.utc)
             self._log("ERROR", None, f"Workflow execution failed: {str(e)}")
         
         return self.execution_state
@@ -197,7 +197,7 @@ class WorkflowExecutorV2:
         node_state = NodeState(
             node_id=node.id,
             status=ExecutionStatus.RUNNING,
-            started_at=datetime.utcnow()
+            started_at=datetime.now(timezone.utc)
         )
         self.execution_state.node_states[node.id] = node_state
         self.execution_state.current_node = node.id
@@ -222,7 +222,7 @@ class WorkflowExecutorV2:
             # Update node state
             node_state.status = ExecutionStatus.COMPLETED
             node_state.output = output
-            node_state.completed_at = datetime.utcnow()
+            node_state.completed_at = datetime.now(timezone.utc)
             
             # Log output summary
             output_summary = str(output)[:100] + "..." if len(str(output)) > 100 else str(output)
@@ -231,7 +231,7 @@ class WorkflowExecutorV2:
         except Exception as e:
             node_state.status = ExecutionStatus.FAILED
             node_state.error = str(e)
-            node_state.completed_at = datetime.utcnow()
+            node_state.completed_at = datetime.now(timezone.utc)
             self._log("ERROR", node.id, f"Node failed: {str(e)}")
     
     def _prepare_node_inputs(self, node: Node) -> Dict[str, Any]:
@@ -248,7 +248,7 @@ class WorkflowExecutorV2:
         """Add a log entry"""
         if self.execution_state:
             log_entry = ExecutionLogEntry(
-                timestamp=datetime.utcnow(),
+                timestamp=datetime.now(timezone.utc),
                 level=level,
                 node_id=node_id,
                 message=message
