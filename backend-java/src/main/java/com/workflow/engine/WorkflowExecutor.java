@@ -1,6 +1,7 @@
 package com.workflow.engine;
 
 import com.workflow.dto.*;
+import com.workflow.util.ObjectUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -16,6 +17,9 @@ import java.util.*;
 public class WorkflowExecutor {
 
     private static final Logger log = LoggerFactory.getLogger(WorkflowExecutor.class);
+    private static final String DEFAULT_SOURCE_HANDLE = "default";
+    private static final String LOG_LEVEL_INFO = "INFO";
+    private static final String LOG_LEVEL_ERROR = "ERROR";
 
     private final NodeExecutorRegistry nodeRegistry;
 
@@ -33,27 +37,20 @@ public class WorkflowExecutor {
 
         ExecutionState state = new ExecutionState();
         state.setExecutionId("exec-" + UUID.randomUUID());
-        state.setWorkflowId(workflow.getId() != null ? workflow.getId() : "unknown");
-        state.setStatus("running");
+        state.setWorkflowId(ObjectUtils.orDefault(workflow.getId(), "unknown"));
+        state.setStatus(ExecutionStatus.RUNNING.getValue());
         state.setStartedAt(LocalDateTime.now());
 
         Map<String, Object> variables = new HashMap<>();
-        if (workflow.getVariables() != null) {
-            variables.putAll(workflow.getVariables());
-        }
-        if (inputs != null) {
-            variables.putAll(inputs);
-        }
+        variables.putAll(ObjectUtils.orEmptyMap(workflow.getVariables()));
+        variables.putAll(ObjectUtils.orEmptyMap(inputs));
         state.getVariables().putAll(variables);
 
-        state.addLog("INFO", null, "Workflow execution started");
+        state.addLog(LOG_LEVEL_INFO, null, "Workflow execution started");
 
         try {
             if (nodes.isEmpty()) {
-                state.setStatus("failed");
-                state.setError("Workflow contains no nodes");
-                state.setCompletedAt(LocalDateTime.now());
-                state.addLog("ERROR", null, "Workflow contains no nodes");
+                markFailed(state, null, "Workflow contains no nodes");
                 return state.toStateMap();
             }
 
@@ -72,10 +69,10 @@ public class WorkflowExecutor {
                 if (node == null) continue;
 
                 if (NodeType.isSkip(node)) {
-                    state.addLog("INFO", nodeId, "Skipping " + node.getType() + " node: " + nodeId);
+                    state.addLog(LOG_LEVEL_INFO, nodeId, "Skipping " + node.getType() + " node: " + nodeId);
                     completed.add(nodeId);
                     state.setCurrentNode(nodeId);
-                    addReadyNeighbors(queue, completed, adjacency, nodeId, edges, null, state, nodeMap);
+                    addReadyNeighbors(queue, completed, adjacency, nodeId);
                     continue;
                 }
 
@@ -83,7 +80,7 @@ public class WorkflowExecutor {
 
                 NodeState nodeState = NodeState.builder()
                         .nodeId(nodeId)
-                        .status("running")
+                        .status(ExecutionStatus.RUNNING.getValue())
                         .input(nodeInputs)
                         .startedAt(LocalDateTime.now())
                         .build();
@@ -98,27 +95,27 @@ public class WorkflowExecutor {
                     return state.toStateMap();
                 }
 
-                nodeState.setStatus("completed");
+                nodeState.setStatus(ExecutionStatus.COMPLETED.getValue());
                 nodeState.setOutput(output);
                 nodeState.setCompletedAt(LocalDateTime.now());
                 completed.add(nodeId);
 
                 if (NodeType.isCondition(node) && output instanceof Map) {
                     Object b = ((Map<?, ?>) output).get("branch");
-                    String branch = b != null ? b.toString() : "true";
+                    String branch = ObjectUtils.toStringOrDefault(b, "true");
                     addConditionNeighbors(queue, completed, edges, nodeId, branch);
                 } else {
-                    addReadyNeighbors(queue, completed, adjacency, nodeId, edges, null, state, nodeMap);
+                    addReadyNeighbors(queue, completed, adjacency, nodeId);
                 }
             }
 
-            state.setStatus("completed");
+            state.setStatus(ExecutionStatus.COMPLETED.getValue());
             if (!state.getNodeStates().isEmpty()) {
                 List<NodeState> states = new ArrayList<>(state.getNodeStates().values());
                 state.setResult(states.get(states.size() - 1).getOutput());
             }
             state.setCompletedAt(LocalDateTime.now());
-            state.addLog("INFO", null, "Workflow execution completed");
+            state.addLog(LOG_LEVEL_INFO, null, "Workflow execution completed");
 
         } catch (Exception e) {
             handleWorkflowFailure(state, e);
@@ -128,26 +125,25 @@ public class WorkflowExecutor {
     }
 
     private void handleNodeFailure(ExecutionState state, NodeState nodeState, String nodeId, Exception e) {
-        nodeState.setStatus("failed");
+        nodeState.setStatus(ExecutionStatus.FAILED.getValue());
         nodeState.setError(e.getMessage());
         nodeState.setCompletedAt(LocalDateTime.now());
-        state.setStatus("failed");
-        state.setError(e.getMessage());
-        state.setCompletedAt(LocalDateTime.now());
-        state.addLog("ERROR", nodeId, "Node failed: " + e.getMessage());
+        markFailed(state, nodeId, "Node failed: " + e.getMessage());
     }
 
     private void handleWorkflowFailure(ExecutionState state, Exception e) {
-        state.setStatus("failed");
-        state.setError(e.getMessage());
+        markFailed(state, null, "Workflow execution failed: " + e.getMessage());
+    }
+
+    private void markFailed(ExecutionState state, String nodeId, String message) {
+        state.setStatus(ExecutionStatus.FAILED.getValue());
+        state.setError(message);
         state.setCompletedAt(LocalDateTime.now());
-        state.addLog("ERROR", null, "Workflow execution failed: " + e.getMessage());
+        state.addLog(LOG_LEVEL_ERROR, nodeId, message);
     }
 
     private void addReadyNeighbors(Deque<String> queue, Set<String> completed,
-                                   Map<String, List<String>> adjacency, String nodeId,
-                                   List<Edge> edges, Node conditionNode, ExecutionState state,
-                                   Map<String, Node> nodeMap) {
+                                   Map<String, List<String>> adjacency, String nodeId) {
         for (String targetId : adjacency.getOrDefault(nodeId, List.of())) {
             if (queue.contains(targetId) || completed.contains(targetId)) continue;
             List<String> deps = new ArrayList<>();
@@ -166,9 +162,8 @@ public class WorkflowExecutor {
                                        List<Edge> edges, String nodeId, String branch) {
         for (Edge e : edges) {
             if (!nodeId.equals(e.getSource())) continue;
-            String handle = e.getSourceHandle();
-            if (handle == null) handle = "default";
-            if (handle.equals(branch) || "default".equals(handle)) {
+            String handle = ObjectUtils.orDefault(e.getSourceHandle(), DEFAULT_SOURCE_HANDLE);
+            if (handle.equals(branch) || DEFAULT_SOURCE_HANDLE.equals(handle)) {
                 if (!queue.contains(e.getTarget()) && !completed.contains(e.getTarget())) {
                     queue.add(e.getTarget());
                 }

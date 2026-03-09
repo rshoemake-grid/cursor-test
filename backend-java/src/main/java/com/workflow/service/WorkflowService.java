@@ -1,21 +1,25 @@
 package com.workflow.service;
 
 import com.workflow.config.TemplateConfig;
+import com.workflow.dto.BulkDeleteResult;
 import com.workflow.dto.WorkflowCreate;
 import com.workflow.dto.WorkflowPublishRequest;
 import com.workflow.dto.WorkflowResponse;
 import com.workflow.dto.WorkflowTemplateResponse;
 import com.workflow.entity.Workflow;
 import com.workflow.entity.WorkflowTemplate;
+import com.workflow.exception.ForbiddenException;
 import com.workflow.exception.ResourceNotFoundException;
 import com.workflow.exception.ValidationException;
 import com.workflow.repository.WorkflowRepository;
+import com.workflow.util.ErrorMessages;
 import com.workflow.util.ObjectUtils;
 import com.workflow.util.RepositoryUtils;
 import com.workflow.util.TemplateFactory;
 import com.workflow.util.ValidationUtils;
 import com.workflow.util.WorkflowFactory;
 import com.workflow.repository.WorkflowTemplateRepository;
+import com.workflow.util.TemplateMapper;
 import com.workflow.util.WorkflowMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,6 +27,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -81,7 +87,7 @@ public class WorkflowService {
     @Transactional(readOnly = true)
     public WorkflowResponse getWorkflow(String id, String userId) {
         log.debug("Fetching workflow: {} for user: {}", id, userId);
-        Workflow workflow = RepositoryUtils.findByIdOrThrow(workflowRepository, id, "Workflow not found: " + id);
+        Workflow workflow = RepositoryUtils.findByIdOrThrow(workflowRepository, id, ErrorMessages.workflowNotFound(id));
         ownershipService.assertCanRead(workflow, userId);
         return workflowMapper.toResponse(workflow);
     }
@@ -147,9 +153,7 @@ public class WorkflowService {
         WorkflowTemplate t = TemplateFactory.fromWorkflow(w, request, userId, isAdmin,
                 templateOptions.getDefaultCategory(), templateOptions.getDefaultDifficulty());
         t = templateRepository.save(t);
-        return new WorkflowTemplateResponse(t.getId(), t.getName(), t.getDescription(), t.getCategory(), t.getTags(),
-                t.getDifficulty(), t.getEstimatedTime(), t.getIsOfficial(), t.getUsesCount(), t.getLikesCount(), t.getRating(),
-                t.getAuthorId(), null, t.getThumbnailUrl(), t.getPreviewImageUrl(), t.getCreatedAt(), t.getUpdatedAt());
+        return TemplateMapper.toResponse(t, null);
     }
 
     /**
@@ -158,13 +162,13 @@ public class WorkflowService {
      */
     public Map<String, Object> bulkDelete(List<String> workflowIds, String userId) {
         if (workflowIds == null || workflowIds.isEmpty()) {
-            throw new ValidationException("No workflow IDs provided");
+            throw new ValidationException(ErrorMessages.BULK_DELETE_NO_IDS);
         }
         if (userId == null) {
-            throw new ValidationException("Authentication required");
+            throw new ValidationException(ErrorMessages.BULK_DELETE_AUTH_REQUIRED);
         }
         int deleted = 0;
-        List<String> failed = new java.util.ArrayList<>();
+        List<String> failed = new ArrayList<>();
         for (String id : workflowIds) {
             try {
                 Workflow w = workflowRepository.findById(id).orElse(null);
@@ -175,19 +179,11 @@ public class WorkflowService {
                 } else {
                     failed.add(id);
                 }
-            } catch (Exception e) {
+            } catch (ForbiddenException | ResourceNotFoundException e) {
                 failed.add(id);
             }
         }
-        Map<String, Object> result = new java.util.HashMap<>();
-        result.put("deleted_count", deleted);
-        if (!failed.isEmpty()) {
-            result.put("message", "Deleted " + deleted + " workflow(s). " + failed.size() + " could not be deleted.");
-            result.put("failed_ids", failed);
-        } else {
-            result.put("message", "Successfully deleted " + deleted + " workflow(s)");
-        }
-        return result;
+        return new BulkDeleteResult(deleted, failed).toMap();
     }
 
     /**

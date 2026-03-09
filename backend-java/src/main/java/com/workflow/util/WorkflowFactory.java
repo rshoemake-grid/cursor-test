@@ -23,10 +23,10 @@ public final class WorkflowFactory {
                                  String version, String category, List<String> tags) {
         Workflow w = new Workflow();
         w.setId(UUID.randomUUID().toString());
-        w.setName(name != null && !name.isBlank() ? name : "Imported Workflow " + w.getId().substring(0, 8));
+        w.setName(ObjectUtils.orDefaultIfBlank(name, "Imported Workflow " + w.getId().substring(0, 8)));
         w.setDescription(description);
-        w.setVersion(version != null ? version : DEFAULT_VERSION);
-        w.setDefinition(definition != null ? definition : Map.of());
+        w.setVersion(ObjectUtils.orDefault(version, DEFAULT_VERSION));
+        w.setDefinition(ObjectUtils.orEmptyMap(definition));
         w.setOwnerId(ownerId);
         w.setIsPublic(false);
         w.setIsTemplate(false);

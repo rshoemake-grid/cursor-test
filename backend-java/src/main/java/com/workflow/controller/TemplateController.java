@@ -3,6 +3,7 @@ package com.workflow.controller;
 import com.workflow.dto.WorkflowResponse;
 import com.workflow.dto.WorkflowTemplateCreate;
 import com.workflow.dto.WorkflowTemplateResponse;
+import com.workflow.service.TemplateQueryService;
 import com.workflow.service.TemplateService;
 import com.workflow.util.AuthenticationHelper;
 import io.swagger.v3.oas.annotations.Operation;
@@ -21,10 +22,13 @@ import java.util.List;
 @Tag(name = "Templates", description = "Workflow templates")
 public class TemplateController {
     private final TemplateService templateService;
+    private final TemplateQueryService templateQueryService;
     private final AuthenticationHelper authenticationHelper;
 
-    public TemplateController(TemplateService templateService, AuthenticationHelper authenticationHelper) {
+    public TemplateController(TemplateService templateService, TemplateQueryService templateQueryService,
+                              AuthenticationHelper authenticationHelper) {
         this.templateService = templateService;
+        this.templateQueryService = templateQueryService;
         this.authenticationHelper = authenticationHelper;
     }
 
@@ -45,25 +49,25 @@ public class TemplateController {
             @RequestParam(defaultValue = "popular") String sortBy,
             @RequestParam(defaultValue = "20") int limit,
             @RequestParam(defaultValue = "0") int offset) {
-        return ResponseEntity.ok(templateService.listTemplates(category, difficulty, search, sortBy, limit, offset));
+        return ResponseEntity.ok(templateQueryService.listTemplates(category, difficulty, search, sortBy, limit, offset));
     }
 
     @GetMapping("/categories")
     @Operation(summary = "List Categories")
     public ResponseEntity<List<String>> categories() {
-        return ResponseEntity.ok(templateService.getCategories());
+        return ResponseEntity.ok(templateQueryService.getCategories());
     }
 
     @GetMapping("/difficulties")
     @Operation(summary = "List Difficulties")
     public ResponseEntity<List<String>> difficulties() {
-        return ResponseEntity.ok(templateService.getDifficulties());
+        return ResponseEntity.ok(templateQueryService.getDifficulties());
     }
 
     @GetMapping("/{templateId}")
     @Operation(summary = "Get Template")
     public ResponseEntity<WorkflowTemplateResponse> get(@PathVariable String templateId) {
-        return ResponseEntity.ok(templateService.getTemplate(templateId));
+        return ResponseEntity.ok(templateQueryService.getTemplate(templateId));
     }
 
     @PostMapping("/{templateId}/use")

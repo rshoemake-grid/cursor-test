@@ -34,13 +34,10 @@ public class WorkflowMapper {
         response.setCreatedAt(workflow.getCreatedAt());
         response.setUpdatedAt(workflow.getUpdatedAt());
         
-        // Safely extract definition components
-        Map<String, Object> definition = workflow.getDefinition();
-        if (definition != null) {
-            response.setNodes(extractNodes(definition));
-            response.setEdges(extractEdges(definition));
-            response.setVariables(extractVariables(definition));
-        }
+        // Safely extract definition components (extractNodes/Edges/Variables handle null)
+        response.setNodes(extractNodes(workflow.getDefinition()));
+        response.setEdges(extractEdges(workflow.getDefinition()));
+        response.setVariables(extractVariables(workflow.getDefinition()));
         
         return response;
     }
@@ -77,8 +74,7 @@ public class WorkflowMapper {
      */
     @SuppressWarnings("unchecked")
     public List<Node> extractNodes(Map<String, Object> definition) {
-        Object nodesObj = definition != null ? definition.get("nodes") : null;
-        return nodesObj == null ? List.of() : convertValueOrCast(nodesObj, new TypeReference<List<Node>>() {});
+        return extractOrDefault(ObjectUtils.orEmptyMap(definition).get("nodes"), new TypeReference<List<Node>>() {}, List.of());
     }
 
     /**
@@ -87,8 +83,7 @@ public class WorkflowMapper {
      */
     @SuppressWarnings("unchecked")
     public List<Edge> extractEdges(Map<String, Object> definition) {
-        Object edgesObj = definition != null ? definition.get("edges") : null;
-        return edgesObj == null ? List.of() : convertValueOrCast(edgesObj, new TypeReference<List<Edge>>() {});
+        return extractOrDefault(ObjectUtils.orEmptyMap(definition).get("edges"), new TypeReference<List<Edge>>() {}, List.of());
     }
 
     /**
@@ -97,8 +92,12 @@ public class WorkflowMapper {
      */
     @SuppressWarnings("unchecked")
     public Map<String, Object> extractVariables(Map<String, Object> definition) {
-        Object variablesObj = definition != null ? definition.get("variables") : null;
-        return variablesObj == null ? Map.of() : convertValueOrCast(variablesObj, new TypeReference<Map<String, Object>>() {});
+        return extractOrDefault(ObjectUtils.orEmptyMap(definition).get("variables"), new TypeReference<Map<String, Object>>() {}, Map.of());
+    }
+
+    @SuppressWarnings("unchecked")
+    private <T> T extractOrDefault(Object obj, TypeReference<T> typeRef, T empty) {
+        return obj == null ? empty : convertValueOrCast(obj, typeRef);
     }
 
     /**

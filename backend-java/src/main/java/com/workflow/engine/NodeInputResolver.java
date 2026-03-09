@@ -1,5 +1,6 @@
 package com.workflow.engine;
 
+import com.workflow.util.ObjectUtils;
 import com.workflow.dto.Edge;
 import com.workflow.dto.InputMapping;
 import com.workflow.dto.Node;
@@ -49,7 +50,7 @@ public final class NodeInputResolver {
                 if (src != null && src.getOutput() != null) {
                     if (src.getOutput() instanceof Map) {
                         Object val = ((Map<?, ?>) src.getOutput()).get(m.getSourceField());
-                        inputs.put(m.getName(), val != null ? val : src.getOutput());
+                        inputs.put(m.getName(), ObjectUtils.orDefault(val, src.getOutput()));
                     } else {
                         inputs.put(m.getName(), src.getOutput());
                     }

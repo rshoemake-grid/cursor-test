@@ -86,6 +86,14 @@ public class AuthenticationHelper {
     }
 
     /**
+     * Extract username from Authentication, safely handling null.
+     * @return username or null if not authenticated or authentication is null
+     */
+    public String extractUsernameNullable(Authentication authentication) {
+        return authentication == null ? null : extractUsername(authentication);
+    }
+
+    /**
      * Check if the authenticated user is an admin.
      * @return true if user is admin, false if not authenticated or not admin
      */

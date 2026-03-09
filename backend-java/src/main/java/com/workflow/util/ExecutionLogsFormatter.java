@@ -2,6 +2,7 @@ package com.workflow.util;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.workflow.dto.ExecutionLogEntry;
+import com.workflow.util.ObjectUtils;
 import com.workflow.dto.ExecutionLogsResponse;
 
 import org.springframework.stereotype.Component;
@@ -17,6 +18,8 @@ import java.util.Map;
  */
 @Component
 public class ExecutionLogsFormatter {
+    private static final int SEPARATOR_WIDTH = 80;
+
     private final ObjectMapper objectMapper;
 
     public ExecutionLogsFormatter(ObjectMapper objectMapper) {
@@ -27,8 +30,7 @@ public class ExecutionLogsFormatter {
         try {
             List<Map<String, Object>> logs = new ArrayList<>();
             for (ExecutionLogEntry e : logsResponse.getLogs()) {
-                String timestamp = e.getTimestamp() != null ? e.getTimestamp().toString() : null;
-                logs.add(JsonStateUtils.createLogEntry(timestamp, e.getLevel(), e.getNodeId(), e.getMessage()));
+                logs.add(JsonStateUtils.logEntryFromDto(e));
             }
             Map<String, Object> result = new LinkedHashMap<>();
             result.put("execution_id", executionId);
@@ -44,10 +46,10 @@ public class ExecutionLogsFormatter {
         StringBuilder sb = new StringBuilder();
         sb.append("Execution Logs for ").append(executionId).append("\n");
         sb.append("Total Logs: ").append(logsResponse.getTotal()).append("\n");
-        sb.append("=".repeat(80)).append("\n\n");
+        sb.append("=".repeat(SEPARATOR_WIDTH)).append("\n\n");
         for (ExecutionLogEntry e : logsResponse.getLogs()) {
             String nodeStr = e.getNodeId() != null ? " [" + e.getNodeId() + "]" : "";
-            sb.append("[").append(e.getTimestamp() != null ? e.getTimestamp() : "").append("] ")
+            sb.append("[").append(ObjectUtils.toStringOrDefault(e.getTimestamp(), "")).append("] ")
                     .append(e.getLevel()).append(nodeStr).append(": ")
                     .append(e.getMessage()).append("\n");
         }

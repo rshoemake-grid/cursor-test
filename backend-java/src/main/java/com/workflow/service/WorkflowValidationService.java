@@ -4,6 +4,8 @@ import com.workflow.dto.Edge;
 import com.workflow.dto.Node;
 import com.workflow.entity.Workflow;
 import com.workflow.repository.WorkflowRepository;
+import com.workflow.util.ErrorMessages;
+import com.workflow.util.ObjectUtils;
 import com.workflow.util.RepositoryUtils;
 import com.workflow.util.WorkflowMapper;
 import org.springframework.stereotype.Service;
@@ -24,7 +26,7 @@ public class WorkflowValidationService {
     }
 
     public Map<String, Object> validate(String workflowId) {
-        Workflow w = RepositoryUtils.findByIdOrThrow(workflowRepository, workflowId, "Workflow not found");
+        Workflow w = RepositoryUtils.findByIdOrThrow(workflowRepository, workflowId, ErrorMessages.WORKFLOW_NOT_FOUND);
         Map<String, Object> def = w.getDefinition();
         List<Node> nodes = workflowMapper.extractNodes(def);
         List<Edge> edges = workflowMapper.extractEdges(def);
@@ -48,7 +50,7 @@ public class WorkflowValidationService {
         }
 
         List<String> types = nodes.stream()
-                .map(n -> n.getType() != null ? n.getType().getValue() : null)
+                .map(n -> ObjectUtils.safeGet(n.getType(), com.workflow.dto.NodeType::getValue))
                 .filter(Objects::nonNull)
                 .toList();
         if (!types.contains("start")) {

@@ -2,6 +2,7 @@ package com.workflow.engine;
 
 import com.workflow.dto.AgentConfig;
 import com.workflow.dto.Node;
+import com.workflow.util.ObjectUtils;
 import com.workflow.dto.NodeType;
 import com.workflow.util.LlmConfigUtils;
 import org.springframework.core.env.Environment;
@@ -38,24 +39,21 @@ public class AgentNodeExecutor implements NodeExecutor {
     @Override
     public Object execute(Node node, Map<String, Object> inputs, ExecutionState state,
                           NodeExecutionContext ctx) {
-        Map<String, Object> llmConfig = ctx != null ? ctx.llmConfig() : Map.of();
-        if (llmConfig == null || llmConfig.isEmpty()) {
+        Map<String, Object> llmConfig = ObjectUtils.orEmptyMap(ObjectUtils.safeGet(ctx, NodeExecutionContext::llmConfig));
+        if (llmConfig.isEmpty()) {
             throw new IllegalStateException("LLM config required for agent nodes");
         }
         AgentConfig cfg = node.getAgentConfig();
-        String model = cfg != null && cfg.getModel() != null ? cfg.getModel() : LlmConfigUtils.getModel(llmConfig);
+        String model = ObjectUtils.orDefault(ObjectUtils.safeGet(cfg, AgentConfig::getModel), LlmConfigUtils.getModel(llmConfig));
+        LlmConfigUtils.validateApiKey(llmConfig, environment);
         String apiKey = LlmConfigUtils.getApiKeyWithEnvFallback(llmConfig, environment);
-        if (apiKey == null || apiKey.isBlank()) {
-            throw new IllegalStateException(
-                    "No LLM API key configured. Set api_key in Settings or one of OPENAI_API_KEY, GEMINI_API_KEY, GOOGLE_API_KEY env vars.");
-        }
 
-        String systemPrompt = cfg != null && cfg.getSystemPrompt() != null ? cfg.getSystemPrompt() : "";
+        String systemPrompt = ObjectUtils.orDefault(ObjectUtils.safeGet(cfg, AgentConfig::getSystemPrompt), "");
         List<Map<String, Object>> messages = new ArrayList<>();
-        messages.add(Map.of("role", "system", "content", systemPrompt));
+        messages.add(LlmConfigUtils.buildMessage("system", systemPrompt));
         Object userContent = InputResolver.getFirstOf(inputs, "message", "data", "output");
         if (userContent == null) userContent = inputs.values().stream().findFirst().orElse("");
-        messages.add(Map.of("role", "user", "content", String.valueOf(userContent)));
+        messages.add(LlmConfigUtils.buildMessage("user", String.valueOf(userContent)));
 
         String url = LlmConfigUtils.buildChatCompletionsUrl(LlmConfigUtils.getBaseUrl(llmConfig));
         return llmClient.chatCompletions(url, apiKey, model, messages);

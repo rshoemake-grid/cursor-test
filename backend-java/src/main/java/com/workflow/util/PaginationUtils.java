@@ -6,8 +6,18 @@ package com.workflow.util;
 public final class PaginationUtils {
 
     private static final int DEFAULT_MAX_LIMIT = 100;
+    /** Default page size when limit is null or <= 0. */
+    public static final int DEFAULT_PAGE_SIZE = 50;
 
     private PaginationUtils() {
+    }
+
+    /**
+     * Resolve page size from nullable limit. Returns DEFAULT_PAGE_SIZE when limit is null or <= 0,
+     * otherwise clamps to [1, DEFAULT_MAX_LIMIT].
+     */
+    public static int resolvePageSize(Integer limit) {
+        return clampLimit(limit != null && limit > 0 ? limit : DEFAULT_PAGE_SIZE);
     }
 
     /**

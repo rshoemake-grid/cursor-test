@@ -146,9 +146,9 @@ class WorkflowMapperTest {
         // Then
         assertNotNull(result);
         assertEquals("workflow-id", result.getId());
-        assertNull(result.getNodes());
-        assertNull(result.getEdges());
-        assertNull(result.getVariables());
+        assertEquals(List.of(), result.getNodes());
+        assertEquals(List.of(), result.getEdges());
+        assertEquals(Map.of(), result.getVariables());
     }
 
     @Test

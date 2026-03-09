@@ -1,11 +1,11 @@
 package com.workflow.dto;
 
+import com.workflow.util.ObjectUtils;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -28,11 +28,11 @@ public class WorkflowResponse {
 
     /** Return nodes or empty list if null. DRY: Used by WorkflowExecutor and WorkflowGraphBuilder. */
     public List<Node> getNodesOrEmpty() {
-        return nodes != null ? nodes : Collections.emptyList();
+        return ObjectUtils.orEmptyList(nodes);
     }
 
     /** Return edges or empty list if null. DRY: Used by WorkflowExecutor and WorkflowGraphBuilder. */
     public List<Edge> getEdgesOrEmpty() {
-        return edges != null ? edges : Collections.emptyList();
+        return ObjectUtils.orEmptyList(edges);
     }
 }

@@ -4,6 +4,7 @@ import com.workflow.entity.PasswordResetToken;
 import com.workflow.entity.User;
 import com.workflow.exception.ValidationException;
 import com.workflow.repository.PasswordResetTokenRepository;
+import com.workflow.util.ErrorMessages;
 import com.workflow.util.RepositoryUtils;
 import com.workflow.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Value;
@@ -77,14 +78,14 @@ public class PasswordResetService {
                 () -> new ValidationException("Invalid or expired reset token"));
 
         if (tokenEntity.getExpiresAt().isBefore(LocalDateTime.now())) {
-            throw new ValidationException("Reset token has expired");
+            throw new ValidationException(ErrorMessages.RESET_TOKEN_EXPIRED);
         }
 
         if (tokenEntity.getUsed()) {
-            throw new ValidationException("Reset token has already been used");
+            throw new ValidationException(ErrorMessages.RESET_TOKEN_ALREADY_USED);
         }
 
-        User user = RepositoryUtils.findByIdOrThrow(userRepository, tokenEntity.getUserId(), "User not found");
+        User user = RepositoryUtils.findByIdOrThrow(userRepository, tokenEntity.getUserId(), ErrorMessages.USER_NOT_FOUND);
 
         user.setHashedPassword(passwordEncoder.encode(newPassword));
         userRepository.save(user);

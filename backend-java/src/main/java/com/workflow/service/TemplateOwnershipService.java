@@ -1,8 +1,9 @@
 package com.workflow.service;
 
 import com.workflow.entity.WorkflowTemplate;
-import com.workflow.exception.ForbiddenException;
 import com.workflow.exception.ResourceNotFoundException;
+import com.workflow.util.ErrorMessages;
+import com.workflow.util.OwnershipUtils;
 import org.springframework.stereotype.Service;
 
 import java.util.Objects;
@@ -25,11 +26,9 @@ public class TemplateOwnershipService {
      */
     public void assertCanDelete(WorkflowTemplate template, String userId, boolean isAdmin) {
         if (template == null) {
-            throw new ResourceNotFoundException("Template not found");
+            throw new ResourceNotFoundException(ErrorMessages.TEMPLATE_NOT_FOUND);
         }
-        if (Objects.equals(template.getAuthorId(), userId) || isAdmin) {
-            return;
-        }
-        throw new ForbiddenException("Not authorized to delete this template");
+        boolean canDelete = Objects.equals(template.getAuthorId(), userId) || isAdmin;
+        OwnershipUtils.require(canDelete, ErrorMessages.NOT_AUTHORIZED_DELETE_TEMPLATE);
     }
 }

@@ -2,10 +2,11 @@ package com.workflow.service;
 
 import com.workflow.entity.Workflow;
 import com.workflow.entity.WorkflowShare;
-import com.workflow.exception.ForbiddenException;
 import com.workflow.exception.ResourceNotFoundException;
 import com.workflow.repository.WorkflowRepository;
 import com.workflow.repository.WorkflowShareRepository;
+import com.workflow.util.ErrorMessages;
+import com.workflow.util.OwnershipUtils;
 import com.workflow.util.RepositoryUtils;
 import org.springframework.stereotype.Service;
 
@@ -29,16 +30,14 @@ public class WorkflowOwnershipService {
      */
     public void assertOwner(Workflow workflow, String userId) {
         requireWorkflowExists(workflow);
-        if (!isOwner(workflow, userId)) {
-            throw new ForbiddenException("Not authorized to access this workflow");
-        }
+        OwnershipUtils.require(isOwner(workflow, userId), ErrorMessages.NOT_AUTHORIZED_WORKFLOW);
     }
 
     /**
      * Get workflow and assert ownership. Throws if not found or not owner.
      */
     public Workflow getWorkflowAndAssertOwner(String workflowId, String userId) {
-        Workflow workflow = RepositoryUtils.findByIdOrThrow(workflowRepository, workflowId, "Workflow not found: " + workflowId);
+        Workflow workflow = RepositoryUtils.findByIdOrThrow(workflowRepository, workflowId, ErrorMessages.workflowNotFound(workflowId));
         assertOwner(workflow, userId);
         return workflow;
     }
@@ -49,9 +48,7 @@ public class WorkflowOwnershipService {
     public void assertCanRead(Workflow workflow, String userId) {
         requireWorkflowExists(workflow);
         if (isPublic(workflow)) return;
-        if (!isOwner(workflow, userId)) {
-            throw new ForbiddenException("Not authorized to access this workflow");
-        }
+        OwnershipUtils.require(isOwner(workflow, userId), ErrorMessages.NOT_AUTHORIZED_WORKFLOW);
     }
 
     /**
@@ -61,14 +58,12 @@ public class WorkflowOwnershipService {
         requireWorkflowExists(workflow);
         if (isPublic(workflow)) return;
         if (isOwner(workflow, userId)) return;
-        if (!hasShareAccess(workflow, userId)) {
-            throw new ForbiddenException("Not authorized to access this workflow");
-        }
+        OwnershipUtils.require(hasShareAccess(workflow, userId), ErrorMessages.NOT_AUTHORIZED_WORKFLOW);
     }
 
     private void requireWorkflowExists(Workflow workflow) {
         if (workflow == null) {
-            throw new ResourceNotFoundException("Workflow not found");
+            throw new ResourceNotFoundException(ErrorMessages.WORKFLOW_NOT_FOUND);
         }
     }
 

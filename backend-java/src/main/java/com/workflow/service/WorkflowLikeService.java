@@ -3,6 +3,8 @@ package com.workflow.service;
 import com.workflow.entity.Workflow;
 import com.workflow.entity.WorkflowLike;
 import com.workflow.repository.WorkflowLikeRepository;
+import com.workflow.util.ErrorMessages;
+import com.workflow.util.ObjectUtils;
 import com.workflow.util.RepositoryUtils;
 import com.workflow.repository.WorkflowRepository;
 import org.springframework.stereotype.Service;
@@ -31,7 +33,7 @@ public class WorkflowLikeService {
 
     @Transactional
     public Map<String, String> likeWorkflow(String workflowId, String userId) {
-        Workflow workflow = RepositoryUtils.findByIdOrThrow(workflowRepository, workflowId, "Workflow not found");
+        Workflow workflow = RepositoryUtils.findByIdOrThrow(workflowRepository, workflowId, ErrorMessages.WORKFLOW_NOT_FOUND);
         ownershipService.assertCanRead(workflow, userId);
         if (workflowLikeRepository.findByWorkflowIdAndUserId(workflowId, userId).isPresent()) {
             return Map.of("message", "Already liked");
@@ -41,20 +43,28 @@ public class WorkflowLikeService {
         like.setWorkflowId(workflowId);
         like.setUserId(userId);
         workflowLikeRepository.save(like);
-        workflow.setLikesCount(Objects.requireNonNullElse(workflow.getLikesCount(), 0) + 1);
+        workflow.setLikesCount(incrementLikesCount(workflow.getLikesCount()));
         workflowRepository.save(workflow);
         return Map.of("message", "Liked successfully");
     }
 
     @Transactional
     public void unlikeWorkflow(String workflowId, String userId) {
-        Workflow workflow = RepositoryUtils.findByIdOrThrow(workflowRepository, workflowId, "Workflow not found");
+        Workflow workflow = RepositoryUtils.findByIdOrThrow(workflowRepository, workflowId, ErrorMessages.WORKFLOW_NOT_FOUND);
         ownershipService.assertCanRead(workflow, userId);
-        RepositoryUtils.orElseThrow(workflowLikeRepository.findByWorkflowIdAndUserId(workflowId, userId), "Like not found");
+        RepositoryUtils.orElseThrow(workflowLikeRepository.findByWorkflowIdAndUserId(workflowId, userId), ErrorMessages.LIKE_NOT_FOUND);
         workflowLikeRepository.deleteByWorkflowIdAndUserId(workflowId, userId);
         workflowRepository.findById(workflowId).ifPresent(w -> {
-            w.setLikesCount(Math.max(0, Objects.requireNonNullElse(w.getLikesCount(), 0) - 1));
+            w.setLikesCount(decrementLikesCount(w.getLikesCount()));
             workflowRepository.save(w);
         });
+    }
+
+    private static int incrementLikesCount(Integer current) {
+        return ObjectUtils.orDefaultInt(current, 0) + 1;
+    }
+
+    private static int decrementLikesCount(Integer current) {
+        return Math.max(0, ObjectUtils.orDefaultInt(current, 0) - 1);
     }
 }

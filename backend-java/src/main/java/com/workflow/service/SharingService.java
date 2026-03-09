@@ -11,6 +11,7 @@ import com.workflow.repository.UserRepository;
 import com.workflow.repository.WorkflowRepository;
 import com.workflow.repository.WorkflowShareRepository;
 import com.workflow.repository.WorkflowVersionRepository;
+import com.workflow.util.ErrorMessages;
 import com.workflow.util.RepositoryUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -45,7 +46,7 @@ public class SharingService {
     @Transactional
     public WorkflowShareResponse shareWorkflow(WorkflowShareCreate create, String userId) {
         var workflow = ownershipService.getWorkflowAndAssertOwner(create.getWorkflowId(), userId);
-        var sharedWith = RepositoryUtils.orElseThrow(userRepository.findByUsername(create.getSharedWithUsername()), "User not found");
+        var sharedWith = RepositoryUtils.orElseThrow(userRepository.findByUsername(create.getSharedWithUsername()), ErrorMessages.USER_NOT_FOUND);
 
         var existing = shareRepository.findBySharedWithUserId(sharedWith.getId()).stream()
                 .filter(s -> s.getWorkflowId().equals(create.getWorkflowId()))
@@ -81,7 +82,7 @@ public class SharingService {
 
     @Transactional
     public void revokeShare(String shareId, String userId) {
-        WorkflowShare share = RepositoryUtils.findByIdOrThrow(shareRepository, shareId, "Share not found");
+        WorkflowShare share = RepositoryUtils.findByIdOrThrow(shareRepository, shareId, ErrorMessages.SHARE_NOT_FOUND);
         ownershipService.getWorkflowAndAssertOwner(share.getWorkflowId(), userId);
         shareRepository.delete(share);
     }
@@ -106,7 +107,7 @@ public class SharingService {
     }
 
     public List<WorkflowVersionResponse> getVersions(String workflowId, String userId) {
-        var workflow = RepositoryUtils.findByIdOrThrow(workflowRepository, workflowId, "Workflow not found");
+        var workflow = RepositoryUtils.findByIdOrThrow(workflowRepository, workflowId, ErrorMessages.WORKFLOW_NOT_FOUND);
         ownershipService.assertCanReadOrShare(workflow, userId);
         return versionRepository.findByWorkflowIdOrderByVersionNumberDesc(workflowId).stream()
                 .map(v -> new WorkflowVersionResponse(v.getId(), v.getWorkflowId(), v.getVersionNumber(),
@@ -116,7 +117,7 @@ public class SharingService {
 
     @Transactional
     public Map<String, String> restoreVersion(String versionId, String userId) {
-        WorkflowVersion v = RepositoryUtils.findByIdOrThrow(versionRepository, versionId, "Version not found");
+        WorkflowVersion v = RepositoryUtils.findByIdOrThrow(versionRepository, versionId, ErrorMessages.VERSION_NOT_FOUND);
         var workflow = ownershipService.getWorkflowAndAssertOwner(v.getWorkflowId(), userId);
         workflow.setDefinition(v.getDefinition());
         workflowRepository.save(workflow);

@@ -24,6 +24,6 @@ public final class LlmErrorResponseBuilder {
      * Build error response from exception message.
      */
     public static Map<String, String> error(Exception e) {
-        return error(e != null ? e.getMessage() : null);
+        return error(ObjectUtils.safeGet(e, Exception::getMessage));
     }
 }

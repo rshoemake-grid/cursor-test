@@ -2,10 +2,13 @@ package com.workflow.service;
 
 import com.workflow.dto.*;
 import com.workflow.entity.Execution;
+import com.workflow.util.ErrorMessages;
+import com.workflow.util.ExecutionResponseMapper;
+import com.workflow.util.OwnershipUtils;
 import com.workflow.util.JsonStateUtils;
+import com.workflow.util.PaginationUtils;
 import com.workflow.util.RepositoryUtils;
 import com.workflow.exception.ExecutionNotFoundException;
-import com.workflow.exception.ForbiddenException;
 import com.workflow.repository.ExecutionRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,8 +17,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeParseException;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -40,20 +41,20 @@ public class ExecutionService implements ExecutionOwnershipChecker {
     @Transactional(readOnly = true)
     public ExecutionResponse getExecution(String executionId, String userId) {
         Execution execution = RepositoryUtils.findByIdOrThrow(executionRepository, executionId,
-                () -> new ExecutionNotFoundException("Execution not found: " + executionId));
+                () -> new ExecutionNotFoundException(ErrorMessages.executionNotFound(executionId)));
         assertExecutionOwner(execution, userId);
-        return toResponse(execution);
+        return ExecutionResponseMapper.toResponse(execution);
     }
 
     @Transactional(readOnly = true)
     public List<ExecutionResponse> listExecutions(String workflowId, String userId, String status,
                                                   Integer limit, int offset) {
-        int size = (limit != null && limit > 0) ? Math.min(limit, 100) : 50;
+        int size = PaginationUtils.resolvePageSize(limit);
         int page = offset / size;
         var pageable = PageRequest.of(page, size);
 
         List<Execution> executions = executionRepository.findWithFilters(workflowId, userId, status, pageable);
-        return executions.stream().map(this::toResponse).collect(Collectors.toList());
+        return executions.stream().map(ExecutionResponseMapper::toResponse).collect(Collectors.toList());
     }
 
     /**
@@ -63,10 +64,10 @@ public class ExecutionService implements ExecutionOwnershipChecker {
     @Transactional(readOnly = true)
     public List<ExecutionResponse> getRunningExecutions(String userId) {
         if (userId == null) {
-            throw new IllegalArgumentException("userId is required");
+            throw new IllegalArgumentException(ErrorMessages.USER_ID_REQUIRED);
         }
         List<Execution> executions = executionRepository.findByUserIdAndStatus(userId, ExecutionStatus.RUNNING.getValue());
-        return executions.stream().map(this::toResponse).collect(Collectors.toList());
+        return executions.stream().map(ExecutionResponseMapper::toResponse).collect(Collectors.toList());
     }
 
     /**
@@ -76,13 +77,13 @@ public class ExecutionService implements ExecutionOwnershipChecker {
     public ExecutionLogsResponse getExecutionLogs(String executionId, String userId, String level, String nodeId,
                                                   int limit, int offset) {
         Execution execution = RepositoryUtils.findByIdOrThrow(executionRepository, executionId,
-                () -> new ExecutionNotFoundException("Execution not found: " + executionId));
+                () -> new ExecutionNotFoundException(ErrorMessages.executionNotFound(executionId)));
         assertExecutionOwner(execution, userId);
 
         List<Map<String, Object>> rawLogs = JsonStateUtils.getLogsList(execution.getState());
 
         List<ExecutionLogEntry> logEntries = rawLogs.stream()
-                .map(this::toLogEntry)
+                .map(ExecutionResponseMapper::toLogEntry)
                 .filter(e -> e != null)
                 .filter(e -> level == null || level.equalsIgnoreCase(e.getLevel()))
                 .filter(e -> nodeId == null || nodeId.equals(e.getNodeId()))
@@ -102,42 +103,33 @@ public class ExecutionService implements ExecutionOwnershipChecker {
      */
     public ExecutionResponse cancelExecution(String executionId, String userId) {
         Execution execution = RepositoryUtils.findByIdOrThrow(executionRepository, executionId,
-                () -> new ExecutionNotFoundException("Execution not found: " + executionId));
+                () -> new ExecutionNotFoundException(ErrorMessages.executionNotFound(executionId)));
         assertExecutionOwner(execution, userId);
 
         String status = execution.getStatus();
         if (!ExecutionStatus.PENDING.getValue().equals(status) && !ExecutionStatus.RUNNING.getValue().equals(status)) {
-            throw new IllegalArgumentException("Execution " + executionId + " is not in a cancellable state (current status: " + status + ")");
+            throw new IllegalArgumentException(ErrorMessages.executionNotCancellable(executionId, status));
         }
 
         appendLogAndUpdateExecutionState(executionId, userId, "INFO", null, "Execution cancelled by user",
                 ExecutionStatus.CANCELLED.getValue(), null);
         execution = RepositoryUtils.findByIdOrThrow(executionRepository, executionId,
-                () -> new ExecutionNotFoundException("Execution not found: " + executionId));
+                () -> new ExecutionNotFoundException(ErrorMessages.executionNotFound(executionId)));
         log.info("Cancelled execution {}", executionId);
-        return toResponse(execution);
+        return ExecutionResponseMapper.toResponse(execution);
     }
 
-    private ExecutionResponse toResponse(Execution execution) {
-        Map<String, Object> state = JsonStateUtils.getStateOrEmpty(execution.getState());
-
-        List<Map<String, Object>> rawLogs = JsonStateUtils.getLogsList(state);
-        List<ExecutionLogEntry> logs = rawLogs.stream()
-                .map(this::toLogEntry)
-                .filter(Objects::nonNull)
-                .collect(Collectors.toList());
-
-        return new ExecutionResponse(
-                execution.getId(),
-                execution.getWorkflowId(),
-                execution.getStatus(),
-                (String) state.get("current_node"),
-                (Map<String, Object>) state.get("result"),
-                (String) state.get("error"),
-                execution.getStartedAt(),
-                execution.getCompletedAt(),
-                logs
-        );
+    /**
+     * Update execution state after workflow run. SRP: Centralizes execution persistence used by ExecutionOrchestratorService.
+     */
+    public void updateExecutionState(String executionId, Map<String, Object> state) {
+        Execution execution = executionRepository.findById(executionId).orElse(null);
+        if (execution != null) {
+            execution.setStatus((String) state.getOrDefault("status", ExecutionStatus.COMPLETED.getValue()));
+            execution.setState(state);
+            execution.setCompletedAt(LocalDateTime.now());
+            executionRepository.save(execution);
+        }
     }
 
     /**
@@ -146,7 +138,7 @@ public class ExecutionService implements ExecutionOwnershipChecker {
     public void appendLogAndUpdateExecutionState(String executionId, String userId, String level, String nodeId,
                                                   String message, String newStatus, String errorMessage) {
         Execution exec = RepositoryUtils.findByIdOrThrow(executionRepository, executionId,
-                () -> new ExecutionNotFoundException("Execution not found: " + executionId));
+                () -> new ExecutionNotFoundException(ErrorMessages.executionNotFound(executionId)));
         assertExecutionOwner(exec, userId);
         Map<String, Object> state = new HashMap<>(JsonStateUtils.getStateOrEmpty(exec.getState()));
         List<Map<String, Object>> logs = new ArrayList<>(JsonStateUtils.getLogsList(state));
@@ -166,7 +158,7 @@ public class ExecutionService implements ExecutionOwnershipChecker {
      */
     public void requireExecutionOwner(String executionId, String userId) {
         Execution execution = RepositoryUtils.findByIdOrThrow(executionRepository, executionId,
-                () -> new ExecutionNotFoundException("Execution not found: " + executionId));
+                () -> new ExecutionNotFoundException(ErrorMessages.executionNotFound(executionId)));
         assertExecutionOwner(execution, userId);
     }
 
@@ -181,37 +173,8 @@ public class ExecutionService implements ExecutionOwnershipChecker {
     }
 
     private void assertExecutionOwner(Execution execution, String userId) {
-        if (userId == null || !Objects.equals(userId, execution.getUserId())) {
-            throw new ForbiddenException("Not authorized to access this execution");
-        }
+        boolean isOwner = userId != null && Objects.equals(userId, execution.getUserId());
+        OwnershipUtils.require(isOwner, ErrorMessages.NOT_AUTHORIZED_EXECUTION);
     }
 
-    private ExecutionLogEntry toLogEntry(Map<String, Object> m) {
-        try {
-            Object ts = m.get("timestamp");
-            LocalDateTime timestamp = null;
-            if (ts instanceof String) {
-                try {
-                    String s = (String) ts;
-                    timestamp = LocalDateTime.parse(s.replace("Z", ""), DateTimeFormatter.ISO_LOCAL_DATE_TIME);
-                } catch (DateTimeParseException e) {
-                    log.debug("Unparseable log timestamp '{}', skipping entry", ts);
-                    return null;
-                }
-            }
-            if (timestamp == null) {
-                log.debug("Log entry missing timestamp, skipping");
-                return null;
-            }
-            return new ExecutionLogEntry(
-                    timestamp,
-                    (String) m.getOrDefault("level", "INFO"),
-                    (String) m.get("node_id"),
-                    (String) m.getOrDefault("message", "")
-            );
-        } catch (Exception e) {
-            log.warn("Failed to parse log entry: {}", e.getMessage());
-            return null;
-        }
-    }
 }

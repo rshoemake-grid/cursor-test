@@ -1,8 +1,11 @@
 package com.workflow.service;
 
+import com.workflow.dto.ExecutionStatus;
 import com.workflow.entity.Execution;
+import com.workflow.exception.ExecutionNotFoundException;
 import com.workflow.exception.ResourceNotFoundException;
 import com.workflow.repository.ExecutionRepository;
+import com.workflow.util.ErrorMessages;
 import com.workflow.util.PaginationUtils;
 import com.workflow.util.JsonStateUtils;
 import com.workflow.util.RepositoryUtils;
@@ -41,7 +44,8 @@ public class ExecutionStatsService {
 
     public Map<String, Object> getTimeline(String executionId, String userId) {
         executionService.requireExecutionOwner(executionId, userId);
-        Execution e = RepositoryUtils.findByIdOrThrow(executionRepository, executionId, "Execution not found");
+        Execution e = RepositoryUtils.findByIdOrThrow(executionRepository, executionId,
+                () -> new ExecutionNotFoundException(ErrorMessages.executionNotFound(executionId)));
         Map<String, Object> state = JsonStateUtils.getStateOrEmpty(e.getState());
         Map<String, Object> result = new HashMap<>();
         result.put("execution_id", executionId);
@@ -55,11 +59,12 @@ public class ExecutionStatsService {
 
     public Map<String, Object> getNodeDetails(String executionId, String nodeId, String userId) {
         executionService.requireExecutionOwner(executionId, userId);
-        Execution e = RepositoryUtils.findByIdOrThrow(executionRepository, executionId, "Execution not found");
+        Execution e = RepositoryUtils.findByIdOrThrow(executionRepository, executionId,
+                () -> new ExecutionNotFoundException(ErrorMessages.executionNotFound(executionId)));
         Map<String, Object> state = JsonStateUtils.getStateOrEmpty(e.getState());
         Map<String, Object> nodeStates = JsonStateUtils.getMap(state, "node_states");
         if (!nodeStates.containsKey(nodeId)) {
-            throw new ResourceNotFoundException("Node not found in execution");
+            throw new ResourceNotFoundException(ErrorMessages.NODE_NOT_FOUND_IN_EXECUTION);
         }
         Map<String, Object> nodeState = JsonStateUtils.getMap(nodeStates, nodeId);
         List<Map<String, Object>> logs = JsonStateUtils.getLogsList(state);
@@ -80,13 +85,19 @@ public class ExecutionStatsService {
     public Map<String, Object> getWorkflowStats(String workflowId) {
         var pageable = PageRequest.of(0, MAX_STATS_LIMIT);
         List<Execution> executions = executionRepository.findByWorkflowIdOrderByStartedAtDesc(workflowId, pageable);
-        long success = executions.stream().filter(e -> "completed".equals(e.getStatus())).count();
-        long failure = executions.stream().filter(e -> "failed".equals(e.getStatus())).count();
-        double avgDur = executions.stream()
-                .filter(ex -> ex.getCompletedAt() != null && ex.getStartedAt() != null)
-                .mapToLong(ex -> Duration.between(ex.getStartedAt(), ex.getCompletedAt()).getSeconds())
-                .average()
-                .orElse(0);
+        long success = 0;
+        long failure = 0;
+        long totalDuration = 0;
+        int completedCount = 0;
+        for (Execution ex : executions) {
+            if (ExecutionStatus.COMPLETED.getValue().equals(ex.getStatus())) success++;
+            else if (ExecutionStatus.FAILED.getValue().equals(ex.getStatus())) failure++;
+            if (ex.getCompletedAt() != null && ex.getStartedAt() != null) {
+                totalDuration += Duration.between(ex.getStartedAt(), ex.getCompletedAt()).getSeconds();
+                completedCount++;
+            }
+        }
+        double avgDur = completedCount > 0 ? (double) totalDuration / completedCount : 0;
         Map<String, Object> result = new HashMap<>();
         result.put("workflow_id", workflowId);
         result.put("total_executions", executions.size());

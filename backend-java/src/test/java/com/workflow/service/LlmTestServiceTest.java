@@ -1,5 +1,6 @@
 package com.workflow.service;
 
+import com.workflow.config.LlmProviderConfig;
 import org.junit.jupiter.api.Test;
 
 import java.util.Map;
@@ -8,7 +9,9 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class LlmTestServiceTest {
 
-    private final LlmTestService service = new LlmTestService();
+    private static final LlmProviderConfig.LlmProviderUrls DEFAULT_URLS = new LlmProviderConfig.LlmProviderUrls();
+
+    private final LlmTestService service = new LlmTestService(DEFAULT_URLS);
 
     @Test
     void testAnthropic_makesRealRequest() {

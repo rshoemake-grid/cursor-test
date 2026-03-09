@@ -1,11 +1,13 @@
 package com.workflow.service;
 
+import com.workflow.exception.ExecutionNotFoundException;
 import com.workflow.entity.Execution;
 import com.workflow.entity.Workflow;
 import com.workflow.repository.ExecutionRepository;
 import com.workflow.repository.WorkflowRepository;
-import com.workflow.util.ObjectUtils;
+import com.workflow.util.ErrorMessages;
 import com.workflow.util.RepositoryUtils;
+import com.workflow.util.WorkflowExportMapper;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -30,7 +32,8 @@ public class ExecutionExportService {
 
     public Map<String, Object> exportExecution(String executionId, String userId) {
         executionService.requireExecutionOwner(executionId, userId);
-        Execution e = RepositoryUtils.findByIdOrThrow(executionRepository, executionId, "Execution not found");
+        Execution e = RepositoryUtils.findByIdOrThrow(executionRepository, executionId,
+                () -> new ExecutionNotFoundException(ErrorMessages.executionNotFound(executionId)));
         Workflow w = workflowRepository.findById(e.getWorkflowId()).orElse(null);
 
         Map<String, Object> result = new HashMap<>();
@@ -46,16 +49,8 @@ public class ExecutionExportService {
         execData.put("state", e.getState());
         result.put("execution", execData);
 
-        result.put("workflow", toWorkflowExportMap(w));
+        result.put("workflow", WorkflowExportMapper.toMinimalExportMap(w));
 
         return result;
-    }
-
-    private static Map<String, Object> toWorkflowExportMap(Workflow w) {
-        Map<String, Object> m = new HashMap<>();
-        m.put("id", ObjectUtils.safeGet(w, Workflow::getId));
-        m.put("name", ObjectUtils.safeGet(w, Workflow::getName));
-        m.put("definition", ObjectUtils.safeGet(w, Workflow::getDefinition));
-        return m;
     }
 }

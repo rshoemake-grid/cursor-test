@@ -2,6 +2,7 @@ package com.workflow.engine;
 
 import com.workflow.dto.ExecutionLogEntry;
 import com.workflow.util.JsonStateUtils;
+import com.workflow.util.ObjectUtils;
 import lombok.Data;
 
 import java.time.LocalDateTime;
@@ -45,8 +46,7 @@ public class ExecutionState {
         map.put("result", result);
         List<Map<String, Object>> logsList = new ArrayList<>();
         for (ExecutionLogEntry l : logs) {
-            String timestamp = l.getTimestamp() != null ? l.getTimestamp().toString() : null;
-            logsList.add(JsonStateUtils.createLogEntry(timestamp, l.getLevel(), l.getNodeId(), l.getMessage()));
+            logsList.add(JsonStateUtils.logEntryFromDto(l));
         }
         map.put("logs", logsList);
         Map<String, Object> nodeStatesMap = new HashMap<>();

@@ -1,5 +1,6 @@
 package com.workflow.exception;
 
+import com.workflow.util.ObjectUtils;
 import com.workflow.util.EnvironmentUtils;
 import com.workflow.util.ErrorResponseBuilder;
 import jakarta.servlet.http.HttpServletRequest;
@@ -31,7 +32,7 @@ public class GlobalExceptionHandler {
     }
 
     private static String getRequestPath(HttpServletRequest request) {
-        return request != null ? request.getRequestURI() : null;
+        return ObjectUtils.safeGet(request, HttpServletRequest::getRequestURI);
     }
     
     @ExceptionHandler(ResourceNotFoundException.class)

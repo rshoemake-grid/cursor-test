@@ -7,7 +7,6 @@ import com.workflow.entity.Execution;
 import com.workflow.engine.WorkflowExecutor;
 import com.workflow.util.EnvironmentUtils;
 import com.workflow.util.ObjectUtils;
-import com.workflow.repository.ExecutionRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.env.Environment;
@@ -29,7 +28,6 @@ public class ExecutionOrchestratorService {
     private static final String GENERIC_ERROR_MESSAGE = "Execution failed";
 
     private final ExecutionCreationService executionCreationService;
-    private final ExecutionRepository executionRepository;
     private final ExecutionService executionService;
     private final WorkflowService workflowService;
     private final SettingsService settingsService;
@@ -37,14 +35,12 @@ public class ExecutionOrchestratorService {
     private final Environment environment;
 
     public ExecutionOrchestratorService(ExecutionCreationService executionCreationService,
-                                       ExecutionRepository executionRepository,
                                        ExecutionService executionService,
                                        WorkflowService workflowService,
                                        SettingsService settingsService,
                                        WorkflowExecutor workflowExecutor,
                                        Environment environment) {
         this.executionCreationService = executionCreationService;
-        this.executionRepository = executionRepository;
         this.executionService = executionService;
         this.workflowService = workflowService;
         this.settingsService = settingsService;
@@ -58,7 +54,7 @@ public class ExecutionOrchestratorService {
         String executionId = execution.getId();
 
         Map<String, Object> inputs = ObjectUtils.orDefault(
-                request != null ? request.getInputs() : null, Map.of());
+                ObjectUtils.safeGet(request, ExecutionRequest::getInputs), Map.of());
 
         log.info("Created execution {} for workflow {}", executionId, workflowId);
 
@@ -85,21 +81,12 @@ public class ExecutionOrchestratorService {
 
             // Simplified executor: process workflow and update state
             Map<String, Object> state = executeWorkflowInternal(workflowId, userId, inputs);
-
-            Execution execution = executionRepository.findById(executionId).orElse(null);
-            if (execution != null) {
-                execution.setStatus((String) state.getOrDefault("status", ExecutionStatus.COMPLETED.getValue()));
-                execution.setState(state);
-                execution.setCompletedAt(LocalDateTime.now());
-                executionRepository.save(execution);
-            }
+            executionService.updateExecutionState(executionId, state);
         } catch (Exception e) {
             log.error("Background execution {} failed: {}", executionId, e.getMessage(), e);
             String errorMessage = EnvironmentUtils.isProduction(environment) ? GENERIC_ERROR_MESSAGE
                     : ObjectUtils.orDefault(e.getMessage(), GENERIC_ERROR_MESSAGE);
-            String logMessage = GENERIC_ERROR_MESSAGE.equals(errorMessage)
-                    ? errorMessage : "Execution failed: " + errorMessage;
-            executionService.appendLogAndUpdateExecutionState(executionId, userId, "ERROR", null, logMessage,
+            executionService.appendLogAndUpdateExecutionState(executionId, userId, "ERROR", null, errorMessage,
                     ExecutionStatus.FAILED.getValue(), errorMessage);
         }
     }

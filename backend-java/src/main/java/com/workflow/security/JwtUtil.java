@@ -1,5 +1,6 @@
 package com.workflow.security;
 
+import com.workflow.util.ObjectUtils;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
@@ -38,7 +39,7 @@ public class JwtUtil {
         try {
             Claims claims = extractAllClaims(token);
             Object userId = claims.get("userId");
-            return userId != null ? userId.toString() : null;
+            return ObjectUtils.toStringOrDefault(userId, null);
         } catch (Exception e) {
             return null;
         }

@@ -1,5 +1,6 @@
 package com.workflow.config;
 
+import com.workflow.util.ObjectUtils;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -40,12 +41,12 @@ public class TemplateConfig {
 
         /** Default difficulty when not specified. Returns first in list or "beginner". */
         public String getDefaultDifficulty() {
-            return difficulties != null && !difficulties.isEmpty() ? difficulties.get(0) : "beginner";
+            return ObjectUtils.firstOrDefault(difficulties, "beginner");
         }
 
         /** Default category when not specified. Returns last in list ("custom") or "custom". */
         public String getDefaultCategory() {
-            return categories != null && !categories.isEmpty() ? categories.get(categories.size() - 1) : "custom";
+            return ObjectUtils.lastOrDefault(categories, "custom");
         }
     }
 }

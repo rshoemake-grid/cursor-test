@@ -5,6 +5,7 @@ import com.workflow.entity.RefreshToken;
 import com.workflow.entity.User;
 import com.workflow.exception.ValidationException;
 import com.workflow.repository.RefreshTokenRepository;
+import com.workflow.util.ErrorMessages;
 import com.workflow.util.RepositoryUtils;
 import com.workflow.repository.UserRepository;
 import com.workflow.security.JwtUtil;
@@ -75,13 +76,13 @@ public class TokenService {
 
         RefreshToken tokenEntity = RepositoryUtils.orElseThrow(
                 refreshTokenRepository.findByToken(refreshTokenValue),
-                () -> new ValidationException("Invalid refresh token"));
+                () -> new ValidationException(ErrorMessages.INVALID_REFRESH_TOKEN));
 
         if (tokenEntity.getRevoked() || tokenEntity.getExpiresAt().isBefore(LocalDateTime.now())) {
-            throw new ValidationException("Refresh token expired or revoked");
+            throw new ValidationException(ErrorMessages.REFRESH_TOKEN_EXPIRED);
         }
 
-        User user = RepositoryUtils.findByIdOrThrow(userRepository, tokenEntity.getUserId(), "User not found");
+        User user = RepositoryUtils.findByIdOrThrow(userRepository, tokenEntity.getUserId(), ErrorMessages.USER_NOT_FOUND);
 
         String newAccessToken = jwtUtil.generateToken(user.getUsername(), user.getId());
         String newRefreshToken = jwtUtil.generateRefreshToken(user.getUsername(), user.getId());

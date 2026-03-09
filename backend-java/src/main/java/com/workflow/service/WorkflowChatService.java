@@ -5,10 +5,12 @@ import com.workflow.dto.WorkflowChatResponse;
 import com.workflow.engine.LlmApiClient;
 import com.workflow.entity.Workflow;
 import com.workflow.repository.WorkflowRepository;
+import com.workflow.util.ErrorMessages;
 import com.workflow.util.ObjectUtils;
 import com.workflow.util.RepositoryUtils;
 import com.workflow.util.WorkflowMapper;
 import com.workflow.util.LlmConfigUtils;
+import org.springframework.core.env.Environment;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -23,21 +25,26 @@ import java.util.*;
 @Service
 public class WorkflowChatService {
     private static final Logger log = LoggerFactory.getLogger(WorkflowChatService.class);
+    private static final String SYSTEM_PROMPT_PREFIX = "You are an AI assistant that helps users create and modify workflow graphs. " +
+            "Respond with helpful suggestions. If the user wants to make changes, describe what you would do. " +
+            "Current workflow context:\n";
 
     private final WorkflowRepository workflowRepository;
     private final WorkflowMapper workflowMapper;
     private final SettingsService settingsService;
     private final LlmApiClient llmApiClient;
     private final WorkflowOwnershipService ownershipService;
+    private final Environment environment;
 
     public WorkflowChatService(WorkflowRepository workflowRepository, WorkflowMapper workflowMapper,
                               SettingsService settingsService, LlmApiClient llmApiClient,
-                              WorkflowOwnershipService ownershipService) {
+                              WorkflowOwnershipService ownershipService, Environment environment) {
         this.workflowRepository = workflowRepository;
         this.workflowMapper = workflowMapper;
         this.settingsService = settingsService;
         this.llmApiClient = llmApiClient;
         this.ownershipService = ownershipService;
+        this.environment = environment;
     }
 
     @Transactional(readOnly = true)
@@ -47,31 +54,27 @@ public class WorkflowChatService {
                         "No LLM provider configured. Please configure an LLM provider in Settings."));
 
         String workflowContext = getWorkflowContext(request.getWorkflowId(), userId);
-        String systemPrompt = "You are an AI assistant that helps users create and modify workflow graphs. " +
-                "Respond with helpful suggestions. If the user wants to make changes, describe what you would do. " +
-                "Current workflow context:\n" + workflowContext;
+        String systemPrompt = SYSTEM_PROMPT_PREFIX + workflowContext;
 
         List<Map<String, Object>> messages = new ArrayList<>();
-        messages.add(Map.of("role", "system", "content", systemPrompt));
+        messages.add(LlmConfigUtils.buildMessage("system", systemPrompt));
         if (request.getConversationHistory() != null) {
             for (var m : request.getConversationHistory()) {
-                messages.add(Map.of("role", m.getRole(), "content", m.getContent()));
+                messages.add(LlmConfigUtils.buildMessage(m.getRole(), m.getContent()));
             }
         }
-        messages.add(Map.of("role", "user", "content", request.getMessage()));
+        messages.add(LlmConfigUtils.buildMessage("user", request.getMessage()));
 
         String baseUrl = LlmConfigUtils.getBaseUrl(llmConfig);
-        String apiKey = LlmConfigUtils.getApiKey(llmConfig);
-        if (apiKey == null || apiKey.isBlank()) {
-            throw new IllegalArgumentException("No LLM API key configured in Settings.");
-        }
+        LlmConfigUtils.validateApiKey(llmConfig, environment);
+        String apiKey = LlmConfigUtils.getApiKeyWithEnvFallback(llmConfig, environment);
         String model = LlmConfigUtils.getModel(llmConfig);
         String url = LlmConfigUtils.buildChatCompletionsUrl(baseUrl);
 
         try {
             String responseContent = llmApiClient.chatCompletions(url, apiKey, model, messages);
             return new WorkflowChatResponse(
-                    responseContent != null && !responseContent.isBlank() ? responseContent : "I've processed your request.",
+                    ObjectUtils.orDefaultIfBlank(responseContent, "I've processed your request."),
                     null,
                     request.getWorkflowId());
         } catch (Exception e) {
@@ -84,9 +87,9 @@ public class WorkflowChatService {
         if (workflowId == null || workflowId.isBlank()) {
             return "No workflow loaded. You can create a new workflow.";
         }
-        Workflow w = RepositoryUtils.findByIdOrThrow(workflowRepository, workflowId, "Workflow not found");
+        Workflow w = RepositoryUtils.findByIdOrThrow(workflowRepository, workflowId, ErrorMessages.WORKFLOW_NOT_FOUND);
         ownershipService.assertCanReadOrShare(w, userId);
-        Map<String, Object> def = w.getDefinition() != null ? w.getDefinition() : Map.of();
+        Map<String, Object> def = ObjectUtils.orEmptyMap(w.getDefinition());
         var nodes = workflowMapper.extractNodes(def);
         var edges = workflowMapper.extractEdges(def);
 

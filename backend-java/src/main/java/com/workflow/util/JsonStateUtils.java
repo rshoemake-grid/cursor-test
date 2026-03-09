@@ -20,7 +20,7 @@ public final class JsonStateUtils {
      * Return state map or empty map if null. DRY: Used by ExecutionService and ExecutionStatsService.
      */
     public static Map<String, Object> getStateOrEmpty(Map<String, Object> state) {
-        return state != null ? state : Collections.emptyMap();
+        return ObjectUtils.orEmptyMap(state);
     }
 
     /**
@@ -55,9 +55,44 @@ public final class JsonStateUtils {
     @SuppressWarnings("unchecked")
     public static Map<String, Object> getMapOrDefault(Map<String, Object> map, String key,
                                                       Map<String, Object> defaultValue) {
-        if (map == null) return defaultValue != null ? defaultValue : Collections.emptyMap();
+        if (map == null) return ObjectUtils.orDefault(defaultValue, Collections.emptyMap());
         Object o = map.get(key);
-        return o instanceof Map<?, ?> ? (Map<String, Object>) o : (defaultValue != null ? defaultValue : Collections.emptyMap());
+        return o instanceof Map<?, ?> ? (Map<String, Object>) o : ObjectUtils.orDefault(defaultValue, Collections.emptyMap());
+    }
+
+    /**
+     * Safely extract list (raw) from map. Returns empty list if missing or wrong type.
+     */
+    @SuppressWarnings("unchecked")
+    public static List<?> getList(Map<String, Object> map, String key) {
+        if (map == null) return List.of();
+        Object o = map.get(key);
+        return o instanceof List<?> ? (List<?>) o : List.of();
+    }
+
+    /**
+     * Safely extract string from map. Returns null if missing or wrong type.
+     */
+    public static String getString(Map<String, Object> map, String key) {
+        if (map == null) return null;
+        Object o = map.get(key);
+        return ObjectUtils.toStringOrDefault(o, null);
+    }
+
+    /**
+     * Safely extract list of strings from map. Returns empty list if missing or wrong type.
+     */
+    @SuppressWarnings("unchecked")
+    public static List<String> getStringList(Map<String, Object> map, String key) {
+        if (map == null) return List.of();
+        Object o = map.get(key);
+        if (o instanceof List<?> list) {
+            return list.stream()
+                    .map(item -> ObjectUtils.toStringOrDefault(item, null))
+                    .filter(Objects::nonNull)
+                    .toList();
+        }
+        return List.of();
     }
 
     /**
@@ -75,6 +110,40 @@ public final class JsonStateUtils {
                     .toList();
         }
         return Collections.emptyList();
+    }
+
+    /**
+     * Parse log entry map to ExecutionLogEntry DTO. DRY: Used by ExecutionService.toLogEntry.
+     * Returns null if timestamp is missing or unparseable.
+     */
+    public static com.workflow.dto.ExecutionLogEntry mapToExecutionLogEntry(Map<String, Object> m) {
+        if (m == null) return null;
+        Object ts = m.get("timestamp");
+        java.time.LocalDateTime timestamp = null;
+        if (ts instanceof String s) {
+            try {
+                timestamp = java.time.LocalDateTime.parse(s.replace("Z", ""), java.time.format.DateTimeFormatter.ISO_LOCAL_DATE_TIME);
+            } catch (java.time.format.DateTimeParseException e) {
+                return null;
+            }
+        }
+        if (timestamp == null) return null;
+        return new com.workflow.dto.ExecutionLogEntry(
+                timestamp,
+                (String) m.getOrDefault("level", "INFO"),
+                (String) m.get("node_id"),
+                (String) m.getOrDefault("message", ""));
+    }
+
+    /**
+     * Create log entry map from ExecutionLogEntry DTO. DRY: Used by ExecutionState, ExecutionLogsFormatter.
+     */
+    public static Map<String, Object> logEntryFromDto(com.workflow.dto.ExecutionLogEntry e) {
+        String timestamp = ObjectUtils.toStringOrDefault(ObjectUtils.safeGet(e, com.workflow.dto.ExecutionLogEntry::getTimestamp), null);
+        return createLogEntry(timestamp,
+                ObjectUtils.safeGet(e, com.workflow.dto.ExecutionLogEntry::getLevel),
+                ObjectUtils.safeGet(e, com.workflow.dto.ExecutionLogEntry::getNodeId),
+                ObjectUtils.safeGet(e, com.workflow.dto.ExecutionLogEntry::getMessage));
     }
 
     /**

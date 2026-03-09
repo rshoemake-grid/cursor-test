@@ -2,6 +2,8 @@ package com.workflow.engine;
 
 import com.workflow.dto.Node;
 import com.workflow.dto.NodeType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import java.util.EnumMap;
@@ -15,6 +17,7 @@ import java.util.Map;
  */
 @Component
 public class NodeExecutorRegistry {
+    private static final Logger log = LoggerFactory.getLogger(NodeExecutorRegistry.class);
 
     private final Map<NodeType, NodeExecutor> executors = new EnumMap<>(NodeType.class);
     private final NodeTypeParser nodeTypeParser;
@@ -33,6 +36,7 @@ public class NodeExecutorRegistry {
         if (executor != null) {
             return executor.execute(node, inputs, state, ctx);
         }
+        log.warn("No executor found for node type: {}, passing through inputs", type);
         return inputs;
     }
 }

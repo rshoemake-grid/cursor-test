@@ -5,6 +5,7 @@ import com.workflow.entity.Workflow;
 import com.workflow.entity.WorkflowLike;
 import com.workflow.repository.WorkflowLikeRepository;
 import com.workflow.repository.WorkflowRepository;
+import com.workflow.util.ObjectUtils;
 import com.workflow.util.PaginationUtils;
 import com.workflow.util.SearchUtils;
 import com.workflow.util.SortStrategy;
@@ -22,6 +23,10 @@ import java.util.stream.Collectors;
  */
 @Service
 public class WorkflowDiscoveryService {
+    private static final int TRENDING_FETCH_SIZE = 100;
+    /** Weight for likes in trending score (likes count * LIKES_WEIGHT). */
+    private static final int LIKES_WEIGHT = 2;
+
     private final WorkflowRepository workflowRepository;
     private final WorkflowLikeRepository workflowLikeRepository;
     private final WorkflowMapper workflowMapper;
@@ -55,12 +60,10 @@ public class WorkflowDiscoveryService {
     }
 
     public List<WorkflowResponseV2> getTrending(int limit) {
-        var pageable = PageRequest.of(0, 100);
+        var pageable = PageRequest.of(0, TRENDING_FETCH_SIZE);
         List<Workflow> workflows = workflowRepository.findPublicOrTemplateWorkflows(pageable);
         return workflows.stream()
-                .sorted((a, b) -> Integer.compare(
-                        Objects.requireNonNullElse(b.getUsesCount(), 0) + Objects.requireNonNullElse(b.getLikesCount(), 0) * 2,
-                        Objects.requireNonNullElse(a.getUsesCount(), 0) + Objects.requireNonNullElse(a.getLikesCount(), 0) * 2))
+                .sorted((a, b) -> Integer.compare(trendingScore(b), trendingScore(a)))
                 .limit(limit)
                 .map(this::toV2)
                 .collect(Collectors.toList());
@@ -86,6 +89,11 @@ public class WorkflowDiscoveryService {
         if (workflowTags == null || workflowTags.isEmpty()) return requiredTags.isEmpty();
         return requiredTags.stream().allMatch(tag -> workflowTags.stream()
                 .anyMatch(t -> t != null && t.equalsIgnoreCase(tag)));
+    }
+
+    private static int trendingScore(Workflow w) {
+        return ObjectUtils.orDefaultInt(w.getUsesCount(), 0)
+                + ObjectUtils.orDefaultInt(w.getLikesCount(), 0) * LIKES_WEIGHT;
     }
 
     private WorkflowResponseV2 toV2(Workflow w) {

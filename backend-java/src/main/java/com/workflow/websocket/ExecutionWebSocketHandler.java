@@ -1,6 +1,7 @@
 package com.workflow.websocket;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.workflow.util.ObjectUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -68,7 +69,7 @@ public class ExecutionWebSocketHandler extends TextWebSocketHandler {
             payload = objectMapper.writeValueAsString(Map.of(
                     "type", type,
                     "execution_id", executionId,
-                    "data", data != null ? data : Map.of(),
+                    "data", ObjectUtils.orDefault(data, Map.of()),
                     "timestamp", System.currentTimeMillis() / 1000.0
             ));
         } catch (Exception e) {
@@ -95,7 +96,7 @@ public class ExecutionWebSocketHandler extends TextWebSocketHandler {
     }
 
     private String extractExecutionId(WebSocketSession session) {
-        String path = session.getUri() != null ? session.getUri().getPath() : "";
+        String path = ObjectUtils.orDefaultIfBlank(ObjectUtils.safeGet(session.getUri(), java.net.URI::getPath), "");
         if (path.contains("/executions/")) {
             String[] parts = path.split("/executions/");
             if (parts.length > 1) {

@@ -35,7 +35,7 @@ public class ImportExportController {
     @Operation(summary = "Export Workflow")
     public ResponseEntity<Map<String, Object>> exportWorkflow(@PathVariable String workflowId, Authentication auth) {
         String userId = authenticationHelper.extractUserIdNullable(auth);
-        String exportedBy = auth != null ? authenticationHelper.extractUsername(auth) : null;
+        String exportedBy = authenticationHelper.extractUsernameNullable(auth);
         var result = importExportService.exportWorkflowWithAuth(workflowId, userId, exportedBy);
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + result.filename())
@@ -62,7 +62,7 @@ public class ImportExportController {
     @GetMapping("/export-all")
     @Operation(summary = "Export All Workflows")
     public ResponseEntity<Map<String, Object>> exportAll(Authentication auth) {
-        String userId = authenticationHelper.extractUserId(auth);
+        String userId = authenticationHelper.extractUserIdRequired(auth);
         String exportedBy = authenticationHelper.extractUsername(auth);
         Map<String, Object> result = importExportService.exportAll(userId, exportedBy);
         return ResponseEntity.ok()

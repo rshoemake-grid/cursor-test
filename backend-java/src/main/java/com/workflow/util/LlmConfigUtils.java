@@ -10,26 +10,28 @@ import java.util.Map;
 public final class LlmConfigUtils {
 
     private static final String DEFAULT_BASE_URL = "https://api.openai.com/v1";
-    private static final String DEFAULT_MODEL = "gpt-4o-mini";
+    /** Default model when none specified. Exposed for WebClientLlmApiClient fallback. */
+    public static final String DEFAULT_MODEL = "gpt-4o-mini";
 
     private LlmConfigUtils() {
     }
 
     public static String getBaseUrl(Map<String, Object> config) {
-        if (config == null) return DEFAULT_BASE_URL;
-        Object o = config.get("base_url");
-        if (o == null) o = config.get("baseUrl");
-        return ObjectUtils.toStringOrDefault(o, DEFAULT_BASE_URL);
+        return getBaseUrlRaw(config, DEFAULT_BASE_URL);
     }
 
     /**
      * Return base_url or baseUrl if present, else null. Used when baseUrl is optional (e.g. test endpoint).
      */
     public static String getBaseUrlOrNull(Map<String, Object> config) {
-        if (config == null) return null;
+        return getBaseUrlRaw(config, null);
+    }
+
+    private static String getBaseUrlRaw(Map<String, Object> config, String defaultWhenNull) {
+        if (config == null) return defaultWhenNull;
         Object o = config.get("base_url");
         if (o == null) o = config.get("baseUrl");
-        return ObjectUtils.toStringOrDefault(o, null);
+        return ObjectUtils.toStringOrDefault(o, defaultWhenNull);
     }
 
     public static String getApiKey(Map<String, Object> config) {
@@ -41,12 +43,24 @@ public final class LlmConfigUtils {
         return null;
     }
 
+    private static final String API_KEY_ERROR = "No LLM API key configured. Set api_key in Settings or one of OPENAI_API_KEY, GEMINI_API_KEY, GOOGLE_API_KEY env vars.";
+
+    /**
+     * Validate that an API key is available; throw if not.
+     */
+    public static void validateApiKey(Map<String, Object> config, Environment env) {
+        String key = getApiKeyWithEnvFallback(ObjectUtils.orEmptyMap(config), env);
+        if (key == null || key.isBlank()) {
+            throw new IllegalStateException(API_KEY_ERROR);
+        }
+    }
+
     /**
      * Check if any LLM API key is available in config or environment.
      * Use for pre-execution validation (e.g. ExecutionOrchestratorService).
      */
     public static boolean hasAnyApiKey(Map<String, Object> config, Environment env) {
-        String key = getApiKeyWithEnvFallback(config != null ? config : Map.of(), env);
+        String key = getApiKeyWithEnvFallback(ObjectUtils.orEmptyMap(config), env);
         return key != null && !key.isBlank();
     }
 
@@ -59,24 +73,18 @@ public final class LlmConfigUtils {
     }
 
     /**
-     * Get API key from config, or from Environment properties. Uses System.getenv when env is null (e.g. tests).
+     * Get API key from config, or from Environment properties.
+     * When env is null, returns null (no System.getenv fallback). Production should always pass Environment.
      */
     public static String getApiKeyWithEnvFallback(Map<String, Object> config, Environment env) {
         String key = getApiKey(config);
         if (key != null) return key;
-        if (env != null) {
-            key = env.getProperty("OPENAI_API_KEY");
-            if (key != null) return key;
-            key = env.getProperty("GEMINI_API_KEY");
-            if (key != null) return key;
-            key = env.getProperty("GOOGLE_API_KEY");
-            return key;
-        }
-        key = System.getenv("OPENAI_API_KEY");
+        if (env == null) return null;
+        key = env.getProperty("OPENAI_API_KEY");
         if (key != null) return key;
-        key = System.getenv("GEMINI_API_KEY");
+        key = env.getProperty("GEMINI_API_KEY");
         if (key != null) return key;
-        return System.getenv("GOOGLE_API_KEY");
+        return env.getProperty("GOOGLE_API_KEY");
     }
 
     public static String getModel(Map<String, Object> config) {
@@ -93,6 +101,13 @@ public final class LlmConfigUtils {
         if (baseUrl == null || baseUrl.isBlank()) return DEFAULT_BASE_URL + "/chat/completions";
         if (baseUrl.contains("/chat/completions")) return baseUrl;
         return baseUrl.endsWith("/") ? baseUrl + "chat/completions" : baseUrl + "/chat/completions";
+    }
+
+    /**
+     * Build a chat message map for OpenAI-compatible API. DRY: Used by AgentNodeExecutor and WorkflowChatService.
+     */
+    public static Map<String, Object> buildMessage(String role, String content) {
+        return Map.of("role", role, "content", ObjectUtils.orDefault(content, ""));
     }
 
     /**

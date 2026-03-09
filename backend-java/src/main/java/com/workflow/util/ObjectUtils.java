@@ -16,8 +16,9 @@ public final class ObjectUtils {
         return value != null ? value : defaultValue;
     }
 
-    public static List<String> orEmptyList(List<String> list) {
-        return list != null ? list : List.of();
+    @SuppressWarnings("unchecked")
+    public static <T> List<T> orEmptyList(List<T> list) {
+        return list != null ? list : (List<T>) List.of();
     }
 
     public static Map<String, Object> orEmptyMap(Map<String, Object> map) {
@@ -40,5 +41,33 @@ public final class ObjectUtils {
      */
     public static String toStringOrDefault(Object o, String defaultWhenNull) {
         return o != null ? o.toString() : defaultWhenNull;
+    }
+
+    /**
+     * Return int value or default when null.
+     */
+    public static int orDefaultInt(Integer value, int defaultValue) {
+        return value != null ? value : defaultValue;
+    }
+
+    /**
+     * Return string or default when null or blank.
+     */
+    public static String orDefaultIfBlank(String value, String defaultWhenBlank) {
+        return value != null && !value.isBlank() ? value : defaultWhenBlank;
+    }
+
+    /**
+     * Return first element or default when list is null or empty.
+     */
+    public static <T> T firstOrDefault(List<T> list, T defaultVal) {
+        return list != null && !list.isEmpty() ? list.get(0) : defaultVal;
+    }
+
+    /**
+     * Return last element or default when list is null or empty.
+     */
+    public static <T> T lastOrDefault(List<T> list, T defaultVal) {
+        return list != null && !list.isEmpty() ? list.get(list.size() - 1) : defaultVal;
     }
 }

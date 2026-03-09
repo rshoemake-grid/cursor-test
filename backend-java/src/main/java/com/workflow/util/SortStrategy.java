@@ -13,6 +13,6 @@ public interface SortStrategy {
 
     /** DRY: Normalize sortBy with default; used by TemplateSortStrategy and WorkflowSortStrategy. */
     static String normalizeSortBy(String sortBy) {
-        return sortBy != null ? sortBy : DEFAULT_SORT;
+        return ObjectUtils.orDefault(sortBy, DEFAULT_SORT);
     }
 }

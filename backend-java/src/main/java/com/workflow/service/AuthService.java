@@ -7,6 +7,7 @@ import com.workflow.dto.UserResponse;
 import com.workflow.entity.User;
 import com.workflow.exception.ValidationException;
 import com.workflow.repository.UserRepository;
+import com.workflow.util.ErrorMessages;
 import com.workflow.util.RepositoryUtils;
 import com.workflow.security.JwtUtil;
 import com.workflow.util.UserResponseMapper;
@@ -62,10 +63,10 @@ public class AuthService {
         log.info("Registering new user: {}", userCreate.getUsername());
 
         if (userRepository.existsByUsername(userCreate.getUsername())) {
-            throw new ValidationException("Username already exists");
+            throw new ValidationException(ErrorMessages.USERNAME_ALREADY_EXISTS);
         }
         if (userRepository.existsByEmail(userCreate.getEmail())) {
-            throw new ValidationException("Email already exists");
+            throw new ValidationException(ErrorMessages.EMAIL_ALREADY_EXISTS);
         }
 
         User user = new User();
@@ -98,7 +99,7 @@ public class AuthService {
                 )
         );
 
-        User user = RepositoryUtils.orElseThrow(userRepository.findByUsername(loginRequest.getUsername()), "User not found");
+        User user = RepositoryUtils.orElseThrow(userRepository.findByUsername(loginRequest.getUsername()), ErrorMessages.USER_NOT_FOUND);
 
         boolean rememberMe = Boolean.TRUE.equals(loginRequest.getRememberMe());
         long accessTokenExpirationMs = rememberMe ? REMEMBER_ME_EXPIRATION_MS : jwtExpirationMs;
@@ -128,7 +129,7 @@ public class AuthService {
     }
 
     public UserResponse getCurrentUser(String username) {
-        User user = RepositoryUtils.orElseThrow(userRepository.findByUsername(username), "User not found");
+        User user = RepositoryUtils.orElseThrow(userRepository.findByUsername(username), ErrorMessages.USER_NOT_FOUND);
         return userResponseMapper.toUserResponse(user);
     }
 
