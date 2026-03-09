@@ -50,7 +50,7 @@ public class WorkflowExecutor {
 
         try {
             if (nodes.isEmpty()) {
-                markFailed(state, null, "Workflow contains no nodes");
+                markFailed(state, null, ExecutionLogConstants.WORKFLOW_CONTAINS_NO_NODES);
                 return state.toStateMap();
             }
 
@@ -69,7 +69,7 @@ public class WorkflowExecutor {
                 if (node == null) continue;
 
                 if (NodeType.isSkip(node)) {
-                    state.addLog(ExecutionLogConstants.LOG_LEVEL_INFO, nodeId, "Skipping " + node.getType() + " node: " + nodeId);
+                    state.addLog(ExecutionLogConstants.LOG_LEVEL_INFO, nodeId, ExecutionLogConstants.skippingNode(node.getType(), nodeId));
                     completed.add(nodeId);
                     state.setCurrentNode(nodeId);
                     addReadyNeighbors(queue, completed, adjacency, nodeId);
@@ -128,11 +128,11 @@ public class WorkflowExecutor {
         nodeState.setStatus(ExecutionStatus.FAILED.getValue());
         nodeState.setError(e.getMessage());
         nodeState.setCompletedAt(LocalDateTime.now());
-        markFailed(state, nodeId, "Node failed: " + e.getMessage());
+        markFailed(state, nodeId, ExecutionLogConstants.nodeFailed(e.getMessage()));
     }
 
     private void handleWorkflowFailure(ExecutionState state, Exception e) {
-        markFailed(state, null, "Workflow execution failed: " + e.getMessage());
+        markFailed(state, null, ExecutionLogConstants.workflowExecutionFailed(e.getMessage()));
     }
 
     private void markFailed(ExecutionState state, String nodeId, String message) {

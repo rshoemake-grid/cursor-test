@@ -35,8 +35,9 @@ public final class ErrorMessages {
     public static final String IMPORT_DEFINITION_NOT_OBJECT = "Import 'definition' must be an object";
     public static final String IMPORT_DEFINITION_TOO_LARGE = "Import definition exceeds maximum size";
 
+    public static final String AUTH_REQUIRED = "Authentication required";
     public static final String BULK_DELETE_NO_IDS = "No workflow IDs provided";
-    public static final String BULK_DELETE_AUTH_REQUIRED = "Authentication required";
+    public static final String BULK_DELETE_AUTH_REQUIRED = AUTH_REQUIRED;
 
     public static final String USERNAME_PASSWORD_REQUIRED = "Username and password are required";
     public static final String INVALID_JSON = "Invalid JSON";
@@ -79,5 +80,21 @@ public final class ErrorMessages {
 
     public static String executionNotCancellable(String executionId, String status) {
         return "Execution " + executionId + " is not in a cancellable state (current status: " + status + ")";
+    }
+
+    public static String noExecutorForNodeType(String nodeType) {
+        return "No executor registered for node type: " + nodeType
+                + ". Add a NodeExecutor implementation or register it in the registry.";
+    }
+
+    public static String orphanNodes(int count) {
+        return "Found " + count + " disconnected nodes";
+    }
+
+    public static final String MISSING_START_NODE = "Workflow has no START node";
+    public static final String MISSING_END_NODE = "Workflow has no END node";
+
+    public static String userNotFound(String username) {
+        return USER_NOT_FOUND + ": " + username;
     }
 }

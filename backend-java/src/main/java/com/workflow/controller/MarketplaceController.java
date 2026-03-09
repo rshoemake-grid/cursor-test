@@ -46,14 +46,14 @@ public class MarketplaceController {
     @PostMapping("/like")
     @Operation(summary = "Like Workflow")
     public ResponseEntity<Map<String, String>> like(@RequestBody WorkflowLikeRequest request, Authentication auth) {
-        String userId = authenticationHelper.extractUserId(auth);
+        String userId = authenticationHelper.extractUserIdRequired(auth);
         return ResponseEntity.status(201).body(marketplaceService.likeWorkflow(request.getWorkflowId(), userId));
     }
 
     @DeleteMapping("/like/{workflowId}")
     @Operation(summary = "Unlike Workflow")
     public ResponseEntity<Void> unlike(@PathVariable String workflowId, Authentication auth) {
-        String userId = authenticationHelper.extractUserId(auth);
+        String userId = authenticationHelper.extractUserIdRequired(auth);
         marketplaceService.unlikeWorkflow(workflowId, userId);
         return ResponseEntity.noContent().build();
     }
@@ -73,7 +73,7 @@ public class MarketplaceController {
     @GetMapping("/my-likes")
     @Operation(summary = "My Liked Workflows")
     public ResponseEntity<List<WorkflowResponseV2>> myLikes(Authentication auth) {
-        String userId = authenticationHelper.extractUserId(auth);
+        String userId = authenticationHelper.extractUserIdRequired(auth);
         return ResponseEntity.ok(marketplaceService.getMyLikes(userId));
     }
 
@@ -82,7 +82,7 @@ public class MarketplaceController {
     public ResponseEntity<PublishedAgentResponse> publishAgent(
             @Valid @RequestBody PublishedAgentCreateRequest request,
             Authentication auth) {
-        String userId = authenticationHelper.extractUserId(auth);
+        String userId = authenticationHelper.extractUserIdRequired(auth);
         boolean isAdmin = authenticationHelper.extractIsAdmin(auth);
         return ResponseEntity.status(201).body(marketplaceService.publishAgent(request, userId, isAdmin));
     }

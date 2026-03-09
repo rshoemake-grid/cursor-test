@@ -51,7 +51,7 @@ public class AuthenticationHelper {
     public String extractUserIdRequired(Authentication authentication) {
         String userId = extractUserId(authentication);
         if (userId == null) {
-            throw new ForbiddenException("Authentication required");
+            throw new ForbiddenException(ErrorMessages.AUTH_REQUIRED);
         }
         return userId;
     }

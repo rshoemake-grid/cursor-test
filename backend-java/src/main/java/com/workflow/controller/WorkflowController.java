@@ -51,7 +51,7 @@ public class WorkflowController {
             Authentication authentication) {
         log.debug("POST /api/workflows - Creating workflow: {}", workflowCreate.getName());
         
-        String userId = authenticationHelper.extractUserId(authentication);
+        String userId = authenticationHelper.extractUserIdRequired(authentication);
         WorkflowResponse response = workflowService.createWorkflow(workflowCreate, userId);
         
         return ResponseEntity.ok(response);
@@ -129,7 +129,7 @@ public class WorkflowController {
             @PathVariable String id,
             @RequestBody WorkflowPublishRequest request,
             Authentication authentication) {
-        String userId = authenticationHelper.extractUserId(authentication);
+        String userId = authenticationHelper.extractUserIdRequired(authentication);
         boolean isAdmin = authenticationHelper.extractIsAdmin(authentication);
         return ResponseEntity.status(201).body(workflowService.publishWorkflow(id, request, userId, isAdmin));
     }

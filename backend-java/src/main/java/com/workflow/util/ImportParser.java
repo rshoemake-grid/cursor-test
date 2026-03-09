@@ -28,7 +28,7 @@ public final class ImportParser {
         try {
             return objectMapper.readValue(content, Map.class);
         } catch (JsonProcessingException e) {
-            throw new ValidationException(ErrorMessages.IMPORT_FILE_INVALID_JSON + ": " + e.getMessage());
+            throw new ValidationException(ErrorMessages.IMPORT_FILE_INVALID_JSON);
         }
     }
 

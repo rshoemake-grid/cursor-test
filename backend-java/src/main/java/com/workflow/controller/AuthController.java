@@ -2,6 +2,7 @@ package com.workflow.controller;
 
 import com.workflow.dto.LoginRequest;
 import com.workflow.dto.PasswordReset;
+import com.workflow.util.AuthenticationHelper;
 import com.workflow.dto.PasswordResetRequest;
 import com.workflow.dto.RefreshTokenRequest;
 import com.workflow.dto.TokenResponse;
@@ -32,11 +33,13 @@ import java.util.Map;
 @Tag(name = "Authentication", description = "User authentication and authorization")
 public class AuthController {
     private static final Logger log = LoggerFactory.getLogger(AuthController.class);
-    
+
     private final AuthService authService;
-    
-    public AuthController(AuthService authService) {
+    private final AuthenticationHelper authenticationHelper;
+
+    public AuthController(AuthService authService, AuthenticationHelper authenticationHelper) {
         this.authService = authService;
+        this.authenticationHelper = authenticationHelper;
     }
 
     @GetMapping("/me")
@@ -46,7 +49,7 @@ public class AuthController {
         @ApiResponse(responseCode = "401", description = "Not authenticated")
     })
     public ResponseEntity<UserResponse> me(Authentication authentication) {
-        if (authentication == null || !authentication.isAuthenticated()) {
+        if (!authenticationHelper.isAuthenticated(authentication)) {
             return ResponseEntity.status(401).build();
         }
         log.debug("GET /api/auth/me - Current user: {}", authentication.getName());

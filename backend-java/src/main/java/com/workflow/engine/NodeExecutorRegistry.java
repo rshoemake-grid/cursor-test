@@ -2,6 +2,7 @@ package com.workflow.engine;
 
 import com.workflow.dto.Node;
 import com.workflow.dto.NodeType;
+import com.workflow.util.ErrorMessages;
 import org.springframework.stereotype.Component;
 
 import java.util.EnumMap;
@@ -33,7 +34,6 @@ public class NodeExecutorRegistry {
         if (executor != null) {
             return executor.execute(node, inputs, state, ctx);
         }
-        throw new IllegalArgumentException("No executor registered for node type: " + type
-                + ". Add a NodeExecutor implementation or register it in the registry.");
+        throw new IllegalArgumentException(ErrorMessages.noExecutorForNodeType(type.getValue()));
     }
 }

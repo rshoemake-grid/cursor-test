@@ -47,7 +47,7 @@ public class WorkflowValidationService {
         Set<String> orphans = new HashSet<>(nodeIds);
         orphans.removeAll(connected);
         if (!orphans.isEmpty()) {
-            warnings.add(Map.of("type", "orphan_nodes", "message", "Found " + orphans.size() + " disconnected nodes", "nodes", orphans));
+            warnings.add(Map.of("type", "orphan_nodes", "message", ErrorMessages.orphanNodes(orphans.size()), "nodes", orphans));
         }
 
         List<String> types = nodes.stream()
@@ -55,10 +55,10 @@ public class WorkflowValidationService {
                 .filter(Objects::nonNull)
                 .toList();
         if (!types.contains(NodeType.START.getValue())) {
-            issues.add(Map.of("type", "missing_start", "message", "Workflow has no START node", "severity", "error"));
+            issues.add(Map.of("type", "missing_start", "message", ErrorMessages.MISSING_START_NODE, "severity", "error"));
         }
         if (!types.contains(NodeType.END.getValue())) {
-            warnings.add(Map.of("type", "missing_end", "message", "Workflow has no END node", "severity", "warning"));
+            warnings.add(Map.of("type", "missing_end", "message", ErrorMessages.MISSING_END_NODE, "severity", "warning"));
         }
 
         Map<String, Object> result = new HashMap<>();

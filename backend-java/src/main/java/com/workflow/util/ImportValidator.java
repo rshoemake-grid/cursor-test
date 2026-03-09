@@ -1,5 +1,6 @@
 package com.workflow.util;
 
+import com.workflow.constants.WorkflowConstants;
 import com.workflow.exception.ValidationException;
 
 import java.util.Map;
@@ -9,8 +10,6 @@ import java.util.Map;
  * Extracted from ImportExportService.
  */
 public final class ImportValidator {
-
-    private static final int MAX_IMPORT_DEFINITION_KEYS = 50;
 
     private ImportValidator() {
     }
@@ -30,7 +29,7 @@ public final class ImportValidator {
             throw new ValidationException(ErrorMessages.IMPORT_DEFINITION_NOT_OBJECT);
         }
         Map<String, Object> definition = JsonStateUtils.getMap(body, "definition");
-        if (definition.size() > MAX_IMPORT_DEFINITION_KEYS) {
+        if (definition.size() > WorkflowConstants.MAX_IMPORT_DEFINITION_KEYS) {
             throw new ValidationException(ErrorMessages.IMPORT_DEFINITION_TOO_LARGE);
         }
     }

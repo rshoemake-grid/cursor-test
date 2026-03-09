@@ -16,4 +16,7 @@ public final class WorkflowConstants {
     public static final String BRANCH_TRUE = "true";
     public static final String BRANCH_FALSE = "false";
     public static final String DEFAULT_SOURCE_HANDLE = "default";
+
+    /** Maximum number of top-level keys in import definition. Used by ImportValidator. */
+    public static final int MAX_IMPORT_DEFINITION_KEYS = 50;
 }
