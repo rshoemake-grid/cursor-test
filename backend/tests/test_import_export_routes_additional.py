@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from fastapi import HTTPException
 from backend.api.import_export_routes import export_workflow
 from backend.database.models import WorkflowDB
+from backend.services.workflow_ownership_service import WorkflowOwnershipService
 from datetime import datetime
 
 
@@ -27,19 +28,18 @@ async def test_export_workflow_success_public(db_session):
         updated_at=datetime.utcnow()
     )
     
-    with patch.object(db_session, 'execute', new_callable=AsyncMock) as mock_execute:
-        mock_result = MagicMock()
-        mock_result.scalar_one_or_none.return_value = workflow
-        mock_execute.return_value = mock_result
-        
-        result = await export_workflow(
-            workflow_id="wf-123",
-            current_user=None,
-            db=db_session
-        )
-        
-        assert hasattr(result, 'body')
-        assert "Public_Workflow" in str(result.headers.get("Content-Disposition", ""))
+    mock_ownership = MagicMock(spec=WorkflowOwnershipService)
+    mock_ownership.get_workflow_and_assert_can_read = AsyncMock(return_value=workflow)
+    
+    result = await export_workflow(
+        workflow_id="wf-123",
+        current_user=None,
+        db=db_session,
+        ownership_service=mock_ownership
+    )
+    
+    assert hasattr(result, 'body')
+    assert "Public_Workflow" in str(result.headers.get("Content-Disposition", ""))
 
 
 @pytest.mark.asyncio
@@ -69,16 +69,17 @@ async def test_export_workflow_unauthorized(db_session):
         updated_at=datetime.utcnow()
     )
     
-    with patch.object(db_session, 'execute', new_callable=AsyncMock) as mock_execute:
-        mock_result = MagicMock()
-        mock_result.scalar_one_or_none.return_value = workflow
-        mock_execute.return_value = mock_result
-        
-        with pytest.raises(HTTPException) as exc_info:
-            await export_workflow(
-                workflow_id="wf-123",
-                current_user=user,
-                db=db_session
-            )
-        
-        assert exc_info.value.status_code == 403
+    mock_ownership = MagicMock(spec=WorkflowOwnershipService)
+    mock_ownership.get_workflow_and_assert_can_read = AsyncMock(
+        side_effect=HTTPException(status_code=403, detail="Forbidden")
+    )
+    
+    with pytest.raises(HTTPException) as exc_info:
+        await export_workflow(
+            workflow_id="wf-123",
+            current_user=user,
+            db=db_session,
+            ownership_service=mock_ownership
+        )
+    
+    assert exc_info.value.status_code == 403

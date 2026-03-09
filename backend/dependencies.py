@@ -8,7 +8,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from .database import get_db
 from .services.workflow_service import WorkflowService
+from .services.workflow_ownership_service import WorkflowOwnershipService
+from .services.marketplace_service import MarketplaceService
+from .services.import_export_service import ImportExportService
 from .services.execution_service import ExecutionService
+from .services.workflow_like_service import WorkflowLikeService
+from .services.sharing_service import SharingService
 from .services.settings_service import ISettingsService, SettingsService
 from .services.llm_client_factory import ILLMClientFactory, LLMClientFactory
 from .repositories.workflow_repository import WorkflowRepository
@@ -26,6 +31,46 @@ def get_workflow_service(db: DatabaseSession) -> WorkflowService:
 
 
 WorkflowServiceDep = Annotated[WorkflowService, Depends(get_workflow_service)]
+
+
+def get_workflow_ownership_service(db: DatabaseSession) -> WorkflowOwnershipService:
+    """Get workflow ownership service instance"""
+    return WorkflowOwnershipService(db)
+
+
+WorkflowOwnershipServiceDep = Annotated[WorkflowOwnershipService, Depends(get_workflow_ownership_service)]
+
+
+def get_marketplace_service(db: DatabaseSession) -> MarketplaceService:
+    """Get marketplace service instance"""
+    return MarketplaceService(db)
+
+
+MarketplaceServiceDep = Annotated[MarketplaceService, Depends(get_marketplace_service)]
+
+
+def get_import_export_service(db: DatabaseSession) -> ImportExportService:
+    """Get import/export service instance"""
+    return ImportExportService(db)
+
+
+ImportExportServiceDep = Annotated[ImportExportService, Depends(get_import_export_service)]
+
+
+def get_workflow_like_service(db: DatabaseSession) -> WorkflowLikeService:
+    """Get workflow like service instance"""
+    return WorkflowLikeService(db)
+
+
+WorkflowLikeServiceDep = Annotated[WorkflowLikeService, Depends(get_workflow_like_service)]
+
+
+def get_sharing_service(db: DatabaseSession) -> SharingService:
+    """Get sharing service instance"""
+    return SharingService(db)
+
+
+SharingServiceDep = Annotated[SharingService, Depends(get_sharing_service)]
 
 
 def get_execution_service(db: DatabaseSession) -> ExecutionService:

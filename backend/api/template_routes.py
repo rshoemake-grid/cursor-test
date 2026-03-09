@@ -20,7 +20,10 @@ from backend.models.schemas import (
     WorkflowResponse
 )
 from backend.auth import get_current_active_user, get_optional_user
+from backend.utils.logger import get_logger
+from backend.utils.response_serializers import template_db_to_response
 
+logger = get_logger(__name__)
 router = APIRouter(prefix="/templates", tags=["Templates"])
 
 
@@ -47,26 +50,7 @@ async def create_template(
     db.add(template)
     await db.commit()
     await db.refresh(template)
-    
-    return WorkflowTemplateResponse(
-        id=template.id,
-        name=template.name,
-        description=template.description,
-        category=template.category,
-        tags=template.tags,
-        difficulty=template.difficulty,
-        estimated_time=template.estimated_time,
-        is_official=template.is_official,
-        uses_count=template.uses_count,
-        likes_count=template.likes_count,
-        rating=template.rating,
-        author_id=template.author_id,
-        author_name=current_user.username,
-        thumbnail_url=template.thumbnail_url,
-        preview_image_url=template.preview_image_url,
-        created_at=template.created_at,
-        updated_at=template.updated_at
-    )
+    return template_db_to_response(template, author_name=current_user.username)
 
 
 @router.get("", response_model=List[WorkflowTemplateResponse])
@@ -115,27 +99,8 @@ async def list_templates(
     
     result = await db.execute(query)
     templates = result.all()
-    
     return [
-        WorkflowTemplateResponse(
-            id=template.id,
-            name=template.name,
-            description=template.description,
-            category=template.category,
-            tags=template.tags,
-            difficulty=template.difficulty,
-            estimated_time=template.estimated_time,
-            is_official=template.is_official,
-            uses_count=template.uses_count,
-            likes_count=template.likes_count,
-            rating=template.rating,
-            author_id=template.author_id,
-            author_name=author_username,
-            thumbnail_url=template.thumbnail_url,
-            preview_image_url=template.preview_image_url,
-            created_at=template.created_at,
-            updated_at=template.updated_at
-        )
+        template_db_to_response(template, author_name=author_username)
         for template, author_username in templates
     ]
 
@@ -173,26 +138,7 @@ async def get_template(
             select(UserDB.username).where(UserDB.id == template.author_id)
         )
         author_username = author_result.scalar_one_or_none()
-    
-    return WorkflowTemplateResponse(
-        id=template.id,
-        name=template.name,
-        description=template.description,
-        category=template.category,
-        tags=template.tags,
-        difficulty=template.difficulty,
-        estimated_time=template.estimated_time,
-        is_official=template.is_official,
-        uses_count=template.uses_count,
-        likes_count=template.likes_count,
-        rating=template.rating,
-        author_id=template.author_id,
-        author_name=author_username,
-        thumbnail_url=template.thumbnail_url,
-        preview_image_url=template.preview_image_url,
-        created_at=template.created_at,
-        updated_at=template.updated_at
-    )
+    return template_db_to_response(template, author_name=author_username)
 
 
 @router.post("/{template_id}/use", response_model=WorkflowResponse, status_code=201)
@@ -247,17 +193,8 @@ async def use_template(
         for edge in condition_edges:
             logger.debug(f"  Edge {edge.get('id')}: sourceHandle={edge.get('sourceHandle')}, type={type(edge.get('sourceHandle'))}")
     
-    return WorkflowResponse(
-        id=workflow.id,
-        name=workflow.name,
-        description=workflow.description,
-        version=workflow.version,
-        nodes=definition.get("nodes", []),
-        edges=edges,
-        variables=definition.get("variables", {}),
-        created_at=workflow.created_at,
-        updated_at=workflow.updated_at
-    )
+    from backend.utils.workflow_serialization import workflow_db_to_response
+    return workflow_db_to_response(workflow)
 
 
 @router.delete("/{template_id}", status_code=204)

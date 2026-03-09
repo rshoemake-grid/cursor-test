@@ -5,6 +5,7 @@ import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
 from backend.api.debug_routes import validate_workflow
 from backend.database.models import WorkflowDB, UserDB
+from backend.services.workflow_ownership_service import WorkflowOwnershipService
 import uuid
 from datetime import datetime
 
@@ -43,15 +44,13 @@ async def test_validate_workflow_orphan_nodes(db_session, test_user):
         updated_at=datetime.utcnow()
     )
     
-    with patch.object(db_session, 'execute', new_callable=AsyncMock) as mock_execute:
-        mock_result = MagicMock()
-        mock_result.scalar_one_or_none.return_value = workflow
-        mock_execute.return_value = mock_result
-        
-        result = await validate_workflow(workflow_id="wf-123", db=db_session, current_user=test_user)
-        
-        assert len(result["warnings"]) > 0
-        assert any(w["type"] == "orphan_nodes" for w in result["warnings"])
+    mock_ownership = MagicMock(spec=WorkflowOwnershipService)
+    mock_ownership.get_workflow_and_assert_can_read_or_share = AsyncMock(return_value=workflow)
+    
+    result = await validate_workflow(workflow_id="wf-123", db=db_session, current_user=test_user, ownership_service=mock_ownership)
+    
+    assert len(result["warnings"]) > 0
+    assert any(w["type"] == "orphan_nodes" for w in result["warnings"])
 
 
 @pytest.mark.asyncio
@@ -68,15 +67,13 @@ async def test_validate_workflow_missing_start(db_session, test_user):
         updated_at=datetime.utcnow()
     )
     
-    with patch.object(db_session, 'execute', new_callable=AsyncMock) as mock_execute:
-        mock_result = MagicMock()
-        mock_result.scalar_one_or_none.return_value = workflow
-        mock_execute.return_value = mock_result
-        
-        result = await validate_workflow(workflow_id="wf-123", db=db_session, current_user=test_user)
-        
-        assert result["valid"] is False
-        assert any(i["type"] == "missing_start" for i in result["issues"])
+    mock_ownership = MagicMock(spec=WorkflowOwnershipService)
+    mock_ownership.get_workflow_and_assert_can_read_or_share = AsyncMock(return_value=workflow)
+    
+    result = await validate_workflow(workflow_id="wf-123", db=db_session, current_user=test_user, ownership_service=mock_ownership)
+    
+    assert result["valid"] is False
+    assert any(i["type"] == "missing_start" for i in result["issues"])
 
 
 @pytest.mark.asyncio
@@ -93,14 +90,12 @@ async def test_validate_workflow_missing_end(db_session, test_user):
         updated_at=datetime.utcnow()
     )
     
-    with patch.object(db_session, 'execute', new_callable=AsyncMock) as mock_execute:
-        mock_result = MagicMock()
-        mock_result.scalar_one_or_none.return_value = workflow
-        mock_execute.return_value = mock_result
-        
-        result = await validate_workflow(workflow_id="wf-123", db=db_session, current_user=test_user)
-        
-        assert any(w["type"] == "missing_end" for w in result["warnings"])
+    mock_ownership = MagicMock(spec=WorkflowOwnershipService)
+    mock_ownership.get_workflow_and_assert_can_read_or_share = AsyncMock(return_value=workflow)
+    
+    result = await validate_workflow(workflow_id="wf-123", db=db_session, current_user=test_user, ownership_service=mock_ownership)
+    
+    assert any(w["type"] == "missing_end" for w in result["warnings"])
 
 
 @pytest.mark.asyncio
@@ -123,15 +118,13 @@ async def test_validate_workflow_cycle_detected(db_session, test_user):
         updated_at=datetime.utcnow()
     )
     
-    with patch.object(db_session, 'execute', new_callable=AsyncMock) as mock_execute:
-        mock_result = MagicMock()
-        mock_result.scalar_one_or_none.return_value = workflow
-        mock_execute.return_value = mock_result
-        
-        result = await validate_workflow(workflow_id="wf-123", db=db_session, current_user=test_user)
-        
-        assert result["valid"] is False
-        assert any(i["type"] == "cycle_detected" for i in result["issues"])
+    mock_ownership = MagicMock(spec=WorkflowOwnershipService)
+    mock_ownership.get_workflow_and_assert_can_read_or_share = AsyncMock(return_value=workflow)
+    
+    result = await validate_workflow(workflow_id="wf-123", db=db_session, current_user=test_user, ownership_service=mock_ownership)
+    
+    assert result["valid"] is False
+    assert any(i["type"] == "cycle_detected" for i in result["issues"])
 
 
 @pytest.mark.asyncio
@@ -155,11 +148,9 @@ async def test_validate_workflow_missing_system_prompt(db_session, test_user):
         updated_at=datetime.utcnow()
     )
     
-    with patch.object(db_session, 'execute', new_callable=AsyncMock) as mock_execute:
-        mock_result = MagicMock()
-        mock_result.scalar_one_or_none.return_value = workflow
-        mock_execute.return_value = mock_result
-        
-        result = await validate_workflow(workflow_id="wf-123", db=db_session, current_user=test_user)
-        
-        assert any(w["type"] == "missing_system_prompt" for w in result["warnings"])
+    mock_ownership = MagicMock(spec=WorkflowOwnershipService)
+    mock_ownership.get_workflow_and_assert_can_read_or_share = AsyncMock(return_value=workflow)
+    
+    result = await validate_workflow(workflow_id="wf-123", db=db_session, current_user=test_user, ownership_service=mock_ownership)
+    
+    assert any(w["type"] == "missing_system_prompt" for w in result["warnings"])

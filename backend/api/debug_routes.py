@@ -10,6 +10,9 @@ from backend.database.db import get_db
 from backend.database.models import WorkflowDB, ExecutionDB, UserDB
 from backend.models.schemas import ExecutionResponse, ExecutionStatus
 from backend.auth import get_current_active_user
+from backend.dependencies import WorkflowOwnershipServiceDep, ExecutionServiceDep
+from backend.exceptions import ExecutionNotFoundError, ExecutionForbiddenError
+from backend.services.workflow_validation_service import validate_workflow_definition
 
 router = APIRouter(prefix="/debug", tags=["Debugging"])
 
@@ -18,112 +21,15 @@ router = APIRouter(prefix="/debug", tags=["Debugging"])
 async def validate_workflow(
     workflow_id: str,
     db: AsyncSession = Depends(get_db),
-    current_user: UserDB = Depends(get_current_active_user)
+    current_user: UserDB = Depends(get_current_active_user),
+    ownership_service: WorkflowOwnershipServiceDep = ...,
 ):
-    """Validate a workflow for potential issues"""
-    # Get workflow
-    result = await db.execute(
-        select(WorkflowDB).where(WorkflowDB.id == workflow_id)
+    """Validate a workflow for potential issues. Requires read access (owner or shared)."""
+    workflow = await ownership_service.get_workflow_and_assert_can_read_or_share(
+        workflow_id, current_user.id
     )
-    workflow = result.scalar_one_or_none()
-    
-    if not workflow:
-        raise HTTPException(status_code=404, detail="Workflow not found")
-    
-    definition = workflow.definition
-    nodes = definition.get("nodes", [])
-    edges = definition.get("edges", [])
-    
-    issues = []
-    warnings = []
-    
-    # Check for nodes without edges
-    node_ids = {node["id"] for node in nodes}
-    connected_nodes = set()
-    for edge in edges:
-        connected_nodes.add(edge["source"])
-        connected_nodes.add(edge["target"])
-    
-    orphan_nodes = node_ids - connected_nodes
-    if orphan_nodes:
-        warnings.append({
-            "type": "orphan_nodes",
-            "message": f"Found {len(orphan_nodes)} disconnected nodes",
-            "nodes": list(orphan_nodes)
-        })
-    
-    # Check for missing start/end nodes
-    node_types = [node.get("type") for node in nodes]
-    if "start" not in node_types:
-        issues.append({
-            "type": "missing_start",
-            "message": "Workflow has no START node",
-            "severity": "error"
-        })
-    
-    if "end" not in node_types:
-        warnings.append({
-            "type": "missing_end",
-            "message": "Workflow has no END node",
-            "severity": "warning"
-        })
-    
-    # Check for cycles
-    def has_cycle():
-        visited = set()
-        rec_stack = set()
-        
-        def dfs(node_id):
-            visited.add(node_id)
-            rec_stack.add(node_id)
-            
-            # Get outgoing edges
-            for edge in edges:
-                if edge["source"] == node_id:
-                    target = edge["target"]
-                    if target not in visited:
-                        if dfs(target):
-                            return True
-                    elif target in rec_stack:
-                        return True
-            
-            rec_stack.remove(node_id)
-            return False
-        
-        for node_id in node_ids:
-            if node_id not in visited:
-                if dfs(node_id):
-                    return True
-        return False
-    
-    if has_cycle():
-        issues.append({
-            "type": "cycle_detected",
-            "message": "Workflow contains a cycle (except for loops)",
-            "severity": "error"
-        })
-    
-    # Check agent nodes for configuration
-    for node in nodes:
-        if node.get("type") == "agent":
-            node_data = node.get("data", {})
-            agent_config = node_data.get("agent_config", {})
-            
-            if not agent_config.get("system_prompt"):
-                warnings.append({
-                    "type": "missing_system_prompt",
-                    "message": f"Agent node '{node.get('id')}' has no system prompt",
-                    "node_id": node.get("id")
-                })
-    
-    return {
-        "workflow_id": workflow_id,
-        "valid": len(issues) == 0,
-        "issues": issues,
-        "warnings": warnings,
-        "node_count": len(nodes),
-        "edge_count": len(edges)
-    }
+    definition = workflow.definition or {}
+    return validate_workflow_definition(workflow_id, definition)
 
 
 @router.get("/workflow/{workflow_id}/executions/history")
@@ -132,9 +38,13 @@ async def get_execution_history(
     limit: int = Query(10, le=100),
     status: Optional[str] = Query(None),
     db: AsyncSession = Depends(get_db),
-    current_user: UserDB = Depends(get_current_active_user)
+    current_user: UserDB = Depends(get_current_active_user),
+    ownership_service: WorkflowOwnershipServiceDep = ...,
 ):
-    """Get execution history for a workflow"""
+    """Get execution history for a workflow. Requires read access (owner or shared)."""
+    await ownership_service.get_workflow_and_assert_can_read_or_share(
+        workflow_id, current_user.id
+    )
     query = select(ExecutionDB).where(ExecutionDB.workflow_id == workflow_id)
     
     if status:
@@ -165,16 +75,11 @@ async def get_execution_history(
 async def get_execution_timeline(
     execution_id: str,
     db: AsyncSession = Depends(get_db),
-    current_user: UserDB = Depends(get_current_active_user)
+    current_user: UserDB = Depends(get_current_active_user),
+    execution_service: ExecutionServiceDep = ...,
 ):
-    """Get detailed timeline of execution"""
-    result = await db.execute(
-        select(ExecutionDB).where(ExecutionDB.id == execution_id)
-    )
-    execution = result.scalar_one_or_none()
-    
-    if not execution:
-        raise HTTPException(status_code=404, detail="Execution not found")
+    """Get detailed timeline of execution. Requires execution ownership."""
+    execution = await execution_service.get_execution_db(execution_id, current_user.id)
     
     state = execution.state
     logs = state.get("logs", [])
@@ -205,16 +110,11 @@ async def get_node_execution_details(
     execution_id: str,
     node_id: str,
     db: AsyncSession = Depends(get_db),
-    current_user: UserDB = Depends(get_current_active_user)
+    current_user: UserDB = Depends(get_current_active_user),
+    execution_service: ExecutionServiceDep = ...,
 ):
-    """Get detailed execution information for a specific node"""
-    result = await db.execute(
-        select(ExecutionDB).where(ExecutionDB.id == execution_id)
-    )
-    execution = result.scalar_one_or_none()
-    
-    if not execution:
-        raise HTTPException(status_code=404, detail="Execution not found")
+    """Get detailed execution information for a specific node. Requires execution ownership."""
+    execution = await execution_service.get_execution_db(execution_id, current_user.id)
     
     state = execution.state
     node_states = state.get("node_states", {})
@@ -245,9 +145,13 @@ async def get_node_execution_details(
 async def get_workflow_stats(
     workflow_id: str,
     db: AsyncSession = Depends(get_db),
-    current_user: UserDB = Depends(get_current_active_user)
+    current_user: UserDB = Depends(get_current_active_user),
+    ownership_service: WorkflowOwnershipServiceDep = ...,
 ):
-    """Get statistics for a workflow"""
+    """Get statistics for a workflow. Requires read access (owner or shared)."""
+    await ownership_service.get_workflow_and_assert_can_read_or_share(
+        workflow_id, current_user.id
+    )
     # Get all executions
     result = await db.execute(
         select(ExecutionDB).where(ExecutionDB.workflow_id == workflow_id)
@@ -289,16 +193,11 @@ async def get_workflow_stats(
 async def export_execution(
     execution_id: str,
     db: AsyncSession = Depends(get_db),
-    current_user: UserDB = Depends(get_current_active_user)
+    current_user: UserDB = Depends(get_current_active_user),
+    execution_service: ExecutionServiceDep = ...,
 ):
-    """Export execution data for debugging"""
-    result = await db.execute(
-        select(ExecutionDB).where(ExecutionDB.id == execution_id)
-    )
-    execution = result.scalar_one_or_none()
-    
-    if not execution:
-        raise HTTPException(status_code=404, detail="Execution not found")
+    """Export execution data for debugging. Requires execution ownership."""
+    execution = await execution_service.get_execution_db(execution_id, current_user.id)
     
     # Get workflow
     result = await db.execute(

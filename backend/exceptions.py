@@ -51,6 +51,35 @@ class ExecutionForbiddenError(ExecutionError):
         super().__init__(execution_id, "Not authorized to access this execution")
 
 
+class LikeNotFoundError(WorkflowEngineException):
+    """Raised when a workflow like is not found"""
+    def __init__(self, workflow_id: str, user_id: str):
+        self.workflow_id = workflow_id
+        self.user_id = user_id
+        super().__init__(f"Like not found for workflow {workflow_id}")
+
+
+class UserNotFoundError(WorkflowEngineException):
+    """Raised when a user is not found"""
+    def __init__(self, username: str):
+        self.username = username
+        super().__init__(f"User not found: {username}")
+
+
+class ShareNotFoundError(WorkflowEngineException):
+    """Raised when a workflow share is not found"""
+    def __init__(self, share_id: str):
+        self.share_id = share_id
+        super().__init__(f"Share not found: {share_id}")
+
+
+class VersionNotFoundError(WorkflowEngineException):
+    """Raised when a workflow version is not found"""
+    def __init__(self, version_id: str):
+        self.version_id = version_id
+        super().__init__(f"Version not found: {version_id}")
+
+
 class NodeExecutionError(ExecutionError):
     """Raised when a node execution fails"""
     def __init__(self, execution_id: str, node_id: str, message: str, error_type: Optional[str] = None):

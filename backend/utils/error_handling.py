@@ -47,6 +47,16 @@ def handle_execution_errors(func: Callable) -> Callable:
             # Re-raise HTTP exceptions (404, 422, etc.) - they're already properly formatted
             raise
         except Exception as e:
+            # Convert workflow ownership errors to HTTP (before generic handler)
+            exc_name = type(e).__name__
+            if exc_name == "WorkflowNotFoundError":
+                raise HTTPException(status_code=404, detail=str(e))
+            if exc_name == "WorkflowForbiddenError":
+                raise HTTPException(status_code=403, detail=str(e))
+            if exc_name == "ExecutionNotFoundError":
+                raise HTTPException(status_code=404, detail=str(e))
+            if exc_name == "ExecutionForbiddenError":
+                raise HTTPException(status_code=403, detail=str(e))
             # Log unexpected errors and convert to HTTPException
             logger.error(f"Unexpected error in {func.__name__}: {e}", exc_info=True)
             # P2-7: In production, use generic message to avoid leaking internals

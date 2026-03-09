@@ -15,6 +15,12 @@ from backend.database.db import init_db, engine, AsyncSessionLocal
 from backend.utils.metrics import metrics_collector
 from sqlalchemy import text
 from backend.api import router as api_router
+from backend.exceptions import (
+    WorkflowNotFoundError,
+    WorkflowForbiddenError,
+    ExecutionNotFoundError,
+    ExecutionForbiddenError,
+)
 from backend.api.auth_routes import router as auth_router
 from backend.api.websocket_routes import router as websocket_router
 from backend.api.settings_routes import router as settings_router
@@ -164,6 +170,71 @@ async def add_security_headers(request: Request, call_next):
     response.headers["X-RateLimit-Reset"] = str(int(time.time()) + 3600)
     
     return response
+
+# Exception handlers for workflow errors (convert to HTTP for Apigee compatibility)
+@app.exception_handler(WorkflowNotFoundError)
+async def workflow_not_found_handler(request: Request, exc: WorkflowNotFoundError):
+    return JSONResponse(
+        status_code=404,
+        content={
+            "detail": str(exc),
+            "error": {
+                "code": "404",
+                "message": str(exc),
+                "path": request.url.path,
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+            },
+        },
+    )
+
+
+@app.exception_handler(WorkflowForbiddenError)
+async def workflow_forbidden_handler(request: Request, exc: WorkflowForbiddenError):
+    return JSONResponse(
+        status_code=403,
+        content={
+            "detail": str(exc),
+            "error": {
+                "code": "403",
+                "message": str(exc),
+                "path": request.url.path,
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+            },
+        },
+    )
+
+
+@app.exception_handler(ExecutionNotFoundError)
+async def execution_not_found_handler(request: Request, exc: ExecutionNotFoundError):
+    return JSONResponse(
+        status_code=404,
+        content={
+            "detail": str(exc),
+            "error": {
+                "code": "404",
+                "message": str(exc),
+                "path": request.url.path,
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+            },
+        },
+    )
+
+
+@app.exception_handler(ExecutionForbiddenError)
+async def execution_forbidden_handler(request: Request, exc: ExecutionForbiddenError):
+    return JSONResponse(
+        status_code=403,
+        content={
+            "detail": str(exc),
+            "error": {
+                "code": "403",
+                "message": str(exc),
+                "path": request.url.path,
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+            },
+        },
+    )
+
 
 # Standardized error handler for Apigee compatibility
 @app.exception_handler(HTTPException)

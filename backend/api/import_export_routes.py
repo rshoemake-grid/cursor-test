@@ -3,15 +3,15 @@ from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
 from fastapi.responses import JSONResponse
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
 from datetime import datetime, timezone
-import uuid
 import json
 
 from backend.database.db import get_db
-from backend.database.models import WorkflowDB, UserDB
+from backend.database.models import UserDB
 from backend.models.schemas import WorkflowExport, WorkflowImport, WorkflowResponseV2
+from backend.utils.workflow_serialization import workflow_db_to_response_v2
 from backend.auth import get_current_active_user, get_optional_user
+from backend.dependencies import WorkflowOwnershipServiceDep, ImportExportServiceDep
 
 router = APIRouter(prefix="/import-export", tags=["Import/Export"])
 
@@ -20,42 +20,17 @@ router = APIRouter(prefix="/import-export", tags=["Import/Export"])
 async def export_workflow(
     workflow_id: str,
     current_user: Optional[UserDB] = Depends(get_optional_user),
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    ownership_service: WorkflowOwnershipServiceDep = ...,
 ):
     """Export a workflow as JSON"""
-    result = await db.execute(
-        select(WorkflowDB).where(WorkflowDB.id == workflow_id)
+    workflow = await ownership_service.get_workflow_and_assert_can_read(
+        workflow_id, current_user.id if current_user else None
     )
-    workflow = result.scalar_one_or_none()
-    
-    if not workflow:
-        raise HTTPException(status_code=404, detail="Workflow not found")
-    
-    # Check access
-    if not workflow.is_public and workflow.owner_id != (current_user.id if current_user else None):
-        raise HTTPException(status_code=403, detail="Not authorized")
     
     # Create export
     export_data = WorkflowExport(
-        workflow=WorkflowResponseV2(
-            id=workflow.id,
-            name=workflow.name,
-            description=workflow.description,
-            version=workflow.version,
-            nodes=workflow.definition.get("nodes", []),
-            edges=workflow.definition.get("edges", []),
-            variables=workflow.definition.get("variables", {}),
-            owner_id=workflow.owner_id,
-            is_public=workflow.is_public,
-            is_template=workflow.is_template,
-            category=workflow.category,
-            tags=workflow.tags or [],
-            likes_count=workflow.likes_count,
-            views_count=workflow.views_count,
-            uses_count=workflow.uses_count,
-            created_at=workflow.created_at,
-            updated_at=workflow.updated_at
-        ),
+        workflow=workflow_db_to_response_v2(workflow),
         version="1.0",
         exported_at=datetime.now(timezone.utc),
         exported_by=current_user.username if current_user else None
@@ -74,172 +49,63 @@ async def export_workflow(
 async def import_workflow(
     import_data: WorkflowImport,
     current_user: Optional[UserDB] = Depends(get_optional_user),
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    import_export_service: ImportExportServiceDep = ...,
 ):
     """Import a workflow from JSON"""
     definition = import_data.definition
-    
-    # Validate definition
     if "nodes" not in definition or "edges" not in definition:
         raise HTTPException(
             status_code=400,
             detail="Invalid workflow definition: must contain 'nodes' and 'edges'"
         )
-    
-    # Create workflow
-    workflow_id = str(uuid.uuid4())
-    workflow = WorkflowDB(
-        id=workflow_id,
-        name=import_data.name or f"Imported Workflow {workflow_id[:8]}",
-        description=import_data.description,
-        version="1.0.0",
+    workflow = await import_export_service.import_workflow(
         definition=definition,
+        name=import_data.name,
+        description=import_data.description,
         owner_id=current_user.id if current_user else None,
-        is_public=False,
-        is_template=False,
-        category=definition.get("category"),
-        tags=definition.get("tags", [])
     )
-    
-    db.add(workflow)
-    await db.commit()
-    await db.refresh(workflow)
-    
-    return WorkflowResponseV2(
-        id=workflow.id,
-        name=workflow.name,
-        description=workflow.description,
-        version=workflow.version,
-        nodes=workflow.definition.get("nodes", []),
-        edges=workflow.definition.get("edges", []),
-        variables=workflow.definition.get("variables", {}),
-        owner_id=workflow.owner_id,
-        is_public=workflow.is_public,
-        is_template=workflow.is_template,
-        category=workflow.category,
-        tags=workflow.tags or [],
-        likes_count=workflow.likes_count,
-        views_count=workflow.views_count,
-        uses_count=workflow.uses_count,
-        created_at=workflow.created_at,
-        updated_at=workflow.updated_at
-    )
+    return workflow_db_to_response_v2(workflow)
 
 
 @router.post("/import/file", response_model=WorkflowResponseV2, status_code=201)
 async def import_workflow_file(
     file: UploadFile = File(...),
     current_user: Optional[UserDB] = Depends(get_optional_user),
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    import_export_service: ImportExportServiceDep = ...,
 ):
     """Import a workflow from uploaded JSON file"""
-    # Read file
     try:
         content = await file.read()
         data = json.loads(content)
     except json.JSONDecodeError:
         raise HTTPException(status_code=400, detail="Invalid JSON file")
-    
-    # Extract workflow data
-    if "workflow" in data:
-        # This is an export file
-        workflow_data = data["workflow"]
-        definition = {
-            "nodes": workflow_data.get("nodes", []),
-            "edges": workflow_data.get("edges", []),
-            "variables": workflow_data.get("variables", {})
-        }
-        name = workflow_data.get("name")
-        description = workflow_data.get("description")
-        category = workflow_data.get("category")
-        tags = workflow_data.get("tags", [])
-    else:
-        # Direct definition
-        definition = data
-        name = data.get("name")
-        description = data.get("description")
-        category = data.get("category")
-        tags = data.get("tags", [])
-    
-    # Validate
-    if "nodes" not in definition or "edges" not in definition:
-        raise HTTPException(
-            status_code=400,
-            detail="Invalid workflow: must contain 'nodes' and 'edges'"
+    try:
+        workflow = await import_export_service.import_workflow_from_file_data(
+            data=data,
+            owner_id=current_user.id if current_user else None,
         )
-    
-    # Create workflow
-    workflow_id = str(uuid.uuid4())
-    workflow = WorkflowDB(
-        id=workflow_id,
-        name=name or f"Imported Workflow {workflow_id[:8]}",
-        description=description,
-        version="1.0.0",
-        definition=definition,
-        owner_id=current_user.id if current_user else None,
-        is_public=False,
-        is_template=False,
-        category=category,
-        tags=tags
-    )
-    
-    db.add(workflow)
-    await db.commit()
-    await db.refresh(workflow)
-    
-    return WorkflowResponseV2(
-        id=workflow.id,
-        name=workflow.name,
-        description=workflow.description,
-        version=workflow.version,
-        nodes=workflow.definition.get("nodes", []),
-        edges=workflow.definition.get("edges", []),
-        variables=workflow.definition.get("variables", {}),
-        owner_id=workflow.owner_id,
-        is_public=workflow.is_public,
-        is_template=workflow.is_template,
-        category=workflow.category,
-        tags=workflow.tags or [],
-        likes_count=workflow.likes_count,
-        views_count=workflow.views_count,
-        uses_count=workflow.uses_count,
-        created_at=workflow.created_at,
-        updated_at=workflow.updated_at
-    )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    return workflow_db_to_response_v2(workflow)
 
 
 @router.get("/export-all")
 async def export_all_workflows(
     current_user: UserDB = Depends(get_current_active_user),
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    import_export_service: ImportExportServiceDep = ...,
 ):
     """Export all user's workflows"""
-    result = await db.execute(
-        select(WorkflowDB).where(WorkflowDB.owner_id == current_user.id)
+    content = await import_export_service.export_all_workflows(
+        user_id=current_user.id,
+        username=current_user.username or "user",
     )
-    workflows = result.scalars().all()
-    
-    exports = []
-    for workflow in workflows:
-        exports.append({
-            "id": workflow.id,
-            "name": workflow.name,
-            "description": workflow.description,
-            "version": workflow.version,
-            "definition": workflow.definition,
-            "created_at": workflow.created_at.isoformat(),
-            "updated_at": workflow.updated_at.isoformat()
-        })
-    
     return JSONResponse(
-        content={
-            "export_version": "1.0",
-            "exported_at": datetime.now(timezone.utc).isoformat(),
-            "exported_by": current_user.username,
-            "workflows": exports
-        },
+        content=content,
         headers={
-            "Content-Disposition": f"attachment; filename=workflows-{current_user.username}.json"
+            "Content-Disposition": f"attachment; filename=workflows-{current_user.username or 'user'}.json"
         }
     )
 

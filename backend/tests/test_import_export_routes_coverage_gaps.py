@@ -6,6 +6,7 @@ import json
 from unittest.mock import AsyncMock, MagicMock, patch
 from fastapi import HTTPException, UploadFile
 from backend.api.import_export_routes import import_workflow_file, export_all_workflows
+from backend.services.import_export_service import ImportExportService
 from backend.database.models import WorkflowDB
 
 
@@ -31,10 +32,12 @@ async def test_import_workflow_file_export_format(db_session):
     mock_file = AsyncMock(spec=UploadFile)
     mock_file.read = AsyncMock(return_value=json.dumps(export_data).encode())
     
+    import_export_service = ImportExportService(db_session)
     result = await import_workflow_file(
         file=mock_file,
         current_user=user,
-        db=db_session
+        db=db_session,
+        import_export_service=import_export_service
     )
     
     assert result.name == "Exported"
@@ -49,8 +52,9 @@ async def test_import_workflow_file_invalid_json(db_session):
     mock_file = AsyncMock(spec=UploadFile)
     mock_file.read = AsyncMock(return_value=b"invalid json")
     
+    import_export_service = ImportExportService(db_session)
     with pytest.raises(HTTPException) as exc_info:
-        await import_workflow_file(file=mock_file, current_user=user, db=db_session)
+        await import_workflow_file(file=mock_file, current_user=user, db=db_session, import_export_service=import_export_service)
     
     assert exc_info.value.status_code == 400
 
@@ -77,11 +81,12 @@ async def test_export_all_workflows_success(db_session):
         )
     ]
     
+    import_export_service = ImportExportService(db_session)
     with patch.object(db_session, 'execute', new_callable=AsyncMock) as mock_execute:
         mock_result = MagicMock()
         mock_result.scalars.return_value.all.return_value = workflows
         mock_execute.return_value = mock_result
         
-        result = await export_all_workflows(current_user=user, db=db_session)
+        result = await export_all_workflows(current_user=user, db=db_session, import_export_service=import_export_service)
         
         assert hasattr(result, 'body')

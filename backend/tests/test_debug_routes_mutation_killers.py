@@ -14,6 +14,7 @@ import uuid
 from datetime import datetime
 
 from backend.database.models import WorkflowDB, ExecutionDB, UserDB
+from backend.auth import get_current_active_user
 from backend.database.db import get_db
 
 
@@ -59,7 +60,7 @@ class TestStatusComparisons:
     """Test status comparison boundaries"""
     
     @pytest.mark.asyncio
-    async def test_get_execution_history_status_completed(self, test_workflow, db_session):
+    async def test_get_execution_history_status_completed(self, test_workflow, db_session, test_user):
         """Test get execution history with status 'completed' (boundary: == 'completed')"""
         from main import app
         from backend.database.db import get_db as get_db_func
@@ -68,6 +69,10 @@ class TestStatusComparisons:
             yield db_session
         
         app.dependency_overrides[get_db_func] = override_get_db
+        
+        async def override_get_current_active_user():
+            return test_user
+        app.dependency_overrides[get_current_active_user] = override_get_current_active_user
         
         try:
             async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
@@ -87,7 +92,7 @@ class TestStatusComparisons:
             app.dependency_overrides.clear()
     
     @pytest.mark.asyncio
-    async def test_get_execution_history_status_failed(self, test_workflow, db_session):
+    async def test_get_execution_history_status_failed(self, test_workflow, db_session, test_user):
         """Test get execution history with status 'failed' (boundary: == 'failed')"""
         from main import app
         from backend.database.db import get_db as get_db_func
@@ -96,6 +101,10 @@ class TestStatusComparisons:
             yield db_session
         
         app.dependency_overrides[get_db_func] = override_get_db
+        
+        async def override_get_current_active_user():
+            return test_user
+        app.dependency_overrides[get_current_active_user] = override_get_current_active_user
         
         try:
             async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
@@ -114,7 +123,7 @@ class TestStatusComparisons:
             app.dependency_overrides.clear()
     
     @pytest.mark.asyncio
-    async def test_get_execution_stats_status_completed(self, test_workflow, db_session):
+    async def test_get_execution_stats_status_completed(self, test_workflow, db_session, test_user):
         """Test get execution stats with completed status (boundary: == 'completed')"""
         from main import app
         from backend.database.db import get_db as get_db_func
@@ -123,6 +132,10 @@ class TestStatusComparisons:
             yield db_session
         
         app.dependency_overrides[get_db_func] = override_get_db
+        
+        async def override_get_current_active_user():
+            return test_user
+        app.dependency_overrides[get_current_active_user] = override_get_current_active_user
         
         try:
             async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
@@ -150,7 +163,7 @@ class TestLengthComparisons:
     """Test length comparison boundaries"""
     
     @pytest.mark.asyncio
-    async def test_validate_workflow_issues_length_zero(self, test_workflow, db_session):
+    async def test_validate_workflow_issues_length_zero(self, test_workflow, db_session, test_user):
         """Test validate workflow with 0 issues (boundary: len(issues) == 0)"""
         from main import app
         from backend.database.db import get_db as get_db_func
@@ -159,6 +172,10 @@ class TestLengthComparisons:
             yield db_session
         
         app.dependency_overrides[get_db_func] = override_get_db
+        
+        async def override_get_current_active_user():
+            return test_user
+        app.dependency_overrides[get_current_active_user] = override_get_current_active_user
         
         try:
             async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
@@ -189,7 +206,7 @@ class TestLengthComparisons:
             app.dependency_overrides.clear()
     
     @pytest.mark.asyncio
-    async def test_validate_workflow_issues_length_one(self, test_workflow, db_session):
+    async def test_validate_workflow_issues_length_one(self, test_workflow, db_session, test_user):
         """Test validate workflow with 1 issue (boundary: len(issues) > 0)"""
         from main import app
         from backend.database.db import get_db as get_db_func
@@ -198,6 +215,10 @@ class TestLengthComparisons:
             yield db_session
         
         app.dependency_overrides[get_db_func] = override_get_db
+        
+        async def override_get_current_active_user():
+            return test_user
+        app.dependency_overrides[get_current_active_user] = override_get_current_active_user
         
         try:
             async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
@@ -225,7 +246,7 @@ class TestLengthComparisons:
             app.dependency_overrides.clear()
     
     @pytest.mark.asyncio
-    async def test_validate_workflow_orphan_nodes_length_zero(self, test_workflow, db_session):
+    async def test_validate_workflow_orphan_nodes_length_zero(self, test_workflow, db_session, test_user):
         """Test validate workflow with 0 orphan nodes (boundary: len(orphan_nodes) == 0)"""
         from main import app
         from backend.database.db import get_db as get_db_func
@@ -234,6 +255,10 @@ class TestLengthComparisons:
             yield db_session
         
         app.dependency_overrides[get_db_func] = override_get_db
+        
+        async def override_get_current_active_user():
+            return test_user
+        app.dependency_overrides[get_current_active_user] = override_get_current_active_user
         
         try:
             async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
@@ -265,7 +290,7 @@ class TestLengthComparisons:
             app.dependency_overrides.clear()
     
     @pytest.mark.asyncio
-    async def test_validate_workflow_orphan_nodes_length_one(self, test_workflow, db_session):
+    async def test_validate_workflow_orphan_nodes_length_one(self, test_workflow, db_session, test_user):
         """Test validate workflow with 1 orphan node (boundary: len(orphan_nodes) > 0)"""
         from main import app
         from backend.database.db import get_db as get_db_func
@@ -274,6 +299,10 @@ class TestLengthComparisons:
             yield db_session
         
         app.dependency_overrides[get_db_func] = override_get_db
+        
+        async def override_get_current_active_user():
+            return test_user
+        app.dependency_overrides[get_current_active_user] = override_get_current_active_user
         
         try:
             async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
@@ -310,7 +339,7 @@ class TestTypeComparisons:
     """Test type comparison boundaries"""
     
     @pytest.mark.asyncio
-    async def test_validate_workflow_node_type_agent(self, test_workflow, db_session):
+    async def test_validate_workflow_node_type_agent(self, test_workflow, db_session, test_user):
         """Test validate workflow with agent node (boundary: == 'agent')"""
         from main import app
         from backend.database.db import get_db as get_db_func
@@ -319,6 +348,10 @@ class TestTypeComparisons:
             yield db_session
         
         app.dependency_overrides[get_db_func] = override_get_db
+        
+        async def override_get_current_active_user():
+            return test_user
+        app.dependency_overrides[get_current_active_user] = override_get_current_active_user
         
         try:
             async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
@@ -359,7 +392,7 @@ class TestTypeComparisons:
             app.dependency_overrides.clear()
     
     @pytest.mark.asyncio
-    async def test_validate_workflow_node_type_start(self, test_workflow, db_session):
+    async def test_validate_workflow_node_type_start(self, test_workflow, db_session, test_user):
         """Test validate workflow with start node (boundary: == 'start')"""
         from main import app
         from backend.database.db import get_db as get_db_func
@@ -368,6 +401,10 @@ class TestTypeComparisons:
             yield db_session
         
         app.dependency_overrides[get_db_func] = override_get_db
+        
+        async def override_get_current_active_user():
+            return test_user
+        app.dependency_overrides[get_current_active_user] = override_get_current_active_user
         
         try:
             async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
@@ -398,7 +435,7 @@ class TestTypeComparisons:
             app.dependency_overrides.clear()
     
     @pytest.mark.asyncio
-    async def test_validate_workflow_node_type_end(self, test_workflow, db_session):
+    async def test_validate_workflow_node_type_end(self, test_workflow, db_session, test_user):
         """Test validate workflow with end node (boundary: == 'end')"""
         from main import app
         from backend.database.db import get_db as get_db_func
@@ -407,6 +444,10 @@ class TestTypeComparisons:
             yield db_session
         
         app.dependency_overrides[get_db_func] = override_get_db
+        
+        async def override_get_current_active_user():
+            return test_user
+        app.dependency_overrides[get_current_active_user] = override_get_current_active_user
         
         try:
             async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
@@ -438,7 +479,7 @@ class TestTypeComparisons:
             app.dependency_overrides.clear()
     
     @pytest.mark.asyncio
-    async def test_validate_workflow_node_type_not_start(self, test_workflow, db_session):
+    async def test_validate_workflow_node_type_not_start(self, test_workflow, db_session, test_user):
         """Test validate workflow without start node (boundary: != 'start')"""
         from main import app
         from backend.database.db import get_db as get_db_func
@@ -447,6 +488,10 @@ class TestTypeComparisons:
             yield db_session
         
         app.dependency_overrides[get_db_func] = override_get_db
+        
+        async def override_get_current_active_user():
+            return test_user
+        app.dependency_overrides[get_current_active_user] = override_get_current_active_user
         
         try:
             async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
@@ -474,7 +519,7 @@ class TestTypeComparisons:
             app.dependency_overrides.clear()
     
     @pytest.mark.asyncio
-    async def test_validate_workflow_node_type_not_end(self, test_workflow, db_session):
+    async def test_validate_workflow_node_type_not_end(self, test_workflow, db_session, test_user):
         """Test validate workflow without end node (boundary: != 'end')"""
         from main import app
         from backend.database.db import get_db as get_db_func
@@ -483,6 +528,10 @@ class TestTypeComparisons:
             yield db_session
         
         app.dependency_overrides[get_db_func] = override_get_db
+        
+        async def override_get_current_active_user():
+            return test_user
+        app.dependency_overrides[get_current_active_user] = override_get_current_active_user
         
         try:
             async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
@@ -514,7 +563,7 @@ class TestEdgeComparisons:
     """Test edge comparison boundaries"""
     
     @pytest.mark.asyncio
-    async def test_validate_workflow_edge_source_equals_node_id(self, test_workflow, db_session):
+    async def test_validate_workflow_edge_source_equals_node_id(self, test_workflow, db_session, test_user):
         """Test validate workflow with edge source matching node ID (boundary: edge['source'] == node_id)"""
         from main import app
         from backend.database.db import get_db as get_db_func
@@ -523,6 +572,10 @@ class TestEdgeComparisons:
             yield db_session
         
         app.dependency_overrides[get_db_func] = override_get_db
+        
+        async def override_get_current_active_user():
+            return test_user
+        app.dependency_overrides[get_current_active_user] = override_get_current_active_user
         
         try:
             async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
@@ -552,7 +605,7 @@ class TestEdgeComparisons:
             app.dependency_overrides.clear()
     
     @pytest.mark.asyncio
-    async def test_get_execution_logs_node_id_match(self, test_workflow, db_session):
+    async def test_get_execution_logs_node_id_match(self, test_workflow, db_session, test_user):
         """Test get execution logs with matching node_id (boundary: log.get('node_id') == node_id)"""
         from main import app
         from backend.database.db import get_db as get_db_func
@@ -561,6 +614,10 @@ class TestEdgeComparisons:
             yield db_session
         
         app.dependency_overrides[get_db_func] = override_get_db
+        
+        async def override_get_current_active_user():
+            return test_user
+        app.dependency_overrides[get_current_active_user] = override_get_current_active_user
         
         try:
             async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
@@ -584,7 +641,7 @@ class TestNodeCountComparisons:
     """Test node count comparison boundaries"""
     
     @pytest.mark.asyncio
-    async def test_validate_workflow_node_count_zero(self, test_workflow, db_session):
+    async def test_validate_workflow_node_count_zero(self, test_workflow, db_session, test_user):
         """Test validate workflow with 0 nodes (boundary: len(nodes) == 0)"""
         from main import app
         from backend.database.db import get_db as get_db_func
@@ -593,6 +650,10 @@ class TestNodeCountComparisons:
             yield db_session
         
         app.dependency_overrides[get_db_func] = override_get_db
+        
+        async def override_get_current_active_user():
+            return test_user
+        app.dependency_overrides[get_current_active_user] = override_get_current_active_user
         
         try:
             async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
@@ -616,7 +677,7 @@ class TestNodeCountComparisons:
             app.dependency_overrides.clear()
     
     @pytest.mark.asyncio
-    async def test_validate_workflow_node_count_one(self, test_workflow, db_session):
+    async def test_validate_workflow_node_count_one(self, test_workflow, db_session, test_user):
         """Test validate workflow with 1 node (boundary: len(nodes) == 1)"""
         from main import app
         from backend.database.db import get_db as get_db_func
@@ -625,6 +686,10 @@ class TestNodeCountComparisons:
             yield db_session
         
         app.dependency_overrides[get_db_func] = override_get_db
+        
+        async def override_get_current_active_user():
+            return test_user
+        app.dependency_overrides[get_current_active_user] = override_get_current_active_user
         
         try:
             async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
@@ -650,7 +715,7 @@ class TestNodeCountComparisons:
             app.dependency_overrides.clear()
     
     @pytest.mark.asyncio
-    async def test_validate_workflow_edge_count_zero(self, test_workflow, db_session):
+    async def test_validate_workflow_edge_count_zero(self, test_workflow, db_session, test_user):
         """Test validate workflow with 0 edges (boundary: len(edges) == 0)"""
         from main import app
         from backend.database.db import get_db as get_db_func
@@ -659,6 +724,10 @@ class TestNodeCountComparisons:
             yield db_session
         
         app.dependency_overrides[get_db_func] = override_get_db
+        
+        async def override_get_current_active_user():
+            return test_user
+        app.dependency_overrides[get_current_active_user] = override_get_current_active_user
         
         try:
             async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
@@ -684,7 +753,7 @@ class TestNodeCountComparisons:
             app.dependency_overrides.clear()
     
     @pytest.mark.asyncio
-    async def test_validate_workflow_edge_count_one(self, test_workflow, db_session):
+    async def test_validate_workflow_edge_count_one(self, test_workflow, db_session, test_user):
         """Test validate workflow with 1 edge (boundary: len(edges) == 1)"""
         from main import app
         from backend.database.db import get_db as get_db_func
@@ -693,6 +762,10 @@ class TestNodeCountComparisons:
             yield db_session
         
         app.dependency_overrides[get_db_func] = override_get_db
+        
+        async def override_get_current_active_user():
+            return test_user
+        app.dependency_overrides[get_current_active_user] = override_get_current_active_user
         
         try:
             async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
@@ -725,7 +798,7 @@ class TestAgentConfigComparisons:
     """Test agent config comparison boundaries"""
     
     @pytest.mark.asyncio
-    async def test_validate_workflow_agent_without_system_prompt(self, test_workflow, db_session):
+    async def test_validate_workflow_agent_without_system_prompt(self, test_workflow, db_session, test_user):
         """Test validate workflow with agent node without system prompt (boundary: not agent_config.get('system_prompt'))"""
         from main import app
         from backend.database.db import get_db as get_db_func
@@ -734,6 +807,10 @@ class TestAgentConfigComparisons:
             yield db_session
         
         app.dependency_overrides[get_db_func] = override_get_db
+        
+        async def override_get_current_active_user():
+            return test_user
+        app.dependency_overrides[get_current_active_user] = override_get_current_active_user
         
         try:
             async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
@@ -776,7 +853,7 @@ class TestAgentConfigComparisons:
             app.dependency_overrides.clear()
     
     @pytest.mark.asyncio
-    async def test_validate_workflow_agent_with_system_prompt(self, test_workflow, db_session):
+    async def test_validate_workflow_agent_with_system_prompt(self, test_workflow, db_session, test_user):
         """Test validate workflow with agent node with system prompt (boundary: agent_config.get('system_prompt') is not None)"""
         from main import app
         from backend.database.db import get_db as get_db_func
@@ -785,6 +862,10 @@ class TestAgentConfigComparisons:
             yield db_session
         
         app.dependency_overrides[get_db_func] = override_get_db
+        
+        async def override_get_current_active_user():
+            return test_user
+        app.dependency_overrides[get_current_active_user] = override_get_current_active_user
         
         try:
             async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:

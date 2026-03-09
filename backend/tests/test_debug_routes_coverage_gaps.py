@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from datetime import datetime
 from backend.api.debug_routes import get_execution_history, get_workflow_stats
 from backend.database.models import ExecutionDB, UserDB
+from backend.services.workflow_ownership_service import WorkflowOwnershipService
 import uuid
 from backend.models.schemas import ExecutionStatus
 
@@ -37,6 +38,9 @@ async def test_get_execution_history_with_status(db_session, test_user):
         completed_at=datetime.utcnow()
     )
     
+    mock_ownership = MagicMock(spec=WorkflowOwnershipService)
+    mock_ownership.get_workflow_and_assert_can_read_or_share = AsyncMock(return_value=None)
+    
     with patch.object(db_session, 'execute', new_callable=AsyncMock) as mock_execute:
         mock_result = MagicMock()
         mock_result.scalars.return_value.all.return_value = [execution]
@@ -47,7 +51,8 @@ async def test_get_execution_history_with_status(db_session, test_user):
             limit=10,
             status=ExecutionStatus.COMPLETED.value,
             db=db_session,
-            current_user=test_user
+            current_user=test_user,
+            ownership_service=mock_ownership
         )
         
         assert len(result) == 1
@@ -59,12 +64,15 @@ async def test_get_workflow_stats_no_executions(db_session, test_user):
     """Test get_workflow_stats with no executions"""
     workflow_id = "workflow-123"
     
+    mock_ownership = MagicMock(spec=WorkflowOwnershipService)
+    mock_ownership.get_workflow_and_assert_can_read_or_share = AsyncMock(return_value=None)
+    
     with patch.object(db_session, 'execute', new_callable=AsyncMock) as mock_execute:
         mock_result = MagicMock()
         mock_result.scalars.return_value.all.return_value = []
         mock_execute.return_value = mock_result
         
-        result = await get_workflow_stats(workflow_id=workflow_id, db=db_session, current_user=test_user)
+        result = await get_workflow_stats(workflow_id=workflow_id, db=db_session, current_user=test_user, ownership_service=mock_ownership)
         
         assert result["total_executions"] == 0
         assert result["success_count"] == 0

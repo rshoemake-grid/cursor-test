@@ -80,7 +80,18 @@ class ExecutionService:
         
         logger.debug(f"Retrieved execution {execution_id}")
         return self._db_to_response(execution)
-    
+
+    async def get_execution_db(self, execution_id: str, user_id: str) -> ExecutionDB:
+        """
+        Get raw ExecutionDB by ID with ownership check. For debug routes that need state/timeline.
+        Raises ExecutionNotFoundError or ExecutionForbiddenError.
+        """
+        execution = await self.repository.get_by_id(execution_id)
+        if not execution:
+            raise ExecutionNotFoundError(execution_id)
+        self._check_execution_ownership(execution, user_id)
+        return execution
+
     async def list_executions(
         self,
         workflow_id: Optional[str] = None,

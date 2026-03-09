@@ -2,7 +2,7 @@
 Tests for workflow route utilities.
 """
 import pytest
-from backend.api.routes.workflow_routes import reconstruct_nodes
+from backend.utils.workflow_reconstruction import reconstruct_nodes
 from backend.models.schemas import Node, NodeType, AgentConfig, ConditionConfig, LoopConfig
 
 

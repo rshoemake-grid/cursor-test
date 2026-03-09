@@ -16,16 +16,16 @@ from ...models.schemas import (
     WorkflowPublishRequest,
     WorkflowTemplateResponse
 )
+from ...utils.workflow_serialization import workflow_db_to_response
+from ...utils.response_serializers import template_db_to_response
 from ...database.models import UserDB, WorkflowTemplateDB
 from ...auth import get_optional_user, get_current_active_user
 from uuid import uuid4
 from ...utils.logger import get_logger
-from ...dependencies import get_workflow_service
+from ...dependencies import get_workflow_service, WorkflowOwnershipServiceDep
 from ...services.workflow_service import WorkflowService
 from ...database import get_db
 from ...exceptions import WorkflowNotFoundError, WorkflowValidationError, WorkflowForbiddenError
-from ...utils.workflow_reconstruction import reconstruct_nodes
-
 logger = get_logger(__name__)
 
 router = APIRouter()
@@ -120,26 +120,13 @@ async def create_workflow(
         user_id = current_user.id if current_user else None
         db_workflow = await workflow_service.create_workflow(workflow, user_id=user_id)
         
-        # Convert processed edges back to Edge objects for response
-        processed_edges = db_workflow.definition.get("edges", [])
-        response_edges = [Edge(**e) for e in processed_edges]
     except WorkflowValidationError as e:
         raise HTTPException(status_code=422, detail=str(e))
     except Exception as e:
         logger.error(f"Unexpected error creating workflow: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
     
-    return WorkflowResponse(
-        id=db_workflow.id,
-        name=db_workflow.name,
-        description=db_workflow.description,
-        version=db_workflow.version,
-        nodes=reconstruct_nodes(db_workflow.definition.get("nodes", [])),
-        edges=response_edges,
-        variables=db_workflow.definition.get("variables", {}),
-        created_at=db_workflow.created_at,
-        updated_at=db_workflow.updated_at
-    )
+    return workflow_db_to_response(db_workflow)
 
 
 @router.get(
@@ -186,21 +173,7 @@ async def list_workflows(
         workflow_service = get_workflow_service(db)
         user_id = current_user.id if current_user else None
         workflows = await workflow_service.list_workflows(user_id=user_id, include_public=True)
-        
-        return [
-            WorkflowResponse(
-                id=w.id,
-                name=w.name,
-                description=w.description,
-                version=w.version,
-                nodes=reconstruct_nodes(w.definition.get("nodes", [])),
-                edges=[Edge(**e) for e in w.definition.get("edges", [])],
-                variables=w.definition.get("variables", {}),
-                created_at=w.created_at,
-                updated_at=w.updated_at
-            )
-            for w in workflows
-        ]
+        return [workflow_db_to_response(w) for w in workflows]
     except Exception as e:
         logger.error(f"Error listing workflows: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Error loading workflows: {str(e)}")
@@ -256,49 +229,34 @@ async def list_workflows(
 )
 async def get_workflow(
     workflow_id: str,
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    current_user: Optional[UserDB] = Depends(get_optional_user),
+    ownership_service: WorkflowOwnershipServiceDep = ...,
 ):
-    """Get a workflow by ID"""
+    """Get a workflow by ID. Requires read access (owner, public, or shared)."""
     try:
-        workflow_service = get_workflow_service(db)
-        workflow = await workflow_service.get_workflow(workflow_id)
+        workflow = await ownership_service.get_workflow_and_assert_can_read_or_share(
+            workflow_id, current_user.id if current_user else None
+        )
         
         # Validate workflow definition exists
         if not workflow.definition or not isinstance(workflow.definition, dict):
             logger.error(f"Workflow {workflow_id} has invalid definition: {workflow.definition}")
             raise HTTPException(status_code=422, detail="Workflow definition is invalid or missing")
         
-        # Reconstruct nodes with error handling
         try:
-            nodes = reconstruct_nodes(workflow.definition.get("nodes", []))
+            return workflow_db_to_response(workflow)
         except HTTPException:
-            raise  # Re-raise HTTPException (422) from reconstruct_nodes
+            raise
         except Exception as e:
-            logger.error(f"Error reconstructing nodes: {e}", exc_info=True)
-            raise HTTPException(status_code=422, detail=f"Invalid node data: {str(e)}")
-        
-        # Reconstruct edges with error handling
-        try:
-            edges = [Edge(**e) for e in workflow.definition.get("edges", [])]
-        except Exception as e:
-            logger.error(f"Error reconstructing edges: {e}", exc_info=True)
-            raise HTTPException(status_code=422, detail=f"Invalid edge data: {str(e)}")
-        
-        return WorkflowResponse(
-            id=workflow.id,
-            name=workflow.name,
-            description=workflow.description,
-            version=workflow.version,
-            nodes=nodes,
-            edges=edges,
-            variables=workflow.definition.get("variables", {}),
-            created_at=workflow.created_at,
-            updated_at=workflow.updated_at
-        )
+            logger.error(f"Error reconstructing workflow: {e}", exc_info=True)
+            raise HTTPException(status_code=422, detail=f"Invalid workflow data: {str(e)}")
     except HTTPException:
         raise  # Re-raise HTTPException (422, 404, etc.)
     except WorkflowNotFoundError as e:
         raise HTTPException(status_code=404, detail=str(e))
+    except WorkflowForbiddenError as e:
+        raise HTTPException(status_code=403, detail=str(e))
     except Exception as e:
         logger.error(f"Error getting workflow: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Error loading workflow: {str(e)}")
@@ -316,18 +274,7 @@ async def update_workflow(
         workflow_service = get_workflow_service(db)
         user_id = current_user.id if current_user else None
         updated_workflow = await workflow_service.update_workflow(workflow_id, workflow, user_id=user_id)
-        
-        return WorkflowResponse(
-            id=updated_workflow.id,
-            name=updated_workflow.name,
-            description=updated_workflow.description,
-            version=updated_workflow.version,
-            nodes=reconstruct_nodes(updated_workflow.definition.get("nodes", [])),
-            edges=[Edge(**e) for e in updated_workflow.definition.get("edges", [])],
-            variables=updated_workflow.definition.get("variables", {}),
-            created_at=updated_workflow.created_at,
-            updated_at=updated_workflow.updated_at
-        )
+        return workflow_db_to_response(updated_workflow)
     except WorkflowNotFoundError as e:
         raise HTTPException(status_code=404, detail=str(e))
     except WorkflowForbiddenError as e:
@@ -367,13 +314,13 @@ async def publish_workflow(
     workflow_id: str,
     publish_request: WorkflowPublishRequest,
     current_user: UserDB = Depends(get_current_active_user),
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    ownership_service: WorkflowOwnershipServiceDep = ...,
 ):
     """Publish a workflow as a marketplace template"""
-    workflow_service = get_workflow_service(db)
-    workflow = await workflow_service.get_workflow(workflow_id)
-    if workflow.owner_id != current_user.id:
-        raise HTTPException(status_code=403, detail="Not authorized to publish this workflow")
+    workflow = await ownership_service.get_workflow_and_assert_owner(
+        workflow_id, current_user.id, "publish"
+    )
     template = WorkflowTemplateDB(
         id=str(uuid4()),
         name=workflow.name,
@@ -390,25 +337,7 @@ async def publish_workflow(
     db.add(template)
     await db.commit()
     await db.refresh(template)
-
-    return WorkflowTemplateResponse(
-        id=template.id,
-        name=template.name,
-        description=template.description,
-        category=template.category,
-        tags=template.tags,
-        difficulty=template.difficulty,
-        estimated_time=template.estimated_time,
-        is_official=template.is_official,
-        uses_count=template.uses_count,
-        likes_count=template.likes_count,
-        rating=template.rating,
-        author_id=template.author_id,
-        thumbnail_url=template.thumbnail_url,
-        preview_image_url=template.preview_image_url,
-        created_at=template.created_at,
-        updated_at=template.updated_at
-    )
+    return template_db_to_response(template, author_name=current_user.username)
 
 
 class BulkDeleteRequest(BaseModel):

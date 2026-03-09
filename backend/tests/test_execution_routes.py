@@ -112,14 +112,19 @@ async def test_execute_workflow_not_found(db_session: AsyncSession):
 
 
 @pytest.mark.asyncio
-async def test_execute_workflow_no_llm_config(db_session: AsyncSession, test_workflow: WorkflowDB):
+async def test_execute_workflow_no_llm_config(db_session: AsyncSession, test_user: UserDB, test_workflow: WorkflowDB):
     """Test executing workflow without LLM config"""
     from main import app
+    from backend.auth import get_optional_user
     
     async def override_get_db():
         yield db_session
     
+    async def override_get_optional_user():
+        return test_user
+    
     app.dependency_overrides[get_db] = override_get_db
+    app.dependency_overrides[get_optional_user] = override_get_optional_user
     
     try:
         async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
@@ -134,14 +139,19 @@ async def test_execute_workflow_no_llm_config(db_session: AsyncSession, test_wor
 
 
 @pytest.mark.asyncio
-async def test_execute_workflow_success(db_session: AsyncSession, test_workflow: WorkflowDB, test_settings: SettingsDB):
+async def test_execute_workflow_success(db_session: AsyncSession, test_user: UserDB, test_workflow: WorkflowDB, test_settings: SettingsDB):
     """Test successful workflow execution"""
     from main import app
+    from backend.auth import get_optional_user
     
     async def override_get_db():
         yield db_session
     
+    async def override_get_optional_user():
+        return test_user
+    
     app.dependency_overrides[get_db] = override_get_db
+    app.dependency_overrides[get_optional_user] = override_get_optional_user
     
     # Mock the executor to avoid actual execution
     with patch("backend.services.execution_orchestrator.WorkflowExecutor") as mock_executor_class:
@@ -183,14 +193,19 @@ async def test_execute_workflow_success(db_session: AsyncSession, test_workflow:
 
 
 @pytest.mark.asyncio
-async def test_get_execution_not_found(db_session: AsyncSession):
+async def test_get_execution_not_found(db_session: AsyncSession, test_user: UserDB):
     """Test getting a non-existent execution"""
     from main import app
+    from backend.auth import get_current_active_user
     
     async def override_get_db():
         yield db_session
     
+    async def override_get_current_active_user():
+        return test_user
+    
     app.dependency_overrides[get_db] = override_get_db
+    app.dependency_overrides[get_current_active_user] = override_get_current_active_user
     
     try:
         async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
@@ -201,14 +216,15 @@ async def test_get_execution_not_found(db_session: AsyncSession):
 
 
 @pytest.mark.asyncio
-async def test_get_execution_success(db_session: AsyncSession, test_workflow: WorkflowDB):
+async def test_get_execution_success(db_session: AsyncSession, test_user: UserDB, test_workflow: WorkflowDB):
     """Test getting an execution"""
     from main import app
+    from backend.auth import get_current_active_user
     
     execution = ExecutionDB(
         id=str(uuid.uuid4()),
         workflow_id=test_workflow.id,
-        user_id=None,
+        user_id=test_user.id,
         status="completed",
         state={
             "current_node": None,
@@ -225,7 +241,11 @@ async def test_get_execution_success(db_session: AsyncSession, test_workflow: Wo
     async def override_get_db():
         yield db_session
     
+    async def override_get_current_active_user():
+        return test_user
+    
     app.dependency_overrides[get_db] = override_get_db
+    app.dependency_overrides[get_current_active_user] = override_get_current_active_user
     
     try:
         async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
@@ -244,6 +264,7 @@ async def test_get_execution_success(db_session: AsyncSession, test_workflow: Wo
 async def test_execute_workflow_invalid_definition(db_session: AsyncSession, test_user: UserDB, test_settings: SettingsDB):
     """Test executing workflow with invalid definition"""
     from main import app
+    from backend.auth import get_optional_user
     
     # Create workflow with invalid definition
     workflow = WorkflowDB(
@@ -261,7 +282,11 @@ async def test_execute_workflow_invalid_definition(db_session: AsyncSession, tes
     async def override_get_db():
         yield db_session
     
+    async def override_get_optional_user():
+        return test_user
+    
     app.dependency_overrides[get_db] = override_get_db
+    app.dependency_overrides[get_optional_user] = override_get_optional_user
     
     # Mock SettingsService dependency
     from backend.services.settings_service import ISettingsService
