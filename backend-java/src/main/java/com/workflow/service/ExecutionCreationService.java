@@ -2,6 +2,7 @@ package com.workflow.service;
 
 import com.workflow.entity.Execution;
 import com.workflow.repository.ExecutionRepository;
+import com.workflow.util.ErrorMessages;
 import com.workflow.util.ExecutionFactory;
 import com.workflow.util.LlmConfigUtils;
 import org.springframework.core.env.Environment;
@@ -61,7 +62,7 @@ public class ExecutionCreationService {
         Optional<Map<String, Object>> llmConfig = settingsService.getActiveLlmConfig(userId);
         if (llmConfig.isEmpty() && !LlmConfigUtils.hasAnyApiKey(Map.of(), environment)) {
             throw new IllegalArgumentException(
-                    "No LLM provider configured. Please configure an LLM provider in Settings before executing workflows.");
+                    ErrorMessages.NO_LLM_PROVIDER_CONFIGURED_EXECUTION);
         }
     }
 }

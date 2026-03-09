@@ -2,6 +2,7 @@ package com.workflow.engine;
 
 import com.workflow.dto.AgentConfig;
 import com.workflow.dto.Node;
+import com.workflow.util.ErrorMessages;
 import com.workflow.util.ObjectUtils;
 import com.workflow.dto.NodeType;
 import com.workflow.util.LlmConfigUtils;
@@ -41,12 +42,12 @@ public class AgentNodeExecutor implements NodeExecutor {
                           NodeExecutionContext ctx) {
         Map<String, Object> llmConfig = ObjectUtils.orEmptyMap(ObjectUtils.safeGet(ctx, NodeExecutionContext::llmConfig));
         if (llmConfig.isEmpty()) {
-            throw new IllegalStateException("LLM config required for agent nodes");
+            throw new IllegalStateException(ErrorMessages.LLM_CONFIG_REQUIRED_AGENT);
         }
+        LlmConfigUtils.LlmRequestContext requestCtx = LlmConfigUtils.prepareRequest(llmConfig, environment);
+
         AgentConfig cfg = node.getAgentConfig();
-        String model = ObjectUtils.orDefault(ObjectUtils.safeGet(cfg, AgentConfig::getModel), LlmConfigUtils.getModel(llmConfig));
-        LlmConfigUtils.validateApiKey(llmConfig, environment);
-        String apiKey = LlmConfigUtils.getApiKeyWithEnvFallback(llmConfig, environment);
+        String model = ObjectUtils.orDefault(ObjectUtils.safeGet(cfg, AgentConfig::getModel), requestCtx.model());
 
         String systemPrompt = ObjectUtils.orDefault(ObjectUtils.safeGet(cfg, AgentConfig::getSystemPrompt), "");
         List<Map<String, Object>> messages = new ArrayList<>();
@@ -55,7 +56,6 @@ public class AgentNodeExecutor implements NodeExecutor {
         if (userContent == null) userContent = inputs.values().stream().findFirst().orElse("");
         messages.add(LlmConfigUtils.buildMessage("user", String.valueOf(userContent)));
 
-        String url = LlmConfigUtils.buildChatCompletionsUrl(LlmConfigUtils.getBaseUrl(llmConfig));
-        return llmClient.chatCompletions(url, apiKey, model, messages);
+        return llmClient.chatCompletions(requestCtx.url(), requestCtx.apiKey(), model, messages);
     }
 }

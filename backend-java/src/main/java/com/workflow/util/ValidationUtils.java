@@ -1,6 +1,7 @@
 package com.workflow.util;
 
 import com.workflow.exception.ValidationException;
+import com.workflow.util.ErrorMessages;
 import org.springframework.util.StringUtils;
 
 /**
@@ -19,7 +20,7 @@ public final class ValidationUtils {
      */
     public static void requireNonEmpty(String value, String fieldName) {
         if (!StringUtils.hasText(value)) {
-            throw new ValidationException(fieldName + " is required");
+            throw new ValidationException(ErrorMessages.fieldRequired(fieldName));
         }
     }
 
@@ -31,7 +32,7 @@ public final class ValidationUtils {
      */
     public static void requireNonNull(Object obj, String fieldName) {
         if (obj == null) {
-            throw new ValidationException(fieldName + " is required");
+            throw new ValidationException(ErrorMessages.fieldRequired(fieldName));
         }
     }
 }

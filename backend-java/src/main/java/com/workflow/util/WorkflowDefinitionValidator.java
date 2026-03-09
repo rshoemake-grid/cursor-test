@@ -7,7 +7,6 @@ import java.util.Map;
  * DRY-15: Centralizes validation for nodes and edges required in definitions.
  */
 public final class WorkflowDefinitionValidator {
-    private static final String ERROR_MESSAGE = "Invalid workflow definition: must contain 'nodes' and 'edges'";
 
     private WorkflowDefinitionValidator() {
     }
@@ -20,7 +19,7 @@ public final class WorkflowDefinitionValidator {
      */
     public static void validate(Map<String, Object> definition) {
         if (definition == null || !definition.containsKey("nodes") || !definition.containsKey("edges")) {
-            throw new IllegalArgumentException(ERROR_MESSAGE);
+            throw new IllegalArgumentException(ErrorMessages.INVALID_WORKFLOW_DEFINITION);
         }
     }
 }

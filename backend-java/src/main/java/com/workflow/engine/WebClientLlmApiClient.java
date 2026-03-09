@@ -1,5 +1,6 @@
 package com.workflow.engine;
 
+import com.workflow.util.ErrorMessages;
 import com.workflow.util.LlmConfigUtils;
 import com.workflow.util.ObjectUtils;
 import org.springframework.stereotype.Component;
@@ -50,6 +51,6 @@ public class WebClientLlmApiClient implements LlmApiClient {
                 }
             }
         }
-        throw new IllegalArgumentException("LLM response missing expected structure (choices[0].message.content)");
+        throw new IllegalArgumentException(ErrorMessages.LLM_RESPONSE_INVALID_STRUCTURE);
     }
 }

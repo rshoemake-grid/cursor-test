@@ -2,43 +2,33 @@ package com.workflow.service;
 
 import com.workflow.dto.WorkflowShareCreate;
 import com.workflow.dto.WorkflowShareResponse;
-import com.workflow.dto.WorkflowVersionCreate;
-import com.workflow.dto.WorkflowVersionResponse;
 import com.workflow.entity.WorkflowShare;
-import com.workflow.entity.WorkflowVersion;
-import com.workflow.exception.ForbiddenException;
 import com.workflow.repository.UserRepository;
-import com.workflow.repository.WorkflowRepository;
 import com.workflow.repository.WorkflowShareRepository;
-import com.workflow.repository.WorkflowVersionRepository;
 import com.workflow.util.ErrorMessages;
 import com.workflow.util.RepositoryUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
 /**
- * Sharing service - matches Python sharing_routes
+ * SRP: Workflow sharing operations (share, revoke, list shared).
+ * Extracted from SharingService.
  */
 @Service
 @Transactional
-public class SharingService {
+public class WorkflowShareService {
     private final WorkflowShareRepository shareRepository;
-    private final WorkflowVersionRepository versionRepository;
-    private final WorkflowRepository workflowRepository;
     private final UserRepository userRepository;
     private final WorkflowOwnershipService ownershipService;
 
-    public SharingService(WorkflowShareRepository shareRepository, WorkflowVersionRepository versionRepository,
-                         WorkflowRepository workflowRepository, UserRepository userRepository,
-                         WorkflowOwnershipService ownershipService) {
+    public WorkflowShareService(WorkflowShareRepository shareRepository,
+                                UserRepository userRepository,
+                                WorkflowOwnershipService ownershipService) {
         this.shareRepository = shareRepository;
-        this.versionRepository = versionRepository;
-        this.workflowRepository = workflowRepository;
         this.userRepository = userRepository;
         this.ownershipService = ownershipService;
     }
@@ -85,43 +75,6 @@ public class SharingService {
         WorkflowShare share = RepositoryUtils.findByIdOrThrow(shareRepository, shareId, ErrorMessages.SHARE_NOT_FOUND);
         ownershipService.getWorkflowAndAssertOwner(share.getWorkflowId(), userId);
         shareRepository.delete(share);
-    }
-
-    @Transactional
-    public WorkflowVersionResponse createVersion(WorkflowVersionCreate create, String userId) {
-        var workflow = ownershipService.getWorkflowAndAssertOwner(create.getWorkflowId(), userId);
-        var latest = versionRepository.findByWorkflowIdOrderByVersionNumberDesc(create.getWorkflowId())
-                .stream().findFirst();
-        int nextVersion = latest.map(v -> v.getVersionNumber() + 1).orElse(1);
-
-        WorkflowVersion v = new WorkflowVersion();
-        v.setId(UUID.randomUUID().toString());
-        v.setWorkflowId(create.getWorkflowId());
-        v.setVersionNumber(nextVersion);
-        v.setDefinition(workflow.getDefinition());
-        v.setChangeNotes(create.getChangeNotes());
-        v.setCreatedBy(userId);
-        v = versionRepository.save(v);
-        return new WorkflowVersionResponse(v.getId(), v.getWorkflowId(), v.getVersionNumber(),
-                v.getChangeNotes(), v.getCreatedBy(), v.getCreatedAt());
-    }
-
-    public List<WorkflowVersionResponse> getVersions(String workflowId, String userId) {
-        var workflow = RepositoryUtils.findByIdOrThrow(workflowRepository, workflowId, ErrorMessages.WORKFLOW_NOT_FOUND);
-        ownershipService.assertCanReadOrShare(workflow, userId);
-        return versionRepository.findByWorkflowIdOrderByVersionNumberDesc(workflowId).stream()
-                .map(v -> new WorkflowVersionResponse(v.getId(), v.getWorkflowId(), v.getVersionNumber(),
-                        v.getChangeNotes(), v.getCreatedBy(), v.getCreatedAt()))
-                .collect(Collectors.toList());
-    }
-
-    @Transactional
-    public Map<String, String> restoreVersion(String versionId, String userId) {
-        WorkflowVersion v = RepositoryUtils.findByIdOrThrow(versionRepository, versionId, ErrorMessages.VERSION_NOT_FOUND);
-        var workflow = ownershipService.getWorkflowAndAssertOwner(v.getWorkflowId(), userId);
-        workflow.setDefinition(v.getDefinition());
-        workflowRepository.save(workflow);
-        return Map.of("message", "Restored to version " + v.getVersionNumber());
     }
 
     private WorkflowShareResponse toShareResponse(WorkflowShare s) {

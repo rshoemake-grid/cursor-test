@@ -1,5 +1,6 @@
 package com.workflow.engine;
 
+import com.workflow.constants.WorkflowConstants;
 import com.workflow.dto.ConditionConfig;
 import com.workflow.dto.Node;
 import com.workflow.util.ObjectUtils;
@@ -17,8 +18,6 @@ import java.util.Optional;
 public class ConditionNodeExecutor implements NodeExecutor {
 
     private static final String BRANCH_KEY = "branch";
-    private static final String BRANCH_TRUE = "true";
-    private static final String BRANCH_FALSE = "false";
 
     @Override
     public Optional<NodeType> getSupportedType() {
@@ -33,7 +32,7 @@ public class ConditionNodeExecutor implements NodeExecutor {
         String expectValue = ObjectUtils.safeGet(cfg, ConditionConfig::getValue);
 
         if (field == null || field.isEmpty()) {
-            return Map.of(BRANCH_KEY, BRANCH_TRUE);
+            return Map.of(BRANCH_KEY, WorkflowConstants.BRANCH_TRUE);
         }
 
         Object actual = inputs.get(field);
@@ -43,6 +42,6 @@ public class ConditionNodeExecutor implements NodeExecutor {
         String actualStr = ObjectUtils.toStringOrDefault(actual, "");
         String expectStr = ObjectUtils.orDefault(expectValue, "");
         boolean match = actualStr.equals(expectStr);
-        return Map.of(BRANCH_KEY, match ? BRANCH_TRUE : BRANCH_FALSE);
+        return Map.of(BRANCH_KEY, match ? WorkflowConstants.BRANCH_TRUE : WorkflowConstants.BRANCH_FALSE);
     }
 }

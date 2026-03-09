@@ -28,7 +28,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 /**
- * T-5: Unit tests for SharingService - share, revoke, versions.
+ * T-5: Unit tests for WorkflowShareService and WorkflowVersionService - share, revoke, versions.
  */
 @ExtendWith(MockitoExtension.class)
 class SharingServiceTest {
@@ -45,8 +45,9 @@ class SharingServiceTest {
     @Mock
     private UserRepository userRepository;
 
-    private WorkflowOwnershipService ownershipService;  // Real instance with mocked repos
-    private SharingService sharingService;
+    private WorkflowOwnershipService ownershipService;
+    private WorkflowShareService workflowShareService;
+    private WorkflowVersionService workflowVersionService;
 
     private static final String OWNER_ID = "owner-id";
     private static final String OTHER_USER_ID = "other-user-id";
@@ -87,8 +88,8 @@ class SharingServiceTest {
         version.setCreatedAt(LocalDateTime.now());
 
         ownershipService = new WorkflowOwnershipService(workflowRepository, shareRepository);
-        sharingService = new SharingService(shareRepository, versionRepository, workflowRepository,
-                userRepository, ownershipService);
+        workflowShareService = new WorkflowShareService(shareRepository, userRepository, ownershipService);
+        workflowVersionService = new WorkflowVersionService(versionRepository, workflowRepository, ownershipService);
     }
 
     @Test
@@ -99,7 +100,7 @@ class SharingServiceTest {
         when(shareRepository.findBySharedWithUserId(OTHER_USER_ID)).thenReturn(List.of());
         when(shareRepository.save(any(WorkflowShare.class))).thenAnswer(inv -> inv.getArgument(0));
 
-        var result = sharingService.shareWorkflow(create, OWNER_ID);
+        var result = workflowShareService.shareWorkflow(create, OWNER_ID);
 
         assertNotNull(result);
         assertEquals(WORKFLOW_ID, result.getWorkflowId());
@@ -116,7 +117,7 @@ class SharingServiceTest {
         when(shareRepository.findBySharedWithUserId(OTHER_USER_ID)).thenReturn(List.of(share));
         when(shareRepository.save(share)).thenReturn(share);
 
-        var result = sharingService.shareWorkflow(create, OWNER_ID);
+        var result = workflowShareService.shareWorkflow(create, OWNER_ID);
 
         assertNotNull(result);
         assertEquals("execute", result.getPermission());
@@ -129,7 +130,7 @@ class SharingServiceTest {
         when(workflowRepository.findById(WORKFLOW_ID)).thenReturn(Optional.of(workflow));
 
         assertThrows(ForbiddenException.class, () ->
-                sharingService.shareWorkflow(create, OTHER_USER_ID));
+                workflowShareService.shareWorkflow(create, OTHER_USER_ID));
         verify(shareRepository, never()).save(any());
     }
 
@@ -139,7 +140,7 @@ class SharingServiceTest {
         when(workflowRepository.findById(WORKFLOW_ID)).thenReturn(Optional.empty());
 
         assertThrows(ResourceNotFoundException.class, () ->
-                sharingService.shareWorkflow(create, OWNER_ID));
+                workflowShareService.shareWorkflow(create, OWNER_ID));
         verify(shareRepository, never()).save(any());
     }
 
@@ -150,7 +151,7 @@ class SharingServiceTest {
         when(userRepository.findByUsername("nonexistent")).thenReturn(Optional.empty());
 
         assertThrows(ResourceNotFoundException.class, () ->
-                sharingService.shareWorkflow(create, OWNER_ID));
+                workflowShareService.shareWorkflow(create, OWNER_ID));
         verify(shareRepository, never()).save(any());
     }
 
@@ -158,7 +159,7 @@ class SharingServiceTest {
     void getSharedWithMe_returnsList() {
         when(shareRepository.findBySharedWithUserId(OWNER_ID)).thenReturn(List.of(share));
 
-        var result = sharingService.getSharedWithMe(OWNER_ID);
+        var result = workflowShareService.getSharedWithMe(OWNER_ID);
 
         assertNotNull(result);
         assertEquals(1, result.size());
@@ -169,7 +170,7 @@ class SharingServiceTest {
     void getSharedByMe_returnsList() {
         when(shareRepository.findBySharedBy(OWNER_ID)).thenReturn(List.of(share));
 
-        var result = sharingService.getSharedByMe(OWNER_ID);
+        var result = workflowShareService.getSharedByMe(OWNER_ID);
 
         assertNotNull(result);
         assertEquals(1, result.size());
@@ -181,7 +182,7 @@ class SharingServiceTest {
         when(shareRepository.findById(SHARE_ID)).thenReturn(Optional.of(share));
         when(workflowRepository.findById(WORKFLOW_ID)).thenReturn(Optional.of(workflow));
 
-        sharingService.revokeShare(SHARE_ID, OWNER_ID);
+        workflowShareService.revokeShare(SHARE_ID, OWNER_ID);
 
         verify(shareRepository).delete(share);
     }
@@ -192,7 +193,7 @@ class SharingServiceTest {
         when(workflowRepository.findById(WORKFLOW_ID)).thenReturn(Optional.of(workflow));
 
         assertThrows(ForbiddenException.class, () ->
-                sharingService.revokeShare(SHARE_ID, OTHER_USER_ID));
+                workflowShareService.revokeShare(SHARE_ID, OTHER_USER_ID));
         verify(shareRepository, never()).delete(any());
     }
 
@@ -201,7 +202,7 @@ class SharingServiceTest {
         when(shareRepository.findById(SHARE_ID)).thenReturn(Optional.empty());
 
         assertThrows(ResourceNotFoundException.class, () ->
-                sharingService.revokeShare(SHARE_ID, OWNER_ID));
+                workflowShareService.revokeShare(SHARE_ID, OWNER_ID));
         verify(shareRepository, never()).delete(any());
     }
 
@@ -216,7 +217,7 @@ class SharingServiceTest {
             return v;
         });
 
-        var result = sharingService.createVersion(create, OWNER_ID);
+        var result = workflowVersionService.createVersion(create, OWNER_ID);
 
         assertNotNull(result);
         assertEquals(WORKFLOW_ID, result.getWorkflowId());
@@ -231,7 +232,7 @@ class SharingServiceTest {
         when(workflowRepository.findById(WORKFLOW_ID)).thenReturn(Optional.of(workflow));
 
         assertThrows(ForbiddenException.class, () ->
-                sharingService.createVersion(create, OTHER_USER_ID));
+                workflowVersionService.createVersion(create, OTHER_USER_ID));
         verify(versionRepository, never()).save(any());
     }
 
@@ -240,7 +241,7 @@ class SharingServiceTest {
         when(workflowRepository.findById(WORKFLOW_ID)).thenReturn(Optional.of(workflow));
         when(versionRepository.findByWorkflowIdOrderByVersionNumberDesc(WORKFLOW_ID)).thenReturn(List.of(version));
 
-        var result = sharingService.getVersions(WORKFLOW_ID, OWNER_ID);
+        var result = workflowVersionService.getVersions(WORKFLOW_ID, OWNER_ID);
 
         assertNotNull(result);
         assertEquals(1, result.size());
@@ -253,7 +254,7 @@ class SharingServiceTest {
         when(shareRepository.findBySharedWithUserId(OTHER_USER_ID)).thenReturn(List.of(share));
         when(versionRepository.findByWorkflowIdOrderByVersionNumberDesc(WORKFLOW_ID)).thenReturn(List.of(version));
 
-        var result = sharingService.getVersions(WORKFLOW_ID, OTHER_USER_ID);
+        var result = workflowVersionService.getVersions(WORKFLOW_ID, OTHER_USER_ID);
 
         assertNotNull(result);
         assertEquals(1, result.size());
@@ -265,7 +266,7 @@ class SharingServiceTest {
         when(shareRepository.findBySharedWithUserId(OTHER_USER_ID)).thenReturn(List.of());
 
         assertThrows(ForbiddenException.class, () ->
-                sharingService.getVersions(WORKFLOW_ID, OTHER_USER_ID));
+                workflowVersionService.getVersions(WORKFLOW_ID, OTHER_USER_ID));
     }
 
     @Test
@@ -274,7 +275,7 @@ class SharingServiceTest {
         when(workflowRepository.findById(WORKFLOW_ID)).thenReturn(Optional.of(workflow));
         when(workflowRepository.save(workflow)).thenReturn(workflow);
 
-        var result = sharingService.restoreVersion(VERSION_ID, OWNER_ID);
+        var result = workflowVersionService.restoreVersion(VERSION_ID, OWNER_ID);
 
         assertNotNull(result);
         assertTrue(result.containsKey("message"));
@@ -288,7 +289,7 @@ class SharingServiceTest {
         when(workflowRepository.findById(WORKFLOW_ID)).thenReturn(Optional.of(workflow));
 
         assertThrows(ForbiddenException.class, () ->
-                sharingService.restoreVersion(VERSION_ID, OTHER_USER_ID));
+                workflowVersionService.restoreVersion(VERSION_ID, OTHER_USER_ID));
         verify(workflowRepository, never()).save(any());
     }
 }

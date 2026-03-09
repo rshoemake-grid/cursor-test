@@ -33,7 +33,7 @@ public class WorkflowLikeService {
 
     @Transactional
     public Map<String, String> likeWorkflow(String workflowId, String userId) {
-        Workflow workflow = RepositoryUtils.findByIdOrThrow(workflowRepository, workflowId, ErrorMessages.WORKFLOW_NOT_FOUND);
+        Workflow workflow = RepositoryUtils.findByIdOrThrow(workflowRepository, workflowId, ErrorMessages.workflowNotFound(workflowId));
         ownershipService.assertCanRead(workflow, userId);
         if (workflowLikeRepository.findByWorkflowIdAndUserId(workflowId, userId).isPresent()) {
             return Map.of("message", "Already liked");
@@ -50,7 +50,7 @@ public class WorkflowLikeService {
 
     @Transactional
     public void unlikeWorkflow(String workflowId, String userId) {
-        Workflow workflow = RepositoryUtils.findByIdOrThrow(workflowRepository, workflowId, ErrorMessages.WORKFLOW_NOT_FOUND);
+        Workflow workflow = RepositoryUtils.findByIdOrThrow(workflowRepository, workflowId, ErrorMessages.workflowNotFound(workflowId));
         ownershipService.assertCanRead(workflow, userId);
         RepositoryUtils.orElseThrow(workflowLikeRepository.findByWorkflowIdAndUserId(workflowId, userId), ErrorMessages.LIKE_NOT_FOUND);
         workflowLikeRepository.deleteByWorkflowIdAndUserId(workflowId, userId);

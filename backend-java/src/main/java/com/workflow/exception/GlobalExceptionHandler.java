@@ -2,6 +2,7 @@ package com.workflow.exception;
 
 import com.workflow.util.ObjectUtils;
 import com.workflow.util.EnvironmentUtils;
+import com.workflow.util.ErrorMessages;
 import com.workflow.util.ErrorResponseBuilder;
 import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
@@ -23,7 +24,6 @@ import java.util.Map;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
     private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
-    private static final String GENERIC_ERROR_MESSAGE = "An unexpected error occurred";
 
     private final Environment environment;
 
@@ -67,8 +67,8 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Map<String, Object>> handleHttpMessageNotReadable(
             HttpMessageNotReadableException e, HttpServletRequest request) {
         String message = e.getMessage() != null && e.getMessage().contains("JSON")
-                ? "Invalid JSON"
-                : "Invalid request body";
+                ? ErrorMessages.INVALID_JSON
+                : ErrorMessages.INVALID_REQUEST_BODY;
         log.debug("Bad request (malformed JSON/body): {}", message);
         return ErrorResponseBuilder.badRequest(message, getRequestPath(request));
     }
@@ -79,7 +79,7 @@ public class GlobalExceptionHandler {
         String message = e.getBindingResult().getFieldErrors().stream()
             .map(error -> error.getField() + ": " + error.getDefaultMessage())
             .reduce((a, b) -> a + ", " + b)
-            .orElse("Validation failed");
+            .orElse(ErrorMessages.VALIDATION_FAILED);
         log.debug("Validation error: {}", message);
         return ErrorResponseBuilder.validationError(message, getRequestPath(request));
     }
@@ -92,8 +92,8 @@ public class GlobalExceptionHandler {
         } else {
             log.error("Unexpected error occurred", e);
         }
-        String clientMessage = EnvironmentUtils.isProduction(environment) ? GENERIC_ERROR_MESSAGE
-                : java.util.Objects.requireNonNullElse(e.getMessage(), GENERIC_ERROR_MESSAGE);
+        String clientMessage = EnvironmentUtils.isProduction(environment) ? ErrorMessages.UNEXPECTED_ERROR
+                : java.util.Objects.requireNonNullElse(e.getMessage(), ErrorMessages.UNEXPECTED_ERROR);
         return ErrorResponseBuilder.internalServerError(clientMessage, getRequestPath(request));
     }
 }

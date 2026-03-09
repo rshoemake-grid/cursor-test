@@ -50,8 +50,7 @@ public class WorkflowChatService {
     @Transactional(readOnly = true)
     public WorkflowChatResponse chat(WorkflowChatRequest request, String userId) {
         Map<String, Object> llmConfig = settingsService.getActiveLlmConfig(userId)
-                .orElseThrow(() -> new IllegalArgumentException(
-                        "No LLM provider configured. Please configure an LLM provider in Settings."));
+                .orElseThrow(() -> new IllegalArgumentException(ErrorMessages.NO_LLM_PROVIDER_CONFIGURED));
 
         String workflowContext = getWorkflowContext(request.getWorkflowId(), userId);
         String systemPrompt = SYSTEM_PROMPT_PREFIX + workflowContext;
@@ -65,21 +64,17 @@ public class WorkflowChatService {
         }
         messages.add(LlmConfigUtils.buildMessage("user", request.getMessage()));
 
-        String baseUrl = LlmConfigUtils.getBaseUrl(llmConfig);
-        LlmConfigUtils.validateApiKey(llmConfig, environment);
-        String apiKey = LlmConfigUtils.getApiKeyWithEnvFallback(llmConfig, environment);
-        String model = LlmConfigUtils.getModel(llmConfig);
-        String url = LlmConfigUtils.buildChatCompletionsUrl(baseUrl);
+        LlmConfigUtils.LlmRequestContext ctx = LlmConfigUtils.prepareRequest(llmConfig, environment);
 
         try {
-            String responseContent = llmApiClient.chatCompletions(url, apiKey, model, messages);
+            String responseContent = llmApiClient.chatCompletions(ctx.url(), ctx.apiKey(), ctx.model(), messages);
             return new WorkflowChatResponse(
                     ObjectUtils.orDefaultIfBlank(responseContent, "I've processed your request."),
                     null,
                     request.getWorkflowId());
         } catch (Exception e) {
             log.warn("Workflow chat LLM call failed: {}", e.getMessage());
-            throw new IllegalArgumentException("Chat error: " + e.getMessage());
+            throw new IllegalArgumentException(ErrorMessages.chatError(e.getMessage()));
         }
     }
 
@@ -87,7 +82,7 @@ public class WorkflowChatService {
         if (workflowId == null || workflowId.isBlank()) {
             return "No workflow loaded. You can create a new workflow.";
         }
-        Workflow w = RepositoryUtils.findByIdOrThrow(workflowRepository, workflowId, ErrorMessages.WORKFLOW_NOT_FOUND);
+        Workflow w = RepositoryUtils.findByIdOrThrow(workflowRepository, workflowId, ErrorMessages.workflowNotFound(workflowId));
         ownershipService.assertCanReadOrShare(w, userId);
         Map<String, Object> def = ObjectUtils.orEmptyMap(w.getDefinition());
         var nodes = workflowMapper.extractNodes(def);

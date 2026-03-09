@@ -43,15 +43,13 @@ public final class LlmConfigUtils {
         return null;
     }
 
-    private static final String API_KEY_ERROR = "No LLM API key configured. Set api_key in Settings or one of OPENAI_API_KEY, GEMINI_API_KEY, GOOGLE_API_KEY env vars.";
-
     /**
      * Validate that an API key is available; throw if not.
      */
     public static void validateApiKey(Map<String, Object> config, Environment env) {
         String key = getApiKeyWithEnvFallback(ObjectUtils.orEmptyMap(config), env);
         if (key == null || key.isBlank()) {
-            throw new IllegalStateException(API_KEY_ERROR);
+            throw new IllegalStateException(ErrorMessages.NO_LLM_API_KEY);
         }
     }
 
@@ -101,6 +99,24 @@ public final class LlmConfigUtils {
         if (baseUrl == null || baseUrl.isBlank()) return DEFAULT_BASE_URL + "/chat/completions";
         if (baseUrl.contains("/chat/completions")) return baseUrl;
         return baseUrl.endsWith("/") ? baseUrl + "chat/completions" : baseUrl + "/chat/completions";
+    }
+
+    /**
+     * Prepared LLM request context (url, apiKey, model). DRY: Used by AgentNodeExecutor and WorkflowChatService.
+     */
+    public record LlmRequestContext(String url, String apiKey, String model) {
+    }
+
+    /**
+     * Validate config, extract url/apiKey/model. Throws if API key missing.
+     */
+    public static LlmRequestContext prepareRequest(Map<String, Object> config, Environment env) {
+        validateApiKey(config, env);
+        String baseUrl = getBaseUrl(ObjectUtils.orEmptyMap(config));
+        String url = buildChatCompletionsUrl(baseUrl);
+        String apiKey = getApiKeyWithEnvFallback(config, env);
+        String model = getModel(config);
+        return new LlmRequestContext(url, apiKey, model);
     }
 
     /**

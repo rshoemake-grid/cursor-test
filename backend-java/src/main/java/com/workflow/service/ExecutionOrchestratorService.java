@@ -5,7 +5,9 @@ import com.workflow.dto.ExecutionResponse;
 import com.workflow.dto.ExecutionStatus;
 import com.workflow.entity.Execution;
 import com.workflow.engine.WorkflowExecutor;
+import com.workflow.constants.ExecutionLogConstants;
 import com.workflow.util.EnvironmentUtils;
+import com.workflow.util.ErrorMessages;
 import com.workflow.util.ObjectUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,7 +27,6 @@ import java.util.*;
 @Service
 public class ExecutionOrchestratorService {
     private static final Logger log = LoggerFactory.getLogger(ExecutionOrchestratorService.class);
-    private static final String GENERIC_ERROR_MESSAGE = "Execution failed";
 
     private final ExecutionCreationService executionCreationService;
     private final ExecutionService executionService;
@@ -84,9 +85,9 @@ public class ExecutionOrchestratorService {
             executionService.updateExecutionState(executionId, state);
         } catch (Exception e) {
             log.error("Background execution {} failed: {}", executionId, e.getMessage(), e);
-            String errorMessage = EnvironmentUtils.isProduction(environment) ? GENERIC_ERROR_MESSAGE
-                    : ObjectUtils.orDefault(e.getMessage(), GENERIC_ERROR_MESSAGE);
-            executionService.appendLogAndUpdateExecutionState(executionId, userId, "ERROR", null, errorMessage,
+            String errorMessage = EnvironmentUtils.isProduction(environment) ? ErrorMessages.EXECUTION_FAILED
+                    : ObjectUtils.orDefault(e.getMessage(), ErrorMessages.EXECUTION_FAILED);
+            executionService.appendLogAndUpdateExecutionState(executionId, userId, ExecutionLogConstants.LOG_LEVEL_ERROR, null, errorMessage,
                     ExecutionStatus.FAILED.getValue(), errorMessage);
         }
     }

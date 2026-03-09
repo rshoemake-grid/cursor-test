@@ -32,7 +32,6 @@ import java.util.UUID;
 @Transactional
 public class AuthService {
     private static final Logger log = LoggerFactory.getLogger(AuthService.class);
-    private static final long REMEMBER_ME_EXPIRATION_MS = 7L * 24 * 60 * 60 * 1000; // 7 days
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
@@ -44,6 +43,9 @@ public class AuthService {
 
     @Value("${jwt.expiration:86400000}")
     private long jwtExpirationMs;
+
+    @Value("${auth.remember-me-expiration-ms:604800000}")
+    private long rememberMeExpirationMs;
 
     public AuthService(UserRepository userRepository, PasswordEncoder passwordEncoder, JwtUtil jwtUtil,
                        AuthenticationManager authenticationManager, TokenService tokenService,
@@ -87,7 +89,7 @@ public class AuthService {
 
     public TokenResponse login(LoginRequest loginRequest) {
         if (loginRequest == null || loginRequest.getUsername() == null || loginRequest.getPassword() == null) {
-            throw new ValidationException("Username and password are required");
+            throw new ValidationException(ErrorMessages.USERNAME_PASSWORD_REQUIRED);
         }
 
         log.info("Login attempt for user: {}", loginRequest.getUsername());
@@ -102,7 +104,7 @@ public class AuthService {
         User user = RepositoryUtils.orElseThrow(userRepository.findByUsername(loginRequest.getUsername()), ErrorMessages.USER_NOT_FOUND);
 
         boolean rememberMe = Boolean.TRUE.equals(loginRequest.getRememberMe());
-        long accessTokenExpirationMs = rememberMe ? REMEMBER_ME_EXPIRATION_MS : jwtExpirationMs;
+        long accessTokenExpirationMs = rememberMe ? rememberMeExpirationMs : jwtExpirationMs;
         String accessToken = jwtUtil.generateToken(user.getUsername(), user.getId(), accessTokenExpirationMs);
         String refreshToken = jwtUtil.generateRefreshToken(user.getUsername(), user.getId());
 

@@ -6,6 +6,8 @@ import com.workflow.entity.Workflow;
 import com.workflow.repository.WorkflowRepository;
 import com.workflow.exception.ValidationException;
 import com.workflow.util.ErrorMessages;
+import com.workflow.util.ImportParser;
+import com.workflow.util.ImportValidator;
 import com.workflow.util.JsonStateUtils;
 import com.workflow.util.ObjectUtils;
 import com.workflow.util.RepositoryUtils;
@@ -26,7 +28,6 @@ import java.util.*;
 @Service
 public class ImportExportService {
     private static final String SAFE_FILENAME_PATTERN = "[^a-zA-Z0-9._-]";
-    private static final int MAX_IMPORT_DEFINITION_KEYS = 50;
     private static final int MAX_FILENAME_LENGTH = 64;
 
     private final WorkflowRepository workflowRepository;
@@ -46,7 +47,7 @@ public class ImportExportService {
      * Export workflow with ownership check. Use from controller to avoid controller depending on WorkflowRepository.
      */
     public ExportResult exportWorkflowWithAuth(String workflowId, String userId, String exportedBy) {
-        Workflow w = RepositoryUtils.findByIdOrThrow(workflowRepository, workflowId, ErrorMessages.WORKFLOW_NOT_FOUND);
+        Workflow w = RepositoryUtils.findByIdOrThrow(workflowRepository, workflowId, ErrorMessages.workflowNotFound(workflowId));
         ownershipService.assertCanRead(w, userId);
         Map<String, Object> export = exportWorkflow(w, exportedBy);
         String filename = getExportFilename(workflowId, w.getName());
@@ -56,7 +57,7 @@ public class ImportExportService {
     public record ExportResult(Map<String, Object> data, String filename) {}
 
     public Map<String, Object> exportWorkflow(String workflowId, String exportedBy) {
-        Workflow w = RepositoryUtils.findByIdOrThrow(workflowRepository, workflowId, ErrorMessages.WORKFLOW_NOT_FOUND);
+        Workflow w = RepositoryUtils.findByIdOrThrow(workflowRepository, workflowId, ErrorMessages.workflowNotFound(workflowId));
         return exportWorkflow(w, exportedBy);
     }
 
@@ -76,8 +77,8 @@ public class ImportExportService {
     }
 
     public WorkflowResponseV2 importWorkflow(Map<String, Object> body, String userId) {
-        validateImportBody(body);
-        ImportData importData = parseImportDataFromBody(body);
+        ImportValidator.validateBody(body);
+        ImportParser.ImportData importData = ImportParser.parseFromBody(body);
         WorkflowDefinitionValidator.validate(importData.definition());
         Workflow w = createWorkflowFromImportData(importData, userId);
         w = workflowRepository.save(w);
@@ -85,62 +86,18 @@ public class ImportExportService {
     }
 
     public WorkflowResponseV2 importFromFile(MultipartFile file, String userId) throws Exception {
-        Map<String, Object> data = parseFileContent(file);
+        Map<String, Object> data = ImportParser.parseFileContent(file, objectMapper);
         if (data == null || data.isEmpty()) {
             throw new ValidationException(ErrorMessages.IMPORT_FILE_EMPTY);
         }
-        ImportData importData = parseImportDataFromFile(data);
+        ImportParser.ImportData importData = ImportParser.parseFromFile(data);
         WorkflowDefinitionValidator.validate(importData.definition());
         Workflow w = createWorkflowFromImportData(importData, userId);
         w = workflowRepository.save(w);
         return workflowMapper.toWorkflowResponseV2(w);
     }
 
-    private Map<String, Object> parseFileContent(MultipartFile file) throws Exception {
-        String content = new String(file.getBytes());
-        try {
-            return objectMapper.readValue(content, Map.class);
-        } catch (com.fasterxml.jackson.core.JsonProcessingException e) {
-            throw new ValidationException(ErrorMessages.IMPORT_FILE_EMPTY + ": " + e.getMessage());
-        }
-    }
-
-    private ImportData parseImportDataFromBody(Map<String, Object> body) {
-        Map<String, Object> definition = JsonStateUtils.getMap(body, "definition");
-        return new ImportData(
-                JsonStateUtils.getString(body, "name"),
-                JsonStateUtils.getString(body, "description"),
-                definition,
-                null,
-                null);
-    }
-
-    private ImportData parseImportDataFromFile(Map<String, Object> data) {
-        if (data.containsKey("workflow")) {
-            Map<String, Object> wf = JsonStateUtils.getMap(data, "workflow");
-            Map<String, Object> definition = Map.of(
-                    "nodes", JsonStateUtils.getList(wf, "nodes"),
-                    "edges", JsonStateUtils.getList(wf, "edges"),
-                    "variables", JsonStateUtils.getMap(wf, "variables"));
-            return buildImportData(wf, definition);
-        }
-        Map<String, Object> definition = JsonStateUtils.getMap(data, "definition");
-        if (definition.isEmpty()) {
-            definition = data;
-        }
-        return buildImportData(data, definition);
-    }
-
-    private static ImportData buildImportData(Map<String, Object> source, Map<String, Object> definition) {
-        return new ImportData(
-                JsonStateUtils.getString(source, "name"),
-                JsonStateUtils.getString(source, "description"),
-                definition,
-                JsonStateUtils.getString(source, "category"),
-                JsonStateUtils.getStringList(source, "tags"));
-    }
-
-    private Workflow createWorkflowFromImportData(ImportData importData, String userId) {
+    private Workflow createWorkflowFromImportData(ImportParser.ImportData importData, String userId) {
         Workflow w = createWorkflowFromDefinition(
                 importData.name(),
                 importData.description(),
@@ -150,9 +107,6 @@ public class ImportExportService {
         if (importData.tags() != null && !importData.tags().isEmpty()) w.setTags(importData.tags());
         return w;
     }
-
-    private record ImportData(String name, String description, Map<String, Object> definition,
-                              String category, List<String> tags) {}
 
     public Map<String, Object> exportAll(String userId, String exportedBy) {
         List<Workflow> workflows = workflowRepository.findByOwnerId(userId);
@@ -165,23 +119,6 @@ public class ImportExportService {
         result.put("exported_by", exportedBy);
         result.put("workflows", exports);
         return result;
-    }
-
-    private void validateImportBody(Map<String, Object> body) {
-        if (body == null || body.isEmpty()) {
-            throw new ValidationException(ErrorMessages.IMPORT_BODY_EMPTY);
-        }
-        if (!body.containsKey("definition")) {
-            throw new ValidationException(ErrorMessages.IMPORT_BODY_MISSING_DEFINITION);
-        }
-        Object def = body.get("definition");
-        if (!(def instanceof Map)) {
-            throw new ValidationException(ErrorMessages.IMPORT_DEFINITION_NOT_OBJECT);
-        }
-        Map<String, Object> definition = JsonStateUtils.getMap(body, "definition");
-        if (definition.size() > MAX_IMPORT_DEFINITION_KEYS) {
-            throw new ValidationException(ErrorMessages.IMPORT_DEFINITION_TOO_LARGE);
-        }
     }
 
     private static String sanitizeFilename(String name, String workflowId) {

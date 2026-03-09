@@ -62,6 +62,10 @@ public final class NodeInputResolver {
         return inputs;
     }
 
+    /**
+     * Get output from the first upstream node (by edge source). For nodes with multiple incoming edges,
+     * only the first matching upstream output is returned; other upstream outputs are ignored.
+     */
     public static Object getPreviousNodeOutput(Node node, ExecutionState state, List<Edge> edges) {
         for (Edge e : edges) {
             if (node.getId().equals(e.getTarget())) {

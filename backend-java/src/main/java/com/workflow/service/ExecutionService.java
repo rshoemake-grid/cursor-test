@@ -2,6 +2,7 @@ package com.workflow.service;
 
 import com.workflow.dto.*;
 import com.workflow.entity.Execution;
+import com.workflow.constants.ExecutionLogConstants;
 import com.workflow.util.ErrorMessages;
 import com.workflow.util.ExecutionResponseMapper;
 import com.workflow.util.OwnershipUtils;
@@ -111,7 +112,7 @@ public class ExecutionService implements ExecutionOwnershipChecker {
             throw new IllegalArgumentException(ErrorMessages.executionNotCancellable(executionId, status));
         }
 
-        appendLogAndUpdateExecutionState(executionId, userId, "INFO", null, "Execution cancelled by user",
+        appendLogAndUpdateExecutionState(executionId, userId, ExecutionLogConstants.LOG_LEVEL_INFO, null, ErrorMessages.EXECUTION_CANCELLED_BY_USER,
                 ExecutionStatus.CANCELLED.getValue(), null);
         execution = RepositoryUtils.findByIdOrThrow(executionRepository, executionId,
                 () -> new ExecutionNotFoundException(ErrorMessages.executionNotFound(executionId)));
@@ -121,8 +122,9 @@ public class ExecutionService implements ExecutionOwnershipChecker {
 
     /**
      * Update execution state after workflow run. SRP: Centralizes execution persistence used by ExecutionOrchestratorService.
+     * Package-private: only for use by ExecutionOrchestratorService (trusted internal caller).
      */
-    public void updateExecutionState(String executionId, Map<String, Object> state) {
+    void updateExecutionState(String executionId, Map<String, Object> state) {
         Execution execution = executionRepository.findById(executionId).orElse(null);
         if (execution != null) {
             execution.setStatus((String) state.getOrDefault("status", ExecutionStatus.COMPLETED.getValue()));

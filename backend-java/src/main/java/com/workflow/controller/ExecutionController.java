@@ -1,9 +1,11 @@
 package com.workflow.controller;
 
 import com.workflow.dto.*;
+import com.workflow.exception.ForbiddenException;
 import com.workflow.service.ExecutionService;
 import com.workflow.service.ExecutionOrchestratorService;
 import com.workflow.util.AuthenticationHelper;
+import com.workflow.util.ErrorMessages;
 import com.workflow.util.ExecutionLogsFormatter;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -63,7 +65,8 @@ public class ExecutionController {
         log.info("Executing workflow {} for user", workflowId);
 
         String userId = authenticationHelper.extractUserIdRequired(authentication);
-        ExecutionResponse response = executionOrchestratorService.executeWorkflow(workflowId, userId, executionRequest);
+        ExecutionRequest request = executionRequest != null ? executionRequest : new ExecutionRequest();
+        ExecutionResponse response = executionOrchestratorService.executeWorkflow(workflowId, userId, request);
 
         return ResponseEntity.ok(response);
     }
@@ -122,7 +125,7 @@ public class ExecutionController {
             Authentication authentication) {
         String authUserId = authenticationHelper.extractUserIdRequired(authentication);
         if (!authUserId.equals(userId)) {
-            return ResponseEntity.status(403).build();
+            throw new ForbiddenException(ErrorMessages.NOT_AUTHORIZED_USER_EXECUTIONS);
         }
         List<ExecutionResponse> executions = executionService.listExecutions(
                 workflowId, userId, status, limit, offset);

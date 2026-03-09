@@ -2,6 +2,7 @@ package com.workflow.service;
 
 import com.workflow.dto.Edge;
 import com.workflow.dto.Node;
+import com.workflow.dto.NodeType;
 import com.workflow.entity.Workflow;
 import com.workflow.repository.WorkflowRepository;
 import com.workflow.util.ErrorMessages;
@@ -26,7 +27,7 @@ public class WorkflowValidationService {
     }
 
     public Map<String, Object> validate(String workflowId) {
-        Workflow w = RepositoryUtils.findByIdOrThrow(workflowRepository, workflowId, ErrorMessages.WORKFLOW_NOT_FOUND);
+        Workflow w = RepositoryUtils.findByIdOrThrow(workflowRepository, workflowId, ErrorMessages.workflowNotFound(workflowId));
         Map<String, Object> def = w.getDefinition();
         List<Node> nodes = workflowMapper.extractNodes(def);
         List<Edge> edges = workflowMapper.extractEdges(def);
@@ -53,10 +54,10 @@ public class WorkflowValidationService {
                 .map(n -> ObjectUtils.safeGet(n.getType(), com.workflow.dto.NodeType::getValue))
                 .filter(Objects::nonNull)
                 .toList();
-        if (!types.contains("start")) {
+        if (!types.contains(NodeType.START.getValue())) {
             issues.add(Map.of("type", "missing_start", "message", "Workflow has no START node", "severity", "error"));
         }
-        if (!types.contains("end")) {
+        if (!types.contains(NodeType.END.getValue())) {
             warnings.add(Map.of("type", "missing_end", "message", "Workflow has no END node", "severity", "warning"));
         }
 
