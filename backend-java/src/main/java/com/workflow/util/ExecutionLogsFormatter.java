@@ -27,12 +27,8 @@ public class ExecutionLogsFormatter {
         try {
             List<Map<String, Object>> logs = new ArrayList<>();
             for (ExecutionLogEntry e : logsResponse.getLogs()) {
-                Map<String, Object> entry = new LinkedHashMap<>();
-                entry.put("timestamp", e.getTimestamp() != null ? e.getTimestamp().toString() : null);
-                entry.put("level", e.getLevel());
-                entry.put("node_id", e.getNodeId());
-                entry.put("message", e.getMessage());
-                logs.add(entry);
+                String timestamp = e.getTimestamp() != null ? e.getTimestamp().toString() : null;
+                logs.add(JsonStateUtils.createLogEntry(timestamp, e.getLevel(), e.getNodeId(), e.getMessage()));
             }
             Map<String, Object> result = new LinkedHashMap<>();
             result.put("execution_id", executionId);

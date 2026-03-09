@@ -6,6 +6,9 @@ import com.workflow.entity.PublishedAgent;
 import com.workflow.entity.User;
 import com.workflow.repository.PublishedAgentRepository;
 import com.workflow.repository.UserRepository;
+import com.workflow.config.TemplateConfig;
+import com.workflow.util.ObjectUtils;
+import com.workflow.util.PaginationUtils;
 import com.workflow.util.UserDisplayNameResolver;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -24,11 +27,14 @@ import java.util.UUID;
 public class PublishedAgentService {
     private final PublishedAgentRepository publishedAgentRepository;
     private final UserRepository userRepository;
+    private final TemplateConfig.TemplateOptions templateOptions;
 
     public PublishedAgentService(PublishedAgentRepository publishedAgentRepository,
-                                UserRepository userRepository) {
+                                UserRepository userRepository,
+                                TemplateConfig.TemplateOptions templateOptions) {
         this.publishedAgentRepository = publishedAgentRepository;
         this.userRepository = userRepository;
+        this.templateOptions = templateOptions;
     }
 
     @Transactional
@@ -38,17 +44,15 @@ public class PublishedAgentService {
         agent.setName(request.getName());
         agent.setDescription(request.getDescription());
         agent.setCategory(request.getCategory());
-        agent.setTags(request.getTags() != null ? request.getTags() : List.of());
-        agent.setDifficulty(request.getDifficulty() != null ? request.getDifficulty() : "beginner");
+        agent.setTags(ObjectUtils.orEmptyList(request.getTags()));
+        agent.setDifficulty(ObjectUtils.orDefault(request.getDifficulty(), templateOptions.getDefaultDifficulty()));
         agent.setEstimatedTime(request.getEstimatedTime());
-        agent.setAgentConfig(request.getAgentConfig() != null ? request.getAgentConfig() : Map.of());
+        agent.setAgentConfig(ObjectUtils.orEmptyMap(request.getAgentConfig()));
         agent.setAuthorId(userId);
         agent.setIsOfficial(isAdmin);
         publishedAgentRepository.save(agent);
 
-        String authorName = userRepository.findById(userId)
-                .map(UserDisplayNameResolver::resolve)
-                .orElse(null);
+        String authorName = UserDisplayNameResolver.resolveFromOptional(userRepository.findById(userId));
 
         return PublishedAgentResponse.builder()
                 .id(agent.getId())
@@ -67,8 +71,8 @@ public class PublishedAgentService {
     }
 
     public List<PublishedAgentResponse> listAgents(String category, String search, int limit, int offset) {
-        int safeLimit = Math.max(1, Math.min(limit, 100));
-        int fetchSize = offset + safeLimit;
+        int safeLimit = PaginationUtils.clampLimit(limit);
+        int fetchSize = PaginationUtils.fetchSize(offset, safeLimit);
         Pageable pageable = PageRequest.of(0, fetchSize, Sort.by(Sort.Direction.DESC, "createdAt"));
         return publishedAgentRepository.findByFilters(category, search, pageable).stream()
                 .skip(offset)
@@ -79,21 +83,21 @@ public class PublishedAgentService {
 
     private PublishedAgentResponse toAgentResponse(PublishedAgent a) {
         String authorName = a.getAuthorId() != null
-                ? userRepository.findById(a.getAuthorId()).map(UserDisplayNameResolver::resolve).orElse(null)
+                ? UserDisplayNameResolver.resolveFromOptional(userRepository.findById(a.getAuthorId()))
                 : null;
         return PublishedAgentResponse.builder()
                 .id(a.getId())
                 .name(a.getName())
                 .description(a.getDescription())
                 .category(a.getCategory())
-                .tags(a.getTags() != null ? a.getTags() : List.of())
+                .tags(ObjectUtils.orEmptyList(a.getTags()))
                 .difficulty(a.getDifficulty())
                 .estimatedTime(a.getEstimatedTime())
                 .agentConfig(a.getAgentConfig())
                 .publishedAt(a.getCreatedAt())
                 .authorId(a.getAuthorId())
                 .authorName(authorName)
-                .isOfficial(a.getIsOfficial() != null ? a.getIsOfficial() : false)
+                .isOfficial(ObjectUtils.orFalse(a.getIsOfficial()))
                 .build();
     }
 }

@@ -25,7 +25,7 @@ import java.util.stream.Collectors;
  */
 @Service
 @Transactional
-public class ExecutionService {
+public class ExecutionService implements ExecutionOwnershipChecker {
     private static final Logger log = LoggerFactory.getLogger(ExecutionService.class);
 
     private final ExecutionRepository executionRepository;
@@ -39,8 +39,8 @@ public class ExecutionService {
      */
     @Transactional(readOnly = true)
     public ExecutionResponse getExecution(String executionId, String userId) {
-        Execution execution = executionRepository.findById(executionId)
-                .orElseThrow(() -> new ExecutionNotFoundException("Execution not found: " + executionId));
+        Execution execution = RepositoryUtils.findByIdOrThrow(executionRepository, executionId,
+                () -> new ExecutionNotFoundException("Execution not found: " + executionId));
         assertExecutionOwner(execution, userId);
         return toResponse(execution);
     }
@@ -112,14 +112,14 @@ public class ExecutionService {
 
         appendLogAndUpdateExecutionState(executionId, userId, "INFO", null, "Execution cancelled by user",
                 ExecutionStatus.CANCELLED.getValue(), null);
-        execution = executionRepository.findById(executionId)
-                .orElseThrow(() -> new ExecutionNotFoundException("Execution not found: " + executionId));
+        execution = RepositoryUtils.findByIdOrThrow(executionRepository, executionId,
+                () -> new ExecutionNotFoundException("Execution not found: " + executionId));
         log.info("Cancelled execution {}", executionId);
         return toResponse(execution);
     }
 
     private ExecutionResponse toResponse(Execution execution) {
-        Map<String, Object> state = execution.getState() != null ? execution.getState() : Collections.emptyMap();
+        Map<String, Object> state = JsonStateUtils.getStateOrEmpty(execution.getState());
 
         List<Map<String, Object>> rawLogs = JsonStateUtils.getLogsList(state);
         List<ExecutionLogEntry> logs = rawLogs.stream()
@@ -148,7 +148,7 @@ public class ExecutionService {
         Execution exec = RepositoryUtils.findByIdOrThrow(executionRepository, executionId,
                 () -> new ExecutionNotFoundException("Execution not found: " + executionId));
         assertExecutionOwner(exec, userId);
-        Map<String, Object> state = exec.getState() != null ? new HashMap<>(exec.getState()) : new HashMap<>();
+        Map<String, Object> state = new HashMap<>(JsonStateUtils.getStateOrEmpty(exec.getState()));
         List<Map<String, Object>> logs = new ArrayList<>(JsonStateUtils.getLogsList(state));
         logs.add(JsonStateUtils.createLogEntry(level, nodeId, message));
         state.put("logs", logs);
@@ -168,6 +168,16 @@ public class ExecutionService {
         Execution execution = RepositoryUtils.findByIdOrThrow(executionRepository, executionId,
                 () -> new ExecutionNotFoundException("Execution not found: " + executionId));
         assertExecutionOwner(execution, userId);
+    }
+
+    /**
+     * Check if user owns the execution. Returns false if execution not found or not owner.
+     * Used by WebSocketAuthHandshakeInterceptor (DRY: centralizes execution ownership logic).
+     */
+    @Transactional(readOnly = true)
+    public boolean isExecutionOwner(String executionId, String userId) {
+        Execution execution = executionRepository.findById(executionId).orElse(null);
+        return execution != null && Objects.equals(userId, execution.getUserId());
     }
 
     private void assertExecutionOwner(Execution execution, String userId) {

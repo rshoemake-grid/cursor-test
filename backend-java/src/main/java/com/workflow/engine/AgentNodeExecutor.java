@@ -4,6 +4,7 @@ import com.workflow.dto.AgentConfig;
 import com.workflow.dto.Node;
 import com.workflow.dto.NodeType;
 import com.workflow.util.LlmConfigUtils;
+import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -22,9 +23,11 @@ import java.util.Optional;
 public class AgentNodeExecutor implements NodeExecutor {
 
     private final LlmApiClient llmClient;
+    private final Environment environment;
 
-    public AgentNodeExecutor(LlmApiClient llmClient) {
+    public AgentNodeExecutor(LlmApiClient llmClient, Environment environment) {
         this.llmClient = llmClient;
+        this.environment = environment;
     }
 
     @Override
@@ -41,7 +44,7 @@ public class AgentNodeExecutor implements NodeExecutor {
         }
         AgentConfig cfg = node.getAgentConfig();
         String model = cfg != null && cfg.getModel() != null ? cfg.getModel() : LlmConfigUtils.getModel(llmConfig);
-        String apiKey = LlmConfigUtils.getApiKeyWithEnvFallback(llmConfig);
+        String apiKey = LlmConfigUtils.getApiKeyWithEnvFallback(llmConfig, environment);
         if (apiKey == null || apiKey.isBlank()) {
             throw new IllegalStateException(
                     "No LLM API key configured. Set api_key in Settings or one of OPENAI_API_KEY, GEMINI_API_KEY, GOOGLE_API_KEY env vars.");

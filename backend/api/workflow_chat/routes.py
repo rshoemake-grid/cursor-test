@@ -7,7 +7,7 @@ from backend.database.db import get_db
 from backend.database.models import UserDB
 from backend.auth import get_optional_user
 from backend.utils.logger import get_logger
-from backend.dependencies import SettingsServiceDep, LLMClientFactoryDep, WorkflowServiceDep
+from backend.dependencies import SettingsServiceDep, LLMClientFactoryDep, WorkflowServiceDep, WorkflowOwnershipServiceDep
 from backend.utils.error_handling import INVALID_API_KEY_MSG, is_api_key_error
 from backend.exceptions import WorkflowForbiddenError
 
@@ -30,6 +30,7 @@ async def chat_with_workflow(
     settings_service: SettingsServiceDep = ...,
     llm_client_factory: LLMClientFactoryDep = ...,
     workflow_service: WorkflowServiceDep = ...,
+    ownership_service: WorkflowOwnershipServiceDep = ...,
 ):
     """Chat with LLM to create or update workflows"""
     try:
@@ -46,7 +47,11 @@ async def chat_with_workflow(
         logger.info(f"Chat agent using iteration_limit: {iteration_limit} for user: {user_id or 'anonymous'}")
 
         client = llm_client_factory.create_client(user_id)
-        workflow_context = await get_workflow_context(db, request.workflow_id)
+        workflow_context = await get_workflow_context(
+            db, request.workflow_id,
+            user_id=user_id,
+            ownership_service=ownership_service,
+        )
 
         messages = [
             {"role": "system", "content": SYSTEM_PROMPT},

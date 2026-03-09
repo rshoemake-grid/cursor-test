@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, Text, DateTime, JSON, Integer, Boolean, ForeignKey
+from sqlalchemy import Column, String, Text, DateTime, JSON, Integer, Boolean, ForeignKey, UniqueConstraint
 from datetime import datetime, timezone
 from .db import Base
 
@@ -142,7 +142,8 @@ class SettingsDB(Base):
 class WorkflowLikeDB(Base):
     """Database model for workflow likes (Phase 4)"""
     __tablename__ = "workflow_likes"
-    
+    __table_args__ = (UniqueConstraint("workflow_id", "user_id", name="uq_workflow_like_workflow_user"),)
+
     id = Column(String, primary_key=True, index=True)
     workflow_id = Column(String, ForeignKey("workflows.id"), nullable=False, index=True)
     user_id = Column(String, ForeignKey("users.id"), nullable=False, index=True)

@@ -40,6 +40,14 @@ public final class RepositoryUtils {
     }
 
     /**
+     * Unwrap Optional or throw custom exception (e.g. UsernameNotFoundException).
+     */
+    public static <T> T orElseThrow(Optional<T> optional,
+                                    Supplier<? extends RuntimeException> exceptionSupplier) {
+        return optional.orElseThrow(exceptionSupplier);
+    }
+
+    /**
      * Find entity by id or throw custom exception.
      */
     public static <T, ID> T findByIdOrThrow(CrudRepository<T, ID> repo, ID id,

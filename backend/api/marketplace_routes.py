@@ -1,4 +1,5 @@
 """Workflow marketplace and discovery API routes for Phase 4"""
+import uuid
 from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -33,7 +34,6 @@ async def discover_workflows(
     limit: int = Query(20, le=100),
     offset: int = Query(0, ge=0),
     current_user: Optional[UserDB] = Depends(get_optional_user),
-    db: AsyncSession = Depends(get_db),
     marketplace_service: MarketplaceServiceDep = ...,
 ):
     """Discover public workflows and templates"""
@@ -76,7 +76,6 @@ async def unlike_workflow(
 @router.get("/trending", response_model=List[WorkflowResponseV2])
 async def get_trending_workflows(
     limit: int = Query(10, le=50),
-    db: AsyncSession = Depends(get_db),
     marketplace_service: MarketplaceServiceDep = ...,
 ):
     """Get trending workflows based on recent activity"""
@@ -86,7 +85,6 @@ async def get_trending_workflows(
 
 @router.get("/stats")
 async def get_marketplace_stats(
-    db: AsyncSession = Depends(get_db),
     marketplace_service: MarketplaceServiceDep = ...,
 ):
     """Get marketplace statistics"""
@@ -96,7 +94,6 @@ async def get_marketplace_stats(
 @router.get("/my-likes", response_model=List[WorkflowResponseV2])
 async def get_my_liked_workflows(
     current_user: UserDB = Depends(get_current_active_user),
-    db: AsyncSession = Depends(get_db),
     marketplace_service: MarketplaceServiceDep = ...,
 ):
     """Get workflows liked by current user"""

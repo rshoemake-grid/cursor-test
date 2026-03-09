@@ -2,6 +2,7 @@ package com.workflow.security;
 
 import com.workflow.entity.User;
 import com.workflow.repository.UserRepository;
+import com.workflow.util.RepositoryUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -20,8 +21,8 @@ public class UserDetailsServiceImpl implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found: " + username));
+        User user = RepositoryUtils.orElseThrow(userRepository.findByUsername(username),
+                () -> new UsernameNotFoundException("User not found: " + username));
         
         return new org.springframework.security.core.userdetails.User(
                 user.getUsername(),

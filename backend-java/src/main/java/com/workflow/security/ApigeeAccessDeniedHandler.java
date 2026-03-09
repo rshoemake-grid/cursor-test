@@ -9,6 +9,7 @@ import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
+import java.util.Objects;
 
 /**
  * Returns Apigee-compatible 403 error format for unauthorized access.
@@ -26,7 +27,7 @@ public class ApigeeAccessDeniedHandler implements AccessDeniedHandler {
     @Override
     public void handle(HttpServletRequest request, HttpServletResponse response,
                        AccessDeniedException accessDeniedException) throws IOException {
-        String message = accessDeniedException.getMessage() != null ? accessDeniedException.getMessage() : "Forbidden";
+        String message = Objects.requireNonNullElse(accessDeniedException.getMessage(), "Forbidden");
         ErrorResponseBuilder.writeToServletResponse(response, objectMapper, "403", message,
                 HttpServletResponse.SC_FORBIDDEN, request.getRequestURI());
     }

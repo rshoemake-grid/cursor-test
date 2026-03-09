@@ -28,10 +28,8 @@ public class WorkflowOwnershipService {
      * Assert that the user owns the workflow. Throws ForbiddenException if not.
      */
     public void assertOwner(Workflow workflow, String userId) {
-        if (workflow == null) {
-            throw new ResourceNotFoundException("Workflow not found");
-        }
-        if (userId == null || !workflow.getOwnerId().equals(userId)) {
+        requireWorkflowExists(workflow);
+        if (!isOwner(workflow, userId)) {
             throw new ForbiddenException("Not authorized to access this workflow");
         }
     }
@@ -49,13 +47,9 @@ public class WorkflowOwnershipService {
      * Assert user can read workflow (owner or public).
      */
     public void assertCanRead(Workflow workflow, String userId) {
-        if (workflow == null) {
-            throw new ResourceNotFoundException("Workflow not found");
-        }
-        if (Boolean.TRUE.equals(workflow.getIsPublic())) {
-            return;
-        }
-        if (userId == null || !workflow.getOwnerId().equals(userId)) {
+        requireWorkflowExists(workflow);
+        if (isPublic(workflow)) return;
+        if (!isOwner(workflow, userId)) {
             throw new ForbiddenException("Not authorized to access this workflow");
         }
     }
@@ -64,19 +58,30 @@ public class WorkflowOwnershipService {
      * Assert user can read workflow (owner, public, or shared with user).
      */
     public void assertCanReadOrShare(Workflow workflow, String userId) {
+        requireWorkflowExists(workflow);
+        if (isPublic(workflow)) return;
+        if (isOwner(workflow, userId)) return;
+        if (!hasShareAccess(workflow, userId)) {
+            throw new ForbiddenException("Not authorized to access this workflow");
+        }
+    }
+
+    private void requireWorkflowExists(Workflow workflow) {
         if (workflow == null) {
             throw new ResourceNotFoundException("Workflow not found");
         }
-        if (Boolean.TRUE.equals(workflow.getIsPublic())) {
-            return;
-        }
-        if (workflow.getOwnerId() != null && workflow.getOwnerId().equals(userId)) {
-            return;
-        }
-        boolean hasShare = userId != null && shareRepository.findBySharedWithUserId(userId).stream()
+    }
+
+    private boolean isPublic(Workflow workflow) {
+        return Boolean.TRUE.equals(workflow.getIsPublic());
+    }
+
+    private boolean isOwner(Workflow workflow, String userId) {
+        return workflow.getOwnerId() != null && workflow.getOwnerId().equals(userId);
+    }
+
+    private boolean hasShareAccess(Workflow workflow, String userId) {
+        return userId != null && shareRepository.findBySharedWithUserId(userId).stream()
                 .anyMatch(s -> workflow.getId().equals(s.getWorkflowId()));
-        if (!hasShare) {
-            throw new ForbiddenException("Not authorized to access this workflow");
-        }
     }
 }

@@ -2,6 +2,8 @@ package com.workflow.util;
 
 import com.workflow.entity.User;
 
+import java.util.Optional;
+
 /**
  * DRY-11: Centralizes user display name resolution.
  * Order: username -> fullName -> email.
@@ -9,6 +11,13 @@ import com.workflow.entity.User;
 public final class UserDisplayNameResolver {
 
     private UserDisplayNameResolver() {
+    }
+
+    /**
+     * Resolve display name from Optional user. Use when looking up by id.
+     */
+    public static String resolveFromOptional(Optional<User> userOpt) {
+        return userOpt.map(UserDisplayNameResolver::resolve).orElse(null);
     }
 
     /**

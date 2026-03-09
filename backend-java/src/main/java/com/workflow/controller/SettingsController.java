@@ -3,6 +3,7 @@ package com.workflow.controller;
 import com.workflow.service.LlmTestService;
 import com.workflow.service.SettingsService;
 import com.workflow.util.AuthenticationHelper;
+import com.workflow.util.LlmConfigUtils;
 import com.workflow.util.LlmErrorResponseBuilder;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -12,7 +13,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -64,8 +64,8 @@ public class SettingsController {
         authenticationHelper.extractUserIdRequired(authentication);
 
         String type = (String) testRequest.get("type");
-        String apiKey = (String) testRequest.getOrDefault("api_key", testRequest.get("apiKey"));
-        String baseUrl = (String) testRequest.getOrDefault("base_url", testRequest.get("baseUrl"));
+        String apiKey = LlmConfigUtils.getApiKey(testRequest);
+        String baseUrl = LlmConfigUtils.getBaseUrlOrNull(testRequest);
         String model = (String) testRequest.get("model");
 
         if (type == null || apiKey == null || model == null) {

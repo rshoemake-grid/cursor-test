@@ -9,6 +9,7 @@ import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
+import java.util.Objects;
 
 /**
  * Returns Apigee-compatible 401 error format for unauthenticated requests.
@@ -26,7 +27,7 @@ public class ApigeeAuthenticationEntryPoint implements AuthenticationEntryPoint 
     @Override
     public void commence(HttpServletRequest request, HttpServletResponse response,
                          AuthenticationException authException) throws IOException {
-        String message = authException.getMessage() != null ? authException.getMessage() : "Unauthorized";
+        String message = Objects.requireNonNullElse(authException.getMessage(), "Unauthorized");
         ErrorResponseBuilder.writeToServletResponse(response, objectMapper, "401", message,
                 HttpServletResponse.SC_UNAUTHORIZED, request.getRequestURI());
     }

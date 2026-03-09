@@ -21,7 +21,7 @@ class WorkflowExecutorTest {
         NodeTypeParser nodeTypeParser = new NodeTypeParser();
         NodeExecutorRegistry registry = new NodeExecutorRegistry(
                 List.of(
-                        new AgentNodeExecutor(mockLlmClient),
+                        new AgentNodeExecutor(mockLlmClient, null),
                         new ConditionNodeExecutor(),
                         new LoopNodeExecutor(),
                         new ToolNodeExecutor()),
@@ -223,7 +223,7 @@ class WorkflowExecutorTest {
         NodeTypeParser nodeTypeParser = new NodeTypeParser();
         NodeExecutorRegistry registry = new NodeExecutorRegistry(
                 List.of(
-                        new AgentNodeExecutor(failingClient),
+                        new AgentNodeExecutor(failingClient, null),
                         new ConditionNodeExecutor(),
                         new LoopNodeExecutor(),
                         new ToolNodeExecutor()),

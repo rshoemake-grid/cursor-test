@@ -14,7 +14,7 @@ from ...database import get_db, ExecutionDB
 from ...database.models import UserDB
 from ...auth import get_optional_user, get_current_active_user
 from ...utils.logger import get_logger
-from ...dependencies import WorkflowServiceDep, SettingsServiceDep, ExecutionServiceDep
+from ...dependencies import WorkflowServiceDep, WorkflowOwnershipServiceDep, SettingsServiceDep, ExecutionServiceDep
 from ...services.execution_orchestrator import ExecutionOrchestrator
 from ...exceptions import ExecutionNotFoundError, ExecutionForbiddenError, WorkflowNotFoundError
 from ...utils.log_utils import serialize_log_for_json
@@ -71,14 +71,20 @@ async def execute_workflow(
     db: AsyncSession = Depends(get_db),
     current_user: Optional[UserDB] = Depends(get_optional_user),
     settings_service: SettingsServiceDep = ...,
-    workflow_service: WorkflowServiceDep = ...
+    workflow_service: WorkflowServiceDep = ...,
+    ownership_service: WorkflowOwnershipServiceDep = ...,
 ):
     """
     Execute a workflow (optionally authenticated).
+    Requires read access to workflow (owner, public, or shared).
     Error handling via @handle_execution_errors (DRY).
     """
     user_id = current_user.id if current_user else None
     logger.info(f"Executing workflow {workflow_id} for user_id: {user_id}")
+
+    await ownership_service.get_workflow_and_assert_can_read_or_share(
+        workflow_id, user_id
+    )
 
     orchestrator = ExecutionOrchestrator(db, settings_service, workflow_service)
 
@@ -151,19 +157,16 @@ async def list_workflow_executions(
     limit: Optional[int] = Query(None, ge=1, le=100, description="Maximum number of results"),
     offset: int = Query(0, ge=0, description="Offset for pagination"),
     execution_service: ExecutionServiceDep = ...,
-    workflow_service: WorkflowServiceDep = ...,
+    ownership_service: WorkflowOwnershipServiceDep = ...,
     current_user: UserDB = Depends(get_current_active_user)
 ):
     """
     List executions for a specific workflow.
     C-2: Requires auth; only workflows owned by current user.
     """
-    try:
-        workflow = await workflow_service.get_workflow(workflow_id)
-    except WorkflowNotFoundError as e:
-        raise HTTPException(status_code=404, detail=str(e))
-    if getattr(workflow, "owner_id", None) != current_user.id:
-        raise HTTPException(status_code=403, detail="Not authorized to list executions for this workflow")
+    await ownership_service.get_workflow_and_assert_owner(
+        workflow_id, current_user.id, "list executions"
+    )
     executions = await execution_service.list_executions(
         workflow_id=workflow_id,
         user_id=current_user.id,

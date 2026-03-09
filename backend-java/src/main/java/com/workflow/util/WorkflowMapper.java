@@ -50,7 +50,7 @@ public class WorkflowMapper {
      */
     public WorkflowResponseV2 toWorkflowResponseV2(Workflow workflow) {
         if (workflow == null) return null;
-        Map<String, Object> def = workflow.getDefinition() != null ? workflow.getDefinition() : Map.of();
+        Map<String, Object> def = ObjectUtils.orEmptyMap(workflow.getDefinition());
         return new WorkflowResponseV2(
                 workflow.getId(), workflow.getName(), workflow.getDescription(), workflow.getVersion(),
                 extractNodes(def), extractEdges(def), extractVariables(def),
@@ -65,9 +65,9 @@ public class WorkflowMapper {
      */
     public Map<String, Object> buildDefinition(WorkflowCreate workflowCreate) {
         return Map.of(
-            "nodes", workflowCreate.getNodes() != null ? workflowCreate.getNodes() : List.of(),
-            "edges", workflowCreate.getEdges() != null ? workflowCreate.getEdges() : List.of(),
-            "variables", workflowCreate.getVariables() != null ? workflowCreate.getVariables() : Map.of()
+            "nodes", ObjectUtils.orDefault(workflowCreate.getNodes(), List.of()),
+            "edges", ObjectUtils.orDefault(workflowCreate.getEdges(), List.of()),
+            "variables", ObjectUtils.orDefault(workflowCreate.getVariables(), Map.of())
         );
     }
     

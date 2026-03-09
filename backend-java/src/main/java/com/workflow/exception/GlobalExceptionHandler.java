@@ -92,7 +92,7 @@ public class GlobalExceptionHandler {
             log.error("Unexpected error occurred", e);
         }
         String clientMessage = EnvironmentUtils.isProduction(environment) ? GENERIC_ERROR_MESSAGE
-                : (e.getMessage() != null ? e.getMessage() : GENERIC_ERROR_MESSAGE);
+                : java.util.Objects.requireNonNullElse(e.getMessage(), GENERIC_ERROR_MESSAGE);
         return ErrorResponseBuilder.internalServerError(clientMessage, getRequestPath(request));
     }
 }

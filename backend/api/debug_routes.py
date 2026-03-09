@@ -167,7 +167,6 @@ async def get_workflow_stats(
             "average_duration_seconds": None
         }
     
-    from ...models.schemas import ExecutionStatus
     success_count = sum(1 for e in executions if e.status == ExecutionStatus.COMPLETED.value)
     failure_count = sum(1 for e in executions if e.status == ExecutionStatus.FAILED.value)
     

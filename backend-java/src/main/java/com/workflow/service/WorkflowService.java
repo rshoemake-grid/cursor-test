@@ -1,17 +1,20 @@
 package com.workflow.service;
 
+import com.workflow.config.TemplateConfig;
 import com.workflow.dto.WorkflowCreate;
 import com.workflow.dto.WorkflowPublishRequest;
 import com.workflow.dto.WorkflowResponse;
 import com.workflow.dto.WorkflowTemplateResponse;
 import com.workflow.entity.Workflow;
 import com.workflow.entity.WorkflowTemplate;
-import com.workflow.exception.ForbiddenException;
 import com.workflow.exception.ResourceNotFoundException;
 import com.workflow.exception.ValidationException;
 import com.workflow.repository.WorkflowRepository;
+import com.workflow.util.ObjectUtils;
 import com.workflow.util.RepositoryUtils;
+import com.workflow.util.TemplateFactory;
 import com.workflow.util.ValidationUtils;
+import com.workflow.util.WorkflowFactory;
 import com.workflow.repository.WorkflowTemplateRepository;
 import com.workflow.util.WorkflowMapper;
 import org.slf4j.Logger;
@@ -40,13 +43,16 @@ public class WorkflowService {
     private final WorkflowTemplateRepository templateRepository;
     private final WorkflowMapper workflowMapper;
     private final WorkflowOwnershipService ownershipService;
+    private final TemplateConfig.TemplateOptions templateOptions;
 
     public WorkflowService(WorkflowRepository workflowRepository, WorkflowTemplateRepository templateRepository,
-                          WorkflowMapper workflowMapper, WorkflowOwnershipService ownershipService) {
+                          WorkflowMapper workflowMapper, WorkflowOwnershipService ownershipService,
+                          TemplateConfig.TemplateOptions templateOptions) {
         this.workflowRepository = workflowRepository;
         this.templateRepository = templateRepository;
         this.workflowMapper = workflowMapper;
         this.ownershipService = ownershipService;
+        this.templateOptions = templateOptions;
     }
     
     /**
@@ -56,19 +62,13 @@ public class WorkflowService {
         validateWorkflowCreate(workflowCreate);
         
         log.info("Creating workflow: {} for user: {}", workflowCreate.getName(), userId);
-        
-        Workflow workflow = new Workflow();
-        workflow.setId(UUID.randomUUID().toString());
-        workflow.setName(workflowCreate.getName());
-        workflow.setDescription(workflowCreate.getDescription());
-        workflow.setVersion(workflowCreate.getVersion() != null ? workflowCreate.getVersion() : DEFAULT_VERSION);
-        workflow.setOwnerId(userId);
-        workflow.setIsPublic(false);
-        workflow.setIsTemplate(false);
-        workflow.setDefinition(workflowMapper.buildDefinition(workflowCreate));
+
+        Workflow workflow = WorkflowFactory.create(userId, workflowCreate.getName(), workflowCreate.getDescription(),
+                workflowMapper.buildDefinition(workflowCreate),
+                workflowCreate.getVersion(), null, null);
         workflow.setCreatedAt(LocalDateTime.now());
         workflow.setUpdatedAt(LocalDateTime.now());
-        
+
         Workflow saved = workflowRepository.save(workflow);
         log.debug("Created workflow with ID: {}", saved.getId());
         
@@ -117,7 +117,7 @@ public class WorkflowService {
 
         workflow.setName(workflowCreate.getName());
         workflow.setDescription(workflowCreate.getDescription());
-        workflow.setVersion(workflowCreate.getVersion() != null ? workflowCreate.getVersion() : workflow.getVersion());
+        workflow.setVersion(ObjectUtils.orDefault(workflowCreate.getVersion(), workflow.getVersion()));
         workflow.setDefinition(workflowMapper.buildDefinition(workflowCreate));
         workflow.setUpdatedAt(LocalDateTime.now());
         
@@ -144,17 +144,8 @@ public class WorkflowService {
      */
     public WorkflowTemplateResponse publishWorkflow(String workflowId, WorkflowPublishRequest request, String userId, boolean isAdmin) {
         Workflow w = ownershipService.getWorkflowAndAssertOwner(workflowId, userId);
-        WorkflowTemplate t = new WorkflowTemplate();
-        t.setId(UUID.randomUUID().toString());
-        t.setName(w.getName());
-        t.setDescription(w.getDescription());
-        t.setCategory(request.getCategory() != null ? request.getCategory() : "custom");
-        t.setTags(request.getTags());
-        t.setDefinition(w.getDefinition());
-        t.setAuthorId(userId);
-        t.setIsOfficial(isAdmin);
-        t.setDifficulty(request.getDifficulty() != null ? request.getDifficulty() : "beginner");
-        t.setEstimatedTime(request.getEstimatedTime());
+        WorkflowTemplate t = TemplateFactory.fromWorkflow(w, request, userId, isAdmin,
+                templateOptions.getDefaultCategory(), templateOptions.getDefaultDifficulty());
         t = templateRepository.save(t);
         return new WorkflowTemplateResponse(t.getId(), t.getName(), t.getDescription(), t.getCategory(), t.getTags(),
                 t.getDifficulty(), t.getEstimatedTime(), t.getIsOfficial(), t.getUsesCount(), t.getLikesCount(), t.getRating(),
@@ -184,8 +175,6 @@ public class WorkflowService {
                 } else {
                     failed.add(id);
                 }
-            } catch (ForbiddenException e) {
-                failed.add(id);
             } catch (Exception e) {
                 failed.add(id);
             }

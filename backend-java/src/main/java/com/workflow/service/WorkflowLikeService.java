@@ -2,13 +2,14 @@ package com.workflow.service;
 
 import com.workflow.entity.Workflow;
 import com.workflow.entity.WorkflowLike;
-import com.workflow.exception.ResourceNotFoundException;
 import com.workflow.repository.WorkflowLikeRepository;
+import com.workflow.util.RepositoryUtils;
 import com.workflow.repository.WorkflowRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 
 /**
@@ -18,17 +19,20 @@ import java.util.UUID;
 public class WorkflowLikeService {
     private final WorkflowRepository workflowRepository;
     private final WorkflowLikeRepository workflowLikeRepository;
+    private final WorkflowOwnershipService ownershipService;
 
     public WorkflowLikeService(WorkflowRepository workflowRepository,
-                               WorkflowLikeRepository workflowLikeRepository) {
+                               WorkflowLikeRepository workflowLikeRepository,
+                               WorkflowOwnershipService ownershipService) {
         this.workflowRepository = workflowRepository;
         this.workflowLikeRepository = workflowLikeRepository;
+        this.ownershipService = ownershipService;
     }
 
     @Transactional
     public Map<String, String> likeWorkflow(String workflowId, String userId) {
-        Workflow workflow = workflowRepository.findById(workflowId)
-                .orElseThrow(() -> new ResourceNotFoundException("Workflow not found"));
+        Workflow workflow = RepositoryUtils.findByIdOrThrow(workflowRepository, workflowId, "Workflow not found");
+        ownershipService.assertCanRead(workflow, userId);
         if (workflowLikeRepository.findByWorkflowIdAndUserId(workflowId, userId).isPresent()) {
             return Map.of("message", "Already liked");
         }
@@ -37,18 +41,19 @@ public class WorkflowLikeService {
         like.setWorkflowId(workflowId);
         like.setUserId(userId);
         workflowLikeRepository.save(like);
-        workflow.setLikesCount((workflow.getLikesCount() != null ? workflow.getLikesCount() : 0) + 1);
+        workflow.setLikesCount(Objects.requireNonNullElse(workflow.getLikesCount(), 0) + 1);
         workflowRepository.save(workflow);
         return Map.of("message", "Liked successfully");
     }
 
     @Transactional
     public void unlikeWorkflow(String workflowId, String userId) {
-        workflowLikeRepository.findByWorkflowIdAndUserId(workflowId, userId)
-                .orElseThrow(() -> new ResourceNotFoundException("Like not found"));
+        Workflow workflow = RepositoryUtils.findByIdOrThrow(workflowRepository, workflowId, "Workflow not found");
+        ownershipService.assertCanRead(workflow, userId);
+        RepositoryUtils.orElseThrow(workflowLikeRepository.findByWorkflowIdAndUserId(workflowId, userId), "Like not found");
         workflowLikeRepository.deleteByWorkflowIdAndUserId(workflowId, userId);
         workflowRepository.findById(workflowId).ifPresent(w -> {
-            w.setLikesCount(Math.max(0, (w.getLikesCount() != null ? w.getLikesCount() : 0) - 1));
+            w.setLikesCount(Math.max(0, Objects.requireNonNullElse(w.getLikesCount(), 0) - 1));
             workflowRepository.save(w);
         });
     }

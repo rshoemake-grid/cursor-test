@@ -1,7 +1,6 @@
 package com.workflow.websocket;
 
-import com.workflow.entity.Execution;
-import com.workflow.repository.ExecutionRepository;
+import com.workflow.service.ExecutionOwnershipChecker;
 import com.workflow.security.JwtUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,7 +12,6 @@ import org.springframework.web.socket.WebSocketHandler;
 import org.springframework.web.socket.server.HandshakeInterceptor;
 
 import java.util.Map;
-import java.util.Objects;
 
 /**
  * S-H3: Validates JWT token from query param and execution ownership before WebSocket handshake.
@@ -26,11 +24,11 @@ public class WebSocketAuthHandshakeInterceptor implements HandshakeInterceptor {
     private static final String TOKEN_PARAM = "token";
 
     private final JwtUtil jwtUtil;
-    private final ExecutionRepository executionRepository;
+    private final ExecutionOwnershipChecker ownershipChecker;
 
-    public WebSocketAuthHandshakeInterceptor(JwtUtil jwtUtil, ExecutionRepository executionRepository) {
+    public WebSocketAuthHandshakeInterceptor(JwtUtil jwtUtil, ExecutionOwnershipChecker ownershipChecker) {
         this.jwtUtil = jwtUtil;
-        this.executionRepository = executionRepository;
+        this.ownershipChecker = ownershipChecker;
     }
 
     @Override
@@ -58,8 +56,7 @@ public class WebSocketAuthHandshakeInterceptor implements HandshakeInterceptor {
             return false;
         }
 
-        Execution execution = executionRepository.findById(executionId).orElse(null);
-        if (execution == null || !Objects.equals(userId, execution.getUserId())) {
+        if (!ownershipChecker.isExecutionOwner(executionId, userId)) {
             log.warn("WebSocket handshake rejected: execution {} not found or not owned by user {}", executionId, userId);
             return false;
         }

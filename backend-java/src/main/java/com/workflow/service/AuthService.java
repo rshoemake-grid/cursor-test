@@ -5,9 +5,9 @@ import com.workflow.dto.TokenResponse;
 import com.workflow.dto.UserCreate;
 import com.workflow.dto.UserResponse;
 import com.workflow.entity.User;
-import com.workflow.exception.ResourceNotFoundException;
 import com.workflow.exception.ValidationException;
 import com.workflow.repository.UserRepository;
+import com.workflow.util.RepositoryUtils;
 import com.workflow.security.JwtUtil;
 import com.workflow.util.UserResponseMapper;
 import com.workflow.util.ValidationUtils;
@@ -98,8 +98,7 @@ public class AuthService {
                 )
         );
 
-        User user = userRepository.findByUsername(loginRequest.getUsername())
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        User user = RepositoryUtils.orElseThrow(userRepository.findByUsername(loginRequest.getUsername()), "User not found");
 
         boolean rememberMe = Boolean.TRUE.equals(loginRequest.getRememberMe());
         long accessTokenExpirationMs = rememberMe ? REMEMBER_ME_EXPIRATION_MS : jwtExpirationMs;
@@ -129,8 +128,7 @@ public class AuthService {
     }
 
     public UserResponse getCurrentUser(String username) {
-        User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        User user = RepositoryUtils.orElseThrow(userRepository.findByUsername(username), "User not found");
         return userResponseMapper.toUserResponse(user);
     }
 

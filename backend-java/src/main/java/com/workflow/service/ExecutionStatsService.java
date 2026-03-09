@@ -3,6 +3,7 @@ package com.workflow.service;
 import com.workflow.entity.Execution;
 import com.workflow.exception.ResourceNotFoundException;
 import com.workflow.repository.ExecutionRepository;
+import com.workflow.util.PaginationUtils;
 import com.workflow.util.JsonStateUtils;
 import com.workflow.util.RepositoryUtils;
 import org.springframework.data.domain.PageRequest;
@@ -30,7 +31,7 @@ public class ExecutionStatsService {
     }
 
     public List<Map<String, Object>> getExecutionHistory(String workflowId, int limit, String status) {
-        int safeLimit = Math.min(Math.max(1, limit), MAX_HISTORY_LIMIT);
+        int safeLimit = PaginationUtils.clampLimit(limit, MAX_HISTORY_LIMIT);
         var pageable = PageRequest.of(0, safeLimit);
         List<Execution> executions = status != null
                 ? executionRepository.findByWorkflowIdAndStatusOrderByStartedAtDesc(workflowId, status, pageable)
@@ -41,7 +42,7 @@ public class ExecutionStatsService {
     public Map<String, Object> getTimeline(String executionId, String userId) {
         executionService.requireExecutionOwner(executionId, userId);
         Execution e = RepositoryUtils.findByIdOrThrow(executionRepository, executionId, "Execution not found");
-        Map<String, Object> state = e.getState() != null ? e.getState() : Map.of();
+        Map<String, Object> state = JsonStateUtils.getStateOrEmpty(e.getState());
         Map<String, Object> result = new HashMap<>();
         result.put("execution_id", executionId);
         result.put("status", e.getStatus());
@@ -55,7 +56,7 @@ public class ExecutionStatsService {
     public Map<String, Object> getNodeDetails(String executionId, String nodeId, String userId) {
         executionService.requireExecutionOwner(executionId, userId);
         Execution e = RepositoryUtils.findByIdOrThrow(executionRepository, executionId, "Execution not found");
-        Map<String, Object> state = e.getState() != null ? e.getState() : Map.of();
+        Map<String, Object> state = JsonStateUtils.getStateOrEmpty(e.getState());
         Map<String, Object> nodeStates = JsonStateUtils.getMap(state, "node_states");
         if (!nodeStates.containsKey(nodeId)) {
             throw new ResourceNotFoundException("Node not found in execution");

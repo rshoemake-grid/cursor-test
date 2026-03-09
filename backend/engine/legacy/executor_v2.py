@@ -211,7 +211,10 @@ class WorkflowExecutorV2:
             
             # Execute based on node type
             if node.type in [NodeType.AGENT, NodeType.CONDITION, NodeType.LOOP]:
-                agent = AgentRegistry.get_agent(node)
+                agent = AgentRegistry.get_agent(
+                    node,
+                    settings_service=SettingsService(),
+                )
                 output = await agent.execute(node_inputs)
             elif node.type == NodeType.TOOL:
                 # Tool execution would go here (Phase 2+)

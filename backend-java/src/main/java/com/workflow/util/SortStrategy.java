@@ -7,5 +7,12 @@ import org.springframework.data.domain.Sort;
  */
 @FunctionalInterface
 public interface SortStrategy {
+    String DEFAULT_SORT = "popular";
+
     Sort getSort(String sortBy);
+
+    /** DRY: Normalize sortBy with default; used by TemplateSortStrategy and WorkflowSortStrategy. */
+    static String normalizeSortBy(String sortBy) {
+        return sortBy != null ? sortBy : DEFAULT_SORT;
+    }
 }

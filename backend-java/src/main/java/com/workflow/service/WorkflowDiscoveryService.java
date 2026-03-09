@@ -5,6 +5,8 @@ import com.workflow.entity.Workflow;
 import com.workflow.entity.WorkflowLike;
 import com.workflow.repository.WorkflowLikeRepository;
 import com.workflow.repository.WorkflowRepository;
+import com.workflow.util.PaginationUtils;
+import com.workflow.util.SearchUtils;
 import com.workflow.util.SortStrategy;
 import com.workflow.util.WorkflowMapper;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -12,6 +14,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -36,17 +39,15 @@ public class WorkflowDiscoveryService {
 
     public List<WorkflowResponseV2> discoverWorkflows(String category, String tags, String search,
                                                       String sortBy, int limit, int offset) {
-        int safeLimit = Math.max(1, Math.min(limit, 100));
-        int fetchSize = offset + safeLimit;
+        int safeLimit = PaginationUtils.clampLimit(limit);
+        int fetchSize = PaginationUtils.fetchSize(offset, safeLimit);
         var pageable = PageRequest.of(0, fetchSize, workflowSortStrategy.getSort(sortBy));
         List<Workflow> workflows = workflowRepository.findPublicOrTemplateWorkflows(pageable);
         List<String> tagList = parseTagList(tags);
         return workflows.stream()
                 .filter(w -> category == null || category.equals(w.getCategory()))
                 .filter(w -> tagList == null || tagList.isEmpty() || matchesAllTags(w.getTags(), tagList))
-                .filter(w -> search == null || search.isBlank() ||
-                        (w.getName() != null && w.getName().toLowerCase().contains(search.toLowerCase())) ||
-                        (w.getDescription() != null && w.getDescription().toLowerCase().contains(search.toLowerCase())))
+                .filter(w -> SearchUtils.matchesSearch(search, w.getName(), w.getDescription()))
                 .skip(offset)
                 .limit(safeLimit)
                 .map(this::toV2)
@@ -58,8 +59,8 @@ public class WorkflowDiscoveryService {
         List<Workflow> workflows = workflowRepository.findPublicOrTemplateWorkflows(pageable);
         return workflows.stream()
                 .sorted((a, b) -> Integer.compare(
-                        (b.getUsesCount() != null ? b.getUsesCount() : 0) + (b.getLikesCount() != null ? b.getLikesCount() : 0) * 2,
-                        (a.getUsesCount() != null ? a.getUsesCount() : 0) + (a.getLikesCount() != null ? a.getLikesCount() : 0) * 2))
+                        Objects.requireNonNullElse(b.getUsesCount(), 0) + Objects.requireNonNullElse(b.getLikesCount(), 0) * 2,
+                        Objects.requireNonNullElse(a.getUsesCount(), 0) + Objects.requireNonNullElse(a.getLikesCount(), 0) * 2))
                 .limit(limit)
                 .map(this::toV2)
                 .collect(Collectors.toList());

@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component;
 public class TemplateSortStrategy implements SortStrategy {
     @Override
     public Sort getSort(String sortBy) {
-        return switch (sortBy != null ? sortBy : "popular") {
+        return switch (SortStrategy.normalizeSortBy(sortBy)) {
             case "recent" -> Sort.by(Sort.Direction.DESC, "createdAt");
             case "rating" -> Sort.by(Sort.Direction.DESC, "rating");
             default -> Sort.by(Sort.Direction.DESC, "usesCount");

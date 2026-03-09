@@ -9,7 +9,7 @@ sys.path.insert(0, project_root)
 from sqlalchemy import select
 from backend.database.db import AsyncSessionLocal
 from backend.database.models import SettingsDB, UserDB
-from backend.api.settings_routes import get_active_llm_config
+from backend.services.settings_service import SettingsService
 from backend.utils.settings_cache import get_settings_cache
 
 async def check_settings():
@@ -38,16 +38,17 @@ async def check_settings():
         print(f"\nSettings cache keys: {list(_settings_cache.keys())}")
         print(f"Cache size: {len(_settings_cache)}")
         
-        # Test get_active_llm_config for different user IDs
+        # Test get_active_llm_config for different user IDs (DIP: use SettingsService directly)
+        settings_service = SettingsService()
         print("\nTesting get_active_llm_config:")
         for u in users:
-            config = get_active_llm_config(u.id)
+            config = settings_service.get_active_llm_config(u.id)
             print(f"  User {u.username} ({u.id}): {config is not None}")
             if config:
                 print(f"    Config: {config.get('type')} - {config.get('model')}")
         
         # Test anonymous
-        config = get_active_llm_config(None)
+        config = settings_service.get_active_llm_config(None)
         print(f"  Anonymous (None): {config is not None}")
         if config:
             print(f"    Config: {config.get('type')} - {config.get('model')}")

@@ -13,18 +13,30 @@ def validate_workflow_definition(
     Validate a workflow definition for potential issues.
     Returns dict with workflow_id, valid, issues, warnings, node_count, edge_count.
     """
-    nodes = definition.get("nodes", [])
-    edges = definition.get("edges", [])
+    nodes = definition.get("nodes") or []
+    edges = definition.get("edges") or []
+    if not isinstance(nodes, list):
+        nodes = []
+    if not isinstance(edges, list):
+        edges = []
 
     issues: List[Dict[str, Any]] = []
     warnings: List[Dict[str, Any]] = []
 
-    # Check for nodes without edges
-    node_ids = {node["id"] for node in nodes}
+    # Check for nodes without edges (defensive: node.get("id") for malformed nodes)
+    node_ids = set()
+    for i, node in enumerate(nodes):
+        if isinstance(node, dict) and "id" in node:
+            node_ids.add(node["id"])
+        elif isinstance(node, dict):
+            node_ids.add(f"unknown-{i}")
     connected_nodes = set()
     for edge in edges:
-        connected_nodes.add(edge["source"])
-        connected_nodes.add(edge["target"])
+        if isinstance(edge, dict):
+            if "source" in edge:
+                connected_nodes.add(edge["source"])
+            if "target" in edge:
+                connected_nodes.add(edge["target"])
 
     orphan_nodes = node_ids - connected_nodes
     if orphan_nodes:
@@ -35,7 +47,10 @@ def validate_workflow_definition(
         })
 
     # Check for missing start/end nodes
-    node_types = [node.get("type") for node in nodes]
+    node_types = [
+        node.get("type") for node in nodes
+        if isinstance(node, dict)
+    ]
     if "start" not in node_types:
         issues.append({
             "type": "missing_start",
@@ -60,6 +75,8 @@ def validate_workflow_definition(
 
     # Check agent nodes for configuration
     for node in nodes:
+        if not isinstance(node, dict):
+            continue
         if node.get("type") == "agent":
             node_data = node.get("data", {})
             agent_config = node_data.get("agent_config", {})
@@ -82,7 +99,7 @@ def validate_workflow_definition(
 
 
 def _has_cycle(node_ids: set, edges: list) -> bool:
-    """Check if workflow graph has a cycle."""
+    """Check if workflow graph has a cycle. Skips malformed edges."""
     visited = set()
     rec_stack = set()
 
@@ -91,6 +108,8 @@ def _has_cycle(node_ids: set, edges: list) -> bool:
         rec_stack.add(node_id)
 
         for edge in edges:
+            if not isinstance(edge, dict) or "source" not in edge or "target" not in edge:
+                continue
             if edge["source"] == node_id:
                 target = edge["target"]
                 if target not in visited:

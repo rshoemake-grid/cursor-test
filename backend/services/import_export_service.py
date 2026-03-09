@@ -36,7 +36,7 @@ class ImportExportService:
             is_public=False,
             is_template=False,
             category=definition.get("category"),
-            tags=definition.get("tags", [])
+            tags=definition.get("tags") or []
         )
         self.db.add(workflow)
         await self.db.commit()
@@ -59,13 +59,13 @@ class ImportExportService:
             name = workflow_data.get("name")
             description = workflow_data.get("description")
             category = workflow_data.get("category")
-            tags = workflow_data.get("tags", [])
+            tags = workflow_data.get("tags") or []
         else:
             definition = data
             name = data.get("name")
             description = data.get("description")
             category = data.get("category")
-            tags = data.get("tags", [])
+            tags = data.get("tags") or []
 
         if "nodes" not in definition or "edges" not in definition:
             raise ValueError("Invalid workflow: must contain 'nodes' and 'edges'")
@@ -81,7 +81,7 @@ class ImportExportService:
             is_public=False,
             is_template=False,
             category=category,
-            tags=tags
+            tags=tags or []
         )
         self.db.add(workflow)
         await self.db.commit()

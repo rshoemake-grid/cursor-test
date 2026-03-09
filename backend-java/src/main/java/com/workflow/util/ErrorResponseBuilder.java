@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * Utility class for building standardized error responses
@@ -44,7 +45,7 @@ public class ErrorResponseBuilder {
     public static Map<String, Object> buildErrorBody(String code, String message, String path) {
         Map<String, Object> error = new HashMap<>();
         error.put("code", code);
-        error.put("message", message != null ? message : "");
+        error.put("message", Objects.requireNonNullElse(message, ""));
         error.put("timestamp", Instant.now().toString());
         if (path != null && !path.isBlank()) {
             error.put("path", path);

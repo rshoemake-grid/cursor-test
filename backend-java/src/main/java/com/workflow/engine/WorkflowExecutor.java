@@ -28,8 +28,8 @@ public class WorkflowExecutor {
      */
     public Map<String, Object> execute(WorkflowResponse workflow, Map<String, Object> inputs,
                                        Map<String, Object> llmConfig, String userId) {
-        List<Node> nodes = workflow.getNodes() != null ? workflow.getNodes() : List.of();
-        List<Edge> edges = workflow.getEdges() != null ? workflow.getEdges() : List.of();
+        List<Node> nodes = workflow.getNodesOrEmpty();
+        List<Edge> edges = workflow.getEdgesOrEmpty();
 
         ExecutionState state = new ExecutionState();
         state.setExecutionId("exec-" + UUID.randomUUID());

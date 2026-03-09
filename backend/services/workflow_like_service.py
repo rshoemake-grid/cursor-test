@@ -5,6 +5,7 @@ Extracts like business logic from marketplace routes.
 import uuid
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, and_
+from sqlalchemy.exc import IntegrityError
 
 from ..database.models import WorkflowDB, WorkflowLikeDB
 from ..exceptions import LikeNotFoundError
@@ -46,7 +47,12 @@ class WorkflowLikeService:
         )
         workflow.likes_count += 1
         self.db.add(like)
-        await self.db.commit()
+        try:
+            await self.db.commit()
+        except IntegrityError:
+            await self.db.rollback()
+            # Race: another request created the like; treat as already liked
+            return {"message": "Already liked"}
         return {"message": "Liked successfully"}
 
     async def unlike_workflow(self, workflow_id: str, user_id: str) -> None:

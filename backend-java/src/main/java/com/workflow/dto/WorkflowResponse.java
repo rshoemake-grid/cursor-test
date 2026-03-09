@@ -5,6 +5,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -24,4 +25,14 @@ public class WorkflowResponse {
     private Map<String, Object> variables;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+
+    /** Return nodes or empty list if null. DRY: Used by WorkflowExecutor and WorkflowGraphBuilder. */
+    public List<Node> getNodesOrEmpty() {
+        return nodes != null ? nodes : Collections.emptyList();
+    }
+
+    /** Return edges or empty list if null. DRY: Used by WorkflowExecutor and WorkflowGraphBuilder. */
+    public List<Edge> getEdgesOrEmpty() {
+        return edges != null ? edges : Collections.emptyList();
+    }
 }

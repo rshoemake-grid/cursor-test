@@ -8,6 +8,7 @@ import com.workflow.exception.ValidationException;
 import com.workflow.util.JsonStateUtils;
 import com.workflow.util.RepositoryUtils;
 import com.workflow.util.WorkflowDefinitionValidator;
+import com.workflow.util.WorkflowFactory;
 import com.workflow.util.WorkflowMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -25,14 +26,29 @@ public class ImportExportService {
 
     private final WorkflowRepository workflowRepository;
     private final WorkflowMapper workflowMapper;
+    private final WorkflowOwnershipService ownershipService;
     private final ObjectMapper objectMapper;
 
     public ImportExportService(WorkflowRepository workflowRepository, WorkflowMapper workflowMapper,
-                               ObjectMapper objectMapper) {
+                               WorkflowOwnershipService ownershipService, ObjectMapper objectMapper) {
         this.workflowRepository = workflowRepository;
         this.workflowMapper = workflowMapper;
+        this.ownershipService = ownershipService;
         this.objectMapper = objectMapper;
     }
+
+    /**
+     * Export workflow with ownership check. Use from controller to avoid controller depending on WorkflowRepository.
+     */
+    public ExportResult exportWorkflowWithAuth(String workflowId, String userId, String exportedBy) {
+        Workflow w = RepositoryUtils.findByIdOrThrow(workflowRepository, workflowId, "Workflow not found");
+        ownershipService.assertCanRead(w, userId);
+        Map<String, Object> export = exportWorkflow(workflowId, exportedBy);
+        String filename = getExportFilename(workflowId, w.getName());
+        return new ExportResult(export, filename);
+    }
+
+    public record ExportResult(Map<String, Object> data, String filename) {}
 
     public Map<String, Object> exportWorkflow(String workflowId, String exportedBy) {
         Workflow w = RepositoryUtils.findByIdOrThrow(workflowRepository, workflowId, "Workflow not found");
@@ -147,9 +163,9 @@ public class ImportExportService {
         m.put("updated_at", w.getUpdatedAt());
         if (fullDefinition) {
             Map<String, Object> definition = w.getDefinition();
-            m.put("nodes", definition != null ? workflowMapper.extractNodes(definition) : List.of());
-            m.put("edges", definition != null ? workflowMapper.extractEdges(definition) : List.of());
-            m.put("variables", definition != null ? workflowMapper.extractVariables(definition) : Map.of());
+            m.put("nodes", workflowMapper.extractNodes(definition));
+            m.put("edges", workflowMapper.extractEdges(definition));
+            m.put("variables", workflowMapper.extractVariables(definition));
             m.put("owner_id", w.getOwnerId());
             m.put("is_public", w.getIsPublic());
             m.put("is_template", w.getIsTemplate());
@@ -173,17 +189,8 @@ public class ImportExportService {
     }
 
     private Workflow createWorkflowFromDefinition(String name, String description, Map<String, Object> definition, String userId) {
-        Workflow w = new Workflow();
-        w.setId(UUID.randomUUID().toString());
-        w.setName(name != null ? name : "Imported Workflow " + w.getId().substring(0, 8));
-        w.setDescription(description);
-        w.setVersion("1.0.0");
-        w.setDefinition(definition);
-        w.setOwnerId(userId);
-        w.setIsPublic(false);
-        w.setIsTemplate(false);
-        w.setCategory((String) definition.get("category"));
-        w.setTags((List<String>) definition.get("tags"));
-        return w;
+        return WorkflowFactory.create(userId, name, description, definition, "1.0.0",
+                definition != null ? (String) definition.get("category") : null,
+                definition != null ? (List<String>) definition.get("tags") : null);
     }
 }

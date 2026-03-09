@@ -1,5 +1,6 @@
 package com.workflow.service;
 
+import com.workflow.util.LlmConfigUtils;
 import com.workflow.util.LlmErrorResponseBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,12 +52,12 @@ public class LlmTestService {
     }
 
     public Map<String, String> testOpenAi(String apiKey, String baseUrl, String model) {
-        String url = (baseUrl != null && !baseUrl.isEmpty() ? baseUrl : URL_OPENAI) + "/chat/completions";
+        String url = LlmConfigUtils.buildChatCompletionsUrl(LlmConfigUtils.normalizeBaseUrl(baseUrl, URL_OPENAI));
         return testOpenAiCompatible(url, apiKey, model);
     }
 
     public Map<String, String> testAnthropic(String apiKey, String baseUrl, String model) {
-        String url = (baseUrl != null && !baseUrl.isEmpty() ? baseUrl : URL_ANTHROPIC) + "/messages";
+        String url = LlmConfigUtils.normalizeBaseUrl(baseUrl, URL_ANTHROPIC) + "/messages";
         return httpPost(url, Map.of(
                 "x-api-key", apiKey,
                 "anthropic-version", "2023-06-01",
@@ -65,17 +66,17 @@ public class LlmTestService {
     }
 
     public Map<String, String> testGemini(String apiKey, String baseUrl, String model) {
-        String bUrl = (baseUrl != null && !baseUrl.isEmpty() ? baseUrl : URL_GEMINI);
+        String bUrl = LlmConfigUtils.normalizeBaseUrl(baseUrl, URL_GEMINI);
         String url = bUrl + "/models/" + model + ":generateContent?key=" + apiKey;
         return httpPost(url, Map.of("Content-Type", "application/json"),
                 "{\"contents\":[{\"parts\":[{\"text\":\"Hello\"}]}],\"generationConfig\":{\"maxOutputTokens\":5}}");
     }
 
     public Map<String, String> testCustom(String apiKey, String baseUrl, String model) {
-        if (baseUrl == null || baseUrl.isEmpty()) {
+        if (baseUrl == null || baseUrl.isBlank()) {
             return LlmErrorResponseBuilder.error("base_url is required for custom providers");
         }
-        String url = baseUrl.endsWith("/") ? baseUrl + "chat/completions" : baseUrl + "/chat/completions";
+        String url = LlmConfigUtils.buildChatCompletionsUrl(baseUrl);
         return testOpenAiCompatible(url, apiKey, model);
     }
 
@@ -108,7 +109,7 @@ public class LlmTestService {
                     : "";
             return LlmErrorResponseBuilder.error("API error " + response.statusCode() + ": " + errMsg);
         } catch (Exception e) {
-            return LlmErrorResponseBuilder.error("Error: " + (e.getMessage() != null ? e.getMessage() : "Unknown error"));
+            return LlmErrorResponseBuilder.error("Error: " + java.util.Objects.requireNonNullElse(e.getMessage(), "Unknown error"));
         }
     }
 }

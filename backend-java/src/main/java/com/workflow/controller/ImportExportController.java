@@ -1,12 +1,8 @@
 package com.workflow.controller;
 
 import com.workflow.dto.WorkflowResponseV2;
-import com.workflow.entity.Workflow;
-import com.workflow.repository.WorkflowRepository;
 import com.workflow.service.ImportExportService;
-import com.workflow.service.WorkflowOwnershipService;
 import com.workflow.util.AuthenticationHelper;
-import com.workflow.util.RepositoryUtils;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.HttpHeaders;
@@ -26,32 +22,25 @@ import java.util.Map;
 @RequestMapping("/api/import-export")
 @Tag(name = "Import/Export", description = "Workflow import and export")
 public class ImportExportController {
-    private final WorkflowRepository workflowRepository;
     private final ImportExportService importExportService;
     private final AuthenticationHelper authenticationHelper;
-    private final WorkflowOwnershipService ownershipService;
 
-    public ImportExportController(WorkflowRepository workflowRepository, ImportExportService importExportService,
-                                 AuthenticationHelper authenticationHelper, WorkflowOwnershipService ownershipService) {
-        this.workflowRepository = workflowRepository;
+    public ImportExportController(ImportExportService importExportService,
+                                 AuthenticationHelper authenticationHelper) {
         this.importExportService = importExportService;
         this.authenticationHelper = authenticationHelper;
-        this.ownershipService = ownershipService;
     }
 
     @GetMapping("/export/{workflowId}")
     @Operation(summary = "Export Workflow")
     public ResponseEntity<Map<String, Object>> exportWorkflow(@PathVariable String workflowId, Authentication auth) {
-        Workflow w = RepositoryUtils.findByIdOrThrow(workflowRepository, workflowId, "Workflow not found");
         String userId = authenticationHelper.extractUserIdNullable(auth);
-        ownershipService.assertCanRead(w, userId);
         String exportedBy = auth != null ? authenticationHelper.extractUsername(auth) : null;
-        Map<String, Object> export = importExportService.exportWorkflow(workflowId, exportedBy);
-        String filename = importExportService.getExportFilename(workflowId, w.getName());
+        var result = importExportService.exportWorkflowWithAuth(workflowId, userId, exportedBy);
         return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + filename)
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + result.filename())
                 .contentType(MediaType.APPLICATION_JSON)
-                .body(export);
+                .body(result.data());
     }
 
     @PostMapping("/import")

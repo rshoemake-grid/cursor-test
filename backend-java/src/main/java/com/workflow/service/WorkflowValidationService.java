@@ -26,8 +26,8 @@ public class WorkflowValidationService {
     public Map<String, Object> validate(String workflowId) {
         Workflow w = RepositoryUtils.findByIdOrThrow(workflowRepository, workflowId, "Workflow not found");
         Map<String, Object> def = w.getDefinition();
-        List<Node> nodes = def != null ? workflowMapper.extractNodes(def) : List.of();
-        List<Edge> edges = def != null ? workflowMapper.extractEdges(def) : List.of();
+        List<Node> nodes = workflowMapper.extractNodes(def);
+        List<Edge> edges = workflowMapper.extractEdges(def);
 
         List<Map<String, Object>> issues = new ArrayList<>();
         List<Map<String, Object>> warnings = new ArrayList<>();

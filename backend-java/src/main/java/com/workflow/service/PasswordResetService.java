@@ -2,9 +2,9 @@ package com.workflow.service;
 
 import com.workflow.entity.PasswordResetToken;
 import com.workflow.entity.User;
-import com.workflow.exception.ResourceNotFoundException;
 import com.workflow.exception.ValidationException;
 import com.workflow.repository.PasswordResetTokenRepository;
+import com.workflow.util.RepositoryUtils;
 import com.workflow.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -72,8 +72,9 @@ public class PasswordResetService {
 
     @Transactional
     public Map<String, Object> resetPassword(String token, String newPassword) {
-        PasswordResetToken tokenEntity = passwordResetTokenRepository.findByToken(token)
-                .orElseThrow(() -> new ValidationException("Invalid or expired reset token"));
+        PasswordResetToken tokenEntity = RepositoryUtils.orElseThrow(
+                passwordResetTokenRepository.findByToken(token),
+                () -> new ValidationException("Invalid or expired reset token"));
 
         if (tokenEntity.getExpiresAt().isBefore(LocalDateTime.now())) {
             throw new ValidationException("Reset token has expired");
@@ -83,8 +84,7 @@ public class PasswordResetService {
             throw new ValidationException("Reset token has already been used");
         }
 
-        User user = userRepository.findById(tokenEntity.getUserId())
-                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        User user = RepositoryUtils.findByIdOrThrow(userRepository, tokenEntity.getUserId(), "User not found");
 
         user.setHashedPassword(passwordEncoder.encode(newPassword));
         userRepository.save(user);

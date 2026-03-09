@@ -4,6 +4,7 @@ import com.workflow.entity.Execution;
 import com.workflow.entity.Workflow;
 import com.workflow.repository.ExecutionRepository;
 import com.workflow.repository.WorkflowRepository;
+import com.workflow.util.ObjectUtils;
 import com.workflow.util.RepositoryUtils;
 import org.springframework.stereotype.Service;
 
@@ -45,12 +46,16 @@ public class ExecutionExportService {
         execData.put("state", e.getState());
         result.put("execution", execData);
 
-        Map<String, Object> wfData = new HashMap<>();
-        wfData.put("id", w != null ? w.getId() : null);
-        wfData.put("name", w != null ? w.getName() : null);
-        wfData.put("definition", w != null ? w.getDefinition() : null);
-        result.put("workflow", wfData);
+        result.put("workflow", toWorkflowExportMap(w));
 
         return result;
+    }
+
+    private static Map<String, Object> toWorkflowExportMap(Workflow w) {
+        Map<String, Object> m = new HashMap<>();
+        m.put("id", ObjectUtils.safeGet(w, Workflow::getId));
+        m.put("name", ObjectUtils.safeGet(w, Workflow::getName));
+        m.put("definition", ObjectUtils.safeGet(w, Workflow::getDefinition));
+        return m;
     }
 }

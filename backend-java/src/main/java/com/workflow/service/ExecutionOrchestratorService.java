@@ -6,6 +6,7 @@ import com.workflow.dto.ExecutionStatus;
 import com.workflow.entity.Execution;
 import com.workflow.engine.WorkflowExecutor;
 import com.workflow.util.EnvironmentUtils;
+import com.workflow.util.ObjectUtils;
 import com.workflow.repository.ExecutionRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,7 +20,7 @@ import java.util.*;
 
 /**
  * Orchestrates workflow execution - matches Python ExecutionOrchestrator
- * Creates execution record and runs workflow in background
+ * SRP: Delegates validation/creation to ExecutionCreationService; focuses on background execution.
  * S-M3: In production, sanitize error details in execution state
  */
 @Service
@@ -27,22 +28,25 @@ public class ExecutionOrchestratorService {
     private static final Logger log = LoggerFactory.getLogger(ExecutionOrchestratorService.class);
     private static final String GENERIC_ERROR_MESSAGE = "Execution failed";
 
-    private final WorkflowService workflowService;
+    private final ExecutionCreationService executionCreationService;
     private final ExecutionRepository executionRepository;
     private final ExecutionService executionService;
+    private final WorkflowService workflowService;
     private final SettingsService settingsService;
     private final WorkflowExecutor workflowExecutor;
     private final Environment environment;
 
-    public ExecutionOrchestratorService(WorkflowService workflowService,
+    public ExecutionOrchestratorService(ExecutionCreationService executionCreationService,
                                        ExecutionRepository executionRepository,
                                        ExecutionService executionService,
+                                       WorkflowService workflowService,
                                        SettingsService settingsService,
                                        WorkflowExecutor workflowExecutor,
                                        Environment environment) {
-        this.workflowService = workflowService;
+        this.executionCreationService = executionCreationService;
         this.executionRepository = executionRepository;
         this.executionService = executionService;
+        this.workflowService = workflowService;
         this.settingsService = settingsService;
         this.workflowExecutor = workflowExecutor;
         this.environment = environment;
@@ -50,33 +54,14 @@ public class ExecutionOrchestratorService {
 
     @Transactional
     public ExecutionResponse executeWorkflow(String workflowId, String userId, ExecutionRequest request) {
-        // Validate workflow exists and user has access
-        workflowService.getWorkflow(workflowId, userId);
+        Execution execution = executionCreationService.validateAndCreate(workflowId, userId);
+        String executionId = execution.getId();
 
-        // Check for LLM config (required for agent nodes - optional for simple workflows)
-        Optional<Map<String, Object>> llmConfig = settingsService.getActiveLlmConfig(userId);
-        if (llmConfig.isEmpty() && System.getenv("GEMINI_API_KEY") == null && System.getenv("GOOGLE_API_KEY") == null) {
-            throw new IllegalArgumentException(
-                    "No LLM provider configured. Please configure an LLM provider in Settings before executing workflows.");
-        }
-
-        String executionId = "exec-" + UUID.randomUUID();
-        Map<String, Object> inputs = request != null && request.getInputs() != null
-                ? request.getInputs() : Map.of();
-
-        // Create execution record
-        Execution execution = new Execution();
-        execution.setId(executionId);
-        execution.setWorkflowId(workflowId);
-        execution.setUserId(userId);
-        execution.setStatus(ExecutionStatus.RUNNING.getValue());
-        execution.setState(Map.of("logs", new ArrayList<Map<String, Object>>()));
-        execution.setStartedAt(LocalDateTime.now());
-        executionRepository.save(execution);
+        Map<String, Object> inputs = ObjectUtils.orDefault(
+                request != null ? request.getInputs() : null, Map.of());
 
         log.info("Created execution {} for workflow {}", executionId, workflowId);
 
-        // Run execution in background
         runExecutionInBackground(executionId, workflowId, userId, inputs);
 
         return new ExecutionResponse(
@@ -111,7 +96,7 @@ public class ExecutionOrchestratorService {
         } catch (Exception e) {
             log.error("Background execution {} failed: {}", executionId, e.getMessage(), e);
             String errorMessage = EnvironmentUtils.isProduction(environment) ? GENERIC_ERROR_MESSAGE
-                    : (e.getMessage() != null ? e.getMessage() : GENERIC_ERROR_MESSAGE);
+                    : ObjectUtils.orDefault(e.getMessage(), GENERIC_ERROR_MESSAGE);
             String logMessage = GENERIC_ERROR_MESSAGE.equals(errorMessage)
                     ? errorMessage : "Execution failed: " + errorMessage;
             executionService.appendLogAndUpdateExecutionState(executionId, userId, "ERROR", null, logMessage,

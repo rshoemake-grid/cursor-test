@@ -2,6 +2,7 @@ package com.workflow.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.workflow.config.TemplateConfig;
 import com.workflow.dto.*;
 import com.workflow.entity.Workflow;
 import com.workflow.exception.ResourceNotFoundException;
@@ -57,7 +58,8 @@ class WorkflowServiceTest {
         ownershipService = new WorkflowOwnershipService(workflowRepository, workflowShareRepository);
 
         // Manually create service instance since @InjectMocks doesn't work with manual construction
-        workflowService = new WorkflowService(workflowRepository, workflowTemplateRepository, workflowMapper, ownershipService);
+        TemplateConfig.TemplateOptions templateOptions = new TemplateConfig.TemplateOptions();
+        workflowService = new WorkflowService(workflowRepository, workflowTemplateRepository, workflowMapper, ownershipService, templateOptions);
         
         // Setup valid WorkflowCreate
         validWorkflowCreate = new WorkflowCreate();

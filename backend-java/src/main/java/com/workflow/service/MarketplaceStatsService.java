@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * SRP-4: Marketplace statistics extracted from MarketplaceService.
@@ -30,7 +31,7 @@ public class MarketplaceStatsService {
         long templateCount = templateRepository.count();
         long userCount = userRepository.count();
         int totalExecutions = workflowRepository.findAll().stream()
-                .mapToInt(w -> w.getUsesCount() != null ? w.getUsesCount() : 0)
+                .mapToInt(w -> Objects.requireNonNullElse(w.getUsesCount(), 0))
                 .sum();
         Map<String, Object> stats = new HashMap<>();
         stats.put("public_workflows", publicCount);

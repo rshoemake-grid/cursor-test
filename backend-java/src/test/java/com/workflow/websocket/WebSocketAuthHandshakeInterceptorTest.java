@@ -1,8 +1,7 @@
 package com.workflow.websocket;
 
-import com.workflow.entity.Execution;
-import com.workflow.repository.ExecutionRepository;
 import com.workflow.security.JwtUtil;
+import com.workflow.service.ExecutionOwnershipChecker;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -14,10 +13,8 @@ import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.web.socket.WebSocketHandler;
 
 import java.lang.reflect.Field;
-import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -29,7 +26,7 @@ import static org.mockito.Mockito.*;
 class WebSocketAuthHandshakeInterceptorTest {
 
     @Mock
-    private ExecutionRepository executionRepository;
+    private ExecutionOwnershipChecker ownershipChecker;
 
     @Mock
     private ServerHttpResponse response;
@@ -46,7 +43,7 @@ class WebSocketAuthHandshakeInterceptorTest {
         setField(jwtUtil, "secret", "test-secret-key-that-is-at-least-256-bits-long-for-hmac-sha256");
         setField(jwtUtil, "expiration", 3600000L);
         setField(jwtUtil, "refreshExpiration", 604800000L);
-        interceptor = new WebSocketAuthHandshakeInterceptor(jwtUtil, executionRepository);
+        interceptor = new WebSocketAuthHandshakeInterceptor(jwtUtil, ownershipChecker);
     }
 
     @Test
@@ -79,14 +76,7 @@ class WebSocketAuthHandshakeInterceptorTest {
     @Test
     void beforeHandshake_validTokenWrongExecutionOwner_rejectsHandshake() {
         String token = jwtUtil.generateToken("user1", "user-1-id");
-        Execution execution = new Execution();
-        execution.setId("exec-123");
-        execution.setUserId("other-user-id");
-        execution.setWorkflowId("wf-1");
-        execution.setStatus("running");
-        execution.setStartedAt(LocalDateTime.now());
-
-        when(executionRepository.findById("exec-123")).thenReturn(Optional.of(execution));
+        when(ownershipChecker.isExecutionOwner("exec-123", "user-1-id")).thenReturn(false);
 
         MockHttpServletRequest servletRequest = new MockHttpServletRequest();
         servletRequest.setRequestURI("/ws/executions/exec-123");
@@ -98,13 +88,13 @@ class WebSocketAuthHandshakeInterceptorTest {
 
         assertFalse(result);
         assertTrue(attributes.isEmpty());
-        verify(executionRepository).findById("exec-123");
+        verify(ownershipChecker).isExecutionOwner("exec-123", "user-1-id");
     }
 
     @Test
     void beforeHandshake_executionNotFound_rejectsHandshake() {
         String token = jwtUtil.generateToken("user1", "user-1-id");
-        when(executionRepository.findById("exec-123")).thenReturn(Optional.empty());
+        when(ownershipChecker.isExecutionOwner("exec-123", "user-1-id")).thenReturn(false);
 
         MockHttpServletRequest servletRequest = new MockHttpServletRequest();
         servletRequest.setRequestURI("/ws/executions/exec-123");
@@ -121,14 +111,7 @@ class WebSocketAuthHandshakeInterceptorTest {
     @Test
     void beforeHandshake_validTokenAndOwnership_allowsHandshake() {
         String token = jwtUtil.generateToken("user1", "user-1-id");
-        Execution execution = new Execution();
-        execution.setId("exec-123");
-        execution.setUserId("user-1-id");
-        execution.setWorkflowId("wf-1");
-        execution.setStatus("running");
-        execution.setStartedAt(LocalDateTime.now());
-
-        when(executionRepository.findById("exec-123")).thenReturn(Optional.of(execution));
+        when(ownershipChecker.isExecutionOwner("exec-123", "user-1-id")).thenReturn(true);
 
         MockHttpServletRequest servletRequest = new MockHttpServletRequest();
         servletRequest.setRequestURI("/ws/executions/exec-123");
@@ -154,7 +137,7 @@ class WebSocketAuthHandshakeInterceptorTest {
         boolean result = interceptor.beforeHandshake(request, response, wsHandler, attributes);
 
         assertFalse(result);
-        verify(executionRepository, never()).findById(any());
+        verify(ownershipChecker, never()).isExecutionOwner(any(), any());
     }
 
     private void setField(Object target, String fieldName, Object value) throws Exception {

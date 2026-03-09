@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * Code Review 2026: Safe extraction from JSON state maps to avoid unchecked casts.
@@ -13,6 +14,13 @@ import java.util.Map;
 public final class JsonStateUtils {
 
     private JsonStateUtils() {
+    }
+
+    /**
+     * Return state map or empty map if null. DRY: Used by ExecutionService and ExecutionStatsService.
+     */
+    public static Map<String, Object> getStateOrEmpty(Map<String, Object> state) {
+        return state != null ? state : Collections.emptyMap();
     }
 
     /**
@@ -73,11 +81,18 @@ public final class JsonStateUtils {
      * Create a log entry map for execution state. DRY: Used by ExecutionService and ExecutionOrchestratorService.
      */
     public static Map<String, Object> createLogEntry(String level, String nodeId, String message) {
+        return createLogEntry(LocalDateTime.now().toString(), level, nodeId, message);
+    }
+
+    /**
+     * Create a log entry map with explicit timestamp. DRY: Used by ExecutionState.toStateMap().
+     */
+    public static Map<String, Object> createLogEntry(String timestamp, String level, String nodeId, String message) {
         Map<String, Object> entry = new HashMap<>();
-        entry.put("timestamp", LocalDateTime.now().toString());
-        entry.put("level", level != null ? level : "INFO");
+        entry.put("timestamp", timestamp);
+        entry.put("level", Objects.requireNonNullElse(level, "INFO"));
         entry.put("node_id", nodeId);
-        entry.put("message", message != null ? message : "");
+        entry.put("message", Objects.requireNonNullElse(message, ""));
         return entry;
     }
 }

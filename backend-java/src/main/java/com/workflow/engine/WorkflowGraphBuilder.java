@@ -17,8 +17,8 @@ public final class WorkflowGraphBuilder {
     }
 
     public static GraphResult build(WorkflowResponse workflow) {
-        List<Node> nodes = workflow.getNodes() != null ? workflow.getNodes() : List.of();
-        List<Edge> edges = workflow.getEdges() != null ? workflow.getEdges() : List.of();
+        List<Node> nodes = workflow.getNodesOrEmpty();
+        List<Edge> edges = workflow.getEdgesOrEmpty();
 
         Map<String, Node> nodeMap = new HashMap<>();
         Map<String, List<String>> adjacency = new HashMap<>();

@@ -4,9 +4,10 @@ import com.workflow.dto.WorkflowChatRequest;
 import com.workflow.dto.WorkflowChatResponse;
 import com.workflow.engine.LlmApiClient;
 import com.workflow.entity.Workflow;
-import com.workflow.exception.ResourceNotFoundException;
 import com.workflow.repository.WorkflowRepository;
-import com.workflow.util.JsonStateUtils;
+import com.workflow.util.ObjectUtils;
+import com.workflow.util.RepositoryUtils;
+import com.workflow.util.WorkflowMapper;
 import com.workflow.util.LlmConfigUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,14 +25,19 @@ public class WorkflowChatService {
     private static final Logger log = LoggerFactory.getLogger(WorkflowChatService.class);
 
     private final WorkflowRepository workflowRepository;
+    private final WorkflowMapper workflowMapper;
     private final SettingsService settingsService;
     private final LlmApiClient llmApiClient;
+    private final WorkflowOwnershipService ownershipService;
 
-    public WorkflowChatService(WorkflowRepository workflowRepository, SettingsService settingsService,
-                              LlmApiClient llmApiClient) {
+    public WorkflowChatService(WorkflowRepository workflowRepository, WorkflowMapper workflowMapper,
+                              SettingsService settingsService, LlmApiClient llmApiClient,
+                              WorkflowOwnershipService ownershipService) {
         this.workflowRepository = workflowRepository;
+        this.workflowMapper = workflowMapper;
         this.settingsService = settingsService;
         this.llmApiClient = llmApiClient;
+        this.ownershipService = ownershipService;
     }
 
     @Transactional(readOnly = true)
@@ -40,7 +46,7 @@ public class WorkflowChatService {
                 .orElseThrow(() -> new IllegalArgumentException(
                         "No LLM provider configured. Please configure an LLM provider in Settings."));
 
-        String workflowContext = getWorkflowContext(request.getWorkflowId());
+        String workflowContext = getWorkflowContext(request.getWorkflowId(), userId);
         String systemPrompt = "You are an AI assistant that helps users create and modify workflow graphs. " +
                 "Respond with helpful suggestions. If the user wants to make changes, describe what you would do. " +
                 "Current workflow context:\n" + workflowContext;
@@ -74,25 +80,25 @@ public class WorkflowChatService {
         }
     }
 
-    private String getWorkflowContext(String workflowId) {
+    private String getWorkflowContext(String workflowId, String userId) {
         if (workflowId == null || workflowId.isBlank()) {
             return "No workflow loaded. You can create a new workflow.";
         }
-        Workflow w = workflowRepository.findById(workflowId)
-                .orElseThrow(() -> new ResourceNotFoundException("Workflow not found"));
-        Map<String, Object> def = w.getDefinition();
-        List<Map<String, Object>> nodes = JsonStateUtils.getListOfMaps(def, "nodes");
-        List<Map<String, Object>> edges = JsonStateUtils.getListOfMaps(def, "edges");
+        Workflow w = RepositoryUtils.findByIdOrThrow(workflowRepository, workflowId, "Workflow not found");
+        ownershipService.assertCanReadOrShare(w, userId);
+        Map<String, Object> def = w.getDefinition() != null ? w.getDefinition() : Map.of();
+        var nodes = workflowMapper.extractNodes(def);
+        var edges = workflowMapper.extractEdges(def);
 
         StringBuilder sb = new StringBuilder();
         sb.append("Workflow: ").append(w.getName()).append("\n");
         sb.append("Nodes (").append(nodes.size()).append("):\n");
         for (var n : nodes) {
-            sb.append("  - ").append(n.get("id")).append(": ").append(n.get("type")).append("\n");
+            sb.append("  - ").append(n.getId()).append(": ").append(ObjectUtils.toStringOrDefault(n.getType(), "unknown")).append("\n");
         }
         sb.append("Edges (").append(edges.size()).append("):\n");
         for (var e : edges) {
-            sb.append("  - ").append(e.get("source")).append(" -> ").append(e.get("target")).append("\n");
+            sb.append("  - ").append(e.getSource()).append(" -> ").append(e.getTarget()).append("\n");
         }
         return sb.toString();
     }
