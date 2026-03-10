@@ -55,7 +55,7 @@ trap cleanup EXIT INT TERM
 echo "▶️  Starting backend on http://localhost:8000"
 # Use python3 if available, otherwise fall back to python
 PYTHON_CMD=$(command -v python3 || command -v python || echo "python3")
-$PYTHON_CMD main.py > backend.log 2>&1 &
+$PYTHON_CMD -m uvicorn backend.main:app --host 0.0.0.0 --port 8000 > backend.log 2>&1 &
 BACKEND_PID=$!
 
 # Wait for backend to be ready

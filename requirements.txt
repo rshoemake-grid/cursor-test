@@ -1,14 +1,14 @@
 fastapi>=0.124.1
 starlette>=0.49.1
 uvicorn>=0.34.0
-pydantic==2.9.2
+pydantic>=2.9.2,<3
 sqlalchemy==2.0.36
 aiosqlite>=0.21.0
 openai==1.54.3
 python-dotenv==1.0.1
 pydantic-settings==2.6.1
-httpx==0.27.2
-websockets==12.0
+httpx>=0.28.1,<1
+websockets>=15.0.1
 redis==5.0.1
 chromadb==0.4.22
 Pillow>=10.0.0
@@ -30,6 +30,6 @@ google-cloud-storage
 # google-cloud-pubsub==2.24.1   # For GCP Pub/Sub input source
 # boto3==1.35.0                  # For AWS S3 input source
 
-# Google ADK (Agent Development Kit) - Optional for ADK agent support
-google-adk>=1.0.0
+# Google ADK (Agent Development Kit) - pin >=1.24 for fastapi>=0.124.1 compatibility
+google-adk>=1.24.0
 

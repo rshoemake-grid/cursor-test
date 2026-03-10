@@ -5,24 +5,26 @@ This directory contains Kubernetes manifests for deploying the Agentic Workflow 
 ## Quick Start
 
 ```bash
+# 0. Create secrets from template (required before deploy)
+cp secrets.yaml.example secrets.yaml
+# Edit secrets.yaml with your API keys, then:
+kubectl apply -f secrets.yaml
+
 # 1. Create namespace
 kubectl apply -f namespace.yaml
 
-# 2. Create secrets (update with your values)
-kubectl apply -f secrets.yaml
-
-# 3. Create configmap (update with your values)
+# 2. Create configmap (update DATABASE_URL, CORS_ORIGINS in configmap.yaml first)
 kubectl apply -f configmap.yaml
 
-# 4. Deploy backend
+# 3. Deploy backend
 kubectl apply -f backend-deployment.yaml
 kubectl apply -f backend-service.yaml
 
-# 5. Deploy frontend
+# 4. Deploy frontend
 kubectl apply -f frontend-deployment.yaml
 kubectl apply -f frontend-service.yaml
 
-# 6. Deploy ingress
+# 5. Deploy ingress (optional - for external access)
 kubectl apply -f ingress.yaml
 ```
 
@@ -30,7 +32,8 @@ kubectl apply -f ingress.yaml
 
 - `namespace.yaml` - Kubernetes namespace
 - `configmap.yaml` - Application configuration
-- `secrets.yaml` - Sensitive data (DO NOT COMMIT REAL SECRETS)
+- `secrets.yaml.example` - Secrets template (copy to secrets.yaml, fill in, then apply)
+- `secrets.yaml` - Sensitive data (create from example, DO NOT COMMIT REAL SECRETS)
 - `backend-deployment.yaml` - Backend application deployment
 - `backend-service.yaml` - Backend service
 - `frontend-deployment.yaml` - Frontend application deployment
