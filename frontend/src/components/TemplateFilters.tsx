@@ -1,8 +1,10 @@
 /**
  * TemplateFilters Component
  * Provides filtering and sorting UI controls for marketplace templates
+ * DRY: Derives category options from templateConstants
  */
 
+import { TEMPLATE_CATEGORIES as CATEGORY_VALUES, formatCategory } from '../config/templateConstants'
 
 interface TemplateFiltersProps {
   category: string
@@ -15,16 +17,16 @@ interface TemplateFiltersProps {
   onSearch: () => void
 }
 
+function toTitleCase(s: string): string {
+  return s.split(' ').map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')
+}
+
 const TEMPLATE_CATEGORIES = [
   { value: '', label: 'All Categories' },
-  { value: 'content_creation', label: 'Content Creation' },
-  { value: 'data_analysis', label: 'Data Analysis' },
-  { value: 'customer_service', label: 'Customer Service' },
-  { value: 'research', label: 'Research' },
-  { value: 'automation', label: 'Automation' },
-  { value: 'education', label: 'Education' },
-  { value: 'marketing', label: 'Marketing' },
-  { value: 'other', label: 'Other' },
+  ...CATEGORY_VALUES.map((cat) => ({
+    value: cat,
+    label: toTitleCase(formatCategory(cat)),
+  })),
 ]
 
 const SORT_OPTIONS = [

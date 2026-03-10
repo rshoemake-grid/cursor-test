@@ -8,6 +8,7 @@ import {
   STORAGE_ERROR_PREFIX,
   formatStorageErrorMessage
 } from '../constants/errorMessages'
+import { extractApiErrorMessage } from '../hooks/utils/apiUtils'
 
 export interface ErrorHandlerOptions {
   showNotification?: boolean
@@ -29,22 +30,9 @@ interface ApiErrorResponse {
 }
 
 /**
- * Interface for API error object
- */
-interface ApiError extends Error {
-  response?: ApiErrorResponse
-  config?: {
-    url?: string
-  }
-}
-
-/**
  * Type guard to check if error is an API error with response
- * 
- * @param error - The error to check
- * @returns True if error has API response structure
  */
-function isApiError(error: any): error is ApiError {
+function isApiError(error: any): error is { response?: ApiErrorResponse; config?: { url?: string } } {
   return (
     error !== null &&
     error !== undefined &&
@@ -53,75 +41,6 @@ function isApiError(error: any): error is ApiError {
     error.response !== undefined &&
     typeof error.response === 'object'
   )
-}
-
-/**
- * Type guard to check if error has error response data
- * 
- * @param error - The API error to check
- * @returns True if error has response data
- */
-function hasErrorResponseData(error: ApiError): boolean {
-  return (
-    error.response !== null &&
-    error.response !== undefined &&
-    error.response.data !== null &&
-    error.response.data !== undefined &&
-    typeof error.response.data === 'object'
-  )
-}
-
-/**
- * Extract error message from various error formats
- * Uses explicit checks to prevent mutation survivors
- * 
- * @param error - The error object to extract message from
- * @param defaultMessage - Default message if extraction fails
- * @returns Extracted error message or default
- */
-function extractErrorMessage(error: any, defaultMessage: string): string {
-  // Check for string errors first
-  if (error !== null && error !== undefined && typeof error === 'string' && error !== '') {
-    return error
-  }
-  
-  // Check for API error with response data
-  if (isApiError(error) === true && hasErrorResponseData(error) === true) {
-    const responseData = error.response!.data!
-    
-    // Check for detail property
-    if (
-      responseData.detail !== null &&
-      responseData.detail !== undefined &&
-      responseData.detail !== ''
-    ) {
-      return responseData.detail
-    }
-    
-    // Check for message property
-    if (
-      responseData.message !== null &&
-      responseData.message !== undefined &&
-      responseData.message !== ''
-    ) {
-      return responseData.message
-    }
-  }
-  
-  // Check for error.message
-  if (
-    error !== null &&
-    error !== undefined &&
-    typeof error === 'object' &&
-    error.message !== null &&
-    error.message !== undefined &&
-    error.message !== ''
-  ) {
-    return error.message
-  }
-  
-  // Fall back to default message
-  return defaultMessage
 }
 
 /**
@@ -139,8 +58,7 @@ export function handleApiError(
     context
   } = options
 
-  // Extract error message using helper function
-  const errorMessage = extractErrorMessage(error, defaultMessage)
+  const errorMessage = extractApiErrorMessage(error, defaultMessage)
 
   // Log error with context if provided
   // Explicit check to prevent mutation survivors
@@ -198,8 +116,7 @@ export function handleStorageError(
 
   // Explicit check to prevent mutation survivors
   if (showNotification === true) {
-    // Use extractErrorMessage helper for consistent error message extraction
-    const errorMsg = extractErrorMessage(error, 'Unknown error')
+    const errorMsg = extractApiErrorMessage(error, 'Unknown error')
     showError(formatStorageErrorMessage(operation, errorMsg))
   }
 }
@@ -218,8 +135,7 @@ export function handleError(
     context
   } = options
 
-  // Extract error message using helper function
-  const errorMessage = extractErrorMessage(error, defaultMessage)
+  const errorMessage = extractApiErrorMessage(error, defaultMessage)
 
   // Explicit check to prevent mutation survivors
   if (logError === true) {

@@ -1074,7 +1074,7 @@ describe('useWebSocket - mutation.basic', () => {
 
       await advanceTimersByTime(100)
 
-      expect(onError).toHaveBeenCalledWith('Failed to create WebSocket connection')
+      expect(onError).toHaveBeenCalledWith('String error')
     })
   })
 

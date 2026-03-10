@@ -65,7 +65,7 @@ export function useOfficialAgentSeeding({
       // Explicit null/undefined check to prevent mutation survivors
       if (storage === null || storage === undefined) return
 
-      const seededKey = 'officialAgentsSeeded'
+      const seededKey = STORAGE_KEYS.OFFICIAL_AGENTS_SEEDED
       // Clear the flag to force re-seeding (remove this line after first successful seed)
       try {
         storage.removeItem(seededKey)

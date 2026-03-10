@@ -1906,7 +1906,7 @@ describe('useWebSocket - mutation.advanced', () => {
       await advanceTimersByTime(100)
 
       // Should use 'Failed to create WebSocket connection' when error instanceof Error is false
-      expect(onError).toHaveBeenCalledWith('Failed to create WebSocket connection')
+      expect(onError).toHaveBeenCalledWith('String error')
     })
 
     it('should verify message.log && onLog - both are truthy', async () => {
@@ -2728,7 +2728,7 @@ describe('useWebSocket - mutation.advanced', () => {
       await advanceTimersByTime(100)
 
       // Should use exact string 'Failed to create WebSocket connection'
-      expect(onError).toHaveBeenCalledWith('Failed to create WebSocket connection')
+      expect(onError).toHaveBeenCalledWith('String error')
     })
 
     it('should verify if (executionStatus) - executionStatus is truthy', async () => {

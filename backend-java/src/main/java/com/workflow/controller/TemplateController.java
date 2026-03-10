@@ -2,6 +2,7 @@ package com.workflow.controller;
 
 import com.workflow.dto.WorkflowResponse;
 import com.workflow.dto.WorkflowTemplateCreate;
+import jakarta.validation.Valid;
 import com.workflow.dto.WorkflowTemplateResponse;
 import com.workflow.service.TemplateQueryService;
 import com.workflow.service.TemplateService;
@@ -34,9 +35,9 @@ public class TemplateController {
 
     @PostMapping
     @Operation(summary = "Create Template")
-    public ResponseEntity<WorkflowTemplateResponse> create(@RequestBody WorkflowTemplateCreate create, Authentication auth) {
-        String userId = authenticationHelper.extractUserIdRequired(auth);
-        boolean isAdmin = authenticationHelper.extractIsAdmin(auth);
+    public ResponseEntity<WorkflowTemplateResponse> create(@Valid @RequestBody WorkflowTemplateCreate create, Authentication authentication) {
+        String userId = authenticationHelper.extractUserIdRequired(authentication);
+        boolean isAdmin = authenticationHelper.extractIsAdmin(authentication);
         return ResponseEntity.status(201).body(templateService.createTemplate(create, userId, isAdmin));
     }
 
@@ -76,16 +77,16 @@ public class TemplateController {
             @PathVariable String templateId,
             @RequestParam(required = false) String name,
             @RequestParam(required = false) String description,
-            Authentication auth) {
-        String userId = authenticationHelper.extractUserIdNullable(auth);
+            Authentication authentication) {
+        String userId = authenticationHelper.extractUserIdRequired(authentication);
         return ResponseEntity.status(201).body(templateService.useTemplate(templateId, name, description, userId));
     }
 
     @DeleteMapping("/{templateId}")
     @Operation(summary = "Delete Template")
-    public ResponseEntity<Void> delete(@PathVariable String templateId, Authentication auth) {
-        String userId = authenticationHelper.extractUserIdRequired(auth);
-        boolean isAdmin = authenticationHelper.extractIsAdmin(auth);
+    public ResponseEntity<Void> delete(@PathVariable String templateId, Authentication authentication) {
+        String userId = authenticationHelper.extractUserIdRequired(authentication);
+        boolean isAdmin = authenticationHelper.extractIsAdmin(authentication);
         templateService.deleteTemplate(templateId, userId, isAdmin);
         return ResponseEntity.noContent().build();
     }

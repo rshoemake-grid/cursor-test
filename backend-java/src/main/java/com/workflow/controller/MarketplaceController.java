@@ -45,15 +45,15 @@ public class MarketplaceController {
 
     @PostMapping("/like")
     @Operation(summary = "Like Workflow")
-    public ResponseEntity<Map<String, String>> like(@RequestBody WorkflowLikeRequest request, Authentication auth) {
-        String userId = authenticationHelper.extractUserIdRequired(auth);
+    public ResponseEntity<Map<String, String>> like(@RequestBody WorkflowLikeRequest request, Authentication authentication) {
+        String userId = authenticationHelper.extractUserIdRequired(authentication);
         return ResponseEntity.status(201).body(marketplaceService.likeWorkflow(request.getWorkflowId(), userId));
     }
 
     @DeleteMapping("/like/{workflowId}")
     @Operation(summary = "Unlike Workflow")
-    public ResponseEntity<Void> unlike(@PathVariable String workflowId, Authentication auth) {
-        String userId = authenticationHelper.extractUserIdRequired(auth);
+    public ResponseEntity<Void> unlike(@PathVariable String workflowId, Authentication authentication) {
+        String userId = authenticationHelper.extractUserIdRequired(authentication);
         marketplaceService.unlikeWorkflow(workflowId, userId);
         return ResponseEntity.noContent().build();
     }
@@ -72,8 +72,8 @@ public class MarketplaceController {
 
     @GetMapping("/my-likes")
     @Operation(summary = "My Liked Workflows")
-    public ResponseEntity<List<WorkflowResponseV2>> myLikes(Authentication auth) {
-        String userId = authenticationHelper.extractUserIdRequired(auth);
+    public ResponseEntity<List<WorkflowResponseV2>> myLikes(Authentication authentication) {
+        String userId = authenticationHelper.extractUserIdRequired(authentication);
         return ResponseEntity.ok(marketplaceService.getMyLikes(userId));
     }
 
@@ -81,9 +81,9 @@ public class MarketplaceController {
     @Operation(summary = "Publish Agent")
     public ResponseEntity<PublishedAgentResponse> publishAgent(
             @Valid @RequestBody PublishedAgentCreateRequest request,
-            Authentication auth) {
-        String userId = authenticationHelper.extractUserIdRequired(auth);
-        boolean isAdmin = authenticationHelper.extractIsAdmin(auth);
+            Authentication authentication) {
+        String userId = authenticationHelper.extractUserIdRequired(authentication);
+        boolean isAdmin = authenticationHelper.extractIsAdmin(authentication);
         return ResponseEntity.status(201).body(marketplaceService.publishAgent(request, userId, isAdmin));
     }
 

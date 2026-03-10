@@ -10,6 +10,7 @@ import NodePanel from './NodePanel'
 import { logger } from '../utils/logger'
 import type { StorageAdapter } from '../types/adapters'
 import { showSuccess, showError } from '../utils/notifications'
+import { STORAGE_KEYS } from '../config/constants'
 
 jest.mock('../utils/notifications', () => ({
   showSuccess: jest.fn(),
@@ -137,7 +138,7 @@ describe('NodePanel', () => {
     const customNodes = [
       { id: 'custom-1', label: 'Custom Agent 1', description: 'Custom description' },
     ]
-    localStorage.setItem('customAgentNodes', JSON.stringify(customNodes))
+    localStorage.setItem(STORAGE_KEYS.CUSTOM_AGENT_NODES, JSON.stringify(customNodes))
 
     render(<NodePanel />)
 
@@ -146,7 +147,7 @@ describe('NodePanel', () => {
   })
 
   it('should handle invalid localStorage data gracefully', () => {
-    localStorage.setItem('customAgentNodes', 'invalid json')
+    localStorage.setItem(STORAGE_KEYS.CUSTOM_AGENT_NODES, 'invalid json')
 
     render(<NodePanel />)
 
@@ -179,7 +180,7 @@ describe('NodePanel', () => {
     const customNodes = [
       { id: 'custom-1', label: 'Custom Agent', description: 'Description' },
     ]
-    localStorage.setItem('customAgentNodes', JSON.stringify(customNodes))
+    localStorage.setItem(STORAGE_KEYS.CUSTOM_AGENT_NODES, JSON.stringify(customNodes))
 
     render(<NodePanel />)
 
@@ -213,7 +214,7 @@ describe('NodePanel', () => {
 
     const newNodes = [{ id: 'custom-2', label: 'New Agent' }]
     const storageEvent = new StorageEvent('storage', {
-      key: 'customAgentNodes',
+      key: STORAGE_KEYS.CUSTOM_AGENT_NODES,
       newValue: JSON.stringify(newNodes),
     })
 
@@ -229,7 +230,7 @@ describe('NodePanel', () => {
     render(<NodePanel />)
 
     const newNodes = [{ id: 'custom-3', label: 'Updated Agent' }]
-    localStorage.setItem('customAgentNodes', JSON.stringify(newNodes))
+    localStorage.setItem(STORAGE_KEYS.CUSTOM_AGENT_NODES, JSON.stringify(newNodes))
 
     const customEvent = new Event('customAgentNodesUpdated')
     window.dispatchEvent(customEvent)
@@ -254,7 +255,7 @@ describe('NodePanel', () => {
 
       render(<NodePanel storage={mockStorage} />)
 
-      expect(mockStorage.getItem).toHaveBeenCalledWith('customAgentNodes')
+      expect(mockStorage.getItem).toHaveBeenCalledWith(STORAGE_KEYS.CUSTOM_AGENT_NODES)
     })
 
     it('should use injected logger', () => {
@@ -351,7 +352,7 @@ describe('NodePanel', () => {
 
       // Simulate storage event (uses event.newValue, not getItem)
       const storageEvent = new StorageEvent('storage', {
-        key: 'customAgentNodes',
+        key: STORAGE_KEYS.CUSTOM_AGENT_NODES,
         newValue: JSON.stringify([{ id: 'custom-1', label: 'New Agent' }]),
       })
 
@@ -369,7 +370,7 @@ describe('NodePanel', () => {
       render(<NodePanel />)
 
       const storageEvent = new StorageEvent('storage', {
-        key: 'customAgentNodes',
+        key: STORAGE_KEYS.CUSTOM_AGENT_NODES,
         newValue: null,
       })
 
@@ -383,7 +384,7 @@ describe('NodePanel', () => {
       render(<NodePanel />)
 
       const storageEvent = new StorageEvent('storage', {
-        key: 'customAgentNodes',
+        key: STORAGE_KEYS.CUSTOM_AGENT_NODES,
         newValue: '',
       })
 
@@ -397,7 +398,7 @@ describe('NodePanel', () => {
       render(<NodePanel />)
 
       const storageEvent = new StorageEvent('storage', {
-        key: 'customAgentNodes',
+        key: STORAGE_KEYS.CUSTOM_AGENT_NODES,
         newValue: '{invalid json}',
       })
 
@@ -412,7 +413,7 @@ describe('NodePanel', () => {
       render(<NodePanel />)
 
       const storageEvent = new StorageEvent('storage', {
-        key: 'customAgentNodes',
+        key: STORAGE_KEYS.CUSTOM_AGENT_NODES,
         newValue: JSON.stringify({ not: 'an array' }),
       })
 
@@ -556,7 +557,7 @@ describe('NodePanel', () => {
         { label: 'Custom 2' }, // Missing id
         { id: 'custom-3', label: 'Custom 3', description: null },
       ]
-      localStorage.setItem('customAgentNodes', JSON.stringify(customNodes))
+      localStorage.setItem(STORAGE_KEYS.CUSTOM_AGENT_NODES, JSON.stringify(customNodes))
 
       render(<NodePanel />)
 

@@ -5,7 +5,7 @@
 
 import { logger as defaultLogger } from '../../utils/logger'
 import { showError as defaultShowError } from '../../utils/notifications'
-import { logicalOr } from './logicalOr'
+import { extractApiErrorMessage } from './apiUtils'
 
 export interface ErrorHandlerOptions {
   showNotification?: boolean
@@ -16,38 +16,8 @@ export interface ErrorHandlerOptions {
   showError?: typeof defaultShowError
 }
 
-/**
- * Extract error message from various error formats
- * 
- * @param error Error object or string
- * @param defaultMessage Default message if error cannot be extracted
- * @returns Error message string
- */
-export function extractErrorMessage(error: any, defaultMessage: string = 'An error occurred'): string {
-  if (typeof error === 'string') {
-    return error
-  }
-  
-  if (error instanceof Error) {
-    const messageResult = logicalOr(error.message, defaultMessage)
-    return (messageResult !== null && messageResult !== undefined) ? messageResult : defaultMessage
-  }
-  
-  // Try to extract from API error response
-  if (error?.response?.data?.detail) {
-    return error.response.data.detail
-  }
-  
-  if (error?.response?.data?.message) {
-    return error.response.data.message
-  }
-  
-  if (error?.message) {
-    return error.message
-  }
-  
-  return defaultMessage
-}
+/** Re-export for backward compatibility. Use extractApiErrorMessage from apiUtils. */
+export const extractErrorMessage = extractApiErrorMessage
 
 /**
  * Handle API errors with consistent logging and notifications
@@ -69,7 +39,7 @@ export function handleApiError(
     showError = defaultShowError,
   } = options
 
-  const errorMessage = extractErrorMessage(error, defaultMessage)
+  const errorMessage = extractApiErrorMessage(error, defaultMessage)
 
   // Log error with context if provided
   if (logError) {
@@ -115,7 +85,7 @@ export function handleError(
     showError = defaultShowError,
   } = options
 
-  const errorMessage = extractErrorMessage(error, defaultMessage)
+  const errorMessage = extractApiErrorMessage(error, defaultMessage)
 
   if (logError) {
     const logContext = context ? `[${context}]` : '[Error Handler]'

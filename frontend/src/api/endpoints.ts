@@ -47,3 +47,10 @@ export const marketplaceEndpoints = {
 export const settingsEndpoints = {
   llm: () => '/settings/llm',
 } as const
+
+/**
+ * Chat endpoints
+ */
+export const chatEndpoints = {
+  chat: () => '/workflow-chat/chat',
+} as const

@@ -12,6 +12,7 @@ import type { Node, Edge } from '@xyflow/react'
 import type { createApiClient } from '../../api/client'
 import { nullishCoalesce } from '../utils/nullishCoalescing'
 import { logicalOr } from '../utils/logicalOr'
+import { extractApiErrorMessage } from '../utils/apiUtils'
 
 interface UseWorkflowPersistenceOptions {
   isAuthenticated: boolean
@@ -86,7 +87,7 @@ export function useWorkflowPersistence({
         return created.id!
       }
     } catch (error: any) {
-      const errorMessage = 'Failed to save workflow: ' + logicalOr(error.message, 'Unknown error')
+      const errorMessage = 'Failed to save workflow: ' + extractApiErrorMessage(error, 'Unknown error')
       showError(errorMessage)
       logger.error('Failed to save workflow:', error)
       throw new Error(errorMessage)

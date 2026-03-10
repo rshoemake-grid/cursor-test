@@ -117,8 +117,8 @@ describe('useNodeOperations - Remaining Branches', () => {
         await result.current.handleSave(mockSetSaveStatus)
       })
 
-      // Should handle non-Error error (line 109 false branch)
-      expect(showError).toHaveBeenCalledWith('Failed to save workflow: Unknown error')
+      // extractApiErrorMessage returns string when error is a string
+      expect(showError).toHaveBeenCalledWith('Failed to save workflow: String error')
       expect(mockSetSaveStatus).toHaveBeenCalledWith('idle')
     })
 

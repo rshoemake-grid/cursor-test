@@ -21,9 +21,9 @@ public final class LlmErrorResponseBuilder {
     }
 
     /**
-     * Build error response from exception message.
+     * Build error response for exception. Returns generic message to avoid leaking internal details.
      */
     public static Map<String, String> error(Exception e) {
-        return error(ObjectUtils.safeGet(e, Exception::getMessage));
+        return error(ErrorMessages.UNEXPECTED_ERROR);
     }
 }

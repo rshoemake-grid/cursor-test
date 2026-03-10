@@ -5,6 +5,9 @@
  */
 
 import type { StorageAdapter, HttpClient } from '../types/adapters'
+import { API_CONFIG, STORAGE_KEYS } from '../config/constants'
+import { logger } from '../utils/logger'
+import { extractApiErrorMessage } from '../hooks/utils/apiUtils'
 // Domain-based imports - Phase 7
 import { buildAuthHeaders } from '../hooks/utils/apiUtils'
 import type { LLMProvider } from '../hooks/providers'
@@ -31,7 +34,7 @@ export class SettingsService {
   async saveSettings(settings: LLMSettings, token?: string | null): Promise<void> {
     // Save to local storage first
     if (this.storage) {
-      this.storage.setItem('llm_settings', JSON.stringify(settings));
+      this.storage.setItem(STORAGE_KEYS.LLM_SETTINGS, JSON.stringify(settings));
     }
 
     // Save to backend if authenticated
@@ -39,18 +42,19 @@ export class SettingsService {
       try {
         const headers = buildAuthHeaders({ token });
         const response = await this.httpClient.post(
-          `${this.apiBaseUrl}/settings/llm`,
+          `${this.apiBaseUrl}${API_CONFIG.ENDPOINTS.SETTINGS}/llm`,
           settings,
           headers
         );
         
         // Check if response is ok
         if (!response.ok) {
-          throw new Error(`Failed to save settings: ${response.status} ${response.statusText}`);
+          const errBody = await response.json().catch(() => ({}));
+          throw new Error(extractApiErrorMessage(errBody, `Failed to save settings: ${response.status} ${response.statusText}`));
         }
       } catch (error) {
         // Log error and rethrow - caller should handle it
-        console.error('Failed to sync settings to backend:', error);
+        logger.error('Failed to sync settings to backend:', error);
         throw error;
       }
     }
@@ -65,7 +69,7 @@ export class SettingsService {
   async testProvider(provider: LLMProvider): Promise<{ status: 'success' | 'error'; message: string }> {
     try {
       const response = await this.httpClient.post(
-        `${this.apiBaseUrl}/settings/llm/test`,
+        `${this.apiBaseUrl}${API_CONFIG.ENDPOINTS.LLM.TEST}`,
         {
           type: provider.type,
           api_key: provider.apiKey,
@@ -85,7 +89,7 @@ export class SettingsService {
     } catch (error: any) {
       return {
         status: 'error',
-        message: error.message || 'Network error - check if backend is running'
+        message: extractApiErrorMessage(error, 'Network error - check if backend is running')
       };
     }
   }

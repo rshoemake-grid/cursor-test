@@ -51,11 +51,16 @@ public class ExecutionService implements ExecutionOwnershipChecker {
     public List<ExecutionResponse> listExecutions(String workflowId, String userId, String status,
                                                   Integer limit, int offset) {
         int size = PaginationUtils.resolvePageSize(limit);
-        int page = offset / size;
-        var pageable = PageRequest.of(page, size);
+        int safeOffset = Math.max(0, offset);
+        int fetchSize = PaginationUtils.cappedFetchSize(safeOffset, size);
+        var pageable = PageRequest.of(0, fetchSize);
 
         List<Execution> executions = executionRepository.findWithFilters(workflowId, userId, status, pageable);
-        return executions.stream().map(ExecutionResponseMapper::toResponse).collect(Collectors.toList());
+        return executions.stream()
+                .skip(safeOffset)
+                .limit(size)
+                .map(ExecutionResponseMapper::toResponse)
+                .collect(Collectors.toList());
     }
 
     /**

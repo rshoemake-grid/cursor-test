@@ -97,4 +97,36 @@ public final class ErrorMessages {
     public static String userNotFound(String username) {
         return USER_NOT_FOUND + ": " + username;
     }
+
+    public static String unknownProviderType(String type) {
+        return "Unknown provider type: " + type;
+    }
+
+    public static final String BASE_URL_REQUIRED_CUSTOM = "base_url is required for custom providers";
+    public static final String FAILED_TO_FORMAT_LOGS_JSON = "Failed to format logs as JSON";
+    public static final String PASSWORD_RESET_SUCCESS = "Password has been reset successfully";
+    public static final String ALREADY_LIKED = "Already liked";
+    public static final String LIKED_SUCCESSFULLY = "Liked successfully";
+
+    public static String bulkDeleteSuccess(int count) {
+        return "Successfully deleted " + count + " workflow(s)";
+    }
+
+    public static String bulkDeletePartial(int deletedCount, int failedCount) {
+        return "Deleted " + deletedCount + " workflow(s). " + failedCount + " could not be deleted.";
+    }
+
+    public static final String PASSWORD_RESET_EMAIL_SENT = "If an account with that email exists, a password reset link has been sent.";
+    public static final String FORBIDDEN = "Forbidden";
+    public static final String UNAUTHORIZED = "Unauthorized";
+    public static final String LLM_TEST_REQUIRED_FIELDS = "type, api_key, and model are required";
+
+    public static String llmApiError(int statusCode) {
+        return "API error " + statusCode + ". Check provider configuration.";
+    }
+
+    public static final String SETTINGS_SAVED_SUCCESS = "Settings saved successfully";
+    public static final String CONNECTED_SUCCESSFULLY = "Connected successfully!";
+    public static final String PASSWORD_RESET_TOKEN_DEV_MESSAGE = "Password reset token generated. In production, this would be sent via email.";
+    public static final String EXPORT_ALL_FILENAME = "workflows.json";
 }

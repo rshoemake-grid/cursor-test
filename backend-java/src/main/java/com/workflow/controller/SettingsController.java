@@ -3,6 +3,7 @@ package com.workflow.controller;
 import com.workflow.service.LlmTestService;
 import com.workflow.service.SettingsService;
 import com.workflow.util.AuthenticationHelper;
+import com.workflow.util.ErrorMessages;
 import com.workflow.util.LlmConfigUtils;
 import com.workflow.util.LlmErrorResponseBuilder;
 import io.swagger.v3.oas.annotations.Operation;
@@ -44,7 +45,7 @@ public class SettingsController {
             Authentication authentication) {
         String userId = authenticationHelper.extractUserIdRequired(authentication);
         settingsService.saveSettings(userId, settings);
-        return ResponseEntity.ok(Map.of("status", "success", "message", "Settings saved successfully"));
+        return ResponseEntity.ok(Map.of("status", "success", "message", ErrorMessages.SETTINGS_SAVED_SUCCESS));
     }
 
     @GetMapping("/llm")
@@ -69,15 +70,18 @@ public class SettingsController {
         String model = (String) testRequest.get("model");
 
         if (type == null || apiKey == null || model == null) {
-            return ResponseEntity.badRequest().body(LlmErrorResponseBuilder.error("type, api_key, and model are required"));
+            return ResponseEntity.badRequest().body(LlmErrorResponseBuilder.error(ErrorMessages.LLM_TEST_REQUIRED_FIELDS));
         }
 
         try {
             Map<String, String> result = llmTestService.testProvider(type, apiKey, baseUrl, model);
+            if ("error".equals(result.get("status"))) {
+                return ResponseEntity.unprocessableEntity().body(result);
+            }
             return ResponseEntity.ok(result);
         } catch (Exception e) {
             log.warn("LLM test failed: {}", e.getMessage());
-            return ResponseEntity.ok(LlmErrorResponseBuilder.error(e));
+            return ResponseEntity.unprocessableEntity().body(LlmErrorResponseBuilder.error(ErrorMessages.UNEXPECTED_ERROR));
         }
     }
 }

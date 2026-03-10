@@ -113,7 +113,7 @@ export function useAgentDeletion({
     // Delete from storage using shared service - SRP + DRY
     const result = deleteAgentsFromStorage(
       storage,
-      'publishedAgents',
+      STORAGE_KEYS.PUBLISHED_AGENTS,
       agentIdsToDelete,
       {
         showError,

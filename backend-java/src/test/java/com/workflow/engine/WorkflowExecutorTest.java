@@ -245,7 +245,7 @@ class WorkflowExecutorTest {
 
         assertEquals("failed", state.get("status"));
         assertNotNull(state.get("error"));
-        assertTrue(state.get("error").toString().contains("LLM API error"));
+        assertEquals("Execution failed", state.get("error"));
     }
 
     private static Node node(String id, NodeType type) {

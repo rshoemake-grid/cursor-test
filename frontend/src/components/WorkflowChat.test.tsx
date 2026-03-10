@@ -19,14 +19,12 @@ jest.mock('../utils/logger', () => ({
   }
 }))
 
-// Mock new utilities - Domain-based imports - Phase 7
-jest.mock('../hooks/api', () => ({
-  useAuthenticatedApi: jest.fn(() => ({
-    authenticatedPost: jest.fn(),
-    authenticatedGet: jest.fn(),
-    authenticatedPut: jest.fn(),
-    authenticatedDelete: jest.fn(),
-  })),
+// Mock API client (WorkflowChat uses api.chat)
+const mockChat = jest.fn()
+jest.mock('../api/client', () => ({
+  api: {
+    chat: (...args: any[]) => mockChat(...args),
+  },
 }))
 
 jest.mock('../utils/errorHandler', () => ({
@@ -64,6 +62,11 @@ jest.mock('../config/constants', () => ({
       CHAT: '/workflow-chat/chat',
     },
   },
+  STORAGE_KEYS: {
+    AUTH_TOKEN: 'auth_token',
+    AUTH_USER: 'auth_user',
+    AUTH_REMEMBER_ME: 'auth_remember_me',
+  },
   getChatHistoryKey: jest.fn((workflowId) => {
     return workflowId ? `chat_history_${workflowId}` : 'chat_history_new_workflow'
   }),
@@ -92,18 +95,11 @@ const renderWithProvider = (component: React.ReactElement) => {
 
 describe('WorkflowChat', () => {
   const mockOnWorkflowUpdate = jest.fn()
-  const mockAuthenticatedPost = jest.fn()
-  const mockAuthenticatedGet = jest.fn()
-  const mockAuthenticatedPut = jest.fn()
-  const mockAuthenticatedDelete = jest.fn()
 
   beforeEach(() => {
     jest.clearAllMocks()
     localStorage.clear()
     
-    // Reset mocks
-    // eslint-disable-next-line @typescript-eslint/no-var-requires -- Dynamic require needed for Jest mocking
-    const { useAuthenticatedApi } = require('../hooks/api')
     // eslint-disable-next-line @typescript-eslint/no-var-requires -- Dynamic require needed for Jest mocking
     const { safeStorageGet } = require('../utils/storageHelpers')
     // eslint-disable-next-line @typescript-eslint/no-var-requires -- Dynamic require needed for Jest mocking
@@ -111,19 +107,10 @@ describe('WorkflowChat', () => {
     // eslint-disable-next-line @typescript-eslint/no-var-requires -- Dynamic require needed for Jest mocking
     const { handleApiError } = require('../utils/errorHandler')
     
-    // Reset all mocks
-    mockAuthenticatedPost.mockClear()
-    mockAuthenticatedGet.mockClear()
-    mockAuthenticatedPut.mockClear()
-    mockAuthenticatedDelete.mockClear()
+    mockChat.mockClear()
     
-    // Setup default mocks
-    useAuthenticatedApi.mockReturnValue({
-      authenticatedPost: mockAuthenticatedPost,
-      authenticatedGet: mockAuthenticatedGet,
-      authenticatedPut: mockAuthenticatedPut,
-      authenticatedDelete: mockAuthenticatedDelete,
-    })
+    // Default: api.chat returns success
+    mockChat.mockResolvedValue({ message: 'Response message' })
     
     // Default storage helpers to use real localStorage
     safeStorageGet.mockImplementation((storage, key, defaultValue) => {
@@ -201,19 +188,6 @@ describe('WorkflowChat', () => {
   })
 
   it('should send message when send button is clicked', async () => {
-    // eslint-disable-next-line @typescript-eslint/no-var-requires -- Dynamic require needed for Jest mocking
-    const { useAuthenticatedApi } = require('../hooks/api')
-    const mockAuthenticatedPost = jest.fn().mockResolvedValue({
-      ok: true,
-      json: async () => ({ message: 'Response message' }),
-    })
-    useAuthenticatedApi.mockReturnValue({
-      authenticatedPost: mockAuthenticatedPost,
-      authenticatedGet: jest.fn(),
-      authenticatedPut: jest.fn(),
-      authenticatedDelete: jest.fn(),
-    })
-
     renderWithProvider(<WorkflowChat workflowId="workflow-1" />)
 
     const input = screen.getByPlaceholderText(/Type your message/)
@@ -223,8 +197,7 @@ describe('WorkflowChat', () => {
     fireEvent.click(sendButton)
 
     await waitForWithTimeout(() => {
-      expect(mockAuthenticatedPost).toHaveBeenCalledWith(
-        '/workflow-chat/chat',
+      expect(mockChat).toHaveBeenCalledWith(
         expect.objectContaining({
           workflow_id: 'workflow-1',
           message: 'Test message',
@@ -234,11 +207,6 @@ describe('WorkflowChat', () => {
   })
 
   it('should send message when Enter is pressed', async () => {
-    mockAuthenticatedPost.mockResolvedValue({
-      ok: true,
-      json: async () => ({ message: 'Response message' }),
-    })
-
     renderWithProvider(<WorkflowChat workflowId="workflow-1" />)
 
     const input = screen.getByPlaceholderText(/Type your message/)
@@ -246,7 +214,7 @@ describe('WorkflowChat', () => {
     fireEvent.keyPress(input, { key: 'Enter', code: 'Enter', charCode: 13 })
 
     await waitForWithTimeout(() => {
-      expect(mockAuthenticatedPost).toHaveBeenCalled()
+      expect(mockChat).toHaveBeenCalled()
     }, 3000) // API call completion
   })
 
@@ -257,7 +225,7 @@ describe('WorkflowChat', () => {
     fireEvent.change(input, { target: { value: 'Test message' } })
     fireEvent.keyPress(input, { key: 'Enter', code: 'Enter', charCode: 13, shiftKey: true })
 
-    expect(mockAuthenticatedPost).not.toHaveBeenCalled()
+    expect(mockChat).not.toHaveBeenCalled()
   })
 
   it('should not send empty message', () => {
@@ -268,10 +236,7 @@ describe('WorkflowChat', () => {
   })
 
   it('should display user and assistant messages', async () => {
-    mockAuthenticatedPost.mockResolvedValue({
-      ok: true,
-      json: async () => ({ message: 'Assistant response' }),
-    })
+    mockChat.mockResolvedValue({ message: 'Assistant response' })
 
     renderWithProvider(<WorkflowChat workflowId="workflow-1" />)
 
@@ -295,10 +260,7 @@ describe('WorkflowChat', () => {
     const { handleApiError } = require('../utils/errorHandler')
     handleApiError.mockReturnValue('HTTP error! status: 500')
     
-    mockAuthenticatedPost.mockResolvedValue({
-      ok: false,
-      status: 500,
-    })
+    mockChat.mockRejectedValue(new Error('HTTP 500'))
 
     renderWithProvider(<WorkflowChat workflowId="workflow-1" />)
 
@@ -314,15 +276,12 @@ describe('WorkflowChat', () => {
   })
 
   it('should apply workflow changes when received', async () => {
-    mockAuthenticatedPost.mockResolvedValue({
-      ok: true,
-      json: async () => ({
-        message: 'Response',
-        workflow_changes: {
-          nodes_to_add: [],
-          nodes_to_delete: ['node-1'],
-        },
-      }),
+    mockChat.mockResolvedValue({
+      message: 'Response',
+      workflow_changes: {
+        nodes_to_add: [],
+        nodes_to_delete: ['node-1'],
+      },
     })
 
     renderWithProvider(<WorkflowChat workflowId="workflow-1" onWorkflowUpdate={mockOnWorkflowUpdate} />)
@@ -342,11 +301,7 @@ describe('WorkflowChat', () => {
   })
 
   it('should save conversation history to localStorage', async () => {
-    const mockResponse = {
-      ok: true,
-      json: async () => ({ message: 'Response' }),
-    }
-    mockAuthenticatedPost.mockResolvedValue(mockResponse)
+    mockChat.mockResolvedValue({ message: 'Response' })
 
     renderWithProvider(<WorkflowChat workflowId="workflow-1" />)
 
@@ -365,10 +320,7 @@ describe('WorkflowChat', () => {
   })
 
   it('should load conversation history when workflowId changes', async () => {
-    mockAuthenticatedPost.mockResolvedValue({
-      ok: true,
-      json: async () => ({ message: 'Response' }),
-    })
+    mockChat.mockResolvedValue({ message: 'Response' })
 
     const history1 = [
       { role: 'user' as const, content: 'Message 1' },
@@ -400,7 +352,7 @@ describe('WorkflowChat', () => {
     const promise = new Promise((resolve) => {
       resolvePromise = resolve
     })
-    mockAuthenticatedPost.mockReturnValue(promise)
+    mockChat.mockReturnValue(promise)
 
     renderWithProvider(<WorkflowChat workflowId="workflow-1" />)
 
@@ -415,10 +367,7 @@ describe('WorkflowChat', () => {
       expect(screen.queryByText('Send')).not.toBeInTheDocument()
     }, 2000) // UI state update
 
-    resolvePromise!({
-      ok: true,
-      json: async () => ({ message: 'Response' }),
-    })
+    resolvePromise!({ message: 'Response' })
 
     await waitForWithTimeout(() => {
       expect(screen.getByText('Send')).toBeInTheDocument()
@@ -430,7 +379,7 @@ describe('WorkflowChat', () => {
     const { handleApiError } = require('../utils/errorHandler')
     handleApiError.mockReturnValue('Unknown error')
     
-    mockAuthenticatedPost.mockRejectedValue('String error')
+    mockChat.mockRejectedValue('String error')
 
     renderWithProvider(<WorkflowChat workflowId="workflow-1" />)
 
@@ -455,10 +404,7 @@ describe('WorkflowChat', () => {
   })
 
   it('should not call onWorkflowUpdate when workflow_changes is missing', async () => {
-    mockAuthenticatedPost.mockResolvedValue({
-      ok: true,
-      json: async () => ({ message: 'Response' }),
-    })
+    mockChat.mockResolvedValue({ message: 'Response' })
 
     renderWithProvider(<WorkflowChat workflowId="workflow-1" onWorkflowUpdate={mockOnWorkflowUpdate} />)
 
@@ -480,7 +426,7 @@ describe('WorkflowChat', () => {
     const { handleApiError } = require('../utils/errorHandler')
     handleApiError.mockReturnValue('Network error')
     
-    mockAuthenticatedPost.mockRejectedValue(new Error('Network error'))
+    mockChat.mockRejectedValue(new Error('Network error'))
 
     renderWithProvider(<WorkflowChat workflowId="workflow-1" />)
 
@@ -510,7 +456,7 @@ describe('WorkflowChat', () => {
     const promise = new Promise((resolve) => {
       resolvePromise = resolve
     })
-    mockAuthenticatedPost.mockReturnValue(promise)
+    mockChat.mockReturnValue(promise)
 
     renderWithProvider(<WorkflowChat workflowId="workflow-1" />)
 
@@ -529,10 +475,7 @@ describe('WorkflowChat', () => {
     fireEvent.change(input, { target: { value: 'Another message' } })
     // Should not trigger another send
 
-    resolvePromise!({
-      ok: true,
-      json: async () => ({ message: 'Response' }),
-    })
+    resolvePromise!({ message: 'Response' })
   })
 
   describe('Dependency Injection', () => {
@@ -554,24 +497,10 @@ describe('WorkflowChat', () => {
       expect(mockStorage.getItem).toHaveBeenCalledWith('chat_history_workflow-1')
     })
 
-    it('should use injected HTTP client', async () => {
-      // eslint-disable-next-line @typescript-eslint/no-var-requires -- Dynamic require needed for Jest mocking
-      const { useAuthenticatedApi } = require('../hooks/api')
-      const injectedMockPost = jest.fn().mockResolvedValue({
-        ok: true,
-        json: async () => ({ message: 'Response from injected client' }),
-      })
-      
-      useAuthenticatedApi.mockReturnValue({
-        authenticatedPost: injectedMockPost,
-        authenticatedGet: jest.fn(),
-        authenticatedPut: jest.fn(),
-        authenticatedDelete: jest.fn(),
-      })
+    it('should use API client for chat', async () => {
+      mockChat.mockResolvedValue({ message: 'Response from API client' })
 
-      renderWithProvider(
-        <WorkflowChat workflowId="workflow-1" />
-      )
+      renderWithProvider(<WorkflowChat workflowId="workflow-1" />)
 
       const input = screen.getByPlaceholderText(/Type your message/)
       fireEvent.change(input, { target: { value: 'Test message' } })
@@ -580,49 +509,12 @@ describe('WorkflowChat', () => {
       fireEvent.click(sendButton)
 
       await waitForWithTimeout(() => {
-        expect(injectedMockPost).toHaveBeenCalled()
-      }, 3000) // API call completion
+        expect(mockChat).toHaveBeenCalled()
+      }, 3000)
 
       await waitForWithTimeout(() => {
-        expect(screen.getByText('Response from injected client')).toBeInTheDocument()
-      }, 3000) // API response rendering
-    })
-
-    it('should use injected API base URL', async () => {
-      // eslint-disable-next-line @typescript-eslint/no-var-requires -- Dynamic require needed for Jest mocking
-      const { useAuthenticatedApi } = require('../hooks/api')
-      const customMockPost = jest.fn().mockResolvedValue({
-        ok: true,
-        json: async () => ({ message: 'Response' }),
-      })
-      
-      useAuthenticatedApi.mockReturnValue({
-        authenticatedPost: customMockPost,
-        authenticatedGet: jest.fn(),
-        authenticatedPut: jest.fn(),
-        authenticatedDelete: jest.fn(),
-      })
-
-      renderWithProvider(
-        <WorkflowChat workflowId="workflow-1" apiBaseUrl="https://custom-api.com/api" />
-      )
-
-      const input = screen.getByPlaceholderText(/Type your message/)
-      fireEvent.change(input, { target: { value: 'Test message' } })
-
-      const sendButton = screen.getByText('Send')
-      fireEvent.click(sendButton)
-
-      await waitForWithTimeout(() => {
-        expect(useAuthenticatedApi).toHaveBeenCalledWith(
-          expect.any(Object),
-          'https://custom-api.com/api'
-        )
-      }, 2000) // Hook initialization
-
-      await waitForWithTimeout(() => {
-        expect(customMockPost).toHaveBeenCalled()
-      }, 3000) // API call completion
+        expect(screen.getByText('Response from API client')).toBeInTheDocument()
+      }, 3000)
     })
 
     it('should use injected logger', async () => {
@@ -633,12 +525,9 @@ describe('WorkflowChat', () => {
         info: jest.fn(),
       }
 
-      mockAuthenticatedPost.mockResolvedValue({
-        ok: true,
-        json: async () => ({ 
-          message: 'Response',
-          workflow_changes: { nodes_to_delete: ['node-1'] }
-        }),
+      mockChat.mockResolvedValue({
+        message: 'Response',
+        workflow_changes: { nodes_to_delete: ['node-1'] },
       })
 
       renderWithProvider(
@@ -698,14 +587,9 @@ describe('WorkflowChat', () => {
       const { safeStorageSet } = require('../utils/storageHelpers')
       safeStorageSet.mockReturnValue(false) // Simulate storage error
 
-      mockAuthenticatedPost.mockResolvedValue({
-        ok: true,
-        json: async () => ({ message: 'Response' }),
-      })
+      mockChat.mockResolvedValue({ message: 'Response' })
 
-      renderWithProvider(
-        <WorkflowChat workflowId="workflow-1" />
-      )
+      renderWithProvider(<WorkflowChat workflowId="workflow-1" />)
 
       const input = screen.getByPlaceholderText(/Type your message/)
       fireEvent.change(input, { target: { value: 'Test message' } })
@@ -725,7 +609,7 @@ describe('WorkflowChat', () => {
       const { handleApiError } = require('../utils/errorHandler')
       handleApiError.mockReturnValue('Network error')
       
-      mockAuthenticatedPost.mockRejectedValue(new Error('Network error'))
+      mockChat.mockRejectedValue(new Error('Network error'))
 
       renderWithProvider(
         <WorkflowChat workflowId="workflow-1" />
@@ -762,11 +646,7 @@ describe('WorkflowChat', () => {
         removeEventListener: jest.fn(),
       }
 
-      const mockResponse = {
-        ok: true,
-        json: async () => ({ message: 'Response' }),
-      }
-      mockAuthenticatedPost.mockResolvedValue(mockResponse)
+      mockChat.mockResolvedValue({ message: 'Response' })
 
       renderWithProvider(
         <WorkflowChat workflowId="workflow-1" storage={mockStorage} />

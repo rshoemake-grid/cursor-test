@@ -4,6 +4,7 @@ import com.workflow.dto.WorkflowShareCreate;
 import com.workflow.dto.WorkflowShareResponse;
 import com.workflow.entity.WorkflowShare;
 import com.workflow.repository.UserRepository;
+import com.workflow.util.ValidationUtils;
 import com.workflow.repository.WorkflowShareRepository;
 import com.workflow.util.ErrorMessages;
 import com.workflow.util.RepositoryUtils;
@@ -35,6 +36,8 @@ public class WorkflowShareService {
 
     @Transactional
     public WorkflowShareResponse shareWorkflow(WorkflowShareCreate create, String userId) {
+        ValidationUtils.requireNonEmpty(create.getWorkflowId(), "workflowId");
+        ValidationUtils.requireNonEmpty(create.getSharedWithUsername(), "sharedWithUsername");
         var workflow = ownershipService.getWorkflowAndAssertOwner(create.getWorkflowId(), userId);
         var sharedWith = RepositoryUtils.orElseThrow(userRepository.findByUsername(create.getSharedWithUsername()), ErrorMessages.USER_NOT_FOUND);
 

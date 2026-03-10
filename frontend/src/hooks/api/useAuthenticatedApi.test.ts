@@ -2049,7 +2049,7 @@ describe('useAuthenticatedApi', () => {
 
         await expect(
           result.current.authenticatedPost('/test', { data: 'test' })
-        ).rejects.toThrow('Request failed')
+        ).rejects.toThrow('string error')
       })
 
       it('should handle when error is not an Error instance in GET', async () => {
@@ -2064,7 +2064,7 @@ describe('useAuthenticatedApi', () => {
 
         await expect(
           result.current.authenticatedGet('/test')
-        ).rejects.toThrow('Request failed')
+        ).rejects.toThrow('object error')
       })
 
       it('should handle when error is not an Error instance in PUT', async () => {

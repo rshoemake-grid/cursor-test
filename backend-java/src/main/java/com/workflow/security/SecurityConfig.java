@@ -70,6 +70,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/executions/**", "/api/workflows/*/executions", "/api/users/*/executions").authenticated()
                 .requestMatchers("/api/marketplace/discover", "/api/marketplace/trending", "/api/marketplace/stats").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/marketplace/agents").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/templates/*/use").authenticated()
                 .requestMatchers("/api/templates", "/api/templates/categories", "/api/templates/difficulties", "/api/templates/*").permitAll()
                 // S-C3: Debug endpoints require authentication
                 .requestMatchers("/api/debug/**").authenticated()

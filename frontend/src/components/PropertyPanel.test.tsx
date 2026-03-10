@@ -576,7 +576,7 @@ describe('PropertyPanel', () => {
     fireEvent.click(saveButton)
 
     await waitForWithTimeout(() => {
-      expect(mockShowError).toHaveBeenCalledWith(expect.stringContaining('Unknown error'))
+      expect(mockShowError).toHaveBeenCalledWith(expect.stringContaining('String error'))
     })
   })
 
@@ -1124,7 +1124,7 @@ describe('PropertyPanel', () => {
       if (saveButton) {
         fireEvent.click(saveButton)
         await waitForWithTimeout(() => {
-          expect(mockShowError).toHaveBeenCalledWith('Failed to save workflow: Unknown error')
+          expect(mockShowError).toHaveBeenCalledWith('Failed to save workflow: String error')
         })
       }
     })
@@ -2762,7 +2762,7 @@ describe('PropertyPanel', () => {
       if (saveButton) {
         fireEvent.click(saveButton)
         await waitForWithTimeout(() => {
-          expect(mockShowError).toHaveBeenCalledWith('Failed to save workflow: Unknown error')
+          expect(mockShowError).toHaveBeenCalledWith('Failed to save workflow: String error')
         })
       }
     })

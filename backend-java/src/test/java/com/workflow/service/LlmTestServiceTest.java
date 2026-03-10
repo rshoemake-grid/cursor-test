@@ -1,5 +1,6 @@
 package com.workflow.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.workflow.config.LlmProviderConfig;
 import org.junit.jupiter.api.Test;
 
@@ -11,7 +12,7 @@ class LlmTestServiceTest {
 
     private static final LlmProviderConfig.LlmProviderUrls DEFAULT_URLS = new LlmProviderConfig.LlmProviderUrls();
 
-    private final LlmTestService service = new LlmTestService(DEFAULT_URLS);
+    private final LlmTestService service = new LlmTestService(DEFAULT_URLS, new ObjectMapper());
 
     @Test
     void testAnthropic_makesRealRequest() {

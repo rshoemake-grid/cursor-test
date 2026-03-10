@@ -730,8 +730,8 @@ describe('WebSocketConnectionManager - Timeout Guards', () => {
 
       manager.connect(callbacks)
 
-      // Verify non-Error error handling (error instanceof Error === false)
-      expect(callbacks.onError).toHaveBeenCalledWith('Failed to create WebSocket connection')
+      // extractApiErrorMessage returns string when error is a string
+      expect(callbacks.onError).toHaveBeenCalledWith('String error')
       expect(callbacks.onStatus).toHaveBeenCalledWith('error')
     })
   })

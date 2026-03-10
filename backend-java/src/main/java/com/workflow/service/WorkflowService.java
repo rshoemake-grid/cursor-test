@@ -65,8 +65,10 @@ public class WorkflowService {
      * Create a new workflow
      */
     public WorkflowResponse createWorkflow(WorkflowCreate workflowCreate, String userId) {
-        validateWorkflowCreate(workflowCreate);
-        
+        ValidationUtils.requireNonNull(workflowCreate, "Workflow data");
+        ValidationUtils.requireNonEmpty(workflowCreate.getName(), "Workflow name");
+        ValidationUtils.requireNonNull(workflowCreate.getNodes(), "Workflow nodes");
+        ValidationUtils.requireNonNull(workflowCreate.getEdges(), "Workflow edges");
         log.info("Creating workflow: {} for user: {}", workflowCreate.getName(), userId);
 
         Workflow workflow = WorkflowFactory.create(userId, workflowCreate.getName(), workflowCreate.getDescription(),
@@ -115,8 +117,10 @@ public class WorkflowService {
      * Update workflow. S-C1: Requires ownership.
      */
     public WorkflowResponse updateWorkflow(String id, WorkflowCreate workflowCreate, String userId) {
-        validateWorkflowCreate(workflowCreate);
-
+        ValidationUtils.requireNonNull(workflowCreate, "Workflow data");
+        ValidationUtils.requireNonEmpty(workflowCreate.getName(), "Workflow name");
+        ValidationUtils.requireNonNull(workflowCreate.getNodes(), "Workflow nodes");
+        ValidationUtils.requireNonNull(workflowCreate.getEdges(), "Workflow edges");
         log.info("Updating workflow: {} by user: {}", id, userId);
 
         Workflow workflow = ownershipService.getWorkflowAndAssertOwner(id, userId);
@@ -184,15 +188,5 @@ public class WorkflowService {
             }
         }
         return new BulkDeleteResult(deleted, failed).toMap();
-    }
-
-    /**
-     * Validate WorkflowCreate DTO
-     */
-    private void validateWorkflowCreate(WorkflowCreate workflowCreate) {
-        ValidationUtils.requireNonNull(workflowCreate, "Workflow data");
-        ValidationUtils.requireNonEmpty(workflowCreate.getName(), "Workflow name");
-        ValidationUtils.requireNonNull(workflowCreate.getNodes(), "Workflow nodes");
-        ValidationUtils.requireNonNull(workflowCreate.getEdges(), "Workflow edges");
     }
 }

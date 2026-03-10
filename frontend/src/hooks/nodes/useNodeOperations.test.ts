@@ -461,8 +461,7 @@ describe('useNodeOperations', () => {
       expect(mockSetSaveStatus).toHaveBeenCalledWith('idle')
     })
 
-    it('should handle non-Error rejection (error instanceof Error false branch)', async () => {
-      // Test line 112: error instanceof Error ? error.message : 'Unknown error'
+    it('should handle non-Error rejection (extractApiErrorMessage returns string when error is string)', async () => {
       const mockOnSaveWorkflow = jest.fn().mockRejectedValue('String error')
       const mockSetSaveStatus = jest.fn()
 
@@ -479,12 +478,11 @@ describe('useNodeOperations', () => {
       })
 
       expect(mockLoggerError).toHaveBeenCalled()
-      expect(mockShowError).toHaveBeenCalledWith('Failed to save workflow: Unknown error')
+      expect(mockShowError).toHaveBeenCalledWith('Failed to save workflow: String error')
       expect(mockSetSaveStatus).toHaveBeenCalledWith('idle')
     })
 
-    it('should handle save error with non-Error object (line 112 branch coverage)', async () => {
-      // Test the branch where error is not an Error instance
+    it('should handle save error with non-Error object (extractApiErrorMessage returns string)', async () => {
       const mockOnSaveWorkflow = jest.fn().mockRejectedValue('String error')
       const mockSetSaveStatus = jest.fn()
 
@@ -501,7 +499,7 @@ describe('useNodeOperations', () => {
       })
 
       expect(mockLoggerError).toHaveBeenCalled()
-      expect(mockShowError).toHaveBeenCalledWith('Failed to save workflow: Unknown error')
+      expect(mockShowError).toHaveBeenCalledWith('Failed to save workflow: String error')
       expect(mockSetSaveStatus).toHaveBeenCalledWith('idle')
     })
 

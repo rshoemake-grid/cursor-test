@@ -6,6 +6,7 @@
 import { useState, useEffect } from 'react'
 import { api } from '../../api/client'
 import { logger } from '../../utils/logger'
+import { STORAGE_KEYS } from '../../config/constants'
 import type { StorageAdapter } from '../../types/adapters'
 import {
   isValidProvidersArray,
@@ -79,7 +80,7 @@ function loadFromStorage(storage: StorageAdapter | null): LLMSettings | null {
   }
 
   try {
-    const saved = storage.getItem('llm_settings')
+    const saved = storage.getItem(STORAGE_KEYS.LLM_SETTINGS)
     if (saved) {
       const parsed = JSON.parse(saved)
       return {
@@ -148,7 +149,7 @@ export function useLLMProviders({
             // Save to storage for offline access
             if (storage) {
               try {
-                storage.setItem('llm_settings', JSON.stringify({
+                storage.setItem(STORAGE_KEYS.LLM_SETTINGS, JSON.stringify({
                   providers: logicalOrToEmptyArray(data.providers),
                   iteration_limit: data.iteration_limit,
                   default_model: logicalOr(data.default_model, '')

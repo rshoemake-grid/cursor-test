@@ -3,6 +3,7 @@ import React, { createContext, useContext, useState, useEffect, useRef, useMemo,
 import { getLocalStorageItem } from '../hooks/storage'
 import { showSuccess } from '../utils/notifications'
 import type { StorageAdapter } from '../types/adapters'
+import { STORAGE_KEYS } from '../config/constants'
 
 export interface Execution {
   id: string
@@ -22,8 +23,6 @@ export interface WorkflowTabData {
   activeExecutionId: string | null
 }
 
-const WORKFLOW_TABS_STORAGE_KEY = 'workflowTabs'
-const ACTIVE_TAB_STORAGE_KEY = 'activeWorkflowTabId'
 
 const emptyTabState: WorkflowTabData = {
   id: 'workflow-1',
@@ -62,7 +61,7 @@ export function WorkflowTabsProvider({
     if (initialTabs) {
       return initialTabs
     }
-    const stored = getLocalStorageItem<WorkflowTabData[]>(WORKFLOW_TABS_STORAGE_KEY, [])
+    const stored = getLocalStorageItem<WorkflowTabData[]>(STORAGE_KEYS.WORKFLOW_TABS, [])
     return Array.isArray(stored) && stored.length > 0 ? stored : [emptyTabState]
   })
   
@@ -71,7 +70,7 @@ export function WorkflowTabsProvider({
     if (initialActiveTabId !== undefined) {
       return initialActiveTabId || tabs[0]?.id || 'workflow-1'
     }
-    const saved = getLocalStorageItem<string | null>(ACTIVE_TAB_STORAGE_KEY, null)
+    const saved = getLocalStorageItem<string | null>(STORAGE_KEYS.ACTIVE_TAB, null)
     return (saved && tabs.some(tab => tab.id === saved)) ? saved : (tabs[0]?.id || 'workflow-1')
   })
 
@@ -82,13 +81,13 @@ export function WorkflowTabsProvider({
   useEffect(() => {
     if (storage) {
       try {
-        storage.setItem(WORKFLOW_TABS_STORAGE_KEY, JSON.stringify(tabs))
+        storage.setItem(STORAGE_KEYS.WORKFLOW_TABS, JSON.stringify(tabs))
       } catch {
         // ignore quota errors
       }
     } else if (typeof window !== 'undefined') {
       try {
-        window.localStorage.setItem(WORKFLOW_TABS_STORAGE_KEY, JSON.stringify(tabs))
+        window.localStorage.setItem(STORAGE_KEYS.WORKFLOW_TABS, JSON.stringify(tabs))
       } catch {
         // ignore quota errors
       }
@@ -100,13 +99,13 @@ export function WorkflowTabsProvider({
     if (activeTabId) {
       if (storage) {
         try {
-          storage.setItem(ACTIVE_TAB_STORAGE_KEY, activeTabId)
+          storage.setItem(STORAGE_KEYS.ACTIVE_TAB, activeTabId)
         } catch {
           // ignore quota errors
         }
       } else if (typeof window !== 'undefined') {
         try {
-          window.localStorage.setItem(ACTIVE_TAB_STORAGE_KEY, activeTabId)
+          window.localStorage.setItem(STORAGE_KEYS.ACTIVE_TAB, activeTabId)
         } catch {
           // ignore quota errors
         }
@@ -114,13 +113,13 @@ export function WorkflowTabsProvider({
     } else {
       if (storage) {
         try {
-          storage.removeItem(ACTIVE_TAB_STORAGE_KEY)
+          storage.removeItem(STORAGE_KEYS.ACTIVE_TAB)
         } catch {
           // ignore
         }
       } else if (typeof window !== 'undefined') {
         try {
-          window.localStorage.removeItem(ACTIVE_TAB_STORAGE_KEY)
+          window.localStorage.removeItem(STORAGE_KEYS.ACTIVE_TAB)
         } catch {
           // ignore
         }
@@ -132,7 +131,7 @@ export function WorkflowTabsProvider({
   const [storageToastShown, setStorageToastShown] = useState(false)
   const isInitialStoragePresent = useMemo(() => {
     if (initialTabs) return false
-    const stored = getLocalStorageItem<WorkflowTabData[]>(WORKFLOW_TABS_STORAGE_KEY, [])
+    const stored = getLocalStorageItem<WorkflowTabData[]>(STORAGE_KEYS.WORKFLOW_TABS, [])
     return Array.isArray(stored) && stored.length > 0
   }, [initialTabs])
 

@@ -5,6 +5,7 @@ import { useAuth } from '../contexts/AuthContext'
 import { api } from '../api/client'
 import { showSuccess, showError } from '../utils/notifications'
 import type { StorageAdapter, HttpClient } from '../types/adapters'
+import { STORAGE_KEYS } from '../config/constants'
 
 // Helper to ensure all waitFor calls have timeouts
 const waitForWithTimeout = (callback: () => void | Promise<void>, timeout = 2000) => {
@@ -152,7 +153,7 @@ describe('MarketplaceDialog', () => {
     })
 
     // Verify agent was saved to localStorage
-    const savedAgents = localStorage.getItem('publishedAgents')
+    const savedAgents = localStorage.getItem(STORAGE_KEYS.PUBLISHED_AGENTS)
     expect(savedAgents).toBeDefined()
     if (savedAgents) {
       const agents = JSON.parse(savedAgents)
@@ -458,7 +459,7 @@ describe('MarketplaceDialog', () => {
     })
 
     // Tags should be filtered to empty array
-    const saved = localStorage.getItem('publishedAgents')
+    const saved = localStorage.getItem(STORAGE_KEYS.PUBLISHED_AGENTS)
     if (saved) {
       const agents = JSON.parse(saved)
       const lastAgent = agents[agents.length - 1]
@@ -492,7 +493,7 @@ describe('MarketplaceDialog', () => {
     })
 
     // Tags should be trimmed and saved to localStorage
-    const saved = localStorage.getItem('publishedAgents')
+    const saved = localStorage.getItem(STORAGE_KEYS.PUBLISHED_AGENTS)
     if (saved) {
       const agents = JSON.parse(saved)
       const lastAgent = agents[agents.length - 1]
@@ -518,7 +519,7 @@ describe('MarketplaceDialog', () => {
     })
 
     // Should use empty object for agent_config
-    const saved = localStorage.getItem('publishedAgents')
+    const saved = localStorage.getItem(STORAGE_KEYS.PUBLISHED_AGENTS)
     if (saved) {
       const agents = JSON.parse(saved)
       const lastAgent = agents[agents.length - 1]
@@ -546,7 +547,7 @@ describe('MarketplaceDialog', () => {
     })
 
     // Should handle null author_name
-    const saved = localStorage.getItem('publishedAgents')
+    const saved = localStorage.getItem(STORAGE_KEYS.PUBLISHED_AGENTS)
     if (saved) {
       const agents = JSON.parse(saved)
       const lastAgent = agents[agents.length - 1]
@@ -577,7 +578,7 @@ describe('MarketplaceDialog', () => {
       fireEvent.click(publishButton)
 
       await waitForWithTimeout(() => {
-        expect(mockStorage.getItem).toHaveBeenCalledWith('publishedAgents')
+        expect(mockStorage.getItem).toHaveBeenCalledWith(STORAGE_KEYS.PUBLISHED_AGENTS)
         expect(mockStorage.setItem).toHaveBeenCalled()
       })
     })
@@ -745,7 +746,7 @@ describe('MarketplaceDialog', () => {
       })
 
       // Should use default '5 min' when empty
-      const saved = localStorage.getItem('publishedAgents')
+      const saved = localStorage.getItem(STORAGE_KEYS.PUBLISHED_AGENTS)
       if (saved) {
         const agents = JSON.parse(saved)
         const lastAgent = agents[agents.length - 1]

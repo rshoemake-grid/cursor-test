@@ -2,6 +2,7 @@ package com.workflow.util;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.workflow.dto.ExecutionLogEntry;
+import com.workflow.util.ErrorMessages;
 import com.workflow.util.ObjectUtils;
 import com.workflow.dto.ExecutionLogsResponse;
 
@@ -38,7 +39,7 @@ public class ExecutionLogsFormatter {
             result.put("total", logsResponse.getTotal());
             return objectMapper.writeValueAsString(result);
         } catch (Exception ex) {
-            throw new RuntimeException("Failed to format logs as JSON", ex);
+            throw new IllegalStateException(ErrorMessages.FAILED_TO_FORMAT_LOGS_JSON, ex);
         }
     }
 

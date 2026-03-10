@@ -1,6 +1,8 @@
 package com.workflow.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.workflow.config.LlmProviderConfig;
+import com.workflow.util.ErrorMessages;
 import com.workflow.util.LlmConfigUtils;
 import com.workflow.util.ObjectUtils;
 import com.workflow.util.LlmErrorResponseBuilder;
@@ -9,9 +11,12 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.net.URI;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -24,14 +29,16 @@ public class LlmTestService {
 
     private final LlmProviderConfig.LlmProviderUrls providerUrls;
     private final Map<String, ProviderTester> providerRegistry;
+    private final ObjectMapper objectMapper;
 
     @FunctionalInterface
     private interface ProviderTester {
         Map<String, String> test(String apiKey, String baseUrl, String model);
     }
 
-    public LlmTestService(LlmProviderConfig.LlmProviderUrls providerUrls) {
+    public LlmTestService(LlmProviderConfig.LlmProviderUrls providerUrls, ObjectMapper objectMapper) {
         this.providerUrls = providerUrls;
+        this.objectMapper = objectMapper;
         providerRegistry = Map.of(
                 "openai", this::testOpenAi,
                 "anthropic", this::testAnthropic,
@@ -46,7 +53,7 @@ public class LlmTestService {
     public Map<String, String> testProvider(String type, String apiKey, String baseUrl, String model) {
         var tester = providerRegistry.get(ObjectUtils.orDefaultIfBlank(type, "").toLowerCase());
         if (tester == null) {
-            return LlmErrorResponseBuilder.error("Unknown provider type: " + type);
+            return LlmErrorResponseBuilder.error(ErrorMessages.unknownProviderType(type));
         }
         return tester.test(apiKey, baseUrl, model);
     }
@@ -67,14 +74,16 @@ public class LlmTestService {
 
     public Map<String, String> testGemini(String apiKey, String baseUrl, String model) {
         String bUrl = LlmConfigUtils.normalizeBaseUrl(baseUrl, providerUrls.getGemini());
-        String url = bUrl + "/models/" + model + ":generateContent?key=" + apiKey;
+        String encodedModel = URLEncoder.encode(model != null ? model : "", StandardCharsets.UTF_8);
+        String encodedKey = URLEncoder.encode(apiKey != null ? apiKey : "", StandardCharsets.UTF_8);
+        String url = bUrl + "/models/" + encodedModel + ":generateContent?key=" + encodedKey;
         return httpPost(url, Map.of("Content-Type", "application/json"),
                 buildGeminiPayload(5));
     }
 
     public Map<String, String> testCustom(String apiKey, String baseUrl, String model) {
         if (baseUrl == null || baseUrl.isBlank()) {
-            return LlmErrorResponseBuilder.error("base_url is required for custom providers");
+            return LlmErrorResponseBuilder.error(ErrorMessages.BASE_URL_REQUIRED_CUSTOM);
         }
         String url = LlmConfigUtils.buildChatCompletionsUrl(baseUrl);
         return testOpenAiCompatible(url, apiKey, model);
@@ -87,12 +96,31 @@ public class LlmTestService {
         ), buildOpenAiCompatiblePayload(model, 5));
     }
 
-    private static String buildOpenAiCompatiblePayload(String model, int maxTokens) {
-        return "{\"model\":\"" + model + "\",\"messages\":[{\"role\":\"user\",\"content\":\"Hello\"}],\"max_tokens\":" + maxTokens + "}";
+    private String buildOpenAiCompatiblePayload(String model, int maxTokens) {
+        try {
+            Map<String, Object> payload = Map.of(
+                    "model", ObjectUtils.orDefaultIfBlank(model, ""),
+                    "messages", List.of(Map.of("role", "user", "content", "Hello")),
+                    "max_tokens", maxTokens
+            );
+            return objectMapper.writeValueAsString(payload);
+        } catch (Exception e) {
+            log.warn("Failed to build OpenAI payload: {}", e.getMessage());
+            throw new IllegalStateException(ErrorMessages.UNEXPECTED_ERROR);
+        }
     }
 
-    private static String buildGeminiPayload(int maxOutputTokens) {
-        return "{\"contents\":[{\"parts\":[{\"text\":\"Hello\"}]}],\"generationConfig\":{\"maxOutputTokens\":" + maxOutputTokens + "}}";
+    private String buildGeminiPayload(int maxOutputTokens) {
+        try {
+            Map<String, Object> payload = Map.of(
+                    "contents", List.of(Map.of("parts", List.of(Map.of("text", "Hello")))),
+                    "generationConfig", Map.of("maxOutputTokens", maxOutputTokens)
+            );
+            return objectMapper.writeValueAsString(payload);
+        } catch (Exception e) {
+            log.warn("Failed to build Gemini payload: {}", e.getMessage());
+            throw new IllegalStateException(ErrorMessages.UNEXPECTED_ERROR);
+        }
     }
 
     /**
@@ -109,15 +137,13 @@ public class LlmTestService {
             var request = builder.build();
             var response = HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
             if (response.statusCode() == 200) {
-                return Map.of("status", "success", "message", "Connected successfully!");
+                return Map.of("status", "success", "message", ErrorMessages.CONNECTED_SUCCESSFULLY);
             }
-            String errBody = response.body();
-            String errMsg = errBody != null && !errBody.isEmpty()
-                    ? errBody.substring(0, Math.min(200, errBody.length()))
-                    : "";
-            return LlmErrorResponseBuilder.error("API error " + response.statusCode() + ": " + errMsg);
+            log.warn("LLM test API error {}: {}", response.statusCode(), response.body());
+            return LlmErrorResponseBuilder.error(ErrorMessages.llmApiError(response.statusCode()));
         } catch (Exception e) {
-            return LlmErrorResponseBuilder.error("Error: " + java.util.Objects.requireNonNullElse(e.getMessage(), "Unknown error"));
+            log.warn("LLM test HTTP request failed: {}", e.getMessage());
+            return LlmErrorResponseBuilder.error(ErrorMessages.UNEXPECTED_ERROR);
         }
     }
 }

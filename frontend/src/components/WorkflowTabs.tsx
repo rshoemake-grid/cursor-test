@@ -5,6 +5,8 @@ import { useWorkflowTabs, type WorkflowTabData } from '../contexts/WorkflowTabsC
 import WorkflowBuilder, { WorkflowBuilderHandle } from './WorkflowBuilder'
 import { api } from '../api/client'
 import { showError } from '../utils/notifications'
+import { extractApiErrorMessage } from '../hooks/utils/apiUtils'
+import { API_CONFIG } from '../config/constants'
 import type { StorageAdapter, HttpClient } from '../types/adapters'
 import { defaultAdapters } from '../types/adapters'
 // Domain-based imports - Phase 7
@@ -35,7 +37,7 @@ export default function WorkflowTabs({
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   storage: _storage = defaultAdapters.createLocalStorageAdapter(),
   httpClient = defaultAdapters.createHttpClient(),
-  apiBaseUrl = 'http://localhost:8000/api'
+  apiBaseUrl = API_CONFIG.BASE_URL
 }: WorkflowTabsProps) {
   // Use context for tabs state management (replaces module-level globalTabs)
   const { tabs, setTabs, activeTabId, setActiveTabId, processedKeys } = useWorkflowTabs()
@@ -135,7 +137,7 @@ export default function WorkflowTabs({
           })
         }
       } catch (error: any) {
-        const detail = error?.response?.data?.detail ?? error?.message ?? 'Unknown error'
+        const detail = extractApiErrorMessage(error, 'Unknown error')
         showError(`Failed to rename workflow: ${detail}`)
         setTabs(prev => prev.map(t => t.id === tabId ? { ...t, name: previousName } : t))
         throw error // Re-throw so hook can handle it

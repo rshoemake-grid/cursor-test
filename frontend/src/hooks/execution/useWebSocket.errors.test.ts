@@ -432,8 +432,8 @@ describe('useWebSocket - errors', () => {
 
       await advanceTimersByTime(100)
 
-      // Should use fallback message when error is not instanceof Error
-      expect(onError).toHaveBeenCalledWith('Failed to create WebSocket connection')
+      // extractApiErrorMessage returns string when error is a string
+      expect(onError).toHaveBeenCalledWith('String error')
       expect(logger.error).toHaveBeenCalled()
     })
   })

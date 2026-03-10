@@ -7,6 +7,7 @@ import com.workflow.util.ErrorMessages;
 import com.workflow.util.ObjectUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
@@ -46,7 +47,7 @@ public class WorkflowExecutor {
         variables.putAll(ObjectUtils.orEmptyMap(inputs));
         state.getVariables().putAll(variables);
 
-        state.addLog(ExecutionLogConstants.LOG_LEVEL_INFO, null, "Workflow execution started");
+        state.addLog(ExecutionLogConstants.LOG_LEVEL_INFO, null, ExecutionLogConstants.WORKFLOW_EXECUTION_STARTED);
 
         try {
             if (nodes.isEmpty()) {
@@ -115,7 +116,7 @@ public class WorkflowExecutor {
                 state.setResult(states.get(states.size() - 1).getOutput());
             }
             state.setCompletedAt(LocalDateTime.now());
-            state.addLog(ExecutionLogConstants.LOG_LEVEL_INFO, null, "Workflow execution completed");
+            state.addLog(ExecutionLogConstants.LOG_LEVEL_INFO, null, ExecutionLogConstants.WORKFLOW_EXECUTION_COMPLETED);
 
         } catch (Exception e) {
             handleWorkflowFailure(state, e);
@@ -125,14 +126,16 @@ public class WorkflowExecutor {
     }
 
     private void handleNodeFailure(ExecutionState state, NodeState nodeState, String nodeId, Exception e) {
+        log.warn("Node {} failed: {}", nodeId, e.getMessage());
         nodeState.setStatus(ExecutionStatus.FAILED.getValue());
-        nodeState.setError(e.getMessage());
+        nodeState.setError(ErrorMessages.EXECUTION_FAILED);
         nodeState.setCompletedAt(LocalDateTime.now());
-        markFailed(state, nodeId, ExecutionLogConstants.nodeFailed(e.getMessage()));
+        markFailed(state, nodeId, ErrorMessages.EXECUTION_FAILED);
     }
 
     private void handleWorkflowFailure(ExecutionState state, Exception e) {
-        markFailed(state, null, ExecutionLogConstants.workflowExecutionFailed(e.getMessage()));
+        log.warn("Workflow execution failed: {}", e.getMessage());
+        markFailed(state, null, ErrorMessages.EXECUTION_FAILED);
     }
 
     private void markFailed(ExecutionState state, String nodeId, String message) {

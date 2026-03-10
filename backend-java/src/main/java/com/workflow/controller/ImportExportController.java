@@ -3,6 +3,8 @@ package com.workflow.controller;
 import com.workflow.dto.WorkflowResponseV2;
 import com.workflow.service.ImportExportService;
 import com.workflow.util.AuthenticationHelper;
+import com.workflow.util.ContentDispositionUtils;
+import com.workflow.util.ErrorMessages;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.HttpHeaders;
@@ -33,40 +35,40 @@ public class ImportExportController {
 
     @GetMapping("/export/{workflowId}")
     @Operation(summary = "Export Workflow")
-    public ResponseEntity<Map<String, Object>> exportWorkflow(@PathVariable String workflowId, Authentication auth) {
-        String userId = authenticationHelper.extractUserIdNullable(auth);
-        String exportedBy = authenticationHelper.extractUsernameNullable(auth);
+    public ResponseEntity<Map<String, Object>> exportWorkflow(@PathVariable String workflowId, Authentication authentication) {
+        String userId = authenticationHelper.extractUserIdRequired(authentication);
+        String exportedBy = authenticationHelper.exportedByOrDefault(authentication, userId);
         var result = importExportService.exportWorkflowWithAuth(workflowId, userId, exportedBy);
         return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + result.filename())
+                .header(HttpHeaders.CONTENT_DISPOSITION, ContentDispositionUtils.attachmentFilename(result.filename()))
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(result.data());
     }
 
     @PostMapping("/import")
     @Operation(summary = "Import Workflow from JSON")
-    public ResponseEntity<WorkflowResponseV2> importWorkflow(@RequestBody Map<String, Object> body, Authentication auth) {
-        String userId = authenticationHelper.extractUserIdNullable(auth);
+    public ResponseEntity<WorkflowResponseV2> importWorkflow(@RequestBody Map<String, Object> body, Authentication authentication) {
+        String userId = authenticationHelper.extractUserIdRequired(authentication);
         WorkflowResponseV2 result = importExportService.importWorkflow(body, userId);
         return ResponseEntity.status(201).body(result);
     }
 
     @PostMapping(value = "/import/file", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @Operation(summary = "Import Workflow from File")
-    public ResponseEntity<WorkflowResponseV2> importFile(@RequestParam("file") MultipartFile file, Authentication auth) throws Exception {
-        String userId = authenticationHelper.extractUserIdNullable(auth);
+    public ResponseEntity<WorkflowResponseV2> importFile(@RequestParam("file") MultipartFile file, Authentication authentication) throws Exception {
+        String userId = authenticationHelper.extractUserIdRequired(authentication);
         WorkflowResponseV2 result = importExportService.importFromFile(file, userId);
         return ResponseEntity.status(201).body(result);
     }
 
     @GetMapping("/export-all")
     @Operation(summary = "Export All Workflows")
-    public ResponseEntity<Map<String, Object>> exportAll(Authentication auth) {
-        String userId = authenticationHelper.extractUserIdRequired(auth);
-        String exportedBy = authenticationHelper.extractUsername(auth);
+    public ResponseEntity<Map<String, Object>> exportAll(Authentication authentication) {
+        String userId = authenticationHelper.extractUserIdRequired(authentication);
+        String exportedBy = authenticationHelper.exportedByOrDefault(authentication, userId);
         Map<String, Object> result = importExportService.exportAll(userId, exportedBy);
         return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=workflows.json")
+                .header(HttpHeaders.CONTENT_DISPOSITION, ContentDispositionUtils.attachmentFilename(ErrorMessages.EXPORT_ALL_FILENAME))
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(result);
     }

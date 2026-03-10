@@ -5,6 +5,7 @@ import { STORAGE_KEYS } from '../config/constants'
 import type { StorageAdapter } from '../types/adapters'
 import { defaultAdapters } from '../types/adapters'
 import { showSuccess, showError } from '../utils/notifications'
+import { extractApiErrorMessage } from '../hooks/utils/apiUtils'
 
 const workflowNodeTemplates = [
   { type: 'start', label: 'Start', icon: Play, color: 'text-primary-600', description: 'Workflow entry point' },
@@ -65,45 +66,29 @@ export default function NodePanel({
     loggerRef.current = injectedLogger
   }, [storage, injectedLogger])
 
+  const loadNodesFromStorage = useCallback((
+    key: string,
+    setter: (data: any[]) => void,
+    logLabel: string
+  ) => {
+    const currentStorage = storageRef.current
+    if (!currentStorage) return
+    try {
+      const saved = currentStorage.getItem(key)
+      if (saved) {
+        const parsed = JSON.parse(saved)
+        if (Array.isArray(parsed)) {
+          setter(parsed)
+        }
+      }
+    } catch (error) {
+      loggerRef.current.error(`Failed to load ${logLabel}:`, error)
+    }
+  }, [])
+
   useEffect(() => {
-    // Load custom agent nodes from storage
-    const loadAgentNodes = () => {
-      const currentStorage = storageRef.current
-      if (!currentStorage) return
-      
-      try {
-        const savedAgentNodes = currentStorage.getItem('customAgentNodes')
-        if (savedAgentNodes) {
-          const parsed = JSON.parse(savedAgentNodes)
-          if (Array.isArray(parsed)) {
-            setCustomAgentNodes(parsed)
-          }
-        }
-      } catch (error) {
-        loggerRef.current.error('Failed to load custom agent nodes:', error)
-      }
-    }
-
-    // Initial load
-    loadAgentNodes()
-
-    // Load custom tool nodes from storage
-    const loadToolNodes = () => {
-      const currentStorage = storageRef.current
-      if (!currentStorage) return
-      try {
-        const saved = currentStorage.getItem(STORAGE_KEYS.CUSTOM_TOOL_NODES)
-        if (saved) {
-          const parsed = JSON.parse(saved)
-          if (Array.isArray(parsed)) {
-            setCustomToolNodes(parsed)
-          }
-        }
-      } catch (error) {
-        loggerRef.current.error('Failed to load custom tool nodes:', error)
-      }
-    }
-    loadToolNodes()
+    loadNodesFromStorage(STORAGE_KEYS.CUSTOM_AGENT_NODES, setCustomAgentNodes, 'custom agent nodes')
+    loadNodesFromStorage(STORAGE_KEYS.CUSTOM_TOOL_NODES, setCustomToolNodes, 'custom tool nodes')
 
     // Listen for storage changes to update when agent nodes are added
     const handleStorageChange = (e: StorageEvent) => {
@@ -137,8 +122,8 @@ export default function NodePanel({
     
     // Also listen for custom event for same-window updates
     const handleCustomStorageChange = () => {
-      loadAgentNodes()
-      loadToolNodes()
+      loadNodesFromStorage(STORAGE_KEYS.CUSTOM_AGENT_NODES, setCustomAgentNodes, 'custom agent nodes')
+      loadNodesFromStorage(STORAGE_KEYS.CUSTOM_TOOL_NODES, setCustomToolNodes, 'custom tool nodes')
     }
 
     if (typeof window !== 'undefined') {
@@ -153,7 +138,7 @@ export default function NodePanel({
         window.removeEventListener('customToolNodesUpdated', handleCustomStorageChange)
       }
     }
-  }, []) // Only run once on mount
+  }, [loadNodesFromStorage]) // loadNodesFromStorage is stable (empty deps)
 
   const agentNodeTemplates = useMemo(() => {
     return [...defaultAgentNodeTemplates, ...customAgentNodes.map(node => ({
@@ -242,7 +227,7 @@ export default function NodePanel({
       showSuccess(`Tool "${toolTemplate.label}" imported. Drag from palette to add to canvas.`)
     } catch (err) {
       loggerRef.current.error('Failed to import tool config:', err)
-      showError(err instanceof Error ? err.message : 'Failed to import tool config')
+      showError(extractApiErrorMessage(err, 'Failed to import tool config'))
     }
   }, [])
 
@@ -296,7 +281,7 @@ export default function NodePanel({
       showSuccess(`Agent "${agentTemplate.label}" imported. Drag from palette to add to canvas.`)
     } catch (err) {
       loggerRef.current.error('Failed to import agent config:', err)
-      showError(err instanceof Error ? err.message : 'Failed to import agent config')
+      showError(extractApiErrorMessage(err, 'Failed to import agent config'))
     }
   }, [])
 

@@ -465,7 +465,7 @@ describe('AuthProvider', () => {
         act(async () => {
           await result.current.register('testuser', 'test@example.com', 'password')
         })
-      ).rejects.toThrow('Registration failed')
+      ).rejects.toThrow('Registration error')
     })
 
     it('should handle register error when login fails after registration', async () => {

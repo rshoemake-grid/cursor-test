@@ -114,12 +114,17 @@ export function extractApiErrorMessage(
     return error.response.data.message
   }
 
-  if (error instanceof Error) {
-    return error.message || defaultMessage
+  // Handle parsed JSON body (e.g. { detail: '...' } from fetch response.json())
+  if (error?.detail) {
+    return error.detail
   }
 
-  if (error?.message) {
+  if (error?.message && typeof error.message === 'string') {
     return error.message
+  }
+
+  if (error instanceof Error) {
+    return error.message || defaultMessage
   }
 
   return defaultMessage

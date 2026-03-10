@@ -230,7 +230,7 @@ describe('useWebSocket - edges.comprehensive.1', () => {
           call[0]?.includes('Connection error')
         )
         if (errorCall && errorCall[1]) {
-          expect(errorCall[1].message).toBe('Unknown WebSocket error')
+          expect(errorCall[1].message).toBe('Not an Error')
         }
       }
     })
@@ -1194,7 +1194,7 @@ describe('useWebSocket - edges.comprehensive.1', () => {
           call[0]?.includes('Connection error')
         )
         if (errorCall2 && errorCall2[1]) {
-          expect(errorCall2[1].message).toBe('Unknown WebSocket error')
+          expect(errorCall2[1].message).toBe('Not an Error')
         }
       }
     })

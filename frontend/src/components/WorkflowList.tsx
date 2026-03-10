@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { api } from '../api/client'
+import { extractApiErrorMessage } from '../hooks/utils/apiUtils'
 import type { WorkflowDefinition } from '../types/workflow'
 import { Play, Trash2, Calendar, CheckSquare, Square, ArrowLeft, Copy, Upload, X } from 'lucide-react'
 import { showError, showSuccess, showWarning } from '../utils/notifications'
@@ -7,6 +8,7 @@ import { showConfirm } from '../utils/confirm'
 import { useAuth } from '../contexts/AuthContext'
 import { useNavigate } from 'react-router-dom'
 import { TEMPLATE_CATEGORIES, TEMPLATE_DIFFICULTIES, formatCategory, formatDifficulty } from '../config/templateConstants'
+import { getDefaultPublishForm, parseTags } from '../utils/publishFormUtils'
 
 interface WorkflowListProps {
   onSelectWorkflow: (id: string) => void
@@ -21,12 +23,7 @@ export default function WorkflowList({ onSelectWorkflow, onBack }: WorkflowListP
   const navigate = useNavigate()
   const [showPublishModal, setShowPublishModal] = useState(false)
   const [publishingWorkflowId, setPublishingWorkflowId] = useState<string | null>(null)
-  const [publishForm, setPublishForm] = useState({
-    category: 'automation',
-    tags: '',
-    difficulty: 'beginner',
-    estimated_time: ''
-  })
+  const [publishForm, setPublishForm] = useState(getDefaultPublishForm())
   const [isPublishing, setIsPublishing] = useState(false)
 
   // Wait for authentication to be ready before loading workflows
@@ -64,7 +61,7 @@ export default function WorkflowList({ onSelectWorkflow, onBack }: WorkflowListP
         showError('Authentication required. Please log in again.')
         // Don't show generic error message for 401
       } else {
-        showError('Failed to load workflows: ' + error.message)
+        showError('Failed to load workflows: ' + extractApiErrorMessage(error, 'Unknown error'))
       }
     } finally {
       setLoading(false)
@@ -88,7 +85,7 @@ export default function WorkflowList({ onSelectWorkflow, onBack }: WorkflowListP
       })
       showSuccess('Workflow deleted successfully')
     } catch (error: any) {
-      showError('Failed to delete workflow: ' + error.message)
+      showError('Failed to delete workflow: ' + extractApiErrorMessage(error, 'Unknown error'))
     }
   }
 
@@ -115,7 +112,7 @@ export default function WorkflowList({ onSelectWorkflow, onBack }: WorkflowListP
           const duplicated = await api.duplicateWorkflow(id)
           duplicatedNames.push(duplicated.name)
         } catch (error: any) {
-          showError(`Failed to duplicate workflow ${id}: ${error.message}`)
+          showError(`Failed to duplicate workflow ${id}: ${extractApiErrorMessage(error, 'Unknown error')}`)
         }
       }
       
@@ -127,7 +124,7 @@ export default function WorkflowList({ onSelectWorkflow, onBack }: WorkflowListP
         showSuccess(`Successfully duplicated ${duplicatedNames.length} workflow(s)`)
       }
     } catch (error: any) {
-      showError('Failed to duplicate workflows: ' + error.message)
+      showError('Failed to duplicate workflows: ' + extractApiErrorMessage(error, 'Unknown error'))
     }
   }
 
@@ -179,7 +176,7 @@ export default function WorkflowList({ onSelectWorkflow, onBack }: WorkflowListP
 
     setIsPublishing(true)
     try {
-      const tagsArray = publishForm.tags.split(',').map(tag => tag.trim()).filter(Boolean)
+      const tagsArray = parseTags(publishForm.tags)
       const published = await api.publishWorkflow(publishingWorkflowId, {
         category: publishForm.category,
         tags: tagsArray,
@@ -190,7 +187,7 @@ export default function WorkflowList({ onSelectWorkflow, onBack }: WorkflowListP
       setShowPublishModal(false)
       setPublishingWorkflowId(null)
     } catch (error: any) {
-      const detail = error?.response?.data?.detail ?? error?.message ?? 'Unknown error'
+      const detail = extractApiErrorMessage(error, 'Unknown error')
       showError(`Failed to publish workflow: ${detail}`)
     } finally {
       setIsPublishing(false)
@@ -224,7 +221,7 @@ export default function WorkflowList({ onSelectWorkflow, onBack }: WorkflowListP
         showSuccess(`Successfully deleted ${result.deleted_count} workflow(s)`)
       }
     } catch (error: any) {
-      showError('Failed to delete workflows: ' + error.message)
+      showError('Failed to delete workflows: ' + extractApiErrorMessage(error, 'Unknown error'))
     }
   }
 

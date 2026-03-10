@@ -6,12 +6,10 @@ import com.workflow.dto.ExecutionStatus;
 import com.workflow.entity.Execution;
 import com.workflow.engine.WorkflowExecutor;
 import com.workflow.constants.ExecutionLogConstants;
-import com.workflow.util.EnvironmentUtils;
 import com.workflow.util.ErrorMessages;
 import com.workflow.util.ObjectUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.core.env.Environment;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,20 +31,17 @@ public class ExecutionOrchestratorService {
     private final WorkflowService workflowService;
     private final SettingsService settingsService;
     private final WorkflowExecutor workflowExecutor;
-    private final Environment environment;
 
     public ExecutionOrchestratorService(ExecutionCreationService executionCreationService,
                                        ExecutionService executionService,
                                        WorkflowService workflowService,
                                        SettingsService settingsService,
-                                       WorkflowExecutor workflowExecutor,
-                                       Environment environment) {
+                                       WorkflowExecutor workflowExecutor) {
         this.executionCreationService = executionCreationService;
         this.executionService = executionService;
         this.workflowService = workflowService;
         this.settingsService = settingsService;
         this.workflowExecutor = workflowExecutor;
-        this.environment = environment;
     }
 
     @Transactional
@@ -85,10 +80,8 @@ public class ExecutionOrchestratorService {
             executionService.updateExecutionState(executionId, state);
         } catch (Exception e) {
             log.error("Background execution {} failed: {}", executionId, e.getMessage(), e);
-            String errorMessage = EnvironmentUtils.isProduction(environment) ? ErrorMessages.EXECUTION_FAILED
-                    : ObjectUtils.orDefault(e.getMessage(), ErrorMessages.EXECUTION_FAILED);
-            executionService.appendLogAndUpdateExecutionState(executionId, userId, ExecutionLogConstants.LOG_LEVEL_ERROR, null, errorMessage,
-                    ExecutionStatus.FAILED.getValue(), errorMessage);
+            executionService.appendLogAndUpdateExecutionState(executionId, userId, ExecutionLogConstants.LOG_LEVEL_ERROR, null, ErrorMessages.EXECUTION_FAILED,
+                    ExecutionStatus.FAILED.getValue(), ErrorMessages.EXECUTION_FAILED);
         }
     }
 

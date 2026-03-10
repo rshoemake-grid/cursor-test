@@ -1554,7 +1554,7 @@ describe('useWebSocket - edges.basic', () => {
       await advanceTimersByTime(100)
 
       expect(logger.error).toHaveBeenCalled()
-      expect(onError).toHaveBeenCalledWith('Failed to create WebSocket connection')
+      expect(onError).toHaveBeenCalledWith('String error')
 
       // Restore original WebSocket
       global.WebSocket = OriginalWS

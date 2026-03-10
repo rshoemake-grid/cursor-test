@@ -91,7 +91,7 @@ export function useAgentsData({
       })
 
       if (canSaveToStorage(storage, updated)) {
-        storage!.setItem('publishedAgents', JSON.stringify(agentsData))
+        storage!.setItem(STORAGE_KEYS.PUBLISHED_AGENTS, JSON.stringify(agentsData))
       }
     }
 

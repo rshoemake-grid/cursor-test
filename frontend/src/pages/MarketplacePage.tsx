@@ -22,6 +22,7 @@ import { MarketplaceTabContent } from '../components/marketplace/MarketplaceTabC
 import { getDifficultyColor } from '../utils/difficultyColors';
 import { useOfficialItems } from '../hooks/marketplace/useOfficialItems';
 import { DEFAULT_SORT } from '../constants/settingsConstants';
+import { API_CONFIG } from '../config/constants';
 import type { StorageAdapter, HttpClient } from '../types/adapters';
 import { defaultAdapters } from '../types/adapters';
 
@@ -35,7 +36,7 @@ interface MarketplacePageProps {
 export default function MarketplacePage({
   storage = defaultAdapters.createLocalStorageAdapter(),
   httpClient = defaultAdapters.createHttpClient(),
-  apiBaseUrl = 'http://localhost:8000/api'
+  apiBaseUrl = API_CONFIG.BASE_URL
 }: MarketplacePageProps = {}) {
   // Tab management (extracted hook)
   const tabs = useMarketplaceTabs();

@@ -1,6 +1,7 @@
 package com.workflow.security;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.workflow.util.ErrorMessages;
 import com.workflow.util.ErrorResponseBuilder;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -9,7 +10,6 @@ import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
-import java.util.Objects;
 
 /**
  * Returns Apigee-compatible 401 error format for unauthenticated requests.
@@ -27,7 +27,7 @@ public class ApigeeAuthenticationEntryPoint implements AuthenticationEntryPoint 
     @Override
     public void commence(HttpServletRequest request, HttpServletResponse response,
                          AuthenticationException authException) throws IOException {
-        String message = Objects.requireNonNullElse(authException.getMessage(), "Unauthorized");
+        String message = ErrorMessages.UNAUTHORIZED;
         ErrorResponseBuilder.writeToServletResponse(response, objectMapper, "401", message,
                 HttpServletResponse.SC_UNAUTHORIZED, request.getRequestURI());
     }

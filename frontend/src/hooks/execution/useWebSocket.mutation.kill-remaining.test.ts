@@ -80,9 +80,9 @@ describe('useWebSocket - Kill Remaining Mutants', () => {
 
       await advanceTimersByTime(100)
 
-      // When error is not Error instance, should use fallback
-      expect(onError).toHaveBeenCalledWith('Failed to create WebSocket connection')
-      expect(onError).not.toHaveBeenCalledWith('String error')
+      // extractApiErrorMessage returns string when error is a string
+      expect(onError).toHaveBeenCalledWith('String error')
+      expect(onError).not.toHaveBeenCalledWith('Failed to create WebSocket connection')
 
       global.WebSocket = OriginalWebSocket
     })
@@ -107,7 +107,7 @@ describe('useWebSocket - Kill Remaining Mutants', () => {
 
       await advanceTimersByTime(100)
 
-      // When error is null, instanceof Error is false, should use fallback
+      // When error is null, extractApiErrorMessage returns default
       expect(onError).toHaveBeenCalledWith('Failed to create WebSocket connection')
 
       global.WebSocket = OriginalWebSocket
@@ -134,9 +134,8 @@ describe('useWebSocket - Kill Remaining Mutants', () => {
 
       await advanceTimersByTime(100)
 
-      // When error is object but not Error instance, should use fallback
-      expect(onError).toHaveBeenCalledWith('Failed to create WebSocket connection')
-      expect(onError).not.toHaveBeenCalledWith('Custom error')
+      // extractApiErrorMessage extracts from object.message
+      expect(onError).toHaveBeenCalledWith('Custom error')
 
       global.WebSocket = OriginalWebSocket
     })
@@ -2347,7 +2346,7 @@ describe('useWebSocket - Kill Remaining Mutants', () => {
         await advanceTimersByTime(100)
 
         // Should use fallback when error is not Error instance
-        expect(onError).toHaveBeenCalledWith('Failed to create WebSocket connection')
+        expect(onError).toHaveBeenCalledWith('String error')
       })
     })
 

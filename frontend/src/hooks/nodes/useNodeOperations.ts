@@ -10,6 +10,7 @@ import { logger } from '../../utils/logger'
 import { UI_CONSTANTS } from '../../config/constants'
 import { confirmDelete } from '../utils/confirmations'
 import { logicalOr, logicalOrToEmptyObject, logicalOrToEmptyArray } from '../utils/logicalOr'
+import { extractApiErrorMessage } from '../utils/apiUtils'
 
 interface UseNodeOperationsOptions {
   selectedNode: any | null
@@ -109,7 +110,7 @@ export function useNodeOperations({
     } catch (error) {
       injectedLogger.error('Save failed:', error)
       setSaveStatus('idle')
-      showErrorNotification('Failed to save workflow: ' + (error instanceof Error ? error.message : 'Unknown error'))
+      showErrorNotification('Failed to save workflow: ' + extractApiErrorMessage(error, 'Unknown error'))
     }
   }, [selectedNode, onSave, onSaveWorkflow, showErrorNotification, injectedLogger])
 

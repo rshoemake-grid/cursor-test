@@ -47,8 +47,8 @@ public class DebugController {
 
     @GetMapping("/workflow/{workflowId}/validate")
     @Operation(summary = "Validate Workflow")
-    public ResponseEntity<Map<String, Object>> validate(@PathVariable String workflowId, Authentication auth) {
-        String userId = authenticationHelper.extractUserIdRequired(auth);
+    public ResponseEntity<Map<String, Object>> validate(@PathVariable String workflowId, Authentication authentication) {
+        String userId = authenticationHelper.extractUserIdRequired(authentication);
         workflowOwnershipService.getWorkflowAndAssertOwner(workflowId, userId);
         return ResponseEntity.ok(workflowValidationService.validate(workflowId));
     }
@@ -59,16 +59,16 @@ public class DebugController {
             @PathVariable String workflowId,
             @RequestParam(defaultValue = "10") int limit,
             @RequestParam(required = false) String status,
-            Authentication auth) {
-        String userId = authenticationHelper.extractUserIdRequired(auth);
+            Authentication authentication) {
+        String userId = authenticationHelper.extractUserIdRequired(authentication);
         workflowOwnershipService.getWorkflowAndAssertOwner(workflowId, userId);
         return ResponseEntity.ok(executionStatsService.getExecutionHistory(workflowId, limit, status));
     }
 
     @GetMapping("/execution/{executionId}/timeline")
     @Operation(summary = "Execution Timeline")
-    public ResponseEntity<Map<String, Object>> timeline(@PathVariable String executionId, Authentication auth) {
-        String userId = authenticationHelper.extractUserIdRequired(auth);
+    public ResponseEntity<Map<String, Object>> timeline(@PathVariable String executionId, Authentication authentication) {
+        String userId = authenticationHelper.extractUserIdRequired(authentication);
         executionService.requireExecutionOwner(executionId, userId);
         return ResponseEntity.ok(executionStatsService.getTimeline(executionId, userId));
     }
@@ -78,24 +78,24 @@ public class DebugController {
     public ResponseEntity<Map<String, Object>> nodeDetails(
             @PathVariable String executionId,
             @PathVariable String nodeId,
-            Authentication auth) {
-        String userId = authenticationHelper.extractUserIdRequired(auth);
+            Authentication authentication) {
+        String userId = authenticationHelper.extractUserIdRequired(authentication);
         executionService.requireExecutionOwner(executionId, userId);
         return ResponseEntity.ok(executionStatsService.getNodeDetails(executionId, nodeId, userId));
     }
 
     @GetMapping("/workflow/{workflowId}/stats")
     @Operation(summary = "Workflow Stats")
-    public ResponseEntity<Map<String, Object>> workflowStats(@PathVariable String workflowId, Authentication auth) {
-        String userId = authenticationHelper.extractUserIdRequired(auth);
+    public ResponseEntity<Map<String, Object>> workflowStats(@PathVariable String workflowId, Authentication authentication) {
+        String userId = authenticationHelper.extractUserIdRequired(authentication);
         workflowOwnershipService.getWorkflowAndAssertOwner(workflowId, userId);
         return ResponseEntity.ok(executionStatsService.getWorkflowStats(workflowId));
     }
 
     @PostMapping("/execution/{executionId}/export")
     @Operation(summary = "Export Execution")
-    public ResponseEntity<Map<String, Object>> exportExecution(@PathVariable String executionId, Authentication auth) {
-        String userId = authenticationHelper.extractUserIdRequired(auth);
+    public ResponseEntity<Map<String, Object>> exportExecution(@PathVariable String executionId, Authentication authentication) {
+        String userId = authenticationHelper.extractUserIdRequired(authentication);
         executionService.requireExecutionOwner(executionId, userId);
         return ResponseEntity.ok(executionExportService.exportExecution(executionId, userId));
     }

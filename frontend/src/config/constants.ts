@@ -43,6 +43,8 @@ export const STORAGE_KEYS = {
   LLM_SETTINGS: 'llm_settings',
   WORKFLOW_DRAFTS: 'workflowDrafts',
   AUTH_TOKEN: 'auth_token',
+  AUTH_USER: 'auth_user',
+  AUTH_REMEMBER_ME: 'auth_remember_me',
   SESSION_TOKEN: 'session_token',
   PUBLISHED_AGENTS: 'publishedAgents',
   REPOSITORY_AGENTS: 'repositoryAgents',

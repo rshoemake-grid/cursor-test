@@ -76,7 +76,7 @@ class GlobalExceptionHandlerTest {
         @SuppressWarnings("unchecked")
         Map<String, Object> error = (Map<String, Object>) response.getBody().get("error");
         assertEquals("500", error.get("code"));
-        assertEquals("Unexpected error", error.get("message"));
+        assertEquals("An unexpected error occurred", error.get("message"));
     }
 
     @Test

@@ -29,6 +29,7 @@ import { applyExecutionFilters } from '../utils/executionFilters'
 import { exportExecutionsToJSON, exportExecutionsToCSV } from '../utils/exportFormatters'
 import { api } from '../api/client'
 import { showConfirm } from '../utils/confirm'
+import { extractApiErrorMessage } from '../hooks/utils/apiUtils'
 
 export interface LogPageProps {
   apiClient?: {
@@ -60,7 +61,7 @@ export default function LogPage({ apiClient: injectedApiClient }: LogPageProps =
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false)
   const [advancedFilters, setAdvancedFilters] = useState<AdvancedFilterOptions>({})
 
-  const { data: executions = [], isLoading: loading, error } = useExecutionListQuery({
+  const { data: executions = [], isLoading: loading, error, refetch } = useExecutionListQuery({
     apiClient: injectedApiClient || api,
     refetchInterval: 5000,
     filters: filters.status
@@ -202,15 +203,24 @@ export default function LogPage({ apiClient: injectedApiClient }: LogPageProps =
     }
 
     try {
-      // Note: API doesn't have bulk delete endpoint yet, so we'll delete individually
-      // In a real implementation, you'd call a bulk delete endpoint
-      toast.info(`Deleting ${executionIds.length} execution(s)...`)
-      
-      // For now, just show a success message
-      // TODO: Implement actual bulk delete API call
-      toast.success(`Successfully deleted ${executionIds.length} execution(s)`)
+      toast.info(`Cancelling ${executionIds.length} execution(s)...`)
+      let succeeded = 0
+      let failed = 0
+      for (const id of executionIds) {
+        try {
+          await api.cancelExecution(id)
+          succeeded++
+        } catch (err: any) {
+          failed++
+          toast.error(`Failed to cancel ${id.slice(0, 8)}...: ${extractApiErrorMessage(err, 'Unknown error')}`)
+        }
+      }
+      if (succeeded > 0) {
+        toast.success(`Cancelled ${succeeded} execution(s)${failed > 0 ? ` (${failed} failed)` : ''}`)
+        refetch()
+      }
     } catch (error: any) {
-      toast.error(`Failed to delete executions: ${error?.message || 'Unknown error'}`)
+      toast.error(`Failed to cancel executions: ${extractApiErrorMessage(error, 'Unknown error')}`)
       throw error
     }
   }
@@ -251,7 +261,7 @@ export default function LogPage({ apiClient: injectedApiClient }: LogPageProps =
       <div className="h-full overflow-auto bg-gray-50 p-8">
         <div className="max-w-6xl mx-auto">
           <div className="flex items-center justify-center h-64">
-            <div className="text-red-500">Error: {error?.message || String(error)}</div>
+            <div className="text-red-500">Error: {extractApiErrorMessage(error, 'Unknown error')}</div>
           </div>
         </div>
       </div>

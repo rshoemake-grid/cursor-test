@@ -46,10 +46,16 @@ public class TemplateQueryService {
                                                         String sortBy, int limit, int offset) {
         int safeLimit = PaginationUtils.clampLimit(limit);
         int safeOffset = Math.max(0, offset);
-        var pageable = PageRequest.of(safeOffset / safeLimit, safeLimit, templateSortStrategy.getSort(sortBy));
+        int fetchSize = PaginationUtils.cappedFetchSize(safeOffset, safeLimit);
+        var pageable = PageRequest.of(0, fetchSize, templateSortStrategy.getSort(sortBy));
         List<WorkflowTemplate> templates = templateRepository.findWithFilters(category, difficulty, pageable);
+        // Search is applied in-memory after fetch. For large offsets, the filtered batch may be smaller than offset,
+        // yielding empty pages even when matches exist. For correct offset-based pagination with search, move
+        // SearchUtils.matchesSearch logic into the repository query (e.g. JPQL LIKE on name/description).
         return templates.stream()
                 .filter(t -> SearchUtils.matchesSearch(search, t.getName(), t.getDescription()))
+                .skip(safeOffset)
+                .limit(safeLimit)
                 .map(t -> TemplateMapper.toResponse(t, UserDisplayNameResolver.resolveFromOptional(userRepository.findById(t.getAuthorId()))))
                 .collect(Collectors.toList());
     }

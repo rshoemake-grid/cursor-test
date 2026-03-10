@@ -1,6 +1,7 @@
 package com.workflow.controller;
 
 import com.workflow.dto.WorkflowChatRequest;
+import jakarta.validation.Valid;
 import com.workflow.dto.WorkflowChatResponse;
 import com.workflow.service.WorkflowChatService;
 import com.workflow.util.AuthenticationHelper;
@@ -27,8 +28,8 @@ public class WorkflowChatController {
 
     @PostMapping("/chat")
     @Operation(summary = "Chat with Workflow")
-    public ResponseEntity<WorkflowChatResponse> chat(@RequestBody WorkflowChatRequest request, Authentication auth) {
-        String userId = authenticationHelper.extractUserIdNullable(auth);
+    public ResponseEntity<WorkflowChatResponse> chat(@Valid @RequestBody WorkflowChatRequest request, Authentication authentication) {
+        String userId = authenticationHelper.extractUserIdRequired(authentication);
         return ResponseEntity.ok(workflowChatService.chat(request, userId));
     }
 }

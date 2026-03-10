@@ -1,6 +1,8 @@
 package com.workflow.controller;
 
+import com.workflow.constants.ExecutionLogConstants;
 import com.workflow.dto.*;
+import com.workflow.util.ContentDispositionUtils;
 import com.workflow.exception.ForbiddenException;
 import com.workflow.service.ExecutionService;
 import com.workflow.service.ExecutionOrchestratorService;
@@ -62,9 +64,8 @@ public class ExecutionController {
             @PathVariable String workflowId,
             @RequestBody(required = false) ExecutionRequest executionRequest,
             Authentication authentication) {
-        log.info("Executing workflow {} for user", workflowId);
-
         String userId = authenticationHelper.extractUserIdRequired(authentication);
+        log.info("Executing workflow {} for user {}", workflowId, userId);
         ExecutionRequest request = executionRequest != null ? executionRequest : new ExecutionRequest();
         ExecutionResponse response = executionOrchestratorService.executeWorkflow(workflowId, userId, request);
 
@@ -172,17 +173,17 @@ public class ExecutionController {
         String mediaType;
 
         if ("json".equalsIgnoreCase(format)) {
-            filename = "execution_" + executionId + "_logs.json";
+            filename = ExecutionLogConstants.executionLogFilename(executionId, "json");
             mediaType = MediaType.APPLICATION_JSON_VALUE;
             content = logsFormatter.formatAsJson(executionId, logsResponse);
         } else {
-            filename = "execution_" + executionId + "_logs.txt";
+            filename = ExecutionLogConstants.executionLogFilename(executionId, "txt");
             mediaType = MediaType.TEXT_PLAIN_VALUE;
             content = logsFormatter.formatAsText(executionId, logsResponse);
         }
 
         httpResponse.setContentType(mediaType);
-        httpResponse.setHeader("Content-Disposition", "attachment; filename=\"" + filename + "\"");
+        httpResponse.setHeader("Content-Disposition", ContentDispositionUtils.attachmentFilename(filename));
         httpResponse.getOutputStream().write(content.getBytes(StandardCharsets.UTF_8));
         httpResponse.getOutputStream().flush();
     }

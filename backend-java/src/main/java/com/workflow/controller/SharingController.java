@@ -1,6 +1,7 @@
 package com.workflow.controller;
 
 import com.workflow.dto.WorkflowShareCreate;
+import jakarta.validation.Valid;
 import com.workflow.dto.WorkflowShareResponse;
 import com.workflow.dto.WorkflowVersionCreate;
 import com.workflow.dto.WorkflowVersionResponse;
@@ -37,45 +38,45 @@ public class SharingController {
 
     @PostMapping("/share")
     @Operation(summary = "Share Workflow")
-    public ResponseEntity<WorkflowShareResponse> share(@RequestBody WorkflowShareCreate create, Authentication auth) {
-        String userId = authenticationHelper.extractUserIdRequired(auth);
+    public ResponseEntity<WorkflowShareResponse> share(@Valid @RequestBody WorkflowShareCreate create, Authentication authentication) {
+        String userId = authenticationHelper.extractUserIdRequired(authentication);
         return ResponseEntity.status(201).body(workflowShareService.shareWorkflow(create, userId));
     }
 
     @GetMapping("/shared-with-me")
     @Operation(summary = "Workflows Shared With Me")
-    public ResponseEntity<List<WorkflowShareResponse>> sharedWithMe(Authentication auth) {
-        return ResponseEntity.ok(workflowShareService.getSharedWithMe(authenticationHelper.extractUserIdRequired(auth)));
+    public ResponseEntity<List<WorkflowShareResponse>> sharedWithMe(Authentication authentication) {
+        return ResponseEntity.ok(workflowShareService.getSharedWithMe(authenticationHelper.extractUserIdRequired(authentication)));
     }
 
     @GetMapping("/shared-by-me")
     @Operation(summary = "Workflows I Shared")
-    public ResponseEntity<List<WorkflowShareResponse>> sharedByMe(Authentication auth) {
-        return ResponseEntity.ok(workflowShareService.getSharedByMe(authenticationHelper.extractUserIdRequired(auth)));
+    public ResponseEntity<List<WorkflowShareResponse>> sharedByMe(Authentication authentication) {
+        return ResponseEntity.ok(workflowShareService.getSharedByMe(authenticationHelper.extractUserIdRequired(authentication)));
     }
 
     @DeleteMapping("/share/{shareId}")
     @Operation(summary = "Revoke Share")
-    public ResponseEntity<Void> revokeShare(@PathVariable String shareId, Authentication auth) {
-        workflowShareService.revokeShare(shareId, authenticationHelper.extractUserIdRequired(auth));
+    public ResponseEntity<Void> revokeShare(@PathVariable String shareId, Authentication authentication) {
+        workflowShareService.revokeShare(shareId, authenticationHelper.extractUserIdRequired(authentication));
         return ResponseEntity.noContent().build();
     }
 
     @PostMapping("/versions")
     @Operation(summary = "Create Version")
-    public ResponseEntity<WorkflowVersionResponse> createVersion(@RequestBody WorkflowVersionCreate create, Authentication auth) {
-        return ResponseEntity.status(201).body(workflowVersionService.createVersion(create, authenticationHelper.extractUserIdRequired(auth)));
+    public ResponseEntity<WorkflowVersionResponse> createVersion(@Valid @RequestBody WorkflowVersionCreate create, Authentication authentication) {
+        return ResponseEntity.status(201).body(workflowVersionService.createVersion(create, authenticationHelper.extractUserIdRequired(authentication)));
     }
 
     @GetMapping("/versions/{workflowId}")
     @Operation(summary = "List Versions")
-    public ResponseEntity<List<WorkflowVersionResponse>> listVersions(@PathVariable String workflowId, Authentication auth) {
-        return ResponseEntity.ok(workflowVersionService.getVersions(workflowId, authenticationHelper.extractUserIdRequired(auth)));
+    public ResponseEntity<List<WorkflowVersionResponse>> listVersions(@PathVariable String workflowId, Authentication authentication) {
+        return ResponseEntity.ok(workflowVersionService.getVersions(workflowId, authenticationHelper.extractUserIdRequired(authentication)));
     }
 
     @PostMapping("/versions/{versionId}/restore")
     @Operation(summary = "Restore Version")
-    public ResponseEntity<Map<String, String>> restoreVersion(@PathVariable String versionId, Authentication auth) {
-        return ResponseEntity.ok(workflowVersionService.restoreVersion(versionId, authenticationHelper.extractUserIdRequired(auth)));
+    public ResponseEntity<Map<String, String>> restoreVersion(@PathVariable String versionId, Authentication authentication) {
+        return ResponseEntity.ok(workflowVersionService.restoreVersion(versionId, authenticationHelper.extractUserIdRequired(authentication)));
     }
 }

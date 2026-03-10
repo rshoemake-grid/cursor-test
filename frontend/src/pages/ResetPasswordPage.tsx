@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, Eye, EyeOff } from 'lucide-react';
+import { API_CONFIG } from '../config/constants';
+import { extractApiErrorMessage } from '../hooks/utils/apiUtils';
 import type { HttpClient } from '../types/adapters';
 import { defaultAdapters } from '../types/adapters';
 
@@ -12,7 +14,7 @@ interface ResetPasswordPageProps {
 
 export default function ResetPasswordPage({
   httpClient = defaultAdapters.createHttpClient(),
-  apiBaseUrl = 'http://localhost:8000/api'
+  apiBaseUrl = API_CONFIG.BASE_URL
 }: ResetPasswordPageProps = {}) {
   const [searchParams] = useSearchParams();
   const token = searchParams.get('token');
@@ -54,14 +56,14 @@ export default function ResetPasswordPage({
 
     try {
       const response = await httpClient.post(
-        `${apiBaseUrl}/auth/reset-password`,
+        `${apiBaseUrl}${API_CONFIG.ENDPOINTS.AUTH.RESET_PASSWORD}`,
         { token, new_password: password },
         { 'Content-Type': 'application/json' }
       );
 
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.detail || 'Failed to reset password');
+        const errorData = await response.json();
+        throw new Error(extractApiErrorMessage(errorData, 'Failed to reset password'));
       }
 
       setSuccess(true);
@@ -69,7 +71,7 @@ export default function ResetPasswordPage({
         navigate('/auth');
       }, 2000);
     } catch (err: any) {
-      setError(err.message);
+      setError(extractApiErrorMessage(err, 'Failed to reset password'));
     } finally {
       setLoading(false);
     }

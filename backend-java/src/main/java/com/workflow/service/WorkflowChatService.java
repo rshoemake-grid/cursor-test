@@ -3,6 +3,7 @@ package com.workflow.service;
 import com.workflow.dto.WorkflowChatRequest;
 import com.workflow.dto.WorkflowChatResponse;
 import com.workflow.engine.LlmApiClient;
+import com.workflow.exception.ValidationException;
 import com.workflow.entity.Workflow;
 import com.workflow.repository.WorkflowRepository;
 import com.workflow.util.ErrorMessages;
@@ -50,7 +51,7 @@ public class WorkflowChatService {
     @Transactional(readOnly = true)
     public WorkflowChatResponse chat(WorkflowChatRequest request, String userId) {
         Map<String, Object> llmConfig = settingsService.getActiveLlmConfig(userId)
-                .orElseThrow(() -> new IllegalArgumentException(ErrorMessages.NO_LLM_PROVIDER_CONFIGURED));
+                .orElseThrow(() -> new ValidationException(ErrorMessages.NO_LLM_PROVIDER_CONFIGURED));
 
         String workflowContext = getWorkflowContext(request.getWorkflowId(), userId);
         String systemPrompt = SYSTEM_PROMPT_PREFIX + workflowContext;
@@ -74,7 +75,7 @@ public class WorkflowChatService {
                     request.getWorkflowId());
         } catch (Exception e) {
             log.warn("Workflow chat LLM call failed: {}", e.getMessage());
-            throw new IllegalArgumentException(ErrorMessages.chatError(e.getMessage()));
+            throw new ValidationException(ErrorMessages.chatError(e.getMessage()));
         }
     }
 

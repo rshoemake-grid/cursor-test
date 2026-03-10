@@ -36,7 +36,7 @@ public class WorkflowLikeService {
         Workflow workflow = RepositoryUtils.findByIdOrThrow(workflowRepository, workflowId, ErrorMessages.workflowNotFound(workflowId));
         ownershipService.assertCanRead(workflow, userId);
         if (workflowLikeRepository.findByWorkflowIdAndUserId(workflowId, userId).isPresent()) {
-            return Map.of("message", "Already liked");
+            return Map.of("message", ErrorMessages.ALREADY_LIKED);
         }
         WorkflowLike like = new WorkflowLike();
         like.setId(UUID.randomUUID().toString());
@@ -45,7 +45,7 @@ public class WorkflowLikeService {
         workflowLikeRepository.save(like);
         workflow.setLikesCount(incrementLikesCount(workflow.getLikesCount()));
         workflowRepository.save(workflow);
-        return Map.of("message", "Liked successfully");
+        return Map.of("message", ErrorMessages.LIKED_SUCCESSFULLY);
     }
 
     @Transactional

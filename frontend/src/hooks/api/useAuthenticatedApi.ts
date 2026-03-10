@@ -11,6 +11,7 @@ import {
   URL_EMPTY_ERROR_MSG,
 } from '../utils/authenticatedRequestHandler'
 import { logicalOr } from '../utils/logicalOr'
+import { extractApiErrorMessage } from '../utils/apiUtils'
 
 /**
  * Custom hook for authenticated API calls
@@ -82,7 +83,7 @@ export function useAuthenticatedApi(
         }
         // Handle other errors safely
         throw createSafeError(
-          error instanceof Error ? error.message : 'Request failed',
+          extractApiErrorMessage(error, 'Request failed'),
           'RequestError'
         )
       }
@@ -111,7 +112,7 @@ export function useAuthenticatedApi(
         }
         // Handle other errors safely
         throw createSafeError(
-          error instanceof Error ? error.message : 'Request failed',
+          extractApiErrorMessage(error, 'Request failed'),
           'RequestError'
         )
       }
@@ -145,7 +146,7 @@ export function useAuthenticatedApi(
         }
         // Handle other errors safely
         throw createSafeError(
-          error instanceof Error ? error.message : 'Request failed',
+          extractApiErrorMessage(error, 'Request failed'),
           'RequestError'
         )
       }
@@ -174,7 +175,7 @@ export function useAuthenticatedApi(
         }
         // Handle other errors safely
         throw createSafeError(
-          error instanceof Error ? error.message : 'Request failed',
+          extractApiErrorMessage(error, 'Request failed'),
           'RequestError'
         )
       }

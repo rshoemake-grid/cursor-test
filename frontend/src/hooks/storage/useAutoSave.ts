@@ -11,6 +11,7 @@
  */
 
 import { useEffect, useRef, useMemo } from 'react'
+import { logger } from '../../utils/logger'
 import { hasValueChanged } from '../utils/useValueComparison'
 import { useFirstRender } from '../utils/useFirstRender'
 import { useDebounce } from '../utils/useDebounce'
@@ -42,7 +43,7 @@ export function useAutoSave<T>(
       try {
         saveFn(val)
       } catch (error) {
-        console.error('Auto-save failed:', error)
+        logger.error('Auto-save failed:', error)
       }
     }
   }, [saveFn])

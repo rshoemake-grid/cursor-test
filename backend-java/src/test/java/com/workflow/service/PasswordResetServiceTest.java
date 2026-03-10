@@ -43,8 +43,10 @@ class PasswordResetServiceTest {
 
     @BeforeEach
     void setUp() {
+        org.springframework.core.env.Environment env = org.mockito.Mockito.mock(org.springframework.core.env.Environment.class);
+        lenient().when(env.getActiveProfiles()).thenReturn(new String[0]);
         passwordResetService = new PasswordResetService(
-                userRepository, passwordResetTokenRepository, passwordEncoder);
+                userRepository, passwordResetTokenRepository, passwordEncoder, env);
         ReflectionTestUtils.setField(passwordResetService, "passwordResetReturnToken", false);
 
         userEntity = new User();

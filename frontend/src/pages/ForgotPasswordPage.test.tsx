@@ -92,7 +92,10 @@ describe('ForgotPasswordPage', () => {
   })
 
   it('should show reset token in development mode', async () => {
-    (global.fetch as jest.Mock).mockResolvedValue({
+    const originalEnv = process.env.NODE_ENV
+    process.env.NODE_ENV = 'development'
+
+    ;(global.fetch as jest.Mock).mockResolvedValue({
       ok: true,
       json: async () => ({ token: 'reset-token-123' }),
     })
@@ -110,6 +113,8 @@ describe('ForgotPasswordPage', () => {
     await waitForWithTimeout(() => {
       expect(screen.getByText('reset-token-123')).toBeInTheDocument()
     }, 3000)
+
+    process.env.NODE_ENV = originalEnv
   })
 
   it('should handle API error', async () => {

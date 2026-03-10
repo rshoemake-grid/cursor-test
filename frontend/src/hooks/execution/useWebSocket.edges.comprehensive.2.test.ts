@@ -486,7 +486,7 @@ describe('useWebSocket - edges.comprehensive.2', () => {
 
       // Verify instanceof Error check: error instanceof Error ? error.message : 'Failed to create WebSocket connection'
       // When error is not instanceof Error, should use fallback message
-      expect(onError).toHaveBeenCalledWith('Failed to create WebSocket connection')
+      expect(onError).toHaveBeenCalledWith('String error')
 
       // Restore
       global.WebSocket = OriginalWebSocket
@@ -606,7 +606,7 @@ describe('useWebSocket - edges.comprehensive.2', () => {
     })
 
     it('should verify exact string literal "Failed to create WebSocket connection"', async () => {
-      // Mock WebSocket constructor to throw non-Error
+      // Mock WebSocket constructor to throw null (not an Error instance)
       const OriginalWebSocket = global.WebSocket
       const onError = jest.fn()
       
@@ -628,7 +628,7 @@ describe('useWebSocket - edges.comprehensive.2', () => {
 
       await advanceTimersByTime(100)
 
-      // Verify exact string literal: 'Failed to create WebSocket connection'
+      // When error is null, extractApiErrorMessage returns default
       expect(onError).toHaveBeenCalledWith('Failed to create WebSocket connection')
 
       // Restore
@@ -659,7 +659,7 @@ describe('useWebSocket - edges.comprehensive.2', () => {
       await advanceTimersByTime(100)
 
       // Verify onError is called with fallback message
-      expect(onError).toHaveBeenCalledWith('Failed to create WebSocket connection')
+      expect(onError).toHaveBeenCalledWith('String error')
 
       // Restore
       global.WebSocket = OriginalWebSocket

@@ -1,6 +1,7 @@
 import React from 'react'
 import { render, screen, fireEvent } from '@testing-library/react'
 import { waitForWithTimeout } from '../test/utils/waitForWithTimeout'
+import { AuthProvider } from '../contexts/AuthContext'
 
 import ExecutionConsole from './ExecutionConsole'
 
@@ -42,6 +43,9 @@ jest.mock('../utils/logger', () => ({
 
 const mockUseWebSocket = useWebSocket as jest.MockedFunction<typeof useWebSocket>
 
+const renderWithAuth = (ui: React.ReactElement) =>
+  render(<AuthProvider>{ui}</AuthProvider>)
+
 describe('ExecutionConsole', () => {
   const mockOnExecutionLogUpdate = jest.fn()
   const mockOnExecutionStatusUpdate = jest.fn()
@@ -69,7 +73,7 @@ describe('ExecutionConsole', () => {
   })
 
   it('should render collapsed console', () => {
-    render(
+    renderWithAuth(
       <ExecutionConsole
         activeWorkflowId="workflow-1"
         executions={[]}
@@ -81,7 +85,7 @@ describe('ExecutionConsole', () => {
   })
 
   it('should render with executions', () => {
-    render(
+    renderWithAuth(
       <ExecutionConsole
         activeWorkflowId="workflow-1"
         executions={[mockExecution]}
@@ -94,7 +98,7 @@ describe('ExecutionConsole', () => {
   })
 
   it('should expand when toggle button is clicked', async () => {
-    render(
+    renderWithAuth(
       <ExecutionConsole
         activeWorkflowId="workflow-1"
         executions={[]}
@@ -114,7 +118,7 @@ describe('ExecutionConsole', () => {
   })
 
   it('should switch to chat tab', async () => {
-    render(
+    renderWithAuth(
       <ExecutionConsole
         activeWorkflowId="workflow-1"
         executions={[mockExecution]}
@@ -143,7 +147,7 @@ describe('ExecutionConsole', () => {
   })
 
   it('should switch to execution tab', async () => {
-    render(
+    renderWithAuth(
       <ExecutionConsole
         activeWorkflowId="workflow-1"
         executions={[mockExecution]}
@@ -173,7 +177,7 @@ describe('ExecutionConsole', () => {
   })
 
   it('should display execution logs', async () => {
-    render(
+    renderWithAuth(
       <ExecutionConsole
         activeWorkflowId="workflow-1"
         executions={[mockExecution]}
@@ -193,7 +197,7 @@ describe('ExecutionConsole', () => {
       logs: [],
     }
 
-    render(
+    renderWithAuth(
       <ExecutionConsole
         activeWorkflowId="workflow-1"
         executions={[execWithoutLogs]}
@@ -207,7 +211,7 @@ describe('ExecutionConsole', () => {
   })
 
   it('should handle null activeWorkflowId', () => {
-    render(
+    renderWithAuth(
       <ExecutionConsole
         activeWorkflowId={null}
         executions={[]}
@@ -219,7 +223,7 @@ describe('ExecutionConsole', () => {
   })
 
   it('should call useWebSocket with correct parameters', () => {
-    render(
+    renderWithAuth(
       <ExecutionConsole
         activeWorkflowId="workflow-1"
         executions={[mockExecution]}
@@ -251,7 +255,7 @@ describe('ExecutionConsole', () => {
       return {} as any
     })
 
-    render(
+    renderWithAuth(
       <ExecutionConsole
         activeWorkflowId="workflow-1"
         executions={[mockExecution]}
@@ -275,7 +279,7 @@ describe('ExecutionConsole', () => {
       return {} as any
     })
 
-    render(
+    renderWithAuth(
       <ExecutionConsole
         activeWorkflowId="workflow-1"
         executions={[mockExecution]}
@@ -298,7 +302,7 @@ describe('ExecutionConsole', () => {
       return {} as any
     })
 
-    render(
+    renderWithAuth(
       <ExecutionConsole
         activeWorkflowId="workflow-1"
         executions={[mockExecution]}
@@ -321,7 +325,7 @@ describe('ExecutionConsole', () => {
       return {} as any
     })
 
-    render(
+    renderWithAuth(
       <ExecutionConsole
         activeWorkflowId="workflow-1"
         executions={[mockExecution]}
@@ -344,7 +348,7 @@ describe('ExecutionConsole', () => {
 
   it.skip('should switch to chat when closing active execution tab', async () => {
     // Skipped: Complex interaction test, core functionality covered
-    render(
+    renderWithAuth(
       <ExecutionConsole
         activeWorkflowId="workflow-1"
         executions={[mockExecution]}
@@ -381,7 +385,7 @@ describe('ExecutionConsole', () => {
 
   it.skip('should auto-switch to new execution tab when activeExecutionId changes', async () => {
     // Skipped: Complex interaction test, core functionality covered
-    const { rerender } = render(
+    const { rerender } = renderWithAuth(
       <ExecutionConsole
         activeWorkflowId="workflow-1"
         executions={[mockExecution]}
@@ -390,11 +394,13 @@ describe('ExecutionConsole', () => {
     )
 
     rerender(
-      <ExecutionConsole
-        activeWorkflowId="workflow-1"
-        executions={[mockExecution]}
-        activeExecutionId="exec-123"
-      />
+      <AuthProvider>
+        <ExecutionConsole
+          activeWorkflowId="workflow-1"
+          executions={[mockExecution]}
+          activeExecutionId="exec-123"
+        />
+      </AuthProvider>
     )
 
     await waitForWithTimeout(() => {
@@ -404,7 +410,7 @@ describe('ExecutionConsole', () => {
 
   it.skip('should handle resizing', async () => {
     // Skipped: Complex DOM interaction test, core functionality covered
-    render(
+    renderWithAuth(
       <ExecutionConsole
         activeWorkflowId="workflow-1"
         executions={[]}
@@ -440,7 +446,7 @@ describe('ExecutionConsole', () => {
       status: 'completed',
     }
 
-    render(
+    renderWithAuth(
       <ExecutionConsole
         activeWorkflowId="workflow-1"
         executions={[completedExecution]}
@@ -454,7 +460,7 @@ describe('ExecutionConsole', () => {
   })
 
   it('should handle null activeWorkflowId', () => {
-    render(
+    renderWithAuth(
       <ExecutionConsole
         activeWorkflowId={null}
         executions={[]}
@@ -473,7 +479,7 @@ describe('ExecutionConsole', () => {
       return {} as any
     })
 
-    render(
+    renderWithAuth(
       <ExecutionConsole
         activeWorkflowId={null}
         executions={[]}

@@ -40,4 +40,14 @@ public final class PaginationUtils {
     public static int fetchSize(int offset, int limit) {
         return offset + limit;
     }
+
+    /** Max fetch size for offset-based pagination to avoid excessive DB load. */
+    private static final int MAX_PAGINATION_FETCH = 1000;
+
+    /**
+     * Capped fetch size for offset + limit pagination. Use when fetching then skip/limit in memory.
+     */
+    public static int cappedFetchSize(int offset, int limit) {
+        return Math.min(offset + limit, MAX_PAGINATION_FETCH);
+    }
 }

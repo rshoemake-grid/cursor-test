@@ -1,5 +1,16 @@
 import { renderHook, act } from '@testing-library/react'
 import { useAutoSave } from './useAutoSave'
+import { logger } from '../../utils/logger'
+
+jest.mock('../../utils/logger', () => ({
+  logger: {
+    debug: jest.fn(),
+    error: jest.fn(),
+    info: jest.fn(),
+    warn: jest.fn(),
+    log: jest.fn(),
+  },
+}))
 
 describe('useAutoSave', () => {
   beforeEach(() => {
@@ -210,7 +221,6 @@ describe('useAutoSave', () => {
   })
 
   it('should handle save function errors gracefully', () => {
-    const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation()
     const saveFn = jest.fn().mockImplementation(() => {
       throw new Error('Save failed')
     })
@@ -227,9 +237,7 @@ describe('useAutoSave', () => {
     })
 
     expect(saveFn).toHaveBeenCalledTimes(1)
-    expect(consoleErrorSpy).toHaveBeenCalledWith('Auto-save failed:', expect.any(Error))
-
-    consoleErrorSpy.mockRestore()
+    expect(logger.error).toHaveBeenCalledWith('Auto-save failed:', expect.any(Error))
   })
 
   it('should cleanup timeout on unmount', () => {

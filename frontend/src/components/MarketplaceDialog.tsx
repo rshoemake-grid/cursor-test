@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { X, Upload, Bot, Workflow, Wrench } from 'lucide-react'
 import { showSuccess, showError } from '../utils/notifications'
 import { api } from '../api/client'
+import { extractApiErrorMessage } from '../hooks/utils/apiUtils'
 import { useAuth } from '../contexts/AuthContext'
 import { STORAGE_KEYS } from '../config/constants'
 import { logger } from '../utils/logger'
@@ -23,6 +24,7 @@ interface MarketplaceDialogProps {
 type TabType = 'agents' | 'workflows' | 'tools'
 
 import { TEMPLATE_CATEGORIES, TEMPLATE_DIFFICULTIES, formatCategory, formatDifficulty } from '../config/templateConstants'
+import { getDefaultPublishForm, parseTags } from '../utils/publishFormUtils'
 // Domain-based imports - Phase 7
 import { usePublishForm } from '../hooks/forms'
 
@@ -51,10 +53,7 @@ export default function MarketplaceDialog({
         ? (node.data?.label || node.data?.name || 'Untitled Tool')
         : (node.data?.label || node.data?.name || 'Untitled Agent')
       publishFormHook.updateForm({
-        category: 'automation',
-        tags: '',
-        difficulty: 'beginner',
-        estimated_time: '',
+        ...getDefaultPublishForm(),
         name: defaultName,
         description: node.data?.description || ''
       })
@@ -87,7 +86,7 @@ export default function MarketplaceDialog({
     setIsPublishing(true)
     try {
       // Publish agent to backend API
-      const tagsArray = publishFormHook.form.tags.split(',').map((t: string) => t.trim()).filter((t: string) => t)
+      const tagsArray = parseTags(publishFormHook.form.tags)
       
       const publishedAgent = await api.publishAgent({
         name: publishFormHook.form.name,
@@ -146,7 +145,7 @@ export default function MarketplaceDialog({
       showSuccess('Agent published to marketplace successfully!')
       onClose()
     } catch (error: any) {
-      const errorMessage = error?.response?.data?.detail || error?.message || 'Unknown error'
+      const errorMessage = extractApiErrorMessage(error, 'Unknown error')
       showError('Failed to publish agent: ' + errorMessage)
     } finally {
       setIsPublishing(false)
@@ -168,14 +167,14 @@ export default function MarketplaceDialog({
     try {
       await api.publishWorkflow(workflowId, {
           category: publishFormHook.form.category,
-          tags: publishFormHook.form.tags.split(',').map((t: string) => t.trim()).filter((t: string) => t),
+          tags: parseTags(publishFormHook.form.tags),
           difficulty: publishFormHook.form.difficulty,
           estimated_time: publishFormHook.form.estimated_time || undefined
       })
       showSuccess('Workflow published to marketplace successfully!')
       onClose()
     } catch (error: any) {
-      showError('Failed to publish workflow: ' + (error.message || 'Unknown error'))
+      showError('Failed to publish workflow: ' + extractApiErrorMessage(error, 'Unknown error'))
     } finally {
       setIsPublishing(false)
     }
@@ -192,7 +191,7 @@ export default function MarketplaceDialog({
     }
     setIsPublishing(true)
     try {
-      const tagsArray = publishFormHook.form.tags.split(',').map((t: string) => t.trim()).filter((t: string) => t)
+      const tagsArray = parseTags(publishFormHook.form.tags)
       // Save to localStorage (backend API can be added when available)
       if (storage) {
         const toolTemplate = {
@@ -219,7 +218,7 @@ export default function MarketplaceDialog({
       showSuccess('Tool published to marketplace successfully!')
       onClose()
     } catch (error: any) {
-      showError('Failed to publish tool: ' + (error?.message || 'Unknown error'))
+      showError('Failed to publish tool: ' + extractApiErrorMessage(error, 'Unknown error'))
     } finally {
       setIsPublishing(false)
     }

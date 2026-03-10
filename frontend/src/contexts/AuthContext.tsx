@@ -2,6 +2,8 @@ import React, { createContext, useContext, useState, useEffect, useCallback, use
 import type { StorageAdapter, HttpClient } from '../types/adapters';
 import { defaultAdapters } from '../types/adapters';
 import { logger } from '../utils/logger';
+import { API_CONFIG, STORAGE_KEYS } from '../config/constants';
+import { extractApiErrorMessage } from '../hooks/utils/apiUtils';
 
 interface User {
   id: string;
@@ -40,7 +42,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children, options })
   const local = useMemo(() => (options?.localStorage !== undefined ? options.localStorage : defaultAdapters.createLocalStorageAdapter()), [options?.localStorage]);
   const session = useMemo(() => (options?.sessionStorage !== undefined ? options.sessionStorage : defaultAdapters.createSessionStorageAdapter()), [options?.sessionStorage]);
   const httpClient = useMemo(() => options?.httpClient ?? defaultAdapters.createHttpClient(), [options?.httpClient]);
-  const apiBaseUrl = options?.apiBaseUrl ?? 'http://localhost:8000/api';
+  const apiBaseUrl = options?.apiBaseUrl ?? API_CONFIG.BASE_URL;
   const injectedLogger = useMemo(() => options?.logger ?? logger, [options?.logger]);
 
   const [user, setUser] = useState<User | null>(null);
@@ -73,11 +75,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children, options })
 
     hasLoadedFromStorage.current = true;
 
-    const rememberMe = currentLocal.getItem('auth_remember_me') === 'true';
+    const rememberMe = currentLocal.getItem(STORAGE_KEYS.AUTH_REMEMBER_ME) === 'true';
     const storage = rememberMe ? currentLocal : currentSession;
     
-    const savedToken = storage.getItem('auth_token');
-    const savedUser = storage.getItem('auth_user');
+    const savedToken = storage.getItem(STORAGE_KEYS.AUTH_TOKEN);
+    const savedUser = storage.getItem(STORAGE_KEYS.AUTH_USER);
     
     if (savedToken && savedUser) {
       // Use functional updates to avoid dependency on token/user state
@@ -88,8 +90,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children, options })
       } catch (error) {
         // Handle invalid JSON gracefully - clear corrupted data
         currentLogger.warn('Failed to parse saved user data, clearing auth state:', error);
-        storage.removeItem('auth_token');
-        storage.removeItem('auth_user');
+        storage.removeItem(STORAGE_KEYS.AUTH_TOKEN);
+        storage.removeItem(STORAGE_KEYS.AUTH_USER);
         setToken(() => null);
         setUser(() => null);
       }
@@ -120,7 +122,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children, options })
     }
 
     const response = await httpClient.post(
-      `${apiBaseUrl}/auth/login`,
+      `${apiBaseUrl}${API_CONFIG.ENDPOINTS.AUTH.LOGIN}`,
       { username, password, remember_me: rememberMe },
       { 'Content-Type': 'application/json' }
     );
@@ -129,7 +131,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children, options })
       let errorMessage = 'Login failed';
       try {
         const error = await response.json();
-        errorMessage = error.detail || error.message || errorMessage;
+        errorMessage = extractApiErrorMessage(error, errorMessage);
         injectedLogger.error('Login error:', error);
       } catch (e) {
         injectedLogger.error('Failed to parse error response:', e);
@@ -145,30 +147,36 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children, options })
     // Store auth data
     if (rememberMe) {
       // Use localStorage for persistent sessions
-      local.setItem('auth_token', data.access_token);
-      local.setItem('auth_user', JSON.stringify(data.user));
-      local.setItem('auth_remember_me', 'true');
+      local.setItem(STORAGE_KEYS.AUTH_TOKEN, data.access_token);
+      local.setItem(STORAGE_KEYS.AUTH_USER, JSON.stringify(data.user));
+      local.setItem(STORAGE_KEYS.AUTH_REMEMBER_ME, 'true');
     } else {
       // Use sessionStorage for session-only storage
-      session.setItem('auth_token', data.access_token);
-      session.setItem('auth_user', JSON.stringify(data.user));
+      session.setItem(STORAGE_KEYS.AUTH_TOKEN, data.access_token);
+      session.setItem(STORAGE_KEYS.AUTH_USER, JSON.stringify(data.user));
       // Clear localStorage if it exists
-      local.removeItem('auth_token');
-      local.removeItem('auth_user');
-      local.removeItem('auth_remember_me');
+      local.removeItem(STORAGE_KEYS.AUTH_TOKEN);
+      local.removeItem(STORAGE_KEYS.AUTH_USER);
+      local.removeItem(STORAGE_KEYS.AUTH_REMEMBER_ME);
     }
   }, [local, session, httpClient, apiBaseUrl, injectedLogger]);
 
   const register = useCallback(async (username: string, email: string, password: string, fullName?: string) => {
     const response = await httpClient.post(
-      `${apiBaseUrl}/auth/register`,
+      `${apiBaseUrl}${API_CONFIG.ENDPOINTS.AUTH.REGISTER}`,
       { username, email, password, full_name: fullName },
       { 'Content-Type': 'application/json' }
     );
 
     if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.detail || 'Registration failed');
+      let errorMessage = 'Registration failed';
+      try {
+        const error = await response.json();
+        errorMessage = extractApiErrorMessage(error, errorMessage);
+      } catch {
+        errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+      }
+      throw new Error(errorMessage);
     }
 
     // Auto-login after registration
@@ -180,13 +188,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children, options })
     setUser(null);
     // Clear both localStorage and sessionStorage
     if (local) {
-      local.removeItem('auth_token');
-      local.removeItem('auth_user');
-      local.removeItem('auth_remember_me');
+      local.removeItem(STORAGE_KEYS.AUTH_TOKEN);
+      local.removeItem(STORAGE_KEYS.AUTH_USER);
+      local.removeItem(STORAGE_KEYS.AUTH_REMEMBER_ME);
     }
     if (session) {
-      session.removeItem('auth_token');
-      session.removeItem('auth_user');
+      session.removeItem(STORAGE_KEYS.AUTH_TOKEN);
+      session.removeItem(STORAGE_KEYS.AUTH_USER);
     }
   }, [local, session]);
 

@@ -12,6 +12,7 @@ import { useSettingsStateSync } from '../hooks/settings/useSettingsStateSync'
 import { SettingsTabs } from '../components/settings/SettingsTabs'
 import { SettingsTabContent } from '../components/settings/SettingsTabContent'
 import { SettingsHeader } from '../components/settings/SettingsHeader'
+import { API_CONFIG } from '../config/constants'
 import { 
   PROVIDER_TEMPLATES, 
   SETTINGS_TABS, 
@@ -29,7 +30,7 @@ interface SettingsPageProps {
 export default function SettingsPage({
   storage = defaultAdapters.createLocalStorageAdapter(),
   httpClient = defaultAdapters.createHttpClient(),
-  apiBaseUrl = '/api',
+  apiBaseUrl = API_CONFIG.BASE_URL,
   consoleAdapter = defaultAdapters.createConsoleAdapter()
 }: SettingsPageProps = {}) {
   const { isAuthenticated, token } = useAuth()

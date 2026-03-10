@@ -19,10 +19,10 @@ public class JwtUtil {
     @Value("${jwt.secret}")
     private String secret;
     
-    @Value("${jwt.expiration}")
+    @Value("${jwt.expiration:86400000}")
     private Long expiration;
     
-    @Value("${jwt.refresh-expiration}")
+    @Value("${jwt.refresh-expiration:604800000}")
     private Long refreshExpiration;
 
     private SecretKey getSigningKey() {
@@ -99,6 +99,6 @@ public class JwtUtil {
 
     public Boolean validateToken(String token, String username) {
         final String extractedUsername = extractUsername(token);
-        return (extractedUsername.equals(username) && !isTokenExpired(token));
+        return extractedUsername != null && extractedUsername.equals(username) && !isTokenExpired(token);
     }
 }

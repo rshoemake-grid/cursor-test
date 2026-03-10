@@ -2,7 +2,10 @@ package com.workflow.controller;
 
 import com.workflow.dto.LoginRequest;
 import com.workflow.dto.PasswordReset;
+import com.workflow.exception.ValidationException;
 import com.workflow.util.AuthenticationHelper;
+import com.workflow.util.ErrorMessages;
+import com.workflow.util.ErrorResponseBuilder;
 import com.workflow.dto.PasswordResetRequest;
 import com.workflow.dto.RefreshTokenRequest;
 import com.workflow.dto.TokenResponse;
@@ -20,6 +23,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import jakarta.servlet.http.HttpServletRequest;
 import java.util.Map;
 
 
@@ -48,9 +52,9 @@ public class AuthController {
         @ApiResponse(responseCode = "200", description = "Current user details"),
         @ApiResponse(responseCode = "401", description = "Not authenticated")
     })
-    public ResponseEntity<UserResponse> me(Authentication authentication) {
+    public ResponseEntity<?> me(Authentication authentication, HttpServletRequest request) {
         if (!authenticationHelper.isAuthenticated(authentication)) {
-            return ResponseEntity.status(401).build();
+            return ErrorResponseBuilder.unauthorized(ErrorMessages.UNAUTHORIZED, request.getRequestURI());
         }
         log.debug("GET /api/auth/me - Current user: {}", authentication.getName());
         UserResponse response = authService.getCurrentUser(authentication.getName());
@@ -66,6 +70,9 @@ public class AuthController {
     public ResponseEntity<TokenResponse> token(
             @RequestParam String username,
             @RequestParam String password) {
+        if (username == null || username.isBlank() || password == null || password.isBlank()) {
+            throw new ValidationException(ErrorMessages.USERNAME_PASSWORD_REQUIRED);
+        }
         log.debug("POST /api/auth/token - OAuth2 login for user: {}", username);
         LoginRequest loginRequest = new LoginRequest();
         loginRequest.setUsername(username);

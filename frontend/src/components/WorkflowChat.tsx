@@ -1,13 +1,12 @@
 import { useState, useRef, useEffect } from 'react'
 import { Send, Loader, Bot, User } from 'lucide-react'
 import { logger } from '../utils/logger'
-import type { StorageAdapter, HttpClient } from '../types/adapters'
+import type { StorageAdapter } from '../types/adapters'
 import { defaultAdapters } from '../types/adapters'
-// Domain-based imports - Phase 7
-import { useAuthenticatedApi } from '../hooks/api'
+import { api } from '../api/client'
 import { handleApiError } from '../utils/errorHandler'
 import { safeStorageGet, safeStorageSet } from '../utils/storageHelpers'
-import { getChatHistoryKey, API_CONFIG } from '../config/constants'
+import { getChatHistoryKey } from '../config/constants'
 
 interface ChatMessage {
   role: 'user' | 'assistant'
@@ -19,8 +18,6 @@ interface WorkflowChatProps {
   onWorkflowUpdate?: (changes: any) => void
   // Dependency injection
   storage?: StorageAdapter | null
-  httpClient?: HttpClient
-  apiBaseUrl?: string
   logger?: typeof logger
 }
 
@@ -28,11 +25,8 @@ export default function WorkflowChat({
   workflowId, 
   onWorkflowUpdate,
   storage = defaultAdapters.createLocalStorageAdapter(),
-  httpClient = defaultAdapters.createHttpClient(),
-  apiBaseUrl = API_CONFIG.BASE_URL,
   logger: injectedLogger = logger
 }: WorkflowChatProps) {
-  const { authenticatedPost } = useAuthenticatedApi(httpClient, apiBaseUrl)
   
   // Load conversation history from storage on mount or workflow change
   const loadConversationHistory = (workflowId: string | null): ChatMessage[] => {
@@ -99,24 +93,14 @@ export default function WorkflowChat({
     setIsLoading(true)
 
     try {
-      const response = await authenticatedPost(
-        API_CONFIG.ENDPOINTS.CHAT,
-        {
-          workflow_id: workflowId,
-          message: userMessage.content,
-          conversation_history: messages.map(m => ({
-            role: m.role,
-            content: m.content
-          }))
-        }
-      )
-
-      // Explicit check to prevent mutation survivors
-      if (response.ok === false) {
-        throw new Error(`HTTP error! status: ${response.status}`)
-      }
-
-      const data = await response.json()
+      const data = await api.chat({
+        workflow_id: workflowId,
+        message: userMessage.content,
+        conversation_history: messages.map(m => ({
+          role: m.role,
+          content: m.content
+        }))
+      })
 
       const assistantMessage: ChatMessage = {
         role: 'assistant',

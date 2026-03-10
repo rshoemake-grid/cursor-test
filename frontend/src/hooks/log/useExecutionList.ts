@@ -8,6 +8,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import type { ExecutionState } from '../../types/workflow'
 import { logger } from '../../utils/logger'
+import { extractApiErrorMessage } from '../utils/apiUtils'
 
 export interface ExecutionListAPI {
   listExecutions(params?: {
@@ -78,7 +79,7 @@ export function useExecutionList(
       setExecutions(data)
     } catch (err: any) {
       logger.error('Failed to load executions:', err)
-      setError(err.message || 'Failed to load executions')
+      setError(extractApiErrorMessage(err, 'Failed to load executions'))
     } finally {
       setLoading(false)
     }

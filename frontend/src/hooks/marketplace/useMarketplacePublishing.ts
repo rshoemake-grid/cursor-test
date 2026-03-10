@@ -7,7 +7,8 @@ import { useState, useCallback } from 'react'
 import { showError as defaultShowError, showSuccess as defaultShowSuccess } from '../../utils/notifications'
 import { usePublishForm } from '../forms'
 import type { HttpClient } from '../../types/adapters'
-import { logicalOr, logicalOrToUndefined } from '../utils/logicalOr'
+import { logicalOrToUndefined } from '../utils/logicalOr'
+import { extractApiErrorMessage } from '../utils/apiUtils'
 // logicalOrToNull intentionally not imported - not used in this file
 
 interface UseMarketplacePublishingOptions {
@@ -99,13 +100,7 @@ export function useMarketplacePublishing({
         showError(`Failed to publish: ${errorText}`)
       }
     } catch (error: any) {
-      // Explicit error message extraction to prevent mutation survivors
-      // Use logicalOr utility instead of || operator for mutation resistance
-      const errorMsg = logicalOr(
-        error?.message,
-        'Unknown error'
-      )
-      showError('Failed to publish workflow: ' + errorMsg)
+      showError('Failed to publish workflow: ' + extractApiErrorMessage(error, 'Unknown error'))
     } finally {
       setIsPublishing(false)
     }

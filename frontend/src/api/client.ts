@@ -3,17 +3,16 @@ import type { WorkflowDefinition, ExecutionState } from '../types/workflow'
 import type { StorageAdapter } from '../types/adapters'
 import { defaultAdapters } from '../types/adapters'
 import { logger } from '../utils/logger'
+import { API_CONFIG, STORAGE_KEYS } from '../config/constants'
 // DRY: Use extracted utilities
 import { extractData } from './responseHandlers'
-import { workflowEndpoints, templateEndpoints, executionEndpoints, marketplaceEndpoints, settingsEndpoints } from './endpoints'
-
-const API_BASE_URL = '/api'
+import { workflowEndpoints, templateEndpoints, executionEndpoints, marketplaceEndpoints, settingsEndpoints, chatEndpoints } from './endpoints'
 
 /**
  * Create axios instance with interceptor to add auth token
  */
 function createAxiosInstance(
-  baseURL: string = API_BASE_URL,
+  baseURL: string = API_CONFIG.BASE_URL,
   options?: {
     localStorage?: StorageAdapter | null
     sessionStorage?: StorageAdapter | null
@@ -33,9 +32,9 @@ function createAxiosInstance(
     (config) => {
       // Get token from storage (check localStorage first for "remember me", then sessionStorage)
       if (local && session) {
-        const rememberMe = local.getItem('auth_remember_me') === 'true'
+        const rememberMe = local.getItem(STORAGE_KEYS.AUTH_REMEMBER_ME) === 'true'
         const storage = rememberMe ? local : session
-        const token = storage.getItem('auth_token')
+        const token = storage.getItem(STORAGE_KEYS.AUTH_TOKEN)
         
         if (token) {
           config.headers.Authorization = `Bearer ${token}`
@@ -57,11 +56,11 @@ function createAxiosInstance(
       if (error.response?.status === 401) {
         // Clear auth data from storage
         if (local && session) {
-          local.removeItem('auth_token')
-          local.removeItem('auth_user')
-          local.removeItem('auth_remember_me')
-          session.removeItem('auth_token')
-          session.removeItem('auth_user')
+          local.removeItem(STORAGE_KEYS.AUTH_TOKEN)
+          local.removeItem(STORAGE_KEYS.AUTH_USER)
+          local.removeItem(STORAGE_KEYS.AUTH_REMEMBER_ME)
+          session.removeItem(STORAGE_KEYS.AUTH_TOKEN)
+          session.removeItem(STORAGE_KEYS.AUTH_USER)
         }
         
         // Dispatch a custom event that AuthContext can listen to
@@ -92,7 +91,7 @@ export function createApiClient(options?: {
   logger?: typeof logger
 }) {
   const {
-    baseURL = API_BASE_URL,
+    baseURL = API_CONFIG.BASE_URL,
     logger: injectedLogger = logger
   } = options ?? {}
 
@@ -270,6 +269,15 @@ export function createApiClient(options?: {
 
   async cancelExecution(executionId: string): Promise<ExecutionState> {
     return extractData(await instance.post(executionEndpoints.cancel(executionId)))
+  },
+
+  // Chat
+  async chat(params: {
+    workflow_id: string | null
+    message: string
+    conversation_history: Array<{ role: string; content: string }>
+  }): Promise<{ message: string; workflow_changes?: any }> {
+    return extractData(await instance.post(chatEndpoints.chat(), params))
   },
 
   // Settings

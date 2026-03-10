@@ -11,6 +11,8 @@ import type { ExecutionState } from '../../types/workflow'
 import { formatExecutionDuration } from '../../utils/executionFormat'
 import ExecutionStatusBadge from '../ExecutionStatusBadge'
 import { api } from '../../api/client'
+import { logger } from '../../utils/logger'
+import { extractApiErrorMessage } from '../../hooks/utils/apiUtils'
 
 export interface ExecutionDetailsModalProps {
   execution: ExecutionState | null
@@ -58,8 +60,8 @@ export default function ExecutionDetailsModal({
       document.body.removeChild(a)
       window.URL.revokeObjectURL(url)
     } catch (error: any) {
-      console.error('Failed to download logs:', error)
-      alert(`Failed to download logs: ${error.message || 'Unknown error'}`)
+      logger.error('Failed to download logs:', error)
+      alert(`Failed to download logs: ${extractApiErrorMessage(error, 'Unknown error')}`)
     } finally {
       setDownloading(false)
     }

@@ -26,6 +26,7 @@ import { useExecutionListQuery } from '../hooks/log/useExecutionListQuery'
 import { useExecutionAnalytics } from '../hooks/analytics/useExecutionAnalytics'
 import { api } from '../api/client'
 import { formatExecutionDuration } from '../utils/executionFormat'
+import { extractApiErrorMessage } from '../hooks/utils/apiUtils'
 
 export interface AnalyticsPageProps {
   apiClient?: {
@@ -73,7 +74,7 @@ export default function AnalyticsPage({
       <div className="h-full overflow-auto bg-gray-50 p-8">
         <div className="max-w-7xl mx-auto">
           <div className="flex items-center justify-center h-64">
-            <div className="text-red-500">Error: {error?.message || String(error)}</div>
+            <div className="text-red-500">Error: {extractApiErrorMessage(error, 'Unknown error')}</div>
           </div>
         </div>
       </div>

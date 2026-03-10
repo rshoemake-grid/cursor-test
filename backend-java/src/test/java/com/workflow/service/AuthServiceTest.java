@@ -74,7 +74,7 @@ class AuthServiceTest {
         tokenService = new TokenService(userRepository, refreshTokenRepository, jwtUtil, userResponseMapper);
         setField(tokenService, "jwtExpirationMs", 3600000L);
 
-        passwordResetService = new PasswordResetService(userRepository, passwordResetTokenRepository, passwordEncoder);
+        passwordResetService = new PasswordResetService(userRepository, passwordResetTokenRepository, passwordEncoder, mock(org.springframework.core.env.Environment.class));
         setField(passwordResetService, "passwordResetReturnToken", false);
 
         authService = new AuthService(

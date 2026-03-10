@@ -72,10 +72,11 @@ public class PublishedAgentService {
 
     public List<PublishedAgentResponse> listAgents(String category, String search, int limit, int offset) {
         int safeLimit = PaginationUtils.clampLimit(limit);
-        int fetchSize = PaginationUtils.fetchSize(offset, safeLimit);
+        int safeOffset = Math.max(0, offset);
+        int fetchSize = PaginationUtils.cappedFetchSize(safeOffset, safeLimit);
         Pageable pageable = PageRequest.of(0, fetchSize, Sort.by(Sort.Direction.DESC, "createdAt"));
         return publishedAgentRepository.findByFilters(category, search, pageable).stream()
-                .skip(offset)
+                .skip(safeOffset)
                 .limit(safeLimit)
                 .map(this::toAgentResponse)
                 .toList();

@@ -1,7 +1,7 @@
 package com.workflow.util;
 
 import com.workflow.entity.User;
-import com.workflow.exception.ForbiddenException;
+import com.workflow.exception.UnauthorizedException;
 import com.workflow.repository.UserRepository;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -51,7 +51,7 @@ public class AuthenticationHelper {
     public String extractUserIdRequired(Authentication authentication) {
         String userId = extractUserId(authentication);
         if (userId == null) {
-            throw new ForbiddenException(ErrorMessages.AUTH_REQUIRED);
+            throw new UnauthorizedException(ErrorMessages.AUTH_REQUIRED);
         }
         return userId;
     }
@@ -91,6 +91,15 @@ public class AuthenticationHelper {
      */
     public String extractUsernameNullable(Authentication authentication) {
         return authentication == null ? null : extractUsername(authentication);
+    }
+
+    /**
+     * Get exportedBy for export operations: username if available, otherwise userId.
+     * Use when userId is required (auth) and exportedBy is a display fallback.
+     */
+    public String exportedByOrDefault(Authentication authentication, String userId) {
+        String username = extractUsernameNullable(authentication);
+        return (username != null && !username.isBlank()) ? username : userId;
     }
 
     /**

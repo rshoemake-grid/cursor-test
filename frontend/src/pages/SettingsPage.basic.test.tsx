@@ -3,6 +3,7 @@ import SettingsPage from './SettingsPage'
 import React from 'react'
 import { screen, fireEvent } from '@testing-library/react'
 import { showConfirm } from '../utils/confirm'
+import { STORAGE_KEYS } from '../config/constants'
 
 describe('SettingsPage - Basic', () => {
   beforeEach(() => {
@@ -78,7 +79,7 @@ describe('SettingsPage - Basic', () => {
         enabled: true,
       },
     ]
-    localStorage.setItem('llm_settings', JSON.stringify({ providers: savedProviders }))
+    localStorage.setItem(STORAGE_KEYS.LLM_SETTINGS, JSON.stringify({ providers: savedProviders }))
 
     renderWithRouter(<SettingsPage />)
 
@@ -124,7 +125,7 @@ describe('SettingsPage - Basic', () => {
     }, 2000)
 
     await waitForWithTimeout(() => {
-      localStorage.getItem('llm_settings')
+      localStorage.getItem(STORAGE_KEYS.LLM_SETTINGS)
       expect(screen.getAllByText(/Settings/).length).toBeGreaterThan(0)
     }, 2000)
   })
@@ -141,7 +142,7 @@ describe('SettingsPage - Basic', () => {
         enabled: true,
       },
     ]
-    localStorage.setItem('llm_settings', JSON.stringify({ providers: savedProviders }))
+    localStorage.setItem(STORAGE_KEYS.LLM_SETTINGS, JSON.stringify({ providers: savedProviders }))
 
     renderWithRouter(<SettingsPage />)
 
@@ -155,7 +156,7 @@ describe('SettingsPage - Basic', () => {
       fireEvent.click(toggleButtons[0])
 
       await waitForWithTimeout(() => {
-        const saved = localStorage.getItem('llm_settings')
+        const saved = localStorage.getItem(STORAGE_KEYS.LLM_SETTINGS)
         if (saved) {
           const settings = JSON.parse(saved)
           if (settings.providers && settings.providers.length > 0) {
@@ -180,7 +181,7 @@ describe('SettingsPage - Basic', () => {
         enabled: true,
       },
     ]
-    localStorage.setItem('llm_settings', JSON.stringify({ providers: savedProviders }))
+    localStorage.setItem(STORAGE_KEYS.LLM_SETTINGS, JSON.stringify({ providers: savedProviders }))
 
     renderWithRouter(<SettingsPage />)
 
@@ -198,7 +199,7 @@ describe('SettingsPage - Basic', () => {
       }, 2000)
 
       await waitForWithTimeout(() => {
-        const saved = localStorage.getItem('llm_settings')
+        const saved = localStorage.getItem(STORAGE_KEYS.LLM_SETTINGS)
         if (saved) {
           const settings = JSON.parse(saved)
           if (settings.providers) {
@@ -247,7 +248,7 @@ describe('SettingsPage - Basic', () => {
         enabled: true,
       },
     ]
-    localStorage.setItem('llm_settings', JSON.stringify({ providers: savedProviders }))
+    localStorage.setItem(STORAGE_KEYS.LLM_SETTINGS, JSON.stringify({ providers: savedProviders }))
 
     renderWithRouter(<SettingsPage />)
 
@@ -295,7 +296,7 @@ describe('SettingsPage - Basic', () => {
         enabled: true,
       },
     ]
-    localStorage.setItem('llm_settings', JSON.stringify({ providers: savedProviders }))
+    localStorage.setItem(STORAGE_KEYS.LLM_SETTINGS, JSON.stringify({ providers: savedProviders }))
 
     renderWithRouter(<SettingsPage />)
 
@@ -331,7 +332,7 @@ describe('SettingsPage - Basic', () => {
         enabled: true,
       },
     ]
-    localStorage.setItem('llm_settings', JSON.stringify({ providers: savedProviders }))
+    localStorage.setItem(STORAGE_KEYS.LLM_SETTINGS, JSON.stringify({ providers: savedProviders }))
 
     renderWithRouter(<SettingsPage />)
 

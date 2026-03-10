@@ -56,6 +56,20 @@ public class GlobalExceptionHandler {
         return ErrorResponseBuilder.badRequest(e.getMessage(), getRequestPath(request));
     }
 
+    @ExceptionHandler(IllegalStateException.class)
+    public ResponseEntity<Map<String, Object>> handleIllegalState(
+            IllegalStateException e, HttpServletRequest request) {
+        log.debug("Invalid state: {}", e.getMessage());
+        return ErrorResponseBuilder.internalServerError(e.getMessage(), getRequestPath(request));
+    }
+
+    @ExceptionHandler(UnauthorizedException.class)
+    public ResponseEntity<Map<String, Object>> handleUnauthorized(
+            UnauthorizedException e, HttpServletRequest request) {
+        log.debug("Unauthorized: {}", e.getMessage());
+        return ErrorResponseBuilder.unauthorized(e.getMessage(), getRequestPath(request));
+    }
+
     @ExceptionHandler(ForbiddenException.class)
     public ResponseEntity<Map<String, Object>> handleForbidden(
             ForbiddenException e, HttpServletRequest request) {
@@ -76,12 +90,8 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Map<String, Object>> handleMethodArgumentNotValid(
             MethodArgumentNotValidException e, HttpServletRequest request) {
-        String message = e.getBindingResult().getFieldErrors().stream()
-            .map(error -> error.getField() + ": " + error.getDefaultMessage())
-            .reduce((a, b) -> a + ", " + b)
-            .orElse(ErrorMessages.VALIDATION_FAILED);
-        log.debug("Validation error: {}", message);
-        return ErrorResponseBuilder.validationError(message, getRequestPath(request));
+        log.debug("Validation error: {}", e.getBindingResult().getFieldErrors());
+        return ErrorResponseBuilder.validationError(ErrorMessages.VALIDATION_FAILED, getRequestPath(request));
     }
     
     @ExceptionHandler(Exception.class)
@@ -92,8 +102,6 @@ public class GlobalExceptionHandler {
         } else {
             log.error("Unexpected error occurred", e);
         }
-        String clientMessage = EnvironmentUtils.isProduction(environment) ? ErrorMessages.UNEXPECTED_ERROR
-                : java.util.Objects.requireNonNullElse(e.getMessage(), ErrorMessages.UNEXPECTED_ERROR);
-        return ErrorResponseBuilder.internalServerError(clientMessage, getRequestPath(request));
+        return ErrorResponseBuilder.internalServerError(ErrorMessages.UNEXPECTED_ERROR, getRequestPath(request));
     }
 }

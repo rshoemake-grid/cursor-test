@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
+import { API_CONFIG } from '../config/constants';
+import { extractApiErrorMessage } from '../hooks/utils/apiUtils';
 import type { HttpClient } from '../types/adapters';
 import { defaultAdapters } from '../types/adapters';
 
@@ -12,7 +14,7 @@ interface ForgotPasswordPageProps {
 
 export default function ForgotPasswordPage({
   httpClient = defaultAdapters.createHttpClient(),
-  apiBaseUrl = 'http://localhost:8000/api'
+  apiBaseUrl = API_CONFIG.BASE_URL
 }: ForgotPasswordPageProps = {}) {
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
@@ -28,25 +30,26 @@ export default function ForgotPasswordPage({
 
     try {
       const response = await httpClient.post(
-        `${apiBaseUrl}/auth/forgot-password`,
+        `${apiBaseUrl}${API_CONFIG.ENDPOINTS.AUTH.FORGOT_PASSWORD}`,
         { email },
         { 'Content-Type': 'application/json' }
       );
 
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.detail || 'Failed to send reset email');
+        const errorData = await response.json();
+        throw new Error(extractApiErrorMessage(errorData, 'Failed to send reset email'));
       }
 
       const data = await response.json();
       setSuccess(true);
       
-      // In development, show the token (remove in production)
-      if (data.token) {
+      // Only show token in development (never in production or test)
+      const isDev = typeof process !== 'undefined' && process.env?.NODE_ENV === 'development';
+      if (isDev && data.token) {
         setResetToken(data.token);
       }
     } catch (err: any) {
-      setError(err.message);
+      setError(extractApiErrorMessage(err, 'Failed to send reset email'));
     } finally {
       setLoading(false);
     }

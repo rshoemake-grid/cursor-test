@@ -185,7 +185,7 @@ export function useCanvasEvents({
 
     try {
       // Get existing agent nodes from storage
-      const savedAgentNodes = storage.getItem('customAgentNodes')
+      const savedAgentNodes = storage.getItem(STORAGE_KEYS.CUSTOM_AGENT_NODES)
       const agentNodes = savedAgentNodes ? JSON.parse(savedAgentNodes) : logicalOrToEmptyArray([])
       
       // Create a template from the node

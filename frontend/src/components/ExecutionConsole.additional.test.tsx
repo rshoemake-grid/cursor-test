@@ -1,6 +1,7 @@
 import React from 'react'
 import { render, screen, fireEvent, act } from '@testing-library/react'
 import { waitForWithTimeoutFakeTimers } from '../test/utils/waitForWithTimeout'
+import { AuthProvider } from '../contexts/AuthContext'
 import ExecutionConsole from './ExecutionConsole'
 // Domain-based imports - Phase 7
 import { useWebSocket } from '../hooks/execution'
@@ -43,6 +44,9 @@ jest.mock('../utils/logger', () => ({
 
 const mockUseWebSocket = useWebSocket as jest.MockedFunction<typeof useWebSocket>
 
+const renderWithAuth = (ui: React.ReactElement) =>
+  render(<AuthProvider>{ui}</AuthProvider>)
+
 describe('ExecutionConsole - Additional Coverage', () => {
   beforeEach(() => {
     jest.useFakeTimers()
@@ -81,7 +85,7 @@ describe('ExecutionConsole - Additional Coverage', () => {
 
   describe('Tab Management', () => {
     it('should switch between chat and execution tabs', async () => {
-      render(
+      renderWithAuth(
         <ExecutionConsole
           activeWorkflowId="workflow-1"
           executions={[mockExecution]}
@@ -141,7 +145,7 @@ describe('ExecutionConsole - Additional Coverage', () => {
     })
 
     it('should render chat tab by default', () => {
-      render(
+      renderWithAuth(
         <ExecutionConsole
           activeWorkflowId="workflow-1"
           executions={[]}
@@ -158,7 +162,7 @@ describe('ExecutionConsole - Additional Coverage', () => {
         { ...mockExecution, id: 'exec-2' },
       ]
 
-      render(
+      renderWithAuth(
         <ExecutionConsole
           activeWorkflowId="workflow-1"
           executions={executions}
@@ -173,7 +177,7 @@ describe('ExecutionConsole - Additional Coverage', () => {
 
   describe('Console Expand/Collapse', () => {
     it('should expand console when expand button is clicked', () => {
-      render(
+      renderWithAuth(
         <ExecutionConsole
           activeWorkflowId="workflow-1"
           executions={[]}
@@ -193,7 +197,7 @@ describe('ExecutionConsole - Additional Coverage', () => {
     })
 
     it('should collapse console when collapse button is clicked', () => {
-      render(
+      renderWithAuth(
         <ExecutionConsole
           activeWorkflowId="workflow-1"
           executions={[]}
@@ -214,7 +218,7 @@ describe('ExecutionConsole - Additional Coverage', () => {
     })
 
     it('should auto-expand when execution starts', () => {
-      render(
+      renderWithAuth(
         <ExecutionConsole
           activeWorkflowId="workflow-1"
           executions={[mockExecution]}
@@ -237,7 +241,7 @@ describe('ExecutionConsole - Additional Coverage', () => {
         return {} as any
       })
 
-      render(
+      renderWithAuth(
         <ExecutionConsole
           activeWorkflowId="workflow-1"
           executions={[mockExecution]}
@@ -322,7 +326,7 @@ describe('ExecutionConsole - Additional Coverage', () => {
     })
 
     it('should set up WebSocket with correct execution ID', () => {
-      render(
+      renderWithAuth(
         <ExecutionConsole
           activeWorkflowId="workflow-1"
           executions={[mockExecution]}
@@ -347,7 +351,7 @@ describe('ExecutionConsole - Additional Coverage', () => {
         return {} as any
       })
 
-      render(
+      renderWithAuth(
         <ExecutionConsole
           activeWorkflowId="workflow-1"
           executions={[mockExecution]}
@@ -448,7 +452,7 @@ describe('ExecutionConsole - Additional Coverage', () => {
         return {} as any
       })
 
-      render(
+      renderWithAuth(
         <ExecutionConsole
           activeWorkflowId="workflow-1"
           executions={[mockExecution]}
@@ -509,7 +513,7 @@ describe('ExecutionConsole - Additional Coverage', () => {
         return {} as any
       })
 
-      render(
+      renderWithAuth(
         <ExecutionConsole
           activeWorkflowId="workflow-1"
           executions={[mockExecution]}
@@ -590,7 +594,7 @@ describe('ExecutionConsole - Additional Coverage', () => {
         return {} as any
       })
 
-      render(
+      renderWithAuth(
         <ExecutionConsole
           activeWorkflowId="workflow-1"
           executions={[mockExecution]}
@@ -611,7 +615,7 @@ describe('ExecutionConsole - Additional Coverage', () => {
 
   describe('Execution Tab Closing', () => {
     it('should close execution tab when close button is clicked', () => {
-      render(
+      renderWithAuth(
         <ExecutionConsole
           activeWorkflowId="workflow-1"
           executions={[mockExecution]}
@@ -629,7 +633,7 @@ describe('ExecutionConsole - Additional Coverage', () => {
     })
 
     it('should switch to chat tab when closing active execution tab', () => {
-      render(
+      renderWithAuth(
         <ExecutionConsole
           activeWorkflowId="workflow-1"
           executions={[mockExecution]}
@@ -651,7 +655,7 @@ describe('ExecutionConsole - Additional Coverage', () => {
         { ...mockExecution, id: 'exec-2' },
       ]
 
-      render(
+      renderWithAuth(
         <ExecutionConsole
           activeWorkflowId="workflow-1"
           executions={executions}
@@ -679,7 +683,7 @@ describe('ExecutionConsole - Additional Coverage', () => {
         body: document.body,
       }
 
-      render(
+      renderWithAuth(
         <ExecutionConsole
           activeWorkflowId="workflow-1"
           executions={[]}
@@ -709,7 +713,7 @@ describe('ExecutionConsole - Additional Coverage', () => {
         body: document.body,
       }
 
-      render(
+      renderWithAuth(
         <ExecutionConsole
           activeWorkflowId="workflow-1"
           executions={[]}
@@ -730,7 +734,7 @@ describe('ExecutionConsole - Additional Coverage', () => {
         body: document.body,
       }
 
-      render(
+      renderWithAuth(
         <ExecutionConsole
           activeWorkflowId="workflow-1"
           executions={[]}
@@ -750,7 +754,7 @@ describe('ExecutionConsole - Additional Coverage', () => {
         status: 'running',
       }
 
-      render(
+      renderWithAuth(
         <ExecutionConsole
           activeWorkflowId="workflow-1"
           executions={[runningExecution]}
@@ -767,7 +771,7 @@ describe('ExecutionConsole - Additional Coverage', () => {
         status: 'completed',
       }
 
-      render(
+      renderWithAuth(
         <ExecutionConsole
           activeWorkflowId="workflow-1"
           executions={[completedExecution]}
@@ -784,7 +788,7 @@ describe('ExecutionConsole - Additional Coverage', () => {
         status: 'failed',
       }
 
-      render(
+      renderWithAuth(
         <ExecutionConsole
           activeWorkflowId="workflow-1"
           executions={[failedExecution]}
@@ -798,7 +802,7 @@ describe('ExecutionConsole - Additional Coverage', () => {
 
   describe('Active Execution Switching', () => {
     it('should switch to new execution tab when activeExecutionId changes', () => {
-      const { rerender } = render(
+      const { rerender } = renderWithAuth(
         <ExecutionConsole
           activeWorkflowId="workflow-1"
           executions={[mockExecution]}
@@ -807,18 +811,20 @@ describe('ExecutionConsole - Additional Coverage', () => {
       )
 
       rerender(
-        <ExecutionConsole
-          activeWorkflowId="workflow-1"
-          executions={[mockExecution]}
-          activeExecutionId="exec-123"
-        />
+        <AuthProvider>
+          <ExecutionConsole
+            activeWorkflowId="workflow-1"
+            executions={[mockExecution]}
+            activeExecutionId="exec-123"
+          />
+        </AuthProvider>
       )
 
       // Should switch to execution tab
     })
 
     it('should auto-expand when switching to execution', () => {
-      const { rerender } = render(
+      const { rerender } = renderWithAuth(
         <ExecutionConsole
           activeWorkflowId="workflow-1"
           executions={[mockExecution]}
@@ -827,11 +833,13 @@ describe('ExecutionConsole - Additional Coverage', () => {
       )
 
       rerender(
-        <ExecutionConsole
-          activeWorkflowId="workflow-1"
-          executions={[mockExecution]}
-          activeExecutionId="exec-123"
-        />
+        <AuthProvider>
+          <ExecutionConsole
+            activeWorkflowId="workflow-1"
+            executions={[mockExecution]}
+            activeExecutionId="exec-123"
+          />
+        </AuthProvider>
       )
 
       // Console should be expanded

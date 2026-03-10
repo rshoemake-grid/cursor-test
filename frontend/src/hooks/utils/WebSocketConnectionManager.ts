@@ -26,6 +26,7 @@ import {
   WS_CLOSE_REASONS,
   WS_RECONNECT
 } from './websocketConstants'
+import { extractApiErrorMessage } from './apiUtils'
 import {
   hasPendingReconnection,
   sanitizeReconnectionDelay,
@@ -189,7 +190,7 @@ export class WebSocketConnectionManager {
     }
 
     ws.onerror = (error) => {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown WebSocket error'
+      const errorMessage = extractApiErrorMessage(error, 'Unknown WebSocket error')
       this.config.logger.error(`[WebSocket] Connection error for execution ${this.config.executionId}:`, {
         message: errorMessage,
         readyState: getWebSocketStateText(ws.readyState),
@@ -366,6 +367,6 @@ export class WebSocketConnectionManager {
   private handleConnectionError(error: any, callbacks: WebSocketCallbacks): void {
     this.isConnectedState = false
     callbacks.onStatus?.(WS_STATUS.ERROR)
-    callbacks.onError?.(error instanceof Error ? error.message : 'Failed to create WebSocket connection')
+    callbacks.onError?.(extractApiErrorMessage(error, 'Failed to create WebSocket connection'))
   }
 }

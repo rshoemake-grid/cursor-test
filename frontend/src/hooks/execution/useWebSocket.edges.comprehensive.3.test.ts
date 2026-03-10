@@ -455,7 +455,7 @@ describe('useWebSocket - edges.comprehensive.3', () => {
         await advanceTimersByTime(100)
 
         expect(logger.error).toHaveBeenCalled()
-        expect(onError).toHaveBeenCalledWith('Failed to create WebSocket connection')
+        expect(onError).toHaveBeenCalledWith('String error')
       })
     })
 

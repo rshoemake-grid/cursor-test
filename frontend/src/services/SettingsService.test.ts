@@ -1,11 +1,23 @@
 import { SettingsService, type LLMSettings } from './SettingsService'
+import { logger } from '../utils/logger'
 import type { StorageAdapter, HttpClient } from '../types/adapters'
 // Domain-based imports - Phase 7
 import type { LLMProvider } from '../hooks/providers'
 import { buildAuthHeaders } from '../hooks/utils/apiUtils'
 
 jest.mock('../hooks/utils/apiUtils', () => ({
+  ...jest.requireActual('../hooks/utils/apiUtils'),
   buildAuthHeaders: jest.fn(),
+}))
+
+jest.mock('../utils/logger', () => ({
+  logger: {
+    debug: jest.fn(),
+    error: jest.fn(),
+    info: jest.fn(),
+    warn: jest.fn(),
+    log: jest.fn(),
+  },
 }))
 
 describe('SettingsService', () => {
@@ -111,14 +123,11 @@ describe('SettingsService', () => {
     it('should throw error when backend save fails', async () => {
       const error = new Error('Network error')
       mockHttpClient.post.mockRejectedValue(error)
-      const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation()
 
       service = new SettingsService(mockHttpClient, mockStorage, apiBaseUrl)
 
       await expect(service.saveSettings(mockSettings, 'test-token')).rejects.toThrow('Network error')
-      expect(consoleErrorSpy).toHaveBeenCalledWith('Failed to sync settings to backend:', error)
-
-      consoleErrorSpy.mockRestore()
+      expect(logger.error).toHaveBeenCalledWith('Failed to sync settings to backend:', error)
     })
 
     it('should throw error when backend returns non-ok response', async () => {
@@ -126,6 +135,7 @@ describe('SettingsService', () => {
         ok: false,
         status: 500,
         statusText: 'Internal Server Error',
+        json: async () => ({}),
       } as Response)
 
       service = new SettingsService(mockHttpClient, mockStorage, apiBaseUrl)

@@ -64,8 +64,8 @@ public class WorkflowController {
     })
     public ResponseEntity<List<WorkflowResponse>> listWorkflows(Authentication authentication) {
         log.debug("GET /api/workflows - Listing workflows");
-        
-        String userId = authenticationHelper.extractUserId(authentication);
+
+        String userId = authenticationHelper.extractUserIdRequired(authentication);
         List<WorkflowResponse> workflows = workflowService.listWorkflows(userId);
         
         return ResponseEntity.ok(workflows);
@@ -127,7 +127,7 @@ public class WorkflowController {
     })
     public ResponseEntity<WorkflowTemplateResponse> publishWorkflow(
             @PathVariable String id,
-            @RequestBody WorkflowPublishRequest request,
+            @Valid @RequestBody WorkflowPublishRequest request,
             Authentication authentication) {
         String userId = authenticationHelper.extractUserIdRequired(authentication);
         boolean isAdmin = authenticationHelper.extractIsAdmin(authentication);
@@ -136,7 +136,7 @@ public class WorkflowController {
 
     @PostMapping("/bulk-delete")
     @Operation(summary = "Bulk Delete Workflows")
-    public ResponseEntity<Map<String, Object>> bulkDelete(@RequestBody BulkDeleteRequest request, Authentication authentication) {
+    public ResponseEntity<Map<String, Object>> bulkDelete(@Valid @RequestBody BulkDeleteRequest request, Authentication authentication) {
         String userId = authenticationHelper.extractUserIdRequired(authentication);
         return ResponseEntity.ok(workflowService.bulkDelete(request.getWorkflowIds(), userId));
     }
