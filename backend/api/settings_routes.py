@@ -100,19 +100,24 @@ def _get_llm_test_registry() -> Dict[str, Any]:
 
 @router.post("/llm/test")
 async def test_llm_connection(test_request: LLMTestRequest):
-    """Test LLM provider connection - uses provider registry (OCP)."""
+    """Test LLM provider connection - uses provider registry (OCP). Apigee-compatible error format."""
     try:
         registry = _get_llm_test_registry()
         tester = registry.get(test_request.type)
         if tester is None:
             raise HTTPException(status_code=400, detail=f"Unknown provider type: {test_request.type}")
-        return await tester(test_request.base_url, test_request.api_key, test_request.model)
+        result = await tester(test_request.base_url, test_request.api_key, test_request.model)
+        if result.get("status") == "error":
+            raise HTTPException(status_code=422, detail=result.get("message", "Connection failed"))
+        return result
+    except HTTPException:
+        raise
     except httpx.HTTPStatusError as e:
-        return {"status": "error", "message": f"HTTP {e.response.status_code}: {e.response.text}"}
+        raise HTTPException(status_code=422, detail=f"HTTP {e.response.status_code}: {e.response.text}")
     except httpx.ConnectError as e:
-        return {"status": "error", "message": f"Connection failed: {str(e)}"}
-    except httpx.TimeoutException as e:
-        return {"status": "error", "message": "Request timed out"}
+        raise HTTPException(status_code=422, detail=f"Connection failed: {str(e)}")
+    except httpx.TimeoutException:
+        raise HTTPException(status_code=422, detail="Request timed out")
     except Exception as e:
-        return {"status": "error", "message": f"Unexpected error: {str(e)}"}
+        raise HTTPException(status_code=422, detail=f"Unexpected error: {str(e)}")
 

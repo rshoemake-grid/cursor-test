@@ -214,7 +214,7 @@ async def test_test_llm_connection_invalid_type():
     
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
         response = await client.post("/api/settings/llm/test", json=test_request)
-        assert response.status_code == 200
+        assert response.status_code == 400  # Apigee: invalid type returns 400
         data = response.json()
-        assert data["status"] == "error"
+        assert "error" in data or "detail" in data
 

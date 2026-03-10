@@ -104,7 +104,7 @@ class TestStatusCodeComparisons:
                         },
                         headers=headers
                     )
-                    assert response.status_code in [200, 400, 500]  # May return error response
+                    assert response.status_code in [200, 400, 422, 500]  # Apigee: 422 for API errors
         finally:
             app.dependency_overrides.clear()
     
@@ -138,7 +138,7 @@ class TestStatusCodeComparisons:
                         },
                         headers=headers
                     )
-                    assert response.status_code in [200, 400, 500]  # May return error response
+                    assert response.status_code in [200, 400, 422, 500]  # Apigee: 422 for API errors
         finally:
             app.dependency_overrides.clear()
     
@@ -172,7 +172,7 @@ class TestStatusCodeComparisons:
                         },
                         headers=headers
                     )
-                    assert response.status_code in [200, 400, 500]  # May return error response
+                    assert response.status_code in [200, 400, 422, 500]  # Apigee: 422 for API errors
         finally:
             app.dependency_overrides.clear()
     
@@ -206,10 +206,9 @@ class TestStatusCodeComparisons:
                         },
                         headers=headers
                     )
-                    assert response.status_code == 200
+                    assert response.status_code == 422  # Apigee: API 400 becomes 422
         finally:
             app.dependency_overrides.clear()
-            assert response.status_code in [200, 400, 500]  # May return error response
 
 
 class TestTypeComparisons:
@@ -358,57 +357,57 @@ class TestAPIKeyLengthComparisons:
     
     def testis_valid_api_key_length_9(self):
         """Test API key validation with length exactly 9 (boundary: < 10 true)"""
-        from backend.api.settings_routes import is_valid_api_key
+        from backend.utils.settings_utils import is_valid_api_key
         result = is_valid_api_key("123456789")  # Exactly 9 chars
         assert result is False
     
     def testis_valid_api_key_length_10(self):
         """Test API key validation with length exactly 10 (boundary: < 10 false)"""
-        from backend.api.settings_routes import is_valid_api_key
+        from backend.utils.settings_utils import is_valid_api_key
         result = is_valid_api_key("1234567890")  # Exactly 10 chars
         assert result is True
     
     def testis_valid_api_key_length_11(self):
         """Test API key validation with length exactly 11 (boundary: > 10)"""
-        from backend.api.settings_routes import is_valid_api_key
+        from backend.utils.settings_utils import is_valid_api_key
         result = is_valid_api_key("12345678901")  # Exactly 11 chars
         assert result is True
     
     def testis_valid_api_key_length_24_with_placeholder(self):
         """Test API key validation with length 24 and placeholder (boundary: < 25)"""
-        from backend.api.settings_routes import is_valid_api_key
+        from backend.utils.settings_utils import is_valid_api_key
         result = is_valid_api_key("your-api-key-here-123")  # Exactly 24 chars
         assert result is False
             
     def testis_valid_api_key_length_25_with_placeholder(self):
         """Test API key validation with length 25 and placeholder (boundary: >= 25)"""
-        from backend.api.settings_routes import is_valid_api_key
+        from backend.utils.settings_utils import is_valid_api_key
         result = is_valid_api_key("your-api-key-here-1234")  # Exactly 25 chars
         # Should pass length check but fail placeholder check
         assert result is False
     
     def testis_valid_api_key_length_29_with_masked(self):
         """Test API key validation with length 29 and masked pattern (boundary: < 30)"""
-        from backend.api.settings_routes import is_valid_api_key
+        from backend.utils.settings_utils import is_valid_api_key
         result = is_valid_api_key("sk-test-*****here-123456")  # Exactly 29 chars
         assert result is False
     
     def testis_valid_api_key_length_30_with_masked(self):
         """Test API key validation with length 30 and masked pattern (boundary: >= 30)"""
-        from backend.api.settings_routes import is_valid_api_key
+        from backend.utils.settings_utils import is_valid_api_key
         result = is_valid_api_key("sk-test-*****here-1234567")  # Exactly 30 chars
         # Should pass length check but fail masked pattern check
         assert result is False
     
     def testis_valid_api_key_empty_string(self):
         """Test API key validation with empty string"""
-        from backend.api.settings_routes import is_valid_api_key
+        from backend.utils.settings_utils import is_valid_api_key
         result = is_valid_api_key("")
         assert result is False
     
     def testis_valid_api_key_valid_long(self):
         """Test API key validation with valid long key"""
-        from backend.api.settings_routes import is_valid_api_key
+        from backend.utils.settings_utils import is_valid_api_key
         result = is_valid_api_key("sk-test-key-123456789012345678901234567890")
         assert result is True
 
@@ -530,13 +529,13 @@ class TestAPIKeyLengthComparisonsStandalone:
     
     def test_api_key_length_zero(self):
         """Test API key length exactly 0 (boundary: len(apiKey) > 0 false)"""
-        from backend.api.settings_routes import is_valid_api_key
+        from backend.utils.settings_utils import is_valid_api_key
         result = is_valid_api_key("")
         assert result is False
     
     def test_api_key_length_one(self):
         """Test API key length exactly 1 (boundary: len(apiKey) > 0 true)"""
-        from backend.api.settings_routes import is_valid_api_key
+        from backend.utils.settings_utils import is_valid_api_key
         result = is_valid_api_key("x")
         assert result is False  # Too short
     

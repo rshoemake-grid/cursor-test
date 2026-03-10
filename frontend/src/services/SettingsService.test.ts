@@ -201,10 +201,10 @@ describe('SettingsService', () => {
 
     it('should return error when provider test fails', async () => {
       mockHttpClient.post.mockResolvedValue({
-        ok: true,
+        ok: false,
+        status: 422,
         json: async () => ({
-          status: 'error',
-          message: 'Invalid API key',
+          error: { code: '422', message: 'Invalid API key', path: '/api/settings/llm/test', timestamp: new Date().toISOString() },
         }),
       } as Response)
 
@@ -216,11 +216,12 @@ describe('SettingsService', () => {
       expect(result.message).toBe('Invalid API key')
     })
 
-    it('should return error with default message when status is error but no message', async () => {
+    it('should return error with default message when Apigee error has no message', async () => {
       mockHttpClient.post.mockResolvedValue({
-        ok: true,
+        ok: false,
+        status: 422,
         json: async () => ({
-          status: 'error',
+          error: { code: '422', path: '/api/settings/llm/test', timestamp: new Date().toISOString() },
         }),
       } as Response)
 

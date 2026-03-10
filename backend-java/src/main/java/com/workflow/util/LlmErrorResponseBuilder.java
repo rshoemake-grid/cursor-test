@@ -4,7 +4,8 @@ import java.util.Map;
 import java.util.Objects;
 
 /**
- * DRY-14: Centralizes LLM error response format used by SettingsController, LlmTestService, etc.
+ * DRY-14: Centralizes LLM error response format used by LlmTestService (service layer).
+ * Note: SettingsController uses ErrorResponseBuilder for Apigee-compatible HTTP error responses.
  */
 public final class LlmErrorResponseBuilder {
 

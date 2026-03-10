@@ -83,9 +83,10 @@ export class SettingsService {
       
       if (data.status === 'success') {
         return { status: 'success', message: data.message };
-      } else {
-        return { status: 'error', message: data.message || 'Connection failed' };
       }
+      // Apigee-compatible error format: { error: { message } } or legacy { status, message }
+      const errorMessage = data.error?.message || data.message || 'Connection failed';
+      return { status: 'error', message: errorMessage };
     } catch (error: any) {
       return {
         status: 'error',

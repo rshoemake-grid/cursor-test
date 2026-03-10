@@ -160,9 +160,9 @@ async def test_test_llm_connection_error(db_session: AsyncSession, test_user: Us
                     },
                     headers={"Authorization": f"Bearer {token}"}
                 )
-                assert response.status_code == 200
+                assert response.status_code == 422  # Apigee: connection errors return 422
                 data = response.json()
-                assert data["status"] == "error"
+                assert "error" in data or "detail" in data
         finally:
             app.dependency_overrides.clear()
 

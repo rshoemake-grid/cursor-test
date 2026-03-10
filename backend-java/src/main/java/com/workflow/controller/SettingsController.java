@@ -5,7 +5,7 @@ import com.workflow.service.SettingsService;
 import com.workflow.util.AuthenticationHelper;
 import com.workflow.util.ErrorMessages;
 import com.workflow.util.LlmConfigUtils;
-import com.workflow.util.LlmErrorResponseBuilder;
+import com.workflow.util.ErrorResponseBuilder;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.slf4j.Logger;
@@ -14,6 +14,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import jakarta.servlet.http.HttpServletRequest;
 import java.util.Map;
 
 /**
@@ -59,9 +60,10 @@ public class SettingsController {
 
     @PostMapping("/llm/test")
     @Operation(summary = "Test LLM Connection", description = "Test LLM provider connection (S-H4: requires auth)")
-    public ResponseEntity<Map<String, String>> testLlmConnection(
+    public ResponseEntity<?> testLlmConnection(
             @RequestBody Map<String, Object> testRequest,
-            Authentication authentication) {
+            Authentication authentication,
+            HttpServletRequest request) {
         authenticationHelper.extractUserIdRequired(authentication);
 
         String type = (String) testRequest.get("type");
@@ -70,18 +72,19 @@ public class SettingsController {
         String model = (String) testRequest.get("model");
 
         if (type == null || apiKey == null || model == null) {
-            return ResponseEntity.badRequest().body(LlmErrorResponseBuilder.error(ErrorMessages.LLM_TEST_REQUIRED_FIELDS));
+            return ErrorResponseBuilder.badRequest(ErrorMessages.LLM_TEST_REQUIRED_FIELDS, request.getRequestURI());
         }
 
         try {
             Map<String, String> result = llmTestService.testProvider(type, apiKey, baseUrl, model);
             if ("error".equals(result.get("status"))) {
-                return ResponseEntity.unprocessableEntity().body(result);
+                String message = result.getOrDefault("message", ErrorMessages.UNEXPECTED_ERROR);
+                return ErrorResponseBuilder.validationError(message, request.getRequestURI());
             }
             return ResponseEntity.ok(result);
         } catch (Exception e) {
             log.warn("LLM test failed: {}", e.getMessage());
-            return ResponseEntity.unprocessableEntity().body(LlmErrorResponseBuilder.error(ErrorMessages.UNEXPECTED_ERROR));
+            return ErrorResponseBuilder.validationError(ErrorMessages.UNEXPECTED_ERROR, request.getRequestURI());
         }
     }
 }
