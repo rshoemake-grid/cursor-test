@@ -3,6 +3,9 @@
  * Tests for execution status checking logic
  */
 
+import * as fs from 'fs'
+import * as path from 'path'
+
 import {
   ExecutionStatusChecker,
   isExecutionTerminated,
@@ -16,6 +19,14 @@ import { EXECUTION_STATUS } from './websocketConstants'
 jest.mock('./executionIdValidation', () => ({
   isTemporaryExecutionId: jest.fn((id: string | null) => id?.startsWith('temp-') ?? false),
 }))
+
+describe('Vite/ESM browser compatibility', () => {
+  it('must not use require() - would cause "require is not defined" in Vite browser build', () => {
+    const filePath = path.join(__dirname, 'executionStatusUtils.ts')
+    const content = fs.readFileSync(filePath, 'utf-8')
+    expect(content).not.toMatch(/\brequire\s*\(/)
+  })
+})
 
 describe('ExecutionStatusChecker', () => {
   describe('isTerminated', () => {

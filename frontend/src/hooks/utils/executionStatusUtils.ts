@@ -2,6 +2,7 @@
  * Execution Status Utilities
  * Extracted for better testability and Single Responsibility
  * Single Responsibility: Only handles execution status checking
+ * NOTE: Use ES import, not CommonJS require - causes "require is not defined" in Vite/browser
  */
 
 import { logicalOr } from './logicalOr'
