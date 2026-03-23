@@ -6,7 +6,7 @@
 
 import { logicalOr } from './logicalOr'
 import { EXECUTION_STATUS } from './websocketConstants'
-// isTemporaryExecutionId is used via require() for dynamic import, not direct import - intentionally not imported
+import { isTemporaryExecutionId } from './executionIdValidation'
 
 /**
  * Execution Status Type
@@ -42,9 +42,6 @@ export class ExecutionStatusChecker {
     lastKnownStatus?: ExecutionStatus | undefined
   ): boolean {
     if (!executionId) return true
-    // Import here to avoid circular dependency
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const { isTemporaryExecutionId } = require('./executionIdValidation')
     if (isTemporaryExecutionId(executionId)) return true
     if (this.isTerminated(executionStatus, lastKnownStatus)) return true
     return false
@@ -63,10 +60,6 @@ export class ExecutionStatusChecker {
     executionStatus: ExecutionStatus | undefined,
     lastKnownStatus?: ExecutionStatus | undefined
   ): boolean {
-    // Import here to avoid circular dependency
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const { isTemporaryExecutionId } = require('./executionIdValidation')
-    
     // Don't reconnect to temporary execution IDs
     if (isTemporaryExecutionId(executionId)) return false
 
