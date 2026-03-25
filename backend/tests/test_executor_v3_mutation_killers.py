@@ -199,7 +199,7 @@ class TestStatusComparisons:
         executor = WorkflowExecutorV3(workflow)
         
         # Mock agent to raise exception
-        with patch("backend.engine.executor_v3.AgentRegistry.get_agent") as mock_get_agent:
+        with patch("backend.engine.nodes.executors.AgentRegistry.get_agent") as mock_get_agent:
             mock_agent = AsyncMock()
             mock_agent.execute = AsyncMock(side_effect=Exception("Test error"))
             mock_get_agent.return_value = mock_agent
@@ -241,7 +241,7 @@ class TestNodeTypeComparisons:
         
         executor = WorkflowExecutorV3(workflow)
         
-        with patch("backend.engine.executor_v3.AgentRegistry.get_agent") as mock_get_agent:
+        with patch("backend.engine.nodes.executors.AgentRegistry.get_agent") as mock_get_agent:
             result = await executor.execute({"value": "test"})
             assert result.status in [ExecutionStatus.COMPLETED, ExecutionStatus.FAILED]
     
@@ -325,7 +325,7 @@ class TestLengthComparisons:
         
         executor = WorkflowExecutorV3(workflow)
         
-        with patch("backend.engine.executor_v3.AgentRegistry.get_agent") as mock_get_agent:
+        with patch("backend.engine.nodes.executors.AgentRegistry.get_agent") as mock_get_agent:
             mock_agent = AsyncMock()
             mock_agent.execute = AsyncMock(return_value="output")
             mock_get_agent.return_value = mock_agent
@@ -361,7 +361,7 @@ class TestLengthComparisons:
         
         executor = WorkflowExecutorV3(workflow)
         
-        with patch("backend.engine.executor_v3.AgentRegistry.get_agent") as mock_get_agent, \
+        with patch("backend.engine.nodes.executors.AgentRegistry.get_agent") as mock_get_agent, \
              patch("backend.engine.execution.execution_broadcaster.ws_manager") as mock_ws:
             mock_ws.broadcast_status = AsyncMock()
             mock_ws.broadcast_completion = AsyncMock()
@@ -421,7 +421,7 @@ class TestLengthComparisons:
         
         executor = WorkflowExecutorV3(workflow)
         
-        with patch("backend.engine.executor_v3.AgentRegistry.get_agent") as mock_get_agent:
+        with patch("backend.engine.nodes.executors.AgentRegistry.get_agent") as mock_get_agent:
             mock_agent = AsyncMock()
             mock_agent.execute = AsyncMock(return_value="output")
             mock_get_agent.return_value = mock_agent
@@ -464,7 +464,7 @@ class TestLengthComparisons:
         
         executor = WorkflowExecutorV3(workflow)
         
-        with patch("backend.engine.executor_v3.AgentRegistry.get_agent") as mock_get_agent, \
+        with patch("backend.engine.nodes.executors.AgentRegistry.get_agent") as mock_get_agent, \
              patch("backend.engine.nodes.storage_node_executor.write_to_input_source") as mock_write:
             mock_agent = AsyncMock()
             # Return dict with multiple values - executor will use filtered dict
@@ -510,7 +510,7 @@ class TestLengthComparisons:
         
         executor = WorkflowExecutorV3(workflow)
         
-        with patch("backend.engine.executor_v3.AgentRegistry.get_agent") as mock_get_agent, \
+        with patch("backend.engine.nodes.executors.AgentRegistry.get_agent") as mock_get_agent, \
              patch("backend.engine.nodes.storage_node_executor.write_to_input_source") as mock_write:
             mock_agent = AsyncMock()
             # Return dict with single 'data' key
@@ -556,7 +556,7 @@ class TestLengthComparisons:
         
         executor = WorkflowExecutorV3(workflow)
         
-        with patch("backend.engine.executor_v3.AgentRegistry.get_agent") as mock_get_agent, \
+        with patch("backend.engine.nodes.executors.AgentRegistry.get_agent") as mock_get_agent, \
              patch("backend.engine.nodes.storage_node_executor.write_to_input_source") as mock_write:
             mock_agent = AsyncMock()
             # Return a single string value - executor will wrap it and extract "data" key
@@ -603,7 +603,7 @@ class TestLengthComparisons:
         
         executor = WorkflowExecutorV3(workflow)
         
-        with patch("backend.engine.executor_v3.AgentRegistry.get_agent") as mock_get_agent, \
+        with patch("backend.engine.nodes.executors.AgentRegistry.get_agent") as mock_get_agent, \
              patch("backend.engine.nodes.storage_node_executor.write_to_input_source") as mock_write:
             mock_agent = AsyncMock()
             # Return dict with multiple values - executor will use filtered dict
@@ -746,7 +746,7 @@ class TestInDegreeComparisons:
         
         executor = WorkflowExecutorV3(workflow)
         
-        with patch("backend.engine.executor_v3.AgentRegistry.get_agent") as mock_get_agent:
+        with patch("backend.engine.nodes.executors.AgentRegistry.get_agent") as mock_get_agent:
             mock_agent = AsyncMock()
             mock_agent.execute = AsyncMock(return_value="output")
             mock_get_agent.return_value = mock_agent
@@ -979,7 +979,7 @@ class TestStringLengthBoundaries:
         
         executor = WorkflowExecutorV3(workflow)
         
-        with patch("backend.engine.executor_v3.AgentRegistry.get_agent") as mock_get_agent:
+        with patch("backend.engine.nodes.executors.AgentRegistry.get_agent") as mock_get_agent:
             mock_agent = AsyncMock()
             mock_agent.execute = AsyncMock(return_value="x" * 100)  # Exactly 100 chars
             mock_get_agent.return_value = mock_agent
@@ -1012,7 +1012,7 @@ class TestStringLengthBoundaries:
         
         executor = WorkflowExecutorV3(workflow)
         
-        with patch("backend.engine.executor_v3.AgentRegistry.get_agent") as mock_get_agent:
+        with patch("backend.engine.nodes.executors.AgentRegistry.get_agent") as mock_get_agent:
             mock_agent = AsyncMock()
             mock_agent.execute = AsyncMock(return_value="x" * 101)  # Exactly 101 chars
             mock_get_agent.return_value = mock_agent
@@ -1045,7 +1045,7 @@ class TestStringLengthBoundaries:
         
         executor = WorkflowExecutorV3(workflow)
         
-        with patch("backend.engine.executor_v3.AgentRegistry.get_agent") as mock_get_agent:
+        with patch("backend.engine.nodes.executors.AgentRegistry.get_agent") as mock_get_agent:
             mock_agent = AsyncMock()
             mock_agent.execute = AsyncMock(return_value="x" * 200)  # Exactly 200 chars
             mock_get_agent.return_value = mock_agent
@@ -1078,7 +1078,7 @@ class TestStringLengthBoundaries:
         
         executor = WorkflowExecutorV3(workflow)
         
-        with patch("backend.engine.executor_v3.AgentRegistry.get_agent") as mock_get_agent:
+        with patch("backend.engine.nodes.executors.AgentRegistry.get_agent") as mock_get_agent:
             mock_agent = AsyncMock()
             mock_agent.execute = AsyncMock(return_value="x" * 201)  # Exactly 201 chars
             mock_get_agent.return_value = mock_agent
@@ -1183,7 +1183,7 @@ class TestOutputEmptyString:
         
         executor = WorkflowExecutorV3(workflow)
         
-        with patch("backend.engine.executor_v3.AgentRegistry.get_agent") as mock_get_agent:
+        with patch("backend.engine.nodes.executors.AgentRegistry.get_agent") as mock_get_agent:
             mock_agent = AsyncMock()
             mock_agent.execute = AsyncMock(return_value="")
             mock_get_agent.return_value = mock_agent
@@ -1220,7 +1220,7 @@ class TestErrorMsgComparisons:
         
         executor = WorkflowExecutorV3(workflow)
         
-        with patch("backend.engine.executor_v3.AgentRegistry.get_agent") as mock_get_agent:
+        with patch("backend.engine.nodes.executors.AgentRegistry.get_agent") as mock_get_agent:
             mock_agent = AsyncMock()
             mock_agent.execute = AsyncMock(return_value="output")
             mock_get_agent.return_value = mock_agent
@@ -1254,7 +1254,7 @@ class TestErrorMsgComparisons:
         
         executor = WorkflowExecutorV3(workflow)
         
-        with patch("backend.engine.executor_v3.AgentRegistry.get_agent") as mock_get_agent:
+        with patch("backend.engine.nodes.executors.AgentRegistry.get_agent") as mock_get_agent:
             mock_agent = AsyncMock()
             mock_agent.execute = AsyncMock(return_value="output")
             mock_get_agent.return_value = mock_agent

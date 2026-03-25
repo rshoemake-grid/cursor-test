@@ -23,6 +23,8 @@ async def test_test_openai_success():
 async def test_test_openai_401():
     mock_response = Mock()
     mock_response.status_code = 401
+    mock_response.text = ""
+    mock_response.json = Mock(return_value={})
     with patch("backend.services.llm_test_service.httpx.AsyncClient") as m:
         mc = AsyncMock()
         mc.post = AsyncMock(return_value=mock_response)

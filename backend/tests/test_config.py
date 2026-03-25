@@ -3,13 +3,17 @@ Tests for configuration management.
 """
 import os
 import pytest
-from backend.config import Settings, get_settings
+from pathlib import Path
+from backend.config import Settings, get_settings, _PROJECT_ROOT
 
 
 def test_settings_defaults():
-    """Test that settings have sensible defaults"""
+    """Test that settings have sensible defaults; SQLite file is absolute (cwd-independent)."""
     settings = Settings()
-    assert settings.database_url == "sqlite+aiosqlite:///./workflows.db"
+    assert settings.database_url.startswith("sqlite+aiosqlite:")
+    assert settings.database_url.endswith("workflows.db")
+    resolved_db = Path(_PROJECT_ROOT.resolve() / "workflows.db")
+    assert resolved_db.as_posix() in settings.database_url.replace("\\", "/")
     assert settings.log_level == "INFO"
     assert settings.host == "0.0.0.0"
     assert settings.port == 8000
@@ -58,11 +62,13 @@ def test_settings_model_dump_safe_excludes_api_keys():
         openai_api_key="sk-secret-key",
         anthropic_api_key="sk-ant-secret",
         gemini_api_key="secret-gemini",
+        dev_bootstrap_password="bootstrap-secret",
     )
     safe = settings.model_dump_safe()
     assert "openai_api_key" not in safe
     assert "anthropic_api_key" not in safe
     assert "gemini_api_key" not in safe
+    assert "dev_bootstrap_password" not in safe
     assert "database_url" in safe
 
 
@@ -77,3 +83,8 @@ def test_settings_repr_excludes_api_keys():
     assert "sk-secret-key" not in r
     assert "sk-ant-secret" not in r
     assert "secret-gemini" not in r
+
+
+def test_dev_bootstrap_password_not_in_repr():
+    settings = Settings(dev_bootstrap_username="u", dev_bootstrap_password="secret-pass")
+    assert "secret-pass" not in repr(settings)

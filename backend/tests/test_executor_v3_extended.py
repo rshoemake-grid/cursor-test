@@ -57,7 +57,7 @@ async def test_execute_with_loop_node(loop_workflow):
     """Test executing workflow with loop node"""
     executor = WorkflowExecutorV3(loop_workflow)
     
-    with patch("backend.engine.executor_v3.AgentRegistry.get_agent") as mock_get_agent:
+    with patch("backend.engine.nodes.executors.AgentRegistry.get_agent") as mock_get_agent:
         mock_loop = AsyncMock()
         mock_loop.execute = AsyncMock(return_value={"items_processed": 3})
         mock_get_agent.return_value = mock_loop
@@ -89,7 +89,7 @@ async def test_execute_parallel_nodes():
     
     executor = WorkflowExecutorV3(workflow)
     
-    with patch("backend.engine.executor_v3.AgentRegistry.get_agent") as mock_get_agent:
+    with patch("backend.engine.nodes.executors.AgentRegistry.get_agent") as mock_get_agent:
         mock_agent = AsyncMock()
         mock_agent.execute = AsyncMock(return_value="Output")
         mock_get_agent.return_value = mock_agent
@@ -127,7 +127,7 @@ async def test_execute_condition_false_branch():
     
     executor = WorkflowExecutorV3(workflow)
     
-    with patch("backend.engine.executor_v3.AgentRegistry.get_agent") as mock_get_agent:
+    with patch("backend.engine.nodes.executors.AgentRegistry.get_agent") as mock_get_agent:
         mock_condition = AsyncMock()
         mock_condition.execute = AsyncMock(return_value={"branch": "false"})
         mock_get_agent.return_value = mock_condition
@@ -161,7 +161,7 @@ async def test_execute_node_failure():
     
     executor = WorkflowExecutorV3(workflow)
     
-    with patch("backend.engine.executor_v3.AgentRegistry.get_agent") as mock_get_agent:
+    with patch("backend.engine.nodes.executors.AgentRegistry.get_agent") as mock_get_agent:
         mock_agent = AsyncMock()
         mock_agent.execute = AsyncMock(side_effect=Exception("Agent failed"))
         mock_get_agent.return_value = mock_agent
@@ -187,12 +187,13 @@ async def test_resolve_config_variables():
         variables={"file_path": "/tmp/test.txt"}
     )
     
+    from backend.utils.config_utils import resolve_config_variables
+
     executor = WorkflowExecutorV3(workflow)
     await executor.execute({})
-    
-    # Test variable resolution
+
     config = {"path": "${file_path}"}
-    resolved = executor._resolve_config_variables(config)
+    resolved = resolve_config_variables(config, executor.execution_state.variables)
     assert resolved["path"] == "/tmp/test.txt"
 
 
@@ -228,7 +229,7 @@ async def test_prepare_node_inputs():
     
     executor = WorkflowExecutorV3(workflow)
     
-    with patch("backend.engine.executor_v3.AgentRegistry.get_agent") as mock_get_agent:
+    with patch("backend.engine.nodes.executors.AgentRegistry.get_agent") as mock_get_agent:
         mock_agent = AsyncMock()
         mock_agent.execute = AsyncMock(return_value="Agent output")
         mock_get_agent.return_value = mock_agent
@@ -301,7 +302,7 @@ async def test_execute_with_storage_node_write():
     
     executor = WorkflowExecutorV3(workflow)
     
-    with patch("backend.engine.executor_v3.AgentRegistry.get_agent") as mock_get_agent, \
+    with patch("backend.engine.nodes.executors.AgentRegistry.get_agent") as mock_get_agent, \
          patch("backend.engine.nodes.storage_node_executor.write_to_input_source") as mock_write:
         mock_agent = AsyncMock()
         mock_agent.execute = AsyncMock(return_value="Data to write")

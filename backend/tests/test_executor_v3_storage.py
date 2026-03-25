@@ -87,7 +87,7 @@ async def test_execute_storage_node_write():
     executor = WorkflowExecutorV3(workflow)
     
     # Mock agent and GCP bucket write
-    with patch("backend.engine.executor_v3.AgentRegistry.get_agent") as mock_get_agent, \
+    with patch("backend.engine.nodes.executors.AgentRegistry.get_agent") as mock_get_agent, \
          patch("backend.engine.nodes.storage_node_executor.write_to_input_source") as mock_write:
         mock_agent = AsyncMock()
         mock_agent.execute = AsyncMock(return_value="test-data")
@@ -137,7 +137,7 @@ async def test_execute_storage_node_write_with_previous_output():
     
     executor = WorkflowExecutorV3(workflow)
     
-    with patch("backend.engine.executor_v3.AgentRegistry.get_agent") as mock_get_agent, \
+    with patch("backend.engine.nodes.executors.AgentRegistry.get_agent") as mock_get_agent, \
          patch("backend.engine.nodes.storage_node_executor.write_to_input_source") as mock_write:
         mock_agent = AsyncMock()
         mock_agent.execute = AsyncMock(return_value="agent-output")

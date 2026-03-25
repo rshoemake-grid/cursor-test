@@ -78,7 +78,7 @@ async def test_register_user_duplicate_username(db_session: AsyncSession, test_u
                 json={
                     "username": "existinguser",
                     "email": "different@example.com",
-                    "password": "pass123",
+                    "password": "pass1234",
                     "full_name": "Different User"
                 }
             )
@@ -105,7 +105,7 @@ async def test_register_user_duplicate_email(db_session: AsyncSession, test_user
                 json={
                     "username": "differentuser",
                     "email": "existing@example.com",
-                    "password": "pass123",
+                    "password": "pass1234",
                     "full_name": "Different User"
                 }
             )

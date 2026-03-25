@@ -226,7 +226,7 @@ async def test_unified_llm_agent_openai_vision_with_system_prompt(mock_node):
         }]
     }
     
-    with patch("backend.api.settings_routes.get_provider_for_model") as mock_get_provider, \
+    with patch("backend.services.settings_service.SettingsService.get_provider_for_model") as mock_get_provider, \
          patch("backend.agents.llm_providers.openai_compatible.httpx.AsyncClient") as mock_client_class:
         mock_get_provider.return_value = llm_config
         mock_client = AsyncMock()

@@ -48,7 +48,7 @@ async def test_execute_with_circular_dependency():
     
     executor = WorkflowExecutorV3(workflow)
     
-    with patch("backend.engine.executor_v3.AgentRegistry.get_agent") as mock_get_agent:
+    with patch("backend.engine.nodes.executors.AgentRegistry.get_agent") as mock_get_agent:
         mock_agent = AsyncMock()
         mock_agent.execute = AsyncMock(return_value="Output")
         mock_get_agent.return_value = mock_agent
@@ -91,7 +91,7 @@ async def test_execute_with_missing_node_output():
     
     executor = WorkflowExecutorV3(workflow)
     
-    with patch("backend.engine.executor_v3.AgentRegistry.get_agent") as mock_get_agent:
+    with patch("backend.engine.nodes.executors.AgentRegistry.get_agent") as mock_get_agent:
         mock_agent = AsyncMock()
         mock_agent.execute = AsyncMock(return_value=None)  # Missing output
         mock_get_agent.return_value = mock_agent
@@ -227,7 +227,7 @@ async def test_get_previous_node_output():
     
     executor = WorkflowExecutorV3(workflow)
     
-    with patch("backend.engine.executor_v3.AgentRegistry.get_agent") as mock_get_agent:
+    with patch("backend.engine.nodes.executors.AgentRegistry.get_agent") as mock_get_agent:
         mock_agent = AsyncMock()
         mock_agent.execute = AsyncMock(return_value="Agent output")
         mock_get_agent.return_value = mock_agent
@@ -263,13 +263,13 @@ async def test_resolve_config_variables_nested():
         }
     )
     
+    from backend.utils.config_utils import resolve_config_variables
+
     executor = WorkflowExecutorV3(workflow)
     await executor.execute({})
-    
-    # Test variable resolution - nested variables need dot notation support
+
     config = {"path": "${user.name}"}
-    resolved = executor._resolve_config_variables(config)
-    # Variable resolution may not support nested paths, so check if it's resolved or kept as-is
+    resolved = resolve_config_variables(config, executor.execution_state.variables)
     assert "path" in resolved
 
 
@@ -298,7 +298,7 @@ async def test_prepare_node_inputs_with_variables():
     
     executor = WorkflowExecutorV3(workflow)
     
-    with patch("backend.engine.executor_v3.AgentRegistry.get_agent") as mock_get_agent:
+    with patch("backend.engine.nodes.executors.AgentRegistry.get_agent") as mock_get_agent:
         mock_agent = AsyncMock()
         mock_agent.execute = AsyncMock(return_value="Output")
         mock_get_agent.return_value = mock_agent

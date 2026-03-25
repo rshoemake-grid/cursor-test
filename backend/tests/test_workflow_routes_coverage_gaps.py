@@ -55,17 +55,23 @@ async def test_list_workflows_exception_handling(db_session):
 @pytest.mark.asyncio
 async def test_get_workflow_invalid_definition(db_session):
     """Test get_workflow with invalid definition (lines 186-188)"""
-    with patch('backend.api.routes.workflow_routes.get_workflow_service') as mock_service:
-        mock_ws = MagicMock()
-        mock_workflow = MagicMock()
-        mock_workflow.definition = None  # Invalid definition
-        mock_ws.get_workflow = AsyncMock(return_value=mock_workflow)
-        mock_service.return_value = mock_ws
-        
-        with pytest.raises(HTTPException) as exc_info:
-            await get_workflow(workflow_id="test", db=db_session)
-        
-        assert exc_info.value.status_code == 422
+    mock_workflow = MagicMock()
+    mock_workflow.definition = None  # Invalid definition
+
+    mock_ownership = MagicMock()
+    mock_ownership.get_workflow_and_assert_can_read_or_share = AsyncMock(
+        return_value=mock_workflow
+    )
+
+    with pytest.raises(HTTPException) as exc_info:
+        await get_workflow(
+            workflow_id="test",
+            db=db_session,
+            current_user=None,
+            ownership_service=mock_ownership,
+        )
+
+    assert exc_info.value.status_code == 422
 
 
 @pytest.mark.asyncio

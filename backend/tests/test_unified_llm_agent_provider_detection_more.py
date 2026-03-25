@@ -40,7 +40,7 @@ async def test_unified_llm_agent_model_suggests_gemini_provider(mock_node):
     
     agent = UnifiedLLMAgent(mock_node, llm_config=llm_config)
     
-    with patch("backend.api.settings_routes.get_provider_for_model") as mock_get_provider:
+    with patch("backend.services.settings_service.SettingsService.get_provider_for_model") as mock_get_provider:
         mock_get_provider.return_value = None  # Model not found
         
         inputs = {"input": "Hello"}
@@ -68,7 +68,7 @@ async def test_unified_llm_agent_model_suggests_anthropic_provider(mock_node):
     
     agent = UnifiedLLMAgent(mock_node, llm_config=llm_config)
     
-    with patch("backend.api.settings_routes.get_provider_for_model") as mock_get_provider:
+    with patch("backend.services.settings_service.SettingsService.get_provider_for_model") as mock_get_provider:
         mock_get_provider.return_value = None  # Model not found
         
         inputs = {"input": "Hello"}
@@ -96,7 +96,7 @@ async def test_unified_llm_agent_model_suggests_openai_provider(mock_node):
     
     agent = UnifiedLLMAgent(mock_node, llm_config=llm_config)
     
-    with patch("backend.api.settings_routes.get_provider_for_model") as mock_get_provider:
+    with patch("backend.services.settings_service.SettingsService.get_provider_for_model") as mock_get_provider:
         mock_get_provider.return_value = None  # Model not found
         
         inputs = {"input": "Hello"}
@@ -115,7 +115,7 @@ async def test_unified_llm_agent_no_default_provider_error(mock_node):
     )
     mock_node.agent_config = config
     
-    with patch("backend.api.settings_routes.get_provider_for_model") as mock_get_provider:
+    with patch("backend.services.settings_service.SettingsService.get_provider_for_model") as mock_get_provider:
         mock_get_provider.return_value = None  # Model not found
         
         # No llm_config provided and no env vars

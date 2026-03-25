@@ -52,7 +52,7 @@ async def test_executor_v3_skips_condition_node_without_field(workflow_with_inva
     
     executor = WorkflowExecutorV3(workflow_with_invalid_condition, llm_config=llm_config)
     
-    with patch("backend.engine.executor_v3.AgentRegistry") as mock_registry:
+    with patch("backend.engine.nodes.executors.AgentRegistry") as mock_registry:
         mock_agent = AsyncMock()
         mock_agent.execute = AsyncMock(return_value="test output")
         mock_registry.get_agent.return_value = mock_agent

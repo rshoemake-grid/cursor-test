@@ -3,11 +3,12 @@ import pytest
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 import uuid
-from unittest.mock import patch, AsyncMock, Mock
+from unittest.mock import patch, AsyncMock, Mock, MagicMock
 
 from backend.database.models import WorkflowDB, UserDB, SettingsDB
 from backend.database.db import get_db
 from backend.auth import get_optional_user, create_access_token
+from backend.dependencies import get_workflow_service
 
 
 def setup_dependency_mocks(app, mock_client):
@@ -201,13 +202,16 @@ async def test_chat_save_workflow_error(db_session: AsyncSession, test_user: Use
     mock_client = AsyncMock()
     mock_client.chat.completions.create = AsyncMock(side_effect=[mock_response1, mock_response2])
     setup_dependency_mocks(app, mock_client)
-    
-    with patch("backend.api.workflow_chat_routes.AsyncOpenAI") as mock_openai_class, \
-         patch("backend.api.workflow_chat.routes.select") as mock_select:
-        # Make select raise an error
-        mock_select.side_effect = Exception("Database error")
+
+    mock_workflow_service = MagicMock()
+    mock_workflow_service.apply_chat_changes = AsyncMock(
+        side_effect=Exception("Database error")
+    )
+    app.dependency_overrides[get_workflow_service] = lambda: mock_workflow_service
+
+    with patch("backend.api.workflow_chat_routes.AsyncOpenAI") as mock_openai_class:
         mock_openai_class.return_value = mock_client
-        
+
         try:
             async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
                 response = await client.post(
@@ -219,8 +223,7 @@ async def test_chat_save_workflow_error(db_session: AsyncSession, test_user: Use
                     },
                     headers={"Authorization": f"Bearer {token}"}
                 )
-                # Should handle error gracefully (may return 500 or 200)
-                assert response.status_code in [200, 500]
+                assert response.status_code == 200
         finally:
             app.dependency_overrides.clear()
 

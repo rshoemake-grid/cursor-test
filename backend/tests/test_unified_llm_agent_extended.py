@@ -77,7 +77,7 @@ async def test_unified_llm_agent_execute_gemini(mock_node):
         mock_client_class.return_value = mock_client
         
         # Mock get_provider_for_model to return None (use default)
-        with patch("backend.api.settings_routes.get_provider_for_model") as mock_get_provider:
+        with patch("backend.services.settings_service.SettingsService.get_provider_for_model") as mock_get_provider:
             mock_get_provider.return_value = None
             
             result = await agent.execute({"input": "Hello"})
@@ -122,7 +122,7 @@ async def test_unified_llm_agent_execute_custom(mock_node):
         mock_client_class.return_value = mock_client
         
         # Mock get_provider_for_model to return None (use default)
-        with patch("backend.api.settings_routes.get_provider_for_model") as mock_get_provider:
+        with patch("backend.services.settings_service.SettingsService.get_provider_for_model") as mock_get_provider:
             mock_get_provider.return_value = None
             
             result = await agent.execute({"input": "Hello"})
@@ -186,7 +186,7 @@ async def test_unified_llm_agent_execute_anthropic_error(mock_node):
         mock_client_class.return_value = mock_client
         
         # Mock get_provider_for_model to return None (use default)
-        with patch("backend.api.settings_routes.get_provider_for_model") as mock_get_provider:
+        with patch("backend.services.settings_service.SettingsService.get_provider_for_model") as mock_get_provider:
             mock_get_provider.return_value = None
             
             with pytest.raises(RuntimeError, match="Anthropic API request failed"):
@@ -299,7 +299,7 @@ async def test_unified_llm_agent_model_not_found_in_provider(mock_node):
     agent = UnifiedLLMAgent(node, llm_config=llm_config)
     
     # Mock get_provider_for_model to return None and mock httpx to avoid actual API call
-    with patch("backend.api.settings_routes.get_provider_for_model") as mock_get_provider, \
+    with patch("backend.services.settings_service.SettingsService.get_provider_for_model") as mock_get_provider, \
          patch("backend.agents.llm_providers.openai_compatible.httpx.AsyncClient") as mock_client_class:
         mock_get_provider.return_value = None
         

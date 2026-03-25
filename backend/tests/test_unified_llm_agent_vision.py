@@ -134,7 +134,7 @@ async def test_unified_llm_agent_execute_anthropic_vision(vision_node):
         mock_client.post = AsyncMock(return_value=mock_http_response)
         mock_client_class.return_value = mock_client
         
-        with patch("backend.api.settings_routes.get_provider_for_model") as mock_get_provider:
+        with patch("backend.services.settings_service.SettingsService.get_provider_for_model") as mock_get_provider:
             mock_get_provider.return_value = None
             
             # Test with vision input
@@ -189,7 +189,7 @@ async def test_unified_llm_agent_execute_gemini_multiple_images(vision_node):
         mock_client.post = AsyncMock(return_value=mock_http_response)
         mock_client_class.return_value = mock_client
         
-        with patch("backend.api.settings_routes.get_provider_for_model") as mock_get_provider:
+        with patch("backend.services.settings_service.SettingsService.get_provider_for_model") as mock_get_provider:
             mock_get_provider.return_value = None
             
             # Test with multiple images

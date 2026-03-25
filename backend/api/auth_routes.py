@@ -279,8 +279,11 @@ async def reset_password(
             detail="Invalid or expired reset token"
         )
     
-    # Check if token is expired
-    if datetime.now(timezone.utc) > reset_token_db.expires_at:
+    # Check if token is expired (DB may return naive UTC)
+    expires_at = reset_token_db.expires_at
+    if expires_at.tzinfo is None:
+        expires_at = expires_at.replace(tzinfo=timezone.utc)
+    if datetime.now(timezone.utc) > expires_at:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Reset token has expired"
@@ -428,8 +431,11 @@ async def refresh_access_token(
             headers={"WWW-Authenticate": "Bearer"},
         )
     
-    # Check if token is expired
-    if refresh_token_db.expires_at < datetime.now(timezone.utc):
+    # Check if token is expired (DB may return naive UTC)
+    exp = refresh_token_db.expires_at
+    if exp.tzinfo is None:
+        exp = exp.replace(tzinfo=timezone.utc)
+    if exp < datetime.now(timezone.utc):
         # Mark as revoked
         refresh_token_db.revoked = True
         await db.commit()

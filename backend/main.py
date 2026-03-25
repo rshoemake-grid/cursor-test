@@ -12,6 +12,7 @@ import uuid
 from typing import Dict, Any
 from backend.config import settings
 from backend.database.db import init_db, engine, AsyncSessionLocal
+from backend.dev_user_bootstrap import apply_dev_user_bootstrap
 from backend.utils.metrics import metrics_collector
 from sqlalchemy import text
 from backend.api import router as api_router
@@ -422,6 +423,7 @@ async def startup_event():
                 "Set it in .env or environment variables. See docs/KEYS_AND_SECRETS.md."
             )
     await init_db()
+    await apply_dev_user_bootstrap()
 
 if __name__ == "__main__":
     import uvicorn

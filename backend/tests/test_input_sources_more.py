@@ -266,20 +266,16 @@ class TestGCPPubSubHandlerMore:
     """More tests for GCPPubSubHandler"""
     
     @patch("backend.inputs.input_sources.GCP_AVAILABLE", True)
-    def test_read_with_credentials(self):
+    @patch("backend.inputs.input_sources._parse_gcp_credentials")
+    def test_read_with_credentials(self, mock_parse_creds):
         """Test reading from Pub/Sub with credentials"""
-        # Mock both pubsub_v1 and service_account at module level
-        mock_pubsub_module = Mock()
-        mock_service_account = Mock()
-        
-        # Import modules into namespace for patching
-        import backend.inputs.input_sources as input_sources_module
-        input_sources_module.service_account = mock_service_account
-        input_sources_module.pubsub_v1 = mock_pubsub_module
-        
         mock_credentials = Mock()
-        mock_service_account.Credentials.from_service_account_info = Mock(return_value=mock_credentials)
-        
+        mock_parse_creds.return_value = mock_credentials
+
+        mock_pubsub_module = Mock()
+        import backend.inputs.input_sources as input_sources_module
+        input_sources_module.pubsub_v1 = mock_pubsub_module
+
         mock_subscriber = Mock()
         mock_response = Mock()
         mock_message = Mock()
@@ -287,43 +283,41 @@ class TestGCPPubSubHandlerMore:
         mock_message.ack_id = "ack_123"
         mock_response.received_messages = [mock_message]
         mock_subscriber.pull.return_value = mock_response
-        mock_subscriber.subscription_path = Mock(return_value="projects/test-project/subscriptions/test-subscription")
+        mock_subscriber.subscription_path = Mock(
+            return_value="projects/test-project/subscriptions/test-subscription"
+        )
         mock_pubsub_module.SubscriberClient.return_value = mock_subscriber
-        
+
         config = {
             "project_id": "test-project",
             "subscription_name": "test-subscription",
-            "credentials": json.dumps({"type": "service_account"})
+            "credentials": json.dumps({"type": "service_account"}),
         }
-        
+
         result = GCPPubSubHandler.read(config)
         assert result == {"key": "value"}
     
     @patch("backend.inputs.input_sources.GCP_AVAILABLE", True)
-    def test_write_with_credentials(self):
+    @patch("backend.inputs.input_sources._parse_gcp_credentials")
+    def test_write_with_credentials(self, mock_parse_creds):
         """Test writing to Pub/Sub with credentials"""
-        # Mock both pubsub_v1 and service_account at module level
-        mock_pubsub_module = Mock()
-        mock_service_account = Mock()
-        
-        # Import modules into namespace for patching
-        import backend.inputs.input_sources as input_sources_module
-        input_sources_module.service_account = mock_service_account
-        input_sources_module.pubsub_v1 = mock_pubsub_module
-        
         mock_credentials = Mock()
-        mock_service_account.Credentials.from_service_account_info = Mock(return_value=mock_credentials)
-        
+        mock_parse_creds.return_value = mock_credentials
+
+        mock_pubsub_module = Mock()
+        import backend.inputs.input_sources as input_sources_module
+        input_sources_module.pubsub_v1 = mock_pubsub_module
+
         mock_publisher = Mock()
         mock_publisher.topic_path = Mock(return_value="projects/test-project/topics/test-topic")
         mock_pubsub_module.PublisherClient.return_value = mock_publisher
-        
+
         config = {
             "project_id": "test-project",
             "topic_name": "test-topic",
-            "credentials": json.dumps({"type": "service_account"})
+            "credentials": json.dumps({"type": "service_account"}),
         }
-        
+
         result = GCPPubSubHandler.write(config, {"key": "value"})
         assert result["status"] == "success"
         mock_publisher.publish.assert_called_once()

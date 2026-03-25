@@ -113,7 +113,7 @@ async def test_unified_llm_agent_anthropic_error_handling(mock_node):
         mock_client.post = AsyncMock(return_value=mock_http_response)
         mock_client_class.return_value = mock_client
         
-        with patch("backend.api.settings_routes.get_provider_for_model") as mock_get_provider:
+        with patch("backend.services.settings_service.SettingsService.get_provider_for_model") as mock_get_provider:
             mock_get_provider.return_value = None
             
             with pytest.raises(RuntimeError):
@@ -155,7 +155,7 @@ async def test_unified_llm_agent_custom_error_handling(mock_node):
         mock_client.post = AsyncMock(return_value=mock_http_response)
         mock_client_class.return_value = mock_client
         
-        with patch("backend.api.settings_routes.get_provider_for_model") as mock_get_provider:
+        with patch("backend.services.settings_service.SettingsService.get_provider_for_model") as mock_get_provider:
             mock_get_provider.return_value = None
             
             with pytest.raises(RuntimeError, match="Custom API request failed"):
@@ -199,7 +199,7 @@ async def test_unified_llm_agent_custom_empty_response(mock_node):
         mock_client.post = AsyncMock(return_value=mock_http_response)
         mock_client_class.return_value = mock_client
         
-        with patch("backend.api.settings_routes.get_provider_for_model") as mock_get_provider:
+        with patch("backend.services.settings_service.SettingsService.get_provider_for_model") as mock_get_provider:
             mock_get_provider.return_value = None
             
             result = await agent.execute({"input": "Hello"})

@@ -174,7 +174,7 @@ async def test_unified_llm_agent_execute_anthropic(mock_node):
         mock_client_class.return_value = mock_client
         
         # Mock get_provider_for_model to return None (use default)
-        with patch("backend.api.settings_routes.get_provider_for_model") as mock_get_provider:
+        with patch("backend.services.settings_service.SettingsService.get_provider_for_model") as mock_get_provider:
             mock_get_provider.return_value = None
             
             result = await agent.execute({"input": "Hello"})

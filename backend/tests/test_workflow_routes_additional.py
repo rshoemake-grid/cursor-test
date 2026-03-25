@@ -46,7 +46,7 @@ async def test_create_workflow_success_with_edges(db_session):
         mock_ws.create_workflow = AsyncMock(return_value=db_workflow)
         mock_service.return_value = mock_ws
         
-        with patch('backend.api.routes.workflow_routes.reconstruct_nodes', return_value=[]):
+        with patch('backend.utils.workflow_serialization.reconstruct_nodes', return_value=[]):
             result = await create_workflow(workflow=workflow, db=db_session, current_user=None)
             
             assert result.id == db_workflow.id
@@ -66,30 +66,38 @@ async def test_get_workflow_node_reconstruction_http_exception(db_session):
         updated_at=datetime.utcnow()
     )
     
-    with patch('backend.api.routes.workflow_routes.get_workflow_service') as mock_service:
-        mock_ws = MagicMock()
-        mock_ws.get_workflow = AsyncMock(return_value=workflow)
-        mock_service.return_value = mock_ws
-        
-        with patch('backend.api.routes.workflow_routes.reconstruct_nodes', side_effect=FastAPIHTTPException(status_code=422, detail="Invalid")):
-            with pytest.raises(FastAPIHTTPException) as exc_info:
-                await get_workflow(workflow_id="wf-123", db=db_session)
-            
-            assert exc_info.value.status_code == 422
+    mock_ownership = MagicMock()
+    mock_ownership.get_workflow_and_assert_can_read_or_share = AsyncMock(return_value=workflow)
+
+    with patch('backend.utils.workflow_serialization.reconstruct_nodes', side_effect=FastAPIHTTPException(status_code=422, detail="Invalid")):
+        with pytest.raises(FastAPIHTTPException) as exc_info:
+            await get_workflow(
+                workflow_id="wf-123",
+                db=db_session,
+                current_user=None,
+                ownership_service=mock_ownership,
+            )
+
+        assert exc_info.value.status_code == 422
 
 
 @pytest.mark.asyncio
 async def test_get_workflow_exception_path(db_session):
     """Test get_workflow exception handling (lines 221-223)"""
-    with patch('backend.api.routes.workflow_routes.get_workflow_service') as mock_service:
-        mock_ws = MagicMock()
-        mock_ws.get_workflow = AsyncMock(side_effect=Exception("Database error"))
-        mock_service.return_value = mock_ws
-        
-        with pytest.raises(HTTPException) as exc_info:
-            await get_workflow(workflow_id="test", db=db_session)
-        
-        assert exc_info.value.status_code == 500
+    mock_ownership = MagicMock()
+    mock_ownership.get_workflow_and_assert_can_read_or_share = AsyncMock(
+        side_effect=Exception("Database error")
+    )
+
+    with pytest.raises(HTTPException) as exc_info:
+        await get_workflow(
+            workflow_id="test",
+            db=db_session,
+            current_user=None,
+            ownership_service=mock_ownership,
+        )
+
+    assert exc_info.value.status_code == 500
 
 
 @pytest.mark.asyncio
@@ -112,7 +120,7 @@ async def test_update_workflow_success(db_session):
         mock_ws.update_workflow = AsyncMock(return_value=updated_workflow)
         mock_service.return_value = mock_ws
         
-        with patch('backend.api.routes.workflow_routes.reconstruct_nodes', return_value=[]):
+        with patch('backend.utils.workflow_serialization.reconstruct_nodes', return_value=[]):
             result = await update_workflow(
                 workflow_id="wf-123",
                 workflow=workflow,
@@ -188,11 +196,15 @@ async def test_publish_workflow_success(db_session):
         mock_ws.get_workflow = AsyncMock(return_value=workflow)
         mock_service.return_value = mock_ws
         
+        mock_ownership = MagicMock()
+        mock_ownership.get_workflow_and_assert_owner = AsyncMock(return_value=workflow)
+
         result = await publish_workflow(
             workflow_id="wf-123",
             publish_request=publish_request,
             current_user=user,
-            db=db_session
+            db=db_session,
+            ownership_service=mock_ownership,
         )
         
         assert result.name == workflow.name

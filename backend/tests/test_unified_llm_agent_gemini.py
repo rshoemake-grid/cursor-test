@@ -76,7 +76,7 @@ async def test_unified_llm_agent_gemini_retry_on_rate_limit(gemini_node, mock_ge
         mock_client.post = AsyncMock(side_effect=mock_post)
         mock_client_class.return_value = mock_client
         
-        with patch("backend.api.settings_routes.get_provider_for_model") as mock_get_provider:
+        with patch("backend.services.settings_service.SettingsService.get_provider_for_model") as mock_get_provider:
             mock_get_provider.return_value = None
             
             result = await agent.execute({"input": "Hello"})
@@ -122,7 +122,7 @@ async def test_unified_llm_agent_gemini_image_generation_multiple(gemini_node, m
         mock_client.post = AsyncMock(return_value=mock_http_response)
         mock_client_class.return_value = mock_client
         
-        with patch("backend.api.settings_routes.get_provider_for_model") as mock_get_provider:
+        with patch("backend.services.settings_service.SettingsService.get_provider_for_model") as mock_get_provider:
             mock_get_provider.return_value = None
             
             result = await agent.execute({"input": "Generate images"})
@@ -159,7 +159,7 @@ async def test_unified_llm_agent_gemini_snake_case_inline_data(gemini_node, mock
         mock_client.post = AsyncMock(return_value=mock_http_response)
         mock_client_class.return_value = mock_client
         
-        with patch("backend.api.settings_routes.get_provider_for_model") as mock_get_provider:
+        with patch("backend.services.settings_service.SettingsService.get_provider_for_model") as mock_get_provider:
             mock_get_provider.return_value = None
             
             result = await agent.execute({"input": "Generate image"})
@@ -202,7 +202,7 @@ async def test_unified_llm_agent_gemini_system_instruction(gemini_node, mock_gem
         mock_client.post = AsyncMock(return_value=mock_http_response)
         mock_client_class.return_value = mock_client
         
-        with patch("backend.api.settings_routes.get_provider_for_model") as mock_get_provider:
+        with patch("backend.services.settings_service.SettingsService.get_provider_for_model") as mock_get_provider:
             mock_get_provider.return_value = None
             
             result = await agent.execute({"input": "Hello"})
@@ -249,7 +249,7 @@ async def test_unified_llm_agent_gemini_generation_config(gemini_node, mock_gemi
         mock_client.post = AsyncMock(return_value=mock_http_response)
         mock_client_class.return_value = mock_client
         
-        with patch("backend.api.settings_routes.get_provider_for_model") as mock_get_provider:
+        with patch("backend.services.settings_service.SettingsService.get_provider_for_model") as mock_get_provider:
             mock_get_provider.return_value = None
             
             result = await agent.execute({"input": "Hello"})

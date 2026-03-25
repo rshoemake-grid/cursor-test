@@ -13,15 +13,20 @@ async def test_websocket_ping_pong():
     mock_websocket = AsyncMock()
     mock_websocket.receive_text = AsyncMock(side_effect=["ping", WebSocketDisconnect()])
     mock_websocket.send_json = AsyncMock()
-    
+
     mock_manager = MagicMock()
     mock_manager.connect = AsyncMock()
     mock_manager.disconnect = AsyncMock()
-    
-    with patch('backend.api.websocket_routes.manager', mock_manager):
-        try:
-            await websocket_execution_stream(mock_websocket, "exec-123")
-        except WebSocketDisconnect:
-            pass
-    
+
+    with patch(
+        "backend.api.websocket_routes._verify_websocket_auth_and_ownership",
+        new_callable=AsyncMock,
+        return_value=True,
+    ):
+        with patch("backend.api.websocket_routes.manager", mock_manager):
+            try:
+                await websocket_execution_stream(mock_websocket, "exec-123")
+            except WebSocketDisconnect:
+                pass
+
     mock_websocket.send_json.assert_called_once_with({"type": "pong"})
