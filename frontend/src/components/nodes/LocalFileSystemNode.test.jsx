@@ -1,0 +1,117 @@
+import { jsx as _jsx } from "react/jsx-runtime";
+import React from 'react';
+import { render, screen } from '@testing-library/react';
+import LocalFileSystemNode from './LocalFileSystemNode';
+import { ReactFlowProvider } from '@xyflow/react';
+const renderWithProvider = (component)=>{
+    return render(/*#__PURE__*/ _jsx(ReactFlowProvider, {
+        children: component
+    }));
+};
+describe('LocalFileSystemNode', ()=>{
+    it('should render local file system node', ()=>{
+        const nodeData = {
+            label: 'My Files'
+        };
+        renderWithProvider(/*#__PURE__*/ _jsx(LocalFileSystemNode, {
+            data: nodeData,
+            selected: false,
+            id: "node-1"
+        }));
+        expect(screen.getByText('My Files')).toBeInTheDocument();
+    });
+    it('should render with default label', ()=>{
+        const nodeData = {
+            label: ''
+        };
+        renderWithProvider(/*#__PURE__*/ _jsx(LocalFileSystemNode, {
+            data: nodeData,
+            selected: false,
+            id: "node-1"
+        }));
+        expect(screen.getByText('Local File System')).toBeInTheDocument();
+    });
+    it('should render file path', ()=>{
+        const nodeData = {
+            label: 'My Files',
+            input_config: {
+                file_path: '/path/to/file.txt'
+            }
+        };
+        renderWithProvider(/*#__PURE__*/ _jsx(LocalFileSystemNode, {
+            data: nodeData,
+            selected: false,
+            id: "node-1"
+        }));
+        expect(screen.getByText(/File: file.txt/)).toBeInTheDocument();
+    });
+    it('should render file pattern', ()=>{
+        const nodeData = {
+            label: 'My Files',
+            input_config: {
+                file_pattern: '*.txt'
+            }
+        };
+        renderWithProvider(/*#__PURE__*/ _jsx(LocalFileSystemNode, {
+            data: nodeData,
+            selected: false,
+            id: "node-1"
+        }));
+        expect(screen.getByText(/Pattern: \*\.txt/)).toBeInTheDocument();
+    });
+    it('should render write mode with overwrite', ()=>{
+        const nodeData = {
+            label: 'My Files',
+            input_config: {
+                mode: 'write',
+                overwrite: true
+            }
+        };
+        renderWithProvider(/*#__PURE__*/ _jsx(LocalFileSystemNode, {
+            data: nodeData,
+            selected: false,
+            id: "node-1"
+        }));
+        expect(screen.getByText(/Mode: Write/)).toBeInTheDocument();
+    });
+    it('should render write mode with auto-increment', ()=>{
+        const nodeData = {
+            label: 'My Files',
+            input_config: {
+                mode: 'write',
+                overwrite: false
+            }
+        };
+        renderWithProvider(/*#__PURE__*/ _jsx(LocalFileSystemNode, {
+            data: nodeData,
+            selected: false,
+            id: "node-1"
+        }));
+        expect(screen.getByText(/Auto-increment/)).toBeInTheDocument();
+    });
+    it('should show selected state', ()=>{
+        const nodeData = {
+            label: 'My Files'
+        };
+        const { container } = renderWithProvider(/*#__PURE__*/ _jsx(LocalFileSystemNode, {
+            data: nodeData,
+            selected: true,
+            id: "node-1"
+        }));
+        const nodeElement = container.querySelector('.border-green-500');
+        expect(nodeElement).toBeInTheDocument();
+    });
+    it('should show error state', ()=>{
+        const nodeData = {
+            label: 'My Files',
+            executionStatus: 'failed'
+        };
+        const { container } = renderWithProvider(/*#__PURE__*/ _jsx(LocalFileSystemNode, {
+            data: nodeData,
+            selected: false,
+            id: "node-1"
+        }));
+        const nodeElement = container.querySelector('.border-red-500');
+        expect(nodeElement).toBeInTheDocument();
+    });
+});
