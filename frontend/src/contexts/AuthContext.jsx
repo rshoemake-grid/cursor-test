@@ -1,5 +1,5 @@
 import { jsx as _jsx } from "react/jsx-runtime";
-import React, { createContext, useContext, useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { defaultAdapters } from '../types/adapters';
 import { logger } from '../utils/logger';
 import { API_CONFIG, STORAGE_KEYS } from '../config/constants';
@@ -64,7 +64,6 @@ export const AuthProvider = ({ children, options })=>{
             }
         }
     // Empty dependency array - effect only runs once on mount, refs provide latest values
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []); // Only run once on mount
     // Listen for unauthorized events from API interceptor
     useEffect(()=>{
@@ -190,6 +189,8 @@ export const AuthProvider = ({ children, options })=>{
         children: children
     });
 };
+// Hook export alongside provider — expected for React context modules
+// eslint-disable-next-line react-refresh/only-export-components
 export const useAuth = ()=>{
     const context = useContext(AuthContext);
     if (context === undefined) {

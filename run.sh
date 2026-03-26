@@ -22,7 +22,7 @@ case "$1" in
   
   server)
     echo "Starting server..."
-    python main.py
+    python -m backend.main
     ;;
   
   test)

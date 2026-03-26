@@ -623,7 +623,6 @@ describe('useMarketplaceData - Complex Patterns', ()=>{
     });
     describe('Complex filter OR chain - search filter (name.includes || description.includes || tags.some)', ()=>{
         it('should filter when only name.includes is true', async ()=>{
-            // eslint-disable-next-line @typescript-eslint/no-var-requires -- Dynamic require needed for Jest mocking
             const { getLocalStorageItem } = require('../storage');
             getLocalStorageItem.mockReturnValue([
                 {
@@ -689,7 +688,6 @@ describe('useMarketplaceData - Complex Patterns', ()=>{
             expect(result.current.agents[0].description).toBe('Test Description');
         });
         it('should filter when only tags.some is true', async ()=>{
-            // eslint-disable-next-line @typescript-eslint/no-var-requires -- Dynamic require needed for Jest mocking
             const { getLocalStorageItem } = require('../storage');
             getLocalStorageItem.mockReturnValue([
                 {
@@ -799,7 +797,6 @@ describe('useMarketplaceData - Complex Patterns', ()=>{
             expect(result.current.agents[1].published_at).toBe('2024-01-01T00:00:00Z');
         });
         it('should handle sort when aIsOfficial === bIsOfficial and sortBy === "recent"', async ()=>{
-            // eslint-disable-next-line @typescript-eslint/no-var-requires -- Dynamic require needed for Jest mocking
             const { getLocalStorageItem } = require('../storage');
             getLocalStorageItem.mockReturnValue([
                 {

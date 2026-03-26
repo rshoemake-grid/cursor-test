@@ -3,7 +3,7 @@ import { jsx as _jsx, jsxs as _jsxs, Fragment as _Fragment } from "react/jsx-run
  * Agent Node Editor Component
  * Handles editing of LLM agent node properties
  * Follows Single Responsibility Principle
- */ import { useRef, useState, useEffect, useCallback } from 'react';
+ */ import { useRef, useState, useEffect, useCallback, useMemo } from 'react';
 import { Download } from 'lucide-react';
 import { showSuccess } from '../../utils/notifications';
 export default function AgentNodeEditor({ node, availableModels, onUpdate, onConfigUpdate }) {
@@ -23,7 +23,9 @@ export default function AgentNodeEditor({ node, availableModels, onUpdate, onCon
     }, [
         node.data.agent_config
     ]);
-    const agentConfig = node.data.agent_config || {};
+    const agentConfig = useMemo(()=>node.data.agent_config || {}, [
+        node.data.agent_config
+    ]);
     const agentType = agentConfig.agent_type || 'workflow';
     const currentModel = agentConfig.model || (availableModels.length > 0 ? availableModels[0].value : 'gpt-4o-mini');
     const adkConfig = agentConfig.adk_config || {};

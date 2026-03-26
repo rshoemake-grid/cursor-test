@@ -135,27 +135,27 @@ import { logicalOrToEmptyArray } from '../utils/logicalOr';
     const fetchTemplates = useCallback(async ()=>{
         await templatesFetching.refetch();
     }, [
-        templatesFetching.refetch
+        templatesFetching
     ]);
     const fetchWorkflowsOfWorkflows = useCallback(async ()=>{
         await workflowsOfWorkflowsFetching.refetch();
     }, [
-        workflowsOfWorkflowsFetching.refetch
+        workflowsOfWorkflowsFetching
     ]);
     const fetchAgents = useCallback(async ()=>{
         await agentsFetching.refetch();
     }, [
-        agentsFetching.refetch
+        agentsFetching
     ]);
     const fetchRepositoryAgents = useCallback(async ()=>{
         await repositoryAgentsFetching.refetch();
     }, [
-        repositoryAgentsFetching.refetch
+        repositoryAgentsFetching
     ]);
     const fetchTools = useCallback(async ()=>{
         await toolsFetching.refetch();
     }, [
-        toolsFetching.refetch
+        toolsFetching
     ]);
     return {
         templates,

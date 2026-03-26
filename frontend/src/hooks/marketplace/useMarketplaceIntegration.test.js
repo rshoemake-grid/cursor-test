@@ -7,7 +7,6 @@ jest.mock('../../utils/logger', ()=>({
             error: jest.fn()
         }
     }));
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const mockLoggerDebug = logger.debug;
 describe('useMarketplaceIntegration', ()=>{
     let mockSetNodes;

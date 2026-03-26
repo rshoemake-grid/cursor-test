@@ -3067,7 +3067,7 @@ describe('useWorkflowExecution', ()=>{
             expect(secondExecute).not.toBe(firstExecute);
         });
         it('should verify exact useCallback dependencies - handleConfirmExecute', ()=>{
-            const { result, rerender } = renderHook(// eslint-disable-next-line @typescript-eslint/no-unused-vars
+            const { result, rerender } = renderHook(
             ({ executionInputs: _executionInputs })=>useWorkflowExecution({
                     isAuthenticated: true,
                     localWorkflowId: 'workflow-id',

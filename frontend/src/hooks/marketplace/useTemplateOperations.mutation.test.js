@@ -33,7 +33,6 @@ const mockShowError = showError;
 const mockShowSuccess = showSuccess;
 const mockShowConfirm = showConfirm;
 const mockDeleteTemplate = api.deleteTemplate;
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const mockLoggerDebug = logger.debug;
 describe('useTemplateOperations - Mutation Killers', ()=>{
     const mockHttpClient = {

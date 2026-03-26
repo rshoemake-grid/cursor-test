@@ -32,7 +32,8 @@ import { extractApiErrorMessage } from '../utils/apiUtils';
         setShowPublishModal(true);
     }, [
         activeTab,
-        publishFormHook
+        publishFormHook,
+        showError
     ]);
     const closePublishModal = useCallback(()=>{
         setShowPublishModal(false);
@@ -83,7 +84,9 @@ import { extractApiErrorMessage } from '../utils/apiUtils';
         token,
         httpClient,
         apiBaseUrl,
-        publishFormHook
+        publishFormHook,
+        showError,
+        showSuccess
     ]);
     return {
         showPublishModal,

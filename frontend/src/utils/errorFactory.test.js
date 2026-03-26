@@ -101,7 +101,7 @@ describe('errorFactory', ()=>{
                     expect(error.message).toBe('Test error');
                     expect(error.name).toBe('TestError');
                 } catch (e) {
-                    fail(`createSafeError threw synchronously in scenario ${index}: ${e}`);
+                    throw new Error(`createSafeError threw synchronously in scenario ${index}: ${e}`);
                 } finally{
                     global.Error = OriginalError;
                     global.Function = OriginalFunction;

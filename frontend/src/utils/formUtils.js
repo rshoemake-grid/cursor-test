@@ -41,7 +41,6 @@ import { coalesce } from './coalesce';
  * Default Cloner implementation
  * Handles primitive values (returns as-is)
  */ class DefaultCloner {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     canHandle(_value) {
         return true // Always handles any value
         ;

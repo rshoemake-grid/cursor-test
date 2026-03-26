@@ -320,7 +320,7 @@ LOG_LEVEL=DEBUG
 
 **Start:**
 ```bash
-python main.py
+python -m backend.main
 # or
 uvicorn backend.main:app --host 0.0.0.0 --port 8000 --reload
 ```
@@ -471,22 +471,22 @@ VITE_API_BASE_URL=http://localhost:8000/api
 VITE_WS_URL=ws://localhost:8000
 ```
 
-**Production:**
+**Production (CRA):**
 ```bash
-VITE_API_BASE_URL=https://api.yourdomain.com/api
-VITE_WS_URL=wss://api.yourdomain.com
+REACT_APP_API_BASE_URL=https://api.yourdomain.com/api
+# WebSocket URL is derived from the app (see websocket helpers); align with your API host.
 ```
 
 ### Build Configuration
 
 **Development Build:**
 ```bash
-npm run dev
+cd frontend && pnpm run start:dev
 ```
 
 **Production Build:**
 ```bash
-VITE_API_BASE_URL=https://api.yourdomain.com/api npm run build
+cd frontend && REACT_APP_API_BASE_URL=https://api.yourdomain.com/api pnpm run build
 ```
 
 ---

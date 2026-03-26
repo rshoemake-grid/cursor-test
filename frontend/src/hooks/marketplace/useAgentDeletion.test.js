@@ -20,7 +20,6 @@ jest.mock('../../utils/logger', ()=>({
 const mockShowError = showError;
 const mockShowSuccess = showSuccess;
 const mockShowConfirm = showConfirm;
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const mockLoggerDebug = logger.debug;
 describe('useAgentDeletion', ()=>{
     const mockStorage = {

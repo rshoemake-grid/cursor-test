@@ -56,16 +56,18 @@
             case 'started_at':
                 comparison = new Date(a.started_at).getTime() - new Date(b.started_at).getTime();
                 break;
-            case 'completed_at':
+            case 'completed_at': {
                 const aCompleted = a.completed_at ? new Date(a.completed_at).getTime() : 0;
                 const bCompleted = b.completed_at ? new Date(b.completed_at).getTime() : 0;
                 comparison = aCompleted - bCompleted;
                 break;
-            case 'duration':
+            }
+            case 'duration': {
                 const aDuration = a.completed_at ? new Date(a.completed_at).getTime() - new Date(a.started_at).getTime() : Date.now() - new Date(a.started_at).getTime();
                 const bDuration = b.completed_at ? new Date(b.completed_at).getTime() - new Date(b.started_at).getTime() : Date.now() - new Date(b.started_at).getTime();
                 comparison = aDuration - bDuration;
                 break;
+            }
             case 'status':
                 comparison = a.status.localeCompare(b.status);
                 break;

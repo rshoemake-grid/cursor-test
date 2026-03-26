@@ -17,7 +17,6 @@ jest.mock('../../utils/logger', ()=>({
         }
     }));
 const mockApi = api;
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const mockLoggerDebug = logger.debug;
 const mockLoggerError = logger.error;
 const waitForWithTimeout = (callback, timeout = 2000)=>{

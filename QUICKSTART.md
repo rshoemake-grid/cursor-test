@@ -32,12 +32,21 @@
 
 ## Running the Application
 
-Start the API server:
+From the **repository root**, start the FastAPI app (with your venv activated):
+
 ```bash
-python main.py
+python -m backend.main
 ```
 
-The server will start at `http://localhost:8000`
+Or with Uvicorn explicitly:
+
+```bash
+uvicorn backend.main:app --host 0.0.0.0 --port 8000 --reload
+```
+
+The server will listen at `http://localhost:8000`. Do **not** use the root `main.py` for the API — that file is not the server entrypoint.
+
+**Alternative:** Run the Spring Boot backend from `backend-java/` (`./gradlew bootRun`) on the same port; use **either** Python or Java, not both.
 
 - API Documentation: http://localhost:8000/docs
 - Alternative Docs: http://localhost:8000/redoc
@@ -153,7 +162,7 @@ Connect nodes to define execution order:
 Make sure you've created a `.env` file with your API key.
 
 ### "Connection refused" when running examples
-Make sure the API server is running (`python main.py`).
+Make sure the API server is running (`python -m backend.main` or `uvicorn backend.main:app --port 8000`).
 
 ### Slow execution
 LLM API calls can take 10-30 seconds each. Multi-agent workflows will take longer.

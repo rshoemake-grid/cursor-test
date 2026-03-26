@@ -8,7 +8,6 @@ jest.mock('../../hooks/forms', ()=>{
     return {
         useFormField: jest.fn((options)=>{
             // Use React from the outer scope
-            // eslint-disable-next-line @typescript-eslint/no-var-requires -- Dynamic require needed for Jest mocking
             const React = require('react');
             return {
                 value: options?.initialValue || '',
@@ -322,9 +321,7 @@ describe('FormField', ()=>{
             expect(screen.getByDisplayValue('controlled value')).toBeInTheDocument();
         });
         it('should use hook value when syncWithNodeData is true', ()=>{
-            // eslint-disable-next-line @typescript-eslint/no-var-requires -- Dynamic require needed for Jest mocking
             const mockUseFormField = require('../../hooks/forms').useFormField;
-            // eslint-disable-next-line @typescript-eslint/no-var-requires -- Dynamic require needed for Jest mocking
             const React = require('react');
             mockUseFormField.mockReturnValueOnce({
                 value: 'hook value',
@@ -590,9 +587,7 @@ describe('FormField', ()=>{
             expect(description).toBeInTheDocument();
         });
         it('should handle select with array dataPath', ()=>{
-            // eslint-disable-next-line @typescript-eslint/no-var-requires -- Dynamic require needed for Jest mocking
             const mockUseFormField = require('../../hooks/forms').useFormField;
-            // eslint-disable-next-line @typescript-eslint/no-var-requires -- Dynamic require needed for Jest mocking
             const React = require('react');
             mockUseFormField.mockReturnValueOnce({
                 value: 'selected',

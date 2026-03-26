@@ -41,7 +41,6 @@ jest.mock('../../utils/logger', ()=>({
     }));
 // Enhanced Mock WebSocket
 export class MockWebSocket {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     send(_data) {
     // Mock send
     }

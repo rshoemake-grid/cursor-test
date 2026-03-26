@@ -1,16 +1,28 @@
-import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 /**
  * Workflow Canvas Component
  * Encapsulates ReactFlow rendering and canvas event handling
  * Performance: Memoized to prevent unnecessary re-renders
- */ import React, { useMemo, memo } from 'react';
+ */
+import { useMemo, memo } from 'react';
 import { ReactFlow, MiniMap, Controls, Background, BackgroundVariant } from '@xyflow/react';
 import { nodeTypes } from './nodes';
-const WorkflowCanvas = /*#__PURE__*/ memo(function WorkflowCanvas({ nodes, edges, onNodesChange, onEdgesChange, onConnect, onDrop, onDragOver, onNodeClick, onNodeContextMenu, onEdgeContextMenu, onPaneClick, nodeExecutionStates = {} }) {
-    // Memoize nodes transformation to prevent unnecessary recalculations
-    const nodesWithExecutionState = useMemo(()=>{
-        return nodes.map((node)=>{
-            // Update nodes with current execution state
+
+const WorkflowCanvas = memo(function WorkflowCanvas({
+    nodes,
+    edges,
+    onNodesChange,
+    onEdgesChange,
+    onConnect,
+    onDrop,
+    onDragOver,
+    onNodeClick,
+    onNodeContextMenu,
+    onEdgeContextMenu,
+    onPaneClick,
+    nodeExecutionStates = {}
+}) {
+    const nodesWithExecutionState = useMemo(() => {
+        return nodes.map((node) => {
             const nodeExecutionState = nodeExecutionStates[node.id];
             return {
                 ...node,
@@ -21,13 +33,11 @@ const WorkflowCanvas = /*#__PURE__*/ memo(function WorkflowCanvas({ nodes, edges
                 }
             };
         });
-    }, [
-        nodes,
-        nodeExecutionStates
-    ]);
-    // Memoize nodeColor function to prevent recreation on each render
-    const nodeColor = useMemo(()=>(node)=>{
-            switch(node.type){
+    }, [nodes, nodeExecutionStates]);
+
+    const nodeColor = useMemo(
+        () => (node) => {
+            switch (node.type) {
                 case 'agent':
                     return '#3b82f6';
                 case 'condition':
@@ -49,53 +59,50 @@ const WorkflowCanvas = /*#__PURE__*/ memo(function WorkflowCanvas({ nodes, edges
                 default:
                     return '#94a3b8';
             }
-        }, []);
-    return /*#__PURE__*/ _jsx("div", {
-        className: "absolute inset-0",
-        children: /*#__PURE__*/ _jsxs(ReactFlow, {
-            nodes: nodesWithExecutionState,
-            edges: edges,
-            onNodesChange: onNodesChange,
-            onEdgesChange: onEdgesChange,
-            onConnect: onConnect,
-            onDrop: onDrop,
-            onDragOver: onDragOver,
-            onNodeClick: onNodeClick,
-            onNodeContextMenu: onNodeContextMenu,
-            onEdgeContextMenu: onEdgeContextMenu,
-            onPaneClick: onPaneClick,
-            nodeTypes: nodeTypes,
-            nodesDraggable: true,
-            nodesConnectable: true,
-            panOnDrag: [
-                1,
-                2
-            ],
-            panOnScroll: true,
-            zoomOnScroll: true,
-            zoomOnPinch: true,
-            selectionOnDrag: true,
-            selectNodesOnDrag: false,
-            fitView: true,
-            className: "bg-gray-50",
-            defaultEdgeOptions: {
-                style: {
-                    strokeWidth: 3
-                }
-            },
-            children: [
-                /*#__PURE__*/ _jsx(Controls, {}),
-                /*#__PURE__*/ _jsx(MiniMap, {
-                    className: "border-2 border-gray-300 rounded-lg shadow-lg",
-                    nodeColor: nodeColor
-                }),
-                /*#__PURE__*/ _jsx(Background, {
-                    variant: BackgroundVariant.Dots,
-                    gap: 12,
-                    size: 1
-                })
-            ]
-        })
-    });
+        },
+        []
+    );
+
+    return (
+        <div className="absolute inset-0">
+            <ReactFlow
+                nodes={nodesWithExecutionState}
+                edges={edges}
+                onNodesChange={onNodesChange}
+                onEdgesChange={onEdgesChange}
+                onConnect={onConnect}
+                onDrop={onDrop}
+                onDragOver={onDragOver}
+                onNodeClick={onNodeClick}
+                onNodeContextMenu={onNodeContextMenu}
+                onEdgeContextMenu={onEdgeContextMenu}
+                onPaneClick={onPaneClick}
+                nodeTypes={nodeTypes}
+                nodesDraggable
+                nodesConnectable
+                panOnDrag={[1, 2]}
+                panOnScroll
+                zoomOnScroll
+                zoomOnPinch
+                selectionOnDrag
+                selectNodesOnDrag={false}
+                fitView
+                className="bg-gray-50"
+                defaultEdgeOptions={{
+                    style: {
+                        strokeWidth: 3
+                    }
+                }}
+            >
+                <Controls />
+                <MiniMap
+                    className="border-2 border-gray-300 rounded-lg shadow-lg"
+                    nodeColor={nodeColor}
+                />
+                <Background variant={BackgroundVariant.Dots} gap={12} size={1} />
+            </ReactFlow>
+        </div>
+    );
 });
+
 export default WorkflowCanvas;

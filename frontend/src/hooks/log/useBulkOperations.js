@@ -52,9 +52,7 @@
         try {
             await onDelete(Array.from(selectedIds));
             setSelectedIds(new Set());
-        } catch (error) {
-            throw error;
-        } finally{
+        } finally {
             setIsDeleting(false);
         }
     }, [

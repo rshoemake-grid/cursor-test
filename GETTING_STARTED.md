@@ -50,15 +50,13 @@ You should see all green checkmarks ✓. If not, fix any issues before continuin
 
 ### Step 4: Start the Server (1 minute)
 
+From the **repository root**:
+
 ```bash
-python main.py
+python -m backend.main
 ```
 
-You should see:
-```
-INFO:     Uvicorn running on http://0.0.0.0:8000
-Database initialized
-```
+You should see Uvicorn listening on port **8000** (for example `http://0.0.0.0:8000`). Keep this terminal open.
 
 **Keep this terminal running!**
 
@@ -292,8 +290,8 @@ Agents are LLM-powered processing units that:
 ### Manual Commands
 
 ```bash
-# Start server
-python main.py
+# Start API server (from repo root)
+python -m backend.main
 
 # Verify setup
 python verify_setup.py
@@ -322,7 +320,7 @@ echo "OPENAI_API_KEY=sk-your-actual-key" > .env
 **Problem:** The server isn't running.
 
 **Solution:** 
-- Make sure `python main.py` is running in another terminal
+- Make sure `python -m backend.main` is running in another terminal
 - Check that it's on port 8000
 
 ### "Module not found" errors
@@ -428,7 +426,7 @@ Before you start building:
 - [ ] Dependencies installed (`pip install -r requirements.txt`)
 - [ ] `.env` file created with OpenAI API key
 - [ ] Setup verified (`python verify_setup.py`)
-- [ ] Server running (`python main.py`)
+- [ ] Server running (`python -m backend.main`)
 - [ ] First example run successfully
 - [ ] API documentation viewed (http://localhost:8000/docs)
 

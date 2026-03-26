@@ -55,7 +55,10 @@ export function useWorkflowExecution({ isAuthenticated, localWorkflowId, workflo
     }, [
         isAuthenticated,
         localWorkflowId,
-        saveWorkflow
+        saveWorkflow,
+        logger,
+        showConfirm,
+        showError
     ]);
     const handleConfirmExecute = useCallback(async ()=>{
         logger.debug('[WorkflowBuilder] handleConfirmExecute called');

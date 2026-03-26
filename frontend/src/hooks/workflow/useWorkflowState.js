@@ -1,7 +1,8 @@
 /**
  * Workflow State Hook
  * Manages local workflow state (id, name, description, variables)
- */ import { useState, useEffect, useRef } from 'react';
+ */
+import { useState, useEffect, useRef } from 'react';
 export function useWorkflowState({ workflowId: initialWorkflowId, tabName }) {
     const [localWorkflowId, setLocalWorkflowId] = useState(initialWorkflowId);
     const [localWorkflowName, setLocalWorkflowName] = useState('Untitled Workflow');
@@ -17,11 +18,12 @@ export function useWorkflowState({ workflowId: initialWorkflowId, tabName }) {
     }, [
         tabName
     ]);
-    // Sync local workflow ID with prop
+    // Sync local workflow ID with prop (omit localWorkflowId from deps to avoid feedback loops)
     useEffect(()=>{
         if (initialWorkflowId !== localWorkflowId) {
             setLocalWorkflowId(initialWorkflowId);
         }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [
         initialWorkflowId
     ]);

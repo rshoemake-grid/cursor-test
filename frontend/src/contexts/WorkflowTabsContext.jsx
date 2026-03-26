@@ -1,5 +1,5 @@
 import { jsx as _jsx } from "react/jsx-runtime";
-import React, { createContext, useContext, useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import { createContext, useContext, useState, useEffect, useRef, useMemo, useCallback } from 'react';
 // Domain-based imports - Phase 7
 import { getLocalStorageItem } from '../hooks/storage';
 import { showSuccess } from '../utils/notifications';
@@ -129,6 +129,7 @@ export function WorkflowTabsProvider({ children, storage, initialTabs, initialAc
         children: children
     });
 }
+// eslint-disable-next-line react-refresh/only-export-components -- context hook
 export function useWorkflowTabs() {
     const context = useContext(WorkflowTabsContext);
     if (!context) {
@@ -136,8 +137,8 @@ export function useWorkflowTabs() {
     }
     return context;
 }
-// Export for testing - allows resetting processedKeys
+// eslint-disable-next-line react-refresh/only-export-components -- test helper
 export function resetWorkflowTabsContext() {
-// This is a no-op in the context, but can be used in tests
-// The actual reset happens when creating a new provider instance
+    // This is a no-op in the context, but can be used in tests
+    // The actual reset happens when creating a new provider instance
 }

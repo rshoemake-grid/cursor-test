@@ -3,7 +3,6 @@
  */ jest.mock('./index.css', ()=>({}));
 jest.mock('@xyflow/react/dist/style.css', ()=>({}));
 jest.mock('./App', ()=>{
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
     const React = require('react');
     return {
         __esModule: true,

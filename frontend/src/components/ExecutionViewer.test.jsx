@@ -1,19 +1,9 @@
 import { jsx as _jsx } from "react/jsx-runtime";
 import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
-// Helper to ensure all waitFor calls have timeouts
-// When using fake timers, we need to advance timers and use real timers for waitFor
-const waitForWithTimeout = async (callback, timeout = 2000)=>{
-    // Temporarily use real timers for waitFor, then restore fake timers
-    jest.useRealTimers();
-    try {
-        return await waitFor(callback, {
-            timeout
-        });
-    } finally{
-        jest.useFakeTimers();
-    }
-};
+const waitForWithTimeout = (callback, timeout = 2000)=>waitFor(callback, {
+        timeout
+    });
 import ExecutionViewer from './ExecutionViewer';
 // Domain-based imports - Phase 7
 import { useWorkflowAPI } from '../hooks/workflow';
@@ -37,7 +27,7 @@ describe('ExecutionViewer', ()=>{
     const mockGetExecution = jest.fn();
     beforeEach(()=>{
         jest.clearAllMocks();
-        jest.useFakeTimers();
+        jest.useRealTimers();
         mockUseWorkflowAPI.mockReturnValue({
             getExecution: mockGetExecution,
             createWorkflow: jest.fn(),
@@ -104,12 +94,9 @@ describe('ExecutionViewer', ()=>{
         await waitForWithTimeout(()=>{
             expect(mockGetExecution).toHaveBeenCalledTimes(1);
         }, 3000);
-        // Advance timers to trigger polling
-        jest.advanceTimersByTime(2000);
-        await Promise.resolve(); // Allow promises to resolve
         await waitForWithTimeout(()=>{
             expect(mockGetExecution).toHaveBeenCalledTimes(2);
-        }, 3000);
+        }, 5000);
     });
     it('should stop polling when execution completes', async ()=>{
         const runningExecution = {
@@ -135,21 +122,12 @@ describe('ExecutionViewer', ()=>{
         await waitForWithTimeout(()=>{
             expect(mockGetExecution).toHaveBeenCalledTimes(1);
         }, 3000);
-        // Advance timers to trigger polling - this will get completed status
-        jest.advanceTimersByTime(2000);
-        await Promise.resolve(); // Allow promises to resolve
-        // Wait for execution to complete
+        // Wait for first poll to complete and status to become completed
         await waitForWithTimeout(()=>{
             expect(mockGetExecution.mock.calls.length).toBeGreaterThanOrEqual(2);
-        }, 3000);
+        }, 5000);
         const callCountAfterCompletion = mockGetExecution.mock.calls.length;
-        // Advance timers multiple times - polling should have stopped
-        jest.advanceTimersByTime(2000);
-        await Promise.resolve();
-        jest.advanceTimersByTime(2000);
-        await Promise.resolve();
-        jest.advanceTimersByTime(2000);
-        await Promise.resolve();
+        await new Promise((r)=>setTimeout(r, 6500));
         // After multiple timer advances, should not have many more calls
         // (allowing for useEffect re-runs due to status change, but interval should stop)
         const finalCallCount = mockGetExecution.mock.calls.length;
@@ -265,12 +243,9 @@ describe('ExecutionViewer', ()=>{
         await waitForWithTimeout(()=>{
             expect(mockGetExecution).toHaveBeenCalled();
         });
-        // Should poll for pending status
-        jest.advanceTimersByTime(2000);
-        await Promise.resolve();
         await waitForWithTimeout(()=>{
             expect(mockGetExecution.mock.calls.length).toBeGreaterThanOrEqual(2);
-        });
+        }, 5000);
     });
     it('should handle failed status', async ()=>{
         const mockExecution = {
@@ -292,8 +267,7 @@ describe('ExecutionViewer', ()=>{
         });
         // Should stop polling for failed status
         const callCount = mockGetExecution.mock.calls.length;
-        jest.advanceTimersByTime(2000);
-        await Promise.resolve();
+        await new Promise((r)=>setTimeout(r, 2100));
         // Should not poll after failed status
         expect(mockGetExecution.mock.calls.length).toBeLessThanOrEqual(callCount + 1);
     });
@@ -382,31 +356,10 @@ describe('ExecutionViewer', ()=>{
         await waitForWithTimeout(()=>{
             expect(mockGetExecution).toHaveBeenCalledTimes(1);
         });
-        // Advance timers to trigger first polling attempt (will fail)
-        jest.advanceTimersByTime(2000);
-        await Promise.resolve();
-        // Should handle error and continue polling
         await waitForWithTimeout(()=>{
             expect(logger.error).toHaveBeenCalled();
-            // After error, should have attempted at least 2 calls (initial + first poll)
             expect(mockGetExecution.mock.calls.length).toBeGreaterThanOrEqual(2);
-        });
-        // Advance timers again - should continue polling after error
-        jest.advanceTimersByTime(2000);
-        await Promise.resolve();
-        // Advance one more time to ensure we get the third call
-        jest.advanceTimersByTime(2000);
-        await Promise.resolve();
-        // Wait for the next poll to complete - should have at least 3 calls now
-        // Note: After an error, polling continues, so we should get at least 3 calls total
-        await waitForWithTimeout(()=>{
-            // Initial call + first poll (error) + second poll (success) = at least 3
-            const callCount = mockGetExecution.mock.calls.length;
-            // If we only got 2, that's still acceptable - the error might have stopped polling
-            // But ideally we should get 3+ calls
-            expect(callCount).toBeGreaterThanOrEqual(2);
-        // If we got 3+, great. If only 2, that's still valid behavior after an error
-        });
+        }, 5000);
     });
     it('should display monitoring banner when polling', async ()=>{
         const mockExecution = {

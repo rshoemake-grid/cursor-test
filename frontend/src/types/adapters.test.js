@@ -1041,7 +1041,6 @@ describe('defaultAdapters', ()=>{
                 // Ensure Response exists
                 if (!globalObj.Response) {
                     globalObj.Response = class MockResponse {
-                        // eslint-disable-next-line @typescript-eslint/no-unused-vars
                         constructor(_body, _init){
                             _define_property(this, "ok", true);
                             _define_property(this, "status", 200);
@@ -1078,7 +1077,6 @@ describe('defaultAdapters', ()=>{
                 // Ensure Response exists for the fallback function
                 if (!globalObj.Response) {
                     globalObj.Response = class MockResponse {
-                        // eslint-disable-next-line @typescript-eslint/no-unused-vars
                         constructor(_body, _init){
                             _define_property(this, "ok", true);
                             _define_property(this, "status", 200);

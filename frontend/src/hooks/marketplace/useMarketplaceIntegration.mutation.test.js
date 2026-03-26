@@ -10,7 +10,6 @@ jest.mock('../../utils/logger', ()=>({
             error: jest.fn()
         }
     }));
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const mockLoggerDebug = logger.debug;
 const mockLoggerError = logger.error;
 describe('useMarketplaceIntegration - Mutation Killers', ()=>{

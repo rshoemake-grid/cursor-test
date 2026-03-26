@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { defaultAdapters } from '../../types/adapters';
 import { API_CONFIG } from '../../config/constants';
@@ -11,7 +11,8 @@ import { extractApiErrorMessage } from '../utils/apiUtils';
  * Refactored to follow SOLID principles and DRY
  * 
  * Uses extracted authenticatedRequestHandler for common request logic
- */ export function useAuthenticatedApi(httpClient, apiBaseUrl) {
+ */
+export function useAuthenticatedApi(httpClient, apiBaseUrl) {
     // Hooks must be called unconditionally at the top level
     const { token } = useAuth();
     // Initialize client with fallback
@@ -33,11 +34,15 @@ import { extractApiErrorMessage } from '../utils/apiUtils';
     const baseUrlResult = logicalOr(apiBaseUrl, API_CONFIG.BASE_URL);
     const baseUrl = baseUrlResult !== null && baseUrlResult !== undefined && typeof baseUrlResult === 'string' ? baseUrlResult : API_CONFIG.BASE_URL;
     // Create request context (shared across all methods)
-    const context = {
+    const context = useMemo(()=>({
+            client,
+            baseUrl,
+            token
+        }), [
         client,
         baseUrl,
         token
-    };
+    ]);
     /**
    * Make an authenticated POST request
    */ const authenticatedPost = useCallback(async (endpoint, data, additionalHeaders)=>{
@@ -57,9 +62,7 @@ import { extractApiErrorMessage } from '../utils/apiUtils';
             throw createSafeError(extractApiErrorMessage(error, 'Request failed'), 'RequestError');
         }
     }, [
-        token,
-        client,
-        baseUrl
+        context
     ]);
     /**
    * Make an authenticated GET request
@@ -79,9 +82,7 @@ import { extractApiErrorMessage } from '../utils/apiUtils';
             throw createSafeError(extractApiErrorMessage(error, 'Request failed'), 'RequestError');
         }
     }, [
-        token,
-        client,
-        baseUrl
+        context
     ]);
     /**
    * Make an authenticated PUT request
@@ -102,9 +103,7 @@ import { extractApiErrorMessage } from '../utils/apiUtils';
             throw createSafeError(extractApiErrorMessage(error, 'Request failed'), 'RequestError');
         }
     }, [
-        token,
-        client,
-        baseUrl
+        context
     ]);
     /**
    * Make an authenticated DELETE request
@@ -124,9 +123,7 @@ import { extractApiErrorMessage } from '../utils/apiUtils';
             throw createSafeError(extractApiErrorMessage(error, 'Request failed'), 'RequestError');
         }
     }, [
-        token,
-        client,
-        baseUrl
+        context
     ]);
     return {
         authenticatedPost,

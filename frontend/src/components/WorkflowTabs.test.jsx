@@ -68,9 +68,7 @@ jest.mock('../hooks/storage', ()=>({
 jest.mock('./WorkflowBuilder', ()=>{
     return {
         __esModule: true,
-        // eslint-disable-next-line @typescript-eslint/no-var-requires -- Dynamic require needed for Jest mocking
         default: require('react').forwardRef((props, ref)=>{
-            // eslint-disable-next-line @typescript-eslint/no-var-requires -- Dynamic require needed for Jest mocking
             const React = require('react');
             React.useImperativeHandle(ref, ()=>({
                     saveWorkflow: jest.fn().mockResolvedValue('workflow-1'),
@@ -84,7 +82,6 @@ jest.mock('./WorkflowBuilder', ()=>{
 const mockUseAuth = useAuth;
 const mockApi = api;
 const mockGetLocalStorageItem = getLocalStorageItem;
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const mockSetLocalStorageItem = setLocalStorageItem;
 describe('WorkflowTabs', ()=>{
     const mockOnExecutionStart = jest.fn();
@@ -2644,7 +2641,6 @@ describe('WorkflowTabs', ()=>{
     describe('No tabs state', ()=>{
         it('should render no tabs state when tabs array is empty', async ()=>{
             // Use a custom provider that starts with empty tabs
-            // eslint-disable-next-line @typescript-eslint/no-var-requires -- Dynamic require needed for Jest mocking
             const { WorkflowTabsProvider } = require('../contexts/WorkflowTabsContext');
             render(/*#__PURE__*/ _jsx(WorkflowTabsProvider, {
                 initialTabs: [],
@@ -2661,7 +2657,6 @@ describe('WorkflowTabs', ()=>{
             }, 3000);
         });
         it('should create new workflow when clicking New Workflow button in no tabs state', async ()=>{
-            // eslint-disable-next-line @typescript-eslint/no-var-requires -- Dynamic require needed for Jest mocking
             const { WorkflowTabsProvider } = require('../contexts/WorkflowTabsContext');
             render(/*#__PURE__*/ _jsx(WorkflowTabsProvider, {
                 initialTabs: [],
@@ -2800,7 +2795,6 @@ describe('WorkflowTabs', ()=>{
             });
         });
         it('should not render WorkflowBuilder when activeTab is null', async ()=>{
-            // eslint-disable-next-line @typescript-eslint/no-var-requires -- Dynamic require needed for Jest mocking
             const { WorkflowTabsProvider } = require('../contexts/WorkflowTabsContext');
             render(/*#__PURE__*/ _jsx(WorkflowTabsProvider, {
                 initialTabs: [],

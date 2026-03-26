@@ -92,7 +92,6 @@ function _define_property(obj, key, value) {
  * Fixed delay reconnection strategy
  * Alternative strategy with constant delay
  */ export class FixedDelayStrategy {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     calculateDelay(_attempt, _baseDelay) {
         // Use fixed delay, ignore attempt and baseDelay (prefixed with _ to indicate intentionally unused)
         if (this.fixedDelay < WS_RECONNECT.MIN_DELAY) {

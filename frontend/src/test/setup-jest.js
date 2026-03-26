@@ -78,18 +78,15 @@ Object.defineProperty(global, 'import', {
 });
 // Polyfill TextEncoder/TextDecoder for react-router-dom
 if (typeof global.TextEncoder === 'undefined') {
-    // eslint-disable-next-line @typescript-eslint/no-var-requires -- Dynamic require needed for Jest setup
     const { TextEncoder, TextDecoder } = require('util');
     global.TextEncoder = TextEncoder;
     global.TextDecoder = TextDecoder;
 }
 // Polyfill setImmediate for jsdom environment (used by @testing-library/react waitFor)
 if (typeof global.setImmediate === 'undefined') {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     global.setImmediate = (callback, ...args)=>{
         return setTimeout(()=>callback(...args), 0);
     };
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     global.clearImmediate = (id)=>{
         clearTimeout(id);
     };
@@ -223,7 +220,6 @@ afterEach(()=>{
     try {
         // Try to access wsInstances from useWebSocket test setup
         // Use dynamic require to avoid import issues if module not available
-        // eslint-disable-next-line @typescript-eslint/no-var-requires -- Dynamic require needed for Jest setup
         const wsSetupModule = require('./hooks/execution/useWebSocket.test.setup');
         if (wsSetupModule && wsSetupModule.wsInstances && Array.isArray(wsSetupModule.wsInstances)) {
             // Clear all WebSocket instances

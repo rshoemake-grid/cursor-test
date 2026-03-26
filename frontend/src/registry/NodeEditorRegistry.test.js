@@ -8,14 +8,12 @@ describe('NodeEditorRegistry', ()=>{
             nodeEditorRegistry.unregister(type);
         });
         mockHandler = {
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
             renderEditor: jest.fn((_node, _onChange)=>({
                     type: 'div',
                     props: {
                         children: 'Editor'
                     }
                 })),
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
             validate: jest.fn((_node)=>({
                     isValid: true,
                     errors: []

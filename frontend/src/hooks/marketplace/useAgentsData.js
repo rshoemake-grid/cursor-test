@@ -74,9 +74,7 @@ import { canSaveToStorage } from '../utils/storageValidation';
         category,
         searchQuery,
         sortBy,
-        user?.id,
-        user?.username,
-        user?.email,
+        user,
         storage
     ]);
     return {

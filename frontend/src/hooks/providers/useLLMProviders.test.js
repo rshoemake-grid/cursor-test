@@ -1414,7 +1414,6 @@ describe('useLLMProviders', ()=>{
         });
         it('should verify exact comparison provider.enabled && provider.models && provider.models.length > 0', async ()=>{
             // Import the function directly
-            // eslint-disable-next-line @typescript-eslint/no-var-requires -- Dynamic require needed for Jest mocking
             const { useLLMProviders } = require('./useLLMProviders');
             // We can't directly test extractModelsFromProviders as it's not exported
             // Instead, test through the hook behavior

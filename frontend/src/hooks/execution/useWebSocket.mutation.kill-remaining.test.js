@@ -5,7 +5,6 @@
 import { advanceTimersByTime, waitForWithTimeout, wsInstances, MockWebSocket, useWebSocket, logger } from './useWebSocket.test.setup';
 describe('useWebSocket - Kill Remaining Mutants', ()=>{
     // Store the MockWebSocket wrapper to restore it if tests modify global.WebSocket
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     let mockWebSocketWrapper;
     beforeEach(()=>{
         jest.clearAllMocks();
@@ -1816,7 +1815,6 @@ describe('useWebSocket - Kill Remaining Mutants', ()=>{
             });
             it('should verify exact error instanceof Error - error is not Error instance', async ()=>{
                 const onError = jest.fn();
-                // eslint-disable-next-line @typescript-eslint/no-unused-vars -- Stored for potential restore
                 const OriginalWebSocket = global.WebSocket;
                 global.WebSocket = class {
                     constructor(){

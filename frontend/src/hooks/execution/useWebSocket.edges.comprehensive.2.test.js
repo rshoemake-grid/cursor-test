@@ -1,4 +1,4 @@
-import { renderHook } from '@testing-library/react';
+import { cleanup, renderHook } from '@testing-library/react';
 import { advanceTimersByTime, wsInstances, MockWebSocket, useWebSocket, logger } from './useWebSocket.test.setup';
 describe('useWebSocket - edges.comprehensive.2', ()=>{
     beforeEach(()=>{
@@ -11,6 +11,7 @@ describe('useWebSocket - edges.comprehensive.2', ()=>{
         }
     });
     afterEach(()=>{
+        cleanup();
         jest.runOnlyPendingTimers();
         wsInstances.splice(0, wsInstances.length);
         jest.useRealTimers();
@@ -214,7 +215,6 @@ describe('useWebSocket - edges.comprehensive.2', ()=>{
             // Mock WebSocket constructor to throw error
             const OriginalWebSocket = global.WebSocket;
             global.WebSocket = class {
-                // eslint-disable-next-line @typescript-eslint/no-unused-vars
                 constructor(_url){
                     throw new Error('Failed to create WebSocket');
                 }
@@ -292,7 +292,6 @@ describe('useWebSocket - edges.comprehensive.2', ()=>{
             const OriginalWebSocket = global.WebSocket;
             const onError = jest.fn();
             global.WebSocket = class {
-                // eslint-disable-next-line @typescript-eslint/no-unused-vars
                 constructor(_url){
                     throw new Error('Connection failed');
                 }
@@ -314,7 +313,6 @@ describe('useWebSocket - edges.comprehensive.2', ()=>{
             const OriginalWebSocket = global.WebSocket;
             const onError = jest.fn();
             global.WebSocket = class {
-                // eslint-disable-next-line @typescript-eslint/no-unused-vars
                 constructor(_url){
                     throw new Error('Test error');
                 }
@@ -336,7 +334,6 @@ describe('useWebSocket - edges.comprehensive.2', ()=>{
             const OriginalWebSocket = global.WebSocket;
             const onError = jest.fn();
             global.WebSocket = class {
-                // eslint-disable-next-line @typescript-eslint/no-unused-vars
                 constructor(_url){
                     throw 'String error';
                 }
@@ -447,7 +444,6 @@ describe('useWebSocket - edges.comprehensive.2', ()=>{
             const OriginalWebSocket = global.WebSocket;
             const onError = jest.fn();
             global.WebSocket = class {
-                // eslint-disable-next-line @typescript-eslint/no-unused-vars
                 constructor(_url){
                     throw null // Not an Error instance
                     ;
@@ -470,7 +466,6 @@ describe('useWebSocket - edges.comprehensive.2', ()=>{
             const OriginalWebSocket = global.WebSocket;
             const onError = jest.fn();
             global.WebSocket = class {
-                // eslint-disable-next-line @typescript-eslint/no-unused-vars
                 constructor(_url){
                     throw 'String error';
                 }
@@ -626,7 +621,6 @@ describe('useWebSocket - edges.comprehensive.2', ()=>{
             // Mock WebSocket constructor to throw error
             const OriginalWebSocket = global.WebSocket;
             global.WebSocket = class {
-                // eslint-disable-next-line @typescript-eslint/no-unused-vars
                 constructor(_url){
                     throw new Error('Failed to create WebSocket');
                 }
@@ -1696,8 +1690,9 @@ describe('useWebSocket - edges.comprehensive.2', ()=>{
                     await advanceTimersByTime(50); // Flush open event timers
                     await advanceTimersByTime(50) // Extra flush
                     ;
-                    logger.debug.mockReset();
-                    await advanceTimersByTime(10); // Small delay to ensure reset completes
+                    // Clear only calls made so far so async work from other hooks/tests
+                    // cannot contaminate this assertion (matches sibling test using mockClear before close).
+                    logger.debug.mockClear();
                     // Test wasClean && code === 1000 pattern with false wasClean
                     // When wasClean is false, the condition wasClean && code === 1000 should be false
                     ws.simulateClose(1000, '', false);
@@ -2081,7 +2076,6 @@ describe('useWebSocket - edges.comprehensive.2', ()=>{
                 const executionId = 'exec-logger-failed-create-template-test';
                 const OriginalWebSocket = global.WebSocket;
                 global.WebSocket = class {
-                    // eslint-disable-next-line @typescript-eslint/no-unused-vars
                     constructor(_url){
                         throw new Error('Connection failed');
                     }

@@ -229,6 +229,8 @@ export default function ExecutionConsole({ activeWorkflowId, executions = [], ac
                 setIsExpanded(true);
             }
         }
+    // isExpanded omitted on purpose: including it would re-open the panel whenever the user collapses it
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [
         activeExecutionId,
         executions.length

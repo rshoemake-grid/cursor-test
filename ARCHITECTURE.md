@@ -52,7 +52,7 @@ The Agentic Workflow Engine is built with a modular, layered architecture design
 
 ```
 cursor-test/
-├── main.py                      # Application entry point
+├── main.py                      # Legacy stub; API: python -m backend.main
 ├── requirements.txt             # Python dependencies
 ├── README.md                    # Project overview
 ├── QUICKSTART.md               # Getting started guide

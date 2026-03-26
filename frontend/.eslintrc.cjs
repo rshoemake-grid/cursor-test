@@ -1,8 +1,35 @@
 module.exports = {
   root: true,
-  env: { browser: true, es2020: true },
+  env: { browser: true, es2020: true, node: true },
   extends: ['eslint:recommended', 'plugin:react-hooks/recommended'],
-  ignorePatterns: ['dist', 'build', '.eslintrc.cjs'],
+  ignorePatterns: ['dist', 'build', '.eslintrc.cjs', 'coverage', '.stryker-tmp'],
+  overrides: [
+    {
+      files: [
+        '**/*.test.js',
+        '**/*.test.jsx',
+        '**/*.test.shared.jsx',
+        '**/*.test.shared.js',
+        '**/test/**/*.js',
+        '**/test/**/*.jsx',
+      ],
+      env: { browser: true, es2020: true, jest: true, node: true },
+      rules: {
+        'no-unused-vars': [
+          'warn',
+          { varsIgnorePattern: '^_', argsIgnorePattern: '^_', ignoreRestSiblings: true },
+        ],
+      },
+    },
+    {
+      files: ['src/setupProxy.js'],
+      env: { node: true },
+    },
+    {
+      files: ['src/utils/logger.js'],
+      env: { browser: true, node: true },
+    },
+  ],
   parser: '@babel/eslint-parser',
   parserOptions: {
     requireConfigFile: true,
@@ -24,8 +51,20 @@ module.exports = {
     sourceType: 'module',
     ecmaFeatures: { jsx: true },
   },
-  plugins: ['react-refresh'],
+  plugins: ['react', 'react-refresh'],
+  settings: { react: { version: 'detect' } },
   rules: {
+    'react/jsx-uses-vars': 'error',
+    'react/react-in-jsx-scope': 'off',
+    'no-unused-vars': [
+      'warn',
+      {
+        argsIgnorePattern: '^_',
+        varsIgnorePattern: '^_',
+        caughtErrorsIgnorePattern: '^_',
+        ignoreRestSiblings: true,
+      },
+    ],
     'react-refresh/only-export-components': ['warn', { allowConstantExport: true }],
     'no-restricted-imports': [
       'warn',

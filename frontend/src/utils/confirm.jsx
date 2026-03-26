@@ -3,7 +3,7 @@ import { defaultAdapters } from '../types/adapters';
  * Show a confirmation dialog (non-blocking, promise-based)
  * Returns a promise that resolves to true if confirmed, false if cancelled
  */ export function showConfirm(message, options = {}) {
-    const { title = 'Confirm', confirmText = 'Confirm', cancelText = 'Cancel', type = 'warning', documentAdapter: providedDocumentAdapter, // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { title = 'Confirm', confirmText = 'Confirm', cancelText = 'Cancel', type = 'warning', documentAdapter: providedDocumentAdapter,
     timerAdapter: _timerAdapter = defaultAdapters.createTimerAdapter() } = options;
     // Use default adapter if not provided, but respect explicit null (SOLID: Explicit Dependencies)
     // If explicitly null, return false (explicit rejection)

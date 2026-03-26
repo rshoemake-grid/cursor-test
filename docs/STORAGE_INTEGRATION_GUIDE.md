@@ -174,7 +174,7 @@ No setup required! SQLite is the default and works out of the box.
 DATABASE_URL=sqlite+aiosqlite:///./workflows.db
 
 # Start application - database created automatically
-python main.py
+python -m backend.main
 
 # Database file appears at ./workflows.db
 # Contains: users, workflows, executions, settings tables

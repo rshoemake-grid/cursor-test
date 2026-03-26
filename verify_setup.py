@@ -145,7 +145,7 @@ def main():
         print("✓ All checks passed! You're ready to run the application.")
         print()
         print("Next steps:")
-        print("  1. Start the server: python main.py")
+        print("  1. Start the server: python -m backend.main")
         print("  2. Run an example: python examples/simple_workflow.py")
         print("  3. View API docs: http://localhost:8000/docs")
     else:

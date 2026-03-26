@@ -1,7 +1,8 @@
 /**
  * Agent Deletion Hook
  * Handles deletion of agents from marketplace and repository
- */ import { useCallback } from 'react';
+ */
+import { useCallback } from 'react';
 import { showError as defaultShowError, showSuccess as defaultShowSuccess } from '../../utils/notifications';
 import { showConfirm as defaultShowConfirm } from '../../utils/confirm';
 import { logger as defaultLogger } from '../../utils/logger';
@@ -15,7 +16,8 @@ import { hasOfficialItems, hasNoUserOwnedItems, ownsAllItems, ownsPartialItems, 
  * 
  * @param options Configuration options
  * @returns Agent deletion handler
- */ export function useAgentDeletion({ user, storage, agents, setAgents, setSelectedAgentIds, showError = defaultShowError, showSuccess = defaultShowSuccess, showConfirm = defaultShowConfirm, logger = defaultLogger }) {
+ */
+export function useAgentDeletion({ user, storage, agents, setAgents, setSelectedAgentIds, showError = defaultShowError, showSuccess = defaultShowSuccess, showConfirm = defaultShowConfirm, logger: _logger = defaultLogger }) {
     const deleteSelectedAgents = useCallback(async (selectedAgentIds)=>{
         if (isEmptySelection(selectedAgentIds)) return;
         const selectedAgents = agents.filter((a)=>selectedAgentIds.has(a.id));
@@ -90,8 +92,7 @@ import { hasOfficialItems, hasNoUserOwnedItems, ownsAllItems, ownsPartialItems, 
         setSelectedAgentIds,
         showError,
         showSuccess,
-        showConfirm,
-        logger
+        showConfirm
     ]);
     return {
         deleteSelectedAgents
@@ -102,7 +103,8 @@ import { hasOfficialItems, hasNoUserOwnedItems, ownsAllItems, ownsPartialItems, 
  * 
  * @param options Configuration options
  * @returns Repository agent deletion handler
- */ export function useRepositoryAgentDeletion({ storage, setRepositoryAgents, setSelectedRepositoryAgentIds, showError = defaultShowError, showSuccess = defaultShowSuccess, showConfirm = defaultShowConfirm }) {
+ */
+export function useRepositoryAgentDeletion({ storage, setRepositoryAgents, setSelectedRepositoryAgentIds, showError = defaultShowError, showSuccess = defaultShowSuccess, showConfirm = defaultShowConfirm }) {
     const deleteSelectedRepositoryAgents = useCallback(async (selectedRepositoryAgentIds, onRefresh)=>{
         if (isEmptySelection(selectedRepositoryAgentIds)) return;
         const confirmed = await showConfirm(`Are you sure you want to delete ${selectedRepositoryAgentIds.size} selected agent(s) from your repository?`, {

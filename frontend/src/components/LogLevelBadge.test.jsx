@@ -334,7 +334,6 @@ describe('LogLevelBadge', ()=>{
             expect(screen.getByText('INFO')).toBeInTheDocument();
         });
         it('should verify exact isValidLogLevel call with level parameter', ()=>{
-            // eslint-disable-next-line @typescript-eslint/no-var-requires -- Dynamic require needed for Jest mocking
             const isValidLogLevelSpy = jest.spyOn(require('../utils/logLevel'), 'isValidLogLevel');
             render(/*#__PURE__*/ _jsx(LogLevelBadge, {
                 level: "DEBUG"
@@ -344,7 +343,6 @@ describe('LogLevelBadge', ()=>{
             isValidLogLevelSpy.mockRestore();
         });
         it('should verify exact getLogLevelColor call when showBackground is true', ()=>{
-            // eslint-disable-next-line @typescript-eslint/no-var-requires -- Dynamic require needed for Jest mocking
             const getLogLevelColorSpy = jest.spyOn(require('../utils/logLevel'), 'getLogLevelColor');
             render(/*#__PURE__*/ _jsx(LogLevelBadge, {
                 level: "ERROR",
@@ -355,7 +353,6 @@ describe('LogLevelBadge', ()=>{
             getLogLevelColorSpy.mockRestore();
         });
         it('should verify exact getLogLevelTextColor call', ()=>{
-            // eslint-disable-next-line @typescript-eslint/no-var-requires -- Dynamic require needed for Jest mocking
             const getLogLevelTextColorSpy = jest.spyOn(require('../utils/logLevel'), 'getLogLevelTextColor');
             render(/*#__PURE__*/ _jsx(LogLevelBadge, {
                 level: "WARNING"

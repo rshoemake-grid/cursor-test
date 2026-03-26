@@ -1095,7 +1095,6 @@ describe('useAuthenticatedApi', ()=>{
             });
             it('should verify catch block in httpClient creation - fallback client', async ()=>{
                 // Mock defaultAdapters.createHttpClient to throw
-                // eslint-disable-next-line @typescript-eslint/no-var-requires -- Dynamic require needed for Jest mocking
                 const { defaultAdapters } = require('../../types/adapters');
                 const originalCreateHttpClient = defaultAdapters.createHttpClient;
                 defaultAdapters.createHttpClient = jest.fn(()=>{
@@ -1110,7 +1109,6 @@ describe('useAuthenticatedApi', ()=>{
                 defaultAdapters.createHttpClient = originalCreateHttpClient;
             });
             it('should verify fallback client methods - get', async ()=>{
-                // eslint-disable-next-line @typescript-eslint/no-var-requires -- Dynamic require needed for Jest mocking
                 const { defaultAdapters } = require('../../types/adapters');
                 const originalCreateHttpClient = defaultAdapters.createHttpClient;
                 defaultAdapters.createHttpClient = jest.fn(()=>{
@@ -1121,7 +1119,6 @@ describe('useAuthenticatedApi', ()=>{
                 defaultAdapters.createHttpClient = originalCreateHttpClient;
             });
             it('should verify fallback client methods - put', async ()=>{
-                // eslint-disable-next-line @typescript-eslint/no-var-requires -- Dynamic require needed for Jest mocking
                 const { defaultAdapters } = require('../../types/adapters');
                 const originalCreateHttpClient = defaultAdapters.createHttpClient;
                 defaultAdapters.createHttpClient = jest.fn(()=>{
@@ -1134,7 +1131,6 @@ describe('useAuthenticatedApi', ()=>{
                 defaultAdapters.createHttpClient = originalCreateHttpClient;
             });
             it('should verify fallback client methods - delete', async ()=>{
-                // eslint-disable-next-line @typescript-eslint/no-var-requires -- Dynamic require needed for Jest mocking
                 const { defaultAdapters } = require('../../types/adapters');
                 const originalCreateHttpClient = defaultAdapters.createHttpClient;
                 defaultAdapters.createHttpClient = jest.fn(()=>{
@@ -1145,7 +1141,6 @@ describe('useAuthenticatedApi', ()=>{
                 defaultAdapters.createHttpClient = originalCreateHttpClient;
             });
             it('should verify exact string literal in fallback client: "HTTP client initialization failed"', async ()=>{
-                // eslint-disable-next-line @typescript-eslint/no-var-requires -- Dynamic require needed for Jest mocking
                 const { defaultAdapters } = require('../../types/adapters');
                 const originalCreateHttpClient = defaultAdapters.createHttpClient;
                 defaultAdapters.createHttpClient = jest.fn(()=>{
@@ -1163,7 +1158,6 @@ describe('useAuthenticatedApi', ()=>{
                 defaultAdapters.createHttpClient = originalCreateHttpClient;
             });
             it('should verify catch block in httpClient creation - createSafeError throws', async ()=>{
-                // eslint-disable-next-line @typescript-eslint/no-var-requires -- Dynamic require needed for Jest mocking
                 const { defaultAdapters } = require('../../types/adapters');
                 const originalCreateHttpClient = defaultAdapters.createHttpClient;
                 // Make createHttpClient throw

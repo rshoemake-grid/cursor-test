@@ -18,7 +18,8 @@ Quick reference guide to all files in the project.
 ### Entry Point
 | File | Purpose |
 |------|---------|
-| `main.py` | FastAPI application, startup, routes |
+| `backend/main.py` | FastAPI app, startup, routes — run with `python -m backend.main` |
+| `main.py` (repo root) | Legacy stub; **not** used to start the API |
 
 ### Backend Modules
 
@@ -129,7 +130,7 @@ TOTAL: 27 files
 4. Review **QUICKSTART.md** > Troubleshooting
 
 #### Learn the API
-1. Start server: `python main.py`
+1. Start server: `python -m backend.main`
 2. Visit http://localhost:8000/docs
 3. Reference `backend/api/routes.py` (implementation)
 
@@ -148,7 +149,7 @@ cursor-test/
 │   └── INDEX.md                    ← This file
 │
 ├── 🔧 Application (12 files)
-│   ├── main.py                     ← Entry point
+│   ├── main.py                     ← Legacy stub (run API: python -m backend.main)
 │   └── backend/
 │       ├── models/schemas.py       ← Data structures
 │       ├── database/
@@ -184,7 +185,7 @@ pip install -r requirements.txt
 python verify_setup.py
 
 # Run
-python main.py                      # Start server
+python -m backend.main              # Start API server
 python examples/simple_workflow.py  # Run example
 python test_api.py                 # Test API
 

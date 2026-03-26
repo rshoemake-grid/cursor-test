@@ -43,7 +43,6 @@ jest.mock('../utils/workflowExecutionService', ()=>({
 const mockShowSuccess = showSuccess;
 const mockShowError = showError;
 const mockShowConfirm = showConfirm;
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const mockApi = api;
 const mockLogger = logger;
 describe('useWorkflowExecution - Enhanced Mutation Killers', ()=>{

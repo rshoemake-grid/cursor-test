@@ -38,7 +38,6 @@ describe('AuthPage', ()=>{
             logout: jest.fn(),
             register: mockRegister
         });
-        // eslint-disable-next-line @typescript-eslint/no-var-requires -- Dynamic require needed for Jest mocking
         jest.spyOn(require('react-router-dom'), 'useNavigate').mockReturnValue(mockNavigate);
     });
     it('should render login form by default', ()=>{

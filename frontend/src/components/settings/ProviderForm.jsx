@@ -215,7 +215,7 @@ import { showError } from '../../utils/notifications';
         ]
     });
 }
-function ModelList({ provider, onUpdateProvider, onToggleModel, isModelExpanded, // eslint-disable-next-line @typescript-eslint/no-unused-vars
+function ModelList({ provider, onUpdateProvider, onToggleModel, isModelExpanded,
 expandedModels: _expandedModels // Unused but part of interface - prefix with underscore to indicate intentionally unused
  }) {
     const handleDeleteModel = (model)=>{

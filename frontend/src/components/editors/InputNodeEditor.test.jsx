@@ -2,7 +2,6 @@ import { jsx as _jsx } from "react/jsx-runtime";
 // Jest globals - no import needed
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 // Helper to ensure all waitFor calls have timeouts
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const waitForWithTimeout = (callback, timeout = 2000)=>{
     return waitFor(callback, {
         timeout

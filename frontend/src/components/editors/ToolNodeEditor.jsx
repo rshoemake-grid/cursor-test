@@ -3,6 +3,7 @@
  * Handles editing of tool node properties
  */ import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 // Built-in tools from backend registry + common ADK tools
+// eslint-disable-next-line react-refresh/only-export-components -- shared catalog for editor/tests
 export const BUILTIN_TOOLS = [
     {
         value: 'calculator',

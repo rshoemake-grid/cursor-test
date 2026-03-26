@@ -91,11 +91,8 @@ describe('WorkflowChat', ()=>{
     beforeEach(()=>{
         jest.clearAllMocks();
         localStorage.clear();
-        // eslint-disable-next-line @typescript-eslint/no-var-requires -- Dynamic require needed for Jest mocking
         const { safeStorageGet } = require('../utils/storageHelpers');
-        // eslint-disable-next-line @typescript-eslint/no-var-requires -- Dynamic require needed for Jest mocking
         const { safeStorageSet } = require('../utils/storageHelpers');
-        // eslint-disable-next-line @typescript-eslint/no-var-requires -- Dynamic require needed for Jest mocking
         const { handleApiError } = require('../utils/errorHandler');
         mockChat.mockClear();
         // Default: api.chat returns success
@@ -166,7 +163,6 @@ describe('WorkflowChat', ()=>{
         expect(screen.getByText('Hi there!')).toBeInTheDocument();
     });
     it('should handle invalid localStorage history gracefully', ()=>{
-        // eslint-disable-next-line @typescript-eslint/no-var-requires -- Dynamic require needed for Jest mocking
         const { safeStorageGet } = require('../utils/storageHelpers');
         safeStorageGet.mockReturnValueOnce([]); // Return empty array on parse error
         localStorage.setItem('chat_history_workflow-1', 'invalid json');
@@ -262,7 +258,6 @@ describe('WorkflowChat', ()=>{
         }, 3000); // API response rendering
     });
     it('should handle API error', async ()=>{
-        // eslint-disable-next-line @typescript-eslint/no-var-requires -- Dynamic require needed for Jest mocking
         const { handleApiError } = require('../utils/errorHandler');
         handleApiError.mockReturnValue('HTTP error! status: 500');
         mockChat.mockRejectedValue(new Error('HTTP 500'));
@@ -395,7 +390,6 @@ describe('WorkflowChat', ()=>{
         }, 2000); // UI state update
     });
     it('should handle non-Error exception', async ()=>{
-        // eslint-disable-next-line @typescript-eslint/no-var-requires -- Dynamic require needed for Jest mocking
         const { handleApiError } = require('../utils/errorHandler');
         handleApiError.mockReturnValue('Unknown error');
         mockChat.mockRejectedValue('String error');
@@ -444,7 +438,6 @@ describe('WorkflowChat', ()=>{
         expect(mockOnWorkflowUpdate).not.toHaveBeenCalled();
     });
     it('should handle network errors', async ()=>{
-        // eslint-disable-next-line @typescript-eslint/no-var-requires -- Dynamic require needed for Jest mocking
         const { handleApiError } = require('../utils/errorHandler');
         handleApiError.mockReturnValue('Network error');
         mockChat.mockRejectedValue(new Error('Network error'));
@@ -590,7 +583,6 @@ describe('WorkflowChat', ()=>{
             }, 2000);
         });
         it('should handle storage errors gracefully', ()=>{
-            // eslint-disable-next-line @typescript-eslint/no-var-requires -- Dynamic require needed for Jest mocking
             const { safeStorageGet } = require('../utils/storageHelpers');
             safeStorageGet.mockReturnValueOnce([]); // Return empty array on error
             const mockStorage = {
@@ -610,7 +602,6 @@ describe('WorkflowChat', ()=>{
             expect(screen.getByText(/Hello! I can help you/)).toBeInTheDocument();
         });
         it('should handle storage setItem errors', async ()=>{
-            // eslint-disable-next-line @typescript-eslint/no-var-requires -- Dynamic require needed for Jest mocking
             const { safeStorageSet } = require('../utils/storageHelpers');
             safeStorageSet.mockReturnValue(false); // Simulate storage error
             mockChat.mockResolvedValue({
@@ -633,7 +624,6 @@ describe('WorkflowChat', ()=>{
         // Should handle storage error gracefully (no crash)
         });
         it('should handle HTTP client errors', async ()=>{
-            // eslint-disable-next-line @typescript-eslint/no-var-requires -- Dynamic require needed for Jest mocking
             const { handleApiError } = require('../utils/errorHandler');
             handleApiError.mockReturnValue('Network error');
             mockChat.mockRejectedValue(new Error('Network error'));

@@ -67,7 +67,7 @@ backend/
 ├── config.py              # Application configuration
 ├── dependencies.py         # Dependency injection setup
 ├── exceptions.py           # Custom exception classes
-├── main.py                # Application entry point
+├── main.py                # FastAPI app (`python -m backend.main`)
 └── tests/                 # Unit and integration tests
     ├── services/              # Service layer tests
     ├── repositories/          # Repository tests

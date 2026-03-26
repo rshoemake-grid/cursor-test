@@ -338,29 +338,29 @@ test('hook works correctly', () => {
 
 ## Environment Variables
 
-Create `.env` file:
+Create **`frontend/.env`** (optional) for Create React App. Variables must be prefixed with **`REACT_APP_`**:
+
 ```env
-VITE_API_BASE_URL=http://localhost:8000/api
-VITE_WS_URL=ws://localhost:8000/ws
+REACT_APP_API_BASE_URL=/api
 ```
+
+In development, `src/setupProxy.js` forwards `/api` to `http://localhost:8000` by default.
 
 ## Running the Application
 
 ```bash
-# Install dependencies
-npm install
+cd frontend
+pnpm install
 
-# Start development server
-npm run dev
+# Dev server (recommended: stable host/port, no auto-open browser)
+pnpm run start:dev
 
 # Build for production
-npm run build
+pnpm run build
 
-# Run tests
-npm test
-
-# Run tests in watch mode
-npm run test:watch
+# Tests / lint
+pnpm test
+pnpm run lint
 ```
 
 ## Debugging

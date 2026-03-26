@@ -338,7 +338,6 @@ jest.mock('../hooks/marketplace', () => ({
   useOfficialAgentSeeding: jest.fn()
 }));
 const mockUseAuth = useAuth;
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const mockApi = api;
 describe('WorkflowBuilder - Additional Coverage', () => {
   const mockOnExecutionStart = jest.fn();

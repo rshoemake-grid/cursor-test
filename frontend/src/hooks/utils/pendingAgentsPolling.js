@@ -6,7 +6,7 @@
 /**
  * Create polling interval for pending agents
  * Mutation-resistant: uses constants for intervals and max checks
- */ export function createPendingAgentsPolling(checkPendingAgents, // eslint-disable-next-line @typescript-eslint/no-unused-vars
+ */ export function createPendingAgentsPolling(checkPendingAgents,
 _logger) {
     let checkCount = 0;
     const maxChecks = PENDING_AGENTS.MAX_CHECKS;

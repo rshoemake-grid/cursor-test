@@ -876,26 +876,26 @@ engine = create_async_engine(
 
 ### API Connection Errors
 
-**Error:** `Network Error` or `Failed to fetch`
+**Error:** `Network Error`, `Failed to fetch`, **`HTTP 502` / `HTTP 504`**, or login shows `Gateway Timeout`
+
+**Cause (dev):** The Create React App dev server proxies `/api` and `/ws` to **`http://localhost:8000`** (`frontend/src/setupProxy.js`). If the Python or Java API is **not** running on port **8000**, the proxy returns **502/504** and the UI surfaces that on login.
 
 **Solutions:**
 
-**1. Check API URL:**
+**1. Start the backend** (one only), from repo root or `backend-java/`:
 ```bash
-# Verify API base URL
-echo $VITE_API_BASE_URL
-
-# Default: http://localhost:8000/api
+python -m backend.main
+# or: cd backend-java && ./gradlew bootRun
 ```
 
-**2. Check CORS:**
-- Verify backend CORS allows frontend origin
-- Check browser console for CORS errors
-
-**3. Check Backend Running:**
+**2. Check health:**
 ```bash
 curl http://localhost:8000/health
 ```
+
+**3. Check API base URL (optional):** CRA uses `REACT_APP_API_BASE_URL` if set; default in code is **`/api`** (relative — goes through the dev proxy).
+
+**4. Check CORS:** Verify backend CORS allows the frontend origin (`http://localhost:3000`).
 
 ### WebSocket Connection Errors
 
@@ -903,13 +903,7 @@ curl http://localhost:8000/health
 
 **Solutions:**
 
-**1. Check WebSocket URL:**
-```bash
-# Verify WebSocket URL
-echo $VITE_WS_URL
-
-# Default: ws://localhost:8000
-```
+**1. WebSocket URL:** In dev, `/ws` is proxied to the same backend as `/api`. Ensure the API is up on port **8000**.
 
 **2. Check Protocol:**
 - Use `ws://` for HTTP
@@ -964,7 +958,7 @@ tail -f app.log
 
 **Enable Debug Logging:**
 ```bash
-LOG_LEVEL=DEBUG python main.py
+LOG_LEVEL=DEBUG python -m backend.main
 ```
 
 **Check Execution State:**

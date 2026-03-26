@@ -1,7 +1,8 @@
 /**
  * Draft Management Hook
  * Handles loading and saving workflow drafts per tab
- */ import { useEffect, useRef } from 'react';
+ */
+import { useEffect, useMemo, useRef } from 'react';
 import { getLocalStorageItem, setLocalStorageItem } from './useLocalStorage';
 import { logger as defaultLogger } from '../../utils/logger';
 const DRAFT_STORAGE_KEY = 'workflowBuilderDrafts';
@@ -13,10 +14,13 @@ export const saveDraftsToStorage = (drafts, options)=>{
     setLocalStorageItem(DRAFT_STORAGE_KEY, drafts, options);
 };
 export function useDraftManagement({ tabId, workflowId, nodes, edges, localWorkflowId, localWorkflowName, localWorkflowDescription, tabIsUnsaved, setNodes, setEdges, setLocalWorkflowId, setLocalWorkflowName, setLocalWorkflowDescription, normalizeNodeForStorage, isAddingAgentsRef, storage, logger = defaultLogger }) {
-    const storageOptions = {
+    const storageOptions = useMemo(()=>({
+            storage,
+            logger
+        }), [
         storage,
         logger
-    };
+    ]);
     const tabDraftsRef = useRef(loadDraftsFromStorage(storageOptions));
     // Load draft when tab or workflow changes
     useEffect(()=>{
@@ -50,7 +54,8 @@ export function useDraftManagement({ tabId, workflowId, nodes, edges, localWorkf
         setEdges,
         setLocalWorkflowId,
         setLocalWorkflowName,
-        setLocalWorkflowDescription
+        setLocalWorkflowDescription,
+        logger
     ]);
     // Save draft when workflow state changes
     useEffect(()=>{

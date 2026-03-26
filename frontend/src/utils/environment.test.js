@@ -219,9 +219,6 @@ describe('environment utilities', ()=>{
             const serverType = 'undefined';
             const serverResult = serverType === 'undefined' ? 'undefined' : 'object';
             expect(serverResult).toBe('undefined');
-            // Verify the logic works correctly for both cases
-            expect('object' === 'undefined' ? 'undefined' : 'object').toBe('object');
-            expect('undefined' === 'undefined' ? 'undefined' : 'object').toBe('undefined');
         });
         it('should document that undefined branch logic is correct for production', ()=>{
             // NOTE: The 'undefined' branch of getWindowType() cannot be executed in Jest/jsdom

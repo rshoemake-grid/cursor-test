@@ -13,7 +13,6 @@ import { getDefaultPublishForm, parseTags } from '../utils/publishFormUtils';
 // Domain-based imports - Phase 7
 import { usePublishForm } from '../hooks/forms';
 export default function MarketplaceDialog({ isOpen, onClose, node, workflowId, workflowName, storage = defaultAdapters.createLocalStorageAdapter(), // httpClient is currently unused but kept for future API integration
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 httpClient: _httpClient = defaultAdapters.createHttpClient() }) {
     const [activeTab, setActiveTab] = useState(()=>node?.type === 'tool' ? 'tools' : 'agents');
     const [isPublishing, setIsPublishing] = useState(false);

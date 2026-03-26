@@ -52,7 +52,6 @@ describe('useSettingsSync', ()=>{
         expect(typeof result.current.handleManualSync).toBe('function');
     });
     it('should call useAutoSave hook', ()=>{
-        // eslint-disable-next-line @typescript-eslint/no-var-requires -- Dynamic require needed for Jest mocking
         const { useAutoSave } = require('../storage');
         renderHook(()=>useSettingsSync({
                 isAuthenticated: true,
@@ -67,7 +66,6 @@ describe('useSettingsSync', ()=>{
         expect(useAutoSave).toHaveBeenCalled();
     });
     it('should enable auto-save when authenticated and settings loaded', ()=>{
-        // eslint-disable-next-line @typescript-eslint/no-var-requires -- Dynamic require needed for Jest mocking
         const { useAutoSave } = require('../storage');
         renderHook(()=>useSettingsSync({
                 isAuthenticated: true,
@@ -84,7 +82,6 @@ describe('useSettingsSync', ()=>{
         expect(autoSaveCall[3]).toBe(true); // enabled
     });
     it('should disable auto-save when not authenticated', ()=>{
-        // eslint-disable-next-line @typescript-eslint/no-var-requires -- Dynamic require needed for Jest mocking
         const { useAutoSave } = require('../storage');
         renderHook(()=>useSettingsSync({
                 isAuthenticated: false,
@@ -100,7 +97,6 @@ describe('useSettingsSync', ()=>{
         expect(autoSaveCall[3]).toBe(false); // enabled
     });
     it('should disable auto-save when settings not loaded', ()=>{
-        // eslint-disable-next-line @typescript-eslint/no-var-requires -- Dynamic require needed for Jest mocking
         const { useAutoSave } = require('../storage');
         renderHook(()=>useSettingsSync({
                 isAuthenticated: true,

@@ -57,6 +57,8 @@ import { WebSocketConnectionManager } from '../utils/WebSocketConnectionManager'
             manager.close();
             setIsConnected(false);
         };
+    // Full `options` omitted: parent often passes new object identity each render; listing stable callbacks/ids above.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [
         options.executionId,
         options.onLog,

@@ -17,7 +17,6 @@ import { TabBar } from './TabBar';
 import { PublishModal } from './PublishModal';
 // Storage functions removed - now handled by WorkflowTabsContext
 export default function WorkflowTabs({ initialWorkflowId, workflowLoadKey, onExecutionStart, // storage is now handled by WorkflowTabsContext, but kept for API compatibility
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 storage: _storage = defaultAdapters.createLocalStorageAdapter(), httpClient = defaultAdapters.createHttpClient(), apiBaseUrl = API_CONFIG.BASE_URL }) {
     // Use context for tabs state management (replaces module-level globalTabs)
     const { tabs, setTabs, activeTabId, setActiveTabId, processedKeys } = useWorkflowTabs();

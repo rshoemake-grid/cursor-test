@@ -51,7 +51,7 @@ async def test_health():
                 return False
         except Exception as e:
             print(f"✗ Could not connect to API: {e}")
-            print("  Make sure the server is running: python main.py")
+            print("  Make sure the server is running: python -m backend.main")
             return False
 
 
@@ -193,7 +193,7 @@ async def main():
     if not health_ok:
         print("\n" + "=" * 60)
         print("✗ Cannot connect to API. Please start the server first:")
-        print("  python main.py")
+        print("  python -m backend.main")
         print("=" * 60)
         return
     

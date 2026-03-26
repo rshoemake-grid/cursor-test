@@ -41,19 +41,19 @@ Build complex multi-agent workflows where AI agents collaborate sequentially to 
 ## 🚀 Quick Start
 
 ### Prerequisites
-- Python 3.8+
-- Node.js 18+ and npm
-- OpenAI API key
+- **Python 3.8+** (FastAPI backend) *or* **JDK 17** (Spring Boot backend in `backend-java/`)
+- **Node.js 22+** and **pnpm 10+** (see `frontend/package.json` `engines`)
+- OpenAI API key (or configure LLMs in Settings after login)
 
 ### One-Command Startup (Recommended)
 
 ```bash
 # Setup (first time only)
 pip install -r requirements.txt
-cd frontend && npm install && cd ..
-cp .env.example .env  # Then add your OpenAI API key
+cd frontend && pnpm install && cd ..
+cp .env.example .env  # Then add your OpenAI API key (optional for some flows)
 
-# Start both backend and frontend
+# Starts Spring Boot (backend-java) + CRA frontend — see start.sh
 ./start.sh
 ```
 
@@ -61,18 +61,48 @@ Visit `http://localhost:3000` to use the visual workflow builder!
 
 ### Manual Startup
 
-#### Terminal 1: Backend
-```bash
-python main.py
-```
-Backend runs at `http://localhost:8000`
+Use **one** backend on port **8000** (Python **or** Java — not both).
 
-#### Terminal 2: Frontend
+#### Terminal 1a: Python API (FastAPI)
+
+From the **repository root**:
+
+```bash
+# With venv activated and dependencies installed
+python -m backend.main
+```
+
+Alternatively:
+
+```bash
+uvicorn backend.main:app --host 0.0.0.0 --port 8000 --reload
+```
+
+API: `http://localhost:8000` · Docs: `http://localhost:8000/docs`
+
+> **Note:** The file `main.py` at the repo root is **not** the API entrypoint. Use `python -m backend.main` (or `uvicorn` as above).
+
+#### Terminal 1b: Java API (Spring Boot)
+
+```bash
+cd backend-java
+./gradlew bootRun
+```
+
+API: `http://localhost:8000` · See [backend-java/README.md](backend-java/README.md) for JDK 17 setup.
+
+#### Terminal 2: Frontend (Create React App)
+
 ```bash
 cd frontend
-npm run dev
+pnpm run start:dev
 ```
-Frontend runs at `http://localhost:3000`
+
+This runs `react-scripts` with `BROWSER=none`, `HOST=127.0.0.1`, and `PORT=3000` (see `package.json` script). The app proxies `/api` and `/ws` to `http://localhost:8000` via `src/setupProxy.js`, so **the backend must be running** or login/API calls will fail (e.g. 502/504).
+
+**Plain** `pnpm start` also works; ensure you type `BROWSER=none` with a space before `pnpm` if you set it manually.
+
+Frontend: `http://localhost:3000` (or `http://127.0.0.1:3000`)
 
 ### Your First Visual Workflow
 
@@ -160,7 +190,7 @@ Researcher → Analyzer → Summarizer → Final Report
 
 ```
 cursor-test/
-├── main.py                    # Application entry point
+├── main.py                    # Legacy stub (use python -m backend.main for the API)
 ├── requirements.txt           # Dependencies
 ├── verify_setup.py           # Setup verification
 ├── test_api.py               # API tests

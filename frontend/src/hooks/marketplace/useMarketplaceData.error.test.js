@@ -18,7 +18,6 @@ jest.mock('../storage', ()=>({
         getLocalStorageItem: jest.fn()
     }));
 const mockLoggerError = logger.error;
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const mockLoggerDebug = logger.debug;
 const mockGetLocalStorageItem = getLocalStorageItem;
 describe('useMarketplaceData - Error Handling', ()=>{
