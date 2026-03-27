@@ -97,6 +97,10 @@ describe('constants', ()=>{
         it('should return key for new workflow when workflowId is null', ()=>{
             expect(getChatHistoryKey(null)).toBe('chat_history_new_workflow');
         });
+        it('should prefer tabId for per-tab chat sessions', ()=>{
+            expect(getChatHistoryKey(null, 'workflow-170000')).toBe('chat_history_tab_workflow-170000');
+            expect(getChatHistoryKey('saved-id', 'workflow-170000')).toBe('chat_history_tab_workflow-170000');
+        });
         it('should handle empty string workflowId', ()=>{
             // Empty string is falsy, so should use new_workflow fallback
             expect(getChatHistoryKey('')).toBe('chat_history_new_workflow');

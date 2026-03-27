@@ -119,6 +119,7 @@ describe('WorkflowBuilderLayout', () => {
     onCut: jest.fn(),
     onPaste: jest.fn(),
     activeWorkflowId: null,
+    chatStorageKey: 'chat_history_new_workflow',
     executions: [],
     activeExecutionId: null,
     onWorkflowUpdate: jest.fn(),

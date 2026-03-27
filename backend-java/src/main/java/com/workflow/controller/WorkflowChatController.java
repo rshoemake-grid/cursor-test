@@ -29,7 +29,7 @@ public class WorkflowChatController {
     @PostMapping("/chat")
     @Operation(summary = "Chat with Workflow")
     public ResponseEntity<WorkflowChatResponse> chat(@Valid @RequestBody WorkflowChatRequest request, Authentication authentication) {
-        String userId = authenticationHelper.extractUserIdRequired(authentication);
+        String userId = authenticationHelper.extractUserIdNullable(authentication);
         return ResponseEntity.ok(workflowChatService.chat(request, userId));
     }
 }

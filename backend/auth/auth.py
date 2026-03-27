@@ -38,7 +38,18 @@ def _get_refresh_secret_key() -> str:
 SECRET_KEY = _get_secret_key()
 REFRESH_TOKEN_SECRET_KEY = _get_refresh_secret_key()
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 30
+
+
+def _access_token_expire_minutes() -> int:
+    """Long chats (many LLM round-trips) can exceed short TTLs; override via ACCESS_TOKEN_EXPIRE_MINUTES."""
+    raw = os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "120")
+    try:
+        return max(5, min(int(raw), 10080))  # 5 minutes .. 7 days
+    except ValueError:
+        return 120
+
+
+ACCESS_TOKEN_EXPIRE_MINUTES = _access_token_expire_minutes()
 REFRESH_TOKEN_EXPIRE_DAYS = 30  # Refresh tokens last 30 days
 
 # Password hashing
@@ -159,8 +170,27 @@ async def get_current_active_user(
 
 
 async def get_optional_user(
-    current_user: Optional[UserDB] = Depends(get_current_user)
+    token: Optional[str] = Depends(oauth2_scheme),
+    db: AsyncSession = Depends(get_db),
 ) -> Optional[UserDB]:
-    """Get the current user if authenticated, None otherwise (for optional auth)"""
-    return current_user
+    """Resolve user when a Bearer token is present and valid; otherwise None (no 401 for expired/invalid tokens).
+
+    Routes that use optional auth (e.g. workflow chat) must not fail the whole request with
+    \"Could not validate credentials\" when the access token expired mid-session — that breaks
+    long tool-calling loops. Callers still enforce workflow access via ownership checks.
+    """
+    if not token:
+        return None
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+    except JWTError:
+        return None
+    tok_type = payload.get("type")
+    if tok_type is not None and tok_type != "access":
+        return None
+    username = payload.get("sub")
+    if username is None or not isinstance(username, str):
+        return None
+    result = await db.execute(select(UserDB).where(UserDB.username == username))
+    return result.scalar_one_or_none()
 

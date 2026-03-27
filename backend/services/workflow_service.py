@@ -67,6 +67,11 @@ def _apply_chat_changes_merge(
             for del_edge in edges_to_delete
         )
     ]
+    node_ids = {n.get("id") for n in final_nodes if n.get("id")}
+    final_edges = [
+        e for e in final_edges
+        if e.get("source") in node_ids and e.get("target") in node_ids
+    ]
     return final_nodes, final_edges
 
 

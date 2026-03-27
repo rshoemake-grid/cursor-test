@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState, useRef, forwardRef, useImperativeHandle } from 'react';
+import { useCallback, useEffect, useState, useRef, forwardRef, useImperativeHandle, useMemo } from 'react';
 import { useNodesState, useEdgesState, ReactFlowProvider } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 // Components moved to extracted layout/dialog components
@@ -16,6 +16,7 @@ import { useDraftManagement, loadDraftsFromStorage } from '../hooks/storage';
 import { useMarketplaceIntegration, useMarketplaceDialog } from '../hooks/marketplace';
 import { useNodeSelection } from '../hooks/nodes';
 import { convertNodesForExecutionInput } from '../utils/nodeConversion';
+import { STORAGE_KEYS } from '../config/constants';
 import { WorkflowBuilderLayout } from './WorkflowBuilder/WorkflowBuilderLayout';
 import { WorkflowBuilderDialogs } from './WorkflowBuilder/WorkflowBuilderDialogs';
 const WorkflowBuilder = /*#__PURE__*/ forwardRef(function WorkflowBuilder({ tabId, workflowId, tabName, tabIsUnsaved, storage = defaultAdapters.createLocalStorageAdapter(), workflowTabs = [], onExecutionStart, onWorkflowSaved, onWorkflowModified, onWorkflowLoaded,
@@ -250,6 +251,30 @@ onClearExecutions: _onClearExecutions, onExecutionLogUpdate, onExecutionStatusUp
     }, [
         execution
     ]);
+    const handleClearCanvas = useCallback(()=>{
+        setNodes([]);
+        setEdges([]);
+        setSelectedNodeId(null);
+        notifyModified();
+    }, [
+        setNodes,
+        setEdges,
+        setSelectedNodeId,
+        notifyModified
+    ]);
+    const chatStorageKey = useMemo(()=>{
+        if (tabId != null && String(tabId).trim() !== '') {
+            return `${STORAGE_KEYS.CHAT_HISTORY_PREFIX}tab_${tabId}`;
+        }
+        const wid = localWorkflowId || null;
+        if (wid) {
+            return `${STORAGE_KEYS.CHAT_HISTORY_PREFIX}${wid}`;
+        }
+        return `${STORAGE_KEYS.CHAT_HISTORY_PREFIX}new_workflow`;
+    }, [
+        localWorkflowId,
+        tabId
+    ]);
     const executions = workflowTabs?.find((t)=>t.workflowId === localWorkflowId)?.executions || [];
     const activeExecutionId = workflowTabs?.find((t)=>t.workflowId === localWorkflowId)?.activeExecutionId || null;
     return (
@@ -277,9 +302,11 @@ onClearExecutions: _onClearExecutions, onExecutionLogUpdate, onExecutionStatusUp
                 onCut={clipboard.cut}
                 onPaste={clipboard.paste}
                 activeWorkflowId={localWorkflowId || null}
+                chatStorageKey={chatStorageKey}
                 executions={executions}
                 activeExecutionId={activeExecutionId}
                 onWorkflowUpdate={handleWorkflowUpdate}
+                onClearCanvas={handleClearCanvas}
                 onExecutionLogUpdate={onExecutionLogUpdate}
                 onExecutionStatusUpdate={onExecutionStatusUpdate}
                 onExecutionNodeUpdate={onExecutionNodeUpdate}

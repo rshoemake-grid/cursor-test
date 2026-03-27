@@ -74,6 +74,8 @@ public class SecurityConfig {
                 .requestMatchers("/api/templates", "/api/templates/categories", "/api/templates/difficulties", "/api/templates/*").permitAll()
                 // S-C3: Debug endpoints require authentication
                 .requestMatchers("/api/debug/**").authenticated()
+                // Align with Python workflow_chat optional auth: chat is allowed without a JWT; access is enforced in service (public vs private).
+                .requestMatchers(HttpMethod.POST, "/api/workflow-chat/chat").permitAll()
                 .anyRequest().authenticated()
             )
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);

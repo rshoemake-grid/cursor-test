@@ -1,7 +1,7 @@
 /**
  * Workflow Updates Hook
  * Handles applying workflow changes from chat/backend updates
- */ import { useCallback, useRef } from 'react';
+ */ import { useCallback, useEffect, useRef } from 'react';
 import { logger } from '../../utils/logger';
 import { addEdge } from '@xyflow/react';
 import { initializeReactFlowNodes, workflowNodeToReactFlowNode } from '../../utils/workflowFormat';
@@ -11,6 +11,13 @@ export function useWorkflowUpdates({ nodes, edges, setNodes, setEdges, notifyMod
     const edgesRef = useRef(edges);
     // Keep refs in sync with state
     const updateRefs = useCallback(()=>{
+        nodesRef.current = nodes;
+        edgesRef.current = edges;
+    }, [
+        nodes,
+        edges
+    ]);
+    useEffect(()=>{
         nodesRef.current = nodes;
         edgesRef.current = edges;
     }, [
@@ -82,6 +89,9 @@ export function useWorkflowUpdates({ nodes, edges, setNodes, setEdges, notifyMod
                 const currentNodes = nodesRef.current;
                 const currentEdges = edgesRef.current;
                 const nodeIds = new Set(currentNodes.map((n)=>n.id));
+                for (const n of changes.nodes_to_add || []){
+                    if (n && n.id) nodeIds.add(n.id);
+                }
                 logger.debug('Adding edges:', changes.edges_to_add);
                 logger.debug('Current nodes:', Array.from(nodeIds));
                 logger.debug('Current edges:', currentEdges.map((e)=>`${e.source} -> ${e.target}`));
@@ -99,7 +109,7 @@ export function useWorkflowUpdates({ nodes, edges, setNodes, setEdges, notifyMod
                         continue;
                     }
                     // Check if edge already exists
-                    const edgeExists = updatedEdges.some((e)=>e.source === edgeToAdd.source && e.target === edgeToAdd.target);
+                    const edgeExists = updatedEdges.some((e)=>e.source === edgeToAdd.source && e.target === edgeToAdd.target && logicalOrToNull(e.sourceHandle) === logicalOrToNull(edgeToAdd.sourceHandle) && logicalOrToNull(e.targetHandle) === logicalOrToNull(edgeToAdd.targetHandle));
                     if (edgeExists) {
                         logger.warn(`Edge from "${edgeToAdd.source}" to "${edgeToAdd.target}" already exists`);
                         continue;

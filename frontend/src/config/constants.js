@@ -30,6 +30,8 @@ export const STORAGE_KEYS = {
     WORKFLOW_TABS: 'workflowTabs',
     ACTIVE_TAB: 'activeWorkflowTabId',
     CHAT_HISTORY_PREFIX: 'chat_history_',
+    /** Persisted max tool rounds for workflow chat composer (1–50). */
+    WORKFLOW_CHAT_ITERATION_LIMIT: 'workflow_chat_iteration_limit',
     OFFICIAL_AGENTS_SEEDED: 'officialAgentsSeeded',
     LLM_SETTINGS: 'llm_settings',
     WORKFLOW_DRAFTS: 'workflowDrafts',
@@ -91,7 +93,13 @@ export const NODE_TYPES = {
 export function buildStorageKey(prefix, suffix) {
     return suffix ? `${prefix}${suffix}` : prefix;
 }
-// Helper function to get chat history key
-export function getChatHistoryKey(workflowId) {
-    return workflowId ? `${STORAGE_KEYS.CHAT_HISTORY_PREFIX}${workflowId}` : `${STORAGE_KEYS.CHAT_HISTORY_PREFIX}new_workflow`;
+// Helper function to get chat history key (per tab when tabId is set so each new-workflow tab has its own session)
+export function getChatHistoryKey(workflowId, tabId) {
+    if (tabId != null && String(tabId).trim() !== '') {
+        return `${STORAGE_KEYS.CHAT_HISTORY_PREFIX}tab_${tabId}`;
+    }
+    if (workflowId) {
+        return `${STORAGE_KEYS.CHAT_HISTORY_PREFIX}${workflowId}`;
+    }
+    return `${STORAGE_KEYS.CHAT_HISTORY_PREFIX}new_workflow`;
 }

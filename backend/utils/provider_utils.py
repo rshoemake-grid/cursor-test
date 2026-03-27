@@ -5,6 +5,19 @@ Eliminates code duplication across settings_routes.py and SettingsService.
 from typing import Dict, Any, Optional, List
 
 
+def normalize_secret_key(value: str) -> str:
+    """
+    Strip whitespace and invisible characters often introduced when pasting API keys
+    (BOM, zero-width spaces, newlines).
+    """
+    if not value:
+        return value
+    s = value.strip().strip("\ufeff")
+    for ch in ("\u200b", "\u200c", "\u200d", "\u2060"):
+        s = s.replace(ch, "")
+    return s.strip()
+
+
 def build_provider_config(
     provider_type: str,
     api_key: str,
@@ -25,8 +38,8 @@ def build_provider_config(
     """
     return {
         "type": provider_type,
-        "api_key": api_key.strip(),
-        "base_url": base_url,
+        "api_key": normalize_secret_key(api_key),
+        "base_url": base_url.strip() if base_url else None,
         "model": model
     }
 

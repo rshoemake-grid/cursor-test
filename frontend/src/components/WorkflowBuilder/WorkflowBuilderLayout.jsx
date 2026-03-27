@@ -34,9 +34,11 @@ export function WorkflowBuilderLayout({
     reactFlowInstanceRef,
     selectedNodeIds,
     activeWorkflowId,
+    chatStorageKey,
     executions,
     activeExecutionId,
     onWorkflowUpdate,
+    onClearCanvas,
     onExecutionLogUpdate,
     onExecutionStatusUpdate,
     onExecutionNodeUpdate,
@@ -75,9 +77,11 @@ export function WorkflowBuilderLayout({
                 </div>
                 <ExecutionConsole
                     activeWorkflowId={activeWorkflowId}
+                    chatStorageKey={chatStorageKey}
                     executions={executions}
                     activeExecutionId={activeExecutionId}
                     onWorkflowUpdate={onWorkflowUpdate}
+                    onClearCanvas={onClearCanvas}
                     onExecutionLogUpdate={onExecutionLogUpdate}
                     onExecutionStatusUpdate={onExecutionStatusUpdate}
                     onExecutionNodeUpdate={onExecutionNodeUpdate}

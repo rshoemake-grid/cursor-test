@@ -1,7 +1,7 @@
 """Pydantic models and constants for workflow chat"""
 from typing import Any, Dict, List, Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 # OCP: Node type -> config key for add_node (add new types without editing if/elif)
 NODE_CONFIG_KEYS = {
@@ -24,6 +24,12 @@ class ChatRequest(BaseModel):
     workflow_id: Optional[str] = None
     message: str
     conversation_history: List[ChatMessage] = []
+    iteration_limit: Optional[int] = Field(
+        default=None,
+        ge=1,
+        le=50,
+        description="Max tool-calling rounds for this request; overrides saved settings when set.",
+    )
 
 
 class ChatResponse(BaseModel):

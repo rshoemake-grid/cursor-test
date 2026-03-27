@@ -4,6 +4,8 @@ Eliminates code duplication between settings_routes.py and SettingsService.
 """
 from typing import Optional
 
+from .provider_utils import normalize_secret_key
+
 
 def is_valid_api_key(api_key: Optional[str]) -> bool:
     """
@@ -18,8 +20,7 @@ def is_valid_api_key(api_key: Optional[str]) -> bool:
     if not api_key:
         return False
     
-    # Trim whitespace
-    api_key = api_key.strip()
+    api_key = normalize_secret_key(api_key)
     if not api_key:
         return False
     

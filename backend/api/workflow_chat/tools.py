@@ -39,6 +39,18 @@ def get_workflow_tools(workflow_id: Optional[str] = None) -> List[Dict[str, Any]
                             "type": "object",
                             "description": "Node-specific configuration (agent_config, condition_config, loop_config, input_config)",
                         },
+                        "connect_from_node_id": {
+                            "type": "string",
+                            "description": "Optional: existing node ID. Creates edge FROM that node TO this new node (use with prior nodes' IDs).",
+                        },
+                        "connect_to_node_id": {
+                            "type": "string",
+                            "description": "Optional: existing node ID. Creates edge FROM this new node TO that node.",
+                        },
+                        "connect_from_source_handle": {
+                            "type": "string",
+                            "description": "When connect_from_node_id is a condition node, set to 'true' or 'false' for that branch.",
+                        },
                     },
                     "required": ["node_type", "name"],
                 },
@@ -76,8 +88,16 @@ def get_workflow_tools(workflow_id: Optional[str] = None) -> List[Dict[str, Any]
         {
             "type": "function",
             "function": {
+                "name": "clear_workflow_canvas",
+                "description": "Remove every node and edge from the workflow so the user can start fresh. Clears any pending add/update/edge changes from the same chat turn, then marks all nodes currently stored for this workflow for deletion. Call save_workflow after if changes should persist.",
+                "parameters": {"type": "object", "properties": {}, "required": []},
+            },
+        },
+        {
+            "type": "function",
+            "function": {
                 "name": "connect_nodes",
-                "description": "Connect two nodes with an edge",
+                "description": "Connect two EXISTING nodes with an edge (required if they are not linked yet). New nodes have no edges until you call this or use add_node connect_from_node_id / connect_to_node_id.",
                 "parameters": {
                     "type": "object",
                     "properties": {

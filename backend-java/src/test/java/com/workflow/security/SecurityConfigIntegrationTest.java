@@ -120,4 +120,16 @@ class SecurityConfigIntegrationTest {
         mockMvc.perform(get("/api-docs"))
                 .andExpect(status().isOk());
     }
+
+    @Test
+    void workflowChat_post_permitAll_notUnauthorizedWithoutAuth() throws Exception {
+        var result = mockMvc.perform(post("/api/workflow-chat/chat")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"message\":\"hello\"}"))
+                .andReturn();
+        int status = result.getResponse().getStatus();
+        assertNotEquals(401, status,
+                "Workflow chat should allow anonymous callers (optional auth; matches Python)");
+        assertNotEquals(403, status);
+    }
 }

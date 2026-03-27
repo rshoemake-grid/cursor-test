@@ -13,7 +13,7 @@ import { defaultAdapters } from '../types/adapters';
 // Mutation kill utilities
 import { coalesceString } from '../utils/nullCoalescing';
 import { LOG_LEVELS } from '../constants/stringLiterals';
-export default function ExecutionConsole({ activeWorkflowId, executions = [], activeExecutionId = null, onWorkflowUpdate, onExecutionLogUpdate, onExecutionStatusUpdate, onExecutionNodeUpdate, onRemoveExecution, documentAdapter = defaultAdapters.createDocumentAdapter() }) {
+export default function ExecutionConsole({ activeWorkflowId, chatStorageKey, executions = [], activeExecutionId = null, onWorkflowUpdate, onClearCanvas, onExecutionLogUpdate, onExecutionStatusUpdate, onExecutionNodeUpdate, onRemoveExecution, documentAdapter = defaultAdapters.createDocumentAdapter() }) {
     const { token: authToken } = useAuth();
     const authTokenRef = useRef(authToken);
     authTokenRef.current = authToken;
@@ -381,7 +381,9 @@ export default function ExecutionConsole({ activeWorkflowId, executions = [], ac
                 },
                 children: activeTab === 'chat' ? /*#__PURE__*/ _jsx(WorkflowChat, {
                     workflowId: activeWorkflowId,
-                    onWorkflowUpdate: onWorkflowUpdate
+                    chatStorageKey: chatStorageKey,
+                    onWorkflowUpdate: onWorkflowUpdate,
+                    onClearCanvas: onClearCanvas
                 }) : activeExecution ? /*#__PURE__*/ _jsx("div", {
                     className: "h-full overflow-y-auto bg-gray-900 text-gray-100 p-4",
                     children: /*#__PURE__*/ _jsxs("div", {

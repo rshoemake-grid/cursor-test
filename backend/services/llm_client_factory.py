@@ -10,6 +10,7 @@ from openai import AsyncOpenAI
 from .settings_service import ISettingsService
 from .llm_provider import ProviderFactory
 from ..utils.logger import get_logger
+from ..utils.provider_utils import normalize_secret_key
 
 logger = get_logger(__name__)
 
@@ -63,7 +64,7 @@ class LLMClientFactory(ILLMClientFactory):
         provider_type = "openai"
         
         if llm_config:
-            api_key = llm_config.get("api_key")
+            api_key = normalize_secret_key(llm_config.get("api_key") or "")
             base_url = llm_config.get("base_url")
             provider_type = llm_config.get("type", "openai")
             
@@ -78,7 +79,7 @@ class LLMClientFactory(ILLMClientFactory):
         
         # Fallback to environment variable
         if not api_key:
-            api_key = os.getenv("OPENAI_API_KEY")
+            api_key = normalize_secret_key(os.getenv("OPENAI_API_KEY") or "")
             if api_key:
                 logger.warning("Using API key from environment variable")
         

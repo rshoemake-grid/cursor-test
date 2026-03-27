@@ -2,6 +2,10 @@
 Main FastAPI application entry point.
 Apigee-ready API with standardized error handling and security headers.
 """
+from backend.utils.httpx_proxies_compat import apply_httpx_proxies_compat
+
+apply_httpx_proxies_compat()
+
 from fastapi import FastAPI, Request, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -13,6 +17,8 @@ from typing import Dict, Any
 from backend.config import settings
 from backend.database.db import init_db, engine, AsyncSessionLocal
 from backend.dev_user_bootstrap import apply_dev_user_bootstrap
+from backend.services.settings_service import SettingsService
+from backend.utils.logger import get_logger
 from backend.utils.metrics import metrics_collector
 from sqlalchemy import text
 from backend.api import router as api_router
@@ -424,6 +430,16 @@ async def startup_event():
             )
     await init_db()
     await apply_dev_user_bootstrap()
+    # Warm LLM settings cache from DB so chat and executions use stored API keys without
+    # requiring a GET /settings/llm first (otherwise get_active_llm_config returns None and
+    # the factory falls back to OPENAI_API_KEY, which looks like an "invalid" key mismatch).
+    _startup_logger = get_logger(__name__)
+    try:
+        async with AsyncSessionLocal() as session:
+            await SettingsService().load_settings_into_cache(session)
+        _startup_logger.info("LLM settings cache loaded from database")
+    except Exception as e:
+        _startup_logger.error("Failed to load LLM settings into cache: %s", e, exc_info=True)
 
 if __name__ == "__main__":
     import uvicorn

@@ -9,6 +9,7 @@ from .base import BaseAgent
 from ..models.schemas import Node
 from ..utils.agent_config_utils import get_node_config
 from ..utils.env_config_utils import get_llm_fallback_config_from_env
+from ..utils.provider_utils import normalize_secret_key
 from ..utils.logger import get_logger
 from ..utils.message_builder import build_user_message
 
@@ -75,7 +76,7 @@ class UnifiedLLMAgent(BaseAgent):
         """Validate that API key is not a placeholder - only flag obvious placeholders"""
         from ..utils.settings_utils import is_valid_api_key
 
-        api_key = (api_key or "").strip()
+        api_key = normalize_secret_key(api_key or "")
         if not api_key:
             raise ValueError(
                 "API key is empty. Please go to Settings, add an LLM provider with a valid API key, "

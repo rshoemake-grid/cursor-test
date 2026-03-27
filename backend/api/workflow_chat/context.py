@@ -46,10 +46,15 @@ async def get_workflow_context(
         node_name = node.get("name") or node.get("data", {}).get("name") or node_id
         context += f"  - {node_id}: {node_type} ({node_name})\n"
 
-    context += f"\nEdges ({len(edges)}):\n"
+    context += f"\nEdges ({len(edges)}) — this is the complete connection list; nodes not listed here are not connected:\n"
     for edge in edges:
         source = edge.get("source", "unknown")
         target = edge.get("target", "unknown")
-        context += f"  - {source} -> {target}\n"
+        handle = edge.get("sourceHandle")
+        suffix = f" (sourceHandle={handle})" if handle else ""
+        context += f"  - {source} -> {target}{suffix}\n"
+
+    if len(edges) == 0 and len(nodes) > 1:
+        context += "\nNote: Multiple nodes but zero edges — the graph is disconnected until edges are added.\n"
 
     return context

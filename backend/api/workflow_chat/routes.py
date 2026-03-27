@@ -43,6 +43,9 @@ async def chat_with_workflow(
         user_settings = settings_service.get_user_settings(user_id)
         if user_settings:
             iteration_limit = user_settings.iteration_limit
+        if request.iteration_limit is not None:
+            iteration_limit = request.iteration_limit
+        iteration_limit = max(1, min(50, iteration_limit))
 
         logger.info(f"Chat agent using iteration_limit: {iteration_limit} for user: {user_id or 'anonymous'}")
 

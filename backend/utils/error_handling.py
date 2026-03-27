@@ -19,13 +19,27 @@ INVALID_API_KEY_MSG = (
 
 
 def is_api_key_error(error_msg: str, exc: Exception) -> bool:
-    """Check if error indicates invalid/missing API key (DRY)."""
-    return (
-        "401" in error_msg
-        or "invalid_api_key" in error_msg
-        or "Incorrect API key" in error_msg
-        or "AuthenticationError" in str(type(exc))
-    )
+    """Check if error indicates invalid/missing API key (DRY).
+
+    Avoid treating every string containing the digits 401 as an auth failure
+    (false positives from unrelated errors / IDs).
+    """
+    lowered = error_msg.lower()
+    exc_name = str(type(exc).__name__).lower()
+    if "invalid_api_key" in lowered:
+        return True
+    if "incorrect api key" in lowered:
+        return True
+    if "authenticationerror" in exc_name or "permissiondenied" in exc_name:
+        return True
+    if "api_key" in lowered and "invalid" in lowered:
+        return True
+    # HTTP / SDK patterns
+    if "status code 401" in lowered or "error code: 401" in lowered or "http 401" in lowered:
+        return True
+    if " 401 " in f" {error_msg} " and ("unauthorized" in lowered or "authentication" in lowered):
+        return True
+    return False
 
 
 def handle_execution_errors(func: Callable) -> Callable:

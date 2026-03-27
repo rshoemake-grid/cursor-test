@@ -3,6 +3,8 @@ import uuid
 from typing import Any, Callable, Dict, List, Optional
 
 from backend.utils.logger import get_logger
+from backend.exceptions import WorkflowForbiddenError
+from backend.services.workflow_service import _check_workflow_ownership
 
 from .models import NODE_CONFIG_KEYS
 from .tools import tool_response
@@ -34,7 +36,40 @@ async def handle_add_node(
             new_node[config_key] = function_args["config"]
             new_node["data"][config_key] = function_args["config"]
     workflow_changes["nodes_to_add"].append(new_node)
-    return tool_response(tool_call, {"status": "success", "action": "added_node", "node_id": node_id})
+
+    response_body: Dict[str, Any] = {"status": "success", "action": "added_node", "node_id": node_id}
+    edges_added_ids: List[str] = []
+
+    connect_from = (function_args.get("connect_from_node_id") or "").strip()
+    connect_to = (function_args.get("connect_to_node_id") or "").strip()
+    source_handle = function_args.get("connect_from_source_handle")
+
+    if connect_from:
+        eid = f"e-{connect_from}-{node_id}"
+        edge: Dict[str, Any] = {
+            "id": eid,
+            "source": connect_from,
+            "target": node_id,
+        }
+        if source_handle:
+            edge["sourceHandle"] = source_handle
+        workflow_changes["edges_to_add"].append(edge)
+        edges_added_ids.append(eid)
+
+    if connect_to:
+        eid = f"e-{node_id}-{connect_to}"
+        edge_out: Dict[str, Any] = {
+            "id": eid,
+            "source": node_id,
+            "target": connect_to,
+        }
+        workflow_changes["edges_to_add"].append(edge_out)
+        edges_added_ids.append(eid)
+
+    if edges_added_ids:
+        response_body["edges_added"] = edges_added_ids
+
+    return tool_response(tool_call, response_body)
 
 
 async def handle_update_node(
@@ -64,6 +99,60 @@ async def handle_delete_node(
         return tool_response(tool_call, {"status": "error", "message": "node_id is required"})
     workflow_changes["nodes_to_delete"].append(function_args["node_id"])
     return tool_response(tool_call, {"status": "success", "action": "deleted_node", "node_id": function_args["node_id"]})
+
+
+async def handle_clear_workflow_canvas(
+    tool_call: Any,
+    function_args: dict,
+    workflow_changes: Dict[str, List[Any]],
+    workflow_service: Any,
+    workflow_id: Optional[str],
+    user_id: Optional[str] = None,
+) -> Any:
+    """Remove all nodes from the stored workflow definition for this chat session."""
+    if not workflow_id:
+        return tool_response(
+            tool_call,
+            {
+                "status": "error",
+                "message": "No workflow is loaded for this chat. Save the workflow first, or clear the canvas using the Clear canvas control in the chat panel.",
+            },
+        )
+    try:
+        workflow = await workflow_service.get_workflow(workflow_id)
+    except Exception as load_err:
+        logger.warning("clear_workflow_canvas: load failed: %s", load_err, exc_info=True)
+        return tool_response(
+            tool_call,
+            {"status": "error", "message": f"Could not load workflow: {load_err}"},
+        )
+    try:
+        _check_workflow_ownership(workflow, user_id, "update")
+    except WorkflowForbiddenError:
+        return tool_response(
+            tool_call,
+            {"status": "error", "message": "You are not allowed to modify this workflow."},
+        )
+
+    nodes = (workflow.definition or {}).get("nodes") or []
+    node_ids = [n["id"] for n in nodes if n.get("id")]
+
+    workflow_changes["nodes_to_add"].clear()
+    workflow_changes["nodes_to_update"].clear()
+    workflow_changes["edges_to_add"].clear()
+    workflow_changes["edges_to_delete"].clear()
+    workflow_changes["nodes_to_delete"].clear()
+    workflow_changes["nodes_to_delete"].extend(node_ids)
+
+    return tool_response(
+        tool_call,
+        {
+            "status": "success",
+            "action": "cleared_canvas",
+            "nodes_removed": len(node_ids),
+            "node_ids": node_ids,
+        },
+    )
 
 
 async def handle_connect_nodes(
@@ -167,6 +256,9 @@ def get_tool_handlers(
         "add_node": lambda tc, fa: handle_add_node(tc, fa, workflow_changes),
         "update_node": lambda tc, fa: handle_update_node(tc, fa, workflow_changes),
         "delete_node": lambda tc, fa: handle_delete_node(tc, fa, workflow_changes),
+        "clear_workflow_canvas": lambda tc, fa: handle_clear_workflow_canvas(
+            tc, fa, workflow_changes, workflow_service, workflow_id, user_id
+        ),
         "connect_nodes": lambda tc, fa: handle_connect_nodes(tc, fa, workflow_changes),
         "disconnect_nodes": lambda tc, fa: handle_disconnect_nodes(tc, fa, workflow_changes),
         "get_workflow_info": lambda tc, fa: handle_get_workflow_info(tc, fa, workflow_context),
