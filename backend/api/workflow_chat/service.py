@@ -21,6 +21,7 @@ def create_changes_dict() -> Dict[str, List[Any]]:
         "nodes_to_delete": [],
         "edges_to_add": [],
         "edges_to_delete": [],
+        "nodes_to_select": [],
     }
 
 
@@ -28,8 +29,29 @@ def has_workflow_changes(changes: Dict[str, List[Any]]) -> bool:
     """Check if workflow changes dict has any changes (DRY)."""
     return any(
         changes.get(key)
-        for key in ("nodes_to_add", "nodes_to_update", "nodes_to_delete", "edges_to_add", "edges_to_delete")
+        for key in (
+            "nodes_to_add",
+            "nodes_to_update",
+            "nodes_to_delete",
+            "edges_to_add",
+            "edges_to_delete",
+            "nodes_to_select",
+        )
     )
+
+
+def _dedupe_ids(ids: List[Any]) -> List[str]:
+    seen: set[str] = set()
+    out: List[str] = []
+    for raw in ids:
+        if raw is None:
+            continue
+        s = str(raw).strip()
+        if not s or s in seen:
+            continue
+        seen.add(s)
+        out.append(s)
+    return out
 
 
 async def run_chat_loop(
@@ -121,6 +143,7 @@ async def run_chat_loop(
         "nodes_to_delete": workflow_changes["nodes_to_delete"] + saved_changes["nodes_to_delete"],
         "edges_to_add": workflow_changes["edges_to_add"] + saved_changes["edges_to_add"],
         "edges_to_delete": workflow_changes["edges_to_delete"] + saved_changes["edges_to_delete"],
+        "nodes_to_select": _dedupe_ids(workflow_changes.get("nodes_to_select") or []),
     }
 
     return assistant_message, all_changes

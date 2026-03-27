@@ -77,12 +77,56 @@ def get_workflow_tools(workflow_id: Optional[str] = None) -> List[Dict[str, Any]
             "type": "function",
             "function": {
                 "name": "delete_node",
-                "description": "Delete a node from the workflow",
+                "description": "Delete a single node from the workflow",
                 "parameters": {
                     "type": "object",
                     "properties": {"node_id": {"type": "string", "description": "ID of the node to delete"}},
                     "required": ["node_id"],
                 },
+            },
+        },
+        {
+            "type": "function",
+            "function": {
+                "name": "delete_nodes",
+                "description": "Delete multiple nodes by ID in one step (e.g. after list_isolated_nodes). Edges touching them are removed when applied.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "node_ids": {
+                            "type": "array",
+                            "items": {"type": "string"},
+                            "description": "Node IDs to remove",
+                        }
+                    },
+                    "required": ["node_ids"],
+                },
+            },
+        },
+        {
+            "type": "function",
+            "function": {
+                "name": "select_nodes",
+                "description": "Highlight specific nodes on the user's canvas (multi-select). Use so the user sees which nodes you mean before deleting or editing. Does not change the graph.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "node_ids": {
+                            "type": "array",
+                            "items": {"type": "string"},
+                            "description": "Node IDs to select on the canvas",
+                        }
+                    },
+                    "required": ["node_ids"],
+                },
+            },
+        },
+        {
+            "type": "function",
+            "function": {
+                "name": "list_isolated_nodes",
+                "description": "List nodes that have no edges at all (not source nor target on any edge). Use to find orphans to connect or delete.",
+                "parameters": {"type": "object", "properties": {}, "required": []},
             },
         },
         {

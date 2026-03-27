@@ -121,6 +121,31 @@ describe('useWorkflowUpdates', ()=>{
         jest.useRealTimers();
     });
     describe('applyLocalChanges', ()=>{
+        it('should apply nodes_to_select and call onChatSelectNodes', ()=>{
+            const onChatSelectNodes = jest.fn();
+            const { result } = renderHook(()=>useWorkflowUpdates({
+                    nodes: initialNodes,
+                    edges: initialEdges,
+                    setNodes: mockSetNodes,
+                    setEdges: mockSetEdges,
+                    notifyModified: mockNotifyModified,
+                    onChatSelectNodes
+                }));
+            act(()=>{
+                result.current.applyLocalChanges({
+                    nodes_to_select: [
+                        'node1',
+                        'node2'
+                    ]
+                });
+            });
+            expect(onChatSelectNodes).toHaveBeenCalledWith([
+                'node1',
+                'node2'
+            ]);
+            expect(mockSetNodes).toHaveBeenCalled();
+            expect(mockNotifyModified).not.toHaveBeenCalled();
+        });
         it('should add nodes', ()=>{
             const { result } = renderHook(()=>useWorkflowUpdates({
                     nodes: initialNodes,

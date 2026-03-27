@@ -6,7 +6,7 @@ import { logger } from '../../utils/logger';
 import { addEdge } from '@xyflow/react';
 import { initializeReactFlowNodes, workflowNodeToReactFlowNode } from '../../utils/workflowFormat';
 import { logicalOrToNull } from '../utils/logicalOr';
-export function useWorkflowUpdates({ nodes, edges, setNodes, setEdges, notifyModified, nodeExecutionStates = {} }) {
+export function useWorkflowUpdates({ nodes, edges, setNodes, setEdges, notifyModified, nodeExecutionStates = {}, onChatSelectNodes }) {
     const nodesRef = useRef(nodes);
     const edgesRef = useRef(edges);
     // Keep refs in sync with state
@@ -135,12 +135,21 @@ export function useWorkflowUpdates({ nodes, edges, setNodes, setEdges, notifyMod
             setEdges((eds)=>eds.filter((edge)=>!changes.edges_to_delete.some((del)=>del.source === edge.source && del.target === edge.target)));
             notifyModified();
         }
+        if (changes.nodes_to_select && changes.nodes_to_select.length > 0) {
+            const sel = new Set(changes.nodes_to_select);
+            setNodes((nds)=>nds.map((n)=>({
+                    ...n,
+                    selected: sel.has(n.id)
+                })));
+            onChatSelectNodes?.(changes.nodes_to_select);
+        }
     }, [
         setNodes,
         setEdges,
         notifyModified,
         workflowNodeToNode,
-        updateRefs
+        updateRefs,
+        onChatSelectNodes
     ]);
     return {
         applyLocalChanges,

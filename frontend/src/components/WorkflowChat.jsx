@@ -432,7 +432,11 @@ export default function WorkflowChat({
                     />
                     <div className="flex gap-2 items-end flex-shrink-0">
                         <div className="flex flex-col items-center justify-end gap-0.5 w-[3.25rem]">
-                            <label htmlFor="workflow-chat-tool-iterations" className="text-[9px] text-gray-500 leading-none text-center px-0.5">
+                            <label
+                                htmlFor="workflow-chat-tool-iterations"
+                                className="text-[9px] text-gray-500 leading-none text-center px-0.5 cursor-help"
+                                title="Tool steps: cap on how many tool-use rounds the assistant gets per message (add nodes, connect edges, save, etc.). Range 1–50. Saved when you leave the number box."
+                            >
                                 Steps
                             </label>
                             <input
@@ -445,8 +449,9 @@ export default function WorkflowChat({
                                 onChange={(e) => setToolIterationsInput(e.target.value)}
                                 onBlur={persistToolIterations}
                                 disabled={isLoading}
-                                className="w-full bg-gray-800 border border-gray-600 rounded-md px-1 py-1.5 text-xs text-gray-100 text-center [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                                title="Maximum tool-calling rounds (1–50) for this message"
+                                className="w-full bg-gray-800 border border-gray-600 rounded-md px-1 py-1.5 text-xs text-gray-100 text-center cursor-help [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                title="Maximum tool rounds for this request (1–50). Each round is one opportunity to call tools (e.g. add_node, connect_nodes). Raise if the assistant stops before finishing; lower for speed or API cost. Value is stored when this field loses focus."
+                                aria-label="Tool steps: maximum tool rounds per message, 1 to 50. Saved on blur."
                             />
                         </div>
                         <div className="flex flex-col items-center gap-1">
@@ -496,9 +501,9 @@ export default function WorkflowChat({
                                 title={
                                     ttsSupported
                                         ? ttsListenModeOn
-                                            ? 'Read-aloud is on. Click to stop and return to standby.'
-                                            : 'Auto-read new assistant replies only. Does not replay existing messages. Stays on until you turn it off.'
-                                        : 'Text-to-speech not supported in this browser'
+                                            ? 'Listen: read-aloud is on. New assistant replies are spoken. Click to stop and silence playback.'
+                                            : 'Listen: turn on read-aloud. Only new assistant messages are spoken after you enable this; existing chat history is not replayed. Turn off with the same button or the square icon when active.'
+                                        : 'Read-aloud is not supported in this browser.'
                                 }
                                 aria-label={
                                     ttsListenModeOn

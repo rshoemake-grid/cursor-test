@@ -48,7 +48,7 @@ onClearExecutions: _onClearExecutions, onExecutionLogUpdate, onExecutionStatusUp
         reactFlowInstanceRef,
         notifyModified
     });
-    const { selectedNodeId, setSelectedNodeId, selectedNodeIds } = nodeSelection;
+    const { selectedNodeId, setSelectedNodeId, selectedNodeIds, setSelectedNodeIds } = nodeSelection;
     // Marketplace dialog management
     const marketplaceDialog = useMarketplaceDialog();
     const { showMarketplaceDialog, marketplaceNode, openDialog: openMarketplaceDialog, closeDialog: closeMarketplaceDialog } = marketplaceDialog;
@@ -57,6 +57,15 @@ onClearExecutions: _onClearExecutions, onExecutionLogUpdate, onExecutionStatusUp
     const [isSaving, setIsSaving] = useState(false);
     // Clipboard operations (must be before KeyboardHandler)
     const clipboard = useClipboard(reactFlowInstanceRef, notifyModified);
+    const onChatSelectNodes = useCallback((ids)=>{
+        const list = Array.isArray(ids) ? ids : [];
+        const s = new Set(list);
+        setSelectedNodeIds(s);
+        setSelectedNodeId(list.length === 1 ? list[0] : null);
+    }, [
+        setSelectedNodeIds,
+        setSelectedNodeId
+    ]);
     // Workflow updates handler
     const workflowUpdates = useWorkflowUpdates({
         nodes,
@@ -64,7 +73,8 @@ onClearExecutions: _onClearExecutions, onExecutionLogUpdate, onExecutionStatusUp
         setNodes,
         setEdges,
         notifyModified,
-        nodeExecutionStates
+        nodeExecutionStates,
+        onChatSelectNodes
     });
     // Marketplace integration (needs draft refs, so we create them first)
     const tabDraftsRef = useRef(loadDraftsFromStorage());
@@ -204,7 +214,9 @@ onClearExecutions: _onClearExecutions, onExecutionLogUpdate, onExecutionStatusUp
         setNodes,
         setEdges,
         workflowNodeToNode,
-        applyLocalChanges
+        applyLocalChanges,
+        setSelectedNodeId,
+        setSelectedNodeIds
     });
     // Context menu management (must be before canvas events to use in pane click)
     const contextMenu = useContextMenu();

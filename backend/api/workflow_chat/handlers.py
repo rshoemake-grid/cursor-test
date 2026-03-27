@@ -6,6 +6,7 @@ from backend.utils.logger import get_logger
 from backend.exceptions import WorkflowForbiddenError
 from backend.services.workflow_service import _check_workflow_ownership
 
+from .graph_utils import isolated_node_summaries
 from .models import NODE_CONFIG_KEYS
 from .tools import tool_response
 
@@ -101,6 +102,97 @@ async def handle_delete_node(
     return tool_response(tool_call, {"status": "success", "action": "deleted_node", "node_id": function_args["node_id"]})
 
 
+async def handle_delete_nodes(
+    tool_call: Any,
+    function_args: dict,
+    workflow_changes: Dict[str, List[Any]],
+) -> Any:
+    """Delete multiple nodes in one tool call."""
+    raw_ids = function_args.get("node_ids")
+    if not raw_ids or not isinstance(raw_ids, list):
+        return tool_response(tool_call, {"status": "error", "message": "node_ids must be a non-empty array of strings"})
+    deleted: List[str] = []
+    for nid in raw_ids:
+        if nid is None:
+            continue
+        s = str(nid).strip()
+        if not s:
+            continue
+        workflow_changes["nodes_to_delete"].append(s)
+        deleted.append(s)
+    if not deleted:
+        return tool_response(tool_call, {"status": "error", "message": "No valid node IDs to delete"})
+    return tool_response(
+        tool_call,
+        {"status": "success", "action": "deleted_nodes", "node_ids": deleted, "count": len(deleted)},
+    )
+
+
+async def handle_select_nodes(
+    tool_call: Any,
+    function_args: dict,
+    workflow_changes: Dict[str, List[Any]],
+) -> Any:
+    """Highlight nodes on the user's canvas (multi-select). Does not modify the graph."""
+    raw_ids = function_args.get("node_ids")
+    if not raw_ids or not isinstance(raw_ids, list):
+        return tool_response(tool_call, {"status": "error", "message": "node_ids must be a non-empty array of strings"})
+    seen: set[str] = set()
+    ordered: List[str] = []
+    for nid in raw_ids:
+        if nid is None:
+            continue
+        s = str(nid).strip()
+        if not s or s in seen:
+            continue
+        seen.add(s)
+        ordered.append(s)
+    if not ordered:
+        return tool_response(tool_call, {"status": "error", "message": "No valid node IDs to select"})
+    workflow_changes["nodes_to_select"] = ordered
+    return tool_response(
+        tool_call,
+        {"status": "success", "action": "selected_nodes", "node_ids": ordered, "count": len(ordered)},
+    )
+
+
+async def handle_list_isolated_nodes(
+    tool_call: Any,
+    function_args: dict,
+    workflow_service: Any,
+    workflow_id: Optional[str],
+    user_id: Optional[str] = None,
+) -> Any:
+    """Nodes with no edges (neither source nor target). Useful before bulk delete."""
+    _ = function_args
+    if not workflow_id:
+        return tool_response(
+            tool_call,
+            {"status": "error", "message": "No workflow loaded; save the workflow first."},
+        )
+    try:
+        workflow = await workflow_service.get_workflow(workflow_id)
+    except Exception as load_err:
+        return tool_response(tool_call, {"status": "error", "message": f"Could not load workflow: {load_err}"})
+    try:
+        _check_workflow_ownership(workflow, user_id, "update")
+    except WorkflowForbiddenError:
+        return tool_response(tool_call, {"status": "error", "message": "You are not allowed to access this workflow."})
+
+    nodes = (workflow.definition or {}).get("nodes") or []
+    edges = (workflow.definition or {}).get("edges") or []
+    isolated = isolated_node_summaries(nodes, edges)
+    return tool_response(
+        tool_call,
+        {
+            "status": "success",
+            "isolated_nodes": isolated,
+            "count": len(isolated),
+            "hint": "These nodes have zero connections. Use select_nodes to highlight them, then delete_nodes with the same IDs to remove them (then save_workflow if needed).",
+        },
+    )
+
+
 async def handle_clear_workflow_canvas(
     tool_call: Any,
     function_args: dict,
@@ -142,6 +234,7 @@ async def handle_clear_workflow_canvas(
     workflow_changes["edges_to_add"].clear()
     workflow_changes["edges_to_delete"].clear()
     workflow_changes["nodes_to_delete"].clear()
+    workflow_changes.setdefault("nodes_to_select", []).clear()
     workflow_changes["nodes_to_delete"].extend(node_ids)
 
     return tool_response(
@@ -256,6 +349,9 @@ def get_tool_handlers(
         "add_node": lambda tc, fa: handle_add_node(tc, fa, workflow_changes),
         "update_node": lambda tc, fa: handle_update_node(tc, fa, workflow_changes),
         "delete_node": lambda tc, fa: handle_delete_node(tc, fa, workflow_changes),
+        "delete_nodes": lambda tc, fa: handle_delete_nodes(tc, fa, workflow_changes),
+        "select_nodes": lambda tc, fa: handle_select_nodes(tc, fa, workflow_changes),
+        "list_isolated_nodes": lambda tc, fa: handle_list_isolated_nodes(tc, fa, workflow_service, workflow_id, user_id),
         "clear_workflow_canvas": lambda tc, fa: handle_clear_workflow_canvas(
             tc, fa, workflow_changes, workflow_service, workflow_id, user_id
         ),

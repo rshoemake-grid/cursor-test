@@ -6,7 +6,7 @@ import { api } from '../../api/client';
 import { logger } from '../../utils/logger';
 import { initializeReactFlowNodes, formatEdgesForReactFlow } from '../../utils/workflowFormat';
 import { logicalOrToEmptyArray } from '../utils/logicalOr';
-export function useWorkflowUpdateHandler({ localWorkflowId, setNodes, setEdges, workflowNodeToNode, applyLocalChanges }) {
+export function useWorkflowUpdateHandler({ localWorkflowId, setNodes, setEdges, workflowNodeToNode, applyLocalChanges, setSelectedNodeId, setSelectedNodeIds }) {
     const handleWorkflowUpdate = useCallback((changes)=>{
         if (!changes) return;
         logger.debug('Received workflow changes:', changes);
@@ -39,7 +39,9 @@ export function useWorkflowUpdateHandler({ localWorkflowId, setNodes, setEdges, 
         workflowNodeToNode,
         setNodes,
         setEdges,
-        applyLocalChanges
+        applyLocalChanges,
+        setSelectedNodeId,
+        setSelectedNodeIds
     ]);
     return {
         handleWorkflowUpdate

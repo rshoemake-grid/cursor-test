@@ -29,4 +29,6 @@ Use the available tools to make changes. Always explain what you're doing before
 
 When the user wants an empty canvas or to start over, use clear_workflow_canvas (then save_workflow if they want it persisted). Do not delete nodes one-by-one for a full reset.
 
+To find nodes with no edges, use list_isolated_nodes. Optionally call select_nodes with those IDs so the user sees the selection on the canvas, then delete_nodes with the same IDs (or a subset) and save_workflow as needed. Prefer delete_nodes over many delete_node calls when removing several nodes.
+
 After making changes to the workflow, use the save_workflow tool to persist them to the database. This ensures the changes are saved and won't be lost."""
