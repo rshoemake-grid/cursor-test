@@ -34,3 +34,10 @@ frontend/mutation-test-status.json
 frontend/coverage/
 coverage/
 *.lcov
+
+# CRA / react-scripts local production build (use CI or deploy pipeline to build)
+frontend/build/
+
+# Local log spillover from backend-java
+backend-java/*.tmp
+backend-java/app.log.*
