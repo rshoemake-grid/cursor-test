@@ -5,7 +5,6 @@ import {
   readStorageItem,
   writeStorageItem,
   deleteStorageItem,
-  looksLikeJson,
   shouldHandleStorageEvent
 } from "./useLocalStorage.utils";
 import { nullishCoalesce } from "../utils/nullishCoalescing";
@@ -35,10 +34,8 @@ function useLocalStorage(key, initialValue, options) {
       if (shouldHandleStorageEvent(e.key, key, e.newValue)) {
         try {
           setStoredValue(JSON.parse(e.newValue));
-        } catch (error) {
-          if (looksLikeJson(e.newValue) && injectedLogger) {
-            injectedLogger.error("Failed to parse JSON:", error);
-          } else if (initialValue === null) {
+        } catch {
+          if (initialValue === null) {
             setStoredValue(e.newValue);
           }
         }

@@ -140,7 +140,23 @@ describe("createApiClient (fetch)", () => {
     expect(out).toBe(b);
   });
 
+  it("should not fetch LLM settings when no auth token is stored", async () => {
+    const api = createApiClient({ fetchImpl: fetchMock, localStorage: mockLocal, sessionStorage: mockSession });
+    const settings = await api.getLLMSettings();
+    expect(settings).toEqual({ providers: [] });
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
   it("should return empty providers when getLLMSettings receives 401", async () => {
+    mockLocal.getItem.mockImplementation((key) => {
+      if (key === STORAGE_KEYS.AUTH_REMEMBER_ME) {
+        return "true";
+      }
+      if (key === STORAGE_KEYS.AUTH_TOKEN) {
+        return "expired-token";
+      }
+      return null;
+    });
     fetchMock.mockResolvedValue({
       ok: false,
       status: 401,
@@ -152,6 +168,7 @@ describe("createApiClient (fetch)", () => {
     const api = createApiClient({ fetchImpl: fetchMock, localStorage: mockLocal, sessionStorage: mockSession });
     const settings = await api.getLLMSettings();
     expect(settings).toEqual({ providers: [] });
+    expect(fetchMock).toHaveBeenCalled();
   });
 
   it("should duplicate workflow via get then post", async () => {

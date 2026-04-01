@@ -68,6 +68,15 @@ function buildAuthHeaders(local, session) {
   return headers;
 }
 
+function hasStoredAuthToken(local, session) {
+  if (!local || !session) {
+    return false;
+  }
+  const rememberMe = local.getItem(STORAGE_KEYS.AUTH_REMEMBER_ME) === "true";
+  const storage = rememberMe ? local : session;
+  return Boolean(storage.getItem(STORAGE_KEYS.AUTH_TOKEN));
+}
+
 async function parseJsonOrText(response) {
   const ct = response.headers.get("content-type") || "";
   if (ct.includes("application/json")) {
@@ -235,6 +244,9 @@ function createApiClient(options) {
       return extractData(await http.post(chatEndpoints.chat(), params));
     },
     async getLLMSettings() {
+      if (!hasStoredAuthToken(local, session)) {
+        return { providers: [] };
+      }
       try {
         return extractData(await http.get(settingsEndpoints.llm()));
       } catch (error) {
