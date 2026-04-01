@@ -36,10 +36,10 @@ async def test_listing(username: str):
         for w in workflows:
             print(f"    - {w.name} (owner: {w.owner_id})")
         
-        # Test without user_id (unauthenticated)
+        # Test without user_id (unauthenticated) — API returns none; guests use marketplace templates
         print("\nTesting without user_id (unauthenticated):")
         workflows = await service.list_workflows(user_id=None, include_public=True)
-        print(f"  Found {len(workflows)} workflow(s)")
+        print(f"  Found {len(workflows)} workflow(s) (expected 0 for logged-out list)")
         for w in workflows:
             print(f"    - {w.name} (owner: {w.owner_id}, public: {w.is_public})")
 

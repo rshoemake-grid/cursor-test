@@ -1,6 +1,6 @@
 # Agentic Workflow Builder - Frontend
 
-Visual workflow builder built with React, TypeScript, and React Flow.
+Visual workflow builder (Create React App, React, React Flow).
 
 ## 🚀 Quick Start
 
@@ -8,27 +8,35 @@ Visual workflow builder built with React, TypeScript, and React Flow.
 # Install dependencies
 npm install
 
-# Start development server
-npm run dev
+# Start development server (http://localhost:3000)
+npm start
 
 # Build for production
 npm run build
 
-# Preview production build
-npm run preview
+# Run tests
+npm test
 ```
+
+## API URL in development
+
+- **Default:** leave **`REACT_APP_API_BASE_URL` empty** in `.env.development` so the browser uses same-origin **`/api`**. `setupProxy.js` forwards to FastAPI (`PROXY_TARGET`, default `http://127.0.0.1:8000`).
+- **Direct API:** set `REACT_APP_API_BASE_URL=http://127.0.0.1:8000` in `.env.development.local` if you must bypass the proxy (mind CORS).
+
+See **[docs/CONFIGURATION_REFERENCE.md](../docs/CONFIGURATION_REFERENCE.md#frontend-configuration)**.
 
 ## 📦 Tech Stack
 
 - **React 18** - UI framework
-- **TypeScript** - Type safety
-- **React Flow** - Visual workflow editor
-- **Zustand** - State management
+- **React Flow (@xyflow/react)** - Visual workflow editor
+- **Redux (RTK)** - App state where used
 - **TailwindCSS** - Styling
-- **Vite** - Build tool
-- **Axios** - HTTP client
+- **Create React App** - Build and dev server
+- **Fetch-based API client** - `src/api/client.jsx`
 
 ## 🏗️ Project Structure
+
+Layout evolves with the repo; primary entry is `src/index.js` and `src/App.jsx`. Illustrative tree:
 
 ```
 src/

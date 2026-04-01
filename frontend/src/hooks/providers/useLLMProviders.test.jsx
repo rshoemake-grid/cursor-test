@@ -40,6 +40,34 @@ describe("useLLMProviders", () => {
       expect(result.current.isLoading).toBe(false);
     });
     expect(mockApi.getLLMSettings).not.toHaveBeenCalled();
+    expect(result.current.providers).toEqual([]);
+  });
+  it("should not read local storage for providers when not authenticated", async () => {
+    mockStorage.getItem.mockReturnValue(
+      JSON.stringify({
+        providers: [
+          {
+            id: "x",
+            name: "OpenAI",
+            type: "openai",
+            enabled: true,
+            apiKey: "sk-secret",
+            models: ["gpt-4"],
+            defaultModel: "gpt-4"
+          }
+        ],
+        iteration_limit: 10,
+        default_model: "gpt-4"
+      })
+    );
+    const { result } = renderHook(() =>
+      useLLMProviders({ storage: mockStorage, isAuthenticated: false })
+    );
+    await waitForWithTimeout(() => {
+      expect(result.current.isLoading).toBe(false);
+    });
+    expect(mockStorage.getItem).not.toHaveBeenCalled();
+    expect(result.current.providers).toEqual([]);
   });
   it("should load providers from API successfully", async () => {
     const mockProviders = [

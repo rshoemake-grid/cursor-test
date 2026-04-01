@@ -181,4 +181,23 @@ describe("createApiClient (fetch)", () => {
     expect(fetchMock).toHaveBeenCalledTimes(2);
     expect(dup.name).toBe("A-copy");
   });
+
+  it("should post chat to /api/workflow-chat/chat when baseURL is empty", async () => {
+    fetchMock.mockResolvedValue(jsonResponse(200, { message: "ok", workflow_id: "w1" }));
+    const api = createApiClient({
+      fetchImpl: fetchMock,
+      baseURL: "",
+      localStorage: mockLocal,
+      sessionStorage: mockSession,
+    });
+    await api.chat({
+      workflow_id: "w1",
+      message: "hi",
+      conversation_history: [],
+    });
+    expect(fetchMock).toHaveBeenCalledWith(
+      expect.stringMatching(/\/api\/workflow-chat\/chat$/),
+      expect.objectContaining({ method: "POST" }),
+    );
+  });
 });

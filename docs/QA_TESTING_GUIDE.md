@@ -360,9 +360,9 @@ curl -X GET "${BASE_URL}/api/workflows"
 ```
 
 **Test Scenarios**:
-- ✅ List workflows (authenticated - sees own + public)
-- ✅ List workflows (anonymous - sees public only)
-- ✅ Empty list (no workflows)
+- ✅ List workflows (authenticated — sees own workflows)
+- ✅ List workflows (anonymous — **empty list**; browse templates via Marketplace / templates APIs)
+- ✅ Empty list (no workflows) for a new user
 
 ---
 

@@ -1,5 +1,5 @@
 import { jsx, jsxs } from "react/jsx-runtime";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { showConfirm } from "../utils/confirm";
 import { useAuth } from "../contexts/AuthContext";
 import { defaultAdapters } from "../types/adapters";
@@ -40,6 +40,15 @@ function SettingsPage({
   const [defaultModel, setDefaultModel] = useState("");
   const [activeTab, setActiveTab] = useState(SETTINGS_TABS.LLM);
   const [settingsLoaded, setSettingsLoaded] = useState(false);
+  useEffect(() => {
+    if (!isAuthenticated) {
+      setProviders([]);
+      setIterationLimit(10);
+      setDefaultModel("");
+      setSettingsLoaded(false);
+      setShowAddProvider(false);
+    }
+  }, [isAuthenticated]);
   const modelExpansion = useModelExpansion();
   const {
     expandedModels,
@@ -137,6 +146,7 @@ function SettingsPage({
       /* @__PURE__ */ jsx("div", { className: "flex-1 space-y-6", children: /* @__PURE__ */ jsx(
         SettingsTabContent,
         {
+          isAuthenticated,
           activeTab,
           iterationLimit,
           onIterationLimitChange: setIterationLimit,

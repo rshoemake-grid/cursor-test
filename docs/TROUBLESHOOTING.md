@@ -468,31 +468,64 @@ engine = create_async_engine(
 
 ## Authentication Issues
 
+### Login works with curl but fails in the browser
+
+**Common causes:**
+
+1. **Frontend calling a different host than you tested** — Prefer an **empty** `REACT_APP_API_BASE_URL` in `frontend/.env.development` so the app uses same-origin **`/api`** and the CRA proxy forwards to FastAPI (see [Configuration Reference](./CONFIGURATION_REFERENCE.md#frontend-configuration)).
+2. **CORS** — If you set `REACT_APP_API_BASE_URL=http://127.0.0.1:8000` while the app runs on `http://localhost:3000`, the browser performs a cross-origin request; ensure `CORS_ORIGINS` includes your exact dev origin.
+3. **Backend not running** or wrong `PROXY_TARGET` for the dev proxy.
+
+**Quick check:**
+```bash
+curl -s -X POST http://127.0.0.1:8000/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"username":"YOUR_USER","password":"YOUR_PASS","remember_me":false}'
+```
+
+### Fresh database: no user or wrong password (development)
+
+Enable **dev bootstrap** in project root `.env` (see `.env.example`):
+
+```bash
+ENVIRONMENT=development
+DEV_BOOTSTRAP_USERNAME=your_username
+DEV_BOOTSTRAP_PASSWORD=your_password
+# Optional: DEV_BOOTSTRAP_EMAIL=user@example.com
+```
+
+Restart the API. On startup, the user is **created if missing** and the password is **reset** to `DEV_BOOTSTRAP_PASSWORD`.
+
+Alternatively create a user manually:
+
+```bash
+python backend/scripts/create_user.py email@example.com username password
+```
+
+### “My workflows” empty when not signed in (expected)
+
+Anonymous **`GET /api/workflows`** returns an empty list. Browse **Marketplace** / templates without logging in; sign in to load **your** saved workflows.
+
 ### Login Fails
 
 **Error:** `401 Unauthorized: Incorrect username or password`
 
 **Solutions:**
 
-**1. Verify Credentials:**
+**1. Verify credentials against the API:**
 ```bash
-# Check user exists
-curl http://localhost:8000/api/users \
-  -H "Authorization: Bearer ADMIN_TOKEN"
+curl -s -X POST http://127.0.0.1:8000/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"username":"your_username","password":"your_password","remember_me":false}'
 ```
 
 **2. Check Password Hashing:**
 - Ensure bcrypt is installed: `pip install bcrypt`
 - Verify password hashing algorithm matches
 
-**3. User Inactive:**
-```bash
-# Activate user (admin only)
-curl -X PATCH http://localhost:8000/api/users/{user_id} \
-  -H "Authorization: Bearer ADMIN_TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{"is_active": true}'
-```
+**3. User inactive or missing:**
+- Use dev bootstrap (above) or `backend/scripts/create_user.py` in development.
+- For inactive accounts, fix in the database or admin tooling if available.
 
 ### Token Expired
 

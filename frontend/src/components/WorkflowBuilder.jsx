@@ -173,7 +173,8 @@ const WorkflowBuilder = forwardRef(function WorkflowBuilder2({
     workflowNodeToNode,
     onWorkflowLoaded,
     isLoadingRef,
-    lastLoadedWorkflowIdRef
+    lastLoadedWorkflowIdRef,
+    isAuthenticated
   });
   const applyLocalChanges = workflowUpdates.applyLocalChanges;
   const { handleWorkflowUpdate } = useWorkflowUpdateHandler({
@@ -181,7 +182,8 @@ const WorkflowBuilder = forwardRef(function WorkflowBuilder2({
     setNodes,
     setEdges,
     workflowNodeToNode,
-    applyLocalChanges
+    applyLocalChanges,
+    isAuthenticated
   });
   const contextMenu = useContextMenu();
   const { onNodeContextMenu, onEdgeContextMenu, contextMenu: contextMenuState } = contextMenu;

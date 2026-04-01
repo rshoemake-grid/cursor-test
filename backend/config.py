@@ -52,6 +52,10 @@ class Settings(BaseSettings):
     # Development only: on startup, set this user's password (must run ENVIRONMENT=development)
     dev_bootstrap_username: Optional[str] = Field(default=None, description="DEV_BOOTSTRAP_USERNAME")
     dev_bootstrap_password: Optional[str] = Field(default=None, description="DEV_BOOTSTRAP_PASSWORD")
+    dev_bootstrap_email: Optional[str] = Field(
+        default=None,
+        description="DEV_BOOTSTRAP_EMAIL — used when creating the dev user if missing (default: <username>@dev-bootstrap.local)",
+    )
     
     # API Keys (fallback if not in settings)
     openai_api_key: Optional[str] = None

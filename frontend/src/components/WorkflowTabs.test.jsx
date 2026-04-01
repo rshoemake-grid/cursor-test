@@ -1701,7 +1701,7 @@ describe("WorkflowTabs", () => {
         expect(mockHttpClient.post).toHaveBeenCalled();
       }, 3e3);
     });
-    it("should handle handlePublish when token is not available", async () => {
+    it("should not publish over HTTP when guest tabs are cleared of saved workflow ids", async () => {
       mockUseAuth.mockReturnValue({
         isAuthenticated: false,
         user: null,
@@ -1741,8 +1741,9 @@ describe("WorkflowTabs", () => {
         fireEvent.submit(form);
       }
       await waitForWithTimeout(() => {
-        expect(mockHttpClient.post).toHaveBeenCalled();
-      }, 3e3);
+        expect(showError).toHaveBeenCalledWith(expect.stringContaining("Save the workflow before publishing"));
+      });
+      expect(mockHttpClient.post).not.toHaveBeenCalled();
     });
   });
   describe("Initial workflow loading edge cases", () => {

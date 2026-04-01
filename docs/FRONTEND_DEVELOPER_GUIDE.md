@@ -163,6 +163,20 @@ Centralized state management for workflow data:
 - Handles tab switching
 - Persists tab state
 
+### Guest access vs signed-in behavior
+
+- **Marketplace** — Available without auth; primary way to discover templates when logged out.
+- **My workflows** — `GET /api/workflows` is only populated for authenticated users; guests see an empty list and a sign-in CTA in the UI.
+- **Builder** — Guests can work in a local untitled tab; server-backed `workflow_id` tabs are cleared until sign-in. Deep links `?workflow=` apply only when authenticated.
+- **Settings / LLM providers** — Many paths skip loading secrets from storage or the API until `isAuthenticated` (e.g. `useLLMProviders`, `PropertyPanel`).
+- **Workflow Chat** — Sending messages, microphone, TTS, and applying AI-driven graph changes require sign-in in the UI; the chat request includes optional **`iteration_limit`** (default **20** in the UI, range 1–100) passed to `POST /api/workflow-chat/chat`.
+
+See [API Reference](./API_REFERENCE.md#access-control-anonymous-vs-signed-in) and [Configuration Reference](./CONFIGURATION_REFERENCE.md#frontend-configuration).
+
+### Workflow Chat (`components/WorkflowChat.jsx`)
+
+Side-panel assistant for natural-language edits. Calls **`api.chat`** → `POST /api/workflow-chat/chat` with `workflow_id`, `message`, `conversation_history`, and **`iteration_limit`** to cap tool–LLM loop iterations per send. Voice (push-to-talk) and read-aloud integrate with the same input/send path.
+
 ## Custom Hooks Architecture
 
 The codebase follows a **hook-based architecture** with custom hooks organized by domain:

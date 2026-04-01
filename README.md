@@ -2,6 +2,12 @@
 
 A complete, enterprise-ready agentic workflow platform with visual builder, real-time monitoring, intelligent agents with memory, tool-calling capabilities, and advanced execution features.
 
+## 🔐 Sign-in and browsing
+
+- **Without an account session**, the app still supports the **Marketplace** (templates). **Your saved workflows** (`GET /api/workflows`) are empty until you **sign in**; the builder uses a local draft tab only.
+- **Workflow assistant (chat)** supports an optional **iteration limit** per message (UI default **20**); see [docs/API_REFERENCE.md](docs/API_REFERENCE.md#workflow-chat).
+- **Local dev login:** Prefer `REACT_APP_API_BASE_URL` **unset** in `frontend/.env.development` so the UI talks to **`/api`** through the dev proxy. Optional **`DEV_BOOTSTRAP_USERNAME`** / **`DEV_BOOTSTRAP_PASSWORD`** in root `.env` create or reset a dev user on API startup — see [docs/CONFIGURATION_REFERENCE.md](docs/CONFIGURATION_REFERENCE.md#development-user-bootstrap-optional).
+
 ## 🌟 Overview
 
 Build complex multi-agent workflows where AI agents collaborate sequentially to accomplish tasks. Perfect for:
@@ -70,9 +76,9 @@ Backend runs at `http://localhost:8000`
 #### Terminal 2: Frontend
 ```bash
 cd frontend
-npm run dev
+npm start
 ```
-Frontend runs at `http://localhost:3000`
+Frontend runs at `http://localhost:3000` (CRA dev server; API defaults to proxied `/api`).
 
 ### Your First Visual Workflow
 

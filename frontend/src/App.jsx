@@ -72,7 +72,11 @@ function AuthenticatedLayout() {
   useEffect(() => {
     const workflowId = searchParams.get("workflow");
     const executionIdParam = searchParams.get("execution");
-    if (workflowId && workflowId !== processedWorkflowFromUrl.current) {
+    if (
+      isAuthenticated &&
+      workflowId &&
+      workflowId !== processedWorkflowFromUrl.current
+    ) {
       logger.debug(`[App] Loading workflow ${workflowId} from URL`);
       processedWorkflowFromUrl.current = workflowId;
       workflowLoadKeyRef.current += 1;
@@ -93,7 +97,7 @@ function AuthenticatedLayout() {
       setCurrentView("execution");
       navigate("/", { replace: true });
     }
-  }, [searchParams, navigate, location, executionId]);
+  }, [searchParams, navigate, location, executionId, isAuthenticated]);
 
   const goToBuilder = useCallback(() => {
     setCurrentView("builder");

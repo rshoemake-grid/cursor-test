@@ -16,9 +16,17 @@ function useWorkflowLoader({
   workflowNodeToNode,
   onWorkflowLoaded,
   isLoadingRef,
-  lastLoadedWorkflowIdRef
+  lastLoadedWorkflowIdRef,
+  isAuthenticated = true
 }) {
   useEffect(() => {
+    if (!isAuthenticated) {
+      if (workflowId) {
+        lastLoadedWorkflowIdRef.current = null;
+        isLoadingRef.current = false;
+      }
+      return;
+    }
     if (workflowId && workflowId === lastLoadedWorkflowIdRef.current) {
       return;
     }
@@ -58,7 +66,7 @@ function useWorkflowLoader({
       lastLoadedWorkflowIdRef.current = null;
       isLoadingRef.current = false;
     }
-  }, [workflowId, tabIsUnsaved, workflowNodeToNode, setNodes, setEdges, setLocalWorkflowId, setLocalWorkflowName, setLocalWorkflowDescription, setVariables, setSelectedNodeId, onWorkflowLoaded, isLoadingRef, lastLoadedWorkflowIdRef]);
+  }, [workflowId, tabIsUnsaved, workflowNodeToNode, setNodes, setEdges, setLocalWorkflowId, setLocalWorkflowName, setLocalWorkflowDescription, setVariables, setSelectedNodeId, onWorkflowLoaded, isLoadingRef, lastLoadedWorkflowIdRef, isAuthenticated]);
 }
 export {
   useWorkflowLoader

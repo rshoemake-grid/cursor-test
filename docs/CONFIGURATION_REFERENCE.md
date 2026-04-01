@@ -89,6 +89,24 @@ CORS_ORIGINS=["https://yourdomain.com", "https://app.yourdomain.com"]
 CORS_ORIGINS=["https://app1.example.com", "https://app2.example.com"]
 ```
 
+### Application environment
+
+| Variable | Type | Default | Description |
+|----------|------|---------|-------------|
+| `ENVIRONMENT` | string | `development` | Use `production` in live deployments (stricter CORS defaults, etc.). |
+
+### Development user bootstrap (optional)
+
+When `ENVIRONMENT=development`, you can set a fixed dev account on every backend startup: **create the user if missing** and **reset the password** to the given value.
+
+| Variable | Type | Default | Description |
+|----------|------|---------|-------------|
+| `DEV_BOOTSTRAP_USERNAME` | string | `None` | Username (or lookup by this value as email) to create/update |
+| `DEV_BOOTSTRAP_PASSWORD` | string | `None` | Password to set (required with username) |
+| `DEV_BOOTSTRAP_EMAIL` | string | `None` | Optional email when **creating** the user; default is `<username>@dev-bootstrap.local` |
+
+Copy from `.env.example` into project root `.env`. Restart the API after changes.
+
 ### API Configuration
 
 | Variable | Type | Default | Description |
@@ -463,31 +481,33 @@ WEBSOCKET_TIMEOUT=30         # 30 second timeout
 
 ## Frontend Configuration
 
-### Environment Variables
+The UI under `frontend/` is a **Create React App** project. Variables must be prefixed with **`REACT_APP_`** and are read from `frontend/.env.development`, `frontend/.env.development.local`, `frontend/.env.production`, etc.
 
-**Development:**
+### `REACT_APP_API_BASE_URL`
+
+| Value | Behavior |
+|-------|----------|
+| **Empty / unset** (recommended local default) | Browser calls same-origin **`/api`**. The CRA dev server uses **`setupProxy.js`** to forward `/api` and `/ws` to the FastAPI process (see `PROXY_TARGET`, default `http://127.0.0.1:8000`). Avoids CORS and `localhost` vs `127.0.0.1` mismatches. |
+| **`http://127.0.0.1:8000`** (or similar origin) | Direct calls to the API. The app normalizes an origin-only URL to **`…/api`** for route paths. Ensure CORS allows your dev page origin if you use this. |
+
+Override per machine in **`frontend/.env.development.local`** (not committed).
+
+### Development commands
+
 ```bash
-VITE_API_BASE_URL=http://localhost:8000/api
-VITE_WS_URL=ws://localhost:8000
+cd frontend
+npm install
+npm start          # dev server (default http://localhost:3000)
 ```
 
-**Production:**
+### Production build
+
 ```bash
-VITE_API_BASE_URL=https://api.yourdomain.com/api
-VITE_WS_URL=wss://api.yourdomain.com
+cd frontend
+REACT_APP_API_BASE_URL=https://api.yourdomain.com npm run build
 ```
 
-### Build Configuration
-
-**Development Build:**
-```bash
-npm run dev
-```
-
-**Production Build:**
-```bash
-VITE_API_BASE_URL=https://api.yourdomain.com/api npm run build
-```
+Use an API base that already includes the `/api` path segment when required (see normalization in `frontend/src/config/constants.jsx`), or an origin-only URL so `/api` is appended automatically.
 
 ---
 

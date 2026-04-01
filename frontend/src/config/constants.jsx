@@ -1,7 +1,33 @@
-const API_BASE_URL =
+/**
+ * CRA/Vite env often sets REACT_APP_API_BASE_URL to the API origin only (e.g. http://127.0.0.1:8000).
+ * Our route paths are like /workflow-chat/chat under the FastAPI /api prefix, so the fetch base must be .../api
+ * or relative /api — never http://host:8000 alone (that yields 404 Not Found on chat).
+ */
+function normalizeApiBaseUrl(raw) {
+  const s = typeof raw === "string" ? raw.trim() : "";
+  if (s === "" || s === "/") {
+    return "/api";
+  }
+  if (!/^https?:\/\//i.test(s)) {
+    const rel = s.replace(/\/$/, "");
+    return rel || "/api";
+  }
+  try {
+    const u = new URL(s);
+    const path = (u.pathname || "/").replace(/\/+$/, "") || "/";
+    if (path === "/") {
+      return `${u.origin}/api`;
+    }
+    return `${u.origin}${path}`;
+  } catch {
+    return "/api";
+  }
+}
+const _rawApiBase =
   (typeof process !== "undefined" && process.env?.REACT_APP_API_BASE_URL) ||
   (typeof process !== "undefined" && process.env?.VITE_API_BASE_URL) ||
-  "/api";
+  "";
+const API_BASE_URL = normalizeApiBaseUrl(_rawApiBase);
 const API_CONFIG = {
   BASE_URL: API_BASE_URL,
   ENDPOINTS: {

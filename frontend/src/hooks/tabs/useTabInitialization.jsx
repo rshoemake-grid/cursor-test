@@ -12,7 +12,8 @@ function useTabInitialization({
   tabsRef,
   initialWorkflowId,
   workflowLoadKey,
-  processedKeys
+  processedKeys,
+  isAuthenticated = true
 }) {
   useEffect(() => {
     if (activeTabId && !tabExists(tabs, activeTabId)) {
@@ -26,6 +27,9 @@ function useTabInitialization({
     }
   }, [tabs, activeTabId, setTabs, setActiveTabId]);
   useEffect(() => {
+    if (!isAuthenticated) {
+      return;
+    }
     if (initialWorkflowId && workflowLoadKey !== void 0) {
       const uniqueKey = `${initialWorkflowId}-${workflowLoadKey}`;
       if (!processedKeys.current.has(uniqueKey)) {
@@ -43,7 +47,7 @@ function useTabInitialization({
         setActiveTabId(newTab.id);
       }
     }
-  }, [initialWorkflowId, workflowLoadKey, setTabs, setActiveTabId, tabsRef, processedKeys]);
+  }, [initialWorkflowId, workflowLoadKey, setTabs, setActiveTabId, tabsRef, processedKeys, isAuthenticated]);
 }
 export {
   useTabInitialization

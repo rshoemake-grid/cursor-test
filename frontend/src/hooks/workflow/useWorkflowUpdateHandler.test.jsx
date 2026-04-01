@@ -116,6 +116,26 @@ describe("useWorkflowUpdateHandler", () => {
       expect(mockApplyLocalChanges).toHaveBeenCalledWith(changes);
       expect(api.getWorkflow).not.toHaveBeenCalled();
     });
+    it("should apply local changes after deletions when not authenticated instead of reloading", () => {
+      const { result } = renderHook(
+        () => useWorkflowUpdateHandler({
+          localWorkflowId: "workflow-1",
+          setNodes: mockSetNodes,
+          setEdges: mockSetEdges,
+          workflowNodeToNode: mockWorkflowNodeToNode,
+          applyLocalChanges: mockApplyLocalChanges,
+          isAuthenticated: false
+        })
+      );
+      const changes = {
+        nodes_to_delete: ["node-1"]
+      };
+      act(() => {
+        result.current.handleWorkflowUpdate(changes);
+      });
+      expect(mockApplyLocalChanges).toHaveBeenCalledWith(changes);
+      expect(api.getWorkflow).not.toHaveBeenCalled();
+    });
     it("should apply local changes when localWorkflowId is null", () => {
       const { result } = renderHook(
         () => useWorkflowUpdateHandler({

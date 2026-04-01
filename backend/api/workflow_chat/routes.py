@@ -21,6 +21,14 @@ logger = get_logger(__name__)
 
 router = APIRouter(prefix="/workflow-chat", tags=["Workflow Chat"])
 
+_CHAT_ITER_MIN = 1
+_CHAT_ITER_MAX = 100
+_DEFAULT_CHAT_ITERATION_LIMIT = 20
+
+
+def _clamp_chat_iteration_limit(value: int) -> int:
+    return max(_CHAT_ITER_MIN, min(int(value), _CHAT_ITER_MAX))
+
 
 @router.post("/chat", response_model=ChatResponse)
 async def chat_with_workflow(
@@ -36,13 +44,22 @@ async def chat_with_workflow(
     try:
         user_id = current_user.id if current_user else None
 
+        if settings_service.get_active_llm_config(user_id) is None:
+            await settings_service.load_settings_into_cache(db)
+
         llm_config = settings_service.get_active_llm_config(user_id)
         model = llm_config.get("model", "gpt-4") if llm_config else "gpt-4"
 
-        iteration_limit = 10
+        iteration_limit = _DEFAULT_CHAT_ITERATION_LIMIT
         user_settings = settings_service.get_user_settings(user_id)
-        if user_settings:
-            iteration_limit = user_settings.iteration_limit
+        if user_settings and getattr(user_settings, "iteration_limit", None) is not None:
+            try:
+                iteration_limit = _clamp_chat_iteration_limit(int(user_settings.iteration_limit))
+            except (TypeError, ValueError):
+                iteration_limit = _DEFAULT_CHAT_ITERATION_LIMIT
+
+        if request.iteration_limit is not None:
+            iteration_limit = _clamp_chat_iteration_limit(int(request.iteration_limit))
 
         logger.info(f"Chat agent using iteration_limit: {iteration_limit} for user: {user_id or 'anonymous'}")
 

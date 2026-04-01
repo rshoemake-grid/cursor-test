@@ -125,6 +125,8 @@ export function usePushToTalk({ getInput, setInput, logger: log, onSessionEnd })
 
 /**
  * Read assistant text aloud using the browser Speech Synthesis API (Chrome-compatible).
+ * Call after a short setTimeout(0) when speaking in response to fetch — Chrome often leaves
+ * the global synthesizer paused until resume().
  */
 export function speakChatMessage(text, options = {}) {
   if (!isSpeechSynthesisSupported() || !text || typeof text !== "string") return;
@@ -132,13 +134,19 @@ export function speakChatMessage(text, options = {}) {
   const trimmed = text.trim();
   if (!trimmed) return;
 
-  window.speechSynthesis.cancel();
+  const synth = window.speechSynthesis;
+  synth.cancel();
+  try {
+    synth.resume();
+  } catch {
+    /* ignore */
+  }
   const utterance = new SpeechSynthesisUtterance(trimmed);
   utterance.lang = options.lang || "en-US";
   utterance.rate = options.rate ?? 1;
   utterance.pitch = options.pitch ?? 1;
   utterance.volume = options.volume ?? 1;
-  window.speechSynthesis.speak(utterance);
+  synth.speak(utterance);
 }
 
 export function stopSpeaking() {

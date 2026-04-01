@@ -1,9 +1,9 @@
 # Documentation Index
 
 **Documentation Version:** 1.0.0  
-**Last Updated:** 2026-02-23  
+**Last Updated:** 2026-04-01  
 
-**Recent changes:** API paths use `/api` prefix (no `/v1`). Templates: `/api/templates` (no trailing slash). Python and Java backends aligned.
+**Recent changes:** API paths use `/api` prefix (no `/v1`). **Guest users:** workflow list and private workflow payloads are not exposed without auth; use Marketplace for templates. **Workflow chat:** `POST /api/workflow-chat/chat` accepts optional `iteration_limit` (1–100). **Frontend dev:** default API calls use same-origin `/api` via CRA `setupProxy`; see [Configuration Reference](./CONFIGURATION_REFERENCE.md#frontend-configuration). **Dev bootstrap:** optional `DEV_BOOTSTRAP_*` env vars create/update a local user — see [Configuration Reference](./CONFIGURATION_REFERENCE.md#development-user-bootstrap-optional).
 
 Welcome to the workflow engine documentation! This index helps you find the right documentation for your needs.
 

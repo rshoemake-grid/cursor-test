@@ -13,26 +13,21 @@ function WorkflowList({ onSelectWorkflow, onBack }) {
   const [workflows, setWorkflows] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedIds, setSelectedIds] = useState(/* @__PURE__ */ new Set());
-  const { isAuthenticated, token } = useAuth();
+  const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const [showPublishModal, setShowPublishModal] = useState(false);
   const [publishingWorkflowId, setPublishingWorkflowId] = useState(null);
   const [publishForm, setPublishForm] = useState(getDefaultPublishForm());
   const [isPublishing, setIsPublishing] = useState(false);
   useEffect(() => {
-    if (token !== null || isAuthenticated) {
-      loadWorkflows();
-    } else {
-      const timeoutId = setTimeout(() => {
-        if (token === null && !isAuthenticated) {
-          setLoading(false);
-        } else if (token !== null || isAuthenticated) {
-          loadWorkflows();
-        }
-      }, 100);
-      return () => clearTimeout(timeoutId);
+    if (!isAuthenticated) {
+      setWorkflows([]);
+      setSelectedIds(/* @__PURE__ */ new Set());
+      setLoading(false);
+      return;
     }
-  }, [token, isAuthenticated]);
+    loadWorkflows();
+  }, [isAuthenticated]);
   const loadWorkflows = async () => {
     setLoading(true);
     try {
@@ -189,8 +184,16 @@ Failed IDs: ${result.failed_ids.join(", ")}`);
   }
   if (workflows.length === 0) {
     return /* @__PURE__ */ jsx("div", { className: "flex items-center justify-center h-full", children: /* @__PURE__ */ jsx("div", { className: "text-center", children: !isAuthenticated ? /* @__PURE__ */ jsxs(Fragment, { children: [
-      /* @__PURE__ */ jsx("p", { className: "text-gray-500 mb-2", children: "Showing anonymous workflows only" }),
-      /* @__PURE__ */ jsx("p", { className: "text-sm text-gray-400 mb-4", children: "Log in to see your workflows" }),
+      /* @__PURE__ */ jsx("p", { className: "text-gray-500 mb-2", children: "Your saved workflows are available after you sign in" }),
+      /* @__PURE__ */ jsx("p", { className: "text-sm text-gray-400 mb-4", children: "Browse templates on the Marketplace, or log in to open workflows you own" }),
+      /* @__PURE__ */ jsx(
+        "button",
+        {
+          onClick: () => navigate("/marketplace"),
+          className: "px-4 py-2 mb-3 bg-white border border-gray-300 text-gray-800 rounded-lg hover:bg-gray-50 transition-colors block mx-auto",
+          children: "Open Marketplace"
+        }
+      ),
       /* @__PURE__ */ jsx(
         "button",
         {
@@ -219,11 +222,6 @@ Failed IDs: ${result.failed_ids.join(", ")}`);
           ),
           /* @__PURE__ */ jsxs("div", { children: [
             /* @__PURE__ */ jsx("h2", { className: "text-2xl font-bold text-gray-900", children: "My Workflows" }),
-            !isAuthenticated && /* @__PURE__ */ jsxs("p", { className: "text-sm text-gray-500 mt-1", children: [
-              "Showing anonymous workflows only. ",
-              /* @__PURE__ */ jsx("button", { onClick: () => navigate("/auth"), className: "text-primary-600 hover:text-primary-700 underline", children: "Log in" }),
-              " to see your workflows."
-            ] })
           ] })
         ] }),
         selectedIds.size > 0 && /* @__PURE__ */ jsxs("div", { className: "flex items-center gap-3", children: [

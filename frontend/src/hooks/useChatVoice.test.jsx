@@ -23,6 +23,7 @@ describe("useChatVoice helpers", () => {
     window.speechSynthesis = {
       speak: jest.fn(),
       cancel: jest.fn(),
+      resume: jest.fn(),
       getVoices: jest.fn(() => []),
     };
   });

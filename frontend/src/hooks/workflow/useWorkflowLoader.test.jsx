@@ -77,6 +77,29 @@ describe("useWorkflowLoader", () => {
       expect(mockLastLoadedWorkflowIdRef.current).toBeNull();
       expect(mockIsLoadingRef.current).toBe(false);
     });
+    it("should not load when not authenticated even if workflowId is set", () => {
+      renderHook(
+        () => useWorkflowLoader({
+          workflowId: "workflow-1",
+          tabIsUnsaved: false,
+          setNodes: mockSetNodes,
+          setEdges: mockSetEdges,
+          setLocalWorkflowId: mockSetLocalWorkflowId,
+          setLocalWorkflowName: mockSetLocalWorkflowName,
+          setLocalWorkflowDescription: mockSetLocalWorkflowDescription,
+          setVariables: mockSetVariables,
+          setSelectedNodeId: mockSetSelectedNodeId,
+          workflowNodeToNode: mockWorkflowNodeToNode,
+          onWorkflowLoaded: mockOnWorkflowLoaded,
+          isLoadingRef: mockIsLoadingRef,
+          lastLoadedWorkflowIdRef: mockLastLoadedWorkflowIdRef,
+          isAuthenticated: false
+        })
+      );
+      expect(api.getWorkflow).not.toHaveBeenCalled();
+      expect(mockLastLoadedWorkflowIdRef.current).toBeNull();
+      expect(mockIsLoadingRef.current).toBe(false);
+    });
     it("should not load if workflowId matches lastLoadedWorkflowId", () => {
       mockLastLoadedWorkflowIdRef.current = "workflow-1";
       renderHook(

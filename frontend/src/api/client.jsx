@@ -12,10 +12,10 @@ import {
 } from "./endpoints";
 
 function joinUrl(baseURL, path) {
-  const base = (baseURL || "").replace(/\/$/, "");
+  let base = (baseURL || "").trim().replace(/\/$/, "");
   const p = path.startsWith("/") ? path : `/${path}`;
   if (!base) {
-    return p;
+    base = "/api";
   }
   return `${base}${p}`;
 }

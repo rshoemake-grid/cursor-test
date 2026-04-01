@@ -133,7 +133,7 @@ async def create_workflow(
     "/workflows",
     response_model=List[WorkflowResponse],
     summary="List Workflows",
-    description="List all workflows accessible to the current user (includes public workflows)",
+    description="List workflows owned by the signed-in user. Returns an empty list when not authenticated.",
     responses={
         200: {
             "description": "List of workflows",
@@ -168,7 +168,7 @@ async def list_workflows(
     db: AsyncSession = Depends(get_db),
     current_user: Optional[UserDB] = Depends(get_optional_user)
 ):
-    """List all workflows accessible to the current user (includes public workflows)"""
+    """List workflows for the authenticated user. Guests get an empty list (use marketplace for templates)."""
     try:
         workflow_service = get_workflow_service(db)
         user_id = current_user.id if current_user else None

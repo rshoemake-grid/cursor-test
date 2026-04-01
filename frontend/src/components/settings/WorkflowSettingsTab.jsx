@@ -1,12 +1,13 @@
 import { jsx, jsxs } from "react/jsx-runtime";
 function WorkflowSettingsTab({
+  readOnly = false,
   iterationLimit,
   onIterationLimitChange,
   defaultModel,
   onDefaultModelChange,
   providers
 }) {
-  return /* @__PURE__ */ jsxs("div", { className: "space-y-6", children: [
+  return /* @__PURE__ */ jsxs("div", { className: `space-y-6 ${readOnly === true ? "opacity-50 pointer-events-none" : ""}`, children: [
     /* @__PURE__ */ jsxs("div", { className: "bg-white rounded-lg border border-gray-200 p-5 flex flex-col gap-3", children: [
       /* @__PURE__ */ jsx("label", { htmlFor: "iteration-limit", className: "text-sm font-medium text-gray-700", children: "Iteration limit" }),
       /* @__PURE__ */ jsx(
@@ -16,8 +17,9 @@ function WorkflowSettingsTab({
           type: "number",
           min: 1,
           value: iterationLimit,
+          disabled: readOnly === true,
           onChange: (e) => onIterationLimitChange(Math.max(1, Number(e.target.value) || 1)),
-          className: "w-24 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+          className: "w-24 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 disabled:bg-gray-100"
         }
       ),
       /* @__PURE__ */ jsx("p", { className: "text-xs text-gray-500", children: 'Number of tool-LLM cycles allowed when using "Chat with LLM".' })
@@ -29,8 +31,9 @@ function WorkflowSettingsTab({
         {
           id: "default-model",
           value: defaultModel,
+          disabled: readOnly === true,
           onChange: (e) => onDefaultModelChange(e.target.value),
-          className: "w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent",
+          className: "w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent disabled:bg-gray-100",
           children: [
             /* @__PURE__ */ jsx("option", { value: "", children: "Select a model..." }),
             providers.filter((p) => p.enabled && p.models && p.models.length > 0).flatMap(

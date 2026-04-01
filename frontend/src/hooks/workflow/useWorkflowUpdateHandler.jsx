@@ -8,13 +8,14 @@ function useWorkflowUpdateHandler({
   setNodes,
   setEdges,
   workflowNodeToNode,
-  applyLocalChanges
+  applyLocalChanges,
+  isAuthenticated = true
 }) {
   const handleWorkflowUpdate = useCallback((changes) => {
     if (!changes) return;
     logger.debug("Received workflow changes:", changes);
     const hasDeletions = changes.nodes_to_delete && changes.nodes_to_delete.length > 0;
-    if (hasDeletions && localWorkflowId) {
+    if (hasDeletions && localWorkflowId && isAuthenticated) {
       logger.debug("Reloading workflow from database after deletions:", changes.nodes_to_delete);
       setTimeout(() => {
         api.getWorkflow(localWorkflowId).then((workflow) => {
@@ -32,7 +33,7 @@ function useWorkflowUpdateHandler({
       return;
     }
     applyLocalChanges(changes);
-  }, [localWorkflowId, workflowNodeToNode, setNodes, setEdges, applyLocalChanges]);
+  }, [localWorkflowId, workflowNodeToNode, setNodes, setEdges, applyLocalChanges, isAuthenticated]);
   return {
     handleWorkflowUpdate
   };

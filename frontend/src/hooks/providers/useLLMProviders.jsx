@@ -54,7 +54,7 @@ function loadFromStorage(storage) {
 }
 function useLLMProviders({
   storage = null,
-  isAuthenticated = false,
+  isAuthenticated = true,
   onLoadComplete
 } = {}) {
   const [availableModels, setAvailableModels] = useState([]);
@@ -65,45 +65,51 @@ function useLLMProviders({
   useEffect(() => {
     const loadProviders = async () => {
       setIsLoading(true);
-      if (isAuthenticated) {
-        try {
-          const data = await api.getLLMSettings();
-          if (isValidData(data) && isValidData(data.providers) && isValidProvidersArray(data.providers) && hasProviders(data.providers)) {
-            const models = extractModelsFromProviders(data.providers);
-            if (models.length > 0) {
-              setAvailableModels(models);
-              setProviders(data.providers);
-              if (typeof data.iteration_limit === "number") {
-                setIterationLimit(data.iteration_limit);
-              }
-              if (data.default_model) {
-                setDefaultModel(data.default_model);
-              }
-              if (storage) {
-                try {
-                  storage.setItem(STORAGE_KEYS.LLM_SETTINGS, JSON.stringify({
-                    providers: logicalOrToEmptyArray(data.providers),
-                    iteration_limit: data.iteration_limit,
-                    default_model: logicalOr(data.default_model, "")
-                  }));
-                } catch (e) {
-                  logger.error("Failed to save LLM settings to storage:", e);
-                }
-              }
-              if (onLoadComplete) {
-                onLoadComplete({
-                  providers: data.providers,
-                  iteration_limit: data.iteration_limit,
-                  default_model: data.default_model
-                });
-              }
-              setIsLoading(false);
-              return;
+      if (!isAuthenticated) {
+        setAvailableModels(DEFAULT_MODELS);
+        setProviders([]);
+        setIterationLimit(void 0);
+        setDefaultModel(void 0);
+        setIsLoading(false);
+        return;
+      }
+      try {
+        const data = await api.getLLMSettings();
+        if (isValidData(data) && isValidData(data.providers) && isValidProvidersArray(data.providers) && hasProviders(data.providers)) {
+          const models = extractModelsFromProviders(data.providers);
+          if (models.length > 0) {
+            setAvailableModels(models);
+            setProviders(data.providers);
+            if (typeof data.iteration_limit === "number") {
+              setIterationLimit(data.iteration_limit);
             }
+            if (data.default_model) {
+              setDefaultModel(data.default_model);
+            }
+            if (storage) {
+              try {
+                storage.setItem(STORAGE_KEYS.LLM_SETTINGS, JSON.stringify({
+                  providers: logicalOrToEmptyArray(data.providers),
+                  iteration_limit: data.iteration_limit,
+                  default_model: logicalOr(data.default_model, "")
+                }));
+              } catch (e) {
+                logger.error("Failed to save LLM settings to storage:", e);
+              }
+            }
+            if (onLoadComplete) {
+              onLoadComplete({
+                providers: data.providers,
+                iteration_limit: data.iteration_limit,
+                default_model: data.default_model
+              });
+            }
+            setIsLoading(false);
+            return;
           }
-        } catch (e) {
-          logger.debug("Could not load from backend, trying storage", e);
         }
+      } catch (e) {
+        logger.debug("Could not load from backend, trying storage", e);
       }
       const storedSettings = loadFromStorage(storage);
       if (isValidData(storedSettings) && isValidData(storedSettings.providers) && isValidProvidersArray(storedSettings.providers) && hasProviders(storedSettings.providers)) {

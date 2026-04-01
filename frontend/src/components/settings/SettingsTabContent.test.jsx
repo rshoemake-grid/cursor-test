@@ -1,5 +1,6 @@
 import { jsx } from "react/jsx-runtime";
 import { render, screen, fireEvent } from "@testing-library/react";
+import { MemoryRouter } from "react-router-dom";
 import { SettingsTabContent } from "./SettingsTabContent";
 import { SETTINGS_TABS } from "../../constants/settingsConstants";
 jest.mock("./ProviderForm", () => {
@@ -114,6 +115,18 @@ describe("SettingsTabContent", () => {
       }));
       expect(screen.getByText(/✓ Using: gpt-4/)).toBeInTheDocument();
     });
+    it("should show sign-in notice and disable workflow fields when not authenticated", () => {
+      render(/* @__PURE__ */ jsx(MemoryRouter, {
+        children: /* @__PURE__ */ jsx(SettingsTabContent, {
+          ...defaultProps,
+          isAuthenticated: false,
+          activeTab: SETTINGS_TABS.WORKFLOW
+        })
+      }));
+      expect(screen.getByText("Sign in required")).toBeInTheDocument();
+      expect(screen.getByLabelText("Iteration limit")).toBeDisabled();
+      expect(screen.getByLabelText("Default Model")).toBeDisabled();
+    });
   });
   describe("LLM Tab", () => {
     it("should render LLM tab content when activeTab is LLM", () => {
@@ -184,6 +197,18 @@ describe("SettingsTabContent", () => {
         activeTab: SETTINGS_TABS.LLM
       }));
       expect(screen.getByText(/Auto-sync enabled/)).toBeInTheDocument();
+    });
+    it("should show only sign-in notice on LLM tab when not authenticated", () => {
+      render(/* @__PURE__ */ jsx(MemoryRouter, {
+        children: /* @__PURE__ */ jsx(SettingsTabContent, {
+          ...defaultProps,
+          isAuthenticated: false,
+          activeTab: SETTINGS_TABS.LLM
+        })
+      }));
+      expect(screen.getByText("Sign in required")).toBeInTheDocument();
+      expect(screen.queryByText("Add LLM Provider")).not.toBeInTheDocument();
+      expect(screen.queryByTestId("provider-form-provider-1")).not.toBeInTheDocument();
     });
   });
   it("should return null for unknown tab", () => {

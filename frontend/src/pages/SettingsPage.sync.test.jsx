@@ -23,7 +23,7 @@ describe("SettingsPage - Manual Sync", () => {
       }, 3e3);
     }
   });
-  it("should handle handleManualSync when not authenticated", async () => {
+  it("should disable Sync Now when not authenticated", async () => {
     mockUseAuth.mockReturnValue({
       isAuthenticated: false,
       user: null,
@@ -36,13 +36,9 @@ describe("SettingsPage - Manual Sync", () => {
     await waitForWithTimeout(() => {
       expect(screen.getAllByText(/Settings/).length).toBeGreaterThan(0);
     }, 3e3);
-    const syncButtons = screen.queryAllByText(/Sync|Manual Sync/);
-    if (syncButtons.length > 0) {
-      fireEvent.click(syncButtons[0]);
-      await waitForWithTimeout(() => {
-        expect(mockShowError).toHaveBeenCalledWith("Sign in to sync your LLM settings with the server.");
-      }, 3e3);
-    }
+    const syncButton = screen.getByText("Sync Now");
+    expect(syncButton).toBeDisabled();
+    expect(mockShowError).not.toHaveBeenCalled();
   });
   it("should handle handleManualSync error", async () => {
     global.fetch.mockRejectedValue(new Error("Sync failed"));
@@ -90,7 +86,7 @@ describe("SettingsPage - Manual Sync", () => {
         expect(mockHttpClient.post).toHaveBeenCalled();
       }, 3e3);
     });
-    it("should handle manual sync when not authenticated", async () => {
+    it("should not run manual sync when not authenticated", async () => {
       mockUseAuth.mockReturnValue({
         isAuthenticated: false,
         user: null,
@@ -101,14 +97,9 @@ describe("SettingsPage - Manual Sync", () => {
       });
       renderWithRouter(/* @__PURE__ */ jsx(SettingsPage, {}));
       await waitForWithTimeout(() => {
-        const syncButtons = screen.queryAllByText(/Sync|Manual Sync/);
-        if (syncButtons.length > 0) {
-          fireEvent.click(syncButtons[0]);
-        }
+        expect(screen.getByText("Sync Now")).toBeDisabled();
       }, 3e3);
-      await waitForWithTimeout(() => {
-        expect(mockShowError).toHaveBeenCalledWith(expect.stringContaining("Sign in"));
-      }, 3e3);
+      expect(mockShowError).not.toHaveBeenCalled();
     });
     it("should handle manual sync error", async () => {
       const mockHttpClient = {

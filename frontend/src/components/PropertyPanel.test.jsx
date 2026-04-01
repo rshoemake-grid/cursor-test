@@ -665,6 +665,9 @@ describe("PropertyPanel", () => {
   });
   describe("Dependency Injection", () => {
     it("should use injected storage adapter", async () => {
+      localStorage.setItem(STORAGE_KEYS.AUTH_REMEMBER_ME, "true");
+      localStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, "test-token");
+      localStorage.setItem(STORAGE_KEYS.AUTH_USER, JSON.stringify({ username: "testuser" }));
       const mockStorage = {
         getItem: jest.fn().mockReturnValue(JSON.stringify({
           providers: [],
@@ -1074,6 +1077,9 @@ describe("PropertyPanel", () => {
       });
     });
     it("should load models from storage when available", async () => {
+      localStorage.setItem(STORAGE_KEYS.AUTH_REMEMBER_ME, "true");
+      localStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, "test-token");
+      localStorage.setItem(STORAGE_KEYS.AUTH_USER, JSON.stringify({ username: "testuser" }));
       const mockStorageData = {
         providers: [{ id: "openai", name: "OpenAI", models: ["gpt-4"], enabled: true }],
         iteration_limit: 10,

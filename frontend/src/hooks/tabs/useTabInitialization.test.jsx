@@ -158,6 +158,23 @@ describe("useTabInitialization", () => {
       );
       expect(mockSetTabs).toHaveBeenCalled();
     });
+    it("should not open URL workflow tab when not authenticated", () => {
+      renderHook(
+        () => useTabInitialization({
+          tabs: [],
+          activeTabId: null,
+          setTabs: mockSetTabs,
+          setActiveTabId: mockSetActiveTabId,
+          tabsRef: mockTabsRef,
+          initialWorkflowId: "workflow-123",
+          workflowLoadKey: 1,
+          processedKeys: mockProcessedKeys,
+          isAuthenticated: false
+        })
+      );
+      expect(mockSetTabs).not.toHaveBeenCalled();
+      expect(mockSetActiveTabId).not.toHaveBeenCalled();
+    });
     it("should not create tab when initialWorkflowId is null", () => {
       renderHook(
         () => useTabInitialization({

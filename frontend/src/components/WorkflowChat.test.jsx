@@ -1,5 +1,6 @@
 import { jsx } from "react/jsx-runtime";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { MemoryRouter } from "react-router-dom";
 import WorkflowChat from "./WorkflowChat";
 import { AuthProvider } from "../contexts/AuthContext";
 const waitForWithTimeout = (callback, timeout = 2e3) => {
@@ -46,22 +47,28 @@ jest.mock("../utils/storageHelpers", () => ({
   })
 }));
 global.fetch = jest.fn();
+const mockUseAuth = jest.fn(() => ({
+  token: "test-token",
+  user: { id: "1", username: "testuser" },
+  isAuthenticated: true
+}));
 jest.mock("../contexts/AuthContext", () => ({
   ...jest.requireActual("../contexts/AuthContext"),
-  useAuth: () => ({
-    token: "test-token",
-    user: { id: "1", username: "testuser" },
-    isAuthenticated: true
-  })
+  useAuth: () => mockUseAuth()
 }));
 const renderWithProvider = (component) => {
   return render(
-    /* @__PURE__ */ jsx(AuthProvider, { children: component })
+    /* @__PURE__ */ jsx(MemoryRouter, { children: /* @__PURE__ */ jsx(AuthProvider, { children: component }) })
   );
 };
 describe("WorkflowChat", () => {
   const mockOnWorkflowUpdate = jest.fn();
   beforeEach(() => {
+    mockUseAuth.mockReturnValue({
+      token: "test-token",
+      user: { id: "1", username: "testuser" },
+      isAuthenticated: true
+    });
     class MockSpeechRecognition {
       constructor() {
         this.continuous = false;
@@ -76,6 +83,7 @@ describe("WorkflowChat", () => {
     window.speechSynthesis = {
       speak: jest.fn(),
       cancel: jest.fn(),
+      resume: jest.fn(),
       getVoices: jest.fn(() => []),
     };
     global.SpeechSynthesisUtterance = function Utterance(text) {
@@ -112,9 +120,22 @@ describe("WorkflowChat", () => {
     });
     Element.prototype.scrollIntoView = jest.fn();
   });
+  it("should disable chat input and send when not authenticated", () => {
+    mockUseAuth.mockReturnValue({
+      token: null,
+      user: null,
+      isAuthenticated: false
+    });
+    renderWithProvider(/* @__PURE__ */ jsx(WorkflowChat, { workflowId: "workflow-1" }));
+    expect(screen.getByPlaceholderText(/Sign in to chat/)).toBeDisabled();
+    expect(screen.getByLabelText(/max iterations/i)).toBeDisabled();
+    expect(screen.getByText("Send")).toBeDisabled();
+    expect(screen.getByRole("link", { name: /sign in/i })).toBeInTheDocument();
+  });
   it("should render chat interface", () => {
     renderWithProvider(/* @__PURE__ */ jsx(WorkflowChat, { workflowId: "workflow-1" }));
     expect(screen.getByPlaceholderText(/Type your message/)).toBeInTheDocument();
+    expect(screen.getByLabelText(/max iterations/i)).toHaveValue(20);
     expect(screen.getByText("Send")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /push to talk/i })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /turn on read aloud/i })).toBeInTheDocument();
@@ -156,6 +177,29 @@ describe("WorkflowChat", () => {
     renderWithProvider(/* @__PURE__ */ jsx(WorkflowChat, { workflowId: "workflow-1" }));
     expect(screen.getByText(/Hello! I can help you/)).toBeInTheDocument();
   });
+  it("should coerce missing message content when sending so API always gets string content", async () => {
+    const { safeStorageGet } = require("../utils/storageHelpers");
+    safeStorageGet.mockReturnValueOnce([
+      { role: "assistant" },
+      { role: "user", content: "Hi" }
+    ]);
+    renderWithProvider(/* @__PURE__ */ jsx(WorkflowChat, { workflowId: "workflow-1" }));
+    const input = screen.getByPlaceholderText(/Type your message/);
+    fireEvent.change(input, { target: { value: "Next" } });
+    fireEvent.click(screen.getByText("Send"));
+    await waitForWithTimeout(() => {
+      expect(api.chat).toHaveBeenCalledWith(
+        expect.objectContaining({
+          message: "Next",
+          iteration_limit: 20,
+          conversation_history: [
+            { role: "assistant", content: "" },
+            { role: "user", content: "Hi" }
+          ]
+        })
+      );
+    }, 3e3);
+  });
   it("should send message when send button is clicked", async () => {
     renderWithProvider(/* @__PURE__ */ jsx(WorkflowChat, { workflowId: "workflow-1" }));
     const input = screen.getByPlaceholderText(/Type your message/);
@@ -166,7 +210,23 @@ describe("WorkflowChat", () => {
       expect(api.chat).toHaveBeenCalledWith(
         expect.objectContaining({
           workflow_id: "workflow-1",
-          message: "Test message"
+          message: "Test message",
+          iteration_limit: 20
+        })
+      );
+    }, 3e3);
+  });
+  it("should send custom iteration_limit from the iterations field", async () => {
+    renderWithProvider(/* @__PURE__ */ jsx(WorkflowChat, { workflowId: "workflow-1" }));
+    fireEvent.change(screen.getByLabelText(/max iterations/i), { target: { value: "7" } });
+    const input = screen.getByPlaceholderText(/Type your message/);
+    fireEvent.change(input, { target: { value: "Hi" } });
+    fireEvent.click(screen.getByText("Send"));
+    await waitForWithTimeout(() => {
+      expect(api.chat).toHaveBeenCalledWith(
+        expect.objectContaining({
+          message: "Hi",
+          iteration_limit: 7
         })
       );
     }, 3e3);

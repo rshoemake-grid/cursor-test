@@ -5,6 +5,7 @@ import { useAuth } from "../../contexts/AuthContext";
 function SettingsHeader({ onSyncClick }) {
   const navigate = useNavigate();
   const { isAuthenticated, user } = useAuth();
+  const canSync = isAuthenticated;
   return /* @__PURE__ */ jsxs("div", { className: "mb-8", children: [
     /* @__PURE__ */ jsxs(
       "button",
@@ -22,8 +23,15 @@ function SettingsHeader({ onSyncClick }) {
       /* @__PURE__ */ jsxs(
         "button",
         {
-          onClick: onSyncClick,
-          className: "px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 flex items-center gap-2",
+          type: "button",
+          onClick: () => {
+            if (canSync) {
+              onSyncClick();
+            }
+          },
+          disabled: !canSync,
+          title: canSync ? "Save settings to the server" : "Sign in to sync settings",
+          className: `px-4 py-2 rounded-lg flex items-center gap-2 ${canSync === true ? "bg-primary-600 text-white hover:bg-primary-700" : "bg-gray-200 text-gray-500 cursor-not-allowed"}`,
           children: [
             /* @__PURE__ */ jsx(Save, { className: "w-4 h-4" }),
             "Sync Now"

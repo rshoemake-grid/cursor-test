@@ -13,6 +13,8 @@ from typing import Dict, Any
 from backend.config import settings
 from backend.database.db import init_db, engine, AsyncSessionLocal
 from backend.dev_user_bootstrap import apply_dev_user_bootstrap
+from backend.services.settings_service import SettingsService
+from backend.utils.logger import get_logger as _get_startup_logger
 from backend.utils.metrics import metrics_collector
 from sqlalchemy import text
 from backend.api import router as api_router
@@ -424,6 +426,17 @@ async def startup_event():
             )
     await init_db()
     await apply_dev_user_bootstrap()
+    # Hydrate global LLM settings cache from DB so workflow chat / executions see API keys
+    # after restart without requiring a visit to Settings first.
+    try:
+        async with AsyncSessionLocal() as db:
+            await SettingsService().load_settings_into_cache(db)
+    except Exception as exc:
+        _get_startup_logger(__name__).warning(
+            "Could not preload LLM settings cache: %s",
+            exc,
+            exc_info=True,
+        )
 
 if __name__ == "__main__":
     import uvicorn

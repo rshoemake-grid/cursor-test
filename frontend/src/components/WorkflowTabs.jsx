@@ -1,5 +1,6 @@
 import { jsx, jsxs } from "react/jsx-runtime";
 import { useEffect, useRef } from "react";
+import { createNewTab } from "../hooks/utils/tabUtils";
 import { Plus } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
 import { useWorkflowTabs } from "../contexts/WorkflowTabsContext";
@@ -30,7 +31,23 @@ function WorkflowTabs({
     tabsRef.current = tabs;
   }, [tabs]);
   const builderRef = useRef(null);
-  const { token } = useAuth();
+  const { token, isAuthenticated } = useAuth();
+  useEffect(() => {
+    if (isAuthenticated) {
+      return;
+    }
+    setTabs((prev) => {
+      if (!prev.some((t) => t.workflowId != null)) {
+        return prev;
+      }
+      const newTab = createNewTab();
+      tabsRef.current = [newTab];
+      queueMicrotask(() => {
+        setActiveTabId(newTab.id);
+      });
+      return [newTab];
+    });
+  }, [isAuthenticated, setTabs, setActiveTabId, tabsRef]);
   useTabInitialization({
     tabs,
     activeTabId,
@@ -39,7 +56,8 @@ function WorkflowTabs({
     tabsRef,
     initialWorkflowId,
     workflowLoadKey,
-    processedKeys
+    processedKeys,
+    isAuthenticated
   });
   const tabOperations = useTabOperations({
     tabs,
@@ -92,7 +110,7 @@ function WorkflowTabs({
       setTabs((prev) => prev.map((t) => t.id === tabId ? { ...t, name: newName } : t));
       try {
         const tab = tabs.find((t) => t.id === tabId);
-        if (tab?.workflowId) {
+        if (tab?.workflowId && isAuthenticated) {
           const currentWorkflow = await api.getWorkflow(tab.workflowId);
           await api.updateWorkflow(tab.workflowId, {
             name: newName,

@@ -51,9 +51,17 @@ describe("SettingsHeader", () => {
     const syncButton = screen.getByText("Sync Now");
     expect(syncButton).toBeInTheDocument();
   });
-  it("should call onSyncClick when sync button is clicked", () => {
+  it("should not call onSyncClick when sync is clicked while logged out", () => {
     renderWithAuth(false);
     const syncButton = screen.getByText("Sync Now");
+    expect(syncButton).toBeDisabled();
+    fireEvent.click(syncButton);
+    expect(mockOnSyncClick).not.toHaveBeenCalled();
+  });
+  it("should call onSyncClick when sync button is clicked while logged in", () => {
+    renderWithAuth(true);
+    const syncButton = screen.getByText("Sync Now");
+    expect(syncButton).not.toBeDisabled();
     fireEvent.click(syncButton);
     expect(mockOnSyncClick).toHaveBeenCalledTimes(1);
   });

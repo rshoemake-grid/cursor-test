@@ -244,9 +244,11 @@ describe("WorkflowList", () => {
     mockApi.getWorkflows.mockResolvedValue(mockWorkflows);
     renderWithRouter(/* @__PURE__ */ jsx(WorkflowList, { onSelectWorkflow: mockOnSelectWorkflow }));
     await waitForWithTimeout(() => {
-      expect(screen.getByText(/Showing anonymous workflows only/)).toBeInTheDocument();
-      expect(screen.getByText(/Log in/)).toBeInTheDocument();
+      expect(screen.getByText(/Your saved workflows are available after you sign in/)).toBeInTheDocument();
+      expect(screen.getByText(/Browse templates on the Marketplace/)).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "Log In" })).toBeInTheDocument();
     });
+    expect(mockApi.getWorkflows).not.toHaveBeenCalled();
   });
   it("should display empty state when no workflows", async () => {
     mockApi.getWorkflows.mockResolvedValue([]);
@@ -400,12 +402,11 @@ describe("WorkflowList", () => {
         });
       }
     });
-    it("should show error when trying to publish without authentication", async () => {
+    it("should not load workflows or show publish when not authenticated", async () => {
       mockUseAuth.mockReturnValue({
         isAuthenticated: false,
         user: null,
-        token: "test-token",
-        // Provide token so workflows load
+        token: null,
         login: jest.fn(),
         logout: jest.fn(),
         register: jest.fn()
@@ -413,17 +414,14 @@ describe("WorkflowList", () => {
       mockApi.getWorkflows.mockResolvedValue(mockWorkflows);
       renderWithRouter(/* @__PURE__ */ jsx(WorkflowList, { onSelectWorkflow: mockOnSelectWorkflow }));
       await waitForWithTimeout(() => {
-        expect(screen.getByText("Test Workflow 1")).toBeInTheDocument();
+        expect(screen.getByText(/Your saved workflows are available after you sign in/)).toBeInTheDocument();
       });
+      expect(screen.queryByText("Test Workflow 1")).not.toBeInTheDocument();
+      expect(mockApi.getWorkflows).not.toHaveBeenCalled();
       const publishButtons = screen.queryAllByRole("button").filter(
         (btn) => btn.textContent?.includes("Publish") || btn.getAttribute("title")?.includes("Publish")
       );
-      if (publishButtons.length > 0) {
-        fireEvent.click(publishButtons[0]);
-        await waitForWithTimeout(() => {
-          expect(showError).toHaveBeenCalledWith(expect.stringContaining("log in to publish"));
-        });
-      }
+      expect(publishButtons.length).toBe(0);
     });
     it("should handle publish form submission", async () => {
       mockApi.getWorkflows.mockResolvedValue(mockWorkflows);

@@ -62,16 +62,16 @@ class WorkflowOwnershipService:
     def assert_can_read(self, workflow: Optional[WorkflowDB], user_id: Optional[str]) -> None:
         """
         Assert user can read workflow (owner or public).
-        Anonymous workflows (owner_id is None): only unauthenticated (user_id is None) can read.
+        Unauthenticated callers may only read public workflows.
         """
         self._require_workflow_exists(workflow, getattr(workflow, "id", None) or "")
         if getattr(workflow, "is_public", False):
             return
+        if user_id is None:
+            raise WorkflowForbiddenError(workflow.id, "access")
         owner_id = getattr(workflow, "owner_id", None)
         if owner_id is None:
-            if user_id is not None:
-                raise WorkflowForbiddenError(workflow.id, "access")
-            return
+            raise WorkflowForbiddenError(workflow.id, "access")
         if user_id == owner_id:
             return
         raise WorkflowForbiddenError(workflow.id, "access")
@@ -79,18 +79,19 @@ class WorkflowOwnershipService:
     async def assert_can_read_or_share(self, workflow: Optional[WorkflowDB], user_id: Optional[str]) -> None:
         """
         Assert user can read workflow (owner, public, or shared with user).
+        Unauthenticated callers may only read public workflows (marketplace-style visibility).
         """
         self._require_workflow_exists(workflow, getattr(workflow, "id", None) or "")
         if getattr(workflow, "is_public", False):
             return
+        if user_id is None:
+            raise WorkflowForbiddenError(workflow.id, "access")
         owner_id = getattr(workflow, "owner_id", None)
         if owner_id is None:
-            if user_id is not None:
-                raise WorkflowForbiddenError(workflow.id, "access")
-            return
+            raise WorkflowForbiddenError(workflow.id, "access")
         if user_id == owner_id:
             return
-        if user_id and await self._has_share_access(workflow.id, user_id):
+        if await self._has_share_access(workflow.id, user_id):
             return
         raise WorkflowForbiddenError(workflow.id, "access")
 
