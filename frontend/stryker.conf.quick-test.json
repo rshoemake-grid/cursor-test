@@ -11,8 +11,8 @@
   "maxTestRunnerReuse": 50,
   "plugins": ["@stryker-mutator/jest-runner"],
   "mutate": [
-    "src/utils/nodeConversion.ts",
-    "src/utils/environment.ts"
+    "src/utils/nodeConversion.jsx",
+    "src/utils/environment.jsx"
   ],
   "checkers": [],
   "thresholds": {

@@ -1,0 +1,658 @@
+import { jsx, jsxs } from "react/jsx-runtime";
+import * as React from "react";
+import { render, screen, waitFor, act } from "@testing-library/react";
+import { ReactFlowProvider } from "@xyflow/react";
+import WorkflowBuilder from "../WorkflowBuilder";
+import { useAuth } from "../../contexts/AuthContext";
+import { api } from "../../api/client";
+import { showConfirm } from "../../utils/confirm";
+jest.mock("../../utils/logger", () => ({
+  logger: {
+    debug: jest.fn(),
+    error: jest.fn(),
+    warn: jest.fn(),
+    info: jest.fn()
+  }
+}));
+jest.mock("../../contexts/AuthContext", () => ({
+  useAuth: jest.fn()
+}));
+jest.mock("../../api/client", () => ({
+  api: {
+    createWorkflow: jest.fn(),
+    updateWorkflow: jest.fn(),
+    getWorkflow: jest.fn(),
+    executeWorkflow: jest.fn()
+  }
+}));
+jest.mock("../../utils/notifications", () => ({
+  showSuccess: jest.fn(),
+  showError: jest.fn()
+}));
+jest.mock("../../utils/confirm", () => ({
+  showConfirm: jest.fn()
+}));
+jest.mock("../../hooks/storage", () => ({
+  useLocalStorage: jest.fn(() => ["", jest.fn(), jest.fn()]),
+  getLocalStorageItem: jest.fn(() => ({})),
+  setLocalStorageItem: jest.fn(),
+  useAutoSave: jest.fn(),
+  useDraftManagement: jest.fn(() => ({
+    saveDraft: jest.fn(),
+    loadDraft: jest.fn(),
+    clearDraft: jest.fn()
+  })),
+  loadDraftsFromStorage: jest.fn(() => [])
+}));
+jest.mock("../../hooks/workflow", () => ({
+  useWorkflowPersistence: jest.fn(() => ({
+    saveWorkflow: jest.fn().mockResolvedValue("workflow-1"),
+    exportWorkflow: jest.fn()
+  })),
+  useWorkflowUpdates: jest.fn(() => ({
+    workflowNodeToNode: jest.fn(n => n),
+    applyLocalChanges: jest.fn()
+  })),
+  useWorkflowUpdateHandler: jest.fn(() => ({
+    handleWorkflowUpdate: jest.fn()
+  })),
+  useWorkflowState: jest.fn(() => ({
+    localWorkflowId: null,
+    setLocalWorkflowId: jest.fn(),
+    localWorkflowName: "Untitled Workflow",
+    setLocalWorkflowName: jest.fn(),
+    localWorkflowDescription: "",
+    setLocalWorkflowDescription: jest.fn(),
+    variables: {},
+    setVariables: jest.fn()
+  })),
+  useWorkflowLoader: jest.fn()
+}));
+jest.mock("../../hooks/execution", () => ({
+  useWorkflowExecution: jest.fn(() => ({
+    executeWorkflow: jest.fn(),
+    showInputs: false,
+    setShowInputs: jest.fn(),
+    setExecutionInputs: jest.fn(),
+    handleConfirmExecute: jest.fn()
+  }))
+}));
+jest.mock("../../hooks/ui", () => ({
+  useClipboard: jest.fn(() => ({
+    clipboardNode: null,
+    copy: jest.fn(),
+    cut: jest.fn(),
+    paste: jest.fn()
+  })),
+  useContextMenu: jest.fn(() => ({
+    contextMenu: null,
+    onNodeContextMenu: jest.fn(),
+    onEdgeContextMenu: jest.fn(),
+    closeContextMenu: jest.fn()
+  })),
+  useCanvasEvents: jest.fn(() => ({
+    onConnect: jest.fn(),
+    onDragOver: jest.fn(),
+    onDrop: jest.fn(),
+    onNodeClick: jest.fn(),
+    onPaneClick: jest.fn(),
+    handleAddToAgentNodes: jest.fn()
+  }))
+}));
+jest.mock("../../hooks/marketplace", () => ({
+  useMarketplaceIntegration: jest.fn(() => ({
+    isAddingAgentsRef: {
+      current: false
+    },
+    addAgentsToCanvas: jest.fn()
+  })),
+  useMarketplaceDialog: jest.fn(() => ({
+    showMarketplaceDialog: false,
+    marketplaceNode: null,
+    openDialog: jest.fn(),
+    closeDialog: jest.fn()
+  }))
+}));
+jest.mock("../../hooks/nodes", () => ({
+  useNodeSelection: jest.fn(() => ({
+    selectedNodeId: null,
+    setSelectedNodeId: jest.fn(),
+    selectedNodeIds: /* @__PURE__ */new Set(),
+    handleNodesChange: jest.fn((changes, base) => base(changes))
+  }))
+}));
+jest.mock("../NodePanel", () => {
+  const { jsx, jsxs } = require("react/jsx-runtime");
+  return {
+    __esModule: true,
+    default: () => /* @__PURE__ */jsx("div", {
+      "data-testid": "node-panel",
+      children: "NodePanel"
+    })
+  };
+});
+jest.mock("../PropertyPanel", () => {
+  const { jsx, jsxs } = require("react/jsx-runtime");
+  return {
+    __esModule: true,
+    default: () => /* @__PURE__ */jsx("div", {
+      "data-testid": "property-panel",
+      children: "PropertyPanel"
+    })
+  };
+});
+jest.mock("../ExecutionConsole", () => {
+  const { jsx, jsxs } = require("react/jsx-runtime");
+  return {
+    __esModule: true,
+    default: () => /* @__PURE__ */jsx("div", {
+      "data-testid": "execution-console",
+      children: "ExecutionConsole"
+    })
+  };
+});
+jest.mock("../ExecutionInputDialog", () => {
+  const { jsx, jsxs } = require("react/jsx-runtime");
+  return {
+    __esModule: true,
+    default: ({
+      isOpen,
+      onClose,
+      onSubmit
+    }) => isOpen ? /* @__PURE__ */jsxs("div", {
+      "data-testid": "execution-input-dialog",
+      children: [/* @__PURE__ */jsx("button", {
+        onClick: onClose,
+        children: "Close"
+      }), /* @__PURE__ */jsx("button", {
+        onClick: () => onSubmit({}),
+        children: "Submit"
+      })]
+    }) : null
+  };
+});
+jest.mock("../NodeContextMenu", () => {
+  const { jsx, jsxs } = require("react/jsx-runtime");
+  return {
+    __esModule: true,
+    default: ({
+      onClose,
+      onDelete,
+      onCopy,
+      onCut,
+      onPaste
+    }) => /* @__PURE__ */jsxs("div", {
+      "data-testid": "context-menu",
+      children: [/* @__PURE__ */jsx("button", {
+        onClick: onClose,
+        children: "Close"
+      }), /* @__PURE__ */jsx("button", {
+        onClick: onDelete,
+        children: "Delete"
+      }), /* @__PURE__ */jsx("button", {
+        onClick: onCopy,
+        children: "Copy"
+      }), /* @__PURE__ */jsx("button", {
+        onClick: onCut,
+        children: "Cut"
+      }), /* @__PURE__ */jsx("button", {
+        onClick: onPaste,
+        children: "Paste"
+      })]
+    })
+  };
+});
+jest.mock("../MarketplaceDialog", () => {
+  const { jsx } = require("react/jsx-runtime");
+  return {
+    __esModule: true,
+    default: ({
+      isOpen,
+      onClose
+    }) => isOpen ? /* @__PURE__ */jsx("div", {
+      "data-testid": "marketplace-dialog",
+      children: /* @__PURE__ */jsx("button", {
+        onClick: onClose,
+        children: "Close"
+      })
+    }) : null
+  };
+});
+jest.mock("../WorkflowCanvas", () => {
+  const { jsx } = require("react/jsx-runtime");
+  return {
+    __esModule: true,
+    default: () => /* @__PURE__ */jsx("div", {
+      "data-testid": "workflow-canvas",
+      children: "WorkflowCanvas"
+    })
+  };
+});
+jest.mock("../KeyboardHandler", () => {
+  const { jsx } = require("react/jsx-runtime");
+  return {
+    __esModule: true,
+    KeyboardHandler: () => /* @__PURE__ */jsx("div", {
+      "data-testid": "keyboard-handler",
+      children: "KeyboardHandler"
+    })
+  };
+});
+jest.mock("../ReactFlowInstanceCapture", () => {
+  const { jsx } = require("react/jsx-runtime");
+  return {
+    __esModule: true,
+    ReactFlowInstanceCapture: () => /* @__PURE__ */jsx("div", {
+      "data-testid": "react-flow-instance-capture",
+      children: "ReactFlowInstanceCapture"
+    })
+  };
+});
+jest.mock("@xyflow/react", () => {
+  const actualReactFlow = jest.requireActual("@xyflow/react");
+  const React2 = jest.requireActual("react");
+  return {
+    ...actualReactFlow,
+    ReactFlow: ({
+      children,
+      ...props
+    }) => {
+      return React2.createElement("div", {
+        "data-testid": "react-flow",
+        ...props
+      }, children);
+    },
+    ReactFlowProvider: ({
+      children
+    }) => {
+      return React2.createElement("div", null, children);
+    },
+    useNodesState: jest.fn(() => [[], jest.fn(), jest.fn()]),
+    useEdgesState: jest.fn(() => [[], jest.fn(), jest.fn()]),
+    useReactFlow: () => ({
+      getNodes: jest.fn(() => []),
+      getEdges: jest.fn(() => []),
+      deleteElements: jest.fn(),
+      screenToFlowPosition: jest.fn(({
+        x,
+        y
+      }) => ({
+        x,
+        y
+      })),
+      screenToFlowCoordinate: jest.fn(({
+        x,
+        y
+      }) => ({
+        x,
+        y
+      }))
+    })
+  };
+});
+jest.mock("@xyflow/react/dist/style.css", () => ({}));
+const mockUseAuth = useAuth;
+const mockApi = api;
+describe("WorkflowBuilder Integration Tests", () => {
+  const mockOnExecutionStart = jest.fn();
+  const mockOnWorkflowSaved = jest.fn();
+  const mockOnWorkflowModified = jest.fn();
+  const mockOnWorkflowLoaded = jest.fn();
+  const defaultProps = {
+    tabId: "tab-1",
+    workflowId: null,
+    tabName: "Untitled Workflow",
+    tabIsUnsaved: false,
+    onExecutionStart: mockOnExecutionStart,
+    onWorkflowSaved: mockOnWorkflowSaved,
+    onWorkflowModified: mockOnWorkflowModified,
+    onWorkflowLoaded: mockOnWorkflowLoaded
+  };
+  beforeEach(() => {
+    jest.clearAllMocks();
+    localStorage.clear();
+    mockUseAuth.mockReturnValue({
+      isAuthenticated: true,
+      user: {
+        id: "1",
+        username: "testuser"
+      },
+      token: "token",
+      login: jest.fn(),
+      logout: jest.fn(),
+      register: jest.fn()
+    });
+    showConfirm.mockResolvedValue(true);
+  });
+  describe("Step 1.1.1: Layout Component Integration", () => {
+    it("should render WorkflowBuilder with WorkflowBuilderLayout", async () => {
+      await act(async () => {
+        render(/* @__PURE__ */jsx(ReactFlowProvider, {
+          children: /* @__PURE__ */jsx(WorkflowBuilder, {
+            ...defaultProps
+          })
+        }));
+      });
+      await waitFor(() => {
+        expect(screen.getByTestId("node-panel")).toBeInTheDocument();
+        expect(screen.getByTestId("property-panel")).toBeInTheDocument();
+        expect(screen.getByTestId("workflow-canvas")).toBeInTheDocument();
+        expect(screen.getByTestId("execution-console")).toBeInTheDocument();
+      });
+    });
+    it("should pass props correctly to layout components", async () => {
+      await act(async () => {
+        render(/* @__PURE__ */jsx(ReactFlowProvider, {
+          children: /* @__PURE__ */jsx(WorkflowBuilder, {
+            ...defaultProps
+          })
+        }));
+      });
+      await waitFor(() => {
+        expect(screen.getByTestId("node-panel")).toBeInTheDocument();
+        expect(screen.getByTestId("workflow-canvas")).toBeInTheDocument();
+        expect(screen.getByTestId("property-panel")).toBeInTheDocument();
+        expect(screen.getByTestId("execution-console")).toBeInTheDocument();
+      });
+    });
+    it("should render layout with keyboard handler and ReactFlow instance capture", async () => {
+      await act(async () => {
+        render(/* @__PURE__ */jsx(ReactFlowProvider, {
+          children: /* @__PURE__ */jsx(WorkflowBuilder, {
+            ...defaultProps
+          })
+        }));
+      });
+      await waitFor(() => {
+        expect(screen.getByTestId("keyboard-handler")).toBeInTheDocument();
+        expect(screen.getByTestId("react-flow-instance-capture")).toBeInTheDocument();
+      });
+    });
+  });
+  describe("Step 1.1.2: Dialog Component Integration", () => {
+    it("should render WorkflowBuilder with WorkflowBuilderDialogs", async () => {
+      await act(async () => {
+        render(/* @__PURE__ */jsx(ReactFlowProvider, {
+          children: /* @__PURE__ */jsx(WorkflowBuilder, {
+            ...defaultProps
+          })
+        }));
+      });
+      expect(screen.queryByTestId("execution-input-dialog")).not.toBeInTheDocument();
+      expect(screen.queryByTestId("context-menu")).not.toBeInTheDocument();
+      expect(screen.queryByTestId("marketplace-dialog")).not.toBeInTheDocument();
+    });
+    it("should pass dialog props correctly", async () => {
+      await act(async () => {
+        render(/* @__PURE__ */jsx(ReactFlowProvider, {
+          children: /* @__PURE__ */jsx(WorkflowBuilder, {
+            ...defaultProps
+          })
+        }));
+      });
+      await waitFor(() => {
+        expect(screen.getByTestId("node-panel")).toBeInTheDocument();
+      });
+    });
+  });
+  describe("Step 1.1.3: End-to-End Workflow Creation", () => {
+    it("should create new workflow with empty state", async () => {
+      await act(async () => {
+        render(/* @__PURE__ */jsx(ReactFlowProvider, {
+          children: /* @__PURE__ */jsx(WorkflowBuilder, {
+            ...defaultProps
+          })
+        }));
+      });
+      await waitFor(() => {
+        expect(screen.getByTestId("workflow-canvas")).toBeInTheDocument();
+        expect(screen.getByTestId("node-panel")).toBeInTheDocument();
+      });
+    });
+    it("should handle workflow with existing workflowId", async () => {
+      const mockWorkflow = {
+        id: "workflow-1",
+        name: "Test Workflow",
+        description: "Test description",
+        nodes: [],
+        edges: [],
+        variables: {}
+      };
+      mockApi.getWorkflow.mockResolvedValue(mockWorkflow);
+      await act(async () => {
+        render(/* @__PURE__ */jsx(ReactFlowProvider, {
+          children: /* @__PURE__ */jsx(WorkflowBuilder, {
+            ...defaultProps,
+            workflowId: "workflow-1"
+          })
+        }));
+      });
+      await waitFor(() => {
+        expect(screen.getByTestId("workflow-canvas")).toBeInTheDocument();
+      });
+    });
+    it("should notify when workflow is modified", async () => {
+      await act(async () => {
+        render(/* @__PURE__ */jsx(ReactFlowProvider, {
+          children: /* @__PURE__ */jsx(WorkflowBuilder, {
+            ...defaultProps
+          })
+        }));
+      });
+      await waitFor(() => {
+        expect(screen.getByTestId("workflow-canvas")).toBeInTheDocument();
+      });
+    });
+  });
+  describe("Step 1.1.3: Component State Synchronization", () => {
+    it("should synchronize state between layout and dialogs", async () => {
+      await act(async () => {
+        render(/* @__PURE__ */jsx(ReactFlowProvider, {
+          children: /* @__PURE__ */jsx(WorkflowBuilder, {
+            ...defaultProps
+          })
+        }));
+      });
+      await waitFor(() => {
+        expect(screen.getByTestId("node-panel")).toBeInTheDocument();
+        expect(screen.getByTestId("workflow-canvas")).toBeInTheDocument();
+      });
+    });
+    it("should handle layout callbacks triggering WorkflowBuilder handlers", async () => {
+      await act(async () => {
+        render(/* @__PURE__ */jsx(ReactFlowProvider, {
+          children: /* @__PURE__ */jsx(WorkflowBuilder, {
+            ...defaultProps
+          })
+        }));
+      });
+      await waitFor(() => {
+        expect(screen.getByTestId("workflow-canvas")).toBeInTheDocument();
+      });
+    });
+  });
+  describe("Step 1.1.3: Panel Integration", () => {
+    it("should render NodePanel in layout", async () => {
+      await act(async () => {
+        render(/* @__PURE__ */jsx(ReactFlowProvider, {
+          children: /* @__PURE__ */jsx(WorkflowBuilder, {
+            ...defaultProps
+          })
+        }));
+      });
+      await waitFor(() => {
+        expect(screen.getByTestId("node-panel")).toBeInTheDocument();
+      });
+    });
+    it("should render PropertyPanel in layout", async () => {
+      await act(async () => {
+        render(/* @__PURE__ */jsx(ReactFlowProvider, {
+          children: /* @__PURE__ */jsx(WorkflowBuilder, {
+            ...defaultProps
+          })
+        }));
+      });
+      await waitFor(() => {
+        expect(screen.getByTestId("property-panel")).toBeInTheDocument();
+      });
+    });
+    it("should render WorkflowCanvas in layout", async () => {
+      await act(async () => {
+        render(/* @__PURE__ */jsx(ReactFlowProvider, {
+          children: /* @__PURE__ */jsx(WorkflowBuilder, {
+            ...defaultProps
+          })
+        }));
+      });
+      await waitFor(() => {
+        expect(screen.getByTestId("workflow-canvas")).toBeInTheDocument();
+      });
+    });
+    it("should render ExecutionConsole in layout", async () => {
+      await act(async () => {
+        render(/* @__PURE__ */jsx(ReactFlowProvider, {
+          children: /* @__PURE__ */jsx(WorkflowBuilder, {
+            ...defaultProps
+          })
+        }));
+      });
+      await waitFor(() => {
+        expect(screen.getByTestId("execution-console")).toBeInTheDocument();
+      });
+    });
+  });
+  describe("Step 1.1.3: Dialog Integration", () => {
+    it("should integrate ExecutionInputDialog", async () => {
+      await act(async () => {
+        render(/* @__PURE__ */jsx(ReactFlowProvider, {
+          children: /* @__PURE__ */jsx(WorkflowBuilder, {
+            ...defaultProps
+          })
+        }));
+      });
+      await waitFor(() => {
+        expect(screen.getByTestId("workflow-canvas")).toBeInTheDocument();
+      });
+    });
+    it("should integrate NodeContextMenu", async () => {
+      await act(async () => {
+        render(/* @__PURE__ */jsx(ReactFlowProvider, {
+          children: /* @__PURE__ */jsx(WorkflowBuilder, {
+            ...defaultProps
+          })
+        }));
+      });
+      await waitFor(() => {
+        expect(screen.getByTestId("workflow-canvas")).toBeInTheDocument();
+      });
+    });
+    it("should integrate MarketplaceDialog", async () => {
+      await act(async () => {
+        render(/* @__PURE__ */jsx(ReactFlowProvider, {
+          children: /* @__PURE__ */jsx(WorkflowBuilder, {
+            ...defaultProps
+          })
+        }));
+      });
+      await waitFor(() => {
+        expect(screen.getByTestId("workflow-canvas")).toBeInTheDocument();
+      });
+    });
+  });
+  describe("Step 1.1.2.3: Dialog State Management", () => {
+    it("should handle dialog state independently", async () => {
+      await act(async () => {
+        render(/* @__PURE__ */jsx(ReactFlowProvider, {
+          children: /* @__PURE__ */jsx(WorkflowBuilder, {
+            ...defaultProps
+          })
+        }));
+      });
+      await waitFor(() => {
+        expect(screen.getByTestId("workflow-canvas")).toBeInTheDocument();
+      });
+    });
+    it("should not have dialog conflicts when multiple dialogs could be open", async () => {
+      await act(async () => {
+        render(/* @__PURE__ */jsx(ReactFlowProvider, {
+          children: /* @__PURE__ */jsx(WorkflowBuilder, {
+            ...defaultProps
+          })
+        }));
+      });
+      expect(screen.queryByTestId("execution-input-dialog")).not.toBeInTheDocument();
+      expect(screen.queryByTestId("context-menu")).not.toBeInTheDocument();
+      expect(screen.queryByTestId("marketplace-dialog")).not.toBeInTheDocument();
+    });
+    it("should cleanup dialogs on unmount", async () => {
+      const {
+        unmount
+      } = await act(async () => {
+        return render(/* @__PURE__ */jsx(ReactFlowProvider, {
+          children: /* @__PURE__ */jsx(WorkflowBuilder, {
+            ...defaultProps
+          })
+        }));
+      });
+      await waitFor(() => {
+        expect(screen.getByTestId("workflow-canvas")).toBeInTheDocument();
+      });
+      await act(async () => {
+        unmount();
+      });
+      expect(screen.queryByTestId("execution-input-dialog")).not.toBeInTheDocument();
+      expect(screen.queryByTestId("context-menu")).not.toBeInTheDocument();
+      expect(screen.queryByTestId("marketplace-dialog")).not.toBeInTheDocument();
+    });
+  });
+  describe("Step 1.1.3: Imperative Handle Integration", () => {
+    it("should expose saveWorkflow via ref", async () => {
+      const ref = React.createRef();
+      await act(async () => {
+        render(/* @__PURE__ */jsx(ReactFlowProvider, {
+          children: /* @__PURE__ */jsx(WorkflowBuilder, {
+            ...defaultProps,
+            ref
+          })
+        }));
+      });
+      await waitFor(() => {
+        expect(ref.current).toBeTruthy();
+        expect(ref.current?.saveWorkflow).toBeDefined();
+        expect(typeof ref.current?.saveWorkflow).toBe("function");
+      });
+    });
+    it("should expose executeWorkflow via ref", async () => {
+      const ref = React.createRef();
+      await act(async () => {
+        render(/* @__PURE__ */jsx(ReactFlowProvider, {
+          children: /* @__PURE__ */jsx(WorkflowBuilder, {
+            ...defaultProps,
+            ref
+          })
+        }));
+      });
+      await waitFor(() => {
+        expect(ref.current).toBeTruthy();
+        expect(ref.current?.executeWorkflow).toBeDefined();
+        expect(typeof ref.current?.executeWorkflow).toBe("function");
+      });
+    });
+    it("should expose exportWorkflow via ref", async () => {
+      const ref = React.createRef();
+      await act(async () => {
+        render(/* @__PURE__ */jsx(ReactFlowProvider, {
+          children: /* @__PURE__ */jsx(WorkflowBuilder, {
+            ...defaultProps,
+            ref
+          })
+        }));
+      });
+      await waitFor(() => {
+        expect(ref.current).toBeTruthy();
+        expect(ref.current?.exportWorkflow).toBeDefined();
+        expect(typeof ref.current?.exportWorkflow).toBe("function");
+      });
+    });
+  });
+});

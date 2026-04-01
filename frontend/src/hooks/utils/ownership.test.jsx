@@ -1,0 +1,110 @@
+import { canUserDelete } from "./ownership";
+import { isOwner } from "../../utils/ownershipUtils";
+jest.mock("../../utils/ownershipUtils", () => ({
+  isOwner: jest.fn(),
+  filterOwnedItems: jest.fn(),
+  separateOfficialItems: jest.fn(),
+  filterUserOwnedDeletableItems: jest.fn()
+}));
+const mockIsOwner = isOwner;
+describe("ownership", () => {
+  const mockUser = {
+    id: "user-123",
+    username: "testuser"
+  };
+  const mockItem = {
+    id: "item-1",
+    author_id: "user-123",
+    is_official: false
+  };
+  beforeEach(() => {
+    mockIsOwner.mockClear();
+    mockIsOwner.mockReturnValue(false);
+  });
+  describe("canUserDelete", () => {
+    it("should return false when item is null", () => {
+      const result = canUserDelete(null, mockUser);
+      expect(result).toBe(false);
+      expect(mockIsOwner).not.toHaveBeenCalled();
+    });
+    it("should return false when item is undefined", () => {
+      const result = canUserDelete(void 0, mockUser);
+      expect(result).toBe(false);
+      expect(mockIsOwner).not.toHaveBeenCalled();
+    });
+    it("should return false when item is official", () => {
+      const officialItem = {
+        ...mockItem,
+        is_official: true
+      };
+      const result = canUserDelete(officialItem, mockUser);
+      expect(result).toBe(false);
+      expect(mockIsOwner).not.toHaveBeenCalled();
+    });
+    it("should return false when user is null", () => {
+      mockIsOwner.mockReturnValue(false);
+      const result = canUserDelete(mockItem, null);
+      expect(result).toBe(false);
+      expect(mockIsOwner).toHaveBeenCalledWith(mockItem, null);
+    });
+    it("should return false when user is undefined", () => {
+      mockIsOwner.mockReturnValue(false);
+      const result = canUserDelete(mockItem, void 0);
+      expect(result).toBe(false);
+      expect(mockIsOwner).toHaveBeenCalledWith(mockItem, null);
+    });
+    it("should return true when item is not official and user owns it", () => {
+      mockIsOwner.mockReturnValue(true);
+      const result = canUserDelete(mockItem, mockUser);
+      expect(result).toBe(true);
+      expect(mockIsOwner).toHaveBeenCalledWith(mockItem, mockUser);
+    });
+    it("should return false when item is not official but user does not own it", () => {
+      mockIsOwner.mockReturnValue(false);
+      const result = canUserDelete(mockItem, mockUser);
+      expect(result).toBe(false);
+      expect(mockIsOwner).toHaveBeenCalledWith(mockItem, mockUser);
+    });
+    it("should handle item with undefined is_official as deletable", () => {
+      mockIsOwner.mockReturnValue(true);
+      const itemWithoutOfficial = {
+        id: "item-1",
+        author_id: "user-123"
+      };
+      const result = canUserDelete(itemWithoutOfficial, mockUser);
+      expect(result).toBe(true);
+      expect(mockIsOwner).toHaveBeenCalledWith(itemWithoutOfficial, mockUser);
+    });
+    it("should handle item with null is_official as deletable", () => {
+      mockIsOwner.mockReturnValue(true);
+      const itemWithNullOfficial = {
+        id: "item-1",
+        author_id: "user-123",
+        is_official: null
+      };
+      const result = canUserDelete(itemWithNullOfficial, mockUser);
+      expect(result).toBe(true);
+      expect(mockIsOwner).toHaveBeenCalledWith(itemWithNullOfficial, mockUser);
+    });
+    it("should check ownership even when is_official is false", () => {
+      mockIsOwner.mockReturnValue(false);
+      const nonOfficialItem = {
+        ...mockItem,
+        is_official: false
+      };
+      const result = canUserDelete(nonOfficialItem, mockUser);
+      expect(result).toBe(false);
+      expect(mockIsOwner).toHaveBeenCalledWith(nonOfficialItem, mockUser);
+    });
+    it("should prioritize official check over ownership check", () => {
+      const officialItem = {
+        ...mockItem,
+        is_official: true
+      };
+      mockIsOwner.mockReturnValue(true);
+      const result = canUserDelete(officialItem, mockUser);
+      expect(result).toBe(false);
+      expect(mockIsOwner).not.toHaveBeenCalled();
+    });
+  });
+});

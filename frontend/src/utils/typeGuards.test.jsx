@@ -1,0 +1,100 @@
+import { isNullOrUndefined, isDefined } from "./typeGuards";
+describe("typeGuards utilities", () => {
+  describe("isNullOrUndefined", () => {
+    it("should return true for null", () => {
+      expect(isNullOrUndefined(null)).toBe(true);
+    });
+    it("should return true for undefined", () => {
+      expect(isNullOrUndefined(void 0)).toBe(true);
+    });
+    it("should return false for defined values", () => {
+      expect(isNullOrUndefined(0)).toBe(false);
+      expect(isNullOrUndefined(false)).toBe(false);
+      expect(isNullOrUndefined("")).toBe(false);
+      expect(isNullOrUndefined([])).toBe(false);
+      expect(isNullOrUndefined({})).toBe(false);
+      expect(isNullOrUndefined("string")).toBe(false);
+      expect(isNullOrUndefined(123)).toBe(false);
+      expect(isNullOrUndefined(true)).toBe(false);
+    });
+    it("should work with type narrowing", () => {
+      const value = "test";
+      if (isNullOrUndefined(value)) {
+        expect(value).toBeNull();
+      } else {
+        expect(typeof value).toBe("string");
+        expect(value.toUpperCase()).toBe("TEST");
+      }
+    });
+    it("should handle all falsy values correctly", () => {
+      expect(isNullOrUndefined(null)).toBe(true);
+      expect(isNullOrUndefined(void 0)).toBe(true);
+      expect(isNullOrUndefined(0)).toBe(false);
+      expect(isNullOrUndefined(false)).toBe(false);
+      expect(isNullOrUndefined("")).toBe(false);
+      expect(isNullOrUndefined(NaN)).toBe(false);
+    });
+  });
+  describe("isDefined", () => {
+    it("should return false for null", () => {
+      expect(isDefined(null)).toBe(false);
+    });
+    it("should return false for undefined", () => {
+      expect(isDefined(void 0)).toBe(false);
+    });
+    it("should return true for defined values", () => {
+      expect(isDefined(0)).toBe(true);
+      expect(isDefined(false)).toBe(true);
+      expect(isDefined("")).toBe(true);
+      expect(isDefined([])).toBe(true);
+      expect(isDefined({})).toBe(true);
+      expect(isDefined("string")).toBe(true);
+      expect(isDefined(123)).toBe(true);
+      expect(isDefined(true)).toBe(true);
+    });
+    it("should work with type narrowing", () => {
+      const value = "test";
+      if (isDefined(value)) {
+        expect(typeof value).toBe("string");
+        expect(value.toUpperCase()).toBe("TEST");
+      } else {
+        expect(value === null || value === void 0).toBe(true);
+      }
+    });
+    it("should handle all falsy values correctly", () => {
+      expect(isDefined(null)).toBe(false);
+      expect(isDefined(void 0)).toBe(false);
+      expect(isDefined(0)).toBe(true);
+      expect(isDefined(false)).toBe(true);
+      expect(isDefined("")).toBe(true);
+      expect(isDefined(NaN)).toBe(true);
+    });
+    it("should work with generic types", () => {
+      const value = { prop: "test" };
+      if (isDefined(value)) {
+        expect(value.prop).toBe("test");
+      }
+    });
+    it("should work with arrays", () => {
+      const value = ["test"];
+      if (isDefined(value)) {
+        expect(value.length).toBe(1);
+        expect(value[0]).toBe("test");
+      }
+    });
+    it("should work with objects", () => {
+      const value = { key: "value" };
+      if (isDefined(value)) {
+        expect(value.key).toBe("value");
+      }
+    });
+  });
+  describe("complementary behavior", () => {
+    it("should be complementary - isDefined is opposite of isNullOrUndefined", () => {
+      const testValues = [null, void 0, 0, false, "", [], {}, "string", 123, true, NaN];
+      testValues.forEach((value) => {
+        expect(isDefined(value)).toBe(!isNullOrUndefined(value));
+      });
+    });
+  });
+});

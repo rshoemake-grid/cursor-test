@@ -1,0 +1,22 @@
+import { useCallback } from "react";
+import { buildSearchParams } from "./useMarketplaceData.utils";
+function useTemplatesData({
+  httpClient,
+  apiBaseUrl,
+  category,
+  searchQuery,
+  sortBy
+}) {
+  const fetchTemplates = useCallback(async () => {
+    const params = buildSearchParams(category, searchQuery, sortBy);
+    const response = await httpClient.get(`${apiBaseUrl}/templates?${params}`);
+    const data = await response.json();
+    return data;
+  }, [httpClient, apiBaseUrl, category, searchQuery, sortBy]);
+  return {
+    fetchTemplates
+  };
+}
+export {
+  useTemplatesData
+};

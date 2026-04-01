@@ -1,0 +1,203 @@
+import { renderHook } from "@testing-library/react";
+import { useExecutionNotifications } from "./useExecutionNotifications";
+describe("useExecutionNotifications", () => {
+  const mockOnSuccess = jest.fn();
+  const mockOnError = jest.fn();
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+  it("should not trigger callbacks when enabled is false", () => {
+    const executions = [
+      {
+        execution_id: "exec-1",
+        workflow_id: "workflow-1",
+        status: "completed",
+        started_at: "2024-01-01T10:00:00Z",
+        completed_at: "2024-01-01T10:00:05Z",
+        node_states: {},
+        variables: {},
+        logs: []
+      }
+    ];
+    renderHook(
+      () => useExecutionNotifications({
+        executions,
+        onSuccess: mockOnSuccess,
+        onError: mockOnError,
+        enabled: false
+      })
+    );
+    expect(mockOnSuccess).not.toHaveBeenCalled();
+    expect(mockOnError).not.toHaveBeenCalled();
+  });
+  it("should trigger onSuccess when execution status changes to completed", () => {
+    const executions = [
+      {
+        execution_id: "exec-1",
+        workflow_id: "workflow-1",
+        status: "completed",
+        started_at: "2024-01-01T10:00:00Z",
+        completed_at: "2024-01-01T10:00:05Z",
+        node_states: {},
+        variables: {},
+        logs: []
+      }
+    ];
+    const { rerender } = renderHook(
+      ({ execs }) => useExecutionNotifications({
+        executions: execs,
+        onSuccess: mockOnSuccess,
+        onError: mockOnError
+      }),
+      {
+        initialProps: {
+          execs: [
+            {
+              ...executions[0],
+              status: "running",
+              completed_at: void 0
+            }
+          ]
+        }
+      }
+    );
+    expect(mockOnSuccess).not.toHaveBeenCalled();
+    rerender({
+      execs: executions
+    });
+    expect(mockOnSuccess).toHaveBeenCalledWith(executions[0]);
+    expect(mockOnError).not.toHaveBeenCalled();
+  });
+  it("should trigger onError when execution status changes to failed", () => {
+    const executions = [
+      {
+        execution_id: "exec-1",
+        workflow_id: "workflow-1",
+        status: "failed",
+        started_at: "2024-01-01T10:00:00Z",
+        completed_at: "2024-01-01T10:00:05Z",
+        error: "Test error",
+        node_states: {},
+        variables: {},
+        logs: []
+      }
+    ];
+    const { rerender } = renderHook(
+      ({ execs }) => useExecutionNotifications({
+        executions: execs,
+        onSuccess: mockOnSuccess,
+        onError: mockOnError
+      }),
+      {
+        initialProps: {
+          execs: [
+            {
+              ...executions[0],
+              status: "running",
+              error: void 0
+            }
+          ]
+        }
+      }
+    );
+    expect(mockOnError).not.toHaveBeenCalled();
+    rerender({
+      execs: executions
+    });
+    expect(mockOnError).toHaveBeenCalledWith(executions[0]);
+    expect(mockOnSuccess).not.toHaveBeenCalled();
+  });
+  it("should not trigger callbacks on initial render", () => {
+    const executions = [
+      {
+        execution_id: "exec-1",
+        workflow_id: "workflow-1",
+        status: "completed",
+        started_at: "2024-01-01T10:00:00Z",
+        completed_at: "2024-01-01T10:00:05Z",
+        node_states: {},
+        variables: {},
+        logs: []
+      }
+    ];
+    renderHook(
+      () => useExecutionNotifications({
+        executions,
+        onSuccess: mockOnSuccess,
+        onError: mockOnError
+      })
+    );
+    expect(mockOnSuccess).not.toHaveBeenCalled();
+    expect(mockOnError).not.toHaveBeenCalled();
+  });
+  it("should not trigger callbacks when status does not change", () => {
+    const executions = [
+      {
+        execution_id: "exec-1",
+        workflow_id: "workflow-1",
+        status: "completed",
+        started_at: "2024-01-01T10:00:00Z",
+        completed_at: "2024-01-01T10:00:05Z",
+        node_states: {},
+        variables: {},
+        logs: []
+      }
+    ];
+    const { rerender } = renderHook(
+      ({ execs }) => useExecutionNotifications({
+        executions: execs,
+        onSuccess: mockOnSuccess,
+        onError: mockOnError
+      }),
+      {
+        initialProps: { execs: executions }
+      }
+    );
+    expect(mockOnSuccess).not.toHaveBeenCalled();
+    rerender({ execs: executions });
+    expect(mockOnSuccess).not.toHaveBeenCalled();
+  });
+  it("should handle multiple executions", () => {
+    const executions = [
+      {
+        execution_id: "exec-1",
+        workflow_id: "workflow-1",
+        status: "completed",
+        started_at: "2024-01-01T10:00:00Z",
+        completed_at: "2024-01-01T10:00:05Z",
+        node_states: {},
+        variables: {},
+        logs: []
+      },
+      {
+        execution_id: "exec-2",
+        workflow_id: "workflow-2",
+        status: "failed",
+        started_at: "2024-01-01T11:00:00Z",
+        completed_at: "2024-01-01T11:00:10Z",
+        error: "Test error",
+        node_states: {},
+        variables: {},
+        logs: []
+      }
+    ];
+    const { rerender } = renderHook(
+      ({ execs }) => useExecutionNotifications({
+        executions: execs,
+        onSuccess: mockOnSuccess,
+        onError: mockOnError
+      }),
+      {
+        initialProps: {
+          execs: [
+            { ...executions[0], status: "running", completed_at: void 0 },
+            { ...executions[1], status: "running", error: void 0 }
+          ]
+        }
+      }
+    );
+    rerender({ execs: executions });
+    expect(mockOnSuccess).toHaveBeenCalledWith(executions[0]);
+    expect(mockOnError).toHaveBeenCalledWith(executions[1]);
+  });
+});

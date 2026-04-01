@@ -10,11 +10,11 @@
   "maxTestRunnerReuse": 10,
   "plugins": ["@stryker-mutator/jest-runner"],
   "mutate": [
-    "src/hooks/useMarketplaceData.ts",
-    "src/hooks/useCanvasEvents.ts",
-    "src/hooks/useWorkflowExecution.ts",
-    "src/hooks/useTemplateOperations.ts",
-    "src/hooks/useLLMProviders.ts"
+    "src/hooks/marketplace/useMarketplaceData.jsx",
+    "src/hooks/ui/useCanvasEvents.jsx",
+    "src/hooks/execution/useWorkflowExecution.jsx",
+    "src/hooks/marketplace/useTemplateOperations.jsx",
+    "src/hooks/providers/useLLMProviders.jsx"
   ],
   "checkers": [],
   "thresholds": {

@@ -1,0 +1,495 @@
+import { showNotification, showSuccess, showError, showInfo, showWarning } from "./notifications";
+describe("notifications", () => {
+  beforeEach(() => {
+    document.body.innerHTML = "";
+    const existingStyles = document.getElementById("notification-styles");
+    if (existingStyles) {
+      existingStyles.remove();
+    }
+    jest.useFakeTimers();
+  });
+  afterEach(() => {
+    document.body.innerHTML = "";
+    const existingStyles = document.getElementById("notification-styles");
+    if (existingStyles) {
+      existingStyles.remove();
+    }
+    jest.useRealTimers();
+  });
+  describe("showNotification", () => {
+    it("should create a notification with default options", () => {
+      const notification = showNotification("Test message");
+      expect(notification).toBeTruthy();
+      expect(notification.textContent).toBe("Test message");
+      expect(document.body.contains(notification)).toBe(true);
+      expect(notification).toBeInstanceOf(HTMLDivElement);
+    });
+    it("should create a notification with custom type", () => {
+      const notification = showNotification("Test message", { type: "success" });
+      expect(notification).toBeTruthy();
+      expect(notification.textContent).toBe("Test message");
+      expect(notification).toBeInstanceOf(HTMLDivElement);
+    });
+    it("should create a notification with error type", () => {
+      const notification = showNotification("Test message", { type: "error" });
+      expect(notification).toBeTruthy();
+      expect(notification.textContent).toBe("Test message");
+      expect(notification).toBeInstanceOf(HTMLDivElement);
+    });
+    it("should create a notification with warning type", () => {
+      const notification = showNotification("Test message", { type: "warning" });
+      expect(notification).toBeTruthy();
+      expect(notification.textContent).toBe("Test message");
+      expect(notification).toBeInstanceOf(HTMLDivElement);
+    });
+    it("should create a notification with info type", () => {
+      const notification = showNotification("Test message", { type: "info" });
+      expect(notification).toBeTruthy();
+      expect(notification.textContent).toBe("Test message");
+      expect(notification).toBeInstanceOf(HTMLDivElement);
+    });
+    it("should use custom duration", () => {
+      const notification = showNotification("Test message", { duration: 1e3 });
+      jest.advanceTimersByTime(1e3);
+      expect(notification.style.cssText).toContain("opacity: 0");
+      expect(notification.style.cssText).toContain("translateX(100%)");
+    });
+    it("should auto-remove notification after duration", () => {
+      const notification = showNotification("Test message", { duration: 1e3 });
+      expect(document.body.contains(notification)).toBe(true);
+      jest.advanceTimersByTime(1e3);
+      jest.advanceTimersByTime(300);
+      expect(document.body.contains(notification)).toBe(false);
+    });
+    it("should add animation styles only once", () => {
+      showNotification("First notification");
+      const styles1 = document.getElementById("notification-styles");
+      expect(styles1).toBeTruthy();
+      showNotification("Second notification");
+      const styles2 = document.getElementById("notification-styles");
+      expect(styles2).toBe(styles1);
+    });
+    it("should handle multi-line messages", () => {
+      const notification = showNotification("Line 1\nLine 2\nLine 3");
+      expect(notification.textContent).toBe("Line 1\nLine 2\nLine 3");
+      expect(notification).toBeInstanceOf(HTMLDivElement);
+    });
+    it("should position notification correctly", () => {
+      const notification = showNotification("Test message");
+      expect(notification).toBeInstanceOf(HTMLDivElement);
+      expect(document.body.contains(notification)).toBe(true);
+    });
+    it("should apply correct styling", () => {
+      const notification = showNotification("Test message");
+      expect(notification).toBeInstanceOf(HTMLDivElement);
+      expect(notification.textContent).toBe("Test message");
+    });
+    it("should use default duration of 5000ms", () => {
+      const notification = showNotification("Test message");
+      jest.advanceTimersByTime(4999);
+      expect(notification.style.cssText).not.toContain("opacity: 0");
+      jest.advanceTimersByTime(1);
+      expect(notification.style.cssText).toContain("opacity: 0");
+    });
+  });
+  describe("showSuccess", () => {
+    it("should create a success notification", () => {
+      const notification = showSuccess("Success message");
+      expect(notification).toBeTruthy();
+      expect(notification.textContent).toBe("Success message");
+      expect(notification).toBeInstanceOf(HTMLDivElement);
+    });
+    it("should use custom duration", () => {
+      const notification = showSuccess("Success message", 2e3);
+      jest.advanceTimersByTime(2e3);
+      expect(notification.style.cssText).toContain("opacity: 0");
+    });
+  });
+  describe("showError", () => {
+    it("should create an error notification", () => {
+      const notification = showError("Error message");
+      expect(notification).toBeTruthy();
+      expect(notification.textContent).toBe("Error message");
+      expect(notification).toBeInstanceOf(HTMLDivElement);
+    });
+    it("should use custom duration", () => {
+      const notification = showError("Error message", 3e3);
+      jest.advanceTimersByTime(3e3);
+      expect(notification.style.cssText).toContain("opacity: 0");
+    });
+  });
+  describe("showInfo", () => {
+    it("should create an info notification", () => {
+      const notification = showInfo("Info message");
+      expect(notification).toBeTruthy();
+      expect(notification.textContent).toBe("Info message");
+      expect(notification).toBeInstanceOf(HTMLDivElement);
+    });
+    it("should use custom duration", () => {
+      const notification = showInfo("Info message", 4e3);
+      jest.advanceTimersByTime(4e3);
+      expect(notification.style.cssText).toContain("opacity: 0");
+    });
+  });
+  describe("showWarning", () => {
+    it("should create a warning notification", () => {
+      const notification = showWarning("Warning message");
+      expect(notification).toBeTruthy();
+      expect(notification.textContent).toBe("Warning message");
+      expect(notification).toBeInstanceOf(HTMLDivElement);
+    });
+    it("should use custom duration", () => {
+      const notification = showWarning("Warning message", 6e3);
+      jest.advanceTimersByTime(6e3);
+      expect(notification.style.cssText).toContain("opacity: 0");
+    });
+  });
+  describe("CSS styling", () => {
+    it("should set notification styles correctly", () => {
+      const notification = showNotification("Test message");
+      expect(notification).toBeTruthy();
+      expect(notification).toBeInstanceOf(HTMLDivElement);
+    });
+    it("should set success notification background color", () => {
+      const notification = showNotification("Test", { type: "success" });
+      expect(notification).toBeTruthy();
+      expect(notification).toBeInstanceOf(HTMLDivElement);
+    });
+    it("should set error notification background color", () => {
+      const notification = showNotification("Test", { type: "error" });
+      expect(notification).toBeTruthy();
+      expect(notification).toBeInstanceOf(HTMLDivElement);
+    });
+    it("should set warning notification background color", () => {
+      const notification = showNotification("Test", { type: "warning" });
+      expect(notification).toBeTruthy();
+      expect(notification).toBeInstanceOf(HTMLDivElement);
+    });
+    it("should set info notification background color", () => {
+      const notification = showNotification("Test", { type: "info" });
+      expect(notification).toBeTruthy();
+      expect(notification).toBeInstanceOf(HTMLDivElement);
+    });
+    it("should add animation styles to document head", () => {
+      showNotification("Test message");
+      const styles = document.getElementById("notification-styles");
+      expect(styles).toBeTruthy();
+      expect(styles?.textContent).toContain("@keyframes slideIn");
+    });
+    it("should set transition styles when fading out", () => {
+      const notification = showNotification("Test message", { duration: 1e3 });
+      jest.advanceTimersByTime(1e3);
+      expect(notification.style.cssText).toContain("transition: opacity 0.3s");
+      expect(notification.style.cssText).toContain("opacity: 0");
+      expect(notification.style.cssText).toContain("translateX(100%)");
+    });
+    it("should remove notification after fade out completes", () => {
+      const notification = showNotification("Test message", { duration: 1e3 });
+      expect(document.body.contains(notification)).toBe(true);
+      jest.advanceTimersByTime(1e3);
+      jest.advanceTimersByTime(300);
+      expect(document.body.contains(notification)).toBe(false);
+    });
+  });
+  describe("edge cases", () => {
+    it("should handle duration of 0", () => {
+      const notification = showNotification("Test message", { duration: 0 });
+      expect(notification).toBeTruthy();
+      jest.advanceTimersByTime(0);
+      jest.advanceTimersByTime(300);
+      expect(document.body.contains(notification)).toBe(false);
+    });
+    it("should handle very large duration", () => {
+      const notification = showNotification("Test message", { duration: 1e5 });
+      expect(notification).toBeTruthy();
+      jest.advanceTimersByTime(5e3);
+      expect(document.body.contains(notification)).toBe(true);
+    });
+    it("should handle empty message", () => {
+      const notification = showNotification("");
+      expect(notification).toBeTruthy();
+      expect(notification.textContent).toBe("");
+      expect(document.body.contains(notification)).toBe(true);
+    });
+    it("should handle message with only whitespace", () => {
+      const notification = showNotification("   ");
+      expect(notification).toBeTruthy();
+      expect(notification.textContent).toBe("   ");
+    });
+    it("should handle very long message", () => {
+      const longMessage = "a".repeat(1e3);
+      const notification = showNotification(longMessage);
+      expect(notification).toBeTruthy();
+      expect(notification.textContent).toBe(longMessage);
+    });
+    it("should handle options object being undefined", () => {
+      const notification = showNotification("Test message", void 0);
+      expect(notification).toBeTruthy();
+      expect(notification.textContent).toBe("Test message");
+    });
+    it("should handle duration being undefined in options", () => {
+      const notification = showNotification("Test message", { type: "success", duration: void 0 });
+      expect(notification).toBeTruthy();
+      jest.advanceTimersByTime(4999);
+      expect(notification.style.cssText).not.toContain("opacity: 0");
+      jest.advanceTimersByTime(1);
+      expect(notification.style.cssText).toContain("opacity: 0");
+    });
+    it("should handle type being undefined in options", () => {
+      const notification = showNotification("Test message", { duration: 1e3, type: void 0 });
+      expect(notification).toBeTruthy();
+      expect(notification).toBeInstanceOf(HTMLDivElement);
+    });
+    it("should handle style element already existing", () => {
+      const existingStyle = document.createElement("style");
+      existingStyle.id = "notification-styles";
+      document.head.appendChild(existingStyle);
+      const notification = showNotification("Test message");
+      expect(notification).toBeTruthy();
+      const styles = document.querySelectorAll("#notification-styles");
+      expect(styles.length).toBe(1);
+    });
+    it("should handle multiple notifications with different durations", () => {
+      const notification1 = showNotification("Message 1", { duration: 1e3 });
+      const notification2 = showNotification("Message 2", { duration: 2e3 });
+      expect(document.body.contains(notification1)).toBe(true);
+      expect(document.body.contains(notification2)).toBe(true);
+      jest.advanceTimersByTime(1e3);
+      jest.advanceTimersByTime(300);
+      expect(document.body.contains(notification1)).toBe(false);
+      expect(document.body.contains(notification2)).toBe(true);
+      jest.advanceTimersByTime(1e3);
+      jest.advanceTimersByTime(300);
+      expect(document.body.contains(notification2)).toBe(false);
+    });
+    it("should handle showSuccess with undefined duration", () => {
+      const notification = showSuccess("Success", void 0);
+      expect(notification).toBeTruthy();
+      jest.advanceTimersByTime(4999);
+      expect(notification.style.cssText).not.toContain("opacity: 0");
+    });
+    it("should handle showError with undefined duration", () => {
+      const notification = showError("Error", void 0);
+      expect(notification).toBeTruthy();
+      jest.advanceTimersByTime(4999);
+      expect(notification.style.cssText).not.toContain("opacity: 0");
+    });
+    it("should handle showInfo with undefined duration", () => {
+      const notification = showInfo("Info", void 0);
+      expect(notification).toBeTruthy();
+      jest.advanceTimersByTime(4999);
+      expect(notification.style.cssText).not.toContain("opacity: 0");
+    });
+    it("should handle showWarning with undefined duration", () => {
+      const notification = showWarning("Warning", void 0);
+      expect(notification).toBeTruthy();
+      jest.advanceTimersByTime(4999);
+      expect(notification.style.cssText).not.toContain("opacity: 0");
+    });
+    it("should handle notification removal timing edge case", () => {
+      const notification = showNotification("Test message", { duration: 1e3 });
+      jest.advanceTimersByTime(1e3);
+      expect(notification.style.cssText).toContain("opacity: 0");
+      jest.advanceTimersByTime(300);
+      expect(document.body.contains(notification)).toBe(false);
+    });
+    it("should handle all notification types with custom colors", () => {
+      const success = showNotification("Success", { type: "success" });
+      const error = showNotification("Error", { type: "error" });
+      const info = showNotification("Info", { type: "info" });
+      const warning = showNotification("Warning", { type: "warning" });
+      expect(success).toBeTruthy();
+      expect(error).toBeTruthy();
+      expect(info).toBeTruthy();
+      expect(warning).toBeTruthy();
+      expect(document.body.contains(success)).toBe(true);
+      expect(document.body.contains(error)).toBe(true);
+      expect(document.body.contains(info)).toBe(true);
+      expect(document.body.contains(warning)).toBe(true);
+    });
+  });
+  describe("object literal coverage for helper functions", () => {
+    it("should verify exact object literal for showSuccess", () => {
+      const notification = showSuccess("Success message", 2e3);
+      expect(notification).toBeTruthy();
+      expect(notification).not.toBeNull();
+      expect(notification.textContent).toBe("Success message");
+      expect(notification.style.background).toBe("rgb(16, 185, 129)");
+    });
+    it("should verify exact object literal for showSuccess with undefined duration", () => {
+      const notification = showSuccess("Success message", void 0);
+      expect(notification).toBeTruthy();
+      expect(notification).not.toBeNull();
+      expect(notification.textContent).toBe("Success message");
+    });
+    it("should verify exact object literal for showError", () => {
+      const notification = showError("Error message", 3e3);
+      expect(notification).toBeTruthy();
+      expect(notification).not.toBeNull();
+      expect(notification.textContent).toBe("Error message");
+      expect(notification.style.background).toBe("rgb(239, 68, 68)");
+    });
+    it("should verify exact object literal for showError with undefined duration", () => {
+      const notification = showError("Error message", void 0);
+      expect(notification).toBeTruthy();
+      expect(notification).not.toBeNull();
+      expect(notification.textContent).toBe("Error message");
+    });
+    it("should verify exact object literal for showInfo", () => {
+      const notification = showInfo("Info message", 4e3);
+      expect(notification).toBeTruthy();
+      expect(notification).not.toBeNull();
+      expect(notification.textContent).toBe("Info message");
+      expect(notification.style.background).toBe("rgb(59, 130, 246)");
+    });
+    it("should verify exact object literal for showInfo with undefined duration", () => {
+      const notification = showInfo("Info message", void 0);
+      expect(notification).toBeTruthy();
+      expect(notification).not.toBeNull();
+      expect(notification.textContent).toBe("Info message");
+    });
+    it("should verify exact object literal for showWarning", () => {
+      const notification = showWarning("Warning message", 6e3);
+      expect(notification).toBeTruthy();
+      expect(notification).not.toBeNull();
+      expect(notification.textContent).toBe("Warning message");
+      expect(notification.style.background).toBe("rgb(245, 158, 11)");
+    });
+    it("should verify exact object literal for showWarning with undefined duration", () => {
+      const notification = showWarning("Warning message", void 0);
+      expect(notification).toBeTruthy();
+      expect(notification).not.toBeNull();
+      expect(notification.textContent).toBe("Warning message");
+    });
+    it("should verify all helper functions use correct type values", () => {
+      const success = showSuccess("Test");
+      const error = showError("Test");
+      const info = showInfo("Test");
+      const warning = showWarning("Test");
+      expect(success).not.toBeNull();
+      expect(error).not.toBeNull();
+      expect(info).not.toBeNull();
+      expect(warning).not.toBeNull();
+      expect(success.style.background).toBe("rgb(16, 185, 129)");
+      expect(error.style.background).toBe("rgb(239, 68, 68)");
+      expect(info.style.background).toBe("rgb(59, 130, 246)");
+      expect(warning.style.background).toBe("rgb(245, 158, 11)");
+    });
+    it("should verify exact text color string literal is white", () => {
+      const success = showSuccess("Test");
+      const error = showError("Test");
+      const info = showInfo("Test");
+      const warning = showWarning("Test");
+      expect(success).not.toBeNull();
+      expect(error).not.toBeNull();
+      expect(info).not.toBeNull();
+      expect(warning).not.toBeNull();
+      expect(success.style.color).toBe("white");
+      expect(error.style.color).toBe("white");
+      expect(info.style.color).toBe("white");
+      expect(warning.style.color).toBe("white");
+    });
+    it("should verify exact color object literal structure", () => {
+      const notification = showNotification("Test", { type: "success" });
+      expect(notification).not.toBeNull();
+      expect(notification.style.background).toBe("rgb(16, 185, 129)");
+      expect(notification.style.color).toBe("white");
+    });
+    it("should verify all color object literals have white text", () => {
+      const types = ["success", "error", "info", "warning"];
+      for (const type of types) {
+        const notification = showNotification("Test", { type });
+        expect(notification).not.toBeNull();
+        expect(notification.style.color).toBe("white");
+      }
+    });
+  });
+  describe("Dependency Injection", () => {
+    it("should use injected document adapter", () => {
+      const mockDocumentAdapter = {
+        createElement: jest.fn((tag) => document.createElement(tag)),
+        getElementById: jest.fn((id) => document.getElementById(id)),
+        getActiveElement: jest.fn(() => document.activeElement),
+        head: document.head,
+        body: document.body
+      };
+      showNotification("Test message", {
+        documentAdapter: mockDocumentAdapter
+      });
+      expect(mockDocumentAdapter.createElement).toHaveBeenCalled();
+      expect(mockDocumentAdapter.body).toBe(document.body);
+    });
+    it("should use injected timer adapter", () => {
+      const mockTimerAdapter = {
+        setTimeout: jest.fn((callback, delay) => {
+          return setTimeout(callback, delay);
+        }),
+        clearTimeout: jest.fn((id) => clearTimeout(id)),
+        setInterval: jest.fn((callback, delay) => {
+          return setInterval(callback, delay);
+        }),
+        clearInterval: jest.fn((id) => clearInterval(id))
+      };
+      showNotification("Test message", {
+        duration: 1e3,
+        timerAdapter: mockTimerAdapter
+      });
+      expect(mockTimerAdapter.setTimeout).toHaveBeenCalled();
+    });
+    it("should handle null document adapter gracefully", () => {
+      const notification = showNotification("Test message", {
+        documentAdapter: null
+      });
+      expect(notification).toBeNull();
+    });
+    it("should use injected document adapter for getElementById", () => {
+      const mockGetElementById = jest.fn((id) => {
+        if (id === "notification-styles") {
+          return null;
+        }
+        return document.getElementById(id);
+      });
+      const mockDocumentAdapter = {
+        createElement: jest.fn((tag) => document.createElement(tag)),
+        getElementById: mockGetElementById,
+        getActiveElement: jest.fn(() => document.activeElement),
+        head: document.head,
+        body: document.body
+      };
+      showNotification("Test message", {
+        documentAdapter: mockDocumentAdapter
+      });
+      expect(mockGetElementById).toHaveBeenCalledWith("notification-styles");
+    });
+    it("should use injected document adapter for head and body", () => {
+      const mockDocumentAdapter = {
+        createElement: jest.fn((tag) => document.createElement(tag)),
+        getElementById: jest.fn((id) => document.getElementById(id)),
+        getActiveElement: jest.fn(() => document.activeElement),
+        head: document.head,
+        body: document.body
+      };
+      const notification = showNotification("Test message", {
+        documentAdapter: mockDocumentAdapter
+      });
+      expect(mockDocumentAdapter.head).toBe(document.head);
+      expect(mockDocumentAdapter.body).toBe(document.body);
+      expect(notification).toBeTruthy();
+    });
+    it("should handle document adapter errors gracefully", () => {
+      const mockDocumentAdapter = {
+        createElement: jest.fn(() => {
+          throw new Error("DOM manipulation error");
+        }),
+        getElementById: jest.fn(() => null),
+        getActiveElement: jest.fn(() => null),
+        head: document.head,
+        body: document.body
+      };
+      const notification = showNotification("Test message", {
+        documentAdapter: mockDocumentAdapter
+      });
+      expect(notification).toBeNull();
+    });
+  });
+});
