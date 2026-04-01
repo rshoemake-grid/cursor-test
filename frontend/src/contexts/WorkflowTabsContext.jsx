@@ -48,14 +48,15 @@ function WorkflowTabsProvider({
   }, [tabs, storage]);
   useEffect(() => {
     if (activeTabId) {
+      const activeTabSerialized = JSON.stringify(activeTabId);
       if (storage) {
         try {
-          storage.setItem(STORAGE_KEYS.ACTIVE_TAB, activeTabId);
+          storage.setItem(STORAGE_KEYS.ACTIVE_TAB, activeTabSerialized);
         } catch {
         }
       } else if (typeof window !== "undefined") {
         try {
-          window.localStorage.setItem(STORAGE_KEYS.ACTIVE_TAB, activeTabId);
+          window.localStorage.setItem(STORAGE_KEYS.ACTIVE_TAB, activeTabSerialized);
         } catch {
         }
       }

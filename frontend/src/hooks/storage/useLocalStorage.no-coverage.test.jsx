@@ -40,7 +40,7 @@ describe("useLocalStorage - No Coverage Paths", () => {
         () => useLocalStorage("test-key", "default", { storage: mockStorage })
       );
       expect(result.current[0]).toBe("default");
-      expect(logger.error).toHaveBeenCalled();
+      expect(logger.error).not.toHaveBeenCalled();
       expect(logger.warn).toHaveBeenCalledWith(
         expect.stringContaining("contains invalid JSON"),
         "{invalid json"

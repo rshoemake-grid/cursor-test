@@ -28,9 +28,9 @@ function readStorageItem(storage, key, defaultValue, logger) {
     if (!item) {
       return defaultValue;
     }
-    const parsed = parseJsonSafely(item, logger);
-    if (parsed !== null) {
-      return parsed;
+    try {
+      return JSON.parse(item);
+    } catch {
     }
     if (looksLikeJson(item)) {
       if (logger) {

@@ -139,6 +139,12 @@ describe("useLocalStorage.utils - No Coverage Paths", () => {
       const result = readStorageItem(mockStorage, "key", null);
       expect(result).toBe("plain string");
     });
+    it("should return legacy unquoted active tab id without logging parse errors", () => {
+      mockStorage.getItem.mockReturnValue("workflow-1");
+      const result = readStorageItem(mockStorage, "key", null, mockLogger);
+      expect(result).toBe("workflow-1");
+      expect(mockLogger.error).not.toHaveBeenCalled();
+    });
     it("should return defaultValue and log warning for plain string when default is not string", () => {
       mockStorage.getItem.mockReturnValue("plain string");
       const result = readStorageItem(mockStorage, "key", 42, mockLogger);
