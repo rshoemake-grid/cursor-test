@@ -15,14 +15,23 @@ export function isSpeechSynthesisSupported() {
 
 /**
  * Push-to-talk: hold the control to dictate; transcript updates the input field.
+ * @param {object} options
+ * @param {() => string} options.getInput
+ * @param {(value: string) => void} options.setInput
+ * @param {{ debug?: Function, warn?: Function } | undefined} options.logger
+ * @param {(finalText: string) => void} [options.onSessionEnd] — called after release when speech was captured (defer to next task so input state can settle).
  */
-export function usePushToTalk({ getInput, setInput, logger: log }) {
+export function usePushToTalk({ getInput, setInput, logger: log, onSessionEnd }) {
   const [isListening, setIsListening] = useState(false);
   const recognitionRef = useRef(null);
   const prefixRef = useRef("");
   const listeningRef = useRef(false);
   const logRef = useRef(log);
   logRef.current = log;
+  const onSessionEndRef = useRef(onSessionEnd);
+  onSessionEndRef.current = onSessionEnd;
+  const latestTranscriptRef = useRef("");
+  const hadResultsRef = useRef(false);
 
   useEffect(() => {
     const SR = getSpeechRecognitionConstructor();
@@ -40,7 +49,12 @@ export function usePushToTalk({ getInput, setInput, logger: log }) {
       }
       const prefix = prefixRef.current;
       const sep = prefix && segment && !prefix.endsWith(" ") ? " " : "";
-      setInput(prefix + sep + segment);
+      const next = prefix + sep + segment;
+      if (segment.trim().length > 0) {
+        hadResultsRef.current = true;
+      }
+      latestTranscriptRef.current = next;
+      setInput(next);
     };
 
     recognition.onerror = (ev) => {
@@ -52,6 +66,13 @@ export function usePushToTalk({ getInput, setInput, logger: log }) {
     recognition.onend = () => {
       listeningRef.current = false;
       setIsListening(false);
+      const endCb = onSessionEndRef.current;
+      if (endCb && hadResultsRef.current) {
+        const text = latestTranscriptRef.current;
+        window.setTimeout(() => {
+          endCb(text);
+        }, 0);
+      }
     };
 
     recognitionRef.current = recognition;
@@ -71,6 +92,8 @@ export function usePushToTalk({ getInput, setInput, logger: log }) {
     if (!recognition || listeningRef.current) return;
 
     prefixRef.current = getInput();
+    hadResultsRef.current = false;
+    latestTranscriptRef.current = prefixRef.current;
     try {
       recognition.start();
       listeningRef.current = true;

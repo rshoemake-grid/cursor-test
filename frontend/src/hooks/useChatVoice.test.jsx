@@ -54,6 +54,10 @@ describe("useChatVoice helpers", () => {
 describe("usePushToTalk", () => {
   let lastRecognition;
 
+  afterEach(() => {
+    jest.useRealTimers();
+  });
+
   beforeEach(() => {
     lastRecognition = null;
     class MockSR {
@@ -150,5 +154,77 @@ describe("usePushToTalk", () => {
     });
 
     expect(lastRecognition.stop).toHaveBeenCalled();
+  });
+
+  it("calls onSessionEnd with full transcript after onend when speech was captured", () => {
+    jest.useFakeTimers();
+    const setInput = jest.fn();
+    const onSessionEnd = jest.fn();
+    const { result } = renderHook(() =>
+      usePushToTalk({
+        getInput: () => "",
+        setInput,
+        logger: { warn: jest.fn() },
+        onSessionEnd,
+      })
+    );
+
+    act(() => {
+      result.current.onPushStart();
+    });
+
+    const ev = {
+      results: {
+        length: 1,
+        0: {
+          0: { transcript: "hello" },
+          length: 1,
+        },
+      },
+    };
+    act(() => {
+      lastRecognition.onresult(ev);
+    });
+    act(() => {
+      result.current.onPushEnd();
+    });
+    act(() => {
+      lastRecognition.onend();
+    });
+    act(() => {
+      jest.runAllTimers();
+    });
+
+    expect(onSessionEnd).toHaveBeenCalledWith("hello");
+    jest.useRealTimers();
+  });
+
+  it("does not call onSessionEnd when recognition ends without speech", () => {
+    jest.useFakeTimers();
+    const onSessionEnd = jest.fn();
+    const { result } = renderHook(() =>
+      usePushToTalk({
+        getInput: () => "",
+        setInput: jest.fn(),
+        logger: { warn: jest.fn() },
+        onSessionEnd,
+      })
+    );
+
+    act(() => {
+      result.current.onPushStart();
+    });
+    act(() => {
+      result.current.onPushEnd();
+    });
+    act(() => {
+      lastRecognition.onend();
+    });
+    act(() => {
+      jest.runAllTimers();
+    });
+
+    expect(onSessionEnd).not.toHaveBeenCalled();
+    jest.useRealTimers();
   });
 });

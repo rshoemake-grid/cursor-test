@@ -46,6 +46,63 @@ function WorkflowChat({
   inputLiveRef.current = input;
 
   const getInputSnapshot = useCallback(() => inputLiveRef.current, []);
+  const sendMessage = useCallback(
+    async (rawText) => {
+      const userContent = typeof rawText === "string" ? rawText.trim() : "";
+      if (userContent === "" || isLoading === true) return;
+      const userMessage = {
+        role: "user",
+        content: userContent
+      };
+      setMessages((prev) => [...prev, userMessage]);
+      setInput("");
+      setIsLoading(true);
+      try {
+        const data = await api.chat({
+          workflow_id: workflowId,
+          message: userMessage.content,
+          conversation_history: messages.map((m) => ({
+            role: m.role,
+            content: m.content
+          }))
+        });
+        const assistantMessage = {
+          role: "assistant",
+          content: data.message
+        };
+        setMessages((prev) => [...prev, assistantMessage]);
+        if (ttsEnabled === true) {
+          speakChatMessage(assistantMessage.content);
+        }
+        if (data.workflow_changes !== null && data.workflow_changes !== void 0 && (onWorkflowUpdate !== null && onWorkflowUpdate !== void 0)) {
+          injectedLogger.debug("Received workflow changes:", data.workflow_changes);
+          injectedLogger.debug("Nodes to delete:", data.workflow_changes.nodes_to_delete);
+          onWorkflowUpdate(data.workflow_changes);
+        }
+      } catch (error) {
+        const errorMessage = handleApiError(error, {
+          context: "WorkflowChat",
+          showNotification: false
+        });
+        const chatErrorMessage = {
+          role: "assistant",
+          content: `Sorry, I encountered an error: ${errorMessage}. Please try again.`
+        };
+        setMessages((prev) => [...prev, chatErrorMessage]);
+      } finally {
+        setIsLoading(false);
+        inputRef.current?.focus();
+      }
+    },
+    [
+      isLoading,
+      workflowId,
+      messages,
+      ttsEnabled,
+      onWorkflowUpdate,
+      injectedLogger
+    ]
+  );
   const {
     isListening,
     onPushStart,
@@ -55,6 +112,9 @@ function WorkflowChat({
     getInput: getInputSnapshot,
     setInput,
     logger: injectedLogger,
+    onSessionEnd: (text) => {
+      void sendMessage(text);
+    }
   });
   const ttsSupported = isSpeechSynthesisSupported();
 
@@ -76,53 +136,9 @@ function WorkflowChat({
     const history = loadConversationHistory(workflowId);
     setMessages(history);
   }, [workflowId]);
-  const handleSend = async () => {
-    if (input.trim() === "" || isLoading === true) return;
-    const userMessage = {
-      role: "user",
-      content: input.trim()
-    };
-    setMessages((prev) => [...prev, userMessage]);
-    setInput("");
-    setIsLoading(true);
-    try {
-      const data = await api.chat({
-        workflow_id: workflowId,
-        message: userMessage.content,
-        conversation_history: messages.map((m) => ({
-          role: m.role,
-          content: m.content
-        }))
-      });
-      const assistantMessage = {
-        role: "assistant",
-        content: data.message
-      };
-      setMessages((prev) => [...prev, assistantMessage]);
-      if (ttsEnabled === true) {
-        speakChatMessage(assistantMessage.content);
-      }
-      if (data.workflow_changes !== null && data.workflow_changes !== void 0 && (onWorkflowUpdate !== null && onWorkflowUpdate !== void 0)) {
-        injectedLogger.debug("Received workflow changes:", data.workflow_changes);
-        injectedLogger.debug("Nodes to delete:", data.workflow_changes.nodes_to_delete);
-        onWorkflowUpdate(data.workflow_changes);
-      }
-    } catch (error) {
-      const errorMessage = handleApiError(error, {
-        context: "WorkflowChat",
-        showNotification: false
-        // We'll show error in chat instead
-      });
-      const chatErrorMessage = {
-        role: "assistant",
-        content: `Sorry, I encountered an error: ${errorMessage}. Please try again.`
-      };
-      setMessages((prev) => [...prev, chatErrorMessage]);
-    } finally {
-      setIsLoading(false);
-      inputRef.current?.focus();
-    }
-  };
+  const handleSend = useCallback(() => {
+    void sendMessage(input);
+  }, [sendMessage, input]);
 
   const toggleTts = () => {
     setTtsEnabled((prev) => {
@@ -173,7 +189,7 @@ function WorkflowChat({
           value: input,
           onChange: (e) => setInput(e.target.value),
           onKeyPress: handleKeyPress,
-          placeholder: "Type your message... (Press Enter to send, Shift+Enter for new line). Hold the mic to dictate.",
+          placeholder: "Type your message... (Enter to send, Shift+Enter for newline). Hold mic to dictate; release to send to the assistant.",
           className: "flex-1 bg-gray-800 text-gray-100 rounded-lg px-4 py-2 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[4.5rem]",
           rows: 2,
           disabled: isLoading
@@ -185,7 +201,7 @@ function WorkflowChat({
           {
             type: "button",
             "aria-label": "Push to talk",
-            title: sttSupported ? "Hold to speak — converts speech to text (browser / Chrome)" : "Speech recognition not supported in this browser",
+            title: sttSupported ? "Hold to speak; release to send dictated text to the assistant" : "Speech recognition not supported in this browser",
             disabled: isLoading === true || sttSupported === false,
             className: `px-3 py-2 rounded-lg flex items-center justify-center transition-colors border border-gray-700 ${isListening === true ? "bg-red-900/50 border-red-500 text-red-200" : "bg-gray-800 text-gray-200 hover:bg-gray-700"} disabled:opacity-40 disabled:cursor-not-allowed`,
             onPointerDown: (e) => {
