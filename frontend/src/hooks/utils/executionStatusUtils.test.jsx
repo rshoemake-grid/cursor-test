@@ -7,9 +7,6 @@ import {
   shouldReconnect
 } from "./executionStatusUtils";
 import { EXECUTION_STATUS } from "./websocketConstants";
-jest.mock("./executionIdValidation", () => ({
-  isTemporaryExecutionId: jest.fn((id) => id?.startsWith("temp-") ?? false)
-}));
 describe("Vite/ESM browser compatibility", () => {
   it('must not use require() - would cause "require is not defined" in Vite browser build', () => {
     const filePath = path.join(__dirname, "executionStatusUtils.jsx");
@@ -55,7 +52,7 @@ describe("ExecutionStatusChecker", () => {
       expect(ExecutionStatusChecker.shouldSkip("", EXECUTION_STATUS.RUNNING)).toBe(true);
     });
     it("should return true for temporary execution IDs", () => {
-      expect(ExecutionStatusChecker.shouldSkip("temp-123", EXECUTION_STATUS.RUNNING)).toBe(true);
+      expect(ExecutionStatusChecker.shouldSkip("pending-123", EXECUTION_STATUS.RUNNING)).toBe(true);
     });
     it("should return true when execution is terminated", () => {
       expect(ExecutionStatusChecker.shouldSkip("exec-123", EXECUTION_STATUS.COMPLETED)).toBe(true);
@@ -79,7 +76,7 @@ describe("ExecutionStatusChecker", () => {
         1006,
         1,
         3,
-        "temp-123",
+        "pending-123",
         EXECUTION_STATUS.RUNNING
       )).toBe(false);
     });
@@ -203,7 +200,7 @@ describe("Legacy function exports", () => {
   describe("shouldSkipConnection", () => {
     it("should delegate to ExecutionStatusChecker.shouldSkip", () => {
       expect(shouldSkipConnection(null, EXECUTION_STATUS.RUNNING)).toBe(true);
-      expect(shouldSkipConnection("temp-123", EXECUTION_STATUS.RUNNING)).toBe(true);
+      expect(shouldSkipConnection("pending-123", EXECUTION_STATUS.RUNNING)).toBe(true);
       expect(shouldSkipConnection("exec-123", EXECUTION_STATUS.COMPLETED)).toBe(true);
       expect(shouldSkipConnection("exec-123", EXECUTION_STATUS.RUNNING)).toBe(false);
     });
@@ -231,7 +228,7 @@ describe("Legacy function exports", () => {
         1006,
         1,
         3,
-        "temp-123",
+        "pending-123",
         EXECUTION_STATUS.RUNNING
       )).toBe(false);
     });

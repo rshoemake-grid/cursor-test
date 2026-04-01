@@ -784,19 +784,25 @@ describe("defaultAdapters", () => {
         expect(client.delete).toBeDefined();
       });
       it("should verify exact arrow function: mockReject = () => Promise.reject", async () => {
-        const client = defaultAdapters.createHttpClient();
-        expect(typeof client.get).toBe("function");
-        expect(typeof client.post).toBe("function");
-        expect(typeof client.put).toBe("function");
-        expect(typeof client.delete).toBe("function");
-        const getPromise = client.get("https://api.test");
-        const postPromise = client.post("https://api.test", {});
-        const putPromise = client.put("https://api.test", {});
-        const deletePromise = client.delete("https://api.test");
-        expect(getPromise).toBeInstanceOf(Promise);
-        expect(postPromise).toBeInstanceOf(Promise);
-        expect(putPromise).toBeInstanceOf(Promise);
-        expect(deletePromise).toBeInstanceOf(Promise);
+        const originalFetch = global.fetch;
+        global.fetch = jest.fn(() => Promise.resolve(new Response("{}")));
+        try {
+          const client = defaultAdapters.createHttpClient();
+          expect(typeof client.get).toBe("function");
+          expect(typeof client.post).toBe("function");
+          expect(typeof client.put).toBe("function");
+          expect(typeof client.delete).toBe("function");
+          const getPromise = client.get("https://api.test");
+          const postPromise = client.post("https://api.test", {});
+          const putPromise = client.put("https://api.test", {});
+          const deletePromise = client.delete("https://api.test");
+          expect(getPromise).toBeInstanceOf(Promise);
+          expect(postPromise).toBeInstanceOf(Promise);
+          expect(putPromise).toBeInstanceOf(Promise);
+          expect(deletePromise).toBeInstanceOf(Promise);
+        } finally {
+          global.fetch = originalFetch;
+        }
       });
       it("should verify outer catch block in createHttpClient - triggers fallback client", async () => {
         const globalObj = typeof global !== "undefined" ? global : globalThis;
@@ -825,45 +831,54 @@ describe("defaultAdapters", () => {
         const globalObj = typeof global !== "undefined" ? global : globalThis;
         const originalFetch = globalObj.fetch;
         const originalResponse = globalObj.Response;
-        if (!globalObj.Response) {
-          globalObj.Response = class MockResponse {
-            constructor(_body, _init) {
-              __publicField(this, "ok", true);
-              __publicField(this, "status", 200);
-            }
-          };
-        }
-        delete globalObj.fetch;
-        const mockGlobalFetch = jest.fn().mockResolvedValue(new globalObj.Response(null, { status: 200 }));
-        globalObj.global = { fetch: mockGlobalFetch };
-        const client = defaultAdapters.createHttpClient();
-        await client.get("https://api.test");
-        expect(mockGlobalFetch).toHaveBeenCalled();
-        globalObj.fetch = originalFetch;
-        delete globalObj.global;
-        if (originalResponse) {
-          globalObj.Response = originalResponse;
+        const originalGlobalSelf = globalObj.global;
+        try {
+          if (!globalObj.Response) {
+            globalObj.Response = class MockResponse {
+              constructor(_body, _init) {
+                __publicField(this, "ok", true);
+                __publicField(this, "status", 200);
+              }
+            };
+          }
+          delete globalObj.fetch;
+          const mockGlobalFetch = jest.fn().mockResolvedValue(new globalObj.Response(null, { status: 200 }));
+          globalObj.global = { fetch: mockGlobalFetch };
+          const client = defaultAdapters.createHttpClient();
+          await client.get("https://api.test");
+          expect(mockGlobalFetch).toHaveBeenCalled();
+        } finally {
+          globalObj.fetch = originalFetch;
+          globalObj.global = originalGlobalSelf;
+          if (originalResponse) {
+            globalObj.Response = originalResponse;
+          }
         }
       });
       it("should verify fallback function when both fetch and global.fetch are undefined", async () => {
         const globalObj = typeof global !== "undefined" ? global : globalThis;
         const originalFetch = globalObj.fetch;
         const originalResponse = globalObj.Response;
-        delete globalObj.fetch;
-        delete globalObj.global;
-        if (!globalObj.Response) {
-          globalObj.Response = class MockResponse {
-            constructor(_body, _init) {
-              __publicField(this, "ok", true);
-              __publicField(this, "status", 200);
-            }
-          };
-        }
-        const client = defaultAdapters.createHttpClient();
-        await expect(client.get("https://api.test")).rejects.toThrow("HTTP client initialization failed");
-        globalObj.fetch = originalFetch;
-        if (originalResponse) {
-          globalObj.Response = originalResponse;
+        const originalGlobalSelf = globalObj.global;
+        try {
+          delete globalObj.fetch;
+          delete globalObj.global;
+          if (!globalObj.Response) {
+            globalObj.Response = class MockResponse {
+              constructor(_body, _init) {
+                __publicField(this, "ok", true);
+                __publicField(this, "status", 200);
+              }
+            };
+          }
+          const client = defaultAdapters.createHttpClient();
+          await expect(client.get("https://api.test")).rejects.toThrow("HTTP client initialization failed");
+        } finally {
+          globalObj.fetch = originalFetch;
+          globalObj.global = originalGlobalSelf;
+          if (originalResponse) {
+            globalObj.Response = originalResponse;
+          }
         }
       });
     });

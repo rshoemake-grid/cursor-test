@@ -3,6 +3,7 @@ import { useWorkflowPersistence } from "./useWorkflowPersistence";
 import { api } from "../../api/client";
 import { showSuccess, showError } from "../../utils/notifications";
 import { logger } from "../../utils/logger";
+import { createWorkflowDefinition } from "../../utils/workflowFormat";
 jest.mock("../../api/client", () => ({
   api: {
     createWorkflow: jest.fn(),
@@ -19,13 +20,7 @@ jest.mock("../../utils/logger", () => ({
   }
 }));
 jest.mock("../../utils/workflowFormat", () => ({
-  createWorkflowDefinition: jest.fn((params) => ({
-    name: params.name,
-    description: params.description,
-    nodes: params.nodes.map((n) => ({ id: n.id, name: n.data.name })),
-    edges: params.edges.map((e) => ({ id: e.id, source: e.source, target: e.target })),
-    variables: params.variables
-  }))
+  createWorkflowDefinition: jest.fn(),
 }));
 const mockApi = api;
 const mockShowSuccess = showSuccess;
@@ -52,6 +47,13 @@ describe("useWorkflowPersistence", () => {
   ];
   beforeEach(() => {
     jest.clearAllMocks();
+    createWorkflowDefinition.mockImplementation((params) => ({
+      name: params.name,
+      description: params.description,
+      nodes: params.nodes.map((n) => ({ id: n.id, name: n.data.name })),
+      edges: params.edges.map((e) => ({ id: e.id, source: e.source, target: e.target })),
+      variables: params.variables,
+    }));
     mockSetLocalWorkflowId = jest.fn();
     mockOnWorkflowSaved = jest.fn();
     mockSetIsSaving = jest.fn();

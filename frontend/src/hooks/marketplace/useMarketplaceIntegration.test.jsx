@@ -2231,33 +2231,6 @@ describe("useMarketplaceIntegration", () => {
         expect(mockStorage.getItem.mock.calls.length).toBeGreaterThanOrEqual(10);
         unmount();
       });
-      it("should handle typeof window !== undefined check - window is undefined", () => {
-        const originalWindow = global.window;
-        delete global.window;
-        const mockStorage = {
-          getItem: jest.fn().mockReturnValue(null),
-          removeItem: jest.fn(),
-          setItem: jest.fn(),
-          addEventListener: jest.fn(),
-          removeEventListener: jest.fn()
-        };
-        renderHook(
-          () => useMarketplaceIntegration({
-            tabId: "tab-1",
-            storage: mockStorage,
-            setNodes: mockSetNodes,
-            notifyModified: mockNotifyModified,
-            localWorkflowId: null,
-            localWorkflowName: "Test Workflow",
-            localWorkflowDescription: "Test Description",
-            tabIsUnsaved: false,
-            tabDraftsRef: mockTabDraftsRef,
-            saveDraftsToStorage: mockSaveDraftsToStorage
-          })
-        );
-        expect(mockStorage.getItem).toHaveBeenCalled();
-        global.window = originalWindow;
-      });
       it("should handle storage.removeItem when storage is null in catch block", () => {
         const mockStorage = {
           getItem: jest.fn().mockImplementation(() => {

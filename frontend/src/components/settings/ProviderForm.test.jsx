@@ -35,6 +35,14 @@ describe("ProviderForm", () => {
   };
   beforeEach(() => {
     jest.clearAllMocks();
+    defaultProps.onToggleProviderModels.mockImplementation(() => {});
+    defaultProps.onToggleApiKeyVisibility.mockImplementation(() => {});
+    defaultProps.onUpdateProvider.mockImplementation(() => {});
+    defaultProps.onDeleteProvider.mockImplementation(() => {});
+    defaultProps.onAddCustomModel.mockImplementation(() => {});
+    defaultProps.onTestProvider.mockImplementation(() => {});
+    defaultProps.onToggleModel.mockImplementation(() => {});
+    defaultProps.isModelExpanded.mockImplementation(() => false);
   });
   it("should render provider name and type", () => {
     render(/* @__PURE__ */ jsx(ProviderForm, { ...defaultProps }));
@@ -265,10 +273,13 @@ describe("ProviderForm", () => {
       ...defaultProps,
       expandedProviders: { "provider-1": true },
       expandedModels: { "provider-1": /* @__PURE__ */ new Set(["gpt-4"]) },
-      isModelExpanded: jest.fn((providerId, modelName) => {
-        return providerId === "provider-1" && modelName === "gpt-4";
-      })
+      isModelExpanded: jest.fn()
     };
+    beforeEach(() => {
+      expandedProps.isModelExpanded.mockImplementation((providerId, modelName) => {
+        return providerId === "provider-1" && modelName === "gpt-4";
+      });
+    });
     it("should expand model when clicked", () => {
       render(/* @__PURE__ */ jsx(ProviderForm, { ...expandedProps }));
       const modelButtons = screen.getAllByText("gpt-4").map((el) => el.closest("button")).filter(Boolean);

@@ -98,11 +98,13 @@ describe("useMarketplaceActions", () => {
     jest.useFakeTimers();
   });
   afterEach(async () => {
-    jest.advanceTimersByTime(0);
-    jest.runOnlyPendingTimers();
-    jest.runAllTimers();
-    jest.advanceTimersByTime(1e3);
-    await Promise.resolve();
+    try {
+      jest.advanceTimersByTime(0);
+      jest.runOnlyPendingTimers();
+      jest.advanceTimersByTime(1e3);
+    } catch {
+      /* avoid runAllTimers() — can hang on async timer chains */
+    }
     await Promise.resolve();
     jest.useRealTimers();
   });
@@ -119,6 +121,12 @@ describe("useMarketplaceActions", () => {
     });
   });
   describe("handleLoadWorkflows", () => {
+    beforeEach(() => {
+      jest.useRealTimers();
+    });
+    afterEach(() => {
+      jest.useFakeTimers();
+    });
     it("should load multiple workflows sequentially", async () => {
       mockTemplateSelection.selectedIds.add("template-1");
       mockTemplateSelection.selectedIds.add("template-2");
@@ -149,6 +157,10 @@ describe("useMarketplaceActions", () => {
       expect(result.current).not.toBeNull();
       await act(async () => {
         const promise = result.current.handleLoadWorkflows();
+        jest.advanceTimersByTime(50);
+        await Promise.resolve();
+        jest.advanceTimersByTime(100);
+        await Promise.resolve();
         jest.advanceTimersByTime(50);
         await Promise.resolve();
         jest.advanceTimersByTime(100);

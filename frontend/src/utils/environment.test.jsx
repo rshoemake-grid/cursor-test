@@ -42,10 +42,12 @@ describe("environment utilities", () => {
   });
   describe("complementary behavior", () => {
     it("should be complementary - isServerEnvironment is opposite of isBrowserEnvironment", () => {
+      const initialWindow = global.window;
       global.window = {};
       expect(isServerEnvironment()).toBe(!isBrowserEnvironment());
       delete global.window;
       expect(isServerEnvironment()).toBe(!isBrowserEnvironment());
+      global.window = initialWindow;
     });
   });
   describe("real-world scenarios", () => {

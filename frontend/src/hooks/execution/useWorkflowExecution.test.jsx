@@ -72,6 +72,7 @@ describe("useWorkflowExecution", () => {
     mockWorkflowIdRef = { current: "workflow-id" };
   });
   afterEach(async () => {
+    jest.restoreAllMocks();
     jest.advanceTimersByTime(0);
     jest.runOnlyPendingTimers();
     jest.runAllTimers();

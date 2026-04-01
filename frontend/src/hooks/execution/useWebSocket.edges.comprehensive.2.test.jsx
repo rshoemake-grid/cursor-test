@@ -1687,45 +1687,40 @@ describe("useWebSocket - edges.comprehensive.2", () => {
       it("should verify wasClean && code === 1000 pattern with false wasClean", async () => {
         jest.clearAllMocks();
         wsInstances.splice(0, wsInstances.length);
-        if (logger.debug && typeof logger.debug.mockReset === "function") {
-          logger.debug.mockReset();
-        }
         const executionId = "exec-wasclean-false-test";
-        renderHook(
+        const { unmount } = renderHook(
           () => useWebSocket({
             executionId,
             executionStatus: "running"
           })
         );
         await advanceTimersByTime(100);
-        await advanceTimersByTime(50);
-        await advanceTimersByTime(50);
-        await advanceTimersByTime(50);
-        if (wsInstances.length > 0) {
-          const ws = wsInstances[wsInstances.length - 1];
-          ws.simulateOpen();
-          await advanceTimersByTime(50);
-          await advanceTimersByTime(50);
-          await advanceTimersByTime(50);
-          logger.debug.mockReset();
-          await advanceTimersByTime(10);
-          ws.simulateClose(1e3, "", false);
-          await advanceTimersByTime(50);
-          await advanceTimersByTime(50);
-          await advanceTimersByTime(50);
-          await advanceTimersByTime(50);
-          const allCalls = logger.debug.mock.calls;
-          const cleanCalls = allCalls.filter(
-            (call) => call[0]?.includes("Connection closed cleanly")
-          );
-          expect(cleanCalls.length).toBe(0);
+        if (wsInstances.length === 0) {
+          unmount();
+          await advanceTimersByTime(100);
+          return;
         }
+        const ws = wsInstances[wsInstances.length - 1];
+        ws.simulateOpen();
+        await advanceTimersByTime(50);
+        logger.debug.mockClear();
+        const debugCallsBeforeClose = logger.debug.mock.calls.length;
+        expect(debugCallsBeforeClose).toBe(0);
+        ws.simulateClose(1e3, "", false);
+        await advanceTimersByTime(50);
+        const callsFromThisClose = logger.debug.mock.calls.slice(debugCallsBeforeClose);
+        const cleanCalls = callsFromThisClose.filter(
+          (call) => typeof call[0] === "string" && call[0].includes("Connection closed cleanly")
+        );
+        expect(cleanCalls.length).toBe(0);
+        unmount();
+        await advanceTimersByTime(100);
       });
       it("should verify wasClean && code === 1000 pattern with different code", async () => {
         jest.clearAllMocks();
         wsInstances.splice(0, wsInstances.length);
         const executionId = "exec-code-different-test";
-        renderHook(
+        const { unmount } = renderHook(
           () => useWebSocket({
             executionId,
             executionStatus: "running"
@@ -1733,21 +1728,28 @@ describe("useWebSocket - edges.comprehensive.2", () => {
         );
         await advanceTimersByTime(100);
         await advanceTimersByTime(50);
-        if (wsInstances.length > 0) {
-          const ws = wsInstances[wsInstances.length - 1];
-          ws.simulateOpen();
-          await advanceTimersByTime(50);
-          logger.debug.mockClear();
-          ws.simulateClose(1006, "", true);
-          await advanceTimersByTime(50);
-          await advanceTimersByTime(50);
-          expect(logger.debug).toHaveBeenCalled();
-          const allCalls = logger.debug.mock.calls;
-          const cleanCalls = allCalls.filter(
-            (call) => call[0] === "[WebSocket] Connection closed cleanly, not reconnecting"
-          );
-          expect(cleanCalls.length).toBe(0);
+        if (wsInstances.length === 0) {
+          unmount();
+          await advanceTimersByTime(100);
+          return;
         }
+        const ws = wsInstances[wsInstances.length - 1];
+        ws.simulateOpen();
+        await advanceTimersByTime(50);
+        logger.debug.mockClear();
+        const debugCallsBeforeClose = logger.debug.mock.calls.length;
+        expect(debugCallsBeforeClose).toBe(0);
+        ws.simulateClose(1006, "", true);
+        await advanceTimersByTime(50);
+        await advanceTimersByTime(50);
+        expect(logger.debug).toHaveBeenCalled();
+        const callsFromThisClose = logger.debug.mock.calls.slice(debugCallsBeforeClose);
+        const cleanCalls = callsFromThisClose.filter(
+          (call) => typeof call[0] === "string" && call[0] === "[WebSocket] Connection closed cleanly, not reconnecting"
+        );
+        expect(cleanCalls.length).toBe(0);
+        unmount();
+        await advanceTimersByTime(100);
       });
       it("should verify reconnectAttempts.current < maxReconnectAttempts pattern", async () => {
         const executionId = "exec-reconnect-attempts-test";
@@ -2232,7 +2234,7 @@ describe("useWebSocket - edges.comprehensive.2", () => {
         jest.clearAllMocks();
         wsInstances.splice(0, wsInstances.length);
         const executionId = "exec-code-equals-1000-test";
-        renderHook(
+        const { unmount } = renderHook(
           () => useWebSocket({
             executionId,
             executionStatus: "running"
@@ -2252,16 +2254,18 @@ describe("useWebSocket - edges.comprehensive.2", () => {
           await advanceTimersByTime(50);
           expect(logger.debug).toHaveBeenCalled();
           const cleanCalls = logger.debug.mock.calls.filter(
-            (call) => call[0]?.includes("Connection closed cleanly")
+            (call) => typeof call[0] === "string" && call[0].includes("Connection closed cleanly")
           );
           expect(cleanCalls.length).toBeGreaterThan(0);
         }
+        unmount();
+        await advanceTimersByTime(100);
       });
       it("should verify code !== 1000 comparison", async () => {
         jest.clearAllMocks();
         wsInstances.splice(0, wsInstances.length);
         const executionId = "exec-code-not-equals-1000-test";
-        renderHook(
+        const { unmount } = renderHook(
           () => useWebSocket({
             executionId,
             executionStatus: "running"
@@ -2270,25 +2274,29 @@ describe("useWebSocket - edges.comprehensive.2", () => {
         await advanceTimersByTime(100);
         await advanceTimersByTime(50);
         await advanceTimersByTime(50);
-        if (wsInstances.length > 0) {
-          const ws = wsInstances[wsInstances.length - 1];
-          ws.simulateOpen();
-          await advanceTimersByTime(50);
-          await advanceTimersByTime(50);
-          logger.debug.mockReset();
-          ws.simulateClose(1006, "", true);
-          await advanceTimersByTime(50);
-          await advanceTimersByTime(50);
-          await advanceTimersByTime(50);
-          const cleanCalls = logger.debug.mock.calls.filter(
-            (call) => call[0]?.includes("Connection closed cleanly")
-          );
-          if (cleanCalls.length > 0) {
-            expect(wsInstances.length).toBeGreaterThan(0);
-          } else {
-            expect(cleanCalls.length).toBe(0);
-          }
+        if (wsInstances.length === 0) {
+          unmount();
+          await advanceTimersByTime(100);
+          return;
         }
+        const ws = wsInstances[wsInstances.length - 1];
+        ws.simulateOpen();
+        await advanceTimersByTime(50);
+        await advanceTimersByTime(50);
+        logger.debug.mockClear();
+        const debugCallsBeforeClose = logger.debug.mock.calls.length;
+        expect(debugCallsBeforeClose).toBe(0);
+        ws.simulateClose(1006, "", true);
+        await advanceTimersByTime(50);
+        await advanceTimersByTime(50);
+        await advanceTimersByTime(50);
+        const callsFromThisClose = logger.debug.mock.calls.slice(debugCallsBeforeClose);
+        const cleanCalls = callsFromThisClose.filter(
+          (call) => typeof call[0] === "string" && call[0].includes("Connection closed cleanly")
+        );
+        expect(cleanCalls.length).toBe(0);
+        unmount();
+        await advanceTimersByTime(100);
       });
       it("should verify maxReconnectAttempts exact value 5", async () => {
         const executionId = "exec-max-attempts-value-test";

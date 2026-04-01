@@ -3,6 +3,7 @@ import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { BrowserRouter } from "react-router-dom";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import ResetPasswordPage from "./ResetPasswordPage";
+import { API_CONFIG } from "../config/constants";
 const waitForWithTimeout = (callback, timeout = 2e3) => {
   return waitFor(callback, { timeout });
 };
@@ -76,7 +77,7 @@ describe("ResetPasswordPage", () => {
     fireEvent.click(submitButton);
     await waitForWithTimeout(() => {
       expect(global.fetch).toHaveBeenCalledWith(
-        "http://localhost:8000/api/auth/reset-password",
+        `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.AUTH.RESET_PASSWORD}`,
         expect.objectContaining({
           method: "POST",
           headers: { "Content-Type": "application/json" },

@@ -15,6 +15,10 @@ const waitForWithTimeout = async (callback, timeout = 2e3) => {
 import { useWorkflowUpdates } from "./useWorkflowUpdates";
 import { logger } from "../../utils/logger";
 import { addEdge } from "@xyflow/react";
+import {
+  initializeReactFlowNodes,
+  workflowNodeToReactFlowNode,
+} from "../../utils/workflowFormat";
 jest.mock("../../utils/logger", () => ({
   logger: {
     debug: jest.fn(),
@@ -22,24 +26,8 @@ jest.mock("../../utils/logger", () => ({
   }
 }));
 jest.mock("../../utils/workflowFormat", () => ({
-  initializeReactFlowNodes: jest.fn((nodes) => nodes),
-  workflowNodeToReactFlowNode: jest.fn((node, nodeExecutionStates) => {
-    const nodeExecutionState = nodeExecutionStates?.[node.id];
-    return {
-      id: node.id,
-      type: node.type,
-      position: node.position || { x: 0, y: 0 },
-      draggable: true,
-      selected: false,
-      data: {
-        ...node.data || {},
-        name: node.data?.name || node.name || node.type,
-        label: node.data?.label || node.data?.name || node.name || node.type,
-        executionStatus: nodeExecutionState?.status,
-        executionError: nodeExecutionState?.error
-      }
-    };
-  })
+  initializeReactFlowNodes: jest.fn(),
+  workflowNodeToReactFlowNode: jest.fn(),
 }));
 jest.mock("@xyflow/react", () => {
   const actual = jest.requireActual("@xyflow/react");
@@ -60,6 +48,16 @@ jest.mock("@xyflow/react", () => {
 const mockLoggerDebug = logger.debug;
 const mockLoggerWarn = logger.warn;
 const mockAddEdge = addEdge;
+const defaultAddEdgeImpl = (connection, edges) => [
+  ...edges,
+  {
+    id: `${connection.source}-${connection.target}`,
+    source: connection.source,
+    target: connection.target,
+    sourceHandle: connection.sourceHandle,
+    targetHandle: connection.targetHandle
+  }
+];
 describe("useWorkflowUpdates", () => {
   let mockSetNodes;
   let mockSetEdges;
@@ -82,6 +80,25 @@ describe("useWorkflowUpdates", () => {
   beforeEach(() => {
     jest.clearAllMocks();
     jest.useFakeTimers();
+    mockAddEdge.mockImplementation(defaultAddEdgeImpl);
+    initializeReactFlowNodes.mockImplementation((nodes) => nodes);
+    workflowNodeToReactFlowNode.mockImplementation((node, nodeExecutionStates) => {
+      const nodeExecutionState = nodeExecutionStates?.[node.id];
+      return {
+        id: node.id,
+        type: node.type,
+        position: node.position || { x: 0, y: 0 },
+        draggable: true,
+        selected: false,
+        data: {
+          ...(node.data || {}),
+          name: node.data?.name || node.name || node.type,
+          label: node.data?.label || node.data?.name || node.name || node.type,
+          executionStatus: nodeExecutionState?.status,
+          executionError: nodeExecutionState?.error,
+        },
+      };
+    });
     mockSetNodes = jest.fn((updater) => {
       if (typeof updater === "function") {
         return updater(initialNodes);

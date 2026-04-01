@@ -27,23 +27,25 @@ jest.mock("../../utils/logger", () => ({
   }
 }));
 jest.mock("../utils/workflowExecutionService", () => ({
-  WorkflowExecutionService: jest.fn().mockImplementation(() => ({
-    parseExecutionInputs: jest.fn((inputs) => JSON.parse(inputs)),
-    createTempExecutionId: jest.fn(() => "temp-exec-123"),
-    executeWorkflow: jest.fn().mockResolvedValue(void 0)
-  }))
+  WorkflowExecutionService: jest.fn()
 }));
 const mockShowSuccess = showSuccess;
 const mockShowError = showError;
 const mockShowConfirm = showConfirm;
 const mockApi = api;
 const mockLogger = logger;
+const defaultWorkflowExecutionServiceImpl = () => ({
+  parseExecutionInputs: jest.fn((inputs) => JSON.parse(inputs)),
+  createTempExecutionId: jest.fn(() => "temp-exec-123"),
+  executeWorkflow: jest.fn().mockResolvedValue(void 0)
+});
 describe("useWorkflowExecution - Enhanced Mutation Killers", () => {
   let mockSaveWorkflow;
   let mockOnExecutionStart;
   let workflowIdRef;
   beforeEach(() => {
     jest.clearAllMocks();
+    WorkflowExecutionService.mockImplementation(defaultWorkflowExecutionServiceImpl);
     mockSaveWorkflow = jest.fn();
     mockOnExecutionStart = jest.fn();
     workflowIdRef = { current: "workflow-1" };

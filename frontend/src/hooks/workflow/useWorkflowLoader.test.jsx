@@ -15,8 +15,8 @@ jest.mock("../../utils/logger", () => ({
   }
 }));
 jest.mock("../../utils/workflowFormat", () => ({
-  initializeReactFlowNodes: jest.fn((nodes) => nodes),
-  formatEdgesForReactFlow: jest.fn((edges) => edges)
+  initializeReactFlowNodes: jest.fn(),
+  formatEdgesForReactFlow: jest.fn(),
 }));
 describe("useWorkflowLoader", () => {
   const mockSetNodes = jest.fn();
@@ -26,18 +26,22 @@ describe("useWorkflowLoader", () => {
   const mockSetLocalWorkflowDescription = jest.fn();
   const mockSetVariables = jest.fn();
   const mockSetSelectedNodeId = jest.fn();
-  const mockWorkflowNodeToNode = jest.fn((wfNode) => ({
+  const defaultWorkflowNodeToNodeImpl = (wfNode) => ({
     id: wfNode.id,
     type: wfNode.type,
     data: wfNode.data || {},
     position: { x: 0, y: 0 }
-  }));
+  });
+  const mockWorkflowNodeToNode = jest.fn(defaultWorkflowNodeToNodeImpl);
   const mockOnWorkflowLoaded = jest.fn();
   const mockIsLoadingRef = { current: false };
   const mockLastLoadedWorkflowIdRef = { current: null };
   beforeEach(() => {
     jest.clearAllMocks();
     jest.useFakeTimers();
+    mockWorkflowNodeToNode.mockImplementation(defaultWorkflowNodeToNodeImpl);
+    initializeReactFlowNodes.mockImplementation((nodes) => nodes);
+    formatEdgesForReactFlow.mockImplementation((edges) => edges);
     mockIsLoadingRef.current = false;
     mockLastLoadedWorkflowIdRef.current = null;
   });

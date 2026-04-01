@@ -3,7 +3,7 @@ module.exports = {
   env: { browser: true, es2020: true, node: true, jest: true },
   overrides: [
     {
-      files: ['**/*.test.js', '**/*.test.jsx', 'src/test/setup-jest.jsx', 'src/test/**/*.jsx'],
+      files: ['**/*.test.js', '**/*.test.jsx', 'src/test/setup-jest.jsx', 'src/setupTests.js', 'src/test/**/*.jsx'],
       rules: {
         'no-import-assign': 'off',
         'no-constant-condition': 'off',
@@ -16,27 +16,25 @@ module.exports = {
     },
     {
       files: [
-        'vite.config.js',
         'tailwind.config.js',
         'postcss.config.js',
-        'babel.config.cjs',
-        'jest.config.cjs',
+        'src/setupProxy.js',
         '.eslintrc.cjs',
       ],
       env: { node: true },
     },
   ],
-  extends: [
-    'eslint:recommended',
-    'plugin:react-hooks/recommended',
-  ],
+  extends: ['eslint:recommended', 'plugin:react/recommended', 'plugin:react-hooks/recommended'],
   ignorePatterns: ['dist', '.eslintrc.cjs', 'scripts/**', 'analyze-mutation-by-file.js'],
   parserOptions: {
     ecmaVersion: 'latest',
     sourceType: 'module',
     ecmaFeatures: { jsx: true },
   },
-  plugins: ['react-refresh'],
+  settings: {
+    react: { version: 'detect' },
+  },
+  plugins: ['react', 'react-hooks'],
   rules: {
     'no-case-declarations': 'off',
     'no-empty': ['error', { allowEmptyCatch: true }],
@@ -45,10 +43,10 @@ module.exports = {
       varsIgnorePattern: '^_',
       caughtErrorsIgnorePattern: '^_',
     }],
-    'react-refresh/only-export-components': [
-      'warn',
-      { allowConstantExport: true },
-    ],
+    'react/prop-types': 'off',
+    'react/react-in-jsx-scope': 'off',
+    'react/jsx-uses-react': 'off',
+    'react-hooks/exhaustive-deps': 'off',
     'no-restricted-imports': [
       'warn',
       {

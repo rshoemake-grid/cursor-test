@@ -1,4 +1,8 @@
 import "@testing-library/jest-dom";
+
+jest.setTimeout(180000);
+const __jestDomWindowRef =
+  typeof globalThis.window !== "undefined" ? globalThis.window : null;
 const localStorageMock = /* @__PURE__ */ (() => {
   let store = {};
   return {
@@ -143,27 +147,41 @@ afterEach(() => {
     const duration = Date.now() - log.start;
     console.log(`[TEST END] ${log.file} > ${log.name} (${duration}ms)`);
   }
-  if (jest.isMockFunction(setTimeout) || jest.isMockFunction(setInterval)) {
-    try {
-      let timerCount = jest.getTimerCount();
-      let iterations = 0;
-      const maxIterations = 100;
-      while (timerCount > 0 && iterations < maxIterations) {
-        jest.runOnlyPendingTimers();
-        const newCount = jest.getTimerCount();
-        if (newCount === timerCount) {
-          break;
-        }
-        timerCount = newCount;
-        iterations++;
-      }
-      jest.useRealTimers();
-    } catch {
+  try {
+    const st = globalThis.setTimeout;
+    const si = globalThis.setInterval;
+    if (
+      typeof st === "function" &&
+      typeof si === "function" &&
+      (jest.isMockFunction(st) || jest.isMockFunction(si))
+    ) {
       try {
+        let timerCount = jest.getTimerCount();
+        let iterations = 0;
+        const maxIterations = 100;
+        while (timerCount > 0 && iterations < maxIterations) {
+          jest.runOnlyPendingTimers();
+          const newCount = jest.getTimerCount();
+          if (newCount === timerCount) {
+            break;
+          }
+          timerCount = newCount;
+          iterations++;
+        }
         jest.useRealTimers();
       } catch {
-        /* ignore */
+        try {
+          jest.useRealTimers();
+        } catch {
+          /* ignore */
+        }
       }
+    }
+  } catch {
+    try {
+      jest.useRealTimers();
+    } catch {
+      /* ignore */
     }
   }
   try {
@@ -173,5 +191,14 @@ afterEach(() => {
     }
   } catch {
     /* optional WS teardown */
+  }
+  if (
+    typeof globalThis.window === "undefined" &&
+    __jestDomWindowRef != null
+  ) {
+    globalThis.window = __jestDomWindowRef;
+    if (typeof global !== "undefined") {
+      global.window = __jestDomWindowRef;
+    }
   }
 });

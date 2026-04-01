@@ -150,18 +150,6 @@ jest.mock("./WorkflowBuilder/WorkflowBuilderDialogs", () => {
     })
   };
 });
-jest.mock("../hooks/ui", () => ({
-  useKeyboardShortcuts: jest.fn(),
-  useClipboard: jest.fn(() => ({
-    clipboardNode: null,
-    onCopy: jest.fn(),
-    onCut: jest.fn(),
-    onPaste: jest.fn()
-  })),
-  useContextMenu: jest.fn(),
-  useCanvasEvents: jest.fn(),
-  usePanelState: jest.fn()
-}));
 jest.mock("./nodes", () => ({
   nodeTypes: {}
 }));
@@ -175,19 +163,18 @@ jest.mock("@xyflow/react", () => {
     }) => /* @__PURE__ */jsx("div", {
       children
     }),
-    useNodesState: jest.fn(() => [[], jest.fn(), jest.fn()]),
-    useEdgesState: jest.fn(() => [[], jest.fn(), jest.fn()])
+    useNodesState: () => [[], jest.fn(), jest.fn()],
+    useEdgesState: () => [[], jest.fn(), jest.fn()]
   };
 });
 jest.mock("../hooks/storage", () => {
-  const mockLoadDraftsFromStorage = jest.fn(() => ({}));
   return {
-    useDraftManagement: jest.fn(() => ({
+    useDraftManagement: () => ({
       loadDraft: jest.fn(),
       saveDraft: jest.fn(),
       clearDraft: jest.fn()
-    })),
-    loadDraftsFromStorage: mockLoadDraftsFromStorage,
+    }),
+    loadDraftsFromStorage: () => ({}),
     useLocalStorage: jest.fn(),
     useAutoSave: jest.fn(),
     getLocalStorageItem: jest.fn(),
@@ -213,14 +200,17 @@ const mockUseWorkflowUpdates = jest.fn(() => ({
 }));
 jest.mock("../hooks/workflow", () => ({
   useWorkflowPersistence: (...args) => mockUseWorkflowPersistence(...args),
-  useWorkflowLoader: jest.fn(),
-  useWorkflowUpdateHandler: jest.fn(() => ({
+  useWorkflowLoader: () => {
+  },
+  useWorkflowUpdateHandler: () => ({
     handleWorkflowUpdate: jest.fn()
-  })),
+  }),
   useWorkflowState: (...args) => mockUseWorkflowState(...args),
   useWorkflowUpdates: (...args) => mockUseWorkflowUpdates(...args),
-  useWorkflowAPI: jest.fn(),
-  useWorkflowDeletion: jest.fn()
+  useWorkflowAPI: () => {
+  },
+  useWorkflowDeletion: () => {
+  }
 }));
 const mockUseWorkflowExecution = jest.fn(() => ({
   executeWorkflow: jest.fn(),
@@ -234,25 +224,27 @@ jest.mock("../hooks/execution", () => ({
   useWebSocket: (...args) => mockUseWebSocket(...args)
 }));
 jest.mock("../hooks/ui", () => ({
-  useCanvasEvents: jest.fn(() => ({
+  useCanvasEvents: () => ({
     onDrop: jest.fn(),
     onDragOver: jest.fn(),
     onConnect: jest.fn(),
     onNodeClick: jest.fn(),
+    onPaneClick: jest.fn(),
+    handleAddToAgentNodes: jest.fn(),
+    handleAddToToolNodes: jest.fn()
+  }),
+  useContextMenu: () => ({
+    contextMenu: null,
     onNodeContextMenu: jest.fn(),
     onEdgeContextMenu: jest.fn(),
-    onPaneClick: jest.fn()
-  })),
-  useContextMenu: jest.fn(() => ({
-    contextMenu: null,
-    onClose: jest.fn()
-  })),
-  useClipboard: jest.fn(() => ({
+    closeContextMenu: jest.fn()
+  }),
+  useClipboard: () => ({
     clipboardNode: null,
     onCopy: jest.fn(),
     onCut: jest.fn(),
     onPaste: jest.fn()
-  })),
+  }),
   usePanelState: jest.fn(),
   useKeyboardShortcuts: jest.fn()
 }));
@@ -270,17 +262,17 @@ jest.mock("../hooks/nodes", () => ({
   useSelectionManager: jest.fn()
 }));
 jest.mock("../hooks/marketplace", () => ({
-  useMarketplaceDialog: jest.fn(() => ({
+  useMarketplaceDialog: () => ({
     showMarketplaceDialog: false,
     marketplaceNode: null,
     openDialog: jest.fn(),
     closeDialog: jest.fn()
-  })),
-  useMarketplaceIntegration: jest.fn(() => ({
+  }),
+  useMarketplaceIntegration: () => ({
     isAddingAgentsRef: {
       current: false
     }
-  })),
+  }),
   useMarketplaceData: jest.fn(),
   useMarketplacePublishing: jest.fn(),
   useTemplateOperations: jest.fn(),
@@ -327,6 +319,33 @@ describe("WorkflowBuilder - Additional Coverage", () => {
       register: jest.fn()
     });
     showConfirm.mockResolvedValue(true);
+    mockUseWorkflowState.mockImplementation(() => ({
+      localWorkflowId: null,
+      setLocalWorkflowId: jest.fn(),
+      localWorkflowName: "",
+      setLocalWorkflowName: jest.fn(),
+      localWorkflowDescription: "",
+      setLocalWorkflowDescription: jest.fn(),
+      variables: {},
+      setVariables: jest.fn()
+    }));
+    mockUseWorkflowPersistence.mockImplementation(() => ({
+      saveWorkflow: jest.fn().mockResolvedValue("workflow-1"),
+      exportWorkflow: jest.fn()
+    }));
+    mockUseWorkflowUpdates.mockImplementation(() => ({
+      workflowNodeToNode: jest.fn()
+    }));
+    mockUseWorkflowExecution.mockImplementation(() => ({
+      executeWorkflow: jest.fn(),
+      showInputs: false
+    }));
+    mockUseNodeSelection.mockImplementation(() => ({
+      selectedNodeId: null,
+      setSelectedNodeId: jest.fn(),
+      selectedNodeIds: [],
+      handleNodesChange: jest.fn()
+    }));
   });
   describe("Component Rendering", () => {
     it("should render WorkflowBuilder with all child components", async () => {

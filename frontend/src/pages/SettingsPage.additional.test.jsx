@@ -7,7 +7,7 @@ import { SettingsService } from "../services/SettingsService";
 import { useProviderManagement } from "../hooks/providers";
 import { useAutoSave } from "../hooks/storage";
 jest.mock("../services/SettingsService");
-const mockUseLLMProviders = jest.fn((options) => {
+const defaultLLMProvidersImpl = (options) => {
   if (options?.onLoadComplete) {
     Promise.resolve().then(() => {
       options.onLoadComplete({
@@ -22,7 +22,8 @@ const mockUseLLMProviders = jest.fn((options) => {
     iterationLimit: 10,
     defaultModel: ""
   };
-});
+};
+const mockUseLLMProviders = jest.fn(defaultLLMProvidersImpl);
 jest.mock("../hooks/providers", () => ({
   useProviderManagement: jest.fn(),
   useLLMProviders: (options) => mockUseLLMProviders(options)
@@ -38,6 +39,7 @@ const mockUseAutoSave = useAutoSave;
 describe("SettingsPage - Additional Coverage", () => {
   beforeEach(() => {
     setupMocks();
+    mockUseLLMProviders.mockImplementation(defaultLLMProvidersImpl);
     mockUseProviderManagement.mockReturnValue({
       saveProviders: jest.fn(),
       updateProvider: jest.fn(),

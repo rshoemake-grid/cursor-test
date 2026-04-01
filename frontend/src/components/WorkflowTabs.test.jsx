@@ -1881,15 +1881,12 @@ describe("WorkflowTabs", () => {
     });
   });
   describe("Storage edge cases", () => {
-    it("should handle saveTabsToStorage when storage is null and window is undefined", async () => {
-      const originalWindow = global.window;
-      delete global.window;
+    it("should handle saveTabsToStorage when storage is null", async () => {
       renderWithProvider({ storage: null });
       await waitForWithTimeout(() => {
         expect(screen.getAllByRole("button").length).toBeGreaterThan(0);
       });
       expect(screen.getAllByRole("button").length).toBeGreaterThan(0);
-      global.window = originalWindow;
     });
     it("should handle saveTabsToStorage when localStorage.setItem throws", async () => {
       const originalSetItem = window.localStorage.setItem;

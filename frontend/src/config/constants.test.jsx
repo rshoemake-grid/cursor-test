@@ -129,7 +129,12 @@ describe("constants", () => {
       expect(typeof API_CONFIG.BASE_URL).toBe("string");
     });
     it("should have valid URL format", () => {
-      expect(API_CONFIG.BASE_URL).toMatch(/^https?:\/\//);
+      const base = API_CONFIG.BASE_URL;
+      expect(
+        base.startsWith("http://") ||
+          base.startsWith("https://") ||
+          base.startsWith("/")
+      ).toBe(true);
     });
   });
 });

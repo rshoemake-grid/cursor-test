@@ -13,12 +13,12 @@ jest.mock("../utils/logger", () => ({
     info: jest.fn()
   }
 }));
-const mockChat = jest.fn();
 jest.mock("../api/client", () => ({
   api: {
-    chat: (...args) => mockChat(...args)
-  }
+    chat: jest.fn(),
+  },
 }));
+import { api } from "../api/client";
 jest.mock("../utils/errorHandler", () => ({
   handleApiError: jest.fn((error) => {
     return error?.message || "Unknown error";
@@ -45,22 +45,6 @@ jest.mock("../utils/storageHelpers", () => ({
     }
   })
 }));
-jest.mock("../config/constants", () => ({
-  API_CONFIG: {
-    BASE_URL: "http://localhost:8000/api",
-    ENDPOINTS: {
-      CHAT: "/workflow-chat/chat"
-    }
-  },
-  STORAGE_KEYS: {
-    AUTH_TOKEN: "auth_token",
-    AUTH_USER: "auth_user",
-    AUTH_REMEMBER_ME: "auth_remember_me"
-  },
-  getChatHistoryKey: jest.fn((workflowId) => {
-    return workflowId ? `chat_history_${workflowId}` : "chat_history_new_workflow";
-  })
-}));
 global.fetch = jest.fn();
 jest.mock("../contexts/AuthContext", () => ({
   ...jest.requireActual("../contexts/AuthContext"),
@@ -78,13 +62,32 @@ const renderWithProvider = (component) => {
 describe("WorkflowChat", () => {
   const mockOnWorkflowUpdate = jest.fn();
   beforeEach(() => {
-    jest.clearAllMocks();
+    class MockSpeechRecognition {
+      constructor() {
+        this.continuous = false;
+        this.interimResults = false;
+        this.start = jest.fn();
+        this.stop = jest.fn();
+        this.abort = jest.fn();
+      }
+    }
+    window.SpeechRecognition = MockSpeechRecognition;
+    window.webkitSpeechRecognition = MockSpeechRecognition;
+    window.speechSynthesis = {
+      speak: jest.fn(),
+      cancel: jest.fn(),
+      getVoices: jest.fn(() => []),
+    };
+    global.SpeechSynthesisUtterance = function Utterance(text) {
+      this.text = text;
+      this.lang = "";
+    };
     localStorage.clear();
     const { safeStorageGet } = require("../utils/storageHelpers");
     const { safeStorageSet } = require("../utils/storageHelpers");
     const { handleApiError } = require("../utils/errorHandler");
-    mockChat.mockClear();
-    mockChat.mockResolvedValue({ message: "Response message" });
+    api.chat.mockClear();
+    api.chat.mockResolvedValue({ message: "Response message" });
     safeStorageGet.mockImplementation((storage, key, defaultValue) => {
       if (!storage) return defaultValue;
       try {
@@ -113,6 +116,20 @@ describe("WorkflowChat", () => {
     renderWithProvider(/* @__PURE__ */ jsx(WorkflowChat, { workflowId: "workflow-1" }));
     expect(screen.getByPlaceholderText(/Type your message/)).toBeInTheDocument();
     expect(screen.getByText("Send")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /push to talk/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /turn on read aloud/i })).toBeInTheDocument();
+  });
+  it("should call speech synthesis when read aloud is on and assistant replies", async () => {
+    renderWithProvider(/* @__PURE__ */ jsx(WorkflowChat, { workflowId: "workflow-1" }));
+    fireEvent.click(screen.getByRole("button", { name: /turn on read aloud/i }));
+    expect(screen.getByRole("button", { name: /turn off read aloud/i })).toBeInTheDocument();
+    fireEvent.change(screen.getByPlaceholderText(/Type your message/), {
+      target: { value: "Hello" }
+    });
+    fireEvent.click(screen.getByText("Send"));
+    await waitForWithTimeout(() => {
+      expect(window.speechSynthesis.speak).toHaveBeenCalled();
+    });
   });
   it("should display default greeting for existing workflow", () => {
     renderWithProvider(/* @__PURE__ */ jsx(WorkflowChat, { workflowId: "workflow-1" }));
@@ -146,7 +163,7 @@ describe("WorkflowChat", () => {
     const sendButton = screen.getByText("Send");
     fireEvent.click(sendButton);
     await waitForWithTimeout(() => {
-      expect(mockChat).toHaveBeenCalledWith(
+      expect(api.chat).toHaveBeenCalledWith(
         expect.objectContaining({
           workflow_id: "workflow-1",
           message: "Test message"
@@ -160,7 +177,7 @@ describe("WorkflowChat", () => {
     fireEvent.change(input, { target: { value: "Test message" } });
     fireEvent.keyPress(input, { key: "Enter", code: "Enter", charCode: 13 });
     await waitForWithTimeout(() => {
-      expect(mockChat).toHaveBeenCalled();
+      expect(api.chat).toHaveBeenCalled();
     }, 3e3);
   });
   it("should not send message when Shift+Enter is pressed", () => {
@@ -168,7 +185,7 @@ describe("WorkflowChat", () => {
     const input = screen.getByPlaceholderText(/Type your message/);
     fireEvent.change(input, { target: { value: "Test message" } });
     fireEvent.keyPress(input, { key: "Enter", code: "Enter", charCode: 13, shiftKey: true });
-    expect(mockChat).not.toHaveBeenCalled();
+    expect(api.chat).not.toHaveBeenCalled();
   });
   it("should not send empty message", () => {
     renderWithProvider(/* @__PURE__ */ jsx(WorkflowChat, { workflowId: "workflow-1" }));
@@ -176,7 +193,7 @@ describe("WorkflowChat", () => {
     expect(sendButton).toBeDisabled();
   });
   it("should display user and assistant messages", async () => {
-    mockChat.mockResolvedValue({ message: "Assistant response" });
+    api.chat.mockResolvedValue({ message: "Assistant response" });
     renderWithProvider(/* @__PURE__ */ jsx(WorkflowChat, { workflowId: "workflow-1" }));
     const input = screen.getByPlaceholderText(/Type your message/);
     fireEvent.change(input, { target: { value: "User message" } });
@@ -192,7 +209,7 @@ describe("WorkflowChat", () => {
   it("should handle API error", async () => {
     const { handleApiError } = require("../utils/errorHandler");
     handleApiError.mockReturnValue("HTTP error! status: 500");
-    mockChat.mockRejectedValue(new Error("HTTP 500"));
+    api.chat.mockRejectedValue(new Error("HTTP 500"));
     renderWithProvider(/* @__PURE__ */ jsx(WorkflowChat, { workflowId: "workflow-1" }));
     const input = screen.getByPlaceholderText(/Type your message/);
     fireEvent.change(input, { target: { value: "Test message" } });
@@ -203,7 +220,7 @@ describe("WorkflowChat", () => {
     }, 2e3);
   });
   it("should apply workflow changes when received", async () => {
-    mockChat.mockResolvedValue({
+    api.chat.mockResolvedValue({
       message: "Response",
       workflow_changes: {
         nodes_to_add: [],
@@ -223,7 +240,7 @@ describe("WorkflowChat", () => {
     }, 3e3);
   });
   it("should save conversation history to localStorage", async () => {
-    mockChat.mockResolvedValue({ message: "Response" });
+    api.chat.mockResolvedValue({ message: "Response" });
     renderWithProvider(/* @__PURE__ */ jsx(WorkflowChat, { workflowId: "workflow-1" }));
     const input = screen.getByPlaceholderText(/Type your message/);
     fireEvent.change(input, { target: { value: "Test message" } });
@@ -237,7 +254,7 @@ describe("WorkflowChat", () => {
     }, 2e3);
   });
   it("should load conversation history when workflowId changes", async () => {
-    mockChat.mockResolvedValue({ message: "Response" });
+    api.chat.mockResolvedValue({ message: "Response" });
     const history1 = [
       { role: "user", content: "Message 1" }
     ];
@@ -261,7 +278,7 @@ describe("WorkflowChat", () => {
     const promise = new Promise((resolve) => {
       resolvePromise = resolve;
     });
-    mockChat.mockReturnValue(promise);
+    api.chat.mockReturnValue(promise);
     renderWithProvider(/* @__PURE__ */ jsx(WorkflowChat, { workflowId: "workflow-1" }));
     const input = screen.getByPlaceholderText(/Type your message/);
     fireEvent.change(input, { target: { value: "Test message" } });
@@ -278,7 +295,7 @@ describe("WorkflowChat", () => {
   it("should handle non-Error exception", async () => {
     const { handleApiError } = require("../utils/errorHandler");
     handleApiError.mockReturnValue("Unknown error");
-    mockChat.mockRejectedValue("String error");
+    api.chat.mockRejectedValue("String error");
     renderWithProvider(/* @__PURE__ */ jsx(WorkflowChat, { workflowId: "workflow-1" }));
     const input = screen.getByPlaceholderText(/Type your message/);
     fireEvent.change(input, { target: { value: "Test message" } });
@@ -294,7 +311,7 @@ describe("WorkflowChat", () => {
     expect(screen.getByText(/Hello! I can help you/)).toBeInTheDocument();
   });
   it("should not call onWorkflowUpdate when workflow_changes is missing", async () => {
-    mockChat.mockResolvedValue({ message: "Response" });
+    api.chat.mockResolvedValue({ message: "Response" });
     renderWithProvider(/* @__PURE__ */ jsx(WorkflowChat, { workflowId: "workflow-1", onWorkflowUpdate: mockOnWorkflowUpdate }));
     const input = screen.getByPlaceholderText(/Type your message/);
     fireEvent.change(input, { target: { value: "Test message" } });
@@ -308,7 +325,7 @@ describe("WorkflowChat", () => {
   it("should handle network errors", async () => {
     const { handleApiError } = require("../utils/errorHandler");
     handleApiError.mockReturnValue("Network error");
-    mockChat.mockRejectedValue(new Error("Network error"));
+    api.chat.mockRejectedValue(new Error("Network error"));
     renderWithProvider(/* @__PURE__ */ jsx(WorkflowChat, { workflowId: "workflow-1" }));
     const input = screen.getByPlaceholderText(/Type your message/);
     fireEvent.change(input, { target: { value: "Test message" } });
@@ -330,7 +347,7 @@ describe("WorkflowChat", () => {
     const promise = new Promise((resolve) => {
       resolvePromise = resolve;
     });
-    mockChat.mockReturnValue(promise);
+    api.chat.mockReturnValue(promise);
     renderWithProvider(/* @__PURE__ */ jsx(WorkflowChat, { workflowId: "workflow-1" }));
     const input = screen.getByPlaceholderText(/Type your message/);
     fireEvent.change(input, { target: { value: "Test message" } });
@@ -359,14 +376,14 @@ describe("WorkflowChat", () => {
       expect(mockStorage.getItem).toHaveBeenCalledWith("chat_history_workflow-1");
     });
     it("should use API client for chat", async () => {
-      mockChat.mockResolvedValue({ message: "Response from API client" });
+      api.chat.mockResolvedValue({ message: "Response from API client" });
       renderWithProvider(/* @__PURE__ */ jsx(WorkflowChat, { workflowId: "workflow-1" }));
       const input = screen.getByPlaceholderText(/Type your message/);
       fireEvent.change(input, { target: { value: "Test message" } });
       const sendButton = screen.getByText("Send");
       fireEvent.click(sendButton);
       await waitForWithTimeout(() => {
-        expect(mockChat).toHaveBeenCalled();
+        expect(api.chat).toHaveBeenCalled();
       }, 3e3);
       await waitForWithTimeout(() => {
         expect(screen.getByText("Response from API client")).toBeInTheDocument();
@@ -379,7 +396,7 @@ describe("WorkflowChat", () => {
         warn: jest.fn(),
         info: jest.fn()
       };
-      mockChat.mockResolvedValue({
+      api.chat.mockResolvedValue({
         message: "Response",
         workflow_changes: { nodes_to_delete: ["node-1"] }
       });
@@ -433,7 +450,7 @@ describe("WorkflowChat", () => {
     it("should handle storage setItem errors", async () => {
       const { safeStorageSet } = require("../utils/storageHelpers");
       safeStorageSet.mockReturnValue(false);
-      mockChat.mockResolvedValue({ message: "Response" });
+      api.chat.mockResolvedValue({ message: "Response" });
       renderWithProvider(/* @__PURE__ */ jsx(WorkflowChat, { workflowId: "workflow-1" }));
       const input = screen.getByPlaceholderText(/Type your message/);
       fireEvent.change(input, { target: { value: "Test message" } });
@@ -446,7 +463,7 @@ describe("WorkflowChat", () => {
     it("should handle HTTP client errors", async () => {
       const { handleApiError } = require("../utils/errorHandler");
       handleApiError.mockReturnValue("Network error");
-      mockChat.mockRejectedValue(new Error("Network error"));
+      api.chat.mockRejectedValue(new Error("Network error"));
       renderWithProvider(
         /* @__PURE__ */ jsx(WorkflowChat, { workflowId: "workflow-1" })
       );
@@ -473,7 +490,7 @@ describe("WorkflowChat", () => {
         addEventListener: jest.fn(),
         removeEventListener: jest.fn()
       };
-      mockChat.mockResolvedValue({ message: "Response" });
+      api.chat.mockResolvedValue({ message: "Response" });
       renderWithProvider(
         /* @__PURE__ */ jsx(WorkflowChat, { workflowId: "workflow-1", storage: mockStorage })
       );

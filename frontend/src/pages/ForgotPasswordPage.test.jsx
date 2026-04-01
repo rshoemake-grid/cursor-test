@@ -3,6 +3,7 @@ import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { BrowserRouter } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import ForgotPasswordPage from "./ForgotPasswordPage";
+import { API_CONFIG } from "../config/constants";
 const waitForWithTimeout = (callback, timeout = 2e3) => {
   return waitFor(callback, { timeout });
 };
@@ -42,7 +43,7 @@ describe("ForgotPasswordPage", () => {
     }, 2e3);
     await waitForWithTimeout(() => {
       expect(global.fetch).toHaveBeenCalledWith(
-        "http://localhost:8000/api/auth/forgot-password",
+        `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.AUTH.FORGOT_PASSWORD}`,
         expect.objectContaining({
           method: "POST",
           headers: { "Content-Type": "application/json" },

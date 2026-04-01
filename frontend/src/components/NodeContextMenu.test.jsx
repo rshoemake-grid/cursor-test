@@ -29,6 +29,9 @@ describe("NodeContextMenu", () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
   it("should render delete button for node", () => {
     renderWithProvider(
       /* @__PURE__ */ jsx(

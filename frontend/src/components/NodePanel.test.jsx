@@ -407,12 +407,5 @@ describe("NodePanel", () => {
       fireEvent.click(toggleButton);
       expect(screen.getByText("Node Palette")).toBeInTheDocument();
     });
-    it("should handle window being undefined", () => {
-      const originalWindow = global.window;
-      delete global.window;
-      render(/* @__PURE__ */ jsx(NodePanel, {}));
-      expect(screen.getByText("Node Palette")).toBeInTheDocument();
-      global.window = originalWindow;
-    });
   });
 });

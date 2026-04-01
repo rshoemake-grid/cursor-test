@@ -4,6 +4,7 @@ const waitForWithTimeout = (callback, timeout = 2e3) => {
   return waitFor(callback, { timeout });
 };
 import { AuthProvider, useAuth } from "./AuthContext";
+import { API_CONFIG } from "../config/constants";
 jest.mock("../utils/logger", () => ({
   logger: {
     debug: jest.fn(),
@@ -102,7 +103,7 @@ describe("AuthProvider", () => {
         await result.current.login("testuser", "password", true);
       });
       expect(mockHttpClient.post).toHaveBeenCalledWith(
-        "http://localhost:8000/api/auth/login",
+        `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.AUTH.LOGIN}`,
         { username: "testuser", password: "password", remember_me: true },
         { "Content-Type": "application/json" }
       );
@@ -217,7 +218,7 @@ describe("AuthProvider", () => {
         await result.current.register("newuser", "new@example.com", "password", "Full Name");
       });
       expect(mockHttpClient.post).toHaveBeenCalledWith(
-        "http://localhost:8000/api/auth/register",
+        `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.AUTH.REGISTER}`,
         { username: "newuser", email: "new@example.com", password: "password", full_name: "Full Name" },
         { "Content-Type": "application/json" }
       );
@@ -242,7 +243,7 @@ describe("AuthProvider", () => {
         await result.current.register("newuser", "new@example.com", "password");
       });
       expect(mockHttpClient.post).toHaveBeenCalledWith(
-        "http://localhost:8000/api/auth/register",
+        `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.AUTH.REGISTER}`,
         { username: "newuser", email: "new@example.com", password: "password", full_name: void 0 },
         { "Content-Type": "application/json" }
       );

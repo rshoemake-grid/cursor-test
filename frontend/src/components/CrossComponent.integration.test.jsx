@@ -37,62 +37,63 @@ jest.mock("react-router-dom", () => ({
   useNavigate: () => jest.fn()
 }));
 jest.mock("../hooks/providers", () => ({
-  useLLMProviders: jest.fn(() => ({
+  useLLMProviders: () => ({
     providers: [],
     iterationLimit: 10,
     defaultModel: "gpt-4"
-  })),
-  useProviderManagement: jest.fn(() => ({
+  }),
+  useProviderManagement: () => ({
     saveProviders: jest.fn(),
     updateProvider: jest.fn(),
     testProvider: jest.fn(),
     addCustomModel: jest.fn(),
     testingProvider: null,
     testResults: {}
-  }))
+  })
 }));
 jest.mock("../hooks/settings/useSettingsSync", () => ({
-  useSettingsSync: jest.fn(() => ({
+  useSettingsSync: () => ({
     handleManualSync: jest.fn()
-  }))
+  })
 }));
 jest.mock("../hooks/settings/useModelExpansion", () => ({
-  useModelExpansion: jest.fn(() => ({
+  useModelExpansion: () => ({
     expandedModels: {},
     expandedProviders: {},
     toggleProviderModels: jest.fn(),
     toggleModel: jest.fn(),
     isModelExpanded: jest.fn(() => false)
-  }))
+  })
 }));
 jest.mock("../hooks/settings/useSettingsStateSync", () => ({
-  useSettingsStateSync: jest.fn()
+  useSettingsStateSync: () => {
+  }
 }));
 jest.mock("../hooks/storage", () => ({
-  useLocalStorage: jest.fn(() => ["", jest.fn(), jest.fn()]),
-  getLocalStorageItem: jest.fn(() => ({})),
+  useLocalStorage: () => ["", jest.fn(), jest.fn()],
+  getLocalStorageItem: () => ({}),
   setLocalStorageItem: jest.fn(),
   useAutoSave: jest.fn(),
-  useDraftManagement: jest.fn(() => ({
+  useDraftManagement: () => ({
     saveDraft: jest.fn(),
     loadDraft: jest.fn(),
     clearDraft: jest.fn()
-  })),
-  loadDraftsFromStorage: jest.fn(() => [])
+  }),
+  loadDraftsFromStorage: () => []
 }));
 jest.mock("../hooks/workflow", () => ({
-  useWorkflowPersistence: jest.fn(() => ({
+  useWorkflowPersistence: () => ({
     saveWorkflow: jest.fn().mockResolvedValue("workflow-1"),
     exportWorkflow: jest.fn()
-  })),
-  useWorkflowUpdates: jest.fn(() => ({
+  }),
+  useWorkflowUpdates: () => ({
     workflowNodeToNode: jest.fn(n => n),
     applyLocalChanges: jest.fn()
-  })),
-  useWorkflowUpdateHandler: jest.fn(() => ({
+  }),
+  useWorkflowUpdateHandler: () => ({
     handleWorkflowUpdate: jest.fn()
-  })),
-  useWorkflowState: jest.fn(() => ({
+  }),
+  useWorkflowState: () => ({
     localWorkflowId: null,
     setLocalWorkflowId: jest.fn(),
     localWorkflowName: "Untitled Workflow",
@@ -101,60 +102,61 @@ jest.mock("../hooks/workflow", () => ({
     setLocalWorkflowDescription: jest.fn(),
     variables: {},
     setVariables: jest.fn()
-  })),
-  useWorkflowLoader: jest.fn()
+  }),
+  useWorkflowLoader: () => {
+  }
 }));
 jest.mock("../hooks/execution", () => ({
-  useWorkflowExecution: jest.fn(() => ({
+  useWorkflowExecution: () => ({
     executeWorkflow: jest.fn(),
     showInputs: false,
     setShowInputs: jest.fn(),
     setExecutionInputs: jest.fn(),
     handleConfirmExecute: jest.fn()
-  }))
+  })
 }));
 jest.mock("../hooks/ui", () => ({
-  useClipboard: jest.fn(() => ({
+  useClipboard: () => ({
     clipboardNode: null,
     copy: jest.fn(),
     cut: jest.fn(),
     paste: jest.fn()
-  })),
-  useContextMenu: jest.fn(() => ({
+  }),
+  useContextMenu: () => ({
     contextMenu: null,
     onNodeContextMenu: jest.fn(),
     onEdgeContextMenu: jest.fn(),
     closeContextMenu: jest.fn()
-  })),
-  useCanvasEvents: jest.fn(() => ({
+  }),
+  useCanvasEvents: () => ({
     onConnect: jest.fn(),
     onDragOver: jest.fn(),
     onDrop: jest.fn(),
     onNodeClick: jest.fn(),
     onPaneClick: jest.fn(),
     handleAddToAgentNodes: jest.fn()
-  }))
+  })
 }));
 jest.mock("../hooks/marketplace", () => ({
-  useMarketplaceIntegration: jest.fn(() => ({
+  useMarketplaceIntegration: () => ({
     isAddingAgentsRef: {
       current: false
     }
-  })),
-  useMarketplaceDialog: jest.fn(() => ({
+  }),
+  useMarketplaceDialog: () => ({
     showMarketplaceDialog: false,
     marketplaceNode: null,
     openDialog: jest.fn(),
     closeDialog: jest.fn()
-  }))
+  })
 }));
 jest.mock("../hooks/nodes", () => ({
-  useNodeSelection: jest.fn(() => ({
+  useNodeSelection: () => ({
     selectedNodeId: null,
     setSelectedNodeId: jest.fn(),
     selectedNodeIds: /* @__PURE__ */new Set(),
     handleNodesChange: jest.fn((changes, base) => base(changes))
-  }))
+  })
 }));
 jest.mock("./NodePanel", () => {
   const { jsx } = require("react/jsx-runtime");
@@ -265,8 +267,8 @@ jest.mock("@xyflow/react", () => {
     }) => {
       return React2.createElement("div", null, children);
     },
-    useNodesState: jest.fn(() => [[], jest.fn(), jest.fn()]),
-    useEdgesState: jest.fn(() => [[], jest.fn(), jest.fn()]),
+    useNodesState: () => [[], jest.fn(), jest.fn()],
+    useEdgesState: () => [[], jest.fn(), jest.fn()],
     useReactFlow: () => ({
       getNodes: jest.fn(() => []),
       getEdges: jest.fn(() => []),

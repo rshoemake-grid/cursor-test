@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import { showSuccess as defaultShowSuccess, showError as defaultShowError } from "../../utils/notifications";
 import { showConfirm as defaultShowConfirm } from "../../utils/confirm";
 import { api as defaultApi } from "../../api/client";
@@ -25,7 +25,14 @@ function useWorkflowExecution({
   logger = defaultLogger
 }) {
   const [showInputs, setShowInputs] = useState(false);
-  const [executionInputs, setExecutionInputs] = useState("{}");
+  const [executionInputs, setExecutionInputsState] = useState("{}");
+  const executionInputsRef = useRef("{}");
+  const setExecutionInputs = useCallback((value) => {
+    const next =
+      typeof value === "function" ? value(executionInputsRef.current) : value;
+    executionInputsRef.current = next;
+    setExecutionInputsState(next);
+  }, []);
   const [isExecuting, setIsExecuting] = useState(false);
   const executeWorkflow = useCallback(async () => {
     logger.debug("[WorkflowBuilder] executeWorkflow called");
@@ -72,7 +79,9 @@ function useWorkflowExecution({
         api,
         logger
       });
-      const inputs = executionService.parseExecutionInputs(executionInputs);
+      const inputs = executionService.parseExecutionInputs(
+        executionInputsRef.current
+      );
       logger.debug("[WorkflowBuilder] Parsed inputs:", inputs);
       setShowInputs(false);
       setExecutionInputs("{}");

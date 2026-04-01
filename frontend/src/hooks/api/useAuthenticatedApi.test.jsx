@@ -38,6 +38,9 @@ describe("useAuthenticatedApi", () => {
       isAuthenticated: true
     });
   });
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
   it("should include Authorization header when token is present", () => {
     const { result } = renderHook(() => useAuthenticatedApi(mockHttpClient));
     result.current.authenticatedPost("/test", { data: "test" });

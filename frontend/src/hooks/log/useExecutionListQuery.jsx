@@ -1,37 +1,85 @@
-import { useQuery } from "@tanstack/react-query";
+import { useEffect, useCallback, useRef } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchExecutionsRequested } from "../../redux/executions/executionsActions";
+import {
+  selectExecutionsItems,
+  selectExecutionsStatus,
+  selectExecutionsError,
+} from "../../redux/executions/executionsSelectors";
 import { logger } from "../../utils/logger";
+
 function useExecutionListQuery({
   apiClient,
   filters,
   enabled = true,
-  refetchInterval = 5e3
+  refetchInterval = 5e3,
 } = {}) {
-  return useQuery({
-    queryKey: ["executions", filters],
-    queryFn: async () => {
-      if (!apiClient) {
-        throw new Error("API client not provided");
-      }
-      const params = {
-        limit: filters?.limit || 100,
-        ...filters?.status && { status: filters.status },
-        ...filters?.workflow_id && { workflow_id: filters.workflow_id },
-        ...filters?.offset && { offset: filters.offset }
-      };
+  const dispatch = useDispatch();
+  const items = useSelector(selectExecutionsItems);
+  const status = useSelector(selectExecutionsStatus);
+  const errorMessage = useSelector(selectExecutionsError);
+  const filtersRef = useRef(filters);
+  const apiClientRef = useRef(apiClient);
+  filtersRef.current = filters;
+  apiClientRef.current = apiClient;
+
+  const isPending = status === "pending";
+  const isError = status === "error";
+  const isLoading = isPending && items.length === 0;
+  const data =
+    status === "idle"
+      ? undefined
+      : status === "error"
+        ? undefined
+        : items;
+
+  const error =
+    errorMessage != null && errorMessage !== ""
+      ? errorMessage instanceof Error
+        ? errorMessage
+        : new Error(errorMessage)
+      : null;
+
+  const runFetch = useCallback(() => {
+    const client = apiClientRef.current;
+    const f = filtersRef.current;
+    if (!client) {
+      return;
+    }
+    dispatch(fetchExecutionsRequested({ apiClient: client, filters: f }));
+  }, [dispatch]);
+
+  const refetch = useCallback(() => {
+    runFetch();
+  }, [runFetch]);
+
+  useEffect(() => {
+    if (!enabled || !apiClient) {
+      return undefined;
+    }
+    const tick = () => {
       try {
-        const data = await apiClient.listExecutions(params);
-        return data;
+        runFetch();
       } catch (err) {
         logger.error("Failed to load executions:", err);
-        throw err;
       }
-    },
-    enabled: enabled && !!apiClient,
-    refetchInterval: refetchInterval > 0 ? refetchInterval : false,
-    staleTime: 3 * 1e3
-    // 3 seconds - data is fresh for 3 seconds
-  });
+    };
+    tick();
+    if (refetchInterval > 0) {
+      const id = setInterval(tick, refetchInterval);
+      return () => clearInterval(id);
+    }
+    return undefined;
+  }, [enabled, apiClient, runFetch, refetchInterval, JSON.stringify(filters)]);
+
+  return {
+    data,
+    isLoading,
+    isPending,
+    isError,
+    error,
+    refetch,
+  };
 }
-export {
-  useExecutionListQuery
-};
+
+export { useExecutionListQuery };

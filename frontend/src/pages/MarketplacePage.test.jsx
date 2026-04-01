@@ -3,6 +3,11 @@ import { render, screen, fireEvent, waitFor, act } from "@testing-library/react"
 import { BrowserRouter } from "react-router-dom";
 import MarketplacePage from "./MarketplacePage";
 import { useAuth } from "../contexts/AuthContext";
+import {
+  useMarketplaceSelections,
+  useTemplateOperations,
+  useMarketplaceActions
+} from "../hooks/marketplace";
 import { api } from "../api/client";
 import { getLocalStorageItem } from "../hooks/storage";
 import { showConfirm } from "../utils/confirm";
@@ -55,12 +60,7 @@ jest.mock("../hooks/marketplace", () => {
     ...actual,
     useMarketplaceData: (...args) => mockUseMarketplaceData(...args),
     useOfficialAgentSeeding: jest.fn(),
-    useTemplateOperations: jest.fn(() => ({
-      useTemplate: jest.fn(),
-      deleteSelectedAgents: jest.fn(),
-      deleteSelectedWorkflows: jest.fn(),
-      deleteSelectedRepositoryAgents: jest.fn()
-    })),
+    useTemplateOperations: jest.fn(),
     useMarketplaceIntegration: jest.fn(),
     useMarketplacePublishing: jest.fn(),
     useMarketplaceDialog: jest.fn(),
@@ -72,32 +72,8 @@ jest.mock("../hooks/marketplace", () => {
     useAgentDeletion: jest.fn(),
     useWorkflowDeletion: jest.fn(),
     // useMarketplaceTabs: Use real hook (from ...actual above)
-    useMarketplaceSelections: jest.fn(() => {
-      const createSelection = () => ({
-        selectedIds: /* @__PURE__ */ new Set(),
-        setSelectedIds: jest.fn(),
-        toggle: jest.fn(),
-        clear: jest.fn(),
-        add: jest.fn(),
-        remove: jest.fn(),
-        has: jest.fn(),
-        size: 0
-      });
-      return {
-        templateSelection: createSelection(),
-        agentSelection: createSelection(),
-        repositoryAgentSelection: createSelection(),
-        toolSelection: createSelection(),
-        clearSelectionsForTab: jest.fn()
-      };
-    }),
-    useMarketplaceActions: jest.fn(() => ({
-      handleDeleteSelected: jest.fn(),
-      handleDeleteTemplate: jest.fn(),
-      handleDeleteAgent: jest.fn(),
-      handleDeleteWorkflow: jest.fn(),
-      handleDeleteRepositoryAgent: jest.fn()
-    })),
+    useMarketplaceSelections: jest.fn(),
+    useMarketplaceActions: jest.fn(),
     MARKETPLACE_TABS: {
       AGENTS: "agents",
       REPOSITORY: "repository",
@@ -125,6 +101,39 @@ jest.mock("../hooks/nodes", () => ({
   useNodeForm: jest.fn(),
   useSelectedNode: jest.fn()
 }));
+const defaultTemplateOperations = () => ({
+  useTemplate: jest.fn(),
+  deleteSelectedAgents: jest.fn(),
+  deleteSelectedWorkflows: jest.fn(),
+  deleteSelectedRepositoryAgents: jest.fn()
+});
+const defaultMarketplaceActions = () => ({
+  handleLoadWorkflows: jest.fn(),
+  handleUseAgents: jest.fn(),
+  handleUseTools: jest.fn(),
+  handleDeleteAgents: jest.fn(),
+  handleDeleteWorkflows: jest.fn(),
+  handleDeleteRepositoryAgents: jest.fn()
+});
+const defaultMarketplaceSelections = () => {
+  const createSelection = () => ({
+    selectedIds: /* @__PURE__ */ new Set(),
+    setSelectedIds: jest.fn(),
+    toggle: jest.fn(),
+    clear: jest.fn(),
+    add: jest.fn(),
+    remove: jest.fn(),
+    has: jest.fn(),
+    size: 0
+  });
+  return {
+    templateSelection: createSelection(),
+    agentSelection: createSelection(),
+    repositoryAgentSelection: createSelection(),
+    toolSelection: createSelection(),
+    clearSelectionsForTab: jest.fn()
+  };
+};
 const mockNavigate = jest.fn();
 jest.mock("react-router-dom", () => ({
   ...jest.requireActual("react-router-dom"),
@@ -141,6 +150,9 @@ const renderWithRouter = (component) => {
 describe("MarketplacePage", () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    useMarketplaceSelections.mockImplementation(defaultMarketplaceSelections);
+    useTemplateOperations.mockImplementation(defaultTemplateOperations);
+    useMarketplaceActions.mockImplementation(defaultMarketplaceActions);
     localStorage.clear();
     mockNavigate.mockClear();
     mockUseAuth.mockReturnValue({

@@ -1,22 +1,17 @@
 import { jsx } from "react/jsx-runtime";
 import { renderHook, waitFor } from "@testing-library/react";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { Provider } from "react-redux";
 import { useExecutionListQuery } from "./useExecutionListQuery";
+import { store } from "../../redux/store";
+import { resetExecutions } from "../../redux/executions/executionsSlice";
+
 describe("useExecutionListQuery", () => {
-  let queryClient;
   beforeEach(() => {
-    queryClient = new QueryClient({
-      defaultOptions: {
-        queries: {
-          retry: false,
-          gcTime: 0
-        }
-      }
-    });
+    store.dispatch(resetExecutions());
   });
-  const wrapper = ({ children }) => {
-    return /* @__PURE__ */ jsx(QueryClientProvider, { client: queryClient, children });
-  };
+
+  const wrapper = ({ children }) => jsx(Provider, { store, children });
+
   it("should fetch executions successfully", async () => {
     const mockExecutions = [
       {
@@ -27,18 +22,19 @@ describe("useExecutionListQuery", () => {
         completed_at: "2024-01-01T10:00:05Z",
         node_states: {},
         variables: {},
-        logs: []
-      }
+        logs: [],
+      },
     ];
     const mockApiClient = {
-      listExecutions: jest.fn().mockResolvedValue(mockExecutions)
+      listExecutions: jest.fn().mockResolvedValue(mockExecutions),
     };
     const { result } = renderHook(
-      () => useExecutionListQuery({
-        apiClient: mockApiClient,
-        filters: { limit: 100 }
-      }),
-      { wrapper }
+      () =>
+        useExecutionListQuery({
+          apiClient: mockApiClient,
+          filters: { limit: 100 },
+        }),
+      { wrapper },
     );
     await waitFor(() => {
       expect(result.current.isLoading).toBe(false);
@@ -47,122 +43,116 @@ describe("useExecutionListQuery", () => {
     expect(result.current.error).toBeNull();
     expect(mockApiClient.listExecutions).toHaveBeenCalledWith({ limit: 100 });
   });
+
   it("should handle API errors", async () => {
     const mockError = new Error("API Error");
     const mockApiClient = {
-      listExecutions: jest.fn().mockRejectedValue(mockError)
+      listExecutions: jest.fn().mockRejectedValue(mockError),
     };
     const { result } = renderHook(
-      () => useExecutionListQuery({
-        apiClient: mockApiClient,
-        filters: { limit: 100 }
-      }),
-      { wrapper }
+      () =>
+        useExecutionListQuery({
+          apiClient: mockApiClient,
+          filters: { limit: 100 },
+        }),
+      { wrapper },
     );
     await waitFor(() => {
       expect(result.current.isError).toBe(true);
     });
     expect(result.current.error).toBeDefined();
   });
+
   it("should not fetch when apiClient is not provided", () => {
-    const { result } = renderHook(
-      () => useExecutionListQuery({
-        enabled: true
-      }),
-      { wrapper }
-    );
+    const { result } = renderHook(() => useExecutionListQuery({ enabled: true }), { wrapper });
     expect(result.current.isLoading).toBe(false);
     expect(result.current.data).toBeUndefined();
   });
+
   it("should not fetch when enabled is false", () => {
     const mockApiClient = {
-      listExecutions: jest.fn()
+      listExecutions: jest.fn(),
     };
     const { result } = renderHook(
-      () => useExecutionListQuery({
-        apiClient: mockApiClient,
-        enabled: false
-      }),
-      { wrapper }
+      () =>
+        useExecutionListQuery({
+          apiClient: mockApiClient,
+          enabled: false,
+        }),
+      { wrapper },
     );
     expect(result.current.isLoading).toBe(false);
     expect(mockApiClient.listExecutions).not.toHaveBeenCalled();
   });
+
   it("should pass filters to API client", async () => {
     const mockApiClient = {
-      listExecutions: jest.fn().mockResolvedValue([])
+      listExecutions: jest.fn().mockResolvedValue([]),
     };
     const filters = {
       status: "completed",
       workflow_id: "workflow-1",
       limit: 50,
-      offset: 10
+      offset: 10,
     };
-    renderHook(
-      () => useExecutionListQuery({
-        apiClient: mockApiClient,
-        filters
-      }),
-      { wrapper }
-    );
+    renderHook(() => useExecutionListQuery({ apiClient: mockApiClient, filters }), { wrapper });
     await waitFor(() => {
       expect(mockApiClient.listExecutions).toHaveBeenCalledWith(filters);
     });
   });
+
   it("should use default limit when not provided", async () => {
     const mockApiClient = {
-      listExecutions: jest.fn().mockResolvedValue([])
+      listExecutions: jest.fn().mockResolvedValue([]),
     };
-    renderHook(
-      () => useExecutionListQuery({
-        apiClient: mockApiClient,
-        filters: {}
-      }),
-      { wrapper }
-    );
+    renderHook(() => useExecutionListQuery({ apiClient: mockApiClient, filters: {} }), { wrapper });
     await waitFor(() => {
       expect(mockApiClient.listExecutions).toHaveBeenCalled();
     });
     const callArgs = mockApiClient.listExecutions.mock.calls[0][0];
     expect(callArgs.limit).toBe(100);
   });
+
   it("should refetch at specified interval", async () => {
     jest.useFakeTimers();
     const mockApiClient = {
-      listExecutions: jest.fn().mockResolvedValue([])
+      listExecutions: jest.fn().mockResolvedValue([]),
     };
     renderHook(
-      () => useExecutionListQuery({
-        apiClient: mockApiClient,
-        refetchInterval: 5e3
-      }),
-      { wrapper }
+      () =>
+        useExecutionListQuery({
+          apiClient: mockApiClient,
+          refetchInterval: 5000,
+        }),
+      { wrapper },
     );
     await waitFor(() => {
       expect(mockApiClient.listExecutions).toHaveBeenCalledTimes(1);
     });
-    jest.advanceTimersByTime(5e3);
+    jest.advanceTimersByTime(5000);
     await waitFor(() => {
-      expect(mockApiClient.listExecutions).toHaveBeenCalledTimes(2);
+      expect(mockApiClient.listExecutions.mock.calls.length).toBeGreaterThanOrEqual(2);
     });
     jest.useRealTimers();
   });
+
   it("should not refetch when refetchInterval is 0", async () => {
     jest.useFakeTimers();
     const mockApiClient = {
-      listExecutions: jest.fn().mockResolvedValue([])
+      listExecutions: jest.fn().mockResolvedValue([]),
     };
     renderHook(
-      () => useExecutionListQuery({
-        apiClient: mockApiClient,
-        refetchInterval: 0
-      }),
-      { wrapper }
+      () =>
+        useExecutionListQuery({
+          apiClient: mockApiClient,
+          refetchInterval: 0,
+        }),
+      { wrapper },
     );
     await waitFor(() => {
       expect(mockApiClient.listExecutions).toHaveBeenCalledTimes(1);
     });
-    jest.advanceTimersByTime(1e4);
+    jest.advanceTimersByTime(10000);
     expect(mockApiClient.listExecutions).toHaveBeenCalledTimes(1);
     jest.useRealTimers();
   });

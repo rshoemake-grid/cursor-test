@@ -40,6 +40,16 @@ describe("MarketplaceDialog", () => {
   beforeEach(() => {
     jest.clearAllMocks();
     localStorage.clear();
+    mockApi.publishAgent.mockResolvedValue({
+      id: "pub-agent-1",
+      name: "Published Agent",
+      description: "d",
+      category: "c",
+      tags: [],
+      difficulty: "beginner",
+      estimated_time: "5 min"
+    });
+    mockApi.publishWorkflow.mockResolvedValue({});
     mockUseAuth.mockReturnValue({
       isAuthenticated: true,
       user: { id: "1", username: "testuser", email: "test@example.com" },

@@ -3,15 +3,20 @@
 
 set -e
 
+# Always run from repository root so commands work from any cwd (e.g. frontend/).
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$ROOT"
+PYTHON_CMD="$(command -v python3 || command -v python || echo python3)"
+
 case "$1" in
   verify)
     echo "Verifying setup..."
-    python verify_setup.py
+    "$PYTHON_CMD" verify_setup.py
     ;;
   
   install)
     echo "Installing dependencies..."
-    pip install -r requirements.txt
+    "$PYTHON_CMD" -m pip install -r requirements.txt
     echo "✓ Dependencies installed"
     echo ""
     echo "Next steps:"
@@ -22,22 +27,23 @@ case "$1" in
   
   server)
     echo "Starting server..."
-    python main.py
+    echo "API: http://localhost:8000  (from repo root: $ROOT)"
+    "$PYTHON_CMD" -m uvicorn backend.main:app --host 0.0.0.0 --port 8000
     ;;
   
   test)
     echo "Running API tests..."
-    python test_api.py
+    "$PYTHON_CMD" test_api.py
     ;;
   
   example-simple)
     echo "Running simple workflow example..."
-    python examples/simple_workflow.py
+    "$PYTHON_CMD" examples/simple_workflow.py
     ;;
   
   example-research)
     echo "Running research workflow example..."
-    python examples/research_workflow.py
+    "$PYTHON_CMD" examples/research_workflow.py
     ;;
   
   clean)

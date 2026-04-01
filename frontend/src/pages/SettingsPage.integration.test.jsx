@@ -33,36 +33,37 @@ jest.mock("../api/client", () => ({
   createApiClient: jest.fn()
 }));
 jest.mock("../hooks/providers", () => ({
-  useLLMProviders: jest.fn(() => ({
+  useLLMProviders: () => ({
     providers: [],
     iterationLimit: 10,
     defaultModel: ""
-  })),
-  useProviderManagement: jest.fn(() => ({
+  }),
+  useProviderManagement: () => ({
     saveProviders: jest.fn(),
     updateProvider: jest.fn(),
     testProvider: jest.fn(),
     addCustomModel: jest.fn(),
     testingProvider: null,
     testResults: {}
-  }))
+  })
 }));
 jest.mock("../hooks/settings/useSettingsSync", () => ({
-  useSettingsSync: jest.fn(() => ({
+  useSettingsSync: () => ({
     handleManualSync: jest.fn()
-  }))
+  })
 }));
 jest.mock("../hooks/settings/useModelExpansion", () => ({
-  useModelExpansion: jest.fn(() => ({
+  useModelExpansion: () => ({
     expandedModels: {},
     expandedProviders: {},
     toggleProviderModels: jest.fn(),
     toggleModel: jest.fn(),
     isModelExpanded: jest.fn(() => false)
-  }))
+  })
 }));
 jest.mock("../hooks/settings/useSettingsStateSync", () => ({
-  useSettingsStateSync: jest.fn()
+  useSettingsStateSync: () => {
+  }
 }));
 jest.mock("../components/settings/SettingsHeader", () => {
   const { jsx } = require("react/jsx-runtime");

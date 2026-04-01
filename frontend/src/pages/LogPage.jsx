@@ -1,5 +1,6 @@
 import { Fragment, jsx, jsxs } from "react/jsx-runtime";
 import { useState, useMemo } from "react";
+import PropTypes from "prop-types";
 import { useNavigate } from "react-router-dom";
 import { AlertCircle, Download } from "lucide-react";
 import ExecutionListItem from "../components/log/ExecutionListItem";
@@ -362,6 +363,16 @@ function LogPage({ apiClient: injectedApiClient } = {}) {
     ] }) })
   ] });
 }
+
+LogPage.propTypes = {
+  apiClient: PropTypes.shape({
+    listExecutions: PropTypes.func,
+    cancelExecution: PropTypes.func,
+    getExecutionLogs: PropTypes.func,
+    downloadExecutionLogs: PropTypes.func,
+  }),
+};
+
 export {
   LogPage as default
 };

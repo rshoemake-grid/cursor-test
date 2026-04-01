@@ -1,4 +1,4 @@
-import { renderHook, act } from "@testing-library/react";
+import { renderHook, act, waitFor } from "@testing-library/react";
 import { useWorkflowUpdateHandler } from "./useWorkflowUpdateHandler";
 import { api } from "../../api/client";
 import { logger } from "../../utils/logger";
@@ -15,22 +15,26 @@ jest.mock("../../utils/logger", () => ({
   }
 }));
 jest.mock("../../utils/workflowFormat", () => ({
-  initializeReactFlowNodes: jest.fn((nodes) => nodes),
-  formatEdgesForReactFlow: jest.fn((edges) => edges)
+  initializeReactFlowNodes: jest.fn(),
+  formatEdgesForReactFlow: jest.fn(),
 }));
 describe("useWorkflowUpdateHandler", () => {
   const mockSetNodes = jest.fn();
   const mockSetEdges = jest.fn();
-  const mockWorkflowNodeToNode = jest.fn((wfNode) => ({
+  const defaultWorkflowNodeToNodeImpl = (wfNode) => ({
     id: wfNode.id,
     type: wfNode.type,
     data: wfNode.data || {},
     position: { x: 0, y: 0 }
-  }));
+  });
+  const mockWorkflowNodeToNode = jest.fn(defaultWorkflowNodeToNodeImpl);
   const mockApplyLocalChanges = jest.fn();
   beforeEach(() => {
     jest.clearAllMocks();
     jest.useFakeTimers();
+    mockWorkflowNodeToNode.mockImplementation(defaultWorkflowNodeToNodeImpl);
+    initializeReactFlowNodes.mockImplementation((nodes) => nodes);
+    formatEdgesForReactFlow.mockImplementation((edges) => edges);
   });
   afterEach(async () => {
     jest.advanceTimersByTime(0);
@@ -292,15 +296,15 @@ describe("useWorkflowUpdateHandler", () => {
       });
       await act(async () => {
         await Promise.resolve();
+        await Promise.resolve();
       });
+      expect(api.getWorkflow).toHaveBeenCalledWith("workflow-1");
+      expect(mockSetNodes).toHaveBeenCalled();
       expect(logger.debug).toHaveBeenCalledWith(
         "Reloaded workflow after deletion, nodes:",
-        expect.arrayContaining(["node-1", "node-2"])
+        expect.arrayContaining(["node-1", "node-2"]),
       );
-      expect(logger.debug).toHaveBeenCalledWith(
-        "Expected deleted nodes:",
-        ["node-1"]
-      );
+      expect(logger.debug).toHaveBeenCalledWith("Expected deleted nodes:", ["node-1"]);
     });
   });
   describe("mutation killers - exact conditionals and operators", () => {

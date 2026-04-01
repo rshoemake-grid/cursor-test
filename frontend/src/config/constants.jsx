@@ -1,4 +1,7 @@
-const API_BASE_URL = typeof process !== "undefined" && process.env?.VITE_API_BASE_URL || "http://localhost:8000/api";
+const API_BASE_URL =
+  (typeof process !== "undefined" && process.env?.REACT_APP_API_BASE_URL) ||
+  (typeof process !== "undefined" && process.env?.VITE_API_BASE_URL) ||
+  "/api";
 const API_CONFIG = {
   BASE_URL: API_BASE_URL,
   ENDPOINTS: {
