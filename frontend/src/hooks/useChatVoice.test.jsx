@@ -5,6 +5,7 @@ import { jsx } from "react/jsx-runtime";
 import { renderHook, act } from "@testing-library/react";
 import {
   usePushToTalk,
+  DEFAULT_POST_RELEASE_DELAY_MS,
   isSpeechRecognitionSupported,
   isSpeechSynthesisSupported,
   speakChatMessage,
@@ -137,7 +138,8 @@ describe("usePushToTalk", () => {
     expect(setInput).toHaveBeenCalledWith("Hi there");
   });
 
-  it("onPushEnd calls stop when listening", () => {
+  it("onPushEnd calls stop after post-release delay when listening", () => {
+    jest.useFakeTimers();
     const setInput = jest.fn();
     const { result } = renderHook(() =>
       usePushToTalk({
@@ -154,7 +156,12 @@ describe("usePushToTalk", () => {
       result.current.onPushEnd();
     });
 
+    expect(lastRecognition.stop).not.toHaveBeenCalled();
+    act(() => {
+      jest.advanceTimersByTime(DEFAULT_POST_RELEASE_DELAY_MS);
+    });
     expect(lastRecognition.stop).toHaveBeenCalled();
+    jest.useRealTimers();
   });
 
   it("calls onSessionEnd with full transcript after onend when speech was captured", () => {
@@ -190,6 +197,9 @@ describe("usePushToTalk", () => {
       result.current.onPushEnd();
     });
     act(() => {
+      jest.advanceTimersByTime(DEFAULT_POST_RELEASE_DELAY_MS);
+    });
+    act(() => {
       lastRecognition.onend();
     });
     act(() => {
@@ -219,6 +229,9 @@ describe("usePushToTalk", () => {
       result.current.onPushEnd();
     });
     act(() => {
+      jest.advanceTimersByTime(DEFAULT_POST_RELEASE_DELAY_MS);
+    });
+    act(() => {
       lastRecognition.onend();
     });
     act(() => {
@@ -227,5 +240,58 @@ describe("usePushToTalk", () => {
 
     expect(onSessionEnd).not.toHaveBeenCalled();
     jest.useRealTimers();
+  });
+
+  it("cancels delayed stop when push starts again before delay elapses", () => {
+    jest.useFakeTimers();
+    const setInput = jest.fn();
+    const { result } = renderHook(() =>
+      usePushToTalk({
+        getInput: () => "",
+        setInput,
+        logger: { warn: jest.fn() },
+      })
+    );
+
+    act(() => {
+      result.current.onPushStart();
+    });
+    act(() => {
+      result.current.onPushEnd();
+    });
+    act(() => {
+      jest.advanceTimersByTime(DEFAULT_POST_RELEASE_DELAY_MS - 1);
+    });
+    expect(lastRecognition.stop).not.toHaveBeenCalled();
+
+    act(() => {
+      result.current.onPushStart();
+    });
+    act(() => {
+      jest.advanceTimersByTime(DEFAULT_POST_RELEASE_DELAY_MS * 2);
+    });
+    expect(lastRecognition.stop).not.toHaveBeenCalled();
+    jest.useRealTimers();
+  });
+
+  it("postReleaseDelayMs 0 stops recognition immediately", () => {
+    const setInput = jest.fn();
+    const { result } = renderHook(() =>
+      usePushToTalk({
+        getInput: () => "",
+        setInput,
+        logger: { warn: jest.fn() },
+        postReleaseDelayMs: 0,
+      })
+    );
+
+    act(() => {
+      result.current.onPushStart();
+    });
+    act(() => {
+      result.current.onPushEnd();
+    });
+
+    expect(lastRecognition.stop).toHaveBeenCalled();
   });
 });

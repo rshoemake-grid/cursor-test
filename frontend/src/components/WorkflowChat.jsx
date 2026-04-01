@@ -211,7 +211,7 @@ function WorkflowChat({
           value: input,
           onChange: (e) => setInput(e.target.value),
           onKeyPress: handleKeyPress,
-          placeholder: chatDisabled === true ? "Sign in to chat with the workflow assistant…" : "Type your message... (Enter to send, Shift+Enter for newline). Hold mic to dictate; release to send to the assistant.",
+          placeholder: chatDisabled === true ? "Sign in to chat with the workflow assistant…" : "Type your message... (Enter to send, Shift+Enter for newline). Hold mic to dictate; release and the mic keeps listening briefly so nothing is cut off.",
           className: "flex-1 bg-gray-800 text-gray-100 rounded-lg px-4 py-2 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[4.5rem] disabled:opacity-50",
           rows: 2,
           disabled: isLoading === true || chatDisabled === true
@@ -254,7 +254,7 @@ function WorkflowChat({
           {
             type: "button",
             "aria-label": "Push to talk",
-            title: chatDisabled === true ? "Sign in to use the microphone" : sttSupported ? "Hold to speak; release to send dictated text to the assistant" : "Speech recognition not supported in this browser",
+            title: chatDisabled === true ? "Sign in to use the microphone" : sttSupported ? "Hold to speak; release to finish — listening continues briefly so the end of your phrase is not cut off" : "Speech recognition not supported in this browser",
             disabled: isLoading === true || sttSupported === false || chatDisabled === true,
             className: `px-3 py-2 rounded-lg flex items-center justify-center transition-colors border border-gray-700 ${isListening === true ? "bg-red-900/50 border-red-500 text-red-200" : "bg-gray-800 text-gray-200 hover:bg-gray-700"} disabled:opacity-40 disabled:cursor-not-allowed`,
             onPointerDown: (e) => {

@@ -1,5 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
+/** Ms to wait after button release before stopping recognition (captures trailing syllables). */
+export const DEFAULT_POST_RELEASE_DELAY_MS = 350;
+
 function getSpeechRecognitionConstructor() {
   if (typeof window === "undefined") return null;
   return window.SpeechRecognition || window.webkitSpeechRecognition || null;
@@ -20,8 +23,19 @@ export function isSpeechSynthesisSupported() {
  * @param {(value: string) => void} options.setInput
  * @param {{ debug?: Function, warn?: Function } | undefined} options.logger
  * @param {(finalText: string) => void} [options.onSessionEnd] — called after release when speech was captured (defer to next task so input state can settle).
+ * @param {number} [options.postReleaseDelayMs] — delay before calling `stop()` after release (default {@link DEFAULT_POST_RELEASE_DELAY_MS}).
  */
-export function usePushToTalk({ getInput, setInput, logger: log, onSessionEnd }) {
+export function usePushToTalk({
+  getInput,
+  setInput,
+  logger: log,
+  onSessionEnd,
+  postReleaseDelayMs: postReleaseDelayMsOption,
+}) {
+  const delayMs =
+    typeof postReleaseDelayMsOption === "number" && postReleaseDelayMsOption >= 0
+      ? postReleaseDelayMsOption
+      : DEFAULT_POST_RELEASE_DELAY_MS;
   const [isListening, setIsListening] = useState(false);
   const recognitionRef = useRef(null);
   const prefixRef = useRef("");
@@ -32,6 +46,7 @@ export function usePushToTalk({ getInput, setInput, logger: log, onSessionEnd })
   onSessionEndRef.current = onSessionEnd;
   const latestTranscriptRef = useRef("");
   const hadResultsRef = useRef(false);
+  const releaseStopTimeoutRef = useRef(null);
 
   useEffect(() => {
     const SR = getSpeechRecognitionConstructor();
@@ -78,6 +93,10 @@ export function usePushToTalk({ getInput, setInput, logger: log, onSessionEnd })
     recognitionRef.current = recognition;
 
     return () => {
+      if (releaseStopTimeoutRef.current !== null) {
+        window.clearTimeout(releaseStopTimeoutRef.current);
+        releaseStopTimeoutRef.current = null;
+      }
       try {
         recognition.abort();
       } catch {
@@ -88,6 +107,10 @@ export function usePushToTalk({ getInput, setInput, logger: log, onSessionEnd })
   }, [setInput]);
 
   const onPushStart = useCallback(() => {
+    if (releaseStopTimeoutRef.current !== null) {
+      window.clearTimeout(releaseStopTimeoutRef.current);
+      releaseStopTimeoutRef.current = null;
+    }
     const recognition = recognitionRef.current;
     if (!recognition || listeningRef.current) return;
 
@@ -108,12 +131,26 @@ export function usePushToTalk({ getInput, setInput, logger: log, onSessionEnd })
   const onPushEnd = useCallback(() => {
     const recognition = recognitionRef.current;
     if (!recognition || !listeningRef.current) return;
-    try {
-      recognition.stop();
-    } catch (err) {
-      logRef.current?.warn?.("Could not stop speech recognition:", err);
+    if (releaseStopTimeoutRef.current !== null) {
+      window.clearTimeout(releaseStopTimeoutRef.current);
+      releaseStopTimeoutRef.current = null;
     }
-  }, []);
+    const runStop = () => {
+      releaseStopTimeoutRef.current = null;
+      const rec = recognitionRef.current;
+      if (!rec || !listeningRef.current) return;
+      try {
+        rec.stop();
+      } catch (err) {
+        logRef.current?.warn?.("Could not stop speech recognition:", err);
+      }
+    };
+    if (delayMs === 0) {
+      runStop();
+    } else {
+      releaseStopTimeoutRef.current = window.setTimeout(runStop, delayMs);
+    }
+  }, [delayMs]);
 
   return {
     isListening,
