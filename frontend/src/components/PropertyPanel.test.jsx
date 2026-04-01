@@ -20,6 +20,7 @@ import { ReactFlowProvider } from "@xyflow/react";
 import PropertyPanel from "./PropertyPanel";
 import { useReactFlow } from "@xyflow/react";
 import { AuthProvider } from "../contexts/AuthContext";
+import { STORAGE_KEYS } from "../config/constants";
 import { showError } from "../utils/notifications";
 import { showConfirm } from "../utils/confirm";
 import { api } from "../api/client";
@@ -1037,6 +1038,9 @@ describe("PropertyPanel", () => {
       }
     });
     it("should load models from API when storage has no providers", async () => {
+      localStorage.setItem(STORAGE_KEYS.AUTH_REMEMBER_ME, "true");
+      localStorage.setItem(STORAGE_KEYS.AUTH_TOKEN, "test-token");
+      localStorage.setItem(STORAGE_KEYS.AUTH_USER, JSON.stringify({ username: "testuser" }));
       const mockProviders = [
         { id: "openai", name: "OpenAI", type: "openai", models: ["gpt-4", "gpt-3.5-turbo"], enabled: true }
       ];

@@ -27,10 +27,19 @@ describe("useLLMProviders", () => {
       setItem: jest.fn()
     };
   });
-  it("should initialize with loading state", () => {
-    mockApi.getLLMSettings.mockRejectedValue(new Error("Network error"));
-    const { result } = renderHook(() => useLLMProviders({ storage: mockStorage }));
-    expect(result.current.isLoading).toBe(true);
+  it("should not call the API until authenticated", async () => {
+    mockApi.getLLMSettings.mockResolvedValue({
+      providers: [
+        { id: "openai", name: "OpenAI", type: "openai", enabled: true, models: ["gpt-4"] }
+      ]
+    });
+    const { result } = renderHook(() =>
+      useLLMProviders({ storage: mockStorage, isAuthenticated: false })
+    );
+    await waitForWithTimeout(() => {
+      expect(result.current.isLoading).toBe(false);
+    });
+    expect(mockApi.getLLMSettings).not.toHaveBeenCalled();
   });
   it("should load providers from API successfully", async () => {
     const mockProviders = [
@@ -1386,7 +1395,9 @@ describe("useLLMProviders", () => {
         ],
         iteration_limit: 10
       });
-      const { result } = renderHook(() => useLLMProviders({ storage: mockStorage }));
+      const { result } = renderHook(() =>
+        useLLMProviders({ storage: mockStorage, isAuthenticated: true })
+      );
       await waitForWithTimeout(() => {
         expect(result.current.isLoading).toBe(false);
       });
@@ -1397,7 +1408,9 @@ describe("useLLMProviders", () => {
         ],
         iteration_limit: "10"
       });
-      const { result: result2 } = renderHook(() => useLLMProviders({ storage: mockStorage }));
+      const { result: result2 } = renderHook(() =>
+        useLLMProviders({ storage: mockStorage, isAuthenticated: true })
+      );
       await waitForWithTimeout(() => {
         expect(result2.current.isLoading).toBe(false);
       });

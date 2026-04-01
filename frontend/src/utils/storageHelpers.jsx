@@ -1,5 +1,6 @@
 import { handleStorageError } from "./errorHandler";
 import { isNullOrUndefined, isDefined } from "./typeGuards";
+import { looksLikeJson } from "../hooks/storage/useLocalStorage.utils";
 const DEFAULT_STORAGE_ERROR_OPTIONS = {
   logError: true,
   showNotification: false
@@ -29,6 +30,9 @@ function safeStorageGet(storage, key, defaultValue, context) {
       try {
         return JSON.parse(item);
       } catch (parseError) {
+        if (!looksLikeJson(item)) {
+          return defaultValue;
+        }
         handleStorageError(parseError, "getItem", key, {
           ...DEFAULT_STORAGE_ERROR_OPTIONS,
           context

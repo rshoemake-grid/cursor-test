@@ -1,3 +1,7 @@
+function looksLikeJson(item) {
+  const trimmed = item.trim();
+  return trimmed.startsWith("{") || trimmed.startsWith("[") || trimmed.startsWith('"');
+}
 function parseJsonSafely(jsonString, logger) {
   if (!jsonString) {
     return null;
@@ -5,15 +9,11 @@ function parseJsonSafely(jsonString, logger) {
   try {
     return JSON.parse(jsonString);
   } catch (error) {
-    if (logger) {
+    if (logger && looksLikeJson(jsonString)) {
       logger.error("Failed to parse JSON:", error);
     }
     return null;
   }
-}
-function looksLikeJson(item) {
-  const trimmed = item.trim();
-  return trimmed.startsWith("{") || trimmed.startsWith("[");
 }
 function stringifyForStorage(value) {
   const valueToStore = value === void 0 ? null : value;

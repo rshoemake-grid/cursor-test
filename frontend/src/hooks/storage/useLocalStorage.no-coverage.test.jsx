@@ -93,10 +93,7 @@ describe("useLocalStorage - No Coverage Paths", () => {
         act(() => {
           handleStorageChange(event);
         });
-        expect(logger.error).toHaveBeenCalledWith(
-          "Failed to parse JSON:",
-          expect.any(Error)
-        );
+        expect(logger.error).not.toHaveBeenCalled();
       }
     });
   });

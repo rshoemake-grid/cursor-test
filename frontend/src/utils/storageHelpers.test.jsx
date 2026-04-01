@@ -37,14 +37,20 @@ describe("storageHelpers", () => {
       const result = safeStorageGet(mockStorage, "key", "default");
       expect(result).toBe("default");
     });
-    it("should return default value on parse error", () => {
+    it("should return default value for plain non-JSON without logging", () => {
       mockStorage.getItem.mockReturnValue("invalid json");
+      const result = safeStorageGet(mockStorage, "key", "default");
+      expect(result).toBe("default");
+      expect(handleStorageError).not.toHaveBeenCalled();
+    });
+    it("should return default and log for invalid JSON that looks structured", () => {
+      mockStorage.getItem.mockReturnValue("{invalid json");
       const result = safeStorageGet(mockStorage, "key", "default");
       expect(result).toBe("default");
       expect(handleStorageError).toHaveBeenCalled();
     });
     it("should include context in error handling", () => {
-      mockStorage.getItem.mockReturnValue("invalid json");
+      mockStorage.getItem.mockReturnValue("{invalid json");
       safeStorageGet(mockStorage, "key", "default", "TestContext");
       expect(handleStorageError).toHaveBeenCalledWith(
         expect.any(Error),

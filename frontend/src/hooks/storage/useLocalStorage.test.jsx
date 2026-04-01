@@ -67,6 +67,17 @@ describe("useLocalStorage", () => {
       });
       expect(result.current[0]).toBe("updated-from-tab");
     });
+    it("should sync legacy plain string storage events when initial value is null", () => {
+      const { result } = renderHook(() => useLocalStorage("test-key", null));
+      act(() => {
+        const event = new StorageEvent("storage", {
+          key: "test-key",
+          newValue: "workflow-1"
+        });
+        window.dispatchEvent(event);
+      });
+      expect(result.current[0]).toBe("workflow-1");
+    });
     it("should ignore storage events for other keys", () => {
       const { result } = renderHook(() => useLocalStorage("test-key", "initial"));
       act(() => {

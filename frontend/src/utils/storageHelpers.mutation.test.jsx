@@ -175,7 +175,7 @@ describe("storageHelpers - Mutation Killers", () => {
       expect(handleStorageError).not.toHaveBeenCalled();
     });
     it("should verify exact method call - JSON.parse throws (should handle error)", () => {
-      mockStorage.getItem.mockReturnValue("invalid json");
+      mockStorage.getItem.mockReturnValue("{invalid json");
       const result = safeStorageGet(mockStorage, "key", "default");
       expect(result).toBe("default");
       expect(handleStorageError).toHaveBeenCalled();
@@ -232,7 +232,7 @@ describe("storageHelpers - Mutation Killers", () => {
   });
   describe("Context parameter - exact property access", () => {
     it("should verify context is passed to error handler in safeStorageGet", () => {
-      mockStorage.getItem.mockReturnValue("invalid json");
+      mockStorage.getItem.mockReturnValue("{invalid json");
       safeStorageGet(mockStorage, "key", "default", "TestContext");
       expect(handleStorageError).toHaveBeenCalledWith(
         expect.any(Error),
@@ -248,7 +248,7 @@ describe("storageHelpers - Mutation Killers", () => {
       expect(callArgs[3].context === "TestContext").toBe(true);
     });
     it("should verify context is undefined when not provided in safeStorageGet", () => {
-      mockStorage.getItem.mockReturnValue("invalid json");
+      mockStorage.getItem.mockReturnValue("{invalid json");
       safeStorageGet(mockStorage, "key", "default");
       const callArgs = handleStorageError.mock.calls[0];
       expect(callArgs[3].context).toBeUndefined();

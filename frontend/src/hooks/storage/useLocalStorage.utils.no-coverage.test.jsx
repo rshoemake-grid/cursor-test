@@ -67,6 +67,9 @@ describe("useLocalStorage.utils - No Coverage Paths", () => {
     it("should return false for plain string", () => {
       expect(looksLikeJson("plain string")).toBe(false);
     });
+    it("should return true for JSON-encoded string values", () => {
+      expect(looksLikeJson('"workflow-1"')).toBe(true);
+    });
     it("should return false for empty string", () => {
       expect(looksLikeJson("")).toBe(false);
     });

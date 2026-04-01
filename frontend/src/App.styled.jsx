@@ -23,8 +23,10 @@ const flexCenter = css`
 `;
 
 export const LayoutRoot = styled.div`
-  ${flexCenter};
+  display: flex;
   flex-direction: column;
+  align-items: stretch;
+  width: 100%;
   height: 100vh;
   background: ${c.gray50};
 `;

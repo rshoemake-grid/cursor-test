@@ -5,7 +5,7 @@ import {
   readStorageItem,
   writeStorageItem,
   deleteStorageItem,
-  parseJsonSafely,
+  looksLikeJson,
   shouldHandleStorageEvent
 } from "./useLocalStorage.utils";
 import { nullishCoalesce } from "../utils/nullishCoalescing";
@@ -33,15 +33,20 @@ function useLocalStorage(key, initialValue, options) {
     }
     const handleStorageChange = (e) => {
       if (shouldHandleStorageEvent(e.key, key, e.newValue)) {
-        const parsed = parseJsonSafely(e.newValue, injectedLogger);
-        if (parsed !== null) {
-          setStoredValue(parsed);
+        try {
+          setStoredValue(JSON.parse(e.newValue));
+        } catch (error) {
+          if (looksLikeJson(e.newValue) && injectedLogger) {
+            injectedLogger.error("Failed to parse JSON:", error);
+          } else if (initialValue === null) {
+            setStoredValue(e.newValue);
+          }
         }
       }
     };
     storage.addEventListener("storage", handleStorageChange);
     return () => storage.removeEventListener("storage", handleStorageChange);
-  }, [key, storage, injectedLogger]);
+  }, [key, storage, injectedLogger, initialValue]);
   return [storedValue, setValue, removeValue];
 }
 function getLocalStorageItem(key, defaultValue, options) {
