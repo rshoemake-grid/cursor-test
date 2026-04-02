@@ -55,7 +55,8 @@ jest.mock("./WorkflowBuilder", () => {
       React2.useImperativeHandle(ref, () => ({
         saveWorkflow: jest.fn().mockResolvedValue("workflow-1"),
         executeWorkflow: jest.fn(),
-        exportWorkflow: jest.fn()
+        exportWorkflow: jest.fn(),
+        clearWorkflow: jest.fn()
       }));
       return React2.createElement("div", null, "WorkflowBuilder Mock");
     })
@@ -2000,6 +2001,15 @@ describe("WorkflowTabs", () => {
       const saveButton = screen.getByTitle(/Save workflow/);
       expect(() => fireEvent.click(saveButton)).not.toThrow();
       expect(saveButton).toBeInTheDocument();
+    });
+    it("should call clearWorkflow when Clear workflow button is clicked", async () => {
+      renderWithProvider();
+      await waitForWithTimeout(() => {
+        expect(screen.getByTitle(/Clear all nodes/)).toBeInTheDocument();
+      });
+      const clearButton = screen.getByTitle(/Clear all nodes/);
+      expect(() => fireEvent.click(clearButton)).not.toThrow();
+      expect(clearButton).toBeInTheDocument();
     });
     it("should call executeWorkflow when Execute button is clicked", async () => {
       renderWithProvider();

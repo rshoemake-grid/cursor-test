@@ -1117,16 +1117,11 @@ describe("useWorkflowUpdates", () => {
       const updatedNodes2 = typeof setNodesCall2 === "function" ? setNodesCall2(initialNodes) : setNodesCall2;
       expect(updatedNodes2[0].data.name).toBe("Node 1");
     });
-    it("should verify exact setTimeout delay of 50 in edges_to_add", () => {
-      jest.useFakeTimers();
-      const nodesWithBoth = [
-        { id: "node1", type: "agent", position: { x: 0, y: 0 }, data: { name: "Node 1" } },
-        { id: "node2", type: "agent", position: { x: 100, y: 100 }, data: { name: "Node 2" } }
-      ];
+    it("should wire edges in the same applyLocalChanges pass as new nodes (no deferred timer)", () => {
       const setTimeoutSpy = jest.spyOn(global, "setTimeout");
       const { result } = renderHook(
         () => useWorkflowUpdates({
-          nodes: nodesWithBoth,
+          nodes: [],
           edges: [],
           setNodes: mockSetNodes,
           setEdges: mockSetEdges,
@@ -1135,15 +1130,32 @@ describe("useWorkflowUpdates", () => {
       );
       act(() => {
         result.current.applyLocalChanges({
-          edges_to_add: [{ source: "node1", target: "node2" }]
+          nodes_to_add: [
+            {
+              id: "node-a",
+              type: "start",
+              position: { x: 0, y: 0 },
+              data: { name: "A", label: "A" }
+            },
+            {
+              id: "node-b",
+              type: "end",
+              position: { x: 200, y: 0 },
+              data: { name: "B", label: "B" }
+            }
+          ],
+          edges_to_add: [{ source: "node-a", target: "node-b" }]
         });
       });
-      const setTimeoutCalls = setTimeoutSpy.mock.calls;
-      const delay50Call = setTimeoutCalls.find((call) => call[1] === 50);
-      expect(delay50Call).toBeDefined();
-      expect(delay50Call?.[1]).toBe(50);
+      const delay50Call = setTimeoutSpy.mock.calls.find((call) => call[1] === 50);
+      expect(delay50Call).toBeUndefined();
+      expect(mockSetNodes).toHaveBeenCalled();
+      expect(mockSetEdges).toHaveBeenCalled();
+      const setEdgesFn = mockSetEdges.mock.calls[0][0];
+      const nextEdges = typeof setEdgesFn === "function" ? setEdgesFn([]) : setEdgesFn;
+      expect(nextEdges.length).toBeGreaterThanOrEqual(1);
+      expect(nextEdges.some((e) => e.source === "node-a" && e.target === "node-b")).toBe(true);
       setTimeoutSpy.mockRestore();
-      jest.useRealTimers();
     });
     it("should verify exact Array.from(nodeIds) call", () => {
       jest.useFakeTimers();

@@ -102,11 +102,20 @@ describe("constants", () => {
     it("should return key with workflow ID when workflowId is provided", () => {
       expect(getChatHistoryKey("workflow-123")).toBe("chat_history_workflow-123");
     });
+    it("should ignore tabId when workflowId is provided", () => {
+      expect(getChatHistoryKey("workflow-123", "tab-1")).toBe("chat_history_workflow-123");
+    });
     it("should return key for new workflow when workflowId is null", () => {
       expect(getChatHistoryKey(null)).toBe("chat_history_new_workflow");
     });
+    it("should return per-tab key when workflowId is null and tabId is set", () => {
+      expect(getChatHistoryKey(null, "tab-abc")).toBe("chat_history_tab_tab-abc");
+    });
     it("should handle empty string workflowId", () => {
       expect(getChatHistoryKey("")).toBe("chat_history_new_workflow");
+    });
+    it("should use tabId when workflowId is empty string", () => {
+      expect(getChatHistoryKey("", "tab-x")).toBe("chat_history_tab_tab-x");
     });
   });
   describe("buildStorageKey edge cases", () => {

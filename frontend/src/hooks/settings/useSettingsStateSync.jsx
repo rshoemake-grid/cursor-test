@@ -4,13 +4,16 @@ function useSettingsStateSync(options) {
     loadedProviders,
     loadedIterationLimit,
     loadedDefaultModel,
+    loadedChatAssistantModel,
     providers,
     iterationLimit,
     defaultModel,
+    chatAssistantModel,
     settingsLoaded,
     setProviders,
     setIterationLimit,
     setDefaultModel,
+    setChatAssistantModel,
     setSettingsLoaded,
     onLoadComplete
   } = options;
@@ -30,11 +33,17 @@ function useSettingsStateSync(options) {
     }
   }, [loadedDefaultModel, defaultModel, setDefaultModel]);
   useEffect(() => {
+    if (loadedChatAssistantModel && !chatAssistantModel) {
+      setChatAssistantModel(loadedChatAssistantModel);
+    }
+  }, [loadedChatAssistantModel, chatAssistantModel, setChatAssistantModel]);
+  useEffect(() => {
     if (onLoadComplete && loadedProviders.length > 0 && !settingsLoaded) {
       onLoadComplete({
         providers: loadedProviders,
         iteration_limit: loadedIterationLimit,
-        default_model: loadedDefaultModel
+        default_model: loadedDefaultModel,
+        chat_assistant_model: loadedChatAssistantModel
       });
       setSettingsLoaded(true);
     }
@@ -42,6 +51,7 @@ function useSettingsStateSync(options) {
     loadedProviders,
     loadedIterationLimit,
     loadedDefaultModel,
+    loadedChatAssistantModel,
     onLoadComplete,
     setSettingsLoaded,
     settingsLoaded

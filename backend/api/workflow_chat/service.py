@@ -3,10 +3,11 @@ Workflow chat service - tool-calling loop (SRP).
 Extracted from routes to reduce route responsibility.
 """
 import json
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 from .tools import tool_response
 from .handlers import get_tool_handlers
+from .context import refresh_live_workflow_summary
 
 from backend.utils.logger import get_logger
 
@@ -40,10 +41,11 @@ async def run_chat_loop(
     workflow_changes: Dict[str, List[Any]],
     saved_changes: Dict[str, List[Any]],
     workflow_context: str,
-    workflow_id: str,
+    workflow_id: Optional[str],
     workflow_service: Any,
     iteration_limit: int,
     user_id: str | None = None,
+    workflow_snapshot: Optional[dict] = None,
 ) -> Tuple[str, Dict[str, List[Any]]]:
     """
     Run the LLM tool-calling loop until completion or iteration limit.
@@ -51,6 +53,7 @@ async def run_chat_loop(
     """
     iteration = 0
     assistant_message = None
+    live_workflow_summary: Dict[str, str] = {"text": workflow_context}
 
     while iteration < iteration_limit:
         iteration += 1
@@ -76,8 +79,13 @@ async def run_chat_loop(
             break
 
         tool_handlers = get_tool_handlers(
-            workflow_changes, saved_changes, workflow_context,
-            workflow_id, workflow_service, user_id,
+            workflow_changes,
+            saved_changes,
+            live_workflow_summary,
+            workflow_snapshot,
+            workflow_id,
+            workflow_service,
+            user_id,
         )
         tool_messages = []
         for tool_call in message.tool_calls:
@@ -104,8 +112,12 @@ async def run_chat_loop(
                 tool_messages.append(
                     tool_response(tool_call, {"status": "error", "message": f"Error executing tool: {str(tool_error)}"})
                 )
+            finally:
+                refresh_live_workflow_summary(live_workflow_summary, workflow_snapshot, workflow_changes)
 
         messages.extend(tool_messages)
+        if len(messages) >= 2 and messages[1].get("role") == "system":
+            messages[1]["content"] = f"Current workflow context:\n{live_workflow_summary['text']}"
 
     if iteration >= iteration_limit and assistant_message is None:
         assistant_message = (

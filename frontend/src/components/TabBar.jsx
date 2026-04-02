@@ -14,6 +14,7 @@ function TabBar({
   onInputKeyDown,
   onNewWorkflow,
   onSave,
+  onClearWorkflow,
   onExecute,
   onPublish,
   onExport
@@ -72,6 +73,16 @@ function TabBar({
           className: "px-3 py-1 rounded-lg border border-gray-300 bg-white text-gray-700 text-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500",
           title: "Save workflow",
           children: "Save"
+        }
+      ),
+      /* @__PURE__ */ jsx(
+        "button",
+        {
+          type: "button",
+          onClick: onClearWorkflow,
+          className: "px-3 py-1 rounded-lg border border-amber-300 bg-amber-50 text-amber-900 text-sm hover:bg-amber-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500",
+          title: "Clear all nodes, edges, and variables from the canvas",
+          children: "Clear workflow"
         }
       ),
       /* @__PURE__ */ jsx(

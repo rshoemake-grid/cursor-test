@@ -112,8 +112,14 @@ const NODE_TYPES = {
 function buildStorageKey(prefix, suffix) {
   return suffix ? `${prefix}${suffix}` : prefix;
 }
-function getChatHistoryKey(workflowId) {
-  return workflowId ? `${STORAGE_KEYS.CHAT_HISTORY_PREFIX}${workflowId}` : `${STORAGE_KEYS.CHAT_HISTORY_PREFIX}new_workflow`;
+function getChatHistoryKey(workflowId, tabId = null) {
+  if (workflowId !== null && workflowId !== void 0 && workflowId !== "") {
+    return `${STORAGE_KEYS.CHAT_HISTORY_PREFIX}${workflowId}`;
+  }
+  if (tabId !== null && tabId !== void 0 && tabId !== "") {
+    return `${STORAGE_KEYS.CHAT_HISTORY_PREFIX}tab_${tabId}`;
+  }
+  return `${STORAGE_KEYS.CHAT_HISTORY_PREFIX}new_workflow`;
 }
 export {
   API_CONFIG,

@@ -44,6 +44,15 @@ jest.mock("../utils/storageHelpers", () => ({
     } catch {
       return false;
     }
+  }),
+  safeStorageRemove: jest.fn((storage, key) => {
+    if (!storage) return false;
+    try {
+      storage.removeItem(key);
+      return true;
+    } catch {
+      return false;
+    }
   })
 }));
 global.fetch = jest.fn();
@@ -91,8 +100,7 @@ describe("WorkflowChat", () => {
       this.lang = "";
     };
     localStorage.clear();
-    const { safeStorageGet } = require("../utils/storageHelpers");
-    const { safeStorageSet } = require("../utils/storageHelpers");
+    const { safeStorageGet, safeStorageSet, safeStorageRemove } = require("../utils/storageHelpers");
     const { handleApiError } = require("../utils/errorHandler");
     api.chat.mockClear();
     api.chat.mockResolvedValue({ message: "Response message" });
@@ -110,6 +118,15 @@ describe("WorkflowChat", () => {
       if (!storage) return false;
       try {
         storage.setItem(key, JSON.stringify(value));
+        return true;
+      } catch {
+        return false;
+      }
+    });
+    safeStorageRemove.mockImplementation((storage, key) => {
+      if (!storage) return false;
+      try {
+        storage.removeItem(key);
         return true;
       } catch {
         return false;
@@ -134,6 +151,7 @@ describe("WorkflowChat", () => {
   });
   it("should render chat interface", () => {
     renderWithProvider(/* @__PURE__ */ jsx(WorkflowChat, { workflowId: "workflow-1" }));
+    expect(screen.getByRole("button", { name: /clear chat and start over/i })).toBeInTheDocument();
     expect(screen.getByPlaceholderText(/Type your message/)).toBeInTheDocument();
     expect(screen.getByLabelText(/max iterations/i)).toHaveValue(20);
     expect(screen.getByText("Send")).toBeInTheDocument();
@@ -169,6 +187,93 @@ describe("WorkflowChat", () => {
     renderWithProvider(/* @__PURE__ */ jsx(WorkflowChat, { workflowId: "workflow-1" }));
     expect(screen.getByText("Hello")).toBeInTheDocument();
     expect(screen.getByText("Hi there!")).toBeInTheDocument();
+  });
+  it("should use separate chat storage per tab when workflowId is null", () => {
+    localStorage.setItem(
+      "chat_history_tab_tab-a",
+      JSON.stringify([{ role: "user", content: "Message A" }])
+    );
+    localStorage.setItem(
+      "chat_history_tab_tab-b",
+      JSON.stringify([{ role: "user", content: "Message B" }])
+    );
+    const { unmount } = renderWithProvider(
+      /* @__PURE__ */ jsx(WorkflowChat, { workflowId: null, tabId: "tab-a" })
+    );
+    expect(screen.getByText("Message A")).toBeInTheDocument();
+    expect(screen.queryByText("Message B")).not.toBeInTheDocument();
+    unmount();
+    renderWithProvider(/* @__PURE__ */ jsx(WorkflowChat, { workflowId: null, tabId: "tab-b" }));
+    expect(screen.getByText("Message B")).toBeInTheDocument();
+    expect(screen.queryByText("Message A")).not.toBeInTheDocument();
+  });
+  it("should migrate tab-scoped chat to workflow key after save", () => {
+    localStorage.setItem(
+      "chat_history_tab_draft-tab",
+      JSON.stringify([{ role: "user", content: "Before save" }])
+    );
+    const { rerender } = renderWithProvider(
+      /* @__PURE__ */ jsx(WorkflowChat, { workflowId: null, tabId: "draft-tab" })
+    );
+    expect(screen.getByText("Before save")).toBeInTheDocument();
+    rerender(
+      /* @__PURE__ */ jsx(MemoryRouter, {
+        children: /* @__PURE__ */ jsx(AuthProvider, {
+          children: /* @__PURE__ */ jsx(WorkflowChat, {
+            workflowId: "saved-wf-1",
+            tabId: "draft-tab"
+          })
+        })
+      })
+    );
+    expect(screen.getByText("Before save")).toBeInTheDocument();
+    expect(localStorage.getItem("chat_history_tab_draft-tab")).toBeNull();
+    const migrated = JSON.parse(localStorage.getItem("chat_history_saved-wf-1"));
+    expect(migrated.some((m) => m.content === "Before save")).toBe(true);
+  });
+  it("should clear chat session, remove storage, and reset to greeting", () => {
+    const { safeStorageRemove } = require("../utils/storageHelpers");
+    const history = [
+      { role: "user", content: "Hello" },
+      { role: "assistant", content: "Hi there!" }
+    ];
+    localStorage.setItem("chat_history_workflow-1", JSON.stringify(history));
+    renderWithProvider(/* @__PURE__ */ jsx(WorkflowChat, { workflowId: "workflow-1" }));
+    expect(screen.getByText("Hello")).toBeInTheDocument();
+    fireEvent.change(screen.getByPlaceholderText(/Type your message/), { target: { value: "draft" } });
+    fireEvent.click(screen.getByRole("button", { name: /clear chat and start over/i }));
+    expect(screen.queryByText("Hello")).not.toBeInTheDocument();
+    expect(screen.queryByText("Hi there!")).not.toBeInTheDocument();
+    expect(screen.getByText(/Hello! I can help you create or modify this workflow/)).toBeInTheDocument();
+    expect(screen.getByPlaceholderText(/Type your message/)).toHaveValue("");
+    expect(safeStorageRemove).toHaveBeenCalledWith(
+      expect.anything(),
+      "chat_history_workflow-1",
+      "WorkflowChat"
+    );
+    const saved = localStorage.getItem("chat_history_workflow-1");
+    expect(saved).toBeTruthy();
+    const parsed = JSON.parse(saved);
+    expect(parsed).toHaveLength(1);
+    expect(parsed[0].role).toBe("assistant");
+    expect(parsed[0].content).toMatch(/Hello! I can help you create or modify this workflow/);
+  });
+  it("should disable clear chat button while sending", async () => {
+    let resolvePromise;
+    const promise = new Promise((resolve) => {
+      resolvePromise = resolve;
+    });
+    api.chat.mockReturnValue(promise);
+    renderWithProvider(/* @__PURE__ */ jsx(WorkflowChat, { workflowId: "workflow-1" }));
+    fireEvent.change(screen.getByPlaceholderText(/Type your message/), { target: { value: "Hi" } });
+    fireEvent.click(screen.getByText("Send"));
+    await waitForWithTimeout(() => {
+      expect(screen.getByRole("button", { name: /clear chat and start over/i })).toBeDisabled();
+    }, 2e3);
+    resolvePromise({ message: "Done" });
+    await waitForWithTimeout(() => {
+      expect(screen.getByRole("button", { name: /clear chat and start over/i })).not.toBeDisabled();
+    }, 2e3);
   });
   it("should handle invalid localStorage history gracefully", () => {
     const { safeStorageGet } = require("../utils/storageHelpers");
@@ -230,6 +335,29 @@ describe("WorkflowChat", () => {
         })
       );
     }, 3e3);
+  });
+  it("should send canvas_snapshot when getCanvasSnapshot returns nodes and edges", async () => {
+    const getCanvasSnapshot = jest.fn(() => ({
+      nodes: [{ id: "n1", type: "start", name: "S", position: { x: 0, y: 0 } }],
+      edges: [{ id: "e1", source: "n1", target: "n2" }]
+    }));
+    renderWithProvider(
+      /* @__PURE__ */ jsx(WorkflowChat, { workflowId: "workflow-1", getCanvasSnapshot })
+    );
+    const input = screen.getByPlaceholderText(/Type your message/);
+    fireEvent.change(input, { target: { value: "Hi" } });
+    fireEvent.click(screen.getByText("Send"));
+    await waitForWithTimeout(() => {
+      expect(api.chat).toHaveBeenCalledWith(
+        expect.objectContaining({
+          canvas_snapshot: {
+            nodes: [{ id: "n1", type: "start", name: "S", position: { x: 0, y: 0 } }],
+            edges: [{ id: "e1", source: "n1", target: "n2" }]
+          }
+        })
+      );
+    }, 3e3);
+    expect(getCanvasSnapshot).toHaveBeenCalled();
   });
   it("should send message when Enter is pressed", async () => {
     renderWithProvider(/* @__PURE__ */ jsx(WorkflowChat, { workflowId: "workflow-1" }));

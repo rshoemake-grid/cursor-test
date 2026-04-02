@@ -58,7 +58,15 @@ def _apply_chat_changes_merge(
 
     nodes_to_delete_set = set(nodes_to_delete)
     final_nodes = [n for n in final_nodes if n.get("id") not in nodes_to_delete_set]
-    final_edges.extend(edges_to_add)
+    for edge in edges_to_add:
+        src, tgt = edge.get("source"), edge.get("target")
+        if src is None or tgt is None:
+            continue
+        if any(
+            e.get("source") == src and e.get("target") == tgt for e in final_edges
+        ):
+            continue
+        final_edges.append(edge)
 
     final_edges = [
         e for e in final_edges

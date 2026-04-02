@@ -28,7 +28,12 @@ function SettingsPage({
     () => new SettingsService(httpClient, storage, apiBaseUrl),
     [httpClient, storage, apiBaseUrl]
   );
-  const { providers: loadedProviders, iterationLimit: loadedIterationLimit, defaultModel: loadedDefaultModel } = useLLMProviders({
+  const {
+    providers: loadedProviders,
+    iterationLimit: loadedIterationLimit,
+    defaultModel: loadedDefaultModel,
+    chatAssistantModel: loadedChatAssistantModel
+  } = useLLMProviders({
     storage,
     isAuthenticated
   });
@@ -38,6 +43,7 @@ function SettingsPage({
   const [showApiKeys, setShowApiKeys] = useState({});
   const [iterationLimit, setIterationLimit] = useState(10);
   const [defaultModel, setDefaultModel] = useState("");
+  const [chatAssistantModel, setChatAssistantModel] = useState("");
   const [activeTab, setActiveTab] = useState(SETTINGS_TABS.LLM);
   const [settingsLoaded, setSettingsLoaded] = useState(false);
   useEffect(() => {
@@ -45,6 +51,7 @@ function SettingsPage({
       setProviders([]);
       setIterationLimit(10);
       setDefaultModel("");
+      setChatAssistantModel("");
       setSettingsLoaded(false);
       setShowAddProvider(false);
     }
@@ -61,13 +68,16 @@ function SettingsPage({
     loadedProviders,
     loadedIterationLimit,
     loadedDefaultModel,
+    loadedChatAssistantModel,
     providers,
     iterationLimit,
     defaultModel,
+    chatAssistantModel,
     settingsLoaded,
     setProviders,
     setIterationLimit,
     setDefaultModel,
+    setChatAssistantModel,
     setSettingsLoaded,
     onLoadComplete: (settings) => {
       if (settings.providers && settings.providers.length > 0) {
@@ -88,6 +98,7 @@ function SettingsPage({
     setProviders,
     iterationLimit,
     defaultModel,
+    chatAssistantModel,
     token
   });
   const { handleManualSync } = useSettingsSync({
@@ -96,6 +107,7 @@ function SettingsPage({
     providers,
     iterationLimit,
     defaultModel,
+    chatAssistantModel,
     settingsService,
     settingsLoaded,
     consoleAdapter
@@ -152,6 +164,8 @@ function SettingsPage({
           onIterationLimitChange: setIterationLimit,
           defaultModel,
           onDefaultModelChange: setDefaultModel,
+          chatAssistantModel,
+          onChatAssistantModelChange: setChatAssistantModel,
           providers,
           showAddProvider,
           onShowAddProvider: setShowAddProvider,

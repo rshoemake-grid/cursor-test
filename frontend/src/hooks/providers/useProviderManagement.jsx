@@ -6,6 +6,7 @@ function useProviderManagement({
   setProviders,
   iterationLimit,
   defaultModel,
+  chatAssistantModel,
   token
 }) {
   const [testingProvider, setTestingProvider] = useState(null);
@@ -14,11 +15,12 @@ function useProviderManagement({
     const settings = {
       providers: newProviders,
       iteration_limit: iterationLimit,
-      default_model: defaultModel
+      default_model: defaultModel,
+      chat_assistant_model: chatAssistantModel || ""
     };
     setProviders(newProviders);
     await service.saveSettings(settings, token);
-  }, [service, token, iterationLimit, defaultModel, setProviders]);
+  }, [service, token, iterationLimit, defaultModel, chatAssistantModel, setProviders]);
   const updateProvider = useCallback((id, updates) => {
     saveProviders(providers.map((p) => p.id === id ? { ...p, ...updates } : p));
   }, [providers, saveProviders]);

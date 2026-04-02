@@ -3,6 +3,7 @@ import uuid
 from typing import Any, Callable, Dict, List, Optional
 
 from backend.utils.logger import get_logger
+from backend.services.workflow_service import _apply_chat_changes_merge
 
 from .models import NODE_CONFIG_KEYS
 from .tools import tool_response
@@ -14,10 +15,35 @@ async def handle_add_node(
     tool_call: Any,
     function_args: dict,
     workflow_changes: Dict[str, List[Any]],
+    workflow_snapshot: Optional[dict],
 ) -> Any:
     """Handle add_node tool call."""
     if "node_type" not in function_args:
         return tool_response(tool_call, {"status": "error", "message": "node_type is required"})
+    node_type = function_args["node_type"]
+    if workflow_snapshot is not None and node_type in ("start", "end"):
+        merged_nodes, _ = _apply_chat_changes_merge(
+            list(workflow_snapshot["nodes"]),
+            list(workflow_snapshot["edges"]),
+            workflow_changes["nodes_to_add"],
+            workflow_changes["nodes_to_update"],
+            workflow_changes["nodes_to_delete"],
+            workflow_changes["edges_to_add"],
+            workflow_changes["edges_to_delete"],
+        )
+        for n in merged_nodes:
+            if n.get("type") == node_type:
+                nid = n.get("id", "?")
+                return tool_response(
+                    tool_call,
+                    {
+                        "status": "error",
+                        "message": (
+                            f"A {node_type} node already exists on the canvas (id={nid}). "
+                            "Use connect_nodes or update_node instead of add_node."
+                        ),
+                    },
+                )
     node_id = f"{function_args['node_type']}-{uuid.uuid4().hex[:12]}"
     node_name = function_args.get("name") or f"{function_args['node_type']} Node"
     new_node = {
@@ -102,10 +128,10 @@ async def handle_disconnect_nodes(
 async def handle_get_workflow_info(
     tool_call: Any,
     function_args: dict,
-    workflow_context: str,
+    live_workflow_summary: Dict[str, str],
 ) -> Any:
     """Handle get_workflow_info tool call."""
-    return tool_response(tool_call, workflow_context)
+    return tool_response(tool_call, live_workflow_summary["text"])
 
 
 async def handle_save_workflow(
@@ -115,11 +141,24 @@ async def handle_save_workflow(
     workflow_changes: Dict[str, List[Any]],
     saved_changes: Dict[str, List[Any]],
     workflow_service: Any,
+    workflow_snapshot: Optional[dict] = None,
     user_id: Optional[str] = None,
 ) -> Any:
     """Handle save_workflow tool call. Persists via WorkflowService."""
     if not workflow_id:
         return tool_response(tool_call, {"status": "error", "message": "No workflow ID provided. Cannot save workflow."})
+    merged_nodes: Optional[List[dict]] = None
+    merged_edges: Optional[List[dict]] = None
+    if workflow_snapshot is not None:
+        merged_nodes, merged_edges = _apply_chat_changes_merge(
+            list(workflow_snapshot["nodes"]),
+            list(workflow_snapshot["edges"]),
+            workflow_changes["nodes_to_add"],
+            workflow_changes["nodes_to_update"],
+            workflow_changes["nodes_to_delete"],
+            workflow_changes["edges_to_add"],
+            workflow_changes["edges_to_delete"],
+        )
     try:
         result = await workflow_service.apply_chat_changes(
             workflow_id=workflow_id,
@@ -142,6 +181,9 @@ async def handle_save_workflow(
         workflow_changes["nodes_to_delete"].clear()
         workflow_changes["edges_to_add"].clear()
         workflow_changes["edges_to_delete"].clear()
+        if workflow_snapshot is not None and merged_nodes is not None and merged_edges is not None:
+            workflow_snapshot["nodes"] = merged_nodes
+            workflow_snapshot["edges"] = merged_edges
         return tool_response(tool_call, {
             "status": "success",
             "action": "saved_workflow",
@@ -157,20 +199,21 @@ async def handle_save_workflow(
 def get_tool_handlers(
     workflow_changes: Dict[str, List[Any]],
     saved_changes: Dict[str, List[Any]],
-    workflow_context: str,
+    live_workflow_summary: Dict[str, str],
+    workflow_snapshot: Optional[dict],
     workflow_id: Optional[str],
     workflow_service: Any,
     user_id: Optional[str] = None,
 ) -> Dict[str, Callable]:
     """Build tool handler registry with context."""
     return {
-        "add_node": lambda tc, fa: handle_add_node(tc, fa, workflow_changes),
+        "add_node": lambda tc, fa: handle_add_node(tc, fa, workflow_changes, workflow_snapshot),
         "update_node": lambda tc, fa: handle_update_node(tc, fa, workflow_changes),
         "delete_node": lambda tc, fa: handle_delete_node(tc, fa, workflow_changes),
         "connect_nodes": lambda tc, fa: handle_connect_nodes(tc, fa, workflow_changes),
         "disconnect_nodes": lambda tc, fa: handle_disconnect_nodes(tc, fa, workflow_changes),
-        "get_workflow_info": lambda tc, fa: handle_get_workflow_info(tc, fa, workflow_context),
+        "get_workflow_info": lambda tc, fa: handle_get_workflow_info(tc, fa, live_workflow_summary),
         "save_workflow": lambda tc, fa: handle_save_workflow(
-            tc, fa, workflow_id, workflow_changes, saved_changes, workflow_service, user_id
+            tc, fa, workflow_id, workflow_changes, saved_changes, workflow_service, workflow_snapshot, user_id
         ),
     }

@@ -111,6 +111,11 @@ class ISettingsService(ABC):
         """
         pass
 
+    @abstractmethod
+    def get_llm_config_for_workflow_chat(self, user_id: Optional[str] = None) -> Optional[Dict[str, Any]]:
+        """LLM provider + model for workflow chat (chat_assistant_model or active default)."""
+        pass
+
 
 class SettingsService(ISettingsService):
     """Implementation of settings service"""
@@ -461,3 +466,30 @@ class SettingsService(ISettingsService):
         logger.debug(f"Searching for provider for model '{model_name}' (user: {uid})")
         
         return self._find_provider_with_model(settings.providers, model_name, uid)
+
+    def get_llm_config_for_workflow_chat(self, user_id: Optional[str] = None) -> Optional[Dict[str, Any]]:
+        """
+        Resolve API client config for workflow chat: optional chat_assistant_model in settings,
+        otherwise same as get_active_llm_config.
+        """
+        uid = self._normalize_user_id(user_id)
+        settings = self._get_settings_from_cache(uid)
+        chat_raw = getattr(settings, "chat_assistant_model", None) if settings else None
+        if chat_raw is not None:
+            chat_model = str(chat_raw).strip()
+            if chat_model:
+                cfg = self._find_provider_with_model(settings.providers, chat_model, uid)
+                if cfg:
+                    logger.info(
+                        "Workflow chat using chat_assistant_model=%r for user %s",
+                        chat_model,
+                        uid,
+                    )
+                    return cfg
+                logger.warning(
+                    "chat_assistant_model %r not found on any enabled provider for user %s; "
+                    "falling back to default LLM config",
+                    chat_model,
+                    uid,
+                )
+        return self.get_active_llm_config(user_id)

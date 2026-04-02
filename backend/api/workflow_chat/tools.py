@@ -111,7 +111,12 @@ def get_workflow_tools(workflow_id: Optional[str] = None) -> List[Dict[str, Any]
             "type": "function",
             "function": {
                 "name": "get_workflow_info",
-                "description": "Get information about the current workflow (nodes, edges, structure)",
+                "description": (
+                    "Get the current workflow as shown on the canvas: all nodes (with positions), "
+                    "all edges (connections), and a short connectivity summary (isolated nodes, "
+                    "nodes missing incoming/outgoing edges). Reflects pending tool edits in this "
+                    "request before save. The system context is updated the same way after each tool call."
+                ),
                 "parameters": {"type": "object", "properties": {}, "required": []},
             },
         },

@@ -154,6 +154,7 @@ function WorkflowTabs({
         onInputKeyDown: handleInputKeyDown,
         onNewWorkflow: handleNewWorkflow,
         onSave: () => void builderRef.current?.saveWorkflow(),
+        onClearWorkflow: () => void builderRef.current?.clearWorkflow?.(),
         onExecute: () => builderRef.current?.executeWorkflow(),
         onPublish: openPublishModal,
         onExport: () => builderRef.current?.exportWorkflow()

@@ -31,7 +31,8 @@ class LLMProvider(BaseModel):
 class LLMSettings(BaseModel):
     providers: List[LLMProvider]
     iteration_limit: int = 10
-    default_model: Optional[str] = None  # Selected model for workflow generation
+    default_model: Optional[str] = None  # Selected model for workflow generation / agents when no per-node model
+    chat_assistant_model: Optional[str] = None  # Workflow builder chat; empty uses default_model / first enabled provider
 
 
 class LLMTestRequest(BaseModel):

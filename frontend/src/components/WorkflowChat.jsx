@@ -2,13 +2,13 @@ import { Fragment, jsx, jsxs } from "react/jsx-runtime";
 import { useState, useRef, useEffect, useCallback } from "react";
 import PropTypes from "prop-types";
 import { Link } from "react-router-dom";
-import { Send, Loader, Bot, User, Mic, Volume2 } from "lucide-react";
+import { Send, Loader, Bot, User, Mic, Volume2, RotateCcw } from "lucide-react";
 import { logger } from "../utils/logger";
 import { useAuth } from "../contexts/AuthContext";
 import { defaultAdapters } from "../types/adapters";
 import { api } from "../api/client";
 import { handleApiError } from "../utils/errorHandler";
-import { safeStorageGet, safeStorageSet } from "../utils/storageHelpers";
+import { safeStorageGet, safeStorageRemove, safeStorageSet } from "../utils/storageHelpers";
 import { getChatHistoryKey } from "../config/constants";
 import { mapMessagesForWorkflowChatApi } from "./workflowChatPayload";
 import {
@@ -20,16 +20,19 @@ import {
 const DEFAULT_WORKFLOW_CHAT_ITERATIONS = 20;
 const MIN_WORKFLOW_CHAT_ITERATIONS = 1;
 const MAX_WORKFLOW_CHAT_ITERATIONS = 100;
+const DEFAULT_WORKFLOW_CHAT_STORAGE = defaultAdapters.createLocalStorageAdapter();
 function WorkflowChat({
   workflowId,
+  tabId = null,
   onWorkflowUpdate,
-  storage = defaultAdapters.createLocalStorageAdapter(),
+  getCanvasSnapshot = null,
+  storage = DEFAULT_WORKFLOW_CHAT_STORAGE,
   logger: injectedLogger = logger
 }) {
   const { isAuthenticated } = useAuth();
   const chatDisabled = isAuthenticated !== true;
-  const loadConversationHistory = (workflowId2) => {
-    const storageKey = getChatHistoryKey(workflowId2);
+  const loadConversationHistory = useCallback((workflowId2, tabId2) => {
+    const storageKey = getChatHistoryKey(workflowId2, tabId2);
     const saved = safeStorageGet(
       storage,
       storageKey,
@@ -43,8 +46,8 @@ function WorkflowChat({
       role: "assistant",
       content: workflowId2 !== null && workflowId2 !== void 0 && workflowId2 !== "" ? "Hello! I can help you create or modify this workflow. What would you like to do?" : "Hello! I can help you create a new workflow. What would you like to build?"
     }];
-  };
-  const [messages, setMessages] = useState(() => loadConversationHistory(workflowId));
+  }, [storage]);
+  const [messages, setMessages] = useState(() => loadConversationHistory(workflowId, tabId));
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [ttsEnabled, setTtsEnabled] = useState(false);
@@ -72,11 +75,14 @@ function WorkflowChat({
           MIN_WORKFLOW_CHAT_ITERATIONS,
           Math.min(MAX_WORKFLOW_CHAT_ITERATIONS, Number(iterationLimit) || DEFAULT_WORKFLOW_CHAT_ITERATIONS)
         );
+        const liveCanvas = typeof getCanvasSnapshot === "function" ? getCanvasSnapshot() : null;
+        const hasLiveCanvas = liveCanvas !== null && liveCanvas !== void 0 && Array.isArray(liveCanvas.nodes) === true && Array.isArray(liveCanvas.edges) === true;
         const data = await api.chat({
           workflow_id: workflowId,
           message: userMessage.content,
           conversation_history: mapMessagesForWorkflowChatApi(messages),
-          iteration_limit: clampedIterations
+          iteration_limit: clampedIterations,
+          ...(hasLiveCanvas === true ? { canvas_snapshot: { nodes: liveCanvas.nodes, edges: liveCanvas.edges } } : {})
         });
         const assistantMessage = {
           role: "assistant",
@@ -116,7 +122,8 @@ function WorkflowChat({
       onWorkflowUpdate,
       injectedLogger,
       chatDisabled,
-      iterationLimit
+      iterationLimit,
+      getCanvasSnapshot
     ]
   );
   const {
@@ -141,17 +148,39 @@ function WorkflowChat({
   }, []);
   useEffect(() => {
     if (messages.length > 0) {
-      const storageKey = getChatHistoryKey(workflowId);
+      const storageKey = getChatHistoryKey(workflowId, tabId);
       safeStorageSet(storage, storageKey, messages, "WorkflowChat");
     }
-  }, [messages, workflowId, storage]);
+  }, [messages, workflowId, tabId, storage]);
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
   useEffect(() => {
-    const history = loadConversationHistory(workflowId);
-    setMessages(history);
-  }, [workflowId]);
+    const hasTab = tabId !== null && tabId !== void 0 && tabId !== "";
+    const hasWorkflow = workflowId !== null && workflowId !== void 0 && workflowId !== "";
+    if (hasTab === true && hasWorkflow === true) {
+      const wfKey = getChatHistoryKey(workflowId);
+      const tabKey = getChatHistoryKey(null, tabId);
+      const atWf = safeStorageGet(storage, wfKey, [], "WorkflowChat");
+      const atTab = safeStorageGet(storage, tabKey, [], "WorkflowChat");
+      const hasWfHistory = Array.isArray(atWf) === true && atWf.length > 0;
+      const hasTabHistory = Array.isArray(atTab) === true && atTab.length > 0;
+      if (hasWfHistory === false && hasTabHistory === true) {
+        safeStorageSet(storage, wfKey, atTab, "WorkflowChat");
+        safeStorageRemove(storage, tabKey, "WorkflowChat");
+      } else if (hasWfHistory === true && hasTabHistory === true) {
+        safeStorageRemove(storage, tabKey, "WorkflowChat");
+      }
+    }
+    setMessages(loadConversationHistory(workflowId, tabId));
+  }, [workflowId, tabId, loadConversationHistory, storage]);
+  const handleClearSession = useCallback(() => {
+    if (isLoading === true) return;
+    stopSpeaking();
+    safeStorageRemove(storage, getChatHistoryKey(workflowId, tabId), "WorkflowChat");
+    setMessages(loadConversationHistory(workflowId, tabId));
+    setInput("");
+  }, [isLoading, workflowId, tabId, storage, loadConversationHistory]);
   const handleSend = useCallback(() => {
     void sendMessage(input);
   }, [sendMessage, input]);
@@ -172,6 +201,18 @@ function WorkflowChat({
     }
   };
   return /* @__PURE__ */ jsxs("div", { className: "flex flex-col h-full bg-gray-900 text-gray-100", children: [
+    /* @__PURE__ */ jsx("div", { className: "flex-shrink-0 flex justify-end items-center px-3 py-2 border-b border-gray-800", children: /* @__PURE__ */ jsx(
+      "button",
+      {
+        type: "button",
+        "aria-label": "Clear chat and start over",
+        title: "Clear this chat session and remove saved history for this workflow",
+        disabled: isLoading === true,
+        onClick: handleClearSession,
+        className: "p-2 rounded-lg flex items-center justify-center transition-colors border border-gray-700 bg-gray-800 text-gray-200 hover:bg-gray-700 hover:border-gray-600 disabled:opacity-40 disabled:cursor-not-allowed",
+        children: /* @__PURE__ */ jsx(RotateCcw, { className: "w-5 h-5", "aria-hidden": true })
+      }
+    ) }),
     /* @__PURE__ */ jsxs("div", { className: "flex-1 overflow-y-auto p-4 space-y-4", children: [
       messages.map((message, idx) => /* @__PURE__ */ jsxs(
         "div",
@@ -302,7 +343,9 @@ function WorkflowChat({
 
 WorkflowChat.propTypes = {
   workflowId: PropTypes.string,
+  tabId: PropTypes.string,
   onWorkflowUpdate: PropTypes.func,
+  getCanvasSnapshot: PropTypes.func,
   storage: PropTypes.shape({
     getItem: PropTypes.func,
     setItem: PropTypes.func,

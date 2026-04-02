@@ -47,7 +47,7 @@ async def chat_with_workflow(
         if settings_service.get_active_llm_config(user_id) is None:
             await settings_service.load_settings_into_cache(db)
 
-        llm_config = settings_service.get_active_llm_config(user_id)
+        llm_config = settings_service.get_llm_config_for_workflow_chat(user_id)
         model = llm_config.get("model", "gpt-4") if llm_config else "gpt-4"
 
         iteration_limit = _DEFAULT_CHAT_ITERATION_LIMIT
@@ -61,13 +61,23 @@ async def chat_with_workflow(
         if request.iteration_limit is not None:
             iteration_limit = _clamp_chat_iteration_limit(int(request.iteration_limit))
 
-        logger.info(f"Chat agent using iteration_limit: {iteration_limit} for user: {user_id or 'anonymous'}")
+        logger.info(
+            "Chat agent model=%s iteration_limit=%s user=%s",
+            model,
+            iteration_limit,
+            user_id or "anonymous",
+        )
 
-        client = llm_client_factory.create_client(user_id)
-        workflow_context = await get_workflow_context(
-            db, request.workflow_id,
+        client = llm_client_factory.create_client(user_id, llm_config=llm_config)
+        client_canvas = (
+            request.canvas_snapshot.model_dump() if request.canvas_snapshot is not None else None
+        )
+        workflow_context, workflow_snapshot = await get_workflow_context(
+            db,
+            request.workflow_id,
             user_id=user_id,
             ownership_service=ownership_service,
+            client_canvas=client_canvas,
         )
 
         messages = [
@@ -94,6 +104,7 @@ async def chat_with_workflow(
             workflow_service=workflow_service,
             iteration_limit=iteration_limit,
             user_id=user_id,
+            workflow_snapshot=workflow_snapshot,
         )
 
         return ChatResponse(

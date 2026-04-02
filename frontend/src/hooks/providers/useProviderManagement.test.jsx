@@ -59,6 +59,7 @@ describe("useProviderManagement", () => {
         setProviders: mockSetProviders,
         iterationLimit: 10,
         defaultModel: "gpt-4",
+        chatAssistantModel: "",
         token: "test-token",
         ...overrides
       })
@@ -81,7 +82,8 @@ describe("useProviderManagement", () => {
         {
           providers: newProviders,
           iteration_limit: 10,
-          default_model: "gpt-4"
+          default_model: "gpt-4",
+          chat_assistant_model: ""
         },
         "test-token"
       );
@@ -233,6 +235,7 @@ describe("useProviderManagement", () => {
           setProviders: mockSetProviders,
           iterationLimit: 10,
           defaultModel: "gpt-4",
+          chatAssistantModel: "",
           token: "test-token"
         })
       );

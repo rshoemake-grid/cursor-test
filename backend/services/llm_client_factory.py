@@ -3,7 +3,7 @@ LLM Client Factory - SOLID Principles Refactoring
 Extracts LLM client creation logic from routes into a factory with dependency injection
 """
 from abc import ABC, abstractmethod
-from typing import Optional
+from typing import Any, Dict, Optional
 import os
 from openai import AsyncOpenAI
 
@@ -18,12 +18,17 @@ class ILLMClientFactory(ABC):
     """Interface for LLM client factory"""
     
     @abstractmethod
-    def create_client(self, user_id: Optional[str] = None) -> AsyncOpenAI:
+    def create_client(
+        self,
+        user_id: Optional[str] = None,
+        llm_config: Optional[Dict[str, Any]] = None,
+    ) -> AsyncOpenAI:
         """
         Create an AsyncOpenAI client for the user
         
         Args:
             user_id: Optional user ID, None for anonymous user
+            llm_config: Optional resolved provider config (e.g. workflow chat model); if None, uses active settings
             
         Returns:
             AsyncOpenAI client instance
@@ -53,10 +58,14 @@ class LLMClientFactory(ILLMClientFactory):
         from ..utils.settings_utils import is_valid_api_key
         return not is_valid_api_key(api_key)
     
-    def create_client(self, user_id: Optional[str] = None) -> AsyncOpenAI:
+    def create_client(
+        self,
+        user_id: Optional[str] = None,
+        llm_config: Optional[Dict[str, Any]] = None,
+    ) -> AsyncOpenAI:
         """Create LLM client using settings service and provider strategy"""
-        # Try to get config from settings service
-        llm_config = self.settings_service.get_active_llm_config(user_id)
+        if llm_config is None:
+            llm_config = self.settings_service.get_active_llm_config(user_id)
         
         api_key = None
         base_url = None

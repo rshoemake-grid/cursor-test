@@ -4,6 +4,7 @@ describe("useSettingsStateSync", () => {
   const mockSetProviders = jest.fn();
   const mockSetIterationLimit = jest.fn();
   const mockSetDefaultModel = jest.fn();
+  const mockSetChatAssistantModel = jest.fn();
   const mockSetSettingsLoaded = jest.fn();
   const mockOnLoadComplete = jest.fn();
   beforeEach(() => {
@@ -27,12 +28,15 @@ describe("useSettingsStateSync", () => {
         loadedProviders,
         loadedIterationLimit: void 0,
         loadedDefaultModel: void 0,
+        loadedChatAssistantModel: void 0,
         providers: [],
         iterationLimit: 10,
         defaultModel: "",
+        chatAssistantModel: "",
         setProviders: mockSetProviders,
         setIterationLimit: mockSetIterationLimit,
         setDefaultModel: mockSetDefaultModel,
+        setChatAssistantModel: mockSetChatAssistantModel,
         setSettingsLoaded: mockSetSettingsLoaded,
         onLoadComplete: mockOnLoadComplete
       })
@@ -69,12 +73,15 @@ describe("useSettingsStateSync", () => {
         loadedProviders,
         loadedIterationLimit: void 0,
         loadedDefaultModel: void 0,
+        loadedChatAssistantModel: void 0,
         providers: existingProviders,
         iterationLimit: 10,
         defaultModel: "",
+        chatAssistantModel: "",
         setProviders: mockSetProviders,
         setIterationLimit: mockSetIterationLimit,
         setDefaultModel: mockSetDefaultModel,
+        setChatAssistantModel: mockSetChatAssistantModel,
         setSettingsLoaded: mockSetSettingsLoaded,
         onLoadComplete: mockOnLoadComplete
       })
@@ -87,12 +94,15 @@ describe("useSettingsStateSync", () => {
         loadedProviders: [],
         loadedIterationLimit: 20,
         loadedDefaultModel: void 0,
+        loadedChatAssistantModel: void 0,
         providers: [],
         iterationLimit: 10,
         defaultModel: "",
+        chatAssistantModel: "",
         setProviders: mockSetProviders,
         setIterationLimit: mockSetIterationLimit,
         setDefaultModel: mockSetDefaultModel,
+        setChatAssistantModel: mockSetChatAssistantModel,
         setSettingsLoaded: mockSetSettingsLoaded,
         onLoadComplete: mockOnLoadComplete
       })
@@ -105,12 +115,15 @@ describe("useSettingsStateSync", () => {
         loadedProviders: [],
         loadedIterationLimit: 20,
         loadedDefaultModel: void 0,
+        loadedChatAssistantModel: void 0,
         providers: [],
         iterationLimit: 15,
         defaultModel: "",
+        chatAssistantModel: "",
         setProviders: mockSetProviders,
         setIterationLimit: mockSetIterationLimit,
         setDefaultModel: mockSetDefaultModel,
+        setChatAssistantModel: mockSetChatAssistantModel,
         setSettingsLoaded: mockSetSettingsLoaded,
         onLoadComplete: mockOnLoadComplete
       })
@@ -123,17 +136,41 @@ describe("useSettingsStateSync", () => {
         loadedProviders: [],
         loadedIterationLimit: void 0,
         loadedDefaultModel: "gpt-4",
+        loadedChatAssistantModel: void 0,
         providers: [],
         iterationLimit: 10,
         defaultModel: "",
+        chatAssistantModel: "",
         setProviders: mockSetProviders,
         setIterationLimit: mockSetIterationLimit,
         setDefaultModel: mockSetDefaultModel,
+        setChatAssistantModel: mockSetChatAssistantModel,
         setSettingsLoaded: mockSetSettingsLoaded,
         onLoadComplete: mockOnLoadComplete
       })
     );
     expect(mockSetDefaultModel).toHaveBeenCalledWith("gpt-4");
+  });
+  it("should sync chat assistant model when loaded and empty", () => {
+    renderHook(
+      () => useSettingsStateSync({
+        loadedProviders: [],
+        loadedIterationLimit: void 0,
+        loadedDefaultModel: void 0,
+        loadedChatAssistantModel: "gpt-4o-mini",
+        providers: [],
+        iterationLimit: 10,
+        defaultModel: "",
+        chatAssistantModel: "",
+        setProviders: mockSetProviders,
+        setIterationLimit: mockSetIterationLimit,
+        setDefaultModel: mockSetDefaultModel,
+        setChatAssistantModel: mockSetChatAssistantModel,
+        setSettingsLoaded: mockSetSettingsLoaded,
+        onLoadComplete: mockOnLoadComplete
+      })
+    );
+    expect(mockSetChatAssistantModel).toHaveBeenCalledWith("gpt-4o-mini");
   });
   it("should not sync default model when already set", () => {
     renderHook(
@@ -141,12 +178,15 @@ describe("useSettingsStateSync", () => {
         loadedProviders: [],
         loadedIterationLimit: void 0,
         loadedDefaultModel: "gpt-4",
+        loadedChatAssistantModel: void 0,
         providers: [],
         iterationLimit: 10,
         defaultModel: "gpt-3.5",
+        chatAssistantModel: "",
         setProviders: mockSetProviders,
         setIterationLimit: mockSetIterationLimit,
         setDefaultModel: mockSetDefaultModel,
+        setChatAssistantModel: mockSetChatAssistantModel,
         setSettingsLoaded: mockSetSettingsLoaded,
         onLoadComplete: mockOnLoadComplete
       })
@@ -171,12 +211,15 @@ describe("useSettingsStateSync", () => {
         loadedProviders,
         loadedIterationLimit: 20,
         loadedDefaultModel: "gpt-4",
+        loadedChatAssistantModel: void 0,
         providers: [],
         iterationLimit: 10,
         defaultModel: "",
+        chatAssistantModel: "",
         setProviders: mockSetProviders,
         setIterationLimit: mockSetIterationLimit,
         setDefaultModel: mockSetDefaultModel,
+        setChatAssistantModel: mockSetChatAssistantModel,
         setSettingsLoaded: mockSetSettingsLoaded,
         onLoadComplete: mockOnLoadComplete
       })
@@ -185,7 +228,8 @@ describe("useSettingsStateSync", () => {
       expect(mockOnLoadComplete).toHaveBeenCalledWith({
         providers: loadedProviders,
         iteration_limit: 20,
-        default_model: "gpt-4"
+        default_model: "gpt-4",
+        chat_assistant_model: void 0
       });
       expect(mockSetSettingsLoaded).toHaveBeenCalledWith(true);
     });
@@ -196,12 +240,15 @@ describe("useSettingsStateSync", () => {
         loadedProviders: [],
         loadedIterationLimit: void 0,
         loadedDefaultModel: void 0,
+        loadedChatAssistantModel: void 0,
         providers: [],
         iterationLimit: 10,
         defaultModel: "",
+        chatAssistantModel: "",
         setProviders: mockSetProviders,
         setIterationLimit: mockSetIterationLimit,
         setDefaultModel: mockSetDefaultModel,
+        setChatAssistantModel: mockSetChatAssistantModel,
         setSettingsLoaded: mockSetSettingsLoaded,
         onLoadComplete: mockOnLoadComplete
       })

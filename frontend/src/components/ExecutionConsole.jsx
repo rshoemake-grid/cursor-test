@@ -13,9 +13,11 @@ import { coalesceString } from "../utils/nullCoalescing";
 import { LOG_LEVELS } from "../constants/stringLiterals";
 function ExecutionConsole({
   activeWorkflowId,
+  workflowTabId = null,
   executions = [],
   activeExecutionId = null,
   onWorkflowUpdate,
+  getWorkflowChatCanvasSnapshot = null,
   onExecutionLogUpdate,
   onExecutionStatusUpdate,
   onExecutionNodeUpdate,
@@ -286,8 +288,11 @@ function ExecutionConsole({
           WorkflowChat,
           {
             workflowId: activeWorkflowId,
-            onWorkflowUpdate
-          }
+            tabId: workflowTabId,
+            onWorkflowUpdate,
+            getCanvasSnapshot: getWorkflowChatCanvasSnapshot
+          },
+          workflowTabId !== null && workflowTabId !== void 0 && workflowTabId !== "" ? workflowTabId : `chat-${activeWorkflowId ?? "none"}`
         ) : activeExecution ? /* @__PURE__ */ jsx("div", { className: "h-full overflow-y-auto bg-gray-900 text-gray-100 p-4", children: /* @__PURE__ */ jsxs("div", { className: "space-y-4", children: [
           /* @__PURE__ */ jsxs("div", { className: "flex items-center justify-between", children: [
             /* @__PURE__ */ jsxs("div", { children: [

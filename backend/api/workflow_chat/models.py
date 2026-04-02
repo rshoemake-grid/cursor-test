@@ -20,6 +20,13 @@ class ChatMessage(BaseModel):
     content: str
 
 
+class CanvasSnapshot(BaseModel):
+    """Current graph from the client canvas (API-shaped nodes/edges). When sent, the chat agent uses this instead of the last saved DB definition so unsaved edits match the UI."""
+
+    nodes: List[Any] = Field(default_factory=list)
+    edges: List[Any] = Field(default_factory=list)
+
+
 class ChatRequest(BaseModel):
     workflow_id: Optional[str] = None
     message: str
@@ -29,6 +36,10 @@ class ChatRequest(BaseModel):
         ge=1,
         le=100,
         description="Override max tool–LLM cycles for this request (optional).",
+    )
+    canvas_snapshot: Optional[CanvasSnapshot] = Field(
+        default=None,
+        description="Optional live canvas from the UI; overrides stored workflow definition for context only.",
     )
 
 

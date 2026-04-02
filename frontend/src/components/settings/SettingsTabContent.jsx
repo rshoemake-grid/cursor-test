@@ -32,6 +32,8 @@ function SettingsTabContent({
   onIterationLimitChange,
   defaultModel,
   onDefaultModelChange,
+  chatAssistantModel,
+  onChatAssistantModelChange,
   providers,
   showAddProvider,
   onShowAddProvider,
@@ -63,6 +65,8 @@ function SettingsTabContent({
           onIterationLimitChange,
           defaultModel,
           onDefaultModelChange,
+          chatAssistantModel,
+          onChatAssistantModelChange,
           providers
         }
       )

@@ -31,6 +31,8 @@ describe("SettingsTabContent", () => {
     onIterationLimitChange: jest.fn(),
     defaultModel: "",
     onDefaultModelChange: jest.fn(),
+    chatAssistantModel: "",
+    onChatAssistantModelChange: jest.fn(),
     providers: mockProviders,
     showAddProvider: false,
     onShowAddProvider: jest.fn(),
@@ -62,6 +64,7 @@ describe("SettingsTabContent", () => {
       }));
       expect(screen.getByLabelText("Iteration limit")).toBeInTheDocument();
       expect(screen.getByLabelText("Default Model")).toBeInTheDocument();
+      expect(screen.getByLabelText("Workflow chat model")).toBeInTheDocument();
     });
     it("should display current iteration limit", () => {
       render(/* @__PURE__ */jsx(SettingsTabContent, {

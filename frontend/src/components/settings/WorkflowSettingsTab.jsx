@@ -5,6 +5,8 @@ function WorkflowSettingsTab({
   onIterationLimitChange,
   defaultModel,
   onDefaultModelChange,
+  chatAssistantModel,
+  onChatAssistantModelChange,
   providers
 }) {
   return /* @__PURE__ */ jsxs("div", { className: `space-y-6 ${readOnly === true ? "opacity-50 pointer-events-none" : ""}`, children: [
@@ -45,10 +47,37 @@ function WorkflowSettingsTab({
           ]
         }
       ),
-      /* @__PURE__ */ jsx("p", { className: "text-xs text-gray-500", children: "Select the default model to use for workflow generation. Only models from enabled providers are shown." }),
+      /* @__PURE__ */ jsx("p", { className: "text-xs text-gray-500", children: "Default model for workflow execution and agent nodes when no per-node model is set. Only models from enabled providers are shown." }),
       defaultModel && /* @__PURE__ */ jsxs("p", { className: "text-xs text-green-600", children: [
         "\u2713 Using: ",
         defaultModel
+      ] })
+    ] }),
+    /* @__PURE__ */ jsxs("div", { className: "bg-white rounded-lg border border-gray-200 p-5 flex flex-col gap-3", children: [
+      /* @__PURE__ */ jsx("label", { htmlFor: "chat-assistant-model", className: "text-sm font-medium text-gray-700", children: "Workflow chat model" }),
+      /* @__PURE__ */ jsxs(
+        "select",
+        {
+          id: "chat-assistant-model",
+          value: chatAssistantModel,
+          disabled: readOnly === true,
+          onChange: (e) => onChatAssistantModelChange(e.target.value),
+          className: "w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent disabled:bg-gray-100",
+          children: [
+            /* @__PURE__ */ jsx("option", { value: "", children: "Same as default model" }),
+            providers.filter((p) => p.enabled && p.models && p.models.length > 0).flatMap(
+              (provider) => (provider.models || []).map((model) => ({
+                value: model,
+                label: `${model} (${provider.name})`
+              }))
+            ).map(({ value, label }) => /* @__PURE__ */ jsx("option", { value, children: label }, `chat-${value}`))
+          ]
+        }
+      ),
+      /* @__PURE__ */ jsx("p", { className: "text-xs text-gray-500", children: "Model used by the workflow builder chat assistant (separate from the default execution model if you want a cheaper or faster model for editing)." }),
+      chatAssistantModel && /* @__PURE__ */ jsxs("p", { className: "text-xs text-green-600", children: [
+        "\u2713 Chat using: ",
+        chatAssistantModel
       ] })
     ] })
   ] });

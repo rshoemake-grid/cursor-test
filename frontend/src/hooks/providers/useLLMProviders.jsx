@@ -44,7 +44,8 @@ function loadFromStorage(storage) {
       return {
         providers: logicalOrToEmptyArray(parsed.providers),
         iteration_limit: parsed.iteration_limit,
-        default_model: parsed.default_model
+        default_model: parsed.default_model,
+        chat_assistant_model: parsed.chat_assistant_model
       };
     }
   } catch (e) {
@@ -61,6 +62,7 @@ function useLLMProviders({
   const [providers, setProviders] = useState([]);
   const [iterationLimit, setIterationLimit] = useState(void 0);
   const [defaultModel, setDefaultModel] = useState(void 0);
+  const [chatAssistantModel, setChatAssistantModel] = useState(void 0);
   const [isLoading, setIsLoading] = useState(true);
   useEffect(() => {
     const loadProviders = async () => {
@@ -70,6 +72,7 @@ function useLLMProviders({
         setProviders([]);
         setIterationLimit(void 0);
         setDefaultModel(void 0);
+        setChatAssistantModel(void 0);
         setIsLoading(false);
         return;
       }
@@ -86,12 +89,18 @@ function useLLMProviders({
             if (data.default_model) {
               setDefaultModel(data.default_model);
             }
+            if (typeof data.chat_assistant_model === "string") {
+              setChatAssistantModel(data.chat_assistant_model);
+            } else {
+              setChatAssistantModel("");
+            }
             if (storage) {
               try {
                 storage.setItem(STORAGE_KEYS.LLM_SETTINGS, JSON.stringify({
                   providers: logicalOrToEmptyArray(data.providers),
                   iteration_limit: data.iteration_limit,
-                  default_model: logicalOr(data.default_model, "")
+                  default_model: logicalOr(data.default_model, ""),
+                  chat_assistant_model: typeof data.chat_assistant_model === "string" ? data.chat_assistant_model : ""
                 }));
               } catch (e) {
                 logger.error("Failed to save LLM settings to storage:", e);
@@ -101,7 +110,8 @@ function useLLMProviders({
               onLoadComplete({
                 providers: data.providers,
                 iteration_limit: data.iteration_limit,
-                default_model: data.default_model
+                default_model: data.default_model,
+                chat_assistant_model: data.chat_assistant_model
               });
             }
             setIsLoading(false);
@@ -123,6 +133,9 @@ function useLLMProviders({
           if (storedSettings.default_model) {
             setDefaultModel(storedSettings.default_model);
           }
+          if (typeof storedSettings.chat_assistant_model === "string") {
+            setChatAssistantModel(storedSettings.chat_assistant_model);
+          }
           if (onLoadComplete) {
             onLoadComplete(storedSettings);
           }
@@ -141,6 +154,7 @@ function useLLMProviders({
     providers,
     iterationLimit,
     defaultModel,
+    chatAssistantModel,
     isLoading
   };
 }

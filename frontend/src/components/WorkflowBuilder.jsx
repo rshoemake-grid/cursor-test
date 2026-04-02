@@ -10,7 +10,9 @@ import { useAuth } from "../contexts/AuthContext";
 import { logger } from "../utils/logger";
 import { defaultAdapters } from "../types/adapters";
 import {
-  normalizeNodeForStorage
+  normalizeNodeForStorage,
+  convertNodesToWorkflowFormat,
+  convertEdgesToWorkflowFormat
 } from "../utils/workflowFormat";
 import { useClipboard, useContextMenu, useCanvasEvents } from "../hooks/ui";
 import { useWorkflowPersistence, useWorkflowUpdates, useWorkflowUpdateHandler, useWorkflowState, useWorkflowLoader } from "../hooks/workflow";
@@ -59,7 +61,7 @@ const WorkflowBuilder = forwardRef(function WorkflowBuilder2({
     reactFlowInstanceRef,
     notifyModified
   });
-  const { selectedNodeId, setSelectedNodeId, selectedNodeIds } = nodeSelection;
+  const { selectedNodeId, setSelectedNodeId, selectedNodeIds, setSelectedNodeIds } = nodeSelection;
   const marketplaceDialog = useMarketplaceDialog();
   const { showMarketplaceDialog, marketplaceNode, openDialog: openMarketplaceDialog, closeDialog: closeMarketplaceDialog } = marketplaceDialog;
   const isLoadingRef = useRef(false);
@@ -142,11 +144,30 @@ const WorkflowBuilder = forwardRef(function WorkflowBuilder2({
   useEffect(() => {
     workflowIdRef.current = localWorkflowId;
   }, [localWorkflowId]);
+  const clearWorkflow = useCallback(() => {
+    const variableCount = variables !== null && variables !== void 0 && typeof variables === "object" ? Object.keys(variables).length : 0;
+    const hasContent = nodes.length > 0 || edges.length > 0 || variableCount > 0;
+    if (hasContent === true) {
+      const ok = window.confirm(
+        "Clear all nodes, edges, and workflow variables from the canvas? This removes unsaved graph content until you save."
+      );
+      if (ok !== true) {
+        return;
+      }
+    }
+    setNodes([]);
+    setEdges([]);
+    setVariables({});
+    setSelectedNodeId(null);
+    setSelectedNodeIds(/* @__PURE__ */ new Set());
+    notifyModified();
+  }, [nodes.length, edges.length, variables, setNodes, setEdges, setVariables, setSelectedNodeId, setSelectedNodeIds, notifyModified]);
   useImperativeHandle(ref, () => ({
     saveWorkflow,
     executeWorkflow: execution.executeWorkflow,
-    exportWorkflow
-  }), [saveWorkflow, execution.executeWorkflow, exportWorkflow]);
+    exportWorkflow,
+    clearWorkflow
+  }), [saveWorkflow, execution.executeWorkflow, exportWorkflow, clearWorkflow]);
   const onNodesChange = useCallback((changes) => {
     nodeSelection.handleNodesChange(changes, onNodesChangeBase);
   }, [nodeSelection, onNodesChangeBase]);
@@ -216,6 +237,12 @@ const WorkflowBuilder = forwardRef(function WorkflowBuilder2({
   }, [execution]);
   const executions = workflowTabs?.find((t) => t.workflowId === localWorkflowId)?.executions || [];
   const activeExecutionId = workflowTabs?.find((t) => t.workflowId === localWorkflowId)?.activeExecutionId || null;
+  const workflowChatCanvasRef = useRef({ nodes: [], edges: [] });
+  workflowChatCanvasRef.current = {
+    nodes: convertNodesToWorkflowFormat(nodes),
+    edges: convertEdgesToWorkflowFormat(edges)
+  };
+  const getWorkflowChatCanvasSnapshot = useCallback(() => workflowChatCanvasRef.current, []);
   return /* @__PURE__ */ jsxs(ReactFlowProvider, { children: [
     /* @__PURE__ */ jsx(
       WorkflowBuilderLayout,
@@ -242,9 +269,11 @@ const WorkflowBuilder = forwardRef(function WorkflowBuilder2({
         onCut: clipboard.cut,
         onPaste: clipboard.paste,
         activeWorkflowId: localWorkflowId || null,
+        workflowTabId: tabId,
         executions,
         activeExecutionId,
         onWorkflowUpdate: handleWorkflowUpdate,
+        getWorkflowChatCanvasSnapshot,
         onExecutionLogUpdate,
         onExecutionStatusUpdate,
         onExecutionNodeUpdate,

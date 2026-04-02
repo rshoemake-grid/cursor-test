@@ -1,5 +1,6 @@
 package com.workflow.service;
 
+import com.workflow.constants.WorkflowChatPrompts;
 import com.workflow.dto.WorkflowChatRequest;
 import com.workflow.dto.WorkflowChatResponse;
 import com.workflow.engine.LlmApiClient;
@@ -10,6 +11,7 @@ import com.workflow.util.ErrorMessages;
 import com.workflow.util.ObjectUtils;
 import com.workflow.util.RepositoryUtils;
 import com.workflow.util.WorkflowMapper;
+import com.workflow.util.WorkflowChatContextFormatter;
 import com.workflow.util.LlmConfigUtils;
 import org.springframework.core.env.Environment;
 import org.slf4j.Logger;
@@ -17,18 +19,21 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 /**
- * Workflow Chat Service - matches Python workflow_chat_routes
- * Uses LlmApiClient (DRY: same as AgentNodeExecutor) for chat completions.
+ * Workflow Chat Service — aligned with Python {@code backend/api/workflow_chat} where applicable.
+ * <p>
+ * <b>Parity note:</b> The Python backend runs a multi-step OpenAI tool-calling loop (add_node, connect_nodes,
+ * save_workflow, live refreshed canvas context). This Java implementation performs one chat completion per
+ * request and returns text only ({@code workflowChanges} is always null). Canvas context formatting matches
+ * Python's {@code format_workflow_for_llm} (nodes with positions, edges, connectivity summary).
  */
 @Service
 public class WorkflowChatService {
     private static final Logger log = LoggerFactory.getLogger(WorkflowChatService.class);
-    private static final String SYSTEM_PROMPT_PREFIX = "You are an AI assistant that helps users create and modify workflow graphs. " +
-            "Respond with helpful suggestions. If the user wants to make changes, describe what you would do. " +
-            "Current workflow context:\n";
 
     private final WorkflowRepository workflowRepository;
     private final WorkflowMapper workflowMapper;
@@ -53,11 +58,17 @@ public class WorkflowChatService {
         Map<String, Object> llmConfig = settingsService.getActiveLlmConfig(userId)
                 .orElseThrow(() -> new ValidationException(ErrorMessages.NO_LLM_PROVIDER_CONFIGURED));
 
-        String workflowContext = getWorkflowContext(request.getWorkflowId(), userId);
-        String systemPrompt = SYSTEM_PROMPT_PREFIX + workflowContext;
+        if (request.getIterationLimit() != null) {
+            log.debug(
+                    "Workflow chat iteration_limit={} (API parity with Python; Java path uses a single completion)",
+                    request.getIterationLimit());
+        }
+
+        String workflowContext = buildWorkflowContextBlock(request.getWorkflowId(), userId);
 
         List<Map<String, Object>> messages = new ArrayList<>();
-        messages.add(LlmConfigUtils.buildMessage("system", systemPrompt));
+        messages.add(LlmConfigUtils.buildMessage("system", WorkflowChatPrompts.SYSTEM_PROMPT));
+        messages.add(LlmConfigUtils.buildMessage("system", "Current workflow context:\n" + workflowContext));
         if (request.getConversationHistory() != null) {
             for (var m : request.getConversationHistory()) {
                 messages.add(LlmConfigUtils.buildMessage(m.getRole(), m.getContent()));
@@ -79,7 +90,7 @@ public class WorkflowChatService {
         }
     }
 
-    private String getWorkflowContext(String workflowId, String userId) {
+    private String buildWorkflowContextBlock(String workflowId, String userId) {
         if (workflowId == null || workflowId.isBlank()) {
             return "No workflow loaded. You can create a new workflow.";
         }
@@ -88,17 +99,10 @@ public class WorkflowChatService {
         Map<String, Object> def = ObjectUtils.orEmptyMap(w.getDefinition());
         var nodes = workflowMapper.extractNodes(def);
         var edges = workflowMapper.extractEdges(def);
-
-        StringBuilder sb = new StringBuilder();
-        sb.append("Workflow: ").append(w.getName()).append("\n");
-        sb.append("Nodes (").append(nodes.size()).append("):\n");
-        for (var n : nodes) {
-            sb.append("  - ").append(n.getId()).append(": ").append(ObjectUtils.toStringOrDefault(n.getType(), "unknown")).append("\n");
-        }
-        sb.append("Edges (").append(edges.size()).append("):\n");
-        for (var e : edges) {
-            sb.append("  - ").append(e.getSource()).append(" -> ").append(e.getTarget()).append("\n");
-        }
-        return sb.toString();
+        return WorkflowChatContextFormatter.formatWorkflowForLlm(
+                w.getName(),
+                w.getDescription(),
+                nodes,
+                edges);
     }
 }

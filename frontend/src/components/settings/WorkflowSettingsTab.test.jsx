@@ -4,6 +4,7 @@ import { WorkflowSettingsTab } from "./WorkflowSettingsTab";
 describe("WorkflowSettingsTab", () => {
   const mockOnIterationLimitChange = jest.fn();
   const mockOnDefaultModelChange = jest.fn();
+  const mockOnChatAssistantModelChange = jest.fn();
   const defaultProviders = [
     {
       id: "provider-1",
@@ -38,10 +39,18 @@ describe("WorkflowSettingsTab", () => {
     onIterationLimitChange: mockOnIterationLimitChange,
     defaultModel: "",
     onDefaultModelChange: mockOnDefaultModelChange,
+    chatAssistantModel: "",
+    onChatAssistantModelChange: mockOnChatAssistantModelChange,
     providers: defaultProviders
   };
   beforeEach(() => {
     jest.clearAllMocks();
+  });
+  it("should call onChatAssistantModelChange when workflow chat model changes", () => {
+    render(/* @__PURE__ */ jsx(WorkflowSettingsTab, { ...defaultProps }));
+    const select = screen.getByLabelText("Workflow chat model");
+    fireEvent.change(select, { target: { value: "gpt-4" } });
+    expect(mockOnChatAssistantModelChange).toHaveBeenCalledWith("gpt-4");
   });
   it("should render iteration limit input", () => {
     render(/* @__PURE__ */ jsx(WorkflowSettingsTab, { ...defaultProps }));
@@ -155,7 +164,7 @@ describe("WorkflowSettingsTab", () => {
   });
   it("should render help text for default model", () => {
     render(/* @__PURE__ */ jsx(WorkflowSettingsTab, { ...defaultProps }));
-    expect(screen.getByText(/Select the default model to use for workflow generation/)).toBeInTheDocument();
+    expect(screen.getByText(/Default model for workflow execution and agent nodes/)).toBeInTheDocument();
     expect(screen.getByText(/Only models from enabled providers are shown/)).toBeInTheDocument();
   });
 });

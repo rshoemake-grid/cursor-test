@@ -38,6 +38,7 @@ describe("useSettingsSync", () => {
         providers: mockProviders,
         iterationLimit: 10,
         defaultModel: "gpt-4",
+        chatAssistantModel: "",
         settingsService: mockSettingsService,
         settingsLoaded: true,
         consoleAdapter: mockConsoleAdapter
@@ -55,6 +56,7 @@ describe("useSettingsSync", () => {
         providers: mockProviders,
         iterationLimit: 10,
         defaultModel: "gpt-4",
+        chatAssistantModel: "",
         settingsService: mockSettingsService,
         settingsLoaded: true,
         consoleAdapter: mockConsoleAdapter
@@ -71,6 +73,7 @@ describe("useSettingsSync", () => {
         providers: mockProviders,
         iterationLimit: 10,
         defaultModel: "gpt-4",
+        chatAssistantModel: "",
         settingsService: mockSettingsService,
         settingsLoaded: true,
         consoleAdapter: mockConsoleAdapter
@@ -89,6 +92,7 @@ describe("useSettingsSync", () => {
         providers: mockProviders,
         iterationLimit: 10,
         defaultModel: "gpt-4",
+        chatAssistantModel: "",
         settingsService: mockSettingsService,
         settingsLoaded: true,
         consoleAdapter: mockConsoleAdapter
@@ -106,6 +110,7 @@ describe("useSettingsSync", () => {
         providers: mockProviders,
         iterationLimit: 10,
         defaultModel: "gpt-4",
+        chatAssistantModel: "",
         settingsService: mockSettingsService,
         settingsLoaded: false,
         consoleAdapter: mockConsoleAdapter

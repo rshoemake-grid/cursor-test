@@ -22,6 +22,7 @@ describe("TabBar", () => {
     onInputKeyDown: jest.fn(),
     onNewWorkflow: jest.fn(),
     onSave: jest.fn(),
+    onClearWorkflow: jest.fn(),
     onExecute: jest.fn(),
     onPublish: jest.fn(),
     onExport: jest.fn()
@@ -133,6 +134,12 @@ describe("TabBar", () => {
     const saveButton = screen.getByRole("button", { name: /save/i });
     fireEvent.click(saveButton);
     expect(mockProps.onSave).toHaveBeenCalled();
+  });
+  it("should call onClearWorkflow when Clear workflow button is clicked", () => {
+    render(/* @__PURE__ */ jsx(TabBar, { ...mockProps }));
+    const clearButton = screen.getByRole("button", { name: /clear workflow/i });
+    fireEvent.click(clearButton);
+    expect(mockProps.onClearWorkflow).toHaveBeenCalled();
   });
   it("should call onExecute when Execute button is clicked", () => {
     render(/* @__PURE__ */ jsx(TabBar, { ...mockProps }));
