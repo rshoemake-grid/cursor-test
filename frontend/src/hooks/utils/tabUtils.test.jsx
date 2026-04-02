@@ -47,7 +47,7 @@ describe("tabUtils", () => {
         executions: [],
         activeExecutionId: null
       });
-      expect(tab.id).toMatch(/^workflow-\d+$/);
+      expect(tab.id).toMatch(/^workflow-\d+-[a-z0-9]+$/);
     });
     it("should create tabs with unique IDs", () => {
       jest.useFakeTimers();
@@ -56,8 +56,8 @@ describe("tabUtils", () => {
       const tab2 = createNewTab();
       jest.useRealTimers();
       expect(tab1.id).not.toBe(tab2.id);
-      expect(tab1.id).toMatch(/^workflow-\d+$/);
-      expect(tab2.id).toMatch(/^workflow-\d+$/);
+      expect(tab1.id).toMatch(/^workflow-\d+-[a-z0-9]+$/);
+      expect(tab2.id).toMatch(/^workflow-\d+-[a-z0-9]+$/);
     });
   });
   describe("createTabWithWorkflow", () => {

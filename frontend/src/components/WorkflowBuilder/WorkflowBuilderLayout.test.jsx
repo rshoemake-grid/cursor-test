@@ -92,6 +92,8 @@ describe("WorkflowBuilderLayout", () => {
     executions: [],
     activeExecutionId: null,
     onWorkflowUpdate: jest.fn(),
+    getWorkflowChatCanvasSnapshot: null,
+    workflowChatClearNonce: 0,
     onExecutionLogUpdate: jest.fn(),
     onExecutionStatusUpdate: jest.fn(),
     onExecutionNodeUpdate: jest.fn(),

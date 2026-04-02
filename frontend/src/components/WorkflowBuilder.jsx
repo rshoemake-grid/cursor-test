@@ -67,6 +67,7 @@ const WorkflowBuilder = forwardRef(function WorkflowBuilder2({
   const isLoadingRef = useRef(false);
   const { isAuthenticated } = useAuth();
   const [isSaving, setIsSaving] = useState(false);
+  const [workflowChatClearNonce, setWorkflowChatClearNonce] = useState(0);
   const clipboard = useClipboard(reactFlowInstanceRef, notifyModified);
   const workflowUpdates = useWorkflowUpdates({
     nodes,
@@ -149,7 +150,7 @@ const WorkflowBuilder = forwardRef(function WorkflowBuilder2({
     const hasContent = nodes.length > 0 || edges.length > 0 || variableCount > 0;
     if (hasContent === true) {
       const ok = window.confirm(
-        "Clear all nodes, edges, and workflow variables from the canvas? This removes unsaved graph content until you save."
+        "Clear all nodes, edges, and workflow variables from the canvas, and reset the workflow chat for this tab? Unsaved graph content is removed until you save."
       );
       if (ok !== true) {
         return;
@@ -160,6 +161,7 @@ const WorkflowBuilder = forwardRef(function WorkflowBuilder2({
     setVariables({});
     setSelectedNodeId(null);
     setSelectedNodeIds(/* @__PURE__ */ new Set());
+    setWorkflowChatClearNonce((n) => n + 1);
     notifyModified();
   }, [nodes.length, edges.length, variables, setNodes, setEdges, setVariables, setSelectedNodeId, setSelectedNodeIds, notifyModified]);
   useImperativeHandle(ref, () => ({
@@ -274,6 +276,7 @@ const WorkflowBuilder = forwardRef(function WorkflowBuilder2({
         activeExecutionId,
         onWorkflowUpdate: handleWorkflowUpdate,
         getWorkflowChatCanvasSnapshot,
+        workflowChatClearNonce,
         onExecutionLogUpdate,
         onExecutionStatusUpdate,
         onExecutionNodeUpdate,

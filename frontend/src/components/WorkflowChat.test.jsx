@@ -188,6 +188,34 @@ describe("WorkflowChat", () => {
     expect(screen.getByText("Hello")).toBeInTheDocument();
     expect(screen.getByText("Hi there!")).toBeInTheDocument();
   });
+  it("should reset chat when chatClearNonce increases (clear workflow)", async () => {
+    const { safeStorageRemove } = require("../utils/storageHelpers");
+    const history = [
+      { role: "user", content: "Wipe me" },
+      { role: "assistant", content: "Ok" }
+    ];
+    localStorage.setItem("chat_history_workflow-1", JSON.stringify(history));
+    const { rerender } = renderWithProvider(
+      /* @__PURE__ */ jsx(WorkflowChat, { workflowId: "workflow-1", chatClearNonce: 0 })
+    );
+    expect(screen.getByText("Wipe me")).toBeInTheDocument();
+    rerender(
+      /* @__PURE__ */ jsx(MemoryRouter, {
+        children: /* @__PURE__ */ jsx(AuthProvider, {
+          children: /* @__PURE__ */ jsx(WorkflowChat, { workflowId: "workflow-1", chatClearNonce: 1 })
+        })
+      })
+    );
+    await waitForWithTimeout(() => {
+      expect(screen.queryByText("Wipe me")).not.toBeInTheDocument();
+      expect(screen.getByText(/Hello! I can help you create or modify this workflow/)).toBeInTheDocument();
+    });
+    expect(safeStorageRemove).toHaveBeenCalledWith(
+      expect.anything(),
+      "chat_history_workflow-1",
+      "WorkflowChat"
+    );
+  });
   it("should use separate chat storage per tab when workflowId is null", () => {
     localStorage.setItem(
       "chat_history_tab_tab-a",

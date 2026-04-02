@@ -1,6 +1,6 @@
 function createNewTab() {
   return {
-    id: `workflow-${Date.now()}`,
+    id: `workflow-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`,
     name: "Untitled Workflow",
     workflowId: null,
     isUnsaved: true,

@@ -70,6 +70,29 @@ describe("detectStryker", () => {
       expect(isRunningUnderStryker()).toBe(false);
     });
   });
+  describe("browser compatibility", () => {
+    it("should return false when global process is undefined", () => {
+      const originalProcess = global.process;
+      Object.defineProperty(global, "process", {
+        value: void 0,
+        configurable: true,
+        writable: true
+      });
+      jest.resetModules();
+      const {
+        isRunningUnderStryker: isStryker,
+        getStrykerSandboxId: getSandboxId
+      } = require("./detectStryker");
+      expect(isStryker()).toBe(false);
+      expect(getSandboxId()).toBeNull();
+      Object.defineProperty(global, "process", {
+        value: originalProcess,
+        configurable: true,
+        writable: true
+      });
+      jest.resetModules();
+    });
+  });
   describe("getStrykerSandboxId", () => {
     it("should return null when not running under Stryker", () => {
       delete process.env.STRYKER_MUTATOR;

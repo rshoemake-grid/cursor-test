@@ -18,6 +18,7 @@ function ExecutionConsole({
   activeExecutionId = null,
   onWorkflowUpdate,
   getWorkflowChatCanvasSnapshot = null,
+  workflowChatClearNonce = 0,
   onExecutionLogUpdate,
   onExecutionStatusUpdate,
   onExecutionNodeUpdate,
@@ -290,7 +291,8 @@ function ExecutionConsole({
             workflowId: activeWorkflowId,
             tabId: workflowTabId,
             onWorkflowUpdate,
-            getCanvasSnapshot: getWorkflowChatCanvasSnapshot
+            getCanvasSnapshot: getWorkflowChatCanvasSnapshot,
+            chatClearNonce: workflowChatClearNonce
           },
           workflowTabId !== null && workflowTabId !== void 0 && workflowTabId !== "" ? workflowTabId : `chat-${activeWorkflowId ?? "none"}`
         ) : activeExecution ? /* @__PURE__ */ jsx("div", { className: "h-full overflow-y-auto bg-gray-900 text-gray-100 p-4", children: /* @__PURE__ */ jsxs("div", { className: "space-y-4", children: [

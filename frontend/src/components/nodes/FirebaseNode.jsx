@@ -8,7 +8,7 @@ function FirebaseNode({ data, selected }) {
   return /* @__PURE__ */ jsxs(
     "div",
     {
-      className: `px-4 py-3 shadow-lg rounded-lg bg-white border-2 min-w-[200px] max-w-[200px] ${hasError ? "border-red-500 border-4 shadow-xl ring-2 ring-red-200" : selected ? "border-orange-500 border-4 shadow-xl ring-2 ring-orange-200" : "border-orange-300"}`,
+      className: `relative px-4 py-3 shadow-lg rounded-lg bg-white border-2 min-w-[200px] max-w-[200px] ${hasError ? "border-red-500 border-4 shadow-xl ring-2 ring-red-200" : selected ? "border-orange-500 border-4 shadow-xl ring-2 ring-orange-200" : "border-orange-300"}`,
       children: [
         /* @__PURE__ */ jsxs("div", { className: "flex items-center gap-2 mb-2", children: [
           /* @__PURE__ */ jsx("div", { className: "p-1.5 bg-orange-100 rounded flex-shrink-0", children: /* @__PURE__ */ jsx(Database, { className: "w-4 h-4 text-orange-600" }) }),
@@ -27,8 +27,10 @@ function FirebaseNode({ data, selected }) {
           "Mode: ",
           inputConfig.mode === "write" ? "Write" : "Read"
         ] }),
-        /* @__PURE__ */ jsx(Handle, { type: "target", position: Position.Top, className: "w-3 h-3" }),
-        /* @__PURE__ */ jsx(Handle, { type: "source", position: Position.Bottom, className: "w-3 h-3" })
+        /* @__PURE__ */ jsx(Handle, { type: "target", position: Position.Top, id: "target-top", className: "w-3 h-3" }),
+        /* @__PURE__ */ jsx(Handle, { type: "target", position: Position.Left, id: "target-left", className: "w-3 h-3" }),
+        /* @__PURE__ */ jsx(Handle, { type: "source", position: Position.Bottom, id: "source-bottom", className: "w-3 h-3" }),
+        /* @__PURE__ */ jsx(Handle, { type: "source", position: Position.Right, id: "source-right", className: "w-3 h-3" })
       ]
     }
   );

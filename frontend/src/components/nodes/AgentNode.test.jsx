@@ -71,4 +71,14 @@ describe("AgentNode", () => {
     const nodeElement = container.querySelector(".bg-white");
     expect(nodeElement).toBeInTheDocument();
   });
+  it("should render top, left, bottom, and right connection handles", () => {
+    const nodeData = { label: "Agent" };
+    const { container } = renderWithProvider(
+      /* @__PURE__ */ jsx(AgentNode, { data: nodeData, selected: false, id: "node-1" })
+    );
+    const handles = container.querySelectorAll(".react-flow__handle");
+    expect(handles.length).toBe(4);
+    expect(container.querySelector('.react-flow__handle[data-handlepos="left"]')).toBeInTheDocument();
+    expect(container.querySelector('.react-flow__handle[data-handlepos="right"]')).toBeInTheDocument();
+  });
 });

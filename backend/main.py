@@ -13,6 +13,10 @@ from typing import Dict, Any
 from backend.config import settings
 from backend.database.db import init_db, engine, AsyncSessionLocal
 from backend.dev_user_bootstrap import apply_dev_user_bootstrap
+from backend.services.default_marketplace_templates import (
+    ensure_default_marketplace_templates,
+    ensure_default_marketplace_workflows,
+)
 from backend.services.settings_service import SettingsService
 from backend.utils.logger import get_logger as _get_startup_logger
 from backend.utils.metrics import metrics_collector
@@ -425,6 +429,24 @@ async def startup_event():
                 "Set it in .env or environment variables. See docs/KEYS_AND_SECRETS.md."
             )
     await init_db()
+    try:
+        async with AsyncSessionLocal() as db:
+            seeded_templates = await ensure_default_marketplace_templates(db)
+            seeded_workflows = await ensure_default_marketplace_workflows(db)
+            if seeded_templates:
+                _get_startup_logger(__name__).info(
+                    "Seeded %s default marketplace workflow template(s)", seeded_templates
+                )
+            if seeded_workflows:
+                _get_startup_logger(__name__).info(
+                    "Seeded %s default public marketplace workflow(s)", seeded_workflows
+                )
+    except Exception as exc:
+        _get_startup_logger(__name__).warning(
+            "Could not ensure default marketplace templates/workflows: %s",
+            exc,
+            exc_info=True,
+        )
     await apply_dev_user_bootstrap()
     # Hydrate global LLM settings cache from DB so workflow chat / executions see API keys
     # after restart without requiring a visit to Settings first.

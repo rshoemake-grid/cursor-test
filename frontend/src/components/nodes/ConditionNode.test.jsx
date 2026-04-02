@@ -65,4 +65,12 @@ describe("ConditionNode", () => {
     expect(screen.getByText("True")).toBeInTheDocument();
     expect(screen.getByText("False")).toBeInTheDocument();
   });
+  it("should expose true and false source handles on the right plus left target", () => {
+    const { container } = renderWithProvider(
+      /* @__PURE__ */ jsx(ConditionNode, { selected: false, data: { label: "Test" }, id: "condition-1" })
+    );
+    expect(container.querySelector('.react-flow__handle[data-handlepos="left"]')).toBeInTheDocument();
+    const rightHandles = container.querySelectorAll('.react-flow__handle[data-handlepos="right"]');
+    expect(rightHandles.length).toBe(2);
+  });
 });

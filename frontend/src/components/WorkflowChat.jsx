@@ -26,6 +26,7 @@ function WorkflowChat({
   tabId = null,
   onWorkflowUpdate,
   getCanvasSnapshot = null,
+  chatClearNonce = 0,
   storage = DEFAULT_WORKFLOW_CHAT_STORAGE,
   logger: injectedLogger = logger
 }) {
@@ -52,6 +53,7 @@ function WorkflowChat({
   const [isLoading, setIsLoading] = useState(false);
   const [ttsEnabled, setTtsEnabled] = useState(false);
   const [iterationLimit, setIterationLimit] = useState(DEFAULT_WORKFLOW_CHAT_ITERATIONS);
+  const lastSyncedChatClearNonce = useRef(0);
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
   const inputLiveRef = useRef("");
@@ -146,6 +148,20 @@ function WorkflowChat({
       stopSpeaking();
     };
   }, []);
+  useEffect(() => {
+    if (chatClearNonce <= lastSyncedChatClearNonce.current) {
+      return;
+    }
+    lastSyncedChatClearNonce.current = chatClearNonce;
+    stopSpeaking();
+    safeStorageRemove(storage, getChatHistoryKey(workflowId, tabId), "WorkflowChat");
+    setMessages(loadConversationHistory(workflowId, tabId));
+    setInput("");
+  }, [chatClearNonce, workflowId, tabId, storage, loadConversationHistory]);
+  useEffect(() => {
+    lastSyncedChatClearNonce.current = chatClearNonce;
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- omit chatClearNonce so same-tab clear (nonce bump) is not pre-synced here
+  }, [workflowId, tabId]);
   useEffect(() => {
     if (messages.length > 0) {
       const storageKey = getChatHistoryKey(workflowId, tabId);
@@ -344,6 +360,7 @@ function WorkflowChat({
 WorkflowChat.propTypes = {
   workflowId: PropTypes.string,
   tabId: PropTypes.string,
+  chatClearNonce: PropTypes.number,
   onWorkflowUpdate: PropTypes.func,
   getCanvasSnapshot: PropTypes.func,
   storage: PropTypes.shape({

@@ -7,9 +7,10 @@ function ConditionNode({ data, selected }) {
   return /* @__PURE__ */ jsxs(
     "div",
     {
-      className: `px-4 py-3 shadow-lg rounded-lg bg-white border-2 min-w-[180px] max-w-[180px] ${hasError ? "border-red-500 border-4 shadow-xl ring-2 ring-red-200" : selected ? "border-primary-500 border-4 shadow-xl ring-2 ring-primary-200" : "border-gray-300"}`,
+      className: `relative px-4 py-3 shadow-lg rounded-lg bg-white border-2 min-w-[180px] max-w-[180px] ${hasError ? "border-red-500 border-4 shadow-xl ring-2 ring-red-200" : selected ? "border-primary-500 border-4 shadow-xl ring-2 ring-primary-200" : "border-gray-300"}`,
       children: [
-        /* @__PURE__ */ jsx(Handle, { type: "target", position: Position.Top, className: "w-3 h-3" }),
+        /* @__PURE__ */ jsx(Handle, { type: "target", position: Position.Top, id: "target-top", className: "w-3 h-3" }),
+        /* @__PURE__ */ jsx(Handle, { type: "target", position: Position.Left, id: "target-left", className: "w-3 h-3" }),
         /* @__PURE__ */ jsxs("div", { className: "flex items-center gap-2 mb-2", children: [
           /* @__PURE__ */ jsx("div", { className: "p-1.5 bg-purple-100 rounded flex-shrink-0", children: /* @__PURE__ */ jsx(GitBranch, { className: "w-4 h-4 text-purple-600" }) }),
           /* @__PURE__ */ jsx("div", { className: "font-semibold text-sm text-gray-900 truncate flex-1 min-w-0", children: String(data.label || "") })
@@ -20,33 +21,29 @@ function ConditionNode({ data, selected }) {
           ": ",
           data.condition_config.field
         ] }),
-        /* @__PURE__ */ jsx("div", { className: "relative mt-2 pt-2 border-t border-gray-200", children: /* @__PURE__ */ jsxs("div", { className: "flex items-end justify-between", children: [
-          /* @__PURE__ */ jsxs("div", { className: "flex flex-col items-center flex-1 relative", children: [
-            /* @__PURE__ */ jsx(
-              Handle,
-              {
-                type: "source",
-                position: Position.Bottom,
-                id: "true",
-                style: { left: "25%" },
-                className: "w-3 h-3 !bg-green-500 !border-green-600"
-              }
-            ),
-            /* @__PURE__ */ jsx("span", { className: "text-xs font-medium text-green-600 mt-1", children: "True" })
-          ] }),
-          /* @__PURE__ */ jsxs("div", { className: "flex flex-col items-center flex-1 relative", children: [
-            /* @__PURE__ */ jsx(
-              Handle,
-              {
-                type: "source",
-                position: Position.Bottom,
-                id: "false",
-                style: { left: "75%" },
-                className: "w-3 h-3 !bg-red-500 !border-red-600"
-              }
-            ),
-            /* @__PURE__ */ jsx("span", { className: "text-xs font-medium text-red-600 mt-1", children: "False" })
-          ] })
+        /* @__PURE__ */ jsx("div", { className: "relative mt-2 pt-2 border-t border-gray-200 min-h-[52px]", children: /* @__PURE__ */ jsxs("div", { className: "flex flex-col justify-center gap-3 py-1 pr-1", children: [
+          /* @__PURE__ */ jsx(
+            Handle,
+            {
+              type: "source",
+              position: Position.Right,
+              id: "true",
+              style: { top: "32%" },
+              className: "w-3 h-3 !bg-green-500 !border-green-600"
+            }
+          ),
+          /* @__PURE__ */ jsx(
+            Handle,
+            {
+              type: "source",
+              position: Position.Right,
+              id: "false",
+              style: { top: "68%" },
+              className: "w-3 h-3 !bg-red-500 !border-red-600"
+            }
+          ),
+          /* @__PURE__ */ jsx("div", { className: "flex justify-end", children: /* @__PURE__ */ jsx("span", { className: "text-xs font-medium text-green-600", children: "True" }) }),
+          /* @__PURE__ */ jsx("div", { className: "flex justify-end", children: /* @__PURE__ */ jsx("span", { className: "text-xs font-medium text-red-600", children: "False" }) })
         ] }) })
       ]
     }

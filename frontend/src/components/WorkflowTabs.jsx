@@ -163,6 +163,7 @@ function WorkflowTabs({
     activeTab && /* @__PURE__ */ jsx("div", { className: "flex-1 flex flex-col overflow-hidden", children: /* @__PURE__ */ jsx(
       WorkflowBuilder,
       {
+        key: activeTab.id,
         ref: builderRef,
         tabId: activeTab.id,
         workflowId: activeTab.workflowId,
