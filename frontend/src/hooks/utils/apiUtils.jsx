@@ -28,9 +28,26 @@ function buildUploadHeaders(additionalHeaders = {}) {
     additionalHeaders,
   });
 }
+
+function maybeEnhanceNetworkFailureMessage(message) {
+  if (typeof message !== "string") {
+    return message;
+  }
+  const t = message.trim().toLowerCase();
+  if (
+    t === "failed to fetch" ||
+    t.includes("networkerror") ||
+    t.includes("load failed") ||
+    t.includes("network request failed")
+  ) {
+    return `${message.trim()} — Check that the API server is running. For local dev, start the backend (default http://127.0.0.1:8000), keep REACT_APP_API_BASE_URL empty so requests use /api through the dev proxy, or set PROXY_TARGET if the API uses another host or port.`;
+  }
+  return message;
+}
+
 function extractApiErrorMessage(error, defaultMessage = "An error occurred") {
   if (typeof error === "string") {
-    return error;
+    return maybeEnhanceNetworkFailureMessage(error);
   }
   if (error?.response?.data?.detail) {
     return error.response.data.detail;
@@ -42,10 +59,10 @@ function extractApiErrorMessage(error, defaultMessage = "An error occurred") {
     return error.detail;
   }
   if (error?.message && typeof error.message === "string") {
-    return error.message;
+    return maybeEnhanceNetworkFailureMessage(error.message);
   }
   if (error instanceof Error) {
-    return error.message || defaultMessage;
+    return maybeEnhanceNetworkFailureMessage(error.message || defaultMessage);
   }
   return defaultMessage;
 }

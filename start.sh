@@ -77,7 +77,7 @@ echo ""
 # Start frontend in background
 echo "▶️  Starting frontend on http://localhost:3000"
 cd frontend
-npm run dev > ../frontend.log 2>&1 &
+npm start > ../frontend.log 2>&1 &
 FRONTEND_PID=$!
 cd ..
 

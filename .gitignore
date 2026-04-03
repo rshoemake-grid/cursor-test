@@ -23,7 +23,7 @@ ENV/
 .idea/
 .vscode/
 *.log
-
+backend-java/app.log*.gz
 
 # Mutation testing reports
 mutation_report*.html

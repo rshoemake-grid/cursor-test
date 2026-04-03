@@ -114,6 +114,13 @@ describe("apiUtils", () => {
       const error = new Error("Error message");
       expect(extractApiErrorMessage(error)).toBe("Error message");
     });
+    it("should expand generic browser network errors with setup guidance", () => {
+      const err = new Error("Failed to fetch");
+      const msg = extractApiErrorMessage(err);
+      expect(msg).toContain("Failed to fetch");
+      expect(msg).toContain("API server");
+      expect(msg).toContain("PROXY_TARGET");
+    });
     it("should extract detail from API error response", () => {
       const error = {
         response: {

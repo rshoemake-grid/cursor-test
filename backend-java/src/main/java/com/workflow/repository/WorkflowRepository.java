@@ -24,4 +24,8 @@ public interface WorkflowRepository extends JpaRepository<Workflow, String> {
     List<Workflow> findPublicOrTemplateWorkflows(Pageable pageable);
 
     List<Workflow> findByIdIn(List<String> ids);
+
+    /** Workflows visible to marketplace discover (matches Python seed guard). */
+    @Query("SELECT COUNT(w) FROM Workflow w WHERE w.isPublic = true OR w.isTemplate = true")
+    long countDiscoverableMarketplaceWorkflows();
 }

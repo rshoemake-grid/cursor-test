@@ -56,13 +56,21 @@ public class TemplateQueryService {
                 .filter(t -> SearchUtils.matchesSearch(search, t.getName(), t.getDescription()))
                 .skip(safeOffset)
                 .limit(safeLimit)
-                .map(t -> TemplateMapper.toResponse(t, UserDisplayNameResolver.resolveFromOptional(userRepository.findById(t.getAuthorId()))))
+                .map(t -> TemplateMapper.toResponse(t, resolveAuthorName(t.getAuthorId())))
                 .collect(Collectors.toList());
     }
 
     public WorkflowTemplateResponse getTemplate(String templateId) {
         WorkflowTemplate t = getTemplateOrThrow(templateId);
-        return TemplateMapper.toResponse(t, UserDisplayNameResolver.resolveFromOptional(userRepository.findById(t.getAuthorId())));
+        return TemplateMapper.toResponse(t, resolveAuthorName(t.getAuthorId()));
+    }
+
+    /** System templates use {@code authorId == null}; avoid {@code findById(null)} which is invalid. */
+    private String resolveAuthorName(String authorId) {
+        if (authorId == null || authorId.isBlank()) {
+            return null;
+        }
+        return UserDisplayNameResolver.resolveFromOptional(userRepository.findById(authorId));
     }
 
     public WorkflowTemplate getTemplateOrThrow(String templateId) {
