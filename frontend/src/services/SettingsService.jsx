@@ -10,7 +10,7 @@ class SettingsService {
   }
   /**
    * Save settings to both backend and local storage
-   * 
+   *
    * @param settings - Settings to save
    * @param token - Authentication token (optional)
    */
@@ -24,11 +24,16 @@ class SettingsService {
         const response = await this.httpClient.post(
           `${this.apiBaseUrl}${API_CONFIG.ENDPOINTS.SETTINGS}/llm`,
           settings,
-          headers
+          headers,
         );
         if (!response.ok) {
           const errBody = await response.json().catch(() => ({}));
-          throw new Error(extractApiErrorMessage(errBody, `Failed to save settings: ${response.status} ${response.statusText}`));
+          throw new Error(
+            extractApiErrorMessage(
+              errBody,
+              `Failed to save settings: ${response.status} ${response.statusText}`,
+            ),
+          );
         }
       } catch (error) {
         logger.error("Failed to sync settings to backend:", error);
@@ -38,7 +43,7 @@ class SettingsService {
   }
   /**
    * Test provider connection
-   * 
+   *
    * @param provider - Provider to test
    * @returns Test result with status and message
    */
@@ -50,24 +55,26 @@ class SettingsService {
           type: provider.type,
           api_key: provider.apiKey,
           base_url: provider.baseUrl,
-          model: provider.defaultModel
+          model: provider.defaultModel,
         },
-        { "Content-Type": "application/json" }
+        { "Content-Type": "application/json" },
       );
       const data = await response.json();
       if (data.status === "success") {
         return { status: "success", message: data.message };
       }
-      const errorMessage = data.error?.message || data.message || "Connection failed";
+      const errorMessage =
+        data.error?.message || data.message || "Connection failed";
       return { status: "error", message: errorMessage };
     } catch (error) {
       return {
         status: "error",
-        message: extractApiErrorMessage(error, "Network error - check if backend is running")
+        message: extractApiErrorMessage(
+          error,
+          "Network error - check if backend is running",
+        ),
       };
     }
   }
 }
-export {
-  SettingsService
-};
+export { SettingsService };

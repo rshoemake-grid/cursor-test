@@ -4,7 +4,7 @@ function useAsyncOperation({
   operation,
   onSuccess,
   onError,
-  logger: injectedLogger = logger
+  logger: injectedLogger = logger,
 }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -16,10 +16,7 @@ function useAsyncOperation({
         const timeoutPromise = new Promise((_, reject) => {
           setTimeout(() => reject(new Error("Operation timeout")), 3e4);
         });
-        const result = await Promise.race([
-          operation(...args),
-          timeoutPromise
-        ]);
+        const result = await Promise.race([operation(...args), timeoutPromise]);
         onSuccess?.(result);
         return result;
       } catch (err) {
@@ -32,7 +29,7 @@ function useAsyncOperation({
         setLoading(false);
       }
     },
-    [operation, onSuccess, onError, injectedLogger]
+    [operation, onSuccess, onError, injectedLogger],
   );
   const reset = useCallback(() => {
     setError(null);
@@ -42,9 +39,7 @@ function useAsyncOperation({
     execute,
     loading,
     error,
-    reset
+    reset,
   };
 }
-export {
-  useAsyncOperation
-};
+export { useAsyncOperation };

@@ -36,10 +36,14 @@ function jsonResponse(status, body) {
     status,
     statusText: status < 300 ? "OK" : "ERR",
     headers: {
-      get: (name) => (String(name).toLowerCase() === "content-type" ? "application/json" : null),
+      get: (name) =>
+        String(name).toLowerCase() === "content-type"
+          ? "application/json"
+          : null,
     },
     json: () => Promise.resolve(body),
-    text: () => Promise.resolve(typeof body === "string" ? body : JSON.stringify(body)),
+    text: () =>
+      Promise.resolve(typeof body === "string" ? body : JSON.stringify(body)),
     blob: () => Promise.resolve(new Blob(["x"])),
   };
 }
@@ -73,7 +77,11 @@ describe("createApiClient (fetch)", () => {
   it("should get all workflows", async () => {
     const list = [{ id: "1", name: "W1" }];
     fetchMock.mockResolvedValue(jsonResponse(200, list));
-    const api = createApiClient({ fetchImpl: fetchMock, localStorage: mockLocal, sessionStorage: mockSession });
+    const api = createApiClient({
+      fetchImpl: fetchMock,
+      localStorage: mockLocal,
+      sessionStorage: mockSession,
+    });
     const result = await api.getWorkflows();
     expect(fetchMock).toHaveBeenCalledWith(
       expect.stringMatching(/\/workflows$/),
@@ -93,14 +101,20 @@ describe("createApiClient (fetch)", () => {
       return null;
     });
     fetchMock.mockResolvedValue(jsonResponse(200, []));
-    const api = createApiClient({ fetchImpl: fetchMock, localStorage: mockLocal, sessionStorage: mockSession });
+    const api = createApiClient({
+      fetchImpl: fetchMock,
+      localStorage: mockLocal,
+      sessionStorage: mockSession,
+    });
     await api.getWorkflows();
     const [, init] = fetchMock.mock.calls[0];
     expect(init.headers.Authorization).toBe("Bearer tok");
   });
 
   it("should clear auth and broadcast on 401", async () => {
-    const spy = jest.spyOn(window, "dispatchEvent").mockImplementation(() => true);
+    const spy = jest
+      .spyOn(window, "dispatchEvent")
+      .mockImplementation(() => true);
     fetchMock.mockResolvedValue({
       ok: false,
       status: 401,
@@ -109,7 +123,11 @@ describe("createApiClient (fetch)", () => {
       json: () => Promise.resolve({ detail: "no" }),
       text: () => Promise.resolve("{}"),
     });
-    const api = createApiClient({ fetchImpl: fetchMock, localStorage: mockLocal, sessionStorage: mockSession });
+    const api = createApiClient({
+      fetchImpl: fetchMock,
+      localStorage: mockLocal,
+      sessionStorage: mockSession,
+    });
     await expect(api.getWorkflows()).rejects.toThrow();
     expect(mockLocal.removeItem).toHaveBeenCalled();
     expect(mockSession.removeItem).toHaveBeenCalled();
@@ -119,7 +137,11 @@ describe("createApiClient (fetch)", () => {
 
   it("should pass query params to listExecutions", async () => {
     fetchMock.mockResolvedValue(jsonResponse(200, []));
-    const api = createApiClient({ fetchImpl: fetchMock, localStorage: mockLocal, sessionStorage: mockSession });
+    const api = createApiClient({
+      fetchImpl: fetchMock,
+      localStorage: mockLocal,
+      sessionStorage: mockSession,
+    });
     await api.listExecutions({ limit: 50, status: "completed" });
     const [url] = fetchMock.mock.calls[0];
     expect(url).toContain("limit=50");
@@ -135,13 +157,21 @@ describe("createApiClient (fetch)", () => {
       headers: { get: () => null },
       blob: () => Promise.resolve(b),
     });
-    const api = createApiClient({ fetchImpl: fetchMock, localStorage: mockLocal, sessionStorage: mockSession });
+    const api = createApiClient({
+      fetchImpl: fetchMock,
+      localStorage: mockLocal,
+      sessionStorage: mockSession,
+    });
     const out = await api.downloadExecutionLogs("e1", "text");
     expect(out).toBe(b);
   });
 
   it("should not fetch LLM settings when no auth token is stored", async () => {
-    const api = createApiClient({ fetchImpl: fetchMock, localStorage: mockLocal, sessionStorage: mockSession });
+    const api = createApiClient({
+      fetchImpl: fetchMock,
+      localStorage: mockLocal,
+      sessionStorage: mockSession,
+    });
     const settings = await api.getLLMSettings();
     expect(settings).toEqual({ providers: [] });
     expect(fetchMock).not.toHaveBeenCalled();
@@ -165,7 +195,11 @@ describe("createApiClient (fetch)", () => {
       json: () => Promise.resolve({}),
       text: () => Promise.resolve("{}"),
     });
-    const api = createApiClient({ fetchImpl: fetchMock, localStorage: mockLocal, sessionStorage: mockSession });
+    const api = createApiClient({
+      fetchImpl: fetchMock,
+      localStorage: mockLocal,
+      sessionStorage: mockSession,
+    });
     const settings = await api.getLLMSettings();
     expect(settings).toEqual({ providers: [] });
     expect(fetchMock).toHaveBeenCalled();
@@ -176,14 +210,20 @@ describe("createApiClient (fetch)", () => {
     fetchMock
       .mockResolvedValueOnce(jsonResponse(200, wf))
       .mockResolvedValueOnce(jsonResponse(200, { id: "2", name: "A-copy" }));
-    const api = createApiClient({ fetchImpl: fetchMock, localStorage: mockLocal, sessionStorage: mockSession });
+    const api = createApiClient({
+      fetchImpl: fetchMock,
+      localStorage: mockLocal,
+      sessionStorage: mockSession,
+    });
     const dup = await api.duplicateWorkflow("1");
     expect(fetchMock).toHaveBeenCalledTimes(2);
     expect(dup.name).toBe("A-copy");
   });
 
   it("should post chat to /api/workflow-chat/chat when baseURL is empty", async () => {
-    fetchMock.mockResolvedValue(jsonResponse(200, { message: "ok", workflow_id: "w1" }));
+    fetchMock.mockResolvedValue(
+      jsonResponse(200, { message: "ok", workflow_id: "w1" }),
+    );
     const api = createApiClient({
       fetchImpl: fetchMock,
       baseURL: "",

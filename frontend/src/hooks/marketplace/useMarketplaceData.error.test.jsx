@@ -7,11 +7,11 @@ const waitForWithTimeout = waitForWithTimeoutFakeTimers;
 jest.mock("../../utils/logger", () => ({
   logger: {
     debug: jest.fn(),
-    error: jest.fn()
-  }
+    error: jest.fn(),
+  },
 }));
 jest.mock("../storage", () => ({
-  getLocalStorageItem: jest.fn()
+  getLocalStorageItem: jest.fn(),
 }));
 const mockLoggerError = logger.error;
 const mockLoggerDebug = logger.debug;
@@ -24,7 +24,7 @@ describe("useMarketplaceData - Error Handling", () => {
     name: "Test Template",
     description: "Test Description",
     category: "automation",
-    tags: ["test"]
+    tags: ["test"],
   };
   const mockAgent = {
     id: "agent-1",
@@ -33,7 +33,7 @@ describe("useMarketplaceData - Error Handling", () => {
     description: "Test Description",
     category: "automation",
     tags: ["test"],
-    published_at: "2024-01-01T00:00:00Z"
+    published_at: "2024-01-01T00:00:00Z",
   };
   beforeEach(() => {
     jest.clearAllMocks();
@@ -44,14 +44,16 @@ describe("useMarketplaceData - Error Handling", () => {
         }
         return Promise.resolve({ json: async () => [] });
       }),
-      post: jest.fn().mockResolvedValue({ ok: true, json: async () => ({ nodes: [] }) })
+      post: jest
+        .fn()
+        .mockResolvedValue({ ok: true, json: async () => ({ nodes: [] }) }),
     };
     mockStorage = {
       getItem: jest.fn().mockReturnValue(JSON.stringify([])),
       setItem: jest.fn(),
       removeItem: jest.fn(),
       addEventListener: jest.fn(),
-      removeEventListener: jest.fn()
+      removeEventListener: jest.fn(),
     };
     mockGetLocalStorageItem.mockReturnValue([]);
   });
@@ -59,8 +61,8 @@ describe("useMarketplaceData - Error Handling", () => {
     it("should handle httpClient.get error and log error message", async () => {
       const networkError = new Error("Network request failed");
       mockHttpClient.get.mockRejectedValue(networkError);
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -69,13 +71,16 @@ describe("useMarketplaceData - Error Handling", () => {
           sortBy: "popular",
           user: null,
           activeTab: "repository",
-          repositorySubTab: "workflows"
-        })
+          repositorySubTab: "workflows",
+        }),
       );
       await waitForWithTimeout(() => {
         expect(result.current.loading).toBe(false);
       });
-      expect(mockLoggerError).toHaveBeenCalledWith("Data fetch failed:", networkError);
+      expect(mockLoggerError).toHaveBeenCalledWith(
+        "Data fetch failed:",
+        networkError,
+      );
       expect(mockLoggerError).toHaveBeenCalledTimes(1);
       expect(result.current.loading).toBe(false);
       expect(result.current.templates).toEqual([]);
@@ -84,10 +89,10 @@ describe("useMarketplaceData - Error Handling", () => {
       mockHttpClient.get.mockResolvedValue({
         json: async () => {
           throw new Error("Invalid JSON");
-        }
+        },
       });
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -96,19 +101,22 @@ describe("useMarketplaceData - Error Handling", () => {
           sortBy: "popular",
           user: null,
           activeTab: "repository",
-          repositorySubTab: "workflows"
-        })
+          repositorySubTab: "workflows",
+        }),
       );
       await waitForWithTimeout(() => {
         expect(result.current.loading).toBe(false);
       });
-      expect(mockLoggerError).toHaveBeenCalledWith("Data fetch failed:", expect.any(Error));
+      expect(mockLoggerError).toHaveBeenCalledWith(
+        "Data fetch failed:",
+        expect.any(Error),
+      );
       expect(result.current.loading).toBe(false);
     });
     it("should set loading to false in finally block even on error", async () => {
       mockHttpClient.get.mockRejectedValue(new Error("Error"));
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -117,8 +125,8 @@ describe("useMarketplaceData - Error Handling", () => {
           sortBy: "popular",
           user: null,
           activeTab: "repository",
-          repositorySubTab: "workflows"
-        })
+          repositorySubTab: "workflows",
+        }),
       );
       await waitForWithTimeout(() => {
         expect(result.current.loading).toBe(false);
@@ -130,8 +138,8 @@ describe("useMarketplaceData - Error Handling", () => {
     it("should handle outer try-catch error (httpClient.get failure)", async () => {
       const networkError = new Error("Failed to fetch workflows");
       mockHttpClient.get.mockRejectedValue(networkError);
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -140,8 +148,8 @@ describe("useMarketplaceData - Error Handling", () => {
           sortBy: "popular",
           user: null,
           activeTab: "workflows-of-workflows",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitForWithTimeout(() => {
         expect(result.current.loading).toBe(false);
@@ -150,18 +158,21 @@ describe("useMarketplaceData - Error Handling", () => {
       const loggedError = mockLoggerError.mock.calls[0]?.[1];
       expect(loggedError).toBeInstanceOf(Error);
       expect(
-        loggedError?.message === "Failed to fetch workflows" || loggedError?.message === "Fetch timeout"
+        loggedError?.message === "Failed to fetch workflows" ||
+          loggedError?.message === "Fetch timeout",
       ).toBe(true);
       expect(result.current.loading).toBe(false);
       expect(result.current.workflowsOfWorkflows).toEqual([]);
     });
     it("should handle inner try-catch error (httpClient.post failure for specific workflow)", async () => {
       mockHttpClient.get.mockResolvedValue({
-        json: async () => [mockTemplate]
+        json: async () => [mockTemplate],
       });
-      mockHttpClient.post.mockRejectedValue(new Error("Failed to check workflow"));
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      mockHttpClient.post.mockRejectedValue(
+        new Error("Failed to check workflow"),
+      );
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -170,15 +181,15 @@ describe("useMarketplaceData - Error Handling", () => {
           sortBy: "popular",
           user: null,
           activeTab: "workflows-of-workflows",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitForWithTimeout(() => {
         expect(result.current.loading).toBe(false);
       });
       expect(mockLoggerError).toHaveBeenCalledWith(
         expect.stringContaining("Failed to check workflow"),
-        expect.any(Error)
+        expect.any(Error),
       );
       expect(result.current.workflowsOfWorkflows).toEqual([]);
       expect(result.current.loading).toBe(false);
@@ -187,20 +198,23 @@ describe("useMarketplaceData - Error Handling", () => {
       const templates = [
         { ...mockTemplate, id: "template-1" },
         { ...mockTemplate, id: "template-2" },
-        { ...mockTemplate, id: "template-3" }
+        { ...mockTemplate, id: "template-3" },
       ];
       mockHttpClient.get.mockResolvedValue({
-        json: async () => templates
+        json: async () => templates,
       });
-      mockHttpClient.post.mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({ nodes: [{ workflow_id: "workflow-1" }] })
-      }).mockRejectedValueOnce(new Error("Workflow 2 failed")).mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({ nodes: [{ workflow_id: "workflow-3" }] })
-      });
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      mockHttpClient.post
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({ nodes: [{ workflow_id: "workflow-1" }] }),
+        })
+        .mockRejectedValueOnce(new Error("Workflow 2 failed"))
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({ nodes: [{ workflow_id: "workflow-3" }] }),
+        });
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -209,22 +223,22 @@ describe("useMarketplaceData - Error Handling", () => {
           sortBy: "popular",
           user: null,
           activeTab: "workflows-of-workflows",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitForWithTimeout(() => {
         expect(result.current.loading).toBe(false);
       });
       expect(mockLoggerError).toHaveBeenCalledWith(
         expect.stringContaining("Failed to check workflow"),
-        expect.any(Error)
+        expect.any(Error),
       );
       expect(result.current.loading).toBe(false);
     });
     it("should set loading to false in finally block even on error", async () => {
       mockHttpClient.get.mockRejectedValue(new Error("Error"));
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -233,8 +247,8 @@ describe("useMarketplaceData - Error Handling", () => {
           sortBy: "popular",
           user: null,
           activeTab: "workflows-of-workflows",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitForWithTimeout(() => {
         expect(result.current.loading).toBe(false);
@@ -248,8 +262,8 @@ describe("useMarketplaceData - Error Handling", () => {
       mockGetLocalStorageItem.mockImplementation(() => {
         throw storageError;
       });
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -258,21 +272,24 @@ describe("useMarketplaceData - Error Handling", () => {
           sortBy: "popular",
           user: null,
           activeTab: "agents",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitForWithTimeout(() => {
         expect(result.current.loading).toBe(false);
       });
-      expect(mockLoggerError).toHaveBeenCalledWith("Data fetch failed:", storageError);
+      expect(mockLoggerError).toHaveBeenCalledWith(
+        "Data fetch failed:",
+        storageError,
+      );
       expect(result.current.loading).toBe(false);
     });
     it("should set loading to false in finally block even on error", async () => {
       mockGetLocalStorageItem.mockImplementation(() => {
         throw new Error("Error");
       });
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -281,8 +298,8 @@ describe("useMarketplaceData - Error Handling", () => {
           sortBy: "popular",
           user: null,
           activeTab: "agents",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitForWithTimeout(() => {
         expect(result.current.loading).toBe(false);
@@ -294,8 +311,8 @@ describe("useMarketplaceData - Error Handling", () => {
       mockStorage.setItem.mockImplementation(() => {
         throw new Error("Storage write failed");
       });
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -304,8 +321,8 @@ describe("useMarketplaceData - Error Handling", () => {
           sortBy: "popular",
           user: { id: "user-1", username: "testuser" },
           activeTab: "agents",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitForWithTimeout(() => {
         expect(result.current.loading).toBe(false);
@@ -319,8 +336,8 @@ describe("useMarketplaceData - Error Handling", () => {
       mockStorage.getItem.mockImplementation(() => {
         throw storageError;
       });
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -329,37 +346,40 @@ describe("useMarketplaceData - Error Handling", () => {
           sortBy: "popular",
           user: null,
           activeTab: "repository",
-          repositorySubTab: "agents"
-        })
-      );
-      await waitForWithTimeout(() => {
-        expect(result.current.loading).toBe(false);
-      });
-      expect(mockLoggerError).toHaveBeenCalledWith("Failed to load repository agents from storage:", storageError);
-      expect(result.current.loading).toBe(false);
-      expect(result.current.repositoryAgents).toEqual([]);
-    });
-    it("should handle JSON.parse error (invalid JSON)", async () => {
-      mockStorage.getItem.mockReturnValue("invalid json{");
-      const { result } = renderHook(
-        () => useMarketplaceData({
-          storage: mockStorage,
-          httpClient: mockHttpClient,
-          apiBaseUrl: "http://api.test",
-          category: "",
-          searchQuery: "",
-          sortBy: "popular",
-          user: null,
-          activeTab: "repository",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitForWithTimeout(() => {
         expect(result.current.loading).toBe(false);
       });
       expect(mockLoggerError).toHaveBeenCalledWith(
         "Failed to load repository agents from storage:",
-        expect.any(Error)
+        storageError,
+      );
+      expect(result.current.loading).toBe(false);
+      expect(result.current.repositoryAgents).toEqual([]);
+    });
+    it("should handle JSON.parse error (invalid JSON)", async () => {
+      mockStorage.getItem.mockReturnValue("invalid json{");
+      const { result } = renderHook(() =>
+        useMarketplaceData({
+          storage: mockStorage,
+          httpClient: mockHttpClient,
+          apiBaseUrl: "http://api.test",
+          category: "",
+          searchQuery: "",
+          sortBy: "popular",
+          user: null,
+          activeTab: "repository",
+          repositorySubTab: "agents",
+        }),
+      );
+      await waitForWithTimeout(() => {
+        expect(result.current.loading).toBe(false);
+      });
+      expect(mockLoggerError).toHaveBeenCalledWith(
+        "Failed to load repository agents from storage:",
+        expect.any(Error),
       );
       expect(result.current.repositoryAgents).toEqual([]);
       expect(result.current.loading).toBe(false);
@@ -368,8 +388,8 @@ describe("useMarketplaceData - Error Handling", () => {
       mockStorage.getItem.mockImplementation(() => {
         throw new Error("Error");
       });
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -378,8 +398,8 @@ describe("useMarketplaceData - Error Handling", () => {
           sortBy: "popular",
           user: null,
           activeTab: "repository",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitForWithTimeout(() => {
         expect(result.current.loading).toBe(false);
@@ -390,8 +410,8 @@ describe("useMarketplaceData - Error Handling", () => {
       mockStorage.getItem.mockImplementation(() => {
         throw new Error("Unexpected storage error");
       });
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -400,21 +420,24 @@ describe("useMarketplaceData - Error Handling", () => {
           sortBy: "popular",
           user: null,
           activeTab: "repository",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitForWithTimeout(() => {
         expect(result.current.loading).toBe(false);
       });
-      expect(mockLoggerError).toHaveBeenCalledWith("Failed to load repository agents from storage:", expect.any(Error));
+      expect(mockLoggerError).toHaveBeenCalledWith(
+        "Failed to load repository agents from storage:",
+        expect.any(Error),
+      );
       expect(result.current.loading).toBe(false);
     });
   });
   describe("Error message strings - exact matches", () => {
     it("should log exact error message for fetchTemplates", async () => {
       mockHttpClient.get.mockRejectedValue(new Error("Network error"));
-      renderHook(
-        () => useMarketplaceData({
+      renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -423,18 +446,21 @@ describe("useMarketplaceData - Error Handling", () => {
           sortBy: "popular",
           user: null,
           activeTab: "repository",
-          repositorySubTab: "workflows"
-        })
+          repositorySubTab: "workflows",
+        }),
       );
       await waitForWithTimeout(() => {
         expect(mockLoggerError).toHaveBeenCalled();
       });
-      expect(mockLoggerError).toHaveBeenCalledWith("Data fetch failed:", expect.any(Error));
+      expect(mockLoggerError).toHaveBeenCalledWith(
+        "Data fetch failed:",
+        expect.any(Error),
+      );
     });
     it("should log exact error message for fetchWorkflowsOfWorkflows", async () => {
       mockHttpClient.get.mockRejectedValue(new Error("Network error"));
-      renderHook(
-        () => useMarketplaceData({
+      renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -443,20 +469,23 @@ describe("useMarketplaceData - Error Handling", () => {
           sortBy: "popular",
           user: null,
           activeTab: "workflows-of-workflows",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitForWithTimeout(() => {
         expect(mockLoggerError).toHaveBeenCalled();
       });
-      expect(mockLoggerError).toHaveBeenCalledWith("Data fetch failed:", expect.any(Error));
+      expect(mockLoggerError).toHaveBeenCalledWith(
+        "Data fetch failed:",
+        expect.any(Error),
+      );
     });
     it("should log exact error message for fetchAgents", async () => {
       mockGetLocalStorageItem.mockImplementation(() => {
         throw new Error("Storage error");
       });
-      renderHook(
-        () => useMarketplaceData({
+      renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -465,20 +494,23 @@ describe("useMarketplaceData - Error Handling", () => {
           sortBy: "popular",
           user: null,
           activeTab: "agents",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitForWithTimeout(() => {
         expect(mockLoggerError).toHaveBeenCalled();
       });
-      expect(mockLoggerError).toHaveBeenCalledWith("Data fetch failed:", expect.any(Error));
+      expect(mockLoggerError).toHaveBeenCalledWith(
+        "Data fetch failed:",
+        expect.any(Error),
+      );
     });
     it("should log exact error message for fetchRepositoryAgents storage error", async () => {
       mockStorage.getItem.mockImplementation(() => {
         throw new Error("Storage error");
       });
-      renderHook(
-        () => useMarketplaceData({
+      renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -487,44 +519,47 @@ describe("useMarketplaceData - Error Handling", () => {
           sortBy: "popular",
           user: null,
           activeTab: "repository",
-          repositorySubTab: "agents"
-        })
-      );
-      await waitForWithTimeout(() => {
-        expect(mockLoggerError).toHaveBeenCalled();
-      });
-      expect(mockLoggerError).toHaveBeenCalledWith("Failed to load repository agents from storage:", expect.any(Error));
-    });
-    it("should log exact error message for fetchRepositoryAgents general error", async () => {
-      mockStorage.getItem.mockReturnValue("invalid json{");
-      renderHook(
-        () => useMarketplaceData({
-          storage: mockStorage,
-          httpClient: mockHttpClient,
-          apiBaseUrl: "http://api.test",
-          category: "",
-          searchQuery: "",
-          sortBy: "popular",
-          user: null,
-          activeTab: "repository",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitForWithTimeout(() => {
         expect(mockLoggerError).toHaveBeenCalled();
       });
       expect(mockLoggerError).toHaveBeenCalledWith(
         "Failed to load repository agents from storage:",
-        expect.any(Error)
+        expect.any(Error),
+      );
+    });
+    it("should log exact error message for fetchRepositoryAgents general error", async () => {
+      mockStorage.getItem.mockReturnValue("invalid json{");
+      renderHook(() =>
+        useMarketplaceData({
+          storage: mockStorage,
+          httpClient: mockHttpClient,
+          apiBaseUrl: "http://api.test",
+          category: "",
+          searchQuery: "",
+          sortBy: "popular",
+          user: null,
+          activeTab: "repository",
+          repositorySubTab: "agents",
+        }),
+      );
+      await waitForWithTimeout(() => {
+        expect(mockLoggerError).toHaveBeenCalled();
+      });
+      expect(mockLoggerError).toHaveBeenCalledWith(
+        "Failed to load repository agents from storage:",
+        expect.any(Error),
       );
     });
     it("should log exact error message for workflow check failure", async () => {
       mockHttpClient.get.mockResolvedValue({
-        json: async () => [{ ...mockTemplate, id: "workflow-1" }]
+        json: async () => [{ ...mockTemplate, id: "workflow-1" }],
       });
       mockHttpClient.post.mockRejectedValue(new Error("Post failed"));
-      renderHook(
-        () => useMarketplaceData({
+      renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -533,15 +568,15 @@ describe("useMarketplaceData - Error Handling", () => {
           sortBy: "popular",
           user: null,
           activeTab: "workflows-of-workflows",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitForWithTimeout(() => {
         expect(mockLoggerError).toHaveBeenCalled();
       });
       expect(mockLoggerError).toHaveBeenCalledWith(
         expect.stringMatching(/^Failed to check workflow/),
-        expect.any(Error)
+        expect.any(Error),
       );
     });
   });

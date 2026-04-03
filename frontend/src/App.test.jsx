@@ -1,8 +1,7 @@
-import { jsx, jsxs } from "react/jsx-runtime";
 import { render, screen, waitFor, fireEvent } from "@testing-library/react";
 const waitForWithTimeout = (callback, timeout = 2e3) => {
   return waitFor(callback, {
-    timeout
+    timeout,
   });
 };
 import App from "./App";
@@ -10,101 +9,76 @@ jest.mock("./components/WorkflowTabs", () => {
   const { jsx, jsxs } = require("react/jsx-runtime");
   return {
     __esModule: true,
-    default: () => /* @__PURE__ */jsx("div", {
-      children: "WorkflowTabs"
-    })
+    default: () => <div>WorkflowTabs</div>,
   };
 });
 jest.mock("./components/WorkflowList", () => {
   const { jsx, jsxs } = require("react/jsx-runtime");
   return {
     __esModule: true,
-    default: ({
-      onSelectWorkflow,
-      onBack
-    }) => /* @__PURE__ */jsxs("div", {
-      children: [/* @__PURE__ */jsx("div", {
-        children: "WorkflowList"
-      }), /* @__PURE__ */jsx("button", {
-        onClick: () => onSelectWorkflow("workflow-1"),
-        children: "Select"
-      }), /* @__PURE__ */jsx("button", {
-        onClick: onBack,
-        children: "Back"
-      })]
-    })
+    default: ({ onSelectWorkflow, onBack }) => (
+      <div>
+        <div>WorkflowList</div>
+        <button onClick={() => onSelectWorkflow("workflow-1")}>Select</button>
+        <button onClick={onBack}>Back</button>
+      </div>
+    ),
   };
 });
 jest.mock("./components/ExecutionViewer", () => {
   const { jsx, jsxs } = require("react/jsx-runtime");
   return {
     __esModule: true,
-    default: ({
-      executionId
-    }) => /* @__PURE__ */jsxs("div", {
-      children: ["ExecutionViewer: ", executionId]
-    })
+    default: ({ executionId }) => <div>ExecutionViewer: {executionId}</div>,
   };
 });
 jest.mock("./pages/AuthPage", () => {
   const { jsx } = require("react/jsx-runtime");
   return {
     __esModule: true,
-    default: () => /* @__PURE__ */jsx("div", {
-      children: "AuthPage"
-    })
+    default: () => <div>AuthPage</div>,
   };
 });
 jest.mock("./pages/ForgotPasswordPage", () => {
   const { jsx } = require("react/jsx-runtime");
   return {
     __esModule: true,
-    default: () => /* @__PURE__ */jsx("div", {
-      children: "ForgotPasswordPage"
-    })
+    default: () => <div>ForgotPasswordPage</div>,
   };
 });
 jest.mock("./pages/ResetPasswordPage", () => {
   const { jsx } = require("react/jsx-runtime");
   return {
     __esModule: true,
-    default: () => /* @__PURE__ */jsx("div", {
-      children: "ResetPasswordPage"
-    })
+    default: () => <div>ResetPasswordPage</div>,
   };
 });
 jest.mock("./pages/MarketplacePage", () => {
   const { jsx } = require("react/jsx-runtime");
   return {
     __esModule: true,
-    default: () => /* @__PURE__ */jsx("div", {
-      children: "MarketplacePage"
-    })
+    default: () => <div>MarketplacePage</div>,
   };
 });
 jest.mock("./pages/SettingsPage", () => {
   const { jsx } = require("react/jsx-runtime");
   return {
     __esModule: true,
-    default: () => /* @__PURE__ */jsx("div", {
-      children: "SettingsPage"
-    })
+    default: () => <div>SettingsPage</div>,
   };
 });
 jest.mock("./pages/LogPage", () => {
   const { jsx } = require("react/jsx-runtime");
   return {
     __esModule: true,
-    default: () => /* @__PURE__ */jsx("div", {
-      children: "LogPage"
-    })
+    default: () => <div>LogPage</div>,
   };
 });
 jest.mock("./utils/confirm", () => ({
-  showConfirm: jest.fn().mockResolvedValue(true)
+  showConfirm: jest.fn().mockResolvedValue(true),
 }));
 const renderApp = () => {
-  return render(/* @__PURE__ */jsx(App, {}));
+  return render(<App />);
 };
 describe("App", () => {
   beforeEach(() => {
@@ -204,7 +178,9 @@ describe("App", () => {
       window.history.pushState({}, "", "/?execution=exec-123");
       renderApp();
       await waitForWithTimeout(() => {
-        expect(screen.getByText("ExecutionViewer: exec-123")).toBeInTheDocument();
+        expect(
+          screen.getByText("ExecutionViewer: exec-123"),
+        ).toBeInTheDocument();
       });
     });
     it("should handle back button from WorkflowList", async () => {

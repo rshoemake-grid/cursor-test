@@ -2,17 +2,20 @@ import { renderHook, act, waitFor } from "@testing-library/react";
 import { useWorkflowUpdateHandler } from "./useWorkflowUpdateHandler";
 import { api } from "../../api/client";
 import { logger } from "../../utils/logger";
-import { initializeReactFlowNodes, formatEdgesForReactFlow } from "../../utils/workflowFormat";
+import {
+  initializeReactFlowNodes,
+  formatEdgesForReactFlow,
+} from "../../utils/workflowFormat";
 jest.mock("../../api/client", () => ({
   api: {
-    getWorkflow: jest.fn()
-  }
+    getWorkflow: jest.fn(),
+  },
 }));
 jest.mock("../../utils/logger", () => ({
   logger: {
     debug: jest.fn(),
-    error: jest.fn()
-  }
+    error: jest.fn(),
+  },
 }));
 jest.mock("../../utils/workflowFormat", () => ({
   initializeReactFlowNodes: jest.fn(),
@@ -25,7 +28,7 @@ describe("useWorkflowUpdateHandler", () => {
     id: wfNode.id,
     type: wfNode.type,
     data: wfNode.data || {},
-    position: { x: 0, y: 0 }
+    position: { x: 0, y: 0 },
   });
   const mockWorkflowNodeToNode = jest.fn(defaultWorkflowNodeToNodeImpl);
   const mockApplyLocalChanges = jest.fn();
@@ -47,14 +50,14 @@ describe("useWorkflowUpdateHandler", () => {
   });
   describe("handleWorkflowUpdate", () => {
     it("should return early if changes is null", () => {
-      const { result } = renderHook(
-        () => useWorkflowUpdateHandler({
+      const { result } = renderHook(() =>
+        useWorkflowUpdateHandler({
           localWorkflowId: "workflow-1",
           setNodes: mockSetNodes,
           setEdges: mockSetEdges,
           workflowNodeToNode: mockWorkflowNodeToNode,
-          applyLocalChanges: mockApplyLocalChanges
-        })
+          applyLocalChanges: mockApplyLocalChanges,
+        }),
       );
       act(() => {
         result.current.handleWorkflowUpdate(null);
@@ -63,14 +66,14 @@ describe("useWorkflowUpdateHandler", () => {
       expect(api.getWorkflow).not.toHaveBeenCalled();
     });
     it("should return early if changes is undefined", () => {
-      const { result } = renderHook(
-        () => useWorkflowUpdateHandler({
+      const { result } = renderHook(() =>
+        useWorkflowUpdateHandler({
           localWorkflowId: "workflow-1",
           setNodes: mockSetNodes,
           setEdges: mockSetEdges,
           workflowNodeToNode: mockWorkflowNodeToNode,
-          applyLocalChanges: mockApplyLocalChanges
-        })
+          applyLocalChanges: mockApplyLocalChanges,
+        }),
       );
       act(() => {
         result.current.handleWorkflowUpdate(void 0);
@@ -79,17 +82,17 @@ describe("useWorkflowUpdateHandler", () => {
       expect(api.getWorkflow).not.toHaveBeenCalled();
     });
     it("should apply local changes when there are no deletions", () => {
-      const { result } = renderHook(
-        () => useWorkflowUpdateHandler({
+      const { result } = renderHook(() =>
+        useWorkflowUpdateHandler({
           localWorkflowId: "workflow-1",
           setNodes: mockSetNodes,
           setEdges: mockSetEdges,
           workflowNodeToNode: mockWorkflowNodeToNode,
-          applyLocalChanges: mockApplyLocalChanges
-        })
+          applyLocalChanges: mockApplyLocalChanges,
+        }),
       );
       const changes = {
-        nodes_to_add: [{ id: "node-1", type: "agent" }]
+        nodes_to_add: [{ id: "node-1", type: "agent" }],
       };
       act(() => {
         result.current.handleWorkflowUpdate(changes);
@@ -98,17 +101,17 @@ describe("useWorkflowUpdateHandler", () => {
       expect(api.getWorkflow).not.toHaveBeenCalled();
     });
     it("should apply local changes when nodes_to_delete is empty array", () => {
-      const { result } = renderHook(
-        () => useWorkflowUpdateHandler({
+      const { result } = renderHook(() =>
+        useWorkflowUpdateHandler({
           localWorkflowId: "workflow-1",
           setNodes: mockSetNodes,
           setEdges: mockSetEdges,
           workflowNodeToNode: mockWorkflowNodeToNode,
-          applyLocalChanges: mockApplyLocalChanges
-        })
+          applyLocalChanges: mockApplyLocalChanges,
+        }),
       );
       const changes = {
-        nodes_to_delete: []
+        nodes_to_delete: [],
       };
       act(() => {
         result.current.handleWorkflowUpdate(changes);
@@ -117,18 +120,18 @@ describe("useWorkflowUpdateHandler", () => {
       expect(api.getWorkflow).not.toHaveBeenCalled();
     });
     it("should apply local changes after deletions when not authenticated instead of reloading", () => {
-      const { result } = renderHook(
-        () => useWorkflowUpdateHandler({
+      const { result } = renderHook(() =>
+        useWorkflowUpdateHandler({
           localWorkflowId: "workflow-1",
           setNodes: mockSetNodes,
           setEdges: mockSetEdges,
           workflowNodeToNode: mockWorkflowNodeToNode,
           applyLocalChanges: mockApplyLocalChanges,
-          isAuthenticated: false
-        })
+          isAuthenticated: false,
+        }),
       );
       const changes = {
-        nodes_to_delete: ["node-1"]
+        nodes_to_delete: ["node-1"],
       };
       act(() => {
         result.current.handleWorkflowUpdate(changes);
@@ -137,17 +140,17 @@ describe("useWorkflowUpdateHandler", () => {
       expect(api.getWorkflow).not.toHaveBeenCalled();
     });
     it("should apply local changes when localWorkflowId is null", () => {
-      const { result } = renderHook(
-        () => useWorkflowUpdateHandler({
+      const { result } = renderHook(() =>
+        useWorkflowUpdateHandler({
           localWorkflowId: null,
           setNodes: mockSetNodes,
           setEdges: mockSetEdges,
           workflowNodeToNode: mockWorkflowNodeToNode,
-          applyLocalChanges: mockApplyLocalChanges
-        })
+          applyLocalChanges: mockApplyLocalChanges,
+        }),
       );
       const changes = {
-        nodes_to_delete: ["node-1"]
+        nodes_to_delete: ["node-1"],
       };
       act(() => {
         result.current.handleWorkflowUpdate(changes);
@@ -161,24 +164,22 @@ describe("useWorkflowUpdateHandler", () => {
         name: "Test Workflow",
         nodes: [
           { id: "node-1", type: "agent", data: {} },
-          { id: "node-2", type: "condition", data: {} }
+          { id: "node-2", type: "condition", data: {} },
         ],
-        edges: [
-          { id: "edge-1", source: "node-1", target: "node-2" }
-        ]
+        edges: [{ id: "edge-1", source: "node-1", target: "node-2" }],
       };
       api.getWorkflow.mockResolvedValue(mockWorkflow);
-      const { result } = renderHook(
-        () => useWorkflowUpdateHandler({
+      const { result } = renderHook(() =>
+        useWorkflowUpdateHandler({
           localWorkflowId: "workflow-1",
           setNodes: mockSetNodes,
           setEdges: mockSetEdges,
           workflowNodeToNode: mockWorkflowNodeToNode,
-          applyLocalChanges: mockApplyLocalChanges
-        })
+          applyLocalChanges: mockApplyLocalChanges,
+        }),
       );
       const changes = {
-        nodes_to_delete: ["node-1"]
+        nodes_to_delete: ["node-1"],
       };
       act(() => {
         result.current.handleWorkflowUpdate(changes);
@@ -193,7 +194,7 @@ describe("useWorkflowUpdateHandler", () => {
       expect(api.getWorkflow).toHaveBeenCalledWith("workflow-1");
       expect(logger.debug).toHaveBeenCalledWith(
         "Reloading workflow from database after deletions:",
-        ["node-1"]
+        ["node-1"],
       );
       expect(mockWorkflowNodeToNode).toHaveBeenCalledTimes(2);
       expect(initializeReactFlowNodes).toHaveBeenCalled();
@@ -204,17 +205,17 @@ describe("useWorkflowUpdateHandler", () => {
     it("should handle API error and fall back to local changes", async () => {
       const error = new Error("API Error");
       api.getWorkflow.mockRejectedValue(error);
-      const { result } = renderHook(
-        () => useWorkflowUpdateHandler({
+      const { result } = renderHook(() =>
+        useWorkflowUpdateHandler({
           localWorkflowId: "workflow-1",
           setNodes: mockSetNodes,
           setEdges: mockSetEdges,
           workflowNodeToNode: mockWorkflowNodeToNode,
-          applyLocalChanges: mockApplyLocalChanges
-        })
+          applyLocalChanges: mockApplyLocalChanges,
+        }),
       );
       const changes = {
-        nodes_to_delete: ["node-1"]
+        nodes_to_delete: ["node-1"],
       };
       act(() => {
         result.current.handleWorkflowUpdate(changes);
@@ -228,47 +229,50 @@ describe("useWorkflowUpdateHandler", () => {
       expect(api.getWorkflow).toHaveBeenCalledWith("workflow-1");
       expect(logger.error).toHaveBeenCalledWith(
         "Failed to reload workflow after deletion:",
-        error
+        error,
       );
       expect(mockApplyLocalChanges).toHaveBeenCalledWith(changes);
     });
     it("should log debug message when receiving changes", () => {
-      const { result } = renderHook(
-        () => useWorkflowUpdateHandler({
+      const { result } = renderHook(() =>
+        useWorkflowUpdateHandler({
           localWorkflowId: "workflow-1",
           setNodes: mockSetNodes,
           setEdges: mockSetEdges,
           workflowNodeToNode: mockWorkflowNodeToNode,
-          applyLocalChanges: mockApplyLocalChanges
-        })
+          applyLocalChanges: mockApplyLocalChanges,
+        }),
       );
       const changes = {
-        nodes_to_add: [{ id: "node-1", type: "agent" }]
+        nodes_to_add: [{ id: "node-1", type: "agent" }],
       };
       act(() => {
         result.current.handleWorkflowUpdate(changes);
       });
-      expect(logger.debug).toHaveBeenCalledWith("Received workflow changes:", changes);
+      expect(logger.debug).toHaveBeenCalledWith(
+        "Received workflow changes:",
+        changes,
+      );
     });
     it("should handle multiple deletions", async () => {
       const mockWorkflow = {
         id: "workflow-1",
         name: "Test Workflow",
         nodes: [{ id: "node-2", type: "condition", data: {} }],
-        edges: []
+        edges: [],
       };
       api.getWorkflow.mockResolvedValue(mockWorkflow);
-      const { result } = renderHook(
-        () => useWorkflowUpdateHandler({
+      const { result } = renderHook(() =>
+        useWorkflowUpdateHandler({
           localWorkflowId: "workflow-1",
           setNodes: mockSetNodes,
           setEdges: mockSetEdges,
           workflowNodeToNode: mockWorkflowNodeToNode,
-          applyLocalChanges: mockApplyLocalChanges
-        })
+          applyLocalChanges: mockApplyLocalChanges,
+        }),
       );
       const changes = {
-        nodes_to_delete: ["node-1", "node-3", "node-4"]
+        nodes_to_delete: ["node-1", "node-3", "node-4"],
       };
       act(() => {
         result.current.handleWorkflowUpdate(changes);
@@ -282,7 +286,7 @@ describe("useWorkflowUpdateHandler", () => {
       expect(api.getWorkflow).toHaveBeenCalledWith("workflow-1");
       expect(logger.debug).toHaveBeenCalledWith(
         "Reloading workflow from database after deletions:",
-        ["node-1", "node-3", "node-4"]
+        ["node-1", "node-3", "node-4"],
       );
     });
     it("should log reloaded workflow nodes", async () => {
@@ -291,22 +295,22 @@ describe("useWorkflowUpdateHandler", () => {
         name: "Test Workflow",
         nodes: [
           { id: "node-1", type: "agent", data: {} },
-          { id: "node-2", type: "condition", data: {} }
+          { id: "node-2", type: "condition", data: {} },
         ],
-        edges: []
+        edges: [],
       };
       api.getWorkflow.mockResolvedValue(mockWorkflow);
-      const { result } = renderHook(
-        () => useWorkflowUpdateHandler({
+      const { result } = renderHook(() =>
+        useWorkflowUpdateHandler({
           localWorkflowId: "workflow-1",
           setNodes: mockSetNodes,
           setEdges: mockSetEdges,
           workflowNodeToNode: mockWorkflowNodeToNode,
-          applyLocalChanges: mockApplyLocalChanges
-        })
+          applyLocalChanges: mockApplyLocalChanges,
+        }),
       );
       const changes = {
-        nodes_to_delete: ["node-1"]
+        nodes_to_delete: ["node-1"],
       };
       act(() => {
         result.current.handleWorkflowUpdate(changes);
@@ -324,20 +328,22 @@ describe("useWorkflowUpdateHandler", () => {
         "Reloaded workflow after deletion, nodes:",
         expect.arrayContaining(["node-1", "node-2"]),
       );
-      expect(logger.debug).toHaveBeenCalledWith("Expected deleted nodes:", ["node-1"]);
+      expect(logger.debug).toHaveBeenCalledWith("Expected deleted nodes:", [
+        "node-1",
+      ]);
     });
   });
   describe("mutation killers - exact conditionals and operators", () => {
     describe("handleWorkflowUpdate - exact conditional checks", () => {
       it("should verify exact conditional: if (!changes)", () => {
-        const { result } = renderHook(
-          () => useWorkflowUpdateHandler({
+        const { result } = renderHook(() =>
+          useWorkflowUpdateHandler({
             localWorkflowId: "workflow-1",
             setNodes: mockSetNodes,
             setEdges: mockSetEdges,
             workflowNodeToNode: mockWorkflowNodeToNode,
-            applyLocalChanges: mockApplyLocalChanges
-          })
+            applyLocalChanges: mockApplyLocalChanges,
+          }),
         );
         act(() => {
           result.current.handleWorkflowUpdate(null);
@@ -355,21 +361,21 @@ describe("useWorkflowUpdateHandler", () => {
           id: "workflow-1",
           name: "Test Workflow",
           nodes: [],
-          edges: []
+          edges: [],
         };
         api.getWorkflow.mockResolvedValue(mockWorkflow);
-        const { result } = renderHook(
-          () => useWorkflowUpdateHandler({
+        const { result } = renderHook(() =>
+          useWorkflowUpdateHandler({
             localWorkflowId: "workflow-1",
             // Truthy
             setNodes: mockSetNodes,
             setEdges: mockSetEdges,
             workflowNodeToNode: mockWorkflowNodeToNode,
-            applyLocalChanges: mockApplyLocalChanges
-          })
+            applyLocalChanges: mockApplyLocalChanges,
+          }),
         );
         const changes = {
-          nodes_to_delete: ["node-1"]
+          nodes_to_delete: ["node-1"],
           // hasDeletions is true
         };
         act(() => {
@@ -385,18 +391,18 @@ describe("useWorkflowUpdateHandler", () => {
         expect(api.getWorkflow).toHaveBeenCalled();
       });
       it("should verify exact conditional: if (hasDeletions && localWorkflowId) - first true, second false", () => {
-        const { result } = renderHook(
-          () => useWorkflowUpdateHandler({
+        const { result } = renderHook(() =>
+          useWorkflowUpdateHandler({
             localWorkflowId: null,
             // Falsy
             setNodes: mockSetNodes,
             setEdges: mockSetEdges,
             workflowNodeToNode: mockWorkflowNodeToNode,
-            applyLocalChanges: mockApplyLocalChanges
-          })
+            applyLocalChanges: mockApplyLocalChanges,
+          }),
         );
         const changes = {
-          nodes_to_delete: ["node-1"]
+          nodes_to_delete: ["node-1"],
           // hasDeletions is true
         };
         act(() => {
@@ -406,18 +412,18 @@ describe("useWorkflowUpdateHandler", () => {
         expect(api.getWorkflow).not.toHaveBeenCalled();
       });
       it("should verify exact conditional: if (hasDeletions && localWorkflowId) - first false", () => {
-        const { result } = renderHook(
-          () => useWorkflowUpdateHandler({
+        const { result } = renderHook(() =>
+          useWorkflowUpdateHandler({
             localWorkflowId: "workflow-1",
             // Truthy
             setNodes: mockSetNodes,
             setEdges: mockSetEdges,
             workflowNodeToNode: mockWorkflowNodeToNode,
-            applyLocalChanges: mockApplyLocalChanges
-          })
+            applyLocalChanges: mockApplyLocalChanges,
+          }),
         );
         const changes = {
-          nodes_to_add: [{ id: "node-1" }]
+          nodes_to_add: [{ id: "node-1" }],
           // No deletions - hasDeletions is false
         };
         act(() => {
@@ -433,20 +439,20 @@ describe("useWorkflowUpdateHandler", () => {
           id: "workflow-1",
           name: "Test Workflow",
           nodes: [],
-          edges: []
+          edges: [],
         };
         api.getWorkflow.mockResolvedValue(mockWorkflow);
-        const { result } = renderHook(
-          () => useWorkflowUpdateHandler({
+        const { result } = renderHook(() =>
+          useWorkflowUpdateHandler({
             localWorkflowId: "workflow-1",
             setNodes: mockSetNodes,
             setEdges: mockSetEdges,
             workflowNodeToNode: mockWorkflowNodeToNode,
-            applyLocalChanges: mockApplyLocalChanges
-          })
+            applyLocalChanges: mockApplyLocalChanges,
+          }),
         );
         const changes1 = {
-          nodes_to_delete: ["node-1"]
+          nodes_to_delete: ["node-1"],
           // Both conditions true
         };
         act(() => {
@@ -461,7 +467,7 @@ describe("useWorkflowUpdateHandler", () => {
         expect(api.getWorkflow).toHaveBeenCalled();
         jest.clearAllMocks();
         const changes2 = {
-          nodes_to_delete: []
+          nodes_to_delete: [],
           // First true, second false
         };
         act(() => {
@@ -471,7 +477,7 @@ describe("useWorkflowUpdateHandler", () => {
         expect(api.getWorkflow).not.toHaveBeenCalled();
         mockApplyLocalChanges.mockClear();
         const changes3 = {
-          nodes_to_add: [{ id: "node-1" }]
+          nodes_to_add: [{ id: "node-1" }],
           // First false
         };
         act(() => {
@@ -487,21 +493,21 @@ describe("useWorkflowUpdateHandler", () => {
           id: "workflow-1",
           name: "Test Workflow",
           nodes: [],
-          edges: null
+          edges: null,
           // null - should use fallback
         };
         api.getWorkflow.mockResolvedValue(mockWorkflow);
-        const { result } = renderHook(
-          () => useWorkflowUpdateHandler({
+        const { result } = renderHook(() =>
+          useWorkflowUpdateHandler({
             localWorkflowId: "workflow-1",
             setNodes: mockSetNodes,
             setEdges: mockSetEdges,
             workflowNodeToNode: mockWorkflowNodeToNode,
-            applyLocalChanges: mockApplyLocalChanges
-          })
+            applyLocalChanges: mockApplyLocalChanges,
+          }),
         );
         const changes = {
-          nodes_to_delete: ["node-1"]
+          nodes_to_delete: ["node-1"],
         };
         act(() => {
           result.current.handleWorkflowUpdate(changes);
@@ -521,21 +527,21 @@ describe("useWorkflowUpdateHandler", () => {
           id: "workflow-1",
           name: "Test Workflow",
           nodes: [],
-          edges: []
+          edges: [],
         };
         api.getWorkflow.mockResolvedValue(mockWorkflow);
         const setTimeoutSpy = jest.spyOn(global, "setTimeout");
-        const { result } = renderHook(
-          () => useWorkflowUpdateHandler({
+        const { result } = renderHook(() =>
+          useWorkflowUpdateHandler({
             localWorkflowId: "workflow-1",
             setNodes: mockSetNodes,
             setEdges: mockSetEdges,
             workflowNodeToNode: mockWorkflowNodeToNode,
-            applyLocalChanges: mockApplyLocalChanges
-          })
+            applyLocalChanges: mockApplyLocalChanges,
+          }),
         );
         const changes = {
-          nodes_to_delete: ["node-1"]
+          nodes_to_delete: ["node-1"],
         };
         act(() => {
           result.current.handleWorkflowUpdate(changes);

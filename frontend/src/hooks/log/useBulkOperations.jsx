@@ -1,13 +1,12 @@
 import { useState, useCallback } from "react";
-function useBulkOperations({
-  executions,
-  onDelete
-}) {
+function useBulkOperations({ executions, onDelete }) {
   const [selectedIds, setSelectedIds] = useState(/* @__PURE__ */ new Set());
   const [isDeleting, setIsDeleting] = useState(false);
   const selectedCount = selectedIds.size;
-  const isAllSelected = executions.length > 0 && selectedIds.size === executions.length;
-  const isSomeSelected = selectedIds.size > 0 && selectedIds.size < executions.length;
+  const isAllSelected =
+    executions.length > 0 && selectedIds.size === executions.length;
+  const isSomeSelected =
+    selectedIds.size > 0 && selectedIds.size < executions.length;
   const toggleSelection = useCallback((executionId) => {
     setSelectedIds((prev) => {
       const next = new Set(prev);
@@ -54,9 +53,7 @@ function useBulkOperations({
     clearSelection,
     selectAll,
     deleteSelected,
-    isDeleting
+    isDeleting,
   };
 }
-export {
-  useBulkOperations
-};
+export { useBulkOperations };

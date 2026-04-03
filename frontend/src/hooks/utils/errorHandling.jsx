@@ -9,7 +9,7 @@ function handleApiError(error, options = {}) {
     defaultMessage = "An error occurred",
     context,
     logger = defaultLogger,
-    showError = defaultShowError
+    showError = defaultShowError,
   } = options;
   const errorMessage = extractApiErrorMessage(error, defaultMessage);
   if (logError) {
@@ -20,7 +20,7 @@ function handleApiError(error, options = {}) {
         status: error.response.status,
         statusText: error.response.statusText,
         data: error.response.data,
-        url: error.config?.url
+        url: error.config?.url,
       });
     }
   }
@@ -36,7 +36,7 @@ function handleError(error, options = {}) {
     defaultMessage = "An unexpected error occurred",
     context,
     logger = defaultLogger,
-    showError = defaultShowError
+    showError = defaultShowError,
   } = options;
   const errorMessage = extractApiErrorMessage(error, defaultMessage);
   if (logError) {
@@ -48,12 +48,18 @@ function handleError(error, options = {}) {
   }
   return errorMessage;
 }
-function createSafeErrorHandler(handler, fallbackMessage = "An error occurred") {
+function createSafeErrorHandler(
+  handler,
+  fallbackMessage = "An error occurred",
+) {
   return (error) => {
     try {
       handler(error);
     } catch (handlerError) {
-      defaultLogger.error("[Safe Error Handler] Handler threw an error:", handlerError);
+      defaultLogger.error(
+        "[Safe Error Handler] Handler threw an error:",
+        handlerError,
+      );
       defaultShowError(fallbackMessage);
     }
   };
@@ -62,5 +68,5 @@ export {
   createSafeErrorHandler,
   extractErrorMessage,
   handleApiError,
-  handleError
+  handleError,
 };

@@ -6,25 +6,28 @@ function useLoopConfig({ selectedNode }) {
   useEffect(() => {
     if (!selectedNode || selectedNode.type !== "loop") return;
     const nodeData = logicalOrToEmptyObject(selectedNode.data);
-    if (!nodeData.loop_config || Object.keys(nodeData.loop_config).length === 0) {
+    if (
+      !nodeData.loop_config ||
+      Object.keys(nodeData.loop_config).length === 0
+    ) {
       const defaultLoopConfig = {
         loop_type: "for_each",
-        max_iterations: 0
+        max_iterations: 0,
       };
-      setNodes(
-        (nodes) => nodes.map(
-          (n) => n.id === selectedNode.id ? {
-            ...n,
-            data: {
-              ...n.data,
-              loop_config: defaultLoopConfig
-            }
-          } : n
-        )
+      setNodes((nodes) =>
+        nodes.map((n) =>
+          n.id === selectedNode.id
+            ? {
+                ...n,
+                data: {
+                  ...n.data,
+                  loop_config: defaultLoopConfig,
+                },
+              }
+            : n,
+        ),
       );
     }
   }, [selectedNode, setNodes]);
 }
-export {
-  useLoopConfig
-};
+export { useLoopConfig };

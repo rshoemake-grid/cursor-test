@@ -10,11 +10,11 @@ describe("useNodeForm", () => {
     mockOnUpdate = jest.fn();
   });
   it("should initialize with empty values", () => {
-    const { result } = renderHook(
-      () => useNodeForm({
+    const { result } = renderHook(() =>
+      useNodeForm({
         selectedNode: null,
-        onUpdate: mockOnUpdate
-      })
+        onUpdate: mockOnUpdate,
+      }),
     );
     expect(result.current.nameValue).toBe("");
     expect(result.current.descriptionValue).toBe("");
@@ -26,17 +26,18 @@ describe("useNodeForm", () => {
       position: { x: 0, y: 0 },
       data: {
         name: "Test Node",
-        description: "Test description"
-      }
+        description: "Test description",
+      },
     };
     const { result, rerender } = renderHook(
-      ({ selectedNode }) => useNodeForm({
-        selectedNode,
-        onUpdate: mockOnUpdate
-      }),
+      ({ selectedNode }) =>
+        useNodeForm({
+          selectedNode,
+          onUpdate: mockOnUpdate,
+        }),
       {
-        initialProps: { selectedNode: null }
-      }
+        initialProps: { selectedNode: null },
+      },
     );
     expect(result.current.nameValue).toBe("");
     rerender({ selectedNode: node });
@@ -51,17 +52,18 @@ describe("useNodeForm", () => {
       type: "agent",
       position: { x: 0, y: 0 },
       data: {
-        label: "Label Only"
-      }
+        label: "Label Only",
+      },
     };
     const { result, rerender } = renderHook(
-      ({ selectedNode }) => useNodeForm({
-        selectedNode,
-        onUpdate: mockOnUpdate
-      }),
+      ({ selectedNode }) =>
+        useNodeForm({
+          selectedNode,
+          onUpdate: mockOnUpdate,
+        }),
       {
-        initialProps: { selectedNode: null }
-      }
+        initialProps: { selectedNode: null },
+      },
     );
     rerender({ selectedNode: node });
     await waitForWithTimeout(() => {
@@ -75,17 +77,18 @@ describe("useNodeForm", () => {
       position: { x: 0, y: 0 },
       data: {
         name: "Name Value",
-        label: "Label Value"
-      }
+        label: "Label Value",
+      },
     };
     const { result, rerender } = renderHook(
-      ({ selectedNode }) => useNodeForm({
-        selectedNode,
-        onUpdate: mockOnUpdate
-      }),
+      ({ selectedNode }) =>
+        useNodeForm({
+          selectedNode,
+          onUpdate: mockOnUpdate,
+        }),
       {
-        initialProps: { selectedNode: null }
-      }
+        initialProps: { selectedNode: null },
+      },
     );
     rerender({ selectedNode: node });
     await waitForWithTimeout(() => {
@@ -99,17 +102,18 @@ describe("useNodeForm", () => {
       position: { x: 0, y: 0 },
       data: {
         name: "Test Node",
-        description: "Test description"
-      }
+        description: "Test description",
+      },
     };
     const { result, rerender } = renderHook(
-      ({ selectedNode }) => useNodeForm({
-        selectedNode,
-        onUpdate: mockOnUpdate
-      }),
+      ({ selectedNode }) =>
+        useNodeForm({
+          selectedNode,
+          onUpdate: mockOnUpdate,
+        }),
       {
-        initialProps: { selectedNode: node }
-      }
+        initialProps: { selectedNode: node },
+      },
     );
     await waitForWithTimeout(() => {
       expect(result.current.nameValue).toBe("Test Node");
@@ -125,13 +129,13 @@ describe("useNodeForm", () => {
       id: "node1",
       type: "agent",
       position: { x: 0, y: 0 },
-      data: { name: "Original" }
+      data: { name: "Original" },
     };
-    const { result } = renderHook(
-      () => useNodeForm({
+    const { result } = renderHook(() =>
+      useNodeForm({
         selectedNode: node,
-        onUpdate: mockOnUpdate
-      })
+        onUpdate: mockOnUpdate,
+      }),
     );
     act(() => {
       result.current.handleNameChange("New Name");
@@ -144,13 +148,13 @@ describe("useNodeForm", () => {
       id: "node1",
       type: "agent",
       position: { x: 0, y: 0 },
-      data: { description: "Original" }
+      data: { description: "Original" },
     };
-    const { result } = renderHook(
-      () => useNodeForm({
+    const { result } = renderHook(() =>
+      useNodeForm({
         selectedNode: node,
-        onUpdate: mockOnUpdate
-      })
+        onUpdate: mockOnUpdate,
+      }),
     );
     act(() => {
       result.current.handleDescriptionChange("New Description");
@@ -159,11 +163,11 @@ describe("useNodeForm", () => {
     expect(result.current.descriptionValue).toBe("New Description");
   });
   it("should not call onUpdate if no node selected", () => {
-    const { result } = renderHook(
-      () => useNodeForm({
+    const { result } = renderHook(() =>
+      useNodeForm({
         selectedNode: null,
-        onUpdate: mockOnUpdate
-      })
+        onUpdate: mockOnUpdate,
+      }),
     );
     act(() => {
       result.current.handleNameChange("New Name");
@@ -172,11 +176,11 @@ describe("useNodeForm", () => {
     expect(result.current.nameValue).toBe("New Name");
   });
   it("should provide input refs", () => {
-    const { result } = renderHook(
-      () => useNodeForm({
+    const { result } = renderHook(() =>
+      useNodeForm({
         selectedNode: null,
-        onUpdate: mockOnUpdate
-      })
+        onUpdate: mockOnUpdate,
+      }),
     );
     expect(result.current.nameInputRef).toBeDefined();
     expect(result.current.nameInputRef.current).toBeNull();
@@ -190,17 +194,18 @@ describe("useNodeForm", () => {
       position: { x: 0, y: 0 },
       data: {
         name: 123,
-        label: { type: "span" }
-      }
+        label: { type: "span" },
+      },
     };
     const { result, rerender } = renderHook(
-      ({ selectedNode }) => useNodeForm({
-        selectedNode,
-        onUpdate: mockOnUpdate
-      }),
+      ({ selectedNode }) =>
+        useNodeForm({
+          selectedNode,
+          onUpdate: mockOnUpdate,
+        }),
       {
-        initialProps: { selectedNode: null }
-      }
+        initialProps: { selectedNode: null },
+      },
     );
     rerender({ selectedNode: node });
     await waitForWithTimeout(() => {
@@ -214,22 +219,23 @@ describe("useNodeForm", () => {
       position: { x: 0, y: 0 },
       data: {
         name: null,
-        description: void 0
-      }
+        description: void 0,
+      },
     };
     const originalActiveElement = document.activeElement;
     Object.defineProperty(document, "activeElement", {
       writable: true,
-      value: null
+      value: null,
     });
     const { result, rerender } = renderHook(
-      ({ selectedNode }) => useNodeForm({
-        selectedNode,
-        onUpdate: mockOnUpdate
-      }),
+      ({ selectedNode }) =>
+        useNodeForm({
+          selectedNode,
+          onUpdate: mockOnUpdate,
+        }),
       {
-        initialProps: { selectedNode: null }
-      }
+        initialProps: { selectedNode: null },
+      },
     );
     rerender({ selectedNode: node });
     await waitForWithTimeout(() => {
@@ -238,7 +244,7 @@ describe("useNodeForm", () => {
     });
     Object.defineProperty(document, "activeElement", {
       writable: true,
-      value: originalActiveElement
+      value: originalActiveElement,
     });
   });
 });

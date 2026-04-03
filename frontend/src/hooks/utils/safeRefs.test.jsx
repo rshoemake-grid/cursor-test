@@ -10,14 +10,14 @@ describe("safeGetTabsRefCurrent", () => {
   });
   it("should return null when tabsRef.current is null", () => {
     const tabsRef = {
-      current: null
+      current: null,
     };
     const result = safeGetTabsRefCurrent(tabsRef);
     expect(result).toBeNull();
   });
   it("should return null when tabsRef.current is undefined", () => {
     const tabsRef = {
-      current: void 0
+      current: void 0,
     };
     const result = safeGetTabsRefCurrent(tabsRef);
     expect(result).toBeNull();
@@ -25,7 +25,7 @@ describe("safeGetTabsRefCurrent", () => {
   it("should return valid array when tabsRef.current is valid", () => {
     const validArray = [{ id: "1" }, { id: "2" }];
     const tabsRef = {
-      current: validArray
+      current: validArray,
     };
     const result = safeGetTabsRefCurrent(tabsRef);
     expect(result).toBe(validArray);
@@ -37,8 +37,8 @@ describe("safeGetTabsRefCurrent", () => {
       {
         get: () => {
           throw new Error("Property access error");
-        }
-      }
+        },
+      },
     );
     const result = safeGetTabsRefCurrent(tabsRef);
     expect(result).toBeNull();
@@ -46,7 +46,7 @@ describe("safeGetTabsRefCurrent", () => {
   it("should return valid value for non-array types", () => {
     const validObject = { test: "value" };
     const tabsRef = {
-      current: validObject
+      current: validObject,
     };
     const result = safeGetTabsRefCurrent(tabsRef);
     expect(result).toBe(validObject);

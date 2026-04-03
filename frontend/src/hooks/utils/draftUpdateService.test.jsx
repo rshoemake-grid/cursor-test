@@ -28,7 +28,7 @@ describe("draftUpdateService", () => {
         workflowDescription,
         tabIsUnsaved,
         saveDraftsToStorage,
-        logger
+        logger,
       );
       expect(tabDraftsRef.current[tabId]).toBeUndefined();
       jest.advanceTimersByTime(DRAFT_UPDATE.IMMEDIATE_DELAY);
@@ -39,7 +39,10 @@ describe("draftUpdateService", () => {
       expect(draft.workflowDescription).toBe(workflowDescription);
       expect(draft.isUnsaved).toBe(tabIsUnsaved);
       expect(saveDraftsToStorage).toHaveBeenCalledWith(tabDraftsRef.current);
-      expect(logger.debug).toHaveBeenCalledWith("[DraftUpdate] Draft updated with new nodes, total:", 2);
+      expect(logger.debug).toHaveBeenCalledWith(
+        "[DraftUpdate] Draft updated with new nodes, total:",
+        2,
+      );
     });
     it("should preserve existing edges when updating", () => {
       const existingEdges = [{ id: "edge-1" }];
@@ -51,9 +54,9 @@ describe("draftUpdateService", () => {
             workflowId: null,
             workflowName: "",
             workflowDescription: "",
-            isUnsaved: false
-          }
-        }
+            isUnsaved: false,
+          },
+        },
       };
       const tabId = "tab-1";
       const updatedNodes = [{ id: "node-1" }];
@@ -68,7 +71,7 @@ describe("draftUpdateService", () => {
         "",
         false,
         saveDraftsToStorage,
-        logger
+        logger,
       );
       jest.advanceTimersByTime(DRAFT_UPDATE.IMMEDIATE_DELAY);
       const draft = tabDraftsRef.current[tabId];
@@ -89,7 +92,7 @@ describe("draftUpdateService", () => {
         "",
         false,
         saveDraftsToStorage,
-        logger
+        logger,
       );
       jest.advanceTimersByTime(DRAFT_UPDATE.IMMEDIATE_DELAY);
       const draft = tabDraftsRef.current[tabId];
@@ -110,7 +113,7 @@ describe("draftUpdateService", () => {
         "",
         false,
         saveDraftsToStorage,
-        logger
+        logger,
       );
       jest.advanceTimersByTime(DRAFT_UPDATE.IMMEDIATE_DELAY);
       const draft = tabDraftsRef.current[tabId];

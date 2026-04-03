@@ -58,13 +58,17 @@ describe("useModelExpansion", () => {
   });
   it("should return false for non-existent provider", () => {
     const { result } = renderHook(() => useModelExpansion());
-    expect(result.current.isModelExpanded("non-existent", "model-1")).toBe(false);
+    expect(result.current.isModelExpanded("non-existent", "model-1")).toBe(
+      false,
+    );
   });
   it("should return false for non-existent model", () => {
     const { result } = renderHook(() => useModelExpansion());
     act(() => {
       result.current.toggleModel("provider-1", "model-1");
     });
-    expect(result.current.isModelExpanded("provider-1", "non-existent")).toBe(false);
+    expect(result.current.isModelExpanded("provider-1", "non-existent")).toBe(
+      false,
+    );
   });
 });

@@ -4,7 +4,7 @@ describe("positioningStrategies", () => {
     horizontalSpacing: 200,
     verticalSpacing: 150,
     defaultX: 250,
-    defaultY: 250
+    defaultY: 250,
   };
   describe("HorizontalStrategy", () => {
     it("should position nodes horizontally on empty canvas", () => {
@@ -18,10 +18,14 @@ describe("positioningStrategies", () => {
     it("should position nodes to the right of existing nodes", () => {
       const existingNodes = [
         { id: "1", position: { x: 100, y: 100 }, data: {}, type: "agent" },
-        { id: "2", position: { x: 300, y: 100 }, data: {}, type: "agent" }
+        { id: "2", position: { x: 300, y: 100 }, data: {}, type: "agent" },
       ];
       const strategy = createPositioningStrategy("horizontal");
-      const positions = strategy.calculatePositions(existingNodes, 2, defaultOptions);
+      const positions = strategy.calculatePositions(
+        existingNodes,
+        2,
+        defaultOptions,
+      );
       expect(positions).toHaveLength(2);
       expect(positions[0].x).toBeGreaterThan(300);
       expect(positions[0].y).toBe(250);
@@ -52,10 +56,14 @@ describe("positioningStrategies", () => {
     it("should position nodes in column to the right of existing nodes", () => {
       const existingNodes = [
         { id: "1", position: { x: 100, y: 100 }, data: {}, type: "agent" },
-        { id: "2", position: { x: 100, y: 250 }, data: {}, type: "agent" }
+        { id: "2", position: { x: 100, y: 250 }, data: {}, type: "agent" },
       ];
       const strategy = createPositioningStrategy("vertical");
-      const positions = strategy.calculatePositions(existingNodes, 2, defaultOptions);
+      const positions = strategy.calculatePositions(
+        existingNodes,
+        2,
+        defaultOptions,
+      );
       expect(positions).toHaveLength(2);
       expect(positions[0].x).toBeGreaterThan(100);
       expect(positions[0].x).toBe(positions[1].x);
@@ -90,10 +98,14 @@ describe("positioningStrategies", () => {
     });
     it("should position grid to the right of existing nodes", () => {
       const existingNodes = [
-        { id: "1", position: { x: 100, y: 100 }, data: {}, type: "agent" }
+        { id: "1", position: { x: 100, y: 100 }, data: {}, type: "agent" },
       ];
       const strategy = createPositioningStrategy("grid", 2);
-      const positions = strategy.calculatePositions(existingNodes, 2, defaultOptions);
+      const positions = strategy.calculatePositions(
+        existingNodes,
+        2,
+        defaultOptions,
+      );
       expect(positions[0].x).toBeGreaterThan(100);
       expect(positions[0].y).toBe(positions[1].y);
       expect(positions[1].x).toBeGreaterThan(positions[0].x);
@@ -149,10 +161,14 @@ describe("positioningStrategies", () => {
     });
     it("should handle nodes with negative positions", () => {
       const existingNodes = [
-        { id: "1", position: { x: -100, y: -50 }, data: {}, type: "agent" }
+        { id: "1", position: { x: -100, y: -50 }, data: {}, type: "agent" },
       ];
       const strategy = createPositioningStrategy("horizontal");
-      const positions = strategy.calculatePositions(existingNodes, 1, defaultOptions);
+      const positions = strategy.calculatePositions(
+        existingNodes,
+        1,
+        defaultOptions,
+      );
       expect(positions[0].x).toBeGreaterThan(-100);
     });
     it("should handle very large node counts", () => {

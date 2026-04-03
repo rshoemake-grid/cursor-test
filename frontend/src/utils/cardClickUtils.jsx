@@ -1,5 +1,12 @@
 function shouldIgnoreClick(target) {
-  return target.closest('input[type="checkbox"]') !== null || target.closest("button") !== null || target.tagName === "BUTTON" || target.tagName === "INPUT" || target.tagName === "SELECT" || target.tagName === "A";
+  return (
+    target.closest('input[type="checkbox"]') !== null ||
+    target.closest("button") !== null ||
+    target.tagName === "BUTTON" ||
+    target.tagName === "INPUT" ||
+    target.tagName === "SELECT" ||
+    target.tagName === "A"
+  );
 }
 function createCardClickHandler(toggleFn) {
   return (e, id) => {
@@ -12,7 +19,4 @@ function createCardClickHandler(toggleFn) {
     toggleFn(id);
   };
 }
-export {
-  createCardClickHandler,
-  shouldIgnoreClick
-};
+export { createCardClickHandler, shouldIgnoreClick };

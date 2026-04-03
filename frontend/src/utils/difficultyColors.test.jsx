@@ -4,7 +4,9 @@ describe("getDifficultyColor", () => {
     expect(getDifficultyColor("beginner")).toBe("bg-green-100 text-green-800");
   });
   it("should return yellow colors for intermediate", () => {
-    expect(getDifficultyColor("intermediate")).toBe("bg-yellow-100 text-yellow-800");
+    expect(getDifficultyColor("intermediate")).toBe(
+      "bg-yellow-100 text-yellow-800",
+    );
   });
   it("should return red colors for advanced", () => {
     expect(getDifficultyColor("advanced")).toBe("bg-red-100 text-red-800");
@@ -16,6 +18,8 @@ describe("getDifficultyColor", () => {
   });
   it("should handle case sensitivity", () => {
     expect(getDifficultyColor("BEGINNER")).toBe("bg-gray-100 text-gray-800");
-    expect(getDifficultyColor("Intermediate")).toBe("bg-gray-100 text-gray-800");
+    expect(getDifficultyColor("Intermediate")).toBe(
+      "bg-gray-100 text-gray-800",
+    );
   });
 });

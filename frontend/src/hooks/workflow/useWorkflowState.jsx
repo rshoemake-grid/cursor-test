@@ -1,10 +1,8 @@
 import { useState, useEffect, useRef } from "react";
-function useWorkflowState({
-  workflowId: initialWorkflowId,
-  tabName
-}) {
+function useWorkflowState({ workflowId: initialWorkflowId, tabName }) {
   const [localWorkflowId, setLocalWorkflowId] = useState(initialWorkflowId);
-  const [localWorkflowName, setLocalWorkflowName] = useState("Untitled Workflow");
+  const [localWorkflowName, setLocalWorkflowName] =
+    useState("Untitled Workflow");
   const [localWorkflowDescription, setLocalWorkflowDescription] = useState("");
   const [variables, setVariables] = useState({});
   const tabNameRef = useRef(tabName);
@@ -27,9 +25,7 @@ function useWorkflowState({
     localWorkflowDescription,
     setLocalWorkflowDescription,
     variables,
-    setVariables
+    setVariables,
   };
 }
-export {
-  useWorkflowState
-};
+export { useWorkflowState };

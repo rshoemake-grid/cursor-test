@@ -5,7 +5,7 @@ function useTemplatesData({
   apiBaseUrl,
   category,
   searchQuery,
-  sortBy
+  sortBy,
 }) {
   const fetchTemplates = useCallback(async () => {
     const params = buildSearchParams(category, searchQuery, sortBy);
@@ -14,9 +14,7 @@ function useTemplatesData({
     return data;
   }, [httpClient, apiBaseUrl, category, searchQuery, sortBy]);
   return {
-    fetchTemplates
+    fetchTemplates,
   };
 }
-export {
-  useTemplatesData
-};
+export { useTemplatesData };

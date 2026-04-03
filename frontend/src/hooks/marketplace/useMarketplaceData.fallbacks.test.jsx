@@ -2,7 +2,7 @@ import { renderHook, waitFor } from "@testing-library/react";
 import { useMarketplaceData } from "./useMarketplaceData";
 import { getLocalStorageItem } from "../storage";
 jest.mock("../storage", () => ({
-  getLocalStorageItem: jest.fn()
+  getLocalStorageItem: jest.fn(),
 }));
 const mockGetLocalStorageItem = getLocalStorageItem;
 describe("useMarketplaceData - Fallback Patterns", () => {
@@ -17,14 +17,16 @@ describe("useMarketplaceData - Fallback Patterns", () => {
         }
         return Promise.resolve({ json: async () => [] });
       }),
-      post: jest.fn().mockResolvedValue({ ok: true, json: async () => ({ nodes: [] }) })
+      post: jest
+        .fn()
+        .mockResolvedValue({ ok: true, json: async () => ({ nodes: [] }) }),
     };
     mockStorage = {
       getItem: jest.fn().mockReturnValue(null),
       setItem: jest.fn(),
       removeItem: jest.fn(),
       addEventListener: jest.fn(),
-      removeEventListener: jest.fn()
+      removeEventListener: jest.fn(),
     };
     mockGetLocalStorageItem.mockReturnValue([]);
   });
@@ -34,22 +36,24 @@ describe("useMarketplaceData - Fallback Patterns", () => {
         id: "template-1",
         name: "Template",
         description: "Description",
-        tags: []
+        tags: [],
       };
       mockHttpClient.get.mockResolvedValue({
-        json: async () => [template]
+        json: async () => [template],
       });
       mockHttpClient.post.mockResolvedValue({
         ok: true,
         json: async () => ({
-          nodes: [{
-            // node.data is undefined, should use {}
-            workflow_id: "workflow-123"
-          }]
-        })
+          nodes: [
+            {
+              // node.data is undefined, should use {}
+              workflow_id: "workflow-123",
+            },
+          ],
+        }),
       });
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -58,12 +62,15 @@ describe("useMarketplaceData - Fallback Patterns", () => {
           sortBy: "popular",
           user: null,
           activeTab: "workflows-of-workflows",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
-      await waitFor(() => {
-        expect(result.current.loading).toBe(false);
-      }, { timeout: 3e3 });
+      await waitFor(
+        () => {
+          expect(result.current.loading).toBe(false);
+        },
+        { timeout: 3e3 },
+      );
       expect(mockHttpClient.post).toHaveBeenCalled();
     });
     it("should use node.data when it exists", async () => {
@@ -71,22 +78,24 @@ describe("useMarketplaceData - Fallback Patterns", () => {
         id: "template-1",
         name: "Template",
         description: "Description",
-        tags: []
+        tags: [],
       };
       mockHttpClient.get.mockResolvedValue({
-        json: async () => [template]
+        json: async () => [template],
       });
       mockHttpClient.post.mockResolvedValue({
         ok: true,
         json: async () => ({
-          nodes: [{
-            data: { workflow_id: "workflow-123" }
-            // node.data exists
-          }]
-        })
+          nodes: [
+            {
+              data: { workflow_id: "workflow-123" },
+              // node.data exists
+            },
+          ],
+        }),
       });
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -95,12 +104,15 @@ describe("useMarketplaceData - Fallback Patterns", () => {
           sortBy: "popular",
           user: null,
           activeTab: "workflows-of-workflows",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
-      await waitFor(() => {
-        expect(result.current.loading).toBe(false);
-      }, { timeout: 3e3 });
+      await waitFor(
+        () => {
+          expect(result.current.loading).toBe(false);
+        },
+        { timeout: 3e3 },
+      );
       expect(result.current.workflowsOfWorkflows.length).toBeGreaterThan(0);
     });
   });
@@ -110,22 +122,24 @@ describe("useMarketplaceData - Fallback Patterns", () => {
         id: "template-1",
         name: "Template",
         description: "Description",
-        tags: []
+        tags: [],
       };
       mockHttpClient.get.mockResolvedValue({
-        json: async () => [template]
+        json: async () => [template],
       });
       mockHttpClient.post.mockResolvedValue({
         ok: true,
         json: async () => ({
-          nodes: [{
-            // Both undefined, should use ''
-            workflow_id: "workflow-123"
-          }]
-        })
+          nodes: [
+            {
+              // Both undefined, should use ''
+              workflow_id: "workflow-123",
+            },
+          ],
+        }),
       });
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -134,12 +148,15 @@ describe("useMarketplaceData - Fallback Patterns", () => {
           sortBy: "popular",
           user: null,
           activeTab: "workflows-of-workflows",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
-      await waitFor(() => {
-        expect(result.current.loading).toBe(false);
-      }, { timeout: 3e3 });
+      await waitFor(
+        () => {
+          expect(result.current.loading).toBe(false);
+        },
+        { timeout: 3e3 },
+      );
       expect(mockHttpClient.post).toHaveBeenCalled();
     });
     it("should use node.description when it exists", async () => {
@@ -147,22 +164,24 @@ describe("useMarketplaceData - Fallback Patterns", () => {
         id: "template-1",
         name: "Template",
         description: "Description",
-        tags: []
+        tags: [],
       };
       mockHttpClient.get.mockResolvedValue({
-        json: async () => [template]
+        json: async () => [template],
       });
       mockHttpClient.post.mockResolvedValue({
         ok: true,
         json: async () => ({
-          nodes: [{
-            description: "workflow reference"
-            // node.description exists
-          }]
-        })
+          nodes: [
+            {
+              description: "workflow reference",
+              // node.description exists
+            },
+          ],
+        }),
       });
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -171,12 +190,15 @@ describe("useMarketplaceData - Fallback Patterns", () => {
           sortBy: "popular",
           user: null,
           activeTab: "workflows-of-workflows",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
-      await waitFor(() => {
-        expect(result.current.loading).toBe(false);
-      }, { timeout: 3e3 });
+      await waitFor(
+        () => {
+          expect(result.current.loading).toBe(false);
+        },
+        { timeout: 3e3 },
+      );
       expect(result.current.workflowsOfWorkflows.length).toBeGreaterThan(0);
     });
     it("should use nodeData.description when node.description is undefined", async () => {
@@ -184,22 +206,24 @@ describe("useMarketplaceData - Fallback Patterns", () => {
         id: "template-1",
         name: "Template",
         description: "Description",
-        tags: []
+        tags: [],
       };
       mockHttpClient.get.mockResolvedValue({
-        json: async () => [template]
+        json: async () => [template],
       });
       mockHttpClient.post.mockResolvedValue({
         ok: true,
         json: async () => ({
-          nodes: [{
-            data: { description: "workflow reference" }
-            // nodeData.description exists
-          }]
-        })
+          nodes: [
+            {
+              data: { description: "workflow reference" },
+              // nodeData.description exists
+            },
+          ],
+        }),
       });
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -208,12 +232,15 @@ describe("useMarketplaceData - Fallback Patterns", () => {
           sortBy: "popular",
           user: null,
           activeTab: "workflows-of-workflows",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
-      await waitFor(() => {
-        expect(result.current.loading).toBe(false);
-      }, { timeout: 3e3 });
+      await waitFor(
+        () => {
+          expect(result.current.loading).toBe(false);
+        },
+        { timeout: 3e3 },
+      );
       expect(result.current.workflowsOfWorkflows.length).toBeGreaterThan(0);
     });
   });
@@ -223,22 +250,24 @@ describe("useMarketplaceData - Fallback Patterns", () => {
         id: "template-1",
         name: "Template",
         description: "Description",
-        tags: []
+        tags: [],
       };
       mockHttpClient.get.mockResolvedValue({
-        json: async () => [template]
+        json: async () => [template],
       });
       mockHttpClient.post.mockResolvedValue({
         ok: true,
         json: async () => ({
-          nodes: [{
-            workflow_id: "workflow-123"
-            // Both name fields undefined
-          }]
-        })
+          nodes: [
+            {
+              workflow_id: "workflow-123",
+              // Both name fields undefined
+            },
+          ],
+        }),
       });
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -247,12 +276,15 @@ describe("useMarketplaceData - Fallback Patterns", () => {
           sortBy: "popular",
           user: null,
           activeTab: "workflows-of-workflows",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
-      await waitFor(() => {
-        expect(result.current.loading).toBe(false);
-      }, { timeout: 3e3 });
+      await waitFor(
+        () => {
+          expect(result.current.loading).toBe(false);
+        },
+        { timeout: 3e3 },
+      );
       expect(mockHttpClient.post).toHaveBeenCalled();
     });
     it("should use node.name when it exists", async () => {
@@ -260,22 +292,24 @@ describe("useMarketplaceData - Fallback Patterns", () => {
         id: "template-1",
         name: "Template",
         description: "Description",
-        tags: []
+        tags: [],
       };
       mockHttpClient.get.mockResolvedValue({
-        json: async () => [template]
+        json: async () => [template],
       });
       mockHttpClient.post.mockResolvedValue({
         ok: true,
         json: async () => ({
-          nodes: [{
-            name: "workflow node"
-            // node.name exists
-          }]
-        })
+          nodes: [
+            {
+              name: "workflow node",
+              // node.name exists
+            },
+          ],
+        }),
       });
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -284,12 +318,15 @@ describe("useMarketplaceData - Fallback Patterns", () => {
           sortBy: "popular",
           user: null,
           activeTab: "workflows-of-workflows",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
-      await waitFor(() => {
-        expect(result.current.loading).toBe(false);
-      }, { timeout: 3e3 });
+      await waitFor(
+        () => {
+          expect(result.current.loading).toBe(false);
+        },
+        { timeout: 3e3 },
+      );
       expect(result.current.workflowsOfWorkflows.length).toBeGreaterThan(0);
     });
     it("should use nodeData.name when node.name is undefined", async () => {
@@ -297,22 +334,24 @@ describe("useMarketplaceData - Fallback Patterns", () => {
         id: "template-1",
         name: "Template",
         description: "Description",
-        tags: []
+        tags: [],
       };
       mockHttpClient.get.mockResolvedValue({
-        json: async () => [template]
+        json: async () => [template],
       });
       mockHttpClient.post.mockResolvedValue({
         ok: true,
         json: async () => ({
-          nodes: [{
-            data: { name: "workflow node" }
-            // nodeData.name exists
-          }]
-        })
+          nodes: [
+            {
+              data: { name: "workflow node" },
+              // nodeData.name exists
+            },
+          ],
+        }),
       });
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -321,12 +360,15 @@ describe("useMarketplaceData - Fallback Patterns", () => {
           sortBy: "popular",
           user: null,
           activeTab: "workflows-of-workflows",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
-      await waitFor(() => {
-        expect(result.current.loading).toBe(false);
-      }, { timeout: 3e3 });
+      await waitFor(
+        () => {
+          expect(result.current.loading).toBe(false);
+        },
+        { timeout: 3e3 },
+      );
       expect(result.current.workflowsOfWorkflows.length).toBeGreaterThan(0);
     });
   });
@@ -336,17 +378,17 @@ describe("useMarketplaceData - Fallback Patterns", () => {
         id: "template-1",
         name: "Template",
         // description is undefined
-        tags: []
+        tags: [],
       };
       mockHttpClient.get.mockResolvedValue({
-        json: async () => [template]
+        json: async () => [template],
       });
       mockHttpClient.post.mockResolvedValue({
         ok: true,
-        json: async () => ({ nodes: [] })
+        json: async () => ({ nodes: [] }),
       });
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -355,12 +397,15 @@ describe("useMarketplaceData - Fallback Patterns", () => {
           sortBy: "popular",
           user: null,
           activeTab: "workflows-of-workflows",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
-      await waitFor(() => {
-        expect(result.current.loading).toBe(false);
-      }, { timeout: 3e3 });
+      await waitFor(
+        () => {
+          expect(result.current.loading).toBe(false);
+        },
+        { timeout: 3e3 },
+      );
       expect(mockHttpClient.post).toHaveBeenCalled();
     });
     it("should use workflow.description when it exists", async () => {
@@ -369,17 +414,17 @@ describe("useMarketplaceData - Fallback Patterns", () => {
         name: "Template",
         description: "workflow of workflows",
         // description exists
-        tags: []
+        tags: [],
       };
       mockHttpClient.get.mockResolvedValue({
-        json: async () => [template]
+        json: async () => [template],
       });
       mockHttpClient.post.mockResolvedValue({
         ok: true,
-        json: async () => ({ nodes: [] })
+        json: async () => ({ nodes: [] }),
       });
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -388,12 +433,15 @@ describe("useMarketplaceData - Fallback Patterns", () => {
           sortBy: "popular",
           user: null,
           activeTab: "workflows-of-workflows",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
-      await waitFor(() => {
-        expect(result.current.loading).toBe(false);
-      }, { timeout: 3e3 });
+      await waitFor(
+        () => {
+          expect(result.current.loading).toBe(false);
+        },
+        { timeout: 3e3 },
+      );
       expect(result.current.workflowsOfWorkflows.length).toBeGreaterThan(0);
     });
   });
@@ -407,12 +455,12 @@ describe("useMarketplaceData - Fallback Patterns", () => {
           category: "automation",
           tags: [],
           published_at: "2024-01-01T00:00:00Z",
-          is_official: false
-        }
+          is_official: false,
+        },
       ];
       mockGetLocalStorageItem.mockReturnValue(agents);
-      renderHook(
-        () => useMarketplaceData({
+      renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -422,8 +470,8 @@ describe("useMarketplaceData - Fallback Patterns", () => {
           user: { id: "user-1" },
           // No username or email
           activeTab: "agents",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(mockStorage.setItem).toHaveBeenCalled();
@@ -440,12 +488,12 @@ describe("useMarketplaceData - Fallback Patterns", () => {
           category: "automation",
           tags: [],
           published_at: "2024-01-01T00:00:00Z",
-          is_official: false
-        }
+          is_official: false,
+        },
       ];
       mockGetLocalStorageItem.mockReturnValue(agents);
-      renderHook(
-        () => useMarketplaceData({
+      renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -455,8 +503,8 @@ describe("useMarketplaceData - Fallback Patterns", () => {
           user: { id: "user-1", username: "testuser" },
           // username exists
           activeTab: "agents",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(mockStorage.setItem).toHaveBeenCalled();
@@ -473,12 +521,12 @@ describe("useMarketplaceData - Fallback Patterns", () => {
           category: "automation",
           tags: [],
           published_at: "2024-01-01T00:00:00Z",
-          is_official: false
-        }
+          is_official: false,
+        },
       ];
       mockGetLocalStorageItem.mockReturnValue(agents);
-      renderHook(
-        () => useMarketplaceData({
+      renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -488,8 +536,8 @@ describe("useMarketplaceData - Fallback Patterns", () => {
           user: { id: "user-1", email: "test@example.com" },
           // email exists, username doesn't
           activeTab: "agents",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(mockStorage.setItem).toHaveBeenCalled();
@@ -507,7 +555,7 @@ describe("useMarketplaceData - Fallback Patterns", () => {
           category: "automation",
           tags: [],
           published_at: "2024-01-01T00:00:00Z",
-          is_official: false
+          is_official: false,
         },
         {
           id: "agent-2",
@@ -515,12 +563,12 @@ describe("useMarketplaceData - Fallback Patterns", () => {
           category: "automation",
           tags: [],
           published_at: "2024-01-01T00:00:00Z",
-          is_official: false
-        }
+          is_official: false,
+        },
       ];
       mockGetLocalStorageItem.mockReturnValue(agents);
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -529,8 +577,8 @@ describe("useMarketplaceData - Fallback Patterns", () => {
           sortBy: "alphabetical",
           user: null,
           activeTab: "agents",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -545,7 +593,7 @@ describe("useMarketplaceData - Fallback Patterns", () => {
           category: "automation",
           tags: [],
           published_at: "2024-01-01T00:00:00Z",
-          is_official: false
+          is_official: false,
         },
         {
           id: "agent-2",
@@ -553,12 +601,12 @@ describe("useMarketplaceData - Fallback Patterns", () => {
           category: "automation",
           tags: [],
           published_at: "2024-01-01T00:00:00Z",
-          is_official: false
-        }
+          is_official: false,
+        },
       ];
       mockGetLocalStorageItem.mockReturnValue(agents);
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -567,8 +615,8 @@ describe("useMarketplaceData - Fallback Patterns", () => {
           sortBy: "alphabetical",
           user: null,
           activeTab: "agents",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -586,7 +634,7 @@ describe("useMarketplaceData - Fallback Patterns", () => {
           category: "automation",
           tags: [],
           published_at: "2024-01-01T00:00:00Z",
-          is_official: false
+          is_official: false,
         },
         {
           id: "agent-2",
@@ -594,12 +642,12 @@ describe("useMarketplaceData - Fallback Patterns", () => {
           category: "automation",
           tags: [],
           published_at: "2024-01-01T00:00:00Z",
-          is_official: false
-        }
+          is_official: false,
+        },
       ];
       mockGetLocalStorageItem.mockReturnValue(agents);
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -608,8 +656,8 @@ describe("useMarketplaceData - Fallback Patterns", () => {
           sortBy: "alphabetical",
           user: null,
           activeTab: "agents",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);

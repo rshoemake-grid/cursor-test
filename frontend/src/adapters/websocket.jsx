@@ -4,10 +4,8 @@ const WebSocketFactoryFactory = {
    */
   createWebSocketFactory() {
     return {
-      create: (url) => new WebSocket(url)
+      create: (url) => new WebSocket(url),
     };
-  }
+  },
 };
-export {
-  WebSocketFactoryFactory
-};
+export { WebSocketFactoryFactory };

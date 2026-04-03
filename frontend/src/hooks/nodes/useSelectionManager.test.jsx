@@ -91,7 +91,9 @@ describe("useSelectionManager", () => {
   it("should expose setSelectedIds for direct manipulation", () => {
     const { result } = renderHook(() => useSelectionManager());
     act(() => {
-      result.current.setSelectedIds(/* @__PURE__ */ new Set(["item-1", "item-2"]));
+      result.current.setSelectedIds(
+        /* @__PURE__ */ new Set(["item-1", "item-2"]),
+      );
     });
     expect(result.current.size).toBe(2);
     expect(result.current.has("item-1")).toBe(true);

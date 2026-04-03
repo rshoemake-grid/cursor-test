@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import {
   createNewTab,
   createTabWithWorkflow,
-  tabExists
+  tabExists,
 } from "../utils/tabUtils";
 function useTabInitialization({
   tabs,
@@ -13,7 +13,7 @@ function useTabInitialization({
   initialWorkflowId,
   workflowLoadKey,
   processedKeys,
-  isAuthenticated = true
+  isAuthenticated = true,
 }) {
   useEffect(() => {
     if (activeTabId && !tabExists(tabs, activeTabId)) {
@@ -47,8 +47,14 @@ function useTabInitialization({
         setActiveTabId(newTab.id);
       }
     }
-  }, [initialWorkflowId, workflowLoadKey, setTabs, setActiveTabId, tabsRef, processedKeys, isAuthenticated]);
+  }, [
+    initialWorkflowId,
+    workflowLoadKey,
+    setTabs,
+    setActiveTabId,
+    tabsRef,
+    processedKeys,
+    isAuthenticated,
+  ]);
 }
-export {
-  useTabInitialization
-};
+export { useTabInitialization };

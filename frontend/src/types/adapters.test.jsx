@@ -1,6 +1,15 @@
 var __defProp = Object.defineProperty;
-var __defNormalProp = (obj, key, value) => key in obj ? __defProp(obj, key, { enumerable: true, configurable: true, writable: true, value }) : obj[key] = value;
-var __publicField = (obj, key, value) => __defNormalProp(obj, typeof key !== "symbol" ? key + "" : key, value);
+var __defNormalProp = (obj, key, value) =>
+  key in obj
+    ? __defProp(obj, key, {
+        enumerable: true,
+        configurable: true,
+        writable: true,
+        value,
+      })
+    : (obj[key] = value);
+var __publicField = (obj, key, value) =>
+  __defNormalProp(obj, typeof key !== "symbol" ? key + "" : key, value);
 import { defaultAdapters } from "./adapters";
 describe("defaultAdapters", () => {
   describe("createStorageAdapter", () => {
@@ -12,7 +21,7 @@ describe("defaultAdapters", () => {
       const mockStorage = {
         getItem: jest.fn(),
         setItem: jest.fn(),
-        removeItem: jest.fn()
+        removeItem: jest.fn(),
       };
       const adapter = defaultAdapters.createStorageAdapter(mockStorage);
       expect(adapter).not.toBeNull();
@@ -26,7 +35,7 @@ describe("defaultAdapters", () => {
       const mockStorage = {
         getItem: jest.fn(),
         setItem: jest.fn(),
-        removeItem: jest.fn()
+        removeItem: jest.fn(),
       };
       const mockListener = jest.fn();
       const adapter = defaultAdapters.createStorageAdapter(mockStorage);
@@ -53,7 +62,7 @@ describe("defaultAdapters", () => {
       const mockStorage = {
         getItem: jest.fn(),
         setItem: jest.fn(),
-        removeItem: jest.fn()
+        removeItem: jest.fn(),
       };
       const mockListener = jest.fn();
       const adapter = defaultAdapters.createStorageAdapter(mockStorage);
@@ -75,11 +84,11 @@ describe("defaultAdapters", () => {
       const mockLocalStorage = {
         getItem: jest.fn(() => "value"),
         setItem: jest.fn(),
-        removeItem: jest.fn()
+        removeItem: jest.fn(),
       };
       Object.defineProperty(window, "localStorage", {
         value: mockLocalStorage,
-        writable: true
+        writable: true,
       });
       const adapter = defaultAdapters.createLocalStorageAdapter();
       expect(adapter).not.toBeNull();
@@ -100,11 +109,11 @@ describe("defaultAdapters", () => {
       const mockSessionStorage = {
         getItem: jest.fn(() => "value"),
         setItem: jest.fn(),
-        removeItem: jest.fn()
+        removeItem: jest.fn(),
       };
       Object.defineProperty(window, "sessionStorage", {
         value: mockSessionStorage,
-        writable: true
+        writable: true,
       });
       const adapter = defaultAdapters.createSessionStorageAdapter();
       expect(adapter).not.toBeNull();
@@ -123,7 +132,10 @@ describe("defaultAdapters", () => {
       global.fetch.mockResolvedValue(mockResponse);
       const client = defaultAdapters.createHttpClient();
       const response = await client.get("https://api.example.com");
-      expect(global.fetch).toHaveBeenCalledWith("https://api.example.com", { method: "GET", headers: void 0 });
+      expect(global.fetch).toHaveBeenCalledWith("https://api.example.com", {
+        method: "GET",
+        headers: void 0,
+      });
       expect(response).toBe(mockResponse);
     });
     it("should create HTTP client with post method", async () => {
@@ -135,7 +147,7 @@ describe("defaultAdapters", () => {
       expect(global.fetch).toHaveBeenCalledWith("https://api.example.com", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body)
+        body: JSON.stringify(body),
       });
       expect(response).toBe(mockResponse);
     });
@@ -144,12 +156,15 @@ describe("defaultAdapters", () => {
       global.fetch.mockResolvedValue(mockResponse);
       const client = defaultAdapters.createHttpClient();
       const body = { key: "value" };
-      const headers = { "Authorization": "Bearer token" };
+      const headers = { Authorization: "Bearer token" };
       await client.post("https://api.example.com", body, headers);
       expect(global.fetch).toHaveBeenCalledWith("https://api.example.com", {
         method: "POST",
-        headers: { "Content-Type": "application/json", "Authorization": "Bearer token" },
-        body: JSON.stringify(body)
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer token",
+        },
+        body: JSON.stringify(body),
       });
     });
     it("should create HTTP client with put method", async () => {
@@ -161,7 +176,7 @@ describe("defaultAdapters", () => {
       expect(global.fetch).toHaveBeenCalledWith("https://api.example.com", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body)
+        body: JSON.stringify(body),
       });
     });
     it("should create HTTP client with delete method", async () => {
@@ -169,36 +184,48 @@ describe("defaultAdapters", () => {
       global.fetch.mockResolvedValue(mockResponse);
       const client = defaultAdapters.createHttpClient();
       await client.delete("https://api.example.com");
-      expect(global.fetch).toHaveBeenCalledWith("https://api.example.com", { method: "DELETE", headers: void 0 });
+      expect(global.fetch).toHaveBeenCalledWith("https://api.example.com", {
+        method: "DELETE",
+        headers: void 0,
+      });
     });
     it("should create HTTP client with get method and headers", async () => {
       const mockResponse = { ok: true, json: jest.fn() };
       global.fetch.mockResolvedValue(mockResponse);
       const client = defaultAdapters.createHttpClient();
-      const headers = { "Authorization": "Bearer token" };
+      const headers = { Authorization: "Bearer token" };
       await client.get("https://api.example.com", headers);
-      expect(global.fetch).toHaveBeenCalledWith("https://api.example.com", { method: "GET", headers });
+      expect(global.fetch).toHaveBeenCalledWith("https://api.example.com", {
+        method: "GET",
+        headers,
+      });
     });
     it("should create HTTP client with put method and custom headers", async () => {
       const mockResponse = { ok: true, json: jest.fn() };
       global.fetch.mockResolvedValue(mockResponse);
       const client = defaultAdapters.createHttpClient();
       const body = { key: "value" };
-      const headers = { "Authorization": "Bearer token" };
+      const headers = { Authorization: "Bearer token" };
       await client.put("https://api.example.com", body, headers);
       expect(global.fetch).toHaveBeenCalledWith("https://api.example.com", {
         method: "PUT",
-        headers: { "Content-Type": "application/json", "Authorization": "Bearer token" },
-        body: JSON.stringify(body)
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer token",
+        },
+        body: JSON.stringify(body),
       });
     });
     it("should create HTTP client with delete method and headers", async () => {
       const mockResponse = { ok: true, json: jest.fn() };
       global.fetch.mockResolvedValue(mockResponse);
       const client = defaultAdapters.createHttpClient();
-      const headers = { "Authorization": "Bearer token" };
+      const headers = { Authorization: "Bearer token" };
       await client.delete("https://api.example.com", headers);
-      expect(global.fetch).toHaveBeenCalledWith("https://api.example.com", { method: "DELETE", headers });
+      expect(global.fetch).toHaveBeenCalledWith("https://api.example.com", {
+        method: "DELETE",
+        headers,
+      });
     });
     it("should handle empty headers in post", async () => {
       const mockResponse = { ok: true, json: jest.fn() };
@@ -209,7 +236,7 @@ describe("defaultAdapters", () => {
       expect(global.fetch).toHaveBeenCalledWith("https://api.example.com", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body)
+        body: JSON.stringify(body),
       });
     });
   });
@@ -412,11 +439,11 @@ describe("defaultAdapters", () => {
         info: jest.fn(),
         warn: jest.fn(),
         error: jest.fn(),
-        debug: jest.fn()
+        debug: jest.fn(),
       };
       Object.defineProperty(global, "console", {
         value: mockConsole,
-        writable: true
+        writable: true,
       });
       const adapter = defaultAdapters.createConsoleAdapter();
       adapter.log("log message");
@@ -436,11 +463,11 @@ describe("defaultAdapters", () => {
         info: jest.fn(),
         warn: jest.fn(),
         error: jest.fn(),
-        debug: void 0
+        debug: void 0,
       };
       Object.defineProperty(global, "console", {
         value: mockConsole,
-        writable: true
+        writable: true,
       });
       const adapter = defaultAdapters.createConsoleAdapter();
       adapter.debug?.("debug message");
@@ -531,12 +558,12 @@ describe("defaultAdapters", () => {
         log: jest.fn(),
         info: jest.fn(),
         warn: jest.fn(),
-        error: jest.fn()
+        error: jest.fn(),
         // debug is undefined
       };
       Object.defineProperty(global, "console", {
         value: mockConsole,
-        writable: true
+        writable: true,
       });
       const adapter = defaultAdapters.createConsoleAdapter();
       adapter.debug?.("test");
@@ -549,11 +576,11 @@ describe("defaultAdapters", () => {
         info: jest.fn(),
         warn: jest.fn(),
         error: jest.fn(),
-        debug: jest.fn()
+        debug: jest.fn(),
       };
       Object.defineProperty(global, "console", {
         value: mockConsole,
-        writable: true
+        writable: true,
       });
       const adapter = defaultAdapters.createConsoleAdapter();
       adapter.debug?.("test");
@@ -566,11 +593,11 @@ describe("defaultAdapters", () => {
         info: jest.fn(),
         warn: jest.fn(),
         error: jest.fn(),
-        debug: jest.fn()
+        debug: jest.fn(),
       };
       Object.defineProperty(global, "console", {
         value: mockConsoleWithDebug,
-        writable: true
+        writable: true,
       });
       const adapter1 = defaultAdapters.createConsoleAdapter();
       adapter1.debug?.("test1");
@@ -580,11 +607,11 @@ describe("defaultAdapters", () => {
         info: jest.fn(),
         warn: jest.fn(),
         error: jest.fn(),
-        debug: void 0
+        debug: void 0,
       };
       Object.defineProperty(global, "console", {
         value: mockConsoleWithoutDebug,
-        writable: true
+        writable: true,
       });
       const adapter2 = defaultAdapters.createConsoleAdapter();
       adapter2.debug?.("test2");
@@ -633,7 +660,9 @@ describe("defaultAdapters", () => {
       });
       global.fetch = mockFetch;
       const client = defaultAdapters.createHttpClient();
-      await expect(client.get("https://example.com")).rejects.toThrow("Network error");
+      await expect(client.get("https://example.com")).rejects.toThrow(
+        "Network error",
+      );
     });
     it("should verify HTTP client methods handle errors in try block - post throws", async () => {
       const mockFetch = jest.fn().mockImplementation(() => {
@@ -641,7 +670,9 @@ describe("defaultAdapters", () => {
       });
       global.fetch = mockFetch;
       const client = defaultAdapters.createHttpClient();
-      await expect(client.post("https://example.com", {})).rejects.toThrow("Network error");
+      await expect(client.post("https://example.com", {})).rejects.toThrow(
+        "Network error",
+      );
     });
     it("should verify HTTP client methods handle errors in try block - put throws", async () => {
       const mockFetch = jest.fn().mockImplementation(() => {
@@ -649,7 +680,9 @@ describe("defaultAdapters", () => {
       });
       global.fetch = mockFetch;
       const client = defaultAdapters.createHttpClient();
-      await expect(client.put("https://example.com", {})).rejects.toThrow("Network error");
+      await expect(client.put("https://example.com", {})).rejects.toThrow(
+        "Network error",
+      );
     });
     it("should verify HTTP client methods handle errors in try block - delete throws", async () => {
       const mockFetch = jest.fn().mockImplementation(() => {
@@ -657,7 +690,9 @@ describe("defaultAdapters", () => {
       });
       global.fetch = mockFetch;
       const client = defaultAdapters.createHttpClient();
-      await expect(client.delete("https://example.com")).rejects.toThrow("Network error");
+      await expect(client.delete("https://example.com")).rejects.toThrow(
+        "Network error",
+      );
     });
     it("should verify createHttpClient catch block returns fallback client when initialization fails", async () => {
       const normalClient = defaultAdapters.createHttpClient();
@@ -690,7 +725,7 @@ describe("defaultAdapters", () => {
       expect(mockFetch).toHaveBeenCalledWith("https://example.com", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ key: "value" })
+        body: JSON.stringify({ key: "value" }),
       });
       const callArgs = mockFetch.mock.calls[0];
       expect(callArgs[1].headers["Content-Type"]).toBe("application/json");
@@ -706,7 +741,7 @@ describe("defaultAdapters", () => {
       expect(mockFetch).toHaveBeenCalledWith("https://example.com", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ key: "value" })
+        body: JSON.stringify({ key: "value" }),
       });
       const callArgs = mockFetch.mock.calls[0];
       expect(callArgs[1].headers["Content-Type"]).toBe("application/json");
@@ -716,11 +751,18 @@ describe("defaultAdapters", () => {
       const mockFetch = jest.fn().mockResolvedValue(mockResponse);
       global.fetch = mockFetch;
       const client = defaultAdapters.createHttpClient();
-      await client.post("https://example.com", { key: "value" }, { "Authorization": "Bearer token" });
+      await client.post(
+        "https://example.com",
+        { key: "value" },
+        { Authorization: "Bearer token" },
+      );
       expect(mockFetch).toHaveBeenCalledWith("https://example.com", {
         method: "POST",
-        headers: { "Content-Type": "application/json", "Authorization": "Bearer token" },
-        body: JSON.stringify({ key: "value" })
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer token",
+        },
+        body: JSON.stringify({ key: "value" }),
       });
       const callArgs = mockFetch.mock.calls[0];
       expect(callArgs[1].headers["Content-Type"]).toBe("application/json");
@@ -735,7 +777,9 @@ describe("defaultAdapters", () => {
           throw new Error("Fetch failed");
         });
         const client = defaultAdapters.createHttpClient();
-        await expect(client.get("https://api.test")).rejects.toThrow("Fetch failed");
+        await expect(client.get("https://api.test")).rejects.toThrow(
+          "Fetch failed",
+        );
         global.fetch = originalFetch;
       });
       it("should verify catch block in post method - fetch throws", async () => {
@@ -744,7 +788,9 @@ describe("defaultAdapters", () => {
           throw new Error("Fetch failed");
         });
         const client = defaultAdapters.createHttpClient();
-        await expect(client.post("https://api.test", {})).rejects.toThrow("Fetch failed");
+        await expect(client.post("https://api.test", {})).rejects.toThrow(
+          "Fetch failed",
+        );
         global.fetch = originalFetch;
       });
       it("should verify catch block in put method - fetch throws", async () => {
@@ -753,7 +799,9 @@ describe("defaultAdapters", () => {
           throw new Error("Fetch failed");
         });
         const client = defaultAdapters.createHttpClient();
-        await expect(client.put("https://api.test", {})).rejects.toThrow("Fetch failed");
+        await expect(client.put("https://api.test", {})).rejects.toThrow(
+          "Fetch failed",
+        );
         global.fetch = originalFetch;
       });
       it("should verify catch block in delete method - fetch throws", async () => {
@@ -762,7 +810,9 @@ describe("defaultAdapters", () => {
           throw new Error("Fetch failed");
         });
         const client = defaultAdapters.createHttpClient();
-        await expect(client.delete("https://api.test")).rejects.toThrow("Fetch failed");
+        await expect(client.delete("https://api.test")).rejects.toThrow(
+          "Fetch failed",
+        );
         global.fetch = originalFetch;
       });
       it("should verify outer catch block - fallback mockReject", async () => {
@@ -842,7 +892,9 @@ describe("defaultAdapters", () => {
             };
           }
           delete globalObj.fetch;
-          const mockGlobalFetch = jest.fn().mockResolvedValue(new globalObj.Response(null, { status: 200 }));
+          const mockGlobalFetch = jest
+            .fn()
+            .mockResolvedValue(new globalObj.Response(null, { status: 200 }));
           globalObj.global = { fetch: mockGlobalFetch };
           const client = defaultAdapters.createHttpClient();
           await client.get("https://api.test");
@@ -872,7 +924,9 @@ describe("defaultAdapters", () => {
             };
           }
           const client = defaultAdapters.createHttpClient();
-          await expect(client.get("https://api.test")).rejects.toThrow("HTTP client initialization failed");
+          await expect(client.get("https://api.test")).rejects.toThrow(
+            "HTTP client initialization failed",
+          );
         } finally {
           globalObj.fetch = originalFetch;
           globalObj.global = originalGlobalSelf;

@@ -2,7 +2,7 @@ import { renderHook, waitFor } from "@testing-library/react";
 import { useMarketplaceData } from "./useMarketplaceData";
 import { getLocalStorageItem } from "../storage";
 jest.mock("../storage", () => ({
-  getLocalStorageItem: jest.fn()
+  getLocalStorageItem: jest.fn(),
 }));
 const mockGetLocalStorageItem = getLocalStorageItem;
 describe("useMarketplaceData - Conditional Expressions", () => {
@@ -13,7 +13,7 @@ describe("useMarketplaceData - Conditional Expressions", () => {
     name: "Test Template",
     description: "Test Description",
     category: "automation",
-    tags: ["test"]
+    tags: ["test"],
   };
   const mockAgent = {
     id: "agent-1",
@@ -23,7 +23,7 @@ describe("useMarketplaceData - Conditional Expressions", () => {
     category: "automation",
     tags: ["test"],
     published_at: "2024-01-01T00:00:00Z",
-    is_official: false
+    is_official: false,
   };
   beforeEach(() => {
     jest.clearAllMocks();
@@ -34,24 +34,26 @@ describe("useMarketplaceData - Conditional Expressions", () => {
         }
         return Promise.resolve({ json: async () => [] });
       }),
-      post: jest.fn().mockResolvedValue({ ok: true, json: async () => ({ nodes: [] }) })
+      post: jest
+        .fn()
+        .mockResolvedValue({ ok: true, json: async () => ({ nodes: [] }) }),
     };
     mockStorage = {
       getItem: jest.fn().mockReturnValue(null),
       setItem: jest.fn(),
       removeItem: jest.fn(),
       addEventListener: jest.fn(),
-      removeEventListener: jest.fn()
+      removeEventListener: jest.fn(),
     };
     mockGetLocalStorageItem.mockReturnValue([]);
   });
   describe("Category conditional - if (category)", () => {
     it("should append category when category is truthy non-empty string", async () => {
       mockHttpClient.get.mockResolvedValue({
-        json: async () => [mockTemplate]
+        json: async () => [mockTemplate],
       });
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -60,22 +62,22 @@ describe("useMarketplaceData - Conditional Expressions", () => {
           sortBy: "popular",
           user: null,
           activeTab: "repository",
-          repositorySubTab: "workflows"
-        })
+          repositorySubTab: "workflows",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
       });
       expect(mockHttpClient.get).toHaveBeenCalledWith(
-        expect.stringContaining("category=automation")
+        expect.stringContaining("category=automation"),
       );
     });
     it("should NOT append category when category is empty string", async () => {
       mockHttpClient.get.mockResolvedValue({
-        json: async () => [mockTemplate]
+        json: async () => [mockTemplate],
       });
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -84,8 +86,8 @@ describe("useMarketplaceData - Conditional Expressions", () => {
           sortBy: "popular",
           user: null,
           activeTab: "repository",
-          repositorySubTab: "workflows"
-        })
+          repositorySubTab: "workflows",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -95,10 +97,10 @@ describe("useMarketplaceData - Conditional Expressions", () => {
     });
     it("should NOT append category when category is null", async () => {
       mockHttpClient.get.mockResolvedValue({
-        json: async () => [mockTemplate]
+        json: async () => [mockTemplate],
       });
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -107,8 +109,8 @@ describe("useMarketplaceData - Conditional Expressions", () => {
           sortBy: "popular",
           user: null,
           activeTab: "repository",
-          repositorySubTab: "workflows"
-        })
+          repositorySubTab: "workflows",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -118,10 +120,10 @@ describe("useMarketplaceData - Conditional Expressions", () => {
     });
     it("should NOT append category when category is undefined", async () => {
       mockHttpClient.get.mockResolvedValue({
-        json: async () => [mockTemplate]
+        json: async () => [mockTemplate],
       });
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -130,8 +132,8 @@ describe("useMarketplaceData - Conditional Expressions", () => {
           sortBy: "popular",
           user: null,
           activeTab: "repository",
-          repositorySubTab: "workflows"
-        })
+          repositorySubTab: "workflows",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -143,10 +145,10 @@ describe("useMarketplaceData - Conditional Expressions", () => {
   describe("SearchQuery conditional - if (searchQuery)", () => {
     it("should append search when searchQuery is truthy non-empty string", async () => {
       mockHttpClient.get.mockResolvedValue({
-        json: async () => [mockTemplate]
+        json: async () => [mockTemplate],
       });
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -155,22 +157,22 @@ describe("useMarketplaceData - Conditional Expressions", () => {
           sortBy: "popular",
           user: null,
           activeTab: "repository",
-          repositorySubTab: "workflows"
-        })
+          repositorySubTab: "workflows",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
       });
       expect(mockHttpClient.get).toHaveBeenCalledWith(
-        expect.stringMatching(/search=test[+%20]query/)
+        expect.stringMatching(/search=test[+%20]query/),
       );
     });
     it("should NOT append search when searchQuery is empty string", async () => {
       mockHttpClient.get.mockResolvedValue({
-        json: async () => [mockTemplate]
+        json: async () => [mockTemplate],
       });
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -179,8 +181,8 @@ describe("useMarketplaceData - Conditional Expressions", () => {
           sortBy: "popular",
           user: null,
           activeTab: "repository",
-          repositorySubTab: "workflows"
-        })
+          repositorySubTab: "workflows",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -193,8 +195,8 @@ describe("useMarketplaceData - Conditional Expressions", () => {
     it("should update agents when all conditions are true", async () => {
       const agents = [{ ...mockAgent, author_id: null }];
       mockGetLocalStorageItem.mockReturnValue(agents);
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -203,8 +205,8 @@ describe("useMarketplaceData - Conditional Expressions", () => {
           sortBy: "popular",
           user: { id: "user-1", username: "testuser" },
           activeTab: "agents",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -214,8 +216,8 @@ describe("useMarketplaceData - Conditional Expressions", () => {
     it("should NOT update when user is null (first condition false)", async () => {
       const agents = [{ ...mockAgent, author_id: null }];
       mockGetLocalStorageItem.mockReturnValue(agents);
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -224,8 +226,8 @@ describe("useMarketplaceData - Conditional Expressions", () => {
           sortBy: "popular",
           user: null,
           activeTab: "agents",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -235,8 +237,8 @@ describe("useMarketplaceData - Conditional Expressions", () => {
     it("should NOT update when user.id is missing (second condition false)", async () => {
       const agents = [{ ...mockAgent, author_id: null }];
       mockGetLocalStorageItem.mockReturnValue(agents);
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -245,8 +247,8 @@ describe("useMarketplaceData - Conditional Expressions", () => {
           sortBy: "popular",
           user: { id: "", username: "testuser" },
           activeTab: "agents",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -255,8 +257,8 @@ describe("useMarketplaceData - Conditional Expressions", () => {
     });
     it("should NOT update when agentsData.length is 0 (third condition false)", async () => {
       mockGetLocalStorageItem.mockReturnValue([]);
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -265,8 +267,8 @@ describe("useMarketplaceData - Conditional Expressions", () => {
           sortBy: "popular",
           user: { id: "user-1", username: "testuser" },
           activeTab: "agents",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -278,8 +280,8 @@ describe("useMarketplaceData - Conditional Expressions", () => {
     it("should update agent when author_id is null", async () => {
       const agents = [{ ...mockAgent, author_id: null }];
       mockGetLocalStorageItem.mockReturnValue(agents);
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -288,8 +290,8 @@ describe("useMarketplaceData - Conditional Expressions", () => {
           sortBy: "popular",
           user: { id: "user-1", username: "testuser" },
           activeTab: "agents",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -299,8 +301,8 @@ describe("useMarketplaceData - Conditional Expressions", () => {
     it("should update agent when author_id is undefined", async () => {
       const agents = [{ ...mockAgent, author_id: void 0 }];
       mockGetLocalStorageItem.mockReturnValue(agents);
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -309,8 +311,8 @@ describe("useMarketplaceData - Conditional Expressions", () => {
           sortBy: "popular",
           user: { id: "user-1", username: "testuser" },
           activeTab: "agents",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -320,8 +322,8 @@ describe("useMarketplaceData - Conditional Expressions", () => {
     it("should NOT update agent when author_id exists", async () => {
       const agents = [{ ...mockAgent, author_id: "existing-author" }];
       mockGetLocalStorageItem.mockReturnValue(agents);
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -330,8 +332,8 @@ describe("useMarketplaceData - Conditional Expressions", () => {
           sortBy: "popular",
           user: { id: "user-1", username: "testuser" },
           activeTab: "agents",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -341,8 +343,8 @@ describe("useMarketplaceData - Conditional Expressions", () => {
   });
   describe("Storage conditional - if (!storage)", () => {
     it("should return early when storage is null", async () => {
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: null,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -351,8 +353,8 @@ describe("useMarketplaceData - Conditional Expressions", () => {
           sortBy: "popular",
           user: null,
           activeTab: "repository",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -362,8 +364,8 @@ describe("useMarketplaceData - Conditional Expressions", () => {
     });
     it("should proceed when storage exists", async () => {
       mockStorage.getItem.mockReturnValue(JSON.stringify([mockAgent]));
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -372,8 +374,8 @@ describe("useMarketplaceData - Conditional Expressions", () => {
           sortBy: "popular",
           user: null,
           activeTab: "repository",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -386,8 +388,8 @@ describe("useMarketplaceData - Conditional Expressions", () => {
     it("should save when both updated and storage are true", async () => {
       const agents = [{ ...mockAgent, author_id: null }];
       mockGetLocalStorageItem.mockReturnValue(agents);
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -396,8 +398,8 @@ describe("useMarketplaceData - Conditional Expressions", () => {
           sortBy: "popular",
           user: { id: "user-1", username: "testuser" },
           activeTab: "agents",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -407,8 +409,8 @@ describe("useMarketplaceData - Conditional Expressions", () => {
     it("should NOT save when updated is false", async () => {
       const agents = [{ ...mockAgent, author_id: "existing-author" }];
       mockGetLocalStorageItem.mockReturnValue(agents);
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -417,8 +419,8 @@ describe("useMarketplaceData - Conditional Expressions", () => {
           sortBy: "popular",
           user: { id: "user-1", username: "testuser" },
           activeTab: "agents",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -428,8 +430,8 @@ describe("useMarketplaceData - Conditional Expressions", () => {
     it("should NOT save when storage is null", async () => {
       const agents = [{ ...mockAgent, author_id: null }];
       mockGetLocalStorageItem.mockReturnValue(agents);
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: null,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -438,8 +440,8 @@ describe("useMarketplaceData - Conditional Expressions", () => {
           sortBy: "popular",
           user: { id: "user-1", username: "testuser" },
           activeTab: "agents",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -451,11 +453,11 @@ describe("useMarketplaceData - Conditional Expressions", () => {
     it('should sort by date when sortBy is "popular"', async () => {
       const agents = [
         { ...mockAgent, id: "agent-1", published_at: "2024-01-01T00:00:00Z" },
-        { ...mockAgent, id: "agent-2", published_at: "2024-01-02T00:00:00Z" }
+        { ...mockAgent, id: "agent-2", published_at: "2024-01-02T00:00:00Z" },
       ];
       mockGetLocalStorageItem.mockReturnValue(agents);
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -464,8 +466,8 @@ describe("useMarketplaceData - Conditional Expressions", () => {
           sortBy: "popular",
           user: null,
           activeTab: "agents",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -476,11 +478,11 @@ describe("useMarketplaceData - Conditional Expressions", () => {
     it('should sort by date when sortBy is "recent"', async () => {
       const agents = [
         { ...mockAgent, id: "agent-1", published_at: "2024-01-01T00:00:00Z" },
-        { ...mockAgent, id: "agent-2", published_at: "2024-01-02T00:00:00Z" }
+        { ...mockAgent, id: "agent-2", published_at: "2024-01-02T00:00:00Z" },
       ];
       mockGetLocalStorageItem.mockReturnValue(agents);
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -489,8 +491,8 @@ describe("useMarketplaceData - Conditional Expressions", () => {
           sortBy: "recent",
           user: null,
           activeTab: "agents",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -501,11 +503,11 @@ describe("useMarketplaceData - Conditional Expressions", () => {
     it('should sort alphabetically when sortBy is neither "popular" nor "recent"', async () => {
       const agents = [
         { ...mockAgent, id: "agent-1", name: "Zebra Agent" },
-        { ...mockAgent, id: "agent-2", name: "Alpha Agent" }
+        { ...mockAgent, id: "agent-2", name: "Alpha Agent" },
       ];
       mockGetLocalStorageItem.mockReturnValue(agents);
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -514,8 +516,8 @@ describe("useMarketplaceData - Conditional Expressions", () => {
           sortBy: "alphabetical",
           user: null,
           activeTab: "agents",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -527,10 +529,10 @@ describe("useMarketplaceData - Conditional Expressions", () => {
   describe('ActiveTab conditional - activeTab === "repository"', () => {
     it('should fetch templates when activeTab is "repository" and repositorySubTab is "workflows"', async () => {
       mockHttpClient.get.mockResolvedValue({
-        json: async () => [mockTemplate]
+        json: async () => [mockTemplate],
       });
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -539,8 +541,8 @@ describe("useMarketplaceData - Conditional Expressions", () => {
           sortBy: "popular",
           user: null,
           activeTab: "repository",
-          repositorySubTab: "workflows"
-        })
+          repositorySubTab: "workflows",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -550,8 +552,8 @@ describe("useMarketplaceData - Conditional Expressions", () => {
     });
     it('should fetch repository agents when activeTab is "repository" and repositorySubTab is "agents"', async () => {
       mockStorage.getItem.mockReturnValue(JSON.stringify([mockAgent]));
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -560,8 +562,8 @@ describe("useMarketplaceData - Conditional Expressions", () => {
           sortBy: "popular",
           user: null,
           activeTab: "repository",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -570,14 +572,14 @@ describe("useMarketplaceData - Conditional Expressions", () => {
     });
     it('should fetch workflows of workflows when activeTab is "workflows-of-workflows"', async () => {
       mockHttpClient.get.mockResolvedValue({
-        json: async () => [mockTemplate]
+        json: async () => [mockTemplate],
       });
       mockHttpClient.post.mockResolvedValue({
         ok: true,
-        json: async () => ({ nodes: [] })
+        json: async () => ({ nodes: [] }),
       });
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -586,8 +588,8 @@ describe("useMarketplaceData - Conditional Expressions", () => {
           sortBy: "popular",
           user: null,
           activeTab: "workflows-of-workflows",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -596,8 +598,8 @@ describe("useMarketplaceData - Conditional Expressions", () => {
     });
     it('should fetch agents when activeTab is "agents"', async () => {
       mockGetLocalStorageItem.mockReturnValue([mockAgent]);
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -606,8 +608,8 @@ describe("useMarketplaceData - Conditional Expressions", () => {
           sortBy: "popular",
           user: null,
           activeTab: "agents",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -618,10 +620,10 @@ describe("useMarketplaceData - Conditional Expressions", () => {
   describe('RepositorySubTab conditional - repositorySubTab === "workflows"', () => {
     it('should fetch templates when repositorySubTab is "workflows"', async () => {
       mockHttpClient.get.mockResolvedValue({
-        json: async () => [mockTemplate]
+        json: async () => [mockTemplate],
       });
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -630,8 +632,8 @@ describe("useMarketplaceData - Conditional Expressions", () => {
           sortBy: "popular",
           user: null,
           activeTab: "repository",
-          repositorySubTab: "workflows"
-        })
+          repositorySubTab: "workflows",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -640,8 +642,8 @@ describe("useMarketplaceData - Conditional Expressions", () => {
     });
     it('should fetch repository agents when repositorySubTab is "agents"', async () => {
       mockStorage.getItem.mockReturnValue(JSON.stringify([mockAgent]));
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -650,8 +652,8 @@ describe("useMarketplaceData - Conditional Expressions", () => {
           sortBy: "popular",
           user: null,
           activeTab: "repository",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -663,11 +665,16 @@ describe("useMarketplaceData - Conditional Expressions", () => {
     it("should return 1 when is_official is true", async () => {
       const agents = [
         { ...mockAgent, is_official: true, name: "Official Agent" },
-        { ...mockAgent, id: "agent-2", is_official: false, name: "Unofficial Agent" }
+        {
+          ...mockAgent,
+          id: "agent-2",
+          is_official: false,
+          name: "Unofficial Agent",
+        },
       ];
       mockGetLocalStorageItem.mockReturnValue(agents);
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -676,8 +683,8 @@ describe("useMarketplaceData - Conditional Expressions", () => {
           sortBy: "popular",
           user: null,
           activeTab: "agents",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -688,11 +695,16 @@ describe("useMarketplaceData - Conditional Expressions", () => {
     it("should return 0 when is_official is false", async () => {
       const agents = [
         { ...mockAgent, is_official: false, name: "Unofficial Agent" },
-        { ...mockAgent, id: "agent-2", is_official: true, name: "Official Agent" }
+        {
+          ...mockAgent,
+          id: "agent-2",
+          is_official: true,
+          name: "Official Agent",
+        },
       ];
       mockGetLocalStorageItem.mockReturnValue(agents);
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -701,8 +713,8 @@ describe("useMarketplaceData - Conditional Expressions", () => {
           sortBy: "popular",
           user: null,
           activeTab: "agents",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -715,11 +727,11 @@ describe("useMarketplaceData - Conditional Expressions", () => {
     it("should return timestamp when published_at exists", async () => {
       const agents = [
         { ...mockAgent, published_at: "2024-01-01T00:00:00Z" },
-        { ...mockAgent, id: "agent-2", published_at: "2024-01-02T00:00:00Z" }
+        { ...mockAgent, id: "agent-2", published_at: "2024-01-02T00:00:00Z" },
       ];
       mockGetLocalStorageItem.mockReturnValue(agents);
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -728,22 +740,24 @@ describe("useMarketplaceData - Conditional Expressions", () => {
           sortBy: "popular",
           user: null,
           activeTab: "agents",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
       });
-      expect(result.current.agents[0].published_at).toBe("2024-01-02T00:00:00Z");
+      expect(result.current.agents[0].published_at).toBe(
+        "2024-01-02T00:00:00Z",
+      );
     });
     it("should return 0 when published_at is undefined", async () => {
       const agents = [
         { ...mockAgent, published_at: "2024-01-01T00:00:00Z" },
-        { ...mockAgent, id: "agent-2", published_at: void 0 }
+        { ...mockAgent, id: "agent-2", published_at: void 0 },
       ];
       mockGetLocalStorageItem.mockReturnValue(agents);
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -752,13 +766,15 @@ describe("useMarketplaceData - Conditional Expressions", () => {
           sortBy: "popular",
           user: null,
           activeTab: "agents",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
       });
-      expect(result.current.agents[0].published_at).toBe("2024-01-01T00:00:00Z");
+      expect(result.current.agents[0].published_at).toBe(
+        "2024-01-01T00:00:00Z",
+      );
       expect(result.current.agents[1].published_at).toBeUndefined();
     });
   });
@@ -766,8 +782,8 @@ describe("useMarketplaceData - Conditional Expressions", () => {
     it("should parse JSON when savedAgents exists", async () => {
       const agents = [mockAgent];
       mockStorage.getItem.mockReturnValue(JSON.stringify(agents));
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -776,8 +792,8 @@ describe("useMarketplaceData - Conditional Expressions", () => {
           sortBy: "popular",
           user: null,
           activeTab: "repository",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -787,8 +803,8 @@ describe("useMarketplaceData - Conditional Expressions", () => {
     });
     it("should use empty array when savedAgents is null", async () => {
       mockStorage.getItem.mockReturnValue(null);
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -797,8 +813,8 @@ describe("useMarketplaceData - Conditional Expressions", () => {
           sortBy: "popular",
           user: null,
           activeTab: "repository",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -810,18 +826,22 @@ describe("useMarketplaceData - Conditional Expressions", () => {
     it("should use username when username exists", async () => {
       const agents = [{ ...mockAgent, author_id: null }];
       mockGetLocalStorageItem.mockReturnValue(agents);
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
           category: "",
           searchQuery: "",
           sortBy: "popular",
-          user: { id: "user-1", username: "testuser", email: "test@example.com" },
+          user: {
+            id: "user-1",
+            username: "testuser",
+            email: "test@example.com",
+          },
           activeTab: "agents",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -833,8 +853,8 @@ describe("useMarketplaceData - Conditional Expressions", () => {
     it("should use email when username is missing but email exists", async () => {
       const agents = [{ ...mockAgent, author_id: null }];
       mockGetLocalStorageItem.mockReturnValue(agents);
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -843,8 +863,8 @@ describe("useMarketplaceData - Conditional Expressions", () => {
           sortBy: "popular",
           user: { id: "user-1", email: "test@example.com" },
           activeTab: "agents",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -856,8 +876,8 @@ describe("useMarketplaceData - Conditional Expressions", () => {
     it("should use null when neither username nor email exists", async () => {
       const agents = [{ ...mockAgent, author_id: null }];
       mockGetLocalStorageItem.mockReturnValue(agents);
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -866,8 +886,8 @@ describe("useMarketplaceData - Conditional Expressions", () => {
           sortBy: "popular",
           user: { id: "user-1" },
           activeTab: "agents",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);

@@ -5,7 +5,7 @@ import {
   buildUploadHeaders,
   extractApiErrorMessage,
   isApiResponseOk,
-  parseJsonResponse
+  parseJsonResponse,
 } from "./apiUtils";
 describe("apiUtils", () => {
   describe("buildHeaders", () => {
@@ -31,7 +31,7 @@ describe("apiUtils", () => {
     });
     it("should include additional headers", () => {
       const headers = buildHeaders({
-        additionalHeaders: { "X-Custom": "value" }
+        additionalHeaders: { "X-Custom": "value" },
       });
       expect(headers["X-Custom"]).toBe("value");
     });
@@ -39,7 +39,7 @@ describe("apiUtils", () => {
       const headers = buildHeaders({
         token: "test-token",
         contentType: "application/json",
-        additionalHeaders: { "X-Custom": "value" }
+        additionalHeaders: { "X-Custom": "value" },
       });
       expect(headers["Authorization"]).toBe("Bearer test-token");
       expect(headers["Content-Type"]).toBe("application/json");
@@ -62,13 +62,16 @@ describe("apiUtils", () => {
       expect(headers["Content-Type"]).toBe("application/json");
     });
     it("should allow custom contentType override", () => {
-      const headers = buildAuthHeaders({ token: "test-token", contentType: "text/plain" });
+      const headers = buildAuthHeaders({
+        token: "test-token",
+        contentType: "text/plain",
+      });
       expect(headers["Content-Type"]).toBe("text/plain");
     });
     it("should include additional headers", () => {
       const headers = buildAuthHeaders({
         token: "test-token",
-        additionalHeaders: { "X-Custom": "value" }
+        additionalHeaders: { "X-Custom": "value" },
       });
       expect(headers["X-Custom"]).toBe("value");
     });
@@ -115,9 +118,9 @@ describe("apiUtils", () => {
       const error = {
         response: {
           data: {
-            detail: "API error detail"
-          }
-        }
+            detail: "API error detail",
+          },
+        },
       };
       expect(extractApiErrorMessage(error)).toBe("API error detail");
     });
@@ -125,9 +128,9 @@ describe("apiUtils", () => {
       const error = {
         response: {
           data: {
-            message: "API error message"
-          }
-        }
+            message: "API error message",
+          },
+        },
       };
       expect(extractApiErrorMessage(error)).toBe("API error message");
     });
@@ -136,9 +139,9 @@ describe("apiUtils", () => {
         response: {
           data: {
             detail: "Detail message",
-            message: "Regular message"
-          }
-        }
+            message: "Regular message",
+          },
+        },
       };
       expect(extractApiErrorMessage(error)).toBe("Detail message");
     });
@@ -151,7 +154,9 @@ describe("apiUtils", () => {
       expect(extractApiErrorMessage(null)).toBe("An error occurred");
     });
     it("should use custom default message", () => {
-      expect(extractApiErrorMessage({}, "Custom default")).toBe("Custom default");
+      expect(extractApiErrorMessage({}, "Custom default")).toBe(
+        "Custom default",
+      );
     });
     it("should handle Error with empty message", () => {
       const error = new Error("");
@@ -160,8 +165,8 @@ describe("apiUtils", () => {
     it("should handle nested error structures", () => {
       const error = {
         error: {
-          message: "Nested error"
-        }
+          message: "Nested error",
+        },
       };
       expect(extractApiErrorMessage(error)).toBe("An error occurred");
     });
@@ -178,14 +183,14 @@ describe("apiUtils", () => {
     it("should handle error with response.data but no detail or message", () => {
       const error = {
         response: {
-          data: {}
-        }
+          data: {},
+        },
       };
       expect(extractApiErrorMessage(error)).toBe("An error occurred");
     });
     it("should handle error with response but no data", () => {
       const error = {
-        response: {}
+        response: {},
       };
       expect(extractApiErrorMessage(error)).toBe("An error occurred");
     });
@@ -247,21 +252,21 @@ describe("apiUtils", () => {
   describe("parseJsonResponse", () => {
     it("should parse valid JSON response", async () => {
       const response = {
-        text: async () => JSON.stringify({ key: "value" })
+        text: async () => JSON.stringify({ key: "value" }),
       };
       const result = await parseJsonResponse(response);
       expect(result).toEqual({ key: "value" });
     });
     it("should return null for empty response", async () => {
       const response = {
-        text: async () => ""
+        text: async () => "",
       };
       const result = await parseJsonResponse(response);
       expect(result).toBeNull();
     });
     it("should return null for invalid JSON", async () => {
       const response = {
-        text: async () => "invalid json"
+        text: async () => "invalid json",
       };
       const result = await parseJsonResponse(response);
       expect(result).toBeNull();
@@ -270,7 +275,7 @@ describe("apiUtils", () => {
       const response = {
         text: async () => {
           throw new Error("Parse error");
-        }
+        },
       };
       const result = await parseJsonResponse(response);
       expect(result).toBeNull();
@@ -279,60 +284,60 @@ describe("apiUtils", () => {
       const complexData = {
         nested: {
           array: [1, 2, 3],
-          object: { key: "value" }
-        }
+          object: { key: "value" },
+        },
       };
       const response = {
-        text: async () => JSON.stringify(complexData)
+        text: async () => JSON.stringify(complexData),
       };
       const result = await parseJsonResponse(response);
       expect(result).toEqual(complexData);
     });
     it("should handle null JSON values", async () => {
       const response = {
-        text: async () => "null"
+        text: async () => "null",
       };
       const result = await parseJsonResponse(response);
       expect(result).toBeNull();
     });
     it("should handle array JSON", async () => {
       const response = {
-        text: async () => JSON.stringify([1, 2, 3])
+        text: async () => JSON.stringify([1, 2, 3]),
       };
       const result = await parseJsonResponse(response);
       expect(result).toEqual([1, 2, 3]);
     });
     it("should handle whitespace-only response", async () => {
       const response = {
-        text: async () => "   "
+        text: async () => "   ",
       };
       const result = await parseJsonResponse(response);
       expect(result).toBeNull();
     });
     it("should handle response with only newlines", async () => {
       const response = {
-        text: async () => "\n\n"
+        text: async () => "\n\n",
       };
       const result = await parseJsonResponse(response);
       expect(result).toBeNull();
     });
     it("should handle malformed JSON with trailing comma", async () => {
       const response = {
-        text: async () => '{"key": "value",}'
+        text: async () => '{"key": "value",}',
       };
       const result = await parseJsonResponse(response);
       expect(result).toBeNull();
     });
     it("should handle JSON with escaped characters", async () => {
       const response = {
-        text: async () => JSON.stringify({ message: "Hello\nWorld	Test" })
+        text: async () => JSON.stringify({ message: "Hello\nWorld	Test" }),
       };
       const result = await parseJsonResponse(response);
       expect(result).toEqual({ message: "Hello\nWorld	Test" });
     });
     it("should handle response.text() returning undefined", async () => {
       const response = {
-        text: async () => void 0
+        text: async () => void 0,
       };
       const result = await parseJsonResponse(response);
       expect(result).toBeNull();

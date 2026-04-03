@@ -1,9 +1,5 @@
 function buildHeaders(options = {}) {
-  const {
-    token,
-    contentType,
-    additionalHeaders = {}
-  } = options;
+  const { token, contentType, additionalHeaders = {} } = options;
   const headers = { ...additionalHeaders };
   if (contentType !== null && contentType !== void 0) {
     headers["Content-Type"] = contentType;
@@ -16,20 +12,20 @@ function buildHeaders(options = {}) {
 function buildAuthHeaders(options = {}) {
   return buildHeaders({
     contentType: "application/json",
-    ...options
+    ...options,
   });
 }
 function buildJsonHeaders(additionalHeaders = {}) {
   return buildHeaders({
     contentType: "application/json",
-    additionalHeaders
+    additionalHeaders,
   });
 }
 function buildUploadHeaders(additionalHeaders = {}) {
   return buildHeaders({
     contentType: null,
     // Explicitly omit Content-Type for file uploads
-    additionalHeaders
+    additionalHeaders,
   });
 }
 function extractApiErrorMessage(error, defaultMessage = "An error occurred") {
@@ -74,5 +70,5 @@ export {
   buildUploadHeaders,
   extractApiErrorMessage,
   isApiResponseOk,
-  parseJsonResponse
+  parseJsonResponse,
 };

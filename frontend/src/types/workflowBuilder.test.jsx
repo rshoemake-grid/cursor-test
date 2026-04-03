@@ -3,7 +3,7 @@ import {
   hasWorkflowBuilderExecutionProps,
   hasWorkflowBuilderPersistenceProps,
   hasWorkflowBuilderDependencyProps,
-  isValidWorkflowBuilderProps
+  isValidWorkflowBuilderProps,
 } from "./workflowBuilder";
 import * as workflowBuilderModule from "./workflowBuilder";
 describe("types/workflowBuilder.ts", () => {
@@ -13,7 +13,7 @@ describe("types/workflowBuilder.ts", () => {
         tabId: "tab-1",
         workflowId: "workflow-1",
         tabName: "Test Workflow",
-        tabIsUnsaved: false
+        tabIsUnsaved: false,
       };
       expect(props.tabId).toBe("tab-1");
       expect(props.workflowId).toBe("workflow-1");
@@ -25,7 +25,7 @@ describe("types/workflowBuilder.ts", () => {
         tabId: "tab-1",
         workflowId: null,
         tabName: "New Workflow",
-        tabIsUnsaved: true
+        tabIsUnsaved: true,
       };
       expect(props.workflowId).toBeNull();
       expect(props.tabIsUnsaved).toBe(true);
@@ -36,7 +36,7 @@ describe("types/workflowBuilder.ts", () => {
       const mockExecution = {
         id: "exec-1",
         status: "running",
-        started_at: "2024-01-01T00:00:00Z"
+        started_at: "2024-01-01T00:00:00Z",
       };
       const props = {
         workflowTabs: [
@@ -44,15 +44,15 @@ describe("types/workflowBuilder.ts", () => {
             workflowId: "workflow-1",
             workflowName: "Test Workflow",
             executions: [mockExecution],
-            activeExecutionId: "exec-1"
-          }
+            activeExecutionId: "exec-1",
+          },
         ],
         onExecutionStart: jest.fn(),
         onExecutionLogUpdate: jest.fn(),
         onExecutionStatusUpdate: jest.fn(),
         onExecutionNodeUpdate: jest.fn(),
         onRemoveExecution: jest.fn(),
-        onClearExecutions: jest.fn()
+        onClearExecutions: jest.fn(),
       };
       expect(props.workflowTabs).toHaveLength(1);
       expect(props.onExecutionStart).toBeDefined();
@@ -60,7 +60,7 @@ describe("types/workflowBuilder.ts", () => {
     });
     it("should allow all execution callbacks to be optional", () => {
       const props = {
-        onExecutionStart: jest.fn()
+        onExecutionStart: jest.fn(),
       };
       expect(props.onExecutionStart).toBeDefined();
       expect(props.onExecutionLogUpdate).toBeUndefined();
@@ -72,7 +72,7 @@ describe("types/workflowBuilder.ts", () => {
         onWorkflowSaved: jest.fn(),
         onWorkflowModified: jest.fn(),
         onWorkflowLoaded: jest.fn(),
-        onCloseWorkflow: jest.fn()
+        onCloseWorkflow: jest.fn(),
       };
       expect(props.onWorkflowSaved).toBeDefined();
       expect(props.onWorkflowModified).toBeDefined();
@@ -81,7 +81,7 @@ describe("types/workflowBuilder.ts", () => {
     });
     it("should allow persistence callbacks to be optional", () => {
       const props = {
-        onWorkflowSaved: jest.fn()
+        onWorkflowSaved: jest.fn(),
       };
       expect(props.onWorkflowSaved).toBeDefined();
       expect(props.onWorkflowModified).toBeUndefined();
@@ -94,16 +94,16 @@ describe("types/workflowBuilder.ts", () => {
         setItem: jest.fn(),
         removeItem: jest.fn(),
         addEventListener: jest.fn(),
-        removeEventListener: jest.fn()
+        removeEventListener: jest.fn(),
       };
       const props = {
-        storage: mockStorage
+        storage: mockStorage,
       };
       expect(props.storage).toBe(mockStorage);
     });
     it("should allow storage to be null", () => {
       const props = {
-        storage: null
+        storage: null,
       };
       expect(props.storage).toBeNull();
     });
@@ -119,7 +119,7 @@ describe("types/workflowBuilder.ts", () => {
         setItem: jest.fn(),
         removeItem: jest.fn(),
         addEventListener: jest.fn(),
-        removeEventListener: jest.fn()
+        removeEventListener: jest.fn(),
       };
       const props = {
         // Core props (required)
@@ -132,7 +132,7 @@ describe("types/workflowBuilder.ts", () => {
         // Persistence props (optional)
         onWorkflowSaved: jest.fn(),
         // Dependency props (optional)
-        storage: mockStorage
+        storage: mockStorage,
       };
       expect(props.tabId).toBe("tab-1");
       expect(props.workflowId).toBe("workflow-1");
@@ -145,7 +145,7 @@ describe("types/workflowBuilder.ts", () => {
         tabId: "tab-1",
         workflowId: null,
         tabName: "New Workflow",
-        tabIsUnsaved: true
+        tabIsUnsaved: true,
       };
       expect(props.tabId).toBe("tab-1");
       expect(props.workflowId).toBeNull();
@@ -157,13 +157,13 @@ describe("types/workflowBuilder.ts", () => {
         tabId: "tab-1",
         workflowId: "workflow-1",
         tabName: "Test",
-        tabIsUnsaved: false
+        tabIsUnsaved: false,
       };
       const executionOnly = {
-        onExecutionStart: jest.fn()
+        onExecutionStart: jest.fn(),
       };
       const persistenceOnly = {
-        onWorkflowSaved: jest.fn()
+        onWorkflowSaved: jest.fn(),
       };
       expect(coreOnly.tabId).toBe("tab-1");
       expect(executionOnly.onExecutionStart).toBeDefined();
@@ -175,7 +175,7 @@ describe("types/workflowBuilder.ts", () => {
         workflowId: "workflow-1",
         tabName: "Test",
         tabIsUnsaved: false,
-        onExecutionStart: jest.fn()
+        onExecutionStart: jest.fn(),
         // No persistence or storage props
       };
       const props2 = {
@@ -184,7 +184,7 @@ describe("types/workflowBuilder.ts", () => {
         tabName: "Test 2",
         tabIsUnsaved: true,
         onWorkflowSaved: jest.fn(),
-        storage: null
+        storage: null,
         // No execution props
       };
       expect(props1.onExecutionStart).toBeDefined();
@@ -199,7 +199,7 @@ describe("types/workflowBuilder.ts", () => {
         tabId: "tab-1",
         workflowId: "workflow-1",
         tabName: "Test",
-        tabIsUnsaved: false
+        tabIsUnsaved: false,
       };
       const fullProps = coreProps;
       expect(fullProps.tabId).toBe("tab-1");
@@ -210,7 +210,7 @@ describe("types/workflowBuilder.ts", () => {
         setItem: jest.fn(),
         removeItem: jest.fn(),
         addEventListener: jest.fn(),
-        removeEventListener: jest.fn()
+        removeEventListener: jest.fn(),
       };
       const props = {
         tabId: "tab-1",
@@ -228,7 +228,7 @@ describe("types/workflowBuilder.ts", () => {
         onWorkflowModified: jest.fn(),
         onWorkflowLoaded: jest.fn(),
         onCloseWorkflow: jest.fn(),
-        storage: mockStorage
+        storage: mockStorage,
       };
       expect(props.tabId).toBe("tab-1");
       expect(props.workflowTabs).toEqual([]);
@@ -242,7 +242,7 @@ describe("types/workflowBuilder.ts", () => {
           tabId: "tab-1",
           workflowId: "workflow-1",
           tabName: "Test",
-          tabIsUnsaved: false
+          tabIsUnsaved: false,
         };
         expect(hasWorkflowBuilderCoreProps(valid)).toBe(true);
       });
@@ -251,7 +251,7 @@ describe("types/workflowBuilder.ts", () => {
           tabId: "tab-1",
           workflowId: null,
           tabName: "Test",
-          tabIsUnsaved: true
+          tabIsUnsaved: true,
         };
         expect(hasWorkflowBuilderCoreProps(valid)).toBe(true);
       });
@@ -265,7 +265,9 @@ describe("types/workflowBuilder.ts", () => {
     describe("hasWorkflowBuilderExecutionProps", () => {
       it("should validate any object", () => {
         expect(hasWorkflowBuilderExecutionProps({})).toBe(true);
-        expect(hasWorkflowBuilderExecutionProps({ onExecutionStart: jest.fn() })).toBe(true);
+        expect(
+          hasWorkflowBuilderExecutionProps({ onExecutionStart: jest.fn() }),
+        ).toBe(true);
       });
       it("should reject non-objects", () => {
         expect(hasWorkflowBuilderExecutionProps(null)).toBe(false);
@@ -276,7 +278,9 @@ describe("types/workflowBuilder.ts", () => {
     describe("hasWorkflowBuilderPersistenceProps", () => {
       it("should validate any object", () => {
         expect(hasWorkflowBuilderPersistenceProps({})).toBe(true);
-        expect(hasWorkflowBuilderPersistenceProps({ onWorkflowSaved: jest.fn() })).toBe(true);
+        expect(
+          hasWorkflowBuilderPersistenceProps({ onWorkflowSaved: jest.fn() }),
+        ).toBe(true);
       });
       it("should reject non-objects", () => {
         expect(hasWorkflowBuilderPersistenceProps(null)).toBe(false);
@@ -299,7 +303,7 @@ describe("types/workflowBuilder.ts", () => {
           tabId: "tab-1",
           workflowId: "workflow-1",
           tabName: "Test",
-          tabIsUnsaved: false
+          tabIsUnsaved: false,
         };
         expect(isValidWorkflowBuilderProps(props)).toBe(true);
       });
@@ -310,9 +314,15 @@ describe("types/workflowBuilder.ts", () => {
     });
     it("should execute all validation functions from module", () => {
       expect(workflowBuilderModule.hasWorkflowBuilderCoreProps).toBeDefined();
-      expect(workflowBuilderModule.hasWorkflowBuilderExecutionProps).toBeDefined();
-      expect(workflowBuilderModule.hasWorkflowBuilderPersistenceProps).toBeDefined();
-      expect(workflowBuilderModule.hasWorkflowBuilderDependencyProps).toBeDefined();
+      expect(
+        workflowBuilderModule.hasWorkflowBuilderExecutionProps,
+      ).toBeDefined();
+      expect(
+        workflowBuilderModule.hasWorkflowBuilderPersistenceProps,
+      ).toBeDefined();
+      expect(
+        workflowBuilderModule.hasWorkflowBuilderDependencyProps,
+      ).toBeDefined();
       expect(workflowBuilderModule.isValidWorkflowBuilderProps).toBeDefined();
     });
     it("should execute module via require", () => {

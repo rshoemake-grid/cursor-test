@@ -26,9 +26,4 @@ function setStorageItem(storage, key, value) {
     return false;
   }
 }
-export {
-  canSaveToStorage,
-  getStorageItem,
-  isStorageAvailable,
-  setStorageItem
-};
+export { canSaveToStorage, getStorageItem, isStorageAvailable, setStorageItem };

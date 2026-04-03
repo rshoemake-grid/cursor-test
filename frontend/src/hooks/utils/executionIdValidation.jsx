@@ -41,5 +41,5 @@ export {
   isRealExecutionId,
   isTemporaryExecutionId,
   isValidExecutionId,
-  shouldLogExecutionError
+  shouldLogExecutionError,
 };

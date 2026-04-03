@@ -1,17 +1,14 @@
-import { jsx } from "react/jsx-runtime";
 import { render, screen, fireEvent } from "@testing-library/react";
 import NodeContextMenu from "./NodeContextMenu";
 import { ReactFlowProvider } from "@xyflow/react";
 jest.mock("@xyflow/react", () => ({
   ...jest.requireActual("@xyflow/react"),
   useReactFlow: () => ({
-    deleteElements: jest.fn()
-  })
+    deleteElements: jest.fn(),
+  }),
 }));
 const renderWithProvider = (component) => {
-  return render(
-    /* @__PURE__ */ jsx(ReactFlowProvider, { children: component })
-  );
+  return render(<ReactFlowProvider>{component}</ReactFlowProvider>);
 };
 describe("NodeContextMenu", () => {
   const mockOnClose = jest.fn();
@@ -24,7 +21,9 @@ describe("NodeContextMenu", () => {
   const mockNode = {
     id: "node-1",
     type: "agent",
-    data: { label: "Test Node" }
+    data: {
+      label: "Test Node",
+    },
   };
   beforeEach(() => {
     jest.clearAllMocks();
@@ -34,101 +33,83 @@ describe("NodeContextMenu", () => {
   });
   it("should render delete button for node", () => {
     renderWithProvider(
-      /* @__PURE__ */ jsx(
-        NodeContextMenu,
-        {
-          nodeId: "node-1",
-          node: mockNode,
-          x: 100,
-          y: 200,
-          onClose: mockOnClose,
-          onDelete: mockOnDelete
-        }
-      )
+      <NodeContextMenu
+        nodeId="node-1"
+        node={mockNode}
+        x={100}
+        y={200}
+        onClose={mockOnClose}
+        onDelete={mockOnDelete}
+      />,
     );
     expect(screen.getByText("Delete Node")).toBeInTheDocument();
   });
   it("should render delete button for edge", () => {
     renderWithProvider(
-      /* @__PURE__ */ jsx(
-        NodeContextMenu,
-        {
-          edgeId: "edge-1",
-          x: 100,
-          y: 200,
-          onClose: mockOnClose,
-          onDelete: mockOnDelete
-        }
-      )
+      <NodeContextMenu
+        edgeId="edge-1"
+        x={100}
+        y={200}
+        onClose={mockOnClose}
+        onDelete={mockOnDelete}
+      />,
     );
     expect(screen.getByText("Delete Connection")).toBeInTheDocument();
   });
   it("should render copy and cut buttons for node", () => {
     renderWithProvider(
-      /* @__PURE__ */ jsx(
-        NodeContextMenu,
-        {
-          nodeId: "node-1",
-          node: mockNode,
-          x: 100,
-          y: 200,
-          onClose: mockOnClose,
-          onCopy: mockOnCopy,
-          onCut: mockOnCut
-        }
-      )
+      <NodeContextMenu
+        nodeId="node-1"
+        node={mockNode}
+        x={100}
+        y={200}
+        onClose={mockOnClose}
+        onCopy={mockOnCopy}
+        onCut={mockOnCut}
+      />,
     );
     expect(screen.getByText("Copy")).toBeInTheDocument();
     expect(screen.getByText("Cut")).toBeInTheDocument();
   });
   it("should render paste button when canPaste is true", () => {
     renderWithProvider(
-      /* @__PURE__ */ jsx(
-        NodeContextMenu,
-        {
-          nodeId: "node-1",
-          node: mockNode,
-          x: 100,
-          y: 200,
-          onClose: mockOnClose,
-          onPaste: mockOnPaste,
-          canPaste: true
-        }
-      )
+      <NodeContextMenu
+        nodeId="node-1"
+        node={mockNode}
+        x={100}
+        y={200}
+        onClose={mockOnClose}
+        onPaste={mockOnPaste}
+        canPaste={true}
+      />,
     );
     expect(screen.getByText("Paste")).toBeInTheDocument();
   });
   it("should not render paste button when canPaste is false", () => {
     renderWithProvider(
-      /* @__PURE__ */ jsx(
-        NodeContextMenu,
-        {
-          nodeId: "node-1",
-          node: mockNode,
-          x: 100,
-          y: 200,
-          onClose: mockOnClose,
-          onPaste: mockOnPaste,
-          canPaste: false
-        }
-      )
+      <NodeContextMenu
+        nodeId="node-1"
+        node={mockNode}
+        x={100}
+        y={200}
+        onClose={mockOnClose}
+        onPaste={mockOnPaste}
+        canPaste={false}
+      />,
     );
     expect(screen.queryByText("Paste")).not.toBeInTheDocument();
   });
   it("should render agent-specific buttons for agent node", () => {
     renderWithProvider(
-      /* @__PURE__ */ jsx(
-        NodeContextMenu,
-        {
-          nodeId: "node-1",
-          node: mockNode,
-          x: 100,
-          y: 200,
-          onClose: mockOnClose,
-          onAddToAgentNodes: mockOnAddToAgentNodes,
-          onSendToMarketplace: mockOnSendToMarketplace
-        }
-      )
+      <NodeContextMenu
+        nodeId="node-1"
+        node={mockNode}
+        x={100}
+        y={200}
+        onClose={mockOnClose}
+        onAddToAgentNodes={mockOnAddToAgentNodes}
+        onSendToMarketplace={mockOnSendToMarketplace}
+      />,
     );
     expect(screen.getByText("Add to Agent Nodes")).toBeInTheDocument();
     expect(screen.getByText("Send to Marketplace")).toBeInTheDocument();
@@ -137,38 +118,34 @@ describe("NodeContextMenu", () => {
     const nonAgentNode = {
       id: "node-1",
       type: "start",
-      data: { label: "Start Node" }
+      data: {
+        label: "Start Node",
+      },
     };
     renderWithProvider(
-      /* @__PURE__ */ jsx(
-        NodeContextMenu,
-        {
-          nodeId: "node-1",
-          node: nonAgentNode,
-          x: 100,
-          y: 200,
-          onClose: mockOnClose,
-          onAddToAgentNodes: mockOnAddToAgentNodes,
-          onSendToMarketplace: mockOnSendToMarketplace
-        }
-      )
+      <NodeContextMenu
+        nodeId="node-1"
+        node={nonAgentNode}
+        x={100}
+        y={200}
+        onClose={mockOnClose}
+        onAddToAgentNodes={mockOnAddToAgentNodes}
+        onSendToMarketplace={mockOnSendToMarketplace}
+      />,
     );
     expect(screen.queryByText("Add to Agent Nodes")).not.toBeInTheDocument();
     expect(screen.queryByText("Send to Marketplace")).not.toBeInTheDocument();
   });
   it("should call onCopy when copy button is clicked", () => {
     renderWithProvider(
-      /* @__PURE__ */ jsx(
-        NodeContextMenu,
-        {
-          nodeId: "node-1",
-          node: mockNode,
-          x: 100,
-          y: 200,
-          onClose: mockOnClose,
-          onCopy: mockOnCopy
-        }
-      )
+      <NodeContextMenu
+        nodeId="node-1"
+        node={mockNode}
+        x={100}
+        y={200}
+        onClose={mockOnClose}
+        onCopy={mockOnCopy}
+      />,
     );
     const copyButton = screen.getByText("Copy");
     fireEvent.click(copyButton);
@@ -177,17 +154,14 @@ describe("NodeContextMenu", () => {
   });
   it("should call onCut when cut button is clicked", () => {
     renderWithProvider(
-      /* @__PURE__ */ jsx(
-        NodeContextMenu,
-        {
-          nodeId: "node-1",
-          node: mockNode,
-          x: 100,
-          y: 200,
-          onClose: mockOnClose,
-          onCut: mockOnCut
-        }
-      )
+      <NodeContextMenu
+        nodeId="node-1"
+        node={mockNode}
+        x={100}
+        y={200}
+        onClose={mockOnClose}
+        onCut={mockOnCut}
+      />,
     );
     const cutButton = screen.getByText("Cut");
     fireEvent.click(cutButton);
@@ -196,18 +170,15 @@ describe("NodeContextMenu", () => {
   });
   it("should call onPaste when paste button is clicked", () => {
     renderWithProvider(
-      /* @__PURE__ */ jsx(
-        NodeContextMenu,
-        {
-          nodeId: "node-1",
-          node: mockNode,
-          x: 100,
-          y: 200,
-          onClose: mockOnClose,
-          onPaste: mockOnPaste,
-          canPaste: true
-        }
-      )
+      <NodeContextMenu
+        nodeId="node-1"
+        node={mockNode}
+        x={100}
+        y={200}
+        onClose={mockOnClose}
+        onPaste={mockOnPaste}
+        canPaste={true}
+      />,
     );
     const pasteButton = screen.getByText("Paste");
     fireEvent.click(pasteButton);
@@ -216,17 +187,14 @@ describe("NodeContextMenu", () => {
   });
   it("should call onAddToAgentNodes when button is clicked", () => {
     renderWithProvider(
-      /* @__PURE__ */ jsx(
-        NodeContextMenu,
-        {
-          nodeId: "node-1",
-          node: mockNode,
-          x: 100,
-          y: 200,
-          onClose: mockOnClose,
-          onAddToAgentNodes: mockOnAddToAgentNodes
-        }
-      )
+      <NodeContextMenu
+        nodeId="node-1"
+        node={mockNode}
+        x={100}
+        y={200}
+        onClose={mockOnClose}
+        onAddToAgentNodes={mockOnAddToAgentNodes}
+      />,
     );
     const addButton = screen.getByText("Add to Agent Nodes");
     fireEvent.click(addButton);
@@ -235,17 +203,14 @@ describe("NodeContextMenu", () => {
   });
   it("should call onSendToMarketplace when button is clicked", () => {
     renderWithProvider(
-      /* @__PURE__ */ jsx(
-        NodeContextMenu,
-        {
-          nodeId: "node-1",
-          node: mockNode,
-          x: 100,
-          y: 200,
-          onClose: mockOnClose,
-          onSendToMarketplace: mockOnSendToMarketplace
-        }
-      )
+      <NodeContextMenu
+        nodeId="node-1"
+        node={mockNode}
+        x={100}
+        y={200}
+        onClose={mockOnClose}
+        onSendToMarketplace={mockOnSendToMarketplace}
+      />,
     );
     const marketplaceButton = screen.getByText("Send to Marketplace");
     fireEvent.click(marketplaceButton);
@@ -254,17 +219,14 @@ describe("NodeContextMenu", () => {
   });
   it("should call onDelete when delete button is clicked for node", () => {
     renderWithProvider(
-      /* @__PURE__ */ jsx(
-        NodeContextMenu,
-        {
-          nodeId: "node-1",
-          node: mockNode,
-          x: 100,
-          y: 200,
-          onClose: mockOnClose,
-          onDelete: mockOnDelete
-        }
-      )
+      <NodeContextMenu
+        nodeId="node-1"
+        node={mockNode}
+        x={100}
+        y={200}
+        onClose={mockOnClose}
+        onDelete={mockOnDelete}
+      />,
     );
     const deleteButton = screen.getByText("Delete Node");
     fireEvent.click(deleteButton);
@@ -273,16 +235,13 @@ describe("NodeContextMenu", () => {
   });
   it("should call onDelete when delete button is clicked for edge", () => {
     renderWithProvider(
-      /* @__PURE__ */ jsx(
-        NodeContextMenu,
-        {
-          edgeId: "edge-1",
-          x: 100,
-          y: 200,
-          onClose: mockOnClose,
-          onDelete: mockOnDelete
-        }
-      )
+      <NodeContextMenu
+        edgeId="edge-1"
+        x={100}
+        y={200}
+        onClose={mockOnClose}
+        onDelete={mockOnDelete}
+      />,
     );
     const deleteButton = screen.getByText("Delete Connection");
     fireEvent.click(deleteButton);
@@ -291,33 +250,32 @@ describe("NodeContextMenu", () => {
   });
   it("should position menu at specified coordinates", () => {
     renderWithProvider(
-      /* @__PURE__ */ jsx(
-        NodeContextMenu,
-        {
-          nodeId: "node-1",
-          node: mockNode,
-          x: 150,
-          y: 250,
-          onClose: mockOnClose
-        }
-      )
+      <NodeContextMenu
+        nodeId="node-1"
+        node={mockNode}
+        x={150}
+        y={250}
+        onClose={mockOnClose}
+      />,
     );
     const menu = screen.getByText("Delete Node").closest("div");
-    expect(menu).toHaveStyle({ left: "150px", top: "250px" });
+    expect(menu).toHaveStyle({
+      left: "150px",
+      top: "250px",
+    });
   });
   it("should stop propagation on click", () => {
     const handleParentClick = jest.fn();
     renderWithProvider(
-      /* @__PURE__ */ jsx("div", { onClick: handleParentClick, children: /* @__PURE__ */ jsx(
-        NodeContextMenu,
-        {
-          nodeId: "node-1",
-          node: mockNode,
-          x: 100,
-          y: 200,
-          onClose: mockOnClose
-        }
-      ) })
+      <div onClick={handleParentClick}>
+        <NodeContextMenu
+          nodeId="node-1"
+          node={mockNode}
+          x={100}
+          y={200}
+          onClose={mockOnClose}
+        />
+      </div>,
     );
     const menu = screen.getByText("Delete Node").closest("div");
     fireEvent.click(menu);
@@ -325,17 +283,14 @@ describe("NodeContextMenu", () => {
   });
   it("should handle copy when node is null", () => {
     renderWithProvider(
-      /* @__PURE__ */ jsx(
-        NodeContextMenu,
-        {
-          nodeId: "node-1",
-          node: null,
-          x: 100,
-          y: 200,
-          onClose: mockOnClose,
-          onCopy: mockOnCopy
-        }
-      )
+      <NodeContextMenu
+        nodeId="node-1"
+        node={null}
+        x={100}
+        y={200}
+        onClose={mockOnClose}
+        onCopy={mockOnCopy}
+      />,
     );
     const copyButton = screen.getByText("Copy");
     fireEvent.click(copyButton);
@@ -344,16 +299,13 @@ describe("NodeContextMenu", () => {
   });
   it("should handle copy when callback is not provided", () => {
     renderWithProvider(
-      /* @__PURE__ */ jsx(
-        NodeContextMenu,
-        {
-          nodeId: "node-1",
-          node: mockNode,
-          x: 100,
-          y: 200,
-          onClose: mockOnClose
-        }
-      )
+      <NodeContextMenu
+        nodeId="node-1"
+        node={mockNode}
+        x={100}
+        y={200}
+        onClose={mockOnClose}
+      />,
     );
     const copyButton = screen.getByText("Copy");
     fireEvent.click(copyButton);
@@ -361,17 +313,14 @@ describe("NodeContextMenu", () => {
   });
   it("should handle cut when node is null", () => {
     renderWithProvider(
-      /* @__PURE__ */ jsx(
-        NodeContextMenu,
-        {
-          nodeId: "node-1",
-          node: null,
-          x: 100,
-          y: 200,
-          onClose: mockOnClose,
-          onCut: mockOnCut
-        }
-      )
+      <NodeContextMenu
+        nodeId="node-1"
+        node={null}
+        x={100}
+        y={200}
+        onClose={mockOnClose}
+        onCut={mockOnCut}
+      />,
     );
     const cutButton = screen.getByText("Cut");
     fireEvent.click(cutButton);
@@ -380,17 +329,14 @@ describe("NodeContextMenu", () => {
   });
   it("should handle paste when callback is not provided", () => {
     renderWithProvider(
-      /* @__PURE__ */ jsx(
-        NodeContextMenu,
-        {
-          nodeId: "node-1",
-          node: mockNode,
-          x: 100,
-          y: 200,
-          onClose: mockOnClose,
-          canPaste: true
-        }
-      )
+      <NodeContextMenu
+        nodeId="node-1"
+        node={mockNode}
+        x={100}
+        y={200}
+        onClose={mockOnClose}
+        canPaste={true}
+      />,
     );
     const pasteButton = screen.getByText("Paste");
     fireEvent.click(pasteButton);
@@ -398,76 +344,70 @@ describe("NodeContextMenu", () => {
   });
   it("should handle addToAgentNodes when node is null", () => {
     renderWithProvider(
-      /* @__PURE__ */ jsx(
-        NodeContextMenu,
-        {
-          nodeId: "node-1",
-          node: null,
-          x: 100,
-          y: 200,
-          onClose: mockOnClose,
-          onAddToAgentNodes: mockOnAddToAgentNodes
-        }
-      )
+      <NodeContextMenu
+        nodeId="node-1"
+        node={null}
+        x={100}
+        y={200}
+        onClose={mockOnClose}
+        onAddToAgentNodes={mockOnAddToAgentNodes}
+      />,
     );
     expect(screen.queryByText("Add to Agent Nodes")).not.toBeInTheDocument();
   });
   it("should handle sendToMarketplace when node is null", () => {
     renderWithProvider(
-      /* @__PURE__ */ jsx(
-        NodeContextMenu,
-        {
-          nodeId: "node-1",
-          node: null,
-          x: 100,
-          y: 200,
-          onClose: mockOnClose,
-          onSendToMarketplace: mockOnSendToMarketplace
-        }
-      )
+      <NodeContextMenu
+        nodeId="node-1"
+        node={null}
+        x={100}
+        y={200}
+        onClose={mockOnClose}
+        onSendToMarketplace={mockOnSendToMarketplace}
+      />,
     );
     expect(screen.queryByText("Send to Marketplace")).not.toBeInTheDocument();
   });
   it("should handle delete when both nodeId and edgeId are provided", () => {
     const mockDeleteElements = jest.fn();
     jest.spyOn(require("@xyflow/react"), "useReactFlow").mockReturnValue({
-      deleteElements: mockDeleteElements
+      deleteElements: mockDeleteElements,
     });
     renderWithProvider(
-      /* @__PURE__ */ jsx(
-        NodeContextMenu,
-        {
-          nodeId: "node-1",
-          edgeId: "edge-1",
-          node: mockNode,
-          x: 100,
-          y: 200,
-          onClose: mockOnClose,
-          onDelete: mockOnDelete
-        }
-      )
+      <NodeContextMenu
+        nodeId="node-1"
+        edgeId="edge-1"
+        node={mockNode}
+        x={100}
+        y={200}
+        onClose={mockOnClose}
+        onDelete={mockOnDelete}
+      />,
     );
     const deleteButton = screen.getByText("Delete Node");
     fireEvent.click(deleteButton);
-    expect(mockDeleteElements).toHaveBeenCalledWith({ nodes: [{ id: "node-1" }] });
+    expect(mockDeleteElements).toHaveBeenCalledWith({
+      nodes: [
+        {
+          id: "node-1",
+        },
+      ],
+    });
     expect(mockOnDelete).toHaveBeenCalledTimes(1);
     expect(mockOnClose).toHaveBeenCalledTimes(1);
   });
   it("should handle delete when neither nodeId nor edgeId are provided", () => {
     const mockDeleteElements = jest.fn();
     jest.spyOn(require("@xyflow/react"), "useReactFlow").mockReturnValue({
-      deleteElements: mockDeleteElements
+      deleteElements: mockDeleteElements,
     });
     renderWithProvider(
-      /* @__PURE__ */ jsx(
-        NodeContextMenu,
-        {
-          x: 100,
-          y: 200,
-          onClose: mockOnClose,
-          onDelete: mockOnDelete
-        }
-      )
+      <NodeContextMenu
+        x={100}
+        y={200}
+        onClose={mockOnClose}
+        onDelete={mockOnDelete}
+      />,
     );
     const deleteButton = screen.getByText("Delete Connection");
     fireEvent.click(deleteButton);
@@ -479,21 +419,20 @@ describe("NodeContextMenu", () => {
     const nonAgentNode = {
       id: "node-1",
       type: "condition",
-      data: { label: "Condition Node" }
+      data: {
+        label: "Condition Node",
+      },
     };
     renderWithProvider(
-      /* @__PURE__ */ jsx(
-        NodeContextMenu,
-        {
-          nodeId: "node-1",
-          node: nonAgentNode,
-          x: 100,
-          y: 200,
-          onClose: mockOnClose,
-          onAddToAgentNodes: mockOnAddToAgentNodes,
-          onSendToMarketplace: mockOnSendToMarketplace
-        }
-      )
+      <NodeContextMenu
+        nodeId="node-1"
+        node={nonAgentNode}
+        x={100}
+        y={200}
+        onClose={mockOnClose}
+        onAddToAgentNodes={mockOnAddToAgentNodes}
+        onSendToMarketplace={mockOnSendToMarketplace}
+      />,
     );
     expect(screen.queryByText("Add to Agent Nodes")).not.toBeInTheDocument();
     expect(screen.queryByText("Send to Marketplace")).not.toBeInTheDocument();
@@ -501,23 +440,26 @@ describe("NodeContextMenu", () => {
   it("should handle delete without onDelete callback", () => {
     const mockDeleteElements = jest.fn();
     jest.spyOn(require("@xyflow/react"), "useReactFlow").mockReturnValue({
-      deleteElements: mockDeleteElements
+      deleteElements: mockDeleteElements,
     });
     renderWithProvider(
-      /* @__PURE__ */ jsx(
-        NodeContextMenu,
-        {
-          nodeId: "node-1",
-          node: mockNode,
-          x: 100,
-          y: 200,
-          onClose: mockOnClose
-        }
-      )
+      <NodeContextMenu
+        nodeId="node-1"
+        node={mockNode}
+        x={100}
+        y={200}
+        onClose={mockOnClose}
+      />,
     );
     const deleteButton = screen.getByText("Delete Node");
     fireEvent.click(deleteButton);
-    expect(mockDeleteElements).toHaveBeenCalledWith({ nodes: [{ id: "node-1" }] });
+    expect(mockDeleteElements).toHaveBeenCalledWith({
+      nodes: [
+        {
+          id: "node-1",
+        },
+      ],
+    });
     expect(mockOnClose).toHaveBeenCalledTimes(1);
   });
 });

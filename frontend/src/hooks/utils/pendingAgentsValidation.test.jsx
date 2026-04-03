@@ -2,7 +2,7 @@ import {
   isValidPendingAgents,
   isPendingAgentsValid,
   isPendingAgentsForDifferentTab,
-  isPendingAgentsTooOld
+  isPendingAgentsTooOld,
 } from "./pendingAgentsValidation";
 describe("pendingAgentsValidation", () => {
   describe("isValidPendingAgents", () => {
@@ -13,28 +13,42 @@ describe("pendingAgentsValidation", () => {
       expect(isValidPendingAgents(void 0)).toBe(false);
     });
     it("should return false for object without tabId", () => {
-      expect(isValidPendingAgents({ timestamp: Date.now(), agents: [] })).toBe(false);
+      expect(isValidPendingAgents({ timestamp: Date.now(), agents: [] })).toBe(
+        false,
+      );
     });
     it("should return false for object with empty tabId", () => {
-      expect(isValidPendingAgents({ tabId: "", timestamp: Date.now(), agents: [] })).toBe(false);
+      expect(
+        isValidPendingAgents({ tabId: "", timestamp: Date.now(), agents: [] }),
+      ).toBe(false);
     });
     it("should return false for object without timestamp", () => {
       expect(isValidPendingAgents({ tabId: "tab-1", agents: [] })).toBe(false);
     });
     it("should return false for object with negative timestamp", () => {
-      expect(isValidPendingAgents({ tabId: "tab-1", timestamp: -1, agents: [] })).toBe(false);
+      expect(
+        isValidPendingAgents({ tabId: "tab-1", timestamp: -1, agents: [] }),
+      ).toBe(false);
     });
     it("should return false for object without agents array", () => {
-      expect(isValidPendingAgents({ tabId: "tab-1", timestamp: Date.now() })).toBe(false);
+      expect(
+        isValidPendingAgents({ tabId: "tab-1", timestamp: Date.now() }),
+      ).toBe(false);
     });
     it("should return false for object with non-array agents", () => {
-      expect(isValidPendingAgents({ tabId: "tab-1", timestamp: Date.now(), agents: "not-array" })).toBe(false);
+      expect(
+        isValidPendingAgents({
+          tabId: "tab-1",
+          timestamp: Date.now(),
+          agents: "not-array",
+        }),
+      ).toBe(false);
     });
     it("should return true for valid pending agents", () => {
       const pending = {
         tabId: "tab-1",
         timestamp: Date.now(),
-        agents: [{ name: "Agent 1" }]
+        agents: [{ name: "Agent 1" }],
       };
       expect(isValidPendingAgents(pending)).toBe(true);
     });
@@ -50,7 +64,7 @@ describe("pendingAgentsValidation", () => {
       const pending = {
         tabId: "tab-1",
         timestamp: Date.now(),
-        agents: []
+        agents: [],
       };
       expect(isPendingAgentsValid(pending, "tab-2")).toBe(false);
     });
@@ -59,7 +73,7 @@ describe("pendingAgentsValidation", () => {
         tabId: "tab-1",
         timestamp: Date.now() + 1e3,
         // Future timestamp
-        agents: []
+        agents: [],
       };
       expect(isPendingAgentsValid(pending, "tab-1")).toBe(false);
     });
@@ -68,7 +82,7 @@ describe("pendingAgentsValidation", () => {
         tabId: "tab-1",
         timestamp: Date.now() - 2e4,
         // 20 seconds ago
-        agents: []
+        agents: [],
       };
       expect(isPendingAgentsValid(pending, "tab-1", 1e4)).toBe(false);
     });
@@ -77,7 +91,7 @@ describe("pendingAgentsValidation", () => {
         tabId: "tab-1",
         timestamp: Date.now() - 5e3,
         // 5 seconds ago
-        agents: []
+        agents: [],
       };
       expect(isPendingAgentsValid(pending, "tab-1", 1e4)).toBe(true);
     });
@@ -88,7 +102,7 @@ describe("pendingAgentsValidation", () => {
         tabId: "tab-1",
         timestamp: anchor - 9999,
         // Just under maxAge
-        agents: []
+        agents: [],
       };
       expect(isPendingAgentsValid(pending, "tab-1", 1e4)).toBe(true);
       spy.mockRestore();
@@ -100,7 +114,7 @@ describe("pendingAgentsValidation", () => {
         tabId: "tab-1",
         timestamp: anchor - 1e4,
         // Exactly maxAge
-        agents: []
+        agents: [],
       };
       expect(isPendingAgentsValid(pending, "tab-1", 1e4)).toBe(false);
       spy.mockRestore();
@@ -114,7 +128,7 @@ describe("pendingAgentsValidation", () => {
       const pending = {
         tabId: "tab-1",
         timestamp: Date.now(),
-        agents: []
+        agents: [],
       };
       expect(isPendingAgentsForDifferentTab(pending, "tab-1")).toBe(false);
     });
@@ -122,7 +136,7 @@ describe("pendingAgentsValidation", () => {
       const pending = {
         tabId: "tab-1",
         timestamp: Date.now(),
-        agents: []
+        agents: [],
       };
       expect(isPendingAgentsForDifferentTab(pending, "tab-2")).toBe(true);
     });
@@ -136,7 +150,7 @@ describe("pendingAgentsValidation", () => {
         tabId: "tab-1",
         timestamp: Date.now() + 1e3,
         // Future timestamp
-        agents: []
+        agents: [],
       };
       expect(isPendingAgentsTooOld(pending, 1e4)).toBe(true);
     });
@@ -145,7 +159,7 @@ describe("pendingAgentsValidation", () => {
         tabId: "tab-1",
         timestamp: Date.now() - 5e3,
         // 5 seconds ago
-        agents: []
+        agents: [],
       };
       expect(isPendingAgentsTooOld(pending, 1e4)).toBe(false);
     });
@@ -156,7 +170,7 @@ describe("pendingAgentsValidation", () => {
         tabId: "tab-1",
         timestamp: anchor - 1e4,
         // Exactly maxAge
-        agents: []
+        agents: [],
       };
       expect(isPendingAgentsTooOld(pending, 1e4)).toBe(true);
       spy.mockRestore();
@@ -166,7 +180,7 @@ describe("pendingAgentsValidation", () => {
         tabId: "tab-1",
         timestamp: Date.now() - 2e4,
         // 20 seconds ago
-        agents: []
+        agents: [],
       };
       expect(isPendingAgentsTooOld(pending, 1e4)).toBe(true);
     });
@@ -177,7 +191,7 @@ describe("pendingAgentsValidation", () => {
         tabId: "tab-1",
         timestamp: anchor - 9999,
         // Just under maxAge
-        agents: []
+        agents: [],
       };
       expect(isPendingAgentsTooOld(pending, 1e4)).toBe(false);
       spy.mockRestore();

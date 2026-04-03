@@ -12,5 +12,5 @@ export {
   useWorkflowPersistence,
   useWorkflowState,
   useWorkflowUpdateHandler,
-  useWorkflowUpdates
+  useWorkflowUpdates,
 };

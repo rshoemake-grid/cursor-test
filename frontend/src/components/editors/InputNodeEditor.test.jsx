@@ -1,7 +1,8 @@
-import { jsx } from "react/jsx-runtime";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 const waitForWithTimeout = (callback, timeout = 2e3) => {
-  return waitFor(callback, { timeout });
+  return waitFor(callback, {
+    timeout,
+  });
 };
 import InputNodeEditor from "./InputNodeEditor";
 describe("InputNodeEditor", () => {
@@ -13,54 +14,124 @@ describe("InputNodeEditor", () => {
     const gcpBucketNode = {
       id: "1",
       type: "gcp_bucket",
-      position: { x: 0, y: 0 },
+      position: {
+        x: 0,
+        y: 0,
+      },
       data: {
         input_config: {
           bucket_name: "test-bucket",
           object_path: "path/to/file",
           credentials: '{"type":"service_account"}',
-          mode: "read"
-        }
-      }
+          mode: "read",
+        },
+      },
     };
     it("should render GCP bucket configuration fields", () => {
-      render(/* @__PURE__ */ jsx(InputNodeEditor, { node: gcpBucketNode, onConfigUpdate: mockOnConfigUpdate }));
+      render(
+        <InputNodeEditor
+          node={gcpBucketNode}
+          onConfigUpdate={mockOnConfigUpdate}
+        />,
+      );
       expect(screen.getByLabelText(/GCP bucket name/i)).toBeInTheDocument();
       expect(screen.getByLabelText(/Object path/i)).toBeInTheDocument();
       expect(screen.getByLabelText(/GCP Credentials/i)).toBeInTheDocument();
       expect(screen.getByLabelText(/Mode/i)).toBeInTheDocument();
     });
     it("should display current bucket name value", () => {
-      render(/* @__PURE__ */ jsx(InputNodeEditor, { node: gcpBucketNode, onConfigUpdate: mockOnConfigUpdate }));
+      render(
+        <InputNodeEditor
+          node={gcpBucketNode}
+          onConfigUpdate={mockOnConfigUpdate}
+        />,
+      );
       const bucketInput = screen.getByLabelText(/GCP bucket name/i);
       expect(bucketInput.value).toBe("test-bucket");
     });
     it("should call onConfigUpdate when bucket name changes", () => {
-      render(/* @__PURE__ */ jsx(InputNodeEditor, { node: gcpBucketNode, onConfigUpdate: mockOnConfigUpdate }));
+      render(
+        <InputNodeEditor
+          node={gcpBucketNode}
+          onConfigUpdate={mockOnConfigUpdate}
+        />,
+      );
       const bucketInput = screen.getByLabelText(/GCP bucket name/i);
-      fireEvent.change(bucketInput, { target: { value: "new-bucket" } });
-      expect(mockOnConfigUpdate).toHaveBeenCalledWith("input_config", "bucket_name", "new-bucket");
+      fireEvent.change(bucketInput, {
+        target: {
+          value: "new-bucket",
+        },
+      });
+      expect(mockOnConfigUpdate).toHaveBeenCalledWith(
+        "input_config",
+        "bucket_name",
+        "new-bucket",
+      );
     });
     it("should call onConfigUpdate when object path changes", () => {
-      render(/* @__PURE__ */ jsx(InputNodeEditor, { node: gcpBucketNode, onConfigUpdate: mockOnConfigUpdate }));
+      render(
+        <InputNodeEditor
+          node={gcpBucketNode}
+          onConfigUpdate={mockOnConfigUpdate}
+        />,
+      );
       const objectPathInput = screen.getByLabelText(/Object path/i);
-      fireEvent.change(objectPathInput, { target: { value: "new/path" } });
-      expect(mockOnConfigUpdate).toHaveBeenCalledWith("input_config", "object_path", "new/path");
+      fireEvent.change(objectPathInput, {
+        target: {
+          value: "new/path",
+        },
+      });
+      expect(mockOnConfigUpdate).toHaveBeenCalledWith(
+        "input_config",
+        "object_path",
+        "new/path",
+      );
     });
     it("should call onConfigUpdate when credentials change", () => {
-      render(/* @__PURE__ */ jsx(InputNodeEditor, { node: gcpBucketNode, onConfigUpdate: mockOnConfigUpdate }));
+      render(
+        <InputNodeEditor
+          node={gcpBucketNode}
+          onConfigUpdate={mockOnConfigUpdate}
+        />,
+      );
       const credentialsInput = screen.getByLabelText(/GCP Credentials/i);
-      fireEvent.change(credentialsInput, { target: { value: '{"new":"credentials"}' } });
-      expect(mockOnConfigUpdate).toHaveBeenCalledWith("input_config", "credentials", '{"new":"credentials"}');
+      fireEvent.change(credentialsInput, {
+        target: {
+          value: '{"new":"credentials"}',
+        },
+      });
+      expect(mockOnConfigUpdate).toHaveBeenCalledWith(
+        "input_config",
+        "credentials",
+        '{"new":"credentials"}',
+      );
     });
     it("should call onConfigUpdate when mode changes", () => {
-      render(/* @__PURE__ */ jsx(InputNodeEditor, { node: gcpBucketNode, onConfigUpdate: mockOnConfigUpdate }));
+      render(
+        <InputNodeEditor
+          node={gcpBucketNode}
+          onConfigUpdate={mockOnConfigUpdate}
+        />,
+      );
       const modeSelect = screen.getByLabelText(/Mode/i);
-      fireEvent.change(modeSelect, { target: { value: "write" } });
-      expect(mockOnConfigUpdate).toHaveBeenCalledWith("input_config", "mode", "write");
+      fireEvent.change(modeSelect, {
+        target: {
+          value: "write",
+        },
+      });
+      expect(mockOnConfigUpdate).toHaveBeenCalledWith(
+        "input_config",
+        "mode",
+        "write",
+      );
     });
     it("should display read mode option", () => {
-      render(/* @__PURE__ */ jsx(InputNodeEditor, { node: gcpBucketNode, onConfigUpdate: mockOnConfigUpdate }));
+      render(
+        <InputNodeEditor
+          node={gcpBucketNode}
+          onConfigUpdate={mockOnConfigUpdate}
+        />,
+      );
       const modeSelect = screen.getByLabelText(/Mode/i);
       expect(modeSelect.value).toBe("read");
     });
@@ -69,7 +140,10 @@ describe("InputNodeEditor", () => {
     const awsS3Node = {
       id: "2",
       type: "aws_s3",
-      position: { x: 0, y: 0 },
+      position: {
+        x: 0,
+        y: 0,
+      },
       data: {
         input_config: {
           bucket_name: "aws-bucket",
@@ -77,41 +151,71 @@ describe("InputNodeEditor", () => {
           access_key_id: "AKIAIOSFODNN7EXAMPLE",
           secret_access_key: "secret",
           region: "us-west-2",
-          mode: "read"
-        }
-      }
+          mode: "read",
+        },
+      },
     };
     it("should render AWS S3 configuration fields", () => {
-      render(/* @__PURE__ */ jsx(InputNodeEditor, { node: awsS3Node, onConfigUpdate: mockOnConfigUpdate }));
+      render(
+        <InputNodeEditor
+          node={awsS3Node}
+          onConfigUpdate={mockOnConfigUpdate}
+        />,
+      );
       expect(screen.getByLabelText(/AWS S3 bucket name/i)).toBeInTheDocument();
       expect(screen.getByLabelText(/Object key/i)).toBeInTheDocument();
       expect(screen.getByLabelText(/AWS Access Key ID/i)).toBeInTheDocument();
-      expect(screen.getByLabelText(/AWS Secret Access Key/i)).toBeInTheDocument();
+      expect(
+        screen.getByLabelText(/AWS Secret Access Key/i),
+      ).toBeInTheDocument();
       expect(screen.getByLabelText(/AWS Region/i)).toBeInTheDocument();
     });
     it("should display current AWS S3 values", () => {
-      render(/* @__PURE__ */ jsx(InputNodeEditor, { node: awsS3Node, onConfigUpdate: mockOnConfigUpdate }));
+      render(
+        <InputNodeEditor
+          node={awsS3Node}
+          onConfigUpdate={mockOnConfigUpdate}
+        />,
+      );
       const bucketInput = screen.getByLabelText(/AWS S3 bucket name/i);
       expect(bucketInput.value).toBe("aws-bucket");
       const regionInput = screen.getByLabelText(/AWS Region/i);
       expect(regionInput.value).toBe("us-west-2");
     });
     it("should call onConfigUpdate when AWS fields change", () => {
-      render(/* @__PURE__ */ jsx(InputNodeEditor, { node: awsS3Node, onConfigUpdate: mockOnConfigUpdate }));
+      render(
+        <InputNodeEditor
+          node={awsS3Node}
+          onConfigUpdate={mockOnConfigUpdate}
+        />,
+      );
       const accessKeyInput = screen.getByLabelText(/AWS Access Key ID/i);
-      fireEvent.change(accessKeyInput, { target: { value: "NEWKEY" } });
-      expect(mockOnConfigUpdate).toHaveBeenCalledWith("input_config", "access_key_id", "NEWKEY");
+      fireEvent.change(accessKeyInput, {
+        target: {
+          value: "NEWKEY",
+        },
+      });
+      expect(mockOnConfigUpdate).toHaveBeenCalledWith(
+        "input_config",
+        "access_key_id",
+        "NEWKEY",
+      );
     });
     it("should use default region when not provided", () => {
       const nodeWithoutRegion = {
         ...awsS3Node,
         data: {
           input_config: {
-            bucket_name: "test-bucket"
-          }
-        }
+            bucket_name: "test-bucket",
+          },
+        },
       };
-      render(/* @__PURE__ */ jsx(InputNodeEditor, { node: nodeWithoutRegion, onConfigUpdate: mockOnConfigUpdate }));
+      render(
+        <InputNodeEditor
+          node={nodeWithoutRegion}
+          onConfigUpdate={mockOnConfigUpdate}
+        />,
+      );
       const regionInput = screen.getByLabelText(/AWS Region/i);
       expect(regionInput.value).toBe("us-east-1");
     });
@@ -120,57 +224,106 @@ describe("InputNodeEditor", () => {
     const pubsubNode = {
       id: "3",
       type: "gcp_pubsub",
-      position: { x: 0, y: 0 },
+      position: {
+        x: 0,
+        y: 0,
+      },
       data: {
         input_config: {
           project_id: "my-project",
           topic_name: "my-topic",
           subscription_name: "my-subscription",
           credentials: '{"type":"service_account"}',
-          mode: "read"
-        }
-      }
+          mode: "read",
+        },
+      },
     };
     it("should render Pub/Sub configuration fields", () => {
-      render(/* @__PURE__ */ jsx(InputNodeEditor, { node: pubsubNode, onConfigUpdate: mockOnConfigUpdate }));
+      render(
+        <InputNodeEditor
+          node={pubsubNode}
+          onConfigUpdate={mockOnConfigUpdate}
+        />,
+      );
       expect(screen.getByLabelText(/Project ID/i)).toBeInTheDocument();
       expect(screen.getByLabelText(/Topic name/i)).toBeInTheDocument();
       expect(screen.getByLabelText(/Subscription name/i)).toBeInTheDocument();
     });
     it("should call onConfigUpdate when Pub/Sub fields change", () => {
-      render(/* @__PURE__ */ jsx(InputNodeEditor, { node: pubsubNode, onConfigUpdate: mockOnConfigUpdate }));
+      render(
+        <InputNodeEditor
+          node={pubsubNode}
+          onConfigUpdate={mockOnConfigUpdate}
+        />,
+      );
       const topicInput = screen.getByLabelText(/Topic name/i);
-      fireEvent.change(topicInput, { target: { value: "new-topic" } });
-      expect(mockOnConfigUpdate).toHaveBeenCalledWith("input_config", "topic_name", "new-topic");
+      fireEvent.change(topicInput, {
+        target: {
+          value: "new-topic",
+        },
+      });
+      expect(mockOnConfigUpdate).toHaveBeenCalledWith(
+        "input_config",
+        "topic_name",
+        "new-topic",
+      );
     });
     it("should handle write mode for Pub/Sub", () => {
-      render(/* @__PURE__ */ jsx(InputNodeEditor, { node: pubsubNode, onConfigUpdate: mockOnConfigUpdate }));
-      const modeSelect = screen.getByLabelText(/Select Pub\/Sub operation mode/i);
-      fireEvent.change(modeSelect, { target: { value: "write" } });
-      expect(mockOnConfigUpdate).toHaveBeenCalledWith("input_config", "mode", "write");
+      render(
+        <InputNodeEditor
+          node={pubsubNode}
+          onConfigUpdate={mockOnConfigUpdate}
+        />,
+      );
+      const modeSelect = screen.getByLabelText(
+        /Select Pub\/Sub operation mode/i,
+      );
+      fireEvent.change(modeSelect, {
+        target: {
+          value: "write",
+        },
+      });
+      expect(mockOnConfigUpdate).toHaveBeenCalledWith(
+        "input_config",
+        "mode",
+        "write",
+      );
     });
   });
   describe("Local FileSystem Configuration", () => {
     const filesystemNode = {
       id: "4",
       type: "local_filesystem",
-      position: { x: 0, y: 0 },
+      position: {
+        x: 0,
+        y: 0,
+      },
       data: {
         input_config: {
           file_path: "/path/to/file.txt",
           file_pattern: "*.txt",
           mode: "read",
-          overwrite: false
-        }
-      }
+          overwrite: false,
+        },
+      },
     };
     it("should render filesystem configuration fields", () => {
-      render(/* @__PURE__ */ jsx(InputNodeEditor, { node: filesystemNode, onConfigUpdate: mockOnConfigUpdate }));
+      render(
+        <InputNodeEditor
+          node={filesystemNode}
+          onConfigUpdate={mockOnConfigUpdate}
+        />,
+      );
       expect(screen.getByLabelText(/File Path/i)).toBeInTheDocument();
       expect(screen.getByLabelText(/File Pattern/i)).toBeInTheDocument();
     });
     it("should show file pattern when mode is read", () => {
-      render(/* @__PURE__ */ jsx(InputNodeEditor, { node: filesystemNode, onConfigUpdate: mockOnConfigUpdate }));
+      render(
+        <InputNodeEditor
+          node={filesystemNode}
+          onConfigUpdate={mockOnConfigUpdate}
+        />,
+      );
       expect(screen.getByLabelText(/File Pattern/i)).toBeInTheDocument();
     });
     it("should show overwrite checkbox when mode is write", () => {
@@ -179,18 +332,38 @@ describe("InputNodeEditor", () => {
         data: {
           input_config: {
             ...filesystemNode.data.input_config,
-            mode: "write"
-          }
-        }
+            mode: "write",
+          },
+        },
       };
-      render(/* @__PURE__ */ jsx(InputNodeEditor, { node: writeNode, onConfigUpdate: mockOnConfigUpdate }));
-      expect(screen.getByLabelText(/Overwrite existing file/i)).toBeInTheDocument();
+      render(
+        <InputNodeEditor
+          node={writeNode}
+          onConfigUpdate={mockOnConfigUpdate}
+        />,
+      );
+      expect(
+        screen.getByLabelText(/Overwrite existing file/i),
+      ).toBeInTheDocument();
     });
     it("should call onConfigUpdate when file path changes", () => {
-      render(/* @__PURE__ */ jsx(InputNodeEditor, { node: filesystemNode, onConfigUpdate: mockOnConfigUpdate }));
+      render(
+        <InputNodeEditor
+          node={filesystemNode}
+          onConfigUpdate={mockOnConfigUpdate}
+        />,
+      );
       const filePathInput = screen.getByLabelText(/File Path/i);
-      fireEvent.change(filePathInput, { target: { value: "/new/path" } });
-      expect(mockOnConfigUpdate).toHaveBeenCalledWith("input_config", "file_path", "/new/path");
+      fireEvent.change(filePathInput, {
+        target: {
+          value: "/new/path",
+        },
+      });
+      expect(mockOnConfigUpdate).toHaveBeenCalledWith(
+        "input_config",
+        "file_path",
+        "/new/path",
+      );
     });
     it("should call onConfigUpdate when overwrite changes", () => {
       const writeNode = {
@@ -199,15 +372,26 @@ describe("InputNodeEditor", () => {
           input_config: {
             ...filesystemNode.data.input_config,
             mode: "write",
-            overwrite: false
-          }
-        }
+            overwrite: false,
+          },
+        },
       };
-      render(/* @__PURE__ */ jsx(InputNodeEditor, { node: writeNode, onConfigUpdate: mockOnConfigUpdate }));
-      const overwriteCheckbox = screen.getByLabelText(/Overwrite existing file/i);
+      render(
+        <InputNodeEditor
+          node={writeNode}
+          onConfigUpdate={mockOnConfigUpdate}
+        />,
+      );
+      const overwriteCheckbox = screen.getByLabelText(
+        /Overwrite existing file/i,
+      );
       expect(overwriteCheckbox.checked).toBe(false);
       fireEvent.click(overwriteCheckbox);
-      expect(mockOnConfigUpdate).toHaveBeenCalledWith("input_config", "overwrite", true);
+      expect(mockOnConfigUpdate).toHaveBeenCalledWith(
+        "input_config",
+        "overwrite",
+        true,
+      );
     });
     it("should use default overwrite value", () => {
       const nodeWithoutOverwrite = {
@@ -215,12 +399,19 @@ describe("InputNodeEditor", () => {
         data: {
           input_config: {
             file_path: "/path/to/file.txt",
-            mode: "write"
-          }
-        }
+            mode: "write",
+          },
+        },
       };
-      render(/* @__PURE__ */ jsx(InputNodeEditor, { node: nodeWithoutOverwrite, onConfigUpdate: mockOnConfigUpdate }));
-      const overwriteCheckbox = screen.getByLabelText(/Overwrite existing file/i);
+      render(
+        <InputNodeEditor
+          node={nodeWithoutOverwrite}
+          onConfigUpdate={mockOnConfigUpdate}
+        />,
+      );
+      const overwriteCheckbox = screen.getByLabelText(
+        /Overwrite existing file/i,
+      );
       expect(overwriteCheckbox.checked).toBe(true);
     });
   });
@@ -228,32 +419,60 @@ describe("InputNodeEditor", () => {
     const databaseNode = {
       id: "5",
       type: "database",
-      position: { x: 0, y: 0 },
-      data: {}
+      position: {
+        x: 0,
+        y: 0,
+      },
+      data: {},
     };
     it("should render placeholder for database nodes", () => {
-      render(/* @__PURE__ */ jsx(InputNodeEditor, { node: databaseNode, onConfigUpdate: mockOnConfigUpdate }));
+      render(
+        <InputNodeEditor
+          node={databaseNode}
+          onConfigUpdate={mockOnConfigUpdate}
+        />,
+      );
       expect(screen.getByText(/Database Configuration/i)).toBeInTheDocument();
-      expect(screen.getByText(/Configuration for database nodes is handled in PropertyPanel/i)).toBeInTheDocument();
+      expect(
+        screen.getByText(
+          /Configuration for database nodes is handled in PropertyPanel/i,
+        ),
+      ).toBeInTheDocument();
     });
     const firebaseNode = {
       id: "6",
       type: "firebase",
-      position: { x: 0, y: 0 },
-      data: {}
+      position: {
+        x: 0,
+        y: 0,
+      },
+      data: {},
     };
     it("should render placeholder for firebase nodes", () => {
-      render(/* @__PURE__ */ jsx(InputNodeEditor, { node: firebaseNode, onConfigUpdate: mockOnConfigUpdate }));
+      render(
+        <InputNodeEditor
+          node={firebaseNode}
+          onConfigUpdate={mockOnConfigUpdate}
+        />,
+      );
       expect(screen.getByText(/Firebase Configuration/i)).toBeInTheDocument();
     });
     const bigqueryNode = {
       id: "7",
       type: "bigquery",
-      position: { x: 0, y: 0 },
-      data: {}
+      position: {
+        x: 0,
+        y: 0,
+      },
+      data: {},
     };
     it("should render placeholder for bigquery nodes", () => {
-      render(/* @__PURE__ */ jsx(InputNodeEditor, { node: bigqueryNode, onConfigUpdate: mockOnConfigUpdate }));
+      render(
+        <InputNodeEditor
+          node={bigqueryNode}
+          onConfigUpdate={mockOnConfigUpdate}
+        />,
+      );
       expect(screen.getByText(/BigQuery Configuration/i)).toBeInTheDocument();
     });
   });
@@ -262,14 +481,19 @@ describe("InputNodeEditor", () => {
       const node = {
         id: "1",
         type: "gcp_bucket",
-        position: { x: 0, y: 0 },
+        position: {
+          x: 0,
+          y: 0,
+        },
         data: {
           input_config: {
-            bucket_name: "initial-bucket"
-          }
-        }
+            bucket_name: "initial-bucket",
+          },
+        },
       };
-      render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+      render(
+        <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+      );
       const bucketInput = screen.getByLabelText(/GCP bucket name/i);
       expect(bucketInput.value).toBe("initial-bucket");
     });
@@ -277,23 +501,33 @@ describe("InputNodeEditor", () => {
       const node = {
         id: "1",
         type: "gcp_bucket",
-        position: { x: 0, y: 0 },
+        position: {
+          x: 0,
+          y: 0,
+        },
         data: {
           input_config: {
-            bucket_name: "initial-bucket"
-          }
-        }
+            bucket_name: "initial-bucket",
+          },
+        },
       };
-      const { rerender } = render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+      const { rerender } = render(
+        <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+      );
       const updatedNode = {
         ...node,
         data: {
           input_config: {
-            bucket_name: "updated-bucket"
-          }
-        }
+            bucket_name: "updated-bucket",
+          },
+        },
       };
-      rerender(/* @__PURE__ */ jsx(InputNodeEditor, { node: updatedNode, onConfigUpdate: mockOnConfigUpdate }));
+      rerender(
+        <InputNodeEditor
+          node={updatedNode}
+          onConfigUpdate={mockOnConfigUpdate}
+        />,
+      );
       const bucketInput = screen.getByLabelText(/GCP bucket name/i);
       expect(bucketInput.value).toBe("updated-bucket");
     });
@@ -301,35 +535,50 @@ describe("InputNodeEditor", () => {
       const node = {
         id: "1",
         type: "gcp_bucket",
-        position: { x: 0, y: 0 },
+        position: {
+          x: 0,
+          y: 0,
+        },
         data: {
           input_config: {
-            bucket_name: "initial-bucket"
-          }
-        }
+            bucket_name: "initial-bucket",
+          },
+        },
       };
-      const { rerender } = render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+      const { rerender } = render(
+        <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+      );
       const bucketInput = screen.getByLabelText(/GCP bucket name/i);
       bucketInput.focus();
       const updatedNode = {
         ...node,
         data: {
           input_config: {
-            bucket_name: "updated-bucket"
-          }
-        }
+            bucket_name: "updated-bucket",
+          },
+        },
       };
-      rerender(/* @__PURE__ */ jsx(InputNodeEditor, { node: updatedNode, onConfigUpdate: mockOnConfigUpdate }));
+      rerender(
+        <InputNodeEditor
+          node={updatedNode}
+          onConfigUpdate={mockOnConfigUpdate}
+        />,
+      );
       expect(bucketInput.value).toBe("initial-bucket");
     });
     it("should handle undefined input_config", () => {
       const node = {
         id: "1",
         type: "gcp_bucket",
-        position: { x: 0, y: 0 },
-        data: {}
+        position: {
+          x: 0,
+          y: 0,
+        },
+        data: {},
       };
-      render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+      render(
+        <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+      );
       const bucketInput = screen.getByLabelText(/GCP bucket name/i);
       expect(bucketInput.value).toBe("");
     });
@@ -337,15 +586,20 @@ describe("InputNodeEditor", () => {
       const node = {
         id: "1",
         type: "gcp_bucket",
-        position: { x: 0, y: 0 },
+        position: {
+          x: 0,
+          y: 0,
+        },
         data: {
           input_config: {
             bucket_name: null,
-            object_path: null
-          }
-        }
+            object_path: null,
+          },
+        },
       };
-      render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+      render(
+        <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+      );
       const bucketInput = screen.getByLabelText(/GCP bucket name/i);
       expect(bucketInput.value).toBe("");
     });
@@ -353,69 +607,123 @@ describe("InputNodeEditor", () => {
       const node = {
         id: "1",
         type: "gcp_bucket",
-        position: { x: 0, y: 0 },
+        position: {
+          x: 0,
+          y: 0,
+        },
         data: {
           input_config: {
-            mode: "read"
-          }
-        }
+            mode: "read",
+          },
+        },
       };
-      render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+      render(
+        <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+      );
       const modeSelect = screen.getByLabelText(/Select bucket operation mode/i);
       expect(modeSelect.value).toBe("read");
-      fireEvent.change(modeSelect, { target: { value: "write" } });
-      expect(mockOnConfigUpdate).toHaveBeenCalledWith("input_config", "mode", "write");
+      fireEvent.change(modeSelect, {
+        target: {
+          value: "write",
+        },
+      });
+      expect(mockOnConfigUpdate).toHaveBeenCalledWith(
+        "input_config",
+        "mode",
+        "write",
+      );
     });
     it("should handle mode switching for AWS S3", () => {
       const node = {
         id: "1",
         type: "aws_s3",
-        position: { x: 0, y: 0 },
+        position: {
+          x: 0,
+          y: 0,
+        },
         data: {
           input_config: {
-            mode: "read"
-          }
-        }
+            mode: "read",
+          },
+        },
       };
-      render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+      render(
+        <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+      );
       const modeSelect = screen.getByLabelText(/Select S3 operation mode/i);
-      fireEvent.change(modeSelect, { target: { value: "write" } });
-      expect(mockOnConfigUpdate).toHaveBeenCalledWith("input_config", "mode", "write");
+      fireEvent.change(modeSelect, {
+        target: {
+          value: "write",
+        },
+      });
+      expect(mockOnConfigUpdate).toHaveBeenCalledWith(
+        "input_config",
+        "mode",
+        "write",
+      );
     });
     it("should handle mode switching for Local FileSystem", () => {
       const node = {
         id: "1",
         type: "local_filesystem",
-        position: { x: 0, y: 0 },
+        position: {
+          x: 0,
+          y: 0,
+        },
         data: {
           input_config: {
             mode: "read",
-            file_path: "/test/path"
-          }
-        }
+            file_path: "/test/path",
+          },
+        },
       };
-      const { rerender } = render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+      const { rerender } = render(
+        <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+      );
       expect(screen.queryByLabelText(/File Pattern/i)).toBeInTheDocument();
-      const modeSelect = screen.getByLabelText(/Select file system operation mode/i);
-      fireEvent.change(modeSelect, { target: { value: "write" } });
-      rerender(/* @__PURE__ */ jsx(InputNodeEditor, { node: {
-        ...node,
-        data: { input_config: { ...node.data.input_config, mode: "write" } }
-      }, onConfigUpdate: mockOnConfigUpdate }));
-      expect(screen.queryByLabelText(/Overwrite existing file/i)).toBeInTheDocument();
+      const modeSelect = screen.getByLabelText(
+        /Select file system operation mode/i,
+      );
+      fireEvent.change(modeSelect, {
+        target: {
+          value: "write",
+        },
+      });
+      rerender(
+        <InputNodeEditor
+          node={{
+            ...node,
+            data: {
+              input_config: {
+                ...node.data.input_config,
+                mode: "write",
+              },
+            },
+          }}
+          onConfigUpdate={mockOnConfigUpdate}
+        />,
+      );
+      expect(
+        screen.queryByLabelText(/Overwrite existing file/i),
+      ).toBeInTheDocument();
     });
     it("should use default region for AWS S3 when not provided", () => {
       const node = {
         id: "1",
         type: "aws_s3",
-        position: { x: 0, y: 0 },
+        position: {
+          x: 0,
+          y: 0,
+        },
         data: {
           input_config: {
-            bucket_name: "test-bucket"
-          }
-        }
+            bucket_name: "test-bucket",
+          },
+        },
       };
-      render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+      render(
+        <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+      );
       const regionInput = screen.getByLabelText(/AWS region/i);
       expect(regionInput.value).toBe("us-east-1");
     });
@@ -423,159 +731,221 @@ describe("InputNodeEditor", () => {
       const node = {
         id: "1",
         type: "local_filesystem",
-        position: { x: 0, y: 0 },
+        position: {
+          x: 0,
+          y: 0,
+        },
         data: {
           input_config: {
             mode: "write",
-            file_path: "/test/path"
-          }
-        }
+            file_path: "/test/path",
+          },
+        },
       };
-      render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
-      const overwriteCheckbox = screen.getByLabelText(/Overwrite existing file/i);
+      render(
+        <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+      );
+      const overwriteCheckbox = screen.getByLabelText(
+        /Overwrite existing file/i,
+      );
       expect(overwriteCheckbox.checked).toBe(true);
     });
     it("should handle overwrite false value for Local FileSystem", () => {
       const node = {
         id: "1",
         type: "local_filesystem",
-        position: { x: 0, y: 0 },
+        position: {
+          x: 0,
+          y: 0,
+        },
         data: {
           input_config: {
             mode: "write",
             file_path: "/test/path",
-            overwrite: false
-          }
-        }
+            overwrite: false,
+          },
+        },
       };
-      render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
-      const overwriteCheckbox = screen.getByLabelText(/Overwrite existing file/i);
+      render(
+        <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+      );
+      const overwriteCheckbox = screen.getByLabelText(
+        /Overwrite existing file/i,
+      );
       expect(overwriteCheckbox.checked).toBe(false);
     });
     it("should handle all GCP Bucket fields", () => {
       const node = {
         id: "1",
         type: "gcp_bucket",
-        position: { x: 0, y: 0 },
+        position: {
+          x: 0,
+          y: 0,
+        },
         data: {
           input_config: {
             bucket_name: "bucket",
             object_path: "path",
             credentials: "creds",
-            mode: "read"
-          }
-        }
+            mode: "read",
+          },
+        },
       };
-      render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+      render(
+        <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+      );
       expect(screen.getByLabelText(/GCP bucket name/i)).toBeInTheDocument();
-      expect(screen.getByLabelText(/Object path in bucket/i)).toBeInTheDocument();
-      expect(screen.getByLabelText(/GCP service account credentials/i)).toBeInTheDocument();
+      expect(
+        screen.getByLabelText(/Object path in bucket/i),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByLabelText(/GCP service account credentials/i),
+      ).toBeInTheDocument();
     });
     it("should handle all AWS S3 fields", () => {
       const node = {
         id: "1",
         type: "aws_s3",
-        position: { x: 0, y: 0 },
+        position: {
+          x: 0,
+          y: 0,
+        },
         data: {
           input_config: {
             bucket_name: "bucket",
             object_key: "key",
             access_key_id: "key-id",
             secret_access_key: "secret",
-            region: "us-west-2"
-          }
-        }
+            region: "us-west-2",
+          },
+        },
       };
-      render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+      render(
+        <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+      );
       expect(screen.getByLabelText(/AWS S3 bucket name/i)).toBeInTheDocument();
       expect(screen.getByLabelText(/S3 object key/i)).toBeInTheDocument();
       expect(screen.getByLabelText(/AWS access key ID/i)).toBeInTheDocument();
-      expect(screen.getByLabelText(/AWS secret access key/i)).toBeInTheDocument();
+      expect(
+        screen.getByLabelText(/AWS secret access key/i),
+      ).toBeInTheDocument();
       expect(screen.getByLabelText(/AWS region/i)).toBeInTheDocument();
     });
     it("should handle all GCP Pub/Sub fields", () => {
       const node = {
         id: "1",
         type: "gcp_pubsub",
-        position: { x: 0, y: 0 },
+        position: {
+          x: 0,
+          y: 0,
+        },
         data: {
           input_config: {
             project_id: "project",
             topic_name: "topic",
             subscription_name: "subscription",
             credentials: "creds",
-            mode: "read"
-          }
-        }
+            mode: "read",
+          },
+        },
       };
-      render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+      render(
+        <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+      );
       expect(screen.getByLabelText(/GCP project ID/i)).toBeInTheDocument();
       expect(screen.getByLabelText(/Pub\/Sub topic name/i)).toBeInTheDocument();
-      expect(screen.getByLabelText(/Pub\/Sub subscription name/i)).toBeInTheDocument();
+      expect(
+        screen.getByLabelText(/Pub\/Sub subscription name/i),
+      ).toBeInTheDocument();
     });
     it("should preserve focus state when updating node data", () => {
       const node = {
         id: "1",
         type: "gcp_bucket",
-        position: { x: 0, y: 0 },
+        position: {
+          x: 0,
+          y: 0,
+        },
         data: {
           input_config: {
-            bucket_name: "initial"
-          }
-        }
+            bucket_name: "initial",
+          },
+        },
       };
-      const { rerender } = render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+      const { rerender } = render(
+        <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+      );
       const bucketInput = screen.getByLabelText(/GCP bucket name/i);
       bucketInput.focus();
       const updatedNode = {
         ...node,
         data: {
           input_config: {
-            bucket_name: "updated"
-          }
-        }
+            bucket_name: "updated",
+          },
+        },
       };
-      rerender(/* @__PURE__ */ jsx(InputNodeEditor, { node: updatedNode, onConfigUpdate: mockOnConfigUpdate }));
+      rerender(
+        <InputNodeEditor
+          node={updatedNode}
+          onConfigUpdate={mockOnConfigUpdate}
+        />,
+      );
       expect(bucketInput.value).toBe("initial");
     });
     it("should handle file pattern visibility toggle", () => {
       const node = {
         id: "1",
         type: "local_filesystem",
-        position: { x: 0, y: 0 },
+        position: {
+          x: 0,
+          y: 0,
+        },
         data: {
           input_config: {
             mode: "read",
-            file_path: "/test"
-          }
-        }
+            file_path: "/test",
+          },
+        },
       };
-      const { rerender } = render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+      const { rerender } = render(
+        <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+      );
       expect(screen.queryByLabelText(/File Pattern/i)).toBeInTheDocument();
       const updatedNode = {
         ...node,
         data: {
           input_config: {
             ...node.data.input_config,
-            mode: "write"
-          }
-        }
+            mode: "write",
+          },
+        },
       };
-      rerender(/* @__PURE__ */ jsx(InputNodeEditor, { node: updatedNode, onConfigUpdate: mockOnConfigUpdate }));
+      rerender(
+        <InputNodeEditor
+          node={updatedNode}
+          onConfigUpdate={mockOnConfigUpdate}
+        />,
+      );
       expect(screen.queryByLabelText(/File Pattern/i)).not.toBeInTheDocument();
     });
     it("should handle focus state for bucketNameRef", () => {
       const node = {
         id: "1",
         type: "gcp_bucket",
-        position: { x: 0, y: 0 },
+        position: {
+          x: 0,
+          y: 0,
+        },
         data: {
           input_config: {
-            bucket_name: "initial"
-          }
-        }
+            bucket_name: "initial",
+          },
+        },
       };
-      const { rerender } = render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+      const { rerender } = render(
+        <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+      );
       const bucketInput = screen.getByLabelText(/GCP bucket name/i);
       expect(bucketInput.value).toBe("initial");
       bucketInput.focus();
@@ -584,11 +954,16 @@ describe("InputNodeEditor", () => {
         ...node,
         data: {
           input_config: {
-            bucket_name: "updated"
-          }
-        }
+            bucket_name: "updated",
+          },
+        },
       };
-      rerender(/* @__PURE__ */ jsx(InputNodeEditor, { node: updatedNode, onConfigUpdate: mockOnConfigUpdate }));
+      rerender(
+        <InputNodeEditor
+          node={updatedNode}
+          onConfigUpdate={mockOnConfigUpdate}
+        />,
+      );
       const currentInput = screen.getByLabelText(/GCP bucket name/i);
       expect(currentInput).toBeInTheDocument();
     });
@@ -596,16 +971,21 @@ describe("InputNodeEditor", () => {
       const node = {
         id: "1",
         type: "gcp_bucket",
-        position: { x: 0, y: 0 },
+        position: {
+          x: 0,
+          y: 0,
+        },
         data: {
           input_config: {
             bucket_name: "bucket",
             object_path: "path",
-            credentials: "creds"
-          }
-        }
+            credentials: "creds",
+          },
+        },
       };
-      const { rerender } = render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+      const { rerender } = render(
+        <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+      );
       const bucketInput = screen.getByLabelText(/GCP bucket name/i);
       const objectPathInput = screen.getByLabelText(/Object path/i);
       const credentialsTextarea = screen.getByLabelText(/GCP Credentials/i);
@@ -616,11 +996,16 @@ describe("InputNodeEditor", () => {
           input_config: {
             bucket_name: "new-bucket",
             object_path: "new-path",
-            credentials: "new-creds"
-          }
-        }
+            credentials: "new-creds",
+          },
+        },
       };
-      rerender(/* @__PURE__ */ jsx(InputNodeEditor, { node: updatedNode, onConfigUpdate: mockOnConfigUpdate }));
+      rerender(
+        <InputNodeEditor
+          node={updatedNode}
+          onConfigUpdate={mockOnConfigUpdate}
+        />,
+      );
       expect(bucketInput.value).toBe("bucket");
       expect(objectPathInput.value).toBe("new-path");
       expect(credentialsTextarea.value).toBe("new-creds");
@@ -629,18 +1014,23 @@ describe("InputNodeEditor", () => {
       const node = {
         id: "1",
         type: "aws_s3",
-        position: { x: 0, y: 0 },
+        position: {
+          x: 0,
+          y: 0,
+        },
         data: {
           input_config: {
             bucket_name: "bucket",
             object_key: "key",
             access_key_id: "key-id",
             secret_access_key: "secret",
-            region: "us-west-2"
-          }
-        }
+            region: "us-west-2",
+          },
+        },
       };
-      const { rerender } = render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+      const { rerender } = render(
+        <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+      );
       const accessKeyInput = screen.getByLabelText(/AWS access key ID/i);
       accessKeyInput.focus();
       const updatedNode = {
@@ -648,27 +1038,37 @@ describe("InputNodeEditor", () => {
         data: {
           input_config: {
             ...node.data.input_config,
-            access_key_id: "new-key-id"
-          }
-        }
+            access_key_id: "new-key-id",
+          },
+        },
       };
-      rerender(/* @__PURE__ */ jsx(InputNodeEditor, { node: updatedNode, onConfigUpdate: mockOnConfigUpdate }));
+      rerender(
+        <InputNodeEditor
+          node={updatedNode}
+          onConfigUpdate={mockOnConfigUpdate}
+        />,
+      );
       expect(accessKeyInput.value).toBe("key-id");
     });
     it("should handle focus state for Pub/Sub refs", () => {
       const node = {
         id: "1",
         type: "gcp_pubsub",
-        position: { x: 0, y: 0 },
+        position: {
+          x: 0,
+          y: 0,
+        },
         data: {
           input_config: {
             project_id: "project",
             topic_name: "topic",
-            subscription_name: "subscription"
-          }
-        }
+            subscription_name: "subscription",
+          },
+        },
       };
-      const { rerender } = render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+      const { rerender } = render(
+        <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+      );
       const projectIdInput = screen.getByLabelText(/GCP project ID/i);
       projectIdInput.focus();
       const updatedNode = {
@@ -676,26 +1076,36 @@ describe("InputNodeEditor", () => {
         data: {
           input_config: {
             ...node.data.input_config,
-            project_id: "new-project"
-          }
-        }
+            project_id: "new-project",
+          },
+        },
       };
-      rerender(/* @__PURE__ */ jsx(InputNodeEditor, { node: updatedNode, onConfigUpdate: mockOnConfigUpdate }));
+      rerender(
+        <InputNodeEditor
+          node={updatedNode}
+          onConfigUpdate={mockOnConfigUpdate}
+        />,
+      );
       expect(projectIdInput.value).toBe("project");
     });
     it("should handle focus state for Local FileSystem refs", () => {
       const node = {
         id: "1",
         type: "local_filesystem",
-        position: { x: 0, y: 0 },
+        position: {
+          x: 0,
+          y: 0,
+        },
         data: {
           input_config: {
             file_path: "/path",
-            file_pattern: "*.txt"
-          }
-        }
+            file_pattern: "*.txt",
+          },
+        },
       };
-      const { rerender } = render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+      const { rerender } = render(
+        <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+      );
       const filePathInput = screen.getByLabelText(/File Path/i);
       filePathInput.focus();
       const updatedNode = {
@@ -703,74 +1113,105 @@ describe("InputNodeEditor", () => {
         data: {
           input_config: {
             ...node.data.input_config,
-            file_path: "/new-path"
-          }
-        }
+            file_path: "/new-path",
+          },
+        },
       };
-      rerender(/* @__PURE__ */ jsx(InputNodeEditor, { node: updatedNode, onConfigUpdate: mockOnConfigUpdate }));
+      rerender(
+        <InputNodeEditor
+          node={updatedNode}
+          onConfigUpdate={mockOnConfigUpdate}
+        />,
+      );
       expect(filePathInput.value).toBe("/path");
     });
     it("should handle overwriteValue with nullish coalescing", () => {
       const node = {
         id: "1",
         type: "local_filesystem",
-        position: { x: 0, y: 0 },
+        position: {
+          x: 0,
+          y: 0,
+        },
         data: {
           input_config: {
             mode: "write",
             file_path: "/test",
-            overwrite: null
-          }
-        }
+            overwrite: null,
+          },
+        },
       };
-      render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
-      const overwriteCheckbox = screen.getByLabelText(/Overwrite existing file/i);
+      render(
+        <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+      );
+      const overwriteCheckbox = screen.getByLabelText(
+        /Overwrite existing file/i,
+      );
       expect(overwriteCheckbox.checked).toBe(true);
     });
     it("should handle overwriteValue with undefined", () => {
       const node = {
         id: "1",
         type: "local_filesystem",
-        position: { x: 0, y: 0 },
+        position: {
+          x: 0,
+          y: 0,
+        },
         data: {
           input_config: {
             mode: "write",
-            file_path: "/test"
+            file_path: "/test",
             // overwrite is undefined
-          }
-        }
+          },
+        },
       };
-      render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
-      const overwriteCheckbox = screen.getByLabelText(/Overwrite existing file/i);
+      render(
+        <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+      );
+      const overwriteCheckbox = screen.getByLabelText(
+        /Overwrite existing file/i,
+      );
       expect(overwriteCheckbox.checked).toBe(true);
     });
     it("should handle overwriteValue with false", () => {
       const node = {
         id: "1",
         type: "local_filesystem",
-        position: { x: 0, y: 0 },
+        position: {
+          x: 0,
+          y: 0,
+        },
         data: {
           input_config: {
             mode: "write",
             file_path: "/test",
-            overwrite: false
-          }
-        }
+            overwrite: false,
+          },
+        },
       };
-      render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
-      const overwriteCheckbox = screen.getByLabelText(/Overwrite existing file/i);
+      render(
+        <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+      );
+      const overwriteCheckbox = screen.getByLabelText(
+        /Overwrite existing file/i,
+      );
       expect(overwriteCheckbox.checked).toBe(false);
     });
     it("should handle all default values correctly", () => {
       const node = {
         id: "1",
         type: "gcp_bucket",
-        position: { x: 0, y: 0 },
+        position: {
+          x: 0,
+          y: 0,
+        },
         data: {
-          input_config: {}
-        }
+          input_config: {},
+        },
       };
-      render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+      render(
+        <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+      );
       const bucketInput = screen.getByLabelText(/GCP bucket name/i);
       const modeSelect = screen.getByLabelText(/Select bucket operation mode/i);
       expect(bucketInput.value).toBe("");
@@ -780,14 +1221,19 @@ describe("InputNodeEditor", () => {
       const node = {
         id: "1",
         type: "aws_s3",
-        position: { x: 0, y: 0 },
+        position: {
+          x: 0,
+          y: 0,
+        },
         data: {
           input_config: {
-            bucket_name: "bucket"
-          }
-        }
+            bucket_name: "bucket",
+          },
+        },
       };
-      render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+      render(
+        <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+      );
       const regionInput = screen.getByLabelText(/AWS region/i);
       expect(regionInput.value).toBe("us-east-1");
     });
@@ -795,14 +1241,19 @@ describe("InputNodeEditor", () => {
       const node = {
         id: "1",
         type: "gcp_bucket",
-        position: { x: 0, y: 0 },
+        position: {
+          x: 0,
+          y: 0,
+        },
         data: {
           input_config: {
-            bucket_name: "bucket"
-          }
-        }
+            bucket_name: "bucket",
+          },
+        },
       };
-      render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+      render(
+        <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+      );
       const modeSelect = screen.getByLabelText(/Select bucket operation mode/i);
       expect(modeSelect.value).toBe("read");
     });
@@ -810,64 +1261,124 @@ describe("InputNodeEditor", () => {
       const gcpBucketNode = {
         id: "1",
         type: "gcp_bucket",
-        position: { x: 0, y: 0 },
-        data: {}
+        position: {
+          x: 0,
+          y: 0,
+        },
+        data: {},
       };
-      const { unmount: unmount1 } = render(/* @__PURE__ */ jsx(InputNodeEditor, { node: gcpBucketNode, onConfigUpdate: mockOnConfigUpdate }));
+      const { unmount: unmount1 } = render(
+        <InputNodeEditor
+          node={gcpBucketNode}
+          onConfigUpdate={mockOnConfigUpdate}
+        />,
+      );
       expect(screen.getByText(/GCP Bucket Configuration/i)).toBeInTheDocument();
       unmount1();
       const awsS3Node = {
         id: "1",
         type: "aws_s3",
-        position: { x: 0, y: 0 },
-        data: {}
+        position: {
+          x: 0,
+          y: 0,
+        },
+        data: {},
       };
-      const { unmount: unmount2 } = render(/* @__PURE__ */ jsx(InputNodeEditor, { node: awsS3Node, onConfigUpdate: mockOnConfigUpdate }));
+      const { unmount: unmount2 } = render(
+        <InputNodeEditor
+          node={awsS3Node}
+          onConfigUpdate={mockOnConfigUpdate}
+        />,
+      );
       expect(screen.getByText(/AWS S3 Configuration/i)).toBeInTheDocument();
       unmount2();
       const pubsubNode = {
         id: "1",
         type: "gcp_pubsub",
-        position: { x: 0, y: 0 },
-        data: {}
+        position: {
+          x: 0,
+          y: 0,
+        },
+        data: {},
       };
-      const { unmount: unmount3 } = render(/* @__PURE__ */ jsx(InputNodeEditor, { node: pubsubNode, onConfigUpdate: mockOnConfigUpdate }));
-      expect(screen.getByText(/GCP Pub\/Sub Configuration/i)).toBeInTheDocument();
+      const { unmount: unmount3 } = render(
+        <InputNodeEditor
+          node={pubsubNode}
+          onConfigUpdate={mockOnConfigUpdate}
+        />,
+      );
+      expect(
+        screen.getByText(/GCP Pub\/Sub Configuration/i),
+      ).toBeInTheDocument();
       unmount3();
       const filesystemNode = {
         id: "1",
         type: "local_filesystem",
-        position: { x: 0, y: 0 },
-        data: {}
+        position: {
+          x: 0,
+          y: 0,
+        },
+        data: {},
       };
-      const { unmount: unmount4 } = render(/* @__PURE__ */ jsx(InputNodeEditor, { node: filesystemNode, onConfigUpdate: mockOnConfigUpdate }));
-      expect(screen.getByText(/Local File System Configuration/i)).toBeInTheDocument();
+      const { unmount: unmount4 } = render(
+        <InputNodeEditor
+          node={filesystemNode}
+          onConfigUpdate={mockOnConfigUpdate}
+        />,
+      );
+      expect(
+        screen.getByText(/Local File System Configuration/i),
+      ).toBeInTheDocument();
       unmount4();
       const databaseNode = {
         id: "1",
         type: "database",
-        position: { x: 0, y: 0 },
-        data: {}
+        position: {
+          x: 0,
+          y: 0,
+        },
+        data: {},
       };
-      const { unmount: unmount5 } = render(/* @__PURE__ */ jsx(InputNodeEditor, { node: databaseNode, onConfigUpdate: mockOnConfigUpdate }));
+      const { unmount: unmount5 } = render(
+        <InputNodeEditor
+          node={databaseNode}
+          onConfigUpdate={mockOnConfigUpdate}
+        />,
+      );
       expect(screen.getByText(/Database Configuration/i)).toBeInTheDocument();
       unmount5();
       const firebaseNode = {
         id: "1",
         type: "firebase",
-        position: { x: 0, y: 0 },
-        data: {}
+        position: {
+          x: 0,
+          y: 0,
+        },
+        data: {},
       };
-      const { unmount: unmount6 } = render(/* @__PURE__ */ jsx(InputNodeEditor, { node: firebaseNode, onConfigUpdate: mockOnConfigUpdate }));
+      const { unmount: unmount6 } = render(
+        <InputNodeEditor
+          node={firebaseNode}
+          onConfigUpdate={mockOnConfigUpdate}
+        />,
+      );
       expect(screen.getByText(/Firebase Configuration/i)).toBeInTheDocument();
       unmount6();
       const bigqueryNode = {
         id: "1",
         type: "bigquery",
-        position: { x: 0, y: 0 },
-        data: {}
+        position: {
+          x: 0,
+          y: 0,
+        },
+        data: {},
       };
-      const { unmount: unmount7 } = render(/* @__PURE__ */ jsx(InputNodeEditor, { node: bigqueryNode, onConfigUpdate: mockOnConfigUpdate }));
+      const { unmount: unmount7 } = render(
+        <InputNodeEditor
+          node={bigqueryNode}
+          onConfigUpdate={mockOnConfigUpdate}
+        />,
+      );
       expect(screen.getByText(/BigQuery Configuration/i)).toBeInTheDocument();
       unmount7();
     });
@@ -875,17 +1386,22 @@ describe("InputNodeEditor", () => {
       const node = {
         id: "1",
         type: "gcp_bucket",
-        position: { x: 0, y: 0 },
+        position: {
+          x: 0,
+          y: 0,
+        },
         data: {
           input_config: {
             bucket_name: "",
             object_path: "",
             credentials: "",
-            mode: "read"
-          }
-        }
+            mode: "read",
+          },
+        },
       };
-      render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+      render(
+        <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+      );
       const bucketInput = screen.getByLabelText(/GCP bucket name/i);
       const objectPathInput = screen.getByLabelText(/Object path/i);
       const credentialsTextarea = screen.getByLabelText(/GCP Credentials/i);
@@ -897,16 +1413,21 @@ describe("InputNodeEditor", () => {
       const node = {
         id: "1",
         type: "gcp_bucket",
-        position: { x: 0, y: 0 },
+        position: {
+          x: 0,
+          y: 0,
+        },
         data: {
           input_config: {
             bucket_name: "   ",
             object_path: "	\n",
-            credentials: " "
-          }
-        }
+            credentials: " ",
+          },
+        },
       };
-      render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+      render(
+        <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+      );
       const bucketInput = screen.getByLabelText(/GCP bucket name/i);
       expect(bucketInput.value).toBe("   ");
     });
@@ -915,15 +1436,20 @@ describe("InputNodeEditor", () => {
       const node = {
         id: "1",
         type: "gcp_bucket",
-        position: { x: 0, y: 0 },
+        position: {
+          x: 0,
+          y: 0,
+        },
         data: {
           input_config: {
             bucket_name: longValue,
-            credentials: longValue
-          }
-        }
+            credentials: longValue,
+          },
+        },
       };
-      render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+      render(
+        <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+      );
       const bucketInput = screen.getByLabelText(/GCP bucket name/i);
       const credentialsTextarea = screen.getByLabelText(/GCP Credentials/i);
       expect(bucketInput.value).toBe(longValue);
@@ -934,15 +1460,20 @@ describe("InputNodeEditor", () => {
       const node = {
         id: "1",
         type: "gcp_bucket",
-        position: { x: 0, y: 0 },
+        position: {
+          x: 0,
+          y: 0,
+        },
         data: {
           input_config: {
             bucket_name: specialValue,
-            object_path: specialValue
-          }
-        }
+            object_path: specialValue,
+          },
+        },
       };
-      render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+      render(
+        <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+      );
       const bucketInput = screen.getByLabelText(/GCP bucket name/i);
       expect(bucketInput.value).toBe(specialValue);
     });
@@ -951,23 +1482,36 @@ describe("InputNodeEditor", () => {
         "gcp_bucket",
         "aws_s3",
         "gcp_pubsub",
-        "local_filesystem"
+        "local_filesystem",
       ];
       nodeTypes.forEach((type) => {
         const node = {
           id: "1",
           type,
-          position: { x: 0, y: 0 },
+          position: {
+            x: 0,
+            y: 0,
+          },
           data: {
             input_config: {
-              mode: "read"
-            }
-          }
+              mode: "read",
+            },
+          },
         };
-        const { unmount } = render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+        const { unmount } = render(
+          <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+        );
         const modeSelect = screen.getByLabelText(/Select.*mode/i);
-        fireEvent.change(modeSelect, { target: { value: "write" } });
-        expect(mockOnConfigUpdate).toHaveBeenCalledWith("input_config", "mode", "write");
+        fireEvent.change(modeSelect, {
+          target: {
+            value: "write",
+          },
+        });
+        expect(mockOnConfigUpdate).toHaveBeenCalledWith(
+          "input_config",
+          "mode",
+          "write",
+        );
         unmount();
         jest.clearAllMocks();
       });
@@ -976,35 +1520,75 @@ describe("InputNodeEditor", () => {
       const node = {
         id: "1",
         type: "gcp_bucket",
-        position: { x: 0, y: 0 },
+        position: {
+          x: 0,
+          y: 0,
+        },
         data: {
           input_config: {
             bucket_name: "",
             object_path: "",
             credentials: "",
-            mode: "read"
-          }
-        }
+            mode: "read",
+          },
+        },
       };
-      render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+      render(
+        <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+      );
       const bucketInput = screen.getByLabelText(/GCP bucket name/i);
       const objectPathInput = screen.getByLabelText(/Object path/i);
       const credentialsTextarea = screen.getByLabelText(/GCP Credentials/i);
       const modeSelect = screen.getByLabelText(/Select bucket operation mode/i);
-      fireEvent.change(bucketInput, { target: { value: "new-bucket" } });
-      expect(mockOnConfigUpdate).toHaveBeenCalledWith("input_config", "bucket_name", "new-bucket");
-      fireEvent.change(objectPathInput, { target: { value: "new-path" } });
-      expect(mockOnConfigUpdate).toHaveBeenCalledWith("input_config", "object_path", "new-path");
-      fireEvent.change(credentialsTextarea, { target: { value: "new-creds" } });
-      expect(mockOnConfigUpdate).toHaveBeenCalledWith("input_config", "credentials", "new-creds");
-      fireEvent.change(modeSelect, { target: { value: "write" } });
-      expect(mockOnConfigUpdate).toHaveBeenCalledWith("input_config", "mode", "write");
+      fireEvent.change(bucketInput, {
+        target: {
+          value: "new-bucket",
+        },
+      });
+      expect(mockOnConfigUpdate).toHaveBeenCalledWith(
+        "input_config",
+        "bucket_name",
+        "new-bucket",
+      );
+      fireEvent.change(objectPathInput, {
+        target: {
+          value: "new-path",
+        },
+      });
+      expect(mockOnConfigUpdate).toHaveBeenCalledWith(
+        "input_config",
+        "object_path",
+        "new-path",
+      );
+      fireEvent.change(credentialsTextarea, {
+        target: {
+          value: "new-creds",
+        },
+      });
+      expect(mockOnConfigUpdate).toHaveBeenCalledWith(
+        "input_config",
+        "credentials",
+        "new-creds",
+      );
+      fireEvent.change(modeSelect, {
+        target: {
+          value: "write",
+        },
+      });
+      expect(mockOnConfigUpdate).toHaveBeenCalledWith(
+        "input_config",
+        "mode",
+        "write",
+      );
     });
     it("should handle all onChange handlers for AWS S3", () => {
       const node = {
         id: "1",
         type: "aws_s3",
-        position: { x: 0, y: 0 },
+        position: {
+          x: 0,
+          y: 0,
+        },
         data: {
           input_config: {
             bucket_name: "",
@@ -1012,120 +1596,246 @@ describe("InputNodeEditor", () => {
             access_key_id: "",
             secret_access_key: "",
             region: "us-east-1",
-            mode: "read"
-          }
-        }
+            mode: "read",
+          },
+        },
       };
-      render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+      render(
+        <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+      );
       const bucketInput = screen.getByLabelText(/AWS S3 bucket name/i);
       const objectKeyInput = screen.getByLabelText(/S3 object key/i);
       const accessKeyInput = screen.getByLabelText(/AWS access key ID/i);
       const secretKeyInput = screen.getByLabelText(/AWS secret access key/i);
       const regionInput = screen.getByLabelText(/AWS region/i);
-      fireEvent.change(bucketInput, { target: { value: "bucket" } });
-      expect(mockOnConfigUpdate).toHaveBeenCalledWith("input_config", "bucket_name", "bucket");
-      fireEvent.change(objectKeyInput, { target: { value: "key" } });
-      expect(mockOnConfigUpdate).toHaveBeenCalledWith("input_config", "object_key", "key");
-      fireEvent.change(accessKeyInput, { target: { value: "key-id" } });
-      expect(mockOnConfigUpdate).toHaveBeenCalledWith("input_config", "access_key_id", "key-id");
-      fireEvent.change(secretKeyInput, { target: { value: "secret" } });
-      expect(mockOnConfigUpdate).toHaveBeenCalledWith("input_config", "secret_access_key", "secret");
-      fireEvent.change(regionInput, { target: { value: "us-west-2" } });
-      expect(mockOnConfigUpdate).toHaveBeenCalledWith("input_config", "region", "us-west-2");
+      fireEvent.change(bucketInput, {
+        target: {
+          value: "bucket",
+        },
+      });
+      expect(mockOnConfigUpdate).toHaveBeenCalledWith(
+        "input_config",
+        "bucket_name",
+        "bucket",
+      );
+      fireEvent.change(objectKeyInput, {
+        target: {
+          value: "key",
+        },
+      });
+      expect(mockOnConfigUpdate).toHaveBeenCalledWith(
+        "input_config",
+        "object_key",
+        "key",
+      );
+      fireEvent.change(accessKeyInput, {
+        target: {
+          value: "key-id",
+        },
+      });
+      expect(mockOnConfigUpdate).toHaveBeenCalledWith(
+        "input_config",
+        "access_key_id",
+        "key-id",
+      );
+      fireEvent.change(secretKeyInput, {
+        target: {
+          value: "secret",
+        },
+      });
+      expect(mockOnConfigUpdate).toHaveBeenCalledWith(
+        "input_config",
+        "secret_access_key",
+        "secret",
+      );
+      fireEvent.change(regionInput, {
+        target: {
+          value: "us-west-2",
+        },
+      });
+      expect(mockOnConfigUpdate).toHaveBeenCalledWith(
+        "input_config",
+        "region",
+        "us-west-2",
+      );
     });
     it("should handle all onChange handlers for Pub/Sub", () => {
       const node = {
         id: "1",
         type: "gcp_pubsub",
-        position: { x: 0, y: 0 },
+        position: {
+          x: 0,
+          y: 0,
+        },
         data: {
           input_config: {
             project_id: "",
             topic_name: "",
             subscription_name: "",
             credentials: "",
-            mode: "read"
-          }
-        }
+            mode: "read",
+          },
+        },
       };
-      render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+      render(
+        <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+      );
       const projectIdInput = screen.getByLabelText(/GCP project ID/i);
       const topicNameInput = screen.getByLabelText(/Pub\/Sub topic name/i);
-      const subscriptionNameInput = screen.getByLabelText(/Pub\/Sub subscription name/i);
+      const subscriptionNameInput = screen.getByLabelText(
+        /Pub\/Sub subscription name/i,
+      );
       const credentialsTextarea = screen.getByLabelText(/GCP Credentials/i);
-      fireEvent.change(projectIdInput, { target: { value: "project" } });
-      expect(mockOnConfigUpdate).toHaveBeenCalledWith("input_config", "project_id", "project");
-      fireEvent.change(topicNameInput, { target: { value: "topic" } });
-      expect(mockOnConfigUpdate).toHaveBeenCalledWith("input_config", "topic_name", "topic");
-      fireEvent.change(subscriptionNameInput, { target: { value: "subscription" } });
-      expect(mockOnConfigUpdate).toHaveBeenCalledWith("input_config", "subscription_name", "subscription");
-      fireEvent.change(credentialsTextarea, { target: { value: "creds" } });
-      expect(mockOnConfigUpdate).toHaveBeenCalledWith("input_config", "credentials", "creds");
+      fireEvent.change(projectIdInput, {
+        target: {
+          value: "project",
+        },
+      });
+      expect(mockOnConfigUpdate).toHaveBeenCalledWith(
+        "input_config",
+        "project_id",
+        "project",
+      );
+      fireEvent.change(topicNameInput, {
+        target: {
+          value: "topic",
+        },
+      });
+      expect(mockOnConfigUpdate).toHaveBeenCalledWith(
+        "input_config",
+        "topic_name",
+        "topic",
+      );
+      fireEvent.change(subscriptionNameInput, {
+        target: {
+          value: "subscription",
+        },
+      });
+      expect(mockOnConfigUpdate).toHaveBeenCalledWith(
+        "input_config",
+        "subscription_name",
+        "subscription",
+      );
+      fireEvent.change(credentialsTextarea, {
+        target: {
+          value: "creds",
+        },
+      });
+      expect(mockOnConfigUpdate).toHaveBeenCalledWith(
+        "input_config",
+        "credentials",
+        "creds",
+      );
     });
     it("should handle all onChange handlers for Local FileSystem", () => {
       const readNode = {
         id: "1",
         type: "local_filesystem",
-        position: { x: 0, y: 0 },
+        position: {
+          x: 0,
+          y: 0,
+        },
         data: {
           input_config: {
             file_path: "",
             file_pattern: "",
             mode: "read",
-            overwrite: true
-          }
-        }
+            overwrite: true,
+          },
+        },
       };
-      const { rerender } = render(/* @__PURE__ */ jsx(InputNodeEditor, { node: readNode, onConfigUpdate: mockOnConfigUpdate }));
+      const { rerender } = render(
+        <InputNodeEditor node={readNode} onConfigUpdate={mockOnConfigUpdate} />,
+      );
       const filePathInput = screen.getByLabelText(/File Path/i);
       const filePatternInput = screen.getByLabelText(/File Pattern/i);
-      fireEvent.change(filePathInput, { target: { value: "/path" } });
-      expect(mockOnConfigUpdate).toHaveBeenCalledWith("input_config", "file_path", "/path");
-      fireEvent.change(filePatternInput, { target: { value: "*.txt" } });
-      expect(mockOnConfigUpdate).toHaveBeenCalledWith("input_config", "file_pattern", "*.txt");
+      fireEvent.change(filePathInput, {
+        target: {
+          value: "/path",
+        },
+      });
+      expect(mockOnConfigUpdate).toHaveBeenCalledWith(
+        "input_config",
+        "file_path",
+        "/path",
+      );
+      fireEvent.change(filePatternInput, {
+        target: {
+          value: "*.txt",
+        },
+      });
+      expect(mockOnConfigUpdate).toHaveBeenCalledWith(
+        "input_config",
+        "file_pattern",
+        "*.txt",
+      );
       jest.clearAllMocks();
       const writeNode = {
         id: "1",
         type: "local_filesystem",
-        position: { x: 0, y: 0 },
+        position: {
+          x: 0,
+          y: 0,
+        },
         data: {
           input_config: {
             file_path: "/path",
             file_pattern: "",
             mode: "write",
-            overwrite: true
-          }
-        }
+            overwrite: true,
+          },
+        },
       };
-      rerender(/* @__PURE__ */ jsx(InputNodeEditor, { node: writeNode, onConfigUpdate: mockOnConfigUpdate }));
+      rerender(
+        <InputNodeEditor
+          node={writeNode}
+          onConfigUpdate={mockOnConfigUpdate}
+        />,
+      );
       expect(screen.queryByLabelText(/File Pattern/i)).not.toBeInTheDocument();
-      const overwriteCheckbox = screen.getByLabelText(/Overwrite existing file/i);
+      const overwriteCheckbox = screen.getByLabelText(
+        /Overwrite existing file/i,
+      );
       expect(overwriteCheckbox.checked).toBe(true);
       fireEvent.click(overwriteCheckbox);
-      expect(mockOnConfigUpdate).toHaveBeenCalledWith("input_config", "overwrite", false);
+      expect(mockOnConfigUpdate).toHaveBeenCalledWith(
+        "input_config",
+        "overwrite",
+        false,
+      );
     });
     it("should handle multiple rapid updates", () => {
       const node = {
         id: "1",
         type: "gcp_bucket",
-        position: { x: 0, y: 0 },
+        position: {
+          x: 0,
+          y: 0,
+        },
         data: {
           input_config: {
-            bucket_name: "initial"
-          }
-        }
+            bucket_name: "initial",
+          },
+        },
       };
-      const { rerender } = render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+      const { rerender } = render(
+        <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+      );
       for (let i = 0; i < 5; i++) {
         const updatedNode = {
           ...node,
           data: {
             input_config: {
-              bucket_name: `update-${i}`
-            }
-          }
+              bucket_name: `update-${i}`,
+            },
+          },
         };
-        rerender(/* @__PURE__ */ jsx(InputNodeEditor, { node: updatedNode, onConfigUpdate: mockOnConfigUpdate }));
+        rerender(
+          <InputNodeEditor
+            node={updatedNode}
+            onConfigUpdate={mockOnConfigUpdate}
+          />,
+        );
       }
       const bucketInput = screen.getByLabelText(/GCP bucket name/i);
       expect(bucketInput.value).toBe("update-4");
@@ -1134,27 +1844,36 @@ describe("InputNodeEditor", () => {
       const gcpNode = {
         id: "1",
         type: "gcp_bucket",
-        position: { x: 0, y: 0 },
+        position: {
+          x: 0,
+          y: 0,
+        },
         data: {
           input_config: {
-            bucket_name: "bucket"
-          }
-        }
+            bucket_name: "bucket",
+          },
+        },
       };
-      const { rerender } = render(/* @__PURE__ */ jsx(InputNodeEditor, { node: gcpNode, onConfigUpdate: mockOnConfigUpdate }));
+      const { rerender } = render(
+        <InputNodeEditor node={gcpNode} onConfigUpdate={mockOnConfigUpdate} />,
+      );
       expect(screen.getByLabelText(/GCP bucket name/i)).toBeInTheDocument();
       const awsNode = {
         ...gcpNode,
         type: "aws_s3",
         data: {
           input_config: {
-            bucket_name: "aws-bucket"
-          }
-        }
+            bucket_name: "aws-bucket",
+          },
+        },
       };
-      rerender(/* @__PURE__ */ jsx(InputNodeEditor, { node: awsNode, onConfigUpdate: mockOnConfigUpdate }));
+      rerender(
+        <InputNodeEditor node={awsNode} onConfigUpdate={mockOnConfigUpdate} />,
+      );
       expect(screen.getByLabelText(/AWS S3 bucket name/i)).toBeInTheDocument();
-      expect(screen.queryByLabelText(/GCP bucket name/i)).not.toBeInTheDocument();
+      expect(
+        screen.queryByLabelText(/GCP bucket name/i),
+      ).not.toBeInTheDocument();
     });
   });
   describe("focus state edge cases for all refs", () => {
@@ -1162,16 +1881,21 @@ describe("InputNodeEditor", () => {
       const node = {
         id: "1",
         type: "gcp_bucket",
-        position: { x: 0, y: 0 },
+        position: {
+          x: 0,
+          y: 0,
+        },
         data: {
           input_config: {
             bucket_name: "bucket1",
             object_path: "path1",
-            credentials: "creds1"
-          }
-        }
+            credentials: "creds1",
+          },
+        },
       };
-      const { rerender } = render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+      const { rerender } = render(
+        <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+      );
       const bucketInput = screen.getByLabelText(/GCP bucket name/i);
       const objectPathInput = screen.getByLabelText(/Object path/i);
       const credentialsTextarea = screen.getByLabelText(/GCP Credentials/i);
@@ -1184,11 +1908,16 @@ describe("InputNodeEditor", () => {
           input_config: {
             bucket_name: "bucket2",
             object_path: "path2",
-            credentials: "creds2"
-          }
-        }
+            credentials: "creds2",
+          },
+        },
       };
-      rerender(/* @__PURE__ */ jsx(InputNodeEditor, { node: updatedNode, onConfigUpdate: mockOnConfigUpdate }));
+      rerender(
+        <InputNodeEditor
+          node={updatedNode}
+          onConfigUpdate={mockOnConfigUpdate}
+        />,
+      );
       const currentBucket = screen.getByLabelText(/GCP bucket name/i);
       const currentPath = screen.getByLabelText(/Object path/i);
       const currentCreds = screen.getByLabelText(/GCP Credentials/i);
@@ -1200,32 +1929,42 @@ describe("InputNodeEditor", () => {
       const node = {
         id: "1",
         type: "gcp_bucket",
-        position: { x: 0, y: 0 },
+        position: {
+          x: 0,
+          y: 0,
+        },
         data: {
           input_config: {
-            bucket_name: "test"
-          }
-        }
+            bucket_name: "test",
+          },
+        },
       };
-      render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+      render(
+        <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+      );
       expect(screen.getByLabelText(/GCP bucket name/i)).toBeInTheDocument();
     });
     it("should handle all AWS S3 refs focus states", () => {
       const node = {
         id: "1",
         type: "aws_s3",
-        position: { x: 0, y: 0 },
+        position: {
+          x: 0,
+          y: 0,
+        },
         data: {
           input_config: {
             bucket_name: "bucket",
             object_key: "key",
             access_key_id: "key-id",
             secret_access_key: "secret",
-            region: "us-west-1"
-          }
-        }
+            region: "us-west-1",
+          },
+        },
       };
-      const { rerender } = render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+      const { rerender } = render(
+        <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+      );
       const accessKeyInput = screen.getByLabelText(/AWS access key ID/i);
       accessKeyInput.focus();
       const updatedNode = {
@@ -1233,28 +1972,38 @@ describe("InputNodeEditor", () => {
         data: {
           input_config: {
             ...node.data.input_config,
-            access_key_id: "new-key-id"
-          }
-        }
+            access_key_id: "new-key-id",
+          },
+        },
       };
-      rerender(/* @__PURE__ */ jsx(InputNodeEditor, { node: updatedNode, onConfigUpdate: mockOnConfigUpdate }));
+      rerender(
+        <InputNodeEditor
+          node={updatedNode}
+          onConfigUpdate={mockOnConfigUpdate}
+        />,
+      );
       expect(screen.getByLabelText(/AWS access key ID/i)).toBeInTheDocument();
     });
     it("should handle all Pub/Sub refs focus states", () => {
       const node = {
         id: "1",
         type: "gcp_pubsub",
-        position: { x: 0, y: 0 },
+        position: {
+          x: 0,
+          y: 0,
+        },
         data: {
           input_config: {
             project_id: "project",
             topic_name: "topic",
             subscription_name: "subscription",
-            credentials: "creds"
-          }
-        }
+            credentials: "creds",
+          },
+        },
       };
-      const { rerender } = render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+      const { rerender } = render(
+        <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+      );
       const topicNameInput = screen.getByLabelText(/Pub\/Sub topic name/i);
       topicNameInput.focus();
       const updatedNode = {
@@ -1262,27 +2011,37 @@ describe("InputNodeEditor", () => {
         data: {
           input_config: {
             ...node.data.input_config,
-            topic_name: "new-topic"
-          }
-        }
+            topic_name: "new-topic",
+          },
+        },
       };
-      rerender(/* @__PURE__ */ jsx(InputNodeEditor, { node: updatedNode, onConfigUpdate: mockOnConfigUpdate }));
+      rerender(
+        <InputNodeEditor
+          node={updatedNode}
+          onConfigUpdate={mockOnConfigUpdate}
+        />,
+      );
       expect(screen.getByLabelText(/Pub\/Sub topic name/i)).toBeInTheDocument();
     });
     it("should handle all Local FileSystem refs focus states", () => {
       const node = {
         id: "1",
         type: "local_filesystem",
-        position: { x: 0, y: 0 },
+        position: {
+          x: 0,
+          y: 0,
+        },
         data: {
           input_config: {
             file_path: "/path",
             file_pattern: "*.txt",
-            mode: "read"
-          }
-        }
+            mode: "read",
+          },
+        },
       };
-      const { rerender } = render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+      const { rerender } = render(
+        <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+      );
       const filePatternInput = screen.getByLabelText(/File Pattern/i);
       filePatternInput.focus();
       const updatedNode = {
@@ -1290,11 +2049,16 @@ describe("InputNodeEditor", () => {
         data: {
           input_config: {
             ...node.data.input_config,
-            file_pattern: "*.json"
-          }
-        }
+            file_pattern: "*.json",
+          },
+        },
       };
-      rerender(/* @__PURE__ */ jsx(InputNodeEditor, { node: updatedNode, onConfigUpdate: mockOnConfigUpdate }));
+      rerender(
+        <InputNodeEditor
+          node={updatedNode}
+          onConfigUpdate={mockOnConfigUpdate}
+        />,
+      );
       expect(screen.getByLabelText(/File Pattern/i)).toBeInTheDocument();
     });
   });
@@ -1303,12 +2067,17 @@ describe("InputNodeEditor", () => {
       const node = {
         id: "1",
         type: "gcp_bucket",
-        position: { x: 0, y: 0 },
+        position: {
+          x: 0,
+          y: 0,
+        },
         data: {
-          input_config: {}
-        }
+          input_config: {},
+        },
       };
-      render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+      render(
+        <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+      );
       const bucketInput = screen.getByLabelText(/GCP bucket name/i);
       const modeSelect = screen.getByLabelText(/Select bucket operation mode/i);
       expect(bucketInput.value).toBe("");
@@ -1318,17 +2087,22 @@ describe("InputNodeEditor", () => {
       const node = {
         id: "1",
         type: "gcp_bucket",
-        position: { x: 0, y: 0 },
+        position: {
+          x: 0,
+          y: 0,
+        },
         data: {
           input_config: {
             bucket_name: null,
             object_path: null,
             credentials: null,
-            mode: null
-          }
-        }
+            mode: null,
+          },
+        },
       };
-      render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+      render(
+        <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+      );
       const bucketInput = screen.getByLabelText(/GCP bucket name/i);
       const modeSelect = screen.getByLabelText(/Select bucket operation mode/i);
       expect(bucketInput.value).toBe("");
@@ -1338,15 +2112,20 @@ describe("InputNodeEditor", () => {
       const node = {
         id: "1",
         type: "aws_s3",
-        position: { x: 0, y: 0 },
+        position: {
+          x: 0,
+          y: 0,
+        },
         data: {
           input_config: {
             bucket_name: "bucket",
-            region: null
-          }
-        }
+            region: null,
+          },
+        },
       };
-      render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+      render(
+        <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+      );
       const regionInput = screen.getByLabelText(/AWS region/i);
       expect(regionInput.value).toBe("us-east-1");
     });
@@ -1354,15 +2133,20 @@ describe("InputNodeEditor", () => {
       const node = {
         id: "1",
         type: "gcp_bucket",
-        position: { x: 0, y: 0 },
+        position: {
+          x: 0,
+          y: 0,
+        },
         data: {
           input_config: {
             bucket_name: "bucket",
-            mode: null
-          }
-        }
+            mode: null,
+          },
+        },
       };
-      render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+      render(
+        <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+      );
       const modeSelect = screen.getByLabelText(/Select bucket operation mode/i);
       expect(modeSelect.value).toBe("read");
     });
@@ -1370,34 +2154,48 @@ describe("InputNodeEditor", () => {
       const node = {
         id: "1",
         type: "local_filesystem",
-        position: { x: 0, y: 0 },
+        position: {
+          x: 0,
+          y: 0,
+        },
         data: {
           input_config: {
             mode: "write",
             file_path: "/test",
-            overwrite: false
-          }
-        }
+            overwrite: false,
+          },
+        },
       };
-      render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
-      const overwriteCheckbox = screen.getByLabelText(/Overwrite existing file/i);
+      render(
+        <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+      );
+      const overwriteCheckbox = screen.getByLabelText(
+        /Overwrite existing file/i,
+      );
       expect(overwriteCheckbox.checked).toBe(false);
     });
     it("should handle overwriteValue with true explicitly", () => {
       const node = {
         id: "1",
         type: "local_filesystem",
-        position: { x: 0, y: 0 },
+        position: {
+          x: 0,
+          y: 0,
+        },
         data: {
           input_config: {
             mode: "write",
             file_path: "/test",
-            overwrite: true
-          }
-        }
+            overwrite: true,
+          },
+        },
       };
-      render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
-      const overwriteCheckbox = screen.getByLabelText(/Overwrite existing file/i);
+      render(
+        <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+      );
+      const overwriteCheckbox = screen.getByLabelText(
+        /Overwrite existing file/i,
+      );
       expect(overwriteCheckbox.checked).toBe(true);
     });
   });
@@ -1406,59 +2204,85 @@ describe("InputNodeEditor", () => {
       const node = {
         id: "1",
         type: "local_filesystem",
-        position: { x: 0, y: 0 },
+        position: {
+          x: 0,
+          y: 0,
+        },
         data: {
           input_config: {
             mode: "read",
-            file_path: "/test"
-          }
-        }
+            file_path: "/test",
+          },
+        },
       };
-      render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+      render(
+        <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+      );
       expect(screen.getByLabelText(/File Pattern/i)).toBeInTheDocument();
     });
     it("should handle overwrite checkbox conditional rendering for write mode", () => {
       const node = {
         id: "1",
         type: "local_filesystem",
-        position: { x: 0, y: 0 },
+        position: {
+          x: 0,
+          y: 0,
+        },
         data: {
           input_config: {
             mode: "write",
-            file_path: "/test"
-          }
-        }
+            file_path: "/test",
+          },
+        },
       };
-      render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
-      expect(screen.getByLabelText(/Overwrite existing file/i)).toBeInTheDocument();
+      render(
+        <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+      );
+      expect(
+        screen.getByLabelText(/Overwrite existing file/i),
+      ).toBeInTheDocument();
       expect(screen.queryByLabelText(/File Pattern/i)).not.toBeInTheDocument();
     });
     it("should handle mode switching between read and write", () => {
       const node = {
         id: "1",
         type: "local_filesystem",
-        position: { x: 0, y: 0 },
+        position: {
+          x: 0,
+          y: 0,
+        },
         data: {
           input_config: {
             mode: "read",
-            file_path: "/test"
-          }
-        }
+            file_path: "/test",
+          },
+        },
       };
-      const { rerender } = render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+      const { rerender } = render(
+        <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+      );
       expect(screen.getByLabelText(/File Pattern/i)).toBeInTheDocument();
-      expect(screen.queryByLabelText(/Overwrite existing file/i)).not.toBeInTheDocument();
+      expect(
+        screen.queryByLabelText(/Overwrite existing file/i),
+      ).not.toBeInTheDocument();
       const writeNode = {
         ...node,
         data: {
           input_config: {
             ...node.data.input_config,
-            mode: "write"
-          }
-        }
+            mode: "write",
+          },
+        },
       };
-      rerender(/* @__PURE__ */ jsx(InputNodeEditor, { node: writeNode, onConfigUpdate: mockOnConfigUpdate }));
-      expect(screen.getByLabelText(/Overwrite existing file/i)).toBeInTheDocument();
+      rerender(
+        <InputNodeEditor
+          node={writeNode}
+          onConfigUpdate={mockOnConfigUpdate}
+        />,
+      );
+      expect(
+        screen.getByLabelText(/Overwrite existing file/i),
+      ).toBeInTheDocument();
       expect(screen.queryByLabelText(/File Pattern/i)).not.toBeInTheDocument();
     });
   });
@@ -1467,49 +2291,88 @@ describe("InputNodeEditor", () => {
       const node = {
         id: "1",
         type: "gcp_bucket",
-        position: { x: 0, y: 0 },
+        position: {
+          x: 0,
+          y: 0,
+        },
         data: {
           input_config: {
-            bucket_name: "test"
-          }
-        }
+            bucket_name: "test",
+          },
+        },
       };
-      render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+      render(
+        <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+      );
       const bucketInput = screen.getByLabelText(/GCP bucket name/i);
-      fireEvent.change(bucketInput, { target: { value: "" } });
-      expect(mockOnConfigUpdate).toHaveBeenCalledWith("input_config", "bucket_name", "");
+      fireEvent.change(bucketInput, {
+        target: {
+          value: "",
+        },
+      });
+      expect(mockOnConfigUpdate).toHaveBeenCalledWith(
+        "input_config",
+        "bucket_name",
+        "",
+      );
     });
     it("should handle onChange with whitespace", () => {
       const node = {
         id: "1",
         type: "gcp_bucket",
-        position: { x: 0, y: 0 },
+        position: {
+          x: 0,
+          y: 0,
+        },
         data: {
           input_config: {
-            bucket_name: "test"
-          }
-        }
+            bucket_name: "test",
+          },
+        },
       };
-      render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+      render(
+        <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+      );
       const bucketInput = screen.getByLabelText(/GCP bucket name/i);
-      fireEvent.change(bucketInput, { target: { value: "   " } });
-      expect(mockOnConfigUpdate).toHaveBeenCalledWith("input_config", "bucket_name", "   ");
+      fireEvent.change(bucketInput, {
+        target: {
+          value: "   ",
+        },
+      });
+      expect(mockOnConfigUpdate).toHaveBeenCalledWith(
+        "input_config",
+        "bucket_name",
+        "   ",
+      );
     });
     it("should handle onChange with special characters", () => {
       const node = {
         id: "1",
         type: "gcp_bucket",
-        position: { x: 0, y: 0 },
+        position: {
+          x: 0,
+          y: 0,
+        },
         data: {
           input_config: {
-            bucket_name: "test"
-          }
-        }
+            bucket_name: "test",
+          },
+        },
       };
-      render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+      render(
+        <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+      );
       const bucketInput = screen.getByLabelText(/GCP bucket name/i);
-      fireEvent.change(bucketInput, { target: { value: "test@#$%" } });
-      expect(mockOnConfigUpdate).toHaveBeenCalledWith("input_config", "bucket_name", "test@#$%");
+      fireEvent.change(bucketInput, {
+        target: {
+          value: "test@#$%",
+        },
+      });
+      expect(mockOnConfigUpdate).toHaveBeenCalledWith(
+        "input_config",
+        "bucket_name",
+        "test@#$%",
+      );
     });
   });
   describe("comprehensive focus state and default value coverage", () => {
@@ -1517,16 +2380,21 @@ describe("InputNodeEditor", () => {
       const node = {
         id: "1",
         type: "gcp_bucket",
-        position: { x: 0, y: 0 },
+        position: {
+          x: 0,
+          y: 0,
+        },
         data: {
           input_config: {
             bucket_name: "bucket1",
             object_path: "path1",
-            credentials: "creds1"
-          }
-        }
+            credentials: "creds1",
+          },
+        },
       };
-      const { rerender } = render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+      const { rerender } = render(
+        <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+      );
       const bucketInput = screen.getByLabelText(/GCP bucket name/i);
       bucketInput.focus();
       const updatedNode1 = {
@@ -1535,11 +2403,16 @@ describe("InputNodeEditor", () => {
           input_config: {
             bucket_name: "bucket2",
             object_path: "path1",
-            credentials: "creds1"
-          }
-        }
+            credentials: "creds1",
+          },
+        },
       };
-      rerender(/* @__PURE__ */ jsx(InputNodeEditor, { node: updatedNode1, onConfigUpdate: mockOnConfigUpdate }));
+      rerender(
+        <InputNodeEditor
+          node={updatedNode1}
+          onConfigUpdate={mockOnConfigUpdate}
+        />,
+      );
       expect(screen.getByLabelText(/GCP bucket name/i)).toBeInTheDocument();
       const objectPathInput = screen.getByLabelText(/Object path/i);
       objectPathInput.focus();
@@ -1549,11 +2422,16 @@ describe("InputNodeEditor", () => {
           input_config: {
             bucket_name: "bucket1",
             object_path: "path2",
-            credentials: "creds1"
-          }
-        }
+            credentials: "creds1",
+          },
+        },
       };
-      rerender(/* @__PURE__ */ jsx(InputNodeEditor, { node: updatedNode2, onConfigUpdate: mockOnConfigUpdate }));
+      rerender(
+        <InputNodeEditor
+          node={updatedNode2}
+          onConfigUpdate={mockOnConfigUpdate}
+        />,
+      );
       expect(screen.getByLabelText(/Object path/i)).toBeInTheDocument();
       const credentialsTextarea = screen.getByLabelText(/GCP Credentials/i);
       credentialsTextarea.focus();
@@ -1563,28 +2441,38 @@ describe("InputNodeEditor", () => {
           input_config: {
             bucket_name: "bucket1",
             object_path: "path1",
-            credentials: "creds2"
-          }
-        }
+            credentials: "creds2",
+          },
+        },
       };
-      rerender(/* @__PURE__ */ jsx(InputNodeEditor, { node: updatedNode3, onConfigUpdate: mockOnConfigUpdate }));
+      rerender(
+        <InputNodeEditor
+          node={updatedNode3}
+          onConfigUpdate={mockOnConfigUpdate}
+        />,
+      );
       expect(screen.getByLabelText(/GCP Credentials/i)).toBeInTheDocument();
     });
     it("should handle all || operators with falsy values", () => {
       const node = {
         id: "1",
         type: "gcp_bucket",
-        position: { x: 0, y: 0 },
+        position: {
+          x: 0,
+          y: 0,
+        },
         data: {
           input_config: {
             bucket_name: null,
             object_path: void 0,
             credentials: "",
-            mode: null
-          }
-        }
+            mode: null,
+          },
+        },
       };
-      render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+      render(
+        <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+      );
       const bucketInput = screen.getByLabelText(/GCP bucket name/i);
       const objectPathInput = screen.getByLabelText(/Object path/i);
       const credentialsTextarea = screen.getByLabelText(/GCP Credentials/i);
@@ -1600,15 +2488,20 @@ describe("InputNodeEditor", () => {
         const node = {
           id: "1",
           type: "aws_s3",
-          position: { x: 0, y: 0 },
+          position: {
+            x: 0,
+            y: 0,
+          },
           data: {
             input_config: {
               bucket_name: "bucket",
-              region: falsyValue
-            }
-          }
+              region: falsyValue,
+            },
+          },
         };
-        const { unmount } = render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+        const { unmount } = render(
+          <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+        );
         const regionInput = screen.getByLabelText(/AWS region/i);
         expect(regionInput.value).toBe("us-east-1");
         unmount();
@@ -1620,16 +2513,23 @@ describe("InputNodeEditor", () => {
         const node = {
           id: "1",
           type: "gcp_bucket",
-          position: { x: 0, y: 0 },
+          position: {
+            x: 0,
+            y: 0,
+          },
           data: {
             input_config: {
               bucket_name: "bucket",
-              mode: falsyValue
-            }
-          }
+              mode: falsyValue,
+            },
+          },
         };
-        const { unmount } = render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
-        const modeSelect = screen.getByLabelText(/Select bucket operation mode/i);
+        const { unmount } = render(
+          <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+        );
+        const modeSelect = screen.getByLabelText(
+          /Select bucket operation mode/i,
+        );
         expect(modeSelect.value).toBe("read");
         unmount();
       }
@@ -1638,68 +2538,96 @@ describe("InputNodeEditor", () => {
       const node = {
         id: "1",
         type: "local_filesystem",
-        position: { x: 0, y: 0 },
+        position: {
+          x: 0,
+          y: 0,
+        },
         data: {
           input_config: {
             mode: "write",
             file_path: "/test",
-            overwrite: null
-          }
-        }
+            overwrite: null,
+          },
+        },
       };
-      render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
-      const overwriteCheckbox = screen.getByLabelText(/Overwrite existing file/i);
+      render(
+        <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+      );
+      const overwriteCheckbox = screen.getByLabelText(
+        /Overwrite existing file/i,
+      );
       expect(overwriteCheckbox.checked).toBe(true);
     });
     it("should handle overwriteValue ?? operator with undefined", () => {
       const node = {
         id: "1",
         type: "local_filesystem",
-        position: { x: 0, y: 0 },
+        position: {
+          x: 0,
+          y: 0,
+        },
         data: {
           input_config: {
             mode: "write",
-            file_path: "/test"
+            file_path: "/test",
             // overwrite is undefined
-          }
-        }
+          },
+        },
       };
-      render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
-      const overwriteCheckbox = screen.getByLabelText(/Overwrite existing file/i);
+      render(
+        <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+      );
+      const overwriteCheckbox = screen.getByLabelText(
+        /Overwrite existing file/i,
+      );
       expect(overwriteCheckbox.checked).toBe(true);
     });
     it("should handle overwriteValue ?? operator with false", () => {
       const node = {
         id: "1",
         type: "local_filesystem",
-        position: { x: 0, y: 0 },
+        position: {
+          x: 0,
+          y: 0,
+        },
         data: {
           input_config: {
             mode: "write",
             file_path: "/test",
-            overwrite: false
-          }
-        }
+            overwrite: false,
+          },
+        },
       };
-      render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
-      const overwriteCheckbox = screen.getByLabelText(/Overwrite existing file/i);
+      render(
+        <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+      );
+      const overwriteCheckbox = screen.getByLabelText(
+        /Overwrite existing file/i,
+      );
       expect(overwriteCheckbox.checked).toBe(false);
     });
     it("should handle overwriteValue ?? operator with 0", () => {
       const node = {
         id: "1",
         type: "local_filesystem",
-        position: { x: 0, y: 0 },
+        position: {
+          x: 0,
+          y: 0,
+        },
         data: {
           input_config: {
             mode: "write",
             file_path: "/test",
-            overwrite: 0
-          }
-        }
+            overwrite: 0,
+          },
+        },
       };
-      render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
-      const overwriteCheckbox = screen.getByLabelText(/Overwrite existing file/i);
+      render(
+        <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+      );
+      const overwriteCheckbox = screen.getByLabelText(
+        /Overwrite existing file/i,
+      );
       expect(overwriteCheckbox.checked).toBe(false);
     });
     it("should handle all node.type === checks", () => {
@@ -1710,30 +2638,47 @@ describe("InputNodeEditor", () => {
         "local_filesystem",
         "database",
         "firebase",
-        "bigquery"
+        "bigquery",
       ];
       for (const type of types) {
         const node = {
           id: "1",
           type,
-          position: { x: 0, y: 0 },
-          data: {}
+          position: {
+            x: 0,
+            y: 0,
+          },
+          data: {},
         };
-        const { unmount } = render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+        const { unmount } = render(
+          <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+        );
         if (type === "gcp_bucket") {
-          expect(screen.getByText(/GCP Bucket Configuration/i)).toBeInTheDocument();
+          expect(
+            screen.getByText(/GCP Bucket Configuration/i),
+          ).toBeInTheDocument();
         } else if (type === "aws_s3") {
           expect(screen.getByText(/AWS S3 Configuration/i)).toBeInTheDocument();
         } else if (type === "gcp_pubsub") {
-          expect(screen.getByText(/GCP Pub\/Sub Configuration/i)).toBeInTheDocument();
+          expect(
+            screen.getByText(/GCP Pub\/Sub Configuration/i),
+          ).toBeInTheDocument();
         } else if (type === "local_filesystem") {
-          expect(screen.getByText(/Local File System Configuration/i)).toBeInTheDocument();
+          expect(
+            screen.getByText(/Local File System Configuration/i),
+          ).toBeInTheDocument();
         } else if (type === "database") {
-          expect(screen.getByText(/Database Configuration/i)).toBeInTheDocument();
+          expect(
+            screen.getByText(/Database Configuration/i),
+          ).toBeInTheDocument();
         } else if (type === "firebase") {
-          expect(screen.getByText(/Firebase Configuration/i)).toBeInTheDocument();
+          expect(
+            screen.getByText(/Firebase Configuration/i),
+          ).toBeInTheDocument();
         } else if (type === "bigquery") {
-          expect(screen.getByText(/BigQuery Configuration/i)).toBeInTheDocument();
+          expect(
+            screen.getByText(/BigQuery Configuration/i),
+          ).toBeInTheDocument();
         }
         unmount();
         document.body.innerHTML = "";
@@ -1743,46 +2688,65 @@ describe("InputNodeEditor", () => {
       const node = {
         id: "1",
         type: "local_filesystem",
-        position: { x: 0, y: 0 },
+        position: {
+          x: 0,
+          y: 0,
+        },
         data: {
           input_config: {
             mode: "read",
-            file_path: "/test"
-          }
-        }
+            file_path: "/test",
+          },
+        },
       };
-      const { rerender } = render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+      const { rerender } = render(
+        <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+      );
       expect(screen.getByLabelText(/File Pattern/i)).toBeInTheDocument();
-      expect(screen.queryByLabelText(/Overwrite existing file/i)).not.toBeInTheDocument();
+      expect(
+        screen.queryByLabelText(/Overwrite existing file/i),
+      ).not.toBeInTheDocument();
       const writeNode = {
         ...node,
         data: {
           input_config: {
             ...node.data.input_config,
-            mode: "write"
-          }
-        }
+            mode: "write",
+          },
+        },
       };
-      rerender(/* @__PURE__ */ jsx(InputNodeEditor, { node: writeNode, onConfigUpdate: mockOnConfigUpdate }));
-      expect(screen.getByLabelText(/Overwrite existing file/i)).toBeInTheDocument();
+      rerender(
+        <InputNodeEditor
+          node={writeNode}
+          onConfigUpdate={mockOnConfigUpdate}
+        />,
+      );
+      expect(
+        screen.getByLabelText(/Overwrite existing file/i),
+      ).toBeInTheDocument();
       expect(screen.queryByLabelText(/File Pattern/i)).not.toBeInTheDocument();
     });
     it("should handle all focus checks with document.activeElement variations", () => {
       const node = {
         id: "1",
         type: "gcp_bucket",
-        position: { x: 0, y: 0 },
+        position: {
+          x: 0,
+          y: 0,
+        },
         data: {
           input_config: {
-            bucket_name: "initial"
-          }
-        }
+            bucket_name: "initial",
+          },
+        },
       };
-      const { rerender } = render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+      const { rerender } = render(
+        <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+      );
       const allInputs = [
         screen.getByLabelText(/GCP bucket name/i),
         screen.getByLabelText(/Object path/i),
-        screen.getByLabelText(/GCP Credentials/i)
+        screen.getByLabelText(/GCP Credentials/i),
       ];
       allInputs.forEach((input) => {
         input.focus();
@@ -1791,11 +2755,16 @@ describe("InputNodeEditor", () => {
           ...node,
           data: {
             input_config: {
-              bucket_name: "updated"
-            }
-          }
+              bucket_name: "updated",
+            },
+          },
         };
-        rerender(/* @__PURE__ */ jsx(InputNodeEditor, { node: updatedNode, onConfigUpdate: mockOnConfigUpdate }));
+        rerender(
+          <InputNodeEditor
+            node={updatedNode}
+            onConfigUpdate={mockOnConfigUpdate}
+          />,
+        );
         expect(screen.getByLabelText(/GCP bucket name/i)).toBeInTheDocument();
       });
     });
@@ -1803,18 +2772,23 @@ describe("InputNodeEditor", () => {
       const node = {
         id: "1",
         type: "gcp_bucket",
-        position: { x: 0, y: 0 },
+        position: {
+          x: 0,
+          y: 0,
+        },
         data: {
           input_config: {
             bucket_name: "bucket-value",
             object_path: "path-value",
             credentials: "creds-value",
             mode: "write",
-            region: "us-west-2"
-          }
-        }
+            region: "us-west-2",
+          },
+        },
       };
-      render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+      render(
+        <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+      );
       const bucketInput = screen.getByLabelText(/GCP bucket name/i);
       const modeSelect = screen.getByLabelText(/Select bucket operation mode/i);
       expect(bucketInput.value).toBe("bucket-value");
@@ -1824,15 +2798,20 @@ describe("InputNodeEditor", () => {
       const node = {
         id: "1",
         type: "aws_s3",
-        position: { x: 0, y: 0 },
+        position: {
+          x: 0,
+          y: 0,
+        },
         data: {
           input_config: {
-            bucket_name: "bucket"
+            bucket_name: "bucket",
             // region is undefined
-          }
-        }
+          },
+        },
       };
-      render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+      render(
+        <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+      );
       const regionInput = screen.getByLabelText(/AWS region/i);
       expect(regionInput.value).toBe("us-east-1");
     });
@@ -1841,20 +2820,25 @@ describe("InputNodeEditor", () => {
         "gcp_bucket",
         "aws_s3",
         "gcp_pubsub",
-        "local_filesystem"
+        "local_filesystem",
       ];
       for (const type of nodeTypes) {
         const node = {
           id: "1",
           type,
-          position: { x: 0, y: 0 },
+          position: {
+            x: 0,
+            y: 0,
+          },
           data: {
             input_config: {
               // mode is undefined
-            }
-          }
+            },
+          },
         };
-        const { unmount } = render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+        const { unmount } = render(
+          <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+        );
         const modeSelect = screen.getByLabelText(/Select.*mode/i);
         expect(modeSelect.value).toBe("read");
         unmount();
@@ -1866,82 +2850,149 @@ describe("InputNodeEditor", () => {
       const node = {
         id: "1",
         type: "gcp_bucket",
-        position: { x: 0, y: 0 },
-        data: { input_config: {} }
+        position: {
+          x: 0,
+          y: 0,
+        },
+        data: {
+          input_config: {},
+        },
       };
-      render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+      render(
+        <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+      );
       expect(screen.getByText(/GCP Bucket Configuration/i)).toBeInTheDocument();
       expect(screen.getByLabelText(/GCP bucket name/i)).toBeInTheDocument();
-      expect(screen.queryByLabelText(/AWS S3 bucket name/i)).not.toBeInTheDocument();
+      expect(
+        screen.queryByLabelText(/AWS S3 bucket name/i),
+      ).not.toBeInTheDocument();
     });
     it("should render AWS S3 configuration for aws_s3 type", () => {
       const node = {
         id: "1",
         type: "aws_s3",
-        position: { x: 0, y: 0 },
-        data: { input_config: {} }
+        position: {
+          x: 0,
+          y: 0,
+        },
+        data: {
+          input_config: {},
+        },
       };
-      render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+      render(
+        <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+      );
       expect(screen.getByText(/AWS S3 Configuration/i)).toBeInTheDocument();
       expect(screen.getByLabelText(/AWS S3 bucket name/i)).toBeInTheDocument();
-      expect(screen.queryByLabelText(/GCP bucket name/i)).not.toBeInTheDocument();
+      expect(
+        screen.queryByLabelText(/GCP bucket name/i),
+      ).not.toBeInTheDocument();
     });
     it("should render GCP Pub/Sub configuration for gcp_pubsub type", () => {
       const node = {
         id: "1",
         type: "gcp_pubsub",
-        position: { x: 0, y: 0 },
-        data: { input_config: {} }
+        position: {
+          x: 0,
+          y: 0,
+        },
+        data: {
+          input_config: {},
+        },
       };
-      render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
-      expect(screen.getByText(/GCP Pub\/Sub Configuration/i)).toBeInTheDocument();
+      render(
+        <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+      );
+      expect(
+        screen.getByText(/GCP Pub\/Sub Configuration/i),
+      ).toBeInTheDocument();
       expect(screen.getByLabelText(/GCP project ID/i)).toBeInTheDocument();
-      expect(screen.queryByLabelText(/GCP bucket name/i)).not.toBeInTheDocument();
+      expect(
+        screen.queryByLabelText(/GCP bucket name/i),
+      ).not.toBeInTheDocument();
     });
     it("should render Local FileSystem configuration for local_filesystem type", () => {
       const node = {
         id: "1",
         type: "local_filesystem",
-        position: { x: 0, y: 0 },
-        data: { input_config: {} }
+        position: {
+          x: 0,
+          y: 0,
+        },
+        data: {
+          input_config: {},
+        },
       };
-      render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
-      expect(screen.getByText(/Local File System Configuration/i)).toBeInTheDocument();
+      render(
+        <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+      );
+      expect(
+        screen.getByText(/Local File System Configuration/i),
+      ).toBeInTheDocument();
       expect(screen.getByLabelText(/File Path/i)).toBeInTheDocument();
-      expect(screen.queryByLabelText(/GCP bucket name/i)).not.toBeInTheDocument();
+      expect(
+        screen.queryByLabelText(/GCP bucket name/i),
+      ).not.toBeInTheDocument();
     });
     it("should render Database configuration message for database type", () => {
       const node = {
         id: "1",
         type: "database",
-        position: { x: 0, y: 0 },
-        data: { input_config: {} }
+        position: {
+          x: 0,
+          y: 0,
+        },
+        data: {
+          input_config: {},
+        },
       };
-      render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+      render(
+        <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+      );
       expect(screen.getByText(/Database Configuration/i)).toBeInTheDocument();
-      expect(screen.queryByLabelText(/GCP bucket name/i)).not.toBeInTheDocument();
+      expect(
+        screen.queryByLabelText(/GCP bucket name/i),
+      ).not.toBeInTheDocument();
     });
     it("should render Firebase configuration message for firebase type", () => {
       const node = {
         id: "1",
         type: "firebase",
-        position: { x: 0, y: 0 },
-        data: { input_config: {} }
+        position: {
+          x: 0,
+          y: 0,
+        },
+        data: {
+          input_config: {},
+        },
       };
-      render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+      render(
+        <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+      );
       expect(screen.getByText(/Firebase Configuration/i)).toBeInTheDocument();
-      expect(screen.queryByLabelText(/GCP bucket name/i)).not.toBeInTheDocument();
+      expect(
+        screen.queryByLabelText(/GCP bucket name/i),
+      ).not.toBeInTheDocument();
     });
     it("should render BigQuery configuration message for bigquery type", () => {
       const node = {
         id: "1",
         type: "bigquery",
-        position: { x: 0, y: 0 },
-        data: { input_config: {} }
+        position: {
+          x: 0,
+          y: 0,
+        },
+        data: {
+          input_config: {},
+        },
       };
-      render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+      render(
+        <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+      );
       expect(screen.getByText(/BigQuery Configuration/i)).toBeInTheDocument();
-      expect(screen.queryByLabelText(/GCP bucket name/i)).not.toBeInTheDocument();
+      expect(
+        screen.queryByLabelText(/GCP bucket name/i),
+      ).not.toBeInTheDocument();
     });
   });
   describe("comprehensive modeValue conditional rendering", () => {
@@ -1949,103 +3000,147 @@ describe("InputNodeEditor", () => {
       const node = {
         id: "1",
         type: "local_filesystem",
-        position: { x: 0, y: 0 },
+        position: {
+          x: 0,
+          y: 0,
+        },
         data: {
           input_config: {
             mode: "read",
-            file_path: "/test"
-          }
-        }
+            file_path: "/test",
+          },
+        },
       };
-      render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+      render(
+        <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+      );
       expect(screen.getByLabelText(/File Pattern/i)).toBeInTheDocument();
-      expect(screen.queryByLabelText(/Overwrite existing file/i)).not.toBeInTheDocument();
+      expect(
+        screen.queryByLabelText(/Overwrite existing file/i),
+      ).not.toBeInTheDocument();
     });
     it("should show overwrite checkbox for write mode in local_filesystem", () => {
       const node = {
         id: "1",
         type: "local_filesystem",
-        position: { x: 0, y: 0 },
+        position: {
+          x: 0,
+          y: 0,
+        },
         data: {
           input_config: {
             mode: "write",
-            file_path: "/test"
-          }
-        }
+            file_path: "/test",
+          },
+        },
       };
-      render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
-      expect(screen.getByLabelText(/Overwrite existing file/i)).toBeInTheDocument();
+      render(
+        <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+      );
+      expect(
+        screen.getByLabelText(/Overwrite existing file/i),
+      ).toBeInTheDocument();
       expect(screen.queryByLabelText(/File Pattern/i)).not.toBeInTheDocument();
     });
     it('should handle modeValue === "read" check', () => {
       const node = {
         id: "1",
         type: "local_filesystem",
-        position: { x: 0, y: 0 },
+        position: {
+          x: 0,
+          y: 0,
+        },
         data: {
           input_config: {
             mode: "read",
-            file_path: "/test"
-          }
-        }
+            file_path: "/test",
+          },
+        },
       };
-      const { rerender } = render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+      const { rerender } = render(
+        <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+      );
       expect(screen.getByLabelText(/File Pattern/i)).toBeInTheDocument();
       const writeNode = {
         ...node,
         data: {
           input_config: {
             ...node.data.input_config,
-            mode: "write"
-          }
-        }
+            mode: "write",
+          },
+        },
       };
-      rerender(/* @__PURE__ */ jsx(InputNodeEditor, { node: writeNode, onConfigUpdate: mockOnConfigUpdate }));
-      expect(screen.getByLabelText(/Overwrite existing file/i)).toBeInTheDocument();
+      rerender(
+        <InputNodeEditor
+          node={writeNode}
+          onConfigUpdate={mockOnConfigUpdate}
+        />,
+      );
+      expect(
+        screen.getByLabelText(/Overwrite existing file/i),
+      ).toBeInTheDocument();
       expect(screen.queryByLabelText(/File Pattern/i)).not.toBeInTheDocument();
     });
     it('should handle modeValue === "write" check', () => {
       const node = {
         id: "1",
         type: "local_filesystem",
-        position: { x: 0, y: 0 },
+        position: {
+          x: 0,
+          y: 0,
+        },
         data: {
           input_config: {
             mode: "write",
-            file_path: "/test"
-          }
-        }
+            file_path: "/test",
+          },
+        },
       };
-      const { rerender } = render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
-      expect(screen.getByLabelText(/Overwrite existing file/i)).toBeInTheDocument();
+      const { rerender } = render(
+        <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+      );
+      expect(
+        screen.getByLabelText(/Overwrite existing file/i),
+      ).toBeInTheDocument();
       const readNode = {
         ...node,
         data: {
           input_config: {
             ...node.data.input_config,
-            mode: "read"
-          }
-        }
+            mode: "read",
+          },
+        },
       };
-      rerender(/* @__PURE__ */ jsx(InputNodeEditor, { node: readNode, onConfigUpdate: mockOnConfigUpdate }));
+      rerender(
+        <InputNodeEditor node={readNode} onConfigUpdate={mockOnConfigUpdate} />,
+      );
       expect(screen.getByLabelText(/File Pattern/i)).toBeInTheDocument();
-      expect(screen.queryByLabelText(/Overwrite existing file/i)).not.toBeInTheDocument();
+      expect(
+        screen.queryByLabelText(/Overwrite existing file/i),
+      ).not.toBeInTheDocument();
     });
     it('should handle modeValue !== "read" and !== "write"', () => {
       const node = {
         id: "1",
         type: "local_filesystem",
-        position: { x: 0, y: 0 },
+        position: {
+          x: 0,
+          y: 0,
+        },
         data: {
           input_config: {
             mode: "invalid",
-            file_path: "/test"
-          }
-        }
+            file_path: "/test",
+          },
+        },
       };
-      render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+      render(
+        <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+      );
       expect(screen.queryByLabelText(/File Pattern/i)).not.toBeInTheDocument();
-      expect(screen.queryByLabelText(/Overwrite existing file/i)).not.toBeInTheDocument();
+      expect(
+        screen.queryByLabelText(/Overwrite existing file/i),
+      ).not.toBeInTheDocument();
     });
   });
   describe("comprehensive ternary operators in configuration messages", () => {
@@ -2053,10 +3148,17 @@ describe("InputNodeEditor", () => {
       const node = {
         id: "1",
         type: "database",
-        position: { x: 0, y: 0 },
-        data: { input_config: {} }
+        position: {
+          x: 0,
+          y: 0,
+        },
+        data: {
+          input_config: {},
+        },
       };
-      render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+      render(
+        <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+      );
       const configText = screen.getByText(/Configuration for database nodes/i);
       expect(configText).toBeInTheDocument();
     });
@@ -2064,10 +3166,17 @@ describe("InputNodeEditor", () => {
       const node = {
         id: "1",
         type: "firebase",
-        position: { x: 0, y: 0 },
-        data: { input_config: {} }
+        position: {
+          x: 0,
+          y: 0,
+        },
+        data: {
+          input_config: {},
+        },
       };
-      render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+      render(
+        <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+      );
       const configText = screen.getByText(/Configuration for firebase nodes/i);
       expect(configText).toBeInTheDocument();
     });
@@ -2075,10 +3184,17 @@ describe("InputNodeEditor", () => {
       const node = {
         id: "1",
         type: "bigquery",
-        position: { x: 0, y: 0 },
-        data: { input_config: {} }
+        position: {
+          x: 0,
+          y: 0,
+        },
+        data: {
+          input_config: {},
+        },
       };
-      render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+      render(
+        <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+      );
       const configText = screen.getByText(/Configuration for bigquery nodes/i);
       expect(configText).toBeInTheDocument();
     });
@@ -2088,43 +3204,77 @@ describe("InputNodeEditor", () => {
       const node = {
         id: "1",
         type: "database",
-        position: { x: 0, y: 0 },
-        data: { input_config: {} }
+        position: {
+          x: 0,
+          y: 0,
+        },
+        data: {
+          input_config: {},
+        },
       };
-      render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+      render(
+        <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+      );
       const configText = screen.getByText(/Configuration for database nodes/i);
-      expect(configText.textContent).toBe("Configuration for database nodes is handled in PropertyPanel.");
+      expect(configText.textContent).toBe(
+        "Configuration for database nodes is handled in PropertyPanel.",
+      );
     });
     it("should verify exact text for firebase configuration message", () => {
       const node = {
         id: "1",
         type: "firebase",
-        position: { x: 0, y: 0 },
-        data: { input_config: {} }
+        position: {
+          x: 0,
+          y: 0,
+        },
+        data: {
+          input_config: {},
+        },
       };
-      render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+      render(
+        <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+      );
       const configText = screen.getByText(/Configuration for firebase nodes/i);
-      expect(configText.textContent).toBe("Configuration for firebase nodes is handled in PropertyPanel.");
+      expect(configText.textContent).toBe(
+        "Configuration for firebase nodes is handled in PropertyPanel.",
+      );
     });
     it("should verify exact text for bigquery configuration message", () => {
       const node = {
         id: "1",
         type: "bigquery",
-        position: { x: 0, y: 0 },
-        data: { input_config: {} }
+        position: {
+          x: 0,
+          y: 0,
+        },
+        data: {
+          input_config: {},
+        },
       };
-      render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+      render(
+        <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+      );
       const configText = screen.getByText(/Configuration for bigquery nodes/i);
-      expect(configText.textContent).toBe("Configuration for bigquery nodes is handled in PropertyPanel.");
+      expect(configText.textContent).toBe(
+        "Configuration for bigquery nodes is handled in PropertyPanel.",
+      );
     });
     it("should verify exact title text for database", () => {
       const node = {
         id: "1",
         type: "database",
-        position: { x: 0, y: 0 },
-        data: { input_config: {} }
+        position: {
+          x: 0,
+          y: 0,
+        },
+        data: {
+          input_config: {},
+        },
       };
-      render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+      render(
+        <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+      );
       const title = screen.getByText("Database Configuration");
       expect(title).toBeInTheDocument();
       expect(title.textContent).toBe("Database Configuration");
@@ -2133,10 +3283,17 @@ describe("InputNodeEditor", () => {
       const node = {
         id: "1",
         type: "firebase",
-        position: { x: 0, y: 0 },
-        data: { input_config: {} }
+        position: {
+          x: 0,
+          y: 0,
+        },
+        data: {
+          input_config: {},
+        },
       };
-      render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+      render(
+        <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+      );
       const title = screen.getByText("Firebase Configuration");
       expect(title).toBeInTheDocument();
       expect(title.textContent).toBe("Firebase Configuration");
@@ -2145,10 +3302,17 @@ describe("InputNodeEditor", () => {
       const node = {
         id: "1",
         type: "bigquery",
-        position: { x: 0, y: 0 },
-        data: { input_config: {} }
+        position: {
+          x: 0,
+          y: 0,
+        },
+        data: {
+          input_config: {},
+        },
       };
-      render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+      render(
+        <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+      );
       const title = screen.getByText("BigQuery Configuration");
       expect(title).toBeInTheDocument();
       expect(title.textContent).toBe("BigQuery Configuration");
@@ -2157,10 +3321,17 @@ describe("InputNodeEditor", () => {
       const node = {
         id: "1",
         type: "gcp_bucket",
-        position: { x: 0, y: 0 },
-        data: { input_config: {} }
+        position: {
+          x: 0,
+          y: 0,
+        },
+        data: {
+          input_config: {},
+        },
       };
-      render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+      render(
+        <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+      );
       const title = screen.getByText("GCP Bucket Configuration");
       expect(title).toBeInTheDocument();
       expect(title.textContent).toBe("GCP Bucket Configuration");
@@ -2169,10 +3340,17 @@ describe("InputNodeEditor", () => {
       const node = {
         id: "1",
         type: "aws_s3",
-        position: { x: 0, y: 0 },
-        data: { input_config: {} }
+        position: {
+          x: 0,
+          y: 0,
+        },
+        data: {
+          input_config: {},
+        },
       };
-      render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+      render(
+        <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+      );
       const title = screen.getByText("AWS S3 Configuration");
       expect(title).toBeInTheDocument();
       expect(title.textContent).toBe("AWS S3 Configuration");
@@ -2181,10 +3359,17 @@ describe("InputNodeEditor", () => {
       const node = {
         id: "1",
         type: "gcp_pubsub",
-        position: { x: 0, y: 0 },
-        data: { input_config: {} }
+        position: {
+          x: 0,
+          y: 0,
+        },
+        data: {
+          input_config: {},
+        },
       };
-      render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+      render(
+        <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+      );
       const title = screen.getByText("GCP Pub/Sub Configuration");
       expect(title).toBeInTheDocument();
       expect(title.textContent).toBe("GCP Pub/Sub Configuration");
@@ -2193,10 +3378,17 @@ describe("InputNodeEditor", () => {
       const node = {
         id: "1",
         type: "local_filesystem",
-        position: { x: 0, y: 0 },
-        data: { input_config: {} }
+        position: {
+          x: 0,
+          y: 0,
+        },
+        data: {
+          input_config: {},
+        },
       };
-      render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+      render(
+        <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+      );
       const title = screen.getByText("Local File System Configuration");
       expect(title).toBeInTheDocument();
       expect(title.textContent).toBe("Local File System Configuration");
@@ -2206,16 +3398,23 @@ describe("InputNodeEditor", () => {
       const expectedTitles = {
         database: "Database Configuration",
         firebase: "Firebase Configuration",
-        bigquery: "BigQuery Configuration"
+        bigquery: "BigQuery Configuration",
       };
       for (const type of types) {
         const node = {
           id: "1",
           type,
-          position: { x: 0, y: 0 },
-          data: { input_config: {} }
+          position: {
+            x: 0,
+            y: 0,
+          },
+          data: {
+            input_config: {},
+          },
         };
-        const { unmount } = render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+        const { unmount } = render(
+          <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+        );
         const title = screen.getByText(expectedTitles[type]);
         expect(title.textContent).toBe(expectedTitles[type]);
         unmount();
@@ -2228,12 +3427,23 @@ describe("InputNodeEditor", () => {
         const node = {
           id: "1",
           type,
-          position: { x: 0, y: 0 },
-          data: { input_config: {} }
+          position: {
+            x: 0,
+            y: 0,
+          },
+          data: {
+            input_config: {},
+          },
         };
-        const { unmount } = render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
-        const configText = screen.getByText(new RegExp(`Configuration for ${type} nodes`, "i"));
-        expect(configText.textContent).toContain(`Configuration for ${type} nodes`);
+        const { unmount } = render(
+          <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+        );
+        const configText = screen.getByText(
+          new RegExp(`Configuration for ${type} nodes`, "i"),
+        );
+        expect(configText.textContent).toContain(
+          `Configuration for ${type} nodes`,
+        );
         unmount();
         document.body.innerHTML = "";
       }
@@ -2242,57 +3452,102 @@ describe("InputNodeEditor", () => {
       const node = {
         id: "1",
         type: "database",
-        position: { x: 0, y: 0 },
-        data: { input_config: {} }
+        position: {
+          x: 0,
+          y: 0,
+        },
+        data: {
+          input_config: {},
+        },
       };
-      render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+      render(
+        <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+      );
       const title = screen.getByText("Database Configuration");
       expect(title).toBeInTheDocument();
-      expect(screen.queryByText("Firebase Configuration")).not.toBeInTheDocument();
-      expect(screen.queryByText("BigQuery Configuration")).not.toBeInTheDocument();
+      expect(
+        screen.queryByText("Firebase Configuration"),
+      ).not.toBeInTheDocument();
+      expect(
+        screen.queryByText("BigQuery Configuration"),
+      ).not.toBeInTheDocument();
     });
     it("should verify exact conditional rendering for firebase type", () => {
       const node = {
         id: "1",
         type: "firebase",
-        position: { x: 0, y: 0 },
-        data: { input_config: {} }
+        position: {
+          x: 0,
+          y: 0,
+        },
+        data: {
+          input_config: {},
+        },
       };
-      render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+      render(
+        <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+      );
       const title = screen.getByText("Firebase Configuration");
       expect(title).toBeInTheDocument();
-      expect(screen.queryByText("Database Configuration")).not.toBeInTheDocument();
-      expect(screen.queryByText("BigQuery Configuration")).not.toBeInTheDocument();
+      expect(
+        screen.queryByText("Database Configuration"),
+      ).not.toBeInTheDocument();
+      expect(
+        screen.queryByText("BigQuery Configuration"),
+      ).not.toBeInTheDocument();
     });
     it("should verify exact conditional rendering for bigquery type", () => {
       const node = {
         id: "1",
         type: "bigquery",
-        position: { x: 0, y: 0 },
-        data: { input_config: {} }
+        position: {
+          x: 0,
+          y: 0,
+        },
+        data: {
+          input_config: {},
+        },
       };
-      render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+      render(
+        <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+      );
       const title = screen.getByText("BigQuery Configuration");
       expect(title).toBeInTheDocument();
-      expect(screen.queryByText("Database Configuration")).not.toBeInTheDocument();
-      expect(screen.queryByText("Firebase Configuration")).not.toBeInTheDocument();
+      expect(
+        screen.queryByText("Database Configuration"),
+      ).not.toBeInTheDocument();
+      expect(
+        screen.queryByText("Firebase Configuration"),
+      ).not.toBeInTheDocument();
     });
     it("should verify exact template literal string for configuration message", () => {
       const types = ["database", "firebase", "bigquery"];
       const expectedMessages = {
-        database: "Configuration for database nodes is handled in PropertyPanel.",
-        firebase: "Configuration for firebase nodes is handled in PropertyPanel.",
-        bigquery: "Configuration for bigquery nodes is handled in PropertyPanel."
+        database:
+          "Configuration for database nodes is handled in PropertyPanel.",
+        firebase:
+          "Configuration for firebase nodes is handled in PropertyPanel.",
+        bigquery:
+          "Configuration for bigquery nodes is handled in PropertyPanel.",
       };
       for (const type of types) {
         const node = {
           id: "1",
           type,
-          position: { x: 0, y: 0 },
-          data: { input_config: {} }
+          position: {
+            x: 0,
+            y: 0,
+          },
+          data: {
+            input_config: {},
+          },
         };
-        const { unmount } = render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
-        const configText = screen.getByText(new RegExp(`Configuration for ${type} nodes`, "i"));
+        const { unmount } = render(
+          <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+        );
+        const configText = screen.getByText(
+          new RegExp(`Configuration for ${type} nodes`, "i"),
+        );
         expect(configText.textContent).toBe(expectedMessages[type]);
         unmount();
         document.body.innerHTML = "";
@@ -2303,16 +3558,23 @@ describe("InputNodeEditor", () => {
       const expectedTitles = {
         database: "Database Configuration",
         firebase: "Firebase Configuration",
-        bigquery: "BigQuery Configuration"
+        bigquery: "BigQuery Configuration",
       };
       for (const type of types) {
         const node = {
           id: "1",
           type,
-          position: { x: 0, y: 0 },
-          data: { input_config: {} }
+          position: {
+            x: 0,
+            y: 0,
+          },
+          data: {
+            input_config: {},
+          },
         };
-        const { unmount } = render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+        const { unmount } = render(
+          <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+        );
         const titles = screen.queryAllByText(/Configuration$/);
         expect(titles.length).toBe(1);
         expect(titles[0].textContent).toBe(expectedTitles[type]);
@@ -2326,10 +3588,17 @@ describe("InputNodeEditor", () => {
       const node = {
         id: "1",
         type: "gcp_bucket",
-        position: { x: 0, y: 0 },
-        data: { input_config: {} }
+        position: {
+          x: 0,
+          y: 0,
+        },
+        data: {
+          input_config: {},
+        },
       };
-      render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+      render(
+        <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+      );
       const bucketNameInput = screen.getByLabelText(/Bucket Name/i);
       expect(bucketNameInput.value).toBe("");
     });
@@ -2337,10 +3606,17 @@ describe("InputNodeEditor", () => {
       const node = {
         id: "1",
         type: "gcp_bucket",
-        position: { x: 0, y: 0 },
-        data: { input_config: {} }
+        position: {
+          x: 0,
+          y: 0,
+        },
+        data: {
+          input_config: {},
+        },
       };
-      render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+      render(
+        <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+      );
       const bucketNameInput = screen.getByLabelText(/Bucket Name/i);
       const objectPathInput = screen.getByLabelText(/Object Path/i);
       expect(bucketNameInput.value).toBe("");
@@ -2354,10 +3630,17 @@ describe("InputNodeEditor", () => {
       const node = {
         id: "1",
         type: "aws_s3",
-        position: { x: 0, y: 0 },
-        data: { input_config: {} }
+        position: {
+          x: 0,
+          y: 0,
+        },
+        data: {
+          input_config: {},
+        },
       };
-      render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+      render(
+        <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+      );
       const regionInput = screen.getByLabelText(/Region/i);
       expect(regionInput.value).toBe("us-east-1");
     });
@@ -2365,10 +3648,17 @@ describe("InputNodeEditor", () => {
       const node = {
         id: "1",
         type: "local_filesystem",
-        position: { x: 0, y: 0 },
-        data: { input_config: {} }
+        position: {
+          x: 0,
+          y: 0,
+        },
+        data: {
+          input_config: {},
+        },
       };
-      render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+      render(
+        <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+      );
       const modeSelect = screen.getByLabelText(/Mode/i);
       expect(modeSelect.value).toBe("read");
     });
@@ -2376,11 +3666,22 @@ describe("InputNodeEditor", () => {
       const node = {
         id: "1",
         type: "local_filesystem",
-        position: { x: 0, y: 0 },
-        data: { input_config: { mode: "write" } }
+        position: {
+          x: 0,
+          y: 0,
+        },
+        data: {
+          input_config: {
+            mode: "write",
+          },
+        },
       };
-      render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
-      const overwriteCheckbox = screen.queryByLabelText(/Overwrite existing files/i);
+      render(
+        <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+      );
+      const overwriteCheckbox = screen.queryByLabelText(
+        /Overwrite existing files/i,
+      );
       if (overwriteCheckbox) {
         expect(overwriteCheckbox.checked).toBe(true);
       } else {
@@ -2393,10 +3694,19 @@ describe("InputNodeEditor", () => {
       const node = {
         id: "1",
         type: "gcp_bucket",
-        position: { x: 0, y: 0 },
-        data: { input_config: { bucket_name: void 0 } }
+        position: {
+          x: 0,
+          y: 0,
+        },
+        data: {
+          input_config: {
+            bucket_name: void 0,
+          },
+        },
       };
-      render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+      render(
+        <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+      );
       const bucketNameInput = screen.getByLabelText(/Bucket Name/i);
       expect(bucketNameInput.value).toBe("");
     });
@@ -2404,10 +3714,19 @@ describe("InputNodeEditor", () => {
       const node = {
         id: "1",
         type: "gcp_bucket",
-        position: { x: 0, y: 0 },
-        data: { input_config: { object_path: void 0 } }
+        position: {
+          x: 0,
+          y: 0,
+        },
+        data: {
+          input_config: {
+            object_path: void 0,
+          },
+        },
       };
-      render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+      render(
+        <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+      );
       const objectPathInput = screen.getByLabelText(/Object Path/i);
       expect(objectPathInput.value).toBe("");
     });
@@ -2415,10 +3734,19 @@ describe("InputNodeEditor", () => {
       const node = {
         id: "1",
         type: "gcp_bucket",
-        position: { x: 0, y: 0 },
-        data: { input_config: { credentials: void 0 } }
+        position: {
+          x: 0,
+          y: 0,
+        },
+        data: {
+          input_config: {
+            credentials: void 0,
+          },
+        },
       };
-      render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+      render(
+        <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+      );
       const credentialsInput = screen.getByLabelText(/GCP Credentials/i);
       expect(credentialsInput.value).toBe("");
     });
@@ -2426,10 +3754,19 @@ describe("InputNodeEditor", () => {
       const node = {
         id: "1",
         type: "aws_s3",
-        position: { x: 0, y: 0 },
-        data: { input_config: { region: void 0 } }
+        position: {
+          x: 0,
+          y: 0,
+        },
+        data: {
+          input_config: {
+            region: void 0,
+          },
+        },
       };
-      render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+      render(
+        <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+      );
       const regionInput = screen.getByLabelText(/Region/i);
       expect(regionInput.value).toBe("us-east-1");
     });
@@ -2437,16 +3774,21 @@ describe("InputNodeEditor", () => {
       const node = {
         id: "1",
         type: "gcp_bucket",
-        position: { x: 0, y: 0 },
+        position: {
+          x: 0,
+          y: 0,
+        },
         data: {
           input_config: {
             bucket_name: "test-bucket",
             object_path: "test/path",
-            credentials: "test-credentials"
-          }
-        }
+            credentials: "test-credentials",
+          },
+        },
       };
-      render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+      render(
+        <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+      );
       const bucketNameInput = screen.getByLabelText(/Bucket Name/i);
       const objectPathInput = screen.getByLabelText(/Object Path/i);
       const credentialsInput = screen.getByLabelText(/GCP Credentials/i);
@@ -2458,10 +3800,17 @@ describe("InputNodeEditor", () => {
       const node = {
         id: "1",
         type: "gcp_bucket",
-        position: { x: 0, y: 0 },
-        data: { input_config: {} }
+        position: {
+          x: 0,
+          y: 0,
+        },
+        data: {
+          input_config: {},
+        },
       };
-      render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+      render(
+        <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+      );
       const bucketNameInput = screen.getByLabelText(/Bucket Name/i);
       const objectPathInput = screen.getByLabelText(/Object Path/i);
       expect(bucketNameInput.value).toBe("");
@@ -2475,7 +3824,10 @@ describe("InputNodeEditor", () => {
       const node = {
         id: "1",
         type: "gcp_bucket",
-        position: { x: 0, y: 0 },
+        position: {
+          x: 0,
+          y: 0,
+        },
         data: {
           input_config: {
             bucket_name: void 0,
@@ -2490,11 +3842,13 @@ describe("InputNodeEditor", () => {
             subscription_name: void 0,
             file_path: void 0,
             file_pattern: void 0,
-            mode: void 0
-          }
-        }
+            mode: void 0,
+          },
+        },
       };
-      render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+      render(
+        <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+      );
       const bucketNameInput = screen.getByLabelText(/Bucket Name/i);
       const objectPathInput = screen.getByLabelText(/Object Path/i);
       expect(bucketNameInput.value).toBe("");
@@ -2504,10 +3858,19 @@ describe("InputNodeEditor", () => {
       const node = {
         id: "1",
         type: "aws_s3",
-        position: { x: 0, y: 0 },
-        data: { input_config: { region: void 0 } }
+        position: {
+          x: 0,
+          y: 0,
+        },
+        data: {
+          input_config: {
+            region: void 0,
+          },
+        },
       };
-      render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+      render(
+        <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+      );
       const regionInput = screen.getByLabelText(/Region/i);
       expect(regionInput.value).toBe("us-east-1");
     });
@@ -2515,10 +3878,19 @@ describe("InputNodeEditor", () => {
       const node = {
         id: "1",
         type: "local_filesystem",
-        position: { x: 0, y: 0 },
-        data: { input_config: { mode: void 0 } }
+        position: {
+          x: 0,
+          y: 0,
+        },
+        data: {
+          input_config: {
+            mode: void 0,
+          },
+        },
       };
-      render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+      render(
+        <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+      );
       const modeSelect = screen.getByLabelText(/Mode/i);
       expect(modeSelect.value).toBe("read");
     });
@@ -2526,11 +3898,23 @@ describe("InputNodeEditor", () => {
       const node = {
         id: "1",
         type: "local_filesystem",
-        position: { x: 0, y: 0 },
-        data: { input_config: { mode: "write", overwrite: void 0 } }
+        position: {
+          x: 0,
+          y: 0,
+        },
+        data: {
+          input_config: {
+            mode: "write",
+            overwrite: void 0,
+          },
+        },
       };
-      render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
-      const overwriteCheckbox = screen.queryByLabelText(/Overwrite existing files/i);
+      render(
+        <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+      );
+      const overwriteCheckbox = screen.queryByLabelText(
+        /Overwrite existing files/i,
+      );
       if (overwriteCheckbox) {
         expect(overwriteCheckbox.checked).toBe(true);
       }
@@ -2539,10 +3923,17 @@ describe("InputNodeEditor", () => {
       const node = {
         id: "1",
         type: "gcp_bucket",
-        position: { x: 0, y: 0 },
-        data: { input_config: {} }
+        position: {
+          x: 0,
+          y: 0,
+        },
+        data: {
+          input_config: {},
+        },
       };
-      render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+      render(
+        <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+      );
       const bucketNameInput = screen.getByLabelText(/Bucket Name/i);
       expect(bucketNameInput).toBeInTheDocument();
       bucketNameInput.focus();
@@ -2552,10 +3943,19 @@ describe("InputNodeEditor", () => {
       const node = {
         id: "1",
         type: "local_filesystem",
-        position: { x: 0, y: 0 },
-        data: { input_config: { mode: "write" } }
+        position: {
+          x: 0,
+          y: 0,
+        },
+        data: {
+          input_config: {
+            mode: "write",
+          },
+        },
       };
-      render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+      render(
+        <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+      );
       const modeSelect = screen.getByLabelText(/Mode/i);
       expect(modeSelect.value).toBe("write");
     });
@@ -2563,11 +3963,23 @@ describe("InputNodeEditor", () => {
       const node = {
         id: "1",
         type: "local_filesystem",
-        position: { x: 0, y: 0 },
-        data: { input_config: { mode: "write", overwrite: false } }
+        position: {
+          x: 0,
+          y: 0,
+        },
+        data: {
+          input_config: {
+            mode: "write",
+            overwrite: false,
+          },
+        },
       };
-      render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
-      const overwriteCheckbox = screen.queryByLabelText(/Overwrite existing files/i);
+      render(
+        <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+      );
+      const overwriteCheckbox = screen.queryByLabelText(
+        /Overwrite existing files/i,
+      );
       if (overwriteCheckbox) {
         expect(overwriteCheckbox.checked).toBe(false);
       }
@@ -2576,16 +3988,21 @@ describe("InputNodeEditor", () => {
       const node = {
         id: "1",
         type: "gcp_bucket",
-        position: { x: 0, y: 0 },
+        position: {
+          x: 0,
+          y: 0,
+        },
         data: {
           input_config: {
             bucket_name: null,
             object_path: null,
-            credentials: null
-          }
-        }
+            credentials: null,
+          },
+        },
       };
-      render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+      render(
+        <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+      );
       const bucketNameInput = screen.getByLabelText(/Bucket Name/i);
       const objectPathInput = screen.getByLabelText(/Object Path/i);
       expect(bucketNameInput.value).toBe("");
@@ -2595,16 +4012,21 @@ describe("InputNodeEditor", () => {
       const node = {
         id: "1",
         type: "gcp_bucket",
-        position: { x: 0, y: 0 },
+        position: {
+          x: 0,
+          y: 0,
+        },
         data: {
           input_config: {
             bucket_name: "",
             object_path: "",
-            credentials: ""
-          }
-        }
+            credentials: "",
+          },
+        },
       };
-      render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+      render(
+        <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+      );
       const bucketNameInput = screen.getByLabelText(/Bucket Name/i);
       const objectPathInput = screen.getByLabelText(/Object Path/i);
       expect(bucketNameInput.value).toBe("");
@@ -2614,10 +4036,19 @@ describe("InputNodeEditor", () => {
       const node = {
         id: "1",
         type: "gcp_bucket",
-        position: { x: 0, y: 0 },
-        data: { input_config: { bucket_name: "test-bucket" } }
+        position: {
+          x: 0,
+          y: 0,
+        },
+        data: {
+          input_config: {
+            bucket_name: "test-bucket",
+          },
+        },
       };
-      render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+      render(
+        <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+      );
       const bucketNameInput = screen.getByLabelText(/Bucket Name/i);
       expect(bucketNameInput.value).toBe("test-bucket");
       bucketNameInput.focus();
@@ -2627,10 +4058,19 @@ describe("InputNodeEditor", () => {
       const node = {
         id: "1",
         type: "gcp_bucket",
-        position: { x: 0, y: 0 },
-        data: { input_config: { object_path: "test/path" } }
+        position: {
+          x: 0,
+          y: 0,
+        },
+        data: {
+          input_config: {
+            object_path: "test/path",
+          },
+        },
       };
-      render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+      render(
+        <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+      );
       const objectPathInput = screen.getByLabelText(/Object Path/i);
       expect(objectPathInput.value).toBe("test/path");
       objectPathInput.focus();
@@ -2640,10 +4080,19 @@ describe("InputNodeEditor", () => {
       const node = {
         id: "1",
         type: "gcp_bucket",
-        position: { x: 0, y: 0 },
-        data: { input_config: { credentials: "test-credentials" } }
+        position: {
+          x: 0,
+          y: 0,
+        },
+        data: {
+          input_config: {
+            credentials: "test-credentials",
+          },
+        },
       };
-      render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+      render(
+        <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+      );
       const credentialsInput = screen.queryByLabelText(/GCP Credentials/i);
       if (credentialsInput) {
         expect(credentialsInput.value).toBe("test-credentials");
@@ -2655,7 +4104,10 @@ describe("InputNodeEditor", () => {
       const node = {
         id: "1",
         type: "gcp_bucket",
-        position: { x: 0, y: 0 },
+        position: {
+          x: 0,
+          y: 0,
+        },
         data: {
           input_config: {
             bucket_name: "bucket",
@@ -2668,11 +4120,13 @@ describe("InputNodeEditor", () => {
             topic_name: "topic",
             subscription_name: "sub",
             file_path: "file",
-            file_pattern: "pattern"
-          }
-        }
+            file_pattern: "pattern",
+          },
+        },
       };
-      render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+      render(
+        <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+      );
       const inputs = [
         screen.getByLabelText(/Bucket Name/i),
         screen.getByLabelText(/Object Path/i),
@@ -2684,7 +4138,7 @@ describe("InputNodeEditor", () => {
         screen.queryByLabelText(/Topic Name/i),
         screen.queryByLabelText(/Subscription Name/i),
         screen.queryByLabelText(/File Path/i),
-        screen.queryByLabelText(/File Pattern/i)
+        screen.queryByLabelText(/File Pattern/i),
       ].filter(Boolean);
       expect(inputs.length).toBeGreaterThan(0);
     });
@@ -2692,10 +4146,19 @@ describe("InputNodeEditor", () => {
       const node = {
         id: "1",
         type: "aws_s3",
-        position: { x: 0, y: 0 },
-        data: { input_config: { object_key: "test-key" } }
+        position: {
+          x: 0,
+          y: 0,
+        },
+        data: {
+          input_config: {
+            object_key: "test-key",
+          },
+        },
       };
-      render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+      render(
+        <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+      );
       const objectKeyInput = screen.queryByLabelText(/Object Key/i);
       if (objectKeyInput) {
         expect(objectKeyInput.value).toBe("test-key");
@@ -2707,10 +4170,19 @@ describe("InputNodeEditor", () => {
       const node = {
         id: "1",
         type: "aws_s3",
-        position: { x: 0, y: 0 },
-        data: { input_config: { access_key_id: "test-access" } }
+        position: {
+          x: 0,
+          y: 0,
+        },
+        data: {
+          input_config: {
+            access_key_id: "test-access",
+          },
+        },
       };
-      render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+      render(
+        <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+      );
       const accessKeyInput = screen.queryByLabelText(/Access Key ID/i);
       if (accessKeyInput) {
         expect(accessKeyInput.value).toBe("test-access");
@@ -2722,10 +4194,19 @@ describe("InputNodeEditor", () => {
       const node = {
         id: "1",
         type: "aws_s3",
-        position: { x: 0, y: 0 },
-        data: { input_config: { secret_access_key: "test-secret" } }
+        position: {
+          x: 0,
+          y: 0,
+        },
+        data: {
+          input_config: {
+            secret_access_key: "test-secret",
+          },
+        },
       };
-      render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+      render(
+        <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+      );
       const secretKeyInput = screen.queryByLabelText(/Secret Access Key/i);
       if (secretKeyInput) {
         expect(secretKeyInput.value).toBe("test-secret");
@@ -2737,10 +4218,19 @@ describe("InputNodeEditor", () => {
       const node = {
         id: "1",
         type: "aws_s3",
-        position: { x: 0, y: 0 },
-        data: { input_config: { region: "us-west-2" } }
+        position: {
+          x: 0,
+          y: 0,
+        },
+        data: {
+          input_config: {
+            region: "us-west-2",
+          },
+        },
       };
-      render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+      render(
+        <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+      );
       const regionInput = screen.getByLabelText(/Region/i);
       expect(regionInput.value).toBe("us-west-2");
       regionInput.focus();
@@ -2750,10 +4240,19 @@ describe("InputNodeEditor", () => {
       const node = {
         id: "1",
         type: "gcp_pubsub",
-        position: { x: 0, y: 0 },
-        data: { input_config: { project_id: "test-project" } }
+        position: {
+          x: 0,
+          y: 0,
+        },
+        data: {
+          input_config: {
+            project_id: "test-project",
+          },
+        },
       };
-      render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+      render(
+        <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+      );
       const projectIdInput = screen.queryByLabelText(/Project ID/i);
       if (projectIdInput) {
         expect(projectIdInput.value).toBe("test-project");
@@ -2765,10 +4264,19 @@ describe("InputNodeEditor", () => {
       const node = {
         id: "1",
         type: "gcp_pubsub",
-        position: { x: 0, y: 0 },
-        data: { input_config: { topic_name: "test-topic" } }
+        position: {
+          x: 0,
+          y: 0,
+        },
+        data: {
+          input_config: {
+            topic_name: "test-topic",
+          },
+        },
       };
-      render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+      render(
+        <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+      );
       const topicNameInput = screen.queryByLabelText(/Topic Name/i);
       if (topicNameInput) {
         expect(topicNameInput.value).toBe("test-topic");
@@ -2780,10 +4288,19 @@ describe("InputNodeEditor", () => {
       const node = {
         id: "1",
         type: "gcp_pubsub",
-        position: { x: 0, y: 0 },
-        data: { input_config: { subscription_name: "test-sub" } }
+        position: {
+          x: 0,
+          y: 0,
+        },
+        data: {
+          input_config: {
+            subscription_name: "test-sub",
+          },
+        },
       };
-      render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+      render(
+        <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+      );
       const subscriptionInput = screen.queryByLabelText(/Subscription Name/i);
       if (subscriptionInput) {
         expect(subscriptionInput.value).toBe("test-sub");
@@ -2795,10 +4312,19 @@ describe("InputNodeEditor", () => {
       const node = {
         id: "1",
         type: "local_filesystem",
-        position: { x: 0, y: 0 },
-        data: { input_config: { file_path: "/test/path" } }
+        position: {
+          x: 0,
+          y: 0,
+        },
+        data: {
+          input_config: {
+            file_path: "/test/path",
+          },
+        },
       };
-      render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+      render(
+        <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+      );
       const filePathInput = screen.queryByLabelText(/File Path/i);
       if (filePathInput) {
         expect(filePathInput.value).toBe("/test/path");
@@ -2810,10 +4336,19 @@ describe("InputNodeEditor", () => {
       const node = {
         id: "1",
         type: "local_filesystem",
-        position: { x: 0, y: 0 },
-        data: { input_config: { file_pattern: "*.txt" } }
+        position: {
+          x: 0,
+          y: 0,
+        },
+        data: {
+          input_config: {
+            file_pattern: "*.txt",
+          },
+        },
       };
-      render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+      render(
+        <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+      );
       const filePatternInput = screen.queryByLabelText(/File Pattern/i);
       if (filePatternInput) {
         expect(filePatternInput.value).toBe("*.txt");
@@ -2825,15 +4360,20 @@ describe("InputNodeEditor", () => {
       const node = {
         id: "1",
         type: "gcp_bucket",
-        position: { x: 0, y: 0 },
+        position: {
+          x: 0,
+          y: 0,
+        },
         data: {
           input_config: {
             bucket_name: "bucket",
-            object_path: "path"
-          }
-        }
+            object_path: "path",
+          },
+        },
       };
-      render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+      render(
+        <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+      );
       const bucketNameInput = screen.getByLabelText(/Bucket Name/i);
       const objectPathInput = screen.getByLabelText(/Object Path/i);
       expect(bucketNameInput.value).toBe("bucket");
@@ -2841,16 +4381,18 @@ describe("InputNodeEditor", () => {
       bucketNameInput.focus();
       expect(document.activeElement !== bucketNameInput).toBe(false);
       render(
-        /* @__PURE__ */ jsx(
-          InputNodeEditor,
-          {
-            node: {
-              ...node,
-              data: { input_config: { bucket_name: "new-bucket", object_path: "new-path" } }
+        <InputNodeEditor
+          node={{
+            ...node,
+            data: {
+              input_config: {
+                bucket_name: "new-bucket",
+                object_path: "new-path",
+              },
             },
-            onConfigUpdate: mockOnConfigUpdate
-          }
-        )
+          }}
+          onConfigUpdate={mockOnConfigUpdate}
+        />,
       );
       expect(bucketNameInput.value).toBe("bucket");
     });
@@ -2858,32 +4400,64 @@ describe("InputNodeEditor", () => {
       const node = {
         id: "1",
         type: "local_filesystem",
-        position: { x: 0, y: 0 },
-        data: { input_config: { mode: "read" } }
+        position: {
+          x: 0,
+          y: 0,
+        },
+        data: {
+          input_config: {
+            mode: "read",
+          },
+        },
       };
-      render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
-      const overwriteCheckbox = screen.queryByLabelText(/Overwrite existing files/i);
+      render(
+        <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+      );
+      const overwriteCheckbox = screen.queryByLabelText(
+        /Overwrite existing files/i,
+      );
       expect(overwriteCheckbox).not.toBeInTheDocument();
     });
     it('should verify modeValue === "write" conditional rendering for local_filesystem', () => {
       const node = {
         id: "1",
         type: "local_filesystem",
-        position: { x: 0, y: 0 },
-        data: { input_config: { mode: "write" } }
+        position: {
+          x: 0,
+          y: 0,
+        },
+        data: {
+          input_config: {
+            mode: "write",
+          },
+        },
       };
-      render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+      render(
+        <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+      );
       expect(node.data.input_config.mode).toBe("write");
     });
     it("should verify overwriteValue ?? true pattern with undefined", () => {
       const node = {
         id: "1",
         type: "local_filesystem",
-        position: { x: 0, y: 0 },
-        data: { input_config: { mode: "write", overwrite: void 0 } }
+        position: {
+          x: 0,
+          y: 0,
+        },
+        data: {
+          input_config: {
+            mode: "write",
+            overwrite: void 0,
+          },
+        },
       };
-      render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
-      const overwriteCheckbox = screen.queryByLabelText(/Overwrite existing files/i);
+      render(
+        <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+      );
+      const overwriteCheckbox = screen.queryByLabelText(
+        /Overwrite existing files/i,
+      );
       if (overwriteCheckbox) {
         expect(overwriteCheckbox.checked).toBe(true);
       }
@@ -2892,11 +4466,23 @@ describe("InputNodeEditor", () => {
       const node = {
         id: "1",
         type: "local_filesystem",
-        position: { x: 0, y: 0 },
-        data: { input_config: { mode: "write", overwrite: null } }
+        position: {
+          x: 0,
+          y: 0,
+        },
+        data: {
+          input_config: {
+            mode: "write",
+            overwrite: null,
+          },
+        },
       };
-      render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
-      const overwriteCheckbox = screen.queryByLabelText(/Overwrite existing files/i);
+      render(
+        <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+      );
+      const overwriteCheckbox = screen.queryByLabelText(
+        /Overwrite existing files/i,
+      );
       if (overwriteCheckbox) {
         expect(overwriteCheckbox.checked).toBe(true);
       }
@@ -2906,70 +4492,125 @@ describe("InputNodeEditor", () => {
         const node = {
           id: "1",
           type: "gcp_bucket",
-          position: { x: 0, y: 0 },
-          data: { input_config: {} }
+          position: {
+            x: 0,
+            y: 0,
+          },
+          data: {
+            input_config: {},
+          },
         };
-        render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
-        expect(screen.getByText(/GCP Bucket Configuration/i)).toBeInTheDocument();
+        render(
+          <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+        );
+        expect(
+          screen.getByText(/GCP Bucket Configuration/i),
+        ).toBeInTheDocument();
       });
       it('should verify node.type === "aws_s3" exact comparison', () => {
         const node = {
           id: "1",
           type: "aws_s3",
-          position: { x: 0, y: 0 },
-          data: { input_config: {} }
+          position: {
+            x: 0,
+            y: 0,
+          },
+          data: {
+            input_config: {},
+          },
         };
-        render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+        render(
+          <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+        );
         expect(screen.getByText(/AWS S3 Configuration/i)).toBeInTheDocument();
       });
       it('should verify node.type === "gcp_pubsub" exact comparison', () => {
         const node = {
           id: "1",
           type: "gcp_pubsub",
-          position: { x: 0, y: 0 },
-          data: { input_config: {} }
+          position: {
+            x: 0,
+            y: 0,
+          },
+          data: {
+            input_config: {},
+          },
         };
-        render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
-        expect(screen.getByText(/GCP Pub\/Sub Configuration/i)).toBeInTheDocument();
+        render(
+          <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+        );
+        expect(
+          screen.getByText(/GCP Pub\/Sub Configuration/i),
+        ).toBeInTheDocument();
       });
       it('should verify node.type === "local_filesystem" exact comparison', () => {
         const node = {
           id: "1",
           type: "local_filesystem",
-          position: { x: 0, y: 0 },
-          data: { input_config: {} }
+          position: {
+            x: 0,
+            y: 0,
+          },
+          data: {
+            input_config: {},
+          },
         };
-        render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
-        expect(screen.getByText(/Local File System Configuration/i)).toBeInTheDocument();
+        render(
+          <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+        );
+        expect(
+          screen.getByText(/Local File System Configuration/i),
+        ).toBeInTheDocument();
       });
       it('should verify node.type === "database" exact comparison', () => {
         const node = {
           id: "1",
           type: "database",
-          position: { x: 0, y: 0 },
-          data: { input_config: {} }
+          position: {
+            x: 0,
+            y: 0,
+          },
+          data: {
+            input_config: {},
+          },
         };
-        render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+        render(
+          <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+        );
         expect(screen.getByText(/Database Configuration/i)).toBeInTheDocument();
       });
       it('should verify node.type === "firebase" exact comparison', () => {
         const node = {
           id: "1",
           type: "firebase",
-          position: { x: 0, y: 0 },
-          data: { input_config: {} }
+          position: {
+            x: 0,
+            y: 0,
+          },
+          data: {
+            input_config: {},
+          },
         };
-        render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+        render(
+          <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+        );
         expect(screen.getByText(/Firebase Configuration/i)).toBeInTheDocument();
       });
       it('should verify node.type === "bigquery" exact comparison', () => {
         const node = {
           id: "1",
           type: "bigquery",
-          position: { x: 0, y: 0 },
-          data: { input_config: {} }
+          position: {
+            x: 0,
+            y: 0,
+          },
+          data: {
+            input_config: {},
+          },
         };
-        render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+        render(
+          <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+        );
         expect(screen.getByText(/BigQuery Configuration/i)).toBeInTheDocument();
       });
     });
@@ -2978,30 +4619,51 @@ describe("InputNodeEditor", () => {
         const node = {
           id: "1",
           type: "database",
-          position: { x: 0, y: 0 },
-          data: { input_config: {} }
+          position: {
+            x: 0,
+            y: 0,
+          },
+          data: {
+            input_config: {},
+          },
         };
-        render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+        render(
+          <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+        );
         expect(screen.getByText(/Database Configuration/i)).toBeInTheDocument();
       });
       it('should verify node.type === "firebase" && "Firebase Configuration" pattern', () => {
         const node = {
           id: "1",
           type: "firebase",
-          position: { x: 0, y: 0 },
-          data: { input_config: {} }
+          position: {
+            x: 0,
+            y: 0,
+          },
+          data: {
+            input_config: {},
+          },
         };
-        render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+        render(
+          <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+        );
         expect(screen.getByText(/Firebase Configuration/i)).toBeInTheDocument();
       });
       it('should verify node.type === "bigquery" && "BigQuery Configuration" pattern', () => {
         const node = {
           id: "1",
           type: "bigquery",
-          position: { x: 0, y: 0 },
-          data: { input_config: {} }
+          position: {
+            x: 0,
+            y: 0,
+          },
+          data: {
+            input_config: {},
+          },
         };
-        render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+        render(
+          <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+        );
         expect(screen.getByText(/BigQuery Configuration/i)).toBeInTheDocument();
       });
     });
@@ -3010,30 +4672,53 @@ describe("InputNodeEditor", () => {
         const node = {
           id: "1",
           type: "gcp_bucket",
-          position: { x: 0, y: 0 },
-          data: { input_config: void 0 }
+          position: {
+            x: 0,
+            y: 0,
+          },
+          data: {
+            input_config: void 0,
+          },
         };
-        render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+        render(
+          <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+        );
         expect(screen.getByLabelText(/Bucket Name/i)).toBeInTheDocument();
       });
       it("should verify node.data.input_config || {} with null", () => {
         const node = {
           id: "1",
           type: "gcp_bucket",
-          position: { x: 0, y: 0 },
-          data: { input_config: null }
+          position: {
+            x: 0,
+            y: 0,
+          },
+          data: {
+            input_config: null,
+          },
         };
-        render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+        render(
+          <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+        );
         expect(screen.getByLabelText(/Bucket Name/i)).toBeInTheDocument();
       });
       it("should verify node.data.input_config || {} with existing config", () => {
         const node = {
           id: "1",
           type: "gcp_bucket",
-          position: { x: 0, y: 0 },
-          data: { input_config: { bucket_name: "test-bucket" } }
+          position: {
+            x: 0,
+            y: 0,
+          },
+          data: {
+            input_config: {
+              bucket_name: "test-bucket",
+            },
+          },
         };
-        render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+        render(
+          <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+        );
         const bucketInput = screen.getByLabelText(/Bucket Name/i);
         expect(bucketInput.value).toBe("test-bucket");
       });
@@ -3043,10 +4728,17 @@ describe("InputNodeEditor", () => {
         const node = {
           id: "1",
           type: "gcp_bucket",
-          position: { x: 0, y: 0 },
-          data: { input_config: {} }
+          position: {
+            x: 0,
+            y: 0,
+          },
+          data: {
+            input_config: {},
+          },
         };
-        render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+        render(
+          <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+        );
         const bucketInput = screen.getByLabelText(/Bucket Name/i);
         const objectPathInput = screen.getByLabelText(/Object Path/i);
         expect(bucketInput.value).toBe("");
@@ -3056,10 +4748,17 @@ describe("InputNodeEditor", () => {
         const node = {
           id: "1",
           type: "aws_s3",
-          position: { x: 0, y: 0 },
-          data: { input_config: {} }
+          position: {
+            x: 0,
+            y: 0,
+          },
+          data: {
+            input_config: {},
+          },
         };
-        render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+        render(
+          <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+        );
         const regionInput = screen.getByLabelText(/Region/i);
         expect(regionInput.value).toBe("us-east-1");
       });
@@ -3067,10 +4766,17 @@ describe("InputNodeEditor", () => {
         const node = {
           id: "1",
           type: "local_filesystem",
-          position: { x: 0, y: 0 },
-          data: { input_config: {} }
+          position: {
+            x: 0,
+            y: 0,
+          },
+          data: {
+            input_config: {},
+          },
         };
-        render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+        render(
+          <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+        );
         const modeSelect = screen.getByLabelText(/Mode/i);
         expect(modeSelect.value).toBe("read");
       });
@@ -3078,10 +4784,19 @@ describe("InputNodeEditor", () => {
         const node = {
           id: "1",
           type: "local_filesystem",
-          position: { x: 0, y: 0 },
-          data: { input_config: { mode: "write" } }
+          position: {
+            x: 0,
+            y: 0,
+          },
+          data: {
+            input_config: {
+              mode: "write",
+            },
+          },
         };
-        render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+        render(
+          <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+        );
         const overwriteCheckbox = screen.queryByLabelText(/Overwrite/i);
         if (overwriteCheckbox) {
           expect(overwriteCheckbox.checked).toBe(true);
@@ -3093,10 +4808,19 @@ describe("InputNodeEditor", () => {
         const node = {
           id: "1",
           type: "gcp_bucket",
-          position: { x: 0, y: 0 },
-          data: { input_config: { bucket_name: void 0 } }
+          position: {
+            x: 0,
+            y: 0,
+          },
+          data: {
+            input_config: {
+              bucket_name: void 0,
+            },
+          },
         };
-        render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+        render(
+          <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+        );
         const bucketInput = screen.getByLabelText(/Bucket Name/i);
         expect(bucketInput.value).toBe("");
       });
@@ -3104,10 +4828,19 @@ describe("InputNodeEditor", () => {
         const node = {
           id: "1",
           type: "aws_s3",
-          position: { x: 0, y: 0 },
-          data: { input_config: { region: void 0 } }
+          position: {
+            x: 0,
+            y: 0,
+          },
+          data: {
+            input_config: {
+              region: void 0,
+            },
+          },
         };
-        render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+        render(
+          <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+        );
         const regionInput = screen.getByLabelText(/Region/i);
         expect(regionInput.value).toBe("us-east-1");
       });
@@ -3115,10 +4848,19 @@ describe("InputNodeEditor", () => {
         const node = {
           id: "1",
           type: "local_filesystem",
-          position: { x: 0, y: 0 },
-          data: { input_config: { mode: void 0 } }
+          position: {
+            x: 0,
+            y: 0,
+          },
+          data: {
+            input_config: {
+              mode: void 0,
+            },
+          },
         };
-        render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+        render(
+          <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+        );
         const modeSelect = screen.getByLabelText(/Mode/i);
         expect(modeSelect.value).toBe("read");
       });
@@ -3128,11 +4870,20 @@ describe("InputNodeEditor", () => {
         const node = {
           id: "1",
           type: "database",
-          position: { x: 0, y: 0 },
-          data: { input_config: {} }
+          position: {
+            x: 0,
+            y: 0,
+          },
+          data: {
+            input_config: {},
+          },
         };
-        render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
-        expect(screen.getByText(/Configuration for database nodes/i)).toBeInTheDocument();
+        render(
+          <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+        );
+        expect(
+          screen.getByText(/Configuration for database nodes/i),
+        ).toBeInTheDocument();
       });
     });
     describe("exact onChange handler patterns", () => {
@@ -3140,34 +4891,75 @@ describe("InputNodeEditor", () => {
         const node = {
           id: "1",
           type: "gcp_bucket",
-          position: { x: 0, y: 0 },
-          data: { input_config: { mode: "read" } }
+          position: {
+            x: 0,
+            y: 0,
+          },
+          data: {
+            input_config: {
+              mode: "read",
+            },
+          },
         };
-        render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+        render(
+          <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+        );
         const modeSelect = screen.getByLabelText(/Mode/i);
-        fireEvent.change(modeSelect, { target: { value: "write" } });
-        expect(mockOnConfigUpdate).toHaveBeenCalledWith("input_config", "mode", "write");
+        fireEvent.change(modeSelect, {
+          target: {
+            value: "write",
+          },
+        });
+        expect(mockOnConfigUpdate).toHaveBeenCalledWith(
+          "input_config",
+          "mode",
+          "write",
+        );
       });
       it("should verify onChange handler exact pattern for bucket name input", () => {
         const node = {
           id: "1",
           type: "gcp_bucket",
-          position: { x: 0, y: 0 },
-          data: { input_config: {} }
+          position: {
+            x: 0,
+            y: 0,
+          },
+          data: {
+            input_config: {},
+          },
         };
-        render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+        render(
+          <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+        );
         const bucketInput = screen.getByLabelText(/Bucket Name/i);
-        fireEvent.change(bucketInput, { target: { value: "test-bucket" } });
-        expect(mockOnConfigUpdate).toHaveBeenCalledWith("input_config", "bucket_name", "test-bucket");
+        fireEvent.change(bucketInput, {
+          target: {
+            value: "test-bucket",
+          },
+        });
+        expect(mockOnConfigUpdate).toHaveBeenCalledWith(
+          "input_config",
+          "bucket_name",
+          "test-bucket",
+        );
       });
       it("should verify onChange handler exact pattern for overwrite checkbox", () => {
         const node = {
           id: "1",
           type: "local_filesystem",
-          position: { x: 0, y: 0 },
-          data: { input_config: { mode: "write" } }
+          position: {
+            x: 0,
+            y: 0,
+          },
+          data: {
+            input_config: {
+              mode: "write",
+            },
+          },
         };
-        render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+        render(
+          <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+        );
         const overwriteCheckbox = screen.queryByLabelText(/Overwrite/i);
         if (overwriteCheckbox) {
           fireEvent.click(overwriteCheckbox);
@@ -3180,10 +4972,19 @@ describe("InputNodeEditor", () => {
         const node = {
           id: "1",
           type: "local_filesystem",
-          position: { x: 0, y: 0 },
-          data: { input_config: { mode: "read" } }
+          position: {
+            x: 0,
+            y: 0,
+          },
+          data: {
+            input_config: {
+              mode: "read",
+            },
+          },
         };
-        render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+        render(
+          <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+        );
         const filePatternInput = screen.queryByLabelText(/File Pattern/i);
         expect(filePatternInput).toBeInTheDocument();
       });
@@ -3191,10 +4992,19 @@ describe("InputNodeEditor", () => {
         const node = {
           id: "1",
           type: "local_filesystem",
-          position: { x: 0, y: 0 },
-          data: { input_config: { mode: "write" } }
+          position: {
+            x: 0,
+            y: 0,
+          },
+          data: {
+            input_config: {
+              mode: "write",
+            },
+          },
         };
-        render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+        render(
+          <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+        );
         const overwriteCheckbox = screen.queryByLabelText(/Overwrite/i);
         expect(overwriteCheckbox).toBeInTheDocument();
       });
@@ -3202,10 +5012,19 @@ describe("InputNodeEditor", () => {
         const node = {
           id: "1",
           type: "local_filesystem",
-          position: { x: 0, y: 0 },
-          data: { input_config: { mode: "write" } }
+          position: {
+            x: 0,
+            y: 0,
+          },
+          data: {
+            input_config: {
+              mode: "write",
+            },
+          },
         };
-        render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+        render(
+          <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+        );
         const filePatternInput = screen.queryByLabelText(/File Pattern/i);
         expect(filePatternInput).not.toBeInTheDocument();
       });
@@ -3213,10 +5032,19 @@ describe("InputNodeEditor", () => {
         const node = {
           id: "1",
           type: "local_filesystem",
-          position: { x: 0, y: 0 },
-          data: { input_config: { mode: "read" } }
+          position: {
+            x: 0,
+            y: 0,
+          },
+          data: {
+            input_config: {
+              mode: "read",
+            },
+          },
         };
-        render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+        render(
+          <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+        );
         const overwriteCheckbox = screen.queryByLabelText(/Overwrite/i);
         expect(overwriteCheckbox).not.toBeInTheDocument();
       });
@@ -3226,16 +5054,21 @@ describe("InputNodeEditor", () => {
         const node = {
           id: "1",
           type: "gcp_bucket",
-          position: { x: 0, y: 0 },
+          position: {
+            x: 0,
+            y: 0,
+          },
           data: {
             input_config: {
               bucket_name: "bucket",
               object_path: "path",
-              credentials: "creds"
-            }
-          }
+              credentials: "creds",
+            },
+          },
         };
-        render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+        render(
+          <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+        );
         const bucketInput = screen.getByLabelText(/Bucket Name/i);
         const objectPathInput = screen.getByLabelText(/Object Path/i);
         expect(bucketInput.value).toBe("bucket");
@@ -3245,23 +5078,33 @@ describe("InputNodeEditor", () => {
         const node = {
           id: "1",
           type: "gcp_bucket",
-          position: { x: 0, y: 0 },
-          data: { input_config: { bucket_name: "initial" } }
+          position: {
+            x: 0,
+            y: 0,
+          },
+          data: {
+            input_config: {
+              bucket_name: "initial",
+            },
+          },
         };
-        const { rerender } = render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+        const { rerender } = render(
+          <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+        );
         const bucketInput = screen.getByLabelText(/Bucket Name/i);
         bucketInput.focus();
         rerender(
-          /* @__PURE__ */ jsx(
-            InputNodeEditor,
-            {
-              node: {
-                ...node,
-                data: { input_config: { bucket_name: "updated" } }
+          <InputNodeEditor
+            node={{
+              ...node,
+              data: {
+                input_config: {
+                  bucket_name: "updated",
+                },
               },
-              onConfigUpdate: mockOnConfigUpdate
-            }
-          )
+            }}
+            onConfigUpdate={mockOnConfigUpdate}
+          />,
         );
         expect(document.activeElement).toBe(bucketInput);
       });
@@ -3271,10 +5114,19 @@ describe("InputNodeEditor", () => {
         const node = {
           id: "1",
           type: "gcp_bucket",
-          position: { x: 0, y: 0 },
-          data: { input_config: { mode: "read" } }
+          position: {
+            x: 0,
+            y: 0,
+          },
+          data: {
+            input_config: {
+              mode: "read",
+            },
+          },
         };
-        render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+        render(
+          <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+        );
         const modeSelect = screen.getByLabelText(/Mode/i);
         expect(modeSelect.value).toBe("read");
       });
@@ -3282,10 +5134,19 @@ describe("InputNodeEditor", () => {
         const node = {
           id: "1",
           type: "gcp_bucket",
-          position: { x: 0, y: 0 },
-          data: { input_config: { mode: "write" } }
+          position: {
+            x: 0,
+            y: 0,
+          },
+          data: {
+            input_config: {
+              mode: "write",
+            },
+          },
         };
-        render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+        render(
+          <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+        );
         const modeSelect = screen.getByLabelText(/Mode/i);
         expect(modeSelect.value).toBe("write");
       });
@@ -3295,34 +5156,75 @@ describe("InputNodeEditor", () => {
         const node = {
           id: "1",
           type: "gcp_bucket",
-          position: { x: 0, y: 0 },
-          data: { input_config: { mode: "read" } }
+          position: {
+            x: 0,
+            y: 0,
+          },
+          data: {
+            input_config: {
+              mode: "read",
+            },
+          },
         };
-        render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+        render(
+          <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+        );
         const modeSelect = screen.getByLabelText(/Mode/i);
-        fireEvent.change(modeSelect, { target: { value: "write" } });
-        expect(mockOnConfigUpdate).toHaveBeenCalledWith("input_config", "mode", "write");
+        fireEvent.change(modeSelect, {
+          target: {
+            value: "write",
+          },
+        });
+        expect(mockOnConfigUpdate).toHaveBeenCalledWith(
+          "input_config",
+          "mode",
+          "write",
+        );
       });
       it("should verify e.target.value exact pattern in text input", () => {
         const node = {
           id: "1",
           type: "gcp_bucket",
-          position: { x: 0, y: 0 },
-          data: { input_config: {} }
+          position: {
+            x: 0,
+            y: 0,
+          },
+          data: {
+            input_config: {},
+          },
         };
-        render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+        render(
+          <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+        );
         const bucketInput = screen.getByLabelText(/Bucket Name/i);
-        fireEvent.change(bucketInput, { target: { value: "test-bucket-value" } });
-        expect(mockOnConfigUpdate).toHaveBeenCalledWith("input_config", "bucket_name", "test-bucket-value");
+        fireEvent.change(bucketInput, {
+          target: {
+            value: "test-bucket-value",
+          },
+        });
+        expect(mockOnConfigUpdate).toHaveBeenCalledWith(
+          "input_config",
+          "bucket_name",
+          "test-bucket-value",
+        );
       });
       it("should verify e.target.checked exact pattern in checkbox", () => {
         const node = {
           id: "1",
           type: "local_filesystem",
-          position: { x: 0, y: 0 },
-          data: { input_config: { mode: "write" } }
+          position: {
+            x: 0,
+            y: 0,
+          },
+          data: {
+            input_config: {
+              mode: "write",
+            },
+          },
         };
-        render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+        render(
+          <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+        );
         const overwriteCheckbox = screen.queryByLabelText(/Overwrite/i);
         if (overwriteCheckbox) {
           fireEvent.click(overwriteCheckbox);
@@ -3335,34 +5237,75 @@ describe("InputNodeEditor", () => {
         const node = {
           id: "1",
           type: "gcp_bucket",
-          position: { x: 0, y: 0 },
-          data: { input_config: { mode: "read" } }
+          position: {
+            x: 0,
+            y: 0,
+          },
+          data: {
+            input_config: {
+              mode: "read",
+            },
+          },
         };
-        render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+        render(
+          <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+        );
         const modeSelect = screen.getByLabelText(/Mode/i);
-        fireEvent.change(modeSelect, { target: { value: "write" } });
-        expect(mockOnConfigUpdate).toHaveBeenCalledWith("input_config", "mode", "write");
+        fireEvent.change(modeSelect, {
+          target: {
+            value: "write",
+          },
+        });
+        expect(mockOnConfigUpdate).toHaveBeenCalledWith(
+          "input_config",
+          "mode",
+          "write",
+        );
       });
       it('should verify onConfigUpdate("input_config", "bucket_name", newValue) exact pattern', () => {
         const node = {
           id: "1",
           type: "gcp_bucket",
-          position: { x: 0, y: 0 },
-          data: { input_config: {} }
+          position: {
+            x: 0,
+            y: 0,
+          },
+          data: {
+            input_config: {},
+          },
         };
-        render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+        render(
+          <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+        );
         const bucketInput = screen.getByLabelText(/Bucket Name/i);
-        fireEvent.change(bucketInput, { target: { value: "bucket-name-value" } });
-        expect(mockOnConfigUpdate).toHaveBeenCalledWith("input_config", "bucket_name", "bucket-name-value");
+        fireEvent.change(bucketInput, {
+          target: {
+            value: "bucket-name-value",
+          },
+        });
+        expect(mockOnConfigUpdate).toHaveBeenCalledWith(
+          "input_config",
+          "bucket_name",
+          "bucket-name-value",
+        );
       });
       it('should verify onConfigUpdate("input_config", "overwrite", newValue) exact pattern', () => {
         const node = {
           id: "1",
           type: "local_filesystem",
-          position: { x: 0, y: 0 },
-          data: { input_config: { mode: "write" } }
+          position: {
+            x: 0,
+            y: 0,
+          },
+          data: {
+            input_config: {
+              mode: "write",
+            },
+          },
         };
-        render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+        render(
+          <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+        );
         const overwriteCheckbox = screen.queryByLabelText(/Overwrite/i);
         if (overwriteCheckbox) {
           fireEvent.click(overwriteCheckbox);
@@ -3375,50 +5318,110 @@ describe("InputNodeEditor", () => {
         const node = {
           id: "1",
           type: "gcp_bucket",
-          position: { x: 0, y: 0 },
-          data: { input_config: {} }
+          position: {
+            x: 0,
+            y: 0,
+          },
+          data: {
+            input_config: {},
+          },
         };
-        render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+        render(
+          <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+        );
         const bucketInput = screen.getByLabelText(/Bucket Name/i);
-        fireEvent.change(bucketInput, { target: { value: "test" } });
-        expect(mockOnConfigUpdate).toHaveBeenCalledWith("input_config", expect.any(String), expect.any(String));
+        fireEvent.change(bucketInput, {
+          target: {
+            value: "test",
+          },
+        });
+        expect(mockOnConfigUpdate).toHaveBeenCalledWith(
+          "input_config",
+          expect.any(String),
+          expect.any(String),
+        );
       });
       it('should verify exact string literal "bucket_name" in onConfigUpdate', () => {
         const node = {
           id: "1",
           type: "gcp_bucket",
-          position: { x: 0, y: 0 },
-          data: { input_config: {} }
+          position: {
+            x: 0,
+            y: 0,
+          },
+          data: {
+            input_config: {},
+          },
         };
-        render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+        render(
+          <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+        );
         const bucketInput = screen.getByLabelText(/Bucket Name/i);
-        fireEvent.change(bucketInput, { target: { value: "test" } });
-        expect(mockOnConfigUpdate).toHaveBeenCalledWith("input_config", "bucket_name", "test");
+        fireEvent.change(bucketInput, {
+          target: {
+            value: "test",
+          },
+        });
+        expect(mockOnConfigUpdate).toHaveBeenCalledWith(
+          "input_config",
+          "bucket_name",
+          "test",
+        );
       });
       it('should verify exact string literal "mode" in onConfigUpdate', () => {
         const node = {
           id: "1",
           type: "gcp_bucket",
-          position: { x: 0, y: 0 },
-          data: { input_config: { mode: "read" } }
+          position: {
+            x: 0,
+            y: 0,
+          },
+          data: {
+            input_config: {
+              mode: "read",
+            },
+          },
         };
-        render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+        render(
+          <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+        );
         const modeSelect = screen.getByLabelText(/Mode/i);
-        fireEvent.change(modeSelect, { target: { value: "write" } });
-        expect(mockOnConfigUpdate).toHaveBeenCalledWith("input_config", "mode", "write");
+        fireEvent.change(modeSelect, {
+          target: {
+            value: "write",
+          },
+        });
+        expect(mockOnConfigUpdate).toHaveBeenCalledWith(
+          "input_config",
+          "mode",
+          "write",
+        );
       });
       it('should verify exact string literal "overwrite" in onConfigUpdate', () => {
         const node = {
           id: "1",
           type: "local_filesystem",
-          position: { x: 0, y: 0 },
-          data: { input_config: { mode: "write" } }
+          position: {
+            x: 0,
+            y: 0,
+          },
+          data: {
+            input_config: {
+              mode: "write",
+            },
+          },
         };
-        render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+        render(
+          <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+        );
         const overwriteCheckbox = screen.queryByLabelText(/Overwrite/i);
         if (overwriteCheckbox) {
           fireEvent.click(overwriteCheckbox);
-          expect(mockOnConfigUpdate).toHaveBeenCalledWith("input_config", "overwrite", expect.any(Boolean));
+          expect(mockOnConfigUpdate).toHaveBeenCalledWith(
+            "input_config",
+            "overwrite",
+            expect.any(Boolean),
+          );
         }
       });
     });
@@ -3427,10 +5430,19 @@ describe("InputNodeEditor", () => {
         const node = {
           id: "1",
           type: "gcp_bucket",
-          position: { x: 0, y: 0 },
-          data: { input_config: { bucket_name: "set-bucket-value" } }
+          position: {
+            x: 0,
+            y: 0,
+          },
+          data: {
+            input_config: {
+              bucket_name: "set-bucket-value",
+            },
+          },
         };
-        render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+        render(
+          <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+        );
         const bucketInput = screen.getByLabelText(/Bucket Name/i);
         expect(bucketInput.value).toBe("set-bucket-value");
       });
@@ -3438,10 +5450,19 @@ describe("InputNodeEditor", () => {
         const node = {
           id: "1",
           type: "gcp_bucket",
-          position: { x: 0, y: 0 },
-          data: { input_config: { mode: "write" } }
+          position: {
+            x: 0,
+            y: 0,
+          },
+          data: {
+            input_config: {
+              mode: "write",
+            },
+          },
         };
-        render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+        render(
+          <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+        );
         const modeSelect = screen.getByLabelText(/Mode/i);
         expect(modeSelect.value).toBe("write");
       });
@@ -3449,10 +5470,20 @@ describe("InputNodeEditor", () => {
         const node = {
           id: "1",
           type: "local_filesystem",
-          position: { x: 0, y: 0 },
-          data: { input_config: { mode: "write", overwrite: false } }
+          position: {
+            x: 0,
+            y: 0,
+          },
+          data: {
+            input_config: {
+              mode: "write",
+              overwrite: false,
+            },
+          },
         };
-        render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+        render(
+          <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+        );
         const overwriteCheckbox = screen.queryByLabelText(/Overwrite/i);
         if (overwriteCheckbox) {
           expect(overwriteCheckbox.checked).toBe(false);
@@ -3464,10 +5495,17 @@ describe("InputNodeEditor", () => {
         const node = {
           id: "1",
           type: "gcp_bucket",
-          position: { x: 0, y: 0 },
-          data: { input_config: {} }
+          position: {
+            x: 0,
+            y: 0,
+          },
+          data: {
+            input_config: {},
+          },
         };
-        render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+        render(
+          <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+        );
         const bucketInput = screen.getByLabelText(/Bucket Name/i);
         expect(bucketInput.placeholder).toBe("my-bucket-name");
       });
@@ -3475,10 +5513,17 @@ describe("InputNodeEditor", () => {
         const node = {
           id: "1",
           type: "aws_s3",
-          position: { x: 0, y: 0 },
-          data: { input_config: {} }
+          position: {
+            x: 0,
+            y: 0,
+          },
+          data: {
+            input_config: {},
+          },
         };
-        render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+        render(
+          <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+        );
         const regionInput = screen.getByLabelText(/Region/i);
         expect(regionInput.placeholder).toBe("us-east-1");
       });
@@ -3486,10 +5531,17 @@ describe("InputNodeEditor", () => {
         const node = {
           id: "1",
           type: "local_filesystem",
-          position: { x: 0, y: 0 },
-          data: { input_config: {} }
+          position: {
+            x: 0,
+            y: 0,
+          },
+          data: {
+            input_config: {},
+          },
         };
-        render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+        render(
+          <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+        );
         const filePathInput = screen.getByLabelText(/File Path/i);
         expect(filePathInput.placeholder).toBe("/path/to/file.txt");
       });
@@ -3499,10 +5551,17 @@ describe("InputNodeEditor", () => {
         const node = {
           id: "1",
           type: "gcp_bucket",
-          position: { x: 0, y: 0 },
-          data: { input_config: {} }
+          position: {
+            x: 0,
+            y: 0,
+          },
+          data: {
+            input_config: {},
+          },
         };
-        render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+        render(
+          <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+        );
         const bucketInput = screen.getByLabelText(/Bucket Name/i);
         expect(bucketInput.getAttribute("aria-label")).toBe("GCP bucket name");
       });
@@ -3510,12 +5569,21 @@ describe("InputNodeEditor", () => {
         const node = {
           id: "1",
           type: "gcp_bucket",
-          position: { x: 0, y: 0 },
-          data: { input_config: {} }
+          position: {
+            x: 0,
+            y: 0,
+          },
+          data: {
+            input_config: {},
+          },
         };
-        render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+        render(
+          <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+        );
         const modeSelect = screen.getByLabelText(/Mode/i);
-        expect(modeSelect.getAttribute("aria-label")).toBe("Select bucket operation mode");
+        expect(modeSelect.getAttribute("aria-label")).toBe(
+          "Select bucket operation mode",
+        );
       });
     });
     describe("exact className string literals", () => {
@@ -3523,10 +5591,17 @@ describe("InputNodeEditor", () => {
         const node = {
           id: "1",
           type: "gcp_bucket",
-          position: { x: 0, y: 0 },
-          data: { input_config: {} }
+          position: {
+            x: 0,
+            y: 0,
+          },
+          data: {
+            input_config: {},
+          },
         };
-        render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+        render(
+          <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+        );
         const bucketInput = screen.getByLabelText(/Bucket Name/i);
         expect(bucketInput.className).toContain("w-full");
       });
@@ -3536,12 +5611,23 @@ describe("InputNodeEditor", () => {
         const node = {
           id: "1",
           type: "gcp_bucket",
-          position: { x: 0, y: 0 },
-          data: { input_config: { mode: "read" } }
+          position: {
+            x: 0,
+            y: 0,
+          },
+          data: {
+            input_config: {
+              mode: "read",
+            },
+          },
         };
-        render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+        render(
+          <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+        );
         const modeSelect = screen.getByLabelText(/Mode/i);
-        const readOption = Array.from(modeSelect.options).find((opt) => opt.value === "read");
+        const readOption = Array.from(modeSelect.options).find(
+          (opt) => opt.value === "read",
+        );
         expect(readOption).toBeDefined();
         expect(readOption?.value).toBe("read");
       });
@@ -3549,12 +5635,23 @@ describe("InputNodeEditor", () => {
         const node = {
           id: "1",
           type: "gcp_bucket",
-          position: { x: 0, y: 0 },
-          data: { input_config: { mode: "write" } }
+          position: {
+            x: 0,
+            y: 0,
+          },
+          data: {
+            input_config: {
+              mode: "write",
+            },
+          },
         };
-        render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+        render(
+          <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+        );
         const modeSelect = screen.getByLabelText(/Mode/i);
-        const writeOption = Array.from(modeSelect.options).find((opt) => opt.value === "write");
+        const writeOption = Array.from(modeSelect.options).find(
+          (opt) => opt.value === "write",
+        );
         expect(writeOption).toBeDefined();
         expect(writeOption?.value).toBe("write");
       });
@@ -3566,29 +5663,39 @@ describe("InputNodeEditor", () => {
         const node = {
           id: "1",
           type: "gcp_bucket",
-          position: { x: 0, y: 0 },
+          position: {
+            x: 0,
+            y: 0,
+          },
           data: {
             input_config: {
-              bucket_name: "new-bucket-name"
-            }
-          }
+              bucket_name: "new-bucket-name",
+            },
+          },
         };
         const mockActiveElement = document.createElement("div");
         Object.defineProperty(document, "activeElement", {
           value: mockActiveElement,
           writable: true,
-          configurable: true
+          configurable: true,
         });
-        const { rerender } = render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+        const { rerender } = render(
+          <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+        );
         const updatedNode = {
           ...node,
           data: {
             input_config: {
-              bucket_name: "updated-bucket"
-            }
-          }
+              bucket_name: "updated-bucket",
+            },
+          },
         };
-        rerender(/* @__PURE__ */ jsx(InputNodeEditor, { node: updatedNode, onConfigUpdate: mockOnConfigUpdate }));
+        rerender(
+          <InputNodeEditor
+            node={updatedNode}
+            onConfigUpdate={mockOnConfigUpdate}
+          />,
+        );
         const bucketInput = screen.getByLabelText(/GCP bucket name/i);
         expect(bucketInput.value).toBe("updated-bucket");
       });
@@ -3596,29 +5703,39 @@ describe("InputNodeEditor", () => {
         const node = {
           id: "1",
           type: "gcp_bucket",
-          position: { x: 0, y: 0 },
+          position: {
+            x: 0,
+            y: 0,
+          },
           data: {
             input_config: {
-              object_path: "new-path"
-            }
-          }
+              object_path: "new-path",
+            },
+          },
         };
         const mockActiveElement = document.createElement("div");
         Object.defineProperty(document, "activeElement", {
           value: mockActiveElement,
           writable: true,
-          configurable: true
+          configurable: true,
         });
-        const { rerender } = render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+        const { rerender } = render(
+          <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+        );
         const updatedNode = {
           ...node,
           data: {
             input_config: {
-              object_path: "updated-path"
-            }
-          }
+              object_path: "updated-path",
+            },
+          },
         };
-        rerender(/* @__PURE__ */ jsx(InputNodeEditor, { node: updatedNode, onConfigUpdate: mockOnConfigUpdate }));
+        rerender(
+          <InputNodeEditor
+            node={updatedNode}
+            onConfigUpdate={mockOnConfigUpdate}
+          />,
+        );
         const objectPathInput = screen.getByLabelText(/Object path/i);
         expect(objectPathInput.value).toBe("updated-path");
       });
@@ -3628,12 +5745,17 @@ describe("InputNodeEditor", () => {
         const node = {
           id: "1",
           type: "gcp_bucket",
-          position: { x: 0, y: 0 },
+          position: {
+            x: 0,
+            y: 0,
+          },
           data: {
-            input_config: null
-          }
+            input_config: null,
+          },
         };
-        render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+        render(
+          <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+        );
         const bucketInput = screen.getByLabelText(/GCP bucket name/i);
         expect(bucketInput.value).toBe("");
       });
@@ -3641,14 +5763,19 @@ describe("InputNodeEditor", () => {
         const node = {
           id: "1",
           type: "gcp_bucket",
-          position: { x: 0, y: 0 },
+          position: {
+            x: 0,
+            y: 0,
+          },
           data: {
             input_config: {
-              bucket_name: null
-            }
-          }
+              bucket_name: null,
+            },
+          },
         };
-        render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+        render(
+          <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+        );
         const bucketInput = screen.getByLabelText(/GCP bucket name/i);
         expect(bucketInput.value).toBe("");
       });
@@ -3656,14 +5783,19 @@ describe("InputNodeEditor", () => {
         const node = {
           id: "1",
           type: "aws_s3",
-          position: { x: 0, y: 0 },
+          position: {
+            x: 0,
+            y: 0,
+          },
           data: {
             input_config: {
-              region: null
-            }
-          }
+              region: null,
+            },
+          },
         };
-        render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+        render(
+          <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+        );
         const regionInput = screen.getByLabelText(/AWS Region/i);
         expect(regionInput.value).toBe("us-east-1");
       });
@@ -3671,14 +5803,19 @@ describe("InputNodeEditor", () => {
         const node = {
           id: "1",
           type: "gcp_bucket",
-          position: { x: 0, y: 0 },
+          position: {
+            x: 0,
+            y: 0,
+          },
           data: {
             input_config: {
-              mode: null
-            }
-          }
+              mode: null,
+            },
+          },
         };
-        render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+        render(
+          <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+        );
         const modeSelect = screen.getByLabelText(/Mode/i);
         expect(modeSelect.value).toBe("read");
       });
@@ -3688,48 +5825,69 @@ describe("InputNodeEditor", () => {
         const node = {
           id: "1",
           type: "local_filesystem",
-          position: { x: 0, y: 0 },
+          position: {
+            x: 0,
+            y: 0,
+          },
           data: {
             input_config: {
               mode: "write",
-              overwrite: null
-            }
-          }
+              overwrite: null,
+            },
+          },
         };
-        render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
-        const overwriteCheckbox = screen.getByLabelText(/Overwrite existing file/i);
+        render(
+          <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+        );
+        const overwriteCheckbox = screen.getByLabelText(
+          /Overwrite existing file/i,
+        );
         expect(overwriteCheckbox.checked).toBe(true);
       });
       it("should handle inputConfig.overwrite ?? true when overwrite is undefined", () => {
         const node = {
           id: "1",
           type: "local_filesystem",
-          position: { x: 0, y: 0 },
+          position: {
+            x: 0,
+            y: 0,
+          },
           data: {
             input_config: {
               mode: "write",
-              overwrite: void 0
-            }
-          }
+              overwrite: void 0,
+            },
+          },
         };
-        render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
-        const overwriteCheckbox = screen.getByLabelText(/Overwrite existing file/i);
+        render(
+          <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+        );
+        const overwriteCheckbox = screen.getByLabelText(
+          /Overwrite existing file/i,
+        );
         expect(overwriteCheckbox.checked).toBe(true);
       });
       it("should handle inputConfig.overwrite ?? true when overwrite is false", () => {
         const node = {
           id: "1",
           type: "local_filesystem",
-          position: { x: 0, y: 0 },
+          position: {
+            x: 0,
+            y: 0,
+          },
           data: {
             input_config: {
               mode: "write",
-              overwrite: false
-            }
-          }
+              overwrite: false,
+            },
+          },
         };
-        render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
-        const overwriteCheckbox = screen.getByLabelText(/Overwrite existing file/i);
+        render(
+          <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+        );
+        const overwriteCheckbox = screen.getByLabelText(
+          /Overwrite existing file/i,
+        );
         expect(overwriteCheckbox.checked).toBe(false);
       });
     });
@@ -3738,30 +5896,51 @@ describe("InputNodeEditor", () => {
         const node = {
           id: "1",
           type: "database",
-          position: { x: 0, y: 0 },
-          data: { input_config: {} }
+          position: {
+            x: 0,
+            y: 0,
+          },
+          data: {
+            input_config: {},
+          },
         };
-        render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+        render(
+          <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+        );
         expect(screen.getByText(/Database Configuration/i)).toBeInTheDocument();
       });
       it("should verify node.type === firebase exact comparison", () => {
         const node = {
           id: "1",
           type: "firebase",
-          position: { x: 0, y: 0 },
-          data: { input_config: {} }
+          position: {
+            x: 0,
+            y: 0,
+          },
+          data: {
+            input_config: {},
+          },
         };
-        render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+        render(
+          <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+        );
         expect(screen.getByText(/Firebase Configuration/i)).toBeInTheDocument();
       });
       it("should verify node.type === bigquery exact comparison", () => {
         const node = {
           id: "1",
           type: "bigquery",
-          position: { x: 0, y: 0 },
-          data: { input_config: {} }
+          position: {
+            x: 0,
+            y: 0,
+          },
+          data: {
+            input_config: {},
+          },
         };
-        render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+        render(
+          <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+        );
         expect(screen.getByText(/BigQuery Configuration/i)).toBeInTheDocument();
       });
     });
@@ -3770,31 +5949,47 @@ describe("InputNodeEditor", () => {
         const node = {
           id: "1",
           type: "local_filesystem",
-          position: { x: 0, y: 0 },
+          position: {
+            x: 0,
+            y: 0,
+          },
           data: {
             input_config: {
-              mode: "read"
-            }
-          }
+              mode: "read",
+            },
+          },
         };
-        render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+        render(
+          <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+        );
         expect(screen.getByLabelText(/File Pattern/i)).toBeInTheDocument();
-        expect(screen.queryByLabelText(/Overwrite existing file/i)).not.toBeInTheDocument();
+        expect(
+          screen.queryByLabelText(/Overwrite existing file/i),
+        ).not.toBeInTheDocument();
       });
       it("should verify modeValue === write exact comparison for conditional rendering", () => {
         const node = {
           id: "1",
           type: "local_filesystem",
-          position: { x: 0, y: 0 },
+          position: {
+            x: 0,
+            y: 0,
+          },
           data: {
             input_config: {
-              mode: "write"
-            }
-          }
+              mode: "write",
+            },
+          },
         };
-        render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
-        expect(screen.getByLabelText(/Overwrite existing file/i)).toBeInTheDocument();
-        expect(screen.queryByLabelText(/File Pattern/i)).not.toBeInTheDocument();
+        render(
+          <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+        );
+        expect(
+          screen.getByLabelText(/Overwrite existing file/i),
+        ).toBeInTheDocument();
+        expect(
+          screen.queryByLabelText(/File Pattern/i),
+        ).not.toBeInTheDocument();
       });
     });
     describe("Event property access", () => {
@@ -3802,30 +5997,56 @@ describe("InputNodeEditor", () => {
         const node = {
           id: "1",
           type: "gcp_bucket",
-          position: { x: 0, y: 0 },
-          data: { input_config: {} }
+          position: {
+            x: 0,
+            y: 0,
+          },
+          data: {
+            input_config: {},
+          },
         };
-        render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
+        render(
+          <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+        );
         const bucketInput = screen.getByLabelText(/GCP bucket name/i);
-        fireEvent.change(bucketInput, { target: { value: "test-value" } });
-        expect(mockOnConfigUpdate).toHaveBeenCalledWith("input_config", "bucket_name", "test-value");
+        fireEvent.change(bucketInput, {
+          target: {
+            value: "test-value",
+          },
+        });
+        expect(mockOnConfigUpdate).toHaveBeenCalledWith(
+          "input_config",
+          "bucket_name",
+          "test-value",
+        );
       });
       it("should verify e.target.checked exact property access", () => {
         const node = {
           id: "1",
           type: "local_filesystem",
-          position: { x: 0, y: 0 },
+          position: {
+            x: 0,
+            y: 0,
+          },
           data: {
             input_config: {
               mode: "write",
-              overwrite: true
-            }
-          }
+              overwrite: true,
+            },
+          },
         };
-        render(/* @__PURE__ */ jsx(InputNodeEditor, { node, onConfigUpdate: mockOnConfigUpdate }));
-        const overwriteCheckbox = screen.getByLabelText(/Overwrite existing file/i);
+        render(
+          <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+        );
+        const overwriteCheckbox = screen.getByLabelText(
+          /Overwrite existing file/i,
+        );
         fireEvent.click(overwriteCheckbox);
-        expect(mockOnConfigUpdate).toHaveBeenCalledWith("input_config", "overwrite", false);
+        expect(mockOnConfigUpdate).toHaveBeenCalledWith(
+          "input_config",
+          "overwrite",
+          false,
+        );
       });
     });
   });

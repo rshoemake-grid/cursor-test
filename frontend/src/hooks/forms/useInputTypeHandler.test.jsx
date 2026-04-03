@@ -6,47 +6,55 @@ describe("useInputTypeHandler", () => {
     const { result } = renderHook(() => useInputTypeHandler("text", onChange));
     act(() => {
       result.current({
-        target: { value: "test value" }
+        target: { value: "test value" },
       });
     });
     expect(onChange).toHaveBeenCalledWith("test value");
   });
   it("should handle number input changes", () => {
     const onChange = jest.fn();
-    const { result } = renderHook(() => useInputTypeHandler("number", onChange));
+    const { result } = renderHook(() =>
+      useInputTypeHandler("number", onChange),
+    );
     act(() => {
       result.current({
-        target: { value: "123" }
+        target: { value: "123" },
       });
     });
     expect(onChange).toHaveBeenCalledWith(123);
   });
   it("should handle checkbox input changes", () => {
     const onChange = jest.fn();
-    const { result } = renderHook(() => useInputTypeHandler("checkbox", onChange));
+    const { result } = renderHook(() =>
+      useInputTypeHandler("checkbox", onChange),
+    );
     act(() => {
       result.current({
-        target: { checked: true }
+        target: { checked: true },
       });
     });
     expect(onChange).toHaveBeenCalledWith(true);
   });
   it("should handle textarea changes", () => {
     const onChange = jest.fn();
-    const { result } = renderHook(() => useInputTypeHandler("textarea", onChange));
+    const { result } = renderHook(() =>
+      useInputTypeHandler("textarea", onChange),
+    );
     act(() => {
       result.current({
-        target: { value: "textarea value" }
+        target: { value: "textarea value" },
       });
     });
     expect(onChange).toHaveBeenCalledWith("textarea value");
   });
   it("should handle select changes", () => {
     const onChange = jest.fn();
-    const { result } = renderHook(() => useInputTypeHandler("select", onChange));
+    const { result } = renderHook(() =>
+      useInputTypeHandler("select", onChange),
+    );
     act(() => {
       result.current({
-        target: { value: "option1" }
+        target: { value: "option1" },
       });
     });
     expect(onChange).toHaveBeenCalledWith("option1");
@@ -56,17 +64,19 @@ describe("useInputTypeHandler", () => {
     const { result } = renderHook(() => useInputTypeHandler("email", onChange));
     act(() => {
       result.current({
-        target: { value: "test@example.com" }
+        target: { value: "test@example.com" },
       });
     });
     expect(onChange).toHaveBeenCalledWith("test@example.com");
   });
   it("should handle password input changes", () => {
     const onChange = jest.fn();
-    const { result } = renderHook(() => useInputTypeHandler("password", onChange));
+    const { result } = renderHook(() =>
+      useInputTypeHandler("password", onChange),
+    );
     act(() => {
       result.current({
-        target: { value: "password123" }
+        target: { value: "password123" },
       });
     });
     expect(onChange).toHaveBeenCalledWith("password123");
@@ -75,18 +85,18 @@ describe("useInputTypeHandler", () => {
     const onChange = jest.fn();
     const { result, rerender } = renderHook(
       ({ type }) => useInputTypeHandler(type, onChange),
-      { initialProps: { type: "text" } }
+      { initialProps: { type: "text" } },
     );
     act(() => {
       result.current({
-        target: { value: "test" }
+        target: { value: "test" },
       });
     });
     expect(onChange).toHaveBeenCalledWith("test");
     rerender({ type: "number" });
     act(() => {
       result.current({
-        target: { value: "456" }
+        target: { value: "456" },
       });
     });
     expect(onChange).toHaveBeenCalledWith(456);
@@ -96,11 +106,11 @@ describe("useInputTypeHandler", () => {
     const onChange2 = jest.fn();
     const { result, rerender } = renderHook(
       ({ onChange }) => useInputTypeHandler("text", onChange),
-      { initialProps: { onChange: onChange1 } }
+      { initialProps: { onChange: onChange1 } },
     );
     act(() => {
       result.current({
-        target: { value: "test" }
+        target: { value: "test" },
       });
     });
     expect(onChange1).toHaveBeenCalledWith("test");
@@ -108,7 +118,7 @@ describe("useInputTypeHandler", () => {
     rerender({ onChange: onChange2 });
     act(() => {
       result.current({
-        target: { value: "new value" }
+        target: { value: "new value" },
       });
     });
     expect(onChange2).toHaveBeenCalledWith("new value");

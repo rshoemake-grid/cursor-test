@@ -2,7 +2,7 @@ import { renderHook, waitFor } from "@testing-library/react";
 import { useMarketplaceData } from "./useMarketplaceData";
 import { getLocalStorageItem } from "../storage";
 jest.mock("../storage", () => ({
-  getLocalStorageItem: jest.fn()
+  getLocalStorageItem: jest.fn(),
 }));
 const mockGetLocalStorageItem = getLocalStorageItem;
 describe("useMarketplaceData - Complex Logical Operators (Phase 4.2)", () => {
@@ -17,14 +17,16 @@ describe("useMarketplaceData - Complex Logical Operators (Phase 4.2)", () => {
         }
         return Promise.resolve({ json: async () => [] });
       }),
-      post: jest.fn().mockResolvedValue({ ok: true, json: async () => ({ nodes: [] }) })
+      post: jest
+        .fn()
+        .mockResolvedValue({ ok: true, json: async () => ({ nodes: [] }) }),
     };
     mockStorage = {
       getItem: jest.fn().mockReturnValue(null),
       setItem: jest.fn(),
       removeItem: jest.fn(),
       addEventListener: jest.fn(),
-      removeEventListener: jest.fn()
+      removeEventListener: jest.fn(),
     };
     mockGetLocalStorageItem.mockReturnValue([]);
   });
@@ -34,24 +36,24 @@ describe("useMarketplaceData - Complex Logical Operators (Phase 4.2)", () => {
         id: "workflow-1",
         name: "Workflow",
         description: "Description",
-        tags: []
+        tags: [],
       };
       mockHttpClient.get.mockResolvedValue({
-        json: async () => [workflow]
+        json: async () => [workflow],
       });
       mockHttpClient.post.mockResolvedValue({
         ok: true,
         json: async () => ({
           nodes: [
             {
-              workflow_id: "workflow-2"
+              workflow_id: "workflow-2",
               // hasWorkflowId is true
-            }
-          ]
-        })
+            },
+          ],
+        }),
       });
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -60,12 +62,15 @@ describe("useMarketplaceData - Complex Logical Operators (Phase 4.2)", () => {
           sortBy: "popular",
           user: null,
           activeTab: "workflows-of-workflows",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
-      await waitFor(() => {
-        expect(result.current.loading).toBe(false);
-      }, { timeout: 3e3 });
+      await waitFor(
+        () => {
+          expect(result.current.loading).toBe(false);
+        },
+        { timeout: 3e3 },
+      );
       expect(result.current.workflowsOfWorkflows.length).toBe(1);
     });
     it("should match when description.includes is true (second OR condition)", async () => {
@@ -73,24 +78,24 @@ describe("useMarketplaceData - Complex Logical Operators (Phase 4.2)", () => {
         id: "workflow-1",
         name: "Workflow",
         description: "Description",
-        tags: []
+        tags: [],
       };
       mockHttpClient.get.mockResolvedValue({
-        json: async () => [workflow]
+        json: async () => [workflow],
       });
       mockHttpClient.post.mockResolvedValue({
         ok: true,
         json: async () => ({
           nodes: [
             {
-              data: { description: "workflow node" }
+              data: { description: "workflow node" },
               // description.includes('workflow') is true
-            }
-          ]
-        })
+            },
+          ],
+        }),
       });
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -99,12 +104,15 @@ describe("useMarketplaceData - Complex Logical Operators (Phase 4.2)", () => {
           sortBy: "popular",
           user: null,
           activeTab: "workflows-of-workflows",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
-      await waitFor(() => {
-        expect(result.current.loading).toBe(false);
-      }, { timeout: 3e3 });
+      await waitFor(
+        () => {
+          expect(result.current.loading).toBe(false);
+        },
+        { timeout: 3e3 },
+      );
       expect(result.current.workflowsOfWorkflows.length).toBe(1);
     });
     it("should match when name.includes is true (third OR condition)", async () => {
@@ -112,24 +120,24 @@ describe("useMarketplaceData - Complex Logical Operators (Phase 4.2)", () => {
         id: "workflow-1",
         name: "Workflow",
         description: "Description",
-        tags: []
+        tags: [],
       };
       mockHttpClient.get.mockResolvedValue({
-        json: async () => [workflow]
+        json: async () => [workflow],
       });
       mockHttpClient.post.mockResolvedValue({
         ok: true,
         json: async () => ({
           nodes: [
             {
-              data: { name: "workflow node" }
+              data: { name: "workflow node" },
               // name.includes('workflow') is true
-            }
-          ]
-        })
+            },
+          ],
+        }),
       });
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -138,12 +146,15 @@ describe("useMarketplaceData - Complex Logical Operators (Phase 4.2)", () => {
           sortBy: "popular",
           user: null,
           activeTab: "workflows-of-workflows",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
-      await waitFor(() => {
-        expect(result.current.loading).toBe(false);
-      }, { timeout: 3e3 });
+      await waitFor(
+        () => {
+          expect(result.current.loading).toBe(false);
+        },
+        { timeout: 3e3 },
+      );
       expect(result.current.workflowsOfWorkflows.length).toBe(1);
     });
     it("should match when tags.some is true (fourth OR condition)", async () => {
@@ -151,23 +162,23 @@ describe("useMarketplaceData - Complex Logical Operators (Phase 4.2)", () => {
         id: "workflow-1",
         name: "Workflow",
         description: "Description",
-        tags: ["workflow"]
+        tags: ["workflow"],
       };
       mockHttpClient.get.mockResolvedValue({
-        json: async () => [workflow]
+        json: async () => [workflow],
       });
       mockHttpClient.post.mockResolvedValue({
         ok: true,
         json: async () => ({
           nodes: [
             {
-              data: {}
-            }
-          ]
-        })
+              data: {},
+            },
+          ],
+        }),
       });
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -176,13 +187,18 @@ describe("useMarketplaceData - Complex Logical Operators (Phase 4.2)", () => {
           sortBy: "popular",
           user: null,
           activeTab: "workflows-of-workflows",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
-      await waitFor(() => {
-        expect(result.current.loading).toBe(false);
-      }, { timeout: 3e3 });
-      expect(result.current.workflowsOfWorkflows.length).toBeGreaterThanOrEqual(0);
+      await waitFor(
+        () => {
+          expect(result.current.loading).toBe(false);
+        },
+        { timeout: 3e3 },
+      );
+      expect(result.current.workflowsOfWorkflows.length).toBeGreaterThanOrEqual(
+        0,
+      );
     });
     it("should NOT match when all OR conditions are false", async () => {
       const workflow = {
@@ -190,24 +206,24 @@ describe("useMarketplaceData - Complex Logical Operators (Phase 4.2)", () => {
         name: "Workflow",
         description: "Regular workflow",
         // Not "workflow of workflows"
-        tags: []
+        tags: [],
       };
       mockHttpClient.get.mockResolvedValue({
-        json: async () => [workflow]
+        json: async () => [workflow],
       });
       mockHttpClient.post.mockResolvedValue({
         ok: true,
         json: async () => ({
           nodes: [
             {
-              data: { description: "node", name: "node" }
+              data: { description: "node", name: "node" },
               // None match workflow pattern
-            }
-          ]
-        })
+            },
+          ],
+        }),
       });
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -216,12 +232,15 @@ describe("useMarketplaceData - Complex Logical Operators (Phase 4.2)", () => {
           sortBy: "popular",
           user: null,
           activeTab: "workflows-of-workflows",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
-      await waitFor(() => {
-        expect(result.current.loading).toBe(false);
-      }, { timeout: 3e3 });
+      await waitFor(
+        () => {
+          expect(result.current.loading).toBe(false);
+        },
+        { timeout: 3e3 },
+      );
       expect(result.current.workflowsOfWorkflows.length).toBe(0);
     });
   });
@@ -235,12 +254,12 @@ describe("useMarketplaceData - Complex Logical Operators (Phase 4.2)", () => {
           category: "automation",
           tags: [],
           published_at: "2024-01-01T00:00:00Z",
-          is_official: false
-        }
+          is_official: false,
+        },
       ];
       mockGetLocalStorageItem.mockReturnValue(agents);
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -250,8 +269,8 @@ describe("useMarketplaceData - Complex Logical Operators (Phase 4.2)", () => {
           sortBy: "popular",
           user: null,
           activeTab: "agents",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -267,12 +286,12 @@ describe("useMarketplaceData - Complex Logical Operators (Phase 4.2)", () => {
           category: "automation",
           tags: [],
           published_at: "2024-01-01T00:00:00Z",
-          is_official: false
-        }
+          is_official: false,
+        },
       ];
       mockGetLocalStorageItem.mockReturnValue(agents);
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -282,8 +301,8 @@ describe("useMarketplaceData - Complex Logical Operators (Phase 4.2)", () => {
           sortBy: "popular",
           user: null,
           activeTab: "agents",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -299,12 +318,12 @@ describe("useMarketplaceData - Complex Logical Operators (Phase 4.2)", () => {
           category: "automation",
           tags: ["test-tag"],
           published_at: "2024-01-01T00:00:00Z",
-          is_official: false
-        }
+          is_official: false,
+        },
       ];
       mockGetLocalStorageItem.mockReturnValue(agents);
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -314,8 +333,8 @@ describe("useMarketplaceData - Complex Logical Operators (Phase 4.2)", () => {
           sortBy: "popular",
           user: null,
           activeTab: "agents",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -331,12 +350,12 @@ describe("useMarketplaceData - Complex Logical Operators (Phase 4.2)", () => {
           category: "automation",
           tags: ["test-tag"],
           published_at: "2024-01-01T00:00:00Z",
-          is_official: false
-        }
+          is_official: false,
+        },
       ];
       mockGetLocalStorageItem.mockReturnValue(agents);
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -346,8 +365,8 @@ describe("useMarketplaceData - Complex Logical Operators (Phase 4.2)", () => {
           sortBy: "popular",
           user: null,
           activeTab: "agents",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -363,12 +382,12 @@ describe("useMarketplaceData - Complex Logical Operators (Phase 4.2)", () => {
           category: "automation",
           tags: ["other-tag"],
           published_at: "2024-01-01T00:00:00Z",
-          is_official: false
-        }
+          is_official: false,
+        },
       ];
       mockGetLocalStorageItem.mockReturnValue(agents);
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -378,8 +397,8 @@ describe("useMarketplaceData - Complex Logical Operators (Phase 4.2)", () => {
           sortBy: "popular",
           user: null,
           activeTab: "agents",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -397,12 +416,12 @@ describe("useMarketplaceData - Complex Logical Operators (Phase 4.2)", () => {
           category: "automation",
           tags: [],
           published_at: "2024-01-01T00:00:00Z",
-          is_official: false
-        }
+          is_official: false,
+        },
       ];
       mockGetLocalStorageItem.mockReturnValue(agents);
-      renderHook(
-        () => useMarketplaceData({
+      renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -412,8 +431,8 @@ describe("useMarketplaceData - Complex Logical Operators (Phase 4.2)", () => {
           user: { id: "user-1", username: "testuser" },
           // user && user.id && agentsData.length > 0
           activeTab: "agents",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(mockStorage.setItem).toHaveBeenCalled();
@@ -429,12 +448,12 @@ describe("useMarketplaceData - Complex Logical Operators (Phase 4.2)", () => {
           category: "automation",
           tags: [],
           published_at: "2024-01-01T00:00:00Z",
-          is_official: false
-        }
+          is_official: false,
+        },
       ];
       mockGetLocalStorageItem.mockReturnValue(agents);
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -444,8 +463,8 @@ describe("useMarketplaceData - Complex Logical Operators (Phase 4.2)", () => {
           user: null,
           // user is null
           activeTab: "agents",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -461,12 +480,12 @@ describe("useMarketplaceData - Complex Logical Operators (Phase 4.2)", () => {
           category: "automation",
           tags: [],
           published_at: "2024-01-01T00:00:00Z",
-          is_official: false
-        }
+          is_official: false,
+        },
       ];
       mockGetLocalStorageItem.mockReturnValue(agents);
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -476,8 +495,8 @@ describe("useMarketplaceData - Complex Logical Operators (Phase 4.2)", () => {
           user: { id: void 0 },
           // user.id is undefined
           activeTab: "agents",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -486,8 +505,8 @@ describe("useMarketplaceData - Complex Logical Operators (Phase 4.2)", () => {
     });
     it("should NOT execute when agentsData.length is 0 (third AND condition false)", async () => {
       mockGetLocalStorageItem.mockReturnValue([]);
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -496,8 +515,8 @@ describe("useMarketplaceData - Complex Logical Operators (Phase 4.2)", () => {
           sortBy: "popular",
           user: { id: "user-1", username: "testuser" },
           activeTab: "agents",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -514,12 +533,12 @@ describe("useMarketplaceData - Complex Logical Operators (Phase 4.2)", () => {
           category: "automation",
           tags: [],
           published_at: "2024-01-01T00:00:00Z",
-          is_official: false
-        }
+          is_official: false,
+        },
       ];
       mockStorage.getItem.mockReturnValue(JSON.stringify(agents));
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -529,8 +548,8 @@ describe("useMarketplaceData - Complex Logical Operators (Phase 4.2)", () => {
           // sortBy === 'popular' || sortBy === 'recent'
           user: null,
           activeTab: "repository",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -545,12 +564,12 @@ describe("useMarketplaceData - Complex Logical Operators (Phase 4.2)", () => {
           category: "automation",
           tags: [],
           published_at: "2024-01-01T00:00:00Z",
-          is_official: false
-        }
+          is_official: false,
+        },
       ];
       mockStorage.getItem.mockReturnValue(JSON.stringify(agents));
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -560,8 +579,8 @@ describe("useMarketplaceData - Complex Logical Operators (Phase 4.2)", () => {
           // sortBy === 'popular' || sortBy === 'recent'
           user: null,
           activeTab: "repository",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -576,12 +595,12 @@ describe("useMarketplaceData - Complex Logical Operators (Phase 4.2)", () => {
           category: "automation",
           tags: [],
           published_at: "2024-01-01T00:00:00Z",
-          is_official: false
-        }
+          is_official: false,
+        },
       ];
       mockStorage.getItem.mockReturnValue(JSON.stringify(agents));
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -591,8 +610,8 @@ describe("useMarketplaceData - Complex Logical Operators (Phase 4.2)", () => {
           // sortBy === 'popular' || sortBy === 'recent' (both false)
           user: null,
           activeTab: "repository",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);

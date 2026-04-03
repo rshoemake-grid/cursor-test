@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 function useExecutionPagination({
   executions,
-  itemsPerPage: initialItemsPerPage = 25
+  itemsPerPage: initialItemsPerPage = 25,
 }) {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(initialItemsPerPage);
@@ -26,9 +26,7 @@ function useExecutionPagination({
     itemsPerPage,
     startItem,
     endItem,
-    totalItems
+    totalItems,
   };
 }
-export {
-  useExecutionPagination
-};
+export { useExecutionPagination };

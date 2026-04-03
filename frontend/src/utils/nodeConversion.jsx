@@ -19,10 +19,8 @@ function convertNodesForExecutionInput(nodes) {
       loop_config: nodeData.loop_config,
       input_config: nodeData.input_config,
       inputs,
-      position: node.position
+      position: node.position,
     };
   });
 }
-export {
-  convertNodesForExecutionInput
-};
+export { convertNodesForExecutionInput };

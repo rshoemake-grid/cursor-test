@@ -3,7 +3,7 @@ import { useReactFlow } from "@xyflow/react";
 import {
   isInputElement,
   matchesKeyCombination,
-  isDeleteKey
+  isDeleteKey,
 } from "./useKeyboardShortcuts.utils";
 function useKeyboardShortcuts({
   selectedNodeId,
@@ -12,7 +12,7 @@ function useKeyboardShortcuts({
   clipboardNode,
   onCopy,
   onCut,
-  onPaste
+  onPaste,
 }) {
   const { deleteElements, getNodes, getEdges } = useReactFlow();
   useEffect(() => {
@@ -52,7 +52,7 @@ function useKeyboardShortcuts({
           event.stopPropagation();
           deleteElements({
             nodes: selectedNodes,
-            edges: selectedEdges
+            edges: selectedEdges,
           });
           if (selectedNodes.some((node) => node.id === selectedNodeId)) {
             setSelectedNodeId(null);
@@ -65,8 +65,17 @@ function useKeyboardShortcuts({
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [deleteElements, getNodes, getEdges, selectedNodeId, setSelectedNodeId, notifyModified, clipboardNode, onCopy, onCut, onPaste]);
+  }, [
+    deleteElements,
+    getNodes,
+    getEdges,
+    selectedNodeId,
+    setSelectedNodeId,
+    notifyModified,
+    clipboardNode,
+    onCopy,
+    onCut,
+    onPaste,
+  ]);
 }
-export {
-  useKeyboardShortcuts
-};
+export { useKeyboardShortcuts };

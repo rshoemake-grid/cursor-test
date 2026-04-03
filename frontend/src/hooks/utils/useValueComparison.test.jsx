@@ -1,6 +1,6 @@
 import {
   defaultComparisonStrategy,
-  hasValueChanged
+  hasValueChanged,
 } from "./useValueComparison";
 describe("defaultComparisonStrategy", () => {
   it("should return false for identical primitives", () => {

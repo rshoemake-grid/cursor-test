@@ -1,6 +1,6 @@
 const SETTINGS_TABS = {
   LLM: "llm",
-  WORKFLOW: "workflow"
+  WORKFLOW: "workflow",
 };
 const DEFAULT_SORT = "popular";
 const DEFAULT_PROVIDER_TEMPLATE = "openai";
@@ -10,7 +10,7 @@ const PROVIDER_TEMPLATES = {
     type: "openai",
     baseUrl: "https://api.openai.com/v1",
     defaultModel: "gpt-4",
-    models: ["gpt-4", "gpt-4-turbo", "gpt-3.5-turbo", "gpt-4o", "gpt-4o-mini"]
+    models: ["gpt-4", "gpt-4-turbo", "gpt-3.5-turbo", "gpt-4o", "gpt-4o-mini"],
   },
   anthropic: {
     name: "Anthropic",
@@ -22,8 +22,8 @@ const PROVIDER_TEMPLATES = {
       "claude-3-5-haiku-20241022",
       "claude-3-opus-20240229",
       "claude-3-sonnet-20240229",
-      "claude-3-haiku-20240307"
-    ]
+      "claude-3-haiku-20240307",
+    ],
   },
   gemini: {
     name: "Google Gemini",
@@ -38,20 +38,20 @@ const PROVIDER_TEMPLATES = {
       "gemini-2.5-flash",
       "gemini-2.5-flash-lite",
       "gemini-2.5-flash-image",
-      "gemini-2.5-flash-preview-09-2025"
-    ]
+      "gemini-2.5-flash-preview-09-2025",
+    ],
   },
   custom: {
     name: "Custom Provider",
     type: "custom",
     baseUrl: "",
     defaultModel: "",
-    models: []
-  }
+    models: [],
+  },
 };
 export {
   DEFAULT_PROVIDER_TEMPLATE,
   DEFAULT_SORT,
   PROVIDER_TEMPLATES,
-  SETTINGS_TABS
+  SETTINGS_TABS,
 };

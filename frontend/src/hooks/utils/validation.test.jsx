@@ -2,7 +2,7 @@ import {
   validateWorkflowName,
   sanitizeName,
   isValidName,
-  hasNameChanged
+  hasNameChanged,
 } from "./validation";
 describe("validation", () => {
   describe("validateWorkflowName", () => {

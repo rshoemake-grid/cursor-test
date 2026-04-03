@@ -93,5 +93,5 @@ export {
   isNonEmptyString,
   isTruthy,
   isValidNumber,
-  isValidObject
+  isValidObject,
 };

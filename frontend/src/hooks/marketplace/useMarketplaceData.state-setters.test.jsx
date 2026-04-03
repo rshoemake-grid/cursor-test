@@ -2,7 +2,7 @@ import { renderHook, waitFor } from "@testing-library/react";
 import { useMarketplaceData } from "./useMarketplaceData";
 import { getLocalStorageItem } from "../storage";
 jest.mock("../storage", () => ({
-  getLocalStorageItem: jest.fn()
+  getLocalStorageItem: jest.fn(),
 }));
 const mockGetLocalStorageItem = getLocalStorageItem;
 describe("useMarketplaceData - State Setters (Phase 4.2)", () => {
@@ -17,14 +17,16 @@ describe("useMarketplaceData - State Setters (Phase 4.2)", () => {
         }
         return Promise.resolve({ json: async () => [] });
       }),
-      post: jest.fn().mockResolvedValue({ ok: true, json: async () => ({ nodes: [] }) })
+      post: jest
+        .fn()
+        .mockResolvedValue({ ok: true, json: async () => ({ nodes: [] }) }),
     };
     mockStorage = {
       getItem: jest.fn().mockReturnValue(null),
       setItem: jest.fn(),
       removeItem: jest.fn(),
       addEventListener: jest.fn(),
-      removeEventListener: jest.fn()
+      removeEventListener: jest.fn(),
     };
     mockGetLocalStorageItem.mockReturnValue([]);
   });
@@ -35,13 +37,13 @@ describe("useMarketplaceData - State Setters (Phase 4.2)", () => {
         name: "Template",
         description: "Description",
         category: "automation",
-        tags: []
+        tags: [],
       };
       mockHttpClient.get.mockResolvedValue({
-        json: async () => [template]
+        json: async () => [template],
       });
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -50,8 +52,8 @@ describe("useMarketplaceData - State Setters (Phase 4.2)", () => {
           sortBy: "popular",
           user: null,
           activeTab: "repository",
-          repositorySubTab: "workflows"
-        })
+          repositorySubTab: "workflows",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -61,14 +63,24 @@ describe("useMarketplaceData - State Setters (Phase 4.2)", () => {
     });
     it("should verify setTemplates receives array from response.json()", async () => {
       const templates = [
-        { id: "template-1", name: "Template 1", category: "automation", tags: [] },
-        { id: "template-2", name: "Template 2", category: "automation", tags: [] }
+        {
+          id: "template-1",
+          name: "Template 1",
+          category: "automation",
+          tags: [],
+        },
+        {
+          id: "template-2",
+          name: "Template 2",
+          category: "automation",
+          tags: [],
+        },
       ];
       mockHttpClient.get.mockResolvedValue({
-        json: async () => templates
+        json: async () => templates,
       });
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -77,8 +89,8 @@ describe("useMarketplaceData - State Setters (Phase 4.2)", () => {
           sortBy: "popular",
           user: null,
           activeTab: "repository",
-          repositorySubTab: "workflows"
-        })
+          repositorySubTab: "workflows",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -92,17 +104,17 @@ describe("useMarketplaceData - State Setters (Phase 4.2)", () => {
         id: "template-1",
         name: "Template",
         description: "workflow of workflows",
-        tags: []
+        tags: [],
       };
       mockHttpClient.get.mockResolvedValue({
-        json: async () => [template]
+        json: async () => [template],
       });
       mockHttpClient.post.mockResolvedValue({
         ok: true,
-        json: async () => ({ nodes: [] })
+        json: async () => ({ nodes: [] }),
       });
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -111,12 +123,15 @@ describe("useMarketplaceData - State Setters (Phase 4.2)", () => {
           sortBy: "popular",
           user: null,
           activeTab: "workflows-of-workflows",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
-      await waitFor(() => {
-        expect(result.current.loading).toBe(false);
-      }, { timeout: 3e3 });
+      await waitFor(
+        () => {
+          expect(result.current.loading).toBe(false);
+        },
+        { timeout: 3e3 },
+      );
       expect(Array.isArray(result.current.workflowsOfWorkflows)).toBe(true);
     });
   });
@@ -129,12 +144,12 @@ describe("useMarketplaceData - State Setters (Phase 4.2)", () => {
           category: "automation",
           tags: [],
           published_at: "2024-01-01T00:00:00Z",
-          is_official: false
-        }
+          is_official: false,
+        },
       ];
       mockGetLocalStorageItem.mockReturnValue(agents);
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -143,8 +158,8 @@ describe("useMarketplaceData - State Setters (Phase 4.2)", () => {
           sortBy: "popular",
           user: null,
           activeTab: "agents",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -162,12 +177,12 @@ describe("useMarketplaceData - State Setters (Phase 4.2)", () => {
           category: "automation",
           tags: [],
           published_at: "2024-01-01T00:00:00Z",
-          is_official: false
-        }
+          is_official: false,
+        },
       ];
       mockStorage.getItem.mockReturnValue(JSON.stringify(agents));
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -176,8 +191,8 @@ describe("useMarketplaceData - State Setters (Phase 4.2)", () => {
           sortBy: "popular",
           user: null,
           activeTab: "repository",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -186,8 +201,8 @@ describe("useMarketplaceData - State Setters (Phase 4.2)", () => {
       expect(result.current.repositoryAgents[0].id).toBe("agent-1");
     });
     it("should call setRepositoryAgents with empty array when storage is null", async () => {
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: null,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -196,8 +211,8 @@ describe("useMarketplaceData - State Setters (Phase 4.2)", () => {
           sortBy: "popular",
           user: null,
           activeTab: "repository",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -208,10 +223,10 @@ describe("useMarketplaceData - State Setters (Phase 4.2)", () => {
   describe("setLoading call - setLoading(true)", () => {
     it("should set loading to true at start of fetchTemplates", async () => {
       mockHttpClient.get.mockResolvedValue({
-        json: async () => []
+        json: async () => [],
       });
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -220,8 +235,8 @@ describe("useMarketplaceData - State Setters (Phase 4.2)", () => {
           sortBy: "popular",
           user: null,
           activeTab: "repository",
-          repositorySubTab: "workflows"
-        })
+          repositorySubTab: "workflows",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -231,10 +246,10 @@ describe("useMarketplaceData - State Setters (Phase 4.2)", () => {
   describe("setLoading call - setLoading(false)", () => {
     it("should set loading to false in finally block", async () => {
       mockHttpClient.get.mockResolvedValue({
-        json: async () => []
+        json: async () => [],
       });
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -243,8 +258,8 @@ describe("useMarketplaceData - State Setters (Phase 4.2)", () => {
           sortBy: "popular",
           user: null,
           activeTab: "repository",
-          repositorySubTab: "workflows"
-        })
+          repositorySubTab: "workflows",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -253,8 +268,8 @@ describe("useMarketplaceData - State Setters (Phase 4.2)", () => {
     });
     it("should set loading to false even on error", async () => {
       mockHttpClient.get.mockRejectedValue(new Error("Network error"));
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -263,8 +278,8 @@ describe("useMarketplaceData - State Setters (Phase 4.2)", () => {
           sortBy: "popular",
           user: null,
           activeTab: "repository",
-          repositorySubTab: "workflows"
-        })
+          repositorySubTab: "workflows",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);

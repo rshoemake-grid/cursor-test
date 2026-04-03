@@ -1,4 +1,3 @@
-import { jsx } from "react/jsx-runtime";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import MarketplaceDialog from "./MarketplaceDialog";
 import { useAuth } from "../contexts/AuthContext";
@@ -6,20 +5,22 @@ import { api } from "../api/client";
 import { showSuccess, showError } from "../utils/notifications";
 import { STORAGE_KEYS } from "../config/constants";
 const waitForWithTimeout = (callback, timeout = 2e3) => {
-  return waitFor(callback, { timeout });
+  return waitFor(callback, {
+    timeout,
+  });
 };
 jest.mock("../contexts/AuthContext", () => ({
-  useAuth: jest.fn()
+  useAuth: jest.fn(),
 }));
 jest.mock("../api/client", () => ({
   api: {
     publishAgent: jest.fn(),
-    publishWorkflow: jest.fn()
-  }
+    publishWorkflow: jest.fn(),
+  },
 }));
 jest.mock("../utils/notifications", () => ({
   showSuccess: jest.fn(),
-  showError: jest.fn()
+  showError: jest.fn(),
 }));
 const mockUseAuth = useAuth;
 const mockApi = api;
@@ -33,9 +34,9 @@ describe("MarketplaceDialog", () => {
       description: "Test description",
       agent_config: {
         model: "gpt-4",
-        temperature: 0.7
-      }
-    }
+        temperature: 0.7,
+      },
+    },
   };
   beforeEach(() => {
     jest.clearAllMocks();
@@ -47,33 +48,37 @@ describe("MarketplaceDialog", () => {
       category: "c",
       tags: [],
       difficulty: "beginner",
-      estimated_time: "5 min"
+      estimated_time: "5 min",
     });
     mockApi.publishWorkflow.mockResolvedValue({});
     mockUseAuth.mockReturnValue({
       isAuthenticated: true,
-      user: { id: "1", username: "testuser", email: "test@example.com" },
+      user: {
+        id: "1",
+        username: "testuser",
+        email: "test@example.com",
+      },
       token: "token",
       login: jest.fn(),
       logout: jest.fn(),
-      register: jest.fn()
+      register: jest.fn(),
     });
   });
   it("should not render when isOpen is false", () => {
-    render(/* @__PURE__ */ jsx(MarketplaceDialog, { isOpen: false, onClose: mockOnClose }));
+    render(<MarketplaceDialog isOpen={false} onClose={mockOnClose} />);
     expect(screen.queryByText("Send to Marketplace")).not.toBeInTheDocument();
   });
   it("should render when isOpen is true", () => {
-    render(/* @__PURE__ */ jsx(MarketplaceDialog, { isOpen: true, onClose: mockOnClose }));
+    render(<MarketplaceDialog isOpen={true} onClose={mockOnClose} />);
     expect(screen.getByText("Send to Marketplace")).toBeInTheDocument();
   });
   it("should render agents tab by default", () => {
-    render(/* @__PURE__ */ jsx(MarketplaceDialog, { isOpen: true, onClose: mockOnClose }));
+    render(<MarketplaceDialog isOpen={true} onClose={mockOnClose} />);
     expect(screen.getByText("Agents")).toBeInTheDocument();
     expect(screen.getByText("Workflows")).toBeInTheDocument();
   });
   it("should switch to workflows tab when clicked", async () => {
-    render(/* @__PURE__ */ jsx(MarketplaceDialog, { isOpen: true, onClose: mockOnClose }));
+    render(<MarketplaceDialog isOpen={true} onClose={mockOnClose} />);
     const workflowsTab = screen.getByText("Workflows");
     fireEvent.click(workflowsTab);
     await waitForWithTimeout(() => {
@@ -82,14 +87,21 @@ describe("MarketplaceDialog", () => {
     });
   });
   it("should call onClose when close button is clicked", () => {
-    render(/* @__PURE__ */ jsx(MarketplaceDialog, { isOpen: true, onClose: mockOnClose }));
-    const closeButton = screen.getByText("Send to Marketplace").closest("div")?.querySelector('button[class*="text-gray"]');
+    render(<MarketplaceDialog isOpen={true} onClose={mockOnClose} />);
+    const closeButton = screen
+      .getByText("Send to Marketplace")
+      .closest("div")
+      ?.querySelector('button[class*="text-gray"]');
     if (closeButton) {
       fireEvent.click(closeButton);
       expect(mockOnClose).toHaveBeenCalledTimes(1);
     } else {
       const buttons = screen.getAllByRole("button");
-      const closeBtn = buttons.find((btn) => btn.getAttribute("aria-label")?.includes("close") || btn.className.includes("text-gray"));
+      const closeBtn = buttons.find(
+        (btn) =>
+          btn.getAttribute("aria-label")?.includes("close") ||
+          btn.className.includes("text-gray"),
+      );
       if (closeBtn) {
         fireEvent.click(closeBtn);
         expect(mockOnClose).toHaveBeenCalledTimes(1);
@@ -97,15 +109,19 @@ describe("MarketplaceDialog", () => {
     }
   });
   it("should call onClose when backdrop is clicked", () => {
-    render(/* @__PURE__ */ jsx(MarketplaceDialog, { isOpen: true, onClose: mockOnClose }));
-    const backdrop = screen.getByText("Send to Marketplace").closest("div")?.previousElementSibling;
+    render(<MarketplaceDialog isOpen={true} onClose={mockOnClose} />);
+    const backdrop = screen
+      .getByText("Send to Marketplace")
+      .closest("div")?.previousElementSibling;
     if (backdrop) {
       fireEvent.click(backdrop);
       expect(mockOnClose).toHaveBeenCalledTimes(1);
     }
   });
   it("should populate form when node is provided", () => {
-    render(/* @__PURE__ */ jsx(MarketplaceDialog, { isOpen: true, onClose: mockOnClose, node: mockNode }));
+    render(
+      <MarketplaceDialog isOpen={true} onClose={mockOnClose} node={mockNode} />,
+    );
     const nameInput = screen.getByDisplayValue("Test Agent");
     expect(nameInput).toBeInTheDocument();
   });
@@ -118,13 +134,17 @@ describe("MarketplaceDialog", () => {
       tags: [],
       difficulty: "beginner",
       estimated_time: "",
-      agent_config: {}
+      agent_config: {},
     });
-    render(/* @__PURE__ */ jsx(MarketplaceDialog, { isOpen: true, onClose: mockOnClose, node: mockNode }));
+    render(
+      <MarketplaceDialog isOpen={true} onClose={mockOnClose} node={mockNode} />,
+    );
     const publishButton = screen.getByText(/Publish/);
     fireEvent.click(publishButton);
     await waitForWithTimeout(() => {
-      expect(showSuccess).toHaveBeenCalledWith("Agent published to marketplace successfully!");
+      expect(showSuccess).toHaveBeenCalledWith(
+        "Agent published to marketplace successfully!",
+      );
       expect(mockOnClose).toHaveBeenCalled();
     });
     const savedAgents = localStorage.getItem(STORAGE_KEYS.PUBLISHED_AGENTS);
@@ -142,32 +162,45 @@ describe("MarketplaceDialog", () => {
       token: null,
       login: jest.fn(),
       logout: jest.fn(),
-      register: jest.fn()
+      register: jest.fn(),
     });
-    render(/* @__PURE__ */ jsx(MarketplaceDialog, { isOpen: true, onClose: mockOnClose, node: mockNode }));
+    render(
+      <MarketplaceDialog isOpen={true} onClose={mockOnClose} node={mockNode} />,
+    );
     const publishButton = screen.getByText(/Publish/);
     fireEvent.click(publishButton);
-    expect(showError).toHaveBeenCalledWith("Please sign in to publish to the marketplace");
+    expect(showError).toHaveBeenCalledWith(
+      "Please sign in to publish to the marketplace",
+    );
   });
   it("should show error when publishing invalid agent node", () => {
-    const invalidNode = { type: "start", data: {} };
-    render(/* @__PURE__ */ jsx(MarketplaceDialog, { isOpen: true, onClose: mockOnClose, node: invalidNode }));
+    const invalidNode = {
+      type: "start",
+      data: {},
+    };
+    render(
+      <MarketplaceDialog
+        isOpen={true}
+        onClose={mockOnClose}
+        node={invalidNode}
+      />,
+    );
     const publishButton = screen.getByText(/Publish/);
     fireEvent.click(publishButton);
     expect(showError).toHaveBeenCalledWith("Invalid agent node");
   });
   it("should handle workflow publishing", async () => {
-    mockApi.publishWorkflow.mockResolvedValue({ id: "published-1", name: "Test Workflow" });
+    mockApi.publishWorkflow.mockResolvedValue({
+      id: "published-1",
+      name: "Test Workflow",
+    });
     render(
-      /* @__PURE__ */ jsx(
-        MarketplaceDialog,
-        {
-          isOpen: true,
-          onClose: mockOnClose,
-          workflowId: "workflow-1",
-          workflowName: "Test Workflow"
-        }
-      )
+      <MarketplaceDialog
+        isOpen={true}
+        onClose={mockOnClose}
+        workflowId="workflow-1"
+        workflowName="Test Workflow"
+      />,
     );
     const workflowsTab = screen.getByText("Workflows");
     fireEvent.click(workflowsTab);
@@ -176,13 +209,18 @@ describe("MarketplaceDialog", () => {
       fireEvent.click(publishButton);
     });
     await waitForWithTimeout(() => {
-      expect(mockApi.publishWorkflow).toHaveBeenCalledWith("workflow-1", expect.any(Object));
-      expect(showSuccess).toHaveBeenCalledWith("Workflow published to marketplace successfully!");
+      expect(mockApi.publishWorkflow).toHaveBeenCalledWith(
+        "workflow-1",
+        expect.any(Object),
+      );
+      expect(showSuccess).toHaveBeenCalledWith(
+        "Workflow published to marketplace successfully!",
+      );
       expect(mockOnClose).toHaveBeenCalled();
     });
   });
   it("should show error when publishing workflow without workflowId", () => {
-    render(/* @__PURE__ */ jsx(MarketplaceDialog, { isOpen: true, onClose: mockOnClose }));
+    render(<MarketplaceDialog isOpen={true} onClose={mockOnClose} />);
     const workflowsTab = screen.getByText("Workflows");
     fireEvent.click(workflowsTab);
     const publishButton = screen.getByText(/Publish/);
@@ -196,76 +234,94 @@ describe("MarketplaceDialog", () => {
       token: null,
       login: jest.fn(),
       logout: jest.fn(),
-      register: jest.fn()
+      register: jest.fn(),
     });
     render(
-      /* @__PURE__ */ jsx(
-        MarketplaceDialog,
-        {
-          isOpen: true,
-          onClose: mockOnClose,
-          workflowId: "workflow-1"
-        }
-      )
+      <MarketplaceDialog
+        isOpen={true}
+        onClose={mockOnClose}
+        workflowId="workflow-1"
+      />,
     );
     const workflowsTab = screen.getByText("Workflows");
     fireEvent.click(workflowsTab);
     const publishButton = screen.getByText(/Publish/);
     fireEvent.click(publishButton);
-    expect(showError).toHaveBeenCalledWith("Please sign in to publish to the marketplace");
+    expect(showError).toHaveBeenCalledWith(
+      "Please sign in to publish to the marketplace",
+    );
   });
   it("should handle form field changes", () => {
-    render(/* @__PURE__ */ jsx(MarketplaceDialog, { isOpen: true, onClose: mockOnClose, node: mockNode }));
+    render(
+      <MarketplaceDialog isOpen={true} onClose={mockOnClose} node={mockNode} />,
+    );
     const nameInput = screen.getByDisplayValue("Test Agent");
-    fireEvent.change(nameInput, { target: { value: "Updated Name" } });
+    fireEvent.change(nameInput, {
+      target: {
+        value: "Updated Name",
+      },
+    });
     expect(nameInput.value).toBe("Updated Name");
   });
   it("should handle category selection", () => {
-    render(/* @__PURE__ */ jsx(MarketplaceDialog, { isOpen: true, onClose: mockOnClose }));
+    render(<MarketplaceDialog isOpen={true} onClose={mockOnClose} />);
     const selects = screen.getAllByRole("combobox");
-    const categorySelect = selects.find(
-      (select) => select.closest("div")?.textContent?.includes("Category")
+    const categorySelect = selects.find((select) =>
+      select.closest("div")?.textContent?.includes("Category"),
     );
     if (categorySelect) {
-      fireEvent.change(categorySelect, { target: { value: "content_creation" } });
+      fireEvent.change(categorySelect, {
+        target: {
+          value: "content_creation",
+        },
+      });
       expect(categorySelect.value).toBe("content_creation");
     }
   });
   it("should handle difficulty selection", () => {
-    render(/* @__PURE__ */ jsx(MarketplaceDialog, { isOpen: true, onClose: mockOnClose }));
+    render(<MarketplaceDialog isOpen={true} onClose={mockOnClose} />);
     const selects = screen.getAllByRole("combobox");
-    const difficultySelect = selects.find(
-      (select) => select.closest("div")?.textContent?.includes("Difficulty")
+    const difficultySelect = selects.find((select) =>
+      select.closest("div")?.textContent?.includes("Difficulty"),
     );
     if (difficultySelect) {
-      fireEvent.change(difficultySelect, { target: { value: "advanced" } });
+      fireEvent.change(difficultySelect, {
+        target: {
+          value: "advanced",
+        },
+      });
       expect(difficultySelect.value).toBe("advanced");
     }
   });
   it("should handle tags input", () => {
-    render(/* @__PURE__ */ jsx(MarketplaceDialog, { isOpen: true, onClose: mockOnClose }));
+    render(<MarketplaceDialog isOpen={true} onClose={mockOnClose} />);
     const tagsInput = screen.getByPlaceholderText(/llm, automation/);
-    fireEvent.change(tagsInput, { target: { value: "tag1, tag2, tag3" } });
+    fireEvent.change(tagsInput, {
+      target: {
+        value: "tag1, tag2, tag3",
+      },
+    });
     expect(tagsInput.value).toBe("tag1, tag2, tag3");
   });
   it("should handle estimated time input", () => {
-    render(/* @__PURE__ */ jsx(MarketplaceDialog, { isOpen: true, onClose: mockOnClose }));
+    render(<MarketplaceDialog isOpen={true} onClose={mockOnClose} />);
     const timeInput = screen.getByPlaceholderText(/5 min/);
-    fireEvent.change(timeInput, { target: { value: "30 minutes" } });
+    fireEvent.change(timeInput, {
+      target: {
+        value: "30 minutes",
+      },
+    });
     expect(timeInput.value).toBe("30 minutes");
   });
   it("should handle workflow publishing error", async () => {
     const error = new Error("Publish failed");
     mockApi.publishWorkflow.mockRejectedValue(error);
     render(
-      /* @__PURE__ */ jsx(
-        MarketplaceDialog,
-        {
-          isOpen: true,
-          onClose: mockOnClose,
-          workflowId: "workflow-1"
-        }
-      )
+      <MarketplaceDialog
+        isOpen={true}
+        onClose={mockOnClose}
+        workflowId="workflow-1"
+      />,
     );
     const workflowsTab = screen.getByText("Workflows");
     fireEvent.click(workflowsTab);
@@ -274,30 +330,40 @@ describe("MarketplaceDialog", () => {
       fireEvent.click(publishButton);
     });
     await waitForWithTimeout(() => {
-      expect(showError).toHaveBeenCalledWith("Failed to publish workflow: Publish failed");
+      expect(showError).toHaveBeenCalledWith(
+        "Failed to publish workflow: Publish failed",
+      );
     });
   });
   it("should update form when node changes", () => {
     const { rerender } = render(
-      /* @__PURE__ */ jsx(MarketplaceDialog, { isOpen: true, onClose: mockOnClose, node: mockNode })
+      <MarketplaceDialog isOpen={true} onClose={mockOnClose} node={mockNode} />,
     );
     expect(screen.getByDisplayValue("Test Agent")).toBeInTheDocument();
     const newNode = {
       type: "agent",
       data: {
         label: "New Agent",
-        description: "New description"
-      }
+        description: "New description",
+      },
     };
-    rerender(/* @__PURE__ */ jsx(MarketplaceDialog, { isOpen: true, onClose: mockOnClose, node: newNode }));
+    rerender(
+      <MarketplaceDialog isOpen={true} onClose={mockOnClose} node={newNode} />,
+    );
     expect(screen.getByDisplayValue("New Agent")).toBeInTheDocument();
   });
   it("should use default name when node has no label or name", () => {
     const nodeWithoutLabel = {
       type: "agent",
-      data: {}
+      data: {},
     };
-    render(/* @__PURE__ */ jsx(MarketplaceDialog, { isOpen: true, onClose: mockOnClose, node: nodeWithoutLabel }));
+    render(
+      <MarketplaceDialog
+        isOpen={true}
+        onClose={mockOnClose}
+        node={nodeWithoutLabel}
+      />,
+    );
     expect(screen.getByDisplayValue("Untitled Agent")).toBeInTheDocument();
   });
   it("should show error when publishing agent without authentication", async () => {
@@ -307,21 +373,31 @@ describe("MarketplaceDialog", () => {
       token: null,
       login: jest.fn(),
       logout: jest.fn(),
-      register: jest.fn()
+      register: jest.fn(),
     });
-    render(/* @__PURE__ */ jsx(MarketplaceDialog, { isOpen: true, onClose: mockOnClose, node: mockNode }));
+    render(
+      <MarketplaceDialog isOpen={true} onClose={mockOnClose} node={mockNode} />,
+    );
     const publishButton = screen.getByText(/Publish/);
     fireEvent.click(publishButton);
     await waitForWithTimeout(() => {
-      expect(showError).toHaveBeenCalledWith("Please sign in to publish to the marketplace");
+      expect(showError).toHaveBeenCalledWith(
+        "Please sign in to publish to the marketplace",
+      );
     });
   });
   it("should show error when publishing invalid agent node", async () => {
     const invalidNode = {
       type: "condition",
-      data: {}
+      data: {},
     };
-    render(/* @__PURE__ */ jsx(MarketplaceDialog, { isOpen: true, onClose: mockOnClose, node: invalidNode }));
+    render(
+      <MarketplaceDialog
+        isOpen={true}
+        onClose={mockOnClose}
+        node={invalidNode}
+      />,
+    );
     const publishButton = screen.getByText(/Publish/);
     fireEvent.click(publishButton);
     await waitForWithTimeout(() => {
@@ -337,7 +413,7 @@ describe("MarketplaceDialog", () => {
       tags: [],
       difficulty: "beginner",
       estimated_time: "",
-      agent_config: {}
+      agent_config: {},
     });
     const mockStorage = {
       getItem: jest.fn().mockReturnValue(null),
@@ -346,20 +422,35 @@ describe("MarketplaceDialog", () => {
       }),
       removeItem: jest.fn(),
       addEventListener: jest.fn(),
-      removeEventListener: jest.fn()
+      removeEventListener: jest.fn(),
     };
-    render(/* @__PURE__ */ jsx(MarketplaceDialog, { isOpen: true, onClose: mockOnClose, node: mockNode, storage: mockStorage }));
+    render(
+      <MarketplaceDialog
+        isOpen={true}
+        onClose={mockOnClose}
+        node={mockNode}
+        storage={mockStorage}
+      />,
+    );
     const publishButton = screen.getByText(/Publish/);
     fireEvent.click(publishButton);
     await waitForWithTimeout(() => {
-      expect(showSuccess).toHaveBeenCalledWith("Agent published to marketplace successfully!");
+      expect(showSuccess).toHaveBeenCalledWith(
+        "Agent published to marketplace successfully!",
+      );
       expect(mockOnClose).toHaveBeenCalled();
     });
   });
   it("should handle empty tags", async () => {
-    render(/* @__PURE__ */ jsx(MarketplaceDialog, { isOpen: true, onClose: mockOnClose, node: mockNode }));
+    render(
+      <MarketplaceDialog isOpen={true} onClose={mockOnClose} node={mockNode} />,
+    );
     const tagsInput = screen.getByPlaceholderText(/e.g., llm, automation, ai/);
-    fireEvent.change(tagsInput, { target: { value: "   ,  ,  " } });
+    fireEvent.change(tagsInput, {
+      target: {
+        value: "   ,  ,  ",
+      },
+    });
     const publishButton = screen.getByText(/Publish/);
     fireEvent.click(publishButton);
     await waitForWithTimeout(() => {
@@ -381,11 +472,17 @@ describe("MarketplaceDialog", () => {
       tags: ["tag1", "tag2", "tag3"],
       difficulty: "beginner",
       estimated_time: "",
-      agent_config: {}
+      agent_config: {},
     });
-    render(/* @__PURE__ */ jsx(MarketplaceDialog, { isOpen: true, onClose: mockOnClose, node: mockNode }));
+    render(
+      <MarketplaceDialog isOpen={true} onClose={mockOnClose} node={mockNode} />,
+    );
     const tagsInput = screen.getByPlaceholderText(/e.g., llm, automation, ai/);
-    fireEvent.change(tagsInput, { target: { value: "  tag1  ,  tag2  ,  tag3  " } });
+    fireEvent.change(tagsInput, {
+      target: {
+        value: "  tag1  ,  tag2  ,  tag3  ",
+      },
+    });
     const publishButton = screen.getByText(/Publish/);
     fireEvent.click(publishButton);
     await waitForWithTimeout(() => {
@@ -402,10 +499,16 @@ describe("MarketplaceDialog", () => {
     const nodeWithoutConfig = {
       type: "agent",
       data: {
-        label: "Test Agent"
-      }
+        label: "Test Agent",
+      },
     };
-    render(/* @__PURE__ */ jsx(MarketplaceDialog, { isOpen: true, onClose: mockOnClose, node: nodeWithoutConfig }));
+    render(
+      <MarketplaceDialog
+        isOpen={true}
+        onClose={mockOnClose}
+        node={nodeWithoutConfig}
+      />,
+    );
     const publishButton = screen.getByText(/Publish/);
     fireEvent.click(publishButton);
     await waitForWithTimeout(() => {
@@ -421,13 +524,17 @@ describe("MarketplaceDialog", () => {
   it("should handle user without username or email", async () => {
     mockUseAuth.mockReturnValue({
       isAuthenticated: true,
-      user: { id: "1" },
+      user: {
+        id: "1",
+      },
       token: "token",
       login: jest.fn(),
       logout: jest.fn(),
-      register: jest.fn()
+      register: jest.fn(),
     });
-    render(/* @__PURE__ */ jsx(MarketplaceDialog, { isOpen: true, onClose: mockOnClose, node: mockNode }));
+    render(
+      <MarketplaceDialog isOpen={true} onClose={mockOnClose} node={mockNode} />,
+    );
     const publishButton = screen.getByText(/Publish/);
     fireEvent.click(publishButton);
     await waitForWithTimeout(() => {
@@ -447,23 +554,22 @@ describe("MarketplaceDialog", () => {
         setItem: jest.fn(),
         removeItem: jest.fn(),
         addEventListener: jest.fn(),
-        removeEventListener: jest.fn()
+        removeEventListener: jest.fn(),
       };
       render(
-        /* @__PURE__ */ jsx(
-          MarketplaceDialog,
-          {
-            isOpen: true,
-            onClose: mockOnClose,
-            node: mockNode,
-            storage: mockStorage
-          }
-        )
+        <MarketplaceDialog
+          isOpen={true}
+          onClose={mockOnClose}
+          node={mockNode}
+          storage={mockStorage}
+        />,
       );
       const publishButton = screen.getByText(/Publish/);
       fireEvent.click(publishButton);
       await waitForWithTimeout(() => {
-        expect(mockStorage.getItem).toHaveBeenCalledWith(STORAGE_KEYS.PUBLISHED_AGENTS);
+        expect(mockStorage.getItem).toHaveBeenCalledWith(
+          STORAGE_KEYS.PUBLISHED_AGENTS,
+        );
         expect(mockStorage.setItem).toHaveBeenCalled();
       });
     });
@@ -472,21 +578,18 @@ describe("MarketplaceDialog", () => {
         get: jest.fn(),
         post: jest.fn(),
         put: jest.fn(),
-        delete: jest.fn()
+        delete: jest.fn(),
       };
       const mockPublishWorkflow = jest.fn().mockResolvedValue({});
       mockApi.publishWorkflow = mockPublishWorkflow;
       render(
-        /* @__PURE__ */ jsx(
-          MarketplaceDialog,
-          {
-            isOpen: true,
-            onClose: mockOnClose,
-            workflowId: "workflow-1",
-            workflowName: "Test Workflow",
-            httpClient: mockHttpClient
-          }
-        )
+        <MarketplaceDialog
+          isOpen={true}
+          onClose={mockOnClose}
+          workflowId="workflow-1"
+          workflowName="Test Workflow"
+          httpClient={mockHttpClient}
+        />,
       );
       const workflowsTab = screen.getByText("Workflows");
       fireEvent.click(workflowsTab);
@@ -507,7 +610,7 @@ describe("MarketplaceDialog", () => {
         tags: [],
         difficulty: "beginner",
         estimated_time: "",
-        agent_config: {}
+        agent_config: {},
       });
       const mockStorage = {
         getItem: jest.fn().mockReturnValue(null),
@@ -516,23 +619,22 @@ describe("MarketplaceDialog", () => {
         }),
         removeItem: jest.fn(),
         addEventListener: jest.fn(),
-        removeEventListener: jest.fn()
+        removeEventListener: jest.fn(),
       };
       render(
-        /* @__PURE__ */ jsx(
-          MarketplaceDialog,
-          {
-            isOpen: true,
-            onClose: mockOnClose,
-            node: mockNode,
-            storage: mockStorage
-          }
-        )
+        <MarketplaceDialog
+          isOpen={true}
+          onClose={mockOnClose}
+          node={mockNode}
+          storage={mockStorage}
+        />,
       );
       const publishButton = screen.getByText(/Publish/);
       fireEvent.click(publishButton);
       await waitForWithTimeout(() => {
-        expect(showSuccess).toHaveBeenCalledWith("Agent published to marketplace successfully!");
+        expect(showSuccess).toHaveBeenCalledWith(
+          "Agent published to marketplace successfully!",
+        );
         expect(mockOnClose).toHaveBeenCalled();
       });
     });
@@ -545,23 +647,22 @@ describe("MarketplaceDialog", () => {
         tags: [],
         difficulty: "beginner",
         estimated_time: "",
-        agent_config: {}
+        agent_config: {},
       });
       render(
-        /* @__PURE__ */ jsx(
-          MarketplaceDialog,
-          {
-            isOpen: true,
-            onClose: mockOnClose,
-            node: mockNode,
-            storage: null
-          }
-        )
+        <MarketplaceDialog
+          isOpen={true}
+          onClose={mockOnClose}
+          node={mockNode}
+          storage={null}
+        />,
       );
       const publishButton = screen.getByText(/Publish/);
       fireEvent.click(publishButton);
       await waitForWithTimeout(() => {
-        expect(showSuccess).toHaveBeenCalledWith("Agent published to marketplace successfully!");
+        expect(showSuccess).toHaveBeenCalledWith(
+          "Agent published to marketplace successfully!",
+        );
         expect(mockOnClose).toHaveBeenCalled();
       });
     });
@@ -570,21 +671,20 @@ describe("MarketplaceDialog", () => {
         get: jest.fn(),
         post: jest.fn(),
         put: jest.fn(),
-        delete: jest.fn()
+        delete: jest.fn(),
       };
-      const mockPublishWorkflow = jest.fn().mockRejectedValue(new Error("Network error"));
+      const mockPublishWorkflow = jest
+        .fn()
+        .mockRejectedValue(new Error("Network error"));
       mockApi.publishWorkflow = mockPublishWorkflow;
       render(
-        /* @__PURE__ */ jsx(
-          MarketplaceDialog,
-          {
-            isOpen: true,
-            onClose: mockOnClose,
-            workflowId: "workflow-1",
-            workflowName: "Test Workflow",
-            httpClient: mockHttpClient
-          }
-        )
+        <MarketplaceDialog
+          isOpen={true}
+          onClose={mockOnClose}
+          workflowId="workflow-1"
+          workflowName="Test Workflow"
+          httpClient={mockHttpClient}
+        />,
       );
       const workflowsTab = screen.getByText("Workflows");
       fireEvent.click(workflowsTab);
@@ -594,16 +694,26 @@ describe("MarketplaceDialog", () => {
       });
       await waitForWithTimeout(() => {
         expect(showError).toHaveBeenCalledWith(
-          expect.stringContaining("Failed to publish workflow")
+          expect.stringContaining("Failed to publish workflow"),
         );
       });
     });
   });
   describe("Edge cases", () => {
     it("should handle estimated_time being empty string", async () => {
-      render(/* @__PURE__ */ jsx(MarketplaceDialog, { isOpen: true, onClose: mockOnClose, node: mockNode }));
+      render(
+        <MarketplaceDialog
+          isOpen={true}
+          onClose={mockOnClose}
+          node={mockNode}
+        />,
+      );
       const timeInput = screen.getByPlaceholderText(/5 min/);
-      fireEvent.change(timeInput, { target: { value: "" } });
+      fireEvent.change(timeInput, {
+        target: {
+          value: "",
+        },
+      });
       const publishButton = screen.getByText(/Publish/);
       fireEvent.click(publishButton);
       await waitForWithTimeout(() => {
@@ -621,10 +731,16 @@ describe("MarketplaceDialog", () => {
         type: "agent",
         data: {
           name: "Agent Name",
-          description: "Test"
-        }
+          description: "Test",
+        },
       };
-      render(/* @__PURE__ */ jsx(MarketplaceDialog, { isOpen: true, onClose: mockOnClose, node: nodeWithName }));
+      render(
+        <MarketplaceDialog
+          isOpen={true}
+          onClose={mockOnClose}
+          node={nodeWithName}
+        />,
+      );
       expect(screen.getByDisplayValue("Agent Name")).toBeInTheDocument();
     });
     it("should handle node with label but no name", async () => {
@@ -632,30 +748,40 @@ describe("MarketplaceDialog", () => {
         type: "agent",
         data: {
           label: "Agent Label",
-          description: "Test"
-        }
+          description: "Test",
+        },
       };
-      render(/* @__PURE__ */ jsx(MarketplaceDialog, { isOpen: true, onClose: mockOnClose, node: nodeWithLabel }));
+      render(
+        <MarketplaceDialog
+          isOpen={true}
+          onClose={mockOnClose}
+          node={nodeWithLabel}
+        />,
+      );
       expect(screen.getByDisplayValue("Agent Label")).toBeInTheDocument();
     });
     it("should handle workflow publishing with empty estimated_time", async () => {
-      mockApi.publishWorkflow.mockResolvedValue({ id: "published-1", name: "Test Workflow" });
+      mockApi.publishWorkflow.mockResolvedValue({
+        id: "published-1",
+        name: "Test Workflow",
+      });
       render(
-        /* @__PURE__ */ jsx(
-          MarketplaceDialog,
-          {
-            isOpen: true,
-            onClose: mockOnClose,
-            workflowId: "workflow-1",
-            workflowName: "Test Workflow"
-          }
-        )
+        <MarketplaceDialog
+          isOpen={true}
+          onClose={mockOnClose}
+          workflowId="workflow-1"
+          workflowName="Test Workflow"
+        />,
       );
       const workflowsTab = screen.getByText("Workflows");
       fireEvent.click(workflowsTab);
       await waitForWithTimeout(() => {
         const timeInput = screen.getByPlaceholderText(/e.g., 10 min/);
-        fireEvent.change(timeInput, { target: { value: "" } });
+        fireEvent.change(timeInput, {
+          target: {
+            value: "",
+          },
+        });
       });
       await waitForWithTimeout(() => {
         const publishButton = screen.getByText(/Publish/);
@@ -665,29 +791,33 @@ describe("MarketplaceDialog", () => {
         expect(mockApi.publishWorkflow).toHaveBeenCalledWith(
           "workflow-1",
           expect.objectContaining({
-            estimated_time: void 0
-          })
+            estimated_time: void 0,
+          }),
         );
       });
     });
     it("should handle workflow publishing with estimated_time", async () => {
-      mockApi.publishWorkflow.mockResolvedValue({ id: "published-1", name: "Test Workflow" });
+      mockApi.publishWorkflow.mockResolvedValue({
+        id: "published-1",
+        name: "Test Workflow",
+      });
       render(
-        /* @__PURE__ */ jsx(
-          MarketplaceDialog,
-          {
-            isOpen: true,
-            onClose: mockOnClose,
-            workflowId: "workflow-1",
-            workflowName: "Test Workflow"
-          }
-        )
+        <MarketplaceDialog
+          isOpen={true}
+          onClose={mockOnClose}
+          workflowId="workflow-1"
+          workflowName="Test Workflow"
+        />,
       );
       const workflowsTab = screen.getByText("Workflows");
       fireEvent.click(workflowsTab);
       await waitForWithTimeout(() => {
         const timeInput = screen.getByPlaceholderText(/e.g., 10 min/);
-        fireEvent.change(timeInput, { target: { value: "45 minutes" } });
+        fireEvent.change(timeInput, {
+          target: {
+            value: "45 minutes",
+          },
+        });
       });
       await waitForWithTimeout(() => {
         const publishButton = screen.getByText(/Publish/);
@@ -697,8 +827,8 @@ describe("MarketplaceDialog", () => {
         expect(mockApi.publishWorkflow).toHaveBeenCalledWith(
           "workflow-1",
           expect.objectContaining({
-            estimated_time: "45 minutes"
-          })
+            estimated_time: "45 minutes",
+          }),
         );
       });
     });

@@ -4,12 +4,12 @@ import { logger } from "../../utils/logger";
 jest.mock("../../utils/logger", () => ({
   logger: {
     debug: jest.fn(),
-    error: jest.fn()
-  }
+    error: jest.fn(),
+  },
 }));
 const mockNavigate = jest.fn();
 jest.mock("react-router-dom", () => ({
-  useNavigate: () => mockNavigate
+  useNavigate: () => mockNavigate,
 }));
 const mockLoggerDebug = logger.debug;
 const mockLoggerError = logger.error;
@@ -18,7 +18,7 @@ describe("useTemplateUsage", () => {
     get: jest.fn(),
     post: jest.fn(),
     put: jest.fn(),
-    delete: jest.fn()
+    delete: jest.fn(),
   };
   beforeEach(() => {
     jest.clearAllMocks();
@@ -28,14 +28,14 @@ describe("useTemplateUsage", () => {
     it("should use template successfully with token", async () => {
       mockHttpClient.post.mockResolvedValue({
         ok: true,
-        json: async () => ({ id: "workflow-123" })
+        json: async () => ({ id: "workflow-123" }),
       });
-      const { result } = renderHook(
-        () => useTemplateUsage({
+      const { result } = renderHook(() =>
+        useTemplateUsage({
           token: "token-123",
           httpClient: mockHttpClient,
-          apiBaseUrl: "http://api.test"
-        })
+          apiBaseUrl: "http://api.test",
+        }),
       );
       await act(async () => {
         await result.current.useTemplate("template-1");
@@ -45,21 +45,21 @@ describe("useTemplateUsage", () => {
         {},
         expect.objectContaining({
           "Content-Type": "application/json",
-          Authorization: "Bearer token-123"
-        })
+          Authorization: "Bearer token-123",
+        }),
       );
     });
     it("should use template successfully without token", async () => {
       mockHttpClient.post.mockResolvedValue({
         ok: true,
-        json: async () => ({ id: "workflow-123" })
+        json: async () => ({ id: "workflow-123" }),
       });
-      const { result } = renderHook(
-        () => useTemplateUsage({
+      const { result } = renderHook(() =>
+        useTemplateUsage({
           token: null,
           httpClient: mockHttpClient,
-          apiBaseUrl: "http://api.test"
-        })
+          apiBaseUrl: "http://api.test",
+        }),
       );
       await act(async () => {
         await result.current.useTemplate("template-1");
@@ -68,22 +68,24 @@ describe("useTemplateUsage", () => {
         "http://api.test/templates/template-1/use",
         {},
         expect.objectContaining({
-          "Content-Type": "application/json"
-        })
+          "Content-Type": "application/json",
+        }),
       );
-      expect(mockHttpClient.post.mock.calls[0][2]).not.toHaveProperty("Authorization");
+      expect(mockHttpClient.post.mock.calls[0][2]).not.toHaveProperty(
+        "Authorization",
+      );
     });
     it("should handle use template error response", async () => {
       mockHttpClient.post.mockResolvedValue({
         ok: false,
-        text: async () => "Error message"
+        text: async () => "Error message",
       });
-      const { result } = renderHook(
-        () => useTemplateUsage({
+      const { result } = renderHook(() =>
+        useTemplateUsage({
           token: "token-123",
           httpClient: mockHttpClient,
-          apiBaseUrl: "http://api.test"
-        })
+          apiBaseUrl: "http://api.test",
+        }),
       );
       await act(async () => {
         await result.current.useTemplate("template-1");
@@ -92,12 +94,12 @@ describe("useTemplateUsage", () => {
     });
     it("should handle use template exception", async () => {
       mockHttpClient.post.mockRejectedValue(new Error("Network error"));
-      const { result } = renderHook(
-        () => useTemplateUsage({
+      const { result } = renderHook(() =>
+        useTemplateUsage({
           token: "token-123",
           httpClient: mockHttpClient,
-          apiBaseUrl: "http://api.test"
-        })
+          apiBaseUrl: "http://api.test",
+        }),
       );
       await act(async () => {
         await result.current.useTemplate("template-1");
@@ -107,31 +109,33 @@ describe("useTemplateUsage", () => {
     it("should handle workflow with null id", async () => {
       mockHttpClient.post.mockResolvedValue({
         ok: true,
-        json: async () => ({ id: null })
+        json: async () => ({ id: null }),
       });
-      const { result } = renderHook(
-        () => useTemplateUsage({
+      const { result } = renderHook(() =>
+        useTemplateUsage({
           token: "token-123",
           httpClient: mockHttpClient,
-          apiBaseUrl: "http://api.test"
-        })
+          apiBaseUrl: "http://api.test",
+        }),
       );
       await act(async () => {
         await result.current.useTemplate("template-1");
       });
-      expect(mockNavigate).toHaveBeenCalledWith(expect.stringContaining("workflow=null"));
+      expect(mockNavigate).toHaveBeenCalledWith(
+        expect.stringContaining("workflow=null"),
+      );
     });
     it("should handle workflow with undefined id", async () => {
       mockHttpClient.post.mockResolvedValue({
         ok: true,
-        json: async () => ({ id: void 0 })
+        json: async () => ({ id: void 0 }),
       });
-      const { result } = renderHook(
-        () => useTemplateUsage({
+      const { result } = renderHook(() =>
+        useTemplateUsage({
           token: "token-123",
           httpClient: mockHttpClient,
-          apiBaseUrl: "http://api.test"
-        })
+          apiBaseUrl: "http://api.test",
+        }),
       );
       await act(async () => {
         await result.current.useTemplate("template-1");
@@ -143,14 +147,14 @@ describe("useTemplateUsage", () => {
         ok: true,
         json: async () => {
           throw new Error("Parse error");
-        }
+        },
       });
-      const { result } = renderHook(
-        () => useTemplateUsage({
+      const { result } = renderHook(() =>
+        useTemplateUsage({
           token: "token-123",
           httpClient: mockHttpClient,
-          apiBaseUrl: "http://api.test"
-        })
+          apiBaseUrl: "http://api.test",
+        }),
       );
       await act(async () => {
         await result.current.useTemplate("template-1");
@@ -162,14 +166,14 @@ describe("useTemplateUsage", () => {
         ok: false,
         text: async () => {
           throw new Error("Text error");
-        }
+        },
       });
-      const { result } = renderHook(
-        () => useTemplateUsage({
+      const { result } = renderHook(() =>
+        useTemplateUsage({
           token: "token-123",
           httpClient: mockHttpClient,
-          apiBaseUrl: "http://api.test"
-        })
+          apiBaseUrl: "http://api.test",
+        }),
       );
       await act(async () => {
         await result.current.useTemplate("template-1");
@@ -181,14 +185,14 @@ describe("useTemplateUsage", () => {
     it("should verify response.ok check by testing false path explicitly", async () => {
       mockHttpClient.post.mockResolvedValue({
         ok: false,
-        text: async () => "Error message"
+        text: async () => "Error message",
       });
-      const { result } = renderHook(
-        () => useTemplateUsage({
+      const { result } = renderHook(() =>
+        useTemplateUsage({
           token: "token-123",
           httpClient: mockHttpClient,
-          apiBaseUrl: "http://api.test"
-        })
+          apiBaseUrl: "http://api.test",
+        }),
       );
       await act(async () => {
         await result.current.useTemplate("template-1");
@@ -199,41 +203,41 @@ describe("useTemplateUsage", () => {
     it("should verify exact logger.debug message content", async () => {
       mockHttpClient.post.mockResolvedValue({
         ok: true,
-        json: async () => ({ id: "workflow-123" })
+        json: async () => ({ id: "workflow-123" }),
       });
-      const { result } = renderHook(
-        () => useTemplateUsage({
+      const { result } = renderHook(() =>
+        useTemplateUsage({
           token: "token-123",
           httpClient: mockHttpClient,
-          apiBaseUrl: "http://api.test"
-        })
+          apiBaseUrl: "http://api.test",
+        }),
       );
       await act(async () => {
         await result.current.useTemplate("template-1");
       });
       expect(mockLoggerDebug).toHaveBeenCalledWith(
         "Created workflow from template:",
-        { id: "workflow-123" }
+        { id: "workflow-123" },
       );
     });
     it("should verify exact logger.error message content", async () => {
       mockHttpClient.post.mockResolvedValue({
         ok: false,
-        text: async () => "Error message"
+        text: async () => "Error message",
       });
-      const { result } = renderHook(
-        () => useTemplateUsage({
+      const { result } = renderHook(() =>
+        useTemplateUsage({
           token: "token-123",
           httpClient: mockHttpClient,
-          apiBaseUrl: "http://api.test"
-        })
+          apiBaseUrl: "http://api.test",
+        }),
       );
       await act(async () => {
         await result.current.useTemplate("template-1");
       });
       expect(mockLoggerError).toHaveBeenCalledWith(
         "Failed to use template:",
-        "Error message"
+        "Error message",
       );
     });
   });
@@ -241,34 +245,34 @@ describe("useTemplateUsage", () => {
     describe("useTemplate - catch block", () => {
       it("should handle httpClient.post throwing error", async () => {
         mockHttpClient.post.mockRejectedValue(new Error("Network error"));
-        const { result } = renderHook(
-          () => useTemplateUsage({
+        const { result } = renderHook(() =>
+          useTemplateUsage({
             token: "test-token",
             httpClient: mockHttpClient,
-            apiBaseUrl: "http://api.test"
-          })
+            apiBaseUrl: "http://api.test",
+          }),
         );
         await act(async () => {
           await result.current.useTemplate("template-123");
         });
         expect(logger.error).toHaveBeenCalledWith(
           "Failed to use template:",
-          expect.any(Error)
+          expect.any(Error),
         );
       });
       it("should handle response.json() throwing in useTemplate", async () => {
         const mockResponse = {
           ok: true,
           json: jest.fn().mockRejectedValue(new Error("Invalid JSON")),
-          text: jest.fn()
+          text: jest.fn(),
         };
         mockHttpClient.post.mockResolvedValue(mockResponse);
-        const { result } = renderHook(
-          () => useTemplateUsage({
+        const { result } = renderHook(() =>
+          useTemplateUsage({
             token: "test-token",
             httpClient: mockHttpClient,
-            apiBaseUrl: "http://api.test"
-          })
+            apiBaseUrl: "http://api.test",
+          }),
         );
         await act(async () => {
           await result.current.useTemplate("template-123");
@@ -282,39 +286,47 @@ describe("useTemplateUsage", () => {
       it("should navigate when response.ok is true", async () => {
         const mockResponse = {
           ok: true,
-          json: jest.fn().mockResolvedValue({ id: "workflow-123" })
+          json: jest.fn().mockResolvedValue({ id: "workflow-123" }),
         };
         mockHttpClient.post.mockResolvedValue(mockResponse);
-        const { result } = renderHook(
-          () => useTemplateUsage({
+        const { result } = renderHook(() =>
+          useTemplateUsage({
             token: "test-token",
             httpClient: mockHttpClient,
-            apiBaseUrl: "http://api.test"
-          })
+            apiBaseUrl: "http://api.test",
+          }),
         );
         await act(async () => {
           await result.current.useTemplate("template-123");
         });
-        expect(mockNavigate).toHaveBeenCalledWith(expect.stringContaining("workflow=workflow-123"));
-        expect(logger.debug).toHaveBeenCalledWith("Created workflow from template:", { id: "workflow-123" });
+        expect(mockNavigate).toHaveBeenCalledWith(
+          expect.stringContaining("workflow=workflow-123"),
+        );
+        expect(logger.debug).toHaveBeenCalledWith(
+          "Created workflow from template:",
+          { id: "workflow-123" },
+        );
       });
       it("should handle response.ok false branch", async () => {
         const mockResponse = {
           ok: false,
-          text: jest.fn().mockResolvedValue("Error message")
+          text: jest.fn().mockResolvedValue("Error message"),
         };
         mockHttpClient.post.mockResolvedValue(mockResponse);
-        const { result } = renderHook(
-          () => useTemplateUsage({
+        const { result } = renderHook(() =>
+          useTemplateUsage({
             token: "test-token",
             httpClient: mockHttpClient,
-            apiBaseUrl: "http://api.test"
-          })
+            apiBaseUrl: "http://api.test",
+          }),
         );
         await act(async () => {
           await result.current.useTemplate("template-123");
         });
-        expect(logger.error).toHaveBeenCalledWith("Failed to use template:", "Error message");
+        expect(logger.error).toHaveBeenCalledWith(
+          "Failed to use template:",
+          "Error message",
+        );
         expect(mockNavigate).not.toHaveBeenCalled();
       });
     });

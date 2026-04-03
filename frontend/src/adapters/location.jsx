@@ -6,7 +6,7 @@ const DEFAULT_LOCATION = {
   port: "8000",
   pathname: "/",
   search: "",
-  hash: ""
+  hash: "",
 };
 const LocationAdapterFactory = {
   /**
@@ -24,13 +24,11 @@ const LocationAdapterFactory = {
         port: window.location?.port || DEFAULT_LOCATION.port,
         pathname: window.location?.pathname || DEFAULT_LOCATION.pathname,
         search: window.location?.search || DEFAULT_LOCATION.search,
-        hash: window.location?.hash || DEFAULT_LOCATION.hash
+        hash: window.location?.hash || DEFAULT_LOCATION.hash,
       };
     } catch {
       return DEFAULT_LOCATION;
     }
-  }
+  },
 };
-export {
-  LocationAdapterFactory
-};
+export { LocationAdapterFactory };

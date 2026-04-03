@@ -3,7 +3,7 @@ import {
   advanceTimersByTime,
   wsInstances,
   useWebSocket,
-  logger
+  logger,
 } from "./useWebSocket.test.setup";
 describe("useWebSocket - No Coverage Paths", () => {
   let mockWindowLocation;
@@ -18,7 +18,7 @@ describe("useWebSocket - No Coverage Paths", () => {
       port: "8000",
       pathname: "/",
       search: "",
-      hash: ""
+      hash: "",
     };
   });
   afterEach(() => {
@@ -28,44 +28,44 @@ describe("useWebSocket - No Coverage Paths", () => {
   });
   describe("connect - exact conditional checks", () => {
     it("should verify exact falsy check - executionId is null", async () => {
-      const { result } = renderHook(
-        () => useWebSocket({
+      const { result } = renderHook(() =>
+        useWebSocket({
           executionId: null,
-          windowLocation: mockWindowLocation
-        })
+          windowLocation: mockWindowLocation,
+        }),
       );
       await advanceTimersByTime(100);
       expect(wsInstances.length).toBe(0);
       expect(result.current.isConnected).toBe(false);
     });
     it("should verify exact falsy check - executionId is empty string", async () => {
-      const { result } = renderHook(
-        () => useWebSocket({
+      const { result } = renderHook(() =>
+        useWebSocket({
           executionId: "",
-          windowLocation: mockWindowLocation
-        })
+          windowLocation: mockWindowLocation,
+        }),
       );
       await advanceTimersByTime(100);
       expect(wsInstances.length).toBe(0);
       expect(result.current.isConnected).toBe(false);
     });
     it('should verify exact string comparison - executionId.startsWith("pending-")', async () => {
-      const { result } = renderHook(
-        () => useWebSocket({
+      const { result } = renderHook(() =>
+        useWebSocket({
           executionId: "pending-123",
-          windowLocation: mockWindowLocation
-        })
+          windowLocation: mockWindowLocation,
+        }),
       );
       await advanceTimersByTime(100);
       expect(wsInstances.length).toBe(0);
       expect(result.current.isConnected).toBe(false);
     });
     it('should verify exact string comparison - executionId does not start with "pending-"', async () => {
-      renderHook(
-        () => useWebSocket({
+      renderHook(() =>
+        useWebSocket({
           executionId: "exec-123",
-          windowLocation: mockWindowLocation
-        })
+          windowLocation: mockWindowLocation,
+        }),
       );
       await advanceTimersByTime(100);
       expect(wsInstances.length).toBeGreaterThan(0);
@@ -74,14 +74,15 @@ describe("useWebSocket - No Coverage Paths", () => {
   describe("connect - logical operators", () => {
     it("should verify logical OR - executionStatus || lastKnownStatusRef.current", async () => {
       const { rerender } = renderHook(
-        ({ executionStatus }) => useWebSocket({
-          executionId: "exec-123",
-          executionStatus,
-          windowLocation: mockWindowLocation
-        }),
+        ({ executionStatus }) =>
+          useWebSocket({
+            executionId: "exec-123",
+            executionStatus,
+            windowLocation: mockWindowLocation,
+          }),
         {
-          initialProps: { executionStatus: void 0 }
-        }
+          initialProps: { executionStatus: void 0 },
+        },
       );
       await advanceTimersByTime(100);
       expect(wsInstances.length).toBeGreaterThan(0);
@@ -91,24 +92,24 @@ describe("useWebSocket - No Coverage Paths", () => {
       expect(wsInstances.length).toBe(0);
     });
     it('should verify exact comparison - currentStatus === "completed"', async () => {
-      const { result } = renderHook(
-        () => useWebSocket({
+      const { result } = renderHook(() =>
+        useWebSocket({
           executionId: "exec-123",
           executionStatus: "completed",
-          windowLocation: mockWindowLocation
-        })
+          windowLocation: mockWindowLocation,
+        }),
       );
       await advanceTimersByTime(100);
       expect(wsInstances.length).toBe(0);
       expect(result.current.isConnected).toBe(false);
     });
     it('should verify exact comparison - currentStatus === "failed"', async () => {
-      const { result } = renderHook(
-        () => useWebSocket({
+      const { result } = renderHook(() =>
+        useWebSocket({
           executionId: "exec-123",
           executionStatus: "failed",
-          windowLocation: mockWindowLocation
-        })
+          windowLocation: mockWindowLocation,
+        }),
       );
       await advanceTimersByTime(100);
       expect(wsInstances.length).toBe(0);
@@ -119,13 +120,13 @@ describe("useWebSocket - No Coverage Paths", () => {
     it('should verify optional chaining - windowLocation?.protocol === "https:"', async () => {
       const httpsLocation = {
         ...mockWindowLocation,
-        protocol: "https:"
+        protocol: "https:",
       };
-      renderHook(
-        () => useWebSocket({
+      renderHook(() =>
+        useWebSocket({
           executionId: "exec-123",
-          windowLocation: httpsLocation
-        })
+          windowLocation: httpsLocation,
+        }),
       );
       await advanceTimersByTime(100);
       expect(wsInstances.length).toBeGreaterThan(0);
@@ -135,11 +136,11 @@ describe("useWebSocket - No Coverage Paths", () => {
       }
     });
     it('should verify optional chaining - windowLocation?.protocol !== "https:"', async () => {
-      renderHook(
-        () => useWebSocket({
+      renderHook(() =>
+        useWebSocket({
           executionId: "exec-123",
-          windowLocation: mockWindowLocation
-        })
+          windowLocation: mockWindowLocation,
+        }),
       );
       await advanceTimersByTime(100);
       expect(wsInstances.length).toBeGreaterThan(0);
@@ -151,13 +152,13 @@ describe("useWebSocket - No Coverage Paths", () => {
     it("should verify optional chaining - windowLocation?.host fallback", async () => {
       const locationWithoutHost = {
         ...mockWindowLocation,
-        host: void 0
+        host: void 0,
       };
-      renderHook(
-        () => useWebSocket({
+      renderHook(() =>
+        useWebSocket({
           executionId: "exec-123",
-          windowLocation: locationWithoutHost
-        })
+          windowLocation: locationWithoutHost,
+        }),
       );
       await advanceTimersByTime(100);
       expect(wsInstances.length).toBeGreaterThan(0);
@@ -167,11 +168,11 @@ describe("useWebSocket - No Coverage Paths", () => {
       }
     });
     it("should verify optional chaining - windowLocation is null", async () => {
-      renderHook(
-        () => useWebSocket({
+      renderHook(() =>
+        useWebSocket({
           executionId: "exec-123",
-          windowLocation: null
-        })
+          windowLocation: null,
+        }),
       );
       await advanceTimersByTime(100);
       expect(wsInstances.length).toBeGreaterThan(0);
@@ -184,13 +185,14 @@ describe("useWebSocket - No Coverage Paths", () => {
   describe("connect - wsRef.current checks", () => {
     it("should verify exact truthy check - wsRef.current exists (should close)", async () => {
       const { rerender } = renderHook(
-        ({ executionId }) => useWebSocket({
-          executionId,
-          windowLocation: mockWindowLocation
-        }),
+        ({ executionId }) =>
+          useWebSocket({
+            executionId,
+            windowLocation: mockWindowLocation,
+          }),
         {
-          initialProps: { executionId: "exec-123" }
-        }
+          initialProps: { executionId: "exec-123" },
+        },
       );
       await advanceTimersByTime(100);
       const initialCount = wsInstances.length;
@@ -206,11 +208,11 @@ describe("useWebSocket - No Coverage Paths", () => {
   });
   describe("onclose - exact comparisons and logical operators", () => {
     it("should verify exact comparison - wasClean && code === 1000", async () => {
-      renderHook(
-        () => useWebSocket({
+      renderHook(() =>
+        useWebSocket({
           executionId: "exec-123",
-          windowLocation: mockWindowLocation
-        })
+          windowLocation: mockWindowLocation,
+        }),
       );
       await advanceTimersByTime(100);
       const initialCount = wsInstances.length;
@@ -221,21 +223,21 @@ describe("useWebSocket - No Coverage Paths", () => {
           ws.onclose({
             code: 1e3,
             reason: "Normal closure",
-            wasClean: true
+            wasClean: true,
           });
           await advanceTimersByTime(2e3);
           expect(logger.debug).toHaveBeenCalledWith(
-            expect.stringContaining("Connection closed cleanly")
+            expect.stringContaining("Connection closed cleanly"),
           );
         }
       }
     });
     it("should verify exact comparison - code !== 1000", async () => {
-      renderHook(
-        () => useWebSocket({
+      renderHook(() =>
+        useWebSocket({
           executionId: "exec-123",
-          windowLocation: mockWindowLocation
-        })
+          windowLocation: mockWindowLocation,
+        }),
       );
       await advanceTimersByTime(100);
       if (wsInstances.length > 0) {
@@ -244,18 +246,18 @@ describe("useWebSocket - No Coverage Paths", () => {
           ws.onclose({
             code: 1001,
             reason: "Going away",
-            wasClean: true
+            wasClean: true,
           });
           await advanceTimersByTime(2e3);
         }
       }
     });
     it("should verify logical AND - reason && reason.length > 0", async () => {
-      renderHook(
-        () => useWebSocket({
+      renderHook(() =>
+        useWebSocket({
           executionId: "exec-123",
-          windowLocation: mockWindowLocation
-        })
+          windowLocation: mockWindowLocation,
+        }),
       );
       await advanceTimersByTime(100);
       if (wsInstances.length > 0) {
@@ -264,13 +266,13 @@ describe("useWebSocket - No Coverage Paths", () => {
           ws.onclose({
             code: 1e3,
             reason: "",
-            wasClean: true
+            wasClean: true,
           });
           expect(logger.debug).toHaveBeenCalledWith(
             expect.stringContaining("[WebSocket] Disconnected"),
             expect.objectContaining({
-              reason: expect.any(String)
-            })
+              reason: expect.any(String),
+            }),
           );
         }
       }
@@ -278,11 +280,11 @@ describe("useWebSocket - No Coverage Paths", () => {
   });
   describe("onerror - exact comparisons", () => {
     it("should verify instanceof check - error instanceof Error", async () => {
-      renderHook(
-        () => useWebSocket({
+      renderHook(() =>
+        useWebSocket({
           executionId: "exec-123",
-          windowLocation: mockWindowLocation
-        })
+          windowLocation: mockWindowLocation,
+        }),
       );
       await advanceTimersByTime(100);
       if (wsInstances.length > 0) {
@@ -293,18 +295,18 @@ describe("useWebSocket - No Coverage Paths", () => {
           expect(logger.error).toHaveBeenCalledWith(
             expect.stringContaining("[WebSocket] Connection error"),
             expect.objectContaining({
-              message: "Test error"
-            })
+              message: "Test error",
+            }),
           );
         }
       }
     });
     it("should verify instanceof check - error is not Error instance", async () => {
-      renderHook(
-        () => useWebSocket({
+      renderHook(() =>
+        useWebSocket({
           executionId: "exec-123",
-          windowLocation: mockWindowLocation
-        })
+          windowLocation: mockWindowLocation,
+        }),
       );
       await advanceTimersByTime(100);
       if (wsInstances.length > 0) {
@@ -315,18 +317,18 @@ describe("useWebSocket - No Coverage Paths", () => {
           expect(logger.error).toHaveBeenCalledWith(
             expect.stringContaining("[WebSocket] Connection error"),
             expect.objectContaining({
-              message: expect.any(String)
-            })
+              message: expect.any(String),
+            }),
           );
         }
       }
     });
     it("should verify exact WebSocket state comparisons", async () => {
-      renderHook(
-        () => useWebSocket({
+      renderHook(() =>
+        useWebSocket({
           executionId: "exec-123",
-          windowLocation: mockWindowLocation
-        })
+          windowLocation: mockWindowLocation,
+        }),
       );
       await advanceTimersByTime(100);
       if (wsInstances.length > 0) {
@@ -337,32 +339,32 @@ describe("useWebSocket - No Coverage Paths", () => {
           expect(logger.error).toHaveBeenCalledWith(
             expect.stringContaining("[WebSocket] Connection error"),
             expect.objectContaining({
-              readyState: "CONNECTING"
-            })
+              readyState: "CONNECTING",
+            }),
           );
           ws.readyState = 1;
           ws.onerror(new Error("Test"));
           expect(logger.error).toHaveBeenCalledWith(
             expect.stringContaining("[WebSocket] Connection error"),
             expect.objectContaining({
-              readyState: "OPEN"
-            })
+              readyState: "OPEN",
+            }),
           );
           ws.readyState = 2;
           ws.onerror(new Error("Test"));
           expect(logger.error).toHaveBeenCalledWith(
             expect.stringContaining("[WebSocket] Connection error"),
             expect.objectContaining({
-              readyState: "CLOSING"
-            })
+              readyState: "CLOSING",
+            }),
           );
           ws.readyState = 3;
           ws.onerror(new Error("Test"));
           expect(logger.error).toHaveBeenCalledWith(
             expect.stringContaining("[WebSocket] Connection error"),
             expect.objectContaining({
-              readyState: "CLOSED"
-            })
+              readyState: "CLOSED",
+            }),
           );
         }
       }
@@ -371,12 +373,12 @@ describe("useWebSocket - No Coverage Paths", () => {
   describe("onmessage - exact logical operators", () => {
     it("should verify logical AND - message.log && onLog", async () => {
       const onLog = jest.fn();
-      renderHook(
-        () => useWebSocket({
+      renderHook(() =>
+        useWebSocket({
           executionId: "exec-123",
           onLog,
-          windowLocation: mockWindowLocation
-        })
+          windowLocation: mockWindowLocation,
+        }),
       );
       await advanceTimersByTime(100);
       if (wsInstances.length > 0) {
@@ -389,9 +391,9 @@ describe("useWebSocket - No Coverage Paths", () => {
               log: {
                 timestamp: "2024-01-01T00:00:00Z",
                 level: "info",
-                message: "Test log"
-              }
-            })
+                message: "Test log",
+              },
+            }),
           };
           ws.onmessage(event);
           expect(onLog).toHaveBeenCalled();
@@ -400,12 +402,12 @@ describe("useWebSocket - No Coverage Paths", () => {
     });
     it("should verify logical AND - message.status && onStatus", async () => {
       const onStatus = jest.fn();
-      renderHook(
-        () => useWebSocket({
+      renderHook(() =>
+        useWebSocket({
           executionId: "exec-123",
           onStatus,
-          windowLocation: mockWindowLocation
-        })
+          windowLocation: mockWindowLocation,
+        }),
       );
       await advanceTimersByTime(100);
       if (wsInstances.length > 0) {
@@ -415,8 +417,8 @@ describe("useWebSocket - No Coverage Paths", () => {
             data: JSON.stringify({
               type: "status",
               execution_id: "exec-123",
-              status: "running"
-            })
+              status: "running",
+            }),
           };
           ws.onmessage(event);
           expect(onStatus).toHaveBeenCalledWith("running");
@@ -425,12 +427,12 @@ describe("useWebSocket - No Coverage Paths", () => {
     });
     it("should verify logical OR - (message as any).node_id || message.node_state.node_id", async () => {
       const onNodeUpdate = jest.fn();
-      renderHook(
-        () => useWebSocket({
+      renderHook(() =>
+        useWebSocket({
           executionId: "exec-123",
           onNodeUpdate,
-          windowLocation: mockWindowLocation
-        })
+          windowLocation: mockWindowLocation,
+        }),
       );
       await advanceTimersByTime(100);
       if (wsInstances.length > 0) {
@@ -441,8 +443,8 @@ describe("useWebSocket - No Coverage Paths", () => {
               type: "node_update",
               execution_id: "exec-123",
               node_id: "node-1",
-              node_state: {}
-            })
+              node_state: {},
+            }),
           };
           ws.onmessage(event1);
           expect(onNodeUpdate).toHaveBeenCalledWith("node-1", {});
@@ -451,35 +453,37 @@ describe("useWebSocket - No Coverage Paths", () => {
               type: "node_update",
               execution_id: "exec-123",
               node_state: {
-                node_id: "node-2"
-              }
-            })
+                node_id: "node-2",
+              },
+            }),
           };
           ws.onmessage(event2);
-          expect(onNodeUpdate).toHaveBeenCalledWith("node-2", { node_id: "node-2" });
+          expect(onNodeUpdate).toHaveBeenCalledWith("node-2", {
+            node_id: "node-2",
+          });
         }
       }
     });
   });
   describe("catch blocks", () => {
     it("should handle JSON.parse throwing in onmessage", async () => {
-      renderHook(
-        () => useWebSocket({
+      renderHook(() =>
+        useWebSocket({
           executionId: "exec-123",
-          windowLocation: mockWindowLocation
-        })
+          windowLocation: mockWindowLocation,
+        }),
       );
       await advanceTimersByTime(100);
       if (wsInstances.length > 0) {
         const ws = wsInstances[0];
         if (ws.onmessage) {
           const event = {
-            data: "invalid json"
+            data: "invalid json",
           };
           expect(() => ws.onmessage(event)).not.toThrow();
           expect(logger.error).toHaveBeenCalledWith(
             expect.stringContaining("[WebSocket] Failed to parse message"),
-            expect.any(Error)
+            expect.any(Error),
           );
         }
       }
@@ -488,62 +492,62 @@ describe("useWebSocket - No Coverage Paths", () => {
       const failingFactory = {
         create: jest.fn(() => {
           throw new Error("WebSocket creation failed");
-        })
+        }),
       };
-      const { result } = renderHook(
-        () => useWebSocket({
+      const { result } = renderHook(() =>
+        useWebSocket({
           executionId: "exec-123",
           webSocketFactory: failingFactory,
-          windowLocation: mockWindowLocation
-        })
+          windowLocation: mockWindowLocation,
+        }),
       );
       await advanceTimersByTime(100);
       expect(result.current.isConnected).toBe(false);
       expect(logger.error).toHaveBeenCalledWith(
         expect.stringContaining("Failed to create connection for execution"),
-        expect.any(Error)
+        expect.any(Error),
       );
     });
   });
   describe("Manager initialization - default values coverage", () => {
     it("should use default windowLocation when windowLocation is undefined (line 43)", async () => {
-      const { result } = renderHook(
-        () => useWebSocket({
+      const { result } = renderHook(() =>
+        useWebSocket({
           executionId: "exec-123",
-          windowLocation: void 0
-        })
+          windowLocation: void 0,
+        }),
       );
       await advanceTimersByTime(100);
       expect(result.current.isConnected).toBeDefined();
     });
     it("should use provided windowLocation when defined (line 43)", async () => {
-      const { result } = renderHook(
-        () => useWebSocket({
+      const { result } = renderHook(() =>
+        useWebSocket({
           executionId: "exec-123",
-          windowLocation: mockWindowLocation
-        })
+          windowLocation: mockWindowLocation,
+        }),
       );
       await advanceTimersByTime(100);
       expect(result.current.isConnected).toBeDefined();
     });
     it("should use default logger when logger is null (line 44-45)", async () => {
-      const { result } = renderHook(
-        () => useWebSocket({
+      const { result } = renderHook(() =>
+        useWebSocket({
           executionId: "exec-123",
           windowLocation: mockWindowLocation,
-          logger: null
-        })
+          logger: null,
+        }),
       );
       await advanceTimersByTime(100);
       expect(result.current.isConnected).toBeDefined();
     });
     it("should use default logger when logger is undefined (line 44-45)", async () => {
-      const { result } = renderHook(
-        () => useWebSocket({
+      const { result } = renderHook(() =>
+        useWebSocket({
           executionId: "exec-123",
           windowLocation: mockWindowLocation,
-          logger: void 0
-        })
+          logger: void 0,
+        }),
       );
       await advanceTimersByTime(100);
       expect(result.current.isConnected).toBeDefined();
@@ -552,14 +556,14 @@ describe("useWebSocket - No Coverage Paths", () => {
       const customLogger = {
         debug: jest.fn(),
         error: jest.fn(),
-        warn: jest.fn()
+        warn: jest.fn(),
       };
-      const { result } = renderHook(
-        () => useWebSocket({
+      const { result } = renderHook(() =>
+        useWebSocket({
           executionId: "exec-123",
           windowLocation: mockWindowLocation,
-          logger: customLogger
-        })
+          logger: customLogger,
+        }),
       );
       await advanceTimersByTime(100);
       expect(result.current.isConnected).toBeDefined();
@@ -567,12 +571,12 @@ describe("useWebSocket - No Coverage Paths", () => {
   });
   describe("useEffect early return - manager is null (line 60)", () => {
     it("should return early when manager is null (line 60)", async () => {
-      const { result } = renderHook(
-        () => useWebSocket({
+      const { result } = renderHook(() =>
+        useWebSocket({
           executionId: null,
           // This prevents manager from being fully initialized
-          windowLocation: mockWindowLocation
-        })
+          windowLocation: mockWindowLocation,
+        }),
       );
       await advanceTimersByTime(100);
       expect(result.current.isConnected).toBe(false);

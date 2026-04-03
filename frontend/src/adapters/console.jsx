@@ -5,16 +5,11 @@ const ConsoleAdapterFactory = {
   createConsoleAdapter() {
     if (typeof console === "undefined") {
       return {
-        log: () => {
-        },
-        info: () => {
-        },
-        warn: () => {
-        },
-        error: () => {
-        },
-        debug: () => {
-        }
+        log: () => {},
+        info: () => {},
+        warn: () => {},
+        error: () => {},
+        debug: () => {},
       };
     }
     return {
@@ -28,10 +23,8 @@ const ConsoleAdapterFactory = {
         } else {
           console.log(...args);
         }
-      }
+      },
     };
-  }
+  },
 };
-export {
-  ConsoleAdapterFactory
-};
+export { ConsoleAdapterFactory };

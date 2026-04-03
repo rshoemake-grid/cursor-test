@@ -10,5 +10,5 @@ export {
   DEFAULT_UNEXPECTED_ERROR_MESSAGE,
   ERROR_CONTEXT_PREFIX,
   STORAGE_ERROR_PREFIX,
-  formatStorageErrorMessage
+  formatStorageErrorMessage,
 };

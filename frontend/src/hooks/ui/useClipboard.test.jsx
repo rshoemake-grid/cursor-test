@@ -2,7 +2,7 @@ import { renderHook, act } from "@testing-library/react";
 import { useClipboard } from "./useClipboard";
 import { showSuccess } from "../../utils/notifications";
 jest.mock("../../utils/notifications", () => ({
-  showSuccess: jest.fn()
+  showSuccess: jest.fn(),
 }));
 const mockShowSuccess = showSuccess;
 describe("useClipboard", () => {
@@ -15,7 +15,7 @@ describe("useClipboard", () => {
       getNodes: jest.fn(() => []),
       screenToFlowPosition: jest.fn((pos) => pos),
       addNodes: jest.fn(),
-      deleteElements: jest.fn()
+      deleteElements: jest.fn(),
     };
   });
   const createMockRef = (instance) => {
@@ -34,7 +34,7 @@ describe("useClipboard", () => {
       id: "node1",
       type: "agent",
       position: { x: 100, y: 200 },
-      data: { name: "Test Node" }
+      data: { name: "Test Node" },
     };
     act(() => {
       result.current.copy(node);
@@ -50,7 +50,7 @@ describe("useClipboard", () => {
       id: "node1",
       type: "agent",
       position: { x: 100, y: 200 },
-      data: { name: "Test Node" }
+      data: { name: "Test Node" },
     };
     act(() => {
       result.current.cut(node);
@@ -66,7 +66,7 @@ describe("useClipboard", () => {
       id: "node1",
       type: "agent",
       position: { x: 100, y: 200 },
-      data: { name: "Test Node" }
+      data: { name: "Test Node" },
     };
     act(() => {
       result.current.copy(node);
@@ -87,7 +87,7 @@ describe("useClipboard", () => {
       id: "node1",
       type: "agent",
       position: { x: 100, y: 200 },
-      data: { name: "Test Node" }
+      data: { name: "Test Node" },
     };
     act(() => {
       result.current.cut(node);
@@ -97,7 +97,7 @@ describe("useClipboard", () => {
     });
     expect(mockReactFlowInstance.addNodes).toHaveBeenCalled();
     expect(mockReactFlowInstance.deleteElements).toHaveBeenCalledWith({
-      nodes: [{ id: "node1" }]
+      nodes: [{ id: "node1" }],
     });
     expect(result.current.clipboardNode).toBeNull();
     expect(result.current.clipboardAction).toBeNull();
@@ -110,20 +110,26 @@ describe("useClipboard", () => {
       id: "node1",
       type: "agent",
       position: { x: 100, y: 200 },
-      data: { name: "Test Node" }
+      data: { name: "Test Node" },
     };
-    mockReactFlowInstance.screenToFlowPosition.mockReturnValue({ x: 300, y: 400 });
+    mockReactFlowInstance.screenToFlowPosition.mockReturnValue({
+      x: 300,
+      y: 400,
+    });
     act(() => {
       result.current.copy(node);
     });
     act(() => {
       result.current.paste(300, 400);
     });
-    expect(mockReactFlowInstance.screenToFlowPosition).toHaveBeenCalledWith({ x: 300, y: 400 });
+    expect(mockReactFlowInstance.screenToFlowPosition).toHaveBeenCalledWith({
+      x: 300,
+      y: 400,
+    });
     expect(mockReactFlowInstance.addNodes).toHaveBeenCalledWith(
       expect.objectContaining({
-        position: { x: 300, y: 400 }
-      })
+        position: { x: 300, y: 400 },
+      }),
     );
   });
   it("should paste at offset position if no coordinates provided", () => {
@@ -133,7 +139,7 @@ describe("useClipboard", () => {
       id: "node1",
       type: "agent",
       position: { x: 100, y: 200 },
-      data: { name: "Test Node" }
+      data: { name: "Test Node" },
     };
     act(() => {
       result.current.copy(node);
@@ -143,9 +149,9 @@ describe("useClipboard", () => {
     });
     expect(mockReactFlowInstance.addNodes).toHaveBeenCalledWith(
       expect.objectContaining({
-        position: { x: 150, y: 250 }
+        position: { x: 150, y: 250 },
         // Original + 50 offset
-      })
+      }),
     );
   });
   it("should not paste if clipboard is empty", () => {
@@ -164,7 +170,7 @@ describe("useClipboard", () => {
       id: "node1",
       type: "agent",
       position: { x: 100, y: 200 },
-      data: { name: "Test Node" }
+      data: { name: "Test Node" },
     };
     act(() => {
       result.current.copy(node);
@@ -181,7 +187,7 @@ describe("useClipboard", () => {
       id: "node1",
       type: "agent",
       position: { x: 100, y: 200 },
-      data: { name: "Test Node" }
+      data: { name: "Test Node" },
     };
     act(() => {
       result.current.copy(node);
@@ -198,7 +204,7 @@ describe("useClipboard", () => {
       id: "node1",
       type: "agent",
       position: { x: 100, y: 200 },
-      data: { name: "Test Node" }
+      data: { name: "Test Node" },
     };
     act(() => {
       result.current.copy(node);
@@ -218,7 +224,7 @@ describe("useClipboard", () => {
       id: "node1",
       type: "agent",
       position: { x: 100, y: 200 },
-      data: { name: "Test Node" }
+      data: { name: "Test Node" },
     };
     act(() => {
       result.current.copy(node);

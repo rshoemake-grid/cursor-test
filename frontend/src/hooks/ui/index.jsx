@@ -8,5 +8,5 @@ export {
   useClipboard,
   useContextMenu,
   useKeyboardShortcuts,
-  usePanelState
+  usePanelState,
 };

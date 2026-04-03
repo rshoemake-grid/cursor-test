@@ -8,7 +8,8 @@ jest.mock("@xyflow/react", () => {
   return {
     ...actual,
     useReactFlow: () => mockUseReactFlow(),
-    ReactFlowProvider: ({ children }) => React2.createElement(React2.Fragment, null, children)
+    ReactFlowProvider: ({ children }) =>
+      React2.createElement(React2.Fragment, null, children),
   };
 });
 describe("useKeyboardShortcuts", () => {
@@ -33,12 +34,12 @@ describe("useKeyboardShortcuts", () => {
     mockUseReactFlow.mockReturnValue({
       deleteElements: mockDeleteElements,
       getNodes: mockGetNodes,
-      getEdges: mockGetEdges
+      getEdges: mockGetEdges,
     });
   });
   const renderHookWithProvider = (options) => {
     return renderHook(() => useKeyboardShortcuts(options), {
-      wrapper: ReactFlowProvider
+      wrapper: ReactFlowProvider,
     });
   };
   it("should set up keyboard event listeners", () => {
@@ -50,9 +51,12 @@ describe("useKeyboardShortcuts", () => {
       clipboardNode: null,
       onCopy: mockOnCopy,
       onCut: mockOnCut,
-      onPaste: mockOnPaste
+      onPaste: mockOnPaste,
     });
-    expect(addEventListenerSpy).toHaveBeenCalledWith("keydown", expect.any(Function));
+    expect(addEventListenerSpy).toHaveBeenCalledWith(
+      "keydown",
+      expect.any(Function),
+    );
     addEventListenerSpy.mockRestore();
   });
   it("should clean up event listeners on unmount", () => {
@@ -64,17 +68,18 @@ describe("useKeyboardShortcuts", () => {
       clipboardNode: null,
       onCopy: mockOnCopy,
       onCut: mockOnCut,
-      onPaste: mockOnPaste
+      onPaste: mockOnPaste,
     });
     unmount();
-    expect(removeEventListenerSpy).toHaveBeenCalledWith("keydown", expect.any(Function));
+    expect(removeEventListenerSpy).toHaveBeenCalledWith(
+      "keydown",
+      expect.any(Function),
+    );
     removeEventListenerSpy.mockRestore();
   });
   it("should not handle shortcuts when typing in input field", () => {
     const mockInput = document.createElement("input");
-    mockGetNodes.mockReturnValue([
-      { id: "node1", selected: true }
-    ]);
+    mockGetNodes.mockReturnValue([{ id: "node1", selected: true }]);
     renderHookWithProvider({
       selectedNodeId: "node1",
       setSelectedNodeId: mockSetSelectedNodeId,
@@ -82,13 +87,16 @@ describe("useKeyboardShortcuts", () => {
       clipboardNode: null,
       onCopy: mockOnCopy,
       onCut: mockOnCut,
-      onPaste: mockOnPaste
+      onPaste: mockOnPaste,
     });
     const event = new KeyboardEvent("keydown", {
       key: "c",
-      ctrlKey: true
+      ctrlKey: true,
     });
-    Object.defineProperty(event, "target", { value: mockInput, writable: false });
+    Object.defineProperty(event, "target", {
+      value: mockInput,
+      writable: false,
+    });
     window.dispatchEvent(event);
     expect(mockOnCopy).not.toHaveBeenCalled();
   });
@@ -102,11 +110,11 @@ describe("useKeyboardShortcuts", () => {
       clipboardNode: null,
       onCopy: mockOnCopy,
       onCut: mockOnCut,
-      onPaste: mockOnPaste
+      onPaste: mockOnPaste,
     });
     const event = new KeyboardEvent("keydown", {
       key: "c",
-      ctrlKey: true
+      ctrlKey: true,
     });
     event.preventDefault = jest.fn();
     window.dispatchEvent(event);
@@ -123,11 +131,11 @@ describe("useKeyboardShortcuts", () => {
       clipboardNode: null,
       onCopy: mockOnCopy,
       onCut: mockOnCut,
-      onPaste: mockOnPaste
+      onPaste: mockOnPaste,
     });
     const event = new KeyboardEvent("keydown", {
       key: "c",
-      metaKey: true
+      metaKey: true,
     });
     event.preventDefault = jest.fn();
     window.dispatchEvent(event);
@@ -137,7 +145,7 @@ describe("useKeyboardShortcuts", () => {
   it("should not copy if multiple nodes are selected", () => {
     mockGetNodes.mockReturnValue([
       { id: "node1", selected: true },
-      { id: "node2", selected: true }
+      { id: "node2", selected: true },
     ]);
     renderHookWithProvider({
       selectedNodeId: "node1",
@@ -146,11 +154,11 @@ describe("useKeyboardShortcuts", () => {
       clipboardNode: null,
       onCopy: mockOnCopy,
       onCut: mockOnCut,
-      onPaste: mockOnPaste
+      onPaste: mockOnPaste,
     });
     const event = new KeyboardEvent("keydown", {
       key: "c",
-      ctrlKey: true
+      ctrlKey: true,
     });
     window.dispatchEvent(event);
     expect(mockOnCopy).not.toHaveBeenCalled();
@@ -165,11 +173,11 @@ describe("useKeyboardShortcuts", () => {
       clipboardNode: null,
       onCopy: mockOnCopy,
       onCut: mockOnCut,
-      onPaste: mockOnPaste
+      onPaste: mockOnPaste,
     });
     const event = new KeyboardEvent("keydown", {
       key: "x",
-      ctrlKey: true
+      ctrlKey: true,
     });
     event.preventDefault = jest.fn();
     window.dispatchEvent(event);
@@ -185,11 +193,11 @@ describe("useKeyboardShortcuts", () => {
       clipboardNode,
       onCopy: mockOnCopy,
       onCut: mockOnCut,
-      onPaste: mockOnPaste
+      onPaste: mockOnPaste,
     });
     const event = new KeyboardEvent("keydown", {
       key: "v",
-      ctrlKey: true
+      ctrlKey: true,
     });
     event.preventDefault = jest.fn();
     window.dispatchEvent(event);
@@ -204,18 +212,23 @@ describe("useKeyboardShortcuts", () => {
       clipboardNode: null,
       onCopy: mockOnCopy,
       onCut: mockOnCut,
-      onPaste: mockOnPaste
+      onPaste: mockOnPaste,
     });
     const event = new KeyboardEvent("keydown", {
       key: "v",
-      ctrlKey: true
+      ctrlKey: true,
     });
     window.dispatchEvent(event);
     expect(mockOnPaste).not.toHaveBeenCalled();
   });
   it("should handle Delete key", () => {
     const selectedNode = { id: "node1", selected: true };
-    const selectedEdge = { id: "e1", source: "node1", target: "node2", selected: true };
+    const selectedEdge = {
+      id: "e1",
+      source: "node1",
+      target: "node2",
+      selected: true,
+    };
     mockGetNodes.mockReturnValue([selectedNode]);
     mockGetEdges.mockReturnValue([selectedEdge]);
     renderHookWithProvider({
@@ -225,10 +238,10 @@ describe("useKeyboardShortcuts", () => {
       clipboardNode: null,
       onCopy: mockOnCopy,
       onCut: mockOnCut,
-      onPaste: mockOnPaste
+      onPaste: mockOnPaste,
     });
     const event = new KeyboardEvent("keydown", {
-      key: "Delete"
+      key: "Delete",
     });
     event.preventDefault = jest.fn();
     event.stopPropagation = jest.fn();
@@ -237,7 +250,7 @@ describe("useKeyboardShortcuts", () => {
     expect(event.stopPropagation).toHaveBeenCalled();
     expect(mockDeleteElements).toHaveBeenCalledWith({
       nodes: [selectedNode],
-      edges: [selectedEdge]
+      edges: [selectedEdge],
     });
     expect(mockSetSelectedNodeId).toHaveBeenCalledWith(null);
     expect(mockNotifyModified).toHaveBeenCalled();
@@ -253,10 +266,10 @@ describe("useKeyboardShortcuts", () => {
       clipboardNode: null,
       onCopy: mockOnCopy,
       onCut: mockOnCut,
-      onPaste: mockOnPaste
+      onPaste: mockOnPaste,
     });
     const event = new KeyboardEvent("keydown", {
-      key: "Backspace"
+      key: "Backspace",
     });
     event.preventDefault = jest.fn();
     event.stopPropagation = jest.fn();
@@ -274,10 +287,10 @@ describe("useKeyboardShortcuts", () => {
       clipboardNode: null,
       onCopy: mockOnCopy,
       onCut: mockOnCut,
-      onPaste: mockOnPaste
+      onPaste: mockOnPaste,
     });
     const event = new KeyboardEvent("keydown", {
-      key: "Delete"
+      key: "Delete",
     });
     window.dispatchEvent(event);
     expect(mockDeleteElements).not.toHaveBeenCalled();
@@ -294,10 +307,10 @@ describe("useKeyboardShortcuts", () => {
       clipboardNode: null,
       onCopy: mockOnCopy,
       onCut: mockOnCut,
-      onPaste: mockOnPaste
+      onPaste: mockOnPaste,
     });
     const event = new KeyboardEvent("keydown", {
-      key: "Delete"
+      key: "Delete",
     });
     event.preventDefault = jest.fn();
     event.stopPropagation = jest.fn();

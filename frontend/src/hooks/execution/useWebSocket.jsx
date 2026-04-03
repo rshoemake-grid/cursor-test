@@ -1,9 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { logger } from "../../utils/logger";
 import { defaultAdapters } from "../../types/adapters";
-import {
-  WebSocketConnectionManager
-} from "../utils/WebSocketConnectionManager";
+import { WebSocketConnectionManager } from "../utils/WebSocketConnectionManager";
 function useWebSocket(options) {
   const [isConnected, setIsConnected] = useState(false);
   const managerRef = useRef(null);
@@ -12,10 +10,19 @@ function useWebSocket(options) {
       executionId: options.executionId,
       executionStatus: options.executionStatus,
       maxReconnectAttempts: 5,
-      webSocketFactory: options.webSocketFactory !== null && options.webSocketFactory !== void 0 ? options.webSocketFactory : defaultAdapters.createWebSocketFactory(),
-      windowLocation: options.windowLocation !== void 0 ? options.windowLocation : defaultAdapters.createWindowLocation(),
+      webSocketFactory:
+        options.webSocketFactory !== null && options.webSocketFactory !== void 0
+          ? options.webSocketFactory
+          : defaultAdapters.createWebSocketFactory(),
+      windowLocation:
+        options.windowLocation !== void 0
+          ? options.windowLocation
+          : defaultAdapters.createWindowLocation(),
       getAuthToken: options.getAuthToken,
-      logger: options.logger !== null && options.logger !== void 0 ? options.logger : logger
+      logger:
+        options.logger !== null && options.logger !== void 0
+          ? options.logger
+          : logger,
     });
   }
   useEffect(() => {
@@ -36,7 +43,7 @@ function useWebSocket(options) {
       },
       onNodeUpdate: options.onNodeUpdate,
       onCompletion: options.onCompletion,
-      onError: options.onError
+      onError: options.onError,
     };
     if (options.executionId) {
       manager.connect(callbacks);
@@ -54,10 +61,8 @@ function useWebSocket(options) {
     options.onStatus,
     options.onNodeUpdate,
     options.onCompletion,
-    options.onError
+    options.onError,
   ]);
   return { isConnected };
 }
-export {
-  useWebSocket
-};
+export { useWebSocket };

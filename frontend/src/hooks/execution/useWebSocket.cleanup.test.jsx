@@ -3,7 +3,7 @@ import {
   advanceTimersByTime,
   wsInstances,
   useWebSocket,
-  logger
+  logger,
 } from "./useWebSocket.test.setup";
 describe("useWebSocket - cleanup", () => {
   beforeEach(() => {
@@ -20,7 +20,7 @@ describe("useWebSocket - cleanup", () => {
     it("should close connection when executionId changes to null", async () => {
       const { result, rerender } = renderHook(
         ({ executionId }) => useWebSocket({ executionId }),
-        { initialProps: { executionId: "exec-1" } }
+        { initialProps: { executionId: "exec-1" } },
       );
       await advanceTimersByTime(100);
       rerender({ executionId: null });
@@ -29,11 +29,12 @@ describe("useWebSocket - cleanup", () => {
     });
     it("should close connection when execution status changes to completed", async () => {
       const { result, rerender } = renderHook(
-        ({ executionStatus }) => useWebSocket({
-          executionId: "exec-1",
-          executionStatus
-        }),
-        { initialProps: { executionStatus: "running" } }
+        ({ executionStatus }) =>
+          useWebSocket({
+            executionId: "exec-1",
+            executionStatus,
+          }),
+        { initialProps: { executionStatus: "running" } },
       );
       await advanceTimersByTime(100);
       rerender({ executionStatus: "completed" });
@@ -42,11 +43,12 @@ describe("useWebSocket - cleanup", () => {
     });
     it("should close connection when execution status changes to failed", async () => {
       const { result, rerender } = renderHook(
-        ({ executionStatus }) => useWebSocket({
-          executionId: "exec-1",
-          executionStatus
-        }),
-        { initialProps: { executionStatus: "running" } }
+        ({ executionStatus }) =>
+          useWebSocket({
+            executionId: "exec-1",
+            executionStatus,
+          }),
+        { initialProps: { executionStatus: "running" } },
       );
       await advanceTimersByTime(100);
       rerender({ executionStatus: "failed" });
@@ -54,11 +56,11 @@ describe("useWebSocket - cleanup", () => {
       expect(result.current.isConnected).toBe(false);
     });
     it("should clear reconnection timeout on cleanup", async () => {
-      const { unmount } = renderHook(
-        () => useWebSocket({
+      const { unmount } = renderHook(() =>
+        useWebSocket({
           executionId: "exec-1",
-          executionStatus: "running"
-        })
+          executionStatus: "running",
+        }),
       );
       await advanceTimersByTime(100);
       unmount();
@@ -68,7 +70,7 @@ describe("useWebSocket - cleanup", () => {
     it("should close existing connection before creating new one", async () => {
       const { rerender } = renderHook(
         ({ executionId }) => useWebSocket({ executionId }),
-        { initialProps: { executionId: "exec-1" } }
+        { initialProps: { executionId: "exec-1" } },
       );
       await advanceTimersByTime(100);
       const firstWsCount = wsInstances.length;

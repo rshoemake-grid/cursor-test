@@ -5,7 +5,7 @@ import {
   isPausedStatus,
   isTerminatedStatus,
   hasStatusChanged,
-  normalizeExecutionStatus
+  normalizeExecutionStatus,
 } from "./executionStatusValidation";
 describe("executionStatusValidation", () => {
   describe("isRunningStatus", () => {

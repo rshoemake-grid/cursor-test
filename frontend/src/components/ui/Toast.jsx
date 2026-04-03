@@ -1,31 +1,24 @@
-import { jsx, jsxs } from "react/jsx-runtime";
 import { X, CheckCircle, XCircle, AlertCircle, Info } from "lucide-react";
 import { useEffect } from "react";
 const TOAST_ICONS = {
   success: CheckCircle,
   error: XCircle,
   warning: AlertCircle,
-  info: Info
+  info: Info,
 };
 const TOAST_COLORS = {
   success: "bg-green-50 border-green-200 text-green-800",
   error: "bg-red-50 border-red-200 text-red-800",
   warning: "bg-yellow-50 border-yellow-200 text-yellow-800",
-  info: "bg-blue-50 border-blue-200 text-blue-800"
+  info: "bg-blue-50 border-blue-200 text-blue-800",
 };
 const ICON_COLORS = {
   success: "text-green-500",
   error: "text-red-500",
   warning: "text-yellow-500",
-  info: "text-blue-500"
+  info: "text-blue-500",
 };
-function Toast({
-  id,
-  message,
-  type = "info",
-  duration = 5e3,
-  onClose
-}) {
+function Toast({ id, message, type = "info", duration = 5e3, onClose }) {
   useEffect(() => {
     if (duration > 0) {
       const timer = setTimeout(() => {
@@ -35,31 +28,27 @@ function Toast({
     }
   }, [id, duration, onClose]);
   const Icon = TOAST_ICONS[type];
-  return /* @__PURE__ */ jsxs(
-    "div",
-    {
-      className: `
+  return (
+    <div
+      className={`
         flex items-start gap-3 p-4 rounded-lg border shadow-lg
         animate-in slide-in-from-top-5 fade-in
         ${TOAST_COLORS[type]}
-      `,
-      role: "alert",
-      children: [
-        /* @__PURE__ */ jsx(Icon, { className: `w-5 h-5 flex-shrink-0 mt-0.5 ${ICON_COLORS[type]}` }),
-        /* @__PURE__ */ jsx("div", { className: "flex-1 min-w-0", children: /* @__PURE__ */ jsx("p", { className: "text-sm font-medium", children: message }) }),
-        /* @__PURE__ */ jsx(
-          "button",
-          {
-            onClick: () => onClose(id),
-            className: "flex-shrink-0 text-gray-400 hover:text-gray-600 transition-colors",
-            "aria-label": "Close notification",
-            children: /* @__PURE__ */ jsx(X, { className: "w-4 h-4" })
-          }
-        )
-      ]
-    }
+      `}
+      role="alert"
+    >
+      <Icon className={`w-5 h-5 flex-shrink-0 mt-0.5 ${ICON_COLORS[type]}`} />
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-medium">{message}</p>
+      </div>
+      <button
+        onClick={() => onClose(id)}
+        className="flex-shrink-0 text-gray-400 hover:text-gray-600 transition-colors"
+        aria-label="Close notification"
+      >
+        <X className="w-4 h-4" />
+      </button>
+    </div>
   );
 }
-export {
-  Toast as default
-};
+export { Toast as default };

@@ -1,4 +1,3 @@
-import { jsx } from "react/jsx-runtime";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { BrowserRouter } from "react-router-dom";
 import LogPage from "./LogPage";
@@ -6,36 +5,38 @@ import { useExecutionListQuery } from "../hooks/log/useExecutionListQuery";
 jest.mock("../hooks/log/useExecutionListQuery");
 const mockApplyExecutionFilters = jest.fn((executions) => executions);
 jest.mock("../utils/executionFilters", () => ({
-  applyExecutionFilters: (...args) => mockApplyExecutionFilters(...args)
+  applyExecutionFilters: (...args) => mockApplyExecutionFilters(...args),
 }));
 const mockNavigate = jest.fn();
 jest.mock("react-router-dom", () => ({
   ...jest.requireActual("react-router-dom"),
-  useNavigate: () => mockNavigate
+  useNavigate: () => mockNavigate,
 }));
 jest.mock("../utils/logger", () => ({
   logger: {
     debug: jest.fn(),
     error: jest.fn(),
     warn: jest.fn(),
-    info: jest.fn()
-  }
+    info: jest.fn(),
+  },
 }));
 jest.mock("../api/client", () => ({
   api: {
     listExecutions: jest.fn().mockResolvedValue([]),
-    downloadExecutionLogs: jest.fn().mockResolvedValue(new Blob())
-  }
+    downloadExecutionLogs: jest.fn().mockResolvedValue(new Blob()),
+  },
 }));
 jest.mock("../utils/confirm", () => ({
-  showConfirm: jest.fn().mockResolvedValue(true)
+  showConfirm: jest.fn().mockResolvedValue(true),
 }));
 const mockUseExecutionListQuery = useExecutionListQuery;
 const waitForWithTimeout = async (callback, timeout = 2e3) => {
-  return await waitFor(callback, { timeout });
+  return await waitFor(callback, {
+    timeout,
+  });
 };
 const renderWithRouter = (component) => {
-  return render(/* @__PURE__ */ jsx(BrowserRouter, { children: component }));
+  return render(<BrowserRouter>{component}</BrowserRouter>);
 };
 describe("LogPage", () => {
   beforeEach(() => {
@@ -50,16 +51,16 @@ describe("LogPage", () => {
     completed_at: "2024-01-01T10:00:05Z",
     node_states: {},
     variables: {},
-    logs: []
+    logs: [],
   };
   it("should render loading state", () => {
     mockUseExecutionListQuery.mockReturnValue({
       data: [],
       isLoading: true,
       error: null,
-      refetch: jest.fn()
+      refetch: jest.fn(),
     });
-    renderWithRouter(/* @__PURE__ */ jsx(LogPage, {}));
+    renderWithRouter(<LogPage />);
     expect(screen.getByText("Loading executions...")).toBeInTheDocument();
   });
   it("should render error state", () => {
@@ -67,30 +68,34 @@ describe("LogPage", () => {
       data: [],
       isLoading: false,
       error: new Error("Failed to load executions"),
-      refetch: jest.fn()
+      refetch: jest.fn(),
     });
-    renderWithRouter(/* @__PURE__ */ jsx(LogPage, {}));
-    expect(screen.getByText(/Error: Failed to load executions/)).toBeInTheDocument();
+    renderWithRouter(<LogPage />);
+    expect(
+      screen.getByText(/Error: Failed to load executions/),
+    ).toBeInTheDocument();
   });
   it("should render empty state when no executions", () => {
     mockUseExecutionListQuery.mockReturnValue({
       data: [],
       isLoading: false,
       error: null,
-      refetch: jest.fn()
+      refetch: jest.fn(),
     });
-    renderWithRouter(/* @__PURE__ */ jsx(LogPage, {}));
+    renderWithRouter(<LogPage />);
     expect(screen.getByText("No executions yet")).toBeInTheDocument();
-    expect(screen.getByText(/Execute a workflow to see execution logs here/)).toBeInTheDocument();
+    expect(
+      screen.getByText(/Execute a workflow to see execution logs here/),
+    ).toBeInTheDocument();
   });
   it("should render execution list", () => {
     mockUseExecutionListQuery.mockReturnValue({
       data: [mockExecution],
       isLoading: false,
       error: null,
-      refetch: jest.fn()
+      refetch: jest.fn(),
     });
-    renderWithRouter(/* @__PURE__ */ jsx(LogPage, {}));
+    renderWithRouter(<LogPage />);
     expect(screen.getByText("Execution Log")).toBeInTheDocument();
     expect(screen.getByText(/1 execution/)).toBeInTheDocument();
     expect(screen.getByText(/exec-123/)).toBeInTheDocument();
@@ -100,9 +105,9 @@ describe("LogPage", () => {
       data: [mockExecution],
       isLoading: false,
       error: null,
-      refetch: jest.fn()
+      refetch: jest.fn(),
     });
-    renderWithRouter(/* @__PURE__ */ jsx(LogPage, {}));
+    renderWithRouter(<LogPage />);
     expect(screen.getByText("Filters")).toBeInTheDocument();
   });
   it("should show filtered count when filters are applied", () => {
@@ -111,25 +116,34 @@ describe("LogPage", () => {
       data: [mockExecution],
       isLoading: false,
       error: null,
-      refetch: jest.fn()
+      refetch: jest.fn(),
     });
-    renderWithRouter(/* @__PURE__ */ jsx(LogPage, {}));
+    renderWithRouter(<LogPage />);
     expect(screen.getByText(/0 execution/)).toBeInTheDocument();
   });
   it("should display execution count correctly for multiple executions", () => {
     const executions = [
-      { ...mockExecution, execution_id: "exec-1" },
-      { ...mockExecution, execution_id: "exec-2" },
-      { ...mockExecution, execution_id: "exec-3" }
+      {
+        ...mockExecution,
+        execution_id: "exec-1",
+      },
+      {
+        ...mockExecution,
+        execution_id: "exec-2",
+      },
+      {
+        ...mockExecution,
+        execution_id: "exec-3",
+      },
     ];
     mockUseExecutionListQuery.mockReturnValue({
       data: executions,
       isLoading: false,
       error: null,
-      refetch: jest.fn()
+      refetch: jest.fn(),
     });
     mockApplyExecutionFilters.mockReturnValue(executions);
-    renderWithRouter(/* @__PURE__ */ jsx(LogPage, {}));
+    renderWithRouter(<LogPage />);
     expect(screen.getByText(/3 execution/)).toBeInTheDocument();
   });
   it("should open details modal when View clicked", () => {
@@ -137,10 +151,10 @@ describe("LogPage", () => {
       data: [mockExecution],
       isLoading: false,
       error: null,
-      refetch: jest.fn()
+      refetch: jest.fn(),
     });
     mockApplyExecutionFilters.mockReturnValue([mockExecution]);
-    renderWithRouter(/* @__PURE__ */ jsx(LogPage, {}));
+    renderWithRouter(<LogPage />);
     const viewButton = screen.getByText("View");
     fireEvent.click(viewButton);
     expect(screen.getByText("Execution Details")).toBeInTheDocument();
@@ -151,11 +165,13 @@ describe("LogPage", () => {
       data: [mockExecution],
       isLoading: false,
       error: null,
-      refetch: jest.fn()
+      refetch: jest.fn(),
     });
     mockApplyExecutionFilters.mockReturnValue([mockExecution]);
-    renderWithRouter(/* @__PURE__ */ jsx(LogPage, {}));
-    const executionItem = screen.getByText(/exec-123/).closest('div[class*="cursor-pointer"]');
+    renderWithRouter(<LogPage />);
+    const executionItem = screen
+      .getByText(/exec-123/)
+      .closest('div[class*="cursor-pointer"]');
     if (executionItem) {
       fireEvent.click(executionItem);
       expect(screen.getByText("Execution Details")).toBeInTheDocument();
@@ -164,43 +180,55 @@ describe("LogPage", () => {
   it("should use injected API client when provided", () => {
     const mockApiClient = {
       listExecutions: jest.fn().mockResolvedValue([]),
-      downloadExecutionLogs: jest.fn().mockResolvedValue(new Blob())
+      downloadExecutionLogs: jest.fn().mockResolvedValue(new Blob()),
     };
     mockUseExecutionListQuery.mockReturnValue({
       data: [],
       isLoading: false,
       error: null,
-      refetch: jest.fn()
+      refetch: jest.fn(),
     });
-    renderWithRouter(/* @__PURE__ */ jsx(LogPage, { apiClient: mockApiClient }));
+    renderWithRouter(<LogPage apiClient={mockApiClient} />);
     expect(mockUseExecutionListQuery).toHaveBeenCalledWith(
       expect.objectContaining({
-        apiClient: mockApiClient
-      })
+        apiClient: mockApiClient,
+      }),
     );
   });
   it("should sort executions newest first", () => {
     const executions = [
-      { ...mockExecution, execution_id: "exec-1", started_at: "2024-01-01T10:00:00Z" },
-      { ...mockExecution, execution_id: "exec-2", started_at: "2024-01-01T12:00:00Z" },
-      { ...mockExecution, execution_id: "exec-3", started_at: "2024-01-01T11:00:00Z" }
+      {
+        ...mockExecution,
+        execution_id: "exec-1",
+        started_at: "2024-01-01T10:00:00Z",
+      },
+      {
+        ...mockExecution,
+        execution_id: "exec-2",
+        started_at: "2024-01-01T12:00:00Z",
+      },
+      {
+        ...mockExecution,
+        execution_id: "exec-3",
+        started_at: "2024-01-01T11:00:00Z",
+      },
     ];
     const sortedExecutions = [
       executions[1],
       // exec-2 (newest)
       executions[2],
       // exec-3
-      executions[0]
+      executions[0],
       // exec-1 (oldest)
     ];
     mockUseExecutionListQuery.mockReturnValue({
       data: executions,
       isLoading: false,
       error: null,
-      refetch: jest.fn()
+      refetch: jest.fn(),
     });
     mockApplyExecutionFilters.mockReturnValue(sortedExecutions);
-    renderWithRouter(/* @__PURE__ */ jsx(LogPage, {}));
+    renderWithRouter(<LogPage />);
     const executionIds = screen.getAllByText(/exec-\d/);
     expect(executionIds[0].textContent).toContain("exec-2");
   });
@@ -210,18 +238,22 @@ describe("LogPage", () => {
       status: "running",
       completed_at: void 0,
       node_states: {
-        node1: { status: "completed" },
-        node2: { status: "running" }
-      }
+        node1: {
+          status: "completed",
+        },
+        node2: {
+          status: "running",
+        },
+      },
     };
     mockUseExecutionListQuery.mockReturnValue({
       data: [runningExecution],
       isLoading: false,
       error: null,
-      refetch: jest.fn()
+      refetch: jest.fn(),
     });
     mockApplyExecutionFilters.mockReturnValue([runningExecution]);
-    renderWithRouter(/* @__PURE__ */ jsx(LogPage, {}));
+    renderWithRouter(<LogPage />);
     expect(screen.getByText(/exec-123/)).toBeInTheDocument();
   });
 });

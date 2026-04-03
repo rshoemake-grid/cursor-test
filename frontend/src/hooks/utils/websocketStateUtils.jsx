@@ -5,6 +5,4 @@ function getWebSocketStateText(readyState) {
   if (readyState === WebSocket.CLOSED) return "CLOSED";
   return "UNKNOWN";
 }
-export {
-  getWebSocketStateText
-};
+export { getWebSocketStateText };

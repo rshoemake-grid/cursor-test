@@ -1,7 +1,7 @@
 /**
  * @jest-environment jsdom
  */
-import { jsx } from "react/jsx-runtime";
+
 import { renderHook, act } from "@testing-library/react";
 import {
   usePushToTalk,
@@ -11,7 +11,6 @@ import {
   speakChatMessage,
   stopSpeaking,
 } from "./useChatVoice";
-
 describe("useChatVoice helpers", () => {
   beforeEach(() => {
     global.SpeechSynthesisUtterance = function MockUtterance(text) {
@@ -28,11 +27,9 @@ describe("useChatVoice helpers", () => {
       getVoices: jest.fn(() => []),
     };
   });
-
   it("isSpeechSynthesisSupported is true when speechSynthesis exists", () => {
     expect(isSpeechSynthesisSupported()).toBe(true);
   });
-
   it("speakChatMessage cancels and calls speak with trimmed text", () => {
     speakChatMessage("  hello  ");
     expect(window.speechSynthesis.cancel).toHaveBeenCalled();
@@ -41,25 +38,20 @@ describe("useChatVoice helpers", () => {
     expect(utterance.text).toBe("hello");
     expect(utterance.lang).toBe("en-US");
   });
-
   it("speakChatMessage does nothing for empty text", () => {
     speakChatMessage("   ");
     expect(window.speechSynthesis.speak).not.toHaveBeenCalled();
   });
-
   it("stopSpeaking calls cancel", () => {
     stopSpeaking();
     expect(window.speechSynthesis.cancel).toHaveBeenCalled();
   });
 });
-
 describe("usePushToTalk", () => {
   let lastRecognition;
-
   afterEach(() => {
     jest.useRealTimers();
   });
-
   beforeEach(() => {
     lastRecognition = null;
     class MockSR {
@@ -79,49 +71,47 @@ describe("usePushToTalk", () => {
     window.SpeechRecognition = MockSR;
     window.webkitSpeechRecognition = MockSR;
   });
-
   afterEach(() => {
     delete window.SpeechRecognition;
     delete window.webkitSpeechRecognition;
   });
-
   it("reports supported when SpeechRecognition exists", () => {
     expect(isSpeechRecognitionSupported()).toBe(true);
   });
-
   it("startListening calls recognition.start", () => {
     const setInput = jest.fn();
     const { result } = renderHook(() =>
       usePushToTalk({
         getInput: () => "",
         setInput,
-        logger: { warn: jest.fn() },
-      })
+        logger: {
+          warn: jest.fn(),
+        },
+      }),
     );
-
     act(() => {
       result.current.onPushStart();
     });
-
     expect(lastRecognition.start).toHaveBeenCalled();
     expect(result.current.isListening).toBe(true);
   });
-
   it("onresult updates input with prefix and transcript", () => {
     const setInput = jest.fn();
     const { result } = renderHook(() =>
       usePushToTalk({
         getInput: () => "Hi",
         setInput,
-        logger: { warn: jest.fn() },
-      })
+        logger: {
+          warn: jest.fn(),
+        },
+      }),
     );
-
     act(() => {
       result.current.onPushStart();
     });
-
-    const resultLine = { transcript: "there" };
+    const resultLine = {
+      transcript: "there",
+    };
     const ev = {
       results: {
         length: 1,
@@ -134,10 +124,8 @@ describe("usePushToTalk", () => {
     act(() => {
       lastRecognition.onresult(ev);
     });
-
     expect(setInput).toHaveBeenCalledWith("Hi there");
   });
-
   it("onPushEnd calls stop after post-release delay when listening", () => {
     jest.useFakeTimers();
     const setInput = jest.fn();
@@ -145,17 +133,17 @@ describe("usePushToTalk", () => {
       usePushToTalk({
         getInput: () => "",
         setInput,
-        logger: { warn: jest.fn() },
-      })
+        logger: {
+          warn: jest.fn(),
+        },
+      }),
     );
-
     act(() => {
       result.current.onPushStart();
     });
     act(() => {
       result.current.onPushEnd();
     });
-
     expect(lastRecognition.stop).not.toHaveBeenCalled();
     act(() => {
       jest.advanceTimersByTime(DEFAULT_POST_RELEASE_DELAY_MS);
@@ -163,7 +151,6 @@ describe("usePushToTalk", () => {
     expect(lastRecognition.stop).toHaveBeenCalled();
     jest.useRealTimers();
   });
-
   it("calls onSessionEnd with full transcript after onend when speech was captured", () => {
     jest.useFakeTimers();
     const setInput = jest.fn();
@@ -172,20 +159,22 @@ describe("usePushToTalk", () => {
       usePushToTalk({
         getInput: () => "",
         setInput,
-        logger: { warn: jest.fn() },
+        logger: {
+          warn: jest.fn(),
+        },
         onSessionEnd,
-      })
+      }),
     );
-
     act(() => {
       result.current.onPushStart();
     });
-
     const ev = {
       results: {
         length: 1,
         0: {
-          0: { transcript: "hello" },
+          0: {
+            transcript: "hello",
+          },
           length: 1,
         },
       },
@@ -205,11 +194,9 @@ describe("usePushToTalk", () => {
     act(() => {
       jest.runAllTimers();
     });
-
     expect(onSessionEnd).toHaveBeenCalledWith("hello");
     jest.useRealTimers();
   });
-
   it("does not call onSessionEnd when recognition ends without speech", () => {
     jest.useFakeTimers();
     const onSessionEnd = jest.fn();
@@ -217,11 +204,12 @@ describe("usePushToTalk", () => {
       usePushToTalk({
         getInput: () => "",
         setInput: jest.fn(),
-        logger: { warn: jest.fn() },
+        logger: {
+          warn: jest.fn(),
+        },
         onSessionEnd,
-      })
+      }),
     );
-
     act(() => {
       result.current.onPushStart();
     });
@@ -237,11 +225,9 @@ describe("usePushToTalk", () => {
     act(() => {
       jest.runAllTimers();
     });
-
     expect(onSessionEnd).not.toHaveBeenCalled();
     jest.useRealTimers();
   });
-
   it("cancels delayed stop when push starts again before delay elapses", () => {
     jest.useFakeTimers();
     const setInput = jest.fn();
@@ -249,10 +235,11 @@ describe("usePushToTalk", () => {
       usePushToTalk({
         getInput: () => "",
         setInput,
-        logger: { warn: jest.fn() },
-      })
+        logger: {
+          warn: jest.fn(),
+        },
+      }),
     );
-
     act(() => {
       result.current.onPushStart();
     });
@@ -263,7 +250,6 @@ describe("usePushToTalk", () => {
       jest.advanceTimersByTime(DEFAULT_POST_RELEASE_DELAY_MS - 1);
     });
     expect(lastRecognition.stop).not.toHaveBeenCalled();
-
     act(() => {
       result.current.onPushStart();
     });
@@ -273,25 +259,24 @@ describe("usePushToTalk", () => {
     expect(lastRecognition.stop).not.toHaveBeenCalled();
     jest.useRealTimers();
   });
-
   it("postReleaseDelayMs 0 stops recognition immediately", () => {
     const setInput = jest.fn();
     const { result } = renderHook(() =>
       usePushToTalk({
         getInput: () => "",
         setInput,
-        logger: { warn: jest.fn() },
+        logger: {
+          warn: jest.fn(),
+        },
         postReleaseDelayMs: 0,
-      })
+      }),
     );
-
     act(() => {
       result.current.onPushStart();
     });
     act(() => {
       result.current.onPushEnd();
     });
-
     expect(lastRecognition.stop).toHaveBeenCalled();
   });
 });

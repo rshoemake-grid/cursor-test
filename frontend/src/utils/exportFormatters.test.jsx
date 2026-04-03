@@ -2,7 +2,7 @@ import {
   exportToJSON,
   exportToCSV,
   exportExecutionsToJSON,
-  exportExecutionsToCSV
+  exportExecutionsToCSV,
 } from "./exportFormatters";
 describe("exportFormatters utilities", () => {
   const mockExecution1 = {
@@ -13,7 +13,7 @@ describe("exportFormatters utilities", () => {
     completed_at: "2024-01-01T10:00:05Z",
     node_states: {},
     variables: {},
-    logs: []
+    logs: [],
   };
   const mockExecution2 = {
     execution_id: "exec-2",
@@ -24,7 +24,7 @@ describe("exportFormatters utilities", () => {
     error: "Test error",
     node_states: {},
     variables: {},
-    logs: []
+    logs: [],
   };
   describe("exportToJSON", () => {
     it("should export executions to JSON", () => {
@@ -59,7 +59,7 @@ describe("exportFormatters utilities", () => {
     it("should escape quotes in CSV", () => {
       const executionWithQuote = {
         ...mockExecution1,
-        error: 'Error with "quotes"'
+        error: 'Error with "quotes"',
       };
       const result = exportToCSV([executionWithQuote]);
       expect(result).toContain('""quotes""');
@@ -83,15 +83,19 @@ describe("exportFormatters utilities", () => {
     });
     it("should create download link for JSON", () => {
       const createElementSpy = jest.spyOn(document, "createElement");
-      const appendChildSpy = jest.spyOn(document.body, "appendChild").mockImplementation(() => ({}));
-      const removeChildSpy = jest.spyOn(document.body, "removeChild").mockImplementation(() => ({}));
+      const appendChildSpy = jest
+        .spyOn(document.body, "appendChild")
+        .mockImplementation(() => ({}));
+      const removeChildSpy = jest
+        .spyOn(document.body, "removeChild")
+        .mockImplementation(() => ({}));
       const clickSpy = jest.fn();
       createElementSpy.mockImplementation((tagName) => {
         if (tagName === "a") {
           return {
             href: "",
             download: "",
-            click: clickSpy
+            click: clickSpy,
           };
         }
         return document.createElement(tagName);
@@ -111,15 +115,19 @@ describe("exportFormatters utilities", () => {
     });
     it("should create download link for CSV", () => {
       const createElementSpy = jest.spyOn(document, "createElement");
-      const appendChildSpy = jest.spyOn(document.body, "appendChild").mockImplementation(() => ({}));
-      const removeChildSpy = jest.spyOn(document.body, "removeChild").mockImplementation(() => ({}));
+      const appendChildSpy = jest
+        .spyOn(document.body, "appendChild")
+        .mockImplementation(() => ({}));
+      const removeChildSpy = jest
+        .spyOn(document.body, "removeChild")
+        .mockImplementation(() => ({}));
       const clickSpy = jest.fn();
       createElementSpy.mockImplementation((tagName) => {
         if (tagName === "a") {
           return {
             href: "",
             download: "",
-            click: clickSpy
+            click: clickSpy,
           };
         }
         return document.createElement(tagName);

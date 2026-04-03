@@ -1,18 +1,32 @@
-import { Fragment, jsx, jsxs } from "react/jsx-runtime";
 import { useEffect, useState } from "react";
 import { api } from "../api/client";
 import { extractApiErrorMessage } from "../hooks/utils/apiUtils";
-import { Play, Trash2, Calendar, CheckSquare, Square, ArrowLeft, Copy, Upload, X } from "lucide-react";
+import {
+  Play,
+  Trash2,
+  Calendar,
+  CheckSquare,
+  Square,
+  ArrowLeft,
+  Copy,
+  Upload,
+  X,
+} from "lucide-react";
 import { showError, showSuccess, showWarning } from "../utils/notifications";
 import { showConfirm } from "../utils/confirm";
 import { useAuth } from "../contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
-import { TEMPLATE_CATEGORIES, TEMPLATE_DIFFICULTIES, formatCategory, formatDifficulty } from "../config/templateConstants";
+import {
+  TEMPLATE_CATEGORIES,
+  TEMPLATE_DIFFICULTIES,
+  formatCategory,
+  formatDifficulty,
+} from "../config/templateConstants";
 import { getDefaultPublishForm, parseTags } from "../utils/publishFormUtils";
 function WorkflowList({ onSelectWorkflow, onBack }) {
   const [workflows, setWorkflows] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [selectedIds, setSelectedIds] = useState(/* @__PURE__ */ new Set());
+  const [selectedIds, setSelectedIds] = useState(new Set());
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const [showPublishModal, setShowPublishModal] = useState(false);
@@ -22,7 +36,7 @@ function WorkflowList({ onSelectWorkflow, onBack }) {
   useEffect(() => {
     if (!isAuthenticated) {
       setWorkflows([]);
-      setSelectedIds(/* @__PURE__ */ new Set());
+      setSelectedIds(new Set());
       setLoading(false);
       return;
     }
@@ -37,7 +51,10 @@ function WorkflowList({ onSelectWorkflow, onBack }) {
       if (error.response?.status === 401) {
         showError("Authentication required. Please log in again.");
       } else {
-        showError("Failed to load workflows: " + extractApiErrorMessage(error, "Unknown error"));
+        showError(
+          "Failed to load workflows: " +
+            extractApiErrorMessage(error, "Unknown error"),
+        );
       }
     } finally {
       setLoading(false);
@@ -46,7 +63,12 @@ function WorkflowList({ onSelectWorkflow, onBack }) {
   const handleDelete = async (id) => {
     const confirmed = await showConfirm(
       "Are you sure you want to delete this workflow?",
-      { title: "Delete Workflow", confirmText: "Delete", cancelText: "Cancel", type: "danger" }
+      {
+        title: "Delete Workflow",
+        confirmText: "Delete",
+        cancelText: "Cancel",
+        type: "danger",
+      },
     );
     if (!confirmed) return;
     try {
@@ -59,7 +81,10 @@ function WorkflowList({ onSelectWorkflow, onBack }) {
       });
       showSuccess("Workflow deleted successfully");
     } catch (error) {
-      showError("Failed to delete workflow: " + extractApiErrorMessage(error, "Unknown error"));
+      showError(
+        "Failed to delete workflow: " +
+          extractApiErrorMessage(error, "Unknown error"),
+      );
     }
   };
   const handleBulkDuplicate = async () => {
@@ -70,7 +95,11 @@ function WorkflowList({ onSelectWorkflow, onBack }) {
     const count = selectedIds.size;
     const confirmed = await showConfirm(
       `Duplicate ${count} workflow(s)? Each will be created with "-copy" appended to the name.`,
-      { title: "Duplicate Workflows", confirmText: "Duplicate", cancelText: "Cancel" }
+      {
+        title: "Duplicate Workflows",
+        confirmText: "Duplicate",
+        cancelText: "Cancel",
+      },
     );
     if (!confirmed) return;
     try {
@@ -81,16 +110,23 @@ function WorkflowList({ onSelectWorkflow, onBack }) {
           const duplicated = await api.duplicateWorkflow(id);
           duplicatedNames.push(duplicated.name);
         } catch (error) {
-          showError(`Failed to duplicate workflow ${id}: ${extractApiErrorMessage(error, "Unknown error")}`);
+          showError(
+            `Failed to duplicate workflow ${id}: ${extractApiErrorMessage(error, "Unknown error")}`,
+          );
         }
       }
       await loadWorkflows();
-      setSelectedIds(/* @__PURE__ */ new Set());
+      setSelectedIds(new Set());
       if (duplicatedNames.length > 0) {
-        showSuccess(`Successfully duplicated ${duplicatedNames.length} workflow(s)`);
+        showSuccess(
+          `Successfully duplicated ${duplicatedNames.length} workflow(s)`,
+        );
       }
     } catch (error) {
-      showError("Failed to duplicate workflows: " + extractApiErrorMessage(error, "Unknown error"));
+      showError(
+        "Failed to duplicate workflows: " +
+          extractApiErrorMessage(error, "Unknown error"),
+      );
     }
   };
   const handleToggleSelect = (id) => {
@@ -106,7 +142,7 @@ function WorkflowList({ onSelectWorkflow, onBack }) {
   };
   const handleSelectAll = () => {
     if (selectedIds.size === workflows.length) {
-      setSelectedIds(/* @__PURE__ */ new Set());
+      setSelectedIds(new Set());
     } else {
       setSelectedIds(new Set(workflows.map((w) => w.id).filter(Boolean)));
     }
@@ -121,12 +157,15 @@ function WorkflowList({ onSelectWorkflow, onBack }) {
       category: "automation",
       tags: "",
       difficulty: "beginner",
-      estimated_time: ""
+      estimated_time: "",
     });
     setShowPublishModal(true);
   };
   const handlePublishFormChange = (field, value) => {
-    setPublishForm((prev) => ({ ...prev, [field]: value }));
+    setPublishForm((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
   };
   const handlePublish = async (event) => {
     event.preventDefault();
@@ -141,7 +180,7 @@ function WorkflowList({ onSelectWorkflow, onBack }) {
         category: publishForm.category,
         tags: tagsArray,
         difficulty: publishForm.difficulty,
-        estimated_time: publishForm.estimated_time || void 0
+        estimated_time: publishForm.estimated_time || void 0,
       });
       showSuccess(`Published "${published.name}" to the marketplace.`);
       setShowPublishModal(false);
@@ -161,14 +200,19 @@ function WorkflowList({ onSelectWorkflow, onBack }) {
     const count = selectedIds.size;
     const confirmed = await showConfirm(
       `Are you sure you want to delete ${count} workflow(s)?`,
-      { title: "Delete Workflows", confirmText: "Delete", cancelText: "Cancel", type: "danger" }
+      {
+        title: "Delete Workflows",
+        confirmText: "Delete",
+        cancelText: "Cancel",
+        type: "danger",
+      },
     );
     if (!confirmed) return;
     try {
       const ids = Array.from(selectedIds);
       const result = await api.bulkDeleteWorkflows(ids);
       setWorkflows(workflows.filter((w) => !selectedIds.has(w.id || "")));
-      setSelectedIds(/* @__PURE__ */ new Set());
+      setSelectedIds(new Set());
       if (result.failed_ids && result.failed_ids.length > 0) {
         showError(`${result.message}
 Failed IDs: ${result.failed_ids.join(", ")}`);
@@ -176,290 +220,328 @@ Failed IDs: ${result.failed_ids.join(", ")}`);
         showSuccess(`Successfully deleted ${result.deleted_count} workflow(s)`);
       }
     } catch (error) {
-      showError("Failed to delete workflows: " + extractApiErrorMessage(error, "Unknown error"));
+      showError(
+        "Failed to delete workflows: " +
+          extractApiErrorMessage(error, "Unknown error"),
+      );
     }
   };
   if (loading) {
-    return /* @__PURE__ */ jsx("div", { className: "flex items-center justify-center h-full", children: /* @__PURE__ */ jsx("div", { className: "text-gray-500", children: "Loading workflows..." }) });
+    return (
+      <div className="flex items-center justify-center h-full">
+        <div className="text-gray-500">Loading workflows...</div>
+      </div>
+    );
   }
   if (workflows.length === 0) {
-    return /* @__PURE__ */ jsx("div", { className: "flex items-center justify-center h-full", children: /* @__PURE__ */ jsx("div", { className: "text-center", children: !isAuthenticated ? /* @__PURE__ */ jsxs(Fragment, { children: [
-      /* @__PURE__ */ jsx("p", { className: "text-gray-500 mb-2", children: "Your saved workflows are available after you sign in" }),
-      /* @__PURE__ */ jsx("p", { className: "text-sm text-gray-400 mb-4", children: "Browse templates on the Marketplace, or log in to open workflows you own" }),
-      /* @__PURE__ */ jsx(
-        "button",
-        {
-          onClick: () => navigate("/marketplace"),
-          className: "px-4 py-2 mb-3 bg-white border border-gray-300 text-gray-800 rounded-lg hover:bg-gray-50 transition-colors block mx-auto",
-          children: "Open Marketplace"
-        }
-      ),
-      /* @__PURE__ */ jsx(
-        "button",
-        {
-          onClick: () => navigate("/auth"),
-          className: "px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors",
-          children: "Log In"
-        }
-      )
-    ] }) : /* @__PURE__ */ jsxs(Fragment, { children: [
-      /* @__PURE__ */ jsx("p", { className: "text-gray-500 mb-4", children: "No workflows yet" }),
-      /* @__PURE__ */ jsx("p", { className: "text-sm text-gray-400", children: "Create your first workflow in the Builder" })
-    ] }) }) });
+    return (
+      <div className="flex items-center justify-center h-full">
+        <div className="text-center">
+          {!isAuthenticated ? (
+            <>
+              <p className="text-gray-500 mb-2">
+                Your saved workflows are available after you sign in
+              </p>
+              <p className="text-sm text-gray-400 mb-4">
+                Browse templates on the Marketplace, or log in to open workflows
+                you own
+              </p>
+              <button
+                onClick={() => navigate("/marketplace")}
+                className="px-4 py-2 mb-3 bg-white border border-gray-300 text-gray-800 rounded-lg hover:bg-gray-50 transition-colors block mx-auto"
+              >
+                Open Marketplace
+              </button>
+              <button
+                onClick={() => navigate("/auth")}
+                className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
+              >
+                Log In
+              </button>
+            </>
+          ) : (
+            <>
+              <p className="text-gray-500 mb-4">No workflows yet</p>
+              <p className="text-sm text-gray-400">
+                Create your first workflow in the Builder
+              </p>
+            </>
+          )}
+        </div>
+      </div>
+    );
   }
-  return /* @__PURE__ */ jsxs("div", { className: "h-full overflow-y-auto", children: [
-    /* @__PURE__ */ jsxs("div", { className: "p-6", children: [
-      /* @__PURE__ */ jsxs("div", { className: "flex items-center justify-between mb-6", children: [
-        /* @__PURE__ */ jsxs("div", { className: "flex items-center gap-4", children: [
-          onBack && /* @__PURE__ */ jsx(
-            "button",
-            {
-              onClick: onBack,
-              className: "p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors",
-              title: "Back to builder",
-              children: /* @__PURE__ */ jsx(ArrowLeft, { className: "w-5 h-5" })
-            }
-          ),
-          /* @__PURE__ */ jsxs("div", { children: [
-            /* @__PURE__ */ jsx("h2", { className: "text-2xl font-bold text-gray-900", children: "My Workflows" }),
-          ] })
-        ] }),
-        selectedIds.size > 0 && /* @__PURE__ */ jsxs("div", { className: "flex items-center gap-3", children: [
-          /* @__PURE__ */ jsxs("span", { className: "text-sm text-gray-600", children: [
-            selectedIds.size,
-            " selected"
-          ] }),
-          /* @__PURE__ */ jsxs(
-            "button",
-            {
-              onClick: handleBulkDuplicate,
-              className: "px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2",
-              children: [
-                /* @__PURE__ */ jsx(Copy, { className: "w-4 h-4" }),
-                "Duplicate Selected (",
-                selectedIds.size,
-                ")"
-              ]
-            }
-          ),
-          /* @__PURE__ */ jsxs(
-            "button",
-            {
-              onClick: handleBulkDelete,
-              className: "px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 flex items-center gap-2",
-              children: [
-                /* @__PURE__ */ jsx(Trash2, { className: "w-4 h-4" }),
-                "Delete Selected (",
-                selectedIds.size,
-                ")"
-              ]
-            }
-          )
-        ] })
-      ] }),
-      workflows.length > 0 && /* @__PURE__ */ jsx("div", { className: "mb-4 flex items-center gap-2", children: /* @__PURE__ */ jsxs(
-        "button",
-        {
-          onClick: handleSelectAll,
-          className: "flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-lg",
-          children: [
-            selectedIds.size === workflows.length ? /* @__PURE__ */ jsx(CheckSquare, { className: "w-5 h-5 text-primary-600" }) : /* @__PURE__ */ jsx(Square, { className: "w-5 h-5 text-gray-400" }),
-            /* @__PURE__ */ jsx("span", { children: selectedIds.size === workflows.length ? "Deselect All" : "Select All" })
-          ]
-        }
-      ) }),
-      /* @__PURE__ */ jsx("div", { className: "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pb-6", children: workflows.map((workflow) => {
-        const isSelected = workflow.id && selectedIds.has(workflow.id);
-        const hasSelection = selectedIds.size > 0;
-        return /* @__PURE__ */ jsxs(
-          "div",
-          {
-            className: `bg-white rounded-lg shadow-md p-4 hover:shadow-lg transition-shadow border-2 ${isSelected ? "border-primary-500 bg-primary-50" : "border-transparent"} ${hasSelection ? "" : "cursor-pointer"}`,
-            onClick: (e) => {
-              if (!hasSelection && e.target === e.currentTarget || e.target.closest(".workflow-content")) {
-                workflow.id && onSelectWorkflow(workflow.id);
-              }
-            },
-            children: [
-              /* @__PURE__ */ jsxs("div", { className: "flex items-start justify-between mb-3", children: [
-                /* @__PURE__ */ jsxs("div", { className: "flex items-start gap-3 flex-1", children: [
-                  /* @__PURE__ */ jsx(
-                    "button",
-                    {
-                      onClick: (e) => {
+  return (
+    <div className="h-full overflow-y-auto">
+      <div className="p-6">
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-4">
+            {onBack && (
+              <button
+                onClick={onBack}
+                className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                title="Back to builder"
+              >
+                <ArrowLeft className="w-5 h-5" />
+              </button>
+            )}
+            <div>
+              <h2 className="text-2xl font-bold text-gray-900">My Workflows</h2>
+            </div>
+          </div>
+          {selectedIds.size > 0 && (
+            <div className="flex items-center gap-3">
+              <span className="text-sm text-gray-600">
+                {selectedIds.size} selected
+              </span>
+              <button
+                onClick={handleBulkDuplicate}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2"
+              >
+                <Copy className="w-4 h-4" />
+                Duplicate Selected ({selectedIds.size})
+              </button>
+              <button
+                onClick={handleBulkDelete}
+                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 flex items-center gap-2"
+              >
+                <Trash2 className="w-4 h-4" />
+                Delete Selected ({selectedIds.size})
+              </button>
+            </div>
+          )}
+        </div>
+        {workflows.length > 0 && (
+          <div className="mb-4 flex items-center gap-2">
+            <button
+              onClick={handleSelectAll}
+              className="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-lg"
+            >
+              {selectedIds.size === workflows.length ? (
+                <CheckSquare className="w-5 h-5 text-primary-600" />
+              ) : (
+                <Square className="w-5 h-5 text-gray-400" />
+              )}
+              <span>
+                {selectedIds.size === workflows.length
+                  ? "Deselect All"
+                  : "Select All"}
+              </span>
+            </button>
+          </div>
+        )}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pb-6">
+          {workflows.map((workflow) => {
+            const isSelected = workflow.id && selectedIds.has(workflow.id);
+            const hasSelection = selectedIds.size > 0;
+            return (
+              <div
+                key={workflow.id}
+                className={`bg-white rounded-lg shadow-md p-4 hover:shadow-lg transition-shadow border-2 ${isSelected ? "border-primary-500 bg-primary-50" : "border-transparent"} ${hasSelection ? "" : "cursor-pointer"}`}
+                onClick={(e) => {
+                  if (
+                    (!hasSelection && e.target === e.currentTarget) ||
+                    e.target.closest(".workflow-content")
+                  ) {
+                    workflow.id && onSelectWorkflow(workflow.id);
+                  }
+                }}
+              >
+                <div className="flex items-start justify-between mb-3">
+                  <div className="flex items-start gap-3 flex-1">
+                    <button
+                      onClick={(e) => {
                         e.stopPropagation();
                         workflow.id && handleToggleSelect(workflow.id);
-                      },
-                      className: "mt-1 flex-shrink-0",
-                      title: isSelected ? "Deselect workflow" : "Select workflow",
-                      children: isSelected ? /* @__PURE__ */ jsx(CheckSquare, { className: "w-5 h-5 text-primary-600" }) : /* @__PURE__ */ jsx(Square, { className: "w-5 h-5 text-gray-400" })
-                    }
-                  ),
-                  /* @__PURE__ */ jsxs("div", { className: "flex-1 workflow-content", onClick: (e) => {
-                    if (hasSelection) {
-                      e.stopPropagation();
-                    }
-                  }, children: [
-                    /* @__PURE__ */ jsx("h3", { className: "font-semibold text-gray-900", children: workflow.name }),
-                    workflow.description && /* @__PURE__ */ jsx("p", { className: "text-sm text-gray-600 mt-1", children: workflow.description })
-                  ] })
-                ] }),
-                /* @__PURE__ */ jsxs("div", { className: "flex items-center gap-1 flex-shrink-0", children: [
-                  isAuthenticated && /* @__PURE__ */ jsx(
-                    "button",
-                    {
-                      onClick: (e) => {
-                        e.stopPropagation();
-                        workflow.id && openPublishModal(workflow.id);
-                      },
-                      className: "text-blue-600 hover:bg-blue-50 p-1 rounded",
-                      title: "Publish to marketplace",
-                      children: /* @__PURE__ */ jsx(Upload, { className: "w-4 h-4" })
-                    }
-                  ),
-                  /* @__PURE__ */ jsx(
-                    "button",
-                    {
-                      onClick: (e) => {
+                      }}
+                      className="mt-1 flex-shrink-0"
+                      title={
+                        isSelected ? "Deselect workflow" : "Select workflow"
+                      }
+                    >
+                      {isSelected ? (
+                        <CheckSquare className="w-5 h-5 text-primary-600" />
+                      ) : (
+                        <Square className="w-5 h-5 text-gray-400" />
+                      )}
+                    </button>
+                    <div
+                      className="flex-1 workflow-content"
+                      onClick={(e) => {
+                        if (hasSelection) {
+                          e.stopPropagation();
+                        }
+                      }}
+                    >
+                      <h3 className="font-semibold text-gray-900">
+                        {workflow.name}
+                      </h3>
+                      {workflow.description && (
+                        <p className="text-sm text-gray-600 mt-1">
+                          {workflow.description}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1 flex-shrink-0">
+                    {isAuthenticated && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          workflow.id && openPublishModal(workflow.id);
+                        }}
+                        className="text-blue-600 hover:bg-blue-50 p-1 rounded"
+                        title="Publish to marketplace"
+                      >
+                        <Upload className="w-4 h-4" />
+                      </button>
+                    )}
+                    <button
+                      onClick={(e) => {
                         e.stopPropagation();
                         workflow.id && handleDelete(workflow.id);
-                      },
-                      className: "text-red-600 hover:bg-red-50 p-1 rounded",
-                      title: "Delete workflow",
-                      children: /* @__PURE__ */ jsx(Trash2, { className: "w-4 h-4" })
-                    }
-                  )
-                ] })
-              ] }),
-              /* @__PURE__ */ jsxs(
-                "div",
-                {
-                  className: "flex items-center gap-4 text-sm text-gray-500 workflow-content",
-                  onClick: (e) => {
+                      }}
+                      className="text-red-600 hover:bg-red-50 p-1 rounded"
+                      title="Delete workflow"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+                <div
+                  className="flex items-center gap-4 text-sm text-gray-500 workflow-content"
+                  onClick={(e) => {
                     if (hasSelection) {
                       e.stopPropagation();
                     }
-                  },
-                  children: [
-                    /* @__PURE__ */ jsxs("div", { className: "flex items-center gap-1", children: [
-                      /* @__PURE__ */ jsx(Play, { className: "w-4 h-4" }),
-                      workflow.nodes?.length || 0,
-                      " nodes"
-                    ] }),
-                    workflow.created_at && /* @__PURE__ */ jsxs("div", { className: "flex items-center gap-1", children: [
-                      /* @__PURE__ */ jsx(Calendar, { className: "w-4 h-4" }),
-                      new Date(workflow.created_at).toLocaleDateString()
-                    ] })
-                  ]
-                }
-              )
-            ]
-          },
-          workflow.id
-        );
-      }) })
-    ] }),
-    showPublishModal && /* @__PURE__ */ jsx("div", { className: "fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40", children: /* @__PURE__ */ jsxs(
-      "form",
-      {
-        onSubmit: handlePublish,
-        className: "bg-white rounded-xl shadow-lg max-w-md w-full p-6 space-y-4",
-        children: [
-          /* @__PURE__ */ jsxs("div", { className: "flex items-center justify-between", children: [
-            /* @__PURE__ */ jsx("h3", { className: "text-lg font-semibold text-gray-900", children: "Publish to Marketplace" }),
-            /* @__PURE__ */ jsx(
-              "button",
-              {
-                type: "button",
-                onClick: () => {
+                  }}
+                >
+                  <div className="flex items-center gap-1">
+                    <Play className="w-4 h-4" />
+                    {workflow.nodes?.length || 0} nodes
+                  </div>
+                  {workflow.created_at && (
+                    <div className="flex items-center gap-1">
+                      <Calendar className="w-4 h-4" />
+                      {new Date(workflow.created_at).toLocaleDateString()}
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+      {showPublishModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+          <form
+            onSubmit={handlePublish}
+            className="bg-white rounded-xl shadow-lg max-w-md w-full p-6 space-y-4"
+          >
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-semibold text-gray-900">
+                Publish to Marketplace
+              </h3>
+              <button
+                type="button"
+                onClick={() => {
                   setShowPublishModal(false);
                   setPublishingWorkflowId(null);
-                },
-                className: "text-gray-500 hover:text-gray-700",
-                children: /* @__PURE__ */ jsx(X, { className: "w-5 h-5" })
-              }
-            )
-          ] }),
-          /* @__PURE__ */ jsxs("div", { children: [
-            /* @__PURE__ */ jsx("label", { className: "block text-sm font-medium text-gray-700 mb-1", children: "Category" }),
-            /* @__PURE__ */ jsx(
-              "select",
-              {
-                value: publishForm.category,
-                onChange: (e) => handlePublishFormChange("category", e.target.value),
-                className: "w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500",
-                children: TEMPLATE_CATEGORIES.map((category) => /* @__PURE__ */ jsx("option", { value: category, children: formatCategory(category) }, category))
-              }
-            )
-          ] }),
-          /* @__PURE__ */ jsxs("div", { className: "flex gap-4", children: [
-            /* @__PURE__ */ jsxs("div", { className: "flex-1", children: [
-              /* @__PURE__ */ jsx("label", { className: "block text-sm font-medium text-gray-700 mb-1", children: "Difficulty" }),
-              /* @__PURE__ */ jsx(
-                "select",
-                {
-                  value: publishForm.difficulty,
-                  onChange: (e) => handlePublishFormChange("difficulty", e.target.value),
-                  className: "w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500",
-                  children: TEMPLATE_DIFFICULTIES.map((diff) => /* @__PURE__ */ jsx("option", { value: diff, children: formatDifficulty(diff) }, diff))
+                }}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Category
+              </label>
+              <select
+                value={publishForm.category}
+                onChange={(e) =>
+                  handlePublishFormChange("category", e.target.value)
                 }
-              )
-            ] }),
-            /* @__PURE__ */ jsxs("div", { className: "flex-1", children: [
-              /* @__PURE__ */ jsx("label", { className: "block text-sm font-medium text-gray-700 mb-1", children: "Estimated Time" }),
-              /* @__PURE__ */ jsx(
-                "input",
-                {
-                  type: "text",
-                  value: publishForm.estimated_time,
-                  onChange: (e) => handlePublishFormChange("estimated_time", e.target.value),
-                  className: "w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500",
-                  placeholder: "e.g. 30 minutes"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+              >
+                {TEMPLATE_CATEGORIES.map((category) => (
+                  <option key={category} value={category}>
+                    {formatCategory(category)}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="flex gap-4">
+              <div className="flex-1">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Difficulty
+                </label>
+                <select
+                  value={publishForm.difficulty}
+                  onChange={(e) =>
+                    handlePublishFormChange("difficulty", e.target.value)
+                  }
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+                >
+                  {TEMPLATE_DIFFICULTIES.map((diff) => (
+                    <option key={diff} value={diff}>
+                      {formatDifficulty(diff)}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="flex-1">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Estimated Time
+                </label>
+                <input
+                  type="text"
+                  value={publishForm.estimated_time}
+                  onChange={(e) =>
+                    handlePublishFormChange("estimated_time", e.target.value)
+                  }
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+                  placeholder="e.g. 30 minutes"
+                />
+              </div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Tags (comma separated)
+              </label>
+              <input
+                type="text"
+                value={publishForm.tags}
+                onChange={(e) =>
+                  handlePublishFormChange("tags", e.target.value)
                 }
-              )
-            ] })
-          ] }),
-          /* @__PURE__ */ jsxs("div", { children: [
-            /* @__PURE__ */ jsx("label", { className: "block text-sm font-medium text-gray-700 mb-1", children: "Tags (comma separated)" }),
-            /* @__PURE__ */ jsx(
-              "input",
-              {
-                type: "text",
-                value: publishForm.tags,
-                onChange: (e) => handlePublishFormChange("tags", e.target.value),
-                className: "w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500",
-                placeholder: "automation, ai, ..."
-              }
-            )
-          ] }),
-          /* @__PURE__ */ jsxs("div", { className: "flex justify-end gap-2", children: [
-            /* @__PURE__ */ jsx(
-              "button",
-              {
-                type: "button",
-                onClick: () => {
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+                placeholder="automation, ai, ..."
+              />
+            </div>
+            <div className="flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => {
                   setShowPublishModal(false);
                   setPublishingWorkflowId(null);
-                },
-                className: "px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50",
-                children: "Cancel"
-              }
-            ),
-            /* @__PURE__ */ jsx(
-              "button",
-              {
-                type: "submit",
-                disabled: isPublishing,
-                className: "px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-60 flex items-center gap-2",
-                children: isPublishing ? "Publishing..." : "Publish"
-              }
-            )
-          ] })
-        ]
-      }
-    ) })
-  ] });
+                }}
+                className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={isPublishing}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-60 flex items-center gap-2"
+              >
+                {isPublishing ? "Publishing..." : "Publish"}
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+    </div>
+  );
 }
-export {
-  WorkflowList as default
-};
+export { WorkflowList as default };

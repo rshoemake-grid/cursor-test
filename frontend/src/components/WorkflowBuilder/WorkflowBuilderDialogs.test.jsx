@@ -1,71 +1,43 @@
-import { jsx, jsxs } from "react/jsx-runtime";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { WorkflowBuilderDialogs } from "./WorkflowBuilderDialogs";
 jest.mock("../ExecutionInputDialog", () => {
   const { jsx, jsxs } = require("react/jsx-runtime");
   return {
     __esModule: true,
-    default: ({
-      isOpen,
-      onClose,
-      onSubmit
-    }) => isOpen ? /* @__PURE__ */jsxs("div", {
-      "data-testid": "execution-input-dialog",
-      children: [/* @__PURE__ */jsx("button", {
-        onClick: onClose,
-        children: "Close"
-      }), /* @__PURE__ */jsx("button", {
-        onClick: () => onSubmit({}),
-        children: "Submit"
-      })]
-    }) : null
+    default: ({ isOpen, onClose, onSubmit }) =>
+      isOpen ? (
+        <div data-testid="execution-input-dialog">
+          <button onClick={onClose}>Close</button>
+          <button onClick={() => onSubmit({})}>Submit</button>
+        </div>
+      ) : null,
   };
 });
 jest.mock("../NodeContextMenu", () => {
   const { jsx, jsxs } = require("react/jsx-runtime");
   return {
     __esModule: true,
-    default: ({
-      onClose,
-      onDelete,
-      onCopy,
-      onCut,
-      onPaste
-    }) => /* @__PURE__ */jsxs("div", {
-      "data-testid": "context-menu",
-      children: [/* @__PURE__ */jsx("button", {
-        onClick: onClose,
-        children: "Close"
-      }), /* @__PURE__ */jsx("button", {
-        onClick: onDelete,
-        children: "Delete"
-      }), /* @__PURE__ */jsx("button", {
-        onClick: onCopy,
-        children: "Copy"
-      }), /* @__PURE__ */jsx("button", {
-        onClick: onCut,
-        children: "Cut"
-      }), /* @__PURE__ */jsx("button", {
-        onClick: onPaste,
-        children: "Paste"
-      })]
-    })
+    default: ({ onClose, onDelete, onCopy, onCut, onPaste }) => (
+      <div data-testid="context-menu">
+        <button onClick={onClose}>Close</button>
+        <button onClick={onDelete}>Delete</button>
+        <button onClick={onCopy}>Copy</button>
+        <button onClick={onCut}>Cut</button>
+        <button onClick={onPaste}>Paste</button>
+      </div>
+    ),
   };
 });
 jest.mock("../MarketplaceDialog", () => {
   const { jsx } = require("react/jsx-runtime");
   return {
     __esModule: true,
-    default: ({
-      isOpen,
-      onClose
-    }) => isOpen ? /* @__PURE__ */jsx("div", {
-      "data-testid": "marketplace-dialog",
-      children: /* @__PURE__ */jsx("button", {
-        onClick: onClose,
-        children: "Close"
-      })
-    }) : null
+    default: ({ isOpen, onClose }) =>
+      isOpen ? (
+        <div data-testid="marketplace-dialog">
+          <button onClick={onClose}>Close</button>
+        </div>
+      ) : null,
   };
 });
 describe("WorkflowBuilderDialogs", () => {
@@ -74,11 +46,11 @@ describe("WorkflowBuilderDialogs", () => {
     type: "agent",
     position: {
       x: 0,
-      y: 0
+      y: 0,
     },
     data: {
-      label: "Test Node"
-    }
+      label: "Test Node",
+    },
   };
   const defaultProps = {
     showInputs: false,
@@ -98,40 +70,31 @@ describe("WorkflowBuilderDialogs", () => {
     showMarketplaceDialog: false,
     onCloseMarketplaceDialog: jest.fn(),
     marketplaceNode: null,
-    workflowId: null
+    workflowId: null,
   };
   beforeEach(() => {
     jest.clearAllMocks();
   });
   it("should not render dialogs when all are closed", () => {
-    render(/* @__PURE__ */jsx(WorkflowBuilderDialogs, {
-      ...defaultProps
-    }));
-    expect(screen.queryByTestId("execution-input-dialog")).not.toBeInTheDocument();
+    render(<WorkflowBuilderDialogs {...defaultProps} />);
+    expect(
+      screen.queryByTestId("execution-input-dialog"),
+    ).not.toBeInTheDocument();
     expect(screen.queryByTestId("context-menu")).not.toBeInTheDocument();
     expect(screen.queryByTestId("marketplace-dialog")).not.toBeInTheDocument();
   });
   it("should render execution input dialog when showInputs is true", () => {
-    render(/* @__PURE__ */jsx(WorkflowBuilderDialogs, {
-      ...defaultProps,
-      showInputs: true
-    }));
+    render(<WorkflowBuilderDialogs {...defaultProps} showInputs={true} />);
     expect(screen.getByTestId("execution-input-dialog")).toBeInTheDocument();
   });
   it("should call onCloseInputs when execution dialog close is clicked", () => {
-    render(/* @__PURE__ */jsx(WorkflowBuilderDialogs, {
-      ...defaultProps,
-      showInputs: true
-    }));
+    render(<WorkflowBuilderDialogs {...defaultProps} showInputs={true} />);
     const closeButton = screen.getByText("Close");
     fireEvent.click(closeButton);
     expect(defaultProps.onCloseInputs).toHaveBeenCalledTimes(1);
   });
   it("should call onConfirmExecute when execution dialog submit is clicked", () => {
-    render(/* @__PURE__ */jsx(WorkflowBuilderDialogs, {
-      ...defaultProps,
-      showInputs: true
-    }));
+    render(<WorkflowBuilderDialogs {...defaultProps} showInputs={true} />);
     const submitButton = screen.getByText("Submit");
     fireEvent.click(submitButton);
     expect(defaultProps.onConfirmExecute).toHaveBeenCalled();
@@ -142,12 +105,11 @@ describe("WorkflowBuilderDialogs", () => {
       edgeId: null,
       node: mockNode,
       x: 100,
-      y: 200
+      y: 200,
     };
-    render(/* @__PURE__ */jsx(WorkflowBuilderDialogs, {
-      ...defaultProps,
-      contextMenu
-    }));
+    render(
+      <WorkflowBuilderDialogs {...defaultProps} contextMenu={contextMenu} />,
+    );
     expect(screen.getByTestId("context-menu")).toBeInTheDocument();
   });
   it("should call onCloseContextMenu when backdrop is clicked", () => {
@@ -156,14 +118,11 @@ describe("WorkflowBuilderDialogs", () => {
       edgeId: null,
       node: mockNode,
       x: 100,
-      y: 200
+      y: 200,
     };
-    const {
-      container
-    } = render(/* @__PURE__ */jsx(WorkflowBuilderDialogs, {
-      ...defaultProps,
-      contextMenu
-    }));
+    const { container } = render(
+      <WorkflowBuilderDialogs {...defaultProps} contextMenu={contextMenu} />,
+    );
     const backdrop = container.querySelector(".fixed.inset-0");
     if (backdrop) {
       fireEvent.click(backdrop);
@@ -176,28 +135,25 @@ describe("WorkflowBuilderDialogs", () => {
       edgeId: null,
       node: mockNode,
       x: 100,
-      y: 200
+      y: 200,
     };
-    render(/* @__PURE__ */jsx(WorkflowBuilderDialogs, {
-      ...defaultProps,
-      contextMenu
-    }));
+    render(
+      <WorkflowBuilderDialogs {...defaultProps} contextMenu={contextMenu} />,
+    );
     const deleteButton = screen.getByText("Delete");
     fireEvent.click(deleteButton);
     expect(defaultProps.onDeleteNode).toHaveBeenCalledTimes(1);
   });
   it("should render marketplace dialog when showMarketplaceDialog is true", () => {
-    render(/* @__PURE__ */jsx(WorkflowBuilderDialogs, {
-      ...defaultProps,
-      showMarketplaceDialog: true
-    }));
+    render(
+      <WorkflowBuilderDialogs {...defaultProps} showMarketplaceDialog={true} />,
+    );
     expect(screen.getByTestId("marketplace-dialog")).toBeInTheDocument();
   });
   it("should call onCloseMarketplaceDialog when marketplace dialog close is clicked", () => {
-    render(/* @__PURE__ */jsx(WorkflowBuilderDialogs, {
-      ...defaultProps,
-      showMarketplaceDialog: true
-    }));
+    render(
+      <WorkflowBuilderDialogs {...defaultProps} showMarketplaceDialog={true} />,
+    );
     const closeButton = screen.getByText("Close");
     fireEvent.click(closeButton);
     expect(defaultProps.onCloseMarketplaceDialog).toHaveBeenCalledTimes(1);

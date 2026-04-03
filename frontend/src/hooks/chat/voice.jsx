@@ -2,5 +2,5 @@ export {
   usePushToTalk,
   isSpeechSynthesisSupported,
   speakChatMessage,
-  stopSpeaking
+  stopSpeaking,
 } from "../useChatVoice";

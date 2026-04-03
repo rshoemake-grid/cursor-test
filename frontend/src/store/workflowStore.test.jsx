@@ -7,7 +7,7 @@ describe("useWorkflowStore", () => {
       workflowDescription: "",
       nodes: [],
       edges: [],
-      variables: {}
+      variables: {},
     });
   });
   describe("Initial state", () => {
@@ -32,20 +32,20 @@ describe("useWorkflowStore", () => {
     });
     it("should set workflowDescription", () => {
       useWorkflowStore.getState().setWorkflowDescription("Description");
-      expect(useWorkflowStore.getState().workflowDescription).toBe("Description");
+      expect(useWorkflowStore.getState().workflowDescription).toBe(
+        "Description",
+      );
     });
     it("should set nodes", () => {
       const nodes = [
         { id: "1", type: "start", position: { x: 0, y: 0 }, data: {} },
-        { id: "2", type: "end", position: { x: 100, y: 100 }, data: {} }
+        { id: "2", type: "end", position: { x: 100, y: 100 }, data: {} },
       ];
       useWorkflowStore.getState().setNodes(nodes);
       expect(useWorkflowStore.getState().nodes).toEqual(nodes);
     });
     it("should set edges", () => {
-      const edges = [
-        { id: "e1", source: "1", target: "2" }
-      ];
+      const edges = [{ id: "e1", source: "1", target: "2" }];
       useWorkflowStore.getState().setEdges(edges);
       expect(useWorkflowStore.getState().edges).toEqual(edges);
     });
@@ -57,26 +57,53 @@ describe("useWorkflowStore", () => {
   });
   describe("Node operations", () => {
     it("should add node", () => {
-      const node = { id: "1", type: "start", position: { x: 0, y: 0 }, data: {} };
+      const node = {
+        id: "1",
+        type: "start",
+        position: { x: 0, y: 0 },
+        data: {},
+      };
       useWorkflowStore.getState().addNode(node);
       expect(useWorkflowStore.getState().nodes).toHaveLength(1);
       expect(useWorkflowStore.getState().nodes[0]).toEqual(node);
     });
     it("should update node", () => {
-      const node = { id: "1", type: "start", position: { x: 0, y: 0 }, data: { label: "Start" } };
+      const node = {
+        id: "1",
+        type: "start",
+        position: { x: 0, y: 0 },
+        data: { label: "Start" },
+      };
       useWorkflowStore.getState().addNode(node);
       useWorkflowStore.getState().updateNode("1", { label: "Updated Start" });
-      expect(useWorkflowStore.getState().nodes[0].data.label).toBe("Updated Start");
+      expect(useWorkflowStore.getState().nodes[0].data.label).toBe(
+        "Updated Start",
+      );
     });
     it("should not update non-existent node", () => {
-      const node = { id: "1", type: "start", position: { x: 0, y: 0 }, data: { label: "Start" } };
+      const node = {
+        id: "1",
+        type: "start",
+        position: { x: 0, y: 0 },
+        data: { label: "Start" },
+      };
       useWorkflowStore.getState().addNode(node);
       useWorkflowStore.getState().updateNode("2", { label: "Updated" });
       expect(useWorkflowStore.getState().nodes[0].data.label).toBe("Start");
     });
     it("should remove node", () => {
-      const node1 = { id: "1", type: "start", position: { x: 0, y: 0 }, data: {} };
-      const node2 = { id: "2", type: "end", position: { x: 100, y: 100 }, data: {} };
+      const node1 = {
+        id: "1",
+        type: "start",
+        position: { x: 0, y: 0 },
+        data: {},
+      };
+      const node2 = {
+        id: "2",
+        type: "end",
+        position: { x: 100, y: 100 },
+        data: {},
+      };
       useWorkflowStore.getState().addNode(node1);
       useWorkflowStore.getState().addNode(node2);
       useWorkflowStore.getState().removeNode("1");
@@ -84,8 +111,18 @@ describe("useWorkflowStore", () => {
       expect(useWorkflowStore.getState().nodes[0].id).toBe("2");
     });
     it("should remove edges connected to removed node", () => {
-      const node1 = { id: "1", type: "start", position: { x: 0, y: 0 }, data: {} };
-      const node2 = { id: "2", type: "end", position: { x: 100, y: 100 }, data: {} };
+      const node1 = {
+        id: "1",
+        type: "start",
+        position: { x: 0, y: 0 },
+        data: {},
+      };
+      const node2 = {
+        id: "2",
+        type: "end",
+        position: { x: 100, y: 100 },
+        data: {},
+      };
       useWorkflowStore.getState().addNode(node1);
       useWorkflowStore.getState().addNode(node2);
       const edge1 = { id: "e1", source: "1", target: "2" };
@@ -125,13 +162,11 @@ describe("useWorkflowStore", () => {
             id: "1",
             type: "start",
             name: "Start",
-            position: { x: 0, y: 0 }
-          }
+            position: { x: 0, y: 0 },
+          },
         ],
-        edges: [
-          { id: "e1", source: "1", target: "2" }
-        ],
-        variables: { var1: "value1" }
+        edges: [{ id: "e1", source: "1", target: "2" }],
+        variables: { var1: "value1" },
       };
       useWorkflowStore.getState().loadWorkflow(workflow);
       const state = useWorkflowStore.getState();
@@ -149,7 +184,7 @@ describe("useWorkflowStore", () => {
         description: "Test Description",
         nodes: [],
         edges: [],
-        variables: {}
+        variables: {},
       };
       useWorkflowStore.getState().loadWorkflow(workflow);
       expect(useWorkflowStore.getState().workflowId).toBeNull();
@@ -167,12 +202,12 @@ describe("useWorkflowStore", () => {
             position: { x: 0, y: 0 },
             data: {
               label: "Start Node",
-              name: "start"
-            }
-          }
+              name: "start",
+            },
+          },
         ],
         edges: [],
-        variables: {}
+        variables: {},
       };
       useWorkflowStore.getState().loadWorkflow(workflow);
       const node = useWorkflowStore.getState().nodes[0];
@@ -185,12 +220,10 @@ describe("useWorkflowStore", () => {
         name: "Test Workflow",
         description: "Test Description",
         nodes: [
-          { id: "1", type: "start", name: "Start", position: { x: 0, y: 0 } }
+          { id: "1", type: "start", name: "Start", position: { x: 0, y: 0 } },
         ],
-        edges: [
-          { id: "e1", source: "1", target: "2" }
-        ],
-        variables: { var1: "value1" }
+        edges: [{ id: "e1", source: "1", target: "2" }],
+        variables: { var1: "value1" },
       };
       useWorkflowStore.getState().loadWorkflow(workflow);
       useWorkflowStore.getState().clearWorkflow();
@@ -207,7 +240,7 @@ describe("useWorkflowStore", () => {
         id: "1",
         type: "start",
         position: { x: 0, y: 0 },
-        data: { label: "Start", name: "start", description: "Start node" }
+        data: { label: "Start", name: "start", description: "Start node" },
       };
       const edge = { id: "e1", source: "1", target: "2" };
       useWorkflowStore.getState().setWorkflowName("My Workflow");
@@ -229,7 +262,7 @@ describe("useWorkflowStore", () => {
         id: "1",
         type: "start",
         position: { x: 0, y: 0 },
-        data: { label: "Start Label" }
+        data: { label: "Start Label" },
       };
       useWorkflowStore.getState().addNode(node);
       const workflow = useWorkflowStore.getState().toWorkflowDefinition();
@@ -240,7 +273,7 @@ describe("useWorkflowStore", () => {
         id: "node-1",
         type: "start",
         position: { x: 0, y: 0 },
-        data: {}
+        data: {},
       };
       useWorkflowStore.getState().addNode(node);
       const workflow = useWorkflowStore.getState().toWorkflowDefinition();
@@ -253,12 +286,15 @@ describe("useWorkflowStore", () => {
         position: { x: 0, y: 0 },
         data: {
           label: "Agent Node",
-          agent_config: { model: "gpt-4", temperature: 0.7 }
-        }
+          agent_config: { model: "gpt-4", temperature: 0.7 },
+        },
       };
       useWorkflowStore.getState().addNode(node);
       const workflow = useWorkflowStore.getState().toWorkflowDefinition();
-      expect(workflow.nodes[0].agent_config).toEqual({ model: "gpt-4", temperature: 0.7 });
+      expect(workflow.nodes[0].agent_config).toEqual({
+        model: "gpt-4",
+        temperature: 0.7,
+      });
     });
     it("should convert node with condition_config", () => {
       const node = {
@@ -267,15 +303,15 @@ describe("useWorkflowStore", () => {
         position: { x: 0, y: 0 },
         data: {
           label: "Condition Node",
-          condition_config: { expression: "x > 10" }
-        }
+          condition_config: { expression: "x > 10" },
+        },
       };
       useWorkflowStore.getState().addNode(node);
       const workflow = useWorkflowStore.getState().toWorkflowDefinition();
       expect(workflow.nodes[0].condition_config).toEqual({
         condition_type: "equals",
         field: "",
-        value: ""
+        value: "",
       });
     });
     it("should convert node with loop_config", () => {
@@ -285,14 +321,14 @@ describe("useWorkflowStore", () => {
         position: { x: 0, y: 0 },
         data: {
           label: "Loop Node",
-          loop_config: { max_iterations: 10 }
-        }
+          loop_config: { max_iterations: 10 },
+        },
       };
       useWorkflowStore.getState().addNode(node);
       const workflow = useWorkflowStore.getState().toWorkflowDefinition();
       expect(workflow.nodes[0].loop_config).toEqual({
         loop_type: "for_each",
-        max_iterations: 10
+        max_iterations: 10,
       });
     });
     it("should convert node with inputs", () => {
@@ -302,14 +338,14 @@ describe("useWorkflowStore", () => {
         position: { x: 0, y: 0 },
         data: {
           label: "Start",
-          inputs: ["input1", "input2"]
-        }
+          inputs: ["input1", "input2"],
+        },
       };
       useWorkflowStore.getState().addNode(node);
       const workflow = useWorkflowStore.getState().toWorkflowDefinition();
       expect(workflow.nodes[0].inputs).toEqual([
         { name: "input1", source_node: void 0, source_field: "" },
-        { name: "input2", source_node: void 0, source_field: "" }
+        { name: "input2", source_node: void 0, source_field: "" },
       ]);
     });
     it("should convert node with empty inputs array", () => {
@@ -319,8 +355,8 @@ describe("useWorkflowStore", () => {
         position: { x: 0, y: 0 },
         data: {
           label: "Start",
-          inputs: []
-        }
+          inputs: [],
+        },
       };
       useWorkflowStore.getState().addNode(node);
       const workflow = useWorkflowStore.getState().toWorkflowDefinition();
@@ -332,8 +368,8 @@ describe("useWorkflowStore", () => {
         type: "start",
         position: { x: 0, y: 0 },
         data: {
-          label: "Start"
-        }
+          label: "Start",
+        },
       };
       useWorkflowStore.getState().addNode(node);
       const workflow = useWorkflowStore.getState().toWorkflowDefinition();
@@ -346,7 +382,7 @@ describe("useWorkflowStore", () => {
         description: "",
         nodes: [],
         edges: [],
-        variables: {}
+        variables: {},
       };
       useWorkflowStore.getState().loadWorkflow(workflow);
       expect(useWorkflowStore.getState().workflowDescription).toBe("");
@@ -358,7 +394,7 @@ describe("useWorkflowStore", () => {
         description: void 0,
         nodes: [],
         edges: [],
-        variables: {}
+        variables: {},
       };
       useWorkflowStore.getState().loadWorkflow(workflow);
       expect(useWorkflowStore.getState().workflowDescription).toBe("");
@@ -373,11 +409,11 @@ describe("useWorkflowStore", () => {
             id: "1",
             type: "start",
             name: "Start",
-            position: void 0
-          }
+            position: void 0,
+          },
         ],
         edges: [],
-        variables: {}
+        variables: {},
       };
       useWorkflowStore.getState().loadWorkflow(workflow);
       const node = useWorkflowStore.getState().nodes[0];
@@ -396,12 +432,12 @@ describe("useWorkflowStore", () => {
             position: { x: 0, y: 0 },
             data: {
               label: "Label",
-              name: "Data Name"
-            }
-          }
+              name: "Data Name",
+            },
+          },
         ],
         edges: [],
-        variables: {}
+        variables: {},
       };
       useWorkflowStore.getState().loadWorkflow(workflow);
       const node = useWorkflowStore.getState().nodes[0];
@@ -418,11 +454,11 @@ describe("useWorkflowStore", () => {
             id: "1",
             type: "start",
             name: "Workflow Node Name",
-            position: { x: 0, y: 0 }
-          }
+            position: { x: 0, y: 0 },
+          },
         ],
         edges: [],
-        variables: {}
+        variables: {},
       };
       useWorkflowStore.getState().loadWorkflow(workflow);
       const node = useWorkflowStore.getState().nodes[0];
@@ -438,11 +474,11 @@ describe("useWorkflowStore", () => {
           {
             id: "1",
             type: "agent",
-            position: { x: 0, y: 0 }
-          }
+            position: { x: 0, y: 0 },
+          },
         ],
         edges: [],
-        variables: {}
+        variables: {},
       };
       useWorkflowStore.getState().loadWorkflow(workflow);
       const node = useWorkflowStore.getState().nodes[0];

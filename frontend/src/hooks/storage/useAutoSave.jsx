@@ -41,13 +41,16 @@ function useAutoSave(value, saveFn, delay = 500, enabled = true) {
     }
   }, [value, enabled, isFirstRender, markAsRendered]);
   useDebounce(value, delay, () => {
-    if (shouldSaveRef.current && enabled && !isFirstRender && valueToDebounceRef.current !== null) {
+    if (
+      shouldSaveRef.current &&
+      enabled &&
+      !isFirstRender &&
+      valueToDebounceRef.current !== null
+    ) {
       debouncedSaveFn(valueToDebounceRef.current);
       shouldSaveRef.current = false;
       valueToDebounceRef.current = null;
     }
   });
 }
-export {
-  useAutoSave
-};
+export { useAutoSave };

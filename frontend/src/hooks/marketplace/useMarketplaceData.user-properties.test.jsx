@@ -2,7 +2,7 @@ import { renderHook, waitFor } from "@testing-library/react";
 import { useMarketplaceData } from "./useMarketplaceData";
 import { getLocalStorageItem } from "../storage";
 jest.mock("../storage", () => ({
-  getLocalStorageItem: jest.fn()
+  getLocalStorageItem: jest.fn(),
 }));
 const mockGetLocalStorageItem = getLocalStorageItem;
 describe("useMarketplaceData - User Properties (Phase 4.2)", () => {
@@ -17,14 +17,16 @@ describe("useMarketplaceData - User Properties (Phase 4.2)", () => {
         }
         return Promise.resolve({ json: async () => [] });
       }),
-      post: jest.fn().mockResolvedValue({ ok: true, json: async () => ({ nodes: [] }) })
+      post: jest
+        .fn()
+        .mockResolvedValue({ ok: true, json: async () => ({ nodes: [] }) }),
     };
     mockStorage = {
       getItem: jest.fn().mockReturnValue(null),
       setItem: jest.fn(),
       removeItem: jest.fn(),
       addEventListener: jest.fn(),
-      removeEventListener: jest.fn()
+      removeEventListener: jest.fn(),
     };
     mockGetLocalStorageItem.mockReturnValue([]);
   });
@@ -38,12 +40,12 @@ describe("useMarketplaceData - User Properties (Phase 4.2)", () => {
           category: "automation",
           tags: [],
           published_at: "2024-01-01T00:00:00Z",
-          is_official: false
-        }
+          is_official: false,
+        },
       ];
       mockGetLocalStorageItem.mockReturnValue(agents);
-      renderHook(
-        () => useMarketplaceData({
+      renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -53,8 +55,8 @@ describe("useMarketplaceData - User Properties (Phase 4.2)", () => {
           user: { id: "user-1", username: "testuser" },
           // Should access user.id
           activeTab: "agents",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(mockStorage.setItem).toHaveBeenCalled();
@@ -71,12 +73,12 @@ describe("useMarketplaceData - User Properties (Phase 4.2)", () => {
           category: "automation",
           tags: [],
           published_at: "2024-01-01T00:00:00Z",
-          is_official: false
-        }
+          is_official: false,
+        },
       ];
       mockGetLocalStorageItem.mockReturnValue(agents);
-      renderHook(
-        () => useMarketplaceData({
+      renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -86,8 +88,8 @@ describe("useMarketplaceData - User Properties (Phase 4.2)", () => {
           user: { id: "user-1" },
           // user.id exists
           activeTab: "agents",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(mockStorage.setItem).toHaveBeenCalled();
@@ -103,12 +105,12 @@ describe("useMarketplaceData - User Properties (Phase 4.2)", () => {
           category: "automation",
           tags: [],
           published_at: "2024-01-01T00:00:00Z",
-          is_official: false
-        }
+          is_official: false,
+        },
       ];
       mockGetLocalStorageItem.mockReturnValue(agents);
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -118,8 +120,8 @@ describe("useMarketplaceData - User Properties (Phase 4.2)", () => {
           user: { id: void 0 },
           // user.id is undefined
           activeTab: "agents",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -137,12 +139,12 @@ describe("useMarketplaceData - User Properties (Phase 4.2)", () => {
           category: "automation",
           tags: [],
           published_at: "2024-01-01T00:00:00Z",
-          is_official: false
-        }
+          is_official: false,
+        },
       ];
       mockGetLocalStorageItem.mockReturnValue(agents);
-      renderHook(
-        () => useMarketplaceData({
+      renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -152,8 +154,8 @@ describe("useMarketplaceData - User Properties (Phase 4.2)", () => {
           user: { id: "user-1", username: "testuser" },
           // Should access user.username
           activeTab: "agents",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(mockStorage.setItem).toHaveBeenCalled();
@@ -172,12 +174,12 @@ describe("useMarketplaceData - User Properties (Phase 4.2)", () => {
           category: "automation",
           tags: [],
           published_at: "2024-01-01T00:00:00Z",
-          is_official: false
-        }
+          is_official: false,
+        },
       ];
       mockGetLocalStorageItem.mockReturnValue(agents);
-      renderHook(
-        () => useMarketplaceData({
+      renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -187,8 +189,8 @@ describe("useMarketplaceData - User Properties (Phase 4.2)", () => {
           user: { id: "user-1", email: "test@example.com" },
           // Should access user.email
           activeTab: "agents",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(mockStorage.setItem).toHaveBeenCalled();
@@ -207,12 +209,12 @@ describe("useMarketplaceData - User Properties (Phase 4.2)", () => {
           category: "automation",
           tags: [],
           published_at: "2024-01-01T00:00:00Z",
-          is_official: false
-        }
+          is_official: false,
+        },
       ];
       mockGetLocalStorageItem.mockReturnValue(agents);
-      renderHook(
-        () => useMarketplaceData({
+      renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -222,8 +224,8 @@ describe("useMarketplaceData - User Properties (Phase 4.2)", () => {
           user: { id: "user-1", username: "testuser" },
           // Both user and user.id exist
           activeTab: "agents",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(mockStorage.setItem).toHaveBeenCalled();
@@ -239,12 +241,12 @@ describe("useMarketplaceData - User Properties (Phase 4.2)", () => {
           category: "automation",
           tags: [],
           published_at: "2024-01-01T00:00:00Z",
-          is_official: false
-        }
+          is_official: false,
+        },
       ];
       mockGetLocalStorageItem.mockReturnValue(agents);
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -254,8 +256,8 @@ describe("useMarketplaceData - User Properties (Phase 4.2)", () => {
           user: null,
           // user is null
           activeTab: "agents",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);

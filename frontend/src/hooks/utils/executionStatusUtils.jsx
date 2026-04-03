@@ -8,7 +8,10 @@ class ExecutionStatusChecker {
    */
   static isTerminated(status, lastKnownStatus) {
     const currentStatus = logicalOr(status, lastKnownStatus);
-    return currentStatus === EXECUTION_STATUS.COMPLETED || currentStatus === EXECUTION_STATUS.FAILED;
+    return (
+      currentStatus === EXECUTION_STATUS.COMPLETED ||
+      currentStatus === EXECUTION_STATUS.FAILED
+    );
   }
   /**
    * Check if connection should be skipped
@@ -24,7 +27,15 @@ class ExecutionStatusChecker {
    * Check if reconnection should be attempted
    * Mutation-resistant: explicit checks
    */
-  static shouldReconnect(wasClean, code, attempt, maxAttempts, executionId, executionStatus, lastKnownStatus) {
+  static shouldReconnect(
+    wasClean,
+    code,
+    attempt,
+    maxAttempts,
+    executionId,
+    executionStatus,
+    lastKnownStatus,
+  ) {
     if (isTemporaryExecutionId(executionId)) return false;
     if (this.isTerminated(executionStatus, lastKnownStatus)) return false;
     if (wasClean && code === 1e3) return false;
@@ -37,9 +48,21 @@ function isExecutionTerminated(status, lastKnownStatus) {
   return ExecutionStatusChecker.isTerminated(status, lastKnownStatus);
 }
 function shouldSkipConnection(executionId, executionStatus, lastKnownStatus) {
-  return ExecutionStatusChecker.shouldSkip(executionId, executionStatus, lastKnownStatus);
+  return ExecutionStatusChecker.shouldSkip(
+    executionId,
+    executionStatus,
+    lastKnownStatus,
+  );
 }
-function shouldReconnect(wasClean, code, attempt, maxAttempts, executionId, executionStatus, lastKnownStatus) {
+function shouldReconnect(
+  wasClean,
+  code,
+  attempt,
+  maxAttempts,
+  executionId,
+  executionStatus,
+  lastKnownStatus,
+) {
   return ExecutionStatusChecker.shouldReconnect(
     wasClean,
     code,
@@ -47,12 +70,12 @@ function shouldReconnect(wasClean, code, attempt, maxAttempts, executionId, exec
     maxAttempts,
     executionId,
     executionStatus,
-    lastKnownStatus
+    lastKnownStatus,
   );
 }
 export {
   ExecutionStatusChecker,
   isExecutionTerminated,
   shouldReconnect,
-  shouldSkipConnection
+  shouldSkipConnection,
 };

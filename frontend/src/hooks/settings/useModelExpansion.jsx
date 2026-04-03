@@ -5,7 +5,7 @@ function useModelExpansion() {
   const toggleProviderModels = useCallback((providerId) => {
     setExpandedProviders((prev) => ({
       ...prev,
-      [providerId]: !prev[providerId]
+      [providerId]: !prev[providerId],
     }));
   }, []);
   const toggleModel = useCallback((providerId, modelName) => {
@@ -19,25 +19,26 @@ function useModelExpansion() {
       }
       return {
         ...prev,
-        [providerId]: newSet
+        [providerId]: newSet,
       };
     });
   }, []);
-  const isModelExpanded = useCallback((providerId, modelName) => {
-    const providerSet = expandedModels[providerId];
-    if (!providerSet) {
-      return false;
-    }
-    return providerSet.has(modelName);
-  }, [expandedModels]);
+  const isModelExpanded = useCallback(
+    (providerId, modelName) => {
+      const providerSet = expandedModels[providerId];
+      if (!providerSet) {
+        return false;
+      }
+      return providerSet.has(modelName);
+    },
+    [expandedModels],
+  );
   return {
     expandedModels,
     expandedProviders,
     toggleProviderModels,
     toggleModel,
-    isModelExpanded
+    isModelExpanded,
   };
 }
-export {
-  useModelExpansion
-};
+export { useModelExpansion };

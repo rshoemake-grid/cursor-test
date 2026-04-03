@@ -2,7 +2,10 @@ import { useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { showError, showSuccess } from "../../utils/notifications";
 import { STORAGE_KEYS } from "../../config/constants";
-import { PENDING_AGENTS_STORAGE_KEY, PENDING_TOOLS_STORAGE_KEY } from "../utils/marketplaceConstants";
+import {
+  PENDING_AGENTS_STORAGE_KEY,
+  PENDING_TOOLS_STORAGE_KEY,
+} from "../utils/marketplaceConstants";
 import { MARKETPLACE_EVENTS } from "../utils/marketplaceEventConstants";
 import { MARKETPLACE_TABS, REPOSITORY_SUB_TABS } from "./useMarketplaceTabs";
 function useMarketplaceActions(options) {
@@ -22,7 +25,7 @@ function useMarketplaceActions(options) {
     deleteSelectedAgents,
     deleteSelectedWorkflows,
     deleteSelectedRepositoryAgents,
-    fetchRepositoryAgents
+    fetchRepositoryAgents,
   } = options;
   const navigate = useNavigate();
   const handleLoadWorkflows = useCallback(async () => {
@@ -34,8 +37,14 @@ function useMarketplaceActions(options) {
     templateSelection.clear();
   }, [templateSelection, loadTemplate]);
   const handleUseAgents = useCallback(() => {
-    const isRepositoryAgentsTab = activeTab === MARKETPLACE_TABS.REPOSITORY && repositorySubTab === REPOSITORY_SUB_TABS.AGENTS;
-    const selectedAgents = isRepositoryAgentsTab ? repositoryAgents.filter((a) => repositoryAgentSelection.selectedIds.has(a.id)) : agents.filter((a) => agentSelection.selectedIds.has(a.id));
+    const isRepositoryAgentsTab =
+      activeTab === MARKETPLACE_TABS.REPOSITORY &&
+      repositorySubTab === REPOSITORY_SUB_TABS.AGENTS;
+    const selectedAgents = isRepositoryAgentsTab
+      ? repositoryAgents.filter((a) =>
+          repositoryAgentSelection.selectedIds.has(a.id),
+        )
+      : agents.filter((a) => agentSelection.selectedIds.has(a.id));
     if (!storage) {
       showError("Storage not available");
       return;
@@ -48,17 +57,19 @@ function useMarketplaceActions(options) {
     const pendingAgents = {
       tabId: activeTabId,
       agents: selectedAgents,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     };
     storage.setItem(PENDING_AGENTS_STORAGE_KEY, JSON.stringify(pendingAgents));
     const event = new CustomEvent(MARKETPLACE_EVENTS.ADD_AGENTS_TO_WORKFLOW, {
       detail: {
         agents: selectedAgents,
-        tabId: activeTabId
-      }
+        tabId: activeTabId,
+      },
     });
     window.dispatchEvent(event);
-    const count = isRepositoryAgentsTab ? repositoryAgentSelection.size : agentSelection.size;
+    const count = isRepositoryAgentsTab
+      ? repositoryAgentSelection.size
+      : agentSelection.size;
     showSuccess(`${count} agent(s) added to workflow`);
     if (isRepositoryAgentsTab) {
       repositoryAgentSelection.clear();
@@ -76,10 +87,12 @@ function useMarketplaceActions(options) {
     repositoryAgentSelection,
     agentSelection,
     storage,
-    navigate
+    navigate,
   ]);
   const handleUseTools = useCallback(() => {
-    const selectedTools = tools.filter((t) => toolSelection.selectedIds.has(t.id));
+    const selectedTools = tools.filter((t) =>
+      toolSelection.selectedIds.has(t.id),
+    );
     if (!storage) {
       showError("Storage not available");
       return;
@@ -92,11 +105,11 @@ function useMarketplaceActions(options) {
     const pendingTools = {
       tabId: activeTabId,
       tools: selectedTools,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     };
     storage.setItem(PENDING_TOOLS_STORAGE_KEY, JSON.stringify(pendingTools));
     const event = new CustomEvent(MARKETPLACE_EVENTS.ADD_TOOLS_TO_WORKFLOW, {
-      detail: { tools: selectedTools, tabId: activeTabId }
+      detail: { tools: selectedTools, tabId: activeTabId },
     });
     window.dispatchEvent(event);
     showSuccess(`${toolSelection.size} tool(s) added to workflow`);
@@ -110,17 +123,22 @@ function useMarketplaceActions(options) {
     await deleteSelectedWorkflows(templateSelection.selectedIds);
   }, [deleteSelectedWorkflows, templateSelection.selectedIds]);
   const handleDeleteRepositoryAgents = useCallback(async () => {
-    await deleteSelectedRepositoryAgents(repositoryAgentSelection.selectedIds, fetchRepositoryAgents);
-  }, [deleteSelectedRepositoryAgents, repositoryAgentSelection.selectedIds, fetchRepositoryAgents]);
+    await deleteSelectedRepositoryAgents(
+      repositoryAgentSelection.selectedIds,
+      fetchRepositoryAgents,
+    );
+  }, [
+    deleteSelectedRepositoryAgents,
+    repositoryAgentSelection.selectedIds,
+    fetchRepositoryAgents,
+  ]);
   return {
     handleLoadWorkflows,
     handleUseAgents,
     handleUseTools,
     handleDeleteAgents,
     handleDeleteWorkflows,
-    handleDeleteRepositoryAgents
+    handleDeleteRepositoryAgents,
   };
 }
-export {
-  useMarketplaceActions
-};
+export { useMarketplaceActions };

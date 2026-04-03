@@ -3,7 +3,7 @@ import {
   advanceTimersByTime,
   wsInstances,
   useWebSocket,
-  logger
+  logger,
 } from "./useWebSocket.test.setup";
 describe("useWebSocket - edges.advanced", () => {
   beforeEach(() => {
@@ -18,11 +18,11 @@ describe("useWebSocket - edges.advanced", () => {
   });
   describe("reconnect delay calculation edge cases", () => {
     it("should cap delay at 10000ms for high attempt numbers", async () => {
-      renderHook(
-        () => useWebSocket({
+      renderHook(() =>
+        useWebSocket({
           executionId: "exec-1",
-          executionStatus: "running"
-        })
+          executionStatus: "running",
+        }),
       );
       await advanceTimersByTime(100);
       if (wsInstances.length > 0) {
@@ -39,8 +39,8 @@ describe("useWebSocket - edges.advanced", () => {
           await advanceTimersByTime(11e3);
         }
         expect(logger.debug).toHaveBeenCalled();
-        const reconnectCalls = logger.debug.mock.calls.filter(
-          (call) => call[0]?.includes("Reconnecting in")
+        const reconnectCalls = logger.debug.mock.calls.filter((call) =>
+          call[0]?.includes("Reconnecting in"),
         );
         if (reconnectCalls.length > 0) {
           const lastCall = reconnectCalls[reconnectCalls.length - 1];
@@ -53,11 +53,11 @@ describe("useWebSocket - edges.advanced", () => {
       }
     });
     it("should calculate exponential backoff correctly", async () => {
-      renderHook(
-        () => useWebSocket({
+      renderHook(() =>
+        useWebSocket({
           executionId: "exec-1",
-          executionStatus: "running"
-        })
+          executionStatus: "running",
+        }),
       );
       await advanceTimersByTime(100);
       if (wsInstances.length > 0) {
@@ -71,8 +71,8 @@ describe("useWebSocket - edges.advanced", () => {
           await advanceTimersByTime(50);
         });
         expect(logger.debug).toHaveBeenCalled();
-        const reconnectCalls = logger.debug.mock.calls.filter(
-          (call) => call[0]?.includes("Reconnecting in")
+        const reconnectCalls = logger.debug.mock.calls.filter((call) =>
+          call[0]?.includes("Reconnecting in"),
         );
         if (reconnectCalls.length > 0) {
           const firstCall = reconnectCalls[0];
@@ -87,11 +87,11 @@ describe("useWebSocket - edges.advanced", () => {
   });
   describe("close event code edge cases", () => {
     it("should handle close with code 1000 and wasClean false", async () => {
-      renderHook(
-        () => useWebSocket({
+      renderHook(() =>
+        useWebSocket({
           executionId: "exec-1",
-          executionStatus: "running"
-        })
+          executionStatus: "running",
+        }),
       );
       await advanceTimersByTime(100);
       if (wsInstances.length > 0) {
@@ -105,8 +105,8 @@ describe("useWebSocket - edges.advanced", () => {
           await advanceTimersByTime(50);
         });
         expect(logger.debug).toHaveBeenCalled();
-        const reconnectCalls = logger.debug.mock.calls.filter(
-          (call) => call[0]?.includes("Reconnecting in")
+        const reconnectCalls = logger.debug.mock.calls.filter((call) =>
+          call[0]?.includes("Reconnecting in"),
         );
         expect(reconnectCalls.length).toBeGreaterThan(0);
       }

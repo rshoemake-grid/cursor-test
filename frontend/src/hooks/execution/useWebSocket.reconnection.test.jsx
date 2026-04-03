@@ -3,7 +3,7 @@ import {
   advanceTimersByTime,
   wsInstances,
   useWebSocket,
-  logger
+  logger,
 } from "./useWebSocket.test.setup";
 describe("useWebSocket - reconnection", () => {
   beforeEach(() => {
@@ -18,11 +18,11 @@ describe("useWebSocket - reconnection", () => {
   });
   describe("reconnection", () => {
     it("should attempt to reconnect on unexpected close", async () => {
-      renderHook(
-        () => useWebSocket({
+      renderHook(() =>
+        useWebSocket({
           executionId: "exec-1",
-          executionStatus: "running"
-        })
+          executionStatus: "running",
+        }),
       );
       await advanceTimersByTime(100);
       if (wsInstances.length > 0) {
@@ -35,11 +35,11 @@ describe("useWebSocket - reconnection", () => {
     it("should not reconnect if connection was closed cleanly", async () => {
       jest.clearAllMocks();
       wsInstances.splice(0, wsInstances.length);
-      const { unmount } = renderHook(
-        () => useWebSocket({
+      const { unmount } = renderHook(() =>
+        useWebSocket({
           executionId: "exec-1",
-          executionStatus: "running"
-        })
+          executionStatus: "running",
+        }),
       );
       await advanceTimersByTime(100);
       await advanceTimersByTime(50);
@@ -54,45 +54,45 @@ describe("useWebSocket - reconnection", () => {
         await advanceTimersByTime(50);
         await advanceTimersByTime(50);
         expect(logger.debug).toHaveBeenCalled();
-        const cleanCloseCalls = logger.debug.mock.calls.filter(
-          (call) => call[0]?.includes("Connection closed cleanly")
+        const cleanCloseCalls = logger.debug.mock.calls.filter((call) =>
+          call[0]?.includes("Connection closed cleanly"),
         );
         expect(cleanCloseCalls.length).toBeGreaterThan(0);
-        const reconnectCalls = logger.debug.mock.calls.filter(
-          (call) => call[0]?.includes("Reconnecting in")
+        const reconnectCalls = logger.debug.mock.calls.filter((call) =>
+          call[0]?.includes("Reconnecting in"),
         );
         expect(reconnectCalls.length).toBe(0);
         unmount();
       }
     });
     it("should not reconnect to temporary execution IDs", async () => {
-      renderHook(
-        () => useWebSocket({
+      renderHook(() =>
+        useWebSocket({
           executionId: "pending-123",
-          executionStatus: "running"
-        })
+          executionStatus: "running",
+        }),
       );
       await advanceTimersByTime(100);
       expect(wsInstances.length).toBe(0);
     });
     it("should not reconnect if execution is completed", async () => {
-      renderHook(
-        () => useWebSocket({
+      renderHook(() =>
+        useWebSocket({
           executionId: "exec-1",
-          executionStatus: "completed"
-        })
+          executionStatus: "completed",
+        }),
       );
       await advanceTimersByTime(100);
       expect(wsInstances.length).toBe(0);
     });
     it("should respect max reconnect attempts", async () => {
       const onError = jest.fn();
-      renderHook(
-        () => useWebSocket({
+      renderHook(() =>
+        useWebSocket({
           executionId: "exec-1",
           executionStatus: "running",
-          onError
-        })
+          onError,
+        }),
       );
       await advanceTimersByTime(100);
       if (wsInstances.length > 0) {
@@ -107,11 +107,11 @@ describe("useWebSocket - reconnection", () => {
       }
     });
     it("should calculate reconnect delay correctly", async () => {
-      renderHook(
-        () => useWebSocket({
+      renderHook(() =>
+        useWebSocket({
           executionId: "exec-1",
-          executionStatus: "running"
-        })
+          executionStatus: "running",
+        }),
       );
       await advanceTimersByTime(100);
       if (wsInstances.length > 0) {

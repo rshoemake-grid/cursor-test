@@ -3,7 +3,7 @@ import { logger } from "../utils/logger";
 import { buildAuthHeaders } from "../hooks/utils/apiUtils";
 jest.mock("../hooks/utils/apiUtils", () => ({
   ...jest.requireActual("../hooks/utils/apiUtils"),
-  buildAuthHeaders: jest.fn()
+  buildAuthHeaders: jest.fn(),
 }));
 jest.mock("../utils/logger", () => ({
   logger: {
@@ -11,8 +11,8 @@ jest.mock("../utils/logger", () => ({
     error: jest.fn(),
     info: jest.fn(),
     warn: jest.fn(),
-    log: jest.fn()
-  }
+    log: jest.fn(),
+  },
 }));
 describe("SettingsService", () => {
   let mockHttpClient;
@@ -25,18 +25,18 @@ describe("SettingsService", () => {
       get: jest.fn(),
       post: jest.fn(),
       put: jest.fn(),
-      delete: jest.fn()
+      delete: jest.fn(),
     };
     mockStorage = {
       getItem: jest.fn(),
       setItem: jest.fn(),
       removeItem: jest.fn(),
       addEventListener: jest.fn(),
-      removeEventListener: jest.fn()
+      removeEventListener: jest.fn(),
     };
     buildAuthHeaders.mockReturnValue({
-      "Authorization": "Bearer test-token",
-      "Content-Type": "application/json"
+      Authorization: "Bearer test-token",
+      "Content-Type": "application/json",
     });
   });
   describe("saveSettings", () => {
@@ -46,18 +46,18 @@ describe("SettingsService", () => {
           id: "provider-1",
           name: "Test Provider",
           type: "openai",
-          enabled: true
-        }
+          enabled: true,
+        },
       ],
       iteration_limit: 10,
-      default_model: "gpt-4"
+      default_model: "gpt-4",
     };
     it("should save to storage when storage is available", async () => {
       service = new SettingsService(mockHttpClient, mockStorage, apiBaseUrl);
       await service.saveSettings(mockSettings);
       expect(mockStorage.setItem).toHaveBeenCalledWith(
         "llm_settings",
-        JSON.stringify(mockSettings)
+        JSON.stringify(mockSettings),
       );
     });
     it("should not save to storage when storage is null", async () => {
@@ -69,7 +69,7 @@ describe("SettingsService", () => {
       mockHttpClient.post.mockResolvedValue({
         ok: true,
         status: 200,
-        statusText: "OK"
+        statusText: "OK",
       });
       service = new SettingsService(mockHttpClient, mockStorage, apiBaseUrl);
       await service.saveSettings(mockSettings, "test-token");
@@ -78,8 +78,8 @@ describe("SettingsService", () => {
         "/api/settings/llm",
         mockSettings,
         expect.objectContaining({
-          "Authorization": "Bearer test-token"
-        })
+          Authorization: "Bearer test-token",
+        }),
       );
     });
     it("should not save to backend when token is not provided", async () => {
@@ -96,26 +96,31 @@ describe("SettingsService", () => {
       const error = new Error("Network error");
       mockHttpClient.post.mockRejectedValue(error);
       service = new SettingsService(mockHttpClient, mockStorage, apiBaseUrl);
-      await expect(service.saveSettings(mockSettings, "test-token")).rejects.toThrow("Network error");
-      expect(logger.error).toHaveBeenCalledWith("Failed to sync settings to backend:", error);
+      await expect(
+        service.saveSettings(mockSettings, "test-token"),
+      ).rejects.toThrow("Network error");
+      expect(logger.error).toHaveBeenCalledWith(
+        "Failed to sync settings to backend:",
+        error,
+      );
     });
     it("should throw error when backend returns non-ok response", async () => {
       mockHttpClient.post.mockResolvedValue({
         ok: false,
         status: 500,
         statusText: "Internal Server Error",
-        json: async () => ({})
+        json: async () => ({}),
       });
       service = new SettingsService(mockHttpClient, mockStorage, apiBaseUrl);
-      await expect(service.saveSettings(mockSettings, "test-token")).rejects.toThrow(
-        "Failed to save settings: 500 Internal Server Error"
-      );
+      await expect(
+        service.saveSettings(mockSettings, "test-token"),
+      ).rejects.toThrow("Failed to save settings: 500 Internal Server Error");
     });
     it("should save to both storage and backend when both are available", async () => {
       mockHttpClient.post.mockResolvedValue({
         ok: true,
         status: 200,
-        statusText: "OK"
+        statusText: "OK",
       });
       service = new SettingsService(mockHttpClient, mockStorage, apiBaseUrl);
       await service.saveSettings(mockSettings, "test-token");
@@ -131,15 +136,15 @@ describe("SettingsService", () => {
       enabled: true,
       apiKey: "test-api-key",
       baseUrl: "https://api.openai.com/v1",
-      defaultModel: "gpt-4"
+      defaultModel: "gpt-4",
     };
     it("should return success when provider test succeeds", async () => {
       mockHttpClient.post.mockResolvedValue({
         ok: true,
         json: async () => ({
           status: "success",
-          message: "Connection successful"
-        })
+          message: "Connection successful",
+        }),
       });
       service = new SettingsService(mockHttpClient, mockStorage, apiBaseUrl);
       const result = await service.testProvider(mockProvider);
@@ -151,9 +156,9 @@ describe("SettingsService", () => {
           type: "openai",
           api_key: "test-api-key",
           base_url: "https://api.openai.com/v1",
-          model: "gpt-4"
+          model: "gpt-4",
         },
-        { "Content-Type": "application/json" }
+        { "Content-Type": "application/json" },
       );
     });
     it("should return error when provider test fails", async () => {
@@ -161,8 +166,13 @@ describe("SettingsService", () => {
         ok: false,
         status: 422,
         json: async () => ({
-          error: { code: "422", message: "Invalid API key", path: "/api/settings/llm/test", timestamp: (/* @__PURE__ */ new Date()).toISOString() }
-        })
+          error: {
+            code: "422",
+            message: "Invalid API key",
+            path: "/api/settings/llm/test",
+            timestamp: /* @__PURE__ */ new Date().toISOString(),
+          },
+        }),
       });
       service = new SettingsService(mockHttpClient, mockStorage, apiBaseUrl);
       const result = await service.testProvider(mockProvider);
@@ -174,8 +184,12 @@ describe("SettingsService", () => {
         ok: false,
         status: 422,
         json: async () => ({
-          error: { code: "422", path: "/api/settings/llm/test", timestamp: (/* @__PURE__ */ new Date()).toISOString() }
-        })
+          error: {
+            code: "422",
+            path: "/api/settings/llm/test",
+            timestamp: /* @__PURE__ */ new Date().toISOString(),
+          },
+        }),
       });
       service = new SettingsService(mockHttpClient, mockStorage, apiBaseUrl);
       const result = await service.testProvider(mockProvider);
@@ -196,21 +210,23 @@ describe("SettingsService", () => {
       service = new SettingsService(mockHttpClient, mockStorage, apiBaseUrl);
       const result = await service.testProvider(mockProvider);
       expect(result.status).toBe("error");
-      expect(result.message).toBe("Network error - check if backend is running");
+      expect(result.message).toBe(
+        "Network error - check if backend is running",
+      );
     });
     it("should handle provider without optional fields", async () => {
       const providerWithoutOptional = {
         id: "provider-2",
         name: "Minimal Provider",
         type: "custom",
-        enabled: true
+        enabled: true,
       };
       mockHttpClient.post.mockResolvedValue({
         ok: true,
         json: async () => ({
           status: "success",
-          message: "OK"
-        })
+          message: "OK",
+        }),
       });
       service = new SettingsService(mockHttpClient, mockStorage, apiBaseUrl);
       const result = await service.testProvider(providerWithoutOptional);
@@ -221,9 +237,9 @@ describe("SettingsService", () => {
           type: "custom",
           api_key: void 0,
           base_url: void 0,
-          model: void 0
+          model: void 0,
         },
-        { "Content-Type": "application/json" }
+        { "Content-Type": "application/json" },
       );
     });
   });

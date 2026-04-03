@@ -2,16 +2,19 @@ import { renderHook, act } from "@testing-library/react";
 import { useMarketplaceActions } from "./useMarketplaceActions";
 import { showError, showSuccess } from "../../utils/notifications";
 import { STORAGE_KEYS } from "../../config/constants";
-import { PENDING_AGENTS_STORAGE_KEY, PENDING_TOOLS_STORAGE_KEY } from "../utils/marketplaceConstants";
+import {
+  PENDING_AGENTS_STORAGE_KEY,
+  PENDING_TOOLS_STORAGE_KEY,
+} from "../utils/marketplaceConstants";
 import { MARKETPLACE_EVENTS } from "../utils/marketplaceEventConstants";
 import { MARKETPLACE_TABS, REPOSITORY_SUB_TABS } from "./useMarketplaceTabs";
 jest.mock("../../utils/notifications", () => ({
   showError: jest.fn(),
-  showSuccess: jest.fn()
+  showSuccess: jest.fn(),
 }));
 const mockNavigate = jest.fn();
 jest.mock("react-router-dom", () => ({
-  useNavigate: () => mockNavigate
+  useNavigate: () => mockNavigate,
 }));
 const mockShowError = showError;
 const mockShowSuccess = showSuccess;
@@ -21,7 +24,7 @@ describe("useMarketplaceActions", () => {
     setItem: jest.fn(),
     removeItem: jest.fn(),
     addEventListener: jest.fn(),
-    removeEventListener: jest.fn()
+    removeEventListener: jest.fn(),
   };
   const mockUseTemplate = jest.fn();
   const mockDeleteSelectedAgents = jest.fn();
@@ -30,40 +33,48 @@ describe("useMarketplaceActions", () => {
   const mockFetchRepositoryAgents = jest.fn();
   const mockTemplateSelection = {
     selectedIds: /* @__PURE__ */ new Set(),
-    clear: jest.fn()
+    clear: jest.fn(),
   };
   const mockAgentSelection = {
     selectedIds: /* @__PURE__ */ new Set(),
     get size() {
       return this.selectedIds.size;
     },
-    clear: jest.fn()
+    clear: jest.fn(),
   };
   const mockRepositoryAgentSelection = {
     selectedIds: /* @__PURE__ */ new Set(),
     get size() {
       return this.selectedIds.size;
     },
-    clear: jest.fn()
+    clear: jest.fn(),
   };
   const mockToolSelection = {
     selectedIds: /* @__PURE__ */ new Set(),
     get size() {
       return this.selectedIds.size;
     },
-    clear: jest.fn()
+    clear: jest.fn(),
   };
   const mockAgents = [
     { id: "agent-1", name: "Agent 1" },
-    { id: "agent-2", name: "Agent 2" }
+    { id: "agent-2", name: "Agent 2" },
   ];
   const mockRepositoryAgents = [
     { id: "repo-agent-1", name: "Repo Agent 1" },
-    { id: "repo-agent-2", name: "Repo Agent 2" }
+    { id: "repo-agent-2", name: "Repo Agent 2" },
   ];
   const mockTools = [
-    { id: "tool-1", name: "Calculator", tool_config: { tool_name: "calculator" } },
-    { id: "tool-2", name: "Web Search", tool_config: { tool_name: "web_search" } }
+    {
+      id: "tool-1",
+      name: "Calculator",
+      tool_config: { tool_name: "calculator" },
+    },
+    {
+      id: "tool-2",
+      name: "Web Search",
+      tool_config: { tool_name: "web_search" },
+    },
   ];
   const defaultOptions = {
     activeTab: MARKETPLACE_TABS.AGENTS,
@@ -80,7 +91,7 @@ describe("useMarketplaceActions", () => {
     deleteSelectedAgents: mockDeleteSelectedAgents,
     deleteSelectedWorkflows: mockDeleteSelectedWorkflows,
     deleteSelectedRepositoryAgents: mockDeleteSelectedRepositoryAgents,
-    fetchRepositoryAgents: mockFetchRepositoryAgents
+    fetchRepositoryAgents: mockFetchRepositoryAgents,
   };
   beforeEach(() => {
     jest.clearAllMocks();
@@ -110,7 +121,9 @@ describe("useMarketplaceActions", () => {
   });
   describe("hook initialization", () => {
     it("should initialize without errors", () => {
-      const { result } = renderHook(() => useMarketplaceActions(defaultOptions));
+      const { result } = renderHook(() =>
+        useMarketplaceActions(defaultOptions),
+      );
       expect(result.current).not.toBeNull();
       expect(result.current.handleLoadWorkflows).toBeDefined();
       expect(result.current.handleUseAgents).toBeDefined();
@@ -131,7 +144,9 @@ describe("useMarketplaceActions", () => {
       mockTemplateSelection.selectedIds.add("template-1");
       mockTemplateSelection.selectedIds.add("template-2");
       mockUseTemplate.mockResolvedValue(void 0);
-      const { result } = renderHook(() => useMarketplaceActions(defaultOptions));
+      const { result } = renderHook(() =>
+        useMarketplaceActions(defaultOptions),
+      );
       expect(result.current).not.toBeNull();
       await act(async () => {
         const promise = result.current.handleLoadWorkflows();
@@ -153,7 +168,9 @@ describe("useMarketplaceActions", () => {
     it("should clear template selection after loading", async () => {
       mockTemplateSelection.selectedIds.add("template-1");
       mockUseTemplate.mockResolvedValue(void 0);
-      const { result } = renderHook(() => useMarketplaceActions(defaultOptions));
+      const { result } = renderHook(() =>
+        useMarketplaceActions(defaultOptions),
+      );
       expect(result.current).not.toBeNull();
       await act(async () => {
         const promise = result.current.handleLoadWorkflows();
@@ -170,7 +187,9 @@ describe("useMarketplaceActions", () => {
       expect(mockTemplateSelection.clear).toHaveBeenCalled();
     });
     it("should handle empty template selection", async () => {
-      const { result } = renderHook(() => useMarketplaceActions(defaultOptions));
+      const { result } = renderHook(() =>
+        useMarketplaceActions(defaultOptions),
+      );
       expect(result.current).not.toBeNull();
       await act(async () => {
         await result.current.handleLoadWorkflows();
@@ -186,7 +205,9 @@ describe("useMarketplaceActions", () => {
       mockAgentSelection.selectedIds.add("agent-1");
       mockAgentSelection.selectedIds.add("agent-2");
       mockStorage.getItem.mockReturnValue("tab-123");
-      const { result } = renderHook(() => useMarketplaceActions(defaultOptions));
+      const { result } = renderHook(() =>
+        useMarketplaceActions(defaultOptions),
+      );
       expect(result.current).not.toBeNull();
       act(() => {
         result.current.handleUseAgents();
@@ -197,9 +218,11 @@ describe("useMarketplaceActions", () => {
       expect(mockStorage.getItem).toHaveBeenCalledWith(STORAGE_KEYS.ACTIVE_TAB);
       expect(mockStorage.setItem).toHaveBeenCalledWith(
         PENDING_AGENTS_STORAGE_KEY,
-        expect.stringContaining('"tabId":"tab-123"')
+        expect.stringContaining('"tabId":"tab-123"'),
       );
-      expect(mockShowSuccess).toHaveBeenCalledWith("2 agent(s) added to workflow");
+      expect(mockShowSuccess).toHaveBeenCalledWith(
+        "2 agent(s) added to workflow",
+      );
       expect(mockAgentSelection.clear).toHaveBeenCalled();
       expect(mockNavigate).toHaveBeenCalledWith("/");
     });
@@ -209,7 +232,7 @@ describe("useMarketplaceActions", () => {
       const options = {
         ...defaultOptions,
         activeTab: MARKETPLACE_TABS.REPOSITORY,
-        repositorySubTab: REPOSITORY_SUB_TABS.AGENTS
+        repositorySubTab: REPOSITORY_SUB_TABS.AGENTS,
       };
       const { result } = renderHook(() => useMarketplaceActions(options));
       expect(result.current).not.toBeNull();
@@ -220,19 +243,21 @@ describe("useMarketplaceActions", () => {
         jest.advanceTimersByTime(100);
       });
       const setItemCall = mockStorage.setItem.mock.calls.find(
-        (call) => call[0] === PENDING_AGENTS_STORAGE_KEY
+        (call) => call[0] === PENDING_AGENTS_STORAGE_KEY,
       );
       expect(setItemCall).toBeDefined();
       const storedData = JSON.parse(setItemCall[1]);
       expect(storedData.agents).toEqual([mockRepositoryAgents[0]]);
-      expect(mockShowSuccess).toHaveBeenCalledWith("1 agent(s) added to workflow");
+      expect(mockShowSuccess).toHaveBeenCalledWith(
+        "1 agent(s) added to workflow",
+      );
       expect(mockRepositoryAgentSelection.clear).toHaveBeenCalled();
       expect(mockNavigate).toHaveBeenCalledWith("/");
     });
     it("should show error when storage is not available", () => {
       const options = {
         ...defaultOptions,
-        storage: null
+        storage: null,
       };
       const { result } = renderHook(() => useMarketplaceActions(options));
       expect(result.current).not.toBeNull();
@@ -244,19 +269,25 @@ describe("useMarketplaceActions", () => {
     });
     it("should show error when no active workflow tab", () => {
       mockStorage.getItem.mockReturnValue(null);
-      const { result } = renderHook(() => useMarketplaceActions(defaultOptions));
+      const { result } = renderHook(() =>
+        useMarketplaceActions(defaultOptions),
+      );
       expect(result.current).not.toBeNull();
       act(() => {
         result.current.handleUseAgents();
       });
-      expect(mockShowError).toHaveBeenCalledWith("No active workflow found. Please open a workflow first.");
+      expect(mockShowError).toHaveBeenCalledWith(
+        "No active workflow found. Please open a workflow first.",
+      );
       expect(mockStorage.setItem).not.toHaveBeenCalled();
     });
     it("should dispatch custom event when adding agents", () => {
       mockAgentSelection.selectedIds.add("agent-1");
       mockStorage.getItem.mockReturnValue("tab-123");
       const dispatchEventSpy = jest.spyOn(window, "dispatchEvent");
-      const { result } = renderHook(() => useMarketplaceActions(defaultOptions));
+      const { result } = renderHook(() =>
+        useMarketplaceActions(defaultOptions),
+      );
       expect(result.current).not.toBeNull();
       act(() => {
         result.current.handleUseAgents();
@@ -277,7 +308,9 @@ describe("useMarketplaceActions", () => {
       mockToolSelection.selectedIds.add("tool-1");
       mockToolSelection.selectedIds.add("tool-2");
       mockStorage.getItem.mockReturnValue("tab-123");
-      const { result } = renderHook(() => useMarketplaceActions(defaultOptions));
+      const { result } = renderHook(() =>
+        useMarketplaceActions(defaultOptions),
+      );
       expect(result.current).not.toBeNull();
       act(() => {
         result.current.handleUseTools();
@@ -288,16 +321,18 @@ describe("useMarketplaceActions", () => {
       expect(mockStorage.getItem).toHaveBeenCalledWith(STORAGE_KEYS.ACTIVE_TAB);
       expect(mockStorage.setItem).toHaveBeenCalledWith(
         PENDING_TOOLS_STORAGE_KEY,
-        expect.stringContaining('"tabId":"tab-123"')
+        expect.stringContaining('"tabId":"tab-123"'),
       );
-      expect(mockShowSuccess).toHaveBeenCalledWith("2 tool(s) added to workflow");
+      expect(mockShowSuccess).toHaveBeenCalledWith(
+        "2 tool(s) added to workflow",
+      );
       expect(mockToolSelection.clear).toHaveBeenCalled();
       expect(mockNavigate).toHaveBeenCalledWith("/");
     });
     it("should show error when storage is not available", () => {
       const options = {
         ...defaultOptions,
-        storage: null
+        storage: null,
       };
       const { result } = renderHook(() => useMarketplaceActions(options));
       expect(result.current).not.toBeNull();
@@ -310,19 +345,25 @@ describe("useMarketplaceActions", () => {
     it("should show error when no active workflow tab", () => {
       mockToolSelection.selectedIds.add("tool-1");
       mockStorage.getItem.mockReturnValue(null);
-      const { result } = renderHook(() => useMarketplaceActions(defaultOptions));
+      const { result } = renderHook(() =>
+        useMarketplaceActions(defaultOptions),
+      );
       expect(result.current).not.toBeNull();
       act(() => {
         result.current.handleUseTools();
       });
-      expect(mockShowError).toHaveBeenCalledWith("No active workflow found. Please open a workflow first.");
+      expect(mockShowError).toHaveBeenCalledWith(
+        "No active workflow found. Please open a workflow first.",
+      );
       expect(mockStorage.setItem).not.toHaveBeenCalled();
     });
     it("should dispatch ADD_TOOLS_TO_WORKFLOW event", () => {
       mockToolSelection.selectedIds.add("tool-1");
       mockStorage.getItem.mockReturnValue("tab-123");
       const dispatchEventSpy = jest.spyOn(window, "dispatchEvent");
-      const { result } = renderHook(() => useMarketplaceActions(defaultOptions));
+      const { result } = renderHook(() =>
+        useMarketplaceActions(defaultOptions),
+      );
       expect(result.current).not.toBeNull();
       act(() => {
         result.current.handleUseTools();
@@ -332,7 +373,7 @@ describe("useMarketplaceActions", () => {
       });
       expect(dispatchEventSpy).toHaveBeenCalled();
       const event = dispatchEventSpy.mock.calls.find(
-        (call) => call[0].type === MARKETPLACE_EVENTS.ADD_TOOLS_TO_WORKFLOW
+        (call) => call[0].type === MARKETPLACE_EVENTS.ADD_TOOLS_TO_WORKFLOW,
       );
       expect(event).toBeDefined();
       const eventDetail = event[0].detail;
@@ -345,65 +386,85 @@ describe("useMarketplaceActions", () => {
     it("should delete selected agents", async () => {
       mockAgentSelection.selectedIds.add("agent-1");
       mockDeleteSelectedAgents.mockResolvedValue(void 0);
-      const { result } = renderHook(() => useMarketplaceActions(defaultOptions));
+      const { result } = renderHook(() =>
+        useMarketplaceActions(defaultOptions),
+      );
       expect(result.current).not.toBeNull();
       await act(async () => {
         await result.current.handleDeleteAgents();
       });
-      expect(mockDeleteSelectedAgents).toHaveBeenCalledWith(mockAgentSelection.selectedIds);
+      expect(mockDeleteSelectedAgents).toHaveBeenCalledWith(
+        mockAgentSelection.selectedIds,
+      );
     });
     it("should handle empty selection", async () => {
-      const { result } = renderHook(() => useMarketplaceActions(defaultOptions));
+      const { result } = renderHook(() =>
+        useMarketplaceActions(defaultOptions),
+      );
       expect(result.current).not.toBeNull();
       await act(async () => {
         await result.current.handleDeleteAgents();
       });
-      expect(mockDeleteSelectedAgents).toHaveBeenCalledWith(/* @__PURE__ */ new Set());
+      expect(mockDeleteSelectedAgents).toHaveBeenCalledWith(
+        /* @__PURE__ */ new Set(),
+      );
     });
   });
   describe("handleDeleteWorkflows", () => {
     it("should delete selected workflows", async () => {
       mockTemplateSelection.selectedIds.add("template-1");
       mockDeleteSelectedWorkflows.mockResolvedValue(void 0);
-      const { result } = renderHook(() => useMarketplaceActions(defaultOptions));
+      const { result } = renderHook(() =>
+        useMarketplaceActions(defaultOptions),
+      );
       expect(result.current).not.toBeNull();
       await act(async () => {
         await result.current.handleDeleteWorkflows();
       });
-      expect(mockDeleteSelectedWorkflows).toHaveBeenCalledWith(mockTemplateSelection.selectedIds);
+      expect(mockDeleteSelectedWorkflows).toHaveBeenCalledWith(
+        mockTemplateSelection.selectedIds,
+      );
     });
     it("should handle empty selection", async () => {
-      const { result } = renderHook(() => useMarketplaceActions(defaultOptions));
+      const { result } = renderHook(() =>
+        useMarketplaceActions(defaultOptions),
+      );
       expect(result.current).not.toBeNull();
       await act(async () => {
         await result.current.handleDeleteWorkflows();
       });
-      expect(mockDeleteSelectedWorkflows).toHaveBeenCalledWith(/* @__PURE__ */ new Set());
+      expect(mockDeleteSelectedWorkflows).toHaveBeenCalledWith(
+        /* @__PURE__ */ new Set(),
+      );
     });
   });
   describe("handleDeleteRepositoryAgents", () => {
     it("should delete selected repository agents", async () => {
       mockRepositoryAgentSelection.selectedIds.add("repo-agent-1");
       mockDeleteSelectedRepositoryAgents.mockResolvedValue(void 0);
-      const { result } = renderHook(() => useMarketplaceActions(defaultOptions));
+      const { result } = renderHook(() =>
+        useMarketplaceActions(defaultOptions),
+      );
       expect(result.current).not.toBeNull();
       await act(async () => {
         await result.current.handleDeleteRepositoryAgents();
       });
       expect(mockDeleteSelectedRepositoryAgents).toHaveBeenCalledWith(
         mockRepositoryAgentSelection.selectedIds,
-        mockFetchRepositoryAgents
+        mockFetchRepositoryAgents,
       );
     });
     it("should handle empty selection", async () => {
-      const { result } = renderHook(() => useMarketplaceActions(defaultOptions));
+      const { result } = renderHook(() =>
+        useMarketplaceActions(defaultOptions),
+      );
       expect(result.current).not.toBeNull();
       await act(async () => {
         await result.current.handleDeleteRepositoryAgents();
       });
       expect(mockDeleteSelectedRepositoryAgents).toHaveBeenCalledWith(
         /* @__PURE__ */ new Set(),
-        mockFetchRepositoryAgents
+        mockFetchRepositoryAgents,
       );
     });
   });

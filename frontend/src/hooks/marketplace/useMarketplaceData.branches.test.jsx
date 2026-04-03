@@ -5,11 +5,11 @@ jest.mock("../../utils/logger", () => ({
   logger: {
     debug: jest.fn(),
     error: jest.fn(),
-    warn: jest.fn()
-  }
+    warn: jest.fn(),
+  },
 }));
 jest.mock("../storage", () => ({
-  getLocalStorageItem: jest.fn()
+  getLocalStorageItem: jest.fn(),
 }));
 const mockGetLocalStorageItem = getLocalStorageItem;
 describe("useMarketplaceData - Remaining Branches", () => {
@@ -19,12 +19,12 @@ describe("useMarketplaceData - Remaining Branches", () => {
     jest.clearAllMocks();
     mockHttpClient = {
       get: jest.fn(),
-      post: jest.fn()
+      post: jest.fn(),
     };
     mockStorage = {
       getItem: jest.fn(),
       setItem: jest.fn(),
-      removeItem: jest.fn()
+      removeItem: jest.fn(),
     };
     mockGetLocalStorageItem.mockReturnValue([]);
   });
@@ -37,12 +37,12 @@ describe("useMarketplaceData - Remaining Branches", () => {
           // Utility function handles this gracefully
           description: "Test Description",
           tags: ["tag1"],
-          category: "automation"
-        }
+          category: "automation",
+        },
       ];
       mockStorage.getItem.mockReturnValue(JSON.stringify(invalidData));
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -52,12 +52,15 @@ describe("useMarketplaceData - Remaining Branches", () => {
           sortBy: "popular",
           user: null,
           activeTab: "repository",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
-      await waitFor(() => {
-        expect(result.current.loading).toBe(false);
-      }, { timeout: 3e3 });
+      await waitFor(
+        () => {
+          expect(result.current.loading).toBe(false);
+        },
+        { timeout: 3e3 },
+      );
       expect(result.current.loading).toBe(false);
       expect(result.current.repositoryAgents).toBeDefined();
     });
@@ -70,12 +73,12 @@ describe("useMarketplaceData - Remaining Branches", () => {
           description: null,
           // Utility function handles this gracefully
           tags: [],
-          category: "automation"
-        }
+          category: "automation",
+        },
       ];
       mockStorage.getItem.mockReturnValue(JSON.stringify(invalidData));
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -85,8 +88,8 @@ describe("useMarketplaceData - Remaining Branches", () => {
           sortBy: "popular",
           user: null,
           activeTab: "repository",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -104,12 +107,12 @@ describe("useMarketplaceData - Remaining Branches", () => {
           // Doesn't match 'test', so evaluates tags
           tags: null,
           // Utility function handles this gracefully with (item.tags || [])
-          category: "automation"
-        }
+          category: "automation",
+        },
       ];
       mockStorage.getItem.mockReturnValue(JSON.stringify(invalidData));
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -119,8 +122,8 @@ describe("useMarketplaceData - Remaining Branches", () => {
           sortBy: "popular",
           user: null,
           activeTab: "repository",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -135,12 +138,12 @@ describe("useMarketplaceData - Remaining Branches", () => {
           // name is missing/undefined - but code uses (a.name || '') so this should be safe
           description: "Test",
           tags: [],
-          category: "automation"
-        }
+          category: "automation",
+        },
       ];
       mockStorage.getItem.mockReturnValue(JSON.stringify(invalidData));
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -150,8 +153,8 @@ describe("useMarketplaceData - Remaining Branches", () => {
           // This will trigger localeCompare with (a.name || '')
           user: null,
           activeTab: "repository",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -165,8 +168,8 @@ describe("useMarketplaceData - Remaining Branches", () => {
           name: "Test Agent",
           description: "Test",
           tags: [],
-          category: "automation"
-        }
+          category: "automation",
+        },
       ];
       mockStorage.getItem.mockReturnValue(JSON.stringify(validData));
       const invalidSortData = [
@@ -176,13 +179,13 @@ describe("useMarketplaceData - Remaining Branches", () => {
           description: "Test",
           tags: [],
           category: "automation",
-          published_at: "invalid-date"
+          published_at: "invalid-date",
           // This might cause issues in Date parsing
-        }
+        },
       ];
       mockStorage.getItem.mockReturnValue(JSON.stringify(invalidSortData));
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -192,8 +195,8 @@ describe("useMarketplaceData - Remaining Branches", () => {
           // This will try to parse published_at
           user: null,
           activeTab: "repository",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -205,10 +208,10 @@ describe("useMarketplaceData - Remaining Branches", () => {
     it("should append category param when category is provided", async () => {
       mockHttpClient.get.mockResolvedValue({
         ok: true,
-        json: async () => ({ workflows: [] })
+        json: async () => ({ workflows: [] }),
       });
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -218,8 +221,8 @@ describe("useMarketplaceData - Remaining Branches", () => {
           sortBy: "popular",
           user: null,
           activeTab: "workflows-of-workflows",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -232,10 +235,10 @@ describe("useMarketplaceData - Remaining Branches", () => {
     it("should append search param when searchQuery is provided", async () => {
       mockHttpClient.get.mockResolvedValue({
         ok: true,
-        json: async () => ({ workflows: [] })
+        json: async () => ({ workflows: [] }),
       });
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -245,8 +248,8 @@ describe("useMarketplaceData - Remaining Branches", () => {
           sortBy: "popular",
           user: null,
           activeTab: "workflows-of-workflows",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -265,19 +268,19 @@ describe("useMarketplaceData - Remaining Branches", () => {
           name: "Agent 1",
           published_at: "2024-01-01",
           category: "automation",
-          tags: []
+          tags: [],
         },
         {
           id: "agent-2",
           name: "Agent 2",
           published_at: "2024-01-02",
           category: "automation",
-          tags: []
-        }
+          tags: [],
+        },
       ];
       mockGetLocalStorageItem.mockReturnValue(agentsData);
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -287,8 +290,8 @@ describe("useMarketplaceData - Remaining Branches", () => {
           // This should trigger line 232-233 branch
           user: null,
           activeTab: "agents",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -304,7 +307,7 @@ describe("useMarketplaceData - Remaining Branches", () => {
           published_at: null,
           // This should trigger dateA ? ... : 0 falsy branch
           category: "automation",
-          tags: []
+          tags: [],
         },
         {
           id: "agent-2",
@@ -312,12 +315,12 @@ describe("useMarketplaceData - Remaining Branches", () => {
           published_at: "2024-01-02",
           // This should trigger dateB ? ... : 0 truthy branch
           category: "automation",
-          tags: []
-        }
+          tags: [],
+        },
       ];
       mockGetLocalStorageItem.mockReturnValue(agentsData);
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -327,8 +330,8 @@ describe("useMarketplaceData - Remaining Branches", () => {
           // This should trigger line 232-233 with ternary branches
           user: null,
           activeTab: "agents",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -343,18 +346,18 @@ describe("useMarketplaceData - Remaining Branches", () => {
           id: "agent-1",
           name: "Agent 1",
           published_at: "2024-01-01",
-          category: "automation"
+          category: "automation",
         },
         {
           id: "agent-2",
           name: "Agent 2",
           published_at: "2024-01-02",
-          category: "automation"
-        }
+          category: "automation",
+        },
       ];
       mockStorage.getItem.mockReturnValue(JSON.stringify(agentsData));
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -364,8 +367,8 @@ describe("useMarketplaceData - Remaining Branches", () => {
           // This should trigger line 283-286 branch
           user: null,
           activeTab: "repository",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -379,18 +382,18 @@ describe("useMarketplaceData - Remaining Branches", () => {
           id: "agent-1",
           name: "Agent 1",
           published_at: "2024-01-01",
-          category: "automation"
+          category: "automation",
         },
         {
           id: "agent-2",
           name: "Agent 2",
           published_at: "2024-01-02",
-          category: "automation"
-        }
+          category: "automation",
+        },
       ];
       mockStorage.getItem.mockReturnValue(JSON.stringify(agentsData));
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -400,8 +403,8 @@ describe("useMarketplaceData - Remaining Branches", () => {
           // This should trigger line 283-286 branch
           user: null,
           activeTab: "repository",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -416,18 +419,18 @@ describe("useMarketplaceData - Remaining Branches", () => {
           name: "Agent 1",
           published_at: null,
           // This should trigger dateA ? ... : 0 branch
-          category: "automation"
+          category: "automation",
         },
         {
           id: "agent-2",
           name: "Agent 2",
           published_at: "2024-01-02",
-          category: "automation"
-        }
+          category: "automation",
+        },
       ];
       mockStorage.getItem.mockReturnValue(JSON.stringify(agentsData));
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -436,8 +439,8 @@ describe("useMarketplaceData - Remaining Branches", () => {
           sortBy: "popular",
           user: null,
           activeTab: "repository",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -449,17 +452,17 @@ describe("useMarketplaceData - Remaining Branches", () => {
         {
           id: "agent-1",
           name: "Zebra Agent",
-          category: "automation"
+          category: "automation",
         },
         {
           id: "agent-2",
           name: "Alpha Agent",
-          category: "automation"
-        }
+          category: "automation",
+        },
       ];
       mockStorage.getItem.mockReturnValue(JSON.stringify(agentsData));
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -469,8 +472,8 @@ describe("useMarketplaceData - Remaining Branches", () => {
           // This should trigger line 288 else branch
           user: null,
           activeTab: "repository",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);

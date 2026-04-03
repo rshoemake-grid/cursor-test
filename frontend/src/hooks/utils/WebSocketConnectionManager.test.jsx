@@ -1,6 +1,15 @@
 var __defProp = Object.defineProperty;
-var __defNormalProp = (obj, key, value) => key in obj ? __defProp(obj, key, { enumerable: true, configurable: true, writable: true, value }) : obj[key] = value;
-var __publicField = (obj, key, value) => __defNormalProp(obj, typeof key !== "symbol" ? key + "" : key, value);
+var __defNormalProp = (obj, key, value) =>
+  key in obj
+    ? __defProp(obj, key, {
+        enumerable: true,
+        configurable: true,
+        writable: true,
+        value,
+      })
+    : (obj[key] = value);
+var __publicField = (obj, key, value) =>
+  __defNormalProp(obj, typeof key !== "symbol" ? key + "" : key, value);
 import { act } from "@testing-library/react";
 import { WebSocketConnectionManager } from "./WebSocketConnectionManager";
 import { WS_CLOSE_CODES, EXECUTION_STATUS } from "./websocketConstants";
@@ -20,9 +29,8 @@ const _MockWebSocket = class _MockWebSocket {
       this.onclose(new CloseEvent("close", { code: code || 1e3, reason }));
     }
   }
-   
-  send(_data) {
-  }
+
+  send(_data) {}
 };
 __publicField(_MockWebSocket, "CONNECTING", 0);
 __publicField(_MockWebSocket, "OPEN", 1);
@@ -39,17 +47,17 @@ describe("WebSocketConnectionManager - Timeout Guards", () => {
     mockLogger = {
       debug: jest.fn(),
       error: jest.fn(),
-      warn: jest.fn()
+      warn: jest.fn(),
     };
     mockWebSocketFactory = {
-      create: jest.fn((url) => new MockWebSocket(url))
+      create: jest.fn((url) => new MockWebSocket(url)),
     };
     callbacks = {
       onLog: jest.fn(),
       onStatus: jest.fn(),
       onNodeUpdate: jest.fn(),
       onCompletion: jest.fn(),
-      onError: jest.fn()
+      onError: jest.fn(),
     };
   });
   afterEach(() => {
@@ -62,7 +70,7 @@ describe("WebSocketConnectionManager - Timeout Guards", () => {
         maxReconnectAttempts: 3,
         webSocketFactory: mockWebSocketFactory,
         windowLocation: { protocol: "ws:", host: "localhost:8000" },
-        logger: mockLogger
+        logger: mockLogger,
       });
       manager.connect(callbacks);
       act(() => {
@@ -71,7 +79,9 @@ describe("WebSocketConnectionManager - Timeout Guards", () => {
       const initialWs = manager.ws;
       expect(initialWs).toBeTruthy();
       if (initialWs && initialWs.onclose) {
-        initialWs.onclose(new CloseEvent("close", { code: 1006, wasClean: false }));
+        initialWs.onclose(
+          new CloseEvent("close", { code: 1006, wasClean: false }),
+        );
       }
       expect(manager.reconnectAttempts).toBe(1);
       expect(manager.reconnectTimeout).toBeTruthy();
@@ -79,7 +89,8 @@ describe("WebSocketConnectionManager - Timeout Guards", () => {
       for (let attempt = 1; attempt <= 3; attempt++) {
         const timeoutBefore = manager.reconnectTimeout;
         expect(timeoutBefore).toBeTruthy();
-        const factoryCallsBefore = mockWebSocketFactory.create.mock.calls.length;
+        const factoryCallsBefore =
+          mockWebSocketFactory.create.mock.calls.length;
         act(() => {
           jest.advanceTimersByTime(6e4);
         });
@@ -89,10 +100,14 @@ describe("WebSocketConnectionManager - Timeout Guards", () => {
         expect(currentWs).toBeTruthy();
         const reconnectAttemptsAfterConnect = manager.reconnectAttempts;
         if (currentWs && currentWs.onclose) {
-          currentWs.onclose(new CloseEvent("close", { code: 1006, wasClean: false }));
+          currentWs.onclose(
+            new CloseEvent("close", { code: 1006, wasClean: false }),
+          );
           const reconnectAttemptsAfterClose = manager.reconnectAttempts;
           if (reconnectAttemptsAfterConnect < 3) {
-            expect(reconnectAttemptsAfterClose).toBe(reconnectAttemptsAfterConnect + 1);
+            expect(reconnectAttemptsAfterClose).toBe(
+              reconnectAttemptsAfterConnect + 1,
+            );
           } else {
             expect(reconnectAttemptsAfterClose).toBe(3);
           }
@@ -107,13 +122,15 @@ describe("WebSocketConnectionManager - Timeout Guards", () => {
         act(() => {
           jest.advanceTimersByTime(5);
         });
-        finalWs.onclose(new CloseEvent("close", { code: 1006, wasClean: false }));
+        finalWs.onclose(
+          new CloseEvent("close", { code: 1006, wasClean: false }),
+        );
       }
       expect(mockLogger.warn).toHaveBeenCalledWith(
-        expect.stringContaining("Max reconnect attempts reached")
+        expect.stringContaining("Max reconnect attempts reached"),
       );
       expect(callbacks.onError).toHaveBeenCalledWith(
-        expect.stringContaining("WebSocket connection failed after 3 attempts")
+        expect.stringContaining("WebSocket connection failed after 3 attempts"),
       );
     });
     it("should clear existing timeout before setting new one", () => {
@@ -122,7 +139,7 @@ describe("WebSocketConnectionManager - Timeout Guards", () => {
         maxReconnectAttempts: 5,
         webSocketFactory: mockWebSocketFactory,
         windowLocation: { protocol: "ws:", host: "localhost:8000" },
-        logger: mockLogger
+        logger: mockLogger,
       });
       manager.connect(callbacks);
       act(() => {
@@ -149,7 +166,7 @@ describe("WebSocketConnectionManager - Timeout Guards", () => {
         maxReconnectAttempts: 5,
         webSocketFactory: mockWebSocketFactory,
         windowLocation: { protocol: "ws:", host: "localhost:8000" },
-        logger: mockLogger
+        logger: mockLogger,
       });
       manager.connect(callbacks);
       act(() => {
@@ -170,7 +187,7 @@ describe("WebSocketConnectionManager - Timeout Guards", () => {
         maxReconnectAttempts: 5,
         webSocketFactory: mockWebSocketFactory,
         windowLocation: { protocol: "ws:", host: "localhost:8000" },
-        logger: mockLogger
+        logger: mockLogger,
       });
       manager.connect(callbacks);
       act(() => {
@@ -178,7 +195,12 @@ describe("WebSocketConnectionManager - Timeout Guards", () => {
       });
       const ws = manager.ws;
       if (ws && ws.onclose) {
-        ws.onclose(new CloseEvent("close", { code: WS_CLOSE_CODES.NORMAL_CLOSURE, wasClean: true }));
+        ws.onclose(
+          new CloseEvent("close", {
+            code: WS_CLOSE_CODES.NORMAL_CLOSURE,
+            wasClean: true,
+          }),
+        );
       }
       act(() => {
         jest.advanceTimersByTime(1e3);
@@ -195,8 +217,8 @@ describe("WebSocketConnectionManager - Timeout Guards", () => {
         reconnectionStrategy: {
           calculateDelay: jest.fn(() => 1e5),
           // Returns delay > MAX_DELAY
-          shouldReconnect: () => true
-        }
+          shouldReconnect: () => true,
+        },
       });
       manager.connect(callbacks);
       act(() => {
@@ -217,7 +239,7 @@ describe("WebSocketConnectionManager - Timeout Guards", () => {
         maxReconnectAttempts: 5,
         webSocketFactory: mockWebSocketFactory,
         windowLocation: { protocol: "ws:", host: "localhost:8000" },
-        logger: mockLogger
+        logger: mockLogger,
       });
       manager.connect(callbacks);
       expect(mockWebSocketFactory.create).not.toHaveBeenCalled();
@@ -229,7 +251,7 @@ describe("WebSocketConnectionManager - Timeout Guards", () => {
         maxReconnectAttempts: 5,
         webSocketFactory: mockWebSocketFactory,
         windowLocation: { protocol: "ws:", host: "localhost:8000" },
-        logger: mockLogger
+        logger: mockLogger,
       });
       manager.connect(callbacks);
       expect(mockWebSocketFactory.create).not.toHaveBeenCalled();
@@ -240,7 +262,7 @@ describe("WebSocketConnectionManager - Timeout Guards", () => {
         maxReconnectAttempts: 5,
         webSocketFactory: mockWebSocketFactory,
         windowLocation: { protocol: "ws:", host: "localhost:8000" },
-        logger: mockLogger
+        logger: mockLogger,
       });
       manager.connect(callbacks);
       act(() => {
@@ -251,7 +273,7 @@ describe("WebSocketConnectionManager - Timeout Guards", () => {
       manager.updateStatus(EXECUTION_STATUS.COMPLETED);
       expect(closeSpy).toHaveBeenCalledWith(
         WS_CLOSE_CODES.NORMAL_CLOSURE,
-        expect.any(String)
+        expect.any(String),
       );
       expect(manager.ws).toBeNull();
     });
@@ -263,7 +285,7 @@ describe("WebSocketConnectionManager - Timeout Guards", () => {
         maxReconnectAttempts: 5,
         webSocketFactory: mockWebSocketFactory,
         windowLocation: { protocol: "ws:", host: "localhost:8000" },
-        logger: mockLogger
+        logger: mockLogger,
       });
       manager.connect(callbacks);
       act(() => {
@@ -284,7 +306,7 @@ describe("WebSocketConnectionManager - Timeout Guards", () => {
         maxReconnectAttempts: 5,
         webSocketFactory: mockWebSocketFactory,
         windowLocation: { protocol: "ws:", host: "localhost:8000" },
-        logger: mockLogger
+        logger: mockLogger,
       });
       manager.connect(callbacks);
       act(() => {
@@ -307,7 +329,7 @@ describe("WebSocketConnectionManager - Timeout Guards", () => {
         maxReconnectAttempts: 5,
         webSocketFactory: mockWebSocketFactory,
         windowLocation: { protocol: "ws:", host: "localhost:8000" },
-        logger: mockLogger
+        logger: mockLogger,
       });
       manager.connect(callbacks);
       act(() => {
@@ -328,7 +350,7 @@ describe("WebSocketConnectionManager - Timeout Guards", () => {
         maxReconnectAttempts: 5,
         webSocketFactory: mockWebSocketFactory,
         windowLocation: { protocol: "ws:", host: "localhost:8000" },
-        logger: mockLogger
+        logger: mockLogger,
       });
       manager.connect(callbacks);
       act(() => {
@@ -341,7 +363,7 @@ describe("WebSocketConnectionManager - Timeout Guards", () => {
       manager.close();
       expect(closeSpy).toHaveBeenCalledWith(
         WS_CLOSE_CODES.NORMAL_CLOSURE,
-        void 0
+        void 0,
       );
       expect(manager.ws).toBeNull();
     });
@@ -351,7 +373,7 @@ describe("WebSocketConnectionManager - Timeout Guards", () => {
         maxReconnectAttempts: 5,
         webSocketFactory: mockWebSocketFactory,
         windowLocation: { protocol: "ws:", host: "localhost:8000" },
-        logger: mockLogger
+        logger: mockLogger,
       });
       manager.connect(callbacks);
       act(() => {
@@ -362,7 +384,7 @@ describe("WebSocketConnectionManager - Timeout Guards", () => {
       manager.close("Test reason");
       expect(closeSpy).toHaveBeenCalledWith(
         WS_CLOSE_CODES.NORMAL_CLOSURE,
-        "Test reason"
+        "Test reason",
       );
     });
     it("should verify close() when hasPending === false", () => {
@@ -371,7 +393,7 @@ describe("WebSocketConnectionManager - Timeout Guards", () => {
         maxReconnectAttempts: 5,
         webSocketFactory: mockWebSocketFactory,
         windowLocation: { protocol: "ws:", host: "localhost:8000" },
-        logger: mockLogger
+        logger: mockLogger,
       });
       manager.connect(callbacks);
       act(() => {
@@ -382,7 +404,12 @@ describe("WebSocketConnectionManager - Timeout Guards", () => {
         ws.onopen(new Event("open"));
       }
       if (ws && ws.onclose) {
-        ws.onclose(new CloseEvent("close", { code: WS_CLOSE_CODES.NORMAL_CLOSURE, wasClean: true }));
+        ws.onclose(
+          new CloseEvent("close", {
+            code: WS_CLOSE_CODES.NORMAL_CLOSURE,
+            wasClean: true,
+          }),
+        );
       }
       expect(manager.reconnectTimeout).toBeNull();
       manager.close();
@@ -394,7 +421,7 @@ describe("WebSocketConnectionManager - Timeout Guards", () => {
         maxReconnectAttempts: 5,
         webSocketFactory: mockWebSocketFactory,
         windowLocation: { protocol: "ws:", host: "localhost:8000" },
-        logger: mockLogger
+        logger: mockLogger,
       });
       expect(manager.ws).toBeNull();
       manager.close();
@@ -408,7 +435,7 @@ describe("WebSocketConnectionManager - Timeout Guards", () => {
         maxReconnectAttempts: 5,
         webSocketFactory: mockWebSocketFactory,
         windowLocation: { protocol: "ws:", host: "localhost:8000" },
-        logger: mockLogger
+        logger: mockLogger,
       });
       manager.connect(callbacks);
       act(() => {
@@ -428,7 +455,7 @@ describe("WebSocketConnectionManager - Timeout Guards", () => {
         maxReconnectAttempts: 5,
         webSocketFactory: mockWebSocketFactory,
         windowLocation: { protocol: "ws:", host: "localhost:8000" },
-        logger: mockLogger
+        logger: mockLogger,
       });
       expect(manager.isConnectedState).toBe(false);
       expect(manager.isConnected).toBe(false);
@@ -439,7 +466,7 @@ describe("WebSocketConnectionManager - Timeout Guards", () => {
         maxReconnectAttempts: 5,
         webSocketFactory: mockWebSocketFactory,
         windowLocation: { protocol: "ws:", host: "localhost:8000" },
-        logger: mockLogger
+        logger: mockLogger,
       });
       manager.isConnectedState = true;
       manager.ws = null;
@@ -451,7 +478,7 @@ describe("WebSocketConnectionManager - Timeout Guards", () => {
         maxReconnectAttempts: 5,
         webSocketFactory: mockWebSocketFactory,
         windowLocation: { protocol: "ws:", host: "localhost:8000" },
-        logger: mockLogger
+        logger: mockLogger,
       });
       manager.connect(callbacks);
       act(() => {
@@ -468,7 +495,7 @@ describe("WebSocketConnectionManager - Timeout Guards", () => {
         maxReconnectAttempts: 5,
         webSocketFactory: mockWebSocketFactory,
         windowLocation: { protocol: "ws:", host: "localhost:8000" },
-        logger: mockLogger
+        logger: mockLogger,
       });
       manager.connect(callbacks);
       act(() => {
@@ -488,10 +515,10 @@ describe("WebSocketConnectionManager - Timeout Guards", () => {
         webSocketFactory: {
           create: jest.fn(() => {
             throw new Error("Connection failed");
-          })
+          }),
         },
         windowLocation: { protocol: "ws:", host: "localhost:8000" },
-        logger: mockLogger
+        logger: mockLogger,
       });
       manager.connect(callbacks);
       expect(callbacks.onError).toHaveBeenCalledWith("Connection failed");
@@ -504,10 +531,10 @@ describe("WebSocketConnectionManager - Timeout Guards", () => {
         webSocketFactory: {
           create: jest.fn(() => {
             throw "String error";
-          })
+          }),
         },
         windowLocation: { protocol: "ws:", host: "localhost:8000" },
-        logger: mockLogger
+        logger: mockLogger,
       });
       manager.connect(callbacks);
       expect(callbacks.onError).toHaveBeenCalledWith("String error");
@@ -521,7 +548,7 @@ describe("WebSocketConnectionManager - Timeout Guards", () => {
         maxReconnectAttempts: 5,
         webSocketFactory: mockWebSocketFactory,
         windowLocation: { protocol: "ws:", host: "localhost:8000" },
-        logger: mockLogger
+        logger: mockLogger,
       });
       const initialLastKnownStatus = manager.lastKnownStatus;
       manager.updateStatus(EXECUTION_STATUS.RUNNING);
@@ -535,7 +562,7 @@ describe("WebSocketConnectionManager - Timeout Guards", () => {
         maxReconnectAttempts: 5,
         webSocketFactory: mockWebSocketFactory,
         windowLocation: { protocol: "ws:", host: "localhost:8000" },
-        logger: mockLogger
+        logger: mockLogger,
       });
       const initialLastKnownStatus = manager.lastKnownStatus;
       manager.updateStatus(void 0);
@@ -547,7 +574,7 @@ describe("WebSocketConnectionManager - Timeout Guards", () => {
         maxReconnectAttempts: 5,
         webSocketFactory: mockWebSocketFactory,
         windowLocation: { protocol: "ws:", host: "localhost:8000" },
-        logger: mockLogger
+        logger: mockLogger,
       });
       manager.connect(callbacks);
       act(() => {
@@ -564,7 +591,7 @@ describe("WebSocketConnectionManager - Timeout Guards", () => {
         maxReconnectAttempts: 5,
         webSocketFactory: mockWebSocketFactory,
         windowLocation: { protocol: "ws:", host: "localhost:8000" },
-        logger: mockLogger
+        logger: mockLogger,
       });
       manager.connect(callbacks);
       act(() => {
@@ -581,7 +608,7 @@ describe("WebSocketConnectionManager - Timeout Guards", () => {
         maxReconnectAttempts: 5,
         webSocketFactory: mockWebSocketFactory,
         windowLocation: { protocol: "ws:", host: "localhost:8000" },
-        logger: mockLogger
+        logger: mockLogger,
       });
       manager.connect(callbacks);
       act(() => {
@@ -598,7 +625,7 @@ describe("WebSocketConnectionManager - Timeout Guards", () => {
         maxReconnectAttempts: 5,
         webSocketFactory: mockWebSocketFactory,
         windowLocation: { protocol: "ws:", host: "localhost:8000" },
-        logger: mockLogger
+        logger: mockLogger,
       });
       manager.connect(callbacks);
       act(() => {
@@ -615,7 +642,7 @@ describe("WebSocketConnectionManager - Timeout Guards", () => {
         maxReconnectAttempts: 5,
         webSocketFactory: mockWebSocketFactory,
         windowLocation: { protocol: "ws:", host: "localhost:8000" },
-        logger: mockLogger
+        logger: mockLogger,
       });
       manager.connect(callbacks);
       act(() => {
@@ -634,7 +661,7 @@ describe("WebSocketConnectionManager - Timeout Guards", () => {
         maxReconnectAttempts: 5,
         webSocketFactory: mockWebSocketFactory,
         windowLocation: { protocol: "ws:", host: "localhost:8000" },
-        logger: mockLogger
+        logger: mockLogger,
       });
       expect(manager.ws).toBeNull();
       manager.updateStatus(EXECUTION_STATUS.COMPLETED);
@@ -646,7 +673,7 @@ describe("WebSocketConnectionManager - Timeout Guards", () => {
         maxReconnectAttempts: 5,
         webSocketFactory: mockWebSocketFactory,
         windowLocation: { protocol: "ws:", host: "localhost:8000" },
-        logger: mockLogger
+        logger: mockLogger,
       });
       manager.connect(callbacks);
       act(() => {
@@ -667,7 +694,7 @@ describe("WebSocketConnectionManager - Timeout Guards", () => {
         maxReconnectAttempts: 5,
         webSocketFactory: mockWebSocketFactory,
         windowLocation: { protocol: "ws:", host: "localhost:8000" },
-        logger: mockLogger
+        logger: mockLogger,
       });
       manager.connect(callbacks);
       act(() => {

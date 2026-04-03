@@ -4,7 +4,7 @@ import { useMarketplaceData } from "./useMarketplaceData";
 import { getLocalStorageItem } from "../storage";
 const waitForWithTimeout = waitForWithTimeoutFakeTimers;
 jest.mock("../storage", () => ({
-  getLocalStorageItem: jest.fn()
+  getLocalStorageItem: jest.fn(),
 }));
 const mockGetLocalStorageItem = getLocalStorageItem;
 describe("useMarketplaceData - Initialization", () => {
@@ -19,21 +19,23 @@ describe("useMarketplaceData - Initialization", () => {
         }
         return Promise.resolve({ json: async () => [] });
       }),
-      post: jest.fn().mockResolvedValue({ ok: true, json: async () => ({ nodes: [] }) })
+      post: jest
+        .fn()
+        .mockResolvedValue({ ok: true, json: async () => ({ nodes: [] }) }),
     };
     mockStorage = {
       getItem: jest.fn().mockReturnValue(null),
       setItem: jest.fn(),
       removeItem: jest.fn(),
       addEventListener: jest.fn(),
-      removeEventListener: jest.fn()
+      removeEventListener: jest.fn(),
     };
   });
   describe("Initial state values", () => {
     it("should initialize templates as empty array", () => {
       mockGetLocalStorageItem.mockReturnValue([]);
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -42,8 +44,8 @@ describe("useMarketplaceData - Initialization", () => {
           sortBy: "popular",
           user: null,
           activeTab: "agents",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       expect(result.current.templates).toEqual([]);
       expect(result.current.templates).toBeInstanceOf(Array);
@@ -51,8 +53,8 @@ describe("useMarketplaceData - Initialization", () => {
     });
     it("should initialize workflowsOfWorkflows as empty array", () => {
       mockGetLocalStorageItem.mockReturnValue([]);
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -61,8 +63,8 @@ describe("useMarketplaceData - Initialization", () => {
           sortBy: "popular",
           user: null,
           activeTab: "agents",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       expect(result.current.workflowsOfWorkflows).toEqual([]);
       expect(result.current.workflowsOfWorkflows).toBeInstanceOf(Array);
@@ -70,8 +72,8 @@ describe("useMarketplaceData - Initialization", () => {
     });
     it("should initialize agents as empty array", () => {
       mockGetLocalStorageItem.mockReturnValue([]);
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -80,8 +82,8 @@ describe("useMarketplaceData - Initialization", () => {
           sortBy: "popular",
           user: null,
           activeTab: "agents",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       expect(result.current.agents).toEqual([]);
       expect(result.current.agents).toBeInstanceOf(Array);
@@ -89,8 +91,8 @@ describe("useMarketplaceData - Initialization", () => {
     });
     it("should initialize repositoryAgents as empty array", () => {
       mockGetLocalStorageItem.mockReturnValue([]);
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -99,8 +101,8 @@ describe("useMarketplaceData - Initialization", () => {
           sortBy: "popular",
           user: null,
           activeTab: "agents",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       expect(result.current.repositoryAgents).toEqual([]);
       expect(result.current.repositoryAgents).toBeInstanceOf(Array);
@@ -113,8 +115,8 @@ describe("useMarketplaceData - Initialization", () => {
         resolvePromise = resolve;
       });
       mockHttpClient.get.mockImplementation(() => delayedPromise);
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -123,8 +125,8 @@ describe("useMarketplaceData - Initialization", () => {
           sortBy: "popular",
           user: null,
           activeTab: "repository",
-          repositorySubTab: "workflows"
-        })
+          repositorySubTab: "workflows",
+        }),
       );
       expect(result.current.loading).toBe(true);
       expect(typeof result.current.loading).toBe("boolean");
@@ -137,8 +139,8 @@ describe("useMarketplaceData - Initialization", () => {
   describe("Default empty array handling", () => {
     it("should use empty array when getLocalStorageItem returns undefined", async () => {
       mockGetLocalStorageItem.mockReturnValue(void 0);
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -147,8 +149,8 @@ describe("useMarketplaceData - Initialization", () => {
           sortBy: "popular",
           user: null,
           activeTab: "agents",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitForWithTimeout(() => {
         expect(result.current.loading).toBe(false);
@@ -158,8 +160,8 @@ describe("useMarketplaceData - Initialization", () => {
     });
     it("should use empty array when getLocalStorageItem returns null", async () => {
       mockGetLocalStorageItem.mockReturnValue(null);
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -168,8 +170,8 @@ describe("useMarketplaceData - Initialization", () => {
           sortBy: "popular",
           user: null,
           activeTab: "agents",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitForWithTimeout(() => {
         expect(result.current.loading).toBe(false);
@@ -179,8 +181,8 @@ describe("useMarketplaceData - Initialization", () => {
     });
     it("should use empty array when storage.getItem returns null", async () => {
       mockStorage.getItem.mockReturnValue(null);
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -189,8 +191,8 @@ describe("useMarketplaceData - Initialization", () => {
           sortBy: "popular",
           user: null,
           activeTab: "repository",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitForWithTimeout(() => {
         expect(result.current.loading).toBe(false);
@@ -200,8 +202,8 @@ describe("useMarketplaceData - Initialization", () => {
     });
     it("should use empty array when storage.getItem returns empty string", async () => {
       mockStorage.getItem.mockReturnValue("");
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -210,8 +212,8 @@ describe("useMarketplaceData - Initialization", () => {
           sortBy: "popular",
           user: null,
           activeTab: "repository",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitForWithTimeout(() => {
         expect(result.current.loading).toBe(false);
@@ -221,10 +223,10 @@ describe("useMarketplaceData - Initialization", () => {
     });
     it("should initialize workflowsOfWorkflows array in fetchWorkflowsOfWorkflows", async () => {
       mockHttpClient.get.mockResolvedValue({
-        json: async () => []
+        json: async () => [],
       });
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -233,8 +235,8 @@ describe("useMarketplaceData - Initialization", () => {
           sortBy: "popular",
           user: null,
           activeTab: "workflows-of-workflows",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitForWithTimeout(() => {
         expect(result.current.loading).toBe(false);
@@ -245,8 +247,8 @@ describe("useMarketplaceData - Initialization", () => {
     });
     it("should handle empty array operations correctly", async () => {
       mockGetLocalStorageItem.mockReturnValue([]);
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -255,8 +257,8 @@ describe("useMarketplaceData - Initialization", () => {
           sortBy: "popular",
           user: null,
           activeTab: "agents",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitForWithTimeout(() => {
         expect(result.current.loading).toBe(false);
@@ -268,8 +270,8 @@ describe("useMarketplaceData - Initialization", () => {
   describe("Array identity and operations", () => {
     it("should verify empty arrays are truly empty (not [undefined])", async () => {
       mockGetLocalStorageItem.mockReturnValue([]);
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -278,8 +280,8 @@ describe("useMarketplaceData - Initialization", () => {
           sortBy: "popular",
           user: null,
           activeTab: "agents",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitForWithTimeout(() => {
         expect(result.current.loading).toBe(false);
@@ -290,8 +292,8 @@ describe("useMarketplaceData - Initialization", () => {
     });
     it("should verify array operations work on empty arrays", async () => {
       mockGetLocalStorageItem.mockReturnValue([]);
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -300,8 +302,8 @@ describe("useMarketplaceData - Initialization", () => {
           sortBy: "popular",
           user: null,
           activeTab: "agents",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitForWithTimeout(() => {
         expect(result.current.loading).toBe(false);

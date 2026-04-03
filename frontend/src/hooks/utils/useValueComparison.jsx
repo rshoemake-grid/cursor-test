@@ -4,10 +4,11 @@ function defaultComparisonStrategy(current, previous) {
   }
   return current !== previous;
 }
-function hasValueChanged(current, previous, strategy = defaultComparisonStrategy) {
+function hasValueChanged(
+  current,
+  previous,
+  strategy = defaultComparisonStrategy,
+) {
   return strategy(current, previous);
 }
-export {
-  defaultComparisonStrategy,
-  hasValueChanged
-};
+export { defaultComparisonStrategy, hasValueChanged };

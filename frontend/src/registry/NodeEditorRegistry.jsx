@@ -1,6 +1,15 @@
 var __defProp = Object.defineProperty;
-var __defNormalProp = (obj, key, value) => key in obj ? __defProp(obj, key, { enumerable: true, configurable: true, writable: true, value }) : obj[key] = value;
-var __publicField = (obj, key, value) => __defNormalProp(obj, typeof key !== "symbol" ? key + "" : key, value);
+var __defNormalProp = (obj, key, value) =>
+  key in obj
+    ? __defProp(obj, key, {
+        enumerable: true,
+        configurable: true,
+        writable: true,
+        value,
+      })
+    : (obj[key] = value);
+var __publicField = (obj, key, value) =>
+  __defNormalProp(obj, typeof key !== "symbol" ? key + "" : key, value);
 import { logger } from "../utils/logger";
 class NodeEditorRegistry {
   constructor() {
@@ -11,7 +20,9 @@ class NodeEditorRegistry {
    */
   register(nodeType, handler) {
     if (this.handlers.has(nodeType)) {
-      logger.warn(`Node type "${nodeType}" is already registered. Overwriting.`);
+      logger.warn(
+        `Node type "${nodeType}" is already registered. Overwriting.`,
+      );
     }
     this.handlers.set(nodeType, handler);
   }
@@ -41,6 +52,4 @@ class NodeEditorRegistry {
   }
 }
 const nodeEditorRegistry = new NodeEditorRegistry();
-export {
-  nodeEditorRegistry
-};
+export { nodeEditorRegistry };

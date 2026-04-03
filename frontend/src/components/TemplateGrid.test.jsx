@@ -1,17 +1,13 @@
-import { jsx } from "react/jsx-runtime";
 import { render, screen } from "@testing-library/react";
 import { TemplateGrid } from "./TemplateGrid";
 jest.mock("./TemplateCard", () => {
   const { jsx } = require("react/jsx-runtime");
   return {
-    TemplateCard: ({
-      item,
-      isSelected
-    }) => /* @__PURE__ */jsx("div", {
-      "data-testid": `template-card-${item.id}`,
-      "data-selected": isSelected,
-      children: item.name || item.label
-    })
+    TemplateCard: ({ item, isSelected }) => (
+      <div data-testid={`template-card-${item.id}`} data-selected={isSelected}>
+        {item.name || item.label}
+      </div>
+    ),
   };
 });
 describe("TemplateGrid", () => {
@@ -25,7 +21,7 @@ describe("TemplateGrid", () => {
     tags: ["test"],
     is_official: false,
     uses_count: 10,
-    likes_count: 5
+    likes_count: 5,
   };
   const mockTemplate2 = {
     id: "template-2",
@@ -37,7 +33,7 @@ describe("TemplateGrid", () => {
     tags: ["data"],
     is_official: true,
     uses_count: 20,
-    likes_count: 10
+    likes_count: 10,
   };
   const mockAgent = {
     id: "agent-1",
@@ -48,125 +44,111 @@ describe("TemplateGrid", () => {
     difficulty: "advanced",
     estimated_time: "2 hours",
     tags: ["ai"],
-    is_official: true
+    is_official: true,
   };
   const mockProps = {
     items: [mockTemplate1, mockTemplate2],
-    selectedIds: /* @__PURE__ */new Set(),
+    selectedIds: new Set(),
     type: "template",
     onToggleSelect: jest.fn(),
     onCardClick: jest.fn(),
-    getDifficultyColor: jest.fn(() => "bg-green-100 text-green-800")
+    getDifficultyColor: jest.fn(() => "bg-green-100 text-green-800"),
   };
   beforeEach(() => {
     jest.clearAllMocks();
   });
   it("should render all items", () => {
-    render(/* @__PURE__ */jsx(TemplateGrid, {
-      ...mockProps
-    }));
+    render(<TemplateGrid {...mockProps} />);
     expect(screen.getByTestId("template-card-template-1")).toBeInTheDocument();
     expect(screen.getByTestId("template-card-template-2")).toBeInTheDocument();
   });
   it("should mark selected items", () => {
-    render(/* @__PURE__ */jsx(TemplateGrid, {
-      ...mockProps,
-      selectedIds: /* @__PURE__ */new Set(["template-1"])
-    }));
+    render(
+      <TemplateGrid {...mockProps} selectedIds={new Set(["template-1"])} />,
+    );
     const card1 = screen.getByTestId("template-card-template-1");
     const card2 = screen.getByTestId("template-card-template-2");
     expect(card1).toHaveAttribute("data-selected", "true");
     expect(card2).toHaveAttribute("data-selected", "false");
   });
   it("should render empty message when items array is empty", () => {
-    render(/* @__PURE__ */jsx(TemplateGrid, {
-      ...mockProps,
-      items: []
-    }));
-    expect(screen.getByText("No items found. Try adjusting your filters.")).toBeInTheDocument();
+    render(<TemplateGrid {...mockProps} items={[]} />);
+    expect(
+      screen.getByText("No items found. Try adjusting your filters."),
+    ).toBeInTheDocument();
   });
   it("should use custom empty message when provided", () => {
-    render(/* @__PURE__ */jsx(TemplateGrid, {
-      ...mockProps,
-      items: [],
-      emptyMessage: "Custom empty message"
-    }));
+    render(
+      <TemplateGrid
+        {...mockProps}
+        items={[]}
+        emptyMessage="Custom empty message"
+      />,
+    );
     expect(screen.getByText("Custom empty message")).toBeInTheDocument();
   });
   it("should render agent items", () => {
-    render(/* @__PURE__ */jsx(TemplateGrid, {
-      ...mockProps,
-      items: [mockAgent],
-      type: "agent"
-    }));
+    render(<TemplateGrid {...mockProps} items={[mockAgent]} type="agent" />);
     expect(screen.getByTestId("template-card-agent-1")).toBeInTheDocument();
   });
   it("should pass correct props to TemplateCard", () => {
-    render(/* @__PURE__ */jsx(TemplateGrid, {
-      ...mockProps,
-      selectedIds: /* @__PURE__ */new Set(["template-1"])
-    }));
+    render(
+      <TemplateGrid {...mockProps} selectedIds={new Set(["template-1"])} />,
+    );
     const card1 = screen.getByTestId("template-card-template-1");
     expect(card1).toBeInTheDocument();
     expect(card1).toHaveAttribute("data-selected", "true");
   });
   it("should handle multiple selected items", () => {
-    render(/* @__PURE__ */jsx(TemplateGrid, {
-      ...mockProps,
-      selectedIds: /* @__PURE__ */new Set(["template-1", "template-2"])
-    }));
+    render(
+      <TemplateGrid
+        {...mockProps}
+        selectedIds={new Set(["template-1", "template-2"])}
+      />,
+    );
     const card1 = screen.getByTestId("template-card-template-1");
     const card2 = screen.getByTestId("template-card-template-2");
     expect(card1).toHaveAttribute("data-selected", "true");
     expect(card2).toHaveAttribute("data-selected", "true");
   });
   it("should handle empty selectedIds set", () => {
-    render(/* @__PURE__ */jsx(TemplateGrid, {
-      ...mockProps,
-      selectedIds: /* @__PURE__ */new Set()
-    }));
+    render(<TemplateGrid {...mockProps} selectedIds={new Set()} />);
     const card1 = screen.getByTestId("template-card-template-1");
     expect(card1).toHaveAttribute("data-selected", "false");
   });
   it("should pass footerText to TemplateCard when provided", () => {
-    render(/* @__PURE__ */jsx(TemplateGrid, {
-      ...mockProps,
-      footerText: "Custom footer"
-    }));
+    render(<TemplateGrid {...mockProps} footerText="Custom footer" />);
     expect(screen.getByTestId("template-card-template-1")).toBeInTheDocument();
   });
   it("should render grid with correct structure", () => {
-    const {
-      container
-    } = render(/* @__PURE__ */jsx(TemplateGrid, {
-      ...mockProps
-    }));
+    const { container } = render(<TemplateGrid {...mockProps} />);
     const grid = container.querySelector(".grid");
     expect(grid).toBeInTheDocument();
     expect(grid).toHaveClass("grid-cols-1", "md:grid-cols-2", "lg:grid-cols-3");
   });
   it("should handle single item", () => {
-    render(/* @__PURE__ */jsx(TemplateGrid, {
-      ...mockProps,
-      items: [mockTemplate1]
-    }));
+    render(<TemplateGrid {...mockProps} items={[mockTemplate1]} />);
     expect(screen.getByTestId("template-card-template-1")).toBeInTheDocument();
-    expect(screen.queryByTestId("template-card-template-2")).not.toBeInTheDocument();
+    expect(
+      screen.queryByTestId("template-card-template-2"),
+    ).not.toBeInTheDocument();
   });
   it("should handle many items", () => {
-    const manyItems = Array.from({
-      length: 10
-    }, (_, i) => ({
-      ...mockTemplate1,
-      id: `template-${i}`,
-      name: `Template ${i}`
-    }));
-    render(/* @__PURE__ */jsx(TemplateGrid, {
-      ...mockProps,
-      items: manyItems
-    }));
-    manyItems.forEach(item => {
-      expect(screen.getByTestId(`template-card-${item.id}`)).toBeInTheDocument();
+    const manyItems = Array.from(
+      {
+        length: 10,
+      },
+      (_, i) => ({
+        ...mockTemplate1,
+        id: `template-${i}`,
+        name: `Template ${i}`,
+      }),
+    );
+    render(<TemplateGrid {...mockProps} items={manyItems} />);
+    manyItems.forEach((item) => {
+      expect(
+        screen.getByTestId(`template-card-${item.id}`),
+      ).toBeInTheDocument();
     });
   });
 });

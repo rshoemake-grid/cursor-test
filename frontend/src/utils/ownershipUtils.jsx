@@ -58,5 +58,5 @@ export {
   filterOwnedItems,
   filterUserOwnedDeletableItems,
   isOwner,
-  separateOfficialItems
+  separateOfficialItems,
 };

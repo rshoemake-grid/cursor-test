@@ -1,5 +1,9 @@
-import { jsx } from "react/jsx-runtime";
-import { setupMocks, mockUseAuth, renderWithRouter, waitForWithTimeout } from "./SettingsPage.test.shared";
+import {
+  setupMocks,
+  mockUseAuth,
+  renderWithRouter,
+  waitForWithTimeout,
+} from "./SettingsPage.test.shared";
 import SettingsPage from "./SettingsPage";
 import { screen, fireEvent } from "@testing-library/react";
 import { showConfirm } from "../utils/confirm";
@@ -9,23 +13,25 @@ describe("SettingsPage - Basic", () => {
     setupMocks();
   });
   it("should render settings page", async () => {
-    renderWithRouter(/* @__PURE__ */ jsx(SettingsPage, {}));
+    renderWithRouter(<SettingsPage />);
     await waitForWithTimeout(() => {
       const settingsElements = screen.getAllByText(/Settings/);
       expect(settingsElements.length).toBeGreaterThan(0);
     }, 2e3);
   });
   it("should render LLM providers tab by default", async () => {
-    renderWithRouter(/* @__PURE__ */ jsx(SettingsPage, {}));
+    renderWithRouter(<SettingsPage />);
     await waitForWithTimeout(() => {
       expect(screen.getByText(/LLM Providers/)).toBeInTheDocument();
     }, 2e3);
   });
   it("should switch to workflow settings tab", async () => {
-    renderWithRouter(/* @__PURE__ */ jsx(SettingsPage, {}));
+    renderWithRouter(<SettingsPage />);
     await waitForWithTimeout(() => {
       const buttons = screen.getAllByRole("button");
-      const workflowTab = buttons.find((btn) => btn.textContent?.includes("Workflow"));
+      const workflowTab = buttons.find((btn) =>
+        btn.textContent?.includes("Workflow"),
+      );
       if (workflowTab) {
         fireEvent.click(workflowTab);
       }
@@ -38,11 +44,13 @@ describe("SettingsPage - Basic", () => {
     }, 2e3);
   });
   it("should show add provider form when add button is clicked", async () => {
-    renderWithRouter(/* @__PURE__ */ jsx(SettingsPage, {}));
+    renderWithRouter(<SettingsPage />);
     await waitForWithTimeout(() => {
       const buttons = screen.getAllByRole("button");
       const addButton = buttons.find(
-        (btn) => btn.textContent?.includes("Add") && !btn.textContent?.includes("Sync")
+        (btn) =>
+          btn.textContent?.includes("Add") &&
+          !btn.textContent?.includes("Sync"),
       );
       if (addButton) {
         fireEvent.click(addButton);
@@ -64,11 +72,16 @@ describe("SettingsPage - Basic", () => {
         apiKey: "sk-test",
         defaultModel: "gpt-4",
         models: ["gpt-4"],
-        enabled: true
-      }
+        enabled: true,
+      },
     ];
-    localStorage.setItem(STORAGE_KEYS.LLM_SETTINGS, JSON.stringify({ providers: savedProviders }));
-    renderWithRouter(/* @__PURE__ */ jsx(SettingsPage, {}));
+    localStorage.setItem(
+      STORAGE_KEYS.LLM_SETTINGS,
+      JSON.stringify({
+        providers: savedProviders,
+      }),
+    );
+    renderWithRouter(<SettingsPage />);
     await waitForWithTimeout(() => {
       const openAIElements = screen.queryAllByText("OpenAI");
       if (openAIElements.length === 0) {
@@ -79,7 +92,7 @@ describe("SettingsPage - Basic", () => {
     }, 3e3);
   });
   it("should save provider to localStorage", async () => {
-    renderWithRouter(/* @__PURE__ */ jsx(SettingsPage, {}));
+    renderWithRouter(<SettingsPage />);
     await waitForWithTimeout(() => {
       const settingsElements = screen.getAllByText(/Settings/);
       expect(settingsElements.length).toBeGreaterThan(0);
@@ -87,17 +100,25 @@ describe("SettingsPage - Basic", () => {
     await waitForWithTimeout(() => {
       const buttons = screen.getAllByRole("button");
       const addButton = buttons.find(
-        (btn) => btn.textContent?.includes("Add") && !btn.textContent?.includes("Sync")
+        (btn) =>
+          btn.textContent?.includes("Add") &&
+          !btn.textContent?.includes("Sync"),
       );
       if (addButton) {
         fireEvent.click(addButton);
       }
     }, 2e3);
     await waitForWithTimeout(() => {
-      const apiKeyInputs = screen.queryAllByPlaceholderText(/Enter API key|API key/);
+      const apiKeyInputs = screen.queryAllByPlaceholderText(
+        /Enter API key|API key/,
+      );
       if (apiKeyInputs.length > 0) {
         const apiKeyInput = apiKeyInputs[0];
-        fireEvent.change(apiKeyInput, { target: { value: "sk-test123" } });
+        fireEvent.change(apiKeyInput, {
+          target: {
+            value: "sk-test123",
+          },
+        });
         const saveButtons = screen.queryAllByText(/Save Provider|Save/);
         if (saveButtons.length > 0) {
           fireEvent.click(saveButtons[0]);
@@ -118,11 +139,16 @@ describe("SettingsPage - Basic", () => {
         apiKey: "sk-test",
         defaultModel: "gpt-4",
         models: ["gpt-4"],
-        enabled: true
-      }
+        enabled: true,
+      },
     ];
-    localStorage.setItem(STORAGE_KEYS.LLM_SETTINGS, JSON.stringify({ providers: savedProviders }));
-    renderWithRouter(/* @__PURE__ */ jsx(SettingsPage, {}));
+    localStorage.setItem(
+      STORAGE_KEYS.LLM_SETTINGS,
+      JSON.stringify({
+        providers: savedProviders,
+      }),
+    );
+    renderWithRouter(<SettingsPage />);
     await waitForWithTimeout(() => {
       const settingsElements = screen.getAllByText(/Settings/);
       expect(settingsElements.length).toBeGreaterThan(0);
@@ -152,11 +178,16 @@ describe("SettingsPage - Basic", () => {
         apiKey: "sk-test",
         defaultModel: "gpt-4",
         models: ["gpt-4"],
-        enabled: true
-      }
+        enabled: true,
+      },
     ];
-    localStorage.setItem(STORAGE_KEYS.LLM_SETTINGS, JSON.stringify({ providers: savedProviders }));
-    renderWithRouter(/* @__PURE__ */ jsx(SettingsPage, {}));
+    localStorage.setItem(
+      STORAGE_KEYS.LLM_SETTINGS,
+      JSON.stringify({
+        providers: savedProviders,
+      }),
+    );
+    renderWithRouter(<SettingsPage />);
     await waitForWithTimeout(() => {
       const settingsElements = screen.getAllByText(/Settings/);
       expect(settingsElements.length).toBeGreaterThan(0);
@@ -181,10 +212,12 @@ describe("SettingsPage - Basic", () => {
     }
   });
   it("should update iteration limit", async () => {
-    renderWithRouter(/* @__PURE__ */ jsx(SettingsPage, {}));
+    renderWithRouter(<SettingsPage />);
     await waitForWithTimeout(() => {
       const buttons = screen.getAllByRole("button");
-      const workflowTab = buttons.find((btn) => btn.textContent?.includes("Workflow"));
+      const workflowTab = buttons.find((btn) =>
+        btn.textContent?.includes("Workflow"),
+      );
       if (workflowTab) {
         fireEvent.click(workflowTab);
       }
@@ -193,7 +226,11 @@ describe("SettingsPage - Basic", () => {
       const limitInputs = screen.queryAllByLabelText(/Iteration Limit/);
       if (limitInputs.length > 0) {
         const limitInput = limitInputs[0];
-        fireEvent.change(limitInput, { target: { value: "20" } });
+        fireEvent.change(limitInput, {
+          target: {
+            value: "20",
+          },
+        });
         expect(limitInput.value).toBe("20");
       } else {
         expect(screen.getAllByText(/Settings/).length).toBeGreaterThan(0);
@@ -209,14 +246,21 @@ describe("SettingsPage - Basic", () => {
         apiKey: "sk-test",
         defaultModel: "",
         models: ["gpt-4", "gpt-3.5-turbo"],
-        enabled: true
-      }
+        enabled: true,
+      },
     ];
-    localStorage.setItem(STORAGE_KEYS.LLM_SETTINGS, JSON.stringify({ providers: savedProviders }));
-    renderWithRouter(/* @__PURE__ */ jsx(SettingsPage, {}));
+    localStorage.setItem(
+      STORAGE_KEYS.LLM_SETTINGS,
+      JSON.stringify({
+        providers: savedProviders,
+      }),
+    );
+    renderWithRouter(<SettingsPage />);
     await waitForWithTimeout(() => {
       const buttons = screen.getAllByRole("button");
-      const workflowTab = buttons.find((btn) => btn.textContent?.includes("Workflow"));
+      const workflowTab = buttons.find((btn) =>
+        btn.textContent?.includes("Workflow"),
+      );
       if (workflowTab) {
         fireEvent.click(workflowTab);
       }
@@ -225,9 +269,15 @@ describe("SettingsPage - Basic", () => {
       const modelSelects = screen.queryAllByLabelText(/Default Model/);
       if (modelSelects.length > 0) {
         const modelSelect = modelSelects[0];
-        const optionExists = Array.from(modelSelect.options).some((opt) => opt.value === "gpt-4");
+        const optionExists = Array.from(modelSelect.options).some(
+          (opt) => opt.value === "gpt-4",
+        );
         if (optionExists && modelSelect.options.length > 1) {
-          fireEvent.change(modelSelect, { target: { value: "gpt-4" } });
+          fireEvent.change(modelSelect, {
+            target: {
+              value: "gpt-4",
+            },
+          });
           expect(modelSelect.value).toBe("gpt-4");
         } else {
           expect(modelSelect).toBeInTheDocument();
@@ -246,11 +296,16 @@ describe("SettingsPage - Basic", () => {
         apiKey: "sk-test123",
         defaultModel: "gpt-4",
         models: ["gpt-4"],
-        enabled: true
-      }
+        enabled: true,
+      },
     ];
-    localStorage.setItem(STORAGE_KEYS.LLM_SETTINGS, JSON.stringify({ providers: savedProviders }));
-    renderWithRouter(/* @__PURE__ */ jsx(SettingsPage, {}));
+    localStorage.setItem(
+      STORAGE_KEYS.LLM_SETTINGS,
+      JSON.stringify({
+        providers: savedProviders,
+      }),
+    );
+    renderWithRouter(<SettingsPage />);
     await waitForWithTimeout(() => {
       const settingsElements = screen.getAllByText(/Settings/);
       expect(settingsElements.length).toBeGreaterThan(0);
@@ -277,11 +332,16 @@ describe("SettingsPage - Basic", () => {
         apiKey: "sk-test",
         defaultModel: "gpt-4",
         models: ["gpt-4", "gpt-3.5-turbo"],
-        enabled: true
-      }
+        enabled: true,
+      },
     ];
-    localStorage.setItem(STORAGE_KEYS.LLM_SETTINGS, JSON.stringify({ providers: savedProviders }));
-    renderWithRouter(/* @__PURE__ */ jsx(SettingsPage, {}));
+    localStorage.setItem(
+      STORAGE_KEYS.LLM_SETTINGS,
+      JSON.stringify({
+        providers: savedProviders,
+      }),
+    );
+    renderWithRouter(<SettingsPage />);
     await waitForWithTimeout(() => {
       const settingsElements = screen.getAllByText(/Settings/);
       expect(settingsElements.length).toBeGreaterThan(0);
@@ -306,8 +366,8 @@ describe("SettingsPage - Basic", () => {
       token: null,
       login: jest.fn(),
       logout: jest.fn(),
-      register: jest.fn()
+      register: jest.fn(),
     });
-    renderWithRouter(/* @__PURE__ */ jsx(SettingsPage, {}));
+    renderWithRouter(<SettingsPage />);
   });
 });

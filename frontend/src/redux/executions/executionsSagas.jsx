@@ -18,7 +18,8 @@ function* fetchExecutionsWorker(action) {
     const data = yield call([apiClient, apiClient.listExecutions], params);
     yield put(fetchSuccess(data));
   } catch (e) {
-    const message = e?.message != null ? String(e.message) : "Failed to load executions";
+    const message =
+      e?.message != null ? String(e.message) : "Failed to load executions";
     yield put(fetchFailed(message));
   }
 }

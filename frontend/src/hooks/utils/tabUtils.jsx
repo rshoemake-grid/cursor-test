@@ -5,7 +5,7 @@ function createNewTab() {
     workflowId: null,
     isUnsaved: true,
     executions: [],
-    activeExecutionId: null
+    activeExecutionId: null,
   };
 }
 function createTabWithWorkflow(workflowId, name = "Loading...") {
@@ -15,17 +15,15 @@ function createTabWithWorkflow(workflowId, name = "Loading...") {
     workflowId,
     isUnsaved: false,
     executions: [],
-    activeExecutionId: null
+    activeExecutionId: null,
   };
 }
 function updateTab(tabs, tabId, updates) {
-  return tabs.map(
-    (tab) => tab.id === tabId ? { ...tab, ...updates } : tab
-  );
+  return tabs.map((tab) => (tab.id === tabId ? { ...tab, ...updates } : tab));
 }
 function updateTabByWorkflowId(tabs, workflowId, updates) {
-  return tabs.map(
-    (tab) => tab.workflowId === workflowId ? { ...tab, ...updates } : tab
+  return tabs.map((tab) =>
+    tab.workflowId === workflowId ? { ...tab, ...updates } : tab,
   );
 }
 function findTab(tabs, tabId) {
@@ -37,7 +35,12 @@ function findTabByWorkflowId(tabs, workflowId) {
 function removeTab(tabs, tabId) {
   return tabs.filter((tab) => tab.id !== tabId);
 }
-function handleActiveTabAfterClose(closedTabId, activeTabId, remainingTabs, setActiveTabId) {
+function handleActiveTabAfterClose(
+  closedTabId,
+  activeTabId,
+  remainingTabs,
+  setActiveTabId,
+) {
   if (closedTabId !== activeTabId) {
     return;
   }
@@ -63,5 +66,5 @@ export {
   removeTab,
   tabExists,
   updateTab,
-  updateTabByWorkflowId
+  updateTabByWorkflowId,
 };

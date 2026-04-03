@@ -9,20 +9,20 @@ const CONDITION_TYPES = {
   NOT_LESS_THAN: "not_less_than",
   EMPTY: "empty",
   NOT_EMPTY: "not_empty",
-  CUSTOM: "custom"
+  CUSTOM: "custom",
 };
 const EXECUTION_STATUSES = {
   PENDING: "pending",
   RUNNING: "running",
   COMPLETED: "completed",
   FAILED: "failed",
-  PAUSED: "paused"
+  PAUSED: "paused",
 };
 const LOG_LEVELS = {
   INFO: "INFO",
   WARNING: "WARNING",
   ERROR: "ERROR",
-  DEBUG: "DEBUG"
+  DEBUG: "DEBUG",
 };
 const NODE_TYPES = {
   START: "start",
@@ -37,16 +37,16 @@ const NODE_TYPES = {
   LOCAL_FILESYSTEM: "local_filesystem",
   AWS_S3: "aws_s3",
   GCP_BUCKET: "gcp_bucket",
-  GCP_PUBSUB: "gcp_pubsub"
+  GCP_PUBSUB: "gcp_pubsub",
 };
 const FIREBASE_SERVICES = {
   FIRESTORE: "firestore",
   REALTIME_DB: "realtime_db",
-  STORAGE: "storage"
+  STORAGE: "storage",
 };
 const INPUT_MODES = {
   READ: "read",
-  WRITE: "write"
+  WRITE: "write",
 };
 function isValidConditionType(value) {
   return Object.values(CONDITION_TYPES).includes(value);
@@ -66,5 +66,5 @@ export {
   NODE_TYPES,
   isValidConditionType,
   isValidExecutionStatus,
-  isValidLogLevel
+  isValidLogLevel,
 };

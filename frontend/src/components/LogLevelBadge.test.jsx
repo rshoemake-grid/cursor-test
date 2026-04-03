@@ -1,107 +1,135 @@
-import { jsx } from "react/jsx-runtime";
 import { render, screen } from "@testing-library/react";
 import LogLevelBadge from "./LogLevelBadge";
 import { isValidLogLevel } from "../utils/logLevel";
 describe("LogLevelBadge", () => {
   it("should render ERROR level", () => {
-    render(/* @__PURE__ */ jsx(LogLevelBadge, { level: "ERROR" }));
+    render(<LogLevelBadge level="ERROR" />);
     expect(screen.getByText("ERROR")).toBeInTheDocument();
   });
   it("should render WARNING level", () => {
-    render(/* @__PURE__ */ jsx(LogLevelBadge, { level: "WARNING" }));
+    render(<LogLevelBadge level="WARNING" />);
     expect(screen.getByText("WARNING")).toBeInTheDocument();
   });
   it("should render INFO level", () => {
-    render(/* @__PURE__ */ jsx(LogLevelBadge, { level: "INFO" }));
+    render(<LogLevelBadge level="INFO" />);
     const badge = screen.getByText("INFO");
     expect(badge).toBeInTheDocument();
     expect(badge.textContent).toBe("INFO");
   });
   it("should apply correct classes for INFO level", () => {
-    const { container } = render(/* @__PURE__ */ jsx(LogLevelBadge, { level: "INFO" }));
+    const { container } = render(<LogLevelBadge level="INFO" />);
     const badge = container.firstChild;
     expect(badge.className).toContain("bg-gray-800");
     expect(badge.className).toContain("text-gray-300");
   });
   it("should apply correct text color for INFO level without background", () => {
-    const { container } = render(/* @__PURE__ */ jsx(LogLevelBadge, { level: "INFO", showBackground: false }));
+    const { container } = render(
+      <LogLevelBadge level="INFO" showBackground={false} />,
+    );
     const badge = container.firstChild;
     expect(badge.className).toContain("text-gray-300");
   });
   it("should render DEBUG level", () => {
-    render(/* @__PURE__ */ jsx(LogLevelBadge, { level: "DEBUG" }));
+    render(<LogLevelBadge level="DEBUG" />);
     expect(screen.getByText("DEBUG")).toBeInTheDocument();
   });
   it("should show background by default", () => {
-    const { container } = render(/* @__PURE__ */ jsx(LogLevelBadge, { level: "ERROR" }));
+    const { container } = render(<LogLevelBadge level="ERROR" />);
     const badge = container.firstChild;
     expect(badge.className).toContain("bg-red-900/30");
   });
   it("should hide background when showBackground is false", () => {
-    const { container } = render(/* @__PURE__ */ jsx(LogLevelBadge, { level: "ERROR", showBackground: false }));
+    const { container } = render(
+      <LogLevelBadge level="ERROR" showBackground={false} />,
+    );
     const badge = container.firstChild;
     expect(badge.className).not.toContain("bg-red-900/30");
     expect(badge.className).toContain("text-red-400");
   });
   it("should normalize invalid level to INFO", () => {
-    render(/* @__PURE__ */ jsx(LogLevelBadge, { level: "invalid-level" }));
+    render(<LogLevelBadge level="invalid-level" />);
     expect(screen.getByText("INFO")).toBeInTheDocument();
   });
   it("should apply custom className", () => {
-    const { container } = render(/* @__PURE__ */ jsx(LogLevelBadge, { level: "ERROR", className: "custom-class" }));
+    const { container } = render(
+      <LogLevelBadge level="ERROR" className="custom-class" />,
+    );
     const badge = container.firstChild;
     expect(badge.className).toContain("custom-class");
   });
   describe("edge cases", () => {
     it("should handle showBackground being false", () => {
-      render(/* @__PURE__ */ jsx(LogLevelBadge, { level: "INFO", showBackground: false }));
+      render(<LogLevelBadge level="INFO" showBackground={false} />);
       const badge = screen.getByText("INFO");
       expect(badge).toBeInTheDocument();
       expect(badge.className).not.toContain("bg-");
     });
     it("should handle showBackground being undefined", () => {
-      render(/* @__PURE__ */ jsx(LogLevelBadge, { level: "INFO" }));
+      render(<LogLevelBadge level="INFO" />);
       const badge = screen.getByText("INFO");
       expect(badge).toBeInTheDocument();
       expect(badge.className).toContain("bg-");
     });
     it("should handle className being empty string", () => {
-      render(/* @__PURE__ */ jsx(LogLevelBadge, { level: "INFO", className: "" }));
+      render(<LogLevelBadge level="INFO" className="" />);
       const badge = screen.getByText("INFO");
       expect(badge).toBeInTheDocument();
     });
     it("should handle className being provided", () => {
-      render(/* @__PURE__ */ jsx(LogLevelBadge, { level: "INFO", className: "custom-class" }));
+      render(<LogLevelBadge level="INFO" className="custom-class" />);
       const badge = screen.getByText("INFO");
       expect(badge.className).toContain("custom-class");
     });
     it("should handle showBackground true with className", () => {
-      render(/* @__PURE__ */ jsx(LogLevelBadge, { level: "INFO", showBackground: true, className: "test-class" }));
+      render(
+        <LogLevelBadge
+          level="INFO"
+          showBackground={true}
+          className="test-class"
+        />,
+      );
       const badge = screen.getByText("INFO");
       expect(badge.className).toContain("test-class");
       expect(badge.className).toContain("bg-");
     });
     it("should handle showBackground false with className", () => {
-      render(/* @__PURE__ */ jsx(LogLevelBadge, { level: "INFO", showBackground: false, className: "test-class" }));
+      render(
+        <LogLevelBadge
+          level="INFO"
+          showBackground={false}
+          className="test-class"
+        />,
+      );
       const badge = screen.getByText("INFO");
       expect(badge.className).toContain("test-class");
       expect(badge.className).not.toContain("bg-");
     });
     it("should handle ternary operator for showBackground", () => {
-      const { unmount: unmount1 } = render(/* @__PURE__ */ jsx(LogLevelBadge, { level: "INFO", showBackground: true }));
+      const { unmount: unmount1 } = render(
+        <LogLevelBadge level="INFO" showBackground={true} />,
+      );
       const badge1 = screen.getByText("INFO");
       expect(badge1.className).toContain("bg-");
       unmount1();
       document.body.innerHTML = "";
-      const { unmount: unmount2 } = render(/* @__PURE__ */ jsx(LogLevelBadge, { level: "INFO", showBackground: false }));
+      const { unmount: unmount2 } = render(
+        <LogLevelBadge level="INFO" showBackground={false} />,
+      );
       const badge2 = screen.getByText("INFO");
       expect(badge2.className).not.toContain("bg-");
       unmount2();
     });
     it("should handle isValidLogLevel check for all levels", () => {
-      const levels = ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL", "INVALID"];
+      const levels = [
+        "DEBUG",
+        "INFO",
+        "WARNING",
+        "ERROR",
+        "CRITICAL",
+        "INVALID",
+      ];
       for (const level of levels) {
-        const { unmount } = render(/* @__PURE__ */ jsx(LogLevelBadge, { level }));
+        const { unmount } = render(<LogLevelBadge level={level} />);
         const badge = screen.getByText(isValidLogLevel(level) ? level : "INFO");
         expect(badge).toBeInTheDocument();
         unmount();
@@ -111,7 +139,9 @@ describe("LogLevelBadge", () => {
     it("should handle all valid log levels with background", () => {
       const validLevels = ["INFO", "WARNING", "ERROR", "DEBUG"];
       for (const level of validLevels) {
-        const { unmount, container } = render(/* @__PURE__ */ jsx(LogLevelBadge, { level, showBackground: true }));
+        const { unmount, container } = render(
+          <LogLevelBadge level={level} showBackground={true} />,
+        );
         const badge = container.firstChild;
         expect(badge.textContent).toBe(level);
         expect(badge.className).toContain("bg-");
@@ -122,7 +152,9 @@ describe("LogLevelBadge", () => {
     it("should handle all valid log levels without background", () => {
       const validLevels = ["INFO", "WARNING", "ERROR", "DEBUG"];
       for (const level of validLevels) {
-        const { unmount, container } = render(/* @__PURE__ */ jsx(LogLevelBadge, { level, showBackground: false }));
+        const { unmount, container } = render(
+          <LogLevelBadge level={level} showBackground={false} />,
+        );
         const badge = container.firstChild;
         expect(badge.textContent).toBe(level);
         expect(badge.className).not.toContain("bg-");
@@ -132,63 +164,75 @@ describe("LogLevelBadge", () => {
       }
     });
     it("should handle className concatenation correctly", () => {
-      const { container } = render(/* @__PURE__ */ jsx(LogLevelBadge, { level: "ERROR", className: "custom-class another-class" }));
+      const { container } = render(
+        <LogLevelBadge level="ERROR" className="custom-class another-class" />,
+      );
       const badge = container.firstChild;
       expect(badge.className).toContain("custom-class");
       expect(badge.className).toContain("another-class");
       expect(badge.className).toContain("font-semibold");
     });
     it("should handle empty level string", () => {
-      render(/* @__PURE__ */ jsx(LogLevelBadge, { level: "" }));
+      render(<LogLevelBadge level="" />);
       expect(screen.getByText("INFO")).toBeInTheDocument();
     });
     it("should handle level with whitespace", () => {
-      render(/* @__PURE__ */ jsx(LogLevelBadge, { level: "  ERROR  " }));
+      render(<LogLevelBadge level="  ERROR  " />);
       expect(screen.getByText("INFO")).toBeInTheDocument();
     });
     it("should handle null level", () => {
-      render(/* @__PURE__ */ jsx(LogLevelBadge, { level: null }));
+      render(<LogLevelBadge level={null} />);
       expect(screen.getByText("INFO")).toBeInTheDocument();
     });
     it("should handle undefined level", () => {
-      render(/* @__PURE__ */ jsx(LogLevelBadge, { level: void 0 }));
+      render(<LogLevelBadge level={void 0} />);
       expect(screen.getByText("INFO")).toBeInTheDocument();
     });
     it("should handle numeric level", () => {
-      render(/* @__PURE__ */ jsx(LogLevelBadge, { level: 123 }));
+      render(<LogLevelBadge level={123} />);
       expect(screen.getByText("INFO")).toBeInTheDocument();
     });
     it("should handle boolean level", () => {
-      render(/* @__PURE__ */ jsx(LogLevelBadge, { level: true }));
+      render(<LogLevelBadge level={true} />);
       expect(screen.getByText("INFO")).toBeInTheDocument();
     });
     it("should verify showBackground default value is true", () => {
-      const { container } = render(/* @__PURE__ */ jsx(LogLevelBadge, { level: "ERROR" }));
+      const { container } = render(<LogLevelBadge level="ERROR" />);
       const badge = container.firstChild;
       expect(badge.className).toContain("bg-red-900/30");
     });
     it("should verify showBackground ternary: true branch", () => {
-      const { container } = render(/* @__PURE__ */ jsx(LogLevelBadge, { level: "WARNING", showBackground: true }));
+      const { container } = render(
+        <LogLevelBadge level="WARNING" showBackground={true} />,
+      );
       const badge = container.firstChild;
       expect(badge.className).toContain("bg-yellow-900/30");
       expect(badge.className).toContain("text-yellow-200");
     });
     it("should verify showBackground ternary: false branch", () => {
-      const { container } = render(/* @__PURE__ */ jsx(LogLevelBadge, { level: "WARNING", showBackground: false }));
+      const { container } = render(
+        <LogLevelBadge level="WARNING" showBackground={false} />,
+      );
       const badge = container.firstChild;
       expect(badge.className).not.toContain("bg-yellow-900/30");
       expect(badge.className).toContain("text-yellow-400");
     });
     it("should verify isValidLogLevel ternary: true branch", () => {
-      render(/* @__PURE__ */ jsx(LogLevelBadge, { level: "DEBUG" }));
+      render(<LogLevelBadge level="DEBUG" />);
       expect(screen.getByText("DEBUG")).toBeInTheDocument();
     });
     it("should verify isValidLogLevel ternary: false branch", () => {
-      render(/* @__PURE__ */ jsx(LogLevelBadge, { level: "INVALID" }));
+      render(<LogLevelBadge level="INVALID" />);
       expect(screen.getByText("INFO")).toBeInTheDocument();
     });
     it("should verify className concatenation with all parts", () => {
-      const { container } = render(/* @__PURE__ */ jsx(LogLevelBadge, { level: "ERROR", showBackground: true, className: "custom" }));
+      const { container } = render(
+        <LogLevelBadge
+          level="ERROR"
+          showBackground={true}
+          className="custom"
+        />,
+      );
       const badge = container.firstChild;
       expect(badge.className).toContain("font-semibold");
       expect(badge.className).toContain("bg-red-900/30");
@@ -196,7 +240,13 @@ describe("LogLevelBadge", () => {
       expect(badge.className).toContain("custom");
     });
     it("should verify className concatenation without background", () => {
-      const { container } = render(/* @__PURE__ */ jsx(LogLevelBadge, { level: "ERROR", showBackground: false, className: "custom" }));
+      const { container } = render(
+        <LogLevelBadge
+          level="ERROR"
+          showBackground={false}
+          className="custom"
+        />,
+      );
       const badge = container.firstChild;
       expect(badge.className).toContain("font-semibold");
       expect(badge.className).not.toContain("bg-red-900/30");
@@ -204,47 +254,66 @@ describe("LogLevelBadge", () => {
       expect(badge.className).toContain("custom");
     });
     it("should verify all CRITICAL level handling", () => {
-      render(/* @__PURE__ */ jsx(LogLevelBadge, { level: "CRITICAL" }));
+      render(<LogLevelBadge level="CRITICAL" />);
       expect(screen.getByText("INFO")).toBeInTheDocument();
     });
     it("should verify exact isValidLogLevel call with level parameter", () => {
-      const isValidLogLevelSpy = jest.spyOn(require("../utils/logLevel"), "isValidLogLevel");
-      render(/* @__PURE__ */ jsx(LogLevelBadge, { level: "DEBUG" }));
+      const isValidLogLevelSpy = jest.spyOn(
+        require("../utils/logLevel"),
+        "isValidLogLevel",
+      );
+      render(<LogLevelBadge level="DEBUG" />);
       expect(isValidLogLevelSpy).toHaveBeenCalledWith("DEBUG");
       isValidLogLevelSpy.mockRestore();
     });
     it("should verify exact getLogLevelColor call when showBackground is true", () => {
-      const getLogLevelColorSpy = jest.spyOn(require("../utils/logLevel"), "getLogLevelColor");
-      render(/* @__PURE__ */ jsx(LogLevelBadge, { level: "ERROR", showBackground: true }));
+      const getLogLevelColorSpy = jest.spyOn(
+        require("../utils/logLevel"),
+        "getLogLevelColor",
+      );
+      render(<LogLevelBadge level="ERROR" showBackground={true} />);
       expect(getLogLevelColorSpy).toHaveBeenCalled();
       getLogLevelColorSpy.mockRestore();
     });
     it("should verify exact getLogLevelTextColor call", () => {
-      const getLogLevelTextColorSpy = jest.spyOn(require("../utils/logLevel"), "getLogLevelTextColor");
-      render(/* @__PURE__ */ jsx(LogLevelBadge, { level: "WARNING" }));
+      const getLogLevelTextColorSpy = jest.spyOn(
+        require("../utils/logLevel"),
+        "getLogLevelTextColor",
+      );
+      render(<LogLevelBadge level="WARNING" />);
       expect(getLogLevelTextColorSpy).toHaveBeenCalled();
       getLogLevelTextColorSpy.mockRestore();
     });
     it("should verify exact ternary operator for showBackground - true branch", () => {
-      const { container } = render(/* @__PURE__ */ jsx(LogLevelBadge, { level: "INFO", showBackground: true }));
+      const { container } = render(
+        <LogLevelBadge level="INFO" showBackground={true} />,
+      );
       const badge = container.firstChild;
       expect(badge.className).toContain("bg-");
     });
     it("should verify exact ternary operator for showBackground - false branch", () => {
-      const { container } = render(/* @__PURE__ */ jsx(LogLevelBadge, { level: "INFO", showBackground: false }));
+      const { container } = render(
+        <LogLevelBadge level="INFO" showBackground={false} />,
+      );
       const badge = container.firstChild;
       expect(badge.className).not.toContain("bg-");
     });
     it("should verify exact ternary operator for isValidLogLevel - true branch", () => {
-      render(/* @__PURE__ */ jsx(LogLevelBadge, { level: "DEBUG" }));
+      render(<LogLevelBadge level="DEBUG" />);
       expect(screen.getByText("DEBUG")).toBeInTheDocument();
     });
     it("should verify exact ternary operator for isValidLogLevel - false branch", () => {
-      render(/* @__PURE__ */ jsx(LogLevelBadge, { level: "INVALID_LEVEL" }));
+      render(<LogLevelBadge level="INVALID_LEVEL" />);
       expect(screen.getByText("INFO")).toBeInTheDocument();
     });
     it("should verify exact className concatenation with template literal", () => {
-      const { container } = render(/* @__PURE__ */ jsx(LogLevelBadge, { level: "ERROR", showBackground: true, className: "test-class" }));
+      const { container } = render(
+        <LogLevelBadge
+          level="ERROR"
+          showBackground={true}
+          className="test-class"
+        />,
+      );
       const badge = container.firstChild;
       expect(badge.className).toContain("font-semibold");
       expect(badge.className).toContain("bg-");
@@ -252,7 +321,13 @@ describe("LogLevelBadge", () => {
       expect(badge.className).toContain("test-class");
     });
     it("should verify exact className concatenation without background", () => {
-      const { container } = render(/* @__PURE__ */ jsx(LogLevelBadge, { level: "ERROR", showBackground: false, className: "test-class" }));
+      const { container } = render(
+        <LogLevelBadge
+          level="ERROR"
+          showBackground={false}
+          className="test-class"
+        />,
+      );
       const badge = container.firstChild;
       expect(badge.className).toContain("font-semibold");
       expect(badge.className).not.toContain("bg-");

@@ -26,13 +26,16 @@ describe("detectStryker", () => {
   });
   describe("isRunningUnderStryker", () => {
     const skipIfUnderStryker = isActuallyRunningUnderStryker() ? it.skip : it;
-    skipIfUnderStryker("should return false when STRYKER_MUTATOR is not set", () => {
-      delete process.env.STRYKER_MUTATOR;
-      const mockCwd = jest.fn(() => "/normal/path");
-      process.cwd = mockCwd;
-      process.argv = ["node", "jest", "test"];
-      expect(isRunningUnderStryker()).toBe(false);
-    });
+    skipIfUnderStryker(
+      "should return false when STRYKER_MUTATOR is not set",
+      () => {
+        delete process.env.STRYKER_MUTATOR;
+        const mockCwd = jest.fn(() => "/normal/path");
+        process.cwd = mockCwd;
+        process.argv = ["node", "jest", "test"];
+        expect(isRunningUnderStryker()).toBe(false);
+      },
+    );
     it('should return true when STRYKER_MUTATOR is "true"', () => {
       process.env.STRYKER_MUTATOR = "true";
       expect(isRunningUnderStryker()).toBe(true);
@@ -41,13 +44,16 @@ describe("detectStryker", () => {
       process.env.STRYKER_MUTATOR = "1";
       expect(isRunningUnderStryker()).toBe(true);
     });
-    skipIfUnderStryker('should return false when STRYKER_MUTATOR is "false"', () => {
-      process.env.STRYKER_MUTATOR = "false";
-      const mockCwd = jest.fn(() => "/normal/path");
-      process.cwd = mockCwd;
-      process.argv = ["node", "jest", "test"];
-      expect(isRunningUnderStryker()).toBe(false);
-    });
+    skipIfUnderStryker(
+      'should return false when STRYKER_MUTATOR is "false"',
+      () => {
+        process.env.STRYKER_MUTATOR = "false";
+        const mockCwd = jest.fn(() => "/normal/path");
+        process.cwd = mockCwd;
+        process.argv = ["node", "jest", "test"];
+        expect(isRunningUnderStryker()).toBe(false);
+      },
+    );
     it('should return true when process.argv contains "stryker"', () => {
       process.argv = ["node", "stryker", "run"];
       const mockCwd = jest.fn(() => "/normal/path");
@@ -62,13 +68,16 @@ describe("detectStryker", () => {
       delete process.env.STRYKER_MUTATOR;
       expect(isRunningUnderStryker()).toBe(true);
     });
-    skipIfUnderStryker("should return false when process.argv does not contain stryker", () => {
-      process.argv = ["node", "jest", "test"];
-      const mockCwd = jest.fn(() => "/normal/path");
-      process.cwd = mockCwd;
-      delete process.env.STRYKER_MUTATOR;
-      expect(isRunningUnderStryker()).toBe(false);
-    });
+    skipIfUnderStryker(
+      "should return false when process.argv does not contain stryker",
+      () => {
+        process.argv = ["node", "jest", "test"];
+        const mockCwd = jest.fn(() => "/normal/path");
+        process.cwd = mockCwd;
+        delete process.env.STRYKER_MUTATOR;
+        expect(isRunningUnderStryker()).toBe(false);
+      },
+    );
   });
   describe("browser compatibility", () => {
     it("should return false when global process is undefined", () => {
@@ -76,19 +85,19 @@ describe("detectStryker", () => {
       Object.defineProperty(global, "process", {
         value: void 0,
         configurable: true,
-        writable: true
+        writable: true,
       });
       jest.resetModules();
       const {
         isRunningUnderStryker: isStryker,
-        getStrykerSandboxId: getSandboxId
+        getStrykerSandboxId: getSandboxId,
       } = require("./detectStryker");
       expect(isStryker()).toBe(false);
       expect(getSandboxId()).toBeNull();
       Object.defineProperty(global, "process", {
         value: originalProcess,
         configurable: true,
-        writable: true
+        writable: true,
       });
       jest.resetModules();
     });

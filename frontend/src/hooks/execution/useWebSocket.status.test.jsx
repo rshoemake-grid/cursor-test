@@ -3,7 +3,7 @@ import {
   advanceTimersByTime,
   wsInstances,
   useWebSocket,
-  logger
+  logger,
 } from "./useWebSocket.test.setup";
 describe("useWebSocket - status", () => {
   beforeEach(() => {
@@ -19,11 +19,12 @@ describe("useWebSocket - status", () => {
   describe("status tracking", () => {
     it("should update lastKnownStatusRef when executionStatus changes", async () => {
       const { rerender } = renderHook(
-        ({ executionStatus }) => useWebSocket({
-          executionId: "exec-1",
-          executionStatus
-        }),
-        { initialProps: { executionStatus: "running" } }
+        ({ executionStatus }) =>
+          useWebSocket({
+            executionId: "exec-1",
+            executionStatus,
+          }),
+        { initialProps: { executionStatus: "running" } },
       );
       await advanceTimersByTime(100);
       rerender({ executionStatus: "paused" });
@@ -31,11 +32,11 @@ describe("useWebSocket - status", () => {
       expect(logger.debug).toHaveBeenCalled();
     });
     it("should use lastKnownStatusRef when executionStatus is undefined", async () => {
-      renderHook(
-        () => useWebSocket({
-          executionId: "exec-1"
+      renderHook(() =>
+        useWebSocket({
+          executionId: "exec-1",
           // No executionStatus provided
-        })
+        }),
       );
       await advanceTimersByTime(100);
       expect(wsInstances.length).toBeGreaterThan(0);

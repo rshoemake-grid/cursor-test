@@ -11,13 +11,13 @@ describe("useContextMenu", () => {
       id: "node-1",
       type: "agent",
       position: { x: 0, y: 0 },
-      data: {}
+      data: {},
     };
     const mockEvent = {
       preventDefault: jest.fn(),
       stopPropagation: jest.fn(),
       clientX: 100,
-      clientY: 200
+      clientY: 200,
     };
     act(() => {
       result.current.onNodeContextMenu(mockEvent, mockNode);
@@ -26,7 +26,7 @@ describe("useContextMenu", () => {
       nodeId: "node-1",
       node: mockNode,
       x: 100,
-      y: 200
+      y: 200,
     });
     expect(mockEvent.preventDefault).toHaveBeenCalled();
     expect(mockEvent.stopPropagation).toHaveBeenCalled();
@@ -36,13 +36,13 @@ describe("useContextMenu", () => {
     const mockEdge = {
       id: "edge-1",
       source: "node-1",
-      target: "node-2"
+      target: "node-2",
     };
     const mockEvent = {
       preventDefault: jest.fn(),
       stopPropagation: jest.fn(),
       clientX: 150,
-      clientY: 250
+      clientY: 250,
     };
     act(() => {
       result.current.onEdgeContextMenu(mockEvent, mockEdge);
@@ -50,7 +50,7 @@ describe("useContextMenu", () => {
     expect(result.current.contextMenu).toEqual({
       edgeId: "edge-1",
       x: 150,
-      y: 250
+      y: 250,
     });
     expect(mockEvent.preventDefault).toHaveBeenCalled();
     expect(mockEvent.stopPropagation).toHaveBeenCalled();
@@ -61,13 +61,13 @@ describe("useContextMenu", () => {
       id: "node-1",
       type: "agent",
       position: { x: 0, y: 0 },
-      data: {}
+      data: {},
     };
     const mockEvent = {
       preventDefault: jest.fn(),
       stopPropagation: jest.fn(),
       clientX: 100,
-      clientY: 200
+      clientY: 200,
     };
     act(() => {
       result.current.onNodeContextMenu(mockEvent, mockNode);
@@ -84,19 +84,19 @@ describe("useContextMenu", () => {
       id: "node-1",
       type: "agent",
       position: { x: 0, y: 0 },
-      data: {}
+      data: {},
     };
     const mockEvent1 = {
       preventDefault: jest.fn(),
       stopPropagation: jest.fn(),
       clientX: 100,
-      clientY: 200
+      clientY: 200,
     };
     const mockEvent2 = {
       preventDefault: jest.fn(),
       stopPropagation: jest.fn(),
       clientX: 300,
-      clientY: 400
+      clientY: 400,
     };
     act(() => {
       result.current.onNodeContextMenu(mockEvent1, mockNode);
@@ -115,19 +115,19 @@ describe("useContextMenu", () => {
       id: "node-1",
       type: "agent",
       position: { x: 0, y: 0 },
-      data: {}
+      data: {},
     };
     const mockNode2 = {
       id: "node-2",
       type: "condition",
       position: { x: 0, y: 0 },
-      data: {}
+      data: {},
     };
     const mockEvent = {
       preventDefault: jest.fn(),
       stopPropagation: jest.fn(),
       clientX: 100,
-      clientY: 200
+      clientY: 200,
     };
     act(() => {
       result.current.onNodeContextMenu(mockEvent, mockNode1);
@@ -144,13 +144,13 @@ describe("useContextMenu", () => {
       result.current.setContextMenu({
         nodeId: "node-1",
         x: 50,
-        y: 75
+        y: 75,
       });
     });
     expect(result.current.contextMenu).toEqual({
       nodeId: "node-1",
       x: 50,
-      y: 75
+      y: 75,
     });
   });
   it("should verify exact null value in initial state", () => {
@@ -165,13 +165,13 @@ describe("useContextMenu", () => {
       id: "node-1",
       type: "agent",
       position: { x: 0, y: 0 },
-      data: {}
+      data: {},
     };
     const mockEvent = {
       preventDefault: jest.fn(),
       stopPropagation: jest.fn(),
       clientX: 100,
-      clientY: 200
+      clientY: 200,
     };
     act(() => {
       result.current.onNodeContextMenu(mockEvent, mockNode);
@@ -189,13 +189,13 @@ describe("useContextMenu", () => {
       id: "node-1",
       type: "agent",
       position: { x: 0, y: 0 },
-      data: {}
+      data: {},
     };
     const mockEvent = {
       preventDefault: jest.fn(),
       stopPropagation: jest.fn(),
       clientX: 100,
-      clientY: 200
+      clientY: 200,
     };
     act(() => {
       result.current.onNodeContextMenu(mockEvent, mockNode);
@@ -210,13 +210,13 @@ describe("useContextMenu", () => {
     const mockEdge = {
       id: "edge-1",
       source: "node-1",
-      target: "node-2"
+      target: "node-2",
     };
     const mockEvent = {
       preventDefault: jest.fn(),
       stopPropagation: jest.fn(),
       clientX: 150,
-      clientY: 250
+      clientY: 250,
     };
     act(() => {
       result.current.onEdgeContextMenu(mockEvent, mockEdge);
@@ -233,13 +233,13 @@ describe("useContextMenu", () => {
       id: "node-1",
       type: "agent",
       position: { x: 0, y: 0 },
-      data: {}
+      data: {},
     };
     const mockEvent = {
       preventDefault: jest.fn(),
       stopPropagation: jest.fn(),
       clientX: 100,
-      clientY: 200
+      clientY: 200,
     };
     act(() => {
       firstHandler(mockEvent, mockNode);
@@ -254,13 +254,13 @@ describe("useContextMenu", () => {
     const mockEdge = {
       id: "edge-1",
       source: "node-1",
-      target: "node-2"
+      target: "node-2",
     };
     const mockEvent = {
       preventDefault: jest.fn(),
       stopPropagation: jest.fn(),
       clientX: 150,
-      clientY: 250
+      clientY: 250,
     };
     act(() => {
       firstHandler(mockEvent, mockEdge);
@@ -294,13 +294,13 @@ describe("useContextMenu", () => {
       id: "node-1",
       type: "agent",
       position: { x: 0, y: 0 },
-      data: {}
+      data: {},
     };
     const mockEvent = {
       preventDefault: jest.fn(),
       stopPropagation: jest.fn(),
       clientX: 100,
-      clientY: 200
+      clientY: 200,
     };
     act(() => {
       result.current.onNodeContextMenu(mockEvent, mockNode);
@@ -314,13 +314,13 @@ describe("useContextMenu", () => {
       id: "node-1",
       type: "agent",
       position: { x: 0, y: 0 },
-      data: {}
+      data: {},
     };
     const mockEvent = {
       preventDefault: jest.fn(),
       stopPropagation: jest.fn(),
       clientX: 100,
-      clientY: 200
+      clientY: 200,
     };
     act(() => {
       result.current.onNodeContextMenu(mockEvent, mockNode);
@@ -334,13 +334,13 @@ describe("useContextMenu", () => {
       id: "node-1",
       type: "agent",
       position: { x: 0, y: 0 },
-      data: {}
+      data: {},
     };
     const mockEvent = {
       preventDefault: jest.fn(),
       stopPropagation: jest.fn(),
       clientX: 100,
-      clientY: 200
+      clientY: 200,
     };
     act(() => {
       result.current.onNodeContextMenu(mockEvent, mockNode);
@@ -349,7 +349,7 @@ describe("useContextMenu", () => {
       nodeId: "node-1",
       node: mockNode,
       x: 100,
-      y: 200
+      y: 200,
     });
   });
   it("should verify exact setContextMenu call with edge context", () => {
@@ -357,13 +357,13 @@ describe("useContextMenu", () => {
     const mockEdge = {
       id: "edge-1",
       source: "node-1",
-      target: "node-2"
+      target: "node-2",
     };
     const mockEvent = {
       preventDefault: jest.fn(),
       stopPropagation: jest.fn(),
       clientX: 150,
-      clientY: 250
+      clientY: 250,
     };
     act(() => {
       result.current.onEdgeContextMenu(mockEvent, mockEdge);
@@ -371,7 +371,7 @@ describe("useContextMenu", () => {
     expect(result.current.contextMenu).toEqual({
       edgeId: "edge-1",
       x: 150,
-      y: 250
+      y: 250,
     });
   });
   it("should verify exact setContextMenu(null) call", () => {
@@ -380,13 +380,13 @@ describe("useContextMenu", () => {
       id: "node-1",
       type: "agent",
       position: { x: 0, y: 0 },
-      data: {}
+      data: {},
     };
     const mockEvent = {
       preventDefault: jest.fn(),
       stopPropagation: jest.fn(),
       clientX: 100,
-      clientY: 200
+      clientY: 200,
     };
     act(() => {
       result.current.onNodeContextMenu(mockEvent, mockNode);

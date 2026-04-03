@@ -1,12 +1,17 @@
 import { renderHook, act } from "@testing-library/react";
-import { useLocalStorage, getLocalStorageItem, setLocalStorageItem, removeLocalStorageItem } from "./useLocalStorage";
+import {
+  useLocalStorage,
+  getLocalStorageItem,
+  setLocalStorageItem,
+  removeLocalStorageItem,
+} from "./useLocalStorage";
 jest.mock("../../utils/logger", () => ({
   logger: {
     error: jest.fn(),
     warn: jest.fn(),
     debug: jest.fn(),
-    info: jest.fn()
-  }
+    info: jest.fn(),
+  },
 }));
 describe("useLocalStorage", () => {
   beforeEach(() => {
@@ -15,21 +20,29 @@ describe("useLocalStorage", () => {
   });
   describe("useLocalStorage hook", () => {
     it("should initialize with initial value when localStorage is empty", () => {
-      const { result } = renderHook(() => useLocalStorage("test-key", "initial"));
+      const { result } = renderHook(() =>
+        useLocalStorage("test-key", "initial"),
+      );
       expect(result.current[0]).toBe("initial");
     });
     it("should initialize with value from localStorage", () => {
       localStorage.setItem("test-key", JSON.stringify("stored-value"));
-      const { result } = renderHook(() => useLocalStorage("test-key", "initial"));
+      const { result } = renderHook(() =>
+        useLocalStorage("test-key", "initial"),
+      );
       expect(result.current[0]).toBe("stored-value");
     });
     it("should update localStorage when value changes", () => {
-      const { result } = renderHook(() => useLocalStorage("test-key", "initial"));
+      const { result } = renderHook(() =>
+        useLocalStorage("test-key", "initial"),
+      );
       act(() => {
         result.current[1]("new-value");
       });
       expect(result.current[0]).toBe("new-value");
-      expect(localStorage.getItem("test-key")).toBe(JSON.stringify("new-value"));
+      expect(localStorage.getItem("test-key")).toBe(
+        JSON.stringify("new-value"),
+      );
     });
     it("should handle function updater", () => {
       const { result } = renderHook(() => useLocalStorage("test-key", 0));
@@ -45,11 +58,16 @@ describe("useLocalStorage", () => {
         result.current[1]({ name: "updated", value: 456 });
       });
       expect(result.current[0]).toEqual({ name: "updated", value: 456 });
-      expect(JSON.parse(localStorage.getItem("test-key"))).toEqual({ name: "updated", value: 456 });
+      expect(JSON.parse(localStorage.getItem("test-key"))).toEqual({
+        name: "updated",
+        value: 456,
+      });
     });
     it("should remove value from localStorage", () => {
       localStorage.setItem("test-key", JSON.stringify("value"));
-      const { result } = renderHook(() => useLocalStorage("test-key", "initial"));
+      const { result } = renderHook(() =>
+        useLocalStorage("test-key", "initial"),
+      );
       act(() => {
         result.current[2]();
       });
@@ -57,11 +75,13 @@ describe("useLocalStorage", () => {
       expect(localStorage.getItem("test-key")).toBeNull();
     });
     it("should handle storage events from other tabs", () => {
-      const { result } = renderHook(() => useLocalStorage("test-key", "initial"));
+      const { result } = renderHook(() =>
+        useLocalStorage("test-key", "initial"),
+      );
       act(() => {
         const event = new StorageEvent("storage", {
           key: "test-key",
-          newValue: JSON.stringify("updated-from-tab")
+          newValue: JSON.stringify("updated-from-tab"),
         });
         window.dispatchEvent(event);
       });
@@ -72,40 +92,46 @@ describe("useLocalStorage", () => {
       act(() => {
         const event = new StorageEvent("storage", {
           key: "test-key",
-          newValue: "workflow-1"
+          newValue: "workflow-1",
         });
         window.dispatchEvent(event);
       });
       expect(result.current[0]).toBe("workflow-1");
     });
     it("should ignore storage events for other keys", () => {
-      const { result } = renderHook(() => useLocalStorage("test-key", "initial"));
+      const { result } = renderHook(() =>
+        useLocalStorage("test-key", "initial"),
+      );
       act(() => {
         const event = new StorageEvent("storage", {
           key: "other-key",
-          newValue: JSON.stringify("should-not-update")
+          newValue: JSON.stringify("should-not-update"),
         });
         window.dispatchEvent(event);
       });
       expect(result.current[0]).toBe("initial");
     });
     it("should ignore storage events when newValue is null", () => {
-      const { result } = renderHook(() => useLocalStorage("test-key", "initial"));
+      const { result } = renderHook(() =>
+        useLocalStorage("test-key", "initial"),
+      );
       act(() => {
         const event = new StorageEvent("storage", {
           key: "test-key",
-          newValue: null
+          newValue: null,
         });
         window.dispatchEvent(event);
       });
       expect(result.current[0]).toBe("initial");
     });
     it("should handle storage events with null key", () => {
-      const { result } = renderHook(() => useLocalStorage("test-key", "initial"));
+      const { result } = renderHook(() =>
+        useLocalStorage("test-key", "initial"),
+      );
       act(() => {
         const event = new StorageEvent("storage", {
           key: null,
-          newValue: JSON.stringify("should-not-update")
+          newValue: JSON.stringify("should-not-update"),
         });
         window.dispatchEvent(event);
       });
@@ -126,7 +152,9 @@ describe("useLocalStorage", () => {
     });
     it("should return plain string for backward compatibility", () => {
       localStorage.setItem("test-key", "plain-string-value");
-      expect(getLocalStorageItem("test-key", "default")).toBe("plain-string-value");
+      expect(getLocalStorageItem("test-key", "default")).toBe(
+        "plain-string-value",
+      );
     });
     it("should return default when plain string but default is not string", () => {
       localStorage.setItem("test-key", "plain-string-value");
@@ -256,7 +284,9 @@ describe("useLocalStorage", () => {
     });
     it("should handle storage quota exceeded error", () => {
       localStorage.setItem("test-key", JSON.stringify("initial"));
-      const { result } = renderHook(() => useLocalStorage("test-key", "default"));
+      const { result } = renderHook(() =>
+        useLocalStorage("test-key", "default"),
+      );
       expect(result.current[0]).toBe("initial");
       const originalSetItem = localStorage.setItem;
       localStorage.setItem = jest.fn(() => {
@@ -279,29 +309,35 @@ describe("useLocalStorage", () => {
       localStorage.getItem = originalGetItem;
     });
     it("should handle undefined value conversion to null", () => {
-      const { result } = renderHook(() => useLocalStorage("test-key", "initial"));
+      const { result } = renderHook(() =>
+        useLocalStorage("test-key", "initial"),
+      );
       act(() => {
         result.current[1](void 0);
       });
       expect(localStorage.getItem("test-key")).toBe(JSON.stringify(null));
     });
     it("should handle storage event with empty string newValue", () => {
-      const { result } = renderHook(() => useLocalStorage("test-key", "initial"));
+      const { result } = renderHook(() =>
+        useLocalStorage("test-key", "initial"),
+      );
       act(() => {
         const event = new StorageEvent("storage", {
           key: "test-key",
-          newValue: ""
+          newValue: "",
         });
         window.dispatchEvent(event);
       });
       expect(result.current[0]).toBe("initial");
     });
     it("should handle storage event parsing error", () => {
-      const { result } = renderHook(() => useLocalStorage("test-key", "initial"));
+      const { result } = renderHook(() =>
+        useLocalStorage("test-key", "initial"),
+      );
       act(() => {
         const event = new StorageEvent("storage", {
           key: "test-key",
-          newValue: "{invalid-json}"
+          newValue: "{invalid-json}",
         });
         window.dispatchEvent(event);
       });
@@ -325,7 +361,9 @@ describe("useLocalStorage", () => {
     });
     it("should handle getLocalStorageItem with plain string when default is string", () => {
       localStorage.setItem("test-key", "plain-string");
-      expect(getLocalStorageItem("test-key", "default-string")).toBe("plain-string");
+      expect(getLocalStorageItem("test-key", "default-string")).toBe(
+        "plain-string",
+      );
     });
     it("should handle getLocalStorageItem with plain string when default is null", () => {
       localStorage.setItem("test-key", "plain-string");
@@ -348,7 +386,9 @@ describe("useLocalStorage", () => {
       expect(localStorage.getItem("test-key")).toBe(JSON.stringify(null));
     });
     it("should handle removeValue with error", () => {
-      const { result } = renderHook(() => useLocalStorage("test-key", "initial"));
+      const { result } = renderHook(() =>
+        useLocalStorage("test-key", "initial"),
+      );
       const originalRemoveItem = localStorage.removeItem;
       localStorage.removeItem = jest.fn(() => {
         throw new Error("Error");
@@ -360,7 +400,9 @@ describe("useLocalStorage", () => {
       localStorage.removeItem = originalRemoveItem;
     });
     it("should handle setValue with function updater that returns undefined", () => {
-      const { result } = renderHook(() => useLocalStorage("test-key", "initial"));
+      const { result } = renderHook(() =>
+        useLocalStorage("test-key", "initial"),
+      );
       act(() => {
         result.current[1](() => void 0);
       });
@@ -371,16 +413,20 @@ describe("useLocalStorage", () => {
       localStorage.getItem = jest.fn(() => {
         throw new Error("Error");
       });
-      const { result } = renderHook(() => useLocalStorage("test-key", "initial"));
+      const { result } = renderHook(() =>
+        useLocalStorage("test-key", "initial"),
+      );
       expect(result.current[0]).toBe("initial");
       localStorage.getItem = originalGetItem;
     });
     it("should handle JSON.parse error in storage event", () => {
-      const { result } = renderHook(() => useLocalStorage("test-key", "initial"));
+      const { result } = renderHook(() =>
+        useLocalStorage("test-key", "initial"),
+      );
       act(() => {
         const event = new StorageEvent("storage", {
           key: "test-key",
-          newValue: "not-json"
+          newValue: "not-json",
         });
         window.dispatchEvent(event);
       });
@@ -405,54 +451,67 @@ describe("useLocalStorage", () => {
       expect(getLocalStorageItem("test-key", "default")).toBe("   ");
     });
     it("should handle JSON.stringify error in setValue", () => {
-      const { result } = renderHook(() => useLocalStorage("test-key", "initial"));
+      const { result } = renderHook(() =>
+        useLocalStorage("test-key", "initial"),
+      );
       const circular = {};
       circular.self = circular;
       act(() => {
         try {
           result.current[1](circular);
-        } catch (e) {
-        }
+        } catch (e) {}
       });
       expect(result.current[0]).toBeDefined();
     });
     it("should handle removeValue when window is undefined", () => {
-      const { result } = renderHook(() => useLocalStorage("test-key", "initial"));
+      const { result } = renderHook(() =>
+        useLocalStorage("test-key", "initial"),
+      );
       act(() => {
         result.current[2]();
       });
       expect(result.current[0]).toBe("initial");
     });
     it("should verify exact JSON.stringify behavior for undefined in setValue", () => {
-      const { result } = renderHook(() => useLocalStorage("test-key", "initial"));
+      const { result } = renderHook(() =>
+        useLocalStorage("test-key", "initial"),
+      );
       act(() => {
         result.current[1](void 0);
       });
       expect(localStorage.getItem("test-key")).toBe("null");
     });
     it("should verify exact JSON.stringify behavior for null in setValue", () => {
-      const { result } = renderHook(() => useLocalStorage("test-key", "initial"));
+      const { result } = renderHook(() =>
+        useLocalStorage("test-key", "initial"),
+      );
       act(() => {
         result.current[1](null);
       });
       expect(localStorage.getItem("test-key")).toBe("null");
     });
     it("should verify exact JSON.stringify behavior for regular values in setValue", () => {
-      const { result } = renderHook(() => useLocalStorage("test-key", "initial"));
+      const { result } = renderHook(() =>
+        useLocalStorage("test-key", "initial"),
+      );
       act(() => {
         result.current[1]("test-value");
       });
       expect(localStorage.getItem("test-key")).toBe('"test-value"');
     });
     it("should verify exact valueToStore === undefined check", () => {
-      const { result } = renderHook(() => useLocalStorage("test-key", "initial"));
+      const { result } = renderHook(() =>
+        useLocalStorage("test-key", "initial"),
+      );
       act(() => {
         result.current[1](void 0);
       });
       expect(localStorage.getItem("test-key")).toBe("null");
     });
     it("should verify exact valueToStore !== undefined path", () => {
-      const { result } = renderHook(() => useLocalStorage("test-key", "initial"));
+      const { result } = renderHook(() =>
+        useLocalStorage("test-key", "initial"),
+      );
       act(() => {
         result.current[1]("test");
       });
@@ -479,22 +538,26 @@ describe("useLocalStorage", () => {
       expect(localStorage.getItem("test-key")).toBe('"test-value"');
     });
     it("should verify exact JSON.parse in storage event handler", () => {
-      const { result } = renderHook(() => useLocalStorage("test-key", "initial"));
+      const { result } = renderHook(() =>
+        useLocalStorage("test-key", "initial"),
+      );
       act(() => {
         const event = new StorageEvent("storage", {
           key: "test-key",
-          newValue: '"updated-value"'
+          newValue: '"updated-value"',
         });
         window.dispatchEvent(event);
       });
       expect(result.current[0]).toBe("updated-value");
     });
     it("should verify exact JSON.parse error handling in storage event", () => {
-      const { result } = renderHook(() => useLocalStorage("test-key", "initial"));
+      const { result } = renderHook(() =>
+        useLocalStorage("test-key", "initial"),
+      );
       act(() => {
         const event = new StorageEvent("storage", {
           key: "test-key",
-          newValue: "{invalid-json}"
+          newValue: "{invalid-json}",
         });
         window.dispatchEvent(event);
       });
@@ -516,7 +579,9 @@ describe("useLocalStorage", () => {
       expect(result.current[0]).toBe(1);
     });
     it("should verify exact value !instanceof Function path", () => {
-      const { result } = renderHook(() => useLocalStorage("test-key", "initial"));
+      const { result } = renderHook(() =>
+        useLocalStorage("test-key", "initial"),
+      );
       act(() => {
         result.current[1]("direct-value");
       });
@@ -533,7 +598,9 @@ describe("useLocalStorage", () => {
       expect(result2).toBe("default");
     });
     it("should verify valueToStore === undefined ? JSON.stringify(null) : JSON.stringify(valueToStore) ternary", () => {
-      const { result } = renderHook(() => useLocalStorage("test-key", "initial"));
+      const { result } = renderHook(() =>
+        useLocalStorage("test-key", "initial"),
+      );
       act(() => {
         result.current[1](void 0);
       });
@@ -565,18 +632,24 @@ describe("useLocalStorage", () => {
   });
   describe("typeof window === undefined coverage", () => {
     it("should verify typeof window === undefined check in useState initializer", () => {
-      const { result } = renderHook(() => useLocalStorage("test-key", "initial"));
+      const { result } = renderHook(() =>
+        useLocalStorage("test-key", "initial"),
+      );
       expect(result.current[0]).toBeDefined();
     });
     it("should verify typeof window !== undefined check in setValue", () => {
-      const { result } = renderHook(() => useLocalStorage("test-key", "initial"));
+      const { result } = renderHook(() =>
+        useLocalStorage("test-key", "initial"),
+      );
       act(() => {
         result.current[1]("test-value");
       });
       expect(localStorage.getItem("test-key")).toBe('"test-value"');
     });
     it("should verify typeof window !== undefined check in removeValue", () => {
-      const { result } = renderHook(() => useLocalStorage("test-key", "initial"));
+      const { result } = renderHook(() =>
+        useLocalStorage("test-key", "initial"),
+      );
       act(() => {
         result.current[2]();
       });
@@ -618,7 +691,9 @@ describe("useLocalStorage", () => {
       localStorage.setItem("test-key-brace", "{invalid");
       localStorage.setItem("test-key-bracket", "[invalid");
       expect(getLocalStorageItem("test-key-brace", "default")).toBe("default");
-      expect(getLocalStorageItem("test-key-bracket", "default")).toBe("default");
+      expect(getLocalStorageItem("test-key-bracket", "default")).toBe(
+        "default",
+      );
     });
     it('should verify typeof defaultValue === "string" || defaultValue === null pattern', () => {
       localStorage.setItem("test-key", "plain-string");
@@ -648,9 +723,13 @@ describe("useLocalStorage", () => {
       localStorage.setItem("test-key-brace", "{invalid");
       expect(getLocalStorageItem("test-key-brace", "default")).toBe("default");
       localStorage.setItem("test-key-bracket", "[invalid");
-      expect(getLocalStorageItem("test-key-bracket", "default")).toBe("default");
+      expect(getLocalStorageItem("test-key-bracket", "default")).toBe(
+        "default",
+      );
       localStorage.setItem("test-key-plain", "plain-string");
-      expect(getLocalStorageItem("test-key-plain", "default")).toBe("plain-string");
+      expect(getLocalStorageItem("test-key-plain", "default")).toBe(
+        "plain-string",
+      );
     });
     it('should verify typeof defaultValue === "string" exact comparison', () => {
       localStorage.setItem("test-key", "plain-string");
@@ -659,7 +738,9 @@ describe("useLocalStorage", () => {
     });
     it('should verify typeof defaultValue === "string" || defaultValue === null exact pattern', () => {
       localStorage.setItem("test-key-string", "plain-string");
-      expect(getLocalStorageItem("test-key-string", "default")).toBe("plain-string");
+      expect(getLocalStorageItem("test-key-string", "default")).toBe(
+        "plain-string",
+      );
       localStorage.setItem("test-key-null", "plain-string");
       expect(getLocalStorageItem("test-key-null", null)).toBe("plain-string");
       localStorage.setItem("test-key-number", "plain-string");
@@ -677,7 +758,9 @@ describe("useLocalStorage", () => {
       expect(localStorage.getItem("test-key")).toBe("null");
     });
     it("should verify valueToStore === undefined ? JSON.stringify(null) : JSON.stringify(valueToStore) pattern", () => {
-      const { result } = renderHook(() => useLocalStorage("test-key", "initial"));
+      const { result } = renderHook(() =>
+        useLocalStorage("test-key", "initial"),
+      );
       act(() => {
         result.current[1](void 0);
       });
@@ -685,44 +768,52 @@ describe("useLocalStorage", () => {
     });
     describe("exact logical operator coverage", () => {
       it("should verify e.key === key && e.newValue exact pattern", () => {
-        const { result } = renderHook(() => useLocalStorage("test-key", "initial"));
+        const { result } = renderHook(() =>
+          useLocalStorage("test-key", "initial"),
+        );
         act(() => {
           const event = new StorageEvent("storage", {
             key: "test-key",
-            newValue: '"updated"'
+            newValue: '"updated"',
           });
           window.dispatchEvent(event);
         });
         expect(result.current[0]).toBe("updated");
       });
       it("should verify e.key === key && e.newValue with different key", () => {
-        const { result } = renderHook(() => useLocalStorage("test-key", "initial"));
+        const { result } = renderHook(() =>
+          useLocalStorage("test-key", "initial"),
+        );
         act(() => {
           const event = new StorageEvent("storage", {
             key: "other-key",
-            newValue: '"should-not-update"'
+            newValue: '"should-not-update"',
           });
           window.dispatchEvent(event);
         });
         expect(result.current[0]).toBe("initial");
       });
       it("should verify e.key === key && e.newValue with null newValue", () => {
-        const { result } = renderHook(() => useLocalStorage("test-key", "initial"));
+        const { result } = renderHook(() =>
+          useLocalStorage("test-key", "initial"),
+        );
         act(() => {
           const event = new StorageEvent("storage", {
             key: "test-key",
-            newValue: null
+            newValue: null,
           });
           window.dispatchEvent(event);
         });
         expect(result.current[0]).toBe("initial");
       });
       it("should verify e.key === key && e.newValue with empty string newValue", () => {
-        const { result } = renderHook(() => useLocalStorage("test-key", "initial"));
+        const { result } = renderHook(() =>
+          useLocalStorage("test-key", "initial"),
+        );
         act(() => {
           const event = new StorageEvent("storage", {
             key: "test-key",
-            newValue: ""
+            newValue: "",
           });
           window.dispatchEvent(event);
         });
@@ -750,11 +841,17 @@ describe("useLocalStorage", () => {
       });
       it('should verify item.trim().startsWith("{") || item.trim().startsWith("[") exact pattern', () => {
         localStorage.setItem("test-key-brace", "{invalid");
-        expect(getLocalStorageItem("test-key-brace", "default")).toBe("default");
+        expect(getLocalStorageItem("test-key-brace", "default")).toBe(
+          "default",
+        );
         localStorage.setItem("test-key-bracket", "[invalid");
-        expect(getLocalStorageItem("test-key-bracket", "default")).toBe("default");
+        expect(getLocalStorageItem("test-key-bracket", "default")).toBe(
+          "default",
+        );
         localStorage.setItem("test-key-plain", "plain-string");
-        expect(getLocalStorageItem("test-key-plain", "default")).toBe("plain-string");
+        expect(getLocalStorageItem("test-key-plain", "default")).toBe(
+          "plain-string",
+        );
       });
       it('should verify typeof defaultValue === "string" exact comparison', () => {
         localStorage.setItem("test-key", "plain-string");
@@ -763,7 +860,9 @@ describe("useLocalStorage", () => {
       });
       it('should verify typeof defaultValue === "string" || defaultValue === null exact pattern', () => {
         localStorage.setItem("test-key-string", "plain-string");
-        expect(getLocalStorageItem("test-key-string", "default")).toBe("plain-string");
+        expect(getLocalStorageItem("test-key-string", "default")).toBe(
+          "plain-string",
+        );
         localStorage.setItem("test-key-null", "plain-string");
         expect(getLocalStorageItem("test-key-null", null)).toBe("plain-string");
         localStorage.setItem("test-key-number", "plain-string");
@@ -782,36 +881,44 @@ describe("useLocalStorage", () => {
     });
     describe("exact comparison operators", () => {
       it("should verify e.key === key exact comparison", () => {
-        const { result } = renderHook(() => useLocalStorage("test-key", "initial"));
+        const { result } = renderHook(() =>
+          useLocalStorage("test-key", "initial"),
+        );
         act(() => {
           const event = new StorageEvent("storage", {
             key: "test-key",
-            newValue: '"updated"'
+            newValue: '"updated"',
           });
           window.dispatchEvent(event);
         });
         expect(result.current[0]).toBe("updated");
       });
       it("should verify e.key !== key comparison", () => {
-        const { result } = renderHook(() => useLocalStorage("test-key", "initial"));
+        const { result } = renderHook(() =>
+          useLocalStorage("test-key", "initial"),
+        );
         act(() => {
           const event = new StorageEvent("storage", {
             key: "different-key",
-            newValue: '"should-not-update"'
+            newValue: '"should-not-update"',
           });
           window.dispatchEvent(event);
         });
         expect(result.current[0]).toBe("initial");
       });
       it("should verify valueToStore === undefined exact comparison", () => {
-        const { result } = renderHook(() => useLocalStorage("test-key", "initial"));
+        const { result } = renderHook(() =>
+          useLocalStorage("test-key", "initial"),
+        );
         act(() => {
           result.current[1](void 0);
         });
         expect(localStorage.getItem("test-key")).toBe("null");
       });
       it("should verify valueToStore !== undefined comparison", () => {
-        const { result } = renderHook(() => useLocalStorage("test-key", "initial"));
+        const { result } = renderHook(() =>
+          useLocalStorage("test-key", "initial"),
+        );
         act(() => {
           result.current[1]("test-value");
         });
@@ -837,7 +944,9 @@ describe("useLocalStorage", () => {
         expect(result.current[0]).toBe(1);
       });
       it("should verify value !instanceof Function path", () => {
-        const { result } = renderHook(() => useLocalStorage("test-key", "initial"));
+        const { result } = renderHook(() =>
+          useLocalStorage("test-key", "initial"),
+        );
         act(() => {
           result.current[1]("direct-value");
         });
@@ -851,14 +960,18 @@ describe("useLocalStorage", () => {
         expect(result).toBe("parsed-value");
       });
       it("should verify JSON.stringify(null) exact call", () => {
-        const { result } = renderHook(() => useLocalStorage("test-key", "initial"));
+        const { result } = renderHook(() =>
+          useLocalStorage("test-key", "initial"),
+        );
         act(() => {
           result.current[1](void 0);
         });
         expect(localStorage.getItem("test-key")).toBe("null");
       });
       it("should verify JSON.stringify(valueToStore) exact call", () => {
-        const { result } = renderHook(() => useLocalStorage("test-key", "initial"));
+        const { result } = renderHook(() =>
+          useLocalStorage("test-key", "initial"),
+        );
         act(() => {
           result.current[1]("test-value");
         });
@@ -870,11 +983,13 @@ describe("useLocalStorage", () => {
         expect(localStorage.getItem("test-key")).toBe('"test-value"');
       });
       it("should verify JSON.parse(e.newValue) exact call", () => {
-        const { result } = renderHook(() => useLocalStorage("test-key", "initial"));
+        const { result } = renderHook(() =>
+          useLocalStorage("test-key", "initial"),
+        );
         act(() => {
           const event = new StorageEvent("storage", {
             key: "test-key",
-            newValue: '"parsed-from-event"'
+            newValue: '"parsed-from-event"',
           });
           window.dispatchEvent(event);
         });
@@ -928,11 +1043,13 @@ describe("useLocalStorage", () => {
     });
     describe("exact event handler coverage", () => {
       it("should verify handleStorageChange function exact call", () => {
-        const { result } = renderHook(() => useLocalStorage("test-key", "initial"));
+        const { result } = renderHook(() =>
+          useLocalStorage("test-key", "initial"),
+        );
         act(() => {
           const event = new StorageEvent("storage", {
             key: "test-key",
-            newValue: '"handler-called"'
+            newValue: '"handler-called"',
           });
           window.dispatchEvent(event);
         });
@@ -940,35 +1057,52 @@ describe("useLocalStorage", () => {
       });
       it("should verify addEventListener exact call", () => {
         const addEventListenerSpy = jest.spyOn(window, "addEventListener");
-        const { unmount } = renderHook(() => useLocalStorage("test-key", "initial"));
-        expect(addEventListenerSpy).toHaveBeenCalledWith("storage", expect.any(Function));
+        const { unmount } = renderHook(() =>
+          useLocalStorage("test-key", "initial"),
+        );
+        expect(addEventListenerSpy).toHaveBeenCalledWith(
+          "storage",
+          expect.any(Function),
+        );
         unmount();
         addEventListenerSpy.mockRestore();
       });
       it("should verify removeEventListener exact call on cleanup", () => {
-        const removeEventListenerSpy = jest.spyOn(window, "removeEventListener");
-        const { unmount } = renderHook(() => useLocalStorage("test-key", "initial"));
+        const removeEventListenerSpy = jest.spyOn(
+          window,
+          "removeEventListener",
+        );
+        const { unmount } = renderHook(() =>
+          useLocalStorage("test-key", "initial"),
+        );
         unmount();
-        expect(removeEventListenerSpy).toHaveBeenCalledWith("storage", expect.any(Function));
+        expect(removeEventListenerSpy).toHaveBeenCalledWith(
+          "storage",
+          expect.any(Function),
+        );
         removeEventListenerSpy.mockRestore();
       });
       it("should verify handleStorageChange with exact e.key check", () => {
-        const { result } = renderHook(() => useLocalStorage("test-key", "initial"));
+        const { result } = renderHook(() =>
+          useLocalStorage("test-key", "initial"),
+        );
         act(() => {
           const event = new StorageEvent("storage", {
             key: "test-key",
-            newValue: '"exact-key-match"'
+            newValue: '"exact-key-match"',
           });
           window.dispatchEvent(event);
         });
         expect(result.current[0]).toBe("exact-key-match");
       });
       it("should verify handleStorageChange with exact e.newValue check", () => {
-        const { result } = renderHook(() => useLocalStorage("test-key", "initial"));
+        const { result } = renderHook(() =>
+          useLocalStorage("test-key", "initial"),
+        );
         act(() => {
           const event = new StorageEvent("storage", {
             key: "test-key",
-            newValue: '"exact-newvalue-check"'
+            newValue: '"exact-newvalue-check"',
           });
           window.dispatchEvent(event);
         });
@@ -981,12 +1115,16 @@ describe("useLocalStorage", () => {
         localStorage.getItem = jest.fn(() => {
           throw new Error("GetItem error");
         });
-        const { result } = renderHook(() => useLocalStorage("test-key", "initial"));
+        const { result } = renderHook(() =>
+          useLocalStorage("test-key", "initial"),
+        );
         expect(result.current[0]).toBe("initial");
         localStorage.getItem = originalGetItem;
       });
       it("should verify catch block in setValue", () => {
-        const { result } = renderHook(() => useLocalStorage("test-key", "initial"));
+        const { result } = renderHook(() =>
+          useLocalStorage("test-key", "initial"),
+        );
         const originalSetItem = localStorage.setItem;
         localStorage.setItem = jest.fn(() => {
           throw new Error("SetItem error");
@@ -998,7 +1136,9 @@ describe("useLocalStorage", () => {
         localStorage.setItem = originalSetItem;
       });
       it("should verify catch block in removeValue", () => {
-        const { result } = renderHook(() => useLocalStorage("test-key", "initial"));
+        const { result } = renderHook(() =>
+          useLocalStorage("test-key", "initial"),
+        );
         const originalRemoveItem = localStorage.removeItem;
         localStorage.removeItem = jest.fn(() => {
           throw new Error("RemoveItem error");
@@ -1010,11 +1150,13 @@ describe("useLocalStorage", () => {
         localStorage.removeItem = originalRemoveItem;
       });
       it("should verify catch block in handleStorageChange", () => {
-        const { result } = renderHook(() => useLocalStorage("test-key", "initial"));
+        const { result } = renderHook(() =>
+          useLocalStorage("test-key", "initial"),
+        );
         act(() => {
           const event = new StorageEvent("storage", {
             key: "test-key",
-            newValue: "{invalid-json}"
+            newValue: "{invalid-json}",
           });
           window.dispatchEvent(event);
         });
@@ -1062,21 +1204,27 @@ describe("useLocalStorage", () => {
         expect(result.current[0]).toBe(10);
       });
       it("should verify valueToStore assignment from direct value", () => {
-        const { result } = renderHook(() => useLocalStorage("test-key", "initial"));
+        const { result } = renderHook(() =>
+          useLocalStorage("test-key", "initial"),
+        );
         act(() => {
           result.current[1]("direct-assignment");
         });
         expect(result.current[0]).toBe("direct-assignment");
       });
       it("should verify valueToStoreString assignment for undefined", () => {
-        const { result } = renderHook(() => useLocalStorage("test-key", "initial"));
+        const { result } = renderHook(() =>
+          useLocalStorage("test-key", "initial"),
+        );
         act(() => {
           result.current[1](void 0);
         });
         expect(localStorage.getItem("test-key")).toBe("null");
       });
       it("should verify valueToStoreString assignment for value", () => {
-        const { result } = renderHook(() => useLocalStorage("test-key", "initial"));
+        const { result } = renderHook(() =>
+          useLocalStorage("test-key", "initial"),
+        );
         act(() => {
           result.current[1]("string-assignment");
         });
@@ -1112,21 +1260,27 @@ describe("useLocalStorage", () => {
         expect(result.current[0]).toBe(10);
       });
       it("should verify value instanceof Function ? value(storedValue) : value - falsy branch", () => {
-        const { result } = renderHook(() => useLocalStorage("test-key", "initial"));
+        const { result } = renderHook(() =>
+          useLocalStorage("test-key", "initial"),
+        );
         act(() => {
           result.current[1]("falsy-branch");
         });
         expect(result.current[0]).toBe("falsy-branch");
       });
       it("should verify valueToStore === undefined ? JSON.stringify(null) : JSON.stringify(valueToStore) - truthy branch", () => {
-        const { result } = renderHook(() => useLocalStorage("test-key", "initial"));
+        const { result } = renderHook(() =>
+          useLocalStorage("test-key", "initial"),
+        );
         act(() => {
           result.current[1](void 0);
         });
         expect(localStorage.getItem("test-key")).toBe("null");
       });
       it("should verify valueToStore === undefined ? JSON.stringify(null) : JSON.stringify(valueToStore) - falsy branch", () => {
-        const { result } = renderHook(() => useLocalStorage("test-key", "initial"));
+        const { result } = renderHook(() =>
+          useLocalStorage("test-key", "initial"),
+        );
         act(() => {
           result.current[1]("falsy-branch");
         });
@@ -1145,7 +1299,9 @@ describe("useLocalStorage", () => {
     });
     describe("exact function call coverage", () => {
       it("should verify setStoredValue exact call", () => {
-        const { result } = renderHook(() => useLocalStorage("test-key", "initial"));
+        const { result } = renderHook(() =>
+          useLocalStorage("test-key", "initial"),
+        );
         act(() => {
           result.current[1]("set-stored-value");
         });
@@ -1153,18 +1309,22 @@ describe("useLocalStorage", () => {
       });
       it("should verify setStoredValue(initialValue) exact call in removeValue", () => {
         localStorage.setItem("test-key", '"stored"');
-        const { result } = renderHook(() => useLocalStorage("test-key", "initial"));
+        const { result } = renderHook(() =>
+          useLocalStorage("test-key", "initial"),
+        );
         act(() => {
           result.current[2]();
         });
         expect(result.current[0]).toBe("initial");
       });
       it("should verify setStoredValue(JSON.parse(e.newValue)) exact call", () => {
-        const { result } = renderHook(() => useLocalStorage("test-key", "initial"));
+        const { result } = renderHook(() =>
+          useLocalStorage("test-key", "initial"),
+        );
         act(() => {
           const event = new StorageEvent("storage", {
             key: "test-key",
-            newValue: '"parsed-value"'
+            newValue: '"parsed-value"',
           });
           window.dispatchEvent(event);
         });
@@ -1176,7 +1336,9 @@ describe("useLocalStorage", () => {
         expect(result).toBe("get-item-value");
       });
       it("should verify window.localStorage.setItem(key, valueToStoreString) exact call", () => {
-        const { result } = renderHook(() => useLocalStorage("test-key", "initial"));
+        const { result } = renderHook(() =>
+          useLocalStorage("test-key", "initial"),
+        );
         act(() => {
           result.current[1]("set-item-value");
         });
@@ -1184,29 +1346,39 @@ describe("useLocalStorage", () => {
       });
       it("should verify window.localStorage.removeItem(key) exact call", () => {
         localStorage.setItem("test-key", '"remove-me"');
-        const { result } = renderHook(() => useLocalStorage("test-key", "initial"));
+        const { result } = renderHook(() =>
+          useLocalStorage("test-key", "initial"),
+        );
         act(() => {
           result.current[2]();
         });
         expect(localStorage.getItem("test-key")).toBeNull();
       });
       it("should verify exact nullish coalescing options?.storage ?? defaultAdapters.createLocalStorageAdapter()", () => {
-        const { result: result1 } = renderHook(() => useLocalStorage("test-key", "initial", {}));
+        const { result: result1 } = renderHook(() =>
+          useLocalStorage("test-key", "initial", {}),
+        );
         expect(result1.current[0]).toBe("initial");
-        const { result: result2 } = renderHook(() => useLocalStorage("test-key", "initial", { storage: null }));
+        const { result: result2 } = renderHook(() =>
+          useLocalStorage("test-key", "initial", { storage: null }),
+        );
         expect(result2.current[0]).toBe("initial");
         const mockStorage = {
           getItem: jest.fn(() => null),
           setItem: jest.fn(),
           removeItem: jest.fn(),
           addEventListener: jest.fn(),
-          removeEventListener: jest.fn()
+          removeEventListener: jest.fn(),
         };
-        renderHook(() => useLocalStorage("test-key", "initial", { storage: mockStorage }));
+        renderHook(() =>
+          useLocalStorage("test-key", "initial", { storage: mockStorage }),
+        );
         expect(mockStorage.getItem).toHaveBeenCalled();
       });
       it("should verify exact undefined handling valueToStore === undefined ? JSON.stringify(null) : JSON.stringify(valueToStore)", () => {
-        const { result } = renderHook(() => useLocalStorage("test-key", "initial"));
+        const { result } = renderHook(() =>
+          useLocalStorage("test-key", "initial"),
+        );
         act(() => {
           result.current[1](void 0);
         });
@@ -1236,7 +1408,7 @@ describe("useLocalStorage", () => {
       it("should verify exact fallback value windowLocation?.host || localhost:8000", () => {
         const mockWindowLocation = {
           protocol: "http:",
-          host: void 0
+          host: void 0,
         };
         const host = mockWindowLocation.host || "localhost:8000";
         expect(host).toBe("localhost:8000");
@@ -1252,7 +1424,10 @@ describe("useLocalStorage", () => {
         expect(protocol2).not.toBe("wss:");
       });
       it("should verify exact logical OR reason && reason.length > 0 ? reason : No reason provided", () => {
-        const reason1 = "Connection closed".length > 0 ? "Connection closed" : "No reason provided";
+        const reason1 =
+          "Connection closed".length > 0
+            ? "Connection closed"
+            : "No reason provided";
         expect(reason1).toBe("Connection closed");
         const reason2 = "" ? "" : "No reason provided";
         expect(reason2).toBe("No reason provided");

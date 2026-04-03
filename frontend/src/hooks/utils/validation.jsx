@@ -3,13 +3,13 @@ function validateWorkflowName(name) {
   if (trimmed === "") {
     return {
       isValid: false,
-      error: "Workflow name cannot be empty."
+      error: "Workflow name cannot be empty.",
     };
   }
   if (trimmed.length > 100) {
     return {
       isValid: false,
-      error: "Workflow name cannot exceed 100 characters."
+      error: "Workflow name cannot exceed 100 characters.",
     };
   }
   return { isValid: true };
@@ -23,9 +23,4 @@ function isValidName(name) {
 function hasNameChanged(newName, currentName) {
   return sanitizeName(newName) !== sanitizeName(currentName);
 }
-export {
-  hasNameChanged,
-  isValidName,
-  sanitizeName,
-  validateWorkflowName
-};
+export { hasNameChanged, isValidName, sanitizeName, validateWorkflowName };

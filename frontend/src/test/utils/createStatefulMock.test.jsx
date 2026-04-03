@@ -1,12 +1,15 @@
-import { createStatefulMock, createMultiStatefulMock } from "./createStatefulMock";
+import {
+  createStatefulMock,
+  createMultiStatefulMock,
+} from "./createStatefulMock";
 describe("createStatefulMock", () => {
   it("should initialize with initial state", () => {
     const { state, createMock } = createStatefulMock({
       initialState: "tab1",
       createMockFn: (currentState) => ({
-        activeTab: currentState
+        activeTab: currentState,
       }),
-      getMockFn: () => void 0
+      getMockFn: () => void 0,
     });
     expect(state).toBe("tab1");
     expect(createMock().activeTab).toBe("tab1");
@@ -17,9 +20,9 @@ describe("createStatefulMock", () => {
     const mockInstance = createStatefulMock({
       initialState: "tab1",
       createMockFn: (currentState) => ({
-        activeTab: currentState
+        activeTab: currentState,
       }),
-      getMockFn: () => mockFn
+      getMockFn: () => mockFn,
     });
     expect(mockInstance.state).toBe("tab1");
     mockInstance.updateState("tab2");
@@ -32,9 +35,9 @@ describe("createStatefulMock", () => {
     const mockInstance = createStatefulMock({
       initialState: "tab1",
       createMockFn: (currentState) => ({
-        activeTab: currentState
+        activeTab: currentState,
       }),
-      getMockFn: () => void 0
+      getMockFn: () => void 0,
     });
     mockInstance.updateState("tab2");
     expect(mockInstance.state).toBe("tab2");
@@ -51,10 +54,10 @@ describe("createStatefulMock", () => {
           activeTab: currentState,
           setActiveTab: jest.fn((tab) => {
             updateStateFn(tab);
-          })
+          }),
         };
       },
-      getMockFn: () => mockFn
+      getMockFn: () => mockFn,
     });
     const mock = mockInstance.createMock();
     expect(mock.activeTab).toBe("tab1");
@@ -69,9 +72,9 @@ describe("createMultiStatefulMock", () => {
       initialState: { tab: "tab1", subTab: "sub1" },
       createMockFn: (currentState) => ({
         activeTab: currentState.tab,
-        subTab: currentState.subTab
+        subTab: currentState.subTab,
       }),
-      getMockFn: () => void 0
+      getMockFn: () => void 0,
     });
     expect(state.tab).toBe("tab1");
     expect(state.subTab).toBe("sub1");
@@ -84,9 +87,9 @@ describe("createMultiStatefulMock", () => {
       initialState: { tab: "tab1", subTab: "sub1" },
       createMockFn: (currentState) => ({
         activeTab: currentState.tab,
-        subTab: currentState.subTab
+        subTab: currentState.subTab,
       }),
-      getMockFn: () => mockFn
+      getMockFn: () => mockFn,
     });
     expect(mockInstance.state.tab).toBe("tab1");
     expect(mockInstance.state.subTab).toBe("sub1");
@@ -102,9 +105,9 @@ describe("createMultiStatefulMock", () => {
       initialState: { tab: "tab1", subTab: "sub1" },
       createMockFn: (currentState) => ({
         activeTab: currentState.tab,
-        subTab: currentState.subTab
+        subTab: currentState.subTab,
       }),
-      getMockFn: () => void 0
+      getMockFn: () => void 0,
     });
     mockInstance.updateState({ tab: "tab2", subTab: "sub2" });
     expect(mockInstance.state.tab).toBe("tab2");

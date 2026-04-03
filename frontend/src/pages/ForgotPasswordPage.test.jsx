@@ -1,20 +1,21 @@
-import { jsx } from "react/jsx-runtime";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { BrowserRouter } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import ForgotPasswordPage from "./ForgotPasswordPage";
 import { API_CONFIG } from "../config/constants";
 const waitForWithTimeout = (callback, timeout = 2e3) => {
-  return waitFor(callback, { timeout });
+  return waitFor(callback, {
+    timeout,
+  });
 };
 jest.mock("react-router-dom", () => ({
   ...jest.requireActual("react-router-dom"),
-  useNavigate: jest.fn()
+  useNavigate: jest.fn(),
 }));
 global.fetch = jest.fn();
 const mockUseNavigate = useNavigate;
 const renderWithRouter = (component) => {
-  return render(/* @__PURE__ */ jsx(BrowserRouter, { children: component }));
+  return render(<BrowserRouter>{component}</BrowserRouter>);
 };
 describe("ForgotPasswordPage", () => {
   const mockNavigate = jest.fn();
@@ -24,7 +25,7 @@ describe("ForgotPasswordPage", () => {
     mockUseNavigate.mockReturnValue(mockNavigate);
   });
   it("should render forgot password page", async () => {
-    renderWithRouter(/* @__PURE__ */ jsx(ForgotPasswordPage, {}));
+    renderWithRouter(<ForgotPasswordPage />);
     await waitForWithTimeout(() => {
       expect(screen.getByText("Forgot Password?")).toBeInTheDocument();
     }, 2e3);
@@ -32,13 +33,21 @@ describe("ForgotPasswordPage", () => {
   it("should handle email submission", async () => {
     global.fetch.mockResolvedValue({
       ok: true,
-      json: async () => ({ token: "reset-token-123" })
+      json: async () => ({
+        token: "reset-token-123",
+      }),
     });
-    renderWithRouter(/* @__PURE__ */ jsx(ForgotPasswordPage, {}));
+    renderWithRouter(<ForgotPasswordPage />);
     await waitForWithTimeout(() => {
       const emailInput = screen.getByPlaceholderText(/your@email.com/);
-      const submitButton = screen.getByRole("button", { name: /Send Reset Link/ });
-      fireEvent.change(emailInput, { target: { value: "test@example.com" } });
+      const submitButton = screen.getByRole("button", {
+        name: /Send Reset Link/,
+      });
+      fireEvent.change(emailInput, {
+        target: {
+          value: "test@example.com",
+        },
+      });
       fireEvent.click(submitButton);
     }, 2e3);
     await waitForWithTimeout(() => {
@@ -46,22 +55,34 @@ describe("ForgotPasswordPage", () => {
         `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.AUTH.FORGOT_PASSWORD}`,
         expect.objectContaining({
           method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email: "test@example.com" })
-        })
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            email: "test@example.com",
+          }),
+        }),
       );
     }, 3e3);
   });
   it("should show success message after submission", async () => {
     global.fetch.mockResolvedValue({
       ok: true,
-      json: async () => ({ token: "reset-token-123" })
+      json: async () => ({
+        token: "reset-token-123",
+      }),
     });
-    renderWithRouter(/* @__PURE__ */ jsx(ForgotPasswordPage, {}));
+    renderWithRouter(<ForgotPasswordPage />);
     await waitForWithTimeout(() => {
       const emailInput = screen.getByPlaceholderText(/your@email.com/);
-      const submitButton = screen.getByRole("button", { name: /Send Reset Link/ });
-      fireEvent.change(emailInput, { target: { value: "test@example.com" } });
+      const submitButton = screen.getByRole("button", {
+        name: /Send Reset Link/,
+      });
+      fireEvent.change(emailInput, {
+        target: {
+          value: "test@example.com",
+        },
+      });
       fireEvent.click(submitButton);
     });
     await waitForWithTimeout(() => {
@@ -73,13 +94,21 @@ describe("ForgotPasswordPage", () => {
     process.env.NODE_ENV = "development";
     global.fetch.mockResolvedValue({
       ok: true,
-      json: async () => ({ token: "reset-token-123" })
+      json: async () => ({
+        token: "reset-token-123",
+      }),
     });
-    renderWithRouter(/* @__PURE__ */ jsx(ForgotPasswordPage, {}));
+    renderWithRouter(<ForgotPasswordPage />);
     await waitForWithTimeout(() => {
       const emailInput = screen.getByPlaceholderText(/your@email.com/);
-      const submitButton = screen.getByRole("button", { name: /Send Reset Link/ });
-      fireEvent.change(emailInput, { target: { value: "test@example.com" } });
+      const submitButton = screen.getByRole("button", {
+        name: /Send Reset Link/,
+      });
+      fireEvent.change(emailInput, {
+        target: {
+          value: "test@example.com",
+        },
+      });
       fireEvent.click(submitButton);
     });
     await waitForWithTimeout(() => {
@@ -90,13 +119,21 @@ describe("ForgotPasswordPage", () => {
   it("should handle API error", async () => {
     global.fetch.mockResolvedValue({
       ok: false,
-      json: async () => ({ detail: "Email not found" })
+      json: async () => ({
+        detail: "Email not found",
+      }),
     });
-    renderWithRouter(/* @__PURE__ */ jsx(ForgotPasswordPage, {}));
+    renderWithRouter(<ForgotPasswordPage />);
     await waitForWithTimeout(() => {
       const emailInput = screen.getByPlaceholderText(/your@email.com/);
-      const submitButton = screen.getByRole("button", { name: /Send Reset Link/ });
-      fireEvent.change(emailInput, { target: { value: "test@example.com" } });
+      const submitButton = screen.getByRole("button", {
+        name: /Send Reset Link/,
+      });
+      fireEvent.change(emailInput, {
+        target: {
+          value: "test@example.com",
+        },
+      });
       fireEvent.click(submitButton);
     });
     await waitForWithTimeout(() => {
@@ -104,7 +141,7 @@ describe("ForgotPasswordPage", () => {
     });
   });
   it("should navigate back to auth page", async () => {
-    renderWithRouter(/* @__PURE__ */ jsx(ForgotPasswordPage, {}));
+    renderWithRouter(<ForgotPasswordPage />);
     await waitForWithTimeout(() => {
       const backButton = screen.getByText(/Back to Login/);
       fireEvent.click(backButton);
@@ -114,13 +151,22 @@ describe("ForgotPasswordPage", () => {
   it("should submit form when Enter key is pressed", async () => {
     global.fetch.mockResolvedValue({
       ok: true,
-      json: async () => ({ token: "reset-token-123" })
+      json: async () => ({
+        token: "reset-token-123",
+      }),
     });
-    renderWithRouter(/* @__PURE__ */ jsx(ForgotPasswordPage, {}));
+    renderWithRouter(<ForgotPasswordPage />);
     await waitForWithTimeout(() => {
       const emailInput = screen.getByPlaceholderText(/your@email.com/);
-      fireEvent.change(emailInput, { target: { value: "test@example.com" } });
-      fireEvent.keyDown(emailInput, { key: "Enter", code: "Enter" });
+      fireEvent.change(emailInput, {
+        target: {
+          value: "test@example.com",
+        },
+      });
+      fireEvent.keyDown(emailInput, {
+        key: "Enter",
+        code: "Enter",
+      });
     });
     await waitForWithTimeout(() => {
       expect(global.fetch).toHaveBeenCalled();
@@ -132,23 +178,33 @@ describe("ForgotPasswordPage", () => {
         get: jest.fn(),
         post: jest.fn().mockResolvedValue({
           ok: true,
-          json: async () => ({ token: "reset-token-123" })
+          json: async () => ({
+            token: "reset-token-123",
+          }),
         }),
         put: jest.fn(),
-        delete: jest.fn()
+        delete: jest.fn(),
       };
-      renderWithRouter(/* @__PURE__ */ jsx(ForgotPasswordPage, { httpClient: mockHttpClient }));
+      renderWithRouter(<ForgotPasswordPage httpClient={mockHttpClient} />);
       await waitForWithTimeout(() => {
         const emailInput = screen.getByPlaceholderText(/your@email.com/);
-        const submitButton = screen.getByRole("button", { name: /Send Reset Link/ });
-        fireEvent.change(emailInput, { target: { value: "test@example.com" } });
+        const submitButton = screen.getByRole("button", {
+          name: /Send Reset Link/,
+        });
+        fireEvent.change(emailInput, {
+          target: {
+            value: "test@example.com",
+          },
+        });
         fireEvent.click(submitButton);
       });
       await waitForWithTimeout(() => {
         expect(mockHttpClient.post).toHaveBeenCalledWith(
           expect.stringContaining("/auth/forgot-password"),
-          { email: "test@example.com" },
-          expect.any(Object)
+          {
+            email: "test@example.com",
+          },
+          expect.any(Object),
         );
       });
     });
@@ -157,31 +213,36 @@ describe("ForgotPasswordPage", () => {
         get: jest.fn(),
         post: jest.fn().mockResolvedValue({
           ok: true,
-          json: async () => ({ token: "reset-token-123" })
+          json: async () => ({
+            token: "reset-token-123",
+          }),
         }),
         put: jest.fn(),
-        delete: jest.fn()
+        delete: jest.fn(),
       };
       renderWithRouter(
-        /* @__PURE__ */ jsx(
-          ForgotPasswordPage,
-          {
-            httpClient: mockHttpClient,
-            apiBaseUrl: "https://custom-api.example.com/api"
-          }
-        )
+        <ForgotPasswordPage
+          httpClient={mockHttpClient}
+          apiBaseUrl="https://custom-api.example.com/api"
+        />,
       );
       await waitForWithTimeout(() => {
         const emailInput = screen.getByPlaceholderText(/your@email.com/);
-        const submitButton = screen.getByRole("button", { name: /Send Reset Link/ });
-        fireEvent.change(emailInput, { target: { value: "test@example.com" } });
+        const submitButton = screen.getByRole("button", {
+          name: /Send Reset Link/,
+        });
+        fireEvent.change(emailInput, {
+          target: {
+            value: "test@example.com",
+          },
+        });
         fireEvent.click(submitButton);
       });
       await waitForWithTimeout(() => {
         expect(mockHttpClient.post).toHaveBeenCalledWith(
           "https://custom-api.example.com/api/auth/forgot-password",
           expect.any(Object),
-          expect.any(Object)
+          expect.any(Object),
         );
       });
     });
@@ -190,13 +251,19 @@ describe("ForgotPasswordPage", () => {
         get: jest.fn(),
         post: jest.fn().mockRejectedValue(new Error("Network error")),
         put: jest.fn(),
-        delete: jest.fn()
+        delete: jest.fn(),
       };
-      renderWithRouter(/* @__PURE__ */ jsx(ForgotPasswordPage, { httpClient: mockHttpClient }));
+      renderWithRouter(<ForgotPasswordPage httpClient={mockHttpClient} />);
       await waitForWithTimeout(() => {
         const emailInput = screen.getByPlaceholderText(/your@email.com/);
-        const submitButton = screen.getByRole("button", { name: /Send Reset Link/ });
-        fireEvent.change(emailInput, { target: { value: "test@example.com" } });
+        const submitButton = screen.getByRole("button", {
+          name: /Send Reset Link/,
+        });
+        fireEvent.change(emailInput, {
+          target: {
+            value: "test@example.com",
+          },
+        });
         fireEvent.click(submitButton);
       });
       await waitForWithTimeout(() => {

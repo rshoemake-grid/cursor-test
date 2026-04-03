@@ -10,6 +10,4 @@ function getDifficultyColor(difficulty) {
       return "bg-gray-100 text-gray-800";
   }
 }
-export {
-  getDifficultyColor
-};
+export { getDifficultyColor };

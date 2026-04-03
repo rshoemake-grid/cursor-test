@@ -7,8 +7,8 @@ jest.mock("../../utils/logger", () => ({
     error: jest.fn(),
     info: jest.fn(),
     log: jest.fn(),
-    warn: jest.fn()
-  }
+    warn: jest.fn(),
+  },
 }));
 const mockLoggerError = logger.error;
 describe("useDataFetching", () => {
@@ -26,8 +26,8 @@ describe("useDataFetching", () => {
     it("should initialize with provided initialData", () => {
       const fetchFn = jest.fn();
       const initialData = { id: "1", name: "Test" };
-      const { result } = renderHook(
-        () => useDataFetching({ fetchFn, initialData })
+      const { result } = renderHook(() =>
+        useDataFetching({ fetchFn, initialData }),
       );
       expect(result.current.data).toEqual(initialData);
       expect(result.current.loading).toBe(false);
@@ -51,9 +51,10 @@ describe("useDataFetching", () => {
       const mockData = { id: "1", name: "Test Data" };
       let resolvePromise;
       const fetchFn = jest.fn().mockImplementation(
-        () => new Promise((resolve) => {
-          resolvePromise = resolve;
-        })
+        () =>
+          new Promise((resolve) => {
+            resolvePromise = resolve;
+          }),
       );
       const { result } = renderHook(() => useDataFetching({ fetchFn }));
       act(() => {
@@ -71,8 +72,8 @@ describe("useDataFetching", () => {
       const error = new Error("Fetch failed");
       const fetchFn = jest.fn().mockRejectedValue(error);
       const onError = jest.fn();
-      const { result } = renderHook(
-        () => useDataFetching({ fetchFn, onError })
+      const { result } = renderHook(() =>
+        useDataFetching({ fetchFn, onError }),
       );
       await act(async () => {
         await result.current.refetch();
@@ -82,7 +83,10 @@ describe("useDataFetching", () => {
       expect(result.current.error?.message).toBe("Fetch failed");
       expect(result.current.loading).toBe(false);
       expect(onError).toHaveBeenCalledWith(error);
-      expect(mockLoggerError).toHaveBeenCalledWith("Data fetch failed:", expect.any(Error));
+      expect(mockLoggerError).toHaveBeenCalledWith(
+        "Data fetch failed:",
+        expect.any(Error),
+      );
     });
     it("should handle non-Error rejections", async () => {
       const fetchFn = jest.fn().mockRejectedValue("String error");
@@ -97,7 +101,10 @@ describe("useDataFetching", () => {
     it("should clear error on successful refetch after error", async () => {
       const error = new Error("Fetch failed");
       const mockData = { id: "1", name: "Test Data" };
-      const fetchFn = jest.fn().mockRejectedValueOnce(error).mockResolvedValueOnce(mockData);
+      const fetchFn = jest
+        .fn()
+        .mockRejectedValueOnce(error)
+        .mockResolvedValueOnce(mockData);
       const { result } = renderHook(() => useDataFetching({ fetchFn }));
       await act(async () => {
         await result.current.refetch();
@@ -115,17 +122,20 @@ describe("useDataFetching", () => {
         debug: jest.fn(),
         info: jest.fn(),
         log: jest.fn(),
-        warn: jest.fn()
+        warn: jest.fn(),
       };
       const error = new Error("Fetch failed");
       const fetchFn = jest.fn().mockRejectedValue(error);
-      const { result } = renderHook(
-        () => useDataFetching({ fetchFn, logger: customLogger })
+      const { result } = renderHook(() =>
+        useDataFetching({ fetchFn, logger: customLogger }),
       );
       await act(async () => {
         await result.current.refetch();
       });
-      expect(customLogger.error).toHaveBeenCalledWith("Data fetch failed:", expect.any(Error));
+      expect(customLogger.error).toHaveBeenCalledWith(
+        "Data fetch failed:",
+        expect.any(Error),
+      );
       expect(mockLoggerError).not.toHaveBeenCalled();
     });
   });

@@ -26,6 +26,4 @@ function safeGetTabsRefCurrent(tabsRef) {
     return null;
   }
 }
-export {
-  safeGetTabsRefCurrent
-};
+export { safeGetTabsRefCurrent };

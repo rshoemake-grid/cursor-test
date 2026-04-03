@@ -11,7 +11,11 @@ import { useTemplateOperations } from "./useTemplateOperations";
 import { useTemplateUsage } from "./useTemplateUsage";
 import { useAgentDeletion } from "./useAgentDeletion";
 import { useOfficialAgentSeeding } from "./useOfficialAgentSeeding";
-import { useMarketplaceTabs, MARKETPLACE_TABS, REPOSITORY_SUB_TABS } from "./useMarketplaceTabs";
+import {
+  useMarketplaceTabs,
+  MARKETPLACE_TABS,
+  REPOSITORY_SUB_TABS,
+} from "./useMarketplaceTabs";
 import { useMarketplaceSelections } from "./useMarketplaceSelections";
 import { useMarketplaceActions } from "./useMarketplaceActions";
 import { useOfficialItems } from "./useOfficialItems";
@@ -34,5 +38,5 @@ export {
   useTemplateUsage,
   useTemplatesData,
   useToolsData,
-  useWorkflowsOfWorkflowsData
+  useWorkflowsOfWorkflowsData,
 };

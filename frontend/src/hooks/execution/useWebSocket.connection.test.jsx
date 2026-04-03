@@ -4,7 +4,7 @@ import {
   wsInstances,
   MockWebSocket,
   useWebSocket,
-  logger
+  logger,
 } from "./useWebSocket.test.setup";
 describe("useWebSocket - connection", () => {
   beforeEach(() => {
@@ -23,37 +23,39 @@ describe("useWebSocket - connection", () => {
       expect(result.current.isConnected).toBe(false);
     });
     it("should not connect to temporary execution IDs", async () => {
-      const { result } = renderHook(() => useWebSocket({ executionId: "pending-123" }));
+      const { result } = renderHook(() =>
+        useWebSocket({ executionId: "pending-123" }),
+      );
       await advanceTimersByTime(100);
       expect(result.current.isConnected).toBe(false);
       expect(wsInstances.length).toBe(0);
     });
     it("should not connect if execution is completed", async () => {
-      const { result } = renderHook(
-        () => useWebSocket({
+      const { result } = renderHook(() =>
+        useWebSocket({
           executionId: "exec-1",
-          executionStatus: "completed"
-        })
+          executionStatus: "completed",
+        }),
       );
       await advanceTimersByTime(100);
       expect(result.current.isConnected).toBe(false);
     });
     it("should not connect if execution is failed", async () => {
-      const { result } = renderHook(
-        () => useWebSocket({
+      const { result } = renderHook(() =>
+        useWebSocket({
           executionId: "exec-1",
-          executionStatus: "failed"
-        })
+          executionStatus: "failed",
+        }),
       );
       await advanceTimersByTime(100);
       expect(result.current.isConnected).toBe(false);
     });
     it("should connect when executionId is provided and status is running", async () => {
-      renderHook(
-        () => useWebSocket({
+      renderHook(() =>
+        useWebSocket({
           executionId: "exec-1",
-          executionStatus: "running"
-        })
+          executionStatus: "running",
+        }),
       );
       await advanceTimersByTime(100);
       expect(wsInstances.length).toBeGreaterThan(0);
@@ -61,7 +63,7 @@ describe("useWebSocket - connection", () => {
     it("should verify connect function early return for null executionId", async () => {
       const { rerender } = renderHook(
         ({ executionId }) => useWebSocket({ executionId }),
-        { initialProps: { executionId: "exec-1" } }
+        { initialProps: { executionId: "exec-1" } },
       );
       await advanceTimersByTime(100);
       expect(wsInstances.length).toBeGreaterThan(0);
@@ -72,7 +74,7 @@ describe("useWebSocket - connection", () => {
     it("should verify connect function early return for empty string executionId", async () => {
       const { rerender } = renderHook(
         ({ executionId }) => useWebSocket({ executionId }),
-        { initialProps: { executionId: "exec-1" } }
+        { initialProps: { executionId: "exec-1" } },
       );
       await advanceTimersByTime(100);
       expect(wsInstances.length).toBeGreaterThan(0);
@@ -82,21 +84,21 @@ describe("useWebSocket - connection", () => {
     });
     it("should verify connect function early return path for pending executionId", async () => {
       const executionId = "pending-test-456";
-      renderHook(
-        () => useWebSocket({
-          executionId
-        })
+      renderHook(() =>
+        useWebSocket({
+          executionId,
+        }),
       );
       await advanceTimersByTime(100);
       expect(wsInstances.length).toBe(0);
     });
     it("should verify connect function early return for wsRef.current check", async () => {
       const executionId = "exec-wsref-check";
-      renderHook(
-        () => useWebSocket({
+      renderHook(() =>
+        useWebSocket({
           executionId,
-          executionStatus: "running"
-        })
+          executionStatus: "running",
+        }),
       );
       await advanceTimersByTime(100);
       if (wsInstances.length > 0) {
@@ -113,15 +115,15 @@ describe("useWebSocket - connection", () => {
         hostname: "localhost",
         port: "8000",
         href: "https://localhost:8000",
-        origin: "https://localhost:8000"
+        origin: "https://localhost:8000",
       };
       const executionId = "exec-protocol-https";
-      renderHook(
-        () => useWebSocket({
+      renderHook(() =>
+        useWebSocket({
           executionId,
           executionStatus: "running",
-          windowLocation: mockWindowLocation
-        })
+          windowLocation: mockWindowLocation,
+        }),
       );
       await advanceTimersByTime(100);
       expect(wsInstances.length).toBeGreaterThan(0);
@@ -138,19 +140,21 @@ describe("useWebSocket - connection", () => {
         hostname: "localhost",
         port: "8000",
         href: "http://localhost:8000",
-        origin: "http://localhost:8000"
+        origin: "http://localhost:8000",
       };
       const executionId = "exec-protocol-http";
-      renderHook(
-        () => useWebSocket({
+      renderHook(() =>
+        useWebSocket({
           executionId,
           executionStatus: "running",
-          windowLocation: mockWindowLocation
-        })
+          windowLocation: mockWindowLocation,
+        }),
       );
       await advanceTimersByTime(100);
       expect(wsInstances.length).toBeGreaterThan(0);
-      const ws = wsInstances.find((w) => w.url.includes("ws://") && !w.url.includes("wss://"));
+      const ws = wsInstances.find(
+        (w) => w.url.includes("ws://") && !w.url.includes("wss://"),
+      );
       expect(ws).toBeDefined();
       if (ws) {
         expect(ws.url).toContain("ws://");
@@ -167,21 +171,21 @@ describe("useWebSocket - connection", () => {
         port: "8000",
         pathname: "/",
         search: "",
-        hash: ""
+        hash: "",
       };
       const webSocketFactory = {
         create: (url) => {
           const ws2 = new MockWebSocket(url);
           wsInstances.push(ws2);
           return ws2;
-        }
+        },
       };
-      const { result } = renderHook(
-        () => useWebSocket({
+      const { result } = renderHook(() =>
+        useWebSocket({
           executionId: "exec-1",
           windowLocation,
-          webSocketFactory
-        })
+          webSocketFactory,
+        }),
       );
       await act(async () => {
         await jest.advanceTimersByTime(5);
@@ -190,7 +194,7 @@ describe("useWebSocket - connection", () => {
       const ws = wsInstances[0];
       expect(ws.onopen).toBeDefined();
       expect(logger.debug).toHaveBeenCalledWith(
-        expect.stringContaining("[WebSocket] Connecting to")
+        expect.stringContaining("[WebSocket] Connecting to"),
       );
       expect(result.current.isConnected).toBe(false);
       logger.debug.mockClear();
@@ -201,7 +205,7 @@ describe("useWebSocket - connection", () => {
         await jest.advanceTimersByTime(0);
       });
       expect(logger.debug).toHaveBeenCalledWith(
-        expect.stringContaining("[WebSocket] Connected to execution exec-1")
+        expect.stringContaining("[WebSocket] Connected to execution exec-1"),
       );
       await act(async () => {
         await jest.advanceTimersByTime(10);
@@ -209,8 +213,8 @@ describe("useWebSocket - connection", () => {
       expect(result.current.isConnected).toBe(true);
     });
     it("should set isConnected to false initially", () => {
-      const { result } = renderHook(
-        () => useWebSocket({ executionId: "exec-1" })
+      const { result } = renderHook(() =>
+        useWebSocket({ executionId: "exec-1" }),
       );
       expect(result.current.isConnected).toBe(false);
     });

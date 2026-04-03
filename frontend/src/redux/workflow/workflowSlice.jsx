@@ -38,13 +38,17 @@ const workflowSlice = createSlice({
     updateNode: (state, action) => {
       const { nodeId, data } = action.payload;
       state.nodes = state.nodes.map((node) =>
-        node.id === nodeId ? { ...node, data: { ...node.data, ...data } } : node,
+        node.id === nodeId
+          ? { ...node, data: { ...node.data, ...data } }
+          : node,
       );
     },
     removeNode: (state, action) => {
       const nodeId = action.payload;
       state.nodes = state.nodes.filter((node) => node.id !== nodeId);
-      state.edges = state.edges.filter((edge) => edge.source !== nodeId && edge.target !== nodeId);
+      state.edges = state.edges.filter(
+        (edge) => edge.source !== nodeId && edge.target !== nodeId,
+      );
     },
     addEdge: (state, action) => {
       state.edges = [...state.edges, action.payload];
@@ -63,7 +67,10 @@ const workflowSlice = createSlice({
       state.variables = workflow.variables;
     },
     clearWorkflow: () => ({ ...initialState }),
-    replaceWorkflowState: (state, action) => ({ ...initialState, ...action.payload }),
+    replaceWorkflowState: (state, action) => ({
+      ...initialState,
+      ...action.payload,
+    }),
   },
 });
 
@@ -97,4 +104,10 @@ function selectWorkflowDefinition(state) {
   };
 }
 
-export { workflowReducer, workflowSlice, initialState, selectWorkflowDefinition, nodeToWorkflowNode };
+export {
+  workflowReducer,
+  workflowSlice,
+  initialState,
+  selectWorkflowDefinition,
+  nodeToWorkflowNode,
+};

@@ -1,12 +1,15 @@
 import { renderHook } from "@testing-library/react";
 import { useTemplateOperations } from "./useTemplateOperations";
 import { useTemplateUsage } from "./useTemplateUsage";
-import { useAgentDeletion, useRepositoryAgentDeletion } from "./useAgentDeletion";
+import {
+  useAgentDeletion,
+  useRepositoryAgentDeletion,
+} from "./useAgentDeletion";
 import { useWorkflowDeletion } from "../workflow";
 jest.mock("./useTemplateUsage");
 jest.mock("./useAgentDeletion");
 jest.mock("../workflow", () => ({
-  useWorkflowDeletion: jest.fn()
+  useWorkflowDeletion: jest.fn(),
 }));
 const mockUseTemplateUsage = useTemplateUsage;
 const mockUseAgentDeletion = useAgentDeletion;
@@ -17,14 +20,14 @@ describe("useTemplateOperations", () => {
     get: jest.fn(),
     post: jest.fn(),
     put: jest.fn(),
-    delete: jest.fn()
+    delete: jest.fn(),
   };
   const mockStorage = {
     getItem: jest.fn(),
     setItem: jest.fn(),
     removeItem: jest.fn(),
     addEventListener: jest.fn(),
-    removeEventListener: jest.fn()
+    removeEventListener: jest.fn(),
   };
   const mockSetAgents = jest.fn();
   const mockSetTemplates = jest.fn();
@@ -45,8 +48,8 @@ describe("useTemplateOperations", () => {
       estimated_time: "5 min",
       agent_config: {},
       author_id: "user-1",
-      author_name: "Test User"
-    }
+      author_name: "Test User",
+    },
   ];
   const mockTemplates = [
     {
@@ -62,27 +65,27 @@ describe("useTemplateOperations", () => {
       likes_count: 0,
       rating: 0,
       author_id: "user-1",
-      author_name: "Test User"
-    }
+      author_name: "Test User",
+    },
   ];
   beforeEach(() => {
     jest.clearAllMocks();
     mockUseTemplateUsage.mockReturnValue({
-      useTemplate: jest.fn()
+      useTemplate: jest.fn(),
     });
     mockUseAgentDeletion.mockReturnValue({
-      deleteSelectedAgents: jest.fn()
+      deleteSelectedAgents: jest.fn(),
     });
     mockUseRepositoryAgentDeletion.mockReturnValue({
-      deleteSelectedRepositoryAgents: jest.fn()
+      deleteSelectedRepositoryAgents: jest.fn(),
     });
     mockUseWorkflowDeletion.mockReturnValue({
-      deleteSelectedWorkflows: jest.fn()
+      deleteSelectedWorkflows: jest.fn(),
     });
   });
   it("should compose useTemplateUsage hook", () => {
-    renderHook(
-      () => useTemplateOperations({
+    renderHook(() =>
+      useTemplateOperations({
         token: "token-123",
         user: { id: "user-1", username: "testuser" },
         httpClient: mockHttpClient,
@@ -98,18 +101,18 @@ describe("useTemplateOperations", () => {
         setRepositoryAgents: mockSetRepositoryAgents,
         setSelectedAgentIds: mockSetSelectedAgentIds,
         setSelectedTemplateIds: mockSetSelectedTemplateIds,
-        setSelectedRepositoryAgentIds: mockSetSelectedRepositoryAgentIds
-      })
+        setSelectedRepositoryAgentIds: mockSetSelectedRepositoryAgentIds,
+      }),
     );
     expect(mockUseTemplateUsage).toHaveBeenCalledWith({
       token: "token-123",
       httpClient: mockHttpClient,
-      apiBaseUrl: "http://api.test"
+      apiBaseUrl: "http://api.test",
     });
   });
   it("should compose useAgentDeletion hook", () => {
-    renderHook(
-      () => useTemplateOperations({
+    renderHook(() =>
+      useTemplateOperations({
         token: "token",
         user: { id: "user-1", username: "testuser" },
         httpClient: mockHttpClient,
@@ -125,20 +128,20 @@ describe("useTemplateOperations", () => {
         setRepositoryAgents: mockSetRepositoryAgents,
         setSelectedAgentIds: mockSetSelectedAgentIds,
         setSelectedTemplateIds: mockSetSelectedTemplateIds,
-        setSelectedRepositoryAgentIds: mockSetSelectedRepositoryAgentIds
-      })
+        setSelectedRepositoryAgentIds: mockSetSelectedRepositoryAgentIds,
+      }),
     );
     expect(mockUseAgentDeletion).toHaveBeenCalledWith({
       user: { id: "user-1", username: "testuser" },
       storage: mockStorage,
       agents: mockAgents,
       setAgents: mockSetAgents,
-      setSelectedAgentIds: mockSetSelectedAgentIds
+      setSelectedAgentIds: mockSetSelectedAgentIds,
     });
   });
   it("should compose useWorkflowDeletion hook", () => {
-    renderHook(
-      () => useTemplateOperations({
+    renderHook(() =>
+      useTemplateOperations({
         token: "token",
         user: { id: "user-1", username: "testuser" },
         httpClient: mockHttpClient,
@@ -154,8 +157,8 @@ describe("useTemplateOperations", () => {
         setRepositoryAgents: mockSetRepositoryAgents,
         setSelectedAgentIds: mockSetSelectedAgentIds,
         setSelectedTemplateIds: mockSetSelectedTemplateIds,
-        setSelectedRepositoryAgentIds: mockSetSelectedRepositoryAgentIds
-      })
+        setSelectedRepositoryAgentIds: mockSetSelectedRepositoryAgentIds,
+      }),
     );
     expect(mockUseWorkflowDeletion).toHaveBeenCalledWith({
       user: { id: "user-1", username: "testuser" },
@@ -164,12 +167,12 @@ describe("useTemplateOperations", () => {
       activeTab: "repository",
       setTemplates: mockSetTemplates,
       setWorkflowsOfWorkflows: mockSetWorkflowsOfWorkflows,
-      setSelectedTemplateIds: mockSetSelectedTemplateIds
+      setSelectedTemplateIds: mockSetSelectedTemplateIds,
     });
   });
   it("should compose useRepositoryAgentDeletion hook", () => {
-    renderHook(
-      () => useTemplateOperations({
+    renderHook(() =>
+      useTemplateOperations({
         token: "token",
         user: { id: "user-1", username: "testuser" },
         httpClient: mockHttpClient,
@@ -185,13 +188,13 @@ describe("useTemplateOperations", () => {
         setRepositoryAgents: mockSetRepositoryAgents,
         setSelectedAgentIds: mockSetSelectedAgentIds,
         setSelectedTemplateIds: mockSetSelectedTemplateIds,
-        setSelectedRepositoryAgentIds: mockSetSelectedRepositoryAgentIds
-      })
+        setSelectedRepositoryAgentIds: mockSetSelectedRepositoryAgentIds,
+      }),
     );
     expect(mockUseRepositoryAgentDeletion).toHaveBeenCalledWith({
       storage: mockStorage,
       setRepositoryAgents: mockSetRepositoryAgents,
-      setSelectedRepositoryAgentIds: mockSetSelectedRepositoryAgentIds
+      setSelectedRepositoryAgentIds: mockSetSelectedRepositoryAgentIds,
     });
   });
   it("should return composed hook functions", () => {
@@ -200,19 +203,19 @@ describe("useTemplateOperations", () => {
     const mockDeleteWorkflows = jest.fn();
     const mockDeleteRepositoryAgents = jest.fn();
     mockUseTemplateUsage.mockReturnValue({
-      useTemplate: mockUseTemplate
+      useTemplate: mockUseTemplate,
     });
     mockUseAgentDeletion.mockReturnValue({
-      deleteSelectedAgents: mockDeleteAgents
+      deleteSelectedAgents: mockDeleteAgents,
     });
     mockUseWorkflowDeletion.mockReturnValue({
-      deleteSelectedWorkflows: mockDeleteWorkflows
+      deleteSelectedWorkflows: mockDeleteWorkflows,
     });
     mockUseRepositoryAgentDeletion.mockReturnValue({
-      deleteSelectedRepositoryAgents: mockDeleteRepositoryAgents
+      deleteSelectedRepositoryAgents: mockDeleteRepositoryAgents,
     });
-    const { result } = renderHook(
-      () => useTemplateOperations({
+    const { result } = renderHook(() =>
+      useTemplateOperations({
         token: "token",
         user: { id: "user-1", username: "testuser" },
         httpClient: mockHttpClient,
@@ -228,12 +231,14 @@ describe("useTemplateOperations", () => {
         setRepositoryAgents: mockSetRepositoryAgents,
         setSelectedAgentIds: mockSetSelectedAgentIds,
         setSelectedTemplateIds: mockSetSelectedTemplateIds,
-        setSelectedRepositoryAgentIds: mockSetSelectedRepositoryAgentIds
-      })
+        setSelectedRepositoryAgentIds: mockSetSelectedRepositoryAgentIds,
+      }),
     );
     expect(result.current.useTemplate).toBe(mockUseTemplate);
     expect(result.current.deleteSelectedAgents).toBe(mockDeleteAgents);
     expect(result.current.deleteSelectedWorkflows).toBe(mockDeleteWorkflows);
-    expect(result.current.deleteSelectedRepositoryAgents).toBe(mockDeleteRepositoryAgents);
+    expect(result.current.deleteSelectedRepositoryAgents).toBe(
+      mockDeleteRepositoryAgents,
+    );
   });
 });

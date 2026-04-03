@@ -1,5 +1,8 @@
 import { useState, useCallback, useRef } from "react";
-import { showSuccess as defaultShowSuccess, showError as defaultShowError } from "../../utils/notifications";
+import {
+  showSuccess as defaultShowSuccess,
+  showError as defaultShowError,
+} from "../../utils/notifications";
 import { showConfirm as defaultShowConfirm } from "../../utils/confirm";
 import { api as defaultApi } from "../../api/client";
 import { logger as defaultLogger } from "../../utils/logger";
@@ -9,7 +12,7 @@ import {
   hasWorkflowId,
   isConfirmed,
   isWorkflowSaved,
-  canExecuteWorkflow
+  canExecuteWorkflow,
 } from "../utils/workflowExecutionValidation";
 import { extractApiErrorMessage } from "../utils/apiUtils";
 function useWorkflowExecution({
@@ -22,7 +25,7 @@ function useWorkflowExecution({
   showError = defaultShowError,
   showConfirm = defaultShowConfirm,
   api = defaultApi,
-  logger = defaultLogger
+  logger = defaultLogger,
 }) {
   const [showInputs, setShowInputs] = useState(false);
   const [executionInputs, setExecutionInputsState] = useState("{}");
@@ -49,7 +52,7 @@ function useWorkflowExecution({
       logger.debug("[WorkflowBuilder] No workflow ID, prompting to save");
       const confirmed = await showConfirm(
         "Workflow needs to be saved before execution. Save now?",
-        { title: "Save Workflow", confirmText: "Save", cancelText: "Cancel" }
+        { title: "Save Workflow", confirmText: "Save", cancelText: "Cancel" },
       );
       if (!isConfirmed(confirmed)) {
         return;
@@ -66,32 +69,48 @@ function useWorkflowExecution({
         return;
       }
     }
-    logger.debug("[WorkflowBuilder] Setting execution inputs and showing dialog");
+    logger.debug(
+      "[WorkflowBuilder] Setting execution inputs and showing dialog",
+    );
     setShowInputs(true);
   }, [isAuthenticated, localWorkflowId, saveWorkflow]);
   const handleConfirmExecute = useCallback(async () => {
     logger.debug("[WorkflowBuilder] handleConfirmExecute called");
     logger.debug("[WorkflowBuilder] executionInputs:", executionInputs);
-    logger.debug("[WorkflowBuilder] workflowIdRef.current:", workflowIdRef.current);
+    logger.debug(
+      "[WorkflowBuilder] workflowIdRef.current:",
+      workflowIdRef.current,
+    );
     setIsExecuting(true);
     try {
       const executionService = new WorkflowExecutionService({
         api,
-        logger
+        logger,
       });
       const inputs = executionService.parseExecutionInputs(
-        executionInputsRef.current
+        executionInputsRef.current,
       );
       logger.debug("[WorkflowBuilder] Parsed inputs:", inputs);
       setShowInputs(false);
       setExecutionInputs("{}");
       const tempExecutionId = executionService.createTempExecutionId();
-      logger.debug("[WorkflowBuilder] Created temp execution ID:", tempExecutionId);
-      showSuccess("\u2705 Execution starting...\n\nCheck the console at the bottom of the screen to watch it run.", 6e3);
+      logger.debug(
+        "[WorkflowBuilder] Created temp execution ID:",
+        tempExecutionId,
+      );
+      showSuccess(
+        "\u2705 Execution starting...\n\nCheck the console at the bottom of the screen to watch it run.",
+        6e3,
+      );
       const workflowIdToExecute = workflowIdRef.current;
-      logger.debug("[WorkflowBuilder] Workflow ID to execute:", workflowIdToExecute);
+      logger.debug(
+        "[WorkflowBuilder] Workflow ID to execute:",
+        workflowIdToExecute,
+      );
       if (!canExecuteWorkflow(workflowIdToExecute)) {
-        logger.error("[WorkflowBuilder] No workflow ID found - workflow must be saved");
+        logger.error(
+          "[WorkflowBuilder] No workflow ID found - workflow must be saved",
+        );
         showError("Workflow must be saved before executing.");
         return;
       }
@@ -103,7 +122,7 @@ function useWorkflowExecution({
         workflowId: workflowIdToExecute,
         inputs,
         tempExecutionId,
-        onExecutionStart
+        onExecutionStart,
       });
     } catch (error) {
       logger.error("[WorkflowBuilder] Execution failed:", error);
@@ -112,7 +131,15 @@ function useWorkflowExecution({
     } finally {
       setIsExecuting(false);
     }
-  }, [executionInputs, workflowIdRef, onExecutionStart, api, logger, showSuccess, showError]);
+  }, [
+    executionInputs,
+    workflowIdRef,
+    onExecutionStart,
+    api,
+    logger,
+    showSuccess,
+    showError,
+  ]);
   return {
     showInputs,
     setShowInputs,
@@ -120,9 +147,7 @@ function useWorkflowExecution({
     setExecutionInputs,
     isExecuting,
     executeWorkflow,
-    handleConfirmExecute
+    handleConfirmExecute,
   };
 }
-export {
-  useWorkflowExecution
-};
+export { useWorkflowExecution };

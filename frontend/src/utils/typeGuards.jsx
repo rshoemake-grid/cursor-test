@@ -4,7 +4,4 @@ function isNullOrUndefined(value) {
 function isDefined(value) {
   return value !== null && value !== void 0;
 }
-export {
-  isDefined,
-  isNullOrUndefined
-};
+export { isDefined, isNullOrUndefined };

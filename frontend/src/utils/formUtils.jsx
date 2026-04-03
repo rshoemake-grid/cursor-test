@@ -28,11 +28,7 @@ class DefaultCloner {
     return value;
   }
 }
-const CLONERS = [
-  new ArrayCloner(),
-  new ObjectCloner(),
-  new DefaultCloner()
-];
+const CLONERS = [new ArrayCloner(), new ObjectCloner(), new DefaultCloner()];
 function cloneValue(value) {
   for (const cloner of CLONERS) {
     if (cloner.canHandle(value) === true) {
@@ -63,7 +59,7 @@ function traversePath(obj, keys) {
   return {
     value: currentValue,
     parent: currentValue,
-    lastKey: keys[lastIndex]
+    lastKey: keys[lastIndex],
   };
 }
 function getNestedValue(obj, path, defaultValue) {
@@ -123,8 +119,4 @@ function hasNestedValue(obj, path) {
   const keyExists = result.lastKey in result.value === true;
   return keyExists;
 }
-export {
-  getNestedValue,
-  hasNestedValue,
-  setNestedValue
-};
+export { getNestedValue, hasNestedValue, setNestedValue };

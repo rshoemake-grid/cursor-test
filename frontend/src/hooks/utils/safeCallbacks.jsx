@@ -23,10 +23,8 @@ function safeShowError(callbacks, message) {
     }
     try {
       callbacks.showError(message);
-    } catch (e) {
-    }
-  } catch (e) {
-  }
+    } catch (e) {}
+  } catch (e) {}
 }
 function safeShowSuccess(callbacks, message) {
   try {
@@ -53,10 +51,8 @@ function safeShowSuccess(callbacks, message) {
     }
     try {
       callbacks.showSuccess(message);
-    } catch (e) {
-    }
-  } catch (e) {
-  }
+    } catch (e) {}
+  } catch (e) {}
 }
 function safeOnComplete(callbacks) {
   try {
@@ -83,13 +79,7 @@ function safeOnComplete(callbacks) {
     }
     try {
       callbacks.onComplete?.();
-    } catch (e) {
-    }
-  } catch (e) {
-  }
+    } catch (e) {}
+  } catch (e) {}
 }
-export {
-  safeOnComplete,
-  safeShowError,
-  safeShowSuccess
-};
+export { safeOnComplete, safeShowError, safeShowSuccess };

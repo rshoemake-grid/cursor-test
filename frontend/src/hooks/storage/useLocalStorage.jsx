@@ -5,22 +5,26 @@ import {
   readStorageItem,
   writeStorageItem,
   deleteStorageItem,
-  shouldHandleStorageEvent
+  shouldHandleStorageEvent,
 } from "./useLocalStorage.utils";
 import { nullishCoalesce } from "../utils/nullishCoalescing";
 function useLocalStorage(key, initialValue, options) {
-  const storage = nullishCoalesce(options?.storage, defaultAdapters.createLocalStorageAdapter());
+  const storage = nullishCoalesce(
+    options?.storage,
+    defaultAdapters.createLocalStorageAdapter(),
+  );
   const injectedLogger = nullishCoalesce(options?.logger, logger);
   const [storedValue, setStoredValue] = useState(() => {
     return readStorageItem(storage, key, initialValue, injectedLogger);
   });
   const setValue = useCallback(
     (value) => {
-      const valueToStore = value instanceof Function ? value(storedValue) : value;
+      const valueToStore =
+        value instanceof Function ? value(storedValue) : value;
       setStoredValue(valueToStore);
       writeStorageItem(storage, key, valueToStore, injectedLogger);
     },
-    [key, storedValue, storage, injectedLogger]
+    [key, storedValue, storage, injectedLogger],
   );
   const removeValue = useCallback(() => {
     setStoredValue(initialValue);
@@ -47,17 +51,26 @@ function useLocalStorage(key, initialValue, options) {
   return [storedValue, setValue, removeValue];
 }
 function getLocalStorageItem(key, defaultValue, options) {
-  const storage = nullishCoalesce(options?.storage, defaultAdapters.createLocalStorageAdapter());
+  const storage = nullishCoalesce(
+    options?.storage,
+    defaultAdapters.createLocalStorageAdapter(),
+  );
   const injectedLogger = nullishCoalesce(options?.logger, logger);
   return readStorageItem(storage, key, defaultValue, injectedLogger);
 }
 function setLocalStorageItem(key, value, options) {
-  const storage = nullishCoalesce(options?.storage, defaultAdapters.createLocalStorageAdapter());
+  const storage = nullishCoalesce(
+    options?.storage,
+    defaultAdapters.createLocalStorageAdapter(),
+  );
   const injectedLogger = nullishCoalesce(options?.logger, logger);
   return writeStorageItem(storage, key, value, injectedLogger);
 }
 function removeLocalStorageItem(key, options) {
-  const storage = nullishCoalesce(options?.storage, defaultAdapters.createLocalStorageAdapter());
+  const storage = nullishCoalesce(
+    options?.storage,
+    defaultAdapters.createLocalStorageAdapter(),
+  );
   const injectedLogger = nullishCoalesce(options?.logger, logger);
   return deleteStorageItem(storage, key, injectedLogger);
 }
@@ -65,5 +78,5 @@ export {
   getLocalStorageItem,
   removeLocalStorageItem,
   setLocalStorageItem,
-  useLocalStorage
+  useLocalStorage,
 };

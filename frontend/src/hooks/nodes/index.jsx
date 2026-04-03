@@ -8,5 +8,5 @@ export {
   useNodeOperations,
   useNodeSelection,
   useSelectedNode,
-  useSelectionManager
+  useSelectionManager,
 };

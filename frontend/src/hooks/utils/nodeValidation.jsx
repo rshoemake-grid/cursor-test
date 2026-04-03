@@ -31,8 +31,4 @@ function nodeExistsAndValid(node) {
   }
   return true;
 }
-export {
-  hasValidCache,
-  isValidNodeId,
-  nodeExistsAndValid
-};
+export { hasValidCache, isValidNodeId, nodeExistsAndValid };

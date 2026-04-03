@@ -58,13 +58,24 @@ function SuccessRateLineChart({ data }) {
   const h = 220;
   const pad = 24;
   const maxY = 100;
-  const xs = data.map((_, i) => pad + (i * (w - 2 * pad)) / Math.max(1, data.length - 1));
+  const xs = data.map(
+    (_, i) => pad + (i * (w - 2 * pad)) / Math.max(1, data.length - 1),
+  );
   const ys = data.map((d) => h - pad - (d.successRate / maxY) * (h - 2 * pad));
   const points = xs.map((x, i) => `${x},${ys[i]}`).join(" ");
   return (
     <ChartWrap>
-      <LineSvg viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none" aria-label="Success rate over time">
-        <polyline fill="none" stroke="#10b981" strokeWidth="2" points={points} />
+      <LineSvg
+        viewBox={`0 0 ${w} ${h}`}
+        preserveAspectRatio="none"
+        aria-label="Success rate over time"
+      >
+        <polyline
+          fill="none"
+          stroke="#10b981"
+          strokeWidth="2"
+          points={points}
+        />
         {data.map((d, i) => (
           <circle key={d.date} cx={xs[i]} cy={ys[i]} r="3" fill="#10b981" />
         ))}
@@ -90,13 +101,26 @@ function AverageDurationLineChart({ data }) {
   const h = 220;
   const pad = 24;
   const maxV = Math.max(1, ...data.map((d) => d.avgDuration || 0));
-  const xs = data.map((_, i) => pad + (i * (w - 2 * pad)) / Math.max(1, data.length - 1));
-  const ys = data.map((d) => h - pad - ((d.avgDuration || 0) / maxV) * (h - 2 * pad));
+  const xs = data.map(
+    (_, i) => pad + (i * (w - 2 * pad)) / Math.max(1, data.length - 1),
+  );
+  const ys = data.map(
+    (d) => h - pad - ((d.avgDuration || 0) / maxV) * (h - 2 * pad),
+  );
   const points = xs.map((x, i) => `${x},${ys[i]}`).join(" ");
   return (
     <ChartWrap>
-      <LineSvg viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none" aria-label="Average duration over time">
-        <polyline fill="none" stroke="#3b82f6" strokeWidth="2" points={points} />
+      <LineSvg
+        viewBox={`0 0 ${w} ${h}`}
+        preserveAspectRatio="none"
+        aria-label="Average duration over time"
+      >
+        <polyline
+          fill="none"
+          stroke="#3b82f6"
+          strokeWidth="2"
+          points={points}
+        />
         {data.map((d, i) => (
           <circle key={d.date} cx={xs[i]} cy={ys[i]} r="3" fill="#3b82f6" />
         ))}
@@ -143,7 +167,12 @@ function StatusPieChart({ data }) {
   });
   return (
     <ChartWrap>
-      <PieSvg width={180} height={180} viewBox="0 0 180 180" aria-label="Status distribution">
+      <PieSvg
+        width={180}
+        height={180}
+        viewBox="0 0 180 180"
+        aria-label="Status distribution"
+      >
         {segs.map((s, i) => {
           if (s.frac <= 0) {
             return null;
@@ -155,7 +184,15 @@ function StatusPieChart({ data }) {
           const large = a2 - a1 > 0.5 ? 1 : 0;
           const fill = PIE_COLORS[s.name.toLowerCase()] || "#8884d8";
           const d = `M ${cx} ${cy} L ${p1.x} ${p1.y} A ${r} ${r} 0 ${large} 1 ${p2.x} ${p2.y} Z`;
-          return <path key={`${s.name}-${i}`} d={d} fill={fill} stroke="#fff" strokeWidth="1" />;
+          return (
+            <path
+              key={`${s.name}-${i}`}
+              d={d}
+              fill={fill}
+              stroke="#fff"
+              strokeWidth="1"
+            />
+          );
         })}
       </PieSvg>
     </ChartWrap>
@@ -181,7 +218,9 @@ function ExecutionsBarChart({ data }) {
       <BarRow>
         {data.map((d) => {
           const pct = ((d.total || 0) / maxTotal) * 100;
-          const completedPct = d.total ? ((d.completed || 0) / d.total) * 100 : 0;
+          const completedPct = d.total
+            ? ((d.completed || 0) / d.total) * 100
+            : 0;
           const failedPct = d.total ? ((d.failed || 0) / d.total) * 100 : 0;
           return (
             <BarSeg key={d.date} title={d.date}>
@@ -208,4 +247,9 @@ ExecutionsBarChart.propTypes = {
   ).isRequired,
 };
 
-export { SuccessRateLineChart, AverageDurationLineChart, StatusPieChart, ExecutionsBarChart };
+export {
+  SuccessRateLineChart,
+  AverageDurationLineChart,
+  StatusPieChart,
+  ExecutionsBarChart,
+};

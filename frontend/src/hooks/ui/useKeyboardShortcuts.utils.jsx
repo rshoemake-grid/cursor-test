@@ -1,5 +1,9 @@
 function isInputElement(target) {
-  return target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable === true;
+  return (
+    target.tagName === "INPUT" ||
+    target.tagName === "TEXTAREA" ||
+    target.isContentEditable === true
+  );
 }
 function hasModifierKey(event) {
   return event.ctrlKey || event.metaKey;
@@ -13,9 +17,4 @@ function matchesKeyCombination(event, key, requireModifier = true) {
 function isDeleteKey(event) {
   return event.key === "Delete" || event.key === "Backspace";
 }
-export {
-  hasModifierKey,
-  isDeleteKey,
-  isInputElement,
-  matchesKeyCombination
-};
+export { hasModifierKey, isDeleteKey, isInputElement, matchesKeyCombination };

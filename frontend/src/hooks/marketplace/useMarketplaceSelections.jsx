@@ -15,7 +15,10 @@ function useMarketplaceSelections() {
       agentSelection.clear();
     } else if (activeTab === "tools") {
       toolSelection.clear();
-    } else if (activeTab === "repository" || activeTab === "workflows-of-workflows") {
+    } else if (
+      activeTab === "repository" ||
+      activeTab === "workflows-of-workflows"
+    ) {
       if (activeTab === "repository" && repositorySubTab === "agents") {
         repositoryAgentSelection.clear();
       } else {
@@ -29,9 +32,7 @@ function useMarketplaceSelections() {
     repositoryAgentSelection,
     toolSelection,
     clearAllSelections,
-    clearSelectionsForTab
+    clearSelectionsForTab,
   };
 }
-export {
-  useMarketplaceSelections
-};
+export { useMarketplaceSelections };

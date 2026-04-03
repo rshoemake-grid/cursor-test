@@ -47,8 +47,8 @@ function convertAgentToNode(agent, position, index) {
       label: getAgentLabel(agent),
       name: getAgentName(agent),
       description: getAgentDescription(agent),
-      agent_config: getAgentConfig(agent)
-    }
+      agent_config: getAgentConfig(agent),
+    },
   };
 }
 function convertAgentsToNodes(agents, positions) {
@@ -62,5 +62,5 @@ export {
   getAgentConfig,
   getAgentDescription,
   getAgentLabel,
-  getAgentName
+  getAgentName,
 };

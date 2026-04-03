@@ -4,8 +4,8 @@ import { logger } from "../../utils/logger";
 jest.mock("../../utils/logger", () => ({
   logger: {
     debug: jest.fn(),
-    error: jest.fn()
-  }
+    error: jest.fn(),
+  },
 }));
 const mockLoggerDebug = logger.debug;
 describe("useMarketplaceIntegration", () => {
@@ -32,9 +32,9 @@ describe("useMarketplaceIntegration", () => {
           workflowId: null,
           workflowName: "Test Workflow",
           workflowDescription: "Test Description",
-          isUnsaved: false
-        }
-      }
+          isUnsaved: false,
+        },
+      },
     };
   });
   afterEach(() => {
@@ -43,8 +43,8 @@ describe("useMarketplaceIntegration", () => {
   });
   describe("addAgentsToCanvas", () => {
     it("should add agents to canvas", () => {
-      const { result } = renderHook(
-        () => useMarketplaceIntegration({
+      const { result } = renderHook(() =>
+        useMarketplaceIntegration({
           tabId: "tab-1",
           storage: null,
           setNodes: mockSetNodes,
@@ -54,30 +54,31 @@ describe("useMarketplaceIntegration", () => {
           localWorkflowDescription: "Test Description",
           tabIsUnsaved: false,
           tabDraftsRef: mockTabDraftsRef,
-          saveDraftsToStorage: mockSaveDraftsToStorage
-        })
+          saveDraftsToStorage: mockSaveDraftsToStorage,
+        }),
       );
       const agents = [
         {
           id: "agent-1",
           name: "Test Agent",
           description: "Test Description",
-          agent_config: { model: "gpt-4" }
-        }
+          agent_config: { model: "gpt-4" },
+        },
       ];
       act(() => {
         result.current.addAgentsToCanvas(agents);
       });
       expect(mockSetNodes).toHaveBeenCalled();
       const setNodesCall = mockSetNodes.mock.calls[0][0];
-      const newNodes = typeof setNodesCall === "function" ? setNodesCall([]) : setNodesCall;
+      const newNodes =
+        typeof setNodesCall === "function" ? setNodesCall([]) : setNodesCall;
       expect(newNodes).toHaveLength(1);
       expect(newNodes[0].type).toBe("agent");
       expect(newNodes[0].data.label).toBe("Test Agent");
     });
     it("should position agents when no existing nodes", () => {
-      const { result } = renderHook(
-        () => useMarketplaceIntegration({
+      const { result } = renderHook(() =>
+        useMarketplaceIntegration({
           tabId: "tab-1",
           storage: null,
           setNodes: mockSetNodes,
@@ -87,18 +88,19 @@ describe("useMarketplaceIntegration", () => {
           localWorkflowDescription: "Test Description",
           tabIsUnsaved: false,
           tabDraftsRef: mockTabDraftsRef,
-          saveDraftsToStorage: mockSaveDraftsToStorage
-        })
+          saveDraftsToStorage: mockSaveDraftsToStorage,
+        }),
       );
       const agents = [
         { id: "agent-1", name: "Agent 1" },
-        { id: "agent-2", name: "Agent 2" }
+        { id: "agent-2", name: "Agent 2" },
       ];
       act(() => {
         result.current.addAgentsToCanvas(agents);
       });
       const setNodesCall = mockSetNodes.mock.calls[0][0];
-      const newNodes = typeof setNodesCall === "function" ? setNodesCall([]) : setNodesCall;
+      const newNodes =
+        typeof setNodesCall === "function" ? setNodesCall([]) : setNodesCall;
       expect(newNodes[0].position.x).toBe(250);
       expect(newNodes[0].position.y).toBe(250);
       expect(newNodes[1].position.y).toBe(400);
@@ -109,17 +111,17 @@ describe("useMarketplaceIntegration", () => {
           id: "node-1",
           type: "agent",
           position: { x: 100, y: 100 },
-          data: {}
+          data: {},
         },
         {
           id: "node-2",
           type: "agent",
           position: { x: 500, y: 200 },
-          data: {}
-        }
+          data: {},
+        },
       ];
-      const { result } = renderHook(
-        () => useMarketplaceIntegration({
+      const { result } = renderHook(() =>
+        useMarketplaceIntegration({
           tabId: "tab-1",
           storage: null,
           setNodes: mockSetNodes,
@@ -129,20 +131,23 @@ describe("useMarketplaceIntegration", () => {
           localWorkflowDescription: "Test Description",
           tabIsUnsaved: false,
           tabDraftsRef: mockTabDraftsRef,
-          saveDraftsToStorage: mockSaveDraftsToStorage
-        })
+          saveDraftsToStorage: mockSaveDraftsToStorage,
+        }),
       );
       const agents = [{ id: "agent-1", name: "Agent 1" }];
       act(() => {
         result.current.addAgentsToCanvas(agents);
       });
       const setNodesCall = mockSetNodes.mock.calls[0][0];
-      const newNodes = typeof setNodesCall === "function" ? setNodesCall(existingNodes) : setNodesCall;
+      const newNodes =
+        typeof setNodesCall === "function"
+          ? setNodesCall(existingNodes)
+          : setNodesCall;
       expect(newNodes[newNodes.length - 1].position.x).toBe(700);
     });
     it("should use label when name is not available", () => {
-      const { result } = renderHook(
-        () => useMarketplaceIntegration({
+      const { result } = renderHook(() =>
+        useMarketplaceIntegration({
           tabId: "tab-1",
           storage: null,
           setNodes: mockSetNodes,
@@ -152,27 +157,28 @@ describe("useMarketplaceIntegration", () => {
           localWorkflowDescription: "Test Description",
           tabIsUnsaved: false,
           tabDraftsRef: mockTabDraftsRef,
-          saveDraftsToStorage: mockSaveDraftsToStorage
-        })
+          saveDraftsToStorage: mockSaveDraftsToStorage,
+        }),
       );
       const agents = [
         {
           id: "agent-1",
           label: "Agent Label",
-          description: "Test Description"
-        }
+          description: "Test Description",
+        },
       ];
       act(() => {
         result.current.addAgentsToCanvas(agents);
       });
       const setNodesCall = mockSetNodes.mock.calls[0][0];
-      const newNodes = typeof setNodesCall === "function" ? setNodesCall([]) : setNodesCall;
+      const newNodes =
+        typeof setNodesCall === "function" ? setNodesCall([]) : setNodesCall;
       expect(newNodes[0].data.label).toBe("Agent Label");
       expect(newNodes[0].data.name).toBe("Agent Label");
     });
     it("should use fallback label when neither name nor label available", () => {
-      const { result } = renderHook(
-        () => useMarketplaceIntegration({
+      const { result } = renderHook(() =>
+        useMarketplaceIntegration({
           tabId: "tab-1",
           storage: null,
           setNodes: mockSetNodes,
@@ -182,20 +188,21 @@ describe("useMarketplaceIntegration", () => {
           localWorkflowDescription: "Test Description",
           tabIsUnsaved: false,
           tabDraftsRef: mockTabDraftsRef,
-          saveDraftsToStorage: mockSaveDraftsToStorage
-        })
+          saveDraftsToStorage: mockSaveDraftsToStorage,
+        }),
       );
       const agents = [
         {
           id: "agent-1",
-          agent_config: {}
-        }
+          agent_config: {},
+        },
       ];
       act(() => {
         result.current.addAgentsToCanvas(agents);
       });
       const setNodesCall = mockSetNodes.mock.calls[0][0];
-      const newNodes = typeof setNodesCall === "function" ? setNodesCall([]) : setNodesCall;
+      const newNodes =
+        typeof setNodesCall === "function" ? setNodesCall([]) : setNodesCall;
       expect(newNodes[0].data.label).toBe("Agent Node");
       expect(newNodes[0].data.name).toBe("Agent Node");
     });
@@ -208,8 +215,8 @@ describe("useMarketplaceIntegration", () => {
           currentNodes = updater;
         }
       });
-      const { result } = renderHook(
-        () => useMarketplaceIntegration({
+      const { result } = renderHook(() =>
+        useMarketplaceIntegration({
           tabId: "tab-1",
           storage: null,
           setNodes: mockSetNodes,
@@ -219,15 +226,15 @@ describe("useMarketplaceIntegration", () => {
           localWorkflowDescription: "Test Description",
           tabIsUnsaved: true,
           tabDraftsRef: mockTabDraftsRef,
-          saveDraftsToStorage: mockSaveDraftsToStorage
-        })
+          saveDraftsToStorage: mockSaveDraftsToStorage,
+        }),
       );
       const agents = [
         {
           id: "agent-1",
           name: "Test Agent",
-          agent_config: {}
-        }
+          agent_config: {},
+        },
       ];
       act(() => {
         result.current.addAgentsToCanvas(agents);
@@ -235,9 +242,12 @@ describe("useMarketplaceIntegration", () => {
       act(() => {
         jest.advanceTimersByTime(10);
       });
-      await waitFor(() => {
-        expect(mockSaveDraftsToStorage).toHaveBeenCalled();
-      }, { timeout: 1e3 });
+      await waitFor(
+        () => {
+          expect(mockSaveDraftsToStorage).toHaveBeenCalled();
+        },
+        { timeout: 1e3 },
+      );
       const savedDrafts = mockSaveDraftsToStorage.mock.calls[0][0];
       expect(savedDrafts["tab-1"].nodes.length).toBeGreaterThan(0);
       expect(savedDrafts["tab-1"].workflowId).toBe("workflow-1");
@@ -250,7 +260,7 @@ describe("useMarketplaceIntegration", () => {
         workflowId: null,
         workflowName: "Test Workflow",
         workflowDescription: "Test Description",
-        isUnsaved: false
+        isUnsaved: false,
       };
       let currentNodes = [];
       mockSetNodes.mockImplementation((updater) => {
@@ -260,8 +270,8 @@ describe("useMarketplaceIntegration", () => {
           currentNodes = updater;
         }
       });
-      const { result } = renderHook(
-        () => useMarketplaceIntegration({
+      const { result } = renderHook(() =>
+        useMarketplaceIntegration({
           tabId: "tab-1",
           storage: null,
           setNodes: mockSetNodes,
@@ -271,8 +281,8 @@ describe("useMarketplaceIntegration", () => {
           localWorkflowDescription: "Test Description",
           tabIsUnsaved: false,
           tabDraftsRef: mockTabDraftsRef,
-          saveDraftsToStorage: mockSaveDraftsToStorage
-        })
+          saveDraftsToStorage: mockSaveDraftsToStorage,
+        }),
       );
       const agents = [{ id: "agent-1", name: "Test Agent", agent_config: {} }];
       act(() => {
@@ -281,16 +291,19 @@ describe("useMarketplaceIntegration", () => {
       act(() => {
         jest.advanceTimersByTime(10);
       });
-      await waitFor(() => {
-        expect(mockSaveDraftsToStorage).toHaveBeenCalled();
-      }, { timeout: 1e3 });
+      await waitFor(
+        () => {
+          expect(mockSaveDraftsToStorage).toHaveBeenCalled();
+        },
+        { timeout: 1e3 },
+      );
       const savedDrafts = mockSaveDraftsToStorage.mock.calls[0][0];
       expect(savedDrafts["tab-1"].edges).toHaveLength(1);
       expect(savedDrafts["tab-1"].edges[0].id).toBe("edge-1");
     });
     it("should call notifyModified", () => {
-      const { result } = renderHook(
-        () => useMarketplaceIntegration({
+      const { result } = renderHook(() =>
+        useMarketplaceIntegration({
           tabId: "tab-1",
           storage: null,
           setNodes: mockSetNodes,
@@ -300,8 +313,8 @@ describe("useMarketplaceIntegration", () => {
           localWorkflowDescription: "Test Description",
           tabIsUnsaved: false,
           tabDraftsRef: mockTabDraftsRef,
-          saveDraftsToStorage: mockSaveDraftsToStorage
-        })
+          saveDraftsToStorage: mockSaveDraftsToStorage,
+        }),
       );
       const agents = [{ id: "agent-1", name: "Test Agent", agent_config: {} }];
       act(() => {
@@ -310,8 +323,8 @@ describe("useMarketplaceIntegration", () => {
       expect(mockNotifyModified).toHaveBeenCalled();
     });
     it("should set isAddingAgentsRef flag", () => {
-      const { result } = renderHook(
-        () => useMarketplaceIntegration({
+      const { result } = renderHook(() =>
+        useMarketplaceIntegration({
           tabId: "tab-1",
           storage: null,
           setNodes: mockSetNodes,
@@ -321,8 +334,8 @@ describe("useMarketplaceIntegration", () => {
           localWorkflowDescription: "Test Description",
           tabIsUnsaved: false,
           tabDraftsRef: mockTabDraftsRef,
-          saveDraftsToStorage: mockSaveDraftsToStorage
-        })
+          saveDraftsToStorage: mockSaveDraftsToStorage,
+        }),
       );
       const agents = [{ id: "agent-1", name: "Test Agent", agent_config: {} }];
       act(() => {
@@ -335,8 +348,8 @@ describe("useMarketplaceIntegration", () => {
       expect(result.current.isAddingAgentsRef.current).toBe(false);
     });
     it("should handle empty agents array", () => {
-      const { result } = renderHook(
-        () => useMarketplaceIntegration({
+      const { result } = renderHook(() =>
+        useMarketplaceIntegration({
           tabId: "tab-1",
           storage: null,
           setNodes: mockSetNodes,
@@ -346,19 +359,20 @@ describe("useMarketplaceIntegration", () => {
           localWorkflowDescription: "Test Description",
           tabIsUnsaved: false,
           tabDraftsRef: mockTabDraftsRef,
-          saveDraftsToStorage: mockSaveDraftsToStorage
-        })
+          saveDraftsToStorage: mockSaveDraftsToStorage,
+        }),
       );
       act(() => {
         result.current.addAgentsToCanvas([]);
       });
       const setNodesCall = mockSetNodes.mock.calls[0][0];
-      const newNodes = typeof setNodesCall === "function" ? setNodesCall([]) : setNodesCall;
+      const newNodes =
+        typeof setNodesCall === "function" ? setNodesCall([]) : setNodesCall;
       expect(newNodes).toHaveLength(0);
     });
     it("should handle multiple agents with proper spacing", () => {
-      const { result } = renderHook(
-        () => useMarketplaceIntegration({
+      const { result } = renderHook(() =>
+        useMarketplaceIntegration({
           tabId: "tab-1",
           storage: null,
           setNodes: mockSetNodes,
@@ -368,19 +382,20 @@ describe("useMarketplaceIntegration", () => {
           localWorkflowDescription: "Test Description",
           tabIsUnsaved: false,
           tabDraftsRef: mockTabDraftsRef,
-          saveDraftsToStorage: mockSaveDraftsToStorage
-        })
+          saveDraftsToStorage: mockSaveDraftsToStorage,
+        }),
       );
       const agents = [
         { id: "agent-1", name: "Agent 1", agent_config: {} },
         { id: "agent-2", name: "Agent 2", agent_config: {} },
-        { id: "agent-3", name: "Agent 3", agent_config: {} }
+        { id: "agent-3", name: "Agent 3", agent_config: {} },
       ];
       act(() => {
         result.current.addAgentsToCanvas(agents);
       });
       const setNodesCall = mockSetNodes.mock.calls[0][0];
-      const newNodes = typeof setNodesCall === "function" ? setNodesCall([]) : setNodesCall;
+      const newNodes =
+        typeof setNodesCall === "function" ? setNodesCall([]) : setNodesCall;
       expect(newNodes).toHaveLength(3);
       expect(newNodes[0].position.y).toBe(250);
       expect(newNodes[1].position.y).toBe(400);
@@ -396,30 +411,31 @@ describe("useMarketplaceIntegration", () => {
         }
       });
       const { result, rerender } = renderHook(
-        ({ localWorkflowId, localWorkflowName, tabIsUnsaved }) => useMarketplaceIntegration({
-          tabId: "tab-1",
-          storage: null,
-          setNodes: mockSetNodes,
-          notifyModified: mockNotifyModified,
-          localWorkflowId,
-          localWorkflowName,
-          localWorkflowDescription: "Test Description",
-          tabIsUnsaved,
-          tabDraftsRef: mockTabDraftsRef,
-          saveDraftsToStorage: mockSaveDraftsToStorage
-        }),
+        ({ localWorkflowId, localWorkflowName, tabIsUnsaved }) =>
+          useMarketplaceIntegration({
+            tabId: "tab-1",
+            storage: null,
+            setNodes: mockSetNodes,
+            notifyModified: mockNotifyModified,
+            localWorkflowId,
+            localWorkflowName,
+            localWorkflowDescription: "Test Description",
+            tabIsUnsaved,
+            tabDraftsRef: mockTabDraftsRef,
+            saveDraftsToStorage: mockSaveDraftsToStorage,
+          }),
         {
           initialProps: {
             localWorkflowId: null,
             localWorkflowName: "Initial Name",
-            tabIsUnsaved: false
-          }
-        }
+            tabIsUnsaved: false,
+          },
+        },
       );
       rerender({
         localWorkflowId: "workflow-1",
         localWorkflowName: "Updated Name",
-        tabIsUnsaved: true
+        tabIsUnsaved: true,
       });
       const agents = [{ id: "agent-1", name: "Test Agent", agent_config: {} }];
       act(() => {
@@ -428,17 +444,20 @@ describe("useMarketplaceIntegration", () => {
       act(() => {
         jest.advanceTimersByTime(10);
       });
-      await waitFor(() => {
-        expect(mockSaveDraftsToStorage).toHaveBeenCalled();
-      }, { timeout: 1e3 });
+      await waitFor(
+        () => {
+          expect(mockSaveDraftsToStorage).toHaveBeenCalled();
+        },
+        { timeout: 1e3 },
+      );
       const savedDrafts = mockSaveDraftsToStorage.mock.calls[0][0];
       expect(savedDrafts["tab-1"].workflowId).toBe("workflow-1");
       expect(savedDrafts["tab-1"].workflowName).toBe("Updated Name");
       expect(savedDrafts["tab-1"].isUnsaved).toBe(true);
     });
     it("should verify agent.name || agent.label || Agent Node - all branches", () => {
-      const { result } = renderHook(
-        () => useMarketplaceIntegration({
+      const { result } = renderHook(() =>
+        useMarketplaceIntegration({
           tabId: "tab-1",
           storage: null,
           setNodes: mockSetNodes,
@@ -448,34 +467,44 @@ describe("useMarketplaceIntegration", () => {
           localWorkflowDescription: "Test Description",
           tabIsUnsaved: false,
           tabDraftsRef: mockTabDraftsRef,
-          saveDraftsToStorage: mockSaveDraftsToStorage
-        })
+          saveDraftsToStorage: mockSaveDraftsToStorage,
+        }),
       );
-      const agentsWithName = [{ id: "agent-1", name: "Agent Name", agent_config: {} }];
+      const agentsWithName = [
+        { id: "agent-1", name: "Agent Name", agent_config: {} },
+      ];
       act(() => {
         result.current.addAgentsToCanvas(agentsWithName);
       });
-      let setNodesCall = mockSetNodes.mock.calls[mockSetNodes.mock.calls.length - 1][0];
-      let newNodes = typeof setNodesCall === "function" ? setNodesCall([]) : setNodesCall;
+      let setNodesCall =
+        mockSetNodes.mock.calls[mockSetNodes.mock.calls.length - 1][0];
+      let newNodes =
+        typeof setNodesCall === "function" ? setNodesCall([]) : setNodesCall;
       expect(newNodes[0].data.name).toBe("Agent Name");
-      const agentsWithLabel = [{ id: "agent-2", label: "Agent Label", agent_config: {} }];
+      const agentsWithLabel = [
+        { id: "agent-2", label: "Agent Label", agent_config: {} },
+      ];
       act(() => {
         result.current.addAgentsToCanvas(agentsWithLabel);
       });
-      setNodesCall = mockSetNodes.mock.calls[mockSetNodes.mock.calls.length - 1][0];
-      newNodes = typeof setNodesCall === "function" ? setNodesCall([]) : setNodesCall;
+      setNodesCall =
+        mockSetNodes.mock.calls[mockSetNodes.mock.calls.length - 1][0];
+      newNodes =
+        typeof setNodesCall === "function" ? setNodesCall([]) : setNodesCall;
       expect(newNodes[0].data.name).toBe("Agent Label");
       const agentsWithoutNameOrLabel = [{ id: "agent-3", agent_config: {} }];
       act(() => {
         result.current.addAgentsToCanvas(agentsWithoutNameOrLabel);
       });
-      setNodesCall = mockSetNodes.mock.calls[mockSetNodes.mock.calls.length - 1][0];
-      newNodes = typeof setNodesCall === "function" ? setNodesCall([]) : setNodesCall;
+      setNodesCall =
+        mockSetNodes.mock.calls[mockSetNodes.mock.calls.length - 1][0];
+      newNodes =
+        typeof setNodesCall === "function" ? setNodesCall([]) : setNodesCall;
       expect(newNodes[0].data.name).toBe("Agent Node");
     });
     it('should verify agent.description || "" fallback', () => {
-      const { result } = renderHook(
-        () => useMarketplaceIntegration({
+      const { result } = renderHook(() =>
+        useMarketplaceIntegration({
           tabId: "tab-1",
           storage: null,
           setNodes: mockSetNodes,
@@ -485,20 +514,23 @@ describe("useMarketplaceIntegration", () => {
           localWorkflowDescription: "Test Description",
           tabIsUnsaved: false,
           tabDraftsRef: mockTabDraftsRef,
-          saveDraftsToStorage: mockSaveDraftsToStorage
-        })
+          saveDraftsToStorage: mockSaveDraftsToStorage,
+        }),
       );
-      const agentsWithoutDescription = [{ id: "agent-1", name: "Agent", agent_config: {} }];
+      const agentsWithoutDescription = [
+        { id: "agent-1", name: "Agent", agent_config: {} },
+      ];
       act(() => {
         result.current.addAgentsToCanvas(agentsWithoutDescription);
       });
       const setNodesCall = mockSetNodes.mock.calls[0][0];
-      const newNodes = typeof setNodesCall === "function" ? setNodesCall([]) : setNodesCall;
+      const newNodes =
+        typeof setNodesCall === "function" ? setNodesCall([]) : setNodesCall;
       expect(newNodes[0].data.description).toBe("");
     });
     it("should verify agent.agent_config || {} fallback", () => {
-      const { result } = renderHook(
-        () => useMarketplaceIntegration({
+      const { result } = renderHook(() =>
+        useMarketplaceIntegration({
           tabId: "tab-1",
           storage: null,
           setNodes: mockSetNodes,
@@ -508,15 +540,16 @@ describe("useMarketplaceIntegration", () => {
           localWorkflowDescription: "Test Description",
           tabIsUnsaved: false,
           tabDraftsRef: mockTabDraftsRef,
-          saveDraftsToStorage: mockSaveDraftsToStorage
-        })
+          saveDraftsToStorage: mockSaveDraftsToStorage,
+        }),
       );
       const agentsWithoutConfig = [{ id: "agent-1", name: "Agent" }];
       act(() => {
         result.current.addAgentsToCanvas(agentsWithoutConfig);
       });
       const setNodesCall = mockSetNodes.mock.calls[0][0];
-      const newNodes = typeof setNodesCall === "function" ? setNodesCall([]) : setNodesCall;
+      const newNodes =
+        typeof setNodesCall === "function" ? setNodesCall([]) : setNodesCall;
       expect(newNodes[0].data.agent_config).toEqual({});
     });
     it("should verify currentDraft?.edges || [] fallback", async () => {
@@ -529,8 +562,8 @@ describe("useMarketplaceIntegration", () => {
           currentNodes = updater;
         }
       });
-      const { result } = renderHook(
-        () => useMarketplaceIntegration({
+      const { result } = renderHook(() =>
+        useMarketplaceIntegration({
           tabId: "tab-1",
           storage: null,
           setNodes: mockSetNodes,
@@ -540,8 +573,8 @@ describe("useMarketplaceIntegration", () => {
           localWorkflowDescription: "Test Description",
           tabIsUnsaved: false,
           tabDraftsRef: mockTabDraftsRef,
-          saveDraftsToStorage: mockSaveDraftsToStorage
-        })
+          saveDraftsToStorage: mockSaveDraftsToStorage,
+        }),
       );
       const agents = [{ id: "agent-1", name: "Test Agent", agent_config: {} }];
       act(() => {
@@ -550,17 +583,20 @@ describe("useMarketplaceIntegration", () => {
       act(() => {
         jest.advanceTimersByTime(10);
       });
-      await waitFor(() => {
-        expect(mockSaveDraftsToStorage).toHaveBeenCalled();
-      }, { timeout: 1e3 });
+      await waitFor(
+        () => {
+          expect(mockSaveDraftsToStorage).toHaveBeenCalled();
+        },
+        { timeout: 1e3 },
+      );
       const savedDrafts = mockSaveDraftsToStorage.mock.calls[0][0];
       expect(savedDrafts["tab-1"].edges).toEqual([]);
     });
   });
   describe("useEffect event handling", () => {
     it("should verify targetTabId !== tabId check - different tab", () => {
-      renderHook(
-        () => useMarketplaceIntegration({
+      renderHook(() =>
+        useMarketplaceIntegration({
           tabId: "tab-1",
           storage: null,
           setNodes: mockSetNodes,
@@ -570,15 +606,15 @@ describe("useMarketplaceIntegration", () => {
           localWorkflowDescription: "Test Description",
           tabIsUnsaved: false,
           tabDraftsRef: mockTabDraftsRef,
-          saveDraftsToStorage: mockSaveDraftsToStorage
-        })
+          saveDraftsToStorage: mockSaveDraftsToStorage,
+        }),
       );
       const event = new CustomEvent("addAgentsToWorkflow", {
         detail: {
           agents: [{ id: "agent-1", name: "Agent" }],
-          tabId: "tab-2"
+          tabId: "tab-2",
           // Different tab
-        }
+        },
       });
       act(() => {
         window.dispatchEvent(event);
@@ -586,8 +622,8 @@ describe("useMarketplaceIntegration", () => {
       expect(mockSetNodes).not.toHaveBeenCalled();
     });
     it("should verify targetTabId !== tabId check - same tab", () => {
-      renderHook(
-        () => useMarketplaceIntegration({
+      renderHook(() =>
+        useMarketplaceIntegration({
           tabId: "tab-1",
           storage: null,
           setNodes: mockSetNodes,
@@ -597,15 +633,15 @@ describe("useMarketplaceIntegration", () => {
           localWorkflowDescription: "Test Description",
           tabIsUnsaved: false,
           tabDraftsRef: mockTabDraftsRef,
-          saveDraftsToStorage: mockSaveDraftsToStorage
-        })
+          saveDraftsToStorage: mockSaveDraftsToStorage,
+        }),
       );
       const event = new CustomEvent("addAgentsToWorkflow", {
         detail: {
           agents: [{ id: "agent-1", name: "Agent", agent_config: {} }],
-          tabId: "tab-1"
+          tabId: "tab-1",
           // Same tab
-        }
+        },
       });
       act(() => {
         window.dispatchEvent(event);
@@ -613,8 +649,8 @@ describe("useMarketplaceIntegration", () => {
       expect(mockSetNodes).toHaveBeenCalled();
     });
     it("should verify !storage check in checkPendingAgents", () => {
-      renderHook(
-        () => useMarketplaceIntegration({
+      renderHook(() =>
+        useMarketplaceIntegration({
           tabId: "tab-1",
           storage: null,
           // No storage
@@ -625,8 +661,8 @@ describe("useMarketplaceIntegration", () => {
           localWorkflowDescription: "Test Description",
           tabIsUnsaved: false,
           tabDraftsRef: mockTabDraftsRef,
-          saveDraftsToStorage: mockSaveDraftsToStorage
-        })
+          saveDraftsToStorage: mockSaveDraftsToStorage,
+        }),
       );
       expect(mockSetNodes).not.toHaveBeenCalled();
     });
@@ -636,10 +672,10 @@ describe("useMarketplaceIntegration", () => {
         setItem: jest.fn(),
         removeItem: jest.fn(),
         addEventListener: jest.fn(),
-        removeEventListener: jest.fn()
+        removeEventListener: jest.fn(),
       };
-      renderHook(
-        () => useMarketplaceIntegration({
+      renderHook(() =>
+        useMarketplaceIntegration({
           tabId: "tab-1",
           storage: mockStorage,
           setNodes: mockSetNodes,
@@ -649,26 +685,28 @@ describe("useMarketplaceIntegration", () => {
           localWorkflowDescription: "Test Description",
           tabIsUnsaved: false,
           tabDraftsRef: mockTabDraftsRef,
-          saveDraftsToStorage: mockSaveDraftsToStorage
-        })
+          saveDraftsToStorage: mockSaveDraftsToStorage,
+        }),
       );
       expect(mockSetNodes).not.toHaveBeenCalled();
     });
     it("should verify pending.tabId === tabId && Date.now() - pending.timestamp < 10000 - both true", async () => {
       const mockStorage = {
-        getItem: jest.fn().mockReturnValue(JSON.stringify({
-          tabId: "tab-1",
-          agents: [{ id: "agent-1", name: "Agent", agent_config: {} }],
-          timestamp: Date.now() - 5e3
-          // Recent (5 seconds ago)
-        })),
+        getItem: jest.fn().mockReturnValue(
+          JSON.stringify({
+            tabId: "tab-1",
+            agents: [{ id: "agent-1", name: "Agent", agent_config: {} }],
+            timestamp: Date.now() - 5e3,
+            // Recent (5 seconds ago)
+          }),
+        ),
         setItem: jest.fn(),
         removeItem: jest.fn(),
         addEventListener: jest.fn(),
-        removeEventListener: jest.fn()
+        removeEventListener: jest.fn(),
       };
-      renderHook(
-        () => useMarketplaceIntegration({
+      renderHook(() =>
+        useMarketplaceIntegration({
           tabId: "tab-1",
           storage: mockStorage,
           setNodes: mockSetNodes,
@@ -678,29 +716,34 @@ describe("useMarketplaceIntegration", () => {
           localWorkflowDescription: "Test Description",
           tabIsUnsaved: false,
           tabDraftsRef: mockTabDraftsRef,
-          saveDraftsToStorage: mockSaveDraftsToStorage
-        })
+          saveDraftsToStorage: mockSaveDraftsToStorage,
+        }),
       );
-      await waitFor(() => {
-        expect(mockSetNodes).toHaveBeenCalled();
-      }, { timeout: 1e3 });
+      await waitFor(
+        () => {
+          expect(mockSetNodes).toHaveBeenCalled();
+        },
+        { timeout: 1e3 },
+      );
       expect(mockStorage.removeItem).toHaveBeenCalledWith("pendingAgentsToAdd");
     });
     it("should verify pending.tabId === tabId && Date.now() - pending.timestamp < 10000 - tabId mismatch", () => {
       const mockStorage = {
-        getItem: jest.fn().mockReturnValue(JSON.stringify({
-          tabId: "tab-2",
-          // Different tab
-          agents: [{ id: "agent-1", name: "Agent", agent_config: {} }],
-          timestamp: Date.now() - 5e3
-        })),
+        getItem: jest.fn().mockReturnValue(
+          JSON.stringify({
+            tabId: "tab-2",
+            // Different tab
+            agents: [{ id: "agent-1", name: "Agent", agent_config: {} }],
+            timestamp: Date.now() - 5e3,
+          }),
+        ),
         setItem: jest.fn(),
         removeItem: jest.fn(),
         addEventListener: jest.fn(),
-        removeEventListener: jest.fn()
+        removeEventListener: jest.fn(),
       };
-      renderHook(
-        () => useMarketplaceIntegration({
+      renderHook(() =>
+        useMarketplaceIntegration({
           tabId: "tab-1",
           storage: mockStorage,
           setNodes: mockSetNodes,
@@ -710,27 +753,29 @@ describe("useMarketplaceIntegration", () => {
           localWorkflowDescription: "Test Description",
           tabIsUnsaved: false,
           tabDraftsRef: mockTabDraftsRef,
-          saveDraftsToStorage: mockSaveDraftsToStorage
-        })
+          saveDraftsToStorage: mockSaveDraftsToStorage,
+        }),
       );
       expect(mockStorage.removeItem).toHaveBeenCalledWith("pendingAgentsToAdd");
       expect(mockSetNodes).not.toHaveBeenCalled();
     });
     it("should verify pending.tabId === tabId && Date.now() - pending.timestamp < 10000 - timestamp too old", () => {
       const mockStorage = {
-        getItem: jest.fn().mockReturnValue(JSON.stringify({
-          tabId: "tab-1",
-          agents: [{ id: "agent-1", name: "Agent", agent_config: {} }],
-          timestamp: Date.now() - 15e3
-          // Too old (15 seconds ago)
-        })),
+        getItem: jest.fn().mockReturnValue(
+          JSON.stringify({
+            tabId: "tab-1",
+            agents: [{ id: "agent-1", name: "Agent", agent_config: {} }],
+            timestamp: Date.now() - 15e3,
+            // Too old (15 seconds ago)
+          }),
+        ),
         setItem: jest.fn(),
         removeItem: jest.fn(),
         addEventListener: jest.fn(),
-        removeEventListener: jest.fn()
+        removeEventListener: jest.fn(),
       };
-      renderHook(
-        () => useMarketplaceIntegration({
+      renderHook(() =>
+        useMarketplaceIntegration({
           tabId: "tab-1",
           storage: mockStorage,
           setNodes: mockSetNodes,
@@ -740,27 +785,29 @@ describe("useMarketplaceIntegration", () => {
           localWorkflowDescription: "Test Description",
           tabIsUnsaved: false,
           tabDraftsRef: mockTabDraftsRef,
-          saveDraftsToStorage: mockSaveDraftsToStorage
-        })
+          saveDraftsToStorage: mockSaveDraftsToStorage,
+        }),
       );
       expect(mockStorage.removeItem).toHaveBeenCalledWith("pendingAgentsToAdd");
       expect(mockSetNodes).not.toHaveBeenCalled();
     });
     it("should verify else if (pending.tabId !== tabId) branch", () => {
       const mockStorage = {
-        getItem: jest.fn().mockReturnValue(JSON.stringify({
-          tabId: "tab-2",
-          // Different tab
-          agents: [{ id: "agent-1", name: "Agent", agent_config: {} }],
-          timestamp: Date.now() - 5e3
-        })),
+        getItem: jest.fn().mockReturnValue(
+          JSON.stringify({
+            tabId: "tab-2",
+            // Different tab
+            agents: [{ id: "agent-1", name: "Agent", agent_config: {} }],
+            timestamp: Date.now() - 5e3,
+          }),
+        ),
         setItem: jest.fn(),
         removeItem: jest.fn(),
         addEventListener: jest.fn(),
-        removeEventListener: jest.fn()
+        removeEventListener: jest.fn(),
       };
-      renderHook(
-        () => useMarketplaceIntegration({
+      renderHook(() =>
+        useMarketplaceIntegration({
           tabId: "tab-1",
           storage: mockStorage,
           setNodes: mockSetNodes,
@@ -770,26 +817,28 @@ describe("useMarketplaceIntegration", () => {
           localWorkflowDescription: "Test Description",
           tabIsUnsaved: false,
           tabDraftsRef: mockTabDraftsRef,
-          saveDraftsToStorage: mockSaveDraftsToStorage
-        })
+          saveDraftsToStorage: mockSaveDraftsToStorage,
+        }),
       );
       expect(mockStorage.removeItem).toHaveBeenCalledWith("pendingAgentsToAdd");
     });
     it("should verify else if (Date.now() - pending.timestamp >= 10000) branch", () => {
       const mockStorage = {
-        getItem: jest.fn().mockReturnValue(JSON.stringify({
-          tabId: "tab-1",
-          agents: [{ id: "agent-1", name: "Agent", agent_config: {} }],
-          timestamp: Date.now() - 2e4
-          // Too old
-        })),
+        getItem: jest.fn().mockReturnValue(
+          JSON.stringify({
+            tabId: "tab-1",
+            agents: [{ id: "agent-1", name: "Agent", agent_config: {} }],
+            timestamp: Date.now() - 2e4,
+            // Too old
+          }),
+        ),
         setItem: jest.fn(),
         removeItem: jest.fn(),
         addEventListener: jest.fn(),
-        removeEventListener: jest.fn()
+        removeEventListener: jest.fn(),
       };
-      renderHook(
-        () => useMarketplaceIntegration({
+      renderHook(() =>
+        useMarketplaceIntegration({
           tabId: "tab-1",
           storage: mockStorage,
           setNodes: mockSetNodes,
@@ -799,8 +848,8 @@ describe("useMarketplaceIntegration", () => {
           localWorkflowDescription: "Test Description",
           tabIsUnsaved: false,
           tabDraftsRef: mockTabDraftsRef,
-          saveDraftsToStorage: mockSaveDraftsToStorage
-        })
+          saveDraftsToStorage: mockSaveDraftsToStorage,
+        }),
       );
       expect(mockStorage.removeItem).toHaveBeenCalledWith("pendingAgentsToAdd");
     });
@@ -811,10 +860,10 @@ describe("useMarketplaceIntegration", () => {
         setItem: jest.fn(),
         removeItem: jest.fn(),
         addEventListener: jest.fn(),
-        removeEventListener: jest.fn()
+        removeEventListener: jest.fn(),
       };
-      renderHook(
-        () => useMarketplaceIntegration({
+      renderHook(() =>
+        useMarketplaceIntegration({
           tabId: "tab-1",
           storage: mockStorage,
           setNodes: mockSetNodes,
@@ -824,19 +873,19 @@ describe("useMarketplaceIntegration", () => {
           localWorkflowDescription: "Test Description",
           tabIsUnsaved: false,
           tabDraftsRef: mockTabDraftsRef,
-          saveDraftsToStorage: mockSaveDraftsToStorage
-        })
+          saveDraftsToStorage: mockSaveDraftsToStorage,
+        }),
       );
       expect(mockLoggerError).toHaveBeenCalledWith(
         "Failed to process pending agents:",
-        expect.any(Error)
+        expect.any(Error),
       );
       expect(mockStorage.removeItem).toHaveBeenCalledWith("pendingAgentsToAdd");
     });
     it("should verify if (storage) check in catch block - storage is null", () => {
       const mockStorage = null;
-      renderHook(
-        () => useMarketplaceIntegration({
+      renderHook(() =>
+        useMarketplaceIntegration({
           tabId: "tab-1",
           storage: mockStorage,
           setNodes: mockSetNodes,
@@ -846,14 +895,14 @@ describe("useMarketplaceIntegration", () => {
           localWorkflowDescription: "Test Description",
           tabIsUnsaved: false,
           tabDraftsRef: mockTabDraftsRef,
-          saveDraftsToStorage: mockSaveDraftsToStorage
-        })
+          saveDraftsToStorage: mockSaveDraftsToStorage,
+        }),
       );
       expect(mockSetNodes).not.toHaveBeenCalled();
     });
     it("should verify if (typeof window !== undefined) check - window exists", () => {
-      const { result } = renderHook(
-        () => useMarketplaceIntegration({
+      const { result } = renderHook(() =>
+        useMarketplaceIntegration({
           tabId: "tab-1",
           storage: null,
           setNodes: mockSetNodes,
@@ -863,8 +912,8 @@ describe("useMarketplaceIntegration", () => {
           localWorkflowDescription: "Test Description",
           tabIsUnsaved: false,
           tabDraftsRef: mockTabDraftsRef,
-          saveDraftsToStorage: mockSaveDraftsToStorage
-        })
+          saveDraftsToStorage: mockSaveDraftsToStorage,
+        }),
       );
       expect(result.current.addAgentsToCanvas).toBeDefined();
     });
@@ -874,10 +923,10 @@ describe("useMarketplaceIntegration", () => {
         setItem: jest.fn(),
         removeItem: jest.fn(),
         addEventListener: jest.fn(),
-        removeEventListener: jest.fn()
+        removeEventListener: jest.fn(),
       };
-      renderHook(
-        () => useMarketplaceIntegration({
+      renderHook(() =>
+        useMarketplaceIntegration({
           tabId: "tab-1",
           storage: mockStorage,
           setNodes: mockSetNodes,
@@ -887,8 +936,8 @@ describe("useMarketplaceIntegration", () => {
           localWorkflowDescription: "Test Description",
           tabIsUnsaved: false,
           tabDraftsRef: mockTabDraftsRef,
-          saveDraftsToStorage: mockSaveDraftsToStorage
-        })
+          saveDraftsToStorage: mockSaveDraftsToStorage,
+        }),
       );
       act(() => {
         jest.advanceTimersByTime(1e4);
@@ -897,8 +946,8 @@ describe("useMarketplaceIntegration", () => {
     });
     it("should verify cleanup removes event listener", () => {
       const removeEventListenerSpy = jest.spyOn(window, "removeEventListener");
-      const { unmount } = renderHook(
-        () => useMarketplaceIntegration({
+      const { unmount } = renderHook(() =>
+        useMarketplaceIntegration({
           tabId: "tab-1",
           storage: null,
           setNodes: mockSetNodes,
@@ -908,13 +957,13 @@ describe("useMarketplaceIntegration", () => {
           localWorkflowDescription: "Test Description",
           tabIsUnsaved: false,
           tabDraftsRef: mockTabDraftsRef,
-          saveDraftsToStorage: mockSaveDraftsToStorage
-        })
+          saveDraftsToStorage: mockSaveDraftsToStorage,
+        }),
       );
       unmount();
       expect(removeEventListenerSpy).toHaveBeenCalledWith(
         "addAgentsToWorkflow",
-        expect.any(Function)
+        expect.any(Function),
       );
       removeEventListenerSpy.mockRestore();
     });
@@ -924,10 +973,10 @@ describe("useMarketplaceIntegration", () => {
         setItem: jest.fn(),
         removeItem: jest.fn(),
         addEventListener: jest.fn(),
-        removeEventListener: jest.fn()
+        removeEventListener: jest.fn(),
       };
-      const { unmount } = renderHook(
-        () => useMarketplaceIntegration({
+      const { unmount } = renderHook(() =>
+        useMarketplaceIntegration({
           tabId: "tab-1",
           storage: mockStorage,
           setNodes: mockSetNodes,
@@ -937,8 +986,8 @@ describe("useMarketplaceIntegration", () => {
           localWorkflowDescription: "Test Description",
           tabIsUnsaved: false,
           tabDraftsRef: mockTabDraftsRef,
-          saveDraftsToStorage: mockSaveDraftsToStorage
-        })
+          saveDraftsToStorage: mockSaveDraftsToStorage,
+        }),
       );
       const initialCallCount = mockStorage.getItem.mock.calls.length;
       unmount();
@@ -950,10 +999,10 @@ describe("useMarketplaceIntegration", () => {
     it("should verify currentNodes.length > 0 branch - nodes exist", () => {
       const existingNodes = [
         { id: "node-1", type: "agent", position: { x: 100, y: 100 }, data: {} },
-        { id: "node-2", type: "agent", position: { x: 300, y: 200 }, data: {} }
+        { id: "node-2", type: "agent", position: { x: 300, y: 200 }, data: {} },
       ];
-      const { result } = renderHook(
-        () => useMarketplaceIntegration({
+      const { result } = renderHook(() =>
+        useMarketplaceIntegration({
           tabId: "tab-1",
           storage: null,
           setNodes: mockSetNodes,
@@ -963,20 +1012,23 @@ describe("useMarketplaceIntegration", () => {
           localWorkflowDescription: "Test Description",
           tabIsUnsaved: false,
           tabDraftsRef: mockTabDraftsRef,
-          saveDraftsToStorage: mockSaveDraftsToStorage
-        })
+          saveDraftsToStorage: mockSaveDraftsToStorage,
+        }),
       );
       const agents = [{ id: "agent-1", name: "Agent", agent_config: {} }];
       act(() => {
         result.current.addAgentsToCanvas(agents);
       });
       const setNodesCall = mockSetNodes.mock.calls[0][0];
-      const newNodes = typeof setNodesCall === "function" ? setNodesCall(existingNodes) : setNodesCall;
+      const newNodes =
+        typeof setNodesCall === "function"
+          ? setNodesCall(existingNodes)
+          : setNodesCall;
       expect(newNodes[newNodes.length - 1].position.x).toBe(500);
     });
     it("should verify currentNodes.length > 0 branch - no nodes", () => {
-      const { result } = renderHook(
-        () => useMarketplaceIntegration({
+      const { result } = renderHook(() =>
+        useMarketplaceIntegration({
           tabId: "tab-1",
           storage: null,
           setNodes: mockSetNodes,
@@ -986,25 +1038,26 @@ describe("useMarketplaceIntegration", () => {
           localWorkflowDescription: "Test Description",
           tabIsUnsaved: false,
           tabDraftsRef: mockTabDraftsRef,
-          saveDraftsToStorage: mockSaveDraftsToStorage
-        })
+          saveDraftsToStorage: mockSaveDraftsToStorage,
+        }),
       );
       const agents = [{ id: "agent-1", name: "Agent", agent_config: {} }];
       act(() => {
         result.current.addAgentsToCanvas(agents);
       });
       const setNodesCall = mockSetNodes.mock.calls[0][0];
-      const newNodes = typeof setNodesCall === "function" ? setNodesCall([]) : setNodesCall;
+      const newNodes =
+        typeof setNodesCall === "function" ? setNodesCall([]) : setNodesCall;
       expect(newNodes[0].position.x).toBe(250);
     });
     it("should verify Math.max(...currentNodes.map(n => n.position.x)) calculation", () => {
       const existingNodes = [
         { id: "node-1", type: "agent", position: { x: 50, y: 100 }, data: {} },
         { id: "node-2", type: "agent", position: { x: 200, y: 150 }, data: {} },
-        { id: "node-3", type: "agent", position: { x: 150, y: 200 }, data: {} }
+        { id: "node-3", type: "agent", position: { x: 150, y: 200 }, data: {} },
       ];
-      const { result } = renderHook(
-        () => useMarketplaceIntegration({
+      const { result } = renderHook(() =>
+        useMarketplaceIntegration({
           tabId: "tab-1",
           storage: null,
           setNodes: mockSetNodes,
@@ -1014,20 +1067,23 @@ describe("useMarketplaceIntegration", () => {
           localWorkflowDescription: "Test Description",
           tabIsUnsaved: false,
           tabDraftsRef: mockTabDraftsRef,
-          saveDraftsToStorage: mockSaveDraftsToStorage
-        })
+          saveDraftsToStorage: mockSaveDraftsToStorage,
+        }),
       );
       const agents = [{ id: "agent-1", name: "Agent", agent_config: {} }];
       act(() => {
         result.current.addAgentsToCanvas(agents);
       });
       const setNodesCall = mockSetNodes.mock.calls[0][0];
-      const newNodes = typeof setNodesCall === "function" ? setNodesCall(existingNodes) : setNodesCall;
+      const newNodes =
+        typeof setNodesCall === "function"
+          ? setNodesCall(existingNodes)
+          : setNodesCall;
       expect(newNodes[newNodes.length - 1].position.x).toBe(400);
     });
     it("should verify currentY + (index * 150) calculation for multiple agents", () => {
-      const { result } = renderHook(
-        () => useMarketplaceIntegration({
+      const { result } = renderHook(() =>
+        useMarketplaceIntegration({
           tabId: "tab-1",
           storage: null,
           setNodes: mockSetNodes,
@@ -1037,26 +1093,27 @@ describe("useMarketplaceIntegration", () => {
           localWorkflowDescription: "Test Description",
           tabIsUnsaved: false,
           tabDraftsRef: mockTabDraftsRef,
-          saveDraftsToStorage: mockSaveDraftsToStorage
-        })
+          saveDraftsToStorage: mockSaveDraftsToStorage,
+        }),
       );
       const agents = [
         { id: "agent-1", name: "Agent 1", agent_config: {} },
         { id: "agent-2", name: "Agent 2", agent_config: {} },
-        { id: "agent-3", name: "Agent 3", agent_config: {} }
+        { id: "agent-3", name: "Agent 3", agent_config: {} },
       ];
       act(() => {
         result.current.addAgentsToCanvas(agents);
       });
       const setNodesCall = mockSetNodes.mock.calls[0][0];
-      const newNodes = typeof setNodesCall === "function" ? setNodesCall([]) : setNodesCall;
+      const newNodes =
+        typeof setNodesCall === "function" ? setNodesCall([]) : setNodesCall;
       expect(newNodes[0].position.y).toBe(250);
       expect(newNodes[1].position.y).toBe(400);
       expect(newNodes[2].position.y).toBe(550);
     });
     it("should verify Date.now() and Math.random() in node ID generation", () => {
-      const { result } = renderHook(
-        () => useMarketplaceIntegration({
+      const { result } = renderHook(() =>
+        useMarketplaceIntegration({
           tabId: "tab-1",
           storage: null,
           setNodes: mockSetNodes,
@@ -1066,20 +1123,21 @@ describe("useMarketplaceIntegration", () => {
           localWorkflowDescription: "Test Description",
           tabIsUnsaved: false,
           tabDraftsRef: mockTabDraftsRef,
-          saveDraftsToStorage: mockSaveDraftsToStorage
-        })
+          saveDraftsToStorage: mockSaveDraftsToStorage,
+        }),
       );
       const agents = [{ id: "agent-1", name: "Agent", agent_config: {} }];
       act(() => {
         result.current.addAgentsToCanvas(agents);
       });
       const setNodesCall = mockSetNodes.mock.calls[0][0];
-      const newNodes = typeof setNodesCall === "function" ? setNodesCall([]) : setNodesCall;
+      const newNodes =
+        typeof setNodesCall === "function" ? setNodesCall([]) : setNodesCall;
       expect(newNodes[0].id).toMatch(/^agent-\d+-\d+$/);
     });
     it("should verify Date.now() in node ID generation", () => {
-      const { result } = renderHook(
-        () => useMarketplaceIntegration({
+      const { result } = renderHook(() =>
+        useMarketplaceIntegration({
           tabId: "tab-1",
           storage: null,
           setNodes: mockSetNodes,
@@ -1089,15 +1147,16 @@ describe("useMarketplaceIntegration", () => {
           localWorkflowDescription: "Test Description",
           tabIsUnsaved: false,
           tabDraftsRef: mockTabDraftsRef,
-          saveDraftsToStorage: mockSaveDraftsToStorage
-        })
+          saveDraftsToStorage: mockSaveDraftsToStorage,
+        }),
       );
       const agents = [{ id: "agent-1", name: "Agent", agent_config: {} }];
       act(() => {
         result.current.addAgentsToCanvas(agents);
       });
       const setNodesCall = mockSetNodes.mock.calls[0][0];
-      const newNodes = typeof setNodesCall === "function" ? setNodesCall([]) : setNodesCall;
+      const newNodes =
+        typeof setNodesCall === "function" ? setNodesCall([]) : setNodesCall;
       expect(newNodes[0].id).toMatch(/^agent-\d+-\d+$/);
       const parts = newNodes[0].id.split("-");
       expect(parts.length).toBe(3);
@@ -1114,8 +1173,8 @@ describe("useMarketplaceIntegration", () => {
           currentNodes = updater;
         }
       });
-      const { result } = renderHook(
-        () => useMarketplaceIntegration({
+      const { result } = renderHook(() =>
+        useMarketplaceIntegration({
           tabId: "tab-1",
           storage: null,
           setNodes: mockSetNodes,
@@ -1125,8 +1184,8 @@ describe("useMarketplaceIntegration", () => {
           localWorkflowDescription: "Test Description",
           tabIsUnsaved: false,
           tabDraftsRef: mockTabDraftsRef,
-          saveDraftsToStorage: mockSaveDraftsToStorage
-        })
+          saveDraftsToStorage: mockSaveDraftsToStorage,
+        }),
       );
       const agents = [{ id: "agent-1", name: "Agent", agent_config: {} }];
       act(() => {
@@ -1141,8 +1200,8 @@ describe("useMarketplaceIntegration", () => {
       expect(mockSaveDraftsToStorage).toHaveBeenCalled();
     });
     it("should verify setTimeout delay of 1000 for flag reset", async () => {
-      const { result } = renderHook(
-        () => useMarketplaceIntegration({
+      const { result } = renderHook(() =>
+        useMarketplaceIntegration({
           tabId: "tab-1",
           storage: null,
           setNodes: mockSetNodes,
@@ -1152,8 +1211,8 @@ describe("useMarketplaceIntegration", () => {
           localWorkflowDescription: "Test Description",
           tabIsUnsaved: false,
           tabDraftsRef: mockTabDraftsRef,
-          saveDraftsToStorage: mockSaveDraftsToStorage
-        })
+          saveDraftsToStorage: mockSaveDraftsToStorage,
+        }),
       );
       const agents = [{ id: "agent-1", name: "Agent", agent_config: {} }];
       act(() => {
@@ -1173,10 +1232,10 @@ describe("useMarketplaceIntegration", () => {
         setItem: jest.fn(),
         removeItem: jest.fn(),
         addEventListener: jest.fn(),
-        removeEventListener: jest.fn()
+        removeEventListener: jest.fn(),
       };
-      const { unmount } = renderHook(
-        () => useMarketplaceIntegration({
+      const { unmount } = renderHook(() =>
+        useMarketplaceIntegration({
           tabId: "tab-1",
           storage: mockStorage,
           setNodes: mockSetNodes,
@@ -1186,8 +1245,8 @@ describe("useMarketplaceIntegration", () => {
           localWorkflowDescription: "Test Description",
           tabIsUnsaved: false,
           tabDraftsRef: mockTabDraftsRef,
-          saveDraftsToStorage: mockSaveDraftsToStorage
-        })
+          saveDraftsToStorage: mockSaveDraftsToStorage,
+        }),
       );
       const initialCallCount = mockStorage.getItem.mock.calls.length;
       act(() => {
@@ -1210,8 +1269,8 @@ describe("useMarketplaceIntegration", () => {
   });
   describe("string literal and template literal mutations", () => {
     it("should verify string literal type: agent exact value", () => {
-      const { result } = renderHook(
-        () => useMarketplaceIntegration({
+      const { result } = renderHook(() =>
+        useMarketplaceIntegration({
           tabId: "tab-1",
           storage: null,
           setNodes: mockSetNodes,
@@ -1221,20 +1280,21 @@ describe("useMarketplaceIntegration", () => {
           localWorkflowDescription: "Test Description",
           tabIsUnsaved: false,
           tabDraftsRef: mockTabDraftsRef,
-          saveDraftsToStorage: mockSaveDraftsToStorage
-        })
+          saveDraftsToStorage: mockSaveDraftsToStorage,
+        }),
       );
       const agents = [{ id: "agent-1", name: "Agent", agent_config: {} }];
       act(() => {
         result.current.addAgentsToCanvas(agents);
       });
       const setNodesCall = mockSetNodes.mock.calls[0][0];
-      const newNodes = typeof setNodesCall === "function" ? setNodesCall([]) : setNodesCall;
+      const newNodes =
+        typeof setNodesCall === "function" ? setNodesCall([]) : setNodesCall;
       expect(newNodes[0].type).toBe("agent");
     });
     it("should verify string literal Agent Node exact value", () => {
-      const { result } = renderHook(
-        () => useMarketplaceIntegration({
+      const { result } = renderHook(() =>
+        useMarketplaceIntegration({
           tabId: "tab-1",
           storage: null,
           setNodes: mockSetNodes,
@@ -1244,21 +1304,22 @@ describe("useMarketplaceIntegration", () => {
           localWorkflowDescription: "Test Description",
           tabIsUnsaved: false,
           tabDraftsRef: mockTabDraftsRef,
-          saveDraftsToStorage: mockSaveDraftsToStorage
-        })
+          saveDraftsToStorage: mockSaveDraftsToStorage,
+        }),
       );
       const agents = [{ id: "agent-1", agent_config: {} }];
       act(() => {
         result.current.addAgentsToCanvas(agents);
       });
       const setNodesCall = mockSetNodes.mock.calls[0][0];
-      const newNodes = typeof setNodesCall === "function" ? setNodesCall([]) : setNodesCall;
+      const newNodes =
+        typeof setNodesCall === "function" ? setNodesCall([]) : setNodesCall;
       expect(newNodes[0].data.label).toBe("Agent Node");
       expect(newNodes[0].data.name).toBe("Agent Node");
     });
     it("should verify template literal agent-${Date.now()}-${index} exact format", () => {
-      const { result } = renderHook(
-        () => useMarketplaceIntegration({
+      const { result } = renderHook(() =>
+        useMarketplaceIntegration({
           tabId: "tab-1",
           storage: null,
           setNodes: mockSetNodes,
@@ -1268,18 +1329,19 @@ describe("useMarketplaceIntegration", () => {
           localWorkflowDescription: "Test Description",
           tabIsUnsaved: false,
           tabDraftsRef: mockTabDraftsRef,
-          saveDraftsToStorage: mockSaveDraftsToStorage
-        })
+          saveDraftsToStorage: mockSaveDraftsToStorage,
+        }),
       );
       const agents = [
         { id: "agent-1", name: "Agent 1", agent_config: {} },
-        { id: "agent-2", name: "Agent 2", agent_config: {} }
+        { id: "agent-2", name: "Agent 2", agent_config: {} },
       ];
       act(() => {
         result.current.addAgentsToCanvas(agents);
       });
       const setNodesCall = mockSetNodes.mock.calls[0][0];
-      const newNodes = typeof setNodesCall === "function" ? setNodesCall([]) : setNodesCall;
+      const newNodes =
+        typeof setNodesCall === "function" ? setNodesCall([]) : setNodesCall;
       expect(newNodes[0].id).toMatch(/^agent-\d+-\d+$/);
       expect(newNodes[0].id.startsWith("agent-")).toBe(true);
       expect(newNodes[1].id).toMatch(/^agent-\d+-\d+$/);
@@ -1292,10 +1354,10 @@ describe("useMarketplaceIntegration", () => {
       const existingNodes = [
         { id: "node-1", type: "agent", position: { x: 100, y: 100 }, data: {} },
         { id: "node-2", type: "agent", position: { x: 300, y: 200 }, data: {} },
-        { id: "node-3", type: "agent", position: { x: 200, y: 300 }, data: {} }
+        { id: "node-3", type: "agent", position: { x: 200, y: 300 }, data: {} },
       ];
-      const { result } = renderHook(
-        () => useMarketplaceIntegration({
+      const { result } = renderHook(() =>
+        useMarketplaceIntegration({
           tabId: "tab-1",
           storage: null,
           setNodes: mockSetNodes,
@@ -1305,20 +1367,23 @@ describe("useMarketplaceIntegration", () => {
           localWorkflowDescription: "Test Description",
           tabIsUnsaved: false,
           tabDraftsRef: mockTabDraftsRef,
-          saveDraftsToStorage: mockSaveDraftsToStorage
-        })
+          saveDraftsToStorage: mockSaveDraftsToStorage,
+        }),
       );
       const agents = [{ id: "agent-1", name: "Agent", agent_config: {} }];
       act(() => {
         result.current.addAgentsToCanvas(agents);
       });
       const setNodesCall = mockSetNodes.mock.calls[0][0];
-      const newNodes = typeof setNodesCall === "function" ? setNodesCall(existingNodes) : setNodesCall;
+      const newNodes =
+        typeof setNodesCall === "function"
+          ? setNodesCall(existingNodes)
+          : setNodesCall;
       expect(newNodes[newNodes.length - 1].position.x).toBe(500);
     });
     it("should verify currentY + (index * 150) exact calculation", () => {
-      const { result } = renderHook(
-        () => useMarketplaceIntegration({
+      const { result } = renderHook(() =>
+        useMarketplaceIntegration({
           tabId: "tab-1",
           storage: null,
           setNodes: mockSetNodes,
@@ -1328,26 +1393,27 @@ describe("useMarketplaceIntegration", () => {
           localWorkflowDescription: "Test Description",
           tabIsUnsaved: false,
           tabDraftsRef: mockTabDraftsRef,
-          saveDraftsToStorage: mockSaveDraftsToStorage
-        })
+          saveDraftsToStorage: mockSaveDraftsToStorage,
+        }),
       );
       const agents = [
         { id: "agent-1", name: "Agent 1", agent_config: {} },
         { id: "agent-2", name: "Agent 2", agent_config: {} },
-        { id: "agent-3", name: "Agent 3", agent_config: {} }
+        { id: "agent-3", name: "Agent 3", agent_config: {} },
       ];
       act(() => {
         result.current.addAgentsToCanvas(agents);
       });
       const setNodesCall = mockSetNodes.mock.calls[0][0];
-      const newNodes = typeof setNodesCall === "function" ? setNodesCall([]) : setNodesCall;
+      const newNodes =
+        typeof setNodesCall === "function" ? setNodesCall([]) : setNodesCall;
       expect(newNodes[0].position.y).toBe(250);
       expect(newNodes[1].position.y).toBe(400);
       expect(newNodes[2].position.y).toBe(550);
     });
     it("should verify string literal 250 exact value", () => {
-      const { result } = renderHook(
-        () => useMarketplaceIntegration({
+      const { result } = renderHook(() =>
+        useMarketplaceIntegration({
           tabId: "tab-1",
           storage: null,
           setNodes: mockSetNodes,
@@ -1357,24 +1423,25 @@ describe("useMarketplaceIntegration", () => {
           localWorkflowDescription: "Test Description",
           tabIsUnsaved: false,
           tabDraftsRef: mockTabDraftsRef,
-          saveDraftsToStorage: mockSaveDraftsToStorage
-        })
+          saveDraftsToStorage: mockSaveDraftsToStorage,
+        }),
       );
       const agents = [{ id: "agent-1", name: "Agent", agent_config: {} }];
       act(() => {
         result.current.addAgentsToCanvas(agents);
       });
       const setNodesCall = mockSetNodes.mock.calls[0][0];
-      const newNodes = typeof setNodesCall === "function" ? setNodesCall([]) : setNodesCall;
+      const newNodes =
+        typeof setNodesCall === "function" ? setNodesCall([]) : setNodesCall;
       expect(newNodes[0].position.x).toBe(250);
       expect(newNodes[0].position.y).toBe(250);
     });
     it("should verify string literal 200 exact value in Math.max calculation", () => {
       const existingNodes = [
-        { id: "node-1", type: "agent", position: { x: 500, y: 100 }, data: {} }
+        { id: "node-1", type: "agent", position: { x: 500, y: 100 }, data: {} },
       ];
-      const { result } = renderHook(
-        () => useMarketplaceIntegration({
+      const { result } = renderHook(() =>
+        useMarketplaceIntegration({
           tabId: "tab-1",
           storage: null,
           setNodes: mockSetNodes,
@@ -1384,20 +1451,23 @@ describe("useMarketplaceIntegration", () => {
           localWorkflowDescription: "Test Description",
           tabIsUnsaved: false,
           tabDraftsRef: mockTabDraftsRef,
-          saveDraftsToStorage: mockSaveDraftsToStorage
-        })
+          saveDraftsToStorage: mockSaveDraftsToStorage,
+        }),
       );
       const agents = [{ id: "agent-1", name: "Agent", agent_config: {} }];
       act(() => {
         result.current.addAgentsToCanvas(agents);
       });
       const setNodesCall = mockSetNodes.mock.calls[0][0];
-      const newNodes = typeof setNodesCall === "function" ? setNodesCall(existingNodes) : setNodesCall;
+      const newNodes =
+        typeof setNodesCall === "function"
+          ? setNodesCall(existingNodes)
+          : setNodesCall;
       expect(newNodes[newNodes.length - 1].position.x).toBe(700);
     });
     it("should verify string literal 150 exact value in positioning", () => {
-      const { result } = renderHook(
-        () => useMarketplaceIntegration({
+      const { result } = renderHook(() =>
+        useMarketplaceIntegration({
           tabId: "tab-1",
           storage: null,
           setNodes: mockSetNodes,
@@ -1407,18 +1477,19 @@ describe("useMarketplaceIntegration", () => {
           localWorkflowDescription: "Test Description",
           tabIsUnsaved: false,
           tabDraftsRef: mockTabDraftsRef,
-          saveDraftsToStorage: mockSaveDraftsToStorage
-        })
+          saveDraftsToStorage: mockSaveDraftsToStorage,
+        }),
       );
       const agents = [
         { id: "agent-1", name: "Agent 1", agent_config: {} },
-        { id: "agent-2", name: "Agent 2", agent_config: {} }
+        { id: "agent-2", name: "Agent 2", agent_config: {} },
       ];
       act(() => {
         result.current.addAgentsToCanvas(agents);
       });
       const setNodesCall = mockSetNodes.mock.calls[0][0];
-      const newNodes = typeof setNodesCall === "function" ? setNodesCall([]) : setNodesCall;
+      const newNodes =
+        typeof setNodesCall === "function" ? setNodesCall([]) : setNodesCall;
       expect(newNodes[1].position.y - newNodes[0].position.y).toBe(150);
     });
     it("should verify checkCount >= maxChecks exact comparison", async () => {
@@ -1427,10 +1498,10 @@ describe("useMarketplaceIntegration", () => {
         setItem: jest.fn(),
         removeItem: jest.fn(),
         addEventListener: jest.fn(),
-        removeEventListener: jest.fn()
+        removeEventListener: jest.fn(),
       };
-      renderHook(
-        () => useMarketplaceIntegration({
+      renderHook(() =>
+        useMarketplaceIntegration({
           tabId: "tab-1",
           storage: mockStorage,
           setNodes: mockSetNodes,
@@ -1440,8 +1511,8 @@ describe("useMarketplaceIntegration", () => {
           localWorkflowDescription: "Test Description",
           tabIsUnsaved: false,
           tabDraftsRef: mockTabDraftsRef,
-          saveDraftsToStorage: mockSaveDraftsToStorage
-        })
+          saveDraftsToStorage: mockSaveDraftsToStorage,
+        }),
       );
       const initialCallCount = mockStorage.getItem.mock.calls.length;
       act(() => {
@@ -1455,8 +1526,8 @@ describe("useMarketplaceIntegration", () => {
   });
   describe("string literal and template literal mutations", () => {
     it("should verify string literal type: agent exact value", () => {
-      const { result } = renderHook(
-        () => useMarketplaceIntegration({
+      const { result } = renderHook(() =>
+        useMarketplaceIntegration({
           tabId: "tab-1",
           storage: null,
           setNodes: mockSetNodes,
@@ -1466,20 +1537,21 @@ describe("useMarketplaceIntegration", () => {
           localWorkflowDescription: "Test Description",
           tabIsUnsaved: false,
           tabDraftsRef: mockTabDraftsRef,
-          saveDraftsToStorage: mockSaveDraftsToStorage
-        })
+          saveDraftsToStorage: mockSaveDraftsToStorage,
+        }),
       );
       const agents = [{ id: "agent-1", name: "Agent", agent_config: {} }];
       act(() => {
         result.current.addAgentsToCanvas(agents);
       });
       const setNodesCall = mockSetNodes.mock.calls[0][0];
-      const newNodes = typeof setNodesCall === "function" ? setNodesCall([]) : setNodesCall;
+      const newNodes =
+        typeof setNodesCall === "function" ? setNodesCall([]) : setNodesCall;
       expect(newNodes[0].type).toBe("agent");
     });
     it("should verify string literal Agent Node exact value", () => {
-      const { result } = renderHook(
-        () => useMarketplaceIntegration({
+      const { result } = renderHook(() =>
+        useMarketplaceIntegration({
           tabId: "tab-1",
           storage: null,
           setNodes: mockSetNodes,
@@ -1489,21 +1561,22 @@ describe("useMarketplaceIntegration", () => {
           localWorkflowDescription: "Test Description",
           tabIsUnsaved: false,
           tabDraftsRef: mockTabDraftsRef,
-          saveDraftsToStorage: mockSaveDraftsToStorage
-        })
+          saveDraftsToStorage: mockSaveDraftsToStorage,
+        }),
       );
       const agents = [{ id: "agent-1", agent_config: {} }];
       act(() => {
         result.current.addAgentsToCanvas(agents);
       });
       const setNodesCall = mockSetNodes.mock.calls[0][0];
-      const newNodes = typeof setNodesCall === "function" ? setNodesCall([]) : setNodesCall;
+      const newNodes =
+        typeof setNodesCall === "function" ? setNodesCall([]) : setNodesCall;
       expect(newNodes[0].data.label).toBe("Agent Node");
       expect(newNodes[0].data.name).toBe("Agent Node");
     });
     it("should verify template literal agent-${Date.now()}-${index} exact format", () => {
-      const { result } = renderHook(
-        () => useMarketplaceIntegration({
+      const { result } = renderHook(() =>
+        useMarketplaceIntegration({
           tabId: "tab-1",
           storage: null,
           setNodes: mockSetNodes,
@@ -1513,18 +1586,19 @@ describe("useMarketplaceIntegration", () => {
           localWorkflowDescription: "Test Description",
           tabIsUnsaved: false,
           tabDraftsRef: mockTabDraftsRef,
-          saveDraftsToStorage: mockSaveDraftsToStorage
-        })
+          saveDraftsToStorage: mockSaveDraftsToStorage,
+        }),
       );
       const agents = [
         { id: "agent-1", name: "Agent 1", agent_config: {} },
-        { id: "agent-2", name: "Agent 2", agent_config: {} }
+        { id: "agent-2", name: "Agent 2", agent_config: {} },
       ];
       act(() => {
         result.current.addAgentsToCanvas(agents);
       });
       const setNodesCall = mockSetNodes.mock.calls[0][0];
-      const newNodes = typeof setNodesCall === "function" ? setNodesCall([]) : setNodesCall;
+      const newNodes =
+        typeof setNodesCall === "function" ? setNodesCall([]) : setNodesCall;
       expect(newNodes[0].id).toMatch(/^agent-\d+-\d+$/);
       expect(newNodes[0].id.startsWith("agent-")).toBe(true);
       expect(newNodes[1].id).toMatch(/^agent-\d+-\d+$/);
@@ -1537,10 +1611,10 @@ describe("useMarketplaceIntegration", () => {
       const existingNodes = [
         { id: "node-1", type: "agent", position: { x: 100, y: 100 }, data: {} },
         { id: "node-2", type: "agent", position: { x: 300, y: 200 }, data: {} },
-        { id: "node-3", type: "agent", position: { x: 200, y: 300 }, data: {} }
+        { id: "node-3", type: "agent", position: { x: 200, y: 300 }, data: {} },
       ];
-      const { result } = renderHook(
-        () => useMarketplaceIntegration({
+      const { result } = renderHook(() =>
+        useMarketplaceIntegration({
           tabId: "tab-1",
           storage: null,
           setNodes: mockSetNodes,
@@ -1550,20 +1624,23 @@ describe("useMarketplaceIntegration", () => {
           localWorkflowDescription: "Test Description",
           tabIsUnsaved: false,
           tabDraftsRef: mockTabDraftsRef,
-          saveDraftsToStorage: mockSaveDraftsToStorage
-        })
+          saveDraftsToStorage: mockSaveDraftsToStorage,
+        }),
       );
       const agents = [{ id: "agent-1", name: "Agent", agent_config: {} }];
       act(() => {
         result.current.addAgentsToCanvas(agents);
       });
       const setNodesCall = mockSetNodes.mock.calls[0][0];
-      const newNodes = typeof setNodesCall === "function" ? setNodesCall(existingNodes) : setNodesCall;
+      const newNodes =
+        typeof setNodesCall === "function"
+          ? setNodesCall(existingNodes)
+          : setNodesCall;
       expect(newNodes[newNodes.length - 1].position.x).toBe(500);
     });
     it("should verify currentY + (index * 150) exact calculation", () => {
-      const { result } = renderHook(
-        () => useMarketplaceIntegration({
+      const { result } = renderHook(() =>
+        useMarketplaceIntegration({
           tabId: "tab-1",
           storage: null,
           setNodes: mockSetNodes,
@@ -1573,26 +1650,27 @@ describe("useMarketplaceIntegration", () => {
           localWorkflowDescription: "Test Description",
           tabIsUnsaved: false,
           tabDraftsRef: mockTabDraftsRef,
-          saveDraftsToStorage: mockSaveDraftsToStorage
-        })
+          saveDraftsToStorage: mockSaveDraftsToStorage,
+        }),
       );
       const agents = [
         { id: "agent-1", name: "Agent 1", agent_config: {} },
         { id: "agent-2", name: "Agent 2", agent_config: {} },
-        { id: "agent-3", name: "Agent 3", agent_config: {} }
+        { id: "agent-3", name: "Agent 3", agent_config: {} },
       ];
       act(() => {
         result.current.addAgentsToCanvas(agents);
       });
       const setNodesCall = mockSetNodes.mock.calls[0][0];
-      const newNodes = typeof setNodesCall === "function" ? setNodesCall([]) : setNodesCall;
+      const newNodes =
+        typeof setNodesCall === "function" ? setNodesCall([]) : setNodesCall;
       expect(newNodes[0].position.y).toBe(250);
       expect(newNodes[1].position.y).toBe(400);
       expect(newNodes[2].position.y).toBe(550);
     });
     it("should verify string literal 250 exact value", () => {
-      const { result } = renderHook(
-        () => useMarketplaceIntegration({
+      const { result } = renderHook(() =>
+        useMarketplaceIntegration({
           tabId: "tab-1",
           storage: null,
           setNodes: mockSetNodes,
@@ -1602,24 +1680,25 @@ describe("useMarketplaceIntegration", () => {
           localWorkflowDescription: "Test Description",
           tabIsUnsaved: false,
           tabDraftsRef: mockTabDraftsRef,
-          saveDraftsToStorage: mockSaveDraftsToStorage
-        })
+          saveDraftsToStorage: mockSaveDraftsToStorage,
+        }),
       );
       const agents = [{ id: "agent-1", name: "Agent", agent_config: {} }];
       act(() => {
         result.current.addAgentsToCanvas(agents);
       });
       const setNodesCall = mockSetNodes.mock.calls[0][0];
-      const newNodes = typeof setNodesCall === "function" ? setNodesCall([]) : setNodesCall;
+      const newNodes =
+        typeof setNodesCall === "function" ? setNodesCall([]) : setNodesCall;
       expect(newNodes[0].position.x).toBe(250);
       expect(newNodes[0].position.y).toBe(250);
     });
     it("should verify string literal 200 exact value in Math.max calculation", () => {
       const existingNodes = [
-        { id: "node-1", type: "agent", position: { x: 500, y: 100 }, data: {} }
+        { id: "node-1", type: "agent", position: { x: 500, y: 100 }, data: {} },
       ];
-      const { result } = renderHook(
-        () => useMarketplaceIntegration({
+      const { result } = renderHook(() =>
+        useMarketplaceIntegration({
           tabId: "tab-1",
           storage: null,
           setNodes: mockSetNodes,
@@ -1629,20 +1708,23 @@ describe("useMarketplaceIntegration", () => {
           localWorkflowDescription: "Test Description",
           tabIsUnsaved: false,
           tabDraftsRef: mockTabDraftsRef,
-          saveDraftsToStorage: mockSaveDraftsToStorage
-        })
+          saveDraftsToStorage: mockSaveDraftsToStorage,
+        }),
       );
       const agents = [{ id: "agent-1", name: "Agent", agent_config: {} }];
       act(() => {
         result.current.addAgentsToCanvas(agents);
       });
       const setNodesCall = mockSetNodes.mock.calls[0][0];
-      const newNodes = typeof setNodesCall === "function" ? setNodesCall(existingNodes) : setNodesCall;
+      const newNodes =
+        typeof setNodesCall === "function"
+          ? setNodesCall(existingNodes)
+          : setNodesCall;
       expect(newNodes[newNodes.length - 1].position.x).toBe(700);
     });
     it("should verify string literal 150 exact value in positioning", () => {
-      const { result } = renderHook(
-        () => useMarketplaceIntegration({
+      const { result } = renderHook(() =>
+        useMarketplaceIntegration({
           tabId: "tab-1",
           storage: null,
           setNodes: mockSetNodes,
@@ -1652,23 +1734,24 @@ describe("useMarketplaceIntegration", () => {
           localWorkflowDescription: "Test Description",
           tabIsUnsaved: false,
           tabDraftsRef: mockTabDraftsRef,
-          saveDraftsToStorage: mockSaveDraftsToStorage
-        })
+          saveDraftsToStorage: mockSaveDraftsToStorage,
+        }),
       );
       const agents = [
         { id: "agent-1", name: "Agent 1", agent_config: {} },
-        { id: "agent-2", name: "Agent 2", agent_config: {} }
+        { id: "agent-2", name: "Agent 2", agent_config: {} },
       ];
       act(() => {
         result.current.addAgentsToCanvas(agents);
       });
       const setNodesCall = mockSetNodes.mock.calls[0][0];
-      const newNodes = typeof setNodesCall === "function" ? setNodesCall([]) : setNodesCall;
+      const newNodes =
+        typeof setNodesCall === "function" ? setNodesCall([]) : setNodesCall;
       expect(newNodes[1].position.y - newNodes[0].position.y).toBe(150);
     });
     it("should verify agent.name || agent.label || Agent Node fallback chain", () => {
-      const { result } = renderHook(
-        () => useMarketplaceIntegration({
+      const { result } = renderHook(() =>
+        useMarketplaceIntegration({
           tabId: "tab-1",
           storage: null,
           setNodes: mockSetNodes,
@@ -1678,24 +1761,30 @@ describe("useMarketplaceIntegration", () => {
           localWorkflowDescription: "Test Description",
           tabIsUnsaved: false,
           tabDraftsRef: mockTabDraftsRef,
-          saveDraftsToStorage: mockSaveDraftsToStorage
-        })
+          saveDraftsToStorage: mockSaveDraftsToStorage,
+        }),
       );
-      const agentWithName = [{ id: "agent-1", name: "Test Agent", agent_config: {} }];
+      const agentWithName = [
+        { id: "agent-1", name: "Test Agent", agent_config: {} },
+      ];
       act(() => {
         result.current.addAgentsToCanvas(agentWithName);
       });
       let setNodesCall = mockSetNodes.mock.calls[0][0];
-      let newNodes = typeof setNodesCall === "function" ? setNodesCall([]) : setNodesCall;
+      let newNodes =
+        typeof setNodesCall === "function" ? setNodesCall([]) : setNodesCall;
       expect(newNodes[0].data.label).toBe("Test Agent");
       expect(newNodes[0].data.name).toBe("Test Agent");
       mockSetNodes.mockClear();
-      const agentWithLabel = [{ id: "agent-2", label: "Label Agent", agent_config: {} }];
+      const agentWithLabel = [
+        { id: "agent-2", label: "Label Agent", agent_config: {} },
+      ];
       act(() => {
         result.current.addAgentsToCanvas(agentWithLabel);
       });
       setNodesCall = mockSetNodes.mock.calls[0][0];
-      newNodes = typeof setNodesCall === "function" ? setNodesCall([]) : setNodesCall;
+      newNodes =
+        typeof setNodesCall === "function" ? setNodesCall([]) : setNodesCall;
       expect(newNodes[0].data.label).toBe("Label Agent");
       expect(newNodes[0].data.name).toBe("Label Agent");
       mockSetNodes.mockClear();
@@ -1704,15 +1793,16 @@ describe("useMarketplaceIntegration", () => {
         result.current.addAgentsToCanvas(agentWithoutNameOrLabel);
       });
       setNodesCall = mockSetNodes.mock.calls[0][0];
-      newNodes = typeof setNodesCall === "function" ? setNodesCall([]) : setNodesCall;
+      newNodes =
+        typeof setNodesCall === "function" ? setNodesCall([]) : setNodesCall;
       expect(newNodes[0].data.label).toBe("Agent Node");
       expect(newNodes[0].data.name).toBe("Agent Node");
       expect(newNodes[0].data.label).not.toBe("agent node");
       expect(newNodes[0].data.label).not.toBe("");
     });
     it("should verify agent.description || empty string fallback", () => {
-      const { result } = renderHook(
-        () => useMarketplaceIntegration({
+      const { result } = renderHook(() =>
+        useMarketplaceIntegration({
           tabId: "tab-1",
           storage: null,
           setNodes: mockSetNodes,
@@ -1722,38 +1812,44 @@ describe("useMarketplaceIntegration", () => {
           localWorkflowDescription: "Test Description",
           tabIsUnsaved: false,
           tabDraftsRef: mockTabDraftsRef,
-          saveDraftsToStorage: mockSaveDraftsToStorage
-        })
+          saveDraftsToStorage: mockSaveDraftsToStorage,
+        }),
       );
-      const agentWithDescription = [{
-        id: "agent-1",
-        name: "Agent",
-        description: "Test Description",
-        agent_config: {}
-      }];
+      const agentWithDescription = [
+        {
+          id: "agent-1",
+          name: "Agent",
+          description: "Test Description",
+          agent_config: {},
+        },
+      ];
       act(() => {
         result.current.addAgentsToCanvas(agentWithDescription);
       });
       let setNodesCall = mockSetNodes.mock.calls[0][0];
-      let newNodes = typeof setNodesCall === "function" ? setNodesCall([]) : setNodesCall;
+      let newNodes =
+        typeof setNodesCall === "function" ? setNodesCall([]) : setNodesCall;
       expect(newNodes[0].data.description).toBe("Test Description");
       mockSetNodes.mockClear();
-      const agentWithoutDescription = [{
-        id: "agent-2",
-        name: "Agent",
-        agent_config: {}
-      }];
+      const agentWithoutDescription = [
+        {
+          id: "agent-2",
+          name: "Agent",
+          agent_config: {},
+        },
+      ];
       act(() => {
         result.current.addAgentsToCanvas(agentWithoutDescription);
       });
       setNodesCall = mockSetNodes.mock.calls[0][0];
-      newNodes = typeof setNodesCall === "function" ? setNodesCall([]) : setNodesCall;
+      newNodes =
+        typeof setNodesCall === "function" ? setNodesCall([]) : setNodesCall;
       expect(newNodes[0].data.description).toBe("");
       expect(newNodes[0].data.description.length).toBe(0);
     });
     it("should verify agent.agent_config || empty object fallback", () => {
-      const { result } = renderHook(
-        () => useMarketplaceIntegration({
+      const { result } = renderHook(() =>
+        useMarketplaceIntegration({
           tabId: "tab-1",
           storage: null,
           setNodes: mockSetNodes,
@@ -1763,36 +1859,42 @@ describe("useMarketplaceIntegration", () => {
           localWorkflowDescription: "Test Description",
           tabIsUnsaved: false,
           tabDraftsRef: mockTabDraftsRef,
-          saveDraftsToStorage: mockSaveDraftsToStorage
-        })
+          saveDraftsToStorage: mockSaveDraftsToStorage,
+        }),
       );
-      const agentWithConfig = [{
-        id: "agent-1",
-        name: "Agent",
-        agent_config: { model: "gpt-4" }
-      }];
+      const agentWithConfig = [
+        {
+          id: "agent-1",
+          name: "Agent",
+          agent_config: { model: "gpt-4" },
+        },
+      ];
       act(() => {
         result.current.addAgentsToCanvas(agentWithConfig);
       });
       let setNodesCall = mockSetNodes.mock.calls[0][0];
-      let newNodes = typeof setNodesCall === "function" ? setNodesCall([]) : setNodesCall;
+      let newNodes =
+        typeof setNodesCall === "function" ? setNodesCall([]) : setNodesCall;
       expect(newNodes[0].data.agent_config).toEqual({ model: "gpt-4" });
       mockSetNodes.mockClear();
-      const agentWithoutConfig = [{
-        id: "agent-2",
-        name: "Agent"
-      }];
+      const agentWithoutConfig = [
+        {
+          id: "agent-2",
+          name: "Agent",
+        },
+      ];
       act(() => {
         result.current.addAgentsToCanvas(agentWithoutConfig);
       });
       setNodesCall = mockSetNodes.mock.calls[0][0];
-      newNodes = typeof setNodesCall === "function" ? setNodesCall([]) : setNodesCall;
+      newNodes =
+        typeof setNodesCall === "function" ? setNodesCall([]) : setNodesCall;
       expect(newNodes[0].data.agent_config).toEqual({});
       expect(Object.keys(newNodes[0].data.agent_config)).toHaveLength(0);
     });
     it("should verify currentDraft?.edges || empty array fallback", () => {
-      const { result } = renderHook(
-        () => useMarketplaceIntegration({
+      const { result } = renderHook(() =>
+        useMarketplaceIntegration({
           tabId: "tab-1",
           storage: null,
           setNodes: mockSetNodes,
@@ -1802,8 +1904,8 @@ describe("useMarketplaceIntegration", () => {
           localWorkflowDescription: "Test Description",
           tabIsUnsaved: false,
           tabDraftsRef: mockTabDraftsRef,
-          saveDraftsToStorage: mockSaveDraftsToStorage
-        })
+          saveDraftsToStorage: mockSaveDraftsToStorage,
+        }),
       );
       mockTabDraftsRef.current["tab-1"] = {
         nodes: [],
@@ -1811,7 +1913,7 @@ describe("useMarketplaceIntegration", () => {
         workflowId: null,
         workflowName: "Test Workflow",
         workflowDescription: "Test Description",
-        isUnsaved: false
+        isUnsaved: false,
       };
       const agents = [{ id: "agent-1", name: "Agent", agent_config: {} }];
       act(() => {
@@ -1821,14 +1923,16 @@ describe("useMarketplaceIntegration", () => {
         jest.advanceTimersByTime(0);
       });
       const updatedDraft = mockTabDraftsRef.current["tab-1"];
-      expect(updatedDraft.edges).toEqual([{ id: "edge-1", source: "node-1", target: "node-2" }]);
+      expect(updatedDraft.edges).toEqual([
+        { id: "edge-1", source: "node-1", target: "node-2" },
+      ]);
       mockTabDraftsRef.current["tab-1"] = {
         nodes: [],
         edges: void 0,
         workflowId: null,
         workflowName: "Test Workflow",
         workflowDescription: "Test Description",
-        isUnsaved: false
+        isUnsaved: false,
       };
       mockSetNodes.mockClear();
       act(() => {
@@ -1851,8 +1955,8 @@ describe("useMarketplaceIntegration", () => {
           }
           return updater;
         });
-        const { result } = renderHook(
-          () => useMarketplaceIntegration({
+        const { result } = renderHook(() =>
+          useMarketplaceIntegration({
             tabId: "tab-1",
             storage: null,
             setNodes: mockSetNodes,
@@ -1862,20 +1966,21 @@ describe("useMarketplaceIntegration", () => {
             localWorkflowDescription: "Test Description",
             tabIsUnsaved: false,
             tabDraftsRef: mockTabDraftsRef,
-            saveDraftsToStorage: mockSaveDraftsToStorage
-          })
+            saveDraftsToStorage: mockSaveDraftsToStorage,
+          }),
         );
         const agents = [{ id: "agent-1", name: "Agent" }];
         act(() => {
           result.current.addAgentsToCanvas(agents);
         });
         const setNodesCall = mockSetNodes.mock.calls[0][0];
-        const newNodes = typeof setNodesCall === "function" ? setNodesCall([]) : setNodesCall;
+        const newNodes =
+          typeof setNodesCall === "function" ? setNodesCall([]) : setNodesCall;
         expect(newNodes[0].position.x).toBe(250);
       });
       it("should handle agent.name || agent.label || Agent Node - name exists", () => {
-        const { result } = renderHook(
-          () => useMarketplaceIntegration({
+        const { result } = renderHook(() =>
+          useMarketplaceIntegration({
             tabId: "tab-1",
             storage: null,
             setNodes: mockSetNodes,
@@ -1885,21 +1990,22 @@ describe("useMarketplaceIntegration", () => {
             localWorkflowDescription: "Test Description",
             tabIsUnsaved: false,
             tabDraftsRef: mockTabDraftsRef,
-            saveDraftsToStorage: mockSaveDraftsToStorage
-          })
+            saveDraftsToStorage: mockSaveDraftsToStorage,
+          }),
         );
         const agents = [{ id: "agent-1", name: "Agent Name" }];
         act(() => {
           result.current.addAgentsToCanvas(agents);
         });
         const setNodesCall = mockSetNodes.mock.calls[0][0];
-        const newNodes = typeof setNodesCall === "function" ? setNodesCall([]) : setNodesCall;
+        const newNodes =
+          typeof setNodesCall === "function" ? setNodesCall([]) : setNodesCall;
         expect(newNodes[0].data.name).toBe("Agent Name");
         expect(newNodes[0].data.label).toBe("Agent Name");
       });
       it("should handle agent.name || agent.label || Agent Node - name null, label exists", () => {
-        const { result } = renderHook(
-          () => useMarketplaceIntegration({
+        const { result } = renderHook(() =>
+          useMarketplaceIntegration({
             tabId: "tab-1",
             storage: null,
             setNodes: mockSetNodes,
@@ -1909,21 +2015,22 @@ describe("useMarketplaceIntegration", () => {
             localWorkflowDescription: "Test Description",
             tabIsUnsaved: false,
             tabDraftsRef: mockTabDraftsRef,
-            saveDraftsToStorage: mockSaveDraftsToStorage
-          })
+            saveDraftsToStorage: mockSaveDraftsToStorage,
+          }),
         );
         const agents = [{ id: "agent-1", name: null, label: "Agent Label" }];
         act(() => {
           result.current.addAgentsToCanvas(agents);
         });
         const setNodesCall = mockSetNodes.mock.calls[0][0];
-        const newNodes = typeof setNodesCall === "function" ? setNodesCall([]) : setNodesCall;
+        const newNodes =
+          typeof setNodesCall === "function" ? setNodesCall([]) : setNodesCall;
         expect(newNodes[0].data.name).toBe("Agent Label");
         expect(newNodes[0].data.label).toBe("Agent Label");
       });
       it("should handle agent.name || agent.label || Agent Node - name undefined, label null", () => {
-        const { result } = renderHook(
-          () => useMarketplaceIntegration({
+        const { result } = renderHook(() =>
+          useMarketplaceIntegration({
             tabId: "tab-1",
             storage: null,
             setNodes: mockSetNodes,
@@ -1933,21 +2040,22 @@ describe("useMarketplaceIntegration", () => {
             localWorkflowDescription: "Test Description",
             tabIsUnsaved: false,
             tabDraftsRef: mockTabDraftsRef,
-            saveDraftsToStorage: mockSaveDraftsToStorage
-          })
+            saveDraftsToStorage: mockSaveDraftsToStorage,
+          }),
         );
         const agents = [{ id: "agent-1", name: void 0, label: null }];
         act(() => {
           result.current.addAgentsToCanvas(agents);
         });
         const setNodesCall = mockSetNodes.mock.calls[0][0];
-        const newNodes = typeof setNodesCall === "function" ? setNodesCall([]) : setNodesCall;
+        const newNodes =
+          typeof setNodesCall === "function" ? setNodesCall([]) : setNodesCall;
         expect(newNodes[0].data.name).toBe("Agent Node");
         expect(newNodes[0].data.label).toBe("Agent Node");
       });
       it("should handle agent.description || empty string - description is null", () => {
-        const { result } = renderHook(
-          () => useMarketplaceIntegration({
+        const { result } = renderHook(() =>
+          useMarketplaceIntegration({
             tabId: "tab-1",
             storage: null,
             setNodes: mockSetNodes,
@@ -1957,20 +2065,21 @@ describe("useMarketplaceIntegration", () => {
             localWorkflowDescription: "Test Description",
             tabIsUnsaved: false,
             tabDraftsRef: mockTabDraftsRef,
-            saveDraftsToStorage: mockSaveDraftsToStorage
-          })
+            saveDraftsToStorage: mockSaveDraftsToStorage,
+          }),
         );
         const agents = [{ id: "agent-1", name: "Agent", description: null }];
         act(() => {
           result.current.addAgentsToCanvas(agents);
         });
         const setNodesCall = mockSetNodes.mock.calls[0][0];
-        const newNodes = typeof setNodesCall === "function" ? setNodesCall([]) : setNodesCall;
+        const newNodes =
+          typeof setNodesCall === "function" ? setNodesCall([]) : setNodesCall;
         expect(newNodes[0].data.description).toBe("");
       });
       it("should handle agent.description || empty string - description is undefined", () => {
-        const { result } = renderHook(
-          () => useMarketplaceIntegration({
+        const { result } = renderHook(() =>
+          useMarketplaceIntegration({
             tabId: "tab-1",
             storage: null,
             setNodes: mockSetNodes,
@@ -1980,21 +2089,22 @@ describe("useMarketplaceIntegration", () => {
             localWorkflowDescription: "Test Description",
             tabIsUnsaved: false,
             tabDraftsRef: mockTabDraftsRef,
-            saveDraftsToStorage: mockSaveDraftsToStorage
-          })
+            saveDraftsToStorage: mockSaveDraftsToStorage,
+          }),
         );
         const agents = [{ id: "agent-1", name: "Agent", description: void 0 }];
         act(() => {
           result.current.addAgentsToCanvas(agents);
         });
         const setNodesCall = mockSetNodes.mock.calls[0][0];
-        const newNodes = typeof setNodesCall === "function" ? setNodesCall([]) : setNodesCall;
+        const newNodes =
+          typeof setNodesCall === "function" ? setNodesCall([]) : setNodesCall;
         expect(newNodes[0].data.description).toBe("");
       });
       it("should handle currentDraft is null in setTimeout callback", () => {
         mockTabDraftsRef.current["tab-1"] = null;
-        const { result } = renderHook(
-          () => useMarketplaceIntegration({
+        const { result } = renderHook(() =>
+          useMarketplaceIntegration({
             tabId: "tab-1",
             storage: null,
             setNodes: mockSetNodes,
@@ -2004,8 +2114,8 @@ describe("useMarketplaceIntegration", () => {
             localWorkflowDescription: "Test Description",
             tabIsUnsaved: false,
             tabDraftsRef: mockTabDraftsRef,
-            saveDraftsToStorage: mockSaveDraftsToStorage
-          })
+            saveDraftsToStorage: mockSaveDraftsToStorage,
+          }),
         );
         const agents = [{ id: "agent-1", name: "Agent" }];
         act(() => {
@@ -2018,8 +2128,8 @@ describe("useMarketplaceIntegration", () => {
       });
       it("should handle currentDraft is undefined in setTimeout callback", () => {
         mockTabDraftsRef.current["tab-1"] = void 0;
-        const { result } = renderHook(
-          () => useMarketplaceIntegration({
+        const { result } = renderHook(() =>
+          useMarketplaceIntegration({
             tabId: "tab-1",
             storage: null,
             setNodes: mockSetNodes,
@@ -2029,8 +2139,8 @@ describe("useMarketplaceIntegration", () => {
             localWorkflowDescription: "Test Description",
             tabIsUnsaved: false,
             tabDraftsRef: mockTabDraftsRef,
-            saveDraftsToStorage: mockSaveDraftsToStorage
-          })
+            saveDraftsToStorage: mockSaveDraftsToStorage,
+          }),
         );
         const agents = [{ id: "agent-1", name: "Agent" }];
         act(() => {
@@ -2045,19 +2155,21 @@ describe("useMarketplaceIntegration", () => {
     describe("useEffect - storage check edge cases", () => {
       it("should handle Date.now() - pending.timestamp === 10000 exact boundary", () => {
         const mockStorage = {
-          getItem: jest.fn().mockReturnValue(JSON.stringify({
-            tabId: "tab-1",
-            agents: [{ id: "agent-1", name: "Agent" }],
-            timestamp: Date.now() - 1e4
-            // Exactly 10000ms ago
-          })),
+          getItem: jest.fn().mockReturnValue(
+            JSON.stringify({
+              tabId: "tab-1",
+              agents: [{ id: "agent-1", name: "Agent" }],
+              timestamp: Date.now() - 1e4,
+              // Exactly 10000ms ago
+            }),
+          ),
           removeItem: jest.fn(),
           setItem: jest.fn(),
           addEventListener: jest.fn(),
-          removeEventListener: jest.fn()
+          removeEventListener: jest.fn(),
         };
-        renderHook(
-          () => useMarketplaceIntegration({
+        renderHook(() =>
+          useMarketplaceIntegration({
             tabId: "tab-1",
             storage: mockStorage,
             setNodes: mockSetNodes,
@@ -2067,29 +2179,33 @@ describe("useMarketplaceIntegration", () => {
             localWorkflowDescription: "Test Description",
             tabIsUnsaved: false,
             tabDraftsRef: mockTabDraftsRef,
-            saveDraftsToStorage: mockSaveDraftsToStorage
-          })
+            saveDraftsToStorage: mockSaveDraftsToStorage,
+          }),
         );
         act(() => {
           jest.advanceTimersByTime(0);
         });
-        expect(mockStorage.removeItem).toHaveBeenCalledWith("pendingAgentsToAdd");
+        expect(mockStorage.removeItem).toHaveBeenCalledWith(
+          "pendingAgentsToAdd",
+        );
       });
       it("should handle Date.now() - pending.timestamp === 9999 just under boundary", () => {
         const mockStorage = {
-          getItem: jest.fn().mockReturnValue(JSON.stringify({
-            tabId: "tab-1",
-            agents: [{ id: "agent-1", name: "Agent" }],
-            timestamp: Date.now() - 9999
-            // Just under 10000ms
-          })),
+          getItem: jest.fn().mockReturnValue(
+            JSON.stringify({
+              tabId: "tab-1",
+              agents: [{ id: "agent-1", name: "Agent" }],
+              timestamp: Date.now() - 9999,
+              // Just under 10000ms
+            }),
+          ),
           removeItem: jest.fn(),
           setItem: jest.fn(),
           addEventListener: jest.fn(),
-          removeEventListener: jest.fn()
+          removeEventListener: jest.fn(),
         };
-        renderHook(
-          () => useMarketplaceIntegration({
+        renderHook(() =>
+          useMarketplaceIntegration({
             tabId: "tab-1",
             storage: mockStorage,
             setNodes: mockSetNodes,
@@ -2099,8 +2215,8 @@ describe("useMarketplaceIntegration", () => {
             localWorkflowDescription: "Test Description",
             tabIsUnsaved: false,
             tabDraftsRef: mockTabDraftsRef,
-            saveDraftsToStorage: mockSaveDraftsToStorage
-          })
+            saveDraftsToStorage: mockSaveDraftsToStorage,
+          }),
         );
         act(() => {
           jest.advanceTimersByTime(0);
@@ -2109,19 +2225,21 @@ describe("useMarketplaceIntegration", () => {
       });
       it("should handle pending.tabId !== tabId exact comparison", () => {
         const mockStorage = {
-          getItem: jest.fn().mockReturnValue(JSON.stringify({
-            tabId: "tab-2",
-            // Different tab
-            agents: [{ id: "agent-1", name: "Agent" }],
-            timestamp: Date.now() - 5e3
-          })),
+          getItem: jest.fn().mockReturnValue(
+            JSON.stringify({
+              tabId: "tab-2",
+              // Different tab
+              agents: [{ id: "agent-1", name: "Agent" }],
+              timestamp: Date.now() - 5e3,
+            }),
+          ),
           removeItem: jest.fn(),
           setItem: jest.fn(),
           addEventListener: jest.fn(),
-          removeEventListener: jest.fn()
+          removeEventListener: jest.fn(),
         };
-        renderHook(
-          () => useMarketplaceIntegration({
+        renderHook(() =>
+          useMarketplaceIntegration({
             tabId: "tab-1",
             // Current tab
             storage: mockStorage,
@@ -2132,29 +2250,33 @@ describe("useMarketplaceIntegration", () => {
             localWorkflowDescription: "Test Description",
             tabIsUnsaved: false,
             tabDraftsRef: mockTabDraftsRef,
-            saveDraftsToStorage: mockSaveDraftsToStorage
-          })
+            saveDraftsToStorage: mockSaveDraftsToStorage,
+          }),
         );
         act(() => {
           jest.advanceTimersByTime(0);
         });
-        expect(mockStorage.removeItem).toHaveBeenCalledWith("pendingAgentsToAdd");
+        expect(mockStorage.removeItem).toHaveBeenCalledWith(
+          "pendingAgentsToAdd",
+        );
         expect(mockSetNodes).not.toHaveBeenCalled();
       });
       it("should handle pending object missing tabId property", () => {
         const mockStorage = {
-          getItem: jest.fn().mockReturnValue(JSON.stringify({
-            // No tabId property
-            agents: [{ id: "agent-1", name: "Agent" }],
-            timestamp: Date.now() - 5e3
-          })),
+          getItem: jest.fn().mockReturnValue(
+            JSON.stringify({
+              // No tabId property
+              agents: [{ id: "agent-1", name: "Agent" }],
+              timestamp: Date.now() - 5e3,
+            }),
+          ),
           removeItem: jest.fn(),
           setItem: jest.fn(),
           addEventListener: jest.fn(),
-          removeEventListener: jest.fn()
+          removeEventListener: jest.fn(),
         };
-        renderHook(
-          () => useMarketplaceIntegration({
+        renderHook(() =>
+          useMarketplaceIntegration({
             tabId: "tab-1",
             storage: mockStorage,
             setNodes: mockSetNodes,
@@ -2164,28 +2286,32 @@ describe("useMarketplaceIntegration", () => {
             localWorkflowDescription: "Test Description",
             tabIsUnsaved: false,
             tabDraftsRef: mockTabDraftsRef,
-            saveDraftsToStorage: mockSaveDraftsToStorage
-          })
+            saveDraftsToStorage: mockSaveDraftsToStorage,
+          }),
         );
         act(() => {
           jest.advanceTimersByTime(0);
         });
-        expect(mockStorage.removeItem).toHaveBeenCalledWith("pendingAgentsToAdd");
+        expect(mockStorage.removeItem).toHaveBeenCalledWith(
+          "pendingAgentsToAdd",
+        );
       });
       it("should handle pending object missing timestamp property", () => {
         const mockStorage = {
-          getItem: jest.fn().mockReturnValue(JSON.stringify({
-            tabId: "tab-1",
-            agents: [{ id: "agent-1", name: "Agent" }]
-            // No timestamp property
-          })),
+          getItem: jest.fn().mockReturnValue(
+            JSON.stringify({
+              tabId: "tab-1",
+              agents: [{ id: "agent-1", name: "Agent" }],
+              // No timestamp property
+            }),
+          ),
           removeItem: jest.fn(),
           setItem: jest.fn(),
           addEventListener: jest.fn(),
-          removeEventListener: jest.fn()
+          removeEventListener: jest.fn(),
         };
-        renderHook(
-          () => useMarketplaceIntegration({
+        renderHook(() =>
+          useMarketplaceIntegration({
             tabId: "tab-1",
             storage: mockStorage,
             setNodes: mockSetNodes,
@@ -2195,8 +2321,8 @@ describe("useMarketplaceIntegration", () => {
             localWorkflowDescription: "Test Description",
             tabIsUnsaved: false,
             tabDraftsRef: mockTabDraftsRef,
-            saveDraftsToStorage: mockSaveDraftsToStorage
-          })
+            saveDraftsToStorage: mockSaveDraftsToStorage,
+          }),
         );
         act(() => {
           jest.advanceTimersByTime(0);
@@ -2209,10 +2335,10 @@ describe("useMarketplaceIntegration", () => {
           removeItem: jest.fn(),
           setItem: jest.fn(),
           addEventListener: jest.fn(),
-          removeEventListener: jest.fn()
+          removeEventListener: jest.fn(),
         };
-        const { unmount } = renderHook(
-          () => useMarketplaceIntegration({
+        const { unmount } = renderHook(() =>
+          useMarketplaceIntegration({
             tabId: "tab-1",
             storage: mockStorage,
             setNodes: mockSetNodes,
@@ -2222,13 +2348,15 @@ describe("useMarketplaceIntegration", () => {
             localWorkflowDescription: "Test Description",
             tabIsUnsaved: false,
             tabDraftsRef: mockTabDraftsRef,
-            saveDraftsToStorage: mockSaveDraftsToStorage
-          })
+            saveDraftsToStorage: mockSaveDraftsToStorage,
+          }),
         );
         act(() => {
           jest.advanceTimersByTime(1e4);
         });
-        expect(mockStorage.getItem.mock.calls.length).toBeGreaterThanOrEqual(10);
+        expect(mockStorage.getItem.mock.calls.length).toBeGreaterThanOrEqual(
+          10,
+        );
         unmount();
       });
       it("should handle storage.removeItem when storage is null in catch block", () => {
@@ -2239,10 +2367,10 @@ describe("useMarketplaceIntegration", () => {
           removeItem: jest.fn(),
           setItem: jest.fn(),
           addEventListener: jest.fn(),
-          removeEventListener: jest.fn()
+          removeEventListener: jest.fn(),
         };
-        renderHook(
-          () => useMarketplaceIntegration({
+        renderHook(() =>
+          useMarketplaceIntegration({
             tabId: "tab-1",
             storage: mockStorage,
             setNodes: mockSetNodes,
@@ -2252,13 +2380,15 @@ describe("useMarketplaceIntegration", () => {
             localWorkflowDescription: "Test Description",
             tabIsUnsaved: false,
             tabDraftsRef: mockTabDraftsRef,
-            saveDraftsToStorage: mockSaveDraftsToStorage
-          })
+            saveDraftsToStorage: mockSaveDraftsToStorage,
+          }),
         );
         act(() => {
           jest.advanceTimersByTime(0);
         });
-        expect(mockStorage.removeItem).toHaveBeenCalledWith("pendingAgentsToAdd");
+        expect(mockStorage.removeItem).toHaveBeenCalledWith(
+          "pendingAgentsToAdd",
+        );
       });
       it("should handle JSON.parse throwing SyntaxError", () => {
         const mockStorage = {
@@ -2266,10 +2396,10 @@ describe("useMarketplaceIntegration", () => {
           removeItem: jest.fn(),
           setItem: jest.fn(),
           addEventListener: jest.fn(),
-          removeEventListener: jest.fn()
+          removeEventListener: jest.fn(),
         };
-        renderHook(
-          () => useMarketplaceIntegration({
+        renderHook(() =>
+          useMarketplaceIntegration({
             tabId: "tab-1",
             storage: mockStorage,
             setNodes: mockSetNodes,
@@ -2279,13 +2409,15 @@ describe("useMarketplaceIntegration", () => {
             localWorkflowDescription: "Test Description",
             tabIsUnsaved: false,
             tabDraftsRef: mockTabDraftsRef,
-            saveDraftsToStorage: mockSaveDraftsToStorage
-          })
+            saveDraftsToStorage: mockSaveDraftsToStorage,
+          }),
         );
         act(() => {
           jest.advanceTimersByTime(0);
         });
-        expect(mockStorage.removeItem).toHaveBeenCalledWith("pendingAgentsToAdd");
+        expect(mockStorage.removeItem).toHaveBeenCalledWith(
+          "pendingAgentsToAdd",
+        );
       });
     });
     describe("mutation killers for addAgentsToCanvas", () => {
@@ -2296,8 +2428,8 @@ describe("useMarketplaceIntegration", () => {
           }
           return updater;
         });
-        const { result } = renderHook(
-          () => useMarketplaceIntegration({
+        const { result } = renderHook(() =>
+          useMarketplaceIntegration({
             tabId: "tab-1",
             storage: null,
             setNodes: mockSetNodes,
@@ -2307,15 +2439,16 @@ describe("useMarketplaceIntegration", () => {
             localWorkflowDescription: "Test Description",
             tabIsUnsaved: false,
             tabDraftsRef: mockTabDraftsRef,
-            saveDraftsToStorage: mockSaveDraftsToStorage
-          })
+            saveDraftsToStorage: mockSaveDraftsToStorage,
+          }),
         );
         const agents = [{ id: "agent-1", name: "Agent 1" }];
         act(() => {
           result.current.addAgentsToCanvas(agents);
         });
         const setNodesCall = mockSetNodes.mock.calls[0][0];
-        const newNodes = typeof setNodesCall === "function" ? setNodesCall([]) : setNodesCall;
+        const newNodes =
+          typeof setNodesCall === "function" ? setNodesCall([]) : setNodesCall;
         expect(newNodes[0].position.x).toBe(250);
       });
       it("should verify exact currentNodes.length > 0 comparison - length is 1", () => {
@@ -2323,7 +2456,7 @@ describe("useMarketplaceIntegration", () => {
           id: "node-1",
           type: "agent",
           position: { x: 100, y: 100 },
-          data: {}
+          data: {},
         };
         mockSetNodes.mockImplementation((updater) => {
           if (typeof updater === "function") {
@@ -2331,8 +2464,8 @@ describe("useMarketplaceIntegration", () => {
           }
           return updater;
         });
-        const { result } = renderHook(
-          () => useMarketplaceIntegration({
+        const { result } = renderHook(() =>
+          useMarketplaceIntegration({
             tabId: "tab-1",
             storage: null,
             setNodes: mockSetNodes,
@@ -2342,22 +2475,35 @@ describe("useMarketplaceIntegration", () => {
             localWorkflowDescription: "Test Description",
             tabIsUnsaved: false,
             tabDraftsRef: mockTabDraftsRef,
-            saveDraftsToStorage: mockSaveDraftsToStorage
-          })
+            saveDraftsToStorage: mockSaveDraftsToStorage,
+          }),
         );
         const agents = [{ id: "agent-1", name: "Agent 1" }];
         act(() => {
           result.current.addAgentsToCanvas(agents);
         });
         const setNodesCall = mockSetNodes.mock.calls[0][0];
-        const newNodes = typeof setNodesCall === "function" ? setNodesCall([existingNode]) : setNodesCall;
+        const newNodes =
+          typeof setNodesCall === "function"
+            ? setNodesCall([existingNode])
+            : setNodesCall;
         expect(newNodes[1].position.x).toBe(300);
       });
       it("should verify exact Math.max(...currentNodes.map(n => n.position.x)) calculation", () => {
         const existingNodes = [
           { id: "node-1", type: "agent", position: { x: 50, y: 50 }, data: {} },
-          { id: "node-2", type: "agent", position: { x: 300, y: 100 }, data: {} },
-          { id: "node-3", type: "agent", position: { x: 150, y: 150 }, data: {} }
+          {
+            id: "node-2",
+            type: "agent",
+            position: { x: 300, y: 100 },
+            data: {},
+          },
+          {
+            id: "node-3",
+            type: "agent",
+            position: { x: 150, y: 150 },
+            data: {},
+          },
         ];
         mockSetNodes.mockImplementation((updater) => {
           if (typeof updater === "function") {
@@ -2365,8 +2511,8 @@ describe("useMarketplaceIntegration", () => {
           }
           return updater;
         });
-        const { result } = renderHook(
-          () => useMarketplaceIntegration({
+        const { result } = renderHook(() =>
+          useMarketplaceIntegration({
             tabId: "tab-1",
             storage: null,
             setNodes: mockSetNodes,
@@ -2376,15 +2522,18 @@ describe("useMarketplaceIntegration", () => {
             localWorkflowDescription: "Test Description",
             tabIsUnsaved: false,
             tabDraftsRef: mockTabDraftsRef,
-            saveDraftsToStorage: mockSaveDraftsToStorage
-          })
+            saveDraftsToStorage: mockSaveDraftsToStorage,
+          }),
         );
         const agents = [{ id: "agent-1", name: "Agent 1" }];
         act(() => {
           result.current.addAgentsToCanvas(agents);
         });
         const setNodesCall = mockSetNodes.mock.calls[0][0];
-        const newNodes = typeof setNodesCall === "function" ? setNodesCall(existingNodes) : setNodesCall;
+        const newNodes =
+          typeof setNodesCall === "function"
+            ? setNodesCall(existingNodes)
+            : setNodesCall;
         expect(newNodes[3].position.x).toBe(500);
       });
       it('should verify exact agent.name || agent.label || "Agent Node" fallback chain', () => {
@@ -2394,8 +2543,8 @@ describe("useMarketplaceIntegration", () => {
           }
           return updater;
         });
-        const { result } = renderHook(
-          () => useMarketplaceIntegration({
+        const { result } = renderHook(() =>
+          useMarketplaceIntegration({
             tabId: "tab-1",
             storage: null,
             setNodes: mockSetNodes,
@@ -2405,30 +2554,39 @@ describe("useMarketplaceIntegration", () => {
             localWorkflowDescription: "Test Description",
             tabIsUnsaved: false,
             tabDraftsRef: mockTabDraftsRef,
-            saveDraftsToStorage: mockSaveDraftsToStorage
-          })
+            saveDraftsToStorage: mockSaveDraftsToStorage,
+          }),
         );
         act(() => {
-          result.current.addAgentsToCanvas([{ id: "agent-1", name: "Agent Name" }]);
+          result.current.addAgentsToCanvas([
+            { id: "agent-1", name: "Agent Name" },
+          ]);
         });
         let setNodesCall = mockSetNodes.mock.calls[0][0];
-        let newNodes = typeof setNodesCall === "function" ? setNodesCall([]) : setNodesCall;
+        let newNodes =
+          typeof setNodesCall === "function" ? setNodesCall([]) : setNodesCall;
         expect(newNodes[0].data.label).toBe("Agent Name");
         expect(newNodes[0].data.name).toBe("Agent Name");
         mockSetNodes.mockClear();
         act(() => {
-          result.current.addAgentsToCanvas([{ id: "agent-2", name: null, label: "Agent Label" }]);
+          result.current.addAgentsToCanvas([
+            { id: "agent-2", name: null, label: "Agent Label" },
+          ]);
         });
         setNodesCall = mockSetNodes.mock.calls[0][0];
-        newNodes = typeof setNodesCall === "function" ? setNodesCall([]) : setNodesCall;
+        newNodes =
+          typeof setNodesCall === "function" ? setNodesCall([]) : setNodesCall;
         expect(newNodes[0].data.label).toBe("Agent Label");
         expect(newNodes[0].data.name).toBe("Agent Label");
         mockSetNodes.mockClear();
         act(() => {
-          result.current.addAgentsToCanvas([{ id: "agent-3", name: null, label: null }]);
+          result.current.addAgentsToCanvas([
+            { id: "agent-3", name: null, label: null },
+          ]);
         });
         setNodesCall = mockSetNodes.mock.calls[0][0];
-        newNodes = typeof setNodesCall === "function" ? setNodesCall([]) : setNodesCall;
+        newNodes =
+          typeof setNodesCall === "function" ? setNodesCall([]) : setNodesCall;
         expect(newNodes[0].data.label).toBe("Agent Node");
         expect(newNodes[0].data.name).toBe("Agent Node");
       });
@@ -2439,8 +2597,8 @@ describe("useMarketplaceIntegration", () => {
           }
           return updater;
         });
-        const { result } = renderHook(
-          () => useMarketplaceIntegration({
+        const { result } = renderHook(() =>
+          useMarketplaceIntegration({
             tabId: "tab-1",
             storage: null,
             setNodes: mockSetNodes,
@@ -2450,21 +2608,27 @@ describe("useMarketplaceIntegration", () => {
             localWorkflowDescription: "Test Description",
             tabIsUnsaved: false,
             tabDraftsRef: mockTabDraftsRef,
-            saveDraftsToStorage: mockSaveDraftsToStorage
-          })
+            saveDraftsToStorage: mockSaveDraftsToStorage,
+          }),
         );
         act(() => {
-          result.current.addAgentsToCanvas([{ id: "agent-1", description: "Test Description" }]);
+          result.current.addAgentsToCanvas([
+            { id: "agent-1", description: "Test Description" },
+          ]);
         });
         let setNodesCall = mockSetNodes.mock.calls[0][0];
-        let newNodes = typeof setNodesCall === "function" ? setNodesCall([]) : setNodesCall;
+        let newNodes =
+          typeof setNodesCall === "function" ? setNodesCall([]) : setNodesCall;
         expect(newNodes[0].data.description).toBe("Test Description");
         mockSetNodes.mockClear();
         act(() => {
-          result.current.addAgentsToCanvas([{ id: "agent-2", description: null }]);
+          result.current.addAgentsToCanvas([
+            { id: "agent-2", description: null },
+          ]);
         });
         setNodesCall = mockSetNodes.mock.calls[0][0];
-        newNodes = typeof setNodesCall === "function" ? setNodesCall([]) : setNodesCall;
+        newNodes =
+          typeof setNodesCall === "function" ? setNodesCall([]) : setNodesCall;
         expect(newNodes[0].data.description).toBe("");
       });
       it("should verify exact agent.agent_config || {} fallback", () => {
@@ -2474,8 +2638,8 @@ describe("useMarketplaceIntegration", () => {
           }
           return updater;
         });
-        const { result } = renderHook(
-          () => useMarketplaceIntegration({
+        const { result } = renderHook(() =>
+          useMarketplaceIntegration({
             tabId: "tab-1",
             storage: null,
             setNodes: mockSetNodes,
@@ -2485,21 +2649,27 @@ describe("useMarketplaceIntegration", () => {
             localWorkflowDescription: "Test Description",
             tabIsUnsaved: false,
             tabDraftsRef: mockTabDraftsRef,
-            saveDraftsToStorage: mockSaveDraftsToStorage
-          })
+            saveDraftsToStorage: mockSaveDraftsToStorage,
+          }),
         );
         act(() => {
-          result.current.addAgentsToCanvas([{ id: "agent-1", agent_config: { model: "gpt-4" } }]);
+          result.current.addAgentsToCanvas([
+            { id: "agent-1", agent_config: { model: "gpt-4" } },
+          ]);
         });
         let setNodesCall = mockSetNodes.mock.calls[0][0];
-        let newNodes = typeof setNodesCall === "function" ? setNodesCall([]) : setNodesCall;
+        let newNodes =
+          typeof setNodesCall === "function" ? setNodesCall([]) : setNodesCall;
         expect(newNodes[0].data.agent_config).toEqual({ model: "gpt-4" });
         mockSetNodes.mockClear();
         act(() => {
-          result.current.addAgentsToCanvas([{ id: "agent-2", agent_config: null }]);
+          result.current.addAgentsToCanvas([
+            { id: "agent-2", agent_config: null },
+          ]);
         });
         setNodesCall = mockSetNodes.mock.calls[0][0];
-        newNodes = typeof setNodesCall === "function" ? setNodesCall([]) : setNodesCall;
+        newNodes =
+          typeof setNodesCall === "function" ? setNodesCall([]) : setNodesCall;
         expect(newNodes[0].data.agent_config).toEqual({});
       });
       it("should verify exact currentDraft?.edges || [] fallback", () => {
@@ -2516,11 +2686,11 @@ describe("useMarketplaceIntegration", () => {
             workflowId: null,
             workflowName: "Test",
             workflowDescription: "",
-            isUnsaved: false
-          }
+            isUnsaved: false,
+          },
         };
-        const { result: result1 } = renderHook(
-          () => useMarketplaceIntegration({
+        const { result: result1 } = renderHook(() =>
+          useMarketplaceIntegration({
             tabId: "tab-1",
             storage: null,
             setNodes: mockSetNodes,
@@ -2530,8 +2700,8 @@ describe("useMarketplaceIntegration", () => {
             localWorkflowDescription: "Test Description",
             tabIsUnsaved: false,
             tabDraftsRef: mockTabDraftsRef,
-            saveDraftsToStorage: mockSaveDraftsToStorage
-          })
+            saveDraftsToStorage: mockSaveDraftsToStorage,
+          }),
         );
         act(() => {
           result1.current.addAgentsToCanvas([{ id: "agent-1", name: "Agent" }]);
@@ -2541,11 +2711,13 @@ describe("useMarketplaceIntegration", () => {
         });
         expect(mockSaveDraftsToStorage).toHaveBeenCalled();
         const savedDraft = mockSaveDraftsToStorage.mock.calls[0][0]["tab-1"];
-        expect(savedDraft.edges).toEqual([{ id: "edge-1", source: "node-1", target: "node-2" }]);
+        expect(savedDraft.edges).toEqual([
+          { id: "edge-1", source: "node-1", target: "node-2" },
+        ]);
         mockSaveDraftsToStorage.mockClear();
         mockTabDraftsRef.current = {};
-        const { result: result2 } = renderHook(
-          () => useMarketplaceIntegration({
+        const { result: result2 } = renderHook(() =>
+          useMarketplaceIntegration({
             tabId: "tab-1",
             storage: null,
             setNodes: mockSetNodes,
@@ -2555,8 +2727,8 @@ describe("useMarketplaceIntegration", () => {
             localWorkflowDescription: "Test Description",
             tabIsUnsaved: false,
             tabDraftsRef: mockTabDraftsRef,
-            saveDraftsToStorage: mockSaveDraftsToStorage
-          })
+            saveDraftsToStorage: mockSaveDraftsToStorage,
+          }),
         );
         act(() => {
           result2.current.addAgentsToCanvas([{ id: "agent-2", name: "Agent" }]);
@@ -2576,8 +2748,8 @@ describe("useMarketplaceIntegration", () => {
           return updater;
         });
         const mockDateNow = jest.spyOn(Date, "now").mockReturnValue(1234567890);
-        const { result } = renderHook(
-          () => useMarketplaceIntegration({
+        const { result } = renderHook(() =>
+          useMarketplaceIntegration({
             tabId: "tab-1",
             storage: null,
             setNodes: mockSetNodes,
@@ -2587,14 +2759,15 @@ describe("useMarketplaceIntegration", () => {
             localWorkflowDescription: "Test Description",
             tabIsUnsaved: false,
             tabDraftsRef: mockTabDraftsRef,
-            saveDraftsToStorage: mockSaveDraftsToStorage
-          })
+            saveDraftsToStorage: mockSaveDraftsToStorage,
+          }),
         );
         act(() => {
           result.current.addAgentsToCanvas([{ id: "agent-1", name: "Agent" }]);
         });
         const setNodesCall = mockSetNodes.mock.calls[0][0];
-        const newNodes = typeof setNodesCall === "function" ? setNodesCall([]) : setNodesCall;
+        const newNodes =
+          typeof setNodesCall === "function" ? setNodesCall([]) : setNodesCall;
         expect(newNodes[0].id).toContain("1234567890");
         mockDateNow.mockRestore();
       });
@@ -2605,8 +2778,8 @@ describe("useMarketplaceIntegration", () => {
           }
           return updater;
         });
-        const { result } = renderHook(
-          () => useMarketplaceIntegration({
+        const { result } = renderHook(() =>
+          useMarketplaceIntegration({
             tabId: "tab-1",
             storage: null,
             setNodes: mockSetNodes,
@@ -2616,26 +2789,27 @@ describe("useMarketplaceIntegration", () => {
             localWorkflowDescription: "Test Description",
             tabIsUnsaved: false,
             tabDraftsRef: mockTabDraftsRef,
-            saveDraftsToStorage: mockSaveDraftsToStorage
-          })
+            saveDraftsToStorage: mockSaveDraftsToStorage,
+          }),
         );
         const agents = [
           { id: "agent-1", name: "Agent 1" },
           { id: "agent-2", name: "Agent 2" },
-          { id: "agent-3", name: "Agent 3" }
+          { id: "agent-3", name: "Agent 3" },
         ];
         act(() => {
           result.current.addAgentsToCanvas(agents);
         });
         const setNodesCall = mockSetNodes.mock.calls[0][0];
-        const newNodes = typeof setNodesCall === "function" ? setNodesCall([]) : setNodesCall;
+        const newNodes =
+          typeof setNodesCall === "function" ? setNodesCall([]) : setNodesCall;
         expect(newNodes[0].position.y).toBe(250);
         expect(newNodes[1].position.y).toBe(400);
         expect(newNodes[2].position.y).toBe(550);
       });
       it("should verify exact targetTabId !== tabId comparison", () => {
-        renderHook(
-          () => useMarketplaceIntegration({
+        renderHook(() =>
+          useMarketplaceIntegration({
             tabId: "tab-1",
             storage: null,
             setNodes: mockSetNodes,
@@ -2645,15 +2819,15 @@ describe("useMarketplaceIntegration", () => {
             localWorkflowDescription: "Test Description",
             tabIsUnsaved: false,
             tabDraftsRef: mockTabDraftsRef,
-            saveDraftsToStorage: mockSaveDraftsToStorage
-          })
+            saveDraftsToStorage: mockSaveDraftsToStorage,
+          }),
         );
         const event = new CustomEvent("addAgentsToWorkflow", {
           detail: {
             agents: [{ id: "agent-1", name: "Agent" }],
-            tabId: "tab-2"
+            tabId: "tab-2",
             // Different tab
-          }
+          },
         });
         act(() => {
           window.dispatchEvent(event);
@@ -2662,9 +2836,9 @@ describe("useMarketplaceIntegration", () => {
         const event2 = new CustomEvent("addAgentsToWorkflow", {
           detail: {
             agents: [{ id: "agent-2", name: "Agent" }],
-            tabId: "tab-1"
+            tabId: "tab-1",
             // Same tab
-          }
+          },
         });
         act(() => {
           window.dispatchEvent(event2);
@@ -2673,19 +2847,21 @@ describe("useMarketplaceIntegration", () => {
       });
       it("should verify exact Date.now() - pending.timestamp < 10000 comparison", () => {
         const mockStorage = {
-          getItem: jest.fn().mockReturnValue(JSON.stringify({
-            tabId: "tab-1",
-            agents: [{ id: "agent-1", name: "Agent" }],
-            timestamp: Date.now() - 5e3
-            // 5 seconds ago (within 10 seconds)
-          })),
+          getItem: jest.fn().mockReturnValue(
+            JSON.stringify({
+              tabId: "tab-1",
+              agents: [{ id: "agent-1", name: "Agent" }],
+              timestamp: Date.now() - 5e3,
+              // 5 seconds ago (within 10 seconds)
+            }),
+          ),
           removeItem: jest.fn(),
           setItem: jest.fn(),
           addEventListener: jest.fn(),
-          removeEventListener: jest.fn()
+          removeEventListener: jest.fn(),
         };
-        renderHook(
-          () => useMarketplaceIntegration({
+        renderHook(() =>
+          useMarketplaceIntegration({
             tabId: "tab-1",
             storage: mockStorage,
             setNodes: mockSetNodes,
@@ -2695,30 +2871,34 @@ describe("useMarketplaceIntegration", () => {
             localWorkflowDescription: "Test Description",
             tabIsUnsaved: false,
             tabDraftsRef: mockTabDraftsRef,
-            saveDraftsToStorage: mockSaveDraftsToStorage
-          })
+            saveDraftsToStorage: mockSaveDraftsToStorage,
+          }),
         );
         act(() => {
           jest.advanceTimersByTime(0);
         });
         expect(mockSetNodes).toHaveBeenCalled();
-        expect(mockStorage.removeItem).toHaveBeenCalledWith("pendingAgentsToAdd");
+        expect(mockStorage.removeItem).toHaveBeenCalledWith(
+          "pendingAgentsToAdd",
+        );
       });
       it("should verify exact Date.now() - pending.timestamp >= 10000 comparison", () => {
         const mockStorage = {
-          getItem: jest.fn().mockReturnValue(JSON.stringify({
-            tabId: "tab-1",
-            agents: [{ id: "agent-1", name: "Agent" }],
-            timestamp: Date.now() - 15e3
-            // 15 seconds ago (>= 10 seconds)
-          })),
+          getItem: jest.fn().mockReturnValue(
+            JSON.stringify({
+              tabId: "tab-1",
+              agents: [{ id: "agent-1", name: "Agent" }],
+              timestamp: Date.now() - 15e3,
+              // 15 seconds ago (>= 10 seconds)
+            }),
+          ),
           removeItem: jest.fn(),
           setItem: jest.fn(),
           addEventListener: jest.fn(),
-          removeEventListener: jest.fn()
+          removeEventListener: jest.fn(),
         };
-        renderHook(
-          () => useMarketplaceIntegration({
+        renderHook(() =>
+          useMarketplaceIntegration({
             tabId: "tab-1",
             storage: mockStorage,
             setNodes: mockSetNodes,
@@ -2728,13 +2908,15 @@ describe("useMarketplaceIntegration", () => {
             localWorkflowDescription: "Test Description",
             tabIsUnsaved: false,
             tabDraftsRef: mockTabDraftsRef,
-            saveDraftsToStorage: mockSaveDraftsToStorage
-          })
+            saveDraftsToStorage: mockSaveDraftsToStorage,
+          }),
         );
         act(() => {
           jest.advanceTimersByTime(0);
         });
-        expect(mockStorage.removeItem).toHaveBeenCalledWith("pendingAgentsToAdd");
+        expect(mockStorage.removeItem).toHaveBeenCalledWith(
+          "pendingAgentsToAdd",
+        );
         expect(mockSetNodes).not.toHaveBeenCalled();
       });
       it("should verify exact checkCount >= maxChecks comparison", () => {
@@ -2743,10 +2925,10 @@ describe("useMarketplaceIntegration", () => {
           removeItem: jest.fn(),
           setItem: jest.fn(),
           addEventListener: jest.fn(),
-          removeEventListener: jest.fn()
+          removeEventListener: jest.fn(),
         };
-        const { unmount } = renderHook(
-          () => useMarketplaceIntegration({
+        const { unmount } = renderHook(() =>
+          useMarketplaceIntegration({
             tabId: "tab-1",
             storage: mockStorage,
             setNodes: mockSetNodes,
@@ -2756,18 +2938,25 @@ describe("useMarketplaceIntegration", () => {
             localWorkflowDescription: "Test Description",
             tabIsUnsaved: false,
             tabDraftsRef: mockTabDraftsRef,
-            saveDraftsToStorage: mockSaveDraftsToStorage
-          })
+            saveDraftsToStorage: mockSaveDraftsToStorage,
+          }),
         );
         act(() => {
           jest.advanceTimersByTime(1e4);
         });
-        expect(mockStorage.getItem.mock.calls.length).toBeGreaterThanOrEqual(11);
+        expect(mockStorage.getItem.mock.calls.length).toBeGreaterThanOrEqual(
+          11,
+        );
         unmount();
       });
       it("should verify exact number literal 200 in Math.max calculation", () => {
         const existingNodes = [
-          { id: "node-1", type: "agent", position: { x: 100, y: 50 }, data: {} }
+          {
+            id: "node-1",
+            type: "agent",
+            position: { x: 100, y: 50 },
+            data: {},
+          },
         ];
         mockSetNodes.mockImplementation((updater) => {
           if (typeof updater === "function") {
@@ -2775,8 +2964,8 @@ describe("useMarketplaceIntegration", () => {
           }
           return updater;
         });
-        const { result } = renderHook(
-          () => useMarketplaceIntegration({
+        const { result } = renderHook(() =>
+          useMarketplaceIntegration({
             tabId: "tab-1",
             storage: null,
             setNodes: mockSetNodes,
@@ -2786,15 +2975,18 @@ describe("useMarketplaceIntegration", () => {
             localWorkflowDescription: "Test Description",
             tabIsUnsaved: false,
             tabDraftsRef: mockTabDraftsRef,
-            saveDraftsToStorage: mockSaveDraftsToStorage
-          })
+            saveDraftsToStorage: mockSaveDraftsToStorage,
+          }),
         );
         const agents = [{ id: "agent-1", name: "Agent 1" }];
         act(() => {
           result.current.addAgentsToCanvas(agents);
         });
         const setNodesCall = mockSetNodes.mock.calls[0][0];
-        const newNodes = typeof setNodesCall === "function" ? setNodesCall(existingNodes) : setNodesCall;
+        const newNodes =
+          typeof setNodesCall === "function"
+            ? setNodesCall(existingNodes)
+            : setNodesCall;
         expect(newNodes[1].position.x).toBe(300);
         expect(newNodes[1].position.x).not.toBe(299);
         expect(newNodes[1].position.x).not.toBe(301);
@@ -2806,8 +2998,8 @@ describe("useMarketplaceIntegration", () => {
           }
           return updater;
         });
-        const { result } = renderHook(
-          () => useMarketplaceIntegration({
+        const { result } = renderHook(() =>
+          useMarketplaceIntegration({
             tabId: "tab-1",
             storage: null,
             setNodes: mockSetNodes,
@@ -2817,15 +3009,16 @@ describe("useMarketplaceIntegration", () => {
             localWorkflowDescription: "Test Description",
             tabIsUnsaved: false,
             tabDraftsRef: mockTabDraftsRef,
-            saveDraftsToStorage: mockSaveDraftsToStorage
-          })
+            saveDraftsToStorage: mockSaveDraftsToStorage,
+          }),
         );
         const agents = [{ id: "agent-1", name: "Agent 1" }];
         act(() => {
           result.current.addAgentsToCanvas(agents);
         });
         const setNodesCall = mockSetNodes.mock.calls[0][0];
-        const newNodes = typeof setNodesCall === "function" ? setNodesCall([]) : setNodesCall;
+        const newNodes =
+          typeof setNodesCall === "function" ? setNodesCall([]) : setNodesCall;
         expect(newNodes[0].position.x).toBe(250);
         expect(newNodes[0].position.x).not.toBe(249);
         expect(newNodes[0].position.x).not.toBe(251);
@@ -2838,8 +3031,8 @@ describe("useMarketplaceIntegration", () => {
           }
           return updater;
         });
-        const { result } = renderHook(
-          () => useMarketplaceIntegration({
+        const { result } = renderHook(() =>
+          useMarketplaceIntegration({
             tabId: "tab-1",
             storage: null,
             setNodes: mockSetNodes,
@@ -2849,15 +3042,16 @@ describe("useMarketplaceIntegration", () => {
             localWorkflowDescription: "Test Description",
             tabIsUnsaved: false,
             tabDraftsRef: mockTabDraftsRef,
-            saveDraftsToStorage: mockSaveDraftsToStorage
-          })
+            saveDraftsToStorage: mockSaveDraftsToStorage,
+          }),
         );
         const agents = [{ id: "agent-1", name: "Agent 1" }];
         act(() => {
           result.current.addAgentsToCanvas(agents);
         });
         const setNodesCall = mockSetNodes.mock.calls[0][0];
-        const newNodes = typeof setNodesCall === "function" ? setNodesCall([]) : setNodesCall;
+        const newNodes =
+          typeof setNodesCall === "function" ? setNodesCall([]) : setNodesCall;
         expect(newNodes[0].position.y).toBe(250);
         expect(newNodes[0].position.y).not.toBe(249);
         expect(newNodes[0].position.y).not.toBe(251);
@@ -2869,8 +3063,8 @@ describe("useMarketplaceIntegration", () => {
           }
           return updater;
         });
-        const { result } = renderHook(
-          () => useMarketplaceIntegration({
+        const { result } = renderHook(() =>
+          useMarketplaceIntegration({
             tabId: "tab-1",
             storage: null,
             setNodes: mockSetNodes,
@@ -2880,19 +3074,20 @@ describe("useMarketplaceIntegration", () => {
             localWorkflowDescription: "Test Description",
             tabIsUnsaved: false,
             tabDraftsRef: mockTabDraftsRef,
-            saveDraftsToStorage: mockSaveDraftsToStorage
-          })
+            saveDraftsToStorage: mockSaveDraftsToStorage,
+          }),
         );
         const agents = [
           { id: "agent-1", name: "Agent 1" },
           { id: "agent-2", name: "Agent 2" },
-          { id: "agent-3", name: "Agent 3" }
+          { id: "agent-3", name: "Agent 3" },
         ];
         act(() => {
           result.current.addAgentsToCanvas(agents);
         });
         const setNodesCall = mockSetNodes.mock.calls[0][0];
-        const newNodes = typeof setNodesCall === "function" ? setNodesCall([]) : setNodesCall;
+        const newNodes =
+          typeof setNodesCall === "function" ? setNodesCall([]) : setNodesCall;
         expect(newNodes[0].position.y).toBe(250);
         expect(newNodes[1].position.y).toBe(400);
         expect(newNodes[2].position.y).toBe(550);
@@ -2907,8 +3102,8 @@ describe("useMarketplaceIntegration", () => {
           }
           return updater;
         });
-        const { result } = renderHook(
-          () => useMarketplaceIntegration({
+        const { result } = renderHook(() =>
+          useMarketplaceIntegration({
             tabId: "tab-1",
             storage: null,
             setNodes: mockSetNodes,
@@ -2918,15 +3113,16 @@ describe("useMarketplaceIntegration", () => {
             localWorkflowDescription: "Test Description",
             tabIsUnsaved: false,
             tabDraftsRef: mockTabDraftsRef,
-            saveDraftsToStorage: mockSaveDraftsToStorage
-          })
+            saveDraftsToStorage: mockSaveDraftsToStorage,
+          }),
         );
         const agents = [{ id: "agent-1", name: "Agent" }];
         act(() => {
           result.current.addAgentsToCanvas(agents);
         });
         const setNodesCall = mockSetNodes.mock.calls[0][0];
-        const newNodes = typeof setNodesCall === "function" ? setNodesCall([]) : setNodesCall;
+        const newNodes =
+          typeof setNodesCall === "function" ? setNodesCall([]) : setNodesCall;
         expect(newNodes[0].id).toMatch(/^agent-/);
         expect(newNodes[0].id).not.toMatch(/^Agent-/);
         expect(newNodes[0].id).not.toMatch(/^agent[^-]/);
@@ -2938,8 +3134,8 @@ describe("useMarketplaceIntegration", () => {
           }
           return updater;
         });
-        const { result } = renderHook(
-          () => useMarketplaceIntegration({
+        const { result } = renderHook(() =>
+          useMarketplaceIntegration({
             tabId: "tab-1",
             storage: null,
             setNodes: mockSetNodes,
@@ -2949,14 +3145,17 @@ describe("useMarketplaceIntegration", () => {
             localWorkflowDescription: "Test Description",
             tabIsUnsaved: false,
             tabDraftsRef: mockTabDraftsRef,
-            saveDraftsToStorage: mockSaveDraftsToStorage
-          })
+            saveDraftsToStorage: mockSaveDraftsToStorage,
+          }),
         );
         act(() => {
-          result.current.addAgentsToCanvas([{ id: "agent-1", name: null, label: null }]);
+          result.current.addAgentsToCanvas([
+            { id: "agent-1", name: null, label: null },
+          ]);
         });
         const setNodesCall = mockSetNodes.mock.calls[0][0];
-        const newNodes = typeof setNodesCall === "function" ? setNodesCall([]) : setNodesCall;
+        const newNodes =
+          typeof setNodesCall === "function" ? setNodesCall([]) : setNodesCall;
         expect(newNodes[0].data.label).toBe("Agent Node");
         expect(newNodes[0].data.label).not.toBe("agent node");
         expect(newNodes[0].data.label).not.toBe("AgentNode");
@@ -2971,8 +3170,8 @@ describe("useMarketplaceIntegration", () => {
           return updater;
         });
         const setTimeoutSpy = jest.spyOn(global, "setTimeout");
-        const { result } = renderHook(
-          () => useMarketplaceIntegration({
+        const { result } = renderHook(() =>
+          useMarketplaceIntegration({
             tabId: "tab-1",
             storage: null,
             setNodes: mockSetNodes,
@@ -2982,8 +3181,8 @@ describe("useMarketplaceIntegration", () => {
             localWorkflowDescription: "Test Description",
             tabIsUnsaved: false,
             tabDraftsRef: mockTabDraftsRef,
-            saveDraftsToStorage: mockSaveDraftsToStorage
-          })
+            saveDraftsToStorage: mockSaveDraftsToStorage,
+          }),
         );
         act(() => {
           result.current.addAgentsToCanvas([{ id: "agent-1", name: "Agent" }]);
@@ -2992,7 +3191,13 @@ describe("useMarketplaceIntegration", () => {
         const zeroDelayCalls = setTimeoutCalls.filter((call) => call[1] === 0);
         expect(zeroDelayCalls.length).toBeGreaterThan(0);
         expect(zeroDelayCalls.some((call) => call[1] === 0)).toBe(true);
-        expect(setTimeoutCalls.some((call) => call[1] === 1 && call[0].toString().includes("saveDraftsToStorage"))).toBe(false);
+        expect(
+          setTimeoutCalls.some(
+            (call) =>
+              call[1] === 1 &&
+              call[0].toString().includes("saveDraftsToStorage"),
+          ),
+        ).toBe(false);
         setTimeoutSpy.mockRestore();
       });
     });
@@ -3006,8 +3211,8 @@ describe("useMarketplaceIntegration", () => {
           }
           return updater;
         });
-        const { result } = renderHook(
-          () => useMarketplaceIntegration({
+        const { result } = renderHook(() =>
+          useMarketplaceIntegration({
             tabId: "tab-1",
             storage: null,
             setNodes: mockSetNodes,
@@ -3017,21 +3222,32 @@ describe("useMarketplaceIntegration", () => {
             localWorkflowDescription: "Test Description",
             tabIsUnsaved: false,
             tabDraftsRef: mockTabDraftsRef,
-            saveDraftsToStorage: mockSaveDraftsToStorage
-          })
+            saveDraftsToStorage: mockSaveDraftsToStorage,
+          }),
         );
         const agents = [{ id: "agent-1", name: "Agent" }];
         act(() => {
           result.current.addAgentsToCanvas(agents);
         });
         const setNodesCall = mockSetNodes.mock.calls[0][0];
-        const newNodes = typeof setNodesCall === "function" ? setNodesCall([]) : setNodesCall;
+        const newNodes =
+          typeof setNodesCall === "function" ? setNodesCall([]) : setNodesCall;
         expect(newNodes[0].position.x).toBe(250);
       });
       it("should verify exact boundary: currentNodes.length > 0", () => {
         const existingNodes = [
-          { id: "node-1", position: { x: 100, y: 100 }, type: "agent", data: {} },
-          { id: "node-2", position: { x: 300, y: 200 }, type: "agent", data: {} }
+          {
+            id: "node-1",
+            position: { x: 100, y: 100 },
+            type: "agent",
+            data: {},
+          },
+          {
+            id: "node-2",
+            position: { x: 300, y: 200 },
+            type: "agent",
+            data: {},
+          },
         ];
         mockSetNodes.mockImplementation((updater) => {
           if (typeof updater === "function") {
@@ -3039,8 +3255,8 @@ describe("useMarketplaceIntegration", () => {
           }
           return updater;
         });
-        const { result } = renderHook(
-          () => useMarketplaceIntegration({
+        const { result } = renderHook(() =>
+          useMarketplaceIntegration({
             tabId: "tab-1",
             storage: null,
             setNodes: mockSetNodes,
@@ -3050,15 +3266,18 @@ describe("useMarketplaceIntegration", () => {
             localWorkflowDescription: "Test Description",
             tabIsUnsaved: false,
             tabDraftsRef: mockTabDraftsRef,
-            saveDraftsToStorage: mockSaveDraftsToStorage
-          })
+            saveDraftsToStorage: mockSaveDraftsToStorage,
+          }),
         );
         const agents = [{ id: "agent-1", name: "Agent" }];
         act(() => {
           result.current.addAgentsToCanvas(agents);
         });
         const setNodesCall = mockSetNodes.mock.calls[0][0];
-        const newNodes = typeof setNodesCall === "function" ? setNodesCall(existingNodes) : setNodesCall;
+        const newNodes =
+          typeof setNodesCall === "function"
+            ? setNodesCall(existingNodes)
+            : setNodesCall;
         expect(newNodes[newNodes.length - 1].position.x).toBe(500);
       });
     });
@@ -3070,8 +3289,8 @@ describe("useMarketplaceIntegration", () => {
           }
           return updater;
         });
-        const { result } = renderHook(
-          () => useMarketplaceIntegration({
+        const { result } = renderHook(() =>
+          useMarketplaceIntegration({
             tabId: "tab-1",
             storage: null,
             setNodes: mockSetNodes,
@@ -3081,38 +3300,53 @@ describe("useMarketplaceIntegration", () => {
             localWorkflowDescription: "Test Description",
             tabIsUnsaved: false,
             tabDraftsRef: mockTabDraftsRef,
-            saveDraftsToStorage: mockSaveDraftsToStorage
-          })
+            saveDraftsToStorage: mockSaveDraftsToStorage,
+          }),
         );
         act(() => {
-          result.current.addAgentsToCanvas([{ id: "agent-1", name: "Name", label: "Label" }]);
+          result.current.addAgentsToCanvas([
+            { id: "agent-1", name: "Name", label: "Label" },
+          ]);
         });
         let setNodesCall = mockSetNodes.mock.calls[0][0];
-        let newNodes = typeof setNodesCall === "function" ? setNodesCall([]) : setNodesCall;
+        let newNodes =
+          typeof setNodesCall === "function" ? setNodesCall([]) : setNodesCall;
         expect(newNodes[0].data.name).toBe("Name");
         act(() => {
-          result.current.addAgentsToCanvas([{ id: "agent-2", name: "Name", label: null }]);
+          result.current.addAgentsToCanvas([
+            { id: "agent-2", name: "Name", label: null },
+          ]);
         });
         setNodesCall = mockSetNodes.mock.calls[1][0];
-        newNodes = typeof setNodesCall === "function" ? setNodesCall([]) : setNodesCall;
+        newNodes =
+          typeof setNodesCall === "function" ? setNodesCall([]) : setNodesCall;
         expect(newNodes[0].data.name).toBe("Name");
         act(() => {
-          result.current.addAgentsToCanvas([{ id: "agent-3", name: null, label: "Label" }]);
+          result.current.addAgentsToCanvas([
+            { id: "agent-3", name: null, label: "Label" },
+          ]);
         });
         setNodesCall = mockSetNodes.mock.calls[2][0];
-        newNodes = typeof setNodesCall === "function" ? setNodesCall([]) : setNodesCall;
+        newNodes =
+          typeof setNodesCall === "function" ? setNodesCall([]) : setNodesCall;
         expect(newNodes[0].data.name).toBe("Label");
         act(() => {
-          result.current.addAgentsToCanvas([{ id: "agent-4", name: null, label: null }]);
+          result.current.addAgentsToCanvas([
+            { id: "agent-4", name: null, label: null },
+          ]);
         });
         setNodesCall = mockSetNodes.mock.calls[3][0];
-        newNodes = typeof setNodesCall === "function" ? setNodesCall([]) : setNodesCall;
+        newNodes =
+          typeof setNodesCall === "function" ? setNodesCall([]) : setNodesCall;
         expect(newNodes[0].data.name).toBe("Agent Node");
         act(() => {
-          result.current.addAgentsToCanvas([{ id: "agent-5", name: void 0, label: void 0 }]);
+          result.current.addAgentsToCanvas([
+            { id: "agent-5", name: void 0, label: void 0 },
+          ]);
         });
         setNodesCall = mockSetNodes.mock.calls[4][0];
-        newNodes = typeof setNodesCall === "function" ? setNodesCall([]) : setNodesCall;
+        newNodes =
+          typeof setNodesCall === "function" ? setNodesCall([]) : setNodesCall;
         expect(newNodes[0].data.name).toBe("Agent Node");
       });
       it('should verify exact logical OR: agent.description || ""', () => {
@@ -3122,8 +3356,8 @@ describe("useMarketplaceIntegration", () => {
           }
           return updater;
         });
-        const { result } = renderHook(
-          () => useMarketplaceIntegration({
+        const { result } = renderHook(() =>
+          useMarketplaceIntegration({
             tabId: "tab-1",
             storage: null,
             setNodes: mockSetNodes,
@@ -3133,26 +3367,35 @@ describe("useMarketplaceIntegration", () => {
             localWorkflowDescription: "Test Description",
             tabIsUnsaved: false,
             tabDraftsRef: mockTabDraftsRef,
-            saveDraftsToStorage: mockSaveDraftsToStorage
-          })
+            saveDraftsToStorage: mockSaveDraftsToStorage,
+          }),
         );
         act(() => {
-          result.current.addAgentsToCanvas([{ id: "agent-1", name: "Agent", description: null }]);
+          result.current.addAgentsToCanvas([
+            { id: "agent-1", name: "Agent", description: null },
+          ]);
         });
         let setNodesCall = mockSetNodes.mock.calls[0][0];
-        let newNodes = typeof setNodesCall === "function" ? setNodesCall([]) : setNodesCall;
+        let newNodes =
+          typeof setNodesCall === "function" ? setNodesCall([]) : setNodesCall;
         expect(newNodes[0].data.description).toBe("");
         act(() => {
-          result.current.addAgentsToCanvas([{ id: "agent-2", name: "Agent", description: void 0 }]);
+          result.current.addAgentsToCanvas([
+            { id: "agent-2", name: "Agent", description: void 0 },
+          ]);
         });
         setNodesCall = mockSetNodes.mock.calls[1][0];
-        newNodes = typeof setNodesCall === "function" ? setNodesCall([]) : setNodesCall;
+        newNodes =
+          typeof setNodesCall === "function" ? setNodesCall([]) : setNodesCall;
         expect(newNodes[0].data.description).toBe("");
         act(() => {
-          result.current.addAgentsToCanvas([{ id: "agent-3", name: "Agent", description: "" }]);
+          result.current.addAgentsToCanvas([
+            { id: "agent-3", name: "Agent", description: "" },
+          ]);
         });
         setNodesCall = mockSetNodes.mock.calls[2][0];
-        newNodes = typeof setNodesCall === "function" ? setNodesCall([]) : setNodesCall;
+        newNodes =
+          typeof setNodesCall === "function" ? setNodesCall([]) : setNodesCall;
         expect(newNodes[0].data.description).toBe("");
       });
       it("should verify exact logical OR: agent.agent_config || {}", () => {
@@ -3162,8 +3405,8 @@ describe("useMarketplaceIntegration", () => {
           }
           return updater;
         });
-        const { result } = renderHook(
-          () => useMarketplaceIntegration({
+        const { result } = renderHook(() =>
+          useMarketplaceIntegration({
             tabId: "tab-1",
             storage: null,
             setNodes: mockSetNodes,
@@ -3173,20 +3416,26 @@ describe("useMarketplaceIntegration", () => {
             localWorkflowDescription: "Test Description",
             tabIsUnsaved: false,
             tabDraftsRef: mockTabDraftsRef,
-            saveDraftsToStorage: mockSaveDraftsToStorage
-          })
+            saveDraftsToStorage: mockSaveDraftsToStorage,
+          }),
         );
         act(() => {
-          result.current.addAgentsToCanvas([{ id: "agent-1", name: "Agent", agent_config: null }]);
+          result.current.addAgentsToCanvas([
+            { id: "agent-1", name: "Agent", agent_config: null },
+          ]);
         });
         let setNodesCall = mockSetNodes.mock.calls[0][0];
-        let newNodes = typeof setNodesCall === "function" ? setNodesCall([]) : setNodesCall;
+        let newNodes =
+          typeof setNodesCall === "function" ? setNodesCall([]) : setNodesCall;
         expect(newNodes[0].data.agent_config).toEqual({});
         act(() => {
-          result.current.addAgentsToCanvas([{ id: "agent-2", name: "Agent", agent_config: void 0 }]);
+          result.current.addAgentsToCanvas([
+            { id: "agent-2", name: "Agent", agent_config: void 0 },
+          ]);
         });
         setNodesCall = mockSetNodes.mock.calls[1][0];
-        newNodes = typeof setNodesCall === "function" ? setNodesCall([]) : setNodesCall;
+        newNodes =
+          typeof setNodesCall === "function" ? setNodesCall([]) : setNodesCall;
         expect(newNodes[0].data.agent_config).toEqual({});
       });
       it("should verify exact optional chaining: currentDraft?.edges || []", () => {
@@ -3197,8 +3446,8 @@ describe("useMarketplaceIntegration", () => {
           return updater;
         });
         const tabDraftsRefNull = { current: { "tab-1": null } };
-        const { result: result1 } = renderHook(
-          () => useMarketplaceIntegration({
+        const { result: result1 } = renderHook(() =>
+          useMarketplaceIntegration({
             tabId: "tab-1",
             storage: null,
             setNodes: mockSetNodes,
@@ -3208,8 +3457,8 @@ describe("useMarketplaceIntegration", () => {
             localWorkflowDescription: "Test Description",
             tabIsUnsaved: false,
             tabDraftsRef: tabDraftsRefNull,
-            saveDraftsToStorage: mockSaveDraftsToStorage
-          })
+            saveDraftsToStorage: mockSaveDraftsToStorage,
+          }),
         );
         act(() => {
           result1.current.addAgentsToCanvas([{ id: "agent-1", name: "Agent" }]);
@@ -3221,8 +3470,8 @@ describe("useMarketplaceIntegration", () => {
         const savedDraft = tabDraftsRefNull.current["tab-1"];
         expect(savedDraft.edges).toEqual([]);
         const tabDraftsRefUndefined = { current: { "tab-1": void 0 } };
-        const { result: result2 } = renderHook(
-          () => useMarketplaceIntegration({
+        const { result: result2 } = renderHook(() =>
+          useMarketplaceIntegration({
             tabId: "tab-1",
             storage: null,
             setNodes: mockSetNodes,
@@ -3232,8 +3481,8 @@ describe("useMarketplaceIntegration", () => {
             localWorkflowDescription: "Test Description",
             tabIsUnsaved: false,
             tabDraftsRef: tabDraftsRefUndefined,
-            saveDraftsToStorage: mockSaveDraftsToStorage
-          })
+            saveDraftsToStorage: mockSaveDraftsToStorage,
+          }),
         );
         act(() => {
           result2.current.addAgentsToCanvas([{ id: "agent-2", name: "Agent" }]);
@@ -3248,19 +3497,21 @@ describe("useMarketplaceIntegration", () => {
     describe("checkPendingAgents - exact comparison operators", () => {
       it("should verify exact comparison: pending.tabId === tabId && Date.now() - pending.timestamp < 10000 - both true", () => {
         const mockStorage = {
-          getItem: jest.fn().mockReturnValue(JSON.stringify({
-            tabId: "tab-1",
-            timestamp: Date.now() - 5e3,
-            // 5 seconds ago (< 10000)
-            agents: [{ id: "agent-1", name: "Agent" }]
-          })),
+          getItem: jest.fn().mockReturnValue(
+            JSON.stringify({
+              tabId: "tab-1",
+              timestamp: Date.now() - 5e3,
+              // 5 seconds ago (< 10000)
+              agents: [{ id: "agent-1", name: "Agent" }],
+            }),
+          ),
           removeItem: jest.fn(),
           setItem: jest.fn(),
           addEventListener: jest.fn(),
-          removeEventListener: jest.fn()
+          removeEventListener: jest.fn(),
         };
-        renderHook(
-          () => useMarketplaceIntegration({
+        renderHook(() =>
+          useMarketplaceIntegration({
             tabId: "tab-1",
             storage: mockStorage,
             setNodes: mockSetNodes,
@@ -3270,30 +3521,34 @@ describe("useMarketplaceIntegration", () => {
             localWorkflowDescription: "Test Description",
             tabIsUnsaved: false,
             tabDraftsRef: mockTabDraftsRef,
-            saveDraftsToStorage: mockSaveDraftsToStorage
-          })
+            saveDraftsToStorage: mockSaveDraftsToStorage,
+          }),
         );
         act(() => {
           jest.advanceTimersByTime(0);
         });
         expect(mockSetNodes).toHaveBeenCalled();
-        expect(mockStorage.removeItem).toHaveBeenCalledWith("pendingAgentsToAdd");
+        expect(mockStorage.removeItem).toHaveBeenCalledWith(
+          "pendingAgentsToAdd",
+        );
       });
       it("should verify exact comparison: pending.tabId === tabId && Date.now() - pending.timestamp < 10000 - first true, second false", () => {
         const mockStorage = {
-          getItem: jest.fn().mockReturnValue(JSON.stringify({
-            tabId: "tab-1",
-            timestamp: Date.now() - 15e3,
-            // 15 seconds ago (>= 10000)
-            agents: [{ id: "agent-1", name: "Agent" }]
-          })),
+          getItem: jest.fn().mockReturnValue(
+            JSON.stringify({
+              tabId: "tab-1",
+              timestamp: Date.now() - 15e3,
+              // 15 seconds ago (>= 10000)
+              agents: [{ id: "agent-1", name: "Agent" }],
+            }),
+          ),
           removeItem: jest.fn(),
           setItem: jest.fn(),
           addEventListener: jest.fn(),
-          removeEventListener: jest.fn()
+          removeEventListener: jest.fn(),
         };
-        renderHook(
-          () => useMarketplaceIntegration({
+        renderHook(() =>
+          useMarketplaceIntegration({
             tabId: "tab-1",
             storage: mockStorage,
             setNodes: mockSetNodes,
@@ -3303,30 +3558,34 @@ describe("useMarketplaceIntegration", () => {
             localWorkflowDescription: "Test Description",
             tabIsUnsaved: false,
             tabDraftsRef: mockTabDraftsRef,
-            saveDraftsToStorage: mockSaveDraftsToStorage
-          })
+            saveDraftsToStorage: mockSaveDraftsToStorage,
+          }),
         );
         act(() => {
           jest.advanceTimersByTime(0);
         });
-        expect(mockStorage.removeItem).toHaveBeenCalledWith("pendingAgentsToAdd");
+        expect(mockStorage.removeItem).toHaveBeenCalledWith(
+          "pendingAgentsToAdd",
+        );
         expect(mockSetNodes).not.toHaveBeenCalled();
       });
       it("should verify exact comparison: pending.tabId === tabId && Date.now() - pending.timestamp < 10000 - first false", () => {
         const mockStorage = {
-          getItem: jest.fn().mockReturnValue(JSON.stringify({
-            tabId: "tab-2",
-            // Different tab
-            timestamp: Date.now() - 5e3,
-            agents: [{ id: "agent-1", name: "Agent" }]
-          })),
+          getItem: jest.fn().mockReturnValue(
+            JSON.stringify({
+              tabId: "tab-2",
+              // Different tab
+              timestamp: Date.now() - 5e3,
+              agents: [{ id: "agent-1", name: "Agent" }],
+            }),
+          ),
           removeItem: jest.fn(),
           setItem: jest.fn(),
           addEventListener: jest.fn(),
-          removeEventListener: jest.fn()
+          removeEventListener: jest.fn(),
         };
-        renderHook(
-          () => useMarketplaceIntegration({
+        renderHook(() =>
+          useMarketplaceIntegration({
             tabId: "tab-1",
             storage: mockStorage,
             setNodes: mockSetNodes,
@@ -3336,30 +3595,34 @@ describe("useMarketplaceIntegration", () => {
             localWorkflowDescription: "Test Description",
             tabIsUnsaved: false,
             tabDraftsRef: mockTabDraftsRef,
-            saveDraftsToStorage: mockSaveDraftsToStorage
-          })
+            saveDraftsToStorage: mockSaveDraftsToStorage,
+          }),
         );
         act(() => {
           jest.advanceTimersByTime(0);
         });
-        expect(mockStorage.removeItem).toHaveBeenCalledWith("pendingAgentsToAdd");
+        expect(mockStorage.removeItem).toHaveBeenCalledWith(
+          "pendingAgentsToAdd",
+        );
         expect(mockSetNodes).not.toHaveBeenCalled();
       });
       it("should verify exact boundary: Date.now() - pending.timestamp === 10000", () => {
         const mockStorage = {
-          getItem: jest.fn().mockReturnValue(JSON.stringify({
-            tabId: "tab-1",
-            timestamp: Date.now() - 1e4,
-            // Exactly 10000ms ago
-            agents: [{ id: "agent-1", name: "Agent" }]
-          })),
+          getItem: jest.fn().mockReturnValue(
+            JSON.stringify({
+              tabId: "tab-1",
+              timestamp: Date.now() - 1e4,
+              // Exactly 10000ms ago
+              agents: [{ id: "agent-1", name: "Agent" }],
+            }),
+          ),
           removeItem: jest.fn(),
           setItem: jest.fn(),
           addEventListener: jest.fn(),
-          removeEventListener: jest.fn()
+          removeEventListener: jest.fn(),
         };
-        renderHook(
-          () => useMarketplaceIntegration({
+        renderHook(() =>
+          useMarketplaceIntegration({
             tabId: "tab-1",
             storage: mockStorage,
             setNodes: mockSetNodes,
@@ -3369,30 +3632,34 @@ describe("useMarketplaceIntegration", () => {
             localWorkflowDescription: "Test Description",
             tabIsUnsaved: false,
             tabDraftsRef: mockTabDraftsRef,
-            saveDraftsToStorage: mockSaveDraftsToStorage
-          })
+            saveDraftsToStorage: mockSaveDraftsToStorage,
+          }),
         );
         act(() => {
           jest.advanceTimersByTime(0);
         });
-        expect(mockStorage.removeItem).toHaveBeenCalledWith("pendingAgentsToAdd");
+        expect(mockStorage.removeItem).toHaveBeenCalledWith(
+          "pendingAgentsToAdd",
+        );
         expect(mockSetNodes).not.toHaveBeenCalled();
       });
       it("should verify exact boundary: Date.now() - pending.timestamp === 9999", () => {
         const mockStorage = {
-          getItem: jest.fn().mockReturnValue(JSON.stringify({
-            tabId: "tab-1",
-            timestamp: Date.now() - 9999,
-            // Exactly 9999ms ago (just under boundary)
-            agents: [{ id: "agent-1", name: "Agent" }]
-          })),
+          getItem: jest.fn().mockReturnValue(
+            JSON.stringify({
+              tabId: "tab-1",
+              timestamp: Date.now() - 9999,
+              // Exactly 9999ms ago (just under boundary)
+              agents: [{ id: "agent-1", name: "Agent" }],
+            }),
+          ),
           removeItem: jest.fn(),
           setItem: jest.fn(),
           addEventListener: jest.fn(),
-          removeEventListener: jest.fn()
+          removeEventListener: jest.fn(),
         };
-        renderHook(
-          () => useMarketplaceIntegration({
+        renderHook(() =>
+          useMarketplaceIntegration({
             tabId: "tab-1",
             storage: mockStorage,
             setNodes: mockSetNodes,
@@ -3402,32 +3669,36 @@ describe("useMarketplaceIntegration", () => {
             localWorkflowDescription: "Test Description",
             tabIsUnsaved: false,
             tabDraftsRef: mockTabDraftsRef,
-            saveDraftsToStorage: mockSaveDraftsToStorage
-          })
+            saveDraftsToStorage: mockSaveDraftsToStorage,
+          }),
         );
         act(() => {
           jest.advanceTimersByTime(0);
         });
         expect(mockSetNodes).toHaveBeenCalled();
-        expect(mockStorage.removeItem).toHaveBeenCalledWith("pendingAgentsToAdd");
+        expect(mockStorage.removeItem).toHaveBeenCalledWith(
+          "pendingAgentsToAdd",
+        );
       });
     });
     describe("checkPendingAgents - exact comparison: pending.tabId !== tabId", () => {
       it("should verify exact comparison: pending.tabId !== tabId - true", () => {
         const mockStorage = {
-          getItem: jest.fn().mockReturnValue(JSON.stringify({
-            tabId: "tab-2",
-            // Different tab
-            timestamp: Date.now() - 5e3,
-            agents: [{ id: "agent-1", name: "Agent" }]
-          })),
+          getItem: jest.fn().mockReturnValue(
+            JSON.stringify({
+              tabId: "tab-2",
+              // Different tab
+              timestamp: Date.now() - 5e3,
+              agents: [{ id: "agent-1", name: "Agent" }],
+            }),
+          ),
           removeItem: jest.fn(),
           setItem: jest.fn(),
           addEventListener: jest.fn(),
-          removeEventListener: jest.fn()
+          removeEventListener: jest.fn(),
         };
-        renderHook(
-          () => useMarketplaceIntegration({
+        renderHook(() =>
+          useMarketplaceIntegration({
             tabId: "tab-1",
             storage: mockStorage,
             setNodes: mockSetNodes,
@@ -3437,30 +3708,34 @@ describe("useMarketplaceIntegration", () => {
             localWorkflowDescription: "Test Description",
             tabIsUnsaved: false,
             tabDraftsRef: mockTabDraftsRef,
-            saveDraftsToStorage: mockSaveDraftsToStorage
-          })
+            saveDraftsToStorage: mockSaveDraftsToStorage,
+          }),
         );
         act(() => {
           jest.advanceTimersByTime(0);
         });
-        expect(mockStorage.removeItem).toHaveBeenCalledWith("pendingAgentsToAdd");
+        expect(mockStorage.removeItem).toHaveBeenCalledWith(
+          "pendingAgentsToAdd",
+        );
         expect(mockSetNodes).not.toHaveBeenCalled();
       });
       it("should verify exact comparison: pending.tabId !== tabId - false", () => {
         const mockStorage = {
-          getItem: jest.fn().mockReturnValue(JSON.stringify({
-            tabId: "tab-1",
-            // Same tab
-            timestamp: Date.now() - 5e3,
-            agents: [{ id: "agent-1", name: "Agent" }]
-          })),
+          getItem: jest.fn().mockReturnValue(
+            JSON.stringify({
+              tabId: "tab-1",
+              // Same tab
+              timestamp: Date.now() - 5e3,
+              agents: [{ id: "agent-1", name: "Agent" }],
+            }),
+          ),
           removeItem: jest.fn(),
           setItem: jest.fn(),
           addEventListener: jest.fn(),
-          removeEventListener: jest.fn()
+          removeEventListener: jest.fn(),
         };
-        renderHook(
-          () => useMarketplaceIntegration({
+        renderHook(() =>
+          useMarketplaceIntegration({
             tabId: "tab-1",
             storage: mockStorage,
             setNodes: mockSetNodes,
@@ -3470,8 +3745,8 @@ describe("useMarketplaceIntegration", () => {
             localWorkflowDescription: "Test Description",
             tabIsUnsaved: false,
             tabDraftsRef: mockTabDraftsRef,
-            saveDraftsToStorage: mockSaveDraftsToStorage
-          })
+            saveDraftsToStorage: mockSaveDraftsToStorage,
+          }),
         );
         act(() => {
           jest.advanceTimersByTime(0);
@@ -3486,10 +3761,10 @@ describe("useMarketplaceIntegration", () => {
           removeItem: jest.fn(),
           setItem: jest.fn(),
           addEventListener: jest.fn(),
-          removeEventListener: jest.fn()
+          removeEventListener: jest.fn(),
         };
-        renderHook(
-          () => useMarketplaceIntegration({
+        renderHook(() =>
+          useMarketplaceIntegration({
             tabId: "tab-1",
             storage: mockStorage,
             setNodes: mockSetNodes,
@@ -3499,8 +3774,8 @@ describe("useMarketplaceIntegration", () => {
             localWorkflowDescription: "Test Description",
             tabIsUnsaved: false,
             tabDraftsRef: mockTabDraftsRef,
-            saveDraftsToStorage: mockSaveDraftsToStorage
-          })
+            saveDraftsToStorage: mockSaveDraftsToStorage,
+          }),
         );
         for (let i = 0; i < 10; i++) {
           act(() => {

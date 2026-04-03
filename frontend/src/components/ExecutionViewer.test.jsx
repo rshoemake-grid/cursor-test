@@ -1,9 +1,10 @@
-import { jsx } from "react/jsx-runtime";
 import { render, screen, waitFor } from "@testing-library/react";
 const waitForWithTimeout = async (callback, timeout = 2e3) => {
   jest.useRealTimers();
   try {
-    return await waitFor(callback, { timeout });
+    return await waitFor(callback, {
+      timeout,
+    });
   } finally {
     jest.useFakeTimers();
   }
@@ -14,15 +15,15 @@ import { logger } from "../utils/logger";
 jest.mock("../hooks/workflow", () => ({
   useWorkflowAPI: jest.fn(),
   useWorkflowState: jest.fn(),
-  useWorkflowLoader: jest.fn()
+  useWorkflowLoader: jest.fn(),
 }));
 jest.mock("../utils/logger", () => ({
   logger: {
     debug: jest.fn(),
     error: jest.fn(),
     warn: jest.fn(),
-    info: jest.fn()
-  }
+    info: jest.fn(),
+  },
 }));
 const mockUseWorkflowAPI = useWorkflowAPI;
 describe("ExecutionViewer", () => {
@@ -38,7 +39,7 @@ describe("ExecutionViewer", () => {
       listWorkflows: jest.fn(),
       getWorkflow: jest.fn(),
       executeWorkflow: jest.fn(),
-      listExecutions: jest.fn()
+      listExecutions: jest.fn(),
     });
   });
   afterEach(() => {
@@ -46,9 +47,8 @@ describe("ExecutionViewer", () => {
     jest.useRealTimers();
   });
   it("should show loading state initially", () => {
-    mockGetExecution.mockImplementation(() => new Promise(() => {
-    }));
-    render(/* @__PURE__ */ jsx(ExecutionViewer, { executionId: "exec-1" }));
+    mockGetExecution.mockImplementation(() => new Promise(() => {}));
+    render(<ExecutionViewer executionId="exec-1" />);
     expect(screen.getByText("Loading execution...")).toBeInTheDocument();
   });
   it("should display execution when loaded", async () => {
@@ -58,18 +58,20 @@ describe("ExecutionViewer", () => {
       started_at: "2024-01-01T00:00:00Z",
       nodes: {},
       node_states: {},
-      logs: []
+      logs: [],
     };
     mockGetExecution.mockResolvedValue(mockExecution);
-    render(/* @__PURE__ */ jsx(ExecutionViewer, { executionId: "exec-1" }));
+    render(<ExecutionViewer executionId="exec-1" />);
     await waitForWithTimeout(() => {
-      expect(screen.queryByText("Loading execution...")).not.toBeInTheDocument();
+      expect(
+        screen.queryByText("Loading execution..."),
+      ).not.toBeInTheDocument();
     }, 3e3);
     expect(mockGetExecution).toHaveBeenCalledWith("exec-1");
   });
   it("should show error message when execution not found", async () => {
     mockGetExecution.mockRejectedValue(new Error("Not found"));
-    render(/* @__PURE__ */ jsx(ExecutionViewer, { executionId: "exec-1" }));
+    render(<ExecutionViewer executionId="exec-1" />);
     await waitForWithTimeout(() => {
       expect(screen.getByText("Execution not found")).toBeInTheDocument();
     });
@@ -82,10 +84,10 @@ describe("ExecutionViewer", () => {
       started_at: "2024-01-01T00:00:00Z",
       nodes: {},
       node_states: {},
-      logs: []
+      logs: [],
     };
     mockGetExecution.mockResolvedValue(mockExecution);
-    render(/* @__PURE__ */ jsx(ExecutionViewer, { executionId: "exec-1" }));
+    render(<ExecutionViewer executionId="exec-1" />);
     await waitForWithTimeout(() => {
       expect(mockGetExecution).toHaveBeenCalledTimes(1);
     }, 3e3);
@@ -102,7 +104,7 @@ describe("ExecutionViewer", () => {
       started_at: "2024-01-01T00:00:00Z",
       nodes: {},
       node_states: {},
-      logs: []
+      logs: [],
     };
     const completedExecution = {
       id: "exec-1",
@@ -110,10 +112,12 @@ describe("ExecutionViewer", () => {
       started_at: "2024-01-01T00:00:00Z",
       nodes: {},
       node_states: {},
-      logs: []
+      logs: [],
     };
-    mockGetExecution.mockResolvedValueOnce(runningExecution).mockResolvedValue(completedExecution);
-    render(/* @__PURE__ */ jsx(ExecutionViewer, { executionId: "exec-1" }));
+    mockGetExecution
+      .mockResolvedValueOnce(runningExecution)
+      .mockResolvedValue(completedExecution);
+    render(<ExecutionViewer executionId="exec-1" />);
     await waitForWithTimeout(() => {
       expect(mockGetExecution).toHaveBeenCalledTimes(1);
     }, 3e3);
@@ -139,12 +143,14 @@ describe("ExecutionViewer", () => {
       started_at: "2024-01-01T00:00:00Z",
       nodes: {},
       node_states: {},
-      logs: []
+      logs: [],
     };
     mockGetExecution.mockResolvedValue(mockExecution);
-    render(/* @__PURE__ */ jsx(ExecutionViewer, { executionId: "exec-1" }));
+    render(<ExecutionViewer executionId="exec-1" />);
     await waitForWithTimeout(() => {
-      expect(screen.queryByText("Loading execution...")).not.toBeInTheDocument();
+      expect(
+        screen.queryByText("Loading execution..."),
+      ).not.toBeInTheDocument();
     }, 3e3);
     expect(mockGetExecution).toHaveBeenCalledWith("exec-1");
   });
@@ -158,12 +164,14 @@ describe("ExecutionViewer", () => {
       error: "Execution failed with error",
       nodes: {},
       node_states: {},
-      logs: []
+      logs: [],
     };
     mockGetExecution.mockResolvedValue(mockExecution);
-    render(/* @__PURE__ */ jsx(ExecutionViewer, { executionId: "exec-1" }));
+    render(<ExecutionViewer executionId="exec-1" />);
     await waitForWithTimeout(() => {
-      expect(screen.getByText(/Execution failed with error/)).toBeInTheDocument();
+      expect(
+        screen.getByText(/Execution failed with error/),
+      ).toBeInTheDocument();
     });
   });
   it("should display node states", async () => {
@@ -178,13 +186,13 @@ describe("ExecutionViewer", () => {
         "node-1": {
           node_id: "node-1",
           status: "completed",
-          output: "Result"
-        }
+          output: "Result",
+        },
       },
-      logs: []
+      logs: [],
     };
     mockGetExecution.mockResolvedValue(mockExecution);
-    render(/* @__PURE__ */ jsx(ExecutionViewer, { executionId: "exec-1" }));
+    render(<ExecutionViewer executionId="exec-1" />);
     await waitForWithTimeout(() => {
       expect(screen.getByText(/node-1/)).toBeInTheDocument();
     });
@@ -203,12 +211,12 @@ describe("ExecutionViewer", () => {
           timestamp: "2024-01-01T00:00:00Z",
           level: "INFO",
           message: "Log message",
-          node_id: "node-1"
-        }
-      ]
+          node_id: "node-1",
+        },
+      ],
     };
     mockGetExecution.mockResolvedValue(mockExecution);
-    render(/* @__PURE__ */ jsx(ExecutionViewer, { executionId: "exec-1" }));
+    render(<ExecutionViewer executionId="exec-1" />);
     await waitForWithTimeout(() => {
       expect(screen.getByText(/Log message/)).toBeInTheDocument();
     });
@@ -222,10 +230,10 @@ describe("ExecutionViewer", () => {
       started_at: "2024-01-01T00:00:00Z",
       nodes: {},
       node_states: {},
-      logs: []
+      logs: [],
     };
     mockGetExecution.mockResolvedValue(mockExecution);
-    render(/* @__PURE__ */ jsx(ExecutionViewer, { executionId: "exec-1" }));
+    render(<ExecutionViewer executionId="exec-1" />);
     await waitForWithTimeout(() => {
       expect(mockGetExecution).toHaveBeenCalled();
     });
@@ -244,17 +252,21 @@ describe("ExecutionViewer", () => {
       started_at: "2024-01-01T00:00:00Z",
       nodes: {},
       node_states: {},
-      logs: []
+      logs: [],
     };
     mockGetExecution.mockResolvedValue(mockExecution);
-    render(/* @__PURE__ */ jsx(ExecutionViewer, { executionId: "exec-1" }));
+    render(<ExecutionViewer executionId="exec-1" />);
     await waitForWithTimeout(() => {
-      expect(screen.queryByText("Loading execution...")).not.toBeInTheDocument();
+      expect(
+        screen.queryByText("Loading execution..."),
+      ).not.toBeInTheDocument();
     });
     const callCount = mockGetExecution.mock.calls.length;
     jest.advanceTimersByTime(2e3);
     await Promise.resolve();
-    expect(mockGetExecution.mock.calls.length).toBeLessThanOrEqual(callCount + 1);
+    expect(mockGetExecution.mock.calls.length).toBeLessThanOrEqual(
+      callCount + 1,
+    );
   });
   it("should handle executionId change", async () => {
     const mockExecution1 = {
@@ -265,7 +277,7 @@ describe("ExecutionViewer", () => {
       started_at: "2024-01-01T00:00:00Z",
       nodes: {},
       node_states: {},
-      logs: []
+      logs: [],
     };
     const mockExecution2 = {
       id: "exec-2",
@@ -275,14 +287,16 @@ describe("ExecutionViewer", () => {
       started_at: "2024-01-01T00:00:00Z",
       nodes: {},
       node_states: {},
-      logs: []
+      logs: [],
     };
-    mockGetExecution.mockResolvedValueOnce(mockExecution1).mockResolvedValue(mockExecution2);
-    const { rerender } = render(/* @__PURE__ */ jsx(ExecutionViewer, { executionId: "exec-1" }));
+    mockGetExecution
+      .mockResolvedValueOnce(mockExecution1)
+      .mockResolvedValue(mockExecution2);
+    const { rerender } = render(<ExecutionViewer executionId="exec-1" />);
     await waitForWithTimeout(() => {
       expect(mockGetExecution).toHaveBeenCalledWith("exec-1");
     });
-    rerender(/* @__PURE__ */ jsx(ExecutionViewer, { executionId: "exec-2" }));
+    rerender(<ExecutionViewer executionId="exec-2" />);
     await waitForWithTimeout(() => {
       expect(mockGetExecution).toHaveBeenCalledWith("exec-2");
     });
@@ -298,12 +312,14 @@ describe("ExecutionViewer", () => {
         started_at: "2024-01-01T00:00:00Z",
         nodes: {},
         node_states: {},
-        logs: []
+        logs: [],
       };
       mockGetExecution.mockResolvedValue(mockExecution);
-      const { unmount } = render(/* @__PURE__ */ jsx(ExecutionViewer, { executionId: "exec-1" }));
+      const { unmount } = render(<ExecutionViewer executionId="exec-1" />);
       await waitForWithTimeout(() => {
-        expect(screen.queryByText("Loading execution...")).not.toBeInTheDocument();
+        expect(
+          screen.queryByText("Loading execution..."),
+        ).not.toBeInTheDocument();
       });
       expect(mockGetExecution).toHaveBeenCalledWith("exec-1");
       unmount();
@@ -319,10 +335,14 @@ describe("ExecutionViewer", () => {
       started_at: "2024-01-01T00:00:00Z",
       nodes: {},
       node_states: {},
-      logs: []
+      logs: [],
     };
-    mockGetExecution.mockResolvedValueOnce(mockExecution).mockRejectedValueOnce(new Error("Network error")).mockResolvedValueOnce(mockExecution).mockResolvedValue(mockExecution);
-    render(/* @__PURE__ */ jsx(ExecutionViewer, { executionId: "exec-1" }));
+    mockGetExecution
+      .mockResolvedValueOnce(mockExecution)
+      .mockRejectedValueOnce(new Error("Network error"))
+      .mockResolvedValueOnce(mockExecution)
+      .mockResolvedValue(mockExecution);
+    render(<ExecutionViewer executionId="exec-1" />);
     await waitForWithTimeout(() => {
       expect(mockGetExecution).toHaveBeenCalledTimes(1);
     });
@@ -350,12 +370,14 @@ describe("ExecutionViewer", () => {
       started_at: "2024-01-01T00:00:00Z",
       nodes: {},
       node_states: {},
-      logs: []
+      logs: [],
     };
     mockGetExecution.mockResolvedValue(mockExecution);
-    render(/* @__PURE__ */ jsx(ExecutionViewer, { executionId: "exec-1" }));
+    render(<ExecutionViewer executionId="exec-1" />);
     await waitForWithTimeout(() => {
-      expect(screen.queryByText("Loading execution...")).not.toBeInTheDocument();
+      expect(
+        screen.queryByText("Loading execution..."),
+      ).not.toBeInTheDocument();
     });
     await waitForWithTimeout(() => {
       expect(screen.getByText(/Workflow Running/)).toBeInTheDocument();
@@ -370,12 +392,14 @@ describe("ExecutionViewer", () => {
       started_at: "2024-01-01T00:00:00Z",
       nodes: {},
       node_states: {},
-      logs: []
+      logs: [],
     };
     mockGetExecution.mockResolvedValue(mockExecution);
-    render(/* @__PURE__ */ jsx(ExecutionViewer, { executionId: "exec-1" }));
+    render(<ExecutionViewer executionId="exec-1" />);
     await waitForWithTimeout(() => {
-      expect(screen.queryByText("Loading execution...")).not.toBeInTheDocument();
+      expect(
+        screen.queryByText("Loading execution..."),
+      ).not.toBeInTheDocument();
     });
     expect(screen.queryByText(/Workflow Running/)).not.toBeInTheDocument();
   });
@@ -389,12 +413,14 @@ describe("ExecutionViewer", () => {
       completed_at: "2024-01-01T00:05:00Z",
       nodes: {},
       node_states: {},
-      logs: []
+      logs: [],
     };
     mockGetExecution.mockResolvedValue(mockExecution);
-    render(/* @__PURE__ */ jsx(ExecutionViewer, { executionId: "exec-1" }));
+    render(<ExecutionViewer executionId="exec-1" />);
     await waitForWithTimeout(() => {
-      expect(screen.queryByText("Loading execution...")).not.toBeInTheDocument();
+      expect(
+        screen.queryByText("Loading execution..."),
+      ).not.toBeInTheDocument();
     });
     expect(screen.getByText(/Completed:/)).toBeInTheDocument();
   });
@@ -408,10 +434,10 @@ describe("ExecutionViewer", () => {
       nodes: {},
       node_states: {},
       logs: [],
-      result: "Final result text"
+      result: "Final result text",
     };
     mockGetExecution.mockResolvedValue(mockExecution);
-    render(/* @__PURE__ */ jsx(ExecutionViewer, { executionId: "exec-1" }));
+    render(<ExecutionViewer executionId="exec-1" />);
     await waitForWithTimeout(() => {
       expect(screen.getByText(/Final Result/)).toBeInTheDocument();
       expect(screen.getByText("Final result text")).toBeInTheDocument();
@@ -427,10 +453,15 @@ describe("ExecutionViewer", () => {
       nodes: {},
       node_states: {},
       logs: [],
-      result: { key: "value", nested: { data: 123 } }
+      result: {
+        key: "value",
+        nested: {
+          data: 123,
+        },
+      },
     };
     mockGetExecution.mockResolvedValue(mockExecution);
-    render(/* @__PURE__ */ jsx(ExecutionViewer, { executionId: "exec-1" }));
+    render(<ExecutionViewer executionId="exec-1" />);
     await waitForWithTimeout(() => {
       expect(screen.getByText(/Final Result/)).toBeInTheDocument();
       expect(screen.getByText(/"key"/)).toBeInTheDocument();
@@ -448,13 +479,13 @@ describe("ExecutionViewer", () => {
         "node-1": {
           node_id: "node-1",
           status: "completed",
-          output: "String output"
-        }
+          output: "String output",
+        },
       },
-      logs: []
+      logs: [],
     };
     mockGetExecution.mockResolvedValue(mockExecution);
-    render(/* @__PURE__ */ jsx(ExecutionViewer, { executionId: "exec-1" }));
+    render(<ExecutionViewer executionId="exec-1" />);
     await waitForWithTimeout(() => {
       expect(screen.getByText("String output")).toBeInTheDocument();
     });
@@ -471,13 +502,16 @@ describe("ExecutionViewer", () => {
         "node-1": {
           node_id: "node-1",
           status: "completed",
-          output: { result: "data", value: 42 }
-        }
+          output: {
+            result: "data",
+            value: 42,
+          },
+        },
       },
-      logs: []
+      logs: [],
     };
     mockGetExecution.mockResolvedValue(mockExecution);
-    render(/* @__PURE__ */ jsx(ExecutionViewer, { executionId: "exec-1" }));
+    render(<ExecutionViewer executionId="exec-1" />);
     await waitForWithTimeout(() => {
       expect(screen.getByText(/"result"/)).toBeInTheDocument();
     });
@@ -494,13 +528,15 @@ describe("ExecutionViewer", () => {
         "node-1": {
           node_id: "node-1",
           status: "completed",
-          input: { param: "value" }
-        }
+          input: {
+            param: "value",
+          },
+        },
       },
-      logs: []
+      logs: [],
     };
     mockGetExecution.mockResolvedValue(mockExecution);
-    render(/* @__PURE__ */ jsx(ExecutionViewer, { executionId: "exec-1" }));
+    render(<ExecutionViewer executionId="exec-1" />);
     await waitForWithTimeout(() => {
       expect(screen.getByText(/Input:/)).toBeInTheDocument();
       expect(screen.getByText(/"param"/)).toBeInTheDocument();
@@ -518,13 +554,13 @@ describe("ExecutionViewer", () => {
         "node-1": {
           node_id: "node-1",
           status: "failed",
-          error: "Node execution failed"
-        }
+          error: "Node execution failed",
+        },
       },
-      logs: []
+      logs: [],
     };
     mockGetExecution.mockResolvedValue(mockExecution);
-    render(/* @__PURE__ */ jsx(ExecutionViewer, { executionId: "exec-1" }));
+    render(<ExecutionViewer executionId="exec-1" />);
     await waitForWithTimeout(() => {
       expect(screen.getByText(/Error:/)).toBeInTheDocument();
       expect(screen.getByText("Node execution failed")).toBeInTheDocument();
@@ -540,13 +576,28 @@ describe("ExecutionViewer", () => {
       nodes: {},
       node_states: {},
       logs: [
-        { timestamp: "2024-01-01T00:00:00Z", level: "INFO", message: "Info log", node_id: "node-1" },
-        { timestamp: "2024-01-01T00:00:01Z", level: "WARNING", message: "Warning log", node_id: "node-1" },
-        { timestamp: "2024-01-01T00:00:02Z", level: "ERROR", message: "Error log", node_id: "node-1" }
-      ]
+        {
+          timestamp: "2024-01-01T00:00:00Z",
+          level: "INFO",
+          message: "Info log",
+          node_id: "node-1",
+        },
+        {
+          timestamp: "2024-01-01T00:00:01Z",
+          level: "WARNING",
+          message: "Warning log",
+          node_id: "node-1",
+        },
+        {
+          timestamp: "2024-01-01T00:00:02Z",
+          level: "ERROR",
+          message: "Error log",
+          node_id: "node-1",
+        },
+      ],
     };
     mockGetExecution.mockResolvedValue(mockExecution);
-    render(/* @__PURE__ */ jsx(ExecutionViewer, { executionId: "exec-1" }));
+    render(<ExecutionViewer executionId="exec-1" />);
     await waitForWithTimeout(() => {
       expect(screen.getByText("Info log")).toBeInTheDocument();
       expect(screen.getByText("Warning log")).toBeInTheDocument();
@@ -562,14 +613,23 @@ describe("ExecutionViewer", () => {
       started_at: "2024-01-01T00:00:00Z",
       nodes: {},
       node_states: {
-        "node-1": { node_id: "node-1", status: "completed" },
-        "node-2": { node_id: "node-2", status: "running" },
-        "node-3": { node_id: "node-3", status: "pending" }
+        "node-1": {
+          node_id: "node-1",
+          status: "completed",
+        },
+        "node-2": {
+          node_id: "node-2",
+          status: "running",
+        },
+        "node-3": {
+          node_id: "node-3",
+          status: "pending",
+        },
       },
-      logs: []
+      logs: [],
     };
     mockGetExecution.mockResolvedValue(mockExecution);
-    render(/* @__PURE__ */ jsx(ExecutionViewer, { executionId: "exec-1" }));
+    render(<ExecutionViewer executionId="exec-1" />);
     await waitForWithTimeout(() => {
       expect(screen.getByText(/1 \/ 3 nodes completed/)).toBeInTheDocument();
     });
@@ -583,13 +643,19 @@ describe("ExecutionViewer", () => {
       started_at: "2024-01-01T00:00:00Z",
       nodes: {},
       node_states: {
-        "node-1": { node_id: "node-1", status: "completed" },
-        "node-2": { node_id: "node-2", status: "running" }
+        "node-1": {
+          node_id: "node-1",
+          status: "completed",
+        },
+        "node-2": {
+          node_id: "node-2",
+          status: "running",
+        },
       },
-      logs: []
+      logs: [],
     };
     mockGetExecution.mockResolvedValue(mockExecution);
-    render(/* @__PURE__ */ jsx(ExecutionViewer, { executionId: "exec-1" }));
+    render(<ExecutionViewer executionId="exec-1" />);
     await waitForWithTimeout(() => {
       const progressBar = document.querySelector(".bg-blue-600");
       expect(progressBar).toBeInTheDocument();

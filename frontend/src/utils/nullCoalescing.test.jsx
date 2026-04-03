@@ -7,7 +7,7 @@ import {
   coalesceChainWithDefault,
   coalesceObjectChain,
   coalesceArrayChain,
-  coalesceStringChain
+  coalesceStringChain,
 } from "./nullCoalescing";
 describe("nullCoalescing utilities", () => {
   describe("coalesce", () => {
@@ -102,7 +102,9 @@ describe("nullCoalescing utilities", () => {
   });
   describe("coalesceChainWithDefault", () => {
     it("should return first non-null value", () => {
-      expect(coalesceChainWithDefault("default", null, void 0, "test")).toBe("test");
+      expect(coalesceChainWithDefault("default", null, void 0, "test")).toBe(
+        "test",
+      );
     });
     it("should return default when all values are null/undefined", () => {
       expect(coalesceChainWithDefault("default", null, void 0)).toBe("default");
@@ -130,7 +132,9 @@ describe("nullCoalescing utilities", () => {
   });
   describe("coalesceStringChain", () => {
     it("should return first non-empty string", () => {
-      expect(coalesceStringChain("default", null, void 0, "", "test")).toBe("test");
+      expect(coalesceStringChain("default", null, void 0, "", "test")).toBe(
+        "test",
+      );
     });
     it("should return default when all values are empty/null/undefined", () => {
       expect(coalesceStringChain("default", null, void 0, "")).toBe("default");

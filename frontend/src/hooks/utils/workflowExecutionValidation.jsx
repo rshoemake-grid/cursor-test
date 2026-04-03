@@ -18,5 +18,5 @@ export {
   hasWorkflowId,
   isConfirmed,
   isUserAuthenticated,
-  isWorkflowSaved
+  isWorkflowSaved,
 };

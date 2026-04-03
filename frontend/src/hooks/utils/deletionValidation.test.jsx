@@ -5,21 +5,21 @@ import {
   ownsAllItems,
   ownsPartialItems,
   hasItemsWithAuthorId,
-  getItemsWithAuthorIdCount
+  getItemsWithAuthorIdCount,
 } from "./deletionValidation";
 describe("deletionValidation", () => {
   describe("hasOfficialItems", () => {
     it("should return true when items have official items", () => {
       const items = [
         { id: "1", is_official: true },
-        { id: "2", is_official: false }
+        { id: "2", is_official: false },
       ];
       expect(hasOfficialItems(items)).toBe(true);
     });
     it("should return false when no official items", () => {
       const items = [
         { id: "1", is_official: false },
-        { id: "2", is_official: false }
+        { id: "2", is_official: false },
       ];
       expect(hasOfficialItems(items)).toBe(false);
     });
@@ -73,21 +73,19 @@ describe("deletionValidation", () => {
     it("should return true when items have author_id", () => {
       const items = [
         { id: "1", author_id: "user-1" },
-        { id: "2", author_id: null }
+        { id: "2", author_id: null },
       ];
       expect(hasItemsWithAuthorId(items)).toBe(true);
     });
     it("should return false when no items have author_id", () => {
       const items = [
         { id: "1", author_id: null },
-        { id: "2", author_id: null }
+        { id: "2", author_id: null },
       ];
       expect(hasItemsWithAuthorId(items)).toBe(false);
     });
     it("should return false when author_id is empty string", () => {
-      const items = [
-        { id: "1", author_id: "" }
-      ];
+      const items = [{ id: "1", author_id: "" }];
       expect(hasItemsWithAuthorId(items)).toBe(false);
     });
     it("should return false when empty array", () => {
@@ -99,14 +97,12 @@ describe("deletionValidation", () => {
       const items = [
         { id: "1", author_id: "user-1" },
         { id: "2", author_id: "user-2" },
-        { id: "3", author_id: null }
+        { id: "3", author_id: null },
       ];
       expect(getItemsWithAuthorIdCount(items)).toBe(2);
     });
     it("should return 0 when no items have author_id", () => {
-      const items = [
-        { id: "1", author_id: null }
-      ];
+      const items = [{ id: "1", author_id: null }];
       expect(getItemsWithAuthorIdCount(items)).toBe(0);
     });
   });

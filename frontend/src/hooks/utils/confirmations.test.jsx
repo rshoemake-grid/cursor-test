@@ -1,11 +1,11 @@
 import {
   confirmUnsavedChanges,
   confirmDelete,
-  confirmAction
+  confirmAction,
 } from "./confirmations";
 import { showConfirm } from "../../utils/confirm";
 jest.mock("../../utils/confirm", () => ({
-  showConfirm: jest.fn()
+  showConfirm: jest.fn(),
 }));
 const mockShowConfirm = showConfirm;
 describe("confirmations", () => {
@@ -23,8 +23,8 @@ describe("confirmations", () => {
           title: "Unsaved Changes",
           confirmText: "Close",
           cancelText: "Cancel",
-          type: "warning"
-        }
+          type: "warning",
+        },
       );
       expect(onConfirm).toHaveBeenCalled();
     });
@@ -53,8 +53,8 @@ describe("confirmations", () => {
           title: "Delete",
           confirmText: "Delete",
           cancelText: "Cancel",
-          type: "danger"
-        }
+          type: "danger",
+        },
       );
       expect(onConfirm).toHaveBeenCalled();
     });
@@ -70,7 +70,7 @@ describe("confirmations", () => {
       await confirmDelete("Test Item", onConfirm, {
         title: "Custom Title",
         confirmText: "Yes",
-        cancelText: "No"
+        cancelText: "No",
       });
       expect(mockShowConfirm).toHaveBeenCalledWith(
         'Are you sure you want to delete "Test Item"?',
@@ -78,8 +78,8 @@ describe("confirmations", () => {
           title: "Custom Title",
           confirmText: "Yes",
           cancelText: "No",
-          type: "danger"
-        }
+          type: "danger",
+        },
       );
     });
     it("should handle empty item name", async () => {
@@ -88,7 +88,7 @@ describe("confirmations", () => {
       await confirmDelete("", onConfirm);
       expect(mockShowConfirm).toHaveBeenCalledWith(
         'Are you sure you want to delete ""?',
-        expect.any(Object)
+        expect.any(Object),
       );
     });
   });
@@ -102,15 +102,15 @@ describe("confirmations", () => {
           title: "Custom Title",
           confirmText: "OK",
           cancelText: "Cancel",
-          type: "info"
+          type: "info",
         },
-        onConfirm
+        onConfirm,
       );
       expect(mockShowConfirm).toHaveBeenCalledWith("Custom message", {
         title: "Custom Title",
         confirmText: "OK",
         cancelText: "Cancel",
-        type: "info"
+        type: "info",
       });
       expect(onConfirm).toHaveBeenCalled();
     });

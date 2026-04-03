@@ -1,28 +1,25 @@
-import { jsx } from "react/jsx-runtime";
 import { render, screen } from "@testing-library/react";
 import FirebaseNode from "./FirebaseNode";
 import { ReactFlowProvider } from "@xyflow/react";
 const renderWithProvider = (component) => {
-  return render(
-    /* @__PURE__ */ jsx(ReactFlowProvider, { children: component })
-  );
+  return render(<ReactFlowProvider>{component}</ReactFlowProvider>);
 };
 describe("FirebaseNode", () => {
   it("should render firebase node", () => {
     const nodeData = {
-      label: "My Firebase"
+      label: "My Firebase",
     };
     renderWithProvider(
-      /* @__PURE__ */ jsx(FirebaseNode, { data: nodeData, selected: false, id: "node-1" })
+      <FirebaseNode data={nodeData} selected={false} id="node-1" />,
     );
     expect(screen.getByText("My Firebase")).toBeInTheDocument();
   });
   it("should render with default label", () => {
     const nodeData = {
-      label: ""
+      label: "",
     };
     renderWithProvider(
-      /* @__PURE__ */ jsx(FirebaseNode, { data: nodeData, selected: false, id: "node-1" })
+      <FirebaseNode data={nodeData} selected={false} id="node-1" />,
     );
     expect(screen.getByText("Firebase")).toBeInTheDocument();
   });
@@ -30,11 +27,11 @@ describe("FirebaseNode", () => {
     const nodeData = {
       label: "My Firebase",
       input_config: {
-        firebase_service: "firestore"
-      }
+        firebase_service: "firestore",
+      },
     };
     renderWithProvider(
-      /* @__PURE__ */ jsx(FirebaseNode, { data: nodeData, selected: false, id: "node-1" })
+      <FirebaseNode data={nodeData} selected={false} id="node-1" />,
     );
     expect(screen.getByText(/Service: firestore/)).toBeInTheDocument();
   });
@@ -42,11 +39,11 @@ describe("FirebaseNode", () => {
     const nodeData = {
       label: "My Firebase",
       input_config: {
-        project_id: "my-project"
-      }
+        project_id: "my-project",
+      },
     };
     renderWithProvider(
-      /* @__PURE__ */ jsx(FirebaseNode, { data: nodeData, selected: false, id: "node-1" })
+      <FirebaseNode data={nodeData} selected={false} id="node-1" />,
     );
     expect(screen.getByText(/Project: my-project/)).toBeInTheDocument();
   });
@@ -54,20 +51,20 @@ describe("FirebaseNode", () => {
     const nodeData = {
       label: "My Firebase",
       input_config: {
-        mode: "write"
-      }
+        mode: "write",
+      },
     };
     renderWithProvider(
-      /* @__PURE__ */ jsx(FirebaseNode, { data: nodeData, selected: false, id: "node-1" })
+      <FirebaseNode data={nodeData} selected={false} id="node-1" />,
     );
     expect(screen.getByText(/Mode: Write/)).toBeInTheDocument();
   });
   it("should show selected state", () => {
     const nodeData = {
-      label: "My Firebase"
+      label: "My Firebase",
     };
     const { container } = renderWithProvider(
-      /* @__PURE__ */ jsx(FirebaseNode, { data: nodeData, selected: true, id: "node-1" })
+      <FirebaseNode data={nodeData} selected={true} id="node-1" />,
     );
     const nodeElement = container.querySelector(".border-orange-500");
     expect(nodeElement).toBeInTheDocument();
@@ -75,10 +72,10 @@ describe("FirebaseNode", () => {
   it("should show error state", () => {
     const nodeData = {
       label: "My Firebase",
-      executionStatus: "failed"
+      executionStatus: "failed",
     };
     const { container } = renderWithProvider(
-      /* @__PURE__ */ jsx(FirebaseNode, { data: nodeData, selected: false, id: "node-1" })
+      <FirebaseNode data={nodeData} selected={false} id="node-1" />,
     );
     const nodeElement = container.querySelector(".border-red-500");
     expect(nodeElement).toBeInTheDocument();

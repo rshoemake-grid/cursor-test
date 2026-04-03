@@ -5,44 +5,46 @@ import {
   saveDraftForTab,
   deleteDraftForTab,
   clearAllDrafts,
-  draftExists
+  draftExists,
 } from "./draftStorage";
 import { getLocalStorageItem, setLocalStorageItem } from "../storage";
-jest.mock("../storage", () => ({
-  getLocalStorageItem: jest.fn(),
-  setLocalStorageItem: jest.fn()
-}), { virtual: false });
+jest.mock(
+  "../storage",
+  () => ({
+    getLocalStorageItem: jest.fn(),
+    setLocalStorageItem: jest.fn(),
+  }),
+  { virtual: false },
+);
 jest.mock("../../utils/logger", () => ({
   logger: {
     debug: jest.fn(),
     error: jest.fn(),
     info: jest.fn(),
     log: jest.fn(),
-    warn: jest.fn()
-  }
+    warn: jest.fn(),
+  },
 }));
 const mockGetLocalStorageItem = getLocalStorageItem;
 const mockSetLocalStorageItem = setLocalStorageItem;
 describe("draftStorage", () => {
   const mockDraft = {
     nodes: [
-      { id: "node-1", type: "agent", position: { x: 0, y: 0 }, data: {} }
+      { id: "node-1", type: "agent", position: { x: 0, y: 0 }, data: {} },
     ],
-    edges: [
-      { id: "edge-1", source: "node-1", target: "node-2" }
-    ],
+    edges: [{ id: "edge-1", source: "node-1", target: "node-2" }],
     workflowId: "workflow-1",
     workflowName: "Test Workflow",
     workflowDescription: "Test Description",
-    isUnsaved: false
+    isUnsaved: false,
   };
   const mockDrafts = {
     "tab-1": mockDraft,
     "tab-2": {
       ...mockDraft,
       workflowId: "workflow-2",
-      workflowName: "Another Workflow"
-    }
+      workflowName: "Another Workflow",
+    },
   };
   beforeEach(() => {
     mockGetLocalStorageItem.mockReset();
@@ -54,7 +56,11 @@ describe("draftStorage", () => {
     it("should load drafts from storage", () => {
       mockGetLocalStorageItem.mockReturnValue(mockDrafts);
       const result = loadDraftsFromStorage();
-      expect(mockGetLocalStorageItem).toHaveBeenCalledWith("workflowBuilderDrafts", {}, void 0);
+      expect(mockGetLocalStorageItem).toHaveBeenCalledWith(
+        "workflowBuilderDrafts",
+        {},
+        void 0,
+      );
       expect(result).toEqual(mockDrafts);
     });
     it("should return empty object when storage returns null", () => {
@@ -72,19 +78,34 @@ describe("draftStorage", () => {
       const mockLogger = { debug: jest.fn() };
       mockGetLocalStorageItem.mockReturnValue({});
       loadDraftsFromStorage({ storage: mockStorage, logger: mockLogger });
-      expect(mockGetLocalStorageItem).toHaveBeenCalledWith("workflowBuilderDrafts", {}, { storage: mockStorage, logger: mockLogger });
+      expect(mockGetLocalStorageItem).toHaveBeenCalledWith(
+        "workflowBuilderDrafts",
+        {},
+        { storage: mockStorage, logger: mockLogger },
+      );
     });
   });
   describe("saveDraftsToStorage", () => {
     it("should save drafts to storage", () => {
       saveDraftsToStorage(mockDrafts);
-      expect(mockSetLocalStorageItem).toHaveBeenCalledWith("workflowBuilderDrafts", mockDrafts, void 0);
+      expect(mockSetLocalStorageItem).toHaveBeenCalledWith(
+        "workflowBuilderDrafts",
+        mockDrafts,
+        void 0,
+      );
     });
     it("should pass options to setLocalStorageItem", () => {
       const mockStorage = { getItem: jest.fn(), setItem: jest.fn() };
       const mockLogger = { debug: jest.fn() };
-      saveDraftsToStorage(mockDrafts, { storage: mockStorage, logger: mockLogger });
-      expect(mockSetLocalStorageItem).toHaveBeenCalledWith("workflowBuilderDrafts", mockDrafts, { storage: mockStorage, logger: mockLogger });
+      saveDraftsToStorage(mockDrafts, {
+        storage: mockStorage,
+        logger: mockLogger,
+      });
+      expect(mockSetLocalStorageItem).toHaveBeenCalledWith(
+        "workflowBuilderDrafts",
+        mockDrafts,
+        { storage: mockStorage, logger: mockLogger },
+      );
     });
   });
   describe("getDraftForTab", () => {
@@ -115,23 +136,31 @@ describe("draftStorage", () => {
       mockGetLocalStorageItem.mockReturnValue({});
       const newDraft = {
         ...mockDraft,
-        workflowName: "New Workflow"
+        workflowName: "New Workflow",
       };
       saveDraftForTab("tab-1", newDraft);
       expect(mockGetLocalStorageItem).toHaveBeenCalled();
-      expect(mockSetLocalStorageItem).toHaveBeenCalledWith("workflowBuilderDrafts", { "tab-1": newDraft }, void 0);
+      expect(mockSetLocalStorageItem).toHaveBeenCalledWith(
+        "workflowBuilderDrafts",
+        { "tab-1": newDraft },
+        void 0,
+      );
     });
     it("should update existing draft for tab", () => {
       mockGetLocalStorageItem.mockReturnValue(mockDrafts);
       const updatedDraft = {
         ...mockDraft,
-        workflowName: "Updated Workflow"
+        workflowName: "Updated Workflow",
       };
       saveDraftForTab("tab-1", updatedDraft);
-      expect(mockSetLocalStorageItem).toHaveBeenCalledWith("workflowBuilderDrafts", {
-        "tab-1": updatedDraft,
-        "tab-2": mockDrafts["tab-2"]
-      }, void 0);
+      expect(mockSetLocalStorageItem).toHaveBeenCalledWith(
+        "workflowBuilderDrafts",
+        {
+          "tab-1": updatedDraft,
+          "tab-2": mockDrafts["tab-2"],
+        },
+        void 0,
+      );
     });
     it("should pass options to storage functions", () => {
       const mockStorage = { getItem: jest.fn(), setItem: jest.fn() };
@@ -146,19 +175,31 @@ describe("draftStorage", () => {
       mockGetLocalStorageItem.mockReturnValue(mockDrafts);
       deleteDraftForTab("tab-1");
       expect(mockGetLocalStorageItem).toHaveBeenCalled();
-      expect(mockSetLocalStorageItem).toHaveBeenCalledWith("workflowBuilderDrafts", {
-        "tab-2": mockDrafts["tab-2"]
-      }, void 0);
+      expect(mockSetLocalStorageItem).toHaveBeenCalledWith(
+        "workflowBuilderDrafts",
+        {
+          "tab-2": mockDrafts["tab-2"],
+        },
+        void 0,
+      );
     });
     it("should handle deleting non-existent tab gracefully", () => {
       mockGetLocalStorageItem.mockReturnValue(mockDrafts);
       deleteDraftForTab("non-existent");
-      expect(mockSetLocalStorageItem).toHaveBeenCalledWith("workflowBuilderDrafts", mockDrafts, void 0);
+      expect(mockSetLocalStorageItem).toHaveBeenCalledWith(
+        "workflowBuilderDrafts",
+        mockDrafts,
+        void 0,
+      );
     });
     it("should handle deleting from empty drafts", () => {
       mockGetLocalStorageItem.mockReturnValue({});
       deleteDraftForTab("tab-1");
-      expect(mockSetLocalStorageItem).toHaveBeenCalledWith("workflowBuilderDrafts", {}, void 0);
+      expect(mockSetLocalStorageItem).toHaveBeenCalledWith(
+        "workflowBuilderDrafts",
+        {},
+        void 0,
+      );
     });
     it("should pass options to storage functions", () => {
       const mockStorage = { getItem: jest.fn(), setItem: jest.fn() };
@@ -171,13 +212,21 @@ describe("draftStorage", () => {
   describe("clearAllDrafts", () => {
     it("should clear all drafts from storage", () => {
       clearAllDrafts();
-      expect(mockSetLocalStorageItem).toHaveBeenCalledWith("workflowBuilderDrafts", {}, void 0);
+      expect(mockSetLocalStorageItem).toHaveBeenCalledWith(
+        "workflowBuilderDrafts",
+        {},
+        void 0,
+      );
     });
     it("should pass options to setLocalStorageItem", () => {
       const mockStorage = { getItem: jest.fn(), setItem: jest.fn() };
       const mockLogger = { debug: jest.fn() };
       clearAllDrafts({ storage: mockStorage, logger: mockLogger });
-      expect(mockSetLocalStorageItem).toHaveBeenCalledWith("workflowBuilderDrafts", {}, { storage: mockStorage, logger: mockLogger });
+      expect(mockSetLocalStorageItem).toHaveBeenCalledWith(
+        "workflowBuilderDrafts",
+        {},
+        { storage: mockStorage, logger: mockLogger },
+      );
     });
   });
   describe("draftExists", () => {
@@ -186,7 +235,11 @@ describe("draftStorage", () => {
       mockGetLocalStorageItem.mockReturnValue(mockDrafts);
       const result = draftExists("tab-1");
       expect(mockGetLocalStorageItem).toHaveBeenCalled();
-      expect(mockGetLocalStorageItem).toHaveBeenCalledWith("workflowBuilderDrafts", {}, void 0);
+      expect(mockGetLocalStorageItem).toHaveBeenCalledWith(
+        "workflowBuilderDrafts",
+        {},
+        void 0,
+      );
       expect(result).toBe(true);
     });
     it("should return false when draft does not exist", () => {

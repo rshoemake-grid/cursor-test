@@ -16,7 +16,8 @@ function findNodesByIds(nodeIds, getNodes, fallbackNodes) {
     const flowNodes = getNodes();
     return flowNodes.filter((n) => nodeIds.includes(n.id));
   } catch {
-    const nodes = fallbackNodes !== null && fallbackNodes !== void 0 ? fallbackNodes : [];
+    const nodes =
+      fallbackNodes !== null && fallbackNodes !== void 0 ? fallbackNodes : [];
     return nodes.filter((n) => nodeIds.includes(n.id));
   }
 }
@@ -25,13 +26,9 @@ function getSelectedNodes(getNodes, fallbackNodes) {
     const flowNodes = getNodes();
     return flowNodes.filter((n) => n.selected);
   } catch {
-    const nodes = fallbackNodes !== null && fallbackNodes !== void 0 ? fallbackNodes : [];
+    const nodes =
+      fallbackNodes !== null && fallbackNodes !== void 0 ? fallbackNodes : [];
     return nodes.filter((n) => n.selected);
   }
 }
-export {
-  findNodeById,
-  findNodesByIds,
-  getSelectedNodes,
-  nodeExists
-};
+export { findNodeById, findNodesByIds, getSelectedNodes, nodeExists };

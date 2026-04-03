@@ -1,7 +1,8 @@
-import { jsx } from "react/jsx-runtime";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 const waitForWithTimeout = (callback, timeout = 2e3) => {
-  return waitFor(callback, { timeout });
+  return waitFor(callback, {
+    timeout,
+  });
 };
 import NodePanel from "./NodePanel";
 import { logger } from "../utils/logger";
@@ -9,15 +10,15 @@ import { showSuccess, showError } from "../utils/notifications";
 import { STORAGE_KEYS } from "../config/constants";
 jest.mock("../utils/notifications", () => ({
   showSuccess: jest.fn(),
-  showError: jest.fn()
+  showError: jest.fn(),
 }));
 jest.mock("../utils/logger", () => ({
   logger: {
     debug: jest.fn(),
     error: jest.fn(),
     warn: jest.fn(),
-    info: jest.fn()
-  }
+    info: jest.fn(),
+  },
 }));
 describe("NodePanel", () => {
   beforeEach(() => {
@@ -25,16 +26,16 @@ describe("NodePanel", () => {
     localStorage.clear();
   });
   it("should render node palette", () => {
-    render(/* @__PURE__ */ jsx(NodePanel, {}));
+    render(<NodePanel />);
     expect(screen.getByText("Node Palette")).toBeInTheDocument();
     expect(screen.getByText(/Drag nodes onto the canvas/)).toBeInTheDocument();
   });
   it("should render workflow nodes category", () => {
-    render(/* @__PURE__ */ jsx(NodePanel, {}));
+    render(<NodePanel />);
     expect(screen.getByText("Workflow Nodes")).toBeInTheDocument();
   });
   it("should toggle workflow nodes category", () => {
-    render(/* @__PURE__ */ jsx(NodePanel, {}));
+    render(<NodePanel />);
     const toggleButton = screen.getByText("Workflow Nodes").closest("button");
     expect(toggleButton).toBeDefined();
     expect(screen.queryByText("Start")).not.toBeInTheDocument();
@@ -45,11 +46,11 @@ describe("NodePanel", () => {
     expect(screen.getByText("End")).toBeInTheDocument();
   });
   it("should render agent nodes category", () => {
-    render(/* @__PURE__ */ jsx(NodePanel, {}));
+    render(<NodePanel />);
     expect(screen.getByText("Agent Nodes")).toBeInTheDocument();
   });
   it("should toggle agent nodes category", () => {
-    render(/* @__PURE__ */ jsx(NodePanel, {}));
+    render(<NodePanel />);
     const toggleButton = screen.getByText("Agent Nodes").closest("button");
     fireEvent.click(toggleButton);
     expect(screen.queryByText("Agent")).not.toBeInTheDocument();
@@ -57,35 +58,46 @@ describe("NodePanel", () => {
     expect(screen.getByText("Agent")).toBeInTheDocument();
   });
   it("should show ADK Agent in palette when agent nodes expanded", () => {
-    render(/* @__PURE__ */ jsx(NodePanel, {}));
+    render(<NodePanel />);
     expect(screen.getByText("ADK Agent")).toBeInTheDocument();
     expect(screen.getByText(/Google ADK agent/)).toBeInTheDocument();
   });
   it("should handle drag start for ADK Agent with agent_type and adk_config", () => {
-    render(/* @__PURE__ */ jsx(NodePanel, {}));
+    render(<NodePanel />);
     const adkAgentNode = screen.getByText("ADK Agent").closest("div");
     expect(adkAgentNode).toBeDefined();
     const dragEvent = new Event("dragstart");
     dragEvent.dataTransfer = {
       setData: jest.fn(),
-      effectAllowed: ""
+      effectAllowed: "",
     };
     fireEvent.dragStart(adkAgentNode, dragEvent);
-    expect(dragEvent.dataTransfer.setData).toHaveBeenCalledWith("application/reactflow", "agent");
-    expect(dragEvent.dataTransfer.setData).toHaveBeenCalledWith("application/custom-agent", expect.any(String));
+    expect(dragEvent.dataTransfer.setData).toHaveBeenCalledWith(
+      "application/reactflow",
+      "agent",
+    );
+    expect(dragEvent.dataTransfer.setData).toHaveBeenCalledWith(
+      "application/custom-agent",
+      expect.any(String),
+    );
     const customAgentJson = dragEvent.dataTransfer.setData.mock.calls.find(
-      (c) => c[0] === "application/custom-agent"
+      (c) => c[0] === "application/custom-agent",
     )?.[1];
     const parsed = JSON.parse(customAgentJson);
-    expect(parsed.agent_config).toMatchObject({ agent_type: "adk", adk_config: { name: "adk_agent" } });
+    expect(parsed.agent_config).toMatchObject({
+      agent_type: "adk",
+      adk_config: {
+        name: "adk_agent",
+      },
+    });
     expect(parsed.label).toBe("ADK Agent");
   });
   it("should render data nodes category", () => {
-    render(/* @__PURE__ */ jsx(NodePanel, {}));
+    render(<NodePanel />);
     expect(screen.getByText("Data Nodes")).toBeInTheDocument();
   });
   it("should toggle data nodes category", () => {
-    render(/* @__PURE__ */ jsx(NodePanel, {}));
+    render(<NodePanel />);
     const toggleButton = screen.getByText("Data Nodes").closest("button");
     fireEvent.click(toggleButton);
     expect(screen.getByText("GCP Bucket")).toBeInTheDocument();
@@ -98,20 +110,27 @@ describe("NodePanel", () => {
   });
   it("should load custom agent nodes from localStorage", () => {
     const customNodes = [
-      { id: "custom-1", label: "Custom Agent 1", description: "Custom description" }
+      {
+        id: "custom-1",
+        label: "Custom Agent 1",
+        description: "Custom description",
+      },
     ];
-    localStorage.setItem(STORAGE_KEYS.CUSTOM_AGENT_NODES, JSON.stringify(customNodes));
-    render(/* @__PURE__ */ jsx(NodePanel, {}));
+    localStorage.setItem(
+      STORAGE_KEYS.CUSTOM_AGENT_NODES,
+      JSON.stringify(customNodes),
+    );
+    render(<NodePanel />);
     expect(screen.getByText("Custom Agent 1")).toBeInTheDocument();
   });
   it("should handle invalid localStorage data gracefully", () => {
     localStorage.setItem(STORAGE_KEYS.CUSTOM_AGENT_NODES, "invalid json");
-    render(/* @__PURE__ */ jsx(NodePanel, {}));
+    render(<NodePanel />);
     expect(screen.getByText("Node Palette")).toBeInTheDocument();
     expect(logger.error).toHaveBeenCalled();
   });
   it("should handle drag start for workflow nodes", () => {
-    render(/* @__PURE__ */ jsx(NodePanel, {}));
+    render(<NodePanel />);
     const toggleButton = screen.getByText("Workflow Nodes").closest("button");
     fireEvent.click(toggleButton);
     const startNode = screen.getByText("Start").closest("div");
@@ -119,41 +138,62 @@ describe("NodePanel", () => {
     const dragEvent = new Event("dragstart");
     dragEvent.dataTransfer = {
       setData: jest.fn(),
-      effectAllowed: ""
+      effectAllowed: "",
     };
     fireEvent.dragStart(startNode, dragEvent);
-    expect(dragEvent.dataTransfer.setData).toHaveBeenCalledWith("application/reactflow", "start");
+    expect(dragEvent.dataTransfer.setData).toHaveBeenCalledWith(
+      "application/reactflow",
+      "start",
+    );
   });
   it("should handle drag start for agent nodes with custom data", async () => {
     const customNodes = [
-      { id: "custom-1", label: "Custom Agent", description: "Description" }
+      {
+        id: "custom-1",
+        label: "Custom Agent",
+        description: "Description",
+      },
     ];
-    localStorage.setItem(STORAGE_KEYS.CUSTOM_AGENT_NODES, JSON.stringify(customNodes));
-    render(/* @__PURE__ */ jsx(NodePanel, {}));
+    localStorage.setItem(
+      STORAGE_KEYS.CUSTOM_AGENT_NODES,
+      JSON.stringify(customNodes),
+    );
+    render(<NodePanel />);
     await waitForWithTimeout(() => {
       const customAgentNode = screen.getByText("Custom Agent").closest("div");
       expect(customAgentNode).toBeDefined();
       const dragEvent = new Event("dragstart");
       dragEvent.dataTransfer = {
         setData: jest.fn(),
-        effectAllowed: ""
+        effectAllowed: "",
       };
       fireEvent.dragStart(customAgentNode, dragEvent);
-      expect(dragEvent.dataTransfer.setData).toHaveBeenCalledWith("application/reactflow", "agent");
-      expect(dragEvent.dataTransfer.setData).toHaveBeenCalledWith("application/custom-agent", expect.any(String));
+      expect(dragEvent.dataTransfer.setData).toHaveBeenCalledWith(
+        "application/reactflow",
+        "agent",
+      );
+      expect(dragEvent.dataTransfer.setData).toHaveBeenCalledWith(
+        "application/custom-agent",
+        expect.any(String),
+      );
     });
   });
   it("should display tip message", () => {
-    render(/* @__PURE__ */ jsx(NodePanel, {}));
+    render(<NodePanel />);
     expect(screen.getByText(/💡 Tip/)).toBeInTheDocument();
     expect(screen.getByText(/Connect nodes by dragging/)).toBeInTheDocument();
   });
   it("should update custom agent nodes when storage event fires", async () => {
-    render(/* @__PURE__ */ jsx(NodePanel, {}));
-    const newNodes = [{ id: "custom-2", label: "New Agent" }];
+    render(<NodePanel />);
+    const newNodes = [
+      {
+        id: "custom-2",
+        label: "New Agent",
+      },
+    ];
     const storageEvent = new StorageEvent("storage", {
       key: STORAGE_KEYS.CUSTOM_AGENT_NODES,
-      newValue: JSON.stringify(newNodes)
+      newValue: JSON.stringify(newNodes),
     });
     window.dispatchEvent(storageEvent);
     await waitForWithTimeout(() => {
@@ -161,9 +201,17 @@ describe("NodePanel", () => {
     });
   });
   it("should handle custom storage event for same-window updates", async () => {
-    render(/* @__PURE__ */ jsx(NodePanel, {}));
-    const newNodes = [{ id: "custom-3", label: "Updated Agent" }];
-    localStorage.setItem(STORAGE_KEYS.CUSTOM_AGENT_NODES, JSON.stringify(newNodes));
+    render(<NodePanel />);
+    const newNodes = [
+      {
+        id: "custom-3",
+        label: "Updated Agent",
+      },
+    ];
+    localStorage.setItem(
+      STORAGE_KEYS.CUSTOM_AGENT_NODES,
+      JSON.stringify(newNodes),
+    );
     const customEvent = new Event("customAgentNodesUpdated");
     window.dispatchEvent(customEvent);
     await waitForWithTimeout(() => {
@@ -173,32 +221,39 @@ describe("NodePanel", () => {
   describe("Dependency Injection", () => {
     it("should use injected storage adapter", () => {
       const mockStorage = {
-        getItem: jest.fn().mockReturnValue(JSON.stringify([
-          { id: "custom-1", label: "Custom Agent 1" }
-        ])),
+        getItem: jest.fn().mockReturnValue(
+          JSON.stringify([
+            {
+              id: "custom-1",
+              label: "Custom Agent 1",
+            },
+          ]),
+        ),
         setItem: jest.fn(),
         removeItem: jest.fn(),
         addEventListener: jest.fn(),
-        removeEventListener: jest.fn()
+        removeEventListener: jest.fn(),
       };
-      render(/* @__PURE__ */ jsx(NodePanel, { storage: mockStorage }));
-      expect(mockStorage.getItem).toHaveBeenCalledWith(STORAGE_KEYS.CUSTOM_AGENT_NODES);
+      render(<NodePanel storage={mockStorage} />);
+      expect(mockStorage.getItem).toHaveBeenCalledWith(
+        STORAGE_KEYS.CUSTOM_AGENT_NODES,
+      );
     });
     it("should use injected logger", () => {
       const mockLogger = {
         debug: jest.fn(),
         error: jest.fn(),
         warn: jest.fn(),
-        info: jest.fn()
+        info: jest.fn(),
       };
       const mockStorage = {
         getItem: jest.fn().mockReturnValue("invalid json"),
         setItem: jest.fn(),
         removeItem: jest.fn(),
         addEventListener: jest.fn(),
-        removeEventListener: jest.fn()
+        removeEventListener: jest.fn(),
       };
-      render(/* @__PURE__ */ jsx(NodePanel, { storage: mockStorage, logger: mockLogger }));
+      render(<NodePanel storage={mockStorage} logger={mockLogger} />);
       expect(mockLogger.error).toHaveBeenCalled();
     });
     it("should handle storage errors gracefully", () => {
@@ -209,20 +264,20 @@ describe("NodePanel", () => {
         setItem: jest.fn(),
         removeItem: jest.fn(),
         addEventListener: jest.fn(),
-        removeEventListener: jest.fn()
+        removeEventListener: jest.fn(),
       };
       const mockLogger = {
         debug: jest.fn(),
         error: jest.fn(),
         warn: jest.fn(),
-        info: jest.fn()
+        info: jest.fn(),
       };
-      render(/* @__PURE__ */ jsx(NodePanel, { storage: mockStorage, logger: mockLogger }));
+      render(<NodePanel storage={mockStorage} logger={mockLogger} />);
       expect(screen.getByText("Node Palette")).toBeInTheDocument();
       expect(mockLogger.error).toHaveBeenCalled();
     });
     it("should handle null storage adapter", () => {
-      render(/* @__PURE__ */ jsx(NodePanel, { storage: null }));
+      render(<NodePanel storage={null} />);
       expect(screen.getByText("Node Palette")).toBeInTheDocument();
     });
     it("should use window event listeners for storage events", () => {
@@ -233,30 +288,57 @@ describe("NodePanel", () => {
         setItem: jest.fn(),
         removeItem: jest.fn(),
         addEventListener: jest.fn(),
-        removeEventListener: jest.fn()
+        removeEventListener: jest.fn(),
       };
-      const { unmount } = render(/* @__PURE__ */ jsx(NodePanel, { storage: mockStorage }));
-      expect(addEventListenerSpy).toHaveBeenCalledWith("storage", expect.any(Function));
-      expect(addEventListenerSpy).toHaveBeenCalledWith("customAgentNodesUpdated", expect.any(Function));
+      const { unmount } = render(<NodePanel storage={mockStorage} />);
+      expect(addEventListenerSpy).toHaveBeenCalledWith(
+        "storage",
+        expect.any(Function),
+      );
+      expect(addEventListenerSpy).toHaveBeenCalledWith(
+        "customAgentNodesUpdated",
+        expect.any(Function),
+      );
       unmount();
-      expect(removeEventListenerSpy).toHaveBeenCalledWith("storage", expect.any(Function));
-      expect(removeEventListenerSpy).toHaveBeenCalledWith("customAgentNodesUpdated", expect.any(Function));
+      expect(removeEventListenerSpy).toHaveBeenCalledWith(
+        "storage",
+        expect.any(Function),
+      );
+      expect(removeEventListenerSpy).toHaveBeenCalledWith(
+        "customAgentNodesUpdated",
+        expect.any(Function),
+      );
       addEventListenerSpy.mockRestore();
       removeEventListenerSpy.mockRestore();
     });
     it("should handle storage event with injected storage", async () => {
       const mockStorage = {
-        getItem: jest.fn().mockReturnValueOnce(null).mockReturnValueOnce(JSON.stringify([{ id: "custom-1", label: "New Agent" }])),
+        getItem: jest
+          .fn()
+          .mockReturnValueOnce(null)
+          .mockReturnValueOnce(
+            JSON.stringify([
+              {
+                id: "custom-1",
+                label: "New Agent",
+              },
+            ]),
+          ),
         // After event
         setItem: jest.fn(),
         removeItem: jest.fn(),
         addEventListener: jest.fn(),
-        removeEventListener: jest.fn()
+        removeEventListener: jest.fn(),
       };
-      render(/* @__PURE__ */ jsx(NodePanel, { storage: mockStorage }));
+      render(<NodePanel storage={mockStorage} />);
       const storageEvent = new StorageEvent("storage", {
         key: STORAGE_KEYS.CUSTOM_AGENT_NODES,
-        newValue: JSON.stringify([{ id: "custom-1", label: "New Agent" }])
+        newValue: JSON.stringify([
+          {
+            id: "custom-1",
+            label: "New Agent",
+          },
+        ]),
       });
       window.dispatchEvent(storageEvent);
       await waitForWithTimeout(() => {
@@ -266,44 +348,46 @@ describe("NodePanel", () => {
   });
   describe("edge cases", () => {
     it("should handle storage event with null newValue", () => {
-      render(/* @__PURE__ */ jsx(NodePanel, {}));
+      render(<NodePanel />);
       const storageEvent = new StorageEvent("storage", {
         key: STORAGE_KEYS.CUSTOM_AGENT_NODES,
-        newValue: null
+        newValue: null,
       });
       window.dispatchEvent(storageEvent);
       expect(screen.getByText("Node Palette")).toBeInTheDocument();
     });
     it("should handle storage event with empty string newValue", () => {
-      render(/* @__PURE__ */ jsx(NodePanel, {}));
+      render(<NodePanel />);
       const storageEvent = new StorageEvent("storage", {
         key: STORAGE_KEYS.CUSTOM_AGENT_NODES,
-        newValue: ""
+        newValue: "",
       });
       window.dispatchEvent(storageEvent);
       expect(screen.getByText("Node Palette")).toBeInTheDocument();
     });
     it("should handle storage event with invalid JSON newValue", () => {
-      render(/* @__PURE__ */ jsx(NodePanel, {}));
+      render(<NodePanel />);
       const storageEvent = new StorageEvent("storage", {
         key: STORAGE_KEYS.CUSTOM_AGENT_NODES,
-        newValue: "{invalid json}"
+        newValue: "{invalid json}",
       });
       window.dispatchEvent(storageEvent);
       expect(screen.getByText("Node Palette")).toBeInTheDocument();
       expect(logger.error).toHaveBeenCalled();
     });
     it("should handle storage event with non-array parsed value", () => {
-      render(/* @__PURE__ */ jsx(NodePanel, {}));
+      render(<NodePanel />);
       const storageEvent = new StorageEvent("storage", {
         key: STORAGE_KEYS.CUSTOM_AGENT_NODES,
-        newValue: JSON.stringify({ not: "an array" })
+        newValue: JSON.stringify({
+          not: "an array",
+        }),
       });
       window.dispatchEvent(storageEvent);
       expect(screen.getByText("Node Palette")).toBeInTheDocument();
     });
     it("should handle customAgentNodesUpdated event when storage is null", () => {
-      render(/* @__PURE__ */ jsx(NodePanel, { storage: null }));
+      render(<NodePanel storage={null} />);
       const customEvent = new Event("customAgentNodesUpdated");
       window.dispatchEvent(customEvent);
       expect(screen.getByText("Node Palette")).toBeInTheDocument();
@@ -315,9 +399,9 @@ describe("NodePanel", () => {
         setItem: jest.fn(),
         removeItem: jest.fn(),
         addEventListener: jest.fn(),
-        removeEventListener: jest.fn()
+        removeEventListener: jest.fn(),
       };
-      render(/* @__PURE__ */ jsx(NodePanel, { storage: mockStorage }));
+      render(<NodePanel storage={mockStorage} />);
       expect(screen.getByText("Node Palette")).toBeInTheDocument();
     });
     it("should handle storage.getItem returning empty string", () => {
@@ -326,14 +410,18 @@ describe("NodePanel", () => {
         setItem: jest.fn(),
         removeItem: jest.fn(),
         addEventListener: jest.fn(),
-        removeEventListener: jest.fn()
+        removeEventListener: jest.fn(),
       };
-      render(/* @__PURE__ */ jsx(NodePanel, { storage: mockStorage }));
+      render(<NodePanel storage={mockStorage} />);
       expect(screen.getByText("Node Palette")).toBeInTheDocument();
     });
     it("should show Import Agent button when agent nodes expanded", () => {
-      render(/* @__PURE__ */ jsx(NodePanel, {}));
-      expect(screen.getByRole("button", { name: /import agent/i })).toBeInTheDocument();
+      render(<NodePanel />);
+      expect(
+        screen.getByRole("button", {
+          name: /import agent/i,
+        }),
+      ).toBeInTheDocument();
     });
     it("should import agent config from JSON file", async () => {
       const agentConfig = {
@@ -341,41 +429,76 @@ describe("NodePanel", () => {
         description: "Test import",
         agent_config: {
           agent_type: "adk",
-          adk_config: { name: "imported_agent", description: "From file" },
-          model: "gemini-1.5-pro"
+          adk_config: {
+            name: "imported_agent",
+            description: "From file",
+          },
+          model: "gemini-1.5-pro",
         },
-        type: "agent"
+        type: "agent",
       };
-      const file = new File([JSON.stringify(agentConfig)], "agent.json", { type: "application/json" });
-      render(/* @__PURE__ */ jsx(NodePanel, {}));
+      const file = new File([JSON.stringify(agentConfig)], "agent.json", {
+        type: "application/json",
+      });
+      render(<NodePanel />);
       const fileInput = screen.getByTestId("import-agent-file-input");
-      fireEvent.change(fileInput, { target: { files: [file] } });
+      fireEvent.change(fileInput, {
+        target: {
+          files: [file],
+        },
+      });
       await waitForWithTimeout(() => {
-        expect(showSuccess).toHaveBeenCalledWith(expect.stringContaining("Imported ADK Agent"));
+        expect(showSuccess).toHaveBeenCalledWith(
+          expect.stringContaining("Imported ADK Agent"),
+        );
       });
       expect(screen.getByText("Imported ADK Agent")).toBeInTheDocument();
     });
     it("should show error when importing invalid JSON", async () => {
-      const file = new File(["invalid json {"], "agent.json", { type: "application/json" });
-      render(/* @__PURE__ */ jsx(NodePanel, {}));
+      const file = new File(["invalid json {"], "agent.json", {
+        type: "application/json",
+      });
+      render(<NodePanel />);
       const fileInput = screen.getByTestId("import-agent-file-input");
-      fireEvent.change(fileInput, { target: { files: [file] } });
+      fireEvent.change(fileInput, {
+        target: {
+          files: [file],
+        },
+      });
       await waitForWithTimeout(() => {
         expect(showError).toHaveBeenCalled();
       });
     });
     it("should show error when importing JSON without agent_config", async () => {
-      const file = new File([JSON.stringify({ label: "No config" })], "agent.json", { type: "application/json" });
-      render(/* @__PURE__ */ jsx(NodePanel, {}));
+      const file = new File(
+        [
+          JSON.stringify({
+            label: "No config",
+          }),
+        ],
+        "agent.json",
+        {
+          type: "application/json",
+        },
+      );
+      render(<NodePanel />);
       const fileInput = screen.getByTestId("import-agent-file-input");
-      fireEvent.change(fileInput, { target: { files: [file] } });
+      fireEvent.change(fileInput, {
+        target: {
+          files: [file],
+        },
+      });
       await waitForWithTimeout(() => {
-        expect(showError).toHaveBeenCalledWith("Invalid agent config: missing agent_config");
+        expect(showError).toHaveBeenCalledWith(
+          "Invalid agent config: missing agent_config",
+        );
       });
     });
     it("should handle all categories being expanded", () => {
-      render(/* @__PURE__ */ jsx(NodePanel, {}));
-      const workflowToggle = screen.getByText("Workflow Nodes").closest("button");
+      render(<NodePanel />);
+      const workflowToggle = screen
+        .getByText("Workflow Nodes")
+        .closest("button");
       const dataToggle = screen.getByText("Data Nodes").closest("button");
       fireEvent.click(workflowToggle);
       fireEvent.click(dataToggle);
@@ -385,7 +508,7 @@ describe("NodePanel", () => {
       expect(screen.getByText("GCP Bucket")).toBeInTheDocument();
     });
     it("should handle all categories being collapsed", () => {
-      render(/* @__PURE__ */ jsx(NodePanel, {}));
+      render(<NodePanel />);
       const agentToggle = screen.getByText("Agent Nodes").closest("button");
       fireEvent.click(agentToggle);
       expect(screen.queryByText("Start")).not.toBeInTheDocument();
@@ -395,14 +518,25 @@ describe("NodePanel", () => {
     });
     it("should handle custom agent nodes with missing properties", () => {
       const customNodes = [
-        { id: "custom-1" },
+        {
+          id: "custom-1",
+        },
         // Missing label
-        { label: "Custom 2" },
+        {
+          label: "Custom 2",
+        },
         // Missing id
-        { id: "custom-3", label: "Custom 3", description: null }
+        {
+          id: "custom-3",
+          label: "Custom 3",
+          description: null,
+        },
       ];
-      localStorage.setItem(STORAGE_KEYS.CUSTOM_AGENT_NODES, JSON.stringify(customNodes));
-      render(/* @__PURE__ */ jsx(NodePanel, {}));
+      localStorage.setItem(
+        STORAGE_KEYS.CUSTOM_AGENT_NODES,
+        JSON.stringify(customNodes),
+      );
+      render(<NodePanel />);
       const toggleButton = screen.getByText("Agent Nodes").closest("button");
       fireEvent.click(toggleButton);
       expect(screen.getByText("Node Palette")).toBeInTheDocument();

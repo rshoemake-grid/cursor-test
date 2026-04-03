@@ -2,7 +2,7 @@ import { renderHook, waitFor } from "@testing-library/react";
 import { useMarketplaceData } from "./useMarketplaceData";
 import { getLocalStorageItem } from "../storage";
 jest.mock("../storage", () => ({
-  getLocalStorageItem: jest.fn()
+  getLocalStorageItem: jest.fn(),
 }));
 const mockGetLocalStorageItem = getLocalStorageItem;
 describe("useMarketplaceData - Array Methods (Phase 4.2)", () => {
@@ -17,14 +17,16 @@ describe("useMarketplaceData - Array Methods (Phase 4.2)", () => {
         }
         return Promise.resolve({ json: async () => [] });
       }),
-      post: jest.fn().mockResolvedValue({ ok: true, json: async () => ({ nodes: [] }) })
+      post: jest
+        .fn()
+        .mockResolvedValue({ ok: true, json: async () => ({ nodes: [] }) }),
     };
     mockStorage = {
       getItem: jest.fn().mockReturnValue(null),
       setItem: jest.fn(),
       removeItem: jest.fn(),
       addEventListener: jest.fn(),
-      removeEventListener: jest.fn()
+      removeEventListener: jest.fn(),
     };
     mockGetLocalStorageItem.mockReturnValue([]);
   });
@@ -38,12 +40,12 @@ describe("useMarketplaceData - Array Methods (Phase 4.2)", () => {
           category: "automation",
           tags: ["test-tag"],
           published_at: "2024-01-01T00:00:00Z",
-          is_official: false
-        }
+          is_official: false,
+        },
       ];
       mockGetLocalStorageItem.mockReturnValue(agents);
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -53,8 +55,8 @@ describe("useMarketplaceData - Array Methods (Phase 4.2)", () => {
           sortBy: "popular",
           user: null,
           activeTab: "agents",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -66,23 +68,23 @@ describe("useMarketplaceData - Array Methods (Phase 4.2)", () => {
         id: "workflow-1",
         name: "Workflow",
         description: "Description",
-        tags: ["workflow"]
+        tags: ["workflow"],
       };
       mockHttpClient.get.mockResolvedValue({
-        json: async () => [workflow]
+        json: async () => [workflow],
       });
       mockHttpClient.post.mockResolvedValue({
         ok: true,
         json: async () => ({
           nodes: [
             {
-              data: {}
-            }
-          ]
-        })
+              data: {},
+            },
+          ],
+        }),
       });
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -91,12 +93,15 @@ describe("useMarketplaceData - Array Methods (Phase 4.2)", () => {
           sortBy: "popular",
           user: null,
           activeTab: "workflows-of-workflows",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
-      await waitFor(() => {
-        expect(result.current.loading).toBe(false);
-      }, { timeout: 3e3 });
+      await waitFor(
+        () => {
+          expect(result.current.loading).toBe(false);
+        },
+        { timeout: 3e3 },
+      );
       expect(result.current.workflowsOfWorkflows.length).toBe(1);
     });
     it("should call tags.some() with workflow-of-workflows tag check", async () => {
@@ -104,17 +109,17 @@ describe("useMarketplaceData - Array Methods (Phase 4.2)", () => {
         id: "workflow-1",
         name: "Workflow",
         description: "Description",
-        tags: ["workflow-of-workflows"]
+        tags: ["workflow-of-workflows"],
       };
       mockHttpClient.get.mockResolvedValue({
-        json: async () => [workflow]
+        json: async () => [workflow],
       });
       mockHttpClient.post.mockResolvedValue({
         ok: true,
-        json: async () => ({ nodes: [] })
+        json: async () => ({ nodes: [] }),
       });
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -123,12 +128,15 @@ describe("useMarketplaceData - Array Methods (Phase 4.2)", () => {
           sortBy: "popular",
           user: null,
           activeTab: "workflows-of-workflows",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
-      await waitFor(() => {
-        expect(result.current.loading).toBe(false);
-      }, { timeout: 3e3 });
+      await waitFor(
+        () => {
+          expect(result.current.loading).toBe(false);
+        },
+        { timeout: 3e3 },
+      );
       expect(result.current.workflowsOfWorkflows.length).toBe(1);
     });
     it("should call tags.some() with composite tag check", async () => {
@@ -136,17 +144,17 @@ describe("useMarketplaceData - Array Methods (Phase 4.2)", () => {
         id: "workflow-1",
         name: "Workflow",
         description: "Description",
-        tags: ["composite"]
+        tags: ["composite"],
       };
       mockHttpClient.get.mockResolvedValue({
-        json: async () => [workflow]
+        json: async () => [workflow],
       });
       mockHttpClient.post.mockResolvedValue({
         ok: true,
-        json: async () => ({ nodes: [] })
+        json: async () => ({ nodes: [] }),
       });
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -155,12 +163,15 @@ describe("useMarketplaceData - Array Methods (Phase 4.2)", () => {
           sortBy: "popular",
           user: null,
           activeTab: "workflows-of-workflows",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
-      await waitFor(() => {
-        expect(result.current.loading).toBe(false);
-      }, { timeout: 3e3 });
+      await waitFor(
+        () => {
+          expect(result.current.loading).toBe(false);
+        },
+        { timeout: 3e3 },
+      );
       expect(result.current.workflowsOfWorkflows.length).toBe(1);
     });
     it("should call tags.some() with nested tag check", async () => {
@@ -168,17 +179,17 @@ describe("useMarketplaceData - Array Methods (Phase 4.2)", () => {
         id: "workflow-1",
         name: "Workflow",
         description: "Description",
-        tags: ["nested"]
+        tags: ["nested"],
       };
       mockHttpClient.get.mockResolvedValue({
-        json: async () => [workflow]
+        json: async () => [workflow],
       });
       mockHttpClient.post.mockResolvedValue({
         ok: true,
-        json: async () => ({ nodes: [] })
+        json: async () => ({ nodes: [] }),
       });
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -187,12 +198,15 @@ describe("useMarketplaceData - Array Methods (Phase 4.2)", () => {
           sortBy: "popular",
           user: null,
           activeTab: "workflows-of-workflows",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
-      await waitFor(() => {
-        expect(result.current.loading).toBe(false);
-      }, { timeout: 3e3 });
+      await waitFor(
+        () => {
+          expect(result.current.loading).toBe(false);
+        },
+        { timeout: 3e3 },
+      );
       expect(result.current.workflowsOfWorkflows.length).toBe(1);
     });
     it("should call nodes.some() with workflow detection callback", async () => {
@@ -200,23 +214,23 @@ describe("useMarketplaceData - Array Methods (Phase 4.2)", () => {
         id: "workflow-1",
         name: "Workflow",
         description: "Description",
-        tags: []
+        tags: [],
       };
       mockHttpClient.get.mockResolvedValue({
-        json: async () => [workflow]
+        json: async () => [workflow],
       });
       mockHttpClient.post.mockResolvedValue({
         ok: true,
         json: async () => ({
           nodes: [
             {
-              workflow_id: "workflow-2"
-            }
-          ]
-        })
+              workflow_id: "workflow-2",
+            },
+          ],
+        }),
       });
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -225,12 +239,15 @@ describe("useMarketplaceData - Array Methods (Phase 4.2)", () => {
           sortBy: "popular",
           user: null,
           activeTab: "workflows-of-workflows",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
-      await waitFor(() => {
-        expect(result.current.loading).toBe(false);
-      }, { timeout: 3e3 });
+      await waitFor(
+        () => {
+          expect(result.current.loading).toBe(false);
+        },
+        { timeout: 3e3 },
+      );
       expect(result.current.workflowsOfWorkflows.length).toBe(1);
     });
   });
@@ -243,7 +260,7 @@ describe("useMarketplaceData - Array Methods (Phase 4.2)", () => {
           category: "automation",
           tags: [],
           published_at: "2024-01-01T00:00:00Z",
-          is_official: false
+          is_official: false,
         },
         {
           id: "agent-2",
@@ -251,12 +268,12 @@ describe("useMarketplaceData - Array Methods (Phase 4.2)", () => {
           category: "other",
           tags: [],
           published_at: "2024-01-01T00:00:00Z",
-          is_official: false
-        }
+          is_official: false,
+        },
       ];
       mockGetLocalStorageItem.mockReturnValue(agents);
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -266,8 +283,8 @@ describe("useMarketplaceData - Array Methods (Phase 4.2)", () => {
           sortBy: "popular",
           user: null,
           activeTab: "agents",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -284,7 +301,7 @@ describe("useMarketplaceData - Array Methods (Phase 4.2)", () => {
           category: "automation",
           tags: [],
           published_at: "2024-01-01T00:00:00Z",
-          is_official: false
+          is_official: false,
         },
         {
           id: "agent-2",
@@ -293,12 +310,12 @@ describe("useMarketplaceData - Array Methods (Phase 4.2)", () => {
           category: "automation",
           tags: [],
           published_at: "2024-01-01T00:00:00Z",
-          is_official: false
-        }
+          is_official: false,
+        },
       ];
       mockGetLocalStorageItem.mockReturnValue(agents);
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -308,8 +325,8 @@ describe("useMarketplaceData - Array Methods (Phase 4.2)", () => {
           sortBy: "popular",
           user: null,
           activeTab: "agents",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -328,12 +345,12 @@ describe("useMarketplaceData - Array Methods (Phase 4.2)", () => {
           category: "automation",
           tags: [],
           published_at: "2024-01-01T00:00:00Z",
-          is_official: false
-        }
+          is_official: false,
+        },
       ];
       mockGetLocalStorageItem.mockReturnValue(agents);
-      renderHook(
-        () => useMarketplaceData({
+      renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -342,8 +359,8 @@ describe("useMarketplaceData - Array Methods (Phase 4.2)", () => {
           sortBy: "popular",
           user: { id: "user-1", username: "testuser" },
           activeTab: "agents",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(mockStorage.setItem).toHaveBeenCalled();
@@ -361,12 +378,12 @@ describe("useMarketplaceData - Array Methods (Phase 4.2)", () => {
           category: "automation",
           tags: [],
           published_at: "2024-01-01T00:00:00Z",
-          is_official: false
-        }
+          is_official: false,
+        },
       ];
       mockGetLocalStorageItem.mockReturnValue(agents);
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -375,8 +392,8 @@ describe("useMarketplaceData - Array Methods (Phase 4.2)", () => {
           sortBy: "popular",
           user: null,
           activeTab: "agents",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -385,7 +402,7 @@ describe("useMarketplaceData - Array Methods (Phase 4.2)", () => {
       expect(result.current.agents[0]).toMatchObject({
         id: "agent-1",
         name: "Agent",
-        author_id: "user-1"
+        author_id: "user-1",
       });
     });
   });
@@ -398,7 +415,7 @@ describe("useMarketplaceData - Array Methods (Phase 4.2)", () => {
           category: "automation",
           tags: [],
           published_at: "2024-01-01T00:00:00Z",
-          is_official: false
+          is_official: false,
         },
         {
           id: "agent-2",
@@ -406,12 +423,12 @@ describe("useMarketplaceData - Array Methods (Phase 4.2)", () => {
           category: "automation",
           tags: [],
           published_at: "2024-01-02T00:00:00Z",
-          is_official: true
-        }
+          is_official: true,
+        },
       ];
       mockGetLocalStorageItem.mockReturnValue(agents);
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -421,8 +438,8 @@ describe("useMarketplaceData - Array Methods (Phase 4.2)", () => {
           // Should call sort with comparison callback
           user: null,
           activeTab: "agents",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);

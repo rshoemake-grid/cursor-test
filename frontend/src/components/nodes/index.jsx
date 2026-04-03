@@ -24,7 +24,7 @@ const nodeTypes = {
   database: DatabaseNode,
   firebase: FirebaseNode,
   bigquery: BigQueryNode,
-  tool: ToolNode
+  tool: ToolNode,
 };
 export {
   AWSS3Node,
@@ -37,5 +37,5 @@ export {
   LoopNode,
   StartNode,
   ToolNode,
-  nodeTypes
+  nodeTypes,
 };

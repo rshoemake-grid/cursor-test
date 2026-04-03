@@ -5,7 +5,7 @@ describe("useSyncState", () => {
     const setter = jest.fn();
     const { rerender } = renderHook(
       ({ source }) => useSyncState(source, setter),
-      { initialProps: { source: null } }
+      { initialProps: { source: null } },
     );
     expect(setter).not.toHaveBeenCalled();
     act(() => {
@@ -32,7 +32,7 @@ describe("useSyncState", () => {
     const setter = jest.fn();
     const { rerender } = renderHook(
       ({ source }) => useSyncState(source, setter),
-      { initialProps: { source: null } }
+      { initialProps: { source: null } },
     );
     act(() => {
       rerender({ source: 0 });
@@ -44,7 +44,7 @@ describe("useSyncState", () => {
     const condition = jest.fn((value) => value !== null && value !== void 0);
     const { rerender } = renderHook(
       ({ source }) => useSyncState(source, setter, condition),
-      { initialProps: { source: null } }
+      { initialProps: { source: null } },
     );
     expect(condition).toHaveBeenCalledWith(null);
     expect(setter).not.toHaveBeenCalled();
@@ -59,7 +59,7 @@ describe("useSyncState", () => {
     const condition = jest.fn(() => false);
     const { rerender } = renderHook(
       ({ source }) => useSyncState(source, setter, condition),
-      { initialProps: { source: "test" } }
+      { initialProps: { source: "test" } },
     );
     expect(setter).not.toHaveBeenCalled();
     act(() => {
@@ -72,7 +72,7 @@ describe("useSyncState", () => {
     const setter = jest.fn();
     const { rerender } = renderHook(
       ({ source }) => useSyncState(source, setter),
-      { initialProps: { source: null } }
+      { initialProps: { source: null } },
     );
     act(() => {
       rerender({ source: ["item1", "item2"] });
@@ -83,7 +83,7 @@ describe("useSyncState", () => {
     const setter = jest.fn();
     const { rerender } = renderHook(
       ({ source }) => useSyncState(source, setter),
-      { initialProps: { source: null } }
+      { initialProps: { source: null } },
     );
     act(() => {
       rerender({ source: [] });
@@ -94,7 +94,7 @@ describe("useSyncState", () => {
     const setter = jest.fn();
     const { rerender } = renderHook(
       ({ source }) => useSyncState(source, setter),
-      { initialProps: { source: "value1" } }
+      { initialProps: { source: "value1" } },
     );
     expect(setter).toHaveBeenCalledWith("value1");
     setter.mockClear();
@@ -109,7 +109,7 @@ describe("useSyncStateWithDefault", () => {
     const setter = jest.fn();
     const { rerender } = renderHook(
       ({ source }) => useSyncStateWithDefault(source, setter, null),
-      { initialProps: { source: null } }
+      { initialProps: { source: null } },
     );
     expect(setter).toHaveBeenCalledWith(null);
     act(() => {
@@ -136,7 +136,7 @@ describe("useSyncStateWithDefault", () => {
     const setter = jest.fn();
     const { rerender } = renderHook(
       ({ source }) => useSyncStateWithDefault(source, setter, null),
-      { initialProps: { source: null } }
+      { initialProps: { source: null } },
     );
     expect(setter).toHaveBeenCalledWith(null);
     setter.mockClear();
@@ -150,7 +150,7 @@ describe("useSyncStateWithDefault", () => {
     const setter = jest.fn();
     const { rerender } = renderHook(
       ({ source }) => useSyncStateWithDefault(source, setter, "default"),
-      { initialProps: { source: null } }
+      { initialProps: { source: null } },
     );
     act(() => {
       rerender({ source: "" });
@@ -161,7 +161,7 @@ describe("useSyncStateWithDefault", () => {
     const setter = jest.fn();
     const { rerender } = renderHook(
       ({ source }) => useSyncStateWithDefault(source, setter, true),
-      { initialProps: { source: null } }
+      { initialProps: { source: null } },
     );
     act(() => {
       rerender({ source: false });
@@ -172,7 +172,7 @@ describe("useSyncStateWithDefault", () => {
     const setter = jest.fn();
     const { rerender } = renderHook(
       ({ source }) => useSyncStateWithDefault(source, setter, null),
-      { initialProps: { source: null } }
+      { initialProps: { source: null } },
     );
     expect(setter).toHaveBeenCalledWith(null);
     setter.mockClear();
@@ -185,7 +185,7 @@ describe("useSyncStateWithDefault", () => {
     const setter = jest.fn();
     const { rerender } = renderHook(
       ({ source }) => useSyncStateWithDefault(source, setter, "default"),
-      { initialProps: { source: "value" } }
+      { initialProps: { source: "value" } },
     );
     expect(setter).toHaveBeenCalledWith("value");
     setter.mockClear();

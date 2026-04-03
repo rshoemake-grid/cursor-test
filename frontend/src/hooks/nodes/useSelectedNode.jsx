@@ -1,20 +1,30 @@
 import { useMemo, useRef } from "react";
 import { useReactFlow } from "@xyflow/react";
-import { findNodeById, nodeExists as checkNodeExists } from "../../utils/nodeUtils";
+import {
+  findNodeById,
+  nodeExists as checkNodeExists,
+} from "../../utils/nodeUtils";
 import { logicalOrToEmptyArray } from "../utils/logicalOr";
-import { isValidNodeId, hasValidCache, nodeExistsAndValid as isValidNode } from "../utils/nodeValidation";
-import { updateNodeCacheRefs, clearNodeCache, syncCacheData } from "../utils/nodeCache";
-function useSelectedNode({
-  selectedNodeId,
-  nodesProp
-}) {
+import {
+  isValidNodeId,
+  hasValidCache,
+  nodeExistsAndValid as isValidNode,
+} from "../utils/nodeValidation";
+import {
+  updateNodeCacheRefs,
+  clearNodeCache,
+  syncCacheData,
+} from "../utils/nodeCache";
+function useSelectedNode({ selectedNodeId, nodesProp }) {
   const { getNodes } = useReactFlow();
   const selectedNodeRef = useRef(null);
   const selectedNodeIdRef = useRef(null);
   const nodes = useMemo(() => {
     try {
       const flowNodes = getNodes();
-      return flowNodes.length > 0 ? flowNodes : logicalOrToEmptyArray(nodesProp);
+      return flowNodes.length > 0
+        ? flowNodes
+        : logicalOrToEmptyArray(nodesProp);
     } catch {
       return logicalOrToEmptyArray(nodesProp);
     }
@@ -24,7 +34,13 @@ function useSelectedNode({
       clearNodeCache(selectedNodeRef, selectedNodeIdRef);
       return null;
     }
-    if (hasValidCache(selectedNodeIdRef.current, selectedNodeId, selectedNodeRef.current)) {
+    if (
+      hasValidCache(
+        selectedNodeIdRef.current,
+        selectedNodeId,
+        selectedNodeRef.current,
+      )
+    ) {
       if (checkNodeExists(selectedNodeId, getNodes, nodes)) {
         const updated = findNodeById(selectedNodeId, getNodes, nodes);
         if (isValidNode(updated)) {
@@ -34,14 +50,17 @@ function useSelectedNode({
       }
     }
     const found = findNodeById(selectedNodeId, getNodes, nodes);
-    updateNodeCacheRefs(selectedNodeRef, selectedNodeIdRef, found, selectedNodeId);
+    updateNodeCacheRefs(
+      selectedNodeRef,
+      selectedNodeIdRef,
+      found,
+      selectedNodeId,
+    );
     return found;
   }, [selectedNodeId, getNodes, nodes]);
   return {
     selectedNode,
-    nodes
+    nodes,
   };
 }
-export {
-  useSelectedNode
-};
+export { useSelectedNode };

@@ -33,5 +33,5 @@ export {
   logicalOrToEmptyArray,
   logicalOrToEmptyObject,
   logicalOrToNull,
-  logicalOrToUndefined
+  logicalOrToUndefined,
 };

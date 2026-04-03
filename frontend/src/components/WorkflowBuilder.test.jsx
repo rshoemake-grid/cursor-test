@@ -1,7 +1,8 @@
-import { jsx } from "react/jsx-runtime";
 import { render, screen, waitFor } from "@testing-library/react";
 const waitForWithTimeout = (callback, timeout = 2e3) => {
-  return waitFor(callback, { timeout });
+  return waitFor(callback, {
+    timeout,
+  });
 };
 import { ReactFlowProvider } from "@xyflow/react";
 import { useAuth } from "../contexts/AuthContext";
@@ -12,78 +13,78 @@ jest.mock("../utils/logger", () => ({
     debug: jest.fn(),
     error: jest.fn(),
     warn: jest.fn(),
-    info: jest.fn()
-  }
+    info: jest.fn(),
+  },
 }));
 jest.mock("../contexts/AuthContext", () => ({
-  useAuth: jest.fn()
+  useAuth: jest.fn(),
 }));
 jest.mock("../api/client", () => ({
   api: {
     createWorkflow: jest.fn(),
     updateWorkflow: jest.fn(),
     getWorkflow: jest.fn(),
-    executeWorkflow: jest.fn()
-  }
+    executeWorkflow: jest.fn(),
+  },
 }));
 jest.mock("../utils/notifications", () => ({
   showSuccess: jest.fn(),
-  showError: jest.fn()
+  showError: jest.fn(),
 }));
 jest.mock("../utils/confirm", () => ({
-  showConfirm: jest.fn()
+  showConfirm: jest.fn(),
 }));
 jest.mock("../hooks/storage", () => ({
   useLocalStorage: jest.fn(() => ["", jest.fn(), jest.fn()]),
   getLocalStorageItem: jest.fn(() => ({})),
   setLocalStorageItem: jest.fn(),
   useAutoSave: jest.fn(),
-  useDraftManagement: jest.fn()
+  useDraftManagement: jest.fn(),
 }));
 jest.mock("./NodePanel", () => {
   const { jsx } = require("react/jsx-runtime");
   return function MockNodePanel() {
-    return /* @__PURE__ */ jsx("div", { "data-testid": "node-panel", children: "NodePanel" });
+    return <div data-testid="node-panel">NodePanel</div>;
   };
 });
 jest.mock("./PropertyPanel", () => {
   const { jsx } = require("react/jsx-runtime");
   return function MockPropertyPanel() {
-    return /* @__PURE__ */ jsx("div", { "data-testid": "property-panel", children: "PropertyPanel" });
+    return <div data-testid="property-panel">PropertyPanel</div>;
   };
 });
 jest.mock("./ExecutionConsole", () => {
   const { jsx } = require("react/jsx-runtime");
   return function MockExecutionConsole() {
-    return /* @__PURE__ */ jsx("div", { "data-testid": "execution-console", children: "ExecutionConsole" });
+    return <div data-testid="execution-console">ExecutionConsole</div>;
   };
 });
 jest.mock("./ExecutionInputDialog", () => {
   const { jsx } = require("react/jsx-runtime");
   return function MockExecutionInputDialog() {
-    return /* @__PURE__ */ jsx("div", { "data-testid": "execution-input-dialog", children: "ExecutionInputDialog" });
+    return <div data-testid="execution-input-dialog">ExecutionInputDialog</div>;
   };
 });
 jest.mock("./NodeContextMenu", () => {
   const { jsx } = require("react/jsx-runtime");
   return function MockNodeContextMenu() {
-    return /* @__PURE__ */ jsx("div", { "data-testid": "node-context-menu", children: "NodeContextMenu" });
+    return <div data-testid="node-context-menu">NodeContextMenu</div>;
   };
 });
 jest.mock("./MarketplaceDialog", () => {
   const { jsx } = require("react/jsx-runtime");
   return function MockMarketplaceDialog() {
-    return /* @__PURE__ */ jsx("div", { "data-testid": "marketplace-dialog", children: "MarketplaceDialog" });
+    return <div data-testid="marketplace-dialog">MarketplaceDialog</div>;
   };
 });
 jest.mock("./WorkflowCanvas", () => {
   const { jsx } = require("react/jsx-runtime");
   return function MockWorkflowCanvas() {
-    return /* @__PURE__ */ jsx("div", { "data-testid": "workflow-canvas", children: "WorkflowCanvas" });
+    return <div data-testid="workflow-canvas">WorkflowCanvas</div>;
   };
 });
 jest.mock("./nodes", () => ({
-  nodeTypes: {}
+  nodeTypes: {},
 }));
 jest.mock("@xyflow/react/dist/style.css", () => ({}));
 jest.mock("@xyflow/react", () => {
@@ -92,25 +93,56 @@ jest.mock("@xyflow/react", () => {
   const mockGetNodes = jest.fn(() => []);
   const mockGetEdges = jest.fn(() => []);
   const mockDeleteElements = jest.fn();
-  const mockScreenToFlowCoordinate = jest.fn(({ x, y }) => ({ x, y }));
+  const mockScreenToFlowCoordinate = jest.fn(({ x, y }) => ({
+    x,
+    y,
+  }));
   return {
     ...actualReactFlow,
     ReactFlow: ({ children, ...props }) => {
-      return React2.createElement("div", { "data-testid": "react-flow", ...props }, children);
+      return React2.createElement(
+        "div",
+        {
+          "data-testid": "react-flow",
+          ...props,
+        },
+        children,
+      );
     },
     ReactFlowProvider: ({ children }) => {
       return React2.createElement("div", null, children);
     },
-    MiniMap: () => React2.createElement("div", { "data-testid": "minimap" }, "MiniMap"),
-    Controls: () => React2.createElement("div", { "data-testid": "controls" }, "Controls"),
-    Background: () => React2.createElement("div", { "data-testid": "background" }, "Background"),
+    MiniMap: () =>
+      React2.createElement(
+        "div",
+        {
+          "data-testid": "minimap",
+        },
+        "MiniMap",
+      ),
+    Controls: () =>
+      React2.createElement(
+        "div",
+        {
+          "data-testid": "controls",
+        },
+        "Controls",
+      ),
+    Background: () =>
+      React2.createElement(
+        "div",
+        {
+          "data-testid": "background",
+        },
+        "Background",
+      ),
     useReactFlow: () => ({
       getNodes: mockGetNodes,
       getEdges: mockGetEdges,
       deleteElements: mockDeleteElements,
       screenToFlowPosition: mockScreenToFlowCoordinate,
-      screenToFlowCoordinate: mockScreenToFlowCoordinate
-    })
+      screenToFlowCoordinate: mockScreenToFlowCoordinate,
+    }),
   };
 });
 import WorkflowBuilder from "./WorkflowBuilder";
@@ -129,24 +161,29 @@ describe("WorkflowBuilder", () => {
     onExecutionStart: mockOnExecutionStart,
     onWorkflowSaved: mockOnWorkflowSaved,
     onWorkflowModified: mockOnWorkflowModified,
-    onWorkflowLoaded: mockOnWorkflowLoaded
+    onWorkflowLoaded: mockOnWorkflowLoaded,
   };
   beforeEach(() => {
     jest.clearAllMocks();
     localStorage.clear();
     mockUseAuth.mockReturnValue({
       isAuthenticated: true,
-      user: { id: "1", username: "testuser" },
+      user: {
+        id: "1",
+        username: "testuser",
+      },
       token: "token",
       login: jest.fn(),
       logout: jest.fn(),
-      register: jest.fn()
+      register: jest.fn(),
     });
     showConfirm.mockResolvedValue(true);
   });
   it.skip("should render WorkflowBuilder", async () => {
     render(
-      /* @__PURE__ */ jsx(ReactFlowProvider, { children: /* @__PURE__ */ jsx(WorkflowBuilder, { ...defaultProps }) })
+      <ReactFlowProvider>
+        <WorkflowBuilder {...defaultProps} />
+      </ReactFlowProvider>,
     );
     await waitForWithTimeout(() => {
       expect(screen.getByTestId("react-flow")).toBeInTheDocument();
@@ -161,11 +198,13 @@ describe("WorkflowBuilder", () => {
       description: "Test description",
       nodes: [],
       edges: [],
-      variables: {}
+      variables: {},
     };
     mockApi.getWorkflow.mockResolvedValue(mockWorkflow);
     render(
-      /* @__PURE__ */ jsx(ReactFlowProvider, { children: /* @__PURE__ */ jsx(WorkflowBuilder, { ...defaultProps, workflowId: "workflow-1" }) })
+      <ReactFlowProvider>
+        <WorkflowBuilder {...defaultProps} workflowId="workflow-1" />
+      </ReactFlowProvider>,
     );
     await waitForWithTimeout(() => {
       expect(mockApi.getWorkflow).toHaveBeenCalledWith("workflow-1");
@@ -178,7 +217,7 @@ describe("WorkflowBuilder", () => {
     const handle = {
       saveWorkflow: jest.fn(),
       executeWorkflow: jest.fn(),
-      exportWorkflow: jest.fn()
+      exportWorkflow: jest.fn(),
     };
     expect(handle).toBeDefined();
   });
@@ -187,7 +226,7 @@ describe("WorkflowBuilder", () => {
       const handle = {
         saveWorkflow: jest.fn().mockResolvedValue("workflow-1"),
         executeWorkflow: jest.fn(),
-        exportWorkflow: jest.fn()
+        exportWorkflow: jest.fn(),
       };
       expect(handle.saveWorkflow).toBeDefined();
       expect(typeof handle.saveWorkflow).toBe("function");
@@ -196,7 +235,7 @@ describe("WorkflowBuilder", () => {
       const handle = {
         saveWorkflow: jest.fn(),
         executeWorkflow: jest.fn(),
-        exportWorkflow: jest.fn()
+        exportWorkflow: jest.fn(),
       };
       expect(handle.executeWorkflow).toBeDefined();
       expect(typeof handle.executeWorkflow).toBe("function");
@@ -205,7 +244,7 @@ describe("WorkflowBuilder", () => {
       const handle = {
         saveWorkflow: jest.fn(),
         executeWorkflow: jest.fn(),
-        exportWorkflow: jest.fn()
+        exportWorkflow: jest.fn(),
       };
       expect(handle.exportWorkflow).toBeDefined();
       expect(typeof handle.exportWorkflow).toBe("function");
@@ -218,7 +257,7 @@ describe("WorkflowBuilder", () => {
         setItem: jest.fn(),
         removeItem: jest.fn(),
         addEventListener: jest.fn(),
-        removeEventListener: jest.fn()
+        removeEventListener: jest.fn(),
       };
       expect(mockStorage).toBeDefined();
     });
@@ -228,7 +267,7 @@ describe("WorkflowBuilder", () => {
         setItem: jest.fn(),
         removeItem: jest.fn(),
         addEventListener: jest.fn(),
-        removeEventListener: jest.fn()
+        removeEventListener: jest.fn(),
       };
       expect(mockStorage).toBeDefined();
     });
@@ -240,7 +279,7 @@ describe("WorkflowBuilder", () => {
         setItem: jest.fn(),
         removeItem: jest.fn(),
         addEventListener: jest.fn(),
-        removeEventListener: jest.fn()
+        removeEventListener: jest.fn(),
       };
       expect(mockStorage).toBeDefined();
     });

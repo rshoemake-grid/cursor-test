@@ -1,4 +1,10 @@
-import { showNotification, showSuccess, showError, showInfo, showWarning } from "./notifications";
+import {
+  showNotification,
+  showSuccess,
+  showError,
+  showInfo,
+  showWarning,
+} from "./notifications";
 describe("notifications", () => {
   beforeEach(() => {
     document.body.innerHTML = "";
@@ -25,7 +31,9 @@ describe("notifications", () => {
       expect(notification).toBeInstanceOf(HTMLDivElement);
     });
     it("should create a notification with custom type", () => {
-      const notification = showNotification("Test message", { type: "success" });
+      const notification = showNotification("Test message", {
+        type: "success",
+      });
       expect(notification).toBeTruthy();
       expect(notification.textContent).toBe("Test message");
       expect(notification).toBeInstanceOf(HTMLDivElement);
@@ -37,7 +45,9 @@ describe("notifications", () => {
       expect(notification).toBeInstanceOf(HTMLDivElement);
     });
     it("should create a notification with warning type", () => {
-      const notification = showNotification("Test message", { type: "warning" });
+      const notification = showNotification("Test message", {
+        type: "warning",
+      });
       expect(notification).toBeTruthy();
       expect(notification.textContent).toBe("Test message");
       expect(notification).toBeInstanceOf(HTMLDivElement);
@@ -228,7 +238,10 @@ describe("notifications", () => {
       expect(notification.textContent).toBe("Test message");
     });
     it("should handle duration being undefined in options", () => {
-      const notification = showNotification("Test message", { type: "success", duration: void 0 });
+      const notification = showNotification("Test message", {
+        type: "success",
+        duration: void 0,
+      });
       expect(notification).toBeTruthy();
       jest.advanceTimersByTime(4999);
       expect(notification.style.cssText).not.toContain("opacity: 0");
@@ -236,7 +249,10 @@ describe("notifications", () => {
       expect(notification.style.cssText).toContain("opacity: 0");
     });
     it("should handle type being undefined in options", () => {
-      const notification = showNotification("Test message", { duration: 1e3, type: void 0 });
+      const notification = showNotification("Test message", {
+        duration: 1e3,
+        type: void 0,
+      });
       expect(notification).toBeTruthy();
       expect(notification).toBeInstanceOf(HTMLDivElement);
     });
@@ -411,10 +427,10 @@ describe("notifications", () => {
         getElementById: jest.fn((id) => document.getElementById(id)),
         getActiveElement: jest.fn(() => document.activeElement),
         head: document.head,
-        body: document.body
+        body: document.body,
       };
       showNotification("Test message", {
-        documentAdapter: mockDocumentAdapter
+        documentAdapter: mockDocumentAdapter,
       });
       expect(mockDocumentAdapter.createElement).toHaveBeenCalled();
       expect(mockDocumentAdapter.body).toBe(document.body);
@@ -428,17 +444,17 @@ describe("notifications", () => {
         setInterval: jest.fn((callback, delay) => {
           return setInterval(callback, delay);
         }),
-        clearInterval: jest.fn((id) => clearInterval(id))
+        clearInterval: jest.fn((id) => clearInterval(id)),
       };
       showNotification("Test message", {
         duration: 1e3,
-        timerAdapter: mockTimerAdapter
+        timerAdapter: mockTimerAdapter,
       });
       expect(mockTimerAdapter.setTimeout).toHaveBeenCalled();
     });
     it("should handle null document adapter gracefully", () => {
       const notification = showNotification("Test message", {
-        documentAdapter: null
+        documentAdapter: null,
       });
       expect(notification).toBeNull();
     });
@@ -454,10 +470,10 @@ describe("notifications", () => {
         getElementById: mockGetElementById,
         getActiveElement: jest.fn(() => document.activeElement),
         head: document.head,
-        body: document.body
+        body: document.body,
       };
       showNotification("Test message", {
-        documentAdapter: mockDocumentAdapter
+        documentAdapter: mockDocumentAdapter,
       });
       expect(mockGetElementById).toHaveBeenCalledWith("notification-styles");
     });
@@ -467,10 +483,10 @@ describe("notifications", () => {
         getElementById: jest.fn((id) => document.getElementById(id)),
         getActiveElement: jest.fn(() => document.activeElement),
         head: document.head,
-        body: document.body
+        body: document.body,
       };
       const notification = showNotification("Test message", {
-        documentAdapter: mockDocumentAdapter
+        documentAdapter: mockDocumentAdapter,
       });
       expect(mockDocumentAdapter.head).toBe(document.head);
       expect(mockDocumentAdapter.body).toBe(document.body);
@@ -484,10 +500,10 @@ describe("notifications", () => {
         getElementById: jest.fn(() => null),
         getActiveElement: jest.fn(() => null),
         head: document.head,
-        body: document.body
+        body: document.body,
       };
       const notification = showNotification("Test message", {
-        documentAdapter: mockDocumentAdapter
+        documentAdapter: mockDocumentAdapter,
       });
       expect(notification).toBeNull();
     });

@@ -5,23 +5,23 @@ const DEFAULT_FORM_DATA = {
   category: "automation",
   tags: "",
   difficulty: "beginner",
-  estimated_time: ""
+  estimated_time: "",
 };
 function usePublishForm({ initialData, onReset } = {}) {
   const [form, setForm] = useState({
     ...DEFAULT_FORM_DATA,
-    ...initialData
+    ...initialData,
   });
   const updateField = useCallback((field, value) => {
     setForm((prev) => ({
       ...prev,
-      [field]: value
+      [field]: value,
     }));
   }, []);
   const updateForm = useCallback((updates) => {
     setForm((prev) => ({
       ...prev,
-      ...updates
+      ...updates,
     }));
   }, []);
   const reset = useCallback(() => {
@@ -33,7 +33,7 @@ function usePublishForm({ initialData, onReset } = {}) {
   const resetToInitial = useCallback(() => {
     setForm({
       ...DEFAULT_FORM_DATA,
-      ...initialData
+      ...initialData,
     });
   }, [initialData]);
   return {
@@ -42,9 +42,7 @@ function usePublishForm({ initialData, onReset } = {}) {
     updateField,
     updateForm,
     reset,
-    resetToInitial
+    resetToInitial,
   };
 }
-export {
-  usePublishForm
-};
+export { usePublishForm };

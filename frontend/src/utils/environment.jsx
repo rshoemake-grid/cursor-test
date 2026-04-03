@@ -8,7 +8,4 @@ function isBrowserEnvironment() {
 function isServerEnvironment() {
   return getWindowType() === "undefined";
 }
-export {
-  isBrowserEnvironment,
-  isServerEnvironment
-};
+export { isBrowserEnvironment, isServerEnvironment };

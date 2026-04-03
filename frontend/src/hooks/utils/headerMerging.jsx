@@ -11,7 +11,7 @@ const headerStrategies = {
   },
   Object: (headers, base) => {
     Object.assign(base, headers);
-  }
+  },
 };
 function addContentTypeIfNeeded(headers, method) {
   if ((method === "POST" || method === "PUT") && !headers["Content-Type"]) {
@@ -43,5 +43,5 @@ export {
   addAuthorizationIfNeeded,
   addContentTypeIfNeeded,
   buildBaseHeaders,
-  mergeHeaders
+  mergeHeaders,
 };

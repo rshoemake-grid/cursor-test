@@ -3,8 +3,8 @@ import { logger } from "../../utils/logger";
 jest.mock("../../utils/logger", () => ({
   logger: {
     debug: jest.fn(),
-    error: jest.fn()
-  }
+    error: jest.fn(),
+  },
 }));
 const mockLoggerDebug = logger.debug;
 describe("ExecutionStateManager", () => {
@@ -15,7 +15,7 @@ describe("ExecutionStateManager", () => {
     workflowId,
     isUnsaved: false,
     executions,
-    activeExecutionId: null
+    activeExecutionId: null,
   });
   beforeEach(() => {
     jest.clearAllMocks();
@@ -24,7 +24,11 @@ describe("ExecutionStateManager", () => {
   describe("handleExecutionStart", () => {
     it("should add new execution to active tab", () => {
       const tabs = [createMockTab("workflow-1")];
-      const result = manager.handleExecutionStart(tabs, "tab-workflow-1", "exec-1");
+      const result = manager.handleExecutionStart(
+        tabs,
+        "tab-workflow-1",
+        "exec-1",
+      );
       expect(result[0].executions).toHaveLength(1);
       expect(result[0].executions[0].id).toBe("exec-1");
       expect(result[0].activeExecutionId).toBe("exec-1");
@@ -35,17 +39,21 @@ describe("ExecutionStateManager", () => {
         status: "running",
         startedAt: /* @__PURE__ */ new Date(),
         nodes: {},
-        logs: []
+        logs: [],
       };
       const pendingExec2 = {
         id: "pending-2",
         status: "running",
         startedAt: /* @__PURE__ */ new Date(),
         nodes: {},
-        logs: []
+        logs: [],
       };
       const tabs = [createMockTab("workflow-1", [pendingExec1, pendingExec2])];
-      const result = manager.handleExecutionStart(tabs, "tab-workflow-1", "exec-real");
+      const result = manager.handleExecutionStart(
+        tabs,
+        "tab-workflow-1",
+        "exec-real",
+      );
       expect(result[0].executions).toHaveLength(2);
       expect(result[0].executions[1].id).toBe("exec-real");
       expect(result[0].executions[0].id).toBe("pending-1");
@@ -56,16 +64,24 @@ describe("ExecutionStateManager", () => {
         status: "running",
         startedAt: /* @__PURE__ */ new Date(),
         nodes: {},
-        logs: []
+        logs: [],
       };
       const tabs = [createMockTab("workflow-1", [existingExec])];
-      const result = manager.handleExecutionStart(tabs, "tab-workflow-1", "exec-1");
+      const result = manager.handleExecutionStart(
+        tabs,
+        "tab-workflow-1",
+        "exec-1",
+      );
       expect(result[0].executions).toHaveLength(1);
       expect(result[0].activeExecutionId).toBe("exec-1");
     });
     it("should not modify tabs when active tab not found", () => {
       const tabs = [createMockTab("workflow-1")];
-      const result = manager.handleExecutionStart(tabs, "non-existent-tab", "exec-1");
+      const result = manager.handleExecutionStart(
+        tabs,
+        "non-existent-tab",
+        "exec-1",
+      );
       expect(result).toEqual(tabs);
       expect(result[0].executions).toHaveLength(0);
     });
@@ -73,7 +89,11 @@ describe("ExecutionStateManager", () => {
       const tab1 = createMockTab("workflow-1");
       const tab2 = createMockTab("workflow-2");
       const tabs = [tab1, tab2];
-      const result = manager.handleExecutionStart(tabs, "tab-workflow-1", "exec-1");
+      const result = manager.handleExecutionStart(
+        tabs,
+        "tab-workflow-1",
+        "exec-1",
+      );
       expect(result[0].executions).toHaveLength(1);
       expect(result[1].executions).toHaveLength(0);
       expect(result[1]).toEqual(tab2);
@@ -86,7 +106,7 @@ describe("ExecutionStateManager", () => {
         status: "running",
         startedAt: /* @__PURE__ */ new Date(),
         nodes: {},
-        logs: []
+        logs: [],
       };
       const tabs = [createMockTab("workflow-1", [exec])];
       const result = manager.handleClearExecutions(tabs, "workflow-1");
@@ -96,7 +116,10 @@ describe("ExecutionStateManager", () => {
     });
     it("should not modify tabs when workflow not found", () => {
       const tabs = [createMockTab("workflow-1")];
-      const result = manager.handleClearExecutions(tabs, "non-existent-workflow");
+      const result = manager.handleClearExecutions(
+        tabs,
+        "non-existent-workflow",
+      );
       expect(result).toEqual(tabs);
     });
   });
@@ -107,20 +130,22 @@ describe("ExecutionStateManager", () => {
         status: "running",
         startedAt: /* @__PURE__ */ new Date(),
         nodes: {},
-        logs: []
+        logs: [],
       };
       const exec2 = {
         id: "exec-2",
         status: "running",
         startedAt: /* @__PURE__ */ new Date(),
         nodes: {},
-        logs: []
+        logs: [],
       };
-      const tabs = [
-        createMockTab("workflow-1", [exec1, exec2])
-      ];
+      const tabs = [createMockTab("workflow-1", [exec1, exec2])];
       tabs[0].activeExecutionId = "exec-1";
-      const result = manager.handleRemoveExecution(tabs, "workflow-1", "exec-1");
+      const result = manager.handleRemoveExecution(
+        tabs,
+        "workflow-1",
+        "exec-1",
+      );
       expect(result[0].executions).toHaveLength(1);
       expect(result[0].executions[0].id).toBe("exec-2");
       expect(result[0].activeExecutionId).toBe("exec-2");
@@ -132,17 +157,25 @@ describe("ExecutionStateManager", () => {
         status: "running",
         startedAt: /* @__PURE__ */ new Date(),
         nodes: {},
-        logs: []
+        logs: [],
       };
       const tabs = [createMockTab("workflow-1", [exec])];
       tabs[0].activeExecutionId = "exec-1";
-      const result = manager.handleRemoveExecution(tabs, "workflow-1", "exec-1");
+      const result = manager.handleRemoveExecution(
+        tabs,
+        "workflow-1",
+        "exec-1",
+      );
       expect(result[0].executions).toHaveLength(0);
       expect(result[0].activeExecutionId).toBeNull();
     });
     it("should not modify tabs when workflow not found", () => {
       const tabs = [createMockTab("workflow-1")];
-      const result = manager.handleRemoveExecution(tabs, "non-existent-workflow", "exec-1");
+      const result = manager.handleRemoveExecution(
+        tabs,
+        "non-existent-workflow",
+        "exec-1",
+      );
       expect(result).toEqual(tabs);
     });
     it("should preserve activeExecutionId when removing non-active execution", () => {
@@ -151,18 +184,22 @@ describe("ExecutionStateManager", () => {
         status: "running",
         startedAt: /* @__PURE__ */ new Date(),
         nodes: {},
-        logs: []
+        logs: [],
       };
       const exec2 = {
         id: "exec-2",
         status: "running",
         startedAt: /* @__PURE__ */ new Date(),
         nodes: {},
-        logs: []
+        logs: [],
       };
       const tabs = [createMockTab("workflow-1", [exec1, exec2])];
       tabs[0].activeExecutionId = "exec-1";
-      const result = manager.handleRemoveExecution(tabs, "workflow-1", "exec-2");
+      const result = manager.handleRemoveExecution(
+        tabs,
+        "workflow-1",
+        "exec-2",
+      );
       expect(result[0].executions).toHaveLength(1);
       expect(result[0].executions[0].id).toBe("exec-1");
       expect(result[0].activeExecutionId).toBe("exec-1");
@@ -175,11 +212,19 @@ describe("ExecutionStateManager", () => {
         status: "running",
         startedAt: /* @__PURE__ */ new Date(),
         nodes: {},
-        logs: []
+        logs: [],
       };
       const tabs = [createMockTab("workflow-1", [exec])];
-      const newLog = { message: "New log", timestamp: /* @__PURE__ */ new Date() };
-      const result = manager.handleExecutionLogUpdate(tabs, "workflow-1", "exec-1", newLog);
+      const newLog = {
+        message: "New log",
+        timestamp: /* @__PURE__ */ new Date(),
+      };
+      const result = manager.handleExecutionLogUpdate(
+        tabs,
+        "workflow-1",
+        "exec-1",
+        newLog,
+      );
       expect(result[0].executions[0].logs).toHaveLength(1);
       expect(result[0].executions[0].logs[0]).toEqual(newLog);
     });
@@ -189,23 +234,33 @@ describe("ExecutionStateManager", () => {
         status: "running",
         startedAt: /* @__PURE__ */ new Date(),
         nodes: {},
-        logs: []
+        logs: [],
       };
       const exec2 = {
         id: "exec-2",
         status: "running",
         startedAt: /* @__PURE__ */ new Date(),
         nodes: {},
-        logs: []
+        logs: [],
       };
       const tabs = [createMockTab("workflow-1", [exec1, exec2])];
-      const result = manager.handleExecutionLogUpdate(tabs, "workflow-1", "exec-1", { message: "Log" });
+      const result = manager.handleExecutionLogUpdate(
+        tabs,
+        "workflow-1",
+        "exec-1",
+        { message: "Log" },
+      );
       expect(result[0].executions[0].logs).toHaveLength(1);
       expect(result[0].executions[1].logs).toHaveLength(0);
     });
     it("should return empty array when workflow not found", () => {
       const tabs = [createMockTab("workflow-1")];
-      const result = manager.handleExecutionLogUpdate(tabs, "non-existent-workflow", "exec-1", { message: "Log" });
+      const result = manager.handleExecutionLogUpdate(
+        tabs,
+        "non-existent-workflow",
+        "exec-1",
+        { message: "Log" },
+      );
       expect(result[0].executions).toEqual([]);
     });
   });
@@ -216,10 +271,15 @@ describe("ExecutionStateManager", () => {
         status: "running",
         startedAt: /* @__PURE__ */ new Date(),
         nodes: {},
-        logs: []
+        logs: [],
       };
       const tabs = [createMockTab("workflow-1", [exec])];
-      const result = manager.handleExecutionStatusUpdate(tabs, "workflow-1", "exec-1", "completed");
+      const result = manager.handleExecutionStatusUpdate(
+        tabs,
+        "workflow-1",
+        "exec-1",
+        "completed",
+      );
       expect(result[0].executions[0].status).toBe("completed");
       expect(result[0].executions[0].completedAt).toBeDefined();
     });
@@ -229,10 +289,15 @@ describe("ExecutionStateManager", () => {
         status: "running",
         startedAt: /* @__PURE__ */ new Date(),
         nodes: {},
-        logs: []
+        logs: [],
       };
       const tabs = [createMockTab("workflow-1", [exec])];
-      const result = manager.handleExecutionStatusUpdate(tabs, "workflow-1", "exec-1", "completed");
+      const result = manager.handleExecutionStatusUpdate(
+        tabs,
+        "workflow-1",
+        "exec-1",
+        "completed",
+      );
       expect(result[0].executions[0].completedAt).toBeDefined();
     });
     it("should set completedAt for failed status", () => {
@@ -241,10 +306,15 @@ describe("ExecutionStateManager", () => {
         status: "running",
         startedAt: /* @__PURE__ */ new Date(),
         nodes: {},
-        logs: []
+        logs: [],
       };
       const tabs = [createMockTab("workflow-1", [exec])];
-      const result = manager.handleExecutionStatusUpdate(tabs, "workflow-1", "exec-1", "failed");
+      const result = manager.handleExecutionStatusUpdate(
+        tabs,
+        "workflow-1",
+        "exec-1",
+        "failed",
+      );
       expect(result[0].executions[0].completedAt).toBeDefined();
     });
     it("should preserve completedAt when status is running", () => {
@@ -255,10 +325,15 @@ describe("ExecutionStateManager", () => {
         startedAt: /* @__PURE__ */ new Date(),
         completedAt: existingCompletedAt,
         nodes: {},
-        logs: []
+        logs: [],
       };
       const tabs = [createMockTab("workflow-1", [exec])];
-      const result = manager.handleExecutionStatusUpdate(tabs, "workflow-1", "exec-1", "running");
+      const result = manager.handleExecutionStatusUpdate(
+        tabs,
+        "workflow-1",
+        "exec-1",
+        "running",
+      );
       expect(result[0].executions[0].status).toBe("running");
       expect(result[0].executions[0].completedAt).toBe(existingCompletedAt);
     });
@@ -268,10 +343,15 @@ describe("ExecutionStateManager", () => {
         status: "running",
         startedAt: /* @__PURE__ */ new Date(),
         nodes: {},
-        logs: []
+        logs: [],
       };
       const tabs = [createMockTab("workflow-1", [exec])];
-      const result = manager.handleExecutionStatusUpdate(tabs, "workflow-1", "exec-1", "running");
+      const result = manager.handleExecutionStatusUpdate(
+        tabs,
+        "workflow-1",
+        "exec-1",
+        "running",
+      );
       expect(result[0].executions[0].status).toBe("running");
       expect(result[0].executions[0].completedAt).toBeUndefined();
     });
@@ -283,10 +363,15 @@ describe("ExecutionStateManager", () => {
         startedAt: /* @__PURE__ */ new Date(),
         completedAt: existingCompletedAt,
         nodes: {},
-        logs: []
+        logs: [],
       };
       const tabs = [createMockTab("workflow-1", [exec])];
-      const result = manager.handleExecutionStatusUpdate(tabs, "workflow-1", "exec-1", "running");
+      const result = manager.handleExecutionStatusUpdate(
+        tabs,
+        "workflow-1",
+        "exec-1",
+        "running",
+      );
       expect(result[0].executions[0].status).toBe("running");
       expect(result[0].executions[0].completedAt).toBe(existingCompletedAt);
     });
@@ -298,15 +383,25 @@ describe("ExecutionStateManager", () => {
         startedAt: /* @__PURE__ */ new Date(),
         completedAt: existingCompletedAt,
         nodes: {},
-        logs: []
+        logs: [],
       };
       const tabs = [createMockTab("workflow-1", [exec])];
-      const result = manager.handleExecutionStatusUpdate(tabs, "workflow-1", "exec-1", "running");
+      const result = manager.handleExecutionStatusUpdate(
+        tabs,
+        "workflow-1",
+        "exec-1",
+        "running",
+      );
       expect(result[0].executions[0].completedAt).toBe(existingCompletedAt);
     });
     it("should return empty array when workflow not found", () => {
       const tabs = [createMockTab("workflow-1")];
-      const result = manager.handleExecutionStatusUpdate(tabs, "non-existent-workflow", "exec-1", "completed");
+      const result = manager.handleExecutionStatusUpdate(
+        tabs,
+        "non-existent-workflow",
+        "exec-1",
+        "completed",
+      );
       expect(result[0].executions).toEqual([]);
     });
     it("should not modify executions that do not match executionId", () => {
@@ -315,17 +410,22 @@ describe("ExecutionStateManager", () => {
         status: "running",
         startedAt: /* @__PURE__ */ new Date(),
         nodes: {},
-        logs: []
+        logs: [],
       };
       const exec2 = {
         id: "exec-2",
         status: "running",
         startedAt: /* @__PURE__ */ new Date(),
         nodes: {},
-        logs: []
+        logs: [],
       };
       const tabs = [createMockTab("workflow-1", [exec1, exec2])];
-      const result = manager.handleExecutionStatusUpdate(tabs, "workflow-1", "exec-1", "completed");
+      const result = manager.handleExecutionStatusUpdate(
+        tabs,
+        "workflow-1",
+        "exec-1",
+        "completed",
+      );
       expect(result[0].executions[0].status).toBe("completed");
       expect(result[0].executions[0].completedAt).toBeDefined();
       expect(result[0].executions[1].status).toBe("running");
@@ -339,11 +439,17 @@ describe("ExecutionStateManager", () => {
         status: "running",
         startedAt: /* @__PURE__ */ new Date(),
         nodes: {},
-        logs: []
+        logs: [],
       };
       const tabs = [createMockTab("workflow-1", [exec])];
       const nodeState = { status: "processing", data: { key: "value" } };
-      const result = manager.handleExecutionNodeUpdate(tabs, "workflow-1", "exec-1", "node-1", nodeState);
+      const result = manager.handleExecutionNodeUpdate(
+        tabs,
+        "workflow-1",
+        "exec-1",
+        "node-1",
+        nodeState,
+      );
       expect(result[0].executions[0].nodes["node-1"]).toEqual(nodeState);
     });
     it("should preserve existing node states", () => {
@@ -352,16 +458,32 @@ describe("ExecutionStateManager", () => {
         status: "running",
         startedAt: /* @__PURE__ */ new Date(),
         nodes: { "node-1": { status: "old" } },
-        logs: []
+        logs: [],
       };
       const tabs = [createMockTab("workflow-1", [exec])];
-      const result = manager.handleExecutionNodeUpdate(tabs, "workflow-1", "exec-1", "node-2", { status: "new" });
-      expect(result[0].executions[0].nodes["node-1"]).toEqual({ status: "old" });
-      expect(result[0].executions[0].nodes["node-2"]).toEqual({ status: "new" });
+      const result = manager.handleExecutionNodeUpdate(
+        tabs,
+        "workflow-1",
+        "exec-1",
+        "node-2",
+        { status: "new" },
+      );
+      expect(result[0].executions[0].nodes["node-1"]).toEqual({
+        status: "old",
+      });
+      expect(result[0].executions[0].nodes["node-2"]).toEqual({
+        status: "new",
+      });
     });
     it("should return empty array when workflow not found", () => {
       const tabs = [createMockTab("workflow-1")];
-      const result = manager.handleExecutionNodeUpdate(tabs, "non-existent-workflow", "exec-1", "node-1", { status: "new" });
+      const result = manager.handleExecutionNodeUpdate(
+        tabs,
+        "non-existent-workflow",
+        "exec-1",
+        "node-1",
+        { status: "new" },
+      );
       expect(result[0].executions).toEqual([]);
     });
     it("should not modify executions that do not match executionId", () => {
@@ -370,18 +492,26 @@ describe("ExecutionStateManager", () => {
         status: "running",
         startedAt: /* @__PURE__ */ new Date(),
         nodes: { "node-1": { status: "old" } },
-        logs: []
+        logs: [],
       };
       const exec2 = {
         id: "exec-2",
         status: "running",
         startedAt: /* @__PURE__ */ new Date(),
         nodes: {},
-        logs: []
+        logs: [],
       };
       const tabs = [createMockTab("workflow-1", [exec1, exec2])];
-      const result = manager.handleExecutionNodeUpdate(tabs, "workflow-1", "exec-1", "node-1", { status: "new" });
-      expect(result[0].executions[0].nodes["node-1"]).toEqual({ status: "new" });
+      const result = manager.handleExecutionNodeUpdate(
+        tabs,
+        "workflow-1",
+        "exec-1",
+        "node-1",
+        { status: "new" },
+      );
+      expect(result[0].executions[0].nodes["node-1"]).toEqual({
+        status: "new",
+      });
       expect(result[0].executions[1].nodes).toEqual({});
     });
   });
@@ -389,7 +519,7 @@ describe("ExecutionStateManager", () => {
     it("should use custom logger when provided", () => {
       const customLogger = {
         debug: jest.fn(),
-        error: jest.fn()
+        error: jest.fn(),
       };
       const customManager = new ExecutionStateManager({ logger: customLogger });
       const tabs = [createMockTab("workflow-1")];

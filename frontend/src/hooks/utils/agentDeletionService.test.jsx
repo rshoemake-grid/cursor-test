@@ -1,7 +1,7 @@
 import {
   deleteAgentsFromStorage,
   extractAgentIds,
-  updateStateAfterDeletion
+  updateStateAfterDeletion,
 } from "./agentDeletionService";
 describe("deleteAgentsFromStorage", () => {
   let mockStorage;
@@ -16,7 +16,7 @@ describe("deleteAgentsFromStorage", () => {
       tags: [],
       difficulty: "beginner",
       estimated_time: "5 min",
-      agent_config: {}
+      agent_config: {},
     },
     {
       id: "agent-2",
@@ -27,7 +27,7 @@ describe("deleteAgentsFromStorage", () => {
       tags: [],
       difficulty: "beginner",
       estimated_time: "5 min",
-      agent_config: {}
+      agent_config: {},
     },
     {
       id: "agent-3",
@@ -38,21 +38,21 @@ describe("deleteAgentsFromStorage", () => {
       tags: [],
       difficulty: "beginner",
       estimated_time: "5 min",
-      agent_config: {}
-    }
+      agent_config: {},
+    },
   ];
   beforeEach(() => {
     mockCallbacks = {
       showError: jest.fn(),
       showSuccess: jest.fn(),
-      onComplete: jest.fn()
+      onComplete: jest.fn(),
     };
     mockStorage = {
       getItem: jest.fn(),
       setItem: jest.fn(),
       removeItem: jest.fn(),
       addEventListener: jest.fn(),
-      removeEventListener: jest.fn()
+      removeEventListener: jest.fn(),
     };
   });
   it("should return error when storage is not available", () => {
@@ -60,12 +60,14 @@ describe("deleteAgentsFromStorage", () => {
       null,
       "testKey",
       /* @__PURE__ */ new Set(["agent-1"]),
-      mockCallbacks
+      mockCallbacks,
     );
     expect(result.success).toBe(false);
     expect(result.error).toBe("Storage not available");
     expect(result.deletedCount).toBe(0);
-    expect(mockCallbacks.showError).toHaveBeenCalledWith("Storage not available");
+    expect(mockCallbacks.showError).toHaveBeenCalledWith(
+      "Storage not available",
+    );
   });
   it("should return error when storage.getItem returns null", () => {
     mockStorage.getItem.mockReturnValue(null);
@@ -73,12 +75,14 @@ describe("deleteAgentsFromStorage", () => {
       mockStorage,
       "testKey",
       /* @__PURE__ */ new Set(["agent-1"]),
-      mockCallbacks
+      mockCallbacks,
     );
     expect(result.success).toBe(false);
     expect(result.error).toBe("No agents found in storage");
     expect(result.deletedCount).toBe(0);
-    expect(mockCallbacks.showError).toHaveBeenCalledWith("No agents found in storage");
+    expect(mockCallbacks.showError).toHaveBeenCalledWith(
+      "No agents found in storage",
+    );
   });
   it("should successfully delete agents", () => {
     mockStorage.getItem.mockReturnValue(JSON.stringify(mockAgents));
@@ -87,15 +91,17 @@ describe("deleteAgentsFromStorage", () => {
       mockStorage,
       "testKey",
       /* @__PURE__ */ new Set(["agent-1", "agent-2"]),
-      mockCallbacks
+      mockCallbacks,
     );
     expect(result.success).toBe(true);
     expect(result.deletedCount).toBe(2);
-    expect(mockCallbacks.showSuccess).toHaveBeenCalledWith("Successfully deleted 2 agent(s)");
+    expect(mockCallbacks.showSuccess).toHaveBeenCalledWith(
+      "Successfully deleted 2 agent(s)",
+    );
     expect(mockCallbacks.onComplete).toHaveBeenCalled();
     expect(mockStorage.setItem).toHaveBeenCalledWith(
       "testKey",
-      JSON.stringify([mockAgents[2]])
+      JSON.stringify([mockAgents[2]]),
     );
   });
   it("should handle deletion of all agents", () => {
@@ -105,11 +111,14 @@ describe("deleteAgentsFromStorage", () => {
       mockStorage,
       "testKey",
       /* @__PURE__ */ new Set(["agent-1", "agent-2", "agent-3"]),
-      mockCallbacks
+      mockCallbacks,
     );
     expect(result.success).toBe(true);
     expect(result.deletedCount).toBe(3);
-    expect(mockStorage.setItem).toHaveBeenCalledWith("testKey", JSON.stringify([]));
+    expect(mockStorage.setItem).toHaveBeenCalledWith(
+      "testKey",
+      JSON.stringify([]),
+    );
   });
   it("should handle deletion of non-existent agents", () => {
     mockStorage.getItem.mockReturnValue(JSON.stringify(mockAgents));
@@ -118,13 +127,13 @@ describe("deleteAgentsFromStorage", () => {
       mockStorage,
       "testKey",
       /* @__PURE__ */ new Set(["agent-999"]),
-      mockCallbacks
+      mockCallbacks,
     );
     expect(result.success).toBe(true);
     expect(result.deletedCount).toBe(0);
     expect(mockStorage.setItem).toHaveBeenCalledWith(
       "testKey",
-      JSON.stringify(mockAgents)
+      JSON.stringify(mockAgents),
     );
   });
   it("should return error when setItem fails", () => {
@@ -136,12 +145,14 @@ describe("deleteAgentsFromStorage", () => {
       mockStorage,
       "testKey",
       /* @__PURE__ */ new Set(["agent-1"]),
-      mockCallbacks
+      mockCallbacks,
     );
     expect(result.success).toBe(false);
     expect(result.error).toBe("Failed to save to storage");
     expect(result.deletedCount).toBe(0);
-    expect(mockCallbacks.showError).toHaveBeenCalledWith("Failed to save to storage");
+    expect(mockCallbacks.showError).toHaveBeenCalledWith(
+      "Failed to save to storage",
+    );
   });
   it("should handle JSON parse errors", () => {
     mockStorage.getItem.mockReturnValue("invalid json");
@@ -149,7 +160,7 @@ describe("deleteAgentsFromStorage", () => {
       mockStorage,
       "testKey",
       /* @__PURE__ */ new Set(["agent-1"]),
-      mockCallbacks
+      mockCallbacks,
     );
     expect(result.success).toBe(false);
     expect(result.error).toContain("Failed to delete agents");
@@ -160,18 +171,18 @@ describe("deleteAgentsFromStorage", () => {
     mockStorage.getItem.mockReturnValue("invalid json");
     const callbacksWithPrefix = {
       ...mockCallbacks,
-      errorPrefix: "repository agents"
+      errorPrefix: "repository agents",
     };
     const result = deleteAgentsFromStorage(
       mockStorage,
       "testKey",
       /* @__PURE__ */ new Set(["agent-1"]),
-      callbacksWithPrefix
+      callbacksWithPrefix,
     );
     expect(result.success).toBe(false);
     expect(result.error).toContain("repository agents");
     expect(mockCallbacks.showError).toHaveBeenCalledWith(
-      expect.stringContaining("repository agents")
+      expect.stringContaining("repository agents"),
     );
   });
   it("should handle empty agentIdsToDelete set", () => {
@@ -181,13 +192,13 @@ describe("deleteAgentsFromStorage", () => {
       mockStorage,
       "testKey",
       /* @__PURE__ */ new Set(),
-      mockCallbacks
+      mockCallbacks,
     );
     expect(result.success).toBe(true);
     expect(result.deletedCount).toBe(0);
     expect(mockStorage.setItem).toHaveBeenCalledWith(
       "testKey",
-      JSON.stringify(mockAgents)
+      JSON.stringify(mockAgents),
     );
   });
 });
@@ -203,7 +214,7 @@ describe("extractAgentIds", () => {
         tags: [],
         difficulty: "beginner",
         estimated_time: "5 min",
-        agent_config: {}
+        agent_config: {},
       },
       {
         id: "agent-2",
@@ -214,8 +225,8 @@ describe("extractAgentIds", () => {
         tags: [],
         difficulty: "beginner",
         estimated_time: "5 min",
-        agent_config: {}
-      }
+        agent_config: {},
+      },
     ];
     const result = extractAgentIds(agents);
     expect(result).toBeInstanceOf(Set);
@@ -234,7 +245,7 @@ describe("extractAgentIds", () => {
       { id: null },
       { id: void 0 },
       { id: "agent-2" },
-      {}
+      {},
       // no id property
     ];
     const result = extractAgentIds(agents);
@@ -243,11 +254,7 @@ describe("extractAgentIds", () => {
     expect(result.has("agent-2")).toBe(true);
   });
   it("should handle null agents in array", () => {
-    const agents = [
-      { id: "agent-1" },
-      null,
-      { id: "agent-2" }
-    ];
+    const agents = [{ id: "agent-1" }, null, { id: "agent-2" }];
     const result = extractAgentIds(agents);
     expect(result.size).toBe(2);
     expect(result.has("agent-1")).toBe(true);
@@ -273,7 +280,7 @@ describe("updateStateAfterDeletion", () => {
         tags: [],
         difficulty: "beginner",
         estimated_time: "5 min",
-        agent_config: {}
+        agent_config: {},
       },
       {
         id: "agent-2",
@@ -284,7 +291,7 @@ describe("updateStateAfterDeletion", () => {
         tags: [],
         difficulty: "beginner",
         estimated_time: "5 min",
-        agent_config: {}
+        agent_config: {},
       },
       {
         id: "agent-3",
@@ -295,13 +302,13 @@ describe("updateStateAfterDeletion", () => {
         tags: [],
         difficulty: "beginner",
         estimated_time: "5 min",
-        agent_config: {}
-      }
+        agent_config: {},
+      },
     ];
     updateStateAfterDeletion(
       /* @__PURE__ */ new Set(["agent-1", "agent-3"]),
       mockSetAgents,
-      mockSetSelectedIds
+      mockSetSelectedIds,
     );
     expect(mockSetAgents).toHaveBeenCalled();
     const updateFn = mockSetAgents.mock.calls[0][0];
@@ -315,7 +322,7 @@ describe("updateStateAfterDeletion", () => {
     updateStateAfterDeletion(
       /* @__PURE__ */ new Set(["agent-1"]),
       mockSetAgents,
-      mockSetSelectedIds
+      mockSetSelectedIds,
     );
     expect(mockSetSelectedIds).toHaveBeenCalledWith(/* @__PURE__ */ new Set());
   });
@@ -332,10 +339,14 @@ describe("updateStateAfterDeletion", () => {
         tags: [],
         difficulty: "beginner",
         estimated_time: "5 min",
-        agent_config: {}
-      }
+        agent_config: {},
+      },
     ];
-    updateStateAfterDeletion(/* @__PURE__ */ new Set(), mockSetAgents, mockSetSelectedIds);
+    updateStateAfterDeletion(
+      /* @__PURE__ */ new Set(),
+      mockSetAgents,
+      mockSetSelectedIds,
+    );
     const updateFn = mockSetAgents.mock.calls[0][0];
     const result = updateFn(agents);
     expect(result).toEqual(agents);
@@ -354,10 +365,14 @@ describe("updateStateAfterDeletion", () => {
         tags: [],
         difficulty: "beginner",
         estimated_time: "5 min",
-        agent_config: {}
-      }
+        agent_config: {},
+      },
     ];
-    updateStateAfterDeletion(/* @__PURE__ */ new Set(["agent-1"]), mockSetAgents, mockSetSelectedIds);
+    updateStateAfterDeletion(
+      /* @__PURE__ */ new Set(["agent-1"]),
+      mockSetAgents,
+      mockSetSelectedIds,
+    );
     const updateFn = mockSetAgents.mock.calls[0][0];
     const result = updateFn(agents);
     expect(result).toEqual([]);

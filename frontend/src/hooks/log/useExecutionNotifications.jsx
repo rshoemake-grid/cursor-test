@@ -3,7 +3,7 @@ function useExecutionNotifications({
   executions,
   onSuccess,
   onError,
-  enabled = true
+  enabled = true,
 }) {
   const previousStatusesRef = useRef(/* @__PURE__ */ new Map());
   useEffect(() => {
@@ -31,6 +31,4 @@ function useExecutionNotifications({
     });
   }, [executions, enabled, onSuccess, onError]);
 }
-export {
-  useExecutionNotifications
-};
+export { useExecutionNotifications };

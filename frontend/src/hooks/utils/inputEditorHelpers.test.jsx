@@ -1,7 +1,7 @@
 import {
   createTextInputHandler,
   createSelectHandler,
-  createCheckboxHandler
+  createCheckboxHandler,
 } from "./inputEditorHelpers";
 describe("inputEditorHelpers", () => {
   describe("createTextInputHandler", () => {
@@ -14,14 +14,18 @@ describe("inputEditorHelpers", () => {
         setValue,
         onConfigUpdate,
         configField,
-        field
+        field,
       );
       const event = {
-        target: { value: "test-value" }
+        target: { value: "test-value" },
       };
       handler(event);
       expect(setValue).toHaveBeenCalledWith("test-value");
-      expect(onConfigUpdate).toHaveBeenCalledWith(configField, field, "test-value");
+      expect(onConfigUpdate).toHaveBeenCalledWith(
+        configField,
+        field,
+        "test-value",
+      );
     });
     it("should handle empty string value", () => {
       const setValue = jest.fn();
@@ -30,10 +34,10 @@ describe("inputEditorHelpers", () => {
         setValue,
         onConfigUpdate,
         "input_config",
-        "name"
+        "name",
       );
       const event = {
-        target: { value: "" }
+        target: { value: "" },
       };
       handler(event);
       expect(setValue).toHaveBeenCalledWith("");
@@ -46,14 +50,18 @@ describe("inputEditorHelpers", () => {
         setValue,
         onConfigUpdate,
         "input_config",
-        "description"
+        "description",
       );
       const event = {
-        target: { value: "textarea value" }
+        target: { value: "textarea value" },
       };
       handler(event);
       expect(setValue).toHaveBeenCalledWith("textarea value");
-      expect(onConfigUpdate).toHaveBeenCalledWith("input_config", "description", "textarea value");
+      expect(onConfigUpdate).toHaveBeenCalledWith(
+        "input_config",
+        "description",
+        "textarea value",
+      );
     });
     it("should use correct configField and field parameters", () => {
       const setValue = jest.fn();
@@ -62,13 +70,17 @@ describe("inputEditorHelpers", () => {
         setValue,
         onConfigUpdate,
         "custom_config",
-        "custom_field"
+        "custom_field",
       );
       const event = {
-        target: { value: "value" }
+        target: { value: "value" },
       };
       handler(event);
-      expect(onConfigUpdate).toHaveBeenCalledWith("custom_config", "custom_field", "value");
+      expect(onConfigUpdate).toHaveBeenCalledWith(
+        "custom_config",
+        "custom_field",
+        "value",
+      );
     });
   });
   describe("createSelectHandler", () => {
@@ -81,14 +93,18 @@ describe("inputEditorHelpers", () => {
         setValue,
         onConfigUpdate,
         configField,
-        field
+        field,
       );
       const event = {
-        target: { value: "us-west-1" }
+        target: { value: "us-west-1" },
       };
       handler(event);
       expect(setValue).toHaveBeenCalledWith("us-west-1");
-      expect(onConfigUpdate).toHaveBeenCalledWith(configField, field, "us-west-1");
+      expect(onConfigUpdate).toHaveBeenCalledWith(
+        configField,
+        field,
+        "us-west-1",
+      );
     });
     it("should handle empty string value", () => {
       const setValue = jest.fn();
@@ -97,10 +113,10 @@ describe("inputEditorHelpers", () => {
         setValue,
         onConfigUpdate,
         "input_config",
-        "region"
+        "region",
       );
       const event = {
-        target: { value: "" }
+        target: { value: "" },
       };
       handler(event);
       expect(setValue).toHaveBeenCalledWith("");
@@ -113,13 +129,17 @@ describe("inputEditorHelpers", () => {
         setValue,
         onConfigUpdate,
         "custom_config",
-        "custom_field"
+        "custom_field",
       );
       const event = {
-        target: { value: "option1" }
+        target: { value: "option1" },
       };
       handler(event);
-      expect(onConfigUpdate).toHaveBeenCalledWith("custom_config", "custom_field", "option1");
+      expect(onConfigUpdate).toHaveBeenCalledWith(
+        "custom_config",
+        "custom_field",
+        "option1",
+      );
     });
   });
   describe("createCheckboxHandler", () => {
@@ -132,10 +152,10 @@ describe("inputEditorHelpers", () => {
         setValue,
         onConfigUpdate,
         configField,
-        field
+        field,
       );
       const event = {
-        target: { checked: true }
+        target: { checked: true },
       };
       handler(event);
       expect(setValue).toHaveBeenCalledWith(true);
@@ -148,14 +168,18 @@ describe("inputEditorHelpers", () => {
         setValue,
         onConfigUpdate,
         "input_config",
-        "overwrite"
+        "overwrite",
       );
       const event = {
-        target: { checked: false }
+        target: { checked: false },
       };
       handler(event);
       expect(setValue).toHaveBeenCalledWith(false);
-      expect(onConfigUpdate).toHaveBeenCalledWith("input_config", "overwrite", false);
+      expect(onConfigUpdate).toHaveBeenCalledWith(
+        "input_config",
+        "overwrite",
+        false,
+      );
     });
     it("should use correct configField and field parameters", () => {
       const setValue = jest.fn();
@@ -164,13 +188,17 @@ describe("inputEditorHelpers", () => {
         setValue,
         onConfigUpdate,
         "custom_config",
-        "custom_field"
+        "custom_field",
       );
       const event = {
-        target: { checked: true }
+        target: { checked: true },
       };
       handler(event);
-      expect(onConfigUpdate).toHaveBeenCalledWith("custom_config", "custom_field", true);
+      expect(onConfigUpdate).toHaveBeenCalledWith(
+        "custom_config",
+        "custom_field",
+        true,
+      );
     });
     it("should handle multiple checkbox toggles", () => {
       const setValue = jest.fn();
@@ -179,20 +207,28 @@ describe("inputEditorHelpers", () => {
         setValue,
         onConfigUpdate,
         "input_config",
-        "overwrite"
+        "overwrite",
       );
       const event1 = {
-        target: { checked: true }
+        target: { checked: true },
       };
       handler(event1);
       expect(setValue).toHaveBeenCalledWith(true);
-      expect(onConfigUpdate).toHaveBeenCalledWith("input_config", "overwrite", true);
+      expect(onConfigUpdate).toHaveBeenCalledWith(
+        "input_config",
+        "overwrite",
+        true,
+      );
       const event2 = {
-        target: { checked: false }
+        target: { checked: false },
       };
       handler(event2);
       expect(setValue).toHaveBeenCalledWith(false);
-      expect(onConfigUpdate).toHaveBeenCalledWith("input_config", "overwrite", false);
+      expect(onConfigUpdate).toHaveBeenCalledWith(
+        "input_config",
+        "overwrite",
+        false,
+      );
     });
   });
 });

@@ -4,12 +4,12 @@ const EnvironmentAdapterFactory = {
    */
   createEnvironmentAdapter() {
     return {
-      isDevelopment: () => process.env.NODE_ENV === "development" || process.env.NODE_ENV !== "production",
+      isDevelopment: () =>
+        process.env.NODE_ENV === "development" ||
+        process.env.NODE_ENV !== "production",
       isProduction: () => process.env.NODE_ENV === "production",
-      get: (key) => process.env[key]
+      get: (key) => process.env[key],
     };
-  }
+  },
 };
-export {
-  EnvironmentAdapterFactory
-};
+export { EnvironmentAdapterFactory };

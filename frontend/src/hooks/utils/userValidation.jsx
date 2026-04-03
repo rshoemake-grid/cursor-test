@@ -48,5 +48,5 @@ export {
   doesUserOwnItem,
   getUserDisplayName,
   getUserId,
-  isValidUser
+  isValidUser,
 };

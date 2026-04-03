@@ -8,7 +8,7 @@ import {
   removeTab,
   handleActiveTabAfterClose,
   tabExists,
-  getTabIndex
+  getTabIndex,
 } from "./tabUtils";
 describe("tabUtils", () => {
   const mockTabs = [
@@ -18,7 +18,7 @@ describe("tabUtils", () => {
       workflowId: "workflow-1",
       isUnsaved: false,
       executions: [],
-      activeExecutionId: null
+      activeExecutionId: null,
     },
     {
       id: "tab-2",
@@ -26,7 +26,7 @@ describe("tabUtils", () => {
       workflowId: "workflow-2",
       isUnsaved: true,
       executions: [],
-      activeExecutionId: null
+      activeExecutionId: null,
     },
     {
       id: "tab-3",
@@ -34,8 +34,8 @@ describe("tabUtils", () => {
       workflowId: null,
       isUnsaved: true,
       executions: [],
-      activeExecutionId: null
-    }
+      activeExecutionId: null,
+    },
   ];
   describe("createNewTab", () => {
     it("should create a new tab with default values", () => {
@@ -45,7 +45,7 @@ describe("tabUtils", () => {
         workflowId: null,
         isUnsaved: true,
         executions: [],
-        activeExecutionId: null
+        activeExecutionId: null,
       });
       expect(tab.id).toMatch(/^workflow-\d+-[a-z0-9]+$/);
     });
@@ -68,7 +68,7 @@ describe("tabUtils", () => {
         name: "Loading...",
         isUnsaved: false,
         executions: [],
-        activeExecutionId: null
+        activeExecutionId: null,
       });
       expect(tab.id).toMatch(/^workflow-\d+$/);
     });
@@ -77,7 +77,7 @@ describe("tabUtils", () => {
       expect(tab).toMatchObject({
         workflowId: "workflow-123",
         name: "Custom Name",
-        isUnsaved: false
+        isUnsaved: false,
       });
     });
   });
@@ -91,7 +91,7 @@ describe("tabUtils", () => {
     it("should update multiple fields", () => {
       const updated = updateTab(mockTabs, "tab-2", {
         name: "New Name",
-        isUnsaved: false
+        isUnsaved: false,
       });
       expect(updated[1].name).toBe("New Name");
       expect(updated[1].isUnsaved).toBe(false);
@@ -110,21 +110,21 @@ describe("tabUtils", () => {
   describe("updateTabByWorkflowId", () => {
     it("should update a tab by workflow ID", () => {
       const updated = updateTabByWorkflowId(mockTabs, "workflow-1", {
-        name: "Updated Name"
+        name: "Updated Name",
       });
       expect(updated[0].name).toBe("Updated Name");
       expect(updated[1]).toEqual(mockTabs[1]);
     });
     it("should not modify tabs with different workflow IDs", () => {
       const updated = updateTabByWorkflowId(mockTabs, "workflow-1", {
-        name: "Updated"
+        name: "Updated",
       });
       expect(updated[1]).toEqual(mockTabs[1]);
       expect(updated[2]).toEqual(mockTabs[2]);
     });
     it("should return original array if workflow ID not found", () => {
       const updated = updateTabByWorkflowId(mockTabs, "non-existent", {
-        name: "Test"
+        name: "Test",
       });
       expect(updated).toEqual(mockTabs);
     });
@@ -182,8 +182,15 @@ describe("tabUtils", () => {
     });
     it("should switch to last tab when closing active tab", () => {
       const remainingTabs = [mockTabs[0], mockTabs[1]];
-      handleActiveTabAfterClose("tab-2", "tab-2", remainingTabs, mockSetActiveTabId);
-      expect(mockSetActiveTabId).toHaveBeenCalledWith(remainingTabs[remainingTabs.length - 1].id);
+      handleActiveTabAfterClose(
+        "tab-2",
+        "tab-2",
+        remainingTabs,
+        mockSetActiveTabId,
+      );
+      expect(mockSetActiveTabId).toHaveBeenCalledWith(
+        remainingTabs[remainingTabs.length - 1].id,
+      );
     });
     it("should set empty string when no tabs remain", () => {
       handleActiveTabAfterClose("tab-1", "tab-1", [], mockSetActiveTabId);

@@ -48,9 +48,4 @@ function safeGetArrayElement(arr, index, defaultValue) {
   const value = arr[index];
   return coalesce(value, defaultValue);
 }
-export {
-  safeCall,
-  safeGet,
-  safeGetArrayElement,
-  safeGetProperty
-};
+export { safeCall, safeGet, safeGetArrayElement, safeGetProperty };

@@ -35,7 +35,9 @@ describe("adapters - No Coverage Paths", () => {
       expect(expectedError.message).toBe("HTTP client initialization failed");
       expect(expectedError.message).not.toBe("HTTP client init failed");
       expect(expectedError.message).not.toBe("Initialization failed");
-      await expect(Promise.reject(expectedError)).rejects.toThrow("HTTP client initialization failed");
+      await expect(Promise.reject(expectedError)).rejects.toThrow(
+        "HTTP client initialization failed",
+      );
     });
   });
   describe("createHttpClient - method catch blocks", () => {
@@ -89,7 +91,7 @@ describe("adapters - No Coverage Paths", () => {
         port: "8000",
         pathname: "/",
         search: "",
-        hash: ""
+        hash: "",
       };
       expect(fallbackLocation.protocol).toBe("http:");
       expect(fallbackLocation.host).toBe("localhost:8000");
@@ -154,7 +156,7 @@ describe("adapters - No Coverage Paths", () => {
     it("should use fallback when window.location is null", () => {
       const originalWindow2 = global.window;
       const mockWindow = {
-        location: null
+        location: null,
       };
       global.window = mockWindow;
       try {
@@ -177,8 +179,8 @@ describe("adapters - No Coverage Paths", () => {
           port: void 0,
           pathname: void 0,
           search: void 0,
-          hash: void 0
-        }
+          hash: void 0,
+        },
       };
       global.window = mockWindow;
       try {

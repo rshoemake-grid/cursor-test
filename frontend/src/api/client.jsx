@@ -89,7 +89,10 @@ function createHttpError(response, body) {
   let message = response.statusText || "Request failed";
   if (body && typeof body === "object") {
     if (body.detail != null) {
-      message = typeof body.detail === "string" ? body.detail : JSON.stringify(body.detail);
+      message =
+        typeof body.detail === "string"
+          ? body.detail
+          : JSON.stringify(body.detail);
     } else if (body.message != null) {
       message = String(body.message);
     }
@@ -97,7 +100,11 @@ function createHttpError(response, body) {
     message = body;
   }
   const err = new Error(message);
-  err.response = { status: response.status, statusText: response.statusText, data: body };
+  err.response = {
+    status: response.status,
+    statusText: response.statusText,
+    data: body,
+  };
   return err;
 }
 
@@ -105,10 +112,10 @@ function createFetchClient({
   baseURL = API_CONFIG.BASE_URL,
   localStorage: local = defaultAdapters.createLocalStorageAdapter(),
   sessionStorage: session = defaultAdapters.createSessionStorageAdapter(),
-  fetchImpl =
-    typeof globalThis !== "undefined" && typeof globalThis.fetch === "function"
-      ? globalThis.fetch.bind(globalThis)
-      : () => Promise.reject(new Error("fetch is not available")),
+  fetchImpl = typeof globalThis !== "undefined" &&
+  typeof globalThis.fetch === "function"
+    ? globalThis.fetch.bind(globalThis)
+    : () => Promise.reject(new Error("fetch is not available")),
 }) {
   async function request(method, path, { params, body, responseType } = {}) {
     const url = appendQuery(joinUrl(baseURL, path), params);
@@ -138,8 +145,10 @@ function createFetchClient({
 
   return {
     get: (path, options = {}) => request("GET", path, options),
-    post: (path, body, options = {}) => request("POST", path, { ...options, body }),
-    put: (path, body, options = {}) => request("PUT", path, { ...options, body }),
+    post: (path, body, options = {}) =>
+      request("POST", path, { ...options, body }),
+    put: (path, body, options = {}) =>
+      request("PUT", path, { ...options, body }),
     delete: (path, options = {}) => request("DELETE", path, options),
   };
 }
@@ -171,16 +180,22 @@ function createApiClient(options) {
       return extractData(await http.post(workflowEndpoints.list(), workflow));
     },
     async updateWorkflow(id, workflow) {
-      return extractData(await http.put(workflowEndpoints.detail(id), workflow));
+      return extractData(
+        await http.put(workflowEndpoints.detail(id), workflow),
+      );
     },
     async deleteWorkflow(id) {
       await http.delete(workflowEndpoints.detail(id));
     },
     async bulkDeleteWorkflows(ids) {
-      return extractData(await http.post(workflowEndpoints.bulkDelete(), { workflow_ids: ids }));
+      return extractData(
+        await http.post(workflowEndpoints.bulkDelete(), { workflow_ids: ids }),
+      );
     },
     async duplicateWorkflow(id) {
-      const workflow = extractData(await http.get(workflowEndpoints.detail(id)));
+      const workflow = extractData(
+        await http.get(workflowEndpoints.detail(id)),
+      );
       const duplicated = {
         ...workflow,
         id: void 0,
@@ -189,19 +204,28 @@ function createApiClient(options) {
       return extractData(await http.post(workflowEndpoints.list(), duplicated));
     },
     async publishWorkflow(workflowId, publishData) {
-      return extractData(await http.post(workflowEndpoints.publish(workflowId), publishData));
+      return extractData(
+        await http.post(workflowEndpoints.publish(workflowId), publishData),
+      );
     },
     async getAgents(params) {
-      return extractData(await http.get(marketplaceEndpoints.agents(), { params }));
+      return extractData(
+        await http.get(marketplaceEndpoints.agents(), { params }),
+      );
     },
     async publishAgent(agentData) {
-      return extractData(await http.post(marketplaceEndpoints.agents(), agentData));
+      return extractData(
+        await http.post(marketplaceEndpoints.agents(), agentData),
+      );
     },
     async deleteTemplate(templateId) {
       await http.delete(templateEndpoints.delete(templateId));
     },
     async executeWorkflow(workflowId, inputs = {}) {
-      injectedLogger.debug("[API Client] executeWorkflow called with:", { workflowId, inputs });
+      injectedLogger.debug("[API Client] executeWorkflow called with:", {
+        workflowId,
+        inputs,
+      });
       try {
         const url = workflowEndpoints.execute(workflowId);
         const payload = { workflow_id: workflowId, inputs };
@@ -223,13 +247,17 @@ function createApiClient(options) {
       }
     },
     async getExecution(executionId) {
-      return extractData(await http.get(executionEndpoints.detail(executionId)));
+      return extractData(
+        await http.get(executionEndpoints.detail(executionId)),
+      );
     },
     async listExecutions(params) {
       return extractData(await http.get(executionEndpoints.list(), { params }));
     },
     async getExecutionLogs(executionId, params) {
-      return extractData(await http.get(executionEndpoints.logs(executionId), { params }));
+      return extractData(
+        await http.get(executionEndpoints.logs(executionId), { params }),
+      );
     },
     async downloadExecutionLogs(executionId, format = "text", params) {
       return http.get(executionEndpoints.downloadLogs(executionId), {
@@ -238,7 +266,9 @@ function createApiClient(options) {
       });
     },
     async cancelExecution(executionId) {
-      return extractData(await http.post(executionEndpoints.cancel(executionId)));
+      return extractData(
+        await http.post(executionEndpoints.cancel(executionId)),
+      );
     },
     async chat(params) {
       return extractData(await http.post(chatEndpoints.chat(), params));

@@ -2,7 +2,7 @@ import { renderHook, waitFor } from "@testing-library/react";
 import { useMarketplaceData } from "./useMarketplaceData";
 import { getLocalStorageItem } from "../storage";
 jest.mock("../storage", () => ({
-  getLocalStorageItem: jest.fn()
+  getLocalStorageItem: jest.fn(),
 }));
 const mockGetLocalStorageItem = getLocalStorageItem;
 describe("useMarketplaceData - Workflow Detection (Phase 4.2)", () => {
@@ -17,14 +17,16 @@ describe("useMarketplaceData - Workflow Detection (Phase 4.2)", () => {
         }
         return Promise.resolve({ json: async () => [] });
       }),
-      post: jest.fn().mockResolvedValue({ ok: true, json: async () => ({ nodes: [] }) })
+      post: jest
+        .fn()
+        .mockResolvedValue({ ok: true, json: async () => ({ nodes: [] }) }),
     };
     mockStorage = {
       getItem: jest.fn().mockReturnValue(null),
       setItem: jest.fn(),
       removeItem: jest.fn(),
       addEventListener: jest.fn(),
-      removeEventListener: jest.fn()
+      removeEventListener: jest.fn(),
     };
     mockGetLocalStorageItem.mockReturnValue([]);
   });
@@ -34,18 +36,21 @@ describe("useMarketplaceData - Workflow Detection (Phase 4.2)", () => {
         id: "workflow-123",
         name: "Workflow",
         description: "Description",
-        tags: []
+        tags: [],
       };
       mockHttpClient.get.mockResolvedValue({
-        json: async () => [workflow]
+        json: async () => [workflow],
       });
       mockHttpClient.post.mockResolvedValue({
         ok: true,
-        json: async () => ({ nodes: [] })
+        json: async () => ({ nodes: [] }),
       });
-      const loggerSpy = jest.spyOn(require("../../utils/logger").logger, "error");
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const loggerSpy = jest.spyOn(
+        require("../../utils/logger").logger,
+        "error",
+      );
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -54,12 +59,15 @@ describe("useMarketplaceData - Workflow Detection (Phase 4.2)", () => {
           sortBy: "popular",
           user: null,
           activeTab: "workflows-of-workflows",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
-      await waitFor(() => {
-        expect(result.current.loading).toBe(false);
-      }, { timeout: 3e3 });
+      await waitFor(
+        () => {
+          expect(result.current.loading).toBe(false);
+        },
+        { timeout: 3e3 },
+      );
       expect(mockHttpClient.get).toHaveBeenCalled();
       loggerSpy.mockRestore();
     });
@@ -70,17 +78,17 @@ describe("useMarketplaceData - Workflow Detection (Phase 4.2)", () => {
         id: "workflow-1",
         name: "Workflow",
         description: "workflow of workflows",
-        tags: []
+        tags: [],
       };
       mockHttpClient.get.mockResolvedValue({
-        json: async () => [workflow]
+        json: async () => [workflow],
       });
       mockHttpClient.post.mockResolvedValue({
         ok: true,
-        json: async () => ({ nodes: [] })
+        json: async () => ({ nodes: [] }),
       });
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -89,12 +97,15 @@ describe("useMarketplaceData - Workflow Detection (Phase 4.2)", () => {
           sortBy: "popular",
           user: null,
           activeTab: "workflows-of-workflows",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
-      await waitFor(() => {
-        expect(result.current.loading).toBe(false);
-      }, { timeout: 3e3 });
+      await waitFor(
+        () => {
+          expect(result.current.loading).toBe(false);
+        },
+        { timeout: 3e3 },
+      );
       expect(result.current.workflowsOfWorkflows.length).toBe(1);
     });
     it("should use empty string fallback when workflow.description is undefined", async () => {
@@ -102,23 +113,23 @@ describe("useMarketplaceData - Workflow Detection (Phase 4.2)", () => {
         id: "workflow-1",
         name: "Workflow",
         description: void 0,
-        tags: []
+        tags: [],
       };
       mockHttpClient.get.mockResolvedValue({
-        json: async () => [workflow]
+        json: async () => [workflow],
       });
       mockHttpClient.post.mockResolvedValue({
         ok: true,
         json: async () => ({
           nodes: [
             {
-              workflow_id: "workflow-2"
-            }
-          ]
-        })
+              workflow_id: "workflow-2",
+            },
+          ],
+        }),
       });
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -127,13 +138,18 @@ describe("useMarketplaceData - Workflow Detection (Phase 4.2)", () => {
           sortBy: "popular",
           user: null,
           activeTab: "workflows-of-workflows",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
-      await waitFor(() => {
-        expect(result.current.loading).toBe(false);
-      }, { timeout: 3e3 });
-      expect(result.current.workflowsOfWorkflows.length).toBeGreaterThanOrEqual(0);
+      await waitFor(
+        () => {
+          expect(result.current.loading).toBe(false);
+        },
+        { timeout: 3e3 },
+      );
+      expect(result.current.workflowsOfWorkflows.length).toBeGreaterThanOrEqual(
+        0,
+      );
     });
   });
   describe("Workflow property access - workflow.tags", () => {
@@ -142,23 +158,23 @@ describe("useMarketplaceData - Workflow Detection (Phase 4.2)", () => {
         id: "workflow-1",
         name: "Workflow",
         description: "Description",
-        tags: ["workflow"]
+        tags: ["workflow"],
       };
       mockHttpClient.get.mockResolvedValue({
-        json: async () => [workflow]
+        json: async () => [workflow],
       });
       mockHttpClient.post.mockResolvedValue({
         ok: true,
         json: async () => ({
           nodes: [
             {
-              data: {}
-            }
-          ]
-        })
+              data: {},
+            },
+          ],
+        }),
       });
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -167,12 +183,15 @@ describe("useMarketplaceData - Workflow Detection (Phase 4.2)", () => {
           sortBy: "popular",
           user: null,
           activeTab: "workflows-of-workflows",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
-      await waitFor(() => {
-        expect(result.current.loading).toBe(false);
-      }, { timeout: 3e3 });
+      await waitFor(
+        () => {
+          expect(result.current.loading).toBe(false);
+        },
+        { timeout: 3e3 },
+      );
       expect(result.current.workflowsOfWorkflows.length).toBe(1);
     });
     it("should handle workflow.tags when it is undefined", async () => {
@@ -180,17 +199,17 @@ describe("useMarketplaceData - Workflow Detection (Phase 4.2)", () => {
         id: "workflow-1",
         name: "Workflow",
         description: "workflow of workflows",
-        tags: void 0
+        tags: void 0,
       };
       mockHttpClient.get.mockResolvedValue({
-        json: async () => [workflow]
+        json: async () => [workflow],
       });
       mockHttpClient.post.mockResolvedValue({
         ok: true,
-        json: async () => ({ nodes: [] })
+        json: async () => ({ nodes: [] }),
       });
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -199,12 +218,15 @@ describe("useMarketplaceData - Workflow Detection (Phase 4.2)", () => {
           sortBy: "popular",
           user: null,
           activeTab: "workflows-of-workflows",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
-      await waitFor(() => {
-        expect(result.current.loading).toBe(false);
-      }, { timeout: 3e3 });
+      await waitFor(
+        () => {
+          expect(result.current.loading).toBe(false);
+        },
+        { timeout: 3e3 },
+      );
       expect(result.current.workflowsOfWorkflows.length).toBe(1);
     });
   });
@@ -214,23 +236,23 @@ describe("useMarketplaceData - Workflow Detection (Phase 4.2)", () => {
         id: "workflow-1",
         name: "Workflow",
         description: "Description",
-        tags: []
+        tags: [],
       };
       mockHttpClient.get.mockResolvedValue({
-        json: async () => [workflow]
+        json: async () => [workflow],
       });
       mockHttpClient.post.mockResolvedValue({
         ok: true,
         json: async () => ({
           nodes: [
             {
-              workflow_id: "workflow-2"
-            }
-          ]
-        })
+              workflow_id: "workflow-2",
+            },
+          ],
+        }),
       });
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -239,12 +261,15 @@ describe("useMarketplaceData - Workflow Detection (Phase 4.2)", () => {
           sortBy: "popular",
           user: null,
           activeTab: "workflows-of-workflows",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
-      await waitFor(() => {
-        expect(result.current.loading).toBe(false);
-      }, { timeout: 3e3 });
+      await waitFor(
+        () => {
+          expect(result.current.loading).toBe(false);
+        },
+        { timeout: 3e3 },
+      );
       expect(result.current.workflowsOfWorkflows.length).toBe(1);
     });
     it("should verify Array.isArray check on workflowDetail.nodes", async () => {
@@ -252,23 +277,23 @@ describe("useMarketplaceData - Workflow Detection (Phase 4.2)", () => {
         id: "workflow-1",
         name: "Workflow",
         description: "Description",
-        tags: []
+        tags: [],
       };
       mockHttpClient.get.mockResolvedValue({
-        json: async () => [workflow]
+        json: async () => [workflow],
       });
       mockHttpClient.post.mockResolvedValue({
         ok: true,
         json: async () => ({
           nodes: [
             {
-              workflow_id: "workflow-2"
-            }
-          ]
-        })
+              workflow_id: "workflow-2",
+            },
+          ],
+        }),
       });
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -277,12 +302,15 @@ describe("useMarketplaceData - Workflow Detection (Phase 4.2)", () => {
           sortBy: "popular",
           user: null,
           activeTab: "workflows-of-workflows",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
-      await waitFor(() => {
-        expect(result.current.loading).toBe(false);
-      }, { timeout: 3e3 });
+      await waitFor(
+        () => {
+          expect(result.current.loading).toBe(false);
+        },
+        { timeout: 3e3 },
+      );
       expect(result.current.workflowsOfWorkflows.length).toBe(1);
     });
   });
@@ -292,24 +320,24 @@ describe("useMarketplaceData - Workflow Detection (Phase 4.2)", () => {
         id: "workflow-1",
         name: "Workflow",
         description: "Description",
-        tags: []
+        tags: [],
       };
       mockHttpClient.get.mockResolvedValue({
-        json: async () => [workflow]
+        json: async () => [workflow],
       });
       mockHttpClient.post.mockResolvedValue({
         ok: true,
         json: async () => ({
           nodes: [
             {
-              workflow_id: "workflow-2"
+              workflow_id: "workflow-2",
               // node.workflow_id
-            }
-          ]
-        })
+            },
+          ],
+        }),
       });
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -318,12 +346,15 @@ describe("useMarketplaceData - Workflow Detection (Phase 4.2)", () => {
           sortBy: "popular",
           user: null,
           activeTab: "workflows-of-workflows",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
-      await waitFor(() => {
-        expect(result.current.loading).toBe(false);
-      }, { timeout: 3e3 });
+      await waitFor(
+        () => {
+          expect(result.current.loading).toBe(false);
+        },
+        { timeout: 3e3 },
+      );
       expect(result.current.workflowsOfWorkflows.length).toBe(1);
     });
     it("should access nodeData.workflow_id property", async () => {
@@ -331,10 +362,10 @@ describe("useMarketplaceData - Workflow Detection (Phase 4.2)", () => {
         id: "workflow-1",
         name: "Workflow",
         description: "Description",
-        tags: []
+        tags: [],
       };
       mockHttpClient.get.mockResolvedValue({
-        json: async () => [workflow]
+        json: async () => [workflow],
       });
       mockHttpClient.post.mockResolvedValue({
         ok: true,
@@ -342,15 +373,15 @@ describe("useMarketplaceData - Workflow Detection (Phase 4.2)", () => {
           nodes: [
             {
               data: {
-                workflow_id: "workflow-2"
+                workflow_id: "workflow-2",
                 // nodeData.workflow_id
-              }
-            }
-          ]
-        })
+              },
+            },
+          ],
+        }),
       });
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -359,12 +390,15 @@ describe("useMarketplaceData - Workflow Detection (Phase 4.2)", () => {
           sortBy: "popular",
           user: null,
           activeTab: "workflows-of-workflows",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
-      await waitFor(() => {
-        expect(result.current.loading).toBe(false);
-      }, { timeout: 3e3 });
+      await waitFor(
+        () => {
+          expect(result.current.loading).toBe(false);
+        },
+        { timeout: 3e3 },
+      );
       expect(result.current.workflowsOfWorkflows.length).toBe(1);
     });
     it("should use node.data fallback pattern", async () => {
@@ -372,10 +406,10 @@ describe("useMarketplaceData - Workflow Detection (Phase 4.2)", () => {
         id: "workflow-1",
         name: "Workflow",
         description: "Description",
-        tags: []
+        tags: [],
       };
       mockHttpClient.get.mockResolvedValue({
-        json: async () => [workflow]
+        json: async () => [workflow],
       });
       mockHttpClient.post.mockResolvedValue({
         ok: true,
@@ -383,14 +417,14 @@ describe("useMarketplaceData - Workflow Detection (Phase 4.2)", () => {
           nodes: [
             {
               data: {
-                description: "workflow node"
-              }
-            }
-          ]
-        })
+                description: "workflow node",
+              },
+            },
+          ],
+        }),
       });
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -399,12 +433,15 @@ describe("useMarketplaceData - Workflow Detection (Phase 4.2)", () => {
           sortBy: "popular",
           user: null,
           activeTab: "workflows-of-workflows",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
-      await waitFor(() => {
-        expect(result.current.loading).toBe(false);
-      }, { timeout: 3e3 });
+      await waitFor(
+        () => {
+          expect(result.current.loading).toBe(false);
+        },
+        { timeout: 3e3 },
+      );
       expect(result.current.workflowsOfWorkflows.length).toBe(1);
     });
   });

@@ -5,7 +5,13 @@ function coalesce(value, defaultValue) {
   return defaultValue;
 }
 function coalesceObject(value, defaultValue) {
-  if (value !== null && value !== void 0 && typeof value === "object" && !Array.isArray(value) && Object.keys(value).length >= 0) {
+  if (
+    value !== null &&
+    value !== void 0 &&
+    typeof value === "object" &&
+    !Array.isArray(value) &&
+    Object.keys(value).length >= 0
+  ) {
     return value;
   }
   return defaultValue;
@@ -17,7 +23,12 @@ function coalesceArray(value, defaultValue) {
   return defaultValue;
 }
 function coalesceString(value, defaultValue) {
-  if (value !== null && value !== void 0 && typeof value === "string" && value !== "") {
+  if (
+    value !== null &&
+    value !== void 0 &&
+    typeof value === "string" &&
+    value !== ""
+  ) {
     return value;
   }
   return defaultValue;
@@ -40,7 +51,12 @@ function coalesceChainWithDefault(defaultValue, ...values) {
 }
 function coalesceObjectChain(defaultValue, ...values) {
   for (const value of values) {
-    if (value !== null && value !== void 0 && typeof value === "object" && !Array.isArray(value)) {
+    if (
+      value !== null &&
+      value !== void 0 &&
+      typeof value === "object" &&
+      !Array.isArray(value)
+    ) {
       return value;
     }
   }
@@ -56,7 +72,12 @@ function coalesceArrayChain(defaultValue, ...values) {
 }
 function coalesceStringChain(defaultValue, ...values) {
   for (const value of values) {
-    if (value !== null && value !== void 0 && typeof value === "string" && value !== "") {
+    if (
+      value !== null &&
+      value !== void 0 &&
+      typeof value === "string" &&
+      value !== ""
+    ) {
       return value;
     }
   }
@@ -71,5 +92,5 @@ export {
   coalesceObject,
   coalesceObjectChain,
   coalesceString,
-  coalesceStringChain
+  coalesceStringChain,
 };

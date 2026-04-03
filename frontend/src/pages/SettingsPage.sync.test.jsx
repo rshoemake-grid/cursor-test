@@ -1,5 +1,11 @@
-import { jsx } from "react/jsx-runtime";
-import { setupMocks, mockUseAuth, mockShowSuccess, mockShowError, renderWithRouter, waitForWithTimeout } from "./SettingsPage.test.shared";
+import {
+  setupMocks,
+  mockUseAuth,
+  mockShowSuccess,
+  mockShowError,
+  renderWithRouter,
+  waitForWithTimeout,
+} from "./SettingsPage.test.shared";
 import SettingsPage from "./SettingsPage";
 import { screen, fireEvent } from "@testing-library/react";
 describe("SettingsPage - Manual Sync", () => {
@@ -9,9 +15,11 @@ describe("SettingsPage - Manual Sync", () => {
   it("should handle handleManualSync when authenticated", async () => {
     global.fetch.mockResolvedValue({
       ok: true,
-      json: async () => ({ success: true })
+      json: async () => ({
+        success: true,
+      }),
     });
-    renderWithRouter(/* @__PURE__ */ jsx(SettingsPage, {}));
+    renderWithRouter(<SettingsPage />);
     await waitForWithTimeout(() => {
       expect(screen.getAllByText(/Settings/).length).toBeGreaterThan(0);
     }, 3e3);
@@ -30,9 +38,9 @@ describe("SettingsPage - Manual Sync", () => {
       token: null,
       login: jest.fn(),
       logout: jest.fn(),
-      register: jest.fn()
+      register: jest.fn(),
     });
-    renderWithRouter(/* @__PURE__ */ jsx(SettingsPage, {}));
+    renderWithRouter(<SettingsPage />);
     await waitForWithTimeout(() => {
       expect(screen.getAllByText(/Settings/).length).toBeGreaterThan(0);
     }, 3e3);
@@ -42,7 +50,7 @@ describe("SettingsPage - Manual Sync", () => {
   });
   it("should handle handleManualSync error", async () => {
     global.fetch.mockRejectedValue(new Error("Sync failed"));
-    renderWithRouter(/* @__PURE__ */ jsx(SettingsPage, {}));
+    renderWithRouter(<SettingsPage />);
     await waitForWithTimeout(() => {
       expect(screen.getAllByText(/Settings/).length).toBeGreaterThan(0);
     }, 3e3);
@@ -59,23 +67,30 @@ describe("SettingsPage - Manual Sync", () => {
       const mockHttpClient = {
         get: jest.fn().mockResolvedValue({
           ok: true,
-          json: async () => ({ providers: [], iteration_limit: 10, default_model: "" })
+          json: async () => ({
+            providers: [],
+            iteration_limit: 10,
+            default_model: "",
+          }),
         }),
         post: jest.fn().mockResolvedValue({
-          ok: true
+          ok: true,
         }),
         put: jest.fn(),
-        delete: jest.fn()
+        delete: jest.fn(),
       };
       mockUseAuth.mockReturnValue({
         isAuthenticated: true,
-        user: { id: "1", username: "testuser" },
+        user: {
+          id: "1",
+          username: "testuser",
+        },
         token: "token",
         login: jest.fn(),
         logout: jest.fn(),
-        register: jest.fn()
+        register: jest.fn(),
       });
-      renderWithRouter(/* @__PURE__ */ jsx(SettingsPage, { httpClient: mockHttpClient }));
+      renderWithRouter(<SettingsPage httpClient={mockHttpClient} />);
       await waitForWithTimeout(() => {
         const syncButtons = screen.queryAllByText(/Sync|Manual Sync/);
         if (syncButtons.length > 0) {
@@ -93,9 +108,9 @@ describe("SettingsPage - Manual Sync", () => {
         token: null,
         login: jest.fn(),
         logout: jest.fn(),
-        register: jest.fn()
+        register: jest.fn(),
       });
-      renderWithRouter(/* @__PURE__ */ jsx(SettingsPage, {}));
+      renderWithRouter(<SettingsPage />);
       await waitForWithTimeout(() => {
         expect(screen.getByText("Sync Now")).toBeDisabled();
       }, 3e3);
@@ -105,23 +120,30 @@ describe("SettingsPage - Manual Sync", () => {
       const mockHttpClient = {
         get: jest.fn().mockResolvedValue({
           ok: true,
-          json: async () => ({ providers: [], iteration_limit: 10, default_model: "" })
+          json: async () => ({
+            providers: [],
+            iteration_limit: 10,
+            default_model: "",
+          }),
         }),
         post: jest.fn().mockResolvedValue({
-          ok: false
+          ok: false,
         }),
         put: jest.fn(),
-        delete: jest.fn()
+        delete: jest.fn(),
       };
       mockUseAuth.mockReturnValue({
         isAuthenticated: true,
-        user: { id: "1", username: "testuser" },
+        user: {
+          id: "1",
+          username: "testuser",
+        },
         token: "token",
         login: jest.fn(),
         logout: jest.fn(),
-        register: jest.fn()
+        register: jest.fn(),
       });
-      renderWithRouter(/* @__PURE__ */ jsx(SettingsPage, { httpClient: mockHttpClient }));
+      renderWithRouter(<SettingsPage httpClient={mockHttpClient} />);
       await waitForWithTimeout(() => {
         const syncButtons = screen.queryAllByText(/Sync|Manual Sync/);
         if (syncButtons.length > 0) {

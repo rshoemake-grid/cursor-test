@@ -5,7 +5,7 @@ import {
   readStorageItem,
   writeStorageItem,
   deleteStorageItem,
-  shouldHandleStorageEvent
+  shouldHandleStorageEvent,
 } from "./useLocalStorage.utils";
 describe("useLocalStorage.utils - No Coverage Paths", () => {
   let mockLogger;
@@ -17,12 +17,12 @@ describe("useLocalStorage.utils - No Coverage Paths", () => {
       info: jest.fn(),
       warn: jest.fn(),
       error: jest.fn(),
-      log: jest.fn()
+      log: jest.fn(),
     };
     mockStorage = {
       getItem: jest.fn(),
       setItem: jest.fn(),
-      removeItem: jest.fn()
+      removeItem: jest.fn(),
     };
   });
   describe("parseJsonSafely", () => {
@@ -42,7 +42,10 @@ describe("useLocalStorage.utils - No Coverage Paths", () => {
       const invalidJson = "{invalid json}";
       const result = parseJsonSafely(invalidJson, mockLogger);
       expect(result).toBeNull();
-      expect(mockLogger.error).toHaveBeenCalledWith("Failed to parse JSON:", expect.any(Error));
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        "Failed to parse JSON:",
+        expect.any(Error),
+      );
     });
     it("should return null without logging when logger is not provided", () => {
       const invalidJson = "{invalid json}";
@@ -129,7 +132,7 @@ describe("useLocalStorage.utils - No Coverage Paths", () => {
       expect(result).toBe("default");
       expect(mockLogger.warn).toHaveBeenCalledWith(
         'localStorage key "key" contains invalid JSON. Returning default value.',
-        "{invalid json}"
+        "{invalid json}",
       );
     });
     it("should return plain string when default is string", () => {
@@ -154,7 +157,7 @@ describe("useLocalStorage.utils - No Coverage Paths", () => {
       expect(result).toBe(42);
       expect(mockLogger.warn).toHaveBeenCalledWith(
         'localStorage key "key" contains plain string but expected JSON. Returning default value.',
-        "plain string"
+        "plain string",
       );
     });
     it("should return defaultValue and log error when storage.getItem throws", () => {
@@ -165,7 +168,7 @@ describe("useLocalStorage.utils - No Coverage Paths", () => {
       expect(result).toBe("default");
       expect(mockLogger.error).toHaveBeenCalledWith(
         'Error reading localStorage key "key":',
-        expect.any(Error)
+        expect.any(Error),
       );
     });
     it("should return defaultValue without logging when storage.getItem throws and logger is not provided", () => {
@@ -200,7 +203,7 @@ describe("useLocalStorage.utils - No Coverage Paths", () => {
       expect(result).toBe(false);
       expect(mockLogger.error).toHaveBeenCalledWith(
         'Error setting localStorage key "key":',
-        expect.any(Error)
+        expect.any(Error),
       );
     });
     it("should return false without logging when storage.setItem throws and logger is not provided", () => {
@@ -230,7 +233,7 @@ describe("useLocalStorage.utils - No Coverage Paths", () => {
       expect(result).toBe(false);
       expect(mockLogger.error).toHaveBeenCalledWith(
         'Error removing localStorage key "key":',
-        expect.any(Error)
+        expect.any(Error),
       );
     });
     it("should return false without logging when storage.removeItem throws and logger is not provided", () => {

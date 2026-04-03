@@ -4,7 +4,7 @@ import {
   isOwner as isOwner2,
   filterOwnedItems,
   separateOfficialItems,
-  filterUserOwnedDeletableItems
+  filterUserOwnedDeletableItems,
 } from "../../utils/ownershipUtils";
 function canUserDelete(item, user) {
   if (!item || item.is_official) {
@@ -17,5 +17,5 @@ export {
   filterOwnedItems as filterUserOwned,
   filterUserOwnedDeletableItems,
   isOwner2 as isUserOwned,
-  separateOfficialItems
+  separateOfficialItems,
 };

@@ -3,7 +3,7 @@ const WS_READY_STATE = {
   CONNECTING: 0,
   OPEN: 1,
   CLOSING: 2,
-  CLOSED: 3
+  CLOSED: 3,
 };
 function isValidWebSocket(ws) {
   if (ws === null || ws === void 0) {
@@ -39,7 +39,11 @@ function isCleanClosure(event) {
   return false;
 }
 function getCloseReason(event) {
-  if (event.reason !== null && event.reason !== void 0 && event.reason.length > 0) {
+  if (
+    event.reason !== null &&
+    event.reason !== void 0 &&
+    event.reason.length > 0
+  ) {
     return event.reason;
   }
   return "No reason provided";
@@ -49,5 +53,5 @@ export {
   hasPendingReconnection,
   isCleanClosure,
   isValidWebSocket,
-  sanitizeReconnectionDelay
+  sanitizeReconnectionDelay,
 };

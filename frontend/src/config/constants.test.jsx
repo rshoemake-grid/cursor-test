@@ -5,7 +5,7 @@ import {
   UI_CONSTANTS,
   NODE_TYPES,
   buildStorageKey,
-  getChatHistoryKey
+  getChatHistoryKey,
 } from "./constants";
 describe("constants", () => {
   describe("API_CONFIG", () => {
@@ -24,8 +24,12 @@ describe("constants", () => {
       expect(API_CONFIG.ENDPOINTS.AUTH.LOGIN).toBe("/auth/login");
       expect(API_CONFIG.ENDPOINTS.AUTH.REGISTER).toBe("/auth/register");
       expect(API_CONFIG.ENDPOINTS.AUTH.LOGOUT).toBe("/auth/logout");
-      expect(API_CONFIG.ENDPOINTS.AUTH.FORGOT_PASSWORD).toBe("/auth/forgot-password");
-      expect(API_CONFIG.ENDPOINTS.AUTH.RESET_PASSWORD).toBe("/auth/reset-password");
+      expect(API_CONFIG.ENDPOINTS.AUTH.FORGOT_PASSWORD).toBe(
+        "/auth/forgot-password",
+      );
+      expect(API_CONFIG.ENDPOINTS.AUTH.RESET_PASSWORD).toBe(
+        "/auth/reset-password",
+      );
     });
     it("should have LLM endpoints", () => {
       expect(API_CONFIG.ENDPOINTS.LLM).toBeDefined();
@@ -100,16 +104,22 @@ describe("constants", () => {
   });
   describe("getChatHistoryKey", () => {
     it("should return key with workflow ID when workflowId is provided", () => {
-      expect(getChatHistoryKey("workflow-123")).toBe("chat_history_workflow-123");
+      expect(getChatHistoryKey("workflow-123")).toBe(
+        "chat_history_workflow-123",
+      );
     });
     it("should ignore tabId when workflowId is provided", () => {
-      expect(getChatHistoryKey("workflow-123", "tab-1")).toBe("chat_history_workflow-123");
+      expect(getChatHistoryKey("workflow-123", "tab-1")).toBe(
+        "chat_history_workflow-123",
+      );
     });
     it("should return key for new workflow when workflowId is null", () => {
       expect(getChatHistoryKey(null)).toBe("chat_history_new_workflow");
     });
     it("should return per-tab key when workflowId is null and tabId is set", () => {
-      expect(getChatHistoryKey(null, "tab-abc")).toBe("chat_history_tab_tab-abc");
+      expect(getChatHistoryKey(null, "tab-abc")).toBe(
+        "chat_history_tab_tab-abc",
+      );
     });
     it("should handle empty string workflowId", () => {
       expect(getChatHistoryKey("")).toBe("chat_history_new_workflow");
@@ -142,7 +152,7 @@ describe("constants", () => {
       expect(
         base.startsWith("http://") ||
           base.startsWith("https://") ||
-          base.startsWith("/")
+          base.startsWith("/"),
       ).toBe(true);
     });
   });

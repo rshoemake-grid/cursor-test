@@ -8,7 +8,8 @@ jest.mock("@xyflow/react", () => {
   return {
     ...actual,
     useReactFlow: () => mockUseReactFlow(),
-    ReactFlowProvider: ({ children }) => React2.createElement(React2.Fragment, null, children)
+    ReactFlowProvider: ({ children }) =>
+      React2.createElement(React2.Fragment, null, children),
   };
 });
 describe("useKeyboardShortcuts - Mutation Killers", () => {
@@ -33,24 +34,27 @@ describe("useKeyboardShortcuts - Mutation Killers", () => {
     mockUseReactFlow.mockReturnValue({
       deleteElements: mockDeleteElements,
       getNodes: mockGetNodes,
-      getEdges: mockGetEdges
+      getEdges: mockGetEdges,
     });
   });
   const renderHookWithProvider = (options) => {
     return renderHook(() => useKeyboardShortcuts(options), {
-      wrapper: ReactFlowProvider
+      wrapper: ReactFlowProvider,
     });
   };
   const createKeyboardEvent = (options) => {
     const event = new KeyboardEvent("keydown", {
       key: options.key,
       ctrlKey: options.ctrlKey || false,
-      metaKey: options.metaKey || false
+      metaKey: options.metaKey || false,
     });
     event.preventDefault = jest.fn();
     event.stopPropagation = jest.fn();
     if (options.target) {
-      Object.defineProperty(event, "target", { value: options.target, writable: false });
+      Object.defineProperty(event, "target", {
+        value: options.target,
+        writable: false,
+      });
     }
     return event;
   };
@@ -65,9 +69,13 @@ describe("useKeyboardShortcuts - Mutation Killers", () => {
         clipboardNode: null,
         onCopy: mockOnCopy,
         onCut: mockOnCut,
-        onPaste: mockOnPaste
+        onPaste: mockOnPaste,
       });
-      const event = createKeyboardEvent({ key: "c", ctrlKey: true, target: mockInput });
+      const event = createKeyboardEvent({
+        key: "c",
+        ctrlKey: true,
+        target: mockInput,
+      });
       window.dispatchEvent(event);
       expect(mockOnCopy).not.toHaveBeenCalled();
     });
@@ -81,9 +89,13 @@ describe("useKeyboardShortcuts - Mutation Killers", () => {
         clipboardNode: null,
         onCopy: mockOnCopy,
         onCut: mockOnCut,
-        onPaste: mockOnPaste
+        onPaste: mockOnPaste,
       });
-      const event = createKeyboardEvent({ key: "c", ctrlKey: true, target: mockTextarea });
+      const event = createKeyboardEvent({
+        key: "c",
+        ctrlKey: true,
+        target: mockTextarea,
+      });
       window.dispatchEvent(event);
       expect(mockOnCopy).not.toHaveBeenCalled();
     });
@@ -91,7 +103,7 @@ describe("useKeyboardShortcuts - Mutation Killers", () => {
       const mockDiv = document.createElement("div");
       Object.defineProperty(mockDiv, "isContentEditable", {
         get: () => true,
-        configurable: true
+        configurable: true,
       });
       mockGetNodes.mockReturnValue([{ id: "node1", selected: true }]);
       renderHookWithProvider({
@@ -101,9 +113,13 @@ describe("useKeyboardShortcuts - Mutation Killers", () => {
         clipboardNode: null,
         onCopy: mockOnCopy,
         onCut: mockOnCut,
-        onPaste: mockOnPaste
+        onPaste: mockOnPaste,
       });
-      const event = createKeyboardEvent({ key: "c", ctrlKey: true, target: mockDiv });
+      const event = createKeyboardEvent({
+        key: "c",
+        ctrlKey: true,
+        target: mockDiv,
+      });
       window.dispatchEvent(event);
       expect(mockOnCopy).not.toHaveBeenCalled();
     });
@@ -118,9 +134,13 @@ describe("useKeyboardShortcuts - Mutation Killers", () => {
         clipboardNode: null,
         onCopy: mockOnCopy,
         onCut: mockOnCut,
-        onPaste: mockOnPaste
+        onPaste: mockOnPaste,
       });
-      const event = createKeyboardEvent({ key: "c", ctrlKey: true, target: mockDiv });
+      const event = createKeyboardEvent({
+        key: "c",
+        ctrlKey: true,
+        target: mockDiv,
+      });
       window.dispatchEvent(event);
       expect(mockOnCopy).toHaveBeenCalledWith(selectedNode);
     });
@@ -136,7 +156,7 @@ describe("useKeyboardShortcuts - Mutation Killers", () => {
         clipboardNode: null,
         onCopy: mockOnCopy,
         onCut: mockOnCut,
-        onPaste: mockOnPaste
+        onPaste: mockOnPaste,
       });
       const event = createKeyboardEvent({ key: "c", ctrlKey: true });
       window.dispatchEvent(event);
@@ -153,7 +173,7 @@ describe("useKeyboardShortcuts - Mutation Killers", () => {
         clipboardNode: null,
         onCopy: mockOnCopy,
         onCut: mockOnCut,
-        onPaste: mockOnPaste
+        onPaste: mockOnPaste,
       });
       const event = createKeyboardEvent({ key: "c", metaKey: true });
       window.dispatchEvent(event);
@@ -170,7 +190,7 @@ describe("useKeyboardShortcuts - Mutation Killers", () => {
         clipboardNode: null,
         onCopy: mockOnCopy,
         onCut: mockOnCut,
-        onPaste: mockOnPaste
+        onPaste: mockOnPaste,
       });
       const event = createKeyboardEvent({ key: "c", ctrlKey: true });
       window.dispatchEvent(event);
@@ -186,7 +206,7 @@ describe("useKeyboardShortcuts - Mutation Killers", () => {
         clipboardNode: null,
         onCopy: mockOnCopy,
         onCut: mockOnCut,
-        onPaste: mockOnPaste
+        onPaste: mockOnPaste,
       });
       const event = createKeyboardEvent({ key: "d", ctrlKey: true });
       window.dispatchEvent(event);
@@ -202,7 +222,7 @@ describe("useKeyboardShortcuts - Mutation Killers", () => {
         clipboardNode: null,
         onCopy: mockOnCopy,
         onCut: mockOnCut,
-        onPaste: mockOnPaste
+        onPaste: mockOnPaste,
       });
       const event = createKeyboardEvent({ key: "c", ctrlKey: true });
       window.dispatchEvent(event);
@@ -211,7 +231,7 @@ describe("useKeyboardShortcuts - Mutation Killers", () => {
     it("should verify exact equality - selectedNodes.length !== 1 (should not copy)", () => {
       mockGetNodes.mockReturnValue([
         { id: "node1", selected: true },
-        { id: "node2", selected: true }
+        { id: "node2", selected: true },
       ]);
       renderHookWithProvider({
         selectedNodeId: "node1",
@@ -220,7 +240,7 @@ describe("useKeyboardShortcuts - Mutation Killers", () => {
         clipboardNode: null,
         onCopy: mockOnCopy,
         onCut: mockOnCut,
-        onPaste: mockOnPaste
+        onPaste: mockOnPaste,
       });
       const event = createKeyboardEvent({ key: "c", ctrlKey: true });
       window.dispatchEvent(event);
@@ -235,7 +255,7 @@ describe("useKeyboardShortcuts - Mutation Killers", () => {
         clipboardNode: null,
         onCopy: mockOnCopy,
         onCut: mockOnCut,
-        onPaste: mockOnPaste
+        onPaste: mockOnPaste,
       });
       const event = createKeyboardEvent({ key: "c", ctrlKey: true });
       window.dispatchEvent(event);
@@ -253,7 +273,7 @@ describe("useKeyboardShortcuts - Mutation Killers", () => {
         clipboardNode: null,
         onCopy: mockOnCopy,
         onCut: mockOnCut,
-        onPaste: mockOnPaste
+        onPaste: mockOnPaste,
       });
       const event = createKeyboardEvent({ key: "x", ctrlKey: true });
       window.dispatchEvent(event);
@@ -270,7 +290,7 @@ describe("useKeyboardShortcuts - Mutation Killers", () => {
         clipboardNode: null,
         onCopy: mockOnCopy,
         onCut: mockOnCut,
-        onPaste: mockOnPaste
+        onPaste: mockOnPaste,
       });
       const event = createKeyboardEvent({ key: "x", metaKey: true });
       window.dispatchEvent(event);
@@ -286,7 +306,7 @@ describe("useKeyboardShortcuts - Mutation Killers", () => {
         clipboardNode: null,
         onCopy: mockOnCopy,
         onCut: mockOnCut,
-        onPaste: mockOnPaste
+        onPaste: mockOnPaste,
       });
       const event = createKeyboardEvent({ key: "x", ctrlKey: true });
       window.dispatchEvent(event);
@@ -302,7 +322,7 @@ describe("useKeyboardShortcuts - Mutation Killers", () => {
         clipboardNode: null,
         onCopy: mockOnCopy,
         onCut: mockOnCut,
-        onPaste: mockOnPaste
+        onPaste: mockOnPaste,
       });
       const event = createKeyboardEvent({ key: "y", ctrlKey: true });
       window.dispatchEvent(event);
@@ -318,7 +338,7 @@ describe("useKeyboardShortcuts - Mutation Killers", () => {
         clipboardNode: null,
         onCopy: mockOnCopy,
         onCut: mockOnCut,
-        onPaste: mockOnPaste
+        onPaste: mockOnPaste,
       });
       const event = createKeyboardEvent({ key: "x", ctrlKey: true });
       window.dispatchEvent(event);
@@ -335,7 +355,7 @@ describe("useKeyboardShortcuts - Mutation Killers", () => {
         clipboardNode,
         onCopy: mockOnCopy,
         onCut: mockOnCut,
-        onPaste: mockOnPaste
+        onPaste: mockOnPaste,
       });
       const event = createKeyboardEvent({ key: "v", ctrlKey: true });
       window.dispatchEvent(event);
@@ -351,7 +371,7 @@ describe("useKeyboardShortcuts - Mutation Killers", () => {
         clipboardNode,
         onCopy: mockOnCopy,
         onCut: mockOnCut,
-        onPaste: mockOnPaste
+        onPaste: mockOnPaste,
       });
       const event = createKeyboardEvent({ key: "v", metaKey: true });
       window.dispatchEvent(event);
@@ -366,7 +386,7 @@ describe("useKeyboardShortcuts - Mutation Killers", () => {
         clipboardNode,
         onCopy: mockOnCopy,
         onCut: mockOnCut,
-        onPaste: mockOnPaste
+        onPaste: mockOnPaste,
       });
       const event = createKeyboardEvent({ key: "v", ctrlKey: true });
       window.dispatchEvent(event);
@@ -381,7 +401,7 @@ describe("useKeyboardShortcuts - Mutation Killers", () => {
         clipboardNode,
         onCopy: mockOnCopy,
         onCut: mockOnCut,
-        onPaste: mockOnPaste
+        onPaste: mockOnPaste,
       });
       const event = createKeyboardEvent({ key: "v", ctrlKey: true });
       window.dispatchEvent(event);
@@ -395,7 +415,7 @@ describe("useKeyboardShortcuts - Mutation Killers", () => {
         clipboardNode: null,
         onCopy: mockOnCopy,
         onCut: mockOnCut,
-        onPaste: mockOnPaste
+        onPaste: mockOnPaste,
       });
       const event = createKeyboardEvent({ key: "v", ctrlKey: true });
       window.dispatchEvent(event);
@@ -409,7 +429,7 @@ describe("useKeyboardShortcuts - Mutation Killers", () => {
         clipboardNode: void 0,
         onCopy: mockOnCopy,
         onCut: mockOnCut,
-        onPaste: mockOnPaste
+        onPaste: mockOnPaste,
       });
       const event = createKeyboardEvent({ key: "v", ctrlKey: true });
       window.dispatchEvent(event);
@@ -428,7 +448,7 @@ describe("useKeyboardShortcuts - Mutation Killers", () => {
         clipboardNode: null,
         onCopy: mockOnCopy,
         onCut: mockOnCut,
-        onPaste: mockOnPaste
+        onPaste: mockOnPaste,
       });
       const event = createKeyboardEvent({ key: "Delete" });
       window.dispatchEvent(event);
@@ -447,7 +467,7 @@ describe("useKeyboardShortcuts - Mutation Killers", () => {
         clipboardNode: null,
         onCopy: mockOnCopy,
         onCut: mockOnCut,
-        onPaste: mockOnPaste
+        onPaste: mockOnPaste,
       });
       const event = createKeyboardEvent({ key: "Backspace" });
       window.dispatchEvent(event);
@@ -465,7 +485,7 @@ describe("useKeyboardShortcuts - Mutation Killers", () => {
         clipboardNode: null,
         onCopy: mockOnCopy,
         onCut: mockOnCut,
-        onPaste: mockOnPaste
+        onPaste: mockOnPaste,
       });
       const event = createKeyboardEvent({ key: "Enter" });
       window.dispatchEvent(event);
@@ -484,7 +504,7 @@ describe("useKeyboardShortcuts - Mutation Killers", () => {
         clipboardNode: null,
         onCopy: mockOnCopy,
         onCut: mockOnCut,
-        onPaste: mockOnPaste
+        onPaste: mockOnPaste,
       });
       const event = createKeyboardEvent({ key: "Delete" });
       window.dispatchEvent(event);
@@ -492,7 +512,12 @@ describe("useKeyboardShortcuts - Mutation Killers", () => {
       expect(mockNotifyModified).toHaveBeenCalled();
     });
     it("should verify exact OR - selectedEdges.length > 0", () => {
-      const selectedEdge = { id: "e1", source: "node1", target: "node2", selected: true };
+      const selectedEdge = {
+        id: "e1",
+        source: "node1",
+        target: "node2",
+        selected: true,
+      };
       mockGetNodes.mockReturnValue([]);
       mockGetEdges.mockReturnValue([selectedEdge]);
       renderHookWithProvider({
@@ -502,7 +527,7 @@ describe("useKeyboardShortcuts - Mutation Killers", () => {
         clipboardNode: null,
         onCopy: mockOnCopy,
         onCut: mockOnCut,
-        onPaste: mockOnPaste
+        onPaste: mockOnPaste,
       });
       const event = createKeyboardEvent({ key: "Delete" });
       window.dispatchEvent(event);
@@ -519,7 +544,7 @@ describe("useKeyboardShortcuts - Mutation Killers", () => {
         clipboardNode: null,
         onCopy: mockOnCopy,
         onCut: mockOnCut,
-        onPaste: mockOnPaste
+        onPaste: mockOnPaste,
       });
       const event = createKeyboardEvent({ key: "Delete" });
       window.dispatchEvent(event);
@@ -537,7 +562,7 @@ describe("useKeyboardShortcuts - Mutation Killers", () => {
         clipboardNode: null,
         onCopy: mockOnCopy,
         onCut: mockOnCut,
-        onPaste: mockOnPaste
+        onPaste: mockOnPaste,
       });
       const event = createKeyboardEvent({ key: "Delete" });
       window.dispatchEvent(event);
@@ -553,7 +578,7 @@ describe("useKeyboardShortcuts - Mutation Killers", () => {
         clipboardNode: null,
         onCopy: mockOnCopy,
         onCut: mockOnCut,
-        onPaste: mockOnPaste
+        onPaste: mockOnPaste,
       });
       const event = createKeyboardEvent({ key: "Delete" });
       window.dispatchEvent(event);
@@ -572,7 +597,7 @@ describe("useKeyboardShortcuts - Mutation Killers", () => {
         clipboardNode: null,
         onCopy: mockOnCopy,
         onCut: mockOnCut,
-        onPaste: mockOnPaste
+        onPaste: mockOnPaste,
       });
       const event = createKeyboardEvent({ key: "Delete" });
       window.dispatchEvent(event);
@@ -590,7 +615,7 @@ describe("useKeyboardShortcuts - Mutation Killers", () => {
         clipboardNode: null,
         onCopy: mockOnCopy,
         onCut: mockOnCut,
-        onPaste: mockOnPaste
+        onPaste: mockOnPaste,
       });
       const event = createKeyboardEvent({ key: "Delete" });
       window.dispatchEvent(event);
@@ -606,7 +631,7 @@ describe("useKeyboardShortcuts - Mutation Killers", () => {
         clipboardNode: null,
         onCopy: mockOnCopy,
         onCut: mockOnCut,
-        onPaste: mockOnPaste
+        onPaste: mockOnPaste,
       });
       const event = createKeyboardEvent({ key: "Delete" });
       window.dispatchEvent(event);

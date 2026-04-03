@@ -14,7 +14,9 @@ function isNotEmpty(value) {
   return isNotNullOrUndefined(value) && value !== "";
 }
 function hasItems(array) {
-  return isNotNullOrUndefined(array) && Array.isArray(array) && array.length > 0;
+  return (
+    isNotNullOrUndefined(array) && Array.isArray(array) && array.length > 0
+  );
 }
 function isNonEmptyArray(array) {
   return hasItems(array);
@@ -34,5 +36,5 @@ export {
   isNonEmptyArray,
   isNotEmpty,
   isNotNullOrUndefined,
-  safeArray
+  safeArray,
 };

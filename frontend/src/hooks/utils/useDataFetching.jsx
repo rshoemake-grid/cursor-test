@@ -6,7 +6,7 @@ function useDataFetching({
   fetchFn,
   initialData,
   onError,
-  logger: injectedLogger = logger
+  logger: injectedLogger = logger,
 }) {
   const [data, setData] = useState(nullishCoalesce(initialData, null));
   const [loading, setLoading] = useState(false);
@@ -19,10 +19,7 @@ function useDataFetching({
       const timeoutPromise = new Promise((_, reject) => {
         setTimeout(() => reject(new Error("Fetch timeout")), timeoutMs);
       });
-      const result = await Promise.race([
-        fetchFn(),
-        timeoutPromise
-      ]);
+      const result = await Promise.race([fetchFn(), timeoutPromise]);
       setData(result);
     } catch (err) {
       const error2 = err instanceof Error ? err : new Error(String(err));
@@ -37,9 +34,7 @@ function useDataFetching({
     data,
     loading,
     error,
-    refetch
+    refetch,
   };
 }
-export {
-  useDataFetching
-};
+export { useDataFetching };

@@ -5,7 +5,7 @@ import {
   wsInstances,
   MockWebSocket,
   useWebSocket,
-  logger
+  logger,
 } from "./useWebSocket.test.setup";
 describe("useWebSocket - Kill Remaining Mutants", () => {
   let mockWebSocketWrapper;
@@ -29,16 +29,18 @@ describe("useWebSocket - Kill Remaining Mutants", () => {
           throw new Error("Test error message");
         }
       };
-      renderHook(
-        () => useWebSocket({
+      renderHook(() =>
+        useWebSocket({
           executionId: "exec-1",
           executionStatus: "running",
-          onError
-        })
+          onError,
+        }),
       );
       await advanceTimersByTime(100);
       expect(onError).toHaveBeenCalledWith("Test error message");
-      expect(onError).not.toHaveBeenCalledWith("Failed to create WebSocket connection");
+      expect(onError).not.toHaveBeenCalledWith(
+        "Failed to create WebSocket connection",
+      );
       global.WebSocket = OriginalWebSocket;
     });
     it("should verify exact error instanceof Error ? error.message : fallback - error is not Error instance", async () => {
@@ -49,16 +51,18 @@ describe("useWebSocket - Kill Remaining Mutants", () => {
           throw "String error";
         }
       };
-      renderHook(
-        () => useWebSocket({
+      renderHook(() =>
+        useWebSocket({
           executionId: "exec-1",
           executionStatus: "running",
-          onError
-        })
+          onError,
+        }),
       );
       await advanceTimersByTime(100);
       expect(onError).toHaveBeenCalledWith("String error");
-      expect(onError).not.toHaveBeenCalledWith("Failed to create WebSocket connection");
+      expect(onError).not.toHaveBeenCalledWith(
+        "Failed to create WebSocket connection",
+      );
       global.WebSocket = OriginalWebSocket;
     });
     it("should verify exact error instanceof Error ? error.message : fallback - error is null", async () => {
@@ -69,15 +73,17 @@ describe("useWebSocket - Kill Remaining Mutants", () => {
           throw null;
         }
       };
-      renderHook(
-        () => useWebSocket({
+      renderHook(() =>
+        useWebSocket({
           executionId: "exec-1",
           executionStatus: "running",
-          onError
-        })
+          onError,
+        }),
       );
       await advanceTimersByTime(100);
-      expect(onError).toHaveBeenCalledWith("Failed to create WebSocket connection");
+      expect(onError).toHaveBeenCalledWith(
+        "Failed to create WebSocket connection",
+      );
       global.WebSocket = OriginalWebSocket;
     });
     it("should verify exact error instanceof Error ? error.message : fallback - error is object without Error prototype", async () => {
@@ -89,12 +95,12 @@ describe("useWebSocket - Kill Remaining Mutants", () => {
           throw customError;
         }
       };
-      renderHook(
-        () => useWebSocket({
+      renderHook(() =>
+        useWebSocket({
           executionId: "exec-1",
           executionStatus: "running",
-          onError
-        })
+          onError,
+        }),
       );
       await advanceTimersByTime(100);
       expect(onError).toHaveBeenCalledWith("Custom error");
@@ -107,11 +113,11 @@ describe("useWebSocket - Kill Remaining Mutants", () => {
           throw new Error("Connection failed");
         }
       };
-      const { result } = renderHook(
-        () => useWebSocket({
+      const { result } = renderHook(() =>
+        useWebSocket({
           executionId: "exec-1",
-          executionStatus: "running"
-        })
+          executionStatus: "running",
+        }),
       );
       await advanceTimersByTime(100);
       expect(result.current.isConnected).toBe(false);
@@ -125,20 +131,20 @@ describe("useWebSocket - Kill Remaining Mutants", () => {
           throw new Error("Test error");
         }
       };
-      renderHook(
-        () => useWebSocket({
+      renderHook(() =>
+        useWebSocket({
           executionId,
-          executionStatus: "running"
-        })
+          executionStatus: "running",
+        }),
       );
       await advanceTimersByTime(100);
       expect(logger.error).toHaveBeenCalledWith(
         expect.stringContaining("Failed to create connection for execution"),
-        expect.anything()
+        expect.anything(),
       );
       expect(logger.error).toHaveBeenCalledWith(
         expect.stringContaining(executionId),
-        expect.anything()
+        expect.anything(),
       );
       global.WebSocket = OriginalWebSocket;
     });
@@ -150,14 +156,15 @@ describe("useWebSocket - Kill Remaining Mutants", () => {
         }
       };
       const { rerender } = renderHook(
-        ({ onError: onError2 }) => useWebSocket({
-          executionId: "exec-1",
-          executionStatus: "running",
-          onError: onError2
-        }),
+        ({ onError: onError2 }) =>
+          useWebSocket({
+            executionId: "exec-1",
+            executionStatus: "running",
+            onError: onError2,
+          }),
         {
-          initialProps: { onError: void 0 }
-        }
+          initialProps: { onError: void 0 },
+        },
       );
       await advanceTimersByTime(100);
       expect(logger.error).toHaveBeenCalled();
@@ -170,61 +177,61 @@ describe("useWebSocket - Kill Remaining Mutants", () => {
   });
   describe("conditional logic edge cases", () => {
     it('should verify exact executionStatus === "completed" || executionStatus === "failed" check - both false', async () => {
-      renderHook(
-        () => useWebSocket({
+      renderHook(() =>
+        useWebSocket({
           executionId: "exec-1",
-          executionStatus: "running"
-        })
+          executionStatus: "running",
+        }),
       );
       await advanceTimersByTime(100);
       expect(wsInstances.length).toBeGreaterThan(0);
     });
     it('should verify exact executionStatus === "completed" || executionStatus === "failed" check - completed is true', async () => {
-      renderHook(
-        () => useWebSocket({
+      renderHook(() =>
+        useWebSocket({
           executionId: "exec-1",
-          executionStatus: "completed"
-        })
+          executionStatus: "completed",
+        }),
       );
       await advanceTimersByTime(100);
       expect(wsInstances.length).toBe(0);
     });
     it('should verify exact executionStatus === "completed" || executionStatus === "failed" check - failed is true', async () => {
-      renderHook(
-        () => useWebSocket({
+      renderHook(() =>
+        useWebSocket({
           executionId: "exec-1",
-          executionStatus: "failed"
-        })
+          executionStatus: "failed",
+        }),
       );
       await advanceTimersByTime(100);
       expect(wsInstances.length).toBe(0);
     });
     it('should verify exact executionStatus === "completed" || executionStatus === "failed" check - both true (impossible but tests logic)', async () => {
-      renderHook(
-        () => useWebSocket({
+      renderHook(() =>
+        useWebSocket({
           executionId: "exec-1",
-          executionStatus: "completed"
-        })
+          executionStatus: "completed",
+        }),
       );
       await advanceTimersByTime(100);
       expect(wsInstances.length).toBe(0);
     });
     it('should verify exact executionId.startsWith("pending-") check - exact prefix match', async () => {
-      renderHook(
-        () => useWebSocket({
+      renderHook(() =>
+        useWebSocket({
           executionId: "pending-12345",
-          executionStatus: "running"
-        })
+          executionStatus: "running",
+        }),
       );
       await advanceTimersByTime(100);
       expect(wsInstances.length).toBe(0);
     });
     it('should verify exact executionId.startsWith("pending-") check - not starting with prefix', async () => {
-      renderHook(
-        () => useWebSocket({
+      renderHook(() =>
+        useWebSocket({
           executionId: "exec-12345",
-          executionStatus: "running"
-        })
+          executionStatus: "running",
+        }),
       );
       await advanceTimersByTime(100);
       expect(wsInstances.length).toBeGreaterThan(0);
@@ -232,14 +239,14 @@ describe("useWebSocket - Kill Remaining Mutants", () => {
     it('should verify exact windowLocation?.protocol === "https:" ? "wss:" : "ws:" check - protocol is https:', async () => {
       const windowLocation = {
         protocol: "https:",
-        host: "example.com:443"
+        host: "example.com:443",
       };
-      renderHook(
-        () => useWebSocket({
+      renderHook(() =>
+        useWebSocket({
           executionId: "exec-1",
           executionStatus: "running",
-          windowLocation
-        })
+          windowLocation,
+        }),
       );
       await advanceTimersByTime(100);
       if (wsInstances.length > 0) {
@@ -250,14 +257,14 @@ describe("useWebSocket - Kill Remaining Mutants", () => {
     it('should verify exact windowLocation?.protocol === "https:" ? "wss:" : "ws:" check - protocol is not https:', async () => {
       const windowLocation = {
         protocol: "http:",
-        host: "example.com:80"
+        host: "example.com:80",
       };
-      renderHook(
-        () => useWebSocket({
+      renderHook(() =>
+        useWebSocket({
           executionId: "exec-1",
           executionStatus: "running",
-          windowLocation
-        })
+          windowLocation,
+        }),
       );
       await advanceTimersByTime(100);
       if (wsInstances.length > 0) {
@@ -268,14 +275,14 @@ describe("useWebSocket - Kill Remaining Mutants", () => {
     it('should verify exact windowLocation?.protocol === "https:" check - protocol is null', async () => {
       const windowLocation = {
         protocol: null,
-        host: "example.com:80"
+        host: "example.com:80",
       };
-      renderHook(
-        () => useWebSocket({
+      renderHook(() =>
+        useWebSocket({
           executionId: "exec-1",
           executionStatus: "running",
-          windowLocation
-        })
+          windowLocation,
+        }),
       );
       await advanceTimersByTime(100);
       if (wsInstances.length > 0) {
@@ -285,14 +292,14 @@ describe("useWebSocket - Kill Remaining Mutants", () => {
     it('should verify exact windowLocation?.host || "localhost:8000" check - host exists', async () => {
       const windowLocation = {
         protocol: "http:",
-        host: "example.com:8000"
+        host: "example.com:8000",
       };
-      renderHook(
-        () => useWebSocket({
+      renderHook(() =>
+        useWebSocket({
           executionId: "exec-1",
           executionStatus: "running",
-          windowLocation
-        })
+          windowLocation,
+        }),
       );
       await advanceTimersByTime(100);
       if (wsInstances.length > 0) {
@@ -303,14 +310,14 @@ describe("useWebSocket - Kill Remaining Mutants", () => {
     it('should verify exact windowLocation?.host || "localhost:8000" check - host is null', async () => {
       const windowLocation = {
         protocol: "http:",
-        host: null
+        host: null,
       };
-      renderHook(
-        () => useWebSocket({
+      renderHook(() =>
+        useWebSocket({
           executionId: "exec-1",
           executionStatus: "running",
-          windowLocation
-        })
+          windowLocation,
+        }),
       );
       await advanceTimersByTime(100);
       if (wsInstances.length > 0) {
@@ -320,14 +327,14 @@ describe("useWebSocket - Kill Remaining Mutants", () => {
     it('should verify exact windowLocation?.host || "localhost:8000" check - host is undefined', async () => {
       const windowLocation = {
         protocol: "http:",
-        host: void 0
+        host: void 0,
       };
-      renderHook(
-        () => useWebSocket({
+      renderHook(() =>
+        useWebSocket({
           executionId: "exec-1",
           executionStatus: "running",
-          windowLocation
-        })
+          windowLocation,
+        }),
       );
       await advanceTimersByTime(100);
       if (wsInstances.length > 0) {
@@ -336,11 +343,11 @@ describe("useWebSocket - Kill Remaining Mutants", () => {
     });
     it("should verify exact wasClean && code === 1000 check - wasClean is true and code is 1000", async () => {
       jest.clearAllMocks();
-      renderHook(
-        () => useWebSocket({
+      renderHook(() =>
+        useWebSocket({
           executionId: "exec-1",
-          executionStatus: "running"
-        })
+          executionStatus: "running",
+        }),
       );
       await advanceTimersByTime(100);
       if (wsInstances.length > 0) {
@@ -351,22 +358,26 @@ describe("useWebSocket - Kill Remaining Mutants", () => {
         });
         jest.clearAllMocks();
         await act(async () => {
-          ws.simulateClose({ code: 1e3, wasClean: true, reason: "Normal closure" });
+          ws.simulateClose({
+            code: 1e3,
+            wasClean: true,
+            reason: "Normal closure",
+          });
           await advanceTimersByTime(50);
         });
         await advanceTimersByTime(100);
         const reconnectCallsAfterClose = logger.debug.mock.calls.filter(
-          (call) => call[0]?.includes("[WebSocket] Reconnecting")
+          (call) => call[0]?.includes("[WebSocket] Reconnecting"),
         );
         expect(reconnectCallsAfterClose.length).toBeLessThanOrEqual(1);
       }
     });
     it("should verify exact wasClean && code === 1000 check - wasClean is false and code is 1000", async () => {
-      renderHook(
-        () => useWebSocket({
+      renderHook(() =>
+        useWebSocket({
           executionId: "exec-1",
-          executionStatus: "running"
-        })
+          executionStatus: "running",
+        }),
       );
       await advanceTimersByTime(100);
       if (wsInstances.length > 0) {
@@ -376,21 +387,25 @@ describe("useWebSocket - Kill Remaining Mutants", () => {
           await advanceTimersByTime(50);
         });
         await act(async () => {
-          ws.simulateClose({ code: 1e3, wasClean: false, reason: "Unclean closure" });
+          ws.simulateClose({
+            code: 1e3,
+            wasClean: false,
+            reason: "Unclean closure",
+          });
           await advanceTimersByTime(50);
         });
         await advanceTimersByTime(2e3);
         expect(logger.debug).toHaveBeenCalledWith(
-          expect.stringContaining("[WebSocket] Reconnecting")
+          expect.stringContaining("[WebSocket] Reconnecting"),
         );
       }
     });
     it("should verify exact wasClean && code === 1000 check - wasClean is true and code is not 1000", async () => {
-      renderHook(
-        () => useWebSocket({
+      renderHook(() =>
+        useWebSocket({
           executionId: "exec-1",
-          executionStatus: "running"
-        })
+          executionStatus: "running",
+        }),
       );
       await advanceTimersByTime(100);
       if (wsInstances.length > 0) {
@@ -400,21 +415,25 @@ describe("useWebSocket - Kill Remaining Mutants", () => {
           await advanceTimersByTime(50);
         });
         await act(async () => {
-          ws.simulateClose({ code: 1001, wasClean: true, reason: "Going away" });
+          ws.simulateClose({
+            code: 1001,
+            wasClean: true,
+            reason: "Going away",
+          });
           await advanceTimersByTime(50);
         });
         await advanceTimersByTime(2e3);
         expect(logger.debug).toHaveBeenCalledWith(
-          expect.stringContaining("[WebSocket] Reconnecting")
+          expect.stringContaining("[WebSocket] Reconnecting"),
         );
       }
     });
     it("should verify exact reconnectAttempts.current < maxReconnectAttempts && executionId check - both true", async () => {
-      renderHook(
-        () => useWebSocket({
+      renderHook(() =>
+        useWebSocket({
           executionId: "exec-1",
-          executionStatus: "running"
-        })
+          executionStatus: "running",
+        }),
       );
       await advanceTimersByTime(100);
       if (wsInstances.length > 0) {
@@ -424,24 +443,28 @@ describe("useWebSocket - Kill Remaining Mutants", () => {
           await advanceTimersByTime(50);
         });
         await act(async () => {
-          ws.simulateClose({ code: 1006, wasClean: false, reason: "Abnormal closure" });
+          ws.simulateClose({
+            code: 1006,
+            wasClean: false,
+            reason: "Abnormal closure",
+          });
           await advanceTimersByTime(50);
         });
         await advanceTimersByTime(2e3);
         expect(logger.debug).toHaveBeenCalledWith(
-          expect.stringContaining("[WebSocket] Reconnecting")
+          expect.stringContaining("[WebSocket] Reconnecting"),
         );
       }
     });
     it("should verify exact reconnectAttempts.current < maxReconnectAttempts && executionId check - attempts >= max", async () => {
       jest.clearAllMocks();
       const onError = jest.fn();
-      renderHook(
-        () => useWebSocket({
+      renderHook(() =>
+        useWebSocket({
           executionId: "exec-1",
           executionStatus: "running",
-          onError
-        })
+          onError,
+        }),
       );
       await advanceTimersByTime(100);
       if (wsInstances.length > 0) {
@@ -452,7 +475,11 @@ describe("useWebSocket - Kill Remaining Mutants", () => {
         });
         for (let i = 0; i < 5; i++) {
           await act(async () => {
-            ws.simulateClose({ code: 1006, wasClean: false, reason: "Abnormal closure" });
+            ws.simulateClose({
+              code: 1006,
+              wasClean: false,
+              reason: "Abnormal closure",
+            });
             await advanceTimersByTime(50);
           });
           const delay = Math.min(1e3 * Math.pow(2, i + 1), 1e4);
@@ -465,12 +492,12 @@ describe("useWebSocket - Kill Remaining Mutants", () => {
     it("should verify exact reconnectAttempts.current >= maxReconnectAttempts check - exact boundary", async () => {
       jest.clearAllMocks();
       const onError = jest.fn();
-      renderHook(
-        () => useWebSocket({
+      renderHook(() =>
+        useWebSocket({
           executionId: "exec-1",
           executionStatus: "running",
-          onError
-        })
+          onError,
+        }),
       );
       await advanceTimersByTime(100);
       if (wsInstances.length > 0) {
@@ -481,23 +508,27 @@ describe("useWebSocket - Kill Remaining Mutants", () => {
         });
         for (let i = 0; i < 6; i++) {
           await act(async () => {
-            ws.simulateClose({ code: 1006, wasClean: false, reason: "Abnormal closure" });
+            ws.simulateClose({
+              code: 1006,
+              wasClean: false,
+              reason: "Abnormal closure",
+            });
             await advanceTimersByTime(50);
           });
           await advanceTimersByTime(12e3);
         }
-        const warnCalls = logger.warn.mock.calls.filter(
-          (call) => call[0]?.includes("[WebSocket] Max reconnect attempts")
+        const warnCalls = logger.warn.mock.calls.filter((call) =>
+          call[0]?.includes("[WebSocket] Max reconnect attempts"),
         );
         expect(warnCalls.length).toBeGreaterThanOrEqual(0);
       }
     });
     it("should verify exact Math.min(1000 * Math.pow(2, reconnectAttempts.current), 10000) delay calculation", async () => {
-      renderHook(
-        () => useWebSocket({
+      renderHook(() =>
+        useWebSocket({
           executionId: "exec-1",
-          executionStatus: "running"
-        })
+          executionStatus: "running",
+        }),
       );
       await advanceTimersByTime(100);
       if (wsInstances.length > 0) {
@@ -507,21 +538,25 @@ describe("useWebSocket - Kill Remaining Mutants", () => {
           await advanceTimersByTime(50);
         });
         await act(async () => {
-          ws.simulateClose({ code: 1006, wasClean: false, reason: "Abnormal closure" });
+          ws.simulateClose({
+            code: 1006,
+            wasClean: false,
+            reason: "Abnormal closure",
+          });
           await advanceTimersByTime(50);
         });
         expect(logger.debug).toHaveBeenCalledWith(
-          expect.stringContaining("[WebSocket] Reconnecting in 10000ms")
+          expect.stringContaining("[WebSocket] Reconnecting in 10000ms"),
         );
       }
     });
     it("should verify exact Math.min delay calculation - capped at 10000", async () => {
       jest.clearAllMocks();
-      renderHook(
-        () => useWebSocket({
+      renderHook(() =>
+        useWebSocket({
           executionId: "exec-1",
-          executionStatus: "running"
-        })
+          executionStatus: "running",
+        }),
       );
       await advanceTimersByTime(100);
       if (wsInstances.length > 0) {
@@ -532,13 +567,17 @@ describe("useWebSocket - Kill Remaining Mutants", () => {
         });
         for (let i = 0; i < 5; i++) {
           await act(async () => {
-            ws.simulateClose({ code: 1006, wasClean: false, reason: "Abnormal closure" });
+            ws.simulateClose({
+              code: 1006,
+              wasClean: false,
+              reason: "Abnormal closure",
+            });
             await advanceTimersByTime(50);
           });
           await advanceTimersByTime(11e3);
         }
-        const reconnectCalls = logger.debug.mock.calls.filter(
-          (call) => call[0]?.includes("[WebSocket] Reconnecting in")
+        const reconnectCalls = logger.debug.mock.calls.filter((call) =>
+          call[0]?.includes("[WebSocket] Reconnecting in"),
         );
         expect(reconnectCalls.length).toBeGreaterThan(0);
         reconnectCalls.forEach((call) => {
@@ -555,11 +594,11 @@ describe("useWebSocket - Kill Remaining Mutants", () => {
   describe("no-coverage paths - cleanup and edge cases", () => {
     it("should verify cleanup function - reconnectTimeoutRef.current exists", async () => {
       jest.clearAllMocks();
-      const { unmount } = renderHook(
-        () => useWebSocket({
+      const { unmount } = renderHook(() =>
+        useWebSocket({
           executionId: "exec-1",
-          executionStatus: "running"
-        })
+          executionStatus: "running",
+        }),
       );
       await advanceTimersByTime(100);
       if (wsInstances.length > 0) {
@@ -569,7 +608,11 @@ describe("useWebSocket - Kill Remaining Mutants", () => {
           await advanceTimersByTime(50);
         });
         await act(async () => {
-          ws.simulateClose({ code: 1006, wasClean: false, reason: "Abnormal closure" });
+          ws.simulateClose({
+            code: 1006,
+            wasClean: false,
+            reason: "Abnormal closure",
+          });
           await advanceTimersByTime(50);
         });
         unmount();
@@ -579,11 +622,11 @@ describe("useWebSocket - Kill Remaining Mutants", () => {
     });
     it("should verify cleanup function - wsRef.current exists", async () => {
       jest.clearAllMocks();
-      const { unmount } = renderHook(
-        () => useWebSocket({
+      const { unmount } = renderHook(() =>
+        useWebSocket({
           executionId: "exec-1",
-          executionStatus: "running"
-        })
+          executionStatus: "running",
+        }),
       );
       await advanceTimersByTime(100);
       if (wsInstances.length > 0) {
@@ -599,11 +642,11 @@ describe("useWebSocket - Kill Remaining Mutants", () => {
     });
     it("should verify cleanup function - both reconnectTimeoutRef and wsRef exist", async () => {
       jest.clearAllMocks();
-      const { unmount } = renderHook(
-        () => useWebSocket({
+      const { unmount } = renderHook(() =>
+        useWebSocket({
           executionId: "exec-1",
-          executionStatus: "running"
-        })
+          executionStatus: "running",
+        }),
       );
       await advanceTimersByTime(100);
       if (wsInstances.length > 0) {
@@ -613,7 +656,11 @@ describe("useWebSocket - Kill Remaining Mutants", () => {
           await advanceTimersByTime(50);
         });
         await act(async () => {
-          ws.simulateClose({ code: 1006, wasClean: false, reason: "Abnormal closure" });
+          ws.simulateClose({
+            code: 1006,
+            wasClean: false,
+            reason: "Abnormal closure",
+          });
           await advanceTimersByTime(50);
         });
         unmount();
@@ -622,22 +669,22 @@ describe("useWebSocket - Kill Remaining Mutants", () => {
       }
     });
     it("should verify if (!executionId) path - executionId is null", async () => {
-      const { result } = renderHook(
-        () => useWebSocket({
+      const { result } = renderHook(() =>
+        useWebSocket({
           executionId: null,
-          executionStatus: "running"
-        })
+          executionStatus: "running",
+        }),
       );
       await advanceTimersByTime(100);
       expect(result.current.isConnected).toBe(false);
       expect(wsInstances.length).toBe(0);
     });
     it("should verify if (!executionId) path - executionId is undefined", async () => {
-      const { result } = renderHook(
-        () => useWebSocket({
+      const { result } = renderHook(() =>
+        useWebSocket({
           executionId: void 0,
-          executionStatus: "running"
-        })
+          executionStatus: "running",
+        }),
       );
       await advanceTimersByTime(100);
       expect(result.current.isConnected).toBe(false);
@@ -645,11 +692,12 @@ describe("useWebSocket - Kill Remaining Mutants", () => {
     });
     it("should verify if (executionStatus) path - executionStatus is null", async () => {
       const { rerender } = renderHook(
-        ({ executionStatus }) => useWebSocket({
-          executionId: "exec-1",
-          executionStatus
-        }),
-        { initialProps: { executionStatus: "running" } }
+        ({ executionStatus }) =>
+          useWebSocket({
+            executionId: "exec-1",
+            executionStatus,
+          }),
+        { initialProps: { executionStatus: "running" } },
       );
       await advanceTimersByTime(100);
       rerender({ executionStatus: null });
@@ -658,11 +706,12 @@ describe("useWebSocket - Kill Remaining Mutants", () => {
     });
     it("should verify if (executionStatus) path - executionStatus is undefined", async () => {
       const { rerender } = renderHook(
-        ({ executionStatus }) => useWebSocket({
-          executionId: "exec-1",
-          executionStatus
-        }),
-        { initialProps: { executionStatus: "running" } }
+        ({ executionStatus }) =>
+          useWebSocket({
+            executionId: "exec-1",
+            executionStatus,
+          }),
+        { initialProps: { executionStatus: "running" } },
       );
       await advanceTimersByTime(100);
       rerender({ executionStatus: void 0 });
@@ -671,11 +720,12 @@ describe("useWebSocket - Kill Remaining Mutants", () => {
     });
     it("should verify if (reconnectTimeoutRef.current) in useEffect - when timeout exists", async () => {
       const { rerender } = renderHook(
-        ({ executionId }) => useWebSocket({
-          executionId,
-          executionStatus: "running"
-        }),
-        { initialProps: { executionId: "exec-1" } }
+        ({ executionId }) =>
+          useWebSocket({
+            executionId,
+            executionStatus: "running",
+          }),
+        { initialProps: { executionId: "exec-1" } },
       );
       await advanceTimersByTime(100);
       if (wsInstances.length > 0) {
@@ -685,7 +735,11 @@ describe("useWebSocket - Kill Remaining Mutants", () => {
           await advanceTimersByTime(50);
         });
         await act(async () => {
-          ws.simulateClose({ code: 1006, wasClean: false, reason: "Abnormal closure" });
+          ws.simulateClose({
+            code: 1006,
+            wasClean: false,
+            reason: "Abnormal closure",
+          });
           await advanceTimersByTime(50);
         });
         rerender({ executionId: "exec-2" });
@@ -695,11 +749,12 @@ describe("useWebSocket - Kill Remaining Mutants", () => {
     });
     it("should verify if (wsRef.current) in useEffect when executionId changes to pending-", async () => {
       const { rerender } = renderHook(
-        ({ executionId }) => useWebSocket({
-          executionId,
-          executionStatus: "running"
-        }),
-        { initialProps: { executionId: "exec-1" } }
+        ({ executionId }) =>
+          useWebSocket({
+            executionId,
+            executionStatus: "running",
+          }),
+        { initialProps: { executionId: "exec-1" } },
       );
       await advanceTimersByTime(100);
       if (wsInstances.length > 0) {
@@ -715,11 +770,12 @@ describe("useWebSocket - Kill Remaining Mutants", () => {
     });
     it("should verify if (wsRef.current) in useEffect when executionId changes to null", async () => {
       const { rerender } = renderHook(
-        ({ executionId }) => useWebSocket({
-          executionId,
-          executionStatus: "running"
-        }),
-        { initialProps: { executionId: "exec-1" } }
+        ({ executionId }) =>
+          useWebSocket({
+            executionId,
+            executionStatus: "running",
+          }),
+        { initialProps: { executionId: "exec-1" } },
       );
       await advanceTimersByTime(100);
       if (wsInstances.length > 0) {
@@ -737,10 +793,10 @@ describe("useWebSocket - Kill Remaining Mutants", () => {
   describe("mutation killers - exact conditionals and string operations", () => {
     describe("connect - exact conditional checks", () => {
       it("should verify exact conditional: if (!executionId)", async () => {
-        const { result } = renderHook(
-          () => useWebSocket({
-            executionId: null
-          })
+        const { result } = renderHook(() =>
+          useWebSocket({
+            executionId: null,
+          }),
         );
         await advanceTimersByTime(100);
         expect(result.current.isConnected).toBe(false);
@@ -748,60 +804,61 @@ describe("useWebSocket - Kill Remaining Mutants", () => {
       });
       it('should verify exact string method: executionId.startsWith("pending-")', async () => {
         jest.clearAllMocks();
-        const { result } = renderHook(
-          () => useWebSocket({
-            executionId: "pending-123-test"
-          })
+        const { result } = renderHook(() =>
+          useWebSocket({
+            executionId: "pending-123-test",
+          }),
         );
         await advanceTimersByTime(100);
         expect(result.current.isConnected).toBe(false);
         expect(wsInstances.length).toBe(0);
         expect(wsInstances.length).toBe(0);
-        const { result: result2 } = renderHook(
-          () => useWebSocket({
-            executionId: "pending-456-other"
-          })
+        const { result: result2 } = renderHook(() =>
+          useWebSocket({
+            executionId: "pending-456-other",
+          }),
         );
         await advanceTimersByTime(100);
         expect(result2.current.isConnected).toBe(false);
         expect(wsInstances.length).toBe(0);
       });
       it("should verify exact logical OR: executionStatus || lastKnownStatusRef.current", async () => {
-        renderHook(
-          () => useWebSocket({
+        renderHook(() =>
+          useWebSocket({
             executionId: "exec-1",
-            executionStatus: void 0
-          })
+            executionStatus: void 0,
+          }),
         );
         await advanceTimersByTime(100);
         expect(wsInstances.length).toBeGreaterThanOrEqual(0);
       });
       it('should verify exact logical OR: currentStatus === "completed" || currentStatus === "failed"', async () => {
-        const { result: result1 } = renderHook(
-          () => useWebSocket({
+        const { result: result1 } = renderHook(() =>
+          useWebSocket({
             executionId: "exec-1",
-            executionStatus: "completed"
-          })
+            executionStatus: "completed",
+          }),
         );
         await advanceTimersByTime(100);
         expect(result1.current.isConnected).toBe(false);
-        const { result: result2 } = renderHook(
-          () => useWebSocket({
+        const { result: result2 } = renderHook(() =>
+          useWebSocket({
             executionId: "exec-2",
-            executionStatus: "failed"
-          })
+            executionStatus: "failed",
+          }),
         );
         await advanceTimersByTime(100);
         expect(result2.current.isConnected).toBe(false);
       });
       it("should verify exact conditional: if (wsRef.current)", async () => {
         const { rerender } = renderHook(
-          ({ executionId }) => useWebSocket({
-            executionId
-          }),
+          ({ executionId }) =>
+            useWebSocket({
+              executionId,
+            }),
           {
-            initialProps: { executionId: "exec-1" }
-          }
+            initialProps: { executionId: "exec-1" },
+          },
         );
         await advanceTimersByTime(100);
         if (wsInstances.length > 0) {
@@ -825,13 +882,13 @@ describe("useWebSocket - Kill Remaining Mutants", () => {
           port: "443",
           pathname: "/",
           search: "",
-          hash: ""
+          hash: "",
         };
-        renderHook(
-          () => useWebSocket({
+        renderHook(() =>
+          useWebSocket({
             executionId: "exec-1",
-            windowLocation
-          })
+            windowLocation,
+          }),
         );
         await advanceTimersByTime(100);
         if (wsInstances.length > 0) {
@@ -847,13 +904,13 @@ describe("useWebSocket - Kill Remaining Mutants", () => {
           port: "8000",
           pathname: "/",
           search: "",
-          hash: ""
+          hash: "",
         };
-        renderHook(
-          () => useWebSocket({
+        renderHook(() =>
+          useWebSocket({
             executionId: "exec-1",
-            windowLocation: windowLocationHttp
-          })
+            windowLocation: windowLocationHttp,
+          }),
         );
         await advanceTimersByTime(100);
         if (wsInstances.length > 0) {
@@ -863,11 +920,11 @@ describe("useWebSocket - Kill Remaining Mutants", () => {
       });
       it('should verify exact optional chaining: windowLocation?.host || "localhost:8000"', async () => {
         const windowLocationNull = null;
-        renderHook(
-          () => useWebSocket({
+        renderHook(() =>
+          useWebSocket({
             executionId: "exec-1",
-            windowLocation: windowLocationNull
-          })
+            windowLocation: windowLocationNull,
+          }),
         );
         await advanceTimersByTime(100);
         if (wsInstances.length > 0) {
@@ -879,11 +936,11 @@ describe("useWebSocket - Kill Remaining Mutants", () => {
     describe("onmessage - exact switch cases and logical operators", () => {
       it('should verify exact case: case "log"', async () => {
         const onLog = jest.fn();
-        renderHook(
-          () => useWebSocket({
+        renderHook(() =>
+          useWebSocket({
             executionId: "exec-1",
-            onLog
-          })
+            onLog,
+          }),
         );
         await advanceTimersByTime(100);
         if (wsInstances.length > 0 && wsInstances[0].onmessage) {
@@ -893,36 +950,36 @@ describe("useWebSocket - Kill Remaining Mutants", () => {
             log: {
               timestamp: "2024-01-01",
               level: "info",
-              message: "Test log"
-            }
+              message: "Test log",
+            },
           });
           expect(onLog).toHaveBeenCalledWith({
             timestamp: "2024-01-01",
             level: "info",
-            message: "Test log"
+            message: "Test log",
           });
         }
       });
       it("should verify exact logical AND: message.log && onLog", async () => {
         const onLog = jest.fn();
-        renderHook(
-          () => useWebSocket({
+        renderHook(() =>
+          useWebSocket({
             executionId: "exec-1",
-            onLog
-          })
+            onLog,
+          }),
         );
         await advanceTimersByTime(100);
         if (wsInstances.length > 0 && wsInstances[0].onmessage) {
           wsInstances[0].simulateMessage({
             type: "log",
             execution_id: "exec-1",
-            log: { timestamp: "2024-01-01", level: "info", message: "Test" }
+            log: { timestamp: "2024-01-01", level: "info", message: "Test" },
           });
           expect(onLog).toHaveBeenCalled();
           onLog.mockClear();
           wsInstances[0].simulateMessage({
             type: "log",
-            execution_id: "exec-1"
+            execution_id: "exec-1",
             // No log property
           });
           expect(onLog).not.toHaveBeenCalled();
@@ -930,11 +987,11 @@ describe("useWebSocket - Kill Remaining Mutants", () => {
       });
       it("should verify exact logical OR: (message as any).node_id || message.node_state.node_id", async () => {
         const onNodeUpdate = jest.fn();
-        renderHook(
-          () => useWebSocket({
+        renderHook(() =>
+          useWebSocket({
             executionId: "exec-1",
-            onNodeUpdate
-          })
+            onNodeUpdate,
+          }),
         );
         await advanceTimersByTime(100);
         if (wsInstances.length > 0 && wsInstances[0].onmessage) {
@@ -942,26 +999,31 @@ describe("useWebSocket - Kill Remaining Mutants", () => {
             type: "node_update",
             execution_id: "exec-1",
             node_id: "node-1",
-            node_state: { status: "running" }
+            node_state: { status: "running" },
           });
-          expect(onNodeUpdate).toHaveBeenCalledWith("node-1", { status: "running" });
+          expect(onNodeUpdate).toHaveBeenCalledWith("node-1", {
+            status: "running",
+          });
           onNodeUpdate.mockClear();
           wsInstances[0].simulateMessage({
             type: "node_update",
             execution_id: "exec-1",
-            node_state: { node_id: "node-2", status: "completed" }
+            node_state: { node_id: "node-2", status: "completed" },
           });
-          expect(onNodeUpdate).toHaveBeenCalledWith("node-2", { node_id: "node-2", status: "completed" });
+          expect(onNodeUpdate).toHaveBeenCalledWith("node-2", {
+            node_id: "node-2",
+            status: "completed",
+          });
         }
       });
     });
     describe("onclose - exact comparisons and logical operators", () => {
       it("should verify exact logical AND: wasClean && code === 1000", async () => {
-        renderHook(
-          () => useWebSocket({
+        renderHook(() =>
+          useWebSocket({
             executionId: "exec-1",
-            executionStatus: "running"
-          })
+            executionStatus: "running",
+          }),
         );
         await advanceTimersByTime(100);
         if (wsInstances.length > 0) {
@@ -976,21 +1038,23 @@ describe("useWebSocket - Kill Remaining Mutants", () => {
             await advanceTimersByTime(200);
           });
           const cleanCalls = logger.debug.mock.calls.filter(
-            (call) => call[0] === "[WebSocket] Connection closed cleanly, not reconnecting"
+            (call) =>
+              call[0] ===
+              "[WebSocket] Connection closed cleanly, not reconnecting",
           );
           expect(cleanCalls.length).toBeGreaterThan(0);
-          const reconnectCalls = logger.debug.mock.calls.filter(
-            (call) => call[0]?.includes("Reconnecting in")
+          const reconnectCalls = logger.debug.mock.calls.filter((call) =>
+            call[0]?.includes("Reconnecting in"),
           );
           expect(reconnectCalls.length).toBe(0);
         }
       });
       it("should verify exact comparison: code === 1000", async () => {
-        renderHook(
-          () => useWebSocket({
+        renderHook(() =>
+          useWebSocket({
             executionId: "exec-1",
-            executionStatus: "running"
-          })
+            executionStatus: "running",
+          }),
         );
         await advanceTimersByTime(100);
         if (wsInstances.length > 0) {
@@ -1007,11 +1071,11 @@ describe("useWebSocket - Kill Remaining Mutants", () => {
         }
       });
       it("should verify exact comparison: reconnectAttempts.current < maxReconnectAttempts", async () => {
-        renderHook(
-          () => useWebSocket({
+        renderHook(() =>
+          useWebSocket({
             executionId: "exec-1",
-            executionStatus: "running"
-          })
+            executionStatus: "running",
+          }),
         );
         await advanceTimersByTime(100);
         if (wsInstances.length > 0) {
@@ -1021,22 +1085,26 @@ describe("useWebSocket - Kill Remaining Mutants", () => {
             await advanceTimersByTime(50);
           });
           await act(async () => {
-            ws.simulateClose({ code: 1006, wasClean: false, reason: "Abnormal closure" });
+            ws.simulateClose({
+              code: 1006,
+              wasClean: false,
+              reason: "Abnormal closure",
+            });
             await advanceTimersByTime(50);
           });
           expect(logger.debug).toHaveBeenCalledWith(
-            expect.stringContaining("Reconnecting in")
+            expect.stringContaining("Reconnecting in"),
           );
         }
       });
       it("should verify exact comparison: reconnectAttempts.current >= maxReconnectAttempts", async () => {
         const onError = jest.fn();
-        renderHook(
-          () => useWebSocket({
+        renderHook(() =>
+          useWebSocket({
             executionId: "exec-1",
             executionStatus: "running",
-            onError
-          })
+            onError,
+          }),
         );
         await advanceTimersByTime(100);
         if (wsInstances.length > 0) {
@@ -1052,8 +1120,8 @@ describe("useWebSocket - Kill Remaining Mutants", () => {
             });
           }
           const warnCalls = logger.warn.mock.calls;
-          const maxAttemptsCall = warnCalls.find(
-            (call) => call[0]?.includes("Max reconnect attempts")
+          const maxAttemptsCall = warnCalls.find((call) =>
+            call[0]?.includes("Max reconnect attempts"),
           );
           if (maxAttemptsCall || onError.mock.calls.length > 0) {
             expect(true).toBe(true);
@@ -1063,10 +1131,10 @@ describe("useWebSocket - Kill Remaining Mutants", () => {
     });
     describe("onerror - exact instanceof check and ternary", () => {
       it("should verify exact instanceof: error instanceof Error", async () => {
-        renderHook(
-          () => useWebSocket({
-            executionId: "exec-1"
-          })
+        renderHook(() =>
+          useWebSocket({
+            executionId: "exec-1",
+          }),
         );
         await advanceTimersByTime(100);
         if (wsInstances.length > 0 && wsInstances[0].onerror) {
@@ -1075,16 +1143,16 @@ describe("useWebSocket - Kill Remaining Mutants", () => {
           expect(logger.error).toHaveBeenCalledWith(
             expect.stringContaining("[WebSocket] Connection error"),
             expect.objectContaining({
-              message: "WebSocket error"
-            })
+              message: "WebSocket error",
+            }),
           );
         }
       });
       it('should verify exact ternary: error instanceof Error ? error.message : "Unknown WebSocket error"', async () => {
-        renderHook(
-          () => useWebSocket({
-            executionId: "exec-1"
-          })
+        renderHook(() =>
+          useWebSocket({
+            executionId: "exec-1",
+          }),
         );
         await advanceTimersByTime(100);
         if (wsInstances.length > 0 && wsInstances[0].onerror) {
@@ -1093,8 +1161,8 @@ describe("useWebSocket - Kill Remaining Mutants", () => {
           expect(logger.error).toHaveBeenCalledWith(
             expect.stringContaining("[WebSocket] Connection error"),
             expect.objectContaining({
-              message: "Unknown WebSocket error"
-            })
+              message: "Unknown WebSocket error",
+            }),
           );
         }
       });
@@ -1102,10 +1170,10 @@ describe("useWebSocket - Kill Remaining Mutants", () => {
     describe("onclose - exact string operations", () => {
       it('should verify exact ternary: reason && reason.length > 0 ? reason : "No reason provided"', async () => {
         jest.clearAllMocks();
-        renderHook(
-          () => useWebSocket({
-            executionId: "exec-1"
-          })
+        renderHook(() =>
+          useWebSocket({
+            executionId: "exec-1",
+          }),
         );
         await advanceTimersByTime(100);
         if (wsInstances.length > 0) {
@@ -1120,22 +1188,22 @@ describe("useWebSocket - Kill Remaining Mutants", () => {
             await advanceTimersByTime(100);
           });
           const debugCalls = logger.debug.mock.calls;
-          const disconnectCall = debugCalls.find(
-            (call) => call[0]?.includes("[WebSocket] Disconnected")
+          const disconnectCall = debugCalls.find((call) =>
+            call[0]?.includes("[WebSocket] Disconnected"),
           );
           if (disconnectCall) {
             expect(disconnectCall[1]).toMatchObject({
-              reason: "No reason provided"
+              reason: "No reason provided",
             });
           }
         }
       });
       it("should verify exact logical AND: reason && reason.length > 0", async () => {
         jest.clearAllMocks();
-        renderHook(
-          () => useWebSocket({
-            executionId: "exec-1"
-          })
+        renderHook(() =>
+          useWebSocket({
+            executionId: "exec-1",
+          }),
         );
         await advanceTimersByTime(100);
         if (wsInstances.length > 0 && wsInstances[0].onclose) {
@@ -1150,8 +1218,8 @@ describe("useWebSocket - Kill Remaining Mutants", () => {
             await advanceTimersByTime(100);
           });
           const debugCalls = logger.debug.mock.calls;
-          const disconnectCall = debugCalls.find(
-            (call) => call[0]?.includes("[WebSocket] Disconnected")
+          const disconnectCall = debugCalls.find((call) =>
+            call[0]?.includes("[WebSocket] Disconnected"),
           );
           if (disconnectCall && disconnectCall[1]) {
             expect(disconnectCall[1].reason).toBe("Normal closure");
@@ -1167,14 +1235,14 @@ describe("useWebSocket - Kill Remaining Mutants", () => {
       it("should verify exact windowLocation?.protocol === https: - protocol is https:", async () => {
         const mockWindowLocation = {
           protocol: "https:",
-          host: "example.com:443"
+          host: "example.com:443",
         };
-        renderHook(
-          () => useWebSocket({
+        renderHook(() =>
+          useWebSocket({
             executionId: "exec-1",
             executionStatus: "running",
-            windowLocation: mockWindowLocation
-          })
+            windowLocation: mockWindowLocation,
+          }),
         );
         await advanceTimersByTime(100);
         expect(wsInstances.length).toBeGreaterThan(0);
@@ -1185,14 +1253,14 @@ describe("useWebSocket - Kill Remaining Mutants", () => {
       it("should verify exact windowLocation?.protocol === https: - protocol is http:", async () => {
         const mockWindowLocation = {
           protocol: "http:",
-          host: "example.com:80"
+          host: "example.com:80",
         };
-        renderHook(
-          () => useWebSocket({
+        renderHook(() =>
+          useWebSocket({
             executionId: "exec-1",
             executionStatus: "running",
-            windowLocation: mockWindowLocation
-          })
+            windowLocation: mockWindowLocation,
+          }),
         );
         await advanceTimersByTime(100);
         expect(wsInstances.length).toBeGreaterThan(0);
@@ -1203,14 +1271,14 @@ describe("useWebSocket - Kill Remaining Mutants", () => {
       it("should verify exact windowLocation?.protocol === https: - protocol is undefined", async () => {
         const mockWindowLocation = {
           protocol: void 0,
-          host: "example.com:80"
+          host: "example.com:80",
         };
-        renderHook(
-          () => useWebSocket({
+        renderHook(() =>
+          useWebSocket({
             executionId: "exec-1",
             executionStatus: "running",
-            windowLocation: mockWindowLocation
-          })
+            windowLocation: mockWindowLocation,
+          }),
         );
         await advanceTimersByTime(100);
         expect(wsInstances.length).toBeGreaterThan(0);
@@ -1220,14 +1288,14 @@ describe("useWebSocket - Kill Remaining Mutants", () => {
       it("should verify exact windowLocation?.host || localhost:8000 - host exists", async () => {
         const mockWindowLocation = {
           protocol: "http:",
-          host: "example.com:80"
+          host: "example.com:80",
         };
-        renderHook(
-          () => useWebSocket({
+        renderHook(() =>
+          useWebSocket({
             executionId: "exec-1",
             executionStatus: "running",
-            windowLocation: mockWindowLocation
-          })
+            windowLocation: mockWindowLocation,
+          }),
         );
         await advanceTimersByTime(100);
         expect(wsInstances.length).toBeGreaterThan(0);
@@ -1237,14 +1305,14 @@ describe("useWebSocket - Kill Remaining Mutants", () => {
       it("should verify exact windowLocation?.host || localhost:8000 - host is undefined", async () => {
         const mockWindowLocation = {
           protocol: "http:",
-          host: void 0
+          host: void 0,
         };
-        renderHook(
-          () => useWebSocket({
+        renderHook(() =>
+          useWebSocket({
             executionId: "exec-1",
             executionStatus: "running",
-            windowLocation: mockWindowLocation
-          })
+            windowLocation: mockWindowLocation,
+          }),
         );
         await advanceTimersByTime(100);
         expect(wsInstances.length).toBeGreaterThan(0);
@@ -1254,14 +1322,14 @@ describe("useWebSocket - Kill Remaining Mutants", () => {
       it("should verify exact windowLocation?.host || localhost:8000 - host is empty string", async () => {
         const mockWindowLocation = {
           protocol: "http:",
-          host: ""
+          host: "",
         };
-        renderHook(
-          () => useWebSocket({
+        renderHook(() =>
+          useWebSocket({
             executionId: "exec-1",
             executionStatus: "running",
-            windowLocation: mockWindowLocation
-          })
+            windowLocation: mockWindowLocation,
+          }),
         );
         await advanceTimersByTime(100);
         expect(wsInstances.length).toBeGreaterThan(0);
@@ -1271,11 +1339,11 @@ describe("useWebSocket - Kill Remaining Mutants", () => {
     });
     describe("reason && reason.length > 0 check", () => {
       it("should verify exact reason && reason.length > 0 - reason exists and has length", async () => {
-        renderHook(
-          () => useWebSocket({
+        renderHook(() =>
+          useWebSocket({
             executionId: "exec-1",
-            executionStatus: "running"
-          })
+            executionStatus: "running",
+          }),
         );
         await advanceTimersByTime(100);
         expect(wsInstances.length).toBeGreaterThan(0);
@@ -1286,19 +1354,19 @@ describe("useWebSocket - Kill Remaining Mutants", () => {
           await advanceTimersByTime(100);
         });
         const debugCalls = logger.debug.mock.calls;
-        const disconnectCall = debugCalls.find(
-          (call) => call[0]?.includes("[WebSocket] Disconnected")
+        const disconnectCall = debugCalls.find((call) =>
+          call[0]?.includes("[WebSocket] Disconnected"),
         );
         if (disconnectCall && disconnectCall[1]) {
           expect(disconnectCall[1].reason).toBe("Normal closure");
         }
       });
       it("should verify exact reason && reason.length > 0 - reason is empty string", async () => {
-        renderHook(
-          () => useWebSocket({
+        renderHook(() =>
+          useWebSocket({
             executionId: "exec-1",
-            executionStatus: "running"
-          })
+            executionStatus: "running",
+          }),
         );
         await advanceTimersByTime(100);
         expect(wsInstances.length).toBeGreaterThan(0);
@@ -1309,19 +1377,19 @@ describe("useWebSocket - Kill Remaining Mutants", () => {
           await advanceTimersByTime(100);
         });
         const debugCalls = logger.debug.mock.calls;
-        const disconnectCall = debugCalls.find(
-          (call) => call[0]?.includes("[WebSocket] Disconnected")
+        const disconnectCall = debugCalls.find((call) =>
+          call[0]?.includes("[WebSocket] Disconnected"),
         );
         if (disconnectCall && disconnectCall[1]) {
           expect(disconnectCall[1].reason).toBe("No reason provided");
         }
       });
       it("should verify exact reason && reason.length > 0 - reason is undefined", async () => {
-        renderHook(
-          () => useWebSocket({
+        renderHook(() =>
+          useWebSocket({
             executionId: "exec-1",
-            executionStatus: "running"
-          })
+            executionStatus: "running",
+          }),
         );
         await advanceTimersByTime(100);
         expect(wsInstances.length).toBeGreaterThan(0);
@@ -1332,8 +1400,8 @@ describe("useWebSocket - Kill Remaining Mutants", () => {
           await advanceTimersByTime(100);
         });
         const debugCalls = logger.debug.mock.calls;
-        const disconnectCall = debugCalls.find(
-          (call) => call[0]?.includes("[WebSocket] Disconnected")
+        const disconnectCall = debugCalls.find((call) =>
+          call[0]?.includes("[WebSocket] Disconnected"),
         );
         if (disconnectCall && disconnectCall[1]) {
           expect(disconnectCall[1].reason).toBe("No reason provided");
@@ -1342,11 +1410,11 @@ describe("useWebSocket - Kill Remaining Mutants", () => {
     });
     describe("wasClean && code === 1000 check", () => {
       it("should verify exact wasClean && code === 1000 - both true", async () => {
-        renderHook(
-          () => useWebSocket({
+        renderHook(() =>
+          useWebSocket({
             executionId: "exec-1",
-            executionStatus: "running"
-          })
+            executionStatus: "running",
+          }),
         );
         await advanceTimersByTime(100);
         expect(wsInstances.length).toBeGreaterThan(0);
@@ -1357,15 +1425,17 @@ describe("useWebSocket - Kill Remaining Mutants", () => {
           await advanceTimersByTime(100);
         });
         expect(logger.debug).toHaveBeenCalledWith(
-          expect.stringContaining("Connection closed cleanly, not reconnecting")
+          expect.stringContaining(
+            "Connection closed cleanly, not reconnecting",
+          ),
         );
       });
       it("should verify exact wasClean && code === 1000 - wasClean is false", async () => {
-        renderHook(
-          () => useWebSocket({
+        renderHook(() =>
+          useWebSocket({
             executionId: "exec-1",
-            executionStatus: "running"
-          })
+            executionStatus: "running",
+          }),
         );
         await advanceTimersByTime(100);
         expect(wsInstances.length).toBeGreaterThan(0);
@@ -1377,23 +1447,23 @@ describe("useWebSocket - Kill Remaining Mutants", () => {
             Object.defineProperties(event, {
               code: { value: 1e3, enumerable: true },
               reason: { value: "Error", enumerable: true },
-              wasClean: { value: false, enumerable: true }
+              wasClean: { value: false, enumerable: true },
             });
             ws.onclose(event);
           }
           await advanceTimersByTime(100);
         });
-        const reconnectCalls = logger.debug.mock.calls.filter(
-          (call) => call[0]?.includes("Reconnecting")
+        const reconnectCalls = logger.debug.mock.calls.filter((call) =>
+          call[0]?.includes("Reconnecting"),
         );
         expect(reconnectCalls.length).toBeGreaterThan(0);
       });
       it("should verify exact wasClean && code === 1000 - code is not 1000", async () => {
-        renderHook(
-          () => useWebSocket({
+        renderHook(() =>
+          useWebSocket({
             executionId: "exec-1",
-            executionStatus: "running"
-          })
+            executionStatus: "running",
+          }),
         );
         await advanceTimersByTime(100);
         expect(wsInstances.length).toBeGreaterThan(0);
@@ -1405,14 +1475,14 @@ describe("useWebSocket - Kill Remaining Mutants", () => {
             Object.defineProperties(event, {
               code: { value: 1001, enumerable: true },
               reason: { value: "Going away", enumerable: true },
-              wasClean: { value: true, enumerable: true }
+              wasClean: { value: true, enumerable: true },
             });
             ws.onclose(event);
           }
           await advanceTimersByTime(100);
         });
-        const reconnectCalls = logger.debug.mock.calls.filter(
-          (call) => call[0]?.includes("Reconnecting")
+        const reconnectCalls = logger.debug.mock.calls.filter((call) =>
+          call[0]?.includes("Reconnecting"),
         );
         expect(reconnectCalls.length).toBeGreaterThan(0);
       });
@@ -1420,12 +1490,12 @@ describe("useWebSocket - Kill Remaining Mutants", () => {
     describe("reconnectAttempts comparisons", () => {
       it("should verify exact reconnectAttempts.current < maxReconnectAttempts - less than", async () => {
         const onError = jest.fn();
-        renderHook(
-          () => useWebSocket({
+        renderHook(() =>
+          useWebSocket({
             executionId: "exec-1",
             executionStatus: "running",
-            onError
-          })
+            onError,
+          }),
         );
         await advanceTimersByTime(100);
         expect(wsInstances.length).toBeGreaterThan(0);
@@ -1438,17 +1508,17 @@ describe("useWebSocket - Kill Remaining Mutants", () => {
         expect(wsInstances.length).toBeGreaterThan(1);
         expect(onError).not.toHaveBeenCalled();
         expect(logger.debug).toHaveBeenCalledWith(
-          expect.stringContaining("Reconnecting in")
+          expect.stringContaining("Reconnecting in"),
         );
       });
       it.skip("should verify exact reconnectAttempts.current >= maxReconnectAttempts - equal to max", async () => {
         const onError = jest.fn();
-        renderHook(
-          () => useWebSocket({
+        renderHook(() =>
+          useWebSocket({
             executionId: "exec-1",
             executionStatus: "running",
-            onError
-          })
+            onError,
+          }),
         );
         await advanceTimersByTime(100);
         expect(wsInstances.length).toBeGreaterThan(0);
@@ -1481,20 +1551,22 @@ describe("useWebSocket - Kill Remaining Mutants", () => {
           });
         }
         expect(onError).toHaveBeenCalledWith(
-          expect.stringContaining("WebSocket connection failed after 5 attempts")
+          expect.stringContaining(
+            "WebSocket connection failed after 5 attempts",
+          ),
         );
         expect(logger.warn).toHaveBeenCalledWith(
-          expect.stringContaining("Max reconnect attempts reached")
+          expect.stringContaining("Max reconnect attempts reached"),
         );
       });
       it("should verify exact reconnectAttempts.current >= maxReconnectAttempts - greater than max", async () => {
         const onError = jest.fn();
-        renderHook(
-          () => useWebSocket({
+        renderHook(() =>
+          useWebSocket({
             executionId: "exec-1",
             executionStatus: "running",
-            onError
-          })
+            onError,
+          }),
         );
         await advanceTimersByTime(100);
         expect(wsInstances.length).toBeGreaterThan(0);
@@ -1505,7 +1577,7 @@ describe("useWebSocket - Kill Remaining Mutants", () => {
             Object.defineProperties(event, {
               code: { value: 1006, enumerable: true },
               reason: { value: "Abnormal closure", enumerable: true },
-              wasClean: { value: false, enumerable: true }
+              wasClean: { value: false, enumerable: true },
             });
             ws.onclose(event);
           }
@@ -1515,30 +1587,31 @@ describe("useWebSocket - Kill Remaining Mutants", () => {
       });
       it("should verify exact reconnectAttempts.current < maxReconnectAttempts && executionId - executionId is null", async () => {
         const { rerender } = renderHook(
-          ({ executionId }) => useWebSocket({
-            executionId,
-            executionStatus: "running"
-          }),
-          { initialProps: { executionId: "exec-1" } }
+          ({ executionId }) =>
+            useWebSocket({
+              executionId,
+              executionStatus: "running",
+            }),
+          { initialProps: { executionId: "exec-1" } },
         );
         await advanceTimersByTime(100);
         expect(wsInstances.length).toBeGreaterThan(0);
         jest.clearAllMocks();
         rerender({ executionId: null });
         await advanceTimersByTime(100);
-        const reconnectCalls = logger.debug.mock.calls.filter(
-          (call) => call[0]?.includes("Reconnecting")
+        const reconnectCalls = logger.debug.mock.calls.filter((call) =>
+          call[0]?.includes("Reconnecting"),
         );
         expect(reconnectCalls.length).toBe(0);
       });
     });
     describe("WebSocket readyState comparisons", () => {
       it("should verify exact wsState === WebSocket.CONNECTING", async () => {
-        renderHook(
-          () => useWebSocket({
+        renderHook(() =>
+          useWebSocket({
             executionId: "exec-1",
-            executionStatus: "running"
-          })
+            executionStatus: "running",
+          }),
         );
         await advanceTimersByTime(100);
         expect(wsInstances.length).toBeGreaterThan(0);
@@ -1547,7 +1620,7 @@ describe("useWebSocket - Kill Remaining Mutants", () => {
         Object.defineProperty(ws, "readyState", {
           value: WebSocket.CONNECTING,
           writable: true,
-          configurable: true
+          configurable: true,
         });
         await act(async () => {
           ws.simulateError(new Error("Connection error"));
@@ -1556,16 +1629,16 @@ describe("useWebSocket - Kill Remaining Mutants", () => {
         expect(logger.error).toHaveBeenCalledWith(
           expect.stringContaining("[WebSocket] Connection error"),
           expect.objectContaining({
-            readyState: "CONNECTING"
-          })
+            readyState: "CONNECTING",
+          }),
         );
       });
       it("should verify exact wsState === WebSocket.OPEN", async () => {
-        renderHook(
-          () => useWebSocket({
+        renderHook(() =>
+          useWebSocket({
             executionId: "exec-1",
-            executionStatus: "running"
-          })
+            executionStatus: "running",
+          }),
         );
         await advanceTimersByTime(100);
         expect(wsInstances.length).toBeGreaterThan(0);
@@ -1574,7 +1647,7 @@ describe("useWebSocket - Kill Remaining Mutants", () => {
         Object.defineProperty(ws, "readyState", {
           value: WebSocket.OPEN,
           writable: true,
-          configurable: true
+          configurable: true,
         });
         await act(async () => {
           ws.simulateError(new Error("Connection error"));
@@ -1583,16 +1656,16 @@ describe("useWebSocket - Kill Remaining Mutants", () => {
         expect(logger.error).toHaveBeenCalledWith(
           expect.stringContaining("[WebSocket] Connection error"),
           expect.objectContaining({
-            readyState: "OPEN"
-          })
+            readyState: "OPEN",
+          }),
         );
       });
       it("should verify exact wsState === WebSocket.CLOSING", async () => {
-        renderHook(
-          () => useWebSocket({
+        renderHook(() =>
+          useWebSocket({
             executionId: "exec-1",
-            executionStatus: "running"
-          })
+            executionStatus: "running",
+          }),
         );
         await advanceTimersByTime(100);
         expect(wsInstances.length).toBeGreaterThan(0);
@@ -1601,7 +1674,7 @@ describe("useWebSocket - Kill Remaining Mutants", () => {
         Object.defineProperty(ws, "readyState", {
           value: WebSocket.CLOSING,
           writable: true,
-          configurable: true
+          configurable: true,
         });
         await act(async () => {
           ws.simulateError(new Error("Connection error"));
@@ -1610,16 +1683,16 @@ describe("useWebSocket - Kill Remaining Mutants", () => {
         expect(logger.error).toHaveBeenCalledWith(
           expect.stringContaining("[WebSocket] Connection error"),
           expect.objectContaining({
-            readyState: "CLOSING"
-          })
+            readyState: "CLOSING",
+          }),
         );
       });
       it("should verify exact wsState === WebSocket.CLOSED", async () => {
-        renderHook(
-          () => useWebSocket({
+        renderHook(() =>
+          useWebSocket({
             executionId: "exec-1",
-            executionStatus: "running"
-          })
+            executionStatus: "running",
+          }),
         );
         await advanceTimersByTime(100);
         expect(wsInstances.length).toBeGreaterThan(0);
@@ -1628,7 +1701,7 @@ describe("useWebSocket - Kill Remaining Mutants", () => {
         Object.defineProperty(ws, "readyState", {
           value: WebSocket.CLOSED,
           writable: true,
-          configurable: true
+          configurable: true,
         });
         await act(async () => {
           ws.simulateError(new Error("Connection error"));
@@ -1637,16 +1710,16 @@ describe("useWebSocket - Kill Remaining Mutants", () => {
         expect(logger.error).toHaveBeenCalledWith(
           expect.stringContaining("[WebSocket] Connection error"),
           expect.objectContaining({
-            readyState: "CLOSED"
-          })
+            readyState: "CLOSED",
+          }),
         );
       });
       it("should verify exact wsState === WebSocket.CLOSED - unknown state", async () => {
-        renderHook(
-          () => useWebSocket({
+        renderHook(() =>
+          useWebSocket({
             executionId: "exec-1",
-            executionStatus: "running"
-          })
+            executionStatus: "running",
+          }),
         );
         await advanceTimersByTime(100);
         expect(wsInstances.length).toBeGreaterThan(0);
@@ -1655,7 +1728,7 @@ describe("useWebSocket - Kill Remaining Mutants", () => {
         Object.defineProperty(ws, "readyState", {
           value: 999,
           writable: true,
-          configurable: true
+          configurable: true,
         });
         await act(async () => {
           ws.simulateError(new Error("Connection error"));
@@ -1664,8 +1737,8 @@ describe("useWebSocket - Kill Remaining Mutants", () => {
         expect(logger.error).toHaveBeenCalledWith(
           expect.stringContaining("[WebSocket] Connection error"),
           expect.objectContaining({
-            readyState: "UNKNOWN"
-          })
+            readyState: "UNKNOWN",
+          }),
         );
       });
     });
@@ -1678,16 +1751,18 @@ describe("useWebSocket - Kill Remaining Mutants", () => {
             throw new Error("Test error message");
           }
         };
-        renderHook(
-          () => useWebSocket({
+        renderHook(() =>
+          useWebSocket({
             executionId: "exec-1",
             executionStatus: "running",
-            onError
-          })
+            onError,
+          }),
         );
         await advanceTimersByTime(100);
         expect(onError).toHaveBeenCalledWith("Test error message");
-        expect(onError).not.toHaveBeenCalledWith("Failed to create WebSocket connection");
+        expect(onError).not.toHaveBeenCalledWith(
+          "Failed to create WebSocket connection",
+        );
         global.WebSocket = OriginalWebSocket;
       });
       it("should verify exact error instanceof Error - error is not Error instance", async () => {
@@ -1698,12 +1773,12 @@ describe("useWebSocket - Kill Remaining Mutants", () => {
             throw "String error";
           }
         };
-        renderHook(
-          () => useWebSocket({
+        renderHook(() =>
+          useWebSocket({
             executionId: "exec-1",
             executionStatus: "running",
-            onError
-          })
+            onError,
+          }),
         );
         await advanceTimersByTime(100);
         expect(onError).toHaveBeenCalledWith("String error");
@@ -1712,12 +1787,12 @@ describe("useWebSocket - Kill Remaining Mutants", () => {
     describe("node_id extraction logical OR", () => {
       it("should verify exact (message as any).node_id || message.node_state.node_id - node_id in message", async () => {
         const onNodeUpdate = jest.fn();
-        renderHook(
-          () => useWebSocket({
+        renderHook(() =>
+          useWebSocket({
             executionId: "exec-1",
             executionStatus: "running",
-            onNodeUpdate
-          })
+            onNodeUpdate,
+          }),
         );
         await advanceTimersByTime(200);
         if (wsInstances.length === 0) {
@@ -1733,7 +1808,7 @@ describe("useWebSocket - Kill Remaining Mutants", () => {
             execution_id: "exec-1",
             node_id: "node-1",
             // Top-level node_id
-            node_state: { node_id: "node-2", status: "running" }
+            node_state: { node_id: "node-2", status: "running" },
           });
           await advanceTimersByTime(100);
         });
@@ -1741,12 +1816,12 @@ describe("useWebSocket - Kill Remaining Mutants", () => {
       });
       it("should verify exact (message as any).node_id || message.node_state.node_id - node_id in node_state", async () => {
         const onNodeUpdate = jest.fn();
-        renderHook(
-          () => useWebSocket({
+        renderHook(() =>
+          useWebSocket({
             executionId: "exec-1",
             executionStatus: "running",
-            onNodeUpdate
-          })
+            onNodeUpdate,
+          }),
         );
         await advanceTimersByTime(200);
         if (wsInstances.length === 0) {
@@ -1761,7 +1836,7 @@ describe("useWebSocket - Kill Remaining Mutants", () => {
             type: "node_update",
             execution_id: "exec-1",
             // No top-level node_id
-            node_state: { node_id: "node-2", status: "running" }
+            node_state: { node_id: "node-2", status: "running" },
           });
           await advanceTimersByTime(100);
         });
@@ -1769,12 +1844,12 @@ describe("useWebSocket - Kill Remaining Mutants", () => {
       });
       it("should verify exact (message as any).node_id || message.node_state.node_id - both undefined", async () => {
         const onNodeUpdate = jest.fn();
-        renderHook(
-          () => useWebSocket({
+        renderHook(() =>
+          useWebSocket({
             executionId: "exec-1",
             executionStatus: "running",
-            onNodeUpdate
-          })
+            onNodeUpdate,
+          }),
         );
         await advanceTimersByTime(200);
         if (wsInstances.length === 0) {
@@ -1788,7 +1863,7 @@ describe("useWebSocket - Kill Remaining Mutants", () => {
           ws.simulateMessage({
             type: "node_update",
             execution_id: "exec-1",
-            node_state: { status: "running" }
+            node_state: { status: "running" },
             // No node_id
           });
           await advanceTimersByTime(100);
@@ -1798,11 +1873,11 @@ describe("useWebSocket - Kill Remaining Mutants", () => {
     });
     describe("reconnectAttempts.current = 0 assignment", () => {
       it("should verify exact reconnectAttempts.current = 0 on connection open", async () => {
-        renderHook(
-          () => useWebSocket({
+        renderHook(() =>
+          useWebSocket({
             executionId: "exec-1",
-            executionStatus: "running"
-          })
+            executionStatus: "running",
+          }),
         );
         await advanceTimersByTime(200);
         if (wsInstances.length === 0) {
@@ -1828,7 +1903,7 @@ describe("useWebSocket - Kill Remaining Mutants", () => {
           await advanceTimersByTime(50);
         });
         expect(logger.debug).toHaveBeenCalledWith(
-          expect.stringContaining("Connected to execution exec-1")
+          expect.stringContaining("Connected to execution exec-1"),
         );
       });
     });

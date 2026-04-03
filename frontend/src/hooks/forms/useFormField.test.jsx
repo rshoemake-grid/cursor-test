@@ -4,21 +4,21 @@ describe("useFormField", () => {
   describe("basic usage", () => {
     it("should initialize with initial value", () => {
       const onUpdate = jest.fn();
-      const { result } = renderHook(
-        () => useFormField({
+      const { result } = renderHook(() =>
+        useFormField({
           initialValue: "initial",
-          onUpdate
-        })
+          onUpdate,
+        }),
       );
       expect(result.current.value).toBe("initial");
     });
     it("should update value and call onUpdate", () => {
       const onUpdate = jest.fn();
-      const { result } = renderHook(
-        () => useFormField({
+      const { result } = renderHook(() =>
+        useFormField({
           initialValue: "initial",
-          onUpdate
-        })
+          onUpdate,
+        }),
       );
       act(() => {
         result.current.setValue("new value");
@@ -28,11 +28,11 @@ describe("useFormField", () => {
     });
     it("should support functional updates", () => {
       const onUpdate = jest.fn();
-      const { result } = renderHook(
-        () => useFormField({
+      const { result } = renderHook(() =>
+        useFormField({
           initialValue: 10,
-          onUpdate
-        })
+          onUpdate,
+        }),
       );
       act(() => {
         result.current.setValue((prev) => prev + 5);
@@ -45,53 +45,54 @@ describe("useFormField", () => {
     it("should sync with nodeData when dataPath is provided", () => {
       const nodeData = {
         agent_config: {
-          model: "gpt-4"
-        }
+          model: "gpt-4",
+        },
       };
       const onUpdate = jest.fn();
-      const { result } = renderHook(
-        () => useFormField({
+      const { result } = renderHook(() =>
+        useFormField({
           initialValue: "default",
           onUpdate,
           nodeData,
-          dataPath: "agent_config.model"
-        })
+          dataPath: "agent_config.model",
+        }),
       );
       expect(result.current.value).toBe("gpt-4");
     });
     it("should use initialValue when nodeData value is undefined", () => {
       const nodeData = {
-        agent_config: {}
+        agent_config: {},
       };
       const onUpdate = jest.fn();
-      const { result } = renderHook(
-        () => useFormField({
+      const { result } = renderHook(() =>
+        useFormField({
           initialValue: "default",
           onUpdate,
           nodeData,
-          dataPath: "agent_config.model"
-        })
+          dataPath: "agent_config.model",
+        }),
       );
       expect(result.current.value).toBe("default");
     });
     it("should sync when nodeData changes", () => {
       const onUpdate = jest.fn();
       const { result, rerender } = renderHook(
-        ({ nodeData }) => useFormField({
-          initialValue: "default",
-          onUpdate,
-          nodeData,
-          dataPath: "agent_config.model"
-        }),
+        ({ nodeData }) =>
+          useFormField({
+            initialValue: "default",
+            onUpdate,
+            nodeData,
+            dataPath: "agent_config.model",
+          }),
         {
           initialProps: {
-            nodeData: { agent_config: { model: "gpt-4" } }
-          }
-        }
+            nodeData: { agent_config: { model: "gpt-4" } },
+          },
+        },
       );
       expect(result.current.value).toBe("gpt-4");
       rerender({
-        nodeData: { agent_config: { model: "gpt-3.5" } }
+        nodeData: { agent_config: { model: "gpt-3.5" } },
       });
       expect(result.current.value).toBe("gpt-3.5");
     });
@@ -100,24 +101,25 @@ describe("useFormField", () => {
       const input = document.createElement("input");
       document.body.appendChild(input);
       const { result, rerender } = renderHook(
-        ({ nodeData }) => useFormField({
-          initialValue: "initial",
-          onUpdate,
-          nodeData,
-          dataPath: "value"
-        }),
+        ({ nodeData }) =>
+          useFormField({
+            initialValue: "initial",
+            onUpdate,
+            nodeData,
+            dataPath: "value",
+          }),
         {
           initialProps: {
-            nodeData: { value: "new" }
-          }
-        }
+            nodeData: { value: "new" },
+          },
+        },
       );
       act(() => {
         input.focus();
         result.current.inputRef.current = input;
       });
       rerender({
-        nodeData: { value: "updated" }
+        nodeData: { value: "updated" },
       });
       expect(result.current.value).toBe("new");
       document.body.removeChild(input);
@@ -125,17 +127,17 @@ describe("useFormField", () => {
     it("should support array path", () => {
       const nodeData = {
         agent_config: {
-          model: "gpt-4"
-        }
+          model: "gpt-4",
+        },
       };
       const onUpdate = jest.fn();
-      const { result } = renderHook(
-        () => useFormField({
+      const { result } = renderHook(() =>
+        useFormField({
           initialValue: "default",
           onUpdate,
           nodeData,
-          dataPath: ["agent_config", "model"]
-        })
+          dataPath: ["agent_config", "model"],
+        }),
       );
       expect(result.current.value).toBe("gpt-4");
     });
@@ -143,8 +145,8 @@ describe("useFormField", () => {
   describe("useSimpleFormField", () => {
     it("should work without node data sync", () => {
       const onUpdate = jest.fn();
-      const { result } = renderHook(
-        () => useSimpleFormField("initial", onUpdate)
+      const { result } = renderHook(() =>
+        useSimpleFormField("initial", onUpdate),
       );
       expect(result.current.value).toBe("initial");
       act(() => {
@@ -157,184 +159,185 @@ describe("useFormField", () => {
   describe("edge cases", () => {
     it("should handle getNestedValue with null object", () => {
       const onUpdate = jest.fn();
-      const { result } = renderHook(
-        () => useFormField({
+      const { result } = renderHook(() =>
+        useFormField({
           initialValue: "default",
           onUpdate,
           nodeData: null,
-          dataPath: "path"
-        })
+          dataPath: "path",
+        }),
       );
       expect(result.current.value).toBe("default");
     });
     it("should handle getNestedValue with undefined object", () => {
       const onUpdate = jest.fn();
-      const { result } = renderHook(
-        () => useFormField({
+      const { result } = renderHook(() =>
+        useFormField({
           initialValue: "default",
           onUpdate,
           nodeData: void 0,
-          dataPath: "path"
-        })
+          dataPath: "path",
+        }),
       );
       expect(result.current.value).toBe("default");
     });
     it("should handle getNestedValue with empty path", () => {
       const onUpdate = jest.fn();
-      const { result } = renderHook(
-        () => useFormField({
+      const { result } = renderHook(() =>
+        useFormField({
           initialValue: "default",
           onUpdate,
           nodeData: { value: "test" },
-          dataPath: ""
-        })
+          dataPath: "",
+        }),
       );
       expect(result.current.value).toBe("default");
     });
     it("should handle getNestedValue with null in path", () => {
       const onUpdate = jest.fn();
       const nodeData = {
-        config: null
+        config: null,
       };
-      const { result } = renderHook(
-        () => useFormField({
+      const { result } = renderHook(() =>
+        useFormField({
           initialValue: "default",
           onUpdate,
           nodeData,
-          dataPath: "config.value"
-        })
+          dataPath: "config.value",
+        }),
       );
       expect(result.current.value).toBe("default");
     });
     it("should handle getNestedValue with undefined in path", () => {
       const onUpdate = jest.fn();
       const nodeData = {
-        config: void 0
+        config: void 0,
       };
-      const { result } = renderHook(
-        () => useFormField({
+      const { result } = renderHook(() =>
+        useFormField({
           initialValue: "default",
           onUpdate,
           nodeData,
-          dataPath: "config.value"
-        })
+          dataPath: "config.value",
+        }),
       );
       expect(result.current.value).toBe("default");
     });
     it("should not sync when syncWithNodeData is false", () => {
       const onUpdate = jest.fn();
       const { result, rerender } = renderHook(
-        ({ nodeData }) => useFormField({
-          initialValue: "initial",
-          onUpdate,
-          nodeData,
-          dataPath: "value",
-          syncWithNodeData: false
-        }),
+        ({ nodeData }) =>
+          useFormField({
+            initialValue: "initial",
+            onUpdate,
+            nodeData,
+            dataPath: "value",
+            syncWithNodeData: false,
+          }),
         {
           initialProps: {
-            nodeData: { value: "first" }
-          }
-        }
+            nodeData: { value: "first" },
+          },
+        },
       );
       expect(result.current.value).toBe("initial");
       rerender({
-        nodeData: { value: "second" }
+        nodeData: { value: "second" },
       });
       expect(result.current.value).toBe("initial");
     });
     it("should not sync when dataPath is not provided", () => {
       const onUpdate = jest.fn();
       const { result, rerender } = renderHook(
-        ({ nodeData }) => useFormField({
-          initialValue: "initial",
-          onUpdate,
-          nodeData
-        }),
+        ({ nodeData }) =>
+          useFormField({
+            initialValue: "initial",
+            onUpdate,
+            nodeData,
+          }),
         {
           initialProps: {
-            nodeData: { value: "first" }
-          }
-        }
+            nodeData: { value: "first" },
+          },
+        },
       );
       expect(result.current.value).toBe("initial");
       rerender({
-        nodeData: { value: "second" }
+        nodeData: { value: "second" },
       });
       expect(result.current.value).toBe("initial");
     });
     it("should not sync when nodeData is not provided", () => {
       const onUpdate = jest.fn();
       const { result, rerender } = renderHook(
-        ({ nodeData }) => useFormField({
-          initialValue: "initial",
-          onUpdate,
-          nodeData,
-          dataPath: "value"
-        }),
+        ({ nodeData }) =>
+          useFormField({
+            initialValue: "initial",
+            onUpdate,
+            nodeData,
+            dataPath: "value",
+          }),
         {
           initialProps: {
-            nodeData: void 0
-          }
-        }
+            nodeData: void 0,
+          },
+        },
       );
       expect(result.current.value).toBe("initial");
       rerender({
-        nodeData: { value: "second" }
+        nodeData: { value: "second" },
       });
       expect(result.current.value).toBe("second");
     });
     it("should handle sync when value is same (no update)", () => {
       const onUpdate = jest.fn();
       const { result, rerender } = renderHook(
-        ({ nodeData }) => useFormField({
-          initialValue: "initial",
-          onUpdate,
-          nodeData,
-          dataPath: "value"
-        }),
+        ({ nodeData }) =>
+          useFormField({
+            initialValue: "initial",
+            onUpdate,
+            nodeData,
+            dataPath: "value",
+          }),
         {
           initialProps: {
-            nodeData: { value: "test" }
-          }
-        }
+            nodeData: { value: "test" },
+          },
+        },
       );
       expect(result.current.value).toBe("test");
       rerender({
-        nodeData: { value: "test" }
+        nodeData: { value: "test" },
       });
       expect(result.current.value).toBe("test");
     });
     it("should handle nested path with array index", () => {
       const onUpdate = jest.fn();
       const nodeData = {
-        items: [
-          { name: "item1" },
-          { name: "item2" }
-        ]
+        items: [{ name: "item1" }, { name: "item2" }],
       };
-      const { result } = renderHook(
-        () => useFormField({
+      const { result } = renderHook(() =>
+        useFormField({
           initialValue: "default",
           onUpdate,
           nodeData,
-          dataPath: ["items", "0", "name"]
-        })
+          dataPath: ["items", "0", "name"],
+        }),
       );
       expect(result.current.value).toBe("item1");
     });
     it("should handle path with null intermediate value", () => {
       const onUpdate = jest.fn();
       const nodeData = {
-        level1: null
+        level1: null,
       };
-      const { result } = renderHook(
-        () => useFormField({
+      const { result } = renderHook(() =>
+        useFormField({
           initialValue: "default",
           onUpdate,
           nodeData,
-          dataPath: "level1.level2.value"
-        })
+          dataPath: "level1.level2.value",
+        }),
       );
       expect(result.current.value).toBe("default");
     });

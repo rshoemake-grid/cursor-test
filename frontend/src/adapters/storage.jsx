@@ -12,8 +12,10 @@ const StorageAdapterFactory = {
       getItem: (key) => storage.getItem(key),
       setItem: (key, value) => storage.setItem(key, value),
       removeItem: (key) => storage.removeItem(key),
-      addEventListener: (type, listener) => window.addEventListener(type, listener),
-      removeEventListener: (type, listener) => window.removeEventListener(type, listener)
+      addEventListener: (type, listener) =>
+        window.addEventListener(type, listener),
+      removeEventListener: (type, listener) =>
+        window.removeEventListener(type, listener),
     };
   },
   /**
@@ -33,8 +35,6 @@ const StorageAdapterFactory = {
       return null;
     }
     return this.createStorageAdapter(window.sessionStorage);
-  }
+  },
 };
-export {
-  StorageAdapterFactory
-};
+export { StorageAdapterFactory };

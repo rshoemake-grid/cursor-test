@@ -2,7 +2,7 @@ import { renderHook, act } from "@testing-library/react";
 import {
   useMarketplaceTabs,
   MARKETPLACE_TABS,
-  REPOSITORY_SUB_TABS
+  REPOSITORY_SUB_TABS,
 } from "./useMarketplaceTabs";
 describe("useMarketplaceTabs", () => {
   it("should initialize with default values", () => {
@@ -76,7 +76,9 @@ describe("MARKETPLACE_TABS constants", () => {
   it("should have correct values", () => {
     expect(MARKETPLACE_TABS.AGENTS).toBe("agents");
     expect(MARKETPLACE_TABS.REPOSITORY).toBe("repository");
-    expect(MARKETPLACE_TABS.WORKFLOWS_OF_WORKFLOWS).toBe("workflows-of-workflows");
+    expect(MARKETPLACE_TABS.WORKFLOWS_OF_WORKFLOWS).toBe(
+      "workflows-of-workflows",
+    );
   });
 });
 describe("REPOSITORY_SUB_TABS constants", () => {

@@ -26,7 +26,9 @@ describe("hooks/api/index.ts", () => {
     it("should execute the export statement via require", () => {
       const requiredModule = require("./index");
       expect(requiredModule.useAuthenticatedApi).toBeDefined();
-      expect(requiredModule.useAuthenticatedApi).toBe(useAuthenticatedApiDirect);
+      expect(requiredModule.useAuthenticatedApi).toBe(
+        useAuthenticatedApiDirect,
+      );
     });
   });
 });

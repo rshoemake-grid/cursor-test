@@ -4,14 +4,14 @@ import {
   isLoopNode,
   isInputNode,
   isStartNode,
-  isEndNode
+  isEndNode,
 } from "./nodeData";
 describe("nodeData type guards", () => {
   const createMockNode = (type, data = {}) => ({
     id: "test-node",
     type,
     data,
-    position: { x: 0, y: 0 }
+    position: { x: 0, y: 0 },
   });
   describe("isAgentNode", () => {
     it("should return true for agent nodes", () => {

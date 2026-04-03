@@ -1,4 +1,3 @@
-import { jsx } from "react/jsx-runtime";
 import { render, screen, fireEvent } from "@testing-library/react";
 import AdvancedFiltersPanel from "./AdvancedFiltersPanel";
 describe("AdvancedFiltersPanel", () => {
@@ -9,25 +8,19 @@ describe("AdvancedFiltersPanel", () => {
   });
   it("should render filter panel", () => {
     render(
-      /* @__PURE__ */ jsx(
-        AdvancedFiltersPanel,
-        {
-          filters: {},
-          onFiltersChange: mockOnFiltersChange
-        }
-      )
+      <AdvancedFiltersPanel
+        filters={{}}
+        onFiltersChange={mockOnFiltersChange}
+      />,
     );
     expect(screen.getByText("Advanced Filters")).toBeInTheDocument();
   });
   it("should render date range inputs", () => {
     render(
-      /* @__PURE__ */ jsx(
-        AdvancedFiltersPanel,
-        {
-          filters: {},
-          onFiltersChange: mockOnFiltersChange
-        }
-      )
+      <AdvancedFiltersPanel
+        filters={{}}
+        onFiltersChange={mockOnFiltersChange}
+      />,
     );
     expect(screen.getByText("Date Range")).toBeInTheDocument();
     expect(screen.getByText("Start Date")).toBeInTheDocument();
@@ -35,13 +28,10 @@ describe("AdvancedFiltersPanel", () => {
   });
   it("should render duration inputs", () => {
     render(
-      /* @__PURE__ */ jsx(
-        AdvancedFiltersPanel,
-        {
-          filters: {},
-          onFiltersChange: mockOnFiltersChange
-        }
-      )
+      <AdvancedFiltersPanel
+        filters={{}}
+        onFiltersChange={mockOnFiltersChange}
+      />,
     );
     expect(screen.getByText("Duration (seconds)")).toBeInTheDocument();
     expect(screen.getByPlaceholderText("Min")).toBeInTheDocument();
@@ -49,69 +39,66 @@ describe("AdvancedFiltersPanel", () => {
   });
   it("should render error status select", () => {
     render(
-      /* @__PURE__ */ jsx(
-        AdvancedFiltersPanel,
-        {
-          filters: {},
-          onFiltersChange: mockOnFiltersChange
-        }
-      )
+      <AdvancedFiltersPanel
+        filters={{}}
+        onFiltersChange={mockOnFiltersChange}
+      />,
     );
     expect(screen.getByText("Error Status")).toBeInTheDocument();
     expect(screen.getByDisplayValue("All")).toBeInTheDocument();
   });
   it("should call onFiltersChange when date is changed", () => {
     render(
-      /* @__PURE__ */ jsx(
-        AdvancedFiltersPanel,
-        {
-          filters: {},
-          onFiltersChange: mockOnFiltersChange
-        }
-      )
+      <AdvancedFiltersPanel
+        filters={{}}
+        onFiltersChange={mockOnFiltersChange}
+      />,
     );
     const startDateInput = screen.getByLabelText("Start Date");
-    fireEvent.change(startDateInput, { target: { value: "2024-01-01" } });
+    fireEvent.change(startDateInput, {
+      target: {
+        value: "2024-01-01",
+      },
+    });
     expect(mockOnFiltersChange).toHaveBeenCalled();
   });
   it("should call onFiltersChange when duration is changed", () => {
     render(
-      /* @__PURE__ */ jsx(
-        AdvancedFiltersPanel,
-        {
-          filters: {},
-          onFiltersChange: mockOnFiltersChange
-        }
-      )
+      <AdvancedFiltersPanel
+        filters={{}}
+        onFiltersChange={mockOnFiltersChange}
+      />,
     );
     const minInput = screen.getByPlaceholderText("Min");
-    fireEvent.change(minInput, { target: { value: "10" } });
+    fireEvent.change(minInput, {
+      target: {
+        value: "10",
+      },
+    });
     expect(mockOnFiltersChange).toHaveBeenCalled();
   });
   it("should call onFiltersChange when error status is changed", () => {
     render(
-      /* @__PURE__ */ jsx(
-        AdvancedFiltersPanel,
-        {
-          filters: {},
-          onFiltersChange: mockOnFiltersChange
-        }
-      )
+      <AdvancedFiltersPanel
+        filters={{}}
+        onFiltersChange={mockOnFiltersChange}
+      />,
     );
     const select = screen.getByDisplayValue("All");
-    fireEvent.change(select, { target: { value: "with-error" } });
+    fireEvent.change(select, {
+      target: {
+        value: "with-error",
+      },
+    });
     expect(mockOnFiltersChange).toHaveBeenCalled();
   });
   it("should call onClose when close button is clicked", () => {
     render(
-      /* @__PURE__ */ jsx(
-        AdvancedFiltersPanel,
-        {
-          filters: {},
-          onFiltersChange: mockOnFiltersChange,
-          onClose: mockOnClose
-        }
-      )
+      <AdvancedFiltersPanel
+        filters={{}}
+        onFiltersChange={mockOnFiltersChange}
+        onClose={mockOnClose}
+      />,
     );
     const closeButton = screen.getByLabelText("Close filters");
     fireEvent.click(closeButton);
@@ -119,35 +106,40 @@ describe("AdvancedFiltersPanel", () => {
   });
   it("should display clear buttons when filters are set", () => {
     render(
-      /* @__PURE__ */ jsx(
-        AdvancedFiltersPanel,
-        {
-          filters: {
-            dateRange: { start: /* @__PURE__ */ new Date("2024-01-01") }
+      <AdvancedFiltersPanel
+        filters={{
+          dateRange: {
+            start: new Date("2024-01-01"),
           },
-          onFiltersChange: mockOnFiltersChange
-        }
-      )
+        }}
+        onFiltersChange={mockOnFiltersChange}
+      />,
     );
     expect(screen.getByText("Clear date range")).toBeInTheDocument();
   });
   it("should render workflow filter when workflows are provided", () => {
     const workflows = [
-      { id: "workflow-1", name: "Workflow 1" },
-      { id: "workflow-2", name: "Workflow 2" }
+      {
+        id: "workflow-1",
+        name: "Workflow 1",
+      },
+      {
+        id: "workflow-2",
+        name: "Workflow 2",
+      },
     ];
     render(
-      /* @__PURE__ */ jsx(
-        AdvancedFiltersPanel,
-        {
-          filters: {},
-          onFiltersChange: mockOnFiltersChange,
-          availableWorkflows: workflows
-        }
-      )
+      <AdvancedFiltersPanel
+        filters={{}}
+        onFiltersChange={mockOnFiltersChange}
+        availableWorkflows={workflows}
+      />,
     );
     expect(screen.getByText("Workflows")).toBeInTheDocument();
-    const select = screen.getByText("Workflows").closest("div")?.querySelector("select");
+    const select = screen
+      .getByText("Workflows")
+      .closest("div")
+      ?.querySelector("select");
     expect(select).toBeInTheDocument();
     if (select) {
       expect(select.textContent).toContain("Workflow 1");

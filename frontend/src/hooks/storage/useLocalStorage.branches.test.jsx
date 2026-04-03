@@ -1,17 +1,22 @@
 import { renderHook, act } from "@testing-library/react";
-import { useLocalStorage, getLocalStorageItem, setLocalStorageItem, removeLocalStorageItem } from "./useLocalStorage";
+import {
+  useLocalStorage,
+  getLocalStorageItem,
+  setLocalStorageItem,
+  removeLocalStorageItem,
+} from "./useLocalStorage";
 import { defaultAdapters } from "../../types/adapters";
 jest.mock("../../utils/logger", () => ({
   logger: {
     debug: jest.fn(),
     error: jest.fn(),
-    warn: jest.fn()
-  }
+    warn: jest.fn(),
+  },
 }));
 jest.mock("../../types/adapters", () => ({
   defaultAdapters: {
-    createLocalStorageAdapter: jest.fn()
-  }
+    createLocalStorageAdapter: jest.fn(),
+  },
 }));
 describe("useLocalStorage - Remaining Branches", () => {
   beforeEach(() => {
@@ -21,8 +26,8 @@ describe("useLocalStorage - Remaining Branches", () => {
   describe("useLocalStorage hook - storage null branches", () => {
     it("should return initialValue when storage is null in useState initializer", () => {
       defaultAdapters.createLocalStorageAdapter.mockReturnValue(null);
-      const { result } = renderHook(
-        () => useLocalStorage("test-key", "initial-value")
+      const { result } = renderHook(() =>
+        useLocalStorage("test-key", "initial-value"),
       );
       expect(result.current[0]).toBe("initial-value");
     });
@@ -32,11 +37,11 @@ describe("useLocalStorage - Remaining Branches", () => {
         setItem: jest.fn(),
         removeItem: jest.fn(),
         addEventListener: jest.fn(),
-        removeEventListener: jest.fn()
+        removeEventListener: jest.fn(),
       };
       defaultAdapters.createLocalStorageAdapter.mockReturnValue(null);
-      const { result } = renderHook(
-        () => useLocalStorage("test-key", "initial-value")
+      const { result } = renderHook(() =>
+        useLocalStorage("test-key", "initial-value"),
       );
       expect(mockStorage.getItem).not.toHaveBeenCalled();
       expect(result.current[0]).toBe("initial-value");
@@ -47,12 +52,10 @@ describe("useLocalStorage - Remaining Branches", () => {
         setItem: jest.fn(),
         removeItem: jest.fn(),
         addEventListener: jest.fn(),
-        removeEventListener: jest.fn()
+        removeEventListener: jest.fn(),
       };
       defaultAdapters.createLocalStorageAdapter.mockReturnValue(null);
-      renderHook(
-        () => useLocalStorage("test-key", "initial-value")
-      );
+      renderHook(() => useLocalStorage("test-key", "initial-value"));
       expect(mockStorage.addEventListener).not.toHaveBeenCalled();
     });
     it("should not call storage.setItem when storage is null in setValue", () => {
@@ -61,11 +64,11 @@ describe("useLocalStorage - Remaining Branches", () => {
         setItem: jest.fn(),
         removeItem: jest.fn(),
         addEventListener: jest.fn(),
-        removeEventListener: jest.fn()
+        removeEventListener: jest.fn(),
       };
       defaultAdapters.createLocalStorageAdapter.mockReturnValue(null);
-      const { result } = renderHook(
-        () => useLocalStorage("test-key", "initial-value")
+      const { result } = renderHook(() =>
+        useLocalStorage("test-key", "initial-value"),
       );
       act(() => {
         result.current[1]("new-value");
@@ -79,11 +82,11 @@ describe("useLocalStorage - Remaining Branches", () => {
         setItem: jest.fn(),
         removeItem: jest.fn(),
         addEventListener: jest.fn(),
-        removeEventListener: jest.fn()
+        removeEventListener: jest.fn(),
       };
       defaultAdapters.createLocalStorageAdapter.mockReturnValue(null);
-      const { result } = renderHook(
-        () => useLocalStorage("test-key", "initial-value")
+      const { result } = renderHook(() =>
+        useLocalStorage("test-key", "initial-value"),
       );
       act(() => {
         result.current[2]();
@@ -94,14 +97,16 @@ describe("useLocalStorage - Remaining Branches", () => {
   });
   describe("getLocalStorageItem - storage null branches", () => {
     it("should return defaultValue when storage is null", () => {
-      const result = getLocalStorageItem("test-key", "default-value", { storage: null });
+      const result = getLocalStorageItem("test-key", "default-value", {
+        storage: null,
+      });
       expect(result).toBe("default-value");
     });
     it("should not call storage.getItem when storage is null", () => {
       const mockStorage = {
         getItem: jest.fn(),
         setItem: jest.fn(),
-        removeItem: jest.fn()
+        removeItem: jest.fn(),
       };
       getLocalStorageItem("test-key", "default-value", { storage: null });
       expect(mockStorage.getItem).not.toHaveBeenCalled();
@@ -117,7 +122,7 @@ describe("useLocalStorage - Remaining Branches", () => {
       const mockStorage = {
         getItem: jest.fn(),
         setItem: jest.fn(),
-        removeItem: jest.fn()
+        removeItem: jest.fn(),
       };
       defaultAdapters.createLocalStorageAdapter.mockReturnValue(null);
       setLocalStorageItem("test-key", "value");
@@ -134,7 +139,7 @@ describe("useLocalStorage - Remaining Branches", () => {
       const mockStorage = {
         getItem: jest.fn(),
         setItem: jest.fn(),
-        removeItem: jest.fn()
+        removeItem: jest.fn(),
       };
       defaultAdapters.createLocalStorageAdapter.mockReturnValue(null);
       removeLocalStorageItem("test-key");

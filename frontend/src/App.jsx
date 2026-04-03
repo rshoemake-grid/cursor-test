@@ -81,7 +81,9 @@ function AuthenticatedLayout() {
       processedWorkflowFromUrl.current = workflowId;
       workflowLoadKeyRef.current += 1;
       const newKey = workflowLoadKeyRef.current;
-      logger.debug(`[App] Incrementing workflowLoadKey: ${newKey - 1} → ${newKey}`);
+      logger.debug(
+        `[App] Incrementing workflowLoadKey: ${newKey - 1} → ${newKey}`,
+      );
       setSelectedWorkflowId(workflowId);
       setWorkflowLoadKey(newKey);
       setCurrentView("builder");
@@ -135,7 +137,8 @@ function AuthenticatedLayout() {
 
   const builderActive = currentView === "builder" && location.pathname === "/";
   const listActive = currentView === "list" && location.pathname === "/";
-  const executionActive = currentView === "execution" && location.pathname === "/";
+  const executionActive =
+    currentView === "execution" && location.pathname === "/";
 
   const renderBuilderContent = () => (
     <WorkflowTabsProvider>
@@ -147,7 +150,10 @@ function AuthenticatedLayout() {
         />
       )}
       {currentView === "list" && (
-        <WorkflowList onSelectWorkflow={handleSelectWorkflow} onBack={handleBackToList} />
+        <WorkflowList
+          onSelectWorkflow={handleSelectWorkflow}
+          onBack={handleBackToList}
+        />
       )}
       {currentView === "execution" && executionId && (
         <ExecutionViewer executionId={executionId} />
@@ -160,7 +166,12 @@ function AuthenticatedLayout() {
     setIsLogoutPending(true);
     const confirmed = await showConfirm(
       "Do you really want to log out? Any unsaved workflows will remain in draft but may be lost if you close the tab.",
-      { title: "Confirm Logout", confirmText: "Log out", cancelText: "Cancel", type: "danger" }
+      {
+        title: "Confirm Logout",
+        confirmText: "Log out",
+        cancelText: "Cancel",
+        type: "danger",
+      },
     );
     setIsLogoutPending(false);
     if (confirmed) {
@@ -183,7 +194,11 @@ function AuthenticatedLayout() {
           </BrandRow>
 
           <Nav>
-            <NavTabButton type="button" $active={builderActive} onClick={goToBuilder}>
+            <NavTabButton
+              type="button"
+              $active={builderActive}
+              onClick={goToBuilder}
+            >
               <Play />
               Builder
             </NavTabButton>
@@ -192,7 +207,11 @@ function AuthenticatedLayout() {
               Workflows
             </NavTabButton>
             {executionId && (
-              <NavTabButton type="button" $active={executionActive} onClick={goToExecution}>
+              <NavTabButton
+                type="button"
+                $active={executionActive}
+                onClick={goToExecution}
+              >
                 <Eye />
                 Execution
               </NavTabButton>
@@ -205,11 +224,17 @@ function AuthenticatedLayout() {
               <FileText />
               Log
             </NavRouteLink>
-            <NavRouteLink to="/analytics" $active={location.pathname === "/analytics"}>
+            <NavRouteLink
+              to="/analytics"
+              $active={location.pathname === "/analytics"}
+            >
               <BarChart3 />
               Analytics
             </NavRouteLink>
-            <NavRouteLink to="/settings" $active={location.pathname === "/settings"}>
+            <NavRouteLink
+              to="/settings"
+              $active={location.pathname === "/settings"}
+            >
               <Settings />
               Settings
             </NavRouteLink>
@@ -221,7 +246,11 @@ function AuthenticatedLayout() {
                     <User />
                     <UserName>{user?.username}</UserName>
                   </UserBadge>
-                  <LogoutButton type="button" onClick={handleLogoutClick} title="Logout">
+                  <LogoutButton
+                    type="button"
+                    onClick={handleLogoutClick}
+                    title="Logout"
+                  >
                     <LogOut />
                   </LogoutButton>
                 </>
@@ -256,7 +285,10 @@ function App() {
     };
     window.addEventListener("unhandledrejection", handleUnhandledRejection);
     return () => {
-      window.removeEventListener("unhandledrejection", handleUnhandledRejection);
+      window.removeEventListener(
+        "unhandledrejection",
+        handleUnhandledRejection,
+      );
     };
   }, []);
 

@@ -3,7 +3,7 @@ import {
   hasArrayItems,
   isArrayEmpty,
   getArrayLength,
-  canProcessArray
+  canProcessArray,
 } from "./arrayValidation";
 describe("arrayValidation", () => {
   describe("isValidArray", () => {

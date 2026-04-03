@@ -5,7 +5,7 @@ describe("pendingAgentsStorage", () => {
     it("should remove item from storage when storage exists", () => {
       const removeItem = jest.fn();
       const storage = {
-        removeItem
+        removeItem,
       };
       clearPendingAgents(storage);
       expect(removeItem).toHaveBeenCalledWith(PENDING_AGENTS_STORAGE_KEY);
@@ -24,7 +24,7 @@ describe("pendingAgentsStorage", () => {
     it("should use correct storage key from constants", () => {
       const removeItem = jest.fn();
       const storage = {
-        removeItem
+        removeItem,
       };
       clearPendingAgents(storage);
       expect(removeItem).toHaveBeenCalledWith(PENDING_AGENTS_STORAGE_KEY);
@@ -36,7 +36,7 @@ describe("pendingAgentsStorage", () => {
       const storage = {
         removeItem,
         getItem,
-        setItem
+        setItem,
       };
       clearPendingAgents(storage);
       expect(removeItem).toHaveBeenCalledWith(PENDING_AGENTS_STORAGE_KEY);

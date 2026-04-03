@@ -12,23 +12,25 @@ describe("useMarketplaceData - URL Parameters (Phase 4.2)", () => {
         }
         return Promise.resolve({ json: async () => [] });
       }),
-      post: jest.fn().mockResolvedValue({ ok: true, json: async () => ({ nodes: [] }) })
+      post: jest
+        .fn()
+        .mockResolvedValue({ ok: true, json: async () => ({ nodes: [] }) }),
     };
     mockStorage = {
       getItem: jest.fn().mockReturnValue(null),
       setItem: jest.fn(),
       removeItem: jest.fn(),
       addEventListener: jest.fn(),
-      removeEventListener: jest.fn()
+      removeEventListener: jest.fn(),
     };
   });
   describe("URLSearchParams construction - new URLSearchParams()", () => {
     it("should create new URLSearchParams instance", async () => {
       mockHttpClient.get.mockResolvedValue({
-        json: async () => []
+        json: async () => [],
       });
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -37,8 +39,8 @@ describe("useMarketplaceData - URL Parameters (Phase 4.2)", () => {
           sortBy: "popular",
           user: null,
           activeTab: "repository",
-          repositorySubTab: "workflows"
-        })
+          repositorySubTab: "workflows",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -52,10 +54,10 @@ describe("useMarketplaceData - URL Parameters (Phase 4.2)", () => {
   describe("params.append - category parameter", () => {
     it("should append category when category is truthy", async () => {
       mockHttpClient.get.mockResolvedValue({
-        json: async () => []
+        json: async () => [],
       });
-      renderHook(
-        () => useMarketplaceData({
+      renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -65,8 +67,8 @@ describe("useMarketplaceData - URL Parameters (Phase 4.2)", () => {
           sortBy: "popular",
           user: null,
           activeTab: "repository",
-          repositorySubTab: "workflows"
-        })
+          repositorySubTab: "workflows",
+        }),
       );
       await waitFor(() => {
         expect(mockHttpClient.get).toHaveBeenCalled();
@@ -76,10 +78,10 @@ describe("useMarketplaceData - URL Parameters (Phase 4.2)", () => {
     });
     it("should NOT append category when category is falsy", async () => {
       mockHttpClient.get.mockResolvedValue({
-        json: async () => []
+        json: async () => [],
       });
-      renderHook(
-        () => useMarketplaceData({
+      renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -89,8 +91,8 @@ describe("useMarketplaceData - URL Parameters (Phase 4.2)", () => {
           sortBy: "popular",
           user: null,
           activeTab: "repository",
-          repositorySubTab: "workflows"
-        })
+          repositorySubTab: "workflows",
+        }),
       );
       await waitFor(() => {
         expect(mockHttpClient.get).toHaveBeenCalled();
@@ -102,10 +104,10 @@ describe("useMarketplaceData - URL Parameters (Phase 4.2)", () => {
   describe("params.append - search parameter", () => {
     it("should append search when searchQuery is truthy", async () => {
       mockHttpClient.get.mockResolvedValue({
-        json: async () => []
+        json: async () => [],
       });
-      renderHook(
-        () => useMarketplaceData({
+      renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -115,8 +117,8 @@ describe("useMarketplaceData - URL Parameters (Phase 4.2)", () => {
           sortBy: "popular",
           user: null,
           activeTab: "repository",
-          repositorySubTab: "workflows"
-        })
+          repositorySubTab: "workflows",
+        }),
       );
       await waitFor(() => {
         expect(mockHttpClient.get).toHaveBeenCalled();
@@ -126,10 +128,10 @@ describe("useMarketplaceData - URL Parameters (Phase 4.2)", () => {
     });
     it("should NOT append search when searchQuery is falsy", async () => {
       mockHttpClient.get.mockResolvedValue({
-        json: async () => []
+        json: async () => [],
       });
-      renderHook(
-        () => useMarketplaceData({
+      renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -139,8 +141,8 @@ describe("useMarketplaceData - URL Parameters (Phase 4.2)", () => {
           sortBy: "popular",
           user: null,
           activeTab: "repository",
-          repositorySubTab: "workflows"
-        })
+          repositorySubTab: "workflows",
+        }),
       );
       await waitFor(() => {
         expect(mockHttpClient.get).toHaveBeenCalled();
@@ -152,10 +154,10 @@ describe("useMarketplaceData - URL Parameters (Phase 4.2)", () => {
   describe("params.append - sort_by parameter (always appended)", () => {
     it("should always append sort_by parameter", async () => {
       mockHttpClient.get.mockResolvedValue({
-        json: async () => []
+        json: async () => [],
       });
-      renderHook(
-        () => useMarketplaceData({
+      renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -164,8 +166,8 @@ describe("useMarketplaceData - URL Parameters (Phase 4.2)", () => {
           sortBy: "popular",
           user: null,
           activeTab: "repository",
-          repositorySubTab: "workflows"
-        })
+          repositorySubTab: "workflows",
+        }),
       );
       await waitFor(() => {
         expect(mockHttpClient.get).toHaveBeenCalled();
@@ -175,10 +177,10 @@ describe("useMarketplaceData - URL Parameters (Phase 4.2)", () => {
     });
     it("should append sort_by with different values", async () => {
       mockHttpClient.get.mockResolvedValue({
-        json: async () => []
+        json: async () => [],
       });
-      renderHook(
-        () => useMarketplaceData({
+      renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -188,8 +190,8 @@ describe("useMarketplaceData - URL Parameters (Phase 4.2)", () => {
           // Different value
           user: null,
           activeTab: "repository",
-          repositorySubTab: "workflows"
-        })
+          repositorySubTab: "workflows",
+        }),
       );
       await waitFor(() => {
         expect(mockHttpClient.get).toHaveBeenCalled();
@@ -201,10 +203,10 @@ describe("useMarketplaceData - URL Parameters (Phase 4.2)", () => {
   describe("URL construction - template literal with params", () => {
     it("should construct URL with query parameters", async () => {
       mockHttpClient.get.mockResolvedValue({
-        json: async () => []
+        json: async () => [],
       });
-      renderHook(
-        () => useMarketplaceData({
+      renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -213,8 +215,8 @@ describe("useMarketplaceData - URL Parameters (Phase 4.2)", () => {
           sortBy: "popular",
           user: null,
           activeTab: "repository",
-          repositorySubTab: "workflows"
-        })
+          repositorySubTab: "workflows",
+        }),
       );
       await waitFor(() => {
         expect(mockHttpClient.get).toHaveBeenCalled();
@@ -228,10 +230,10 @@ describe("useMarketplaceData - URL Parameters (Phase 4.2)", () => {
     });
     it("should construct URL with only sort_by when category and searchQuery are empty", async () => {
       mockHttpClient.get.mockResolvedValue({
-        json: async () => []
+        json: async () => [],
       });
-      renderHook(
-        () => useMarketplaceData({
+      renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -240,8 +242,8 @@ describe("useMarketplaceData - URL Parameters (Phase 4.2)", () => {
           sortBy: "popular",
           user: null,
           activeTab: "repository",
-          repositorySubTab: "workflows"
-        })
+          repositorySubTab: "workflows",
+        }),
       );
       await waitFor(() => {
         expect(mockHttpClient.get).toHaveBeenCalled();
@@ -259,17 +261,17 @@ describe("useMarketplaceData - URL Parameters (Phase 4.2)", () => {
         id: "template-1",
         name: "Template",
         description: "Description",
-        tags: []
+        tags: [],
       };
       mockHttpClient.get.mockResolvedValue({
-        json: async () => [template]
+        json: async () => [template],
       });
       mockHttpClient.post.mockResolvedValue({
         ok: true,
-        json: async () => ({ nodes: [] })
+        json: async () => ({ nodes: [] }),
       });
-      renderHook(
-        () => useMarketplaceData({
+      renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -278,12 +280,15 @@ describe("useMarketplaceData - URL Parameters (Phase 4.2)", () => {
           sortBy: "popular",
           user: null,
           activeTab: "workflows-of-workflows",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
-      await waitFor(() => {
-        expect(mockHttpClient.post).toHaveBeenCalled();
-      }, { timeout: 3e3 });
+      await waitFor(
+        () => {
+          expect(mockHttpClient.post).toHaveBeenCalled();
+        },
+        { timeout: 3e3 },
+      );
       const callUrl = mockHttpClient.post.mock.calls[0][0];
       expect(callUrl).toContain("http://api.test/templates/template-1/use");
     });

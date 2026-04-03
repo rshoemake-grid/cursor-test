@@ -2,7 +2,7 @@ import {
   extractErrorMessage,
   handleApiError,
   handleError,
-  createSafeErrorHandler
+  createSafeErrorHandler,
 } from "./errorHandling";
 import { logger } from "../../utils/logger";
 import { showError } from "../../utils/notifications";
@@ -12,11 +12,11 @@ jest.mock("../../utils/logger", () => ({
     error: jest.fn(),
     info: jest.fn(),
     log: jest.fn(),
-    warn: jest.fn()
-  }
+    warn: jest.fn(),
+  },
 }));
 jest.mock("../../utils/notifications", () => ({
-  showError: jest.fn()
+  showError: jest.fn(),
 }));
 const mockLoggerError = logger.error;
 const mockShowError = showError;
@@ -59,9 +59,9 @@ describe("errorHandling", () => {
       const error = {
         response: {
           data: {
-            detail: "API error detail"
-          }
-        }
+            detail: "API error detail",
+          },
+        },
       };
       const result = extractErrorMessage(error, "Default");
       expect(result).toBe("API error detail");
@@ -70,9 +70,9 @@ describe("errorHandling", () => {
       const error = {
         response: {
           data: {
-            message: "API error message"
-          }
-        }
+            message: "API error message",
+          },
+        },
       };
       const result = extractErrorMessage(error, "Default");
       expect(result).toBe("API error message");
@@ -82,9 +82,9 @@ describe("errorHandling", () => {
         response: {
           data: {
             detail: "Detail message",
-            message: "Regular message"
-          }
-        }
+            message: "Regular message",
+          },
+        },
       };
       const result = extractErrorMessage(error, "Default");
       expect(result).toBe("Detail message");
@@ -117,13 +117,19 @@ describe("errorHandling", () => {
     it("should log error and show notification by default", () => {
       const error = new Error("API error");
       handleApiError(error);
-      expect(mockLoggerError).toHaveBeenCalledWith("[Error Handler] API Error:", error);
+      expect(mockLoggerError).toHaveBeenCalledWith(
+        "[Error Handler] API Error:",
+        error,
+      );
       expect(mockShowError).toHaveBeenCalledWith("API error");
     });
     it("should use custom context in log", () => {
       const error = new Error("API error");
       handleApiError(error, { context: "MyContext" });
-      expect(mockLoggerError).toHaveBeenCalledWith("[MyContext] API Error:", error);
+      expect(mockLoggerError).toHaveBeenCalledWith(
+        "[MyContext] API Error:",
+        error,
+      );
     });
     it("should log error details when response exists", () => {
       const error = {
@@ -131,19 +137,27 @@ describe("errorHandling", () => {
         response: {
           status: 404,
           statusText: "Not Found",
-          data: { detail: "Resource not found" }
+          data: { detail: "Resource not found" },
         },
-        config: { url: "/api/resource" }
+        config: { url: "/api/resource" },
       };
       handleApiError(error, { context: "Test" });
       expect(mockLoggerError).toHaveBeenCalledTimes(2);
-      expect(mockLoggerError).toHaveBeenNthCalledWith(1, "[Test] API Error:", error);
-      expect(mockLoggerError).toHaveBeenNthCalledWith(2, "[Test] Error details:", {
-        status: 404,
-        statusText: "Not Found",
-        data: { detail: "Resource not found" },
-        url: "/api/resource"
-      });
+      expect(mockLoggerError).toHaveBeenNthCalledWith(
+        1,
+        "[Test] API Error:",
+        error,
+      );
+      expect(mockLoggerError).toHaveBeenNthCalledWith(
+        2,
+        "[Test] Error details:",
+        {
+          status: 404,
+          statusText: "Not Found",
+          data: { detail: "Resource not found" },
+          url: "/api/resource",
+        },
+      );
     });
     it("should not log when logError is false", () => {
       const error = new Error("API error");
@@ -186,24 +200,31 @@ describe("errorHandling", () => {
         response: {
           status: 500,
           statusText: "Internal Server Error",
-          data: {}
-        }
+          data: {},
+        },
       };
       handleApiError(error, { context: "Test" });
       expect(mockLoggerError).toHaveBeenCalledTimes(2);
-      expect(mockLoggerError).toHaveBeenNthCalledWith(2, "[Test] Error details:", {
-        status: 500,
-        statusText: "Internal Server Error",
-        data: {},
-        url: void 0
-      });
+      expect(mockLoggerError).toHaveBeenNthCalledWith(
+        2,
+        "[Test] Error details:",
+        {
+          status: 500,
+          statusText: "Internal Server Error",
+          data: {},
+          url: void 0,
+        },
+      );
     });
   });
   describe("handleError", () => {
     it("should log error and show notification by default", () => {
       const error = new Error("Generic error");
       handleError(error);
-      expect(mockLoggerError).toHaveBeenCalledWith("[Error Handler] Error:", error);
+      expect(mockLoggerError).toHaveBeenCalledWith(
+        "[Error Handler] Error:",
+        error,
+      );
       expect(mockShowError).toHaveBeenCalledWith("Generic error");
     });
     it("should use custom context in log", () => {
@@ -272,7 +293,10 @@ describe("errorHandling", () => {
       });
       const safeHandler = createSafeErrorHandler(handler);
       safeHandler(new Error("Test error"));
-      expect(mockLoggerError).toHaveBeenCalledWith("[Safe Error Handler] Handler threw an error:", expect.any(Error));
+      expect(mockLoggerError).toHaveBeenCalledWith(
+        "[Safe Error Handler] Handler threw an error:",
+        expect.any(Error),
+      );
     });
     it("should show fallback message when handler throws", () => {
       const handler = jest.fn().mockImplementation(() => {

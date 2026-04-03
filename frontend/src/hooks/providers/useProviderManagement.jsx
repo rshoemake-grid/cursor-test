@@ -7,50 +7,69 @@ function useProviderManagement({
   iterationLimit,
   defaultModel,
   chatAssistantModel,
-  token
+  token,
 }) {
   const [testingProvider, setTestingProvider] = useState(null);
   const [testResults, setTestResults] = useState({});
-  const saveProviders = useCallback(async (newProviders) => {
-    const settings = {
-      providers: newProviders,
-      iteration_limit: iterationLimit,
-      default_model: defaultModel,
-      chat_assistant_model: chatAssistantModel || ""
-    };
-    setProviders(newProviders);
-    await service.saveSettings(settings, token);
-  }, [service, token, iterationLimit, defaultModel, chatAssistantModel, setProviders]);
-  const updateProvider = useCallback((id, updates) => {
-    saveProviders(providers.map((p) => p.id === id ? { ...p, ...updates } : p));
-  }, [providers, saveProviders]);
-  const testProvider = useCallback(async (provider) => {
-    setTestingProvider(provider.id);
-    setTestResults((prev) => ({ ...prev, [provider.id]: void 0 }));
-    try {
-      const result = await service.testProvider(provider);
-      setTestResults((prev) => ({ ...prev, [provider.id]: result }));
-    } finally {
-      setTestingProvider(null);
-    }
-  }, [service]);
-  const addCustomModel = useCallback((providerId, modelName) => {
-    const provider = providers.find((p) => p.id === providerId);
-    if (provider && modelName) {
-      updateProvider(providerId, {
-        models: [...logicalOrToEmptyArray(provider.models), modelName]
-      });
-    }
-  }, [providers, updateProvider]);
+  const saveProviders = useCallback(
+    async (newProviders) => {
+      const settings = {
+        providers: newProviders,
+        iteration_limit: iterationLimit,
+        default_model: defaultModel,
+        chat_assistant_model: chatAssistantModel || "",
+      };
+      setProviders(newProviders);
+      await service.saveSettings(settings, token);
+    },
+    [
+      service,
+      token,
+      iterationLimit,
+      defaultModel,
+      chatAssistantModel,
+      setProviders,
+    ],
+  );
+  const updateProvider = useCallback(
+    (id, updates) => {
+      saveProviders(
+        providers.map((p) => (p.id === id ? { ...p, ...updates } : p)),
+      );
+    },
+    [providers, saveProviders],
+  );
+  const testProvider = useCallback(
+    async (provider) => {
+      setTestingProvider(provider.id);
+      setTestResults((prev) => ({ ...prev, [provider.id]: void 0 }));
+      try {
+        const result = await service.testProvider(provider);
+        setTestResults((prev) => ({ ...prev, [provider.id]: result }));
+      } finally {
+        setTestingProvider(null);
+      }
+    },
+    [service],
+  );
+  const addCustomModel = useCallback(
+    (providerId, modelName) => {
+      const provider = providers.find((p) => p.id === providerId);
+      if (provider && modelName) {
+        updateProvider(providerId, {
+          models: [...logicalOrToEmptyArray(provider.models), modelName],
+        });
+      }
+    },
+    [providers, updateProvider],
+  );
   return {
     saveProviders,
     updateProvider,
     testProvider,
     addCustomModel,
     testingProvider,
-    testResults
+    testResults,
   };
 }
-export {
-  useProviderManagement
-};
+export { useProviderManagement };

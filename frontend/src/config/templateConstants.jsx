@@ -6,7 +6,7 @@ const TEMPLATE_CATEGORIES = [
   "automation",
   "education",
   "marketing",
-  "other"
+  "other",
 ];
 const TEMPLATE_DIFFICULTIES = ["beginner", "intermediate", "advanced"];
 function formatCategory(category) {
@@ -19,5 +19,5 @@ export {
   TEMPLATE_CATEGORIES,
   TEMPLATE_DIFFICULTIES,
   formatCategory,
-  formatDifficulty
+  formatDifficulty,
 };

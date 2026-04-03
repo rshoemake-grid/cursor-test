@@ -18,8 +18,4 @@ function hasArrayIndices(path) {
   const keys = parsePath(path);
   return keys.some((key) => /^\d+$/.test(key));
 }
-export {
-  hasArrayIndices,
-  parsePath,
-  validatePath
-};
+export { hasArrayIndices, parsePath, validatePath };

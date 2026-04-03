@@ -15,14 +15,14 @@ describe("useProviderManagement", () => {
       get: jest.fn(),
       post: jest.fn(),
       put: jest.fn(),
-      delete: jest.fn()
+      delete: jest.fn(),
     };
     mockStorage = {
       getItem: jest.fn(),
       setItem: jest.fn(),
       removeItem: jest.fn(),
       addEventListener: jest.fn(),
-      removeEventListener: jest.fn()
+      removeEventListener: jest.fn(),
     };
     mockService = new SettingsService(mockHttpClient, mockStorage, "/api");
     mockService.saveSettings = jest.fn().mockResolvedValue(void 0);
@@ -37,7 +37,7 @@ describe("useProviderManagement", () => {
         apiKey: "key-1",
         baseUrl: "https://api.openai.com/v1",
         defaultModel: "gpt-4",
-        models: ["gpt-4", "gpt-3.5-turbo"]
+        models: ["gpt-4", "gpt-3.5-turbo"],
       },
       {
         id: "provider-2",
@@ -47,13 +47,13 @@ describe("useProviderManagement", () => {
         apiKey: "key-2",
         baseUrl: "https://api.anthropic.com/v1",
         defaultModel: "claude-3",
-        models: ["claude-3"]
-      }
+        models: ["claude-3"],
+      },
     ];
   });
   const renderHookWithDefaults = (overrides = {}) => {
-    return renderHook(
-      () => useProviderManagement({
+    return renderHook(() =>
+      useProviderManagement({
         service: mockService,
         providers,
         setProviders: mockSetProviders,
@@ -61,19 +61,22 @@ describe("useProviderManagement", () => {
         defaultModel: "gpt-4",
         chatAssistantModel: "",
         token: "test-token",
-        ...overrides
-      })
+        ...overrides,
+      }),
     );
   };
   describe("saveProviders", () => {
     it("should save providers and update state", async () => {
       const { result } = renderHookWithDefaults();
-      const newProviders = [...providers, {
-        id: "provider-3",
-        name: "Provider 3",
-        type: "gemini",
-        enabled: true
-      }];
+      const newProviders = [
+        ...providers,
+        {
+          id: "provider-3",
+          name: "Provider 3",
+          type: "gemini",
+          enabled: true,
+        },
+      ];
       await act(async () => {
         await result.current.saveProviders(newProviders);
       });
@@ -83,9 +86,9 @@ describe("useProviderManagement", () => {
           providers: newProviders,
           iteration_limit: 10,
           default_model: "gpt-4",
-          chat_assistant_model: ""
+          chat_assistant_model: "",
         },
-        "test-token"
+        "test-token",
       );
     });
     it("should throw error when saveSettings fails", async () => {
@@ -95,7 +98,7 @@ describe("useProviderManagement", () => {
       await expect(
         act(async () => {
           await result.current.saveProviders(providers);
-        })
+        }),
       ).rejects.toThrow("Save failed");
     });
   });
@@ -105,8 +108,8 @@ describe("useProviderManagement", () => {
       await act(async () => {
         await result.current.updateProvider("provider-1", { enabled: false });
       });
-      const updatedProviders = providers.map(
-        (p) => p.id === "provider-1" ? { ...p, enabled: false } : p
+      const updatedProviders = providers.map((p) =>
+        p.id === "provider-1" ? { ...p, enabled: false } : p,
       );
       expect(mockSetProviders).toHaveBeenCalledWith(updatedProviders);
       expect(mockService.saveSettings).toHaveBeenCalled();
@@ -116,11 +119,11 @@ describe("useProviderManagement", () => {
       await act(async () => {
         await result.current.updateProvider("provider-1", {
           enabled: false,
-          apiKey: "new-key"
+          apiKey: "new-key",
         });
       });
-      const updatedProviders = providers.map(
-        (p) => p.id === "provider-1" ? { ...p, enabled: false, apiKey: "new-key" } : p
+      const updatedProviders = providers.map((p) =>
+        p.id === "provider-1" ? { ...p, enabled: false, apiKey: "new-key" } : p,
       );
       expect(mockSetProviders).toHaveBeenCalledWith(updatedProviders);
     });
@@ -136,7 +139,7 @@ describe("useProviderManagement", () => {
     it("should test provider and set result", async () => {
       mockService.testProvider.mockResolvedValue({
         status: "success",
-        message: "Connection successful"
+        message: "Connection successful",
       });
       const { result } = renderHookWithDefaults();
       await act(async () => {
@@ -145,7 +148,7 @@ describe("useProviderManagement", () => {
       expect(mockService.testProvider).toHaveBeenCalledWith(providers[0]);
       expect(result.current.testResults["provider-1"]).toEqual({
         status: "success",
-        message: "Connection successful"
+        message: "Connection successful",
       });
       expect(result.current.testingProvider).toBe(null);
     });
@@ -167,13 +170,13 @@ describe("useProviderManagement", () => {
       expect(result.current.testingProvider).toBe(null);
       expect(result.current.testResults["provider-1"]).toEqual({
         status: "success",
-        message: "OK"
+        message: "OK",
       });
     });
     it("should handle test error", async () => {
       mockService.testProvider.mockResolvedValue({
         status: "error",
-        message: "Connection failed"
+        message: "Connection failed",
       });
       const { result } = renderHookWithDefaults();
       await act(async () => {
@@ -181,7 +184,7 @@ describe("useProviderManagement", () => {
       });
       expect(result.current.testResults["provider-1"]).toEqual({
         status: "error",
-        message: "Connection failed"
+        message: "Connection failed",
       });
       expect(result.current.testingProvider).toBe(null);
     });
@@ -191,8 +194,7 @@ describe("useProviderManagement", () => {
       await act(async () => {
         try {
           await result.current.testProvider(providers[0]);
-        } catch (e) {
-        }
+        } catch (e) {}
       });
       expect(result.current.testingProvider).toBe(null);
     });
@@ -203,8 +205,10 @@ describe("useProviderManagement", () => {
       await act(async () => {
         await result.current.addCustomModel("provider-1", "custom-model");
       });
-      const updatedProviders = providers.map(
-        (p) => p.id === "provider-1" ? { ...p, models: [...p.models || [], "custom-model"] } : p
+      const updatedProviders = providers.map((p) =>
+        p.id === "provider-1"
+          ? { ...p, models: [...(p.models || []), "custom-model"] }
+          : p,
       );
       expect(mockSetProviders).toHaveBeenCalledWith(updatedProviders);
     });
@@ -225,19 +229,19 @@ describe("useProviderManagement", () => {
     it("should handle provider without models array", async () => {
       const providerWithoutModels = {
         ...providers[0],
-        models: void 0
+        models: void 0,
       };
       const customProviders = [providerWithoutModels];
-      const { result } = renderHook(
-        () => useProviderManagement({
+      const { result } = renderHook(() =>
+        useProviderManagement({
           service: mockService,
           providers: customProviders,
           setProviders: mockSetProviders,
           iterationLimit: 10,
           defaultModel: "gpt-4",
           chatAssistantModel: "",
-          token: "test-token"
-        })
+          token: "test-token",
+        }),
       );
       await act(async () => {
         await result.current.addCustomModel("provider-1", "new-model");
@@ -254,7 +258,9 @@ describe("useProviderManagement", () => {
       expect(result.current.testResults).toEqual({});
     });
     it("should maintain test results across multiple tests", async () => {
-      mockService.testProvider.mockResolvedValueOnce({ status: "success", message: "OK 1" }).mockResolvedValueOnce({ status: "error", message: "Failed 2" });
+      mockService.testProvider
+        .mockResolvedValueOnce({ status: "success", message: "OK 1" })
+        .mockResolvedValueOnce({ status: "error", message: "Failed 2" });
       const { result } = renderHookWithDefaults();
       await act(async () => {
         await result.current.testProvider(providers[0]);
@@ -264,11 +270,11 @@ describe("useProviderManagement", () => {
       });
       expect(result.current.testResults["provider-1"]).toEqual({
         status: "success",
-        message: "OK 1"
+        message: "OK 1",
       });
       expect(result.current.testResults["provider-2"]).toEqual({
         status: "error",
-        message: "Failed 2"
+        message: "Failed 2",
       });
     });
   });

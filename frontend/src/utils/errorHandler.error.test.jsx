@@ -1,17 +1,17 @@
 import {
   handleApiError,
   handleStorageError,
-  handleError
+  handleError,
 } from "./errorHandler";
 import { logger } from "./logger";
 import { showError } from "./notifications";
 jest.mock("./logger", () => ({
   logger: {
-    error: jest.fn()
-  }
+    error: jest.fn(),
+  },
 }));
 jest.mock("./notifications", () => ({
-  showError: jest.fn()
+  showError: jest.fn(),
 }));
 const mockLoggerError = logger.error;
 const mockShowError = showError;
@@ -48,8 +48,8 @@ describe("errorHandler - Error Guards", () => {
     it("should extract error.response.data.detail", () => {
       const error = {
         response: {
-          data: { detail: "Custom error detail" }
-        }
+          data: { detail: "Custom error detail" },
+        },
       };
       const result = handleApiError(error);
       expect(result).toBe("Custom error detail");
@@ -57,8 +57,8 @@ describe("errorHandler - Error Guards", () => {
     it("should extract error.response.data.message when detail is missing", () => {
       const error = {
         response: {
-          data: { message: "Error message" }
-        }
+          data: { message: "Error message" },
+        },
       };
       const result = handleApiError(error);
       expect(result).toBe("Error message");
@@ -76,8 +76,8 @@ describe("errorHandler - Error Guards", () => {
     it("should handle error.response.data.detail as null", () => {
       const error = {
         response: {
-          data: { detail: null, message: "Fallback message" }
-        }
+          data: { detail: null, message: "Fallback message" },
+        },
       };
       const result = handleApiError(error);
       expect(result).toBe("Fallback message");
@@ -85,9 +85,9 @@ describe("errorHandler - Error Guards", () => {
     it("should handle error.response.data.message as null", () => {
       const error = {
         response: {
-          data: { message: null }
+          data: { message: null },
         },
-        message: "Fallback message"
+        message: "Fallback message",
       };
       const result = handleApiError(error);
       expect(result).toBe("Fallback message");
@@ -101,7 +101,7 @@ describe("errorHandler - Error Guards", () => {
       handleApiError(new Error("Test error"), { context: "TestContext" });
       expect(mockLoggerError).toHaveBeenCalledWith(
         "[TestContext] API Error:",
-        expect.any(Error)
+        expect.any(Error),
       );
     });
     it("should show notification when requested", () => {
@@ -126,7 +126,7 @@ describe("errorHandler - Error Guards", () => {
       const error = { code: "QUOTA_EXCEEDED" };
       handleStorageError(error, "setItem", "key", { showNotification: true });
       expect(mockShowError).toHaveBeenCalledWith(
-        "Failed to setItem storage: Unknown error"
+        "Failed to setItem storage: Unknown error",
       );
     });
     it("should handle Error instance", () => {
@@ -134,28 +134,30 @@ describe("errorHandler - Error Guards", () => {
       handleStorageError(error, "getItem", "key");
       expect(mockLoggerError).toHaveBeenCalledWith(
         '[Storage Error Handler] Storage getItem error for key "key":',
-        error
+        error,
       );
     });
     it("should handle error with message property", () => {
       const error = { message: "Quota exceeded" };
       handleStorageError(error, "setItem", "key", { showNotification: true });
       expect(mockShowError).toHaveBeenCalledWith(
-        "Failed to setItem storage: Quota exceeded"
+        "Failed to setItem storage: Quota exceeded",
       );
     });
     it("should handle error.message as null", () => {
       const error = { message: null };
-      handleStorageError(error, "removeItem", "key", { showNotification: true });
+      handleStorageError(error, "removeItem", "key", {
+        showNotification: true,
+      });
       expect(mockShowError).toHaveBeenCalledWith(
-        "Failed to removeItem storage: Unknown error"
+        "Failed to removeItem storage: Unknown error",
       );
     });
     it("should handle error.message as undefined", () => {
       const error = { message: void 0 };
       handleStorageError(error, "clear", "all", { showNotification: true });
       expect(mockShowError).toHaveBeenCalledWith(
-        "Failed to clear storage: Unknown error"
+        "Failed to clear storage: Unknown error",
       );
     });
     it("should log with context when provided", () => {
@@ -163,7 +165,7 @@ describe("errorHandler - Error Guards", () => {
       handleStorageError(error, "getItem", "key", { context: "TestContext" });
       expect(mockLoggerError).toHaveBeenCalledWith(
         '[TestContext] Storage getItem error for key "key":',
-        error
+        error,
       );
     });
   });
@@ -182,7 +184,10 @@ describe("errorHandler - Error Guards", () => {
       const error = new Error("Error message");
       const result = handleError(error);
       expect(result).toBe("Error message");
-      expect(mockLoggerError).toHaveBeenCalledWith("[Error Handler] Error:", error);
+      expect(mockLoggerError).toHaveBeenCalledWith(
+        "[Error Handler] Error:",
+        error,
+      );
     });
     it("should handle string error", () => {
       const result = handleError("String error");
@@ -208,7 +213,7 @@ describe("errorHandler - Error Guards", () => {
     });
     it("should use custom default message", () => {
       const result = handleError(null, {
-        defaultMessage: "Custom default"
+        defaultMessage: "Custom default",
       });
       expect(result).toBe("Custom default");
     });
@@ -217,7 +222,7 @@ describe("errorHandler - Error Guards", () => {
       handleError(error, { context: "TestContext" });
       expect(mockLoggerError).toHaveBeenCalledWith(
         "[TestContext] Error:",
-        error
+        error,
       );
     });
     it("should show notification when requested", () => {

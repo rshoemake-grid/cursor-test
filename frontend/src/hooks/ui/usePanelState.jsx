@@ -17,9 +17,7 @@ function usePanelState({ selectedNode }) {
     saveStatus,
     setSaveStatus,
     closePanel,
-    openPanel
+    openPanel,
   };
 }
-export {
-  usePanelState
-};
+export { usePanelState };

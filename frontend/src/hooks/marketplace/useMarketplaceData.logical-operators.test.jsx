@@ -2,7 +2,7 @@ import { renderHook, waitFor } from "@testing-library/react";
 import { useMarketplaceData } from "./useMarketplaceData";
 import { getLocalStorageItem } from "../storage";
 jest.mock("../storage", () => ({
-  getLocalStorageItem: jest.fn()
+  getLocalStorageItem: jest.fn(),
 }));
 const mockGetLocalStorageItem = getLocalStorageItem;
 describe("useMarketplaceData - Logical Operators", () => {
@@ -13,7 +13,7 @@ describe("useMarketplaceData - Logical Operators", () => {
     name: "Test Template",
     description: "Test Description",
     category: "automation",
-    tags: ["test"]
+    tags: ["test"],
   };
   const mockAgent = {
     id: "agent-1",
@@ -22,7 +22,7 @@ describe("useMarketplaceData - Logical Operators", () => {
     description: "Test Description",
     category: "automation",
     tags: ["test"],
-    published_at: "2024-01-01T00:00:00Z"
+    published_at: "2024-01-01T00:00:00Z",
   };
   beforeEach(() => {
     jest.clearAllMocks();
@@ -33,33 +33,37 @@ describe("useMarketplaceData - Logical Operators", () => {
         }
         return Promise.resolve({ json: async () => [] });
       }),
-      post: jest.fn().mockResolvedValue({ ok: true, json: async () => ({ nodes: [] }) })
+      post: jest
+        .fn()
+        .mockResolvedValue({ ok: true, json: async () => ({ nodes: [] }) }),
     };
     mockStorage = {
       getItem: jest.fn().mockReturnValue(null),
       setItem: jest.fn(),
       removeItem: jest.fn(),
       addEventListener: jest.fn(),
-      removeEventListener: jest.fn()
+      removeEventListener: jest.fn(),
     };
     mockGetLocalStorageItem.mockReturnValue([]);
   });
   describe("OR operator - hasWorkflowId || description.includes || name.includes || tags.some", () => {
     it("should detect workflow reference when hasWorkflowId is truthy", async () => {
       mockHttpClient.get.mockResolvedValue({
-        json: async () => [mockTemplate]
+        json: async () => [mockTemplate],
       });
       mockHttpClient.post.mockResolvedValue({
         ok: true,
         json: async () => ({
-          nodes: [{
-            workflow_id: "workflow-1"
-            // First OR condition true
-          }]
-        })
+          nodes: [
+            {
+              workflow_id: "workflow-1",
+              // First OR condition true
+            },
+          ],
+        }),
       });
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -68,8 +72,8 @@ describe("useMarketplaceData - Logical Operators", () => {
           sortBy: "popular",
           user: null,
           activeTab: "workflows-of-workflows",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -78,18 +82,20 @@ describe("useMarketplaceData - Logical Operators", () => {
     });
     it('should detect workflow reference when description.includes("workflow")', async () => {
       mockHttpClient.get.mockResolvedValue({
-        json: async () => [mockTemplate]
+        json: async () => [mockTemplate],
       });
       mockHttpClient.post.mockResolvedValue({
         ok: true,
         json: async () => ({
-          nodes: [{
-            description: "This is a workflow node"
-          }]
-        })
+          nodes: [
+            {
+              description: "This is a workflow node",
+            },
+          ],
+        }),
       });
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -98,8 +104,8 @@ describe("useMarketplaceData - Logical Operators", () => {
           sortBy: "popular",
           user: null,
           activeTab: "workflows-of-workflows",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -108,18 +114,20 @@ describe("useMarketplaceData - Logical Operators", () => {
     });
     it('should detect workflow reference when name.includes("workflow")', async () => {
       mockHttpClient.get.mockResolvedValue({
-        json: async () => [mockTemplate]
+        json: async () => [mockTemplate],
       });
       mockHttpClient.post.mockResolvedValue({
         ok: true,
         json: async () => ({
-          nodes: [{
-            name: "workflow node"
-          }]
-        })
+          nodes: [
+            {
+              name: "workflow node",
+            },
+          ],
+        }),
       });
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -128,8 +136,8 @@ describe("useMarketplaceData - Logical Operators", () => {
           sortBy: "popular",
           user: null,
           activeTab: "workflows-of-workflows",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -138,16 +146,16 @@ describe("useMarketplaceData - Logical Operators", () => {
     });
     it('should detect workflow reference when tags.some(includes("workflow"))', async () => {
       mockHttpClient.get.mockResolvedValue({
-        json: async () => [{ ...mockTemplate, tags: ["workflow", "test"] }]
+        json: async () => [{ ...mockTemplate, tags: ["workflow", "test"] }],
       });
       mockHttpClient.post.mockResolvedValue({
         ok: true,
         json: async () => ({
-          nodes: [{}]
-        })
+          nodes: [{}],
+        }),
       });
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -156,8 +164,8 @@ describe("useMarketplaceData - Logical Operators", () => {
           sortBy: "popular",
           user: null,
           activeTab: "workflows-of-workflows",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -166,19 +174,21 @@ describe("useMarketplaceData - Logical Operators", () => {
     });
     it("should NOT detect workflow reference when all OR conditions are false", async () => {
       mockHttpClient.get.mockResolvedValue({
-        json: async () => [mockTemplate]
+        json: async () => [mockTemplate],
       });
       mockHttpClient.post.mockResolvedValue({
         ok: true,
         json: async () => ({
-          nodes: [{
-            name: "regular node",
-            description: "regular description"
-          }]
-        })
+          nodes: [
+            {
+              name: "regular node",
+              description: "regular description",
+            },
+          ],
+        }),
       });
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -187,8 +197,8 @@ describe("useMarketplaceData - Logical Operators", () => {
           sortBy: "popular",
           user: null,
           activeTab: "workflows-of-workflows",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -197,20 +207,22 @@ describe("useMarketplaceData - Logical Operators", () => {
     });
     it("should detect workflow reference when multiple OR conditions are true", async () => {
       mockHttpClient.get.mockResolvedValue({
-        json: async () => [mockTemplate]
+        json: async () => [mockTemplate],
       });
       mockHttpClient.post.mockResolvedValue({
         ok: true,
         json: async () => ({
-          nodes: [{
-            workflow_id: "workflow-1",
-            description: "workflow description",
-            name: "workflow node"
-          }]
-        })
+          nodes: [
+            {
+              workflow_id: "workflow-1",
+              description: "workflow description",
+              name: "workflow node",
+            },
+          ],
+        }),
       });
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -219,8 +231,8 @@ describe("useMarketplaceData - Logical Operators", () => {
           sortBy: "popular",
           user: null,
           activeTab: "workflows-of-workflows",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -231,16 +243,18 @@ describe("useMarketplaceData - Logical Operators", () => {
   describe('OR operator - workflowDescription.includes("workflow of workflows") || ...', () => {
     it('should detect workflow of workflows when description includes "workflow of workflows"', async () => {
       mockHttpClient.get.mockResolvedValue({
-        json: async () => [{ ...mockTemplate, description: "This is a workflow of workflows" }]
+        json: async () => [
+          { ...mockTemplate, description: "This is a workflow of workflows" },
+        ],
       });
       mockHttpClient.post.mockResolvedValue({
         ok: true,
         json: async () => ({
-          nodes: []
-        })
+          nodes: [],
+        }),
       });
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -249,8 +263,8 @@ describe("useMarketplaceData - Logical Operators", () => {
           sortBy: "popular",
           user: null,
           activeTab: "workflows-of-workflows",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -259,16 +273,18 @@ describe("useMarketplaceData - Logical Operators", () => {
     });
     it('should detect workflow of workflows when description includes "composite workflow"', async () => {
       mockHttpClient.get.mockResolvedValue({
-        json: async () => [{ ...mockTemplate, description: "This is a composite workflow" }]
+        json: async () => [
+          { ...mockTemplate, description: "This is a composite workflow" },
+        ],
       });
       mockHttpClient.post.mockResolvedValue({
         ok: true,
         json: async () => ({
-          nodes: []
-        })
+          nodes: [],
+        }),
       });
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -277,8 +293,8 @@ describe("useMarketplaceData - Logical Operators", () => {
           sortBy: "popular",
           user: null,
           activeTab: "workflows-of-workflows",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -287,16 +303,18 @@ describe("useMarketplaceData - Logical Operators", () => {
     });
     it('should detect workflow of workflows when description includes "nested workflow"', async () => {
       mockHttpClient.get.mockResolvedValue({
-        json: async () => [{ ...mockTemplate, description: "This is a nested workflow" }]
+        json: async () => [
+          { ...mockTemplate, description: "This is a nested workflow" },
+        ],
       });
       mockHttpClient.post.mockResolvedValue({
         ok: true,
         json: async () => ({
-          nodes: []
-        })
+          nodes: [],
+        }),
       });
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -305,8 +323,8 @@ describe("useMarketplaceData - Logical Operators", () => {
           sortBy: "popular",
           user: null,
           activeTab: "workflows-of-workflows",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -315,16 +333,18 @@ describe("useMarketplaceData - Logical Operators", () => {
     });
     it('should detect workflow of workflows when tags include "workflow-of-workflows"', async () => {
       mockHttpClient.get.mockResolvedValue({
-        json: async () => [{ ...mockTemplate, tags: ["workflow-of-workflows", "test"] }]
+        json: async () => [
+          { ...mockTemplate, tags: ["workflow-of-workflows", "test"] },
+        ],
       });
       mockHttpClient.post.mockResolvedValue({
         ok: true,
         json: async () => ({
-          nodes: []
-        })
+          nodes: [],
+        }),
       });
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -333,8 +353,8 @@ describe("useMarketplaceData - Logical Operators", () => {
           sortBy: "popular",
           user: null,
           activeTab: "workflows-of-workflows",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -345,18 +365,20 @@ describe("useMarketplaceData - Logical Operators", () => {
   describe("OR operator - hasWorkflowReference || isWorkflowOfWorkflows", () => {
     it("should add workflow when hasWorkflowReference is true", async () => {
       mockHttpClient.get.mockResolvedValue({
-        json: async () => [mockTemplate]
+        json: async () => [mockTemplate],
       });
       mockHttpClient.post.mockResolvedValue({
         ok: true,
         json: async () => ({
-          nodes: [{
-            workflow_id: "workflow-1"
-          }]
-        })
+          nodes: [
+            {
+              workflow_id: "workflow-1",
+            },
+          ],
+        }),
       });
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -365,8 +387,8 @@ describe("useMarketplaceData - Logical Operators", () => {
           sortBy: "popular",
           user: null,
           activeTab: "workflows-of-workflows",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -375,16 +397,18 @@ describe("useMarketplaceData - Logical Operators", () => {
     });
     it("should add workflow when isWorkflowOfWorkflows is true", async () => {
       mockHttpClient.get.mockResolvedValue({
-        json: async () => [{ ...mockTemplate, description: "workflow of workflows" }]
+        json: async () => [
+          { ...mockTemplate, description: "workflow of workflows" },
+        ],
       });
       mockHttpClient.post.mockResolvedValue({
         ok: true,
         json: async () => ({
-          nodes: []
-        })
+          nodes: [],
+        }),
       });
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -393,8 +417,8 @@ describe("useMarketplaceData - Logical Operators", () => {
           sortBy: "popular",
           user: null,
           activeTab: "workflows-of-workflows",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -403,18 +427,22 @@ describe("useMarketplaceData - Logical Operators", () => {
     });
     it("should add workflow when both conditions are true", async () => {
       mockHttpClient.get.mockResolvedValue({
-        json: async () => [{ ...mockTemplate, description: "workflow of workflows" }]
+        json: async () => [
+          { ...mockTemplate, description: "workflow of workflows" },
+        ],
       });
       mockHttpClient.post.mockResolvedValue({
         ok: true,
         json: async () => ({
-          nodes: [{
-            workflow_id: "workflow-1"
-          }]
-        })
+          nodes: [
+            {
+              workflow_id: "workflow-1",
+            },
+          ],
+        }),
       });
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -423,8 +451,8 @@ describe("useMarketplaceData - Logical Operators", () => {
           sortBy: "popular",
           user: null,
           activeTab: "workflows-of-workflows",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -433,16 +461,16 @@ describe("useMarketplaceData - Logical Operators", () => {
     });
     it("should NOT add workflow when both conditions are false", async () => {
       mockHttpClient.get.mockResolvedValue({
-        json: async () => [mockTemplate]
+        json: async () => [mockTemplate],
       });
       mockHttpClient.post.mockResolvedValue({
         ok: true,
         json: async () => ({
-          nodes: [{}]
-        })
+          nodes: [{}],
+        }),
       });
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -451,8 +479,8 @@ describe("useMarketplaceData - Logical Operators", () => {
           sortBy: "popular",
           user: null,
           activeTab: "workflows-of-workflows",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -464,18 +492,22 @@ describe("useMarketplaceData - Logical Operators", () => {
     it("should use username when username exists (first OR condition)", async () => {
       const agents = [{ ...mockAgent, author_id: null }];
       mockGetLocalStorageItem.mockReturnValue(agents);
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
           category: "",
           searchQuery: "",
           sortBy: "popular",
-          user: { id: "user-1", username: "testuser", email: "test@example.com" },
+          user: {
+            id: "user-1",
+            username: "testuser",
+            email: "test@example.com",
+          },
           activeTab: "agents",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -487,8 +519,8 @@ describe("useMarketplaceData - Logical Operators", () => {
     it("should use email when username is missing but email exists (second OR condition)", async () => {
       const agents = [{ ...mockAgent, author_id: null }];
       mockGetLocalStorageItem.mockReturnValue(agents);
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -497,8 +529,8 @@ describe("useMarketplaceData - Logical Operators", () => {
           sortBy: "popular",
           user: { id: "user-1", email: "test@example.com" },
           activeTab: "agents",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -510,8 +542,8 @@ describe("useMarketplaceData - Logical Operators", () => {
     it("should use null when neither username nor email exists (third OR condition)", async () => {
       const agents = [{ ...mockAgent, author_id: null }];
       mockGetLocalStorageItem.mockReturnValue(agents);
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -520,8 +552,8 @@ describe("useMarketplaceData - Logical Operators", () => {
           sortBy: "popular",
           user: { id: "user-1" },
           activeTab: "agents",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -534,12 +566,23 @@ describe("useMarketplaceData - Logical Operators", () => {
   describe("OR operator - search filter: name || description || tags", () => {
     it("should filter by name when name matches (first OR condition)", async () => {
       const agents = [
-        { ...mockAgent, name: "Test Agent", description: "Other", tags: ["other"] },
-        { ...mockAgent, id: "agent-2", name: "Other Agent", description: "Other", tags: ["other"] }
+        {
+          ...mockAgent,
+          name: "Test Agent",
+          description: "Other",
+          tags: ["other"],
+        },
+        {
+          ...mockAgent,
+          id: "agent-2",
+          name: "Other Agent",
+          description: "Other",
+          tags: ["other"],
+        },
       ];
       mockGetLocalStorageItem.mockReturnValue(agents);
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -548,8 +591,8 @@ describe("useMarketplaceData - Logical Operators", () => {
           sortBy: "popular",
           user: null,
           activeTab: "agents",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -559,12 +602,23 @@ describe("useMarketplaceData - Logical Operators", () => {
     });
     it("should filter by description when description matches (second OR condition)", async () => {
       const agents = [
-        { ...mockAgent, name: "Agent One", description: "Test Description", tags: ["other"] },
-        { ...mockAgent, id: "agent-2", name: "Agent Two", description: "Other Description", tags: ["other"] }
+        {
+          ...mockAgent,
+          name: "Agent One",
+          description: "Test Description",
+          tags: ["other"],
+        },
+        {
+          ...mockAgent,
+          id: "agent-2",
+          name: "Agent Two",
+          description: "Other Description",
+          tags: ["other"],
+        },
       ];
       mockGetLocalStorageItem.mockReturnValue(agents);
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -573,8 +627,8 @@ describe("useMarketplaceData - Logical Operators", () => {
           sortBy: "popular",
           user: null,
           activeTab: "agents",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -584,12 +638,23 @@ describe("useMarketplaceData - Logical Operators", () => {
     });
     it("should filter by tags when tags match (third OR condition)", async () => {
       const agents = [
-        { ...mockAgent, name: "Agent One", description: "Other", tags: ["test", "automation"] },
-        { ...mockAgent, id: "agent-2", name: "Agent Two", description: "Other", tags: ["other"] }
+        {
+          ...mockAgent,
+          name: "Agent One",
+          description: "Other",
+          tags: ["test", "automation"],
+        },
+        {
+          ...mockAgent,
+          id: "agent-2",
+          name: "Agent Two",
+          description: "Other",
+          tags: ["other"],
+        },
       ];
       mockGetLocalStorageItem.mockReturnValue(agents);
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -598,8 +663,8 @@ describe("useMarketplaceData - Logical Operators", () => {
           sortBy: "popular",
           user: null,
           activeTab: "agents",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -609,12 +674,23 @@ describe("useMarketplaceData - Logical Operators", () => {
     });
     it("should filter when multiple OR conditions match", async () => {
       const agents = [
-        { ...mockAgent, name: "Test Agent", description: "Test Description", tags: ["test"] },
-        { ...mockAgent, id: "agent-2", name: "Other Agent", description: "Other", tags: ["other"] }
+        {
+          ...mockAgent,
+          name: "Test Agent",
+          description: "Test Description",
+          tags: ["test"],
+        },
+        {
+          ...mockAgent,
+          id: "agent-2",
+          name: "Other Agent",
+          description: "Other",
+          tags: ["other"],
+        },
       ];
       mockGetLocalStorageItem.mockReturnValue(agents);
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -623,8 +699,8 @@ describe("useMarketplaceData - Logical Operators", () => {
           sortBy: "popular",
           user: null,
           activeTab: "agents",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -633,12 +709,23 @@ describe("useMarketplaceData - Logical Operators", () => {
     });
     it("should NOT filter when all OR conditions are false", async () => {
       const agents = [
-        { ...mockAgent, name: "Agent One", description: "Description One", tags: ["tag1"] },
-        { ...mockAgent, id: "agent-2", name: "Agent Two", description: "Description Two", tags: ["tag2"] }
+        {
+          ...mockAgent,
+          name: "Agent One",
+          description: "Description One",
+          tags: ["tag1"],
+        },
+        {
+          ...mockAgent,
+          id: "agent-2",
+          name: "Agent Two",
+          description: "Description Two",
+          tags: ["tag2"],
+        },
       ];
       mockGetLocalStorageItem.mockReturnValue(agents);
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -647,8 +734,8 @@ describe("useMarketplaceData - Logical Operators", () => {
           sortBy: "popular",
           user: null,
           activeTab: "agents",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -660,11 +747,11 @@ describe("useMarketplaceData - Logical Operators", () => {
     it('should sort by date when sortBy is "popular"', async () => {
       const agents = [
         { ...mockAgent, published_at: "2024-01-01T00:00:00Z" },
-        { ...mockAgent, id: "agent-2", published_at: "2024-01-02T00:00:00Z" }
+        { ...mockAgent, id: "agent-2", published_at: "2024-01-02T00:00:00Z" },
       ];
       mockGetLocalStorageItem.mockReturnValue(agents);
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -673,22 +760,24 @@ describe("useMarketplaceData - Logical Operators", () => {
           sortBy: "popular",
           user: null,
           activeTab: "agents",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
       });
-      expect(result.current.agents[0].published_at).toBe("2024-01-02T00:00:00Z");
+      expect(result.current.agents[0].published_at).toBe(
+        "2024-01-02T00:00:00Z",
+      );
     });
     it('should sort by date when sortBy is "recent"', async () => {
       const agents = [
         { ...mockAgent, published_at: "2024-01-01T00:00:00Z" },
-        { ...mockAgent, id: "agent-2", published_at: "2024-01-02T00:00:00Z" }
+        { ...mockAgent, id: "agent-2", published_at: "2024-01-02T00:00:00Z" },
       ];
       mockGetLocalStorageItem.mockReturnValue(agents);
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -697,22 +786,24 @@ describe("useMarketplaceData - Logical Operators", () => {
           sortBy: "recent",
           user: null,
           activeTab: "agents",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
       });
-      expect(result.current.agents[0].published_at).toBe("2024-01-02T00:00:00Z");
+      expect(result.current.agents[0].published_at).toBe(
+        "2024-01-02T00:00:00Z",
+      );
     });
     it('should sort alphabetically when sortBy is neither "popular" nor "recent"', async () => {
       const agents = [
         { ...mockAgent, name: "Zebra Agent" },
-        { ...mockAgent, id: "agent-2", name: "Alpha Agent" }
+        { ...mockAgent, id: "agent-2", name: "Alpha Agent" },
       ];
       mockGetLocalStorageItem.mockReturnValue(agents);
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -721,8 +812,8 @@ describe("useMarketplaceData - Logical Operators", () => {
           sortBy: "alphabetical",
           user: null,
           activeTab: "agents",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -734,8 +825,8 @@ describe("useMarketplaceData - Logical Operators", () => {
     it("should update when all AND conditions are true", async () => {
       const agents = [{ ...mockAgent, author_id: null }];
       mockGetLocalStorageItem.mockReturnValue(agents);
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -744,8 +835,8 @@ describe("useMarketplaceData - Logical Operators", () => {
           sortBy: "popular",
           user: { id: "user-1", username: "testuser" },
           activeTab: "agents",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -755,8 +846,8 @@ describe("useMarketplaceData - Logical Operators", () => {
     it("should NOT update when user is null (first AND condition false)", async () => {
       const agents = [{ ...mockAgent, author_id: null }];
       mockGetLocalStorageItem.mockReturnValue(agents);
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -765,8 +856,8 @@ describe("useMarketplaceData - Logical Operators", () => {
           sortBy: "popular",
           user: null,
           activeTab: "agents",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -776,8 +867,8 @@ describe("useMarketplaceData - Logical Operators", () => {
     it("should NOT update when user.id is missing (second AND condition false)", async () => {
       const agents = [{ ...mockAgent, author_id: null }];
       mockGetLocalStorageItem.mockReturnValue(agents);
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -786,8 +877,8 @@ describe("useMarketplaceData - Logical Operators", () => {
           sortBy: "popular",
           user: { id: "", username: "testuser" },
           activeTab: "agents",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -796,8 +887,8 @@ describe("useMarketplaceData - Logical Operators", () => {
     });
     it("should NOT update when agentsData.length is 0 (third AND condition false)", async () => {
       mockGetLocalStorageItem.mockReturnValue([]);
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -806,8 +897,8 @@ describe("useMarketplaceData - Logical Operators", () => {
           sortBy: "popular",
           user: { id: "user-1", username: "testuser" },
           activeTab: "agents",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -819,8 +910,8 @@ describe("useMarketplaceData - Logical Operators", () => {
     it("should save when both updated and storage are true", async () => {
       const agents = [{ ...mockAgent, author_id: null }];
       mockGetLocalStorageItem.mockReturnValue(agents);
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -829,8 +920,8 @@ describe("useMarketplaceData - Logical Operators", () => {
           sortBy: "popular",
           user: { id: "user-1", username: "testuser" },
           activeTab: "agents",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -840,8 +931,8 @@ describe("useMarketplaceData - Logical Operators", () => {
     it("should NOT save when updated is false", async () => {
       const agents = [{ ...mockAgent, author_id: "existing-author" }];
       mockGetLocalStorageItem.mockReturnValue(agents);
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -850,8 +941,8 @@ describe("useMarketplaceData - Logical Operators", () => {
           sortBy: "popular",
           user: { id: "user-1", username: "testuser" },
           activeTab: "agents",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -861,8 +952,8 @@ describe("useMarketplaceData - Logical Operators", () => {
     it("should NOT save when storage is null", async () => {
       const agents = [{ ...mockAgent, author_id: null }];
       mockGetLocalStorageItem.mockReturnValue(agents);
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: null,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -871,8 +962,8 @@ describe("useMarketplaceData - Logical Operators", () => {
           sortBy: "popular",
           user: { id: "user-1", username: "testuser" },
           activeTab: "agents",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);

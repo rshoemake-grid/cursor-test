@@ -62,7 +62,7 @@ describe("cardClickUtils", () => {
       const event = {
         target: div,
         preventDefault: jest.fn(),
-        stopPropagation: jest.fn()
+        stopPropagation: jest.fn(),
       };
       handler(event, "item-1");
       expect(event.preventDefault).toHaveBeenCalled();
@@ -78,7 +78,7 @@ describe("cardClickUtils", () => {
       const event = {
         target: checkbox,
         preventDefault: jest.fn(),
-        stopPropagation: jest.fn()
+        stopPropagation: jest.fn(),
       };
       handler(event, "item-1");
       expect(event.preventDefault).toHaveBeenCalled();
@@ -93,7 +93,7 @@ describe("cardClickUtils", () => {
       const event = {
         target: button,
         preventDefault: jest.fn(),
-        stopPropagation: jest.fn()
+        stopPropagation: jest.fn(),
       };
       handler(event, "item-1");
       expect(event.preventDefault).toHaveBeenCalled();
@@ -110,7 +110,7 @@ describe("cardClickUtils", () => {
       const event = {
         target: span,
         preventDefault: jest.fn(),
-        stopPropagation: jest.fn()
+        stopPropagation: jest.fn(),
       };
       handler(event, "item-1");
       expect(event.preventDefault).toHaveBeenCalled();
@@ -126,7 +126,7 @@ describe("cardClickUtils", () => {
       const event = {
         target: div,
         preventDefault: jest.fn(),
-        stopPropagation: jest.fn()
+        stopPropagation: jest.fn(),
       };
       handler(event, "custom-id-123");
       expect(toggleFn).toHaveBeenCalledWith("custom-id-123");
@@ -139,12 +139,12 @@ describe("cardClickUtils", () => {
       const event1 = {
         target: div,
         preventDefault: jest.fn(),
-        stopPropagation: jest.fn()
+        stopPropagation: jest.fn(),
       };
       const event2 = {
         target: div,
         preventDefault: jest.fn(),
-        stopPropagation: jest.fn()
+        stopPropagation: jest.fn(),
       };
       handler(event1, "item-1");
       handler(event2, "item-2");

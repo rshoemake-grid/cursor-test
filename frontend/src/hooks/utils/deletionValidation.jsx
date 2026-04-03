@@ -16,11 +16,15 @@ function ownsPartialItems(userOwnedCount, totalDeletableCount) {
   return userOwnedCount > 0 && userOwnedCount < totalDeletableCount;
 }
 function hasItemsWithAuthorId(items) {
-  const itemsWithAuthorId = items.filter((item) => item.author_id != null && item.author_id !== "");
+  const itemsWithAuthorId = items.filter(
+    (item) => item.author_id != null && item.author_id !== "",
+  );
   return hasArrayItems(itemsWithAuthorId);
 }
 function getItemsWithAuthorIdCount(items) {
-  const itemsWithAuthorId = items.filter((item) => item.author_id != null && item.author_id !== "");
+  const itemsWithAuthorId = items.filter(
+    (item) => item.author_id != null && item.author_id !== "",
+  );
   return getArrayLength(itemsWithAuthorId);
 }
 export {
@@ -30,5 +34,5 @@ export {
   hasOfficialItems,
   hasUserOwnedItems,
   ownsAllItems,
-  ownsPartialItems
+  ownsPartialItems,
 };

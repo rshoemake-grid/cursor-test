@@ -16,7 +16,4 @@ function nullishCoalesceToNull(value) {
   }
   return value;
 }
-export {
-  nullishCoalesce,
-  nullishCoalesceToNull
-};
+export { nullishCoalesce, nullishCoalesceToNull };

@@ -15,11 +15,9 @@ function createSafeError(message, name) {
         message: message ?? "",
         // Preserve empty string if provided, otherwise use 'Error' as default
         name: name ?? "Error",
-        stack: ""
+        stack: "",
       };
     }
   }
 }
-export {
-  createSafeError
-};
+export { createSafeError };

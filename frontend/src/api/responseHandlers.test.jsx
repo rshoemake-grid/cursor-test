@@ -7,7 +7,7 @@ describe("responseHandlers", () => {
         status: 200,
         statusText: "OK",
         headers: {},
-        config: {}
+        config: {},
       };
       const result = extractData(mockResponse);
       expect(result).toEqual({ id: "1", name: "Test" });
@@ -18,7 +18,7 @@ describe("responseHandlers", () => {
         status: 200,
         statusText: "OK",
         headers: {},
-        config: {}
+        config: {},
       };
       const result = extractData(mockResponse);
       expect(result).toEqual([1, 2, 3]);
@@ -29,7 +29,7 @@ describe("responseHandlers", () => {
         status: 200,
         statusText: "OK",
         headers: {},
-        config: {}
+        config: {},
       };
       const result = extractData(mockResponse);
       expect(result).toBe("test string");
@@ -40,7 +40,7 @@ describe("responseHandlers", () => {
         status: 204,
         statusText: "No Content",
         headers: {},
-        config: {}
+        config: {},
       };
       const result = extractData(mockResponse);
       expect(result).toBeNull();
@@ -53,7 +53,7 @@ describe("responseHandlers", () => {
         status: 200,
         statusText: "OK",
         headers: {},
-        config: {}
+        config: {},
       };
       const promise = Promise.resolve(mockResponse);
       const result = await extractDataAsync(promise);

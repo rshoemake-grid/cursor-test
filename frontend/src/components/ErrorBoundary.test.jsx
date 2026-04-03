@@ -1,4 +1,3 @@
-import { jsx } from "react/jsx-runtime";
 import { render, screen, fireEvent } from "@testing-library/react";
 import ErrorBoundary from "./ErrorBoundary";
 import { logger } from "../utils/logger";
@@ -7,61 +6,69 @@ jest.mock("../utils/logger", () => ({
     error: jest.fn(),
     debug: jest.fn(),
     warn: jest.fn(),
-    info: jest.fn()
-  }
+    info: jest.fn(),
+  },
 }));
 const ThrowError = ({ shouldThrow }) => {
   if (shouldThrow) {
     throw new Error("Test error");
   }
-  return /* @__PURE__ */ jsx("div", { children: "No error" });
+  return <div>No error</div>;
 };
 describe("ErrorBoundary", () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    jest.spyOn(console, "error").mockImplementation(() => {
-    });
+    jest.spyOn(console, "error").mockImplementation(() => {});
   });
   afterEach(() => {
-    
     console.error.mockRestore();
   });
   it("should render children when no error", () => {
     render(
-      /* @__PURE__ */ jsx(ErrorBoundary, { children: /* @__PURE__ */ jsx("div", { children: "Test content" }) })
+      <ErrorBoundary>
+        <div>Test content</div>
+      </ErrorBoundary>,
     );
     expect(screen.getByText("Test content")).toBeInTheDocument();
   });
   it("should render error UI when error occurs", () => {
     render(
-      /* @__PURE__ */ jsx(ErrorBoundary, { children: /* @__PURE__ */ jsx(ThrowError, { shouldThrow: true }) })
+      <ErrorBoundary>
+        <ThrowError shouldThrow={true} />
+      </ErrorBoundary>,
     );
     expect(screen.getByText("Something went wrong")).toBeInTheDocument();
     expect(screen.getByText(/We're sorry/)).toBeInTheDocument();
   });
   it("should log error when caught", () => {
     render(
-      /* @__PURE__ */ jsx(ErrorBoundary, { children: /* @__PURE__ */ jsx(ThrowError, { shouldThrow: true }) })
+      <ErrorBoundary>
+        <ThrowError shouldThrow={true} />
+      </ErrorBoundary>,
     );
     expect(logger.error).toHaveBeenCalledWith(
       "ErrorBoundary caught an error:",
       expect.any(Error),
-      expect.any(Object)
+      expect.any(Object),
     );
   });
   it("should call onError callback when provided", () => {
     const mockOnError = jest.fn();
     render(
-      /* @__PURE__ */ jsx(ErrorBoundary, { onError: mockOnError, children: /* @__PURE__ */ jsx(ThrowError, { shouldThrow: true }) })
+      <ErrorBoundary onError={mockOnError}>
+        <ThrowError shouldThrow={true} />
+      </ErrorBoundary>,
     );
     expect(mockOnError).toHaveBeenCalledWith(
       expect.any(Error),
-      expect.any(Object)
+      expect.any(Object),
     );
   });
   it("should display error message", () => {
     render(
-      /* @__PURE__ */ jsx(ErrorBoundary, { children: /* @__PURE__ */ jsx(ThrowError, { shouldThrow: true }) })
+      <ErrorBoundary>
+        <ThrowError shouldThrow={true} />
+      </ErrorBoundary>,
     );
     expect(screen.getByText(/Error Details:/)).toBeInTheDocument();
     expect(screen.getByText(/Test error/)).toBeInTheDocument();
@@ -70,7 +77,9 @@ describe("ErrorBoundary", () => {
     const originalEnv = process.env.NODE_ENV;
     process.env.NODE_ENV = "development";
     render(
-      /* @__PURE__ */ jsx(ErrorBoundary, { children: /* @__PURE__ */ jsx(ThrowError, { shouldThrow: true }) })
+      <ErrorBoundary>
+        <ThrowError shouldThrow={true} />
+      </ErrorBoundary>,
     );
     const details = screen.getByText("Stack Trace");
     expect(details).toBeInTheDocument();
@@ -78,7 +87,9 @@ describe("ErrorBoundary", () => {
   });
   it("should have Try Again button that can be clicked", () => {
     render(
-      /* @__PURE__ */ jsx(ErrorBoundary, { children: /* @__PURE__ */ jsx(ThrowError, { shouldThrow: true }) })
+      <ErrorBoundary>
+        <ThrowError shouldThrow={true} />
+      </ErrorBoundary>,
     );
     expect(screen.getByText("Something went wrong")).toBeInTheDocument();
     const tryAgainButton = screen.getByText("Try Again");
@@ -88,9 +99,11 @@ describe("ErrorBoundary", () => {
     }).not.toThrow();
   });
   it("should render custom fallback when provided", () => {
-    const customFallback = /* @__PURE__ */ jsx("div", { children: "Custom error message" });
+    const customFallback = <div>Custom error message</div>;
     render(
-      /* @__PURE__ */ jsx(ErrorBoundary, { fallback: customFallback, children: /* @__PURE__ */ jsx(ThrowError, { shouldThrow: true }) })
+      <ErrorBoundary fallback={customFallback}>
+        <ThrowError shouldThrow={true} />
+      </ErrorBoundary>,
     );
     expect(screen.getByText("Custom error message")).toBeInTheDocument();
     expect(screen.queryByText("Something went wrong")).not.toBeInTheDocument();
@@ -98,9 +111,13 @@ describe("ErrorBoundary", () => {
   it("should have Go Home button", () => {
     const originalLocation = window.location;
     delete window.location;
-    window.location = { href: "" };
+    window.location = {
+      href: "",
+    };
     render(
-      /* @__PURE__ */ jsx(ErrorBoundary, { children: /* @__PURE__ */ jsx(ThrowError, { shouldThrow: true }) })
+      <ErrorBoundary>
+        <ThrowError shouldThrow={true} />
+      </ErrorBoundary>,
     );
     const goHomeButton = screen.getByText("Go Home");
     expect(goHomeButton).toBeInTheDocument();

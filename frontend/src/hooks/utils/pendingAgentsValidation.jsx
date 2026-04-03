@@ -14,7 +14,11 @@ function isValidPendingAgents(pending) {
   }
   return true;
 }
-function isPendingAgentsValid(pending, currentTabId, maxAge = PENDING_AGENTS.MAX_AGE) {
+function isPendingAgentsValid(
+  pending,
+  currentTabId,
+  maxAge = PENDING_AGENTS.MAX_AGE,
+) {
   if (pending === null || pending === void 0) {
     return false;
   }
@@ -50,5 +54,5 @@ export {
   isPendingAgentsForDifferentTab,
   isPendingAgentsTooOld,
   isPendingAgentsValid,
-  isValidPendingAgents
+  isValidPendingAgents,
 };

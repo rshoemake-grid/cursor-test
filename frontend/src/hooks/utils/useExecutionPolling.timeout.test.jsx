@@ -8,12 +8,12 @@ describe("useExecutionPolling - Timeout Guards", () => {
   beforeEach(() => {
     jest.useFakeTimers();
     mockApiClient = {
-      getExecution: jest.fn()
+      getExecution: jest.fn(),
     };
     mockLogger = {
       debug: jest.fn(),
       warn: jest.fn(),
-      error: jest.fn()
+      error: jest.fn(),
     };
     tabsRef = { current: [] };
     setTabs = jest.fn();
@@ -27,83 +27,85 @@ describe("useExecutionPolling - Timeout Guards", () => {
       const runningExecution = {
         id: "exec-1",
         status: "running",
-        startedAt: /* @__PURE__ */ new Date()
+        startedAt: /* @__PURE__ */ new Date(),
       };
       tabsRef.current = [
         {
           id: "tab-1",
-          executions: [runningExecution]
-        }
+          executions: [runningExecution],
+        },
       ];
       mockApiClient.getExecution.mockResolvedValue({
         id: "exec-1",
         status: "running",
         completed_at: null,
         node_states: {},
-        logs: []
+        logs: [],
       });
-      renderHook(
-        () => useExecutionPolling({
+      renderHook(() =>
+        useExecutionPolling({
           tabsRef,
           setTabs,
           apiClient: mockApiClient,
           logger: mockLogger,
-          pollInterval: 100
+          pollInterval: 100,
           // Fast interval for testing
-        })
+        }),
       );
       for (let i = 0; i < 1001; i++) {
         jest.advanceTimersByTime(100);
       }
       await waitFor(() => {
         expect(mockLogger.warn).toHaveBeenCalledWith(
-          expect.stringContaining("Max polling iterations (1000) reached")
+          expect.stringContaining("Max polling iterations (1000) reached"),
         );
       });
       const callCountBefore = mockApiClient.getExecution.mock.calls.length;
       jest.advanceTimersByTime(1e3);
-      expect(mockApiClient.getExecution.mock.calls.length).toBe(callCountBefore);
+      expect(mockApiClient.getExecution.mock.calls.length).toBe(
+        callCountBefore,
+      );
     });
   });
   describe("Invalid poll interval guard", () => {
     it("should clamp negative interval to default", () => {
-      renderHook(
-        () => useExecutionPolling({
+      renderHook(() =>
+        useExecutionPolling({
           tabsRef,
           setTabs,
           apiClient: mockApiClient,
           logger: mockLogger,
-          pollInterval: -100
+          pollInterval: -100,
           // Invalid negative interval
-        })
+        }),
       );
       jest.advanceTimersByTime(2e3);
       expect(mockApiClient.getExecution).not.toHaveBeenCalled();
     });
     it("should clamp zero interval to default", () => {
-      renderHook(
-        () => useExecutionPolling({
+      renderHook(() =>
+        useExecutionPolling({
           tabsRef,
           setTabs,
           apiClient: mockApiClient,
           logger: mockLogger,
-          pollInterval: 0
+          pollInterval: 0,
           // Invalid zero interval
-        })
+        }),
       );
       jest.advanceTimersByTime(2e3);
       expect(mockApiClient.getExecution).not.toHaveBeenCalled();
     });
     it("should clamp very large interval to max", () => {
-      renderHook(
-        () => useExecutionPolling({
+      renderHook(() =>
+        useExecutionPolling({
           tabsRef,
           setTabs,
           apiClient: mockApiClient,
           logger: mockLogger,
-          pollInterval: 1e5
+          pollInterval: 1e5,
           // Very large interval (> 60000)
-        })
+        }),
       );
       jest.advanceTimersByTime(2e3);
       expect(mockApiClient.getExecution).not.toHaveBeenCalled();
@@ -112,30 +114,30 @@ describe("useExecutionPolling - Timeout Guards", () => {
       const runningExecution = {
         id: "exec-1",
         status: "running",
-        startedAt: /* @__PURE__ */ new Date()
+        startedAt: /* @__PURE__ */ new Date(),
       };
       tabsRef.current = [
         {
           id: "tab-1",
-          executions: [runningExecution]
-        }
+          executions: [runningExecution],
+        },
       ];
       mockApiClient.getExecution.mockResolvedValue({
         id: "exec-1",
         status: "running",
         completed_at: null,
         node_states: {},
-        logs: []
+        logs: [],
       });
-      renderHook(
-        () => useExecutionPolling({
+      renderHook(() =>
+        useExecutionPolling({
           tabsRef,
           setTabs,
           apiClient: mockApiClient,
           logger: mockLogger,
-          pollInterval: 5e3
+          pollInterval: 5e3,
           // Valid interval
-        })
+        }),
       );
       jest.advanceTimersByTime(4e3);
       expect(mockApiClient.getExecution).not.toHaveBeenCalled();
@@ -148,54 +150,60 @@ describe("useExecutionPolling - Timeout Guards", () => {
       const runningExecutions = Array.from({ length: 60 }, (_, i) => ({
         id: `exec-${i}`,
         status: "running",
-        startedAt: /* @__PURE__ */ new Date()
+        startedAt: /* @__PURE__ */ new Date(),
       }));
       tabsRef.current = [
         {
           id: "tab-1",
-          executions: runningExecutions
-        }
+          executions: runningExecutions,
+        },
       ];
       mockApiClient.getExecution.mockResolvedValue({
         id: "exec-1",
         status: "running",
         completed_at: null,
         node_states: {},
-        logs: []
+        logs: [],
       });
-      renderHook(
-        () => useExecutionPolling({
+      renderHook(() =>
+        useExecutionPolling({
           tabsRef,
           setTabs,
           apiClient: mockApiClient,
           logger: mockLogger,
-          pollInterval: 100
-        })
+          pollInterval: 100,
+        }),
       );
       jest.advanceTimersByTime(100);
       await waitFor(() => {
         expect(mockLogger.warn).toHaveBeenCalledWith(
-          expect.stringContaining("Too many running executions (60), limiting to 50")
+          expect.stringContaining(
+            "Too many running executions (60), limiting to 50",
+          ),
         );
-        expect(mockApiClient.getExecution.mock.calls.length).toBeLessThanOrEqual(50);
+        expect(
+          mockApiClient.getExecution.mock.calls.length,
+        ).toBeLessThanOrEqual(50);
       });
     });
   });
   describe("Cleanup", () => {
     it("should clear interval on unmount", () => {
-      const { unmount } = renderHook(
-        () => useExecutionPolling({
+      const { unmount } = renderHook(() =>
+        useExecutionPolling({
           tabsRef,
           setTabs,
           apiClient: mockApiClient,
           logger: mockLogger,
-          pollInterval: 100
-        })
+          pollInterval: 100,
+        }),
       );
       const callCountBefore = mockApiClient.getExecution.mock.calls.length;
       unmount();
       jest.advanceTimersByTime(1e3);
-      expect(mockApiClient.getExecution.mock.calls.length).toBe(callCountBefore);
+      expect(mockApiClient.getExecution.mock.calls.length).toBe(
+        callCountBefore,
+      );
     });
   });
 });

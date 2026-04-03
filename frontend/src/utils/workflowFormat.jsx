@@ -1,7 +1,19 @@
-import { coalesceObject, coalesceArray, coalesceObjectChain, coalesceArrayChain, coalesceStringChain } from "./nullCoalescing";
+import {
+  coalesceObject,
+  coalesceArray,
+  coalesceObjectChain,
+  coalesceArrayChain,
+  coalesceStringChain,
+} from "./nullCoalescing";
 import { safeGetProperty } from "./safeAccess";
 import { isDefined } from "./typeGuards";
-const CONFIG_TYPES = ["agent_config", "condition_config", "loop_config", "input_config", "tool_config"];
+const CONFIG_TYPES = [
+  "agent_config",
+  "condition_config",
+  "loop_config",
+  "input_config",
+  "tool_config",
+];
 function mergeConfigs(data, wfNode) {
   const configs = {};
   for (const configType of CONFIG_TYPES) {
@@ -42,7 +54,8 @@ function generateEdgeId(edge, sourceHandle) {
   if (hasId === true) {
     return edge.id;
   }
-  const hasSourceHandle = isDefined(sourceHandle) === true && sourceHandle !== "";
+  const hasSourceHandle =
+    isDefined(sourceHandle) === true && sourceHandle !== "";
   if (hasSourceHandle === true) {
     return `${edge.source}-${sourceHandle}-${edge.target}`;
   }
@@ -53,7 +66,7 @@ function convertEdgesToWorkflowFormat(edges) {
     id: edge.id,
     source: edge.source,
     target: edge.target,
-    label: typeof edge.label === "string" ? edge.label : void 0
+    label: typeof edge.label === "string" ? edge.label : void 0,
   }));
 }
 function convertNodesToWorkflowFormat(nodes) {
@@ -61,21 +74,28 @@ function convertNodesToWorkflowFormat(nodes) {
     const nodeName = coalesceStringChain(
       node.id,
       // default fallback
-      typeof node.data.name === "string" && node.data.name !== "" ? node.data.name : null,
-      typeof node.data.label === "string" && node.data.label !== "" ? node.data.label : null
+      typeof node.data.name === "string" && node.data.name !== ""
+        ? node.data.name
+        : null,
+      typeof node.data.label === "string" && node.data.label !== ""
+        ? node.data.label
+        : null,
     );
     return {
       id: node.id,
       type: node.type,
       name: nodeName,
-      description: typeof node.data.description === "string" ? node.data.description : void 0,
+      description:
+        typeof node.data.description === "string"
+          ? node.data.description
+          : void 0,
       agent_config: node.data.agent_config,
       condition_config: node.data.condition_config,
       loop_config: node.data.loop_config,
       input_config: node.data.input_config,
       tool_config: node.data.tool_config,
       inputs: coalesceArray(node.data.inputs, []),
-      position: node.position
+      position: node.position,
     };
   });
 }
@@ -85,7 +105,7 @@ function createWorkflowDefinition(params) {
     description: params.description,
     nodes: convertNodesToWorkflowFormat(params.nodes),
     edges: convertEdgesToWorkflowFormat(params.edges),
-    variables: params.variables
+    variables: params.variables,
   };
 }
 function initializeReactFlowNodes(nodes) {
@@ -97,8 +117,8 @@ function initializeReactFlowNodes(nodes) {
       ...node.data,
       // Use mergeConfigs to eliminate DRY violation
       ...mergeConfigs(node.data, {}),
-      inputs: coalesceArray(node.data.inputs, [])
-    }
+      inputs: coalesceArray(node.data.inputs, []),
+    },
   }));
 }
 function formatEdgesForReactFlow(edges) {
@@ -109,18 +129,25 @@ function formatEdgesForReactFlow(edges) {
     const formattedEdge = {
       id: edgeId,
       source: edge.source,
-      target: edge.target
+      target: edge.target,
     };
-    const hasSourceHandle = isDefined(sourceHandle) === true && sourceHandle !== "";
+    const hasSourceHandle =
+      isDefined(sourceHandle) === true && sourceHandle !== "";
     if (hasSourceHandle === true) {
       formattedEdge.sourceHandle = String(sourceHandle);
     }
-    const hasTargetHandle = isDefined(targetHandle) === true && targetHandle !== "";
+    const hasTargetHandle =
+      isDefined(targetHandle) === true && targetHandle !== "";
     if (hasTargetHandle === true) {
       formattedEdge.targetHandle = String(targetHandle);
     }
     Object.keys(edge).forEach((key) => {
-      if (key !== "sourceHandle" && key !== "source_handle" && key !== "targetHandle" && key !== "target_handle") {
+      if (
+        key !== "sourceHandle" &&
+        key !== "source_handle" &&
+        key !== "targetHandle" &&
+        key !== "target_handle"
+      ) {
         formattedEdge[key] = edge[key];
       }
     });
@@ -133,16 +160,17 @@ function normalizeNodeForStorage(node) {
     data: {
       ...node.data,
       // Use mergeConfigs to eliminate DRY violation
-      ...mergeConfigs(
-        node.data,
-        node
-      )
-    }
+      ...mergeConfigs(node.data, node),
+    },
   };
 }
 function workflowNodeToReactFlowNode(wfNode, nodeExecutionStates) {
   const data = coalesceObject(wfNode.data, {});
-  const nodeExecutionState = safeGetProperty(nodeExecutionStates, wfNode.id, void 0);
+  const nodeExecutionState = safeGetProperty(
+    nodeExecutionStates,
+    wfNode.id,
+    void 0,
+  );
   return {
     id: wfNode.id,
     type: wfNode.type,
@@ -155,19 +183,19 @@ function workflowNodeToReactFlowNode(wfNode, nodeExecutionStates) {
         // final fallback
         data.label,
         data.name,
-        wfNode.name
+        wfNode.name,
       ),
       name: coalesceStringChain(
         wfNode.type,
         // final fallback
         data.name,
-        wfNode.name
+        wfNode.name,
       ),
       description: coalesceStringChain(
         "",
         // default
         data.description,
-        wfNode.description
+        wfNode.description,
       ),
       // Merge configs - prefer data object, fallback to top-level
       // Use mergeConfigs to eliminate DRY violation
@@ -176,8 +204,8 @@ function workflowNodeToReactFlowNode(wfNode, nodeExecutionStates) {
       // Add execution state for visual feedback
       // Use safeGetProperty to kill OptionalChaining mutations
       executionStatus: safeGetProperty(nodeExecutionState, "status", void 0),
-      executionError: safeGetProperty(nodeExecutionState, "error", void 0)
-    }
+      executionError: safeGetProperty(nodeExecutionState, "error", void 0),
+    },
   };
 }
 export {
@@ -187,5 +215,5 @@ export {
   formatEdgesForReactFlow,
   initializeReactFlowNodes,
   normalizeNodeForStorage,
-  workflowNodeToReactFlowNode
+  workflowNodeToReactFlowNode,
 };

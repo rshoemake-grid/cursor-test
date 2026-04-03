@@ -1,11 +1,7 @@
 import { getLocalStorageItem, setLocalStorageItem } from "../storage";
 const DRAFT_STORAGE_KEY = "workflowBuilderDrafts";
 function loadDraftsFromStorage(options) {
-  const drafts = getLocalStorageItem(
-    DRAFT_STORAGE_KEY,
-    {},
-    options
-  );
+  const drafts = getLocalStorageItem(DRAFT_STORAGE_KEY, {}, options);
   return typeof drafts === "object" && drafts !== null ? drafts : {};
 }
 function saveDraftsToStorage(drafts, options) {
@@ -39,5 +35,5 @@ export {
   getDraftForTab,
   loadDraftsFromStorage,
   saveDraftForTab,
-  saveDraftsToStorage
+  saveDraftsToStorage,
 };

@@ -76,8 +76,6 @@ const defaultAdapters = {
    */
   createEnvironmentAdapter() {
     return EnvironmentAdapterFactory.createEnvironmentAdapter();
-  }
+  },
 };
-export {
-  defaultAdapters
-};
+export { defaultAdapters };

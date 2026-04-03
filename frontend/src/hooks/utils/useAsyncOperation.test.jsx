@@ -7,8 +7,8 @@ jest.mock("../../utils/logger", () => ({
     error: jest.fn(),
     info: jest.fn(),
     log: jest.fn(),
-    warn: jest.fn()
-  }
+    warn: jest.fn(),
+  },
 }));
 const mockLoggerError = logger.error;
 describe("useAsyncOperation", () => {
@@ -33,8 +33,8 @@ describe("useAsyncOperation", () => {
       const mockResult = { id: "1", name: "Result" };
       const operation = jest.fn().mockResolvedValue(mockResult);
       const onSuccess = jest.fn();
-      const { result } = renderHook(
-        () => useAsyncOperation({ operation, onSuccess })
+      const { result } = renderHook(() =>
+        useAsyncOperation({ operation, onSuccess }),
       );
       let executeResult;
       await act(async () => {
@@ -56,9 +56,10 @@ describe("useAsyncOperation", () => {
     });
     it("should handle loading state during execution", async () => {
       const operation = jest.fn().mockImplementation(
-        () => new Promise((resolve) => {
-          setTimeout(() => resolve("result"), 100);
-        })
+        () =>
+          new Promise((resolve) => {
+            setTimeout(() => resolve("result"), 100);
+          }),
       );
       const { result } = renderHook(() => useAsyncOperation({ operation }));
       act(() => {
@@ -74,8 +75,8 @@ describe("useAsyncOperation", () => {
       const error = new Error("Operation failed");
       const operation = jest.fn().mockRejectedValue(error);
       const onError = jest.fn();
-      const { result } = renderHook(
-        () => useAsyncOperation({ operation, onError })
+      const { result } = renderHook(() =>
+        useAsyncOperation({ operation, onError }),
       );
       await act(async () => {
         await result.current.execute();
@@ -85,7 +86,10 @@ describe("useAsyncOperation", () => {
       expect(result.current.error?.message).toBe("Operation failed");
       expect(result.current.loading).toBe(false);
       expect(onError).toHaveBeenCalledWith(error);
-      expect(mockLoggerError).toHaveBeenCalledWith("Async operation failed:", expect.any(Error));
+      expect(mockLoggerError).toHaveBeenCalledWith(
+        "Async operation failed:",
+        expect.any(Error),
+      );
     });
     it("should return null on error", async () => {
       const error = new Error("Operation failed");
@@ -124,17 +128,20 @@ describe("useAsyncOperation", () => {
         debug: jest.fn(),
         info: jest.fn(),
         log: jest.fn(),
-        warn: jest.fn()
+        warn: jest.fn(),
       };
       const error = new Error("Operation failed");
       const operation = jest.fn().mockRejectedValue(error);
-      const { result } = renderHook(
-        () => useAsyncOperation({ operation, logger: customLogger })
+      const { result } = renderHook(() =>
+        useAsyncOperation({ operation, logger: customLogger }),
       );
       await act(async () => {
         await result.current.execute();
       });
-      expect(customLogger.error).toHaveBeenCalledWith("Async operation failed:", expect.any(Error));
+      expect(customLogger.error).toHaveBeenCalledWith(
+        "Async operation failed:",
+        expect.any(Error),
+      );
       expect(mockLoggerError).not.toHaveBeenCalled();
     });
   });

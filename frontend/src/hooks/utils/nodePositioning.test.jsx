@@ -4,7 +4,7 @@ import {
   calculateNextNodePosition,
   calculateMultipleNodePositions,
   calculateGridPosition,
-  calculateRelativePosition
+  calculateRelativePosition,
 } from "./nodePositioning";
 describe("nodePositioning", () => {
   describe("getMaxNodeX", () => {
@@ -13,7 +13,7 @@ describe("nodePositioning", () => {
     });
     it("should return x position for single node", () => {
       const nodes = [
-        { id: "1", position: { x: 100, y: 50 }, data: {}, type: "agent" }
+        { id: "1", position: { x: 100, y: 50 }, data: {}, type: "agent" },
       ];
       expect(getMaxNodeX(nodes)).toBe(100);
     });
@@ -21,21 +21,21 @@ describe("nodePositioning", () => {
       const nodes = [
         { id: "1", position: { x: 100, y: 50 }, data: {}, type: "agent" },
         { id: "2", position: { x: 300, y: 50 }, data: {}, type: "agent" },
-        { id: "3", position: { x: 200, y: 50 }, data: {}, type: "agent" }
+        { id: "3", position: { x: 200, y: 50 }, data: {}, type: "agent" },
       ];
       expect(getMaxNodeX(nodes)).toBe(300);
     });
     it("should handle negative x positions", () => {
       const nodes = [
         { id: "1", position: { x: -100, y: 50 }, data: {}, type: "agent" },
-        { id: "2", position: { x: -50, y: 50 }, data: {}, type: "agent" }
+        { id: "2", position: { x: -50, y: 50 }, data: {}, type: "agent" },
       ];
       expect(getMaxNodeX(nodes)).toBe(-50);
     });
     it("should handle zero x position", () => {
       const nodes = [
         { id: "1", position: { x: 0, y: 50 }, data: {}, type: "agent" },
-        { id: "2", position: { x: -100, y: 50 }, data: {}, type: "agent" }
+        { id: "2", position: { x: -100, y: 50 }, data: {}, type: "agent" },
       ];
       expect(getMaxNodeX(nodes)).toBe(0);
     });
@@ -46,7 +46,7 @@ describe("nodePositioning", () => {
     });
     it("should return y position for single node", () => {
       const nodes = [
-        { id: "1", position: { x: 50, y: 100 }, data: {}, type: "agent" }
+        { id: "1", position: { x: 50, y: 100 }, data: {}, type: "agent" },
       ];
       expect(getMaxNodeY(nodes)).toBe(100);
     });
@@ -54,14 +54,14 @@ describe("nodePositioning", () => {
       const nodes = [
         { id: "1", position: { x: 50, y: 100 }, data: {}, type: "agent" },
         { id: "2", position: { x: 50, y: 300 }, data: {}, type: "agent" },
-        { id: "3", position: { x: 50, y: 200 }, data: {}, type: "agent" }
+        { id: "3", position: { x: 50, y: 200 }, data: {}, type: "agent" },
       ];
       expect(getMaxNodeY(nodes)).toBe(300);
     });
     it("should handle negative y positions", () => {
       const nodes = [
         { id: "1", position: { x: 50, y: -100 }, data: {}, type: "agent" },
-        { id: "2", position: { x: 50, y: -50 }, data: {}, type: "agent" }
+        { id: "2", position: { x: 50, y: -50 }, data: {}, type: "agent" },
       ];
       expect(getMaxNodeY(nodes)).toBe(-50);
     });
@@ -74,7 +74,7 @@ describe("nodePositioning", () => {
     it("should position to the right of existing nodes", () => {
       const nodes = [
         { id: "1", position: { x: 100, y: 100 }, data: {}, type: "agent" },
-        { id: "2", position: { x: 300, y: 100 }, data: {}, type: "agent" }
+        { id: "2", position: { x: 300, y: 100 }, data: {}, type: "agent" },
       ];
       const position = calculateNextNodePosition(nodes);
       expect(position.x).toBeGreaterThan(300);
@@ -84,16 +84,16 @@ describe("nodePositioning", () => {
       const position = calculateNextNodePosition([], {
         defaultX: 100,
         defaultY: 200,
-        horizontalSpacing: 300
+        horizontalSpacing: 300,
       });
       expect(position).toEqual({ x: 100, y: 200 });
     });
     it("should respect horizontal spacing", () => {
       const nodes = [
-        { id: "1", position: { x: 100, y: 100 }, data: {}, type: "agent" }
+        { id: "1", position: { x: 100, y: 100 }, data: {}, type: "agent" },
       ];
       const position = calculateNextNodePosition(nodes, {
-        horizontalSpacing: 500
+        horizontalSpacing: 500,
       });
       expect(position.x).toBe(100 + 500);
     });
@@ -113,7 +113,7 @@ describe("nodePositioning", () => {
     });
     it("should position to the right of existing nodes", () => {
       const nodes = [
-        { id: "1", position: { x: 100, y: 100 }, data: {}, type: "agent" }
+        { id: "1", position: { x: 100, y: 100 }, data: {}, type: "agent" },
       ];
       const positions = calculateMultipleNodePositions(nodes, 2);
       expect(positions[0].x).toBeGreaterThan(100);
@@ -121,7 +121,7 @@ describe("nodePositioning", () => {
     });
     it("should use custom spacing", () => {
       const positions = calculateMultipleNodePositions([], 2, {
-        verticalSpacing: 300
+        verticalSpacing: 300,
       });
       expect(positions[1].y - positions[0].y).toBe(300);
     });
@@ -146,7 +146,7 @@ describe("nodePositioning", () => {
     });
     it("should position grid to the right of existing nodes", () => {
       const nodes = [
-        { id: "1", position: { x: 100, y: 100 }, data: {}, type: "agent" }
+        { id: "1", position: { x: 100, y: 100 }, data: {}, type: "agent" },
       ];
       const positions = calculateGridPosition(nodes, 2, 2);
       expect(positions[0].x).toBeGreaterThan(100);
@@ -160,7 +160,7 @@ describe("nodePositioning", () => {
     it("should use custom spacing", () => {
       const positions = calculateGridPosition([], 4, 2, {
         horizontalSpacing: 300,
-        verticalSpacing: 200
+        verticalSpacing: 200,
       });
       expect(positions[1].x - positions[0].x).toBe(300);
       expect(positions[2].y - positions[0].y).toBe(200);
@@ -171,18 +171,24 @@ describe("nodePositioning", () => {
       id: "ref",
       position: { x: 100, y: 200 },
       data: {},
-      type: "agent"
+      type: "agent",
     };
     it("should calculate position with default offset", () => {
       const position = calculateRelativePosition(referenceNode);
       expect(position).toEqual({ x: 300, y: 200 });
     });
     it("should calculate position with custom offset", () => {
-      const position = calculateRelativePosition(referenceNode, { x: 50, y: 100 });
+      const position = calculateRelativePosition(referenceNode, {
+        x: 50,
+        y: 100,
+      });
       expect(position).toEqual({ x: 150, y: 300 });
     });
     it("should handle negative offsets", () => {
-      const position = calculateRelativePosition(referenceNode, { x: -50, y: -100 });
+      const position = calculateRelativePosition(referenceNode, {
+        x: -50,
+        y: -100,
+      });
       expect(position).toEqual({ x: 50, y: 100 });
     });
     it("should handle zero offset", () => {
@@ -190,14 +196,17 @@ describe("nodePositioning", () => {
       expect(position).toEqual({ x: 100, y: 200 });
     });
     it("should handle large offsets", () => {
-      const position = calculateRelativePosition(referenceNode, { x: 1e3, y: 2e3 });
+      const position = calculateRelativePosition(referenceNode, {
+        x: 1e3,
+        y: 2e3,
+      });
       expect(position).toEqual({ x: 1100, y: 2200 });
     });
   });
   describe("mergeOptions edge cases", () => {
     it("should handle partial options in calculateNextNodePosition", () => {
       const position = calculateNextNodePosition([], {
-        defaultX: 500
+        defaultX: 500,
         // Other options should use defaults
       });
       expect(position.x).toBe(500);
@@ -205,7 +214,7 @@ describe("nodePositioning", () => {
     });
     it("should handle partial options in calculateMultipleNodePositions", () => {
       const positions = calculateMultipleNodePositions([], 2, {
-        verticalSpacing: 500
+        verticalSpacing: 500,
         // Other options should use defaults
       });
       expect(positions[0].x).toBe(250);
@@ -214,7 +223,7 @@ describe("nodePositioning", () => {
     it("should handle partial options in calculateGridPosition", () => {
       const positions = calculateGridPosition([], 2, 2, {
         defaultX: 100,
-        defaultY: 200
+        defaultY: 200,
         // Other options should use defaults
       });
       expect(positions[0].x).toBe(100);
@@ -230,27 +239,27 @@ describe("nodePositioning", () => {
     });
     it("should handle zero spacing values", () => {
       const nodes = [
-        { id: "1", position: { x: 100, y: 100 }, data: {}, type: "agent" }
+        { id: "1", position: { x: 100, y: 100 }, data: {}, type: "agent" },
       ];
       const position = calculateNextNodePosition(nodes, {
-        horizontalSpacing: 0
+        horizontalSpacing: 0,
       });
       expect(position.x).toBe(100);
       expect(position.y).toBe(250);
     });
     it("should handle very large spacing values", () => {
       const nodes = [
-        { id: "1", position: { x: 100, y: 100 }, data: {}, type: "agent" }
+        { id: "1", position: { x: 100, y: 100 }, data: {}, type: "agent" },
       ];
       const position = calculateNextNodePosition(nodes, {
-        horizontalSpacing: 1e4
+        horizontalSpacing: 1e4,
       });
       expect(position.x).toBe(100 + 1e4);
     });
     it("should handle negative default positions", () => {
       const position = calculateNextNodePosition([], {
         defaultX: -100,
-        defaultY: -200
+        defaultY: -200,
       });
       expect(position).toEqual({ x: -100, y: -200 });
     });

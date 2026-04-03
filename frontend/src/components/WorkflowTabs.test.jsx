@@ -1,16 +1,19 @@
-import { jsx } from "react/jsx-runtime";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 const waitForWithTimeout = async (callback, timeout = 2e3) => {
   const wasUsingFakeTimers = typeof jest.getRealSystemTime === "function";
   if (wasUsingFakeTimers) {
     jest.useRealTimers();
     try {
-      return await waitFor(callback, { timeout });
+      return await waitFor(callback, {
+        timeout,
+      });
     } finally {
       jest.useFakeTimers();
     }
   } else {
-    return await waitFor(callback, { timeout });
+    return await waitFor(callback, {
+      timeout,
+    });
   }
 };
 import WorkflowTabs from "./WorkflowTabs";
@@ -21,7 +24,7 @@ import { showConfirm } from "../utils/confirm";
 import { showError } from "../utils/notifications";
 import { getLocalStorageItem, setLocalStorageItem } from "../hooks/storage";
 jest.mock("../contexts/AuthContext", () => ({
-  useAuth: jest.fn()
+  useAuth: jest.fn(),
 }));
 jest.mock("../api/client", () => ({
   api: {
@@ -29,15 +32,15 @@ jest.mock("../api/client", () => ({
     createWorkflow: jest.fn(),
     updateWorkflow: jest.fn(),
     publishWorkflow: jest.fn(),
-    getExecution: jest.fn()
-  }
+    getExecution: jest.fn(),
+  },
 }));
 jest.mock("../utils/confirm", () => ({
-  showConfirm: jest.fn()
+  showConfirm: jest.fn(),
 }));
 jest.mock("../utils/notifications", () => ({
   showError: jest.fn(),
-  showSuccess: jest.fn()
+  showSuccess: jest.fn(),
 }));
 jest.mock("../hooks/storage", () => ({
   useLocalStorage: jest.fn(() => ["", jest.fn(), jest.fn()]),
@@ -45,7 +48,7 @@ jest.mock("../hooks/storage", () => ({
   setLocalStorageItem: jest.fn(),
   removeLocalStorageItem: jest.fn(),
   useAutoSave: jest.fn(),
-  useDraftManagement: jest.fn()
+  useDraftManagement: jest.fn(),
 }));
 jest.mock("./WorkflowBuilder", () => {
   return {
@@ -56,10 +59,10 @@ jest.mock("./WorkflowBuilder", () => {
         saveWorkflow: jest.fn().mockResolvedValue("workflow-1"),
         executeWorkflow: jest.fn(),
         exportWorkflow: jest.fn(),
-        clearWorkflow: jest.fn()
+        clearWorkflow: jest.fn(),
       }));
       return React2.createElement("div", null, "WorkflowBuilder Mock");
-    })
+    }),
   };
 });
 const mockUseAuth = useAuth;
@@ -69,17 +72,26 @@ const mockSetLocalStorageItem = setLocalStorageItem;
 describe("WorkflowTabs", () => {
   const mockOnExecutionStart = jest.fn();
   const renderWithProvider = (props = {}) => {
-    const { onExecutionStart, initialTabs, initialActiveTabId, storage, ...restProps } = props;
+    const {
+      onExecutionStart,
+      initialTabs,
+      initialActiveTabId,
+      storage,
+      ...restProps
+    } = props;
     return render(
-      /* @__PURE__ */ jsx(
-        WorkflowTabsProvider,
-        {
-          initialTabs: initialTabs || [],
-          initialActiveTabId: initialActiveTabId !== void 0 ? initialActiveTabId : null,
-          storage,
-          children: /* @__PURE__ */ jsx(WorkflowTabs, { onExecutionStart: onExecutionStart || mockOnExecutionStart, ...restProps })
+      <WorkflowTabsProvider
+        initialTabs={initialTabs || []}
+        initialActiveTabId={
+          initialActiveTabId !== void 0 ? initialActiveTabId : null
         }
-      )
+        storage={storage}
+      >
+        <WorkflowTabs
+          onExecutionStart={onExecutionStart || mockOnExecutionStart}
+          {...restProps}
+        />
+      </WorkflowTabsProvider>,
     );
   };
   beforeEach(() => {
@@ -88,32 +100,35 @@ describe("WorkflowTabs", () => {
     mockGetLocalStorageItem.mockReturnValue([]);
     mockUseAuth.mockReturnValue({
       isAuthenticated: true,
-      user: { id: "1", username: "testuser" },
+      user: {
+        id: "1",
+        username: "testuser",
+      },
       token: "token",
       login: jest.fn(),
       logout: jest.fn(),
-      register: jest.fn()
+      register: jest.fn(),
     });
     showConfirm.mockResolvedValue(true);
   });
   it("should render with default tab", () => {
     renderWithProvider();
-    const tabButtons = screen.getAllByRole("button").filter(
-      (btn) => btn.textContent?.includes("Untitled Workflow")
-    );
+    const tabButtons = screen
+      .getAllByRole("button")
+      .filter((btn) => btn.textContent?.includes("Untitled Workflow"));
     expect(tabButtons.length).toBeGreaterThan(0);
   });
   it("should create new tab when plus button is clicked", async () => {
     renderWithProvider();
-    const initialTabCount = screen.getAllByRole("button").filter(
-      (btn) => btn.textContent?.includes("Untitled Workflow")
-    ).length;
+    const initialTabCount = screen
+      .getAllByRole("button")
+      .filter((btn) => btn.textContent?.includes("Untitled Workflow")).length;
     const plusButton = screen.getByTitle(/New workflow/);
     fireEvent.click(plusButton);
     await waitForWithTimeout(() => {
-      const tabButtons = screen.getAllByRole("button").filter(
-        (btn) => btn.textContent?.includes("Untitled Workflow")
-      );
+      const tabButtons = screen
+        .getAllByRole("button")
+        .filter((btn) => btn.textContent?.includes("Untitled Workflow"));
       expect(tabButtons.length).toBeGreaterThan(initialTabCount);
     });
   });
@@ -128,18 +143,38 @@ describe("WorkflowTabs", () => {
     const tabButtons = screen.getAllByRole("button").filter((btn) => {
       const text = btn.textContent || "";
       const title = btn.getAttribute("title") || "";
-      return text.includes("Untitled Workflow") && !title.includes("Close") && !title.includes("Save") && !title.includes("Execute") && !title.includes("Publish") && !title.includes("Export") && !title.includes("New");
+      return (
+        text.includes("Untitled Workflow") &&
+        !title.includes("Close") &&
+        !title.includes("Save") &&
+        !title.includes("Execute") &&
+        !title.includes("Publish") &&
+        !title.includes("Export") &&
+        !title.includes("New")
+      );
     });
     if (tabButtons.length > 1) {
       fireEvent.click(tabButtons[1]);
       await waitForWithTimeout(() => {
-        const updatedTabButtons = screen.getAllByRole("button").filter((btn) => {
-          const text = btn.textContent || "";
-          const title = btn.getAttribute("title") || "";
-          return text.includes("Untitled Workflow") && !title.includes("Close") && !title.includes("Save") && !title.includes("Execute") && !title.includes("Publish") && !title.includes("Export") && !title.includes("New");
-        });
+        const updatedTabButtons = screen
+          .getAllByRole("button")
+          .filter((btn) => {
+            const text = btn.textContent || "";
+            const title = btn.getAttribute("title") || "";
+            return (
+              text.includes("Untitled Workflow") &&
+              !title.includes("Close") &&
+              !title.includes("Save") &&
+              !title.includes("Execute") &&
+              !title.includes("Publish") &&
+              !title.includes("Export") &&
+              !title.includes("New")
+            );
+          });
         expect(updatedTabButtons.length).toBeGreaterThanOrEqual(2);
-        const hasActiveTab = updatedTabButtons.some((btn) => btn.className.includes("bg-white"));
+        const hasActiveTab = updatedTabButtons.some((btn) =>
+          btn.className.includes("bg-white"),
+        );
         expect(hasActiveTab).toBe(true);
         expect(updatedTabButtons.length).toBeGreaterThanOrEqual(2);
       });
@@ -171,15 +206,15 @@ describe("WorkflowTabs", () => {
   it("should prevent closing last tab", async () => {
     renderWithProvider();
     await waitForWithTimeout(() => {
-      const tabButtons2 = screen.getAllByRole("button").filter(
-        (btn) => btn.textContent?.includes("Untitled Workflow")
-      );
+      const tabButtons2 = screen
+        .getAllByRole("button")
+        .filter((btn) => btn.textContent?.includes("Untitled Workflow"));
       expect(tabButtons2.length).toBeGreaterThan(0);
     });
     const closeButtons = screen.queryAllByTitle(/Close/);
-    const tabButtons = screen.getAllByRole("button").filter(
-      (btn) => btn.textContent?.includes("Untitled Workflow")
-    );
+    const tabButtons = screen
+      .getAllByRole("button")
+      .filter((btn) => btn.textContent?.includes("Untitled Workflow"));
     if (tabButtons.length === 1) {
       expect(closeButtons.length).toBe(0);
     }
@@ -187,14 +222,18 @@ describe("WorkflowTabs", () => {
   it("should start editing tab name on double click", async () => {
     renderWithProvider();
     await waitForWithTimeout(() => {
-      const tabButtons2 = screen.getAllByRole("button").filter(
-        (btn) => btn.textContent?.includes("Untitled Workflow")
-      );
+      const tabButtons2 = screen
+        .getAllByRole("button")
+        .filter((btn) => btn.textContent?.includes("Untitled Workflow"));
       expect(tabButtons2.length).toBeGreaterThan(0);
     });
-    const tabButtons = screen.getAllByRole("button").filter(
-      (btn) => btn.textContent?.includes("Untitled Workflow") && btn.getAttribute("title") !== "Close tab"
-    );
+    const tabButtons = screen
+      .getAllByRole("button")
+      .filter(
+        (btn) =>
+          btn.textContent?.includes("Untitled Workflow") &&
+          btn.getAttribute("title") !== "Close tab",
+      );
     if (tabButtons.length > 0) {
       fireEvent.doubleClick(tabButtons[0]);
       await waitForWithTimeout(() => {
@@ -206,21 +245,32 @@ describe("WorkflowTabs", () => {
   it("should save tab name on Enter", async () => {
     renderWithProvider();
     await waitForWithTimeout(() => {
-      const tabButtons2 = screen.getAllByRole("button").filter(
-        (btn) => btn.textContent?.includes("Untitled Workflow")
-      );
+      const tabButtons2 = screen
+        .getAllByRole("button")
+        .filter((btn) => btn.textContent?.includes("Untitled Workflow"));
       expect(tabButtons2.length).toBeGreaterThan(0);
     });
-    const tabButtons = screen.getAllByRole("button").filter(
-      (btn) => btn.textContent?.includes("Untitled Workflow") && btn.getAttribute("title") !== "Close tab"
-    );
+    const tabButtons = screen
+      .getAllByRole("button")
+      .filter(
+        (btn) =>
+          btn.textContent?.includes("Untitled Workflow") &&
+          btn.getAttribute("title") !== "Close tab",
+      );
     if (tabButtons.length > 0) {
       fireEvent.doubleClick(tabButtons[0]);
       await waitForWithTimeout(() => {
         const input = screen.getByDisplayValue(/Untitled Workflow/);
         expect(input).toBeInTheDocument();
-        fireEvent.change(input, { target: { value: "New Name" } });
-        fireEvent.keyDown(input, { key: "Enter", code: "Enter" });
+        fireEvent.change(input, {
+          target: {
+            value: "New Name",
+          },
+        });
+        fireEvent.keyDown(input, {
+          key: "Enter",
+          code: "Enter",
+        });
       });
       await waitForWithTimeout(() => {
         expect(screen.getByText("New Name")).toBeInTheDocument();
@@ -230,26 +280,37 @@ describe("WorkflowTabs", () => {
   it("should cancel editing on Escape", async () => {
     renderWithProvider();
     await waitForWithTimeout(() => {
-      const tabButtons2 = screen.getAllByRole("button").filter(
-        (btn) => btn.textContent?.includes("Untitled Workflow")
-      );
+      const tabButtons2 = screen
+        .getAllByRole("button")
+        .filter((btn) => btn.textContent?.includes("Untitled Workflow"));
       expect(tabButtons2.length).toBeGreaterThan(0);
     });
-    const tabButtons = screen.getAllByRole("button").filter(
-      (btn) => btn.textContent?.includes("Untitled Workflow") && btn.getAttribute("title") !== "Close tab"
-    );
+    const tabButtons = screen
+      .getAllByRole("button")
+      .filter(
+        (btn) =>
+          btn.textContent?.includes("Untitled Workflow") &&
+          btn.getAttribute("title") !== "Close tab",
+      );
     if (tabButtons.length > 0) {
       fireEvent.doubleClick(tabButtons[0]);
       await waitForWithTimeout(() => {
         const input = screen.getByDisplayValue(/Untitled Workflow/);
         expect(input).toBeInTheDocument();
-        fireEvent.change(input, { target: { value: "New Name" } });
-        fireEvent.keyDown(input, { key: "Escape", code: "Escape" });
+        fireEvent.change(input, {
+          target: {
+            value: "New Name",
+          },
+        });
+        fireEvent.keyDown(input, {
+          key: "Escape",
+          code: "Escape",
+        });
       });
       await waitForWithTimeout(() => {
-        const tabButtonsAfter = screen.getAllByRole("button").filter(
-          (btn) => btn.textContent?.includes("Untitled Workflow")
-        );
+        const tabButtonsAfter = screen
+          .getAllByRole("button")
+          .filter((btn) => btn.textContent?.includes("Untitled Workflow"));
         expect(tabButtonsAfter.length).toBeGreaterThan(0);
         expect(screen.queryByDisplayValue("New Name")).not.toBeInTheDocument();
       });
@@ -261,14 +322,22 @@ describe("WorkflowTabs", () => {
       name: "Loaded Workflow",
       description: "Test",
       nodes: [],
-      edges: []
+      edges: [],
     };
     mockApi.getWorkflow.mockResolvedValue(mockWorkflow);
-    renderWithProvider({ initialWorkflowId: "workflow-1", workflowLoadKey: 1 });
+    renderWithProvider({
+      initialWorkflowId: "workflow-1",
+      workflowLoadKey: 1,
+    });
     await waitForWithTimeout(() => {
-      const tabButtons = screen.getAllByRole("button").filter(
-        (btn) => btn.textContent?.includes("Loading") || btn.textContent?.includes("Loaded Workflow") || btn.textContent?.includes("Untitled Workflow")
-      );
+      const tabButtons = screen
+        .getAllByRole("button")
+        .filter(
+          (btn) =>
+            btn.textContent?.includes("Loading") ||
+            btn.textContent?.includes("Loaded Workflow") ||
+            btn.textContent?.includes("Untitled Workflow"),
+        );
       expect(tabButtons.length).toBeGreaterThan(0);
     }, 3e3);
   });
@@ -278,14 +347,34 @@ describe("WorkflowTabs", () => {
       setItem: jest.fn(),
       removeItem: jest.fn(),
       addEventListener: jest.fn(),
-      removeEventListener: jest.fn()
+      removeEventListener: jest.fn(),
     };
     const initialTabs = [
-      { id: "tab-1", name: "Tab 1", workflowId: null, isUnsaved: false, executions: [], activeExecutionId: null },
-      { id: "tab-2", name: "Tab 2", workflowId: null, isUnsaved: false, executions: [], activeExecutionId: null }
+      {
+        id: "tab-1",
+        name: "Tab 1",
+        workflowId: null,
+        isUnsaved: false,
+        executions: [],
+        activeExecutionId: null,
+      },
+      {
+        id: "tab-2",
+        name: "Tab 2",
+        workflowId: null,
+        isUnsaved: false,
+        executions: [],
+        activeExecutionId: null,
+      },
     ];
     render(
-      /* @__PURE__ */ jsx(WorkflowTabsProvider, { storage: mockStorage, initialTabs, initialActiveTabId: "tab-1", children: /* @__PURE__ */ jsx(WorkflowTabs, { onExecutionStart: mockOnExecutionStart }) })
+      <WorkflowTabsProvider
+        storage={mockStorage}
+        initialTabs={initialTabs}
+        initialActiveTabId="tab-1"
+      >
+        <WorkflowTabs onExecutionStart={mockOnExecutionStart} />
+      </WorkflowTabsProvider>,
     );
     await waitForWithTimeout(() => {
       expect(screen.getAllByRole("button").length).toBeGreaterThan(0);
@@ -293,25 +382,51 @@ describe("WorkflowTabs", () => {
     const tabButtons = screen.getAllByRole("button").filter((btn) => {
       const text = btn.textContent || "";
       const title = btn.getAttribute("title") || "";
-      return (text.includes("Tab 1") || text.includes("Tab 2")) && !title.includes("Close") && !title.includes("Save") && !title.includes("Execute") && !title.includes("Publish") && !title.includes("Export") && !title.includes("New");
+      return (
+        (text.includes("Tab 1") || text.includes("Tab 2")) &&
+        !title.includes("Close") &&
+        !title.includes("Save") &&
+        !title.includes("Execute") &&
+        !title.includes("Publish") &&
+        !title.includes("Export") &&
+        !title.includes("New")
+      );
     });
     expect(tabButtons.length).toBeGreaterThanOrEqual(2);
     mockStorage.setItem.mockClear();
-    const secondTab = tabButtons.find((btn) => btn.textContent?.includes("Tab 2"));
+    const secondTab = tabButtons.find((btn) =>
+      btn.textContent?.includes("Tab 2"),
+    );
     expect(secondTab).toBeDefined();
     if (secondTab) {
       fireEvent.click(secondTab);
       await waitForWithTimeout(() => {
         const calls = mockStorage.setItem.mock.calls;
-        const activeTabCalls = calls.filter((call) => call[0] === "activeWorkflowTabId");
+        const activeTabCalls = calls.filter(
+          (call) => call[0] === "activeWorkflowTabId",
+        );
         expect(activeTabCalls.length).toBeGreaterThan(0);
       }, 2e3);
     }
   });
   it("should restore tabs from localStorage", async () => {
     const savedTabs = [
-      { id: "tab-1", name: "Saved Tab 1", workflowId: null, isUnsaved: false, executions: [], activeExecutionId: null },
-      { id: "tab-2", name: "Saved Tab 2", workflowId: null, isUnsaved: false, executions: [], activeExecutionId: null }
+      {
+        id: "tab-1",
+        name: "Saved Tab 1",
+        workflowId: null,
+        isUnsaved: false,
+        executions: [],
+        activeExecutionId: null,
+      },
+      {
+        id: "tab-2",
+        name: "Saved Tab 2",
+        workflowId: null,
+        isUnsaved: false,
+        executions: [],
+        activeExecutionId: null,
+      },
     ];
     mockGetLocalStorageItem.mockImplementation((key) => {
       if (key === "workflowTabs") return savedTabs;
@@ -326,7 +441,14 @@ describe("WorkflowTabs", () => {
   });
   it("should show success message when restoring tabs", async () => {
     const savedTabs = [
-      { id: "tab-1", name: "Saved Tab", workflowId: null, isUnsaved: false, executions: [], activeExecutionId: null }
+      {
+        id: "tab-1",
+        name: "Saved Tab",
+        workflowId: null,
+        isUnsaved: false,
+        executions: [],
+        activeExecutionId: null,
+      },
     ];
     mockGetLocalStorageItem.mockImplementation((key) => {
       if (key === "workflowTabs") return savedTabs;
@@ -344,12 +466,19 @@ describe("WorkflowTabs", () => {
       name: "Test Workflow",
       description: "Test",
       nodes: [],
-      edges: []
+      edges: [],
     };
     mockApi.getWorkflow.mockResolvedValue(mockWorkflow);
     mockApi.updateWorkflow.mockRejectedValue(new Error("Update failed"));
     const savedTabs = [
-      { id: "tab-1", name: "Test Workflow", workflowId: "workflow-1", isUnsaved: false, executions: [], activeExecutionId: null }
+      {
+        id: "tab-1",
+        name: "Test Workflow",
+        workflowId: "workflow-1",
+        isUnsaved: false,
+        executions: [],
+        activeExecutionId: null,
+      },
     ];
     mockGetLocalStorageItem.mockImplementation((key) => {
       if (key === "workflowTabs") return savedTabs;
@@ -359,9 +488,9 @@ describe("WorkflowTabs", () => {
     await waitForWithTimeout(() => {
       expect(screen.getAllByRole("button").length).toBeGreaterThan(0);
     });
-    const tabButtons = screen.getAllByRole("button").filter(
-      (btn) => btn.textContent?.includes("Test Workflow")
-    );
+    const tabButtons = screen
+      .getAllByRole("button")
+      .filter((btn) => btn.textContent?.includes("Test Workflow"));
     if (tabButtons.length > 0) {
       fireEvent.dblClick(tabButtons[0]);
       await waitForWithTimeout(() => {
@@ -369,10 +498,16 @@ describe("WorkflowTabs", () => {
         expect(input2).toBeInTheDocument();
       });
       const input = screen.getByDisplayValue(/Test Workflow/);
-      fireEvent.change(input, { target: { value: "New Name" } });
+      fireEvent.change(input, {
+        target: {
+          value: "New Name",
+        },
+      });
       fireEvent.blur(input);
       await waitForWithTimeout(() => {
-        expect(showError).toHaveBeenCalledWith(expect.stringContaining("Failed to rename workflow"));
+        expect(showError).toHaveBeenCalledWith(
+          expect.stringContaining("Failed to rename workflow"),
+        );
       }, 3e3);
     }
   });
@@ -382,10 +517,27 @@ describe("WorkflowTabs", () => {
   it("should cancel tab close when user cancels confirmation", async () => {
     showConfirm.mockResolvedValue(false);
     const savedTabs = [
-      { id: "tab-1", name: "Unsaved Tab", workflowId: null, isUnsaved: true, executions: [], activeExecutionId: null },
-      { id: "tab-2", name: "Tab 2", workflowId: null, isUnsaved: false, executions: [], activeExecutionId: null }
+      {
+        id: "tab-1",
+        name: "Unsaved Tab",
+        workflowId: null,
+        isUnsaved: true,
+        executions: [],
+        activeExecutionId: null,
+      },
+      {
+        id: "tab-2",
+        name: "Tab 2",
+        workflowId: null,
+        isUnsaved: false,
+        executions: [],
+        activeExecutionId: null,
+      },
     ];
-    renderWithProvider({ initialTabs: savedTabs, initialActiveTabId: "tab-1" });
+    renderWithProvider({
+      initialTabs: savedTabs,
+      initialActiveTabId: "tab-1",
+    });
     await waitForWithTimeout(() => {
       expect(screen.getAllByRole("button").length).toBeGreaterThan(0);
     });
@@ -399,10 +551,27 @@ describe("WorkflowTabs", () => {
   });
   it("should create new tab when all tabs are closed", async () => {
     const savedTabs = [
-      { id: "tab-1", name: "Tab 1", workflowId: null, isUnsaved: false, executions: [], activeExecutionId: null },
-      { id: "tab-2", name: "Tab 2", workflowId: null, isUnsaved: false, executions: [], activeExecutionId: null }
+      {
+        id: "tab-1",
+        name: "Tab 1",
+        workflowId: null,
+        isUnsaved: false,
+        executions: [],
+        activeExecutionId: null,
+      },
+      {
+        id: "tab-2",
+        name: "Tab 2",
+        workflowId: null,
+        isUnsaved: false,
+        executions: [],
+        activeExecutionId: null,
+      },
     ];
-    renderWithProvider({ initialTabs: savedTabs, initialActiveTabId: "tab-1" });
+    renderWithProvider({
+      initialTabs: savedTabs,
+      initialActiveTabId: "tab-1",
+    });
     await waitForWithTimeout(() => {
       expect(screen.getAllByRole("button").length).toBeGreaterThan(0);
     });
@@ -422,9 +591,9 @@ describe("WorkflowTabs", () => {
     await waitForWithTimeout(() => {
       expect(screen.getAllByRole("button").length).toBeGreaterThan(0);
     });
-    const tabButtons = screen.getAllByRole("button").filter(
-      (btn) => btn.textContent?.includes("Untitled Workflow")
-    );
+    const tabButtons = screen
+      .getAllByRole("button")
+      .filter((btn) => btn.textContent?.includes("Untitled Workflow"));
     if (tabButtons.length > 0) {
       fireEvent.dblClick(tabButtons[0]);
       await waitForWithTimeout(() => {
@@ -440,7 +609,10 @@ describe("WorkflowTabs", () => {
   });
   it("should handle workflow loading error", async () => {
     mockApi.getWorkflow.mockRejectedValue(new Error("Load failed"));
-    renderWithProvider({ initialWorkflowId: "workflow-1", workflowLoadKey: 1 });
+    renderWithProvider({
+      initialWorkflowId: "workflow-1",
+      workflowLoadKey: 1,
+    });
     await waitForWithTimeout(() => {
       const tabButtons = screen.getAllByRole("button");
       expect(tabButtons.length).toBeGreaterThan(0);
@@ -466,8 +638,22 @@ describe("WorkflowTabs", () => {
   });
   it("should handle active tab validation when tab no longer exists", async () => {
     const savedTabs = [
-      { id: "tab-1", name: "Tab 1", workflowId: null, isUnsaved: false, executions: [], activeExecutionId: null },
-      { id: "tab-2", name: "Tab 2", workflowId: null, isUnsaved: false, executions: [], activeExecutionId: null }
+      {
+        id: "tab-1",
+        name: "Tab 1",
+        workflowId: null,
+        isUnsaved: false,
+        executions: [],
+        activeExecutionId: null,
+      },
+      {
+        id: "tab-2",
+        name: "Tab 2",
+        workflowId: null,
+        isUnsaved: false,
+        executions: [],
+        activeExecutionId: null,
+      },
     ];
     mockGetLocalStorageItem.mockImplementation((key) => {
       if (key === "workflowTabs") return savedTabs;
@@ -487,9 +673,11 @@ describe("WorkflowTabs", () => {
         setItem: jest.fn(),
         removeItem: jest.fn(),
         addEventListener: jest.fn(),
-        removeEventListener: jest.fn()
+        removeEventListener: jest.fn(),
       };
-      renderWithProvider({ storage: mockStorage });
+      renderWithProvider({
+        storage: mockStorage,
+      });
       waitFor(() => {
         expect(mockStorage.setItem).toHaveBeenCalled();
       }, 1e3);
@@ -499,30 +687,42 @@ describe("WorkflowTabs", () => {
         get: jest.fn(),
         post: jest.fn().mockResolvedValue({
           ok: true,
-          json: async () => ({ id: "published-1", name: "Published Workflow" })
+          json: async () => ({
+            id: "published-1",
+            name: "Published Workflow",
+          }),
         }),
         put: jest.fn(),
-        delete: jest.fn()
+        delete: jest.fn(),
       };
       mockGetLocalStorageItem.mockImplementation((key) => {
         if (key === "workflowTabs") {
-          return [{
-            id: "tab-1",
-            name: "Test Workflow",
-            workflowId: "workflow-123",
-            isUnsaved: false,
-            executions: [],
-            activeExecutionId: null
-          }];
+          return [
+            {
+              id: "tab-1",
+              name: "Test Workflow",
+              workflowId: "workflow-123",
+              isUnsaved: false,
+              executions: [],
+              activeExecutionId: null,
+            },
+          ];
         }
         return null;
       });
-      renderWithProvider({ httpClient: mockHttpClient, apiBaseUrl: "http://test.api.com/api" });
+      renderWithProvider({
+        httpClient: mockHttpClient,
+        apiBaseUrl: "http://test.api.com/api",
+      });
       await waitForWithTimeout(() => {
-        expect(screen.getByText(/Test Workflow|Untitled Workflow/)).toBeInTheDocument();
+        expect(
+          screen.getByText(/Test Workflow|Untitled Workflow/),
+        ).toBeInTheDocument();
       });
       expect(mockHttpClient).toBeDefined();
-      expect(screen.getByText(/Test Workflow|Untitled Workflow/)).toBeInTheDocument();
+      expect(
+        screen.getByText(/Test Workflow|Untitled Workflow/),
+      ).toBeInTheDocument();
     });
     it("should handle storage errors gracefully", () => {
       const mockStorage = {
@@ -532,13 +732,17 @@ describe("WorkflowTabs", () => {
         setItem: jest.fn(),
         removeItem: jest.fn(),
         addEventListener: jest.fn(),
-        removeEventListener: jest.fn()
+        removeEventListener: jest.fn(),
       };
-      renderWithProvider({ storage: mockStorage });
+      renderWithProvider({
+        storage: mockStorage,
+      });
       expect(screen.getByText(/Untitled Workflow/)).toBeInTheDocument();
     });
     it("should handle null storage adapter", () => {
-      renderWithProvider({ storage: null });
+      renderWithProvider({
+        storage: null,
+      });
       expect(screen.getByText(/Untitled Workflow/)).toBeInTheDocument();
     });
     it("should handle HTTP client errors for workflow publishing", async () => {
@@ -546,15 +750,22 @@ describe("WorkflowTabs", () => {
         get: jest.fn(),
         post: jest.fn().mockRejectedValue(new Error("Network error")),
         put: jest.fn(),
-        delete: jest.fn()
+        delete: jest.fn(),
       };
       const savedTabs = [
-        { id: "tab-1", name: "Test Workflow", workflowId: "workflow-1", isUnsaved: false, executions: [], activeExecutionId: null }
+        {
+          id: "tab-1",
+          name: "Test Workflow",
+          workflowId: "workflow-1",
+          isUnsaved: false,
+          executions: [],
+          activeExecutionId: null,
+        },
       ];
       renderWithProvider({
         httpClient: mockHttpClient,
         initialTabs: savedTabs,
-        initialActiveTabId: "tab-1"
+        initialActiveTabId: "tab-1",
       });
       await waitForWithTimeout(() => {
         expect(screen.getAllByRole("button").length).toBeGreaterThan(0);
@@ -569,7 +780,9 @@ describe("WorkflowTabs", () => {
         fireEvent.submit(form);
       }
       await waitForWithTimeout(() => {
-        expect(showError).toHaveBeenCalledWith(expect.stringContaining("Failed to publish workflow"));
+        expect(showError).toHaveBeenCalledWith(
+          expect.stringContaining("Failed to publish workflow"),
+        );
       }, 3e3);
     });
   });
@@ -582,10 +795,16 @@ describe("WorkflowTabs", () => {
           workflowId: "workflow-1",
           isUnsaved: false,
           executions: [
-            { id: "pending-1", status: "running", startedAt: /* @__PURE__ */ new Date(), nodes: {}, logs: [] }
+            {
+              id: "pending-1",
+              status: "running",
+              startedAt: new Date(),
+              nodes: {},
+              logs: [],
+            },
           ],
-          activeExecutionId: "pending-1"
-        }
+          activeExecutionId: "pending-1",
+        },
       ];
       mockGetLocalStorageItem.mockImplementation((key) => {
         if (key === "workflowTabs") return savedTabs;
@@ -606,10 +825,16 @@ describe("WorkflowTabs", () => {
           workflowId: "workflow-1",
           isUnsaved: false,
           executions: [
-            { id: "exec-1", status: "running", startedAt: /* @__PURE__ */ new Date(), nodes: {}, logs: [] }
+            {
+              id: "exec-1",
+              status: "running",
+              startedAt: new Date(),
+              nodes: {},
+              logs: [],
+            },
           ],
-          activeExecutionId: null
-        }
+          activeExecutionId: null,
+        },
       ];
       mockGetLocalStorageItem.mockImplementation((key) => {
         if (key === "workflowTabs") return savedTabs;
@@ -630,8 +855,8 @@ describe("WorkflowTabs", () => {
           workflowId: "workflow-1",
           isUnsaved: false,
           executions: [],
-          activeExecutionId: null
-        }
+          activeExecutionId: null,
+        },
       ];
       mockGetLocalStorageItem.mockImplementation((key) => {
         if (key === "workflowTabs") return savedTabs;
@@ -648,7 +873,14 @@ describe("WorkflowTabs", () => {
   describe("Publish modal", () => {
     it("should open publish modal when publish button is clicked", async () => {
       const savedTabs = [
-        { id: "tab-1", name: "Test Workflow", workflowId: "workflow-1", isUnsaved: false, executions: [], activeExecutionId: null }
+        {
+          id: "tab-1",
+          name: "Test Workflow",
+          workflowId: "workflow-1",
+          isUnsaved: false,
+          executions: [],
+          activeExecutionId: null,
+        },
       ];
       mockGetLocalStorageItem.mockImplementation((key) => {
         if (key === "workflowTabs") return savedTabs;
@@ -670,16 +902,18 @@ describe("WorkflowTabs", () => {
         get: jest.fn(),
         post: jest.fn().mockResolvedValue({
           ok: true,
-          json: async () => ({})
+          json: async () => ({}),
         }),
         put: jest.fn(),
-        delete: jest.fn()
+        delete: jest.fn(),
       };
       mockGetLocalStorageItem.mockImplementation((key) => {
         if (key === "workflowTabs") return [];
         return null;
       });
-      renderWithProvider({ httpClient: mockHttpClient });
+      renderWithProvider({
+        httpClient: mockHttpClient,
+      });
       await waitForWithTimeout(() => {
         expect(screen.getAllByRole("button").length).toBeGreaterThan(0);
       });
@@ -692,13 +926,22 @@ describe("WorkflowTabs", () => {
       expect(form).toBeInTheDocument();
       fireEvent.submit(form);
       await waitForWithTimeout(() => {
-        expect(showError).toHaveBeenCalledWith(expect.stringContaining("Save the workflow before publishing"));
+        expect(showError).toHaveBeenCalledWith(
+          expect.stringContaining("Save the workflow before publishing"),
+        );
       }, 3e3);
       expect(mockHttpClient.post).not.toHaveBeenCalled();
     });
     it("should show error when no active tab for publish", async () => {
       const savedTabs = [
-        { id: "tab-1", name: "Untitled Workflow", workflowId: null, isUnsaved: true, executions: [], activeExecutionId: null }
+        {
+          id: "tab-1",
+          name: "Untitled Workflow",
+          workflowId: null,
+          isUnsaved: true,
+          executions: [],
+          activeExecutionId: null,
+        },
       ];
       mockGetLocalStorageItem.mockImplementation((key) => {
         if (key === "workflowTabs") return savedTabs;
@@ -714,10 +957,27 @@ describe("WorkflowTabs", () => {
   describe("Tab management edge cases", () => {
     it("should handle closing tab when it is the active tab", async () => {
       const savedTabs = [
-        { id: "tab-1", name: "Tab 1", workflowId: null, isUnsaved: false, executions: [], activeExecutionId: null },
-        { id: "tab-2", name: "Tab 2", workflowId: null, isUnsaved: false, executions: [], activeExecutionId: null }
+        {
+          id: "tab-1",
+          name: "Tab 1",
+          workflowId: null,
+          isUnsaved: false,
+          executions: [],
+          activeExecutionId: null,
+        },
+        {
+          id: "tab-2",
+          name: "Tab 2",
+          workflowId: null,
+          isUnsaved: false,
+          executions: [],
+          activeExecutionId: null,
+        },
       ];
-      renderWithProvider({ initialTabs: savedTabs, initialActiveTabId: "tab-1" });
+      renderWithProvider({
+        initialTabs: savedTabs,
+        initialActiveTabId: "tab-1",
+      });
       await waitForWithTimeout(() => {
         expect(screen.getAllByRole("button").length).toBeGreaterThan(0);
       });
@@ -735,7 +995,14 @@ describe("WorkflowTabs", () => {
     });
     it("should create new tab when all tabs are closed", async () => {
       const savedTabs = [
-        { id: "tab-1", name: "Tab 1", workflowId: null, isUnsaved: false, executions: [], activeExecutionId: null }
+        {
+          id: "tab-1",
+          name: "Tab 1",
+          workflowId: null,
+          isUnsaved: false,
+          executions: [],
+          activeExecutionId: null,
+        },
       ];
       mockGetLocalStorageItem.mockImplementation((key) => {
         if (key === "workflowTabs") return savedTabs;
@@ -752,7 +1019,14 @@ describe("WorkflowTabs", () => {
   describe("Execution handling edge cases", () => {
     it("should handle handleExecutionStart when activeTab is not found", async () => {
       const savedTabs = [
-        { id: "tab-1", name: "Tab 1", workflowId: "workflow-1", isUnsaved: false, executions: [], activeExecutionId: null }
+        {
+          id: "tab-1",
+          name: "Tab 1",
+          workflowId: "workflow-1",
+          isUnsaved: false,
+          executions: [],
+          activeExecutionId: null,
+        },
       ];
       mockGetLocalStorageItem.mockImplementation((key) => {
         if (key === "workflowTabs") return savedTabs;
@@ -773,12 +1047,30 @@ describe("WorkflowTabs", () => {
           workflowId: "workflow-1",
           isUnsaved: false,
           executions: [
-            { id: "pending-1", status: "running", startedAt: /* @__PURE__ */ new Date(), nodes: {}, logs: [] },
-            { id: "pending-2", status: "running", startedAt: /* @__PURE__ */ new Date(), nodes: {}, logs: [] },
-            { id: "pending-3", status: "running", startedAt: /* @__PURE__ */ new Date(), nodes: {}, logs: [] }
+            {
+              id: "pending-1",
+              status: "running",
+              startedAt: new Date(),
+              nodes: {},
+              logs: [],
+            },
+            {
+              id: "pending-2",
+              status: "running",
+              startedAt: new Date(),
+              nodes: {},
+              logs: [],
+            },
+            {
+              id: "pending-3",
+              status: "running",
+              startedAt: new Date(),
+              nodes: {},
+              logs: [],
+            },
           ],
-          activeExecutionId: "pending-1"
-        }
+          activeExecutionId: "pending-1",
+        },
       ];
       mockGetLocalStorageItem.mockImplementation((key) => {
         if (key === "workflowTabs") return savedTabs;
@@ -799,10 +1091,16 @@ describe("WorkflowTabs", () => {
           workflowId: "workflow-1",
           isUnsaved: false,
           executions: [
-            { id: "exec-1", status: "running", startedAt: /* @__PURE__ */ new Date(), nodes: {}, logs: [] }
+            {
+              id: "exec-1",
+              status: "running",
+              startedAt: new Date(),
+              nodes: {},
+              logs: [],
+            },
           ],
-          activeExecutionId: null
-        }
+          activeExecutionId: null,
+        },
       ];
       mockGetLocalStorageItem.mockImplementation((key) => {
         if (key === "workflowTabs") return savedTabs;
@@ -823,8 +1121,8 @@ describe("WorkflowTabs", () => {
           workflowId: "workflow-1",
           isUnsaved: false,
           executions: [],
-          activeExecutionId: null
-        }
+          activeExecutionId: null,
+        },
       ];
       mockGetLocalStorageItem.mockImplementation((key) => {
         if (key === "workflowTabs") return savedTabs;
@@ -845,11 +1143,23 @@ describe("WorkflowTabs", () => {
           workflowId: "workflow-1",
           isUnsaved: false,
           executions: [
-            { id: "exec-1", status: "running", startedAt: /* @__PURE__ */ new Date(), nodes: {}, logs: [] },
-            { id: "exec-2", status: "completed", startedAt: /* @__PURE__ */ new Date(), nodes: {}, logs: [] }
+            {
+              id: "exec-1",
+              status: "running",
+              startedAt: new Date(),
+              nodes: {},
+              logs: [],
+            },
+            {
+              id: "exec-2",
+              status: "completed",
+              startedAt: new Date(),
+              nodes: {},
+              logs: [],
+            },
           ],
-          activeExecutionId: "exec-1"
-        }
+          activeExecutionId: "exec-1",
+        },
       ];
       mockGetLocalStorageItem.mockImplementation((key) => {
         if (key === "workflowTabs") return savedTabs;
@@ -870,11 +1180,23 @@ describe("WorkflowTabs", () => {
           workflowId: "workflow-1",
           isUnsaved: false,
           executions: [
-            { id: "exec-1", status: "running", startedAt: /* @__PURE__ */ new Date(), nodes: {}, logs: [] },
-            { id: "exec-2", status: "completed", startedAt: /* @__PURE__ */ new Date(), nodes: {}, logs: [] }
+            {
+              id: "exec-1",
+              status: "running",
+              startedAt: new Date(),
+              nodes: {},
+              logs: [],
+            },
+            {
+              id: "exec-2",
+              status: "completed",
+              startedAt: new Date(),
+              nodes: {},
+              logs: [],
+            },
           ],
-          activeExecutionId: "exec-1"
-        }
+          activeExecutionId: "exec-1",
+        },
       ];
       mockGetLocalStorageItem.mockImplementation((key) => {
         if (key === "workflowTabs") return savedTabs;
@@ -895,10 +1217,16 @@ describe("WorkflowTabs", () => {
           workflowId: "workflow-1",
           isUnsaved: false,
           executions: [
-            { id: "exec-1", status: "running", startedAt: /* @__PURE__ */ new Date(), nodes: {}, logs: [] }
+            {
+              id: "exec-1",
+              status: "running",
+              startedAt: new Date(),
+              nodes: {},
+              logs: [],
+            },
           ],
-          activeExecutionId: "exec-1"
-        }
+          activeExecutionId: "exec-1",
+        },
       ];
       mockGetLocalStorageItem.mockImplementation((key) => {
         if (key === "workflowTabs") return savedTabs;
@@ -919,9 +1247,15 @@ describe("WorkflowTabs", () => {
           workflowId: "workflow-1",
           isUnsaved: false,
           executions: [
-            { id: "exec-1", status: "running", startedAt: /* @__PURE__ */ new Date(), nodes: {}, logs: [] }
+            {
+              id: "exec-1",
+              status: "running",
+              startedAt: new Date(),
+              nodes: {},
+              logs: [],
+            },
           ],
-          activeExecutionId: "exec-1"
+          activeExecutionId: "exec-1",
         },
         {
           id: "tab-2",
@@ -929,10 +1263,16 @@ describe("WorkflowTabs", () => {
           workflowId: "workflow-1",
           isUnsaved: false,
           executions: [
-            { id: "exec-2", status: "completed", startedAt: /* @__PURE__ */ new Date(), nodes: {}, logs: [] }
+            {
+              id: "exec-2",
+              status: "completed",
+              startedAt: new Date(),
+              nodes: {},
+              logs: [],
+            },
           ],
-          activeExecutionId: "exec-2"
-        }
+          activeExecutionId: "exec-2",
+        },
       ];
       mockGetLocalStorageItem.mockImplementation((key) => {
         if (key === "workflowTabs") return savedTabs;
@@ -953,10 +1293,16 @@ describe("WorkflowTabs", () => {
           workflowId: "workflow-1",
           isUnsaved: false,
           executions: [
-            { id: "exec-1", status: "running", startedAt: /* @__PURE__ */ new Date(), nodes: {}, logs: [] }
+            {
+              id: "exec-1",
+              status: "running",
+              startedAt: new Date(),
+              nodes: {},
+              logs: [],
+            },
           ],
-          activeExecutionId: "exec-1"
-        }
+          activeExecutionId: "exec-1",
+        },
       ];
       mockGetLocalStorageItem.mockImplementation((key) => {
         if (key === "workflowTabs") return savedTabs;
@@ -977,10 +1323,16 @@ describe("WorkflowTabs", () => {
           workflowId: "workflow-1",
           isUnsaved: false,
           executions: [
-            { id: "exec-1", status: "running", startedAt: /* @__PURE__ */ new Date(), nodes: {}, logs: [] }
+            {
+              id: "exec-1",
+              status: "running",
+              startedAt: new Date(),
+              nodes: {},
+              logs: [],
+            },
           ],
-          activeExecutionId: "exec-1"
-        }
+          activeExecutionId: "exec-1",
+        },
       ];
       mockGetLocalStorageItem.mockImplementation((key) => {
         if (key === "workflowTabs") return savedTabs;
@@ -1001,10 +1353,16 @@ describe("WorkflowTabs", () => {
           workflowId: "workflow-1",
           isUnsaved: false,
           executions: [
-            { id: "exec-1", status: "running", startedAt: /* @__PURE__ */ new Date(), nodes: {}, logs: [] }
+            {
+              id: "exec-1",
+              status: "running",
+              startedAt: new Date(),
+              nodes: {},
+              logs: [],
+            },
           ],
-          activeExecutionId: "exec-1"
-        }
+          activeExecutionId: "exec-1",
+        },
       ];
       mockGetLocalStorageItem.mockImplementation((key) => {
         if (key === "workflowTabs") return savedTabs;
@@ -1025,10 +1383,16 @@ describe("WorkflowTabs", () => {
           workflowId: "workflow-1",
           isUnsaved: false,
           executions: [
-            { id: "exec-1", status: "running", startedAt: /* @__PURE__ */ new Date(), nodes: {}, logs: [] }
+            {
+              id: "exec-1",
+              status: "running",
+              startedAt: new Date(),
+              nodes: {},
+              logs: [],
+            },
           ],
-          activeExecutionId: "exec-1"
-        }
+          activeExecutionId: "exec-1",
+        },
       ];
       mockGetLocalStorageItem.mockImplementation((key) => {
         if (key === "workflowTabs") return savedTabs;
@@ -1058,10 +1422,16 @@ describe("WorkflowTabs", () => {
           workflowId: "workflow-1",
           isUnsaved: false,
           executions: [
-            { id: "exec-1", status: "completed", startedAt: /* @__PURE__ */ new Date(), nodes: {}, logs: [] }
+            {
+              id: "exec-1",
+              status: "completed",
+              startedAt: new Date(),
+              nodes: {},
+              logs: [],
+            },
           ],
-          activeExecutionId: "exec-1"
-        }
+          activeExecutionId: "exec-1",
+        },
       ];
       mockGetLocalStorageItem.mockImplementation((key) => {
         if (key === "workflowTabs") return savedTabs;
@@ -1084,10 +1454,16 @@ describe("WorkflowTabs", () => {
           workflowId: "workflow-1",
           isUnsaved: false,
           executions: [
-            { id: "exec-1", status: "running", startedAt: /* @__PURE__ */ new Date(), nodes: {}, logs: [] }
+            {
+              id: "exec-1",
+              status: "running",
+              startedAt: new Date(),
+              nodes: {},
+              logs: [],
+            },
           ],
-          activeExecutionId: "exec-1"
-        }
+          activeExecutionId: "exec-1",
+        },
       ];
       mockGetLocalStorageItem.mockImplementation((key) => {
         if (key === "workflowTabs") return savedTabs;
@@ -1109,7 +1485,7 @@ describe("WorkflowTabs", () => {
         status: "paused",
         started_at: "2024-01-01T00:00:00Z",
         node_states: {},
-        logs: []
+        logs: [],
       };
       mockApi.getExecution.mockResolvedValue(mockExecution);
       const savedTabs = [
@@ -1119,10 +1495,16 @@ describe("WorkflowTabs", () => {
           workflowId: "workflow-1",
           isUnsaved: false,
           executions: [
-            { id: "exec-1", status: "running", startedAt: /* @__PURE__ */ new Date(), nodes: {}, logs: [] }
+            {
+              id: "exec-1",
+              status: "running",
+              startedAt: new Date(),
+              nodes: {},
+              logs: [],
+            },
           ],
-          activeExecutionId: "exec-1"
-        }
+          activeExecutionId: "exec-1",
+        },
       ];
       mockGetLocalStorageItem.mockImplementation((key) => {
         if (key === "workflowTabs") return savedTabs;
@@ -1145,7 +1527,7 @@ describe("WorkflowTabs", () => {
         started_at: "2024-01-01T00:00:00Z",
         completed_at: "2024-01-01T01:00:00Z",
         node_states: {},
-        logs: []
+        logs: [],
       };
       mockApi.getExecution.mockResolvedValue(mockExecution);
       const savedTabs = [
@@ -1155,10 +1537,16 @@ describe("WorkflowTabs", () => {
           workflowId: "workflow-1",
           isUnsaved: false,
           executions: [
-            { id: "exec-1", status: "running", startedAt: /* @__PURE__ */ new Date(), nodes: {}, logs: [] }
+            {
+              id: "exec-1",
+              status: "running",
+              startedAt: new Date(),
+              nodes: {},
+              logs: [],
+            },
           ],
-          activeExecutionId: "exec-1"
-        }
+          activeExecutionId: "exec-1",
+        },
       ];
       mockGetLocalStorageItem.mockImplementation((key) => {
         if (key === "workflowTabs") return savedTabs;
@@ -1179,8 +1567,12 @@ describe("WorkflowTabs", () => {
         id: "exec-1",
         status: "running",
         started_at: "2024-01-01T00:00:00Z",
-        node_states: { "node-1": { status: "completed" } },
-        logs: []
+        node_states: {
+          "node-1": {
+            status: "completed",
+          },
+        },
+        logs: [],
       };
       mockApi.getExecution.mockResolvedValue(mockExecution);
       const savedTabs = [
@@ -1190,10 +1582,16 @@ describe("WorkflowTabs", () => {
           workflowId: "workflow-1",
           isUnsaved: false,
           executions: [
-            { id: "exec-1", status: "running", startedAt: /* @__PURE__ */ new Date(), nodes: {}, logs: [] }
+            {
+              id: "exec-1",
+              status: "running",
+              startedAt: new Date(),
+              nodes: {},
+              logs: [],
+            },
           ],
-          activeExecutionId: "exec-1"
-        }
+          activeExecutionId: "exec-1",
+        },
       ];
       mockGetLocalStorageItem.mockImplementation((key) => {
         if (key === "workflowTabs") return savedTabs;
@@ -1215,7 +1613,12 @@ describe("WorkflowTabs", () => {
         status: "running",
         started_at: "2024-01-01T00:00:00Z",
         node_states: {},
-        logs: [{ level: "INFO", message: "Test log" }]
+        logs: [
+          {
+            level: "INFO",
+            message: "Test log",
+          },
+        ],
       };
       mockApi.getExecution.mockResolvedValue(mockExecution);
       const savedTabs = [
@@ -1225,10 +1628,16 @@ describe("WorkflowTabs", () => {
           workflowId: "workflow-1",
           isUnsaved: false,
           executions: [
-            { id: "exec-1", status: "running", startedAt: /* @__PURE__ */ new Date(), nodes: {}, logs: [] }
+            {
+              id: "exec-1",
+              status: "running",
+              startedAt: new Date(),
+              nodes: {},
+              logs: [],
+            },
           ],
-          activeExecutionId: "exec-1"
-        }
+          activeExecutionId: "exec-1",
+        },
       ];
       mockGetLocalStorageItem.mockImplementation((key) => {
         if (key === "workflowTabs") return savedTabs;
@@ -1253,10 +1662,16 @@ describe("WorkflowTabs", () => {
           workflowId: "workflow-1",
           isUnsaved: false,
           executions: [
-            { id: "exec-1", status: "running", startedAt: /* @__PURE__ */ new Date(), nodes: {}, logs: [] }
+            {
+              id: "exec-1",
+              status: "running",
+              startedAt: new Date(),
+              nodes: {},
+              logs: [],
+            },
           ],
-          activeExecutionId: "exec-1"
-        }
+          activeExecutionId: "exec-1",
+        },
       ];
       mockGetLocalStorageItem.mockImplementation((key) => {
         if (key === "workflowTabs") return savedTabs;
@@ -1293,15 +1708,23 @@ describe("WorkflowTabs", () => {
       await waitForWithTimeout(() => {
         expect(screen.getAllByRole("button").length).toBeGreaterThan(0);
       });
-      const tabButtons = screen.getAllByRole("button").filter(
-        (btn) => btn.textContent?.includes("Untitled Workflow") && btn.getAttribute("title") !== "Close tab"
-      );
+      const tabButtons = screen
+        .getAllByRole("button")
+        .filter(
+          (btn) =>
+            btn.textContent?.includes("Untitled Workflow") &&
+            btn.getAttribute("title") !== "Close tab",
+        );
       if (tabButtons.length > 0) {
         fireEvent.dblClick(tabButtons[0]);
         await waitForWithTimeout(() => {
           const input = screen.getByDisplayValue(/Untitled Workflow/);
           expect(input).toBeInTheDocument();
-          fireEvent.change(input, { target: { value: "New Name" } });
+          fireEvent.change(input, {
+            target: {
+              value: "New Name",
+            },
+          });
           fireEvent.blur(input);
         });
         await waitForWithTimeout(() => {
@@ -1312,7 +1735,14 @@ describe("WorkflowTabs", () => {
     it("should handle commitTabRename when getWorkflow fails", async () => {
       mockApi.getWorkflow.mockRejectedValue(new Error("Get workflow failed"));
       const savedTabs = [
-        { id: "tab-1", name: "Test Workflow", workflowId: "workflow-1", isUnsaved: false, executions: [], activeExecutionId: null }
+        {
+          id: "tab-1",
+          name: "Test Workflow",
+          workflowId: "workflow-1",
+          isUnsaved: false,
+          executions: [],
+          activeExecutionId: null,
+        },
       ];
       mockGetLocalStorageItem.mockImplementation((key) => {
         if (key === "workflowTabs") return savedTabs;
@@ -1323,19 +1753,25 @@ describe("WorkflowTabs", () => {
       await waitForWithTimeout(() => {
         expect(screen.getAllByRole("button").length).toBeGreaterThan(0);
       });
-      const tabButtons = screen.getAllByRole("button").filter(
-        (btn) => btn.textContent?.includes("Test Workflow")
-      );
+      const tabButtons = screen
+        .getAllByRole("button")
+        .filter((btn) => btn.textContent?.includes("Test Workflow"));
       if (tabButtons.length > 0) {
         fireEvent.dblClick(tabButtons[0]);
         await waitForWithTimeout(() => {
           const input = screen.getByDisplayValue(/Test Workflow/);
           expect(input).toBeInTheDocument();
-          fireEvent.change(input, { target: { value: "New Name" } });
+          fireEvent.change(input, {
+            target: {
+              value: "New Name",
+            },
+          });
           fireEvent.blur(input);
         });
         await waitForWithTimeout(() => {
-          expect(showError).toHaveBeenCalledWith(expect.stringContaining("Failed to rename workflow"));
+          expect(showError).toHaveBeenCalledWith(
+            expect.stringContaining("Failed to rename workflow"),
+          );
         }, 3e3);
       }
     });
@@ -1346,12 +1782,19 @@ describe("WorkflowTabs", () => {
         description: "Test",
         nodes: [],
         edges: [],
-        variables: {}
+        variables: {},
       };
       mockApi.getWorkflow.mockResolvedValue(mockWorkflow);
       mockApi.updateWorkflow.mockRejectedValue(new Error("Update failed"));
       const savedTabs = [
-        { id: "tab-1", name: "Test Workflow", workflowId: "workflow-1", isUnsaved: false, executions: [], activeExecutionId: null }
+        {
+          id: "tab-1",
+          name: "Test Workflow",
+          workflowId: "workflow-1",
+          isUnsaved: false,
+          executions: [],
+          activeExecutionId: null,
+        },
       ];
       mockGetLocalStorageItem.mockImplementation((key) => {
         if (key === "workflowTabs") return savedTabs;
@@ -1362,19 +1805,25 @@ describe("WorkflowTabs", () => {
       await waitForWithTimeout(() => {
         expect(screen.getAllByRole("button").length).toBeGreaterThan(0);
       });
-      const tabButtons = screen.getAllByRole("button").filter(
-        (btn) => btn.textContent?.includes("Test Workflow")
-      );
+      const tabButtons = screen
+        .getAllByRole("button")
+        .filter((btn) => btn.textContent?.includes("Test Workflow"));
       if (tabButtons.length > 0) {
         fireEvent.dblClick(tabButtons[0]);
         await waitForWithTimeout(() => {
           const input = screen.getByDisplayValue(/Test Workflow/);
           expect(input).toBeInTheDocument();
-          fireEvent.change(input, { target: { value: "New Name" } });
+          fireEvent.change(input, {
+            target: {
+              value: "New Name",
+            },
+          });
           fireEvent.blur(input);
         });
         await waitForWithTimeout(() => {
-          expect(showError).toHaveBeenCalledWith(expect.stringContaining("Failed to rename workflow"));
+          expect(showError).toHaveBeenCalledWith(
+            expect.stringContaining("Failed to rename workflow"),
+          );
         }, 3e3);
       }
     });
@@ -1385,14 +1834,25 @@ describe("WorkflowTabs", () => {
         description: "Test",
         nodes: [],
         edges: [],
-        variables: {}
+        variables: {},
       };
       mockApi.getWorkflow.mockResolvedValue(mockWorkflow);
       const error = new Error("Update failed");
-      error.response = { data: { detail: "Custom error detail" } };
+      error.response = {
+        data: {
+          detail: "Custom error detail",
+        },
+      };
       mockApi.updateWorkflow.mockRejectedValue(error);
       const savedTabs = [
-        { id: "tab-1", name: "Test Workflow", workflowId: "workflow-1", isUnsaved: false, executions: [], activeExecutionId: null }
+        {
+          id: "tab-1",
+          name: "Test Workflow",
+          workflowId: "workflow-1",
+          isUnsaved: false,
+          executions: [],
+          activeExecutionId: null,
+        },
       ];
       mockGetLocalStorageItem.mockImplementation((key) => {
         if (key === "workflowTabs") return savedTabs;
@@ -1403,19 +1863,25 @@ describe("WorkflowTabs", () => {
       await waitForWithTimeout(() => {
         expect(screen.getAllByRole("button").length).toBeGreaterThan(0);
       });
-      const tabButtons = screen.getAllByRole("button").filter(
-        (btn) => btn.textContent?.includes("Test Workflow")
-      );
+      const tabButtons = screen
+        .getAllByRole("button")
+        .filter((btn) => btn.textContent?.includes("Test Workflow"));
       if (tabButtons.length > 0) {
         fireEvent.dblClick(tabButtons[0]);
         await waitForWithTimeout(() => {
           const input = screen.getByDisplayValue(/Test Workflow/);
           expect(input).toBeInTheDocument();
-          fireEvent.change(input, { target: { value: "New Name" } });
+          fireEvent.change(input, {
+            target: {
+              value: "New Name",
+            },
+          });
           fireEvent.blur(input);
         });
         await waitForWithTimeout(() => {
-          expect(showError).toHaveBeenCalledWith(expect.stringContaining("Custom error detail"));
+          expect(showError).toHaveBeenCalledWith(
+            expect.stringContaining("Custom error detail"),
+          );
         }, 3e3);
       }
     });
@@ -1426,12 +1892,19 @@ describe("WorkflowTabs", () => {
         description: "Test",
         nodes: [],
         edges: [],
-        variables: {}
+        variables: {},
       };
       mockApi.getWorkflow.mockResolvedValue(mockWorkflow);
       mockApi.updateWorkflow.mockRejectedValue(new Error("Network error"));
       const savedTabs = [
-        { id: "tab-1", name: "Test Workflow", workflowId: "workflow-1", isUnsaved: false, executions: [], activeExecutionId: null }
+        {
+          id: "tab-1",
+          name: "Test Workflow",
+          workflowId: "workflow-1",
+          isUnsaved: false,
+          executions: [],
+          activeExecutionId: null,
+        },
       ];
       mockGetLocalStorageItem.mockImplementation((key) => {
         if (key === "workflowTabs") return savedTabs;
@@ -1442,19 +1915,25 @@ describe("WorkflowTabs", () => {
       await waitForWithTimeout(() => {
         expect(screen.getAllByRole("button").length).toBeGreaterThan(0);
       });
-      const tabButtons = screen.getAllByRole("button").filter(
-        (btn) => btn.textContent?.includes("Test Workflow")
-      );
+      const tabButtons = screen
+        .getAllByRole("button")
+        .filter((btn) => btn.textContent?.includes("Test Workflow"));
       if (tabButtons.length > 0) {
         fireEvent.dblClick(tabButtons[0]);
         await waitForWithTimeout(() => {
           const input = screen.getByDisplayValue(/Test Workflow/);
           expect(input).toBeInTheDocument();
-          fireEvent.change(input, { target: { value: "New Name" } });
+          fireEvent.change(input, {
+            target: {
+              value: "New Name",
+            },
+          });
           fireEvent.blur(input);
         });
         await waitForWithTimeout(() => {
-          expect(showError).toHaveBeenCalledWith(expect.stringContaining("Network error"));
+          expect(showError).toHaveBeenCalledWith(
+            expect.stringContaining("Network error"),
+          );
         }, 3e3);
       }
     });
@@ -1465,12 +1944,19 @@ describe("WorkflowTabs", () => {
         description: "Test",
         nodes: [],
         edges: [],
-        variables: {}
+        variables: {},
       };
       mockApi.getWorkflow.mockResolvedValue(mockWorkflow);
       mockApi.updateWorkflow.mockRejectedValue({});
       const savedTabs = [
-        { id: "tab-1", name: "Test Workflow", workflowId: "workflow-1", isUnsaved: false, executions: [], activeExecutionId: null }
+        {
+          id: "tab-1",
+          name: "Test Workflow",
+          workflowId: "workflow-1",
+          isUnsaved: false,
+          executions: [],
+          activeExecutionId: null,
+        },
       ];
       mockGetLocalStorageItem.mockImplementation((key) => {
         if (key === "workflowTabs") return savedTabs;
@@ -1481,19 +1967,25 @@ describe("WorkflowTabs", () => {
       await waitForWithTimeout(() => {
         expect(screen.getAllByRole("button").length).toBeGreaterThan(0);
       });
-      const tabButtons = screen.getAllByRole("button").filter(
-        (btn) => btn.textContent?.includes("Test Workflow")
-      );
+      const tabButtons = screen
+        .getAllByRole("button")
+        .filter((btn) => btn.textContent?.includes("Test Workflow"));
       if (tabButtons.length > 0) {
         fireEvent.dblClick(tabButtons[0]);
         await waitForWithTimeout(() => {
           const input = screen.getByDisplayValue(/Test Workflow/);
           expect(input).toBeInTheDocument();
-          fireEvent.change(input, { target: { value: "New Name" } });
+          fireEvent.change(input, {
+            target: {
+              value: "New Name",
+            },
+          });
           fireEvent.blur(input);
         });
         await waitForWithTimeout(() => {
-          expect(showError).toHaveBeenCalledWith(expect.stringContaining("Unknown error"));
+          expect(showError).toHaveBeenCalledWith(
+            expect.stringContaining("Unknown error"),
+          );
         }, 3e3);
       }
     });
@@ -1518,26 +2010,35 @@ describe("WorkflowTabs", () => {
         get: jest.fn(),
         post: jest.fn().mockResolvedValue({
           ok: false,
-          text: async () => "Server error"
+          text: async () => "Server error",
         }),
         put: jest.fn(),
-        delete: jest.fn()
+        delete: jest.fn(),
       };
       const savedTabs = [
-        { id: "tab-1", name: "Test Workflow", workflowId: "workflow-1", isUnsaved: false, executions: [], activeExecutionId: null }
+        {
+          id: "tab-1",
+          name: "Test Workflow",
+          workflowId: "workflow-1",
+          isUnsaved: false,
+          executions: [],
+          activeExecutionId: null,
+        },
       ];
       renderWithProvider({
         httpClient: mockHttpClient,
         apiBaseUrl: "http://test.api.com/api",
         initialTabs: savedTabs,
-        initialActiveTabId: "tab-1"
+        initialActiveTabId: "tab-1",
       });
       await waitForWithTimeout(() => {
         expect(screen.getAllByRole("button").length).toBeGreaterThan(0);
       });
       await waitForWithTimeout(() => {
         const buttons = screen.getAllByRole("button");
-        const hasPublishButton = buttons.some((btn) => btn.getAttribute("title") === "Publish workflow");
+        const hasPublishButton = buttons.some(
+          (btn) => btn.getAttribute("title") === "Publish workflow",
+        );
         expect(hasPublishButton).toBe(true);
       }, 2e3);
       const publishButton = screen.getByTitle(/Publish workflow/);
@@ -1550,7 +2051,9 @@ describe("WorkflowTabs", () => {
         fireEvent.submit(form);
       }
       await waitForWithTimeout(() => {
-        expect(showError).toHaveBeenCalledWith(expect.stringContaining("Failed to publish"));
+        expect(showError).toHaveBeenCalledWith(
+          expect.stringContaining("Failed to publish"),
+        );
       }, 3e3);
     });
     it("should handle handlePublish when response.json() fails", async () => {
@@ -1560,19 +2063,26 @@ describe("WorkflowTabs", () => {
           ok: true,
           json: async () => {
             throw new Error("JSON parse error");
-          }
+          },
         }),
         put: jest.fn(),
-        delete: jest.fn()
+        delete: jest.fn(),
       };
       const savedTabs = [
-        { id: "workflow-1", name: "Test Workflow", workflowId: "workflow-1", isUnsaved: false, executions: [], activeExecutionId: null }
+        {
+          id: "workflow-1",
+          name: "Test Workflow",
+          workflowId: "workflow-1",
+          isUnsaved: false,
+          executions: [],
+          activeExecutionId: null,
+        },
       ];
       renderWithProvider({
         httpClient: mockHttpClient,
         apiBaseUrl: "http://test.api.com/api",
         initialTabs: savedTabs,
-        initialActiveTabId: "workflow-1"
+        initialActiveTabId: "workflow-1",
       });
       await waitForWithTimeout(() => {
         expect(screen.getAllByRole("button").length).toBeGreaterThan(0);
@@ -1586,7 +2096,9 @@ describe("WorkflowTabs", () => {
       expect(form).toBeInTheDocument();
       fireEvent.submit(form);
       await waitForWithTimeout(() => {
-        expect(showError).toHaveBeenCalledWith(expect.stringContaining("Failed to publish workflow"));
+        expect(showError).toHaveBeenCalledWith(
+          expect.stringContaining("Failed to publish workflow"),
+        );
       }, 3e3);
     });
     it("should handle handlePublish when tags are empty", async () => {
@@ -1594,19 +2106,29 @@ describe("WorkflowTabs", () => {
         get: jest.fn(),
         post: jest.fn().mockResolvedValue({
           ok: true,
-          json: async () => ({ id: "published-1", name: "Published Workflow" })
+          json: async () => ({
+            id: "published-1",
+            name: "Published Workflow",
+          }),
         }),
         put: jest.fn(),
-        delete: jest.fn()
+        delete: jest.fn(),
       };
       const savedTabs = [
-        { id: "tab-1", name: "Test Workflow", workflowId: "workflow-1", isUnsaved: false, executions: [], activeExecutionId: null }
+        {
+          id: "tab-1",
+          name: "Test Workflow",
+          workflowId: "workflow-1",
+          isUnsaved: false,
+          executions: [],
+          activeExecutionId: null,
+        },
       ];
       renderWithProvider({
         httpClient: mockHttpClient,
         apiBaseUrl: "http://test.api.com/api",
         initialTabs: savedTabs,
-        initialActiveTabId: "tab-1"
+        initialActiveTabId: "tab-1",
       });
       await waitForWithTimeout(() => {
         expect(screen.getAllByRole("button").length).toBeGreaterThan(0);
@@ -1618,7 +2140,11 @@ describe("WorkflowTabs", () => {
       });
       const tagsInput = screen.queryByPlaceholderText(/automation, ai/);
       if (tagsInput) {
-        fireEvent.change(tagsInput, { target: { value: "" } });
+        fireEvent.change(tagsInput, {
+          target: {
+            value: "",
+          },
+        });
       }
       const form = screen.getByText(/Publish to Marketplace/).closest("form");
       if (form) {
@@ -1633,19 +2159,29 @@ describe("WorkflowTabs", () => {
         get: jest.fn(),
         post: jest.fn().mockResolvedValue({
           ok: true,
-          json: async () => ({ id: "published-1", name: "Published Workflow" })
+          json: async () => ({
+            id: "published-1",
+            name: "Published Workflow",
+          }),
         }),
         put: jest.fn(),
-        delete: jest.fn()
+        delete: jest.fn(),
       };
       const savedTabs = [
-        { id: "tab-1", name: "Test Workflow", workflowId: "workflow-1", isUnsaved: false, executions: [], activeExecutionId: null }
+        {
+          id: "tab-1",
+          name: "Test Workflow",
+          workflowId: "workflow-1",
+          isUnsaved: false,
+          executions: [],
+          activeExecutionId: null,
+        },
       ];
       renderWithProvider({
         httpClient: mockHttpClient,
         apiBaseUrl: "http://test.api.com/api",
         initialTabs: savedTabs,
-        initialActiveTabId: "tab-1"
+        initialActiveTabId: "tab-1",
       });
       await waitForWithTimeout(() => {
         expect(screen.getAllByRole("button").length).toBeGreaterThan(0);
@@ -1657,7 +2193,11 @@ describe("WorkflowTabs", () => {
       });
       const tagsInput = screen.queryByPlaceholderText(/automation, ai/);
       if (tagsInput) {
-        fireEvent.change(tagsInput, { target: { value: " tag1 , tag2 , tag3 " } });
+        fireEvent.change(tagsInput, {
+          target: {
+            value: " tag1 , tag2 , tag3 ",
+          },
+        });
       }
       const form = screen.getByText(/Publish to Marketplace/).closest("form");
       if (form) {
@@ -1672,19 +2212,29 @@ describe("WorkflowTabs", () => {
         get: jest.fn(),
         post: jest.fn().mockResolvedValue({
           ok: true,
-          json: async () => ({ id: "published-1", name: "Published Workflow" })
+          json: async () => ({
+            id: "published-1",
+            name: "Published Workflow",
+          }),
         }),
         put: jest.fn(),
-        delete: jest.fn()
+        delete: jest.fn(),
       };
       const savedTabs = [
-        { id: "tab-1", name: "Test Workflow", workflowId: "workflow-1", isUnsaved: false, executions: [], activeExecutionId: null }
+        {
+          id: "tab-1",
+          name: "Test Workflow",
+          workflowId: "workflow-1",
+          isUnsaved: false,
+          executions: [],
+          activeExecutionId: null,
+        },
       ];
       renderWithProvider({
         httpClient: mockHttpClient,
         apiBaseUrl: "http://test.api.com/api",
         initialTabs: savedTabs,
-        initialActiveTabId: "tab-1"
+        initialActiveTabId: "tab-1",
       });
       await waitForWithTimeout(() => {
         expect(screen.getAllByRole("button").length).toBeGreaterThan(0);
@@ -1709,25 +2259,35 @@ describe("WorkflowTabs", () => {
         token: null,
         login: jest.fn(),
         logout: jest.fn(),
-        register: jest.fn()
+        register: jest.fn(),
       });
       const mockHttpClient = {
         get: jest.fn(),
         post: jest.fn().mockResolvedValue({
           ok: true,
-          json: async () => ({ id: "published-1", name: "Published Workflow" })
+          json: async () => ({
+            id: "published-1",
+            name: "Published Workflow",
+          }),
         }),
         put: jest.fn(),
-        delete: jest.fn()
+        delete: jest.fn(),
       };
       const savedTabs = [
-        { id: "tab-1", name: "Test Workflow", workflowId: "workflow-1", isUnsaved: false, executions: [], activeExecutionId: null }
+        {
+          id: "tab-1",
+          name: "Test Workflow",
+          workflowId: "workflow-1",
+          isUnsaved: false,
+          executions: [],
+          activeExecutionId: null,
+        },
       ];
       renderWithProvider({
         httpClient: mockHttpClient,
         apiBaseUrl: "http://test.api.com/api",
         initialTabs: savedTabs,
-        initialActiveTabId: "tab-1"
+        initialActiveTabId: "tab-1",
       });
       await waitForWithTimeout(() => {
         expect(screen.getAllByRole("button").length).toBeGreaterThan(0);
@@ -1742,7 +2302,9 @@ describe("WorkflowTabs", () => {
         fireEvent.submit(form);
       }
       await waitForWithTimeout(() => {
-        expect(showError).toHaveBeenCalledWith(expect.stringContaining("Save the workflow before publishing"));
+        expect(showError).toHaveBeenCalledWith(
+          expect.stringContaining("Save the workflow before publishing"),
+        );
       });
       expect(mockHttpClient.post).not.toHaveBeenCalled();
     });
@@ -1754,14 +2316,23 @@ describe("WorkflowTabs", () => {
         name: "Loaded Workflow",
         description: "Test",
         nodes: [],
-        edges: []
+        edges: [],
       });
-      const { rerender } = renderWithProvider({ initialWorkflowId: "workflow-1", workflowLoadKey: 1 });
+      const { rerender } = renderWithProvider({
+        initialWorkflowId: "workflow-1",
+        workflowLoadKey: 1,
+      });
       await waitForWithTimeout(() => {
         expect(screen.getAllByRole("button").length).toBeGreaterThan(0);
       });
       rerender(
-        /* @__PURE__ */ jsx(WorkflowTabsProvider, { initialTabs: [], initialActiveTabId: null, children: /* @__PURE__ */ jsx(WorkflowTabs, { initialWorkflowId: "workflow-1", workflowLoadKey: 1, onExecutionStart: mockOnExecutionStart }) })
+        <WorkflowTabsProvider initialTabs={[]} initialActiveTabId={null}>
+          <WorkflowTabs
+            initialWorkflowId="workflow-1"
+            workflowLoadKey={1}
+            onExecutionStart={mockOnExecutionStart}
+          />
+        </WorkflowTabsProvider>,
       );
       await waitForWithTimeout(() => {
         expect(screen.getAllByRole("button").length).toBeGreaterThan(0);
@@ -1773,21 +2344,32 @@ describe("WorkflowTabs", () => {
         name: "Loaded Workflow",
         description: "Test",
         nodes: [],
-        edges: []
+        edges: [],
       });
-      const { rerender } = renderWithProvider({ initialWorkflowId: "workflow-1", workflowLoadKey: 1 });
+      const { rerender } = renderWithProvider({
+        initialWorkflowId: "workflow-1",
+        workflowLoadKey: 1,
+      });
       await waitForWithTimeout(() => {
         expect(screen.getAllByRole("button").length).toBeGreaterThan(0);
       });
       rerender(
-        /* @__PURE__ */ jsx(WorkflowTabsProvider, { initialTabs: [], initialActiveTabId: null, children: /* @__PURE__ */ jsx(WorkflowTabs, { initialWorkflowId: "workflow-1", workflowLoadKey: 2, onExecutionStart: mockOnExecutionStart }) })
+        <WorkflowTabsProvider initialTabs={[]} initialActiveTabId={null}>
+          <WorkflowTabs
+            initialWorkflowId="workflow-1"
+            workflowLoadKey={2}
+            onExecutionStart={mockOnExecutionStart}
+          />
+        </WorkflowTabsProvider>,
       );
       await waitForWithTimeout(() => {
         expect(screen.getAllByRole("button").length).toBeGreaterThan(0);
       });
     });
     it("should handle initialWorkflowId when workflowLoadKey is undefined", async () => {
-      renderWithProvider({ initialWorkflowId: "workflow-1" });
+      renderWithProvider({
+        initialWorkflowId: "workflow-1",
+      });
       await waitForWithTimeout(() => {
         expect(screen.getAllByRole("button").length).toBeGreaterThan(0);
       });
@@ -1799,17 +2381,34 @@ describe("WorkflowTabs", () => {
         name: "Loaded Workflow",
         description: "Test",
         nodes: [],
-        edges: []
+        edges: [],
       });
       const savedTabs = [
-        { id: "tab-1", name: "Tab 1", workflowId: null, isUnsaved: false, executions: [], activeExecutionId: null },
-        { id: "tab-2", name: "Tab 2", workflowId: null, isUnsaved: false, executions: [], activeExecutionId: null }
+        {
+          id: "tab-1",
+          name: "Tab 1",
+          workflowId: null,
+          isUnsaved: false,
+          executions: [],
+          activeExecutionId: null,
+        },
+        {
+          id: "tab-2",
+          name: "Tab 2",
+          workflowId: null,
+          isUnsaved: false,
+          executions: [],
+          activeExecutionId: null,
+        },
       ];
       mockGetLocalStorageItem.mockImplementation((key) => {
         if (key === "workflowTabs") return savedTabs;
         return null;
       });
-      renderWithProvider({ initialWorkflowId: "workflow-1", workflowLoadKey: 1 });
+      renderWithProvider({
+        initialWorkflowId: "workflow-1",
+        workflowLoadKey: 1,
+      });
       await waitForWithTimeout(() => {
         expect(screen.getAllByRole("button").length).toBeGreaterThan(0);
       });
@@ -1821,17 +2420,27 @@ describe("WorkflowTabs", () => {
         name: "Loaded Workflow",
         description: "Test",
         nodes: [],
-        edges: []
+        edges: [],
       });
       const existingTabId = `workflow-${Date.now()}`;
       const savedTabs = [
-        { id: existingTabId, name: "Existing Tab", workflowId: "workflow-1", isUnsaved: false, executions: [], activeExecutionId: null }
+        {
+          id: existingTabId,
+          name: "Existing Tab",
+          workflowId: "workflow-1",
+          isUnsaved: false,
+          executions: [],
+          activeExecutionId: null,
+        },
       ];
       mockGetLocalStorageItem.mockImplementation((key) => {
         if (key === "workflowTabs") return savedTabs;
         return null;
       });
-      renderWithProvider({ initialWorkflowId: "workflow-1", workflowLoadKey: 1 });
+      renderWithProvider({
+        initialWorkflowId: "workflow-1",
+        workflowLoadKey: 1,
+      });
       await waitForWithTimeout(() => {
         expect(screen.getAllByRole("button").length).toBeGreaterThan(0);
       });
@@ -1853,7 +2462,14 @@ describe("WorkflowTabs", () => {
     });
     it("should handle activeTabId validation when activeTabId is null", async () => {
       const savedTabs = [
-        { id: "tab-1", name: "Tab 1", workflowId: null, isUnsaved: false, executions: [], activeExecutionId: null }
+        {
+          id: "tab-1",
+          name: "Tab 1",
+          workflowId: null,
+          isUnsaved: false,
+          executions: [],
+          activeExecutionId: null,
+        },
       ];
       mockGetLocalStorageItem.mockImplementation((key) => {
         if (key === "workflowTabs") return savedTabs;
@@ -1868,7 +2484,14 @@ describe("WorkflowTabs", () => {
     });
     it("should handle activeTabId validation when activeTabId does not exist in tabs", async () => {
       const savedTabs = [
-        { id: "tab-1", name: "Tab 1", workflowId: null, isUnsaved: false, executions: [], activeExecutionId: null }
+        {
+          id: "tab-1",
+          name: "Tab 1",
+          workflowId: null,
+          isUnsaved: false,
+          executions: [],
+          activeExecutionId: null,
+        },
       ];
       mockGetLocalStorageItem.mockImplementation((key) => {
         if (key === "workflowTabs") return savedTabs;
@@ -1884,7 +2507,9 @@ describe("WorkflowTabs", () => {
   });
   describe("Storage edge cases", () => {
     it("should handle saveTabsToStorage when storage is null", async () => {
-      renderWithProvider({ storage: null });
+      renderWithProvider({
+        storage: null,
+      });
       await waitForWithTimeout(() => {
         expect(screen.getAllByRole("button").length).toBeGreaterThan(0);
       });
@@ -1895,7 +2520,9 @@ describe("WorkflowTabs", () => {
       window.localStorage.setItem = jest.fn(() => {
         throw new Error("Quota exceeded");
       });
-      renderWithProvider({ storage: null });
+      renderWithProvider({
+        storage: null,
+      });
       await waitForWithTimeout(() => {
         expect(screen.getAllByRole("button").length).toBeGreaterThan(0);
       });
@@ -1910,9 +2537,11 @@ describe("WorkflowTabs", () => {
         }),
         removeItem: jest.fn(),
         addEventListener: jest.fn(),
-        removeEventListener: jest.fn()
+        removeEventListener: jest.fn(),
       };
-      renderWithProvider({ storage: mockStorage });
+      renderWithProvider({
+        storage: mockStorage,
+      });
       await waitForWithTimeout(() => {
         expect(screen.getAllByRole("button").length).toBeGreaterThan(0);
       });
@@ -1920,7 +2549,10 @@ describe("WorkflowTabs", () => {
     });
     it("should handle loadTabsFromStorage when tabs is not an array", async () => {
       mockGetLocalStorageItem.mockImplementation((key) => {
-        if (key === "workflowTabs") return { not: "an array" };
+        if (key === "workflowTabs")
+          return {
+            not: "an array",
+          };
         return null;
       });
       renderWithProvider();
@@ -1931,7 +2563,14 @@ describe("WorkflowTabs", () => {
     });
     it("should handle loadActiveTabFromStorage when saved tab does not exist", async () => {
       const savedTabs = [
-        { id: "tab-1", name: "Tab 1", workflowId: null, isUnsaved: false, executions: [], activeExecutionId: null }
+        {
+          id: "tab-1",
+          name: "Tab 1",
+          workflowId: null,
+          isUnsaved: false,
+          executions: [],
+          activeExecutionId: null,
+        },
       ];
       mockGetLocalStorageItem.mockImplementation((key) => {
         if (key === "workflowTabs") return savedTabs;
@@ -1955,28 +2594,47 @@ describe("WorkflowTabs", () => {
   });
   describe("No tabs state", () => {
     it("should render no tabs state when tabs array is empty", async () => {
-      const { WorkflowTabsProvider: WorkflowTabsProvider2 } = require("../contexts/WorkflowTabsContext");
+      const {
+        WorkflowTabsProvider: WorkflowTabsProvider2,
+      } = require("../contexts/WorkflowTabsContext");
       render(
-        /* @__PURE__ */ jsx(WorkflowTabsProvider2, { initialTabs: [], initialActiveTabId: null, children: /* @__PURE__ */ jsx(WorkflowTabs, { onExecutionStart: mockOnExecutionStart }) })
+        <WorkflowTabsProvider2 initialTabs={[]} initialActiveTabId={null}>
+          <WorkflowTabs onExecutionStart={mockOnExecutionStart} />
+        </WorkflowTabsProvider2>,
       );
       await waitForWithTimeout(() => {
         const noExecutionsText = screen.queryByText(/No executions/i);
         const newWorkflowButton = screen.queryByText(/New Workflow/i);
-        expect(noExecutionsText || newWorkflowButton || screen.queryAllByText(/Untitled Workflow/).length > 0).toBeTruthy();
+        expect(
+          noExecutionsText ||
+            newWorkflowButton ||
+            screen.queryAllByText(/Untitled Workflow/).length > 0,
+        ).toBeTruthy();
       }, 3e3);
     });
     it("should create new workflow when clicking New Workflow button in no tabs state", async () => {
-      const { WorkflowTabsProvider: WorkflowTabsProvider2 } = require("../contexts/WorkflowTabsContext");
+      const {
+        WorkflowTabsProvider: WorkflowTabsProvider2,
+      } = require("../contexts/WorkflowTabsContext");
       render(
-        /* @__PURE__ */ jsx(WorkflowTabsProvider2, { initialTabs: [], initialActiveTabId: null, children: /* @__PURE__ */ jsx(WorkflowTabs, { onExecutionStart: mockOnExecutionStart }) })
+        <WorkflowTabsProvider2 initialTabs={[]} initialActiveTabId={null}>
+          <WorkflowTabs onExecutionStart={mockOnExecutionStart} />
+        </WorkflowTabsProvider2>,
       );
       await waitForWithTimeout(() => {
-        const newWorkflowButton2 = screen.queryByText(/New Workflow/i)?.closest("button");
+        const newWorkflowButton2 = screen
+          .queryByText(/New Workflow/i)
+          ?.closest("button");
         const plusButton2 = screen.queryByTitle(/New workflow/);
         const button2 = newWorkflowButton2 || plusButton2;
-        return button2 !== null || screen.queryAllByText(/Untitled Workflow/).length > 0;
+        return (
+          button2 !== null ||
+          screen.queryAllByText(/Untitled Workflow/).length > 0
+        );
       }, 3e3);
-      const newWorkflowButton = screen.queryByText(/New Workflow/i)?.closest("button");
+      const newWorkflowButton = screen
+        .queryByText(/New Workflow/i)
+        ?.closest("button");
       const plusButton = screen.queryByTitle(/New workflow/);
       const button = newWorkflowButton || plusButton;
       if (button) {
@@ -2035,10 +2693,27 @@ describe("WorkflowTabs", () => {
   describe("Active tab filtering", () => {
     it("should filter out tabs with null workflowId when passing to WorkflowBuilder", async () => {
       const tabsWithNullWorkflow = [
-        { id: "tab-1", name: "Tab 1", workflowId: null, isUnsaved: false, executions: [], activeExecutionId: null },
-        { id: "tab-2", name: "Tab 2", workflowId: "workflow-1", isUnsaved: false, executions: [], activeExecutionId: null }
+        {
+          id: "tab-1",
+          name: "Tab 1",
+          workflowId: null,
+          isUnsaved: false,
+          executions: [],
+          activeExecutionId: null,
+        },
+        {
+          id: "tab-2",
+          name: "Tab 2",
+          workflowId: "workflow-1",
+          isUnsaved: false,
+          executions: [],
+          activeExecutionId: null,
+        },
       ];
-      renderWithProvider({ initialTabs: tabsWithNullWorkflow, initialActiveTabId: "tab-2" });
+      renderWithProvider({
+        initialTabs: tabsWithNullWorkflow,
+        initialActiveTabId: "tab-2",
+      });
       await waitForWithTimeout(() => {
         expect(screen.getByText("Tab 2")).toBeInTheDocument();
       });
@@ -2051,11 +2726,19 @@ describe("WorkflowTabs", () => {
           name: "Tab 1",
           workflowId: "workflow-1",
           isUnsaved: false,
-          executions: [{ id: "exec-1", status: "running" }],
-          activeExecutionId: "exec-1"
-        }
+          executions: [
+            {
+              id: "exec-1",
+              status: "running",
+            },
+          ],
+          activeExecutionId: "exec-1",
+        },
       ];
-      renderWithProvider({ initialTabs: tabsWithExecutions, initialActiveTabId: "tab-1" });
+      renderWithProvider({
+        initialTabs: tabsWithExecutions,
+        initialActiveTabId: "tab-1",
+      });
       await waitForWithTimeout(() => {
         expect(screen.getByText("Tab 1")).toBeInTheDocument();
       });
@@ -2064,16 +2747,23 @@ describe("WorkflowTabs", () => {
   });
   describe("Active tab edge cases", () => {
     it("should handle when activeTab is undefined", async () => {
-      renderWithProvider({ initialTabs: [], initialActiveTabId: "non-existent-tab" });
+      renderWithProvider({
+        initialTabs: [],
+        initialActiveTabId: "non-existent-tab",
+      });
       await waitForWithTimeout(() => {
         const buttons = screen.getAllByRole("button");
         expect(buttons.length).toBeGreaterThan(0);
       });
     });
     it("should not render WorkflowBuilder when activeTab is null", async () => {
-      const { WorkflowTabsProvider: WorkflowTabsProvider2 } = require("../contexts/WorkflowTabsContext");
+      const {
+        WorkflowTabsProvider: WorkflowTabsProvider2,
+      } = require("../contexts/WorkflowTabsContext");
       render(
-        /* @__PURE__ */ jsx(WorkflowTabsProvider2, { initialTabs: [], initialActiveTabId: null, children: /* @__PURE__ */ jsx(WorkflowTabs, { onExecutionStart: mockOnExecutionStart }) })
+        <WorkflowTabsProvider2 initialTabs={[]} initialActiveTabId={null}>
+          <WorkflowTabs onExecutionStart={mockOnExecutionStart} />
+        </WorkflowTabsProvider2>,
       );
       await waitForWithTimeout(() => {
         const noExecutionsText = screen.queryByText(/No executions/i);
@@ -2081,7 +2771,9 @@ describe("WorkflowTabs", () => {
         if (noExecutionsText) {
           expect(workflowBuilder).not.toBeInTheDocument();
         } else {
-          expect(screen.queryAllByText(/Untitled Workflow/).length).toBeGreaterThan(0);
+          expect(
+            screen.queryAllByText(/Untitled Workflow/).length,
+          ).toBeGreaterThan(0);
         }
       }, 3e3);
     });
@@ -2090,10 +2782,20 @@ describe("WorkflowTabs", () => {
     it("should revert tab name on rename error", async () => {
       const originalName = "Original Name";
       const tabs = [
-        { id: "tab-1", name: originalName, workflowId: "workflow-1", isUnsaved: false, executions: [], activeExecutionId: null }
+        {
+          id: "tab-1",
+          name: originalName,
+          workflowId: "workflow-1",
+          isUnsaved: false,
+          executions: [],
+          activeExecutionId: null,
+        },
       ];
       mockApi.getWorkflow.mockRejectedValue(new Error("Network error"));
-      renderWithProvider({ initialTabs: tabs, initialActiveTabId: "tab-1" });
+      renderWithProvider({
+        initialTabs: tabs,
+        initialActiveTabId: "tab-1",
+      });
       await waitForWithTimeout(() => {
         expect(screen.getByText(originalName)).toBeInTheDocument();
       });
@@ -2103,7 +2805,11 @@ describe("WorkflowTabs", () => {
         await waitForWithTimeout(() => {
           const input = screen.getByDisplayValue(originalName);
           expect(input).toBeInTheDocument();
-          fireEvent.change(input, { target: { value: "New Name" } });
+          fireEvent.change(input, {
+            target: {
+              value: "New Name",
+            },
+          });
           fireEvent.blur(input);
         });
         await waitForWithTimeout(() => {
@@ -2116,12 +2822,19 @@ describe("WorkflowTabs", () => {
     it("should pass execution callbacks to WorkflowBuilder", async () => {
       const mockOnExecutionStart2 = jest.fn();
       const tabs = [
-        { id: "tab-1", name: "Tab 1", workflowId: "workflow-1", isUnsaved: false, executions: [], activeExecutionId: null }
+        {
+          id: "tab-1",
+          name: "Tab 1",
+          workflowId: "workflow-1",
+          isUnsaved: false,
+          executions: [],
+          activeExecutionId: null,
+        },
       ];
       renderWithProvider({
         initialTabs: tabs,
         initialActiveTabId: "tab-1",
-        onExecutionStart: mockOnExecutionStart2
+        onExecutionStart: mockOnExecutionStart2,
       });
       await waitForWithTimeout(() => {
         expect(screen.getByText("Tab 1")).toBeInTheDocument();
@@ -2135,13 +2848,17 @@ describe("WorkflowTabs", () => {
         get: jest.fn(),
         post: jest.fn(),
         put: jest.fn(),
-        delete: jest.fn()
+        delete: jest.fn(),
       };
-      renderWithProvider({ httpClient: mockHttpClient });
+      renderWithProvider({
+        httpClient: mockHttpClient,
+      });
       expect(screen.getAllByRole("button").length).toBeGreaterThan(0);
     });
     it("should accept apiBaseUrl prop", () => {
-      renderWithProvider({ apiBaseUrl: "https://custom-api.example.com/api" });
+      renderWithProvider({
+        apiBaseUrl: "https://custom-api.example.com/api",
+      });
       expect(screen.getAllByRole("button").length).toBeGreaterThan(0);
     });
     it("should use default adapters when props not provided", () => {
@@ -2161,7 +2878,9 @@ describe("WorkflowTabs", () => {
       if (closeButton) {
         fireEvent.click(closeButton);
         await waitForWithTimeout(() => {
-          expect(screen.queryByText(/Publish to Marketplace/i)).not.toBeInTheDocument();
+          expect(
+            screen.queryByText(/Publish to Marketplace/i),
+          ).not.toBeInTheDocument();
         });
       }
     });
@@ -2172,9 +2891,15 @@ describe("WorkflowTabs", () => {
       await waitForWithTimeout(() => {
         expect(screen.getByText(/Publish to Marketplace/i)).toBeInTheDocument();
       });
-      const nameInput = screen.queryByLabelText(/Name/i) || screen.queryByPlaceholderText(/Workflow name/i);
+      const nameInput =
+        screen.queryByLabelText(/Name/i) ||
+        screen.queryByPlaceholderText(/Workflow name/i);
       if (nameInput) {
-        fireEvent.change(nameInput, { target: { value: "Test Workflow" } });
+        fireEvent.change(nameInput, {
+          target: {
+            value: "Test Workflow",
+          },
+        });
         expect(nameInput.value).toBe("Test Workflow");
       }
     });
@@ -2182,9 +2907,19 @@ describe("WorkflowTabs", () => {
   describe("WorkflowBuilder callbacks", () => {
     it("should handle onWorkflowSaved callback", async () => {
       const tabs = [
-        { id: "tab-1", name: "Tab 1", workflowId: null, isUnsaved: true, executions: [], activeExecutionId: null }
+        {
+          id: "tab-1",
+          name: "Tab 1",
+          workflowId: null,
+          isUnsaved: true,
+          executions: [],
+          activeExecutionId: null,
+        },
       ];
-      renderWithProvider({ initialTabs: tabs, initialActiveTabId: "tab-1" });
+      renderWithProvider({
+        initialTabs: tabs,
+        initialActiveTabId: "tab-1",
+      });
       await waitForWithTimeout(() => {
         expect(screen.getByText("Tab 1")).toBeInTheDocument();
       });
@@ -2192,9 +2927,19 @@ describe("WorkflowTabs", () => {
     });
     it("should handle onWorkflowModified callback", async () => {
       const tabs = [
-        { id: "tab-1", name: "Tab 1", workflowId: "workflow-1", isUnsaved: false, executions: [], activeExecutionId: null }
+        {
+          id: "tab-1",
+          name: "Tab 1",
+          workflowId: "workflow-1",
+          isUnsaved: false,
+          executions: [],
+          activeExecutionId: null,
+        },
       ];
-      renderWithProvider({ initialTabs: tabs, initialActiveTabId: "tab-1" });
+      renderWithProvider({
+        initialTabs: tabs,
+        initialActiveTabId: "tab-1",
+      });
       await waitForWithTimeout(() => {
         expect(screen.getByText("Tab 1")).toBeInTheDocument();
       });
@@ -2202,7 +2947,14 @@ describe("WorkflowTabs", () => {
     });
     it("should handle onWorkflowLoaded callback", async () => {
       const tabs = [
-        { id: "tab-1", name: "Tab 1", workflowId: null, isUnsaved: false, executions: [], activeExecutionId: null }
+        {
+          id: "tab-1",
+          name: "Tab 1",
+          workflowId: null,
+          isUnsaved: false,
+          executions: [],
+          activeExecutionId: null,
+        },
       ];
       mockApi.getWorkflow.mockResolvedValue({
         id: "workflow-1",
@@ -2210,9 +2962,12 @@ describe("WorkflowTabs", () => {
         description: "Description",
         nodes: [],
         edges: [],
-        variables: {}
+        variables: {},
       });
-      renderWithProvider({ initialTabs: tabs, initialActiveTabId: "tab-1" });
+      renderWithProvider({
+        initialTabs: tabs,
+        initialActiveTabId: "tab-1",
+      });
       await waitForWithTimeout(() => {
         expect(screen.getByText("Tab 1")).toBeInTheDocument();
       });

@@ -3,12 +3,12 @@ import { useTabRenaming } from "./useTabRenaming";
 import { showError } from "../../utils/notifications";
 import { logger } from "../../utils/logger";
 jest.mock("../../utils/notifications", () => ({
-  showError: jest.fn()
+  showError: jest.fn(),
 }));
 jest.mock("../../utils/logger", () => ({
   logger: {
-    error: jest.fn()
-  }
+    error: jest.fn(),
+  },
 }));
 const mockShowError = showError;
 const mockLoggerError = logger.error;
@@ -21,8 +21,8 @@ describe("useTabRenaming", () => {
       workflowId: "workflow-1",
       isUnsaved: false,
       executions: [],
-      activeExecutionId: null
-    }
+      activeExecutionId: null,
+    },
   ];
   beforeEach(() => {
     jest.clearAllMocks();
@@ -35,11 +35,11 @@ describe("useTabRenaming", () => {
   });
   describe("startEditing", () => {
     it("should start editing a tab", () => {
-      const { result } = renderHook(
-        () => useTabRenaming({
+      const { result } = renderHook(() =>
+        useTabRenaming({
           tabs: mockTabs,
-          onRename: mockOnRename
-        })
+          onRename: mockOnRename,
+        }),
       );
       act(() => {
         result.current.startEditing(mockTabs[0]);
@@ -48,14 +48,14 @@ describe("useTabRenaming", () => {
       expect(result.current.editingName).toBe("Workflow 1");
     });
     it("should stop propagation on event if provided", () => {
-      const { result } = renderHook(
-        () => useTabRenaming({
+      const { result } = renderHook(() =>
+        useTabRenaming({
           tabs: mockTabs,
-          onRename: mockOnRename
-        })
+          onRename: mockOnRename,
+        }),
       );
       const mockEvent = {
-        stopPropagation: jest.fn()
+        stopPropagation: jest.fn(),
       };
       act(() => {
         result.current.startEditing(mockTabs[0], mockEvent);
@@ -63,11 +63,11 @@ describe("useTabRenaming", () => {
       expect(mockEvent.stopPropagation).toHaveBeenCalled();
     });
     it("should work without event", () => {
-      const { result } = renderHook(
-        () => useTabRenaming({
+      const { result } = renderHook(() =>
+        useTabRenaming({
           tabs: mockTabs,
-          onRename: mockOnRename
-        })
+          onRename: mockOnRename,
+        }),
       );
       act(() => {
         result.current.startEditing(mockTabs[0]);
@@ -77,11 +77,11 @@ describe("useTabRenaming", () => {
   });
   describe("commitRename", () => {
     it("should rename tab successfully", async () => {
-      const { result } = renderHook(
-        () => useTabRenaming({
+      const { result } = renderHook(() =>
+        useTabRenaming({
           tabs: mockTabs,
-          onRename: mockOnRename
-        })
+          onRename: mockOnRename,
+        }),
       );
       act(() => {
         result.current.startEditing(mockTabs[0]);
@@ -90,16 +90,20 @@ describe("useTabRenaming", () => {
       await act(async () => {
         await result.current.commitRename("tab-1", "New Name");
       });
-      expect(mockOnRename).toHaveBeenCalledWith("tab-1", "New Name", "Workflow 1");
+      expect(mockOnRename).toHaveBeenCalledWith(
+        "tab-1",
+        "New Name",
+        "Workflow 1",
+      );
       expect(result.current.editingTabId).toBeNull();
       expect(result.current.editingName).toBe("");
     });
     it("should trim whitespace from name", async () => {
-      const { result } = renderHook(
-        () => useTabRenaming({
+      const { result } = renderHook(() =>
+        useTabRenaming({
           tabs: mockTabs,
-          onRename: mockOnRename
-        })
+          onRename: mockOnRename,
+        }),
       );
       act(() => {
         result.current.startEditing(mockTabs[0]);
@@ -107,14 +111,18 @@ describe("useTabRenaming", () => {
       await act(async () => {
         await result.current.commitRename("tab-1", "  New Name  ");
       });
-      expect(mockOnRename).toHaveBeenCalledWith("tab-1", "New Name", "Workflow 1");
+      expect(mockOnRename).toHaveBeenCalledWith(
+        "tab-1",
+        "New Name",
+        "Workflow 1",
+      );
     });
     it("should show error for empty name", async () => {
-      const { result } = renderHook(
-        () => useTabRenaming({
+      const { result } = renderHook(() =>
+        useTabRenaming({
           tabs: mockTabs,
-          onRename: mockOnRename
-        })
+          onRename: mockOnRename,
+        }),
       );
       act(() => {
         result.current.startEditing(mockTabs[0]);
@@ -122,15 +130,17 @@ describe("useTabRenaming", () => {
       await act(async () => {
         await result.current.commitRename("tab-1", "   ");
       });
-      expect(mockShowError).toHaveBeenCalledWith("Workflow name cannot be empty.");
+      expect(mockShowError).toHaveBeenCalledWith(
+        "Workflow name cannot be empty.",
+      );
       expect(mockOnRename).not.toHaveBeenCalled();
     });
     it("should cancel editing if name unchanged", async () => {
-      const { result } = renderHook(
-        () => useTabRenaming({
+      const { result } = renderHook(() =>
+        useTabRenaming({
           tabs: mockTabs,
-          onRename: mockOnRename
-        })
+          onRename: mockOnRename,
+        }),
       );
       act(() => {
         result.current.startEditing(mockTabs[0]);
@@ -143,11 +153,11 @@ describe("useTabRenaming", () => {
     });
     it("should handle rename error", async () => {
       mockOnRename.mockRejectedValue(new Error("Rename failed"));
-      const { result } = renderHook(
-        () => useTabRenaming({
+      const { result } = renderHook(() =>
+        useTabRenaming({
           tabs: mockTabs,
-          onRename: mockOnRename
-        })
+          onRename: mockOnRename,
+        }),
       );
       act(() => {
         result.current.startEditing(mockTabs[0]);
@@ -160,11 +170,11 @@ describe("useTabRenaming", () => {
       expect(mockOnRename).toHaveBeenCalled();
     });
     it("should return early if tab not found", async () => {
-      const { result } = renderHook(
-        () => useTabRenaming({
+      const { result } = renderHook(() =>
+        useTabRenaming({
           tabs: mockTabs,
-          onRename: mockOnRename
-        })
+          onRename: mockOnRename,
+        }),
       );
       act(() => {
         result.current.startEditing(mockTabs[0]);
@@ -176,11 +186,11 @@ describe("useTabRenaming", () => {
       expect(result.current.editingTabId).toBeNull();
     });
     it("should prevent concurrent renames", async () => {
-      const { result } = renderHook(
-        () => useTabRenaming({
+      const { result } = renderHook(() =>
+        useTabRenaming({
           tabs: mockTabs,
-          onRename: mockOnRename
-        })
+          onRename: mockOnRename,
+        }),
       );
       act(() => {
         result.current.startEditing(mockTabs[0]);
@@ -196,11 +206,11 @@ describe("useTabRenaming", () => {
   });
   describe("cancelEditing", () => {
     it("should cancel editing", () => {
-      const { result } = renderHook(
-        () => useTabRenaming({
+      const { result } = renderHook(() =>
+        useTabRenaming({
           tabs: mockTabs,
-          onRename: mockOnRename
-        })
+          onRename: mockOnRename,
+        }),
       );
       act(() => {
         result.current.startEditing(mockTabs[0]);
@@ -215,11 +225,11 @@ describe("useTabRenaming", () => {
   });
   describe("handleInputBlur", () => {
     it("should commit rename on blur", async () => {
-      const { result } = renderHook(
-        () => useTabRenaming({
+      const { result } = renderHook(() =>
+        useTabRenaming({
           tabs: mockTabs,
-          onRename: mockOnRename
-        })
+          onRename: mockOnRename,
+        }),
       );
       act(() => {
         result.current.startEditing(mockTabs[0]);
@@ -234,11 +244,11 @@ describe("useTabRenaming", () => {
       });
     });
     it("should not commit if editing different tab", async () => {
-      const { result } = renderHook(
-        () => useTabRenaming({
+      const { result } = renderHook(() =>
+        useTabRenaming({
           tabs: mockTabs,
-          onRename: mockOnRename
-        })
+          onRename: mockOnRename,
+        }),
       );
       act(() => {
         result.current.startEditing(mockTabs[0]);
@@ -247,18 +257,21 @@ describe("useTabRenaming", () => {
         result.current.handleInputBlur("different-tab");
         jest.advanceTimersByTime(100);
       });
-      await waitFor(() => {
-        expect(mockOnRename).not.toHaveBeenCalled();
-      }, { timeout: 200 });
+      await waitFor(
+        () => {
+          expect(mockOnRename).not.toHaveBeenCalled();
+        },
+        { timeout: 200 },
+      );
     });
   });
   describe("handleInputKeyDown", () => {
     it("should commit rename on Enter", async () => {
-      const { result } = renderHook(
-        () => useTabRenaming({
+      const { result } = renderHook(() =>
+        useTabRenaming({
           tabs: mockTabs,
-          onRename: mockOnRename
-        })
+          onRename: mockOnRename,
+        }),
       );
       act(() => {
         result.current.startEditing(mockTabs[0]);
@@ -266,7 +279,7 @@ describe("useTabRenaming", () => {
       });
       const mockEvent = {
         key: "Enter",
-        preventDefault: jest.fn()
+        preventDefault: jest.fn(),
       };
       await act(async () => {
         result.current.handleInputKeyDown("tab-1", mockEvent);
@@ -275,18 +288,18 @@ describe("useTabRenaming", () => {
       expect(mockOnRename).toHaveBeenCalled();
     });
     it("should cancel editing on Escape", () => {
-      const { result } = renderHook(
-        () => useTabRenaming({
+      const { result } = renderHook(() =>
+        useTabRenaming({
           tabs: mockTabs,
-          onRename: mockOnRename
-        })
+          onRename: mockOnRename,
+        }),
       );
       act(() => {
         result.current.startEditing(mockTabs[0]);
       });
       const mockEvent = {
         key: "Escape",
-        preventDefault: jest.fn()
+        preventDefault: jest.fn(),
       };
       act(() => {
         result.current.handleInputKeyDown("tab-1", mockEvent);
@@ -295,18 +308,18 @@ describe("useTabRenaming", () => {
       expect(result.current.editingTabId).toBeNull();
     });
     it("should not handle other keys", () => {
-      const { result } = renderHook(
-        () => useTabRenaming({
+      const { result } = renderHook(() =>
+        useTabRenaming({
           tabs: mockTabs,
-          onRename: mockOnRename
-        })
+          onRename: mockOnRename,
+        }),
       );
       act(() => {
         result.current.startEditing(mockTabs[0]);
       });
       const mockEvent = {
         key: "a",
-        preventDefault: jest.fn()
+        preventDefault: jest.fn(),
       };
       act(() => {
         result.current.handleInputKeyDown("tab-1", mockEvent);

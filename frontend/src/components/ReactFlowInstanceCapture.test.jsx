@@ -1,10 +1,9 @@
-import { jsx } from "react/jsx-runtime";
 import { createRef } from "react";
 import { render } from "@testing-library/react";
 import { ReactFlowInstanceCapture } from "./ReactFlowInstanceCapture";
 import { useReactFlow } from "@xyflow/react";
 jest.mock("@xyflow/react", () => ({
-  useReactFlow: jest.fn()
+  useReactFlow: jest.fn(),
 }));
 const mockUseReactFlow = useReactFlow;
 describe("ReactFlowInstanceCapture", () => {
@@ -25,7 +24,7 @@ describe("ReactFlowInstanceCapture", () => {
     addEdges: jest.fn(),
     updateNode: jest.fn(),
     updateEdge: jest.fn(),
-    deleteElements: jest.fn()
+    deleteElements: jest.fn(),
   };
   beforeEach(() => {
     jest.clearAllMocks();
@@ -33,32 +32,39 @@ describe("ReactFlowInstanceCapture", () => {
   });
   it("should render without crashing", () => {
     const instanceRef = createRef();
-    const { container } = render(/* @__PURE__ */ jsx(ReactFlowInstanceCapture, { instanceRef }));
+    const { container } = render(
+      <ReactFlowInstanceCapture instanceRef={instanceRef} />,
+    );
     expect(container.firstChild).toBeNull();
   });
   it("should capture ReactFlow instance in ref", () => {
     const instanceRef = createRef();
-    render(/* @__PURE__ */ jsx(ReactFlowInstanceCapture, { instanceRef }));
+    render(<ReactFlowInstanceCapture instanceRef={instanceRef} />);
     expect(instanceRef.current).toBe(mockReactFlowInstance);
   });
   it("should update ref when ReactFlow instance changes", () => {
     const instanceRef = createRef();
-    const { rerender } = render(/* @__PURE__ */ jsx(ReactFlowInstanceCapture, { instanceRef }));
+    const { rerender } = render(
+      <ReactFlowInstanceCapture instanceRef={instanceRef} />,
+    );
     expect(instanceRef.current).toBe(mockReactFlowInstance);
-    const newInstance = { ...mockReactFlowInstance, zoomIn: jest.fn() };
+    const newInstance = {
+      ...mockReactFlowInstance,
+      zoomIn: jest.fn(),
+    };
     mockUseReactFlow.mockReturnValue(newInstance);
-    rerender(/* @__PURE__ */ jsx(ReactFlowInstanceCapture, { instanceRef }));
+    rerender(<ReactFlowInstanceCapture instanceRef={instanceRef} />);
     expect(instanceRef.current).toBe(newInstance);
   });
   it("should call useReactFlow hook", () => {
     const instanceRef = createRef();
-    render(/* @__PURE__ */ jsx(ReactFlowInstanceCapture, { instanceRef }));
+    render(<ReactFlowInstanceCapture instanceRef={instanceRef} />);
     expect(mockUseReactFlow).toHaveBeenCalled();
   });
   it("should handle null instance gracefully", () => {
     mockUseReactFlow.mockReturnValue(null);
     const instanceRef = createRef();
-    render(/* @__PURE__ */ jsx(ReactFlowInstanceCapture, { instanceRef }));
+    render(<ReactFlowInstanceCapture instanceRef={instanceRef} />);
     expect(instanceRef.current).toBeNull();
   });
 });

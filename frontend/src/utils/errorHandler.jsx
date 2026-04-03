@@ -6,22 +6,32 @@ import {
   DEFAULT_UNEXPECTED_ERROR_MESSAGE,
   ERROR_CONTEXT_PREFIX,
   STORAGE_ERROR_PREFIX,
-  formatStorageErrorMessage
+  formatStorageErrorMessage,
 } from "../constants/errorMessages";
 import { extractApiErrorMessage } from "../hooks/utils/apiUtils";
 function isApiError(error) {
-  return error !== null && error !== void 0 && typeof error === "object" && error.response !== null && error.response !== void 0 && typeof error.response === "object";
+  return (
+    error !== null &&
+    error !== void 0 &&
+    typeof error === "object" &&
+    error.response !== null &&
+    error.response !== void 0 &&
+    typeof error.response === "object"
+  );
 }
 function handleApiError(error, options = {}) {
   const {
     showNotification = true,
     logError = true,
     defaultMessage = DEFAULT_ERROR_MESSAGE,
-    context
+    context,
   } = options;
   const errorMessage = extractApiErrorMessage(error, defaultMessage);
   if (logError === true) {
-    const logContext = context !== null && context !== void 0 && context !== "" ? `[${context}]` : ERROR_CONTEXT_PREFIX;
+    const logContext =
+      context !== null && context !== void 0 && context !== ""
+        ? `[${context}]`
+        : ERROR_CONTEXT_PREFIX;
     logger.error(`${logContext} API Error:`, error);
     if (isApiError(error) === true) {
       const response = error.response;
@@ -30,7 +40,7 @@ function handleApiError(error, options = {}) {
         statusText: response.statusText,
         data: response.data,
         // Use safeGetProperty to kill OptionalChaining mutations
-        url: safeGetProperty(error.config, "url", void 0)
+        url: safeGetProperty(error.config, "url", void 0),
       });
     }
   }
@@ -44,11 +54,17 @@ function handleStorageError(error, operation, key, options = {}) {
     showNotification = false,
     // Storage errors usually don't need user notification
     logError = true,
-    context
+    context,
   } = options;
   if (logError === true) {
-    const logContext = context !== null && context !== void 0 && context !== "" ? `[${context}]` : STORAGE_ERROR_PREFIX;
-    logger.error(`${logContext} Storage ${operation} error for key "${key}":`, error);
+    const logContext =
+      context !== null && context !== void 0 && context !== ""
+        ? `[${context}]`
+        : STORAGE_ERROR_PREFIX;
+    logger.error(
+      `${logContext} Storage ${operation} error for key "${key}":`,
+      error,
+    );
   }
   if (showNotification === true) {
     const errorMsg = extractApiErrorMessage(error, "Unknown error");
@@ -60,11 +76,14 @@ function handleError(error, options = {}) {
     showNotification = true,
     logError = true,
     defaultMessage = DEFAULT_UNEXPECTED_ERROR_MESSAGE,
-    context
+    context,
   } = options;
   const errorMessage = extractApiErrorMessage(error, defaultMessage);
   if (logError === true) {
-    const logContext = context !== null && context !== void 0 && context !== "" ? `[${context}]` : ERROR_CONTEXT_PREFIX;
+    const logContext =
+      context !== null && context !== void 0 && context !== ""
+        ? `[${context}]`
+        : ERROR_CONTEXT_PREFIX;
     logger.error(`${logContext} Error:`, error);
   }
   if (showNotification === true) {
@@ -72,8 +91,4 @@ function handleError(error, options = {}) {
   }
   return errorMessage;
 }
-export {
-  handleApiError,
-  handleError,
-  handleStorageError
-};
+export { handleApiError, handleError, handleStorageError };

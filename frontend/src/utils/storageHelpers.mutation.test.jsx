@@ -3,11 +3,11 @@ import {
   safeStorageSet,
   safeStorageRemove,
   safeStorageHas,
-  safeStorageClear
+  safeStorageClear,
 } from "./storageHelpers";
 import { handleStorageError } from "./errorHandler";
 jest.mock("./errorHandler", () => ({
-  handleStorageError: jest.fn()
+  handleStorageError: jest.fn(),
 }));
 describe("storageHelpers - Mutation Killers", () => {
   let mockStorage;
@@ -19,7 +19,7 @@ describe("storageHelpers - Mutation Killers", () => {
       removeItem: jest.fn(),
       addEventListener: jest.fn(),
       removeEventListener: jest.fn(),
-      clear: jest.fn()
+      clear: jest.fn(),
     };
   });
   describe("safeStorageGet - exact conditionals", () => {
@@ -68,15 +68,24 @@ describe("storageHelpers - Mutation Killers", () => {
     });
     it("should verify exact ternary - value === undefined (should convert to null)", () => {
       safeStorageSet(mockStorage, "key", void 0);
-      expect(mockStorage.setItem).toHaveBeenCalledWith("key", JSON.stringify(null));
+      expect(mockStorage.setItem).toHaveBeenCalledWith(
+        "key",
+        JSON.stringify(null),
+      );
     });
     it("should verify exact ternary - value !== undefined (should use value)", () => {
       safeStorageSet(mockStorage, "key", "test");
-      expect(mockStorage.setItem).toHaveBeenCalledWith("key", JSON.stringify("test"));
+      expect(mockStorage.setItem).toHaveBeenCalledWith(
+        "key",
+        JSON.stringify("test"),
+      );
     });
     it("should verify exact ternary - value is null (should use null)", () => {
       safeStorageSet(mockStorage, "key", null);
-      expect(mockStorage.setItem).toHaveBeenCalledWith("key", JSON.stringify(null));
+      expect(mockStorage.setItem).toHaveBeenCalledWith(
+        "key",
+        JSON.stringify(null),
+      );
     });
   });
   describe("safeStorageRemove - exact falsy check", () => {
@@ -147,7 +156,7 @@ describe("storageHelpers - Mutation Killers", () => {
       const storageWithoutClear = {
         getItem: jest.fn(),
         setItem: jest.fn(),
-        removeItem: jest.fn()
+        removeItem: jest.fn(),
       };
       const result = safeStorageClear(storageWithoutClear);
       expect(result).toBe(false);
@@ -157,7 +166,7 @@ describe("storageHelpers - Mutation Killers", () => {
         getItem: jest.fn(),
         setItem: jest.fn(),
         removeItem: jest.fn(),
-        clear: "not a function"
+        clear: "not a function",
       };
       const result = safeStorageClear(storageWithNonFunctionClear);
       expect(result).toBe(false);
@@ -182,7 +191,10 @@ describe("storageHelpers - Mutation Killers", () => {
     });
     it("should verify exact method call - JSON.stringify in safeStorageSet", () => {
       safeStorageSet(mockStorage, "key", { value: "test" });
-      expect(mockStorage.setItem).toHaveBeenCalledWith("key", JSON.stringify({ value: "test" }));
+      expect(mockStorage.setItem).toHaveBeenCalledWith(
+        "key",
+        JSON.stringify({ value: "test" }),
+      );
     });
     it("should verify exact method call - storage.setItem throws (should handle error)", () => {
       mockStorage.setItem.mockImplementation(() => {
@@ -238,7 +250,7 @@ describe("storageHelpers - Mutation Killers", () => {
         expect.any(Error),
         "getItem",
         "key",
-        expect.objectContaining({ context: "TestContext" })
+        expect.objectContaining({ context: "TestContext" }),
       );
       const callArgs = handleStorageError.mock.calls[0];
       expect(callArgs[3]).toBeDefined();
@@ -262,7 +274,7 @@ describe("storageHelpers - Mutation Killers", () => {
         expect.any(Error),
         "setItem",
         "key",
-        expect.objectContaining({ context: "TestContext" })
+        expect.objectContaining({ context: "TestContext" }),
       );
       const callArgs = handleStorageError.mock.calls[0];
       expect(callArgs[3]).toBeDefined();
@@ -288,7 +300,7 @@ describe("storageHelpers - Mutation Killers", () => {
         expect.any(Error),
         "removeItem",
         "key",
-        expect.objectContaining({ context: "TestContext" })
+        expect.objectContaining({ context: "TestContext" }),
       );
       const callArgs = handleStorageError.mock.calls[0];
       expect(callArgs[3]).toBeDefined();
@@ -314,7 +326,7 @@ describe("storageHelpers - Mutation Killers", () => {
         expect.any(Error),
         "getItem",
         "key",
-        expect.objectContaining({ context: "TestContext" })
+        expect.objectContaining({ context: "TestContext" }),
       );
       const callArgs = handleStorageError.mock.calls[0];
       expect(callArgs[3]).toBeDefined();
@@ -341,7 +353,7 @@ describe("storageHelpers - Mutation Killers", () => {
         expect.any(Error),
         "clear",
         "all",
-        expect.objectContaining({ context: "TestContext" })
+        expect.objectContaining({ context: "TestContext" }),
       );
       const callArgs = handleStorageError.mock.calls[0];
       expect(callArgs[3]).toBeDefined();

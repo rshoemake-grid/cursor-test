@@ -27,5 +27,5 @@ export {
   getArrayLength,
   hasArrayItems,
   isArrayEmpty,
-  isValidArray
+  isValidArray,
 };

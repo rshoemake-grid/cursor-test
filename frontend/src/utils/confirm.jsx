@@ -6,7 +6,7 @@ function showConfirm(message, options = {}) {
     cancelText = "Cancel",
     type = "warning",
     documentAdapter: providedDocumentAdapter,
-    timerAdapter: _timerAdapter = defaultAdapters.createTimerAdapter()
+    timerAdapter: _timerAdapter = defaultAdapters.createTimerAdapter(),
   } = options;
   let documentAdapter;
   if (providedDocumentAdapter === null) {
@@ -121,7 +121,7 @@ function showConfirm(message, options = {}) {
       const confirmColors = {
         warning: { bg: "#f59e0b", hover: "#d97706" },
         danger: { bg: "#ef4444", hover: "#dc2626" },
-        info: { bg: "#3b82f6", hover: "#2563eb" }
+        info: { bg: "#3b82f6", hover: "#2563eb" },
       };
       const colors = confirmColors[type];
       confirmBtn.style.cssText = `
@@ -161,6 +161,4 @@ function showConfirm(message, options = {}) {
     }
   });
 }
-export {
-  showConfirm
-};
+export { showConfirm };

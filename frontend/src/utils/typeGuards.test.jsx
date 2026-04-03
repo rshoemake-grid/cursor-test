@@ -91,7 +91,19 @@ describe("typeGuards utilities", () => {
   });
   describe("complementary behavior", () => {
     it("should be complementary - isDefined is opposite of isNullOrUndefined", () => {
-      const testValues = [null, void 0, 0, false, "", [], {}, "string", 123, true, NaN];
+      const testValues = [
+        null,
+        void 0,
+        0,
+        false,
+        "",
+        [],
+        {},
+        "string",
+        123,
+        true,
+        NaN,
+      ];
       testValues.forEach((value) => {
         expect(isDefined(value)).toBe(!isNullOrUndefined(value));
       });

@@ -6,8 +6,8 @@ jest.mock("../../utils/logger", () => ({
     error: jest.fn(),
     info: jest.fn(),
     log: jest.fn(),
-    warn: jest.fn()
-  }
+    warn: jest.fn(),
+  },
 }));
 const mockLoggerError = logger.error;
 describe("WorkflowExecutionService", () => {
@@ -18,23 +18,25 @@ describe("WorkflowExecutionService", () => {
     jest.clearAllMocks();
     onExecutionStart = jest.fn();
     mockApi = {
-      executeWorkflow: jest.fn()
+      executeWorkflow: jest.fn(),
     };
     service = new WorkflowExecutionService({ api: mockApi });
   });
   describe("executeWorkflow", () => {
     it("should execute workflow successfully", async () => {
       const execution = {
-        execution_id: "exec-123"
+        execution_id: "exec-123",
       };
       mockApi.executeWorkflow.mockResolvedValue(execution);
       const result = await service.executeWorkflow({
         workflowId: "workflow-1",
         inputs: { key: "value" },
         tempExecutionId: "pending-123",
-        onExecutionStart
+        onExecutionStart,
       });
-      expect(mockApi.executeWorkflow).toHaveBeenCalledWith("workflow-1", { key: "value" });
+      expect(mockApi.executeWorkflow).toHaveBeenCalledWith("workflow-1", {
+        key: "value",
+      });
       expect(onExecutionStart).toHaveBeenCalledWith("pending-123");
       expect(onExecutionStart).toHaveBeenCalledWith("exec-123");
       expect(result.executionId).toBe("exec-123");
@@ -42,14 +44,14 @@ describe("WorkflowExecutionService", () => {
     });
     it("should use temp execution ID when API returns same ID", async () => {
       const execution = {
-        execution_id: "pending-123"
+        execution_id: "pending-123",
       };
       mockApi.executeWorkflow.mockResolvedValue(execution);
       const result = await service.executeWorkflow({
         workflowId: "workflow-1",
         inputs: {},
         tempExecutionId: "pending-123",
-        onExecutionStart
+        onExecutionStart,
       });
       expect(onExecutionStart).toHaveBeenCalledTimes(1);
       expect(onExecutionStart).toHaveBeenCalledWith("pending-123");
@@ -57,13 +59,13 @@ describe("WorkflowExecutionService", () => {
     });
     it("should not call onExecutionStart when not provided", async () => {
       const execution = {
-        execution_id: "exec-123"
+        execution_id: "exec-123",
       };
       mockApi.executeWorkflow.mockResolvedValue(execution);
       await service.executeWorkflow({
         workflowId: "workflow-1",
         inputs: {},
-        tempExecutionId: "pending-123"
+        tempExecutionId: "pending-123",
       });
       expect(mockApi.executeWorkflow).toHaveBeenCalled();
     });
@@ -75,8 +77,8 @@ describe("WorkflowExecutionService", () => {
           workflowId: "workflow-1",
           inputs: {},
           tempExecutionId: "pending-123",
-          onExecutionStart
-        })
+          onExecutionStart,
+        }),
       ).rejects.toThrow("API Error");
       expect(onExecutionStart).toHaveBeenCalledWith("pending-123");
     });
@@ -103,7 +105,7 @@ describe("WorkflowExecutionService", () => {
       const inputs = service.parseExecutionInputs(json);
       expect(inputs).toEqual({
         nested: { key: "value" },
-        array: [1, 2, 3]
+        array: [1, 2, 3],
       });
     });
     it("should throw error for invalid JSON", () => {
@@ -124,11 +126,11 @@ describe("WorkflowExecutionService", () => {
         error: jest.fn(),
         info: jest.fn(),
         log: jest.fn(),
-        warn: jest.fn()
+        warn: jest.fn(),
       };
       const customService = new WorkflowExecutionService({
         api: mockApi,
-        logger: customLogger
+        logger: customLogger,
       });
       expect(() => {
         customService.parseExecutionInputs("invalid json");

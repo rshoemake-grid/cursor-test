@@ -2,17 +2,20 @@ import { renderHook, act } from "@testing-library/react";
 import { useWorkflowLoader } from "./useWorkflowLoader";
 import { api } from "../../api/client";
 import { logger } from "../../utils/logger";
-import { initializeReactFlowNodes, formatEdgesForReactFlow } from "../../utils/workflowFormat";
+import {
+  initializeReactFlowNodes,
+  formatEdgesForReactFlow,
+} from "../../utils/workflowFormat";
 jest.mock("../../api/client", () => ({
   api: {
-    getWorkflow: jest.fn()
-  }
+    getWorkflow: jest.fn(),
+  },
 }));
 jest.mock("../../utils/logger", () => ({
   logger: {
     debug: jest.fn(),
-    error: jest.fn()
-  }
+    error: jest.fn(),
+  },
 }));
 jest.mock("../../utils/workflowFormat", () => ({
   initializeReactFlowNodes: jest.fn(),
@@ -30,7 +33,7 @@ describe("useWorkflowLoader", () => {
     id: wfNode.id,
     type: wfNode.type,
     data: wfNode.data || {},
-    position: { x: 0, y: 0 }
+    position: { x: 0, y: 0 },
   });
   const mockWorkflowNodeToNode = jest.fn(defaultWorkflowNodeToNodeImpl);
   const mockOnWorkflowLoaded = jest.fn();
@@ -56,8 +59,8 @@ describe("useWorkflowLoader", () => {
   });
   describe("workflow loading", () => {
     it("should not load if workflowId is null", () => {
-      renderHook(
-        () => useWorkflowLoader({
+      renderHook(() =>
+        useWorkflowLoader({
           workflowId: null,
           tabIsUnsaved: false,
           setNodes: mockSetNodes,
@@ -70,16 +73,16 @@ describe("useWorkflowLoader", () => {
           workflowNodeToNode: mockWorkflowNodeToNode,
           onWorkflowLoaded: mockOnWorkflowLoaded,
           isLoadingRef: mockIsLoadingRef,
-          lastLoadedWorkflowIdRef: mockLastLoadedWorkflowIdRef
-        })
+          lastLoadedWorkflowIdRef: mockLastLoadedWorkflowIdRef,
+        }),
       );
       expect(api.getWorkflow).not.toHaveBeenCalled();
       expect(mockLastLoadedWorkflowIdRef.current).toBeNull();
       expect(mockIsLoadingRef.current).toBe(false);
     });
     it("should not load when not authenticated even if workflowId is set", () => {
-      renderHook(
-        () => useWorkflowLoader({
+      renderHook(() =>
+        useWorkflowLoader({
           workflowId: "workflow-1",
           tabIsUnsaved: false,
           setNodes: mockSetNodes,
@@ -93,8 +96,8 @@ describe("useWorkflowLoader", () => {
           onWorkflowLoaded: mockOnWorkflowLoaded,
           isLoadingRef: mockIsLoadingRef,
           lastLoadedWorkflowIdRef: mockLastLoadedWorkflowIdRef,
-          isAuthenticated: false
-        })
+          isAuthenticated: false,
+        }),
       );
       expect(api.getWorkflow).not.toHaveBeenCalled();
       expect(mockLastLoadedWorkflowIdRef.current).toBeNull();
@@ -102,8 +105,8 @@ describe("useWorkflowLoader", () => {
     });
     it("should not load if workflowId matches lastLoadedWorkflowId", () => {
       mockLastLoadedWorkflowIdRef.current = "workflow-1";
-      renderHook(
-        () => useWorkflowLoader({
+      renderHook(() =>
+        useWorkflowLoader({
           workflowId: "workflow-1",
           tabIsUnsaved: false,
           setNodes: mockSetNodes,
@@ -116,14 +119,14 @@ describe("useWorkflowLoader", () => {
           workflowNodeToNode: mockWorkflowNodeToNode,
           onWorkflowLoaded: mockOnWorkflowLoaded,
           isLoadingRef: mockIsLoadingRef,
-          lastLoadedWorkflowIdRef: mockLastLoadedWorkflowIdRef
-        })
+          lastLoadedWorkflowIdRef: mockLastLoadedWorkflowIdRef,
+        }),
       );
       expect(api.getWorkflow).not.toHaveBeenCalled();
     });
     it("should not load if tabIsUnsaved is true", () => {
-      renderHook(
-        () => useWorkflowLoader({
+      renderHook(() =>
+        useWorkflowLoader({
           workflowId: "workflow-1",
           tabIsUnsaved: true,
           setNodes: mockSetNodes,
@@ -136,8 +139,8 @@ describe("useWorkflowLoader", () => {
           workflowNodeToNode: mockWorkflowNodeToNode,
           onWorkflowLoaded: mockOnWorkflowLoaded,
           isLoadingRef: mockIsLoadingRef,
-          lastLoadedWorkflowIdRef: mockLastLoadedWorkflowIdRef
-        })
+          lastLoadedWorkflowIdRef: mockLastLoadedWorkflowIdRef,
+        }),
       );
       expect(api.getWorkflow).not.toHaveBeenCalled();
     });
@@ -148,16 +151,14 @@ describe("useWorkflowLoader", () => {
         description: "Test Description",
         nodes: [
           { id: "node-1", type: "agent", data: {} },
-          { id: "node-2", type: "condition", data: {} }
+          { id: "node-2", type: "condition", data: {} },
         ],
-        edges: [
-          { id: "edge-1", source: "node-1", target: "node-2" }
-        ],
-        variables: { var1: "value1" }
+        edges: [{ id: "edge-1", source: "node-1", target: "node-2" }],
+        variables: { var1: "value1" },
       };
       api.getWorkflow.mockResolvedValue(mockWorkflow);
-      renderHook(
-        () => useWorkflowLoader({
+      renderHook(() =>
+        useWorkflowLoader({
           workflowId: "workflow-1",
           tabIsUnsaved: false,
           setNodes: mockSetNodes,
@@ -170,8 +171,8 @@ describe("useWorkflowLoader", () => {
           workflowNodeToNode: mockWorkflowNodeToNode,
           onWorkflowLoaded: mockOnWorkflowLoaded,
           isLoadingRef: mockIsLoadingRef,
-          lastLoadedWorkflowIdRef: mockLastLoadedWorkflowIdRef
-        })
+          lastLoadedWorkflowIdRef: mockLastLoadedWorkflowIdRef,
+        }),
       );
       await act(async () => {
         await Promise.resolve();
@@ -179,7 +180,9 @@ describe("useWorkflowLoader", () => {
       expect(api.getWorkflow).toHaveBeenCalledWith("workflow-1");
       expect(mockSetLocalWorkflowId).toHaveBeenCalledWith("workflow-1");
       expect(mockSetLocalWorkflowName).toHaveBeenCalledWith("Test Workflow");
-      expect(mockSetLocalWorkflowDescription).toHaveBeenCalledWith("Test Description");
+      expect(mockSetLocalWorkflowDescription).toHaveBeenCalledWith(
+        "Test Description",
+      );
       expect(mockSetVariables).toHaveBeenCalledWith({ var1: "value1" });
       expect(mockWorkflowNodeToNode).toHaveBeenCalledTimes(2);
       expect(initializeReactFlowNodes).toHaveBeenCalled();
@@ -195,11 +198,11 @@ describe("useWorkflowLoader", () => {
         description: "",
         nodes: [],
         edges: [],
-        variables: {}
+        variables: {},
       };
       api.getWorkflow.mockResolvedValue(mockWorkflow);
-      renderHook(
-        () => useWorkflowLoader({
+      renderHook(() =>
+        useWorkflowLoader({
           workflowId: "workflow-1",
           tabIsUnsaved: false,
           setNodes: mockSetNodes,
@@ -212,8 +215,8 @@ describe("useWorkflowLoader", () => {
           workflowNodeToNode: mockWorkflowNodeToNode,
           onWorkflowLoaded: mockOnWorkflowLoaded,
           isLoadingRef: mockIsLoadingRef,
-          lastLoadedWorkflowIdRef: mockLastLoadedWorkflowIdRef
-        })
+          lastLoadedWorkflowIdRef: mockLastLoadedWorkflowIdRef,
+        }),
       );
       expect(mockIsLoadingRef.current).toBe(true);
       await act(async () => {
@@ -233,11 +236,11 @@ describe("useWorkflowLoader", () => {
         name: "Test Workflow",
         nodes: [],
         edges: [],
-        variables: {}
+        variables: {},
       };
       api.getWorkflow.mockResolvedValue(mockWorkflow);
-      renderHook(
-        () => useWorkflowLoader({
+      renderHook(() =>
+        useWorkflowLoader({
           workflowId: "workflow-1",
           tabIsUnsaved: false,
           setNodes: mockSetNodes,
@@ -250,8 +253,8 @@ describe("useWorkflowLoader", () => {
           workflowNodeToNode: mockWorkflowNodeToNode,
           onWorkflowLoaded: mockOnWorkflowLoaded,
           isLoadingRef: mockIsLoadingRef,
-          lastLoadedWorkflowIdRef: mockLastLoadedWorkflowIdRef
-        })
+          lastLoadedWorkflowIdRef: mockLastLoadedWorkflowIdRef,
+        }),
       );
       await act(async () => {
         await Promise.resolve();
@@ -265,11 +268,11 @@ describe("useWorkflowLoader", () => {
         description: "",
         nodes: [],
         edges: [],
-        variables: null
+        variables: null,
       };
       api.getWorkflow.mockResolvedValue(mockWorkflow);
-      renderHook(
-        () => useWorkflowLoader({
+      renderHook(() =>
+        useWorkflowLoader({
           workflowId: "workflow-1",
           tabIsUnsaved: false,
           setNodes: mockSetNodes,
@@ -282,8 +285,8 @@ describe("useWorkflowLoader", () => {
           workflowNodeToNode: mockWorkflowNodeToNode,
           onWorkflowLoaded: mockOnWorkflowLoaded,
           isLoadingRef: mockIsLoadingRef,
-          lastLoadedWorkflowIdRef: mockLastLoadedWorkflowIdRef
-        })
+          lastLoadedWorkflowIdRef: mockLastLoadedWorkflowIdRef,
+        }),
       );
       await act(async () => {
         await Promise.resolve();
@@ -297,11 +300,11 @@ describe("useWorkflowLoader", () => {
         description: "",
         nodes: [],
         edges: void 0,
-        variables: {}
+        variables: {},
       };
       api.getWorkflow.mockResolvedValue(mockWorkflow);
-      renderHook(
-        () => useWorkflowLoader({
+      renderHook(() =>
+        useWorkflowLoader({
           workflowId: "workflow-1",
           tabIsUnsaved: false,
           setNodes: mockSetNodes,
@@ -314,8 +317,8 @@ describe("useWorkflowLoader", () => {
           workflowNodeToNode: mockWorkflowNodeToNode,
           onWorkflowLoaded: mockOnWorkflowLoaded,
           isLoadingRef: mockIsLoadingRef,
-          lastLoadedWorkflowIdRef: mockLastLoadedWorkflowIdRef
-        })
+          lastLoadedWorkflowIdRef: mockLastLoadedWorkflowIdRef,
+        }),
       );
       await act(async () => {
         await Promise.resolve();
@@ -329,11 +332,11 @@ describe("useWorkflowLoader", () => {
         description: "",
         nodes: [],
         edges: [{ id: "edge-1", source: "node-1", target: "node-2" }],
-        variables: {}
+        variables: {},
       };
       api.getWorkflow.mockResolvedValue(mockWorkflow);
-      renderHook(
-        () => useWorkflowLoader({
+      renderHook(() =>
+        useWorkflowLoader({
           workflowId: "workflow-1",
           tabIsUnsaved: false,
           setNodes: mockSetNodes,
@@ -346,8 +349,8 @@ describe("useWorkflowLoader", () => {
           workflowNodeToNode: mockWorkflowNodeToNode,
           onWorkflowLoaded: mockOnWorkflowLoaded,
           isLoadingRef: mockIsLoadingRef,
-          lastLoadedWorkflowIdRef: mockLastLoadedWorkflowIdRef
-        })
+          lastLoadedWorkflowIdRef: mockLastLoadedWorkflowIdRef,
+        }),
       );
       await act(async () => {
         await Promise.resolve();
@@ -368,11 +371,11 @@ describe("useWorkflowLoader", () => {
         description: "",
         nodes: [],
         edges: [],
-        variables: {}
+        variables: {},
       };
       api.getWorkflow.mockResolvedValue(mockWorkflow);
-      renderHook(
-        () => useWorkflowLoader({
+      renderHook(() =>
+        useWorkflowLoader({
           workflowId: "workflow-1",
           tabIsUnsaved: false,
           setNodes: mockSetNodes,
@@ -385,13 +388,16 @@ describe("useWorkflowLoader", () => {
           workflowNodeToNode: mockWorkflowNodeToNode,
           onWorkflowLoaded: mockOnWorkflowLoaded,
           isLoadingRef: mockIsLoadingRef,
-          lastLoadedWorkflowIdRef: mockLastLoadedWorkflowIdRef
-        })
+          lastLoadedWorkflowIdRef: mockLastLoadedWorkflowIdRef,
+        }),
       );
       await act(async () => {
         await Promise.resolve();
       });
-      expect(mockOnWorkflowLoaded).toHaveBeenCalledWith("workflow-1", "Test Workflow");
+      expect(mockOnWorkflowLoaded).toHaveBeenCalledWith(
+        "workflow-1",
+        "Test Workflow",
+      );
     });
     it("should not call onWorkflowLoaded when not provided", async () => {
       const mockWorkflow = {
@@ -400,11 +406,11 @@ describe("useWorkflowLoader", () => {
         description: "",
         nodes: [],
         edges: [],
-        variables: {}
+        variables: {},
       };
       api.getWorkflow.mockResolvedValue(mockWorkflow);
-      renderHook(
-        () => useWorkflowLoader({
+      renderHook(() =>
+        useWorkflowLoader({
           workflowId: "workflow-1",
           tabIsUnsaved: false,
           setNodes: mockSetNodes,
@@ -417,8 +423,8 @@ describe("useWorkflowLoader", () => {
           workflowNodeToNode: mockWorkflowNodeToNode,
           onWorkflowLoaded: void 0,
           isLoadingRef: mockIsLoadingRef,
-          lastLoadedWorkflowIdRef: mockLastLoadedWorkflowIdRef
-        })
+          lastLoadedWorkflowIdRef: mockLastLoadedWorkflowIdRef,
+        }),
       );
       await act(async () => {
         await Promise.resolve();
@@ -428,8 +434,8 @@ describe("useWorkflowLoader", () => {
     it("should handle API error", async () => {
       const error = new Error("Failed to load workflow");
       api.getWorkflow.mockRejectedValue(error);
-      renderHook(
-        () => useWorkflowLoader({
+      renderHook(() =>
+        useWorkflowLoader({
           workflowId: "workflow-1",
           tabIsUnsaved: false,
           setNodes: mockSetNodes,
@@ -442,13 +448,16 @@ describe("useWorkflowLoader", () => {
           workflowNodeToNode: mockWorkflowNodeToNode,
           onWorkflowLoaded: mockOnWorkflowLoaded,
           isLoadingRef: mockIsLoadingRef,
-          lastLoadedWorkflowIdRef: mockLastLoadedWorkflowIdRef
-        })
+          lastLoadedWorkflowIdRef: mockLastLoadedWorkflowIdRef,
+        }),
       );
       await act(async () => {
         await Promise.resolve();
       });
-      expect(logger.error).toHaveBeenCalledWith("Failed to load workflow:", error);
+      expect(logger.error).toHaveBeenCalledWith(
+        "Failed to load workflow:",
+        error,
+      );
       expect(mockIsLoadingRef.current).toBe(false);
     });
     it("should log loaded nodes", async () => {
@@ -458,14 +467,14 @@ describe("useWorkflowLoader", () => {
         description: "",
         nodes: [
           { id: "node-1", type: "agent", data: {} },
-          { id: "node-2", type: "condition", data: {} }
+          { id: "node-2", type: "condition", data: {} },
         ],
         edges: [],
-        variables: {}
+        variables: {},
       };
       api.getWorkflow.mockResolvedValue(mockWorkflow);
-      renderHook(
-        () => useWorkflowLoader({
+      renderHook(() =>
+        useWorkflowLoader({
           workflowId: "workflow-1",
           tabIsUnsaved: false,
           setNodes: mockSetNodes,
@@ -478,8 +487,8 @@ describe("useWorkflowLoader", () => {
           workflowNodeToNode: mockWorkflowNodeToNode,
           onWorkflowLoaded: mockOnWorkflowLoaded,
           isLoadingRef: mockIsLoadingRef,
-          lastLoadedWorkflowIdRef: mockLastLoadedWorkflowIdRef
-        })
+          lastLoadedWorkflowIdRef: mockLastLoadedWorkflowIdRef,
+        }),
       );
       await act(async () => {
         await Promise.resolve();
@@ -488,14 +497,14 @@ describe("useWorkflowLoader", () => {
         "Loaded nodes:",
         expect.arrayContaining([
           expect.objectContaining({ id: "node-1", type: "agent" }),
-          expect.objectContaining({ id: "node-2", type: "condition" })
-        ])
+          expect.objectContaining({ id: "node-2", type: "condition" }),
+        ]),
       );
     });
     it("should reset lastLoadedWorkflowIdRef when workflowId is null", () => {
       mockLastLoadedWorkflowIdRef.current = "workflow-1";
-      renderHook(
-        () => useWorkflowLoader({
+      renderHook(() =>
+        useWorkflowLoader({
           workflowId: null,
           tabIsUnsaved: false,
           setNodes: mockSetNodes,
@@ -508,8 +517,8 @@ describe("useWorkflowLoader", () => {
           workflowNodeToNode: mockWorkflowNodeToNode,
           onWorkflowLoaded: mockOnWorkflowLoaded,
           isLoadingRef: mockIsLoadingRef,
-          lastLoadedWorkflowIdRef: mockLastLoadedWorkflowIdRef
-        })
+          lastLoadedWorkflowIdRef: mockLastLoadedWorkflowIdRef,
+        }),
       );
       expect(mockLastLoadedWorkflowIdRef.current).toBeNull();
       expect(mockIsLoadingRef.current).toBe(false);
@@ -519,8 +528,8 @@ describe("useWorkflowLoader", () => {
     describe("useEffect - exact conditional checks", () => {
       it("should verify exact conditional: if (workflowId && workflowId === lastLoadedWorkflowIdRef.current)", () => {
         mockLastLoadedWorkflowIdRef.current = "workflow-1";
-        renderHook(
-          () => useWorkflowLoader({
+        renderHook(() =>
+          useWorkflowLoader({
             workflowId: "workflow-1",
             tabIsUnsaved: false,
             setNodes: mockSetNodes,
@@ -533,8 +542,8 @@ describe("useWorkflowLoader", () => {
             workflowNodeToNode: mockWorkflowNodeToNode,
             onWorkflowLoaded: mockOnWorkflowLoaded,
             isLoadingRef: mockIsLoadingRef,
-            lastLoadedWorkflowIdRef: mockLastLoadedWorkflowIdRef
-          })
+            lastLoadedWorkflowIdRef: mockLastLoadedWorkflowIdRef,
+          }),
         );
         expect(api.getWorkflow).not.toHaveBeenCalled();
       });
@@ -546,11 +555,11 @@ describe("useWorkflowLoader", () => {
           description: "Description",
           nodes: [],
           edges: [],
-          variables: {}
+          variables: {},
         };
         api.getWorkflow.mockResolvedValue(mockWorkflow);
-        renderHook(
-          () => useWorkflowLoader({
+        renderHook(() =>
+          useWorkflowLoader({
             workflowId: "workflow-2",
             // Different from lastLoaded
             tabIsUnsaved: false,
@@ -564,8 +573,8 @@ describe("useWorkflowLoader", () => {
             workflowNodeToNode: mockWorkflowNodeToNode,
             onWorkflowLoaded: mockOnWorkflowLoaded,
             isLoadingRef: mockIsLoadingRef,
-            lastLoadedWorkflowIdRef: mockLastLoadedWorkflowIdRef
-          })
+            lastLoadedWorkflowIdRef: mockLastLoadedWorkflowIdRef,
+          }),
         );
         act(() => {
           jest.advanceTimersByTime(0);
@@ -573,8 +582,8 @@ describe("useWorkflowLoader", () => {
         expect(api.getWorkflow).toHaveBeenCalledWith("workflow-2");
       });
       it("should verify exact conditional: if (workflowId)", () => {
-        renderHook(
-          () => useWorkflowLoader({
+        renderHook(() =>
+          useWorkflowLoader({
             workflowId: null,
             // Falsy
             tabIsUnsaved: false,
@@ -588,8 +597,8 @@ describe("useWorkflowLoader", () => {
             workflowNodeToNode: mockWorkflowNodeToNode,
             onWorkflowLoaded: mockOnWorkflowLoaded,
             isLoadingRef: mockIsLoadingRef,
-            lastLoadedWorkflowIdRef: mockLastLoadedWorkflowIdRef
-          })
+            lastLoadedWorkflowIdRef: mockLastLoadedWorkflowIdRef,
+          }),
         );
         expect(api.getWorkflow).not.toHaveBeenCalled();
         expect(mockLastLoadedWorkflowIdRef.current).toBeNull();
@@ -602,11 +611,11 @@ describe("useWorkflowLoader", () => {
           description: "Description",
           nodes: [],
           edges: [],
-          variables: {}
+          variables: {},
         };
         api.getWorkflow.mockResolvedValue(mockWorkflow);
-        renderHook(
-          () => useWorkflowLoader({
+        renderHook(() =>
+          useWorkflowLoader({
             workflowId: "workflow-1",
             tabIsUnsaved: true,
             // Unsaved - should not load
@@ -620,8 +629,8 @@ describe("useWorkflowLoader", () => {
             workflowNodeToNode: mockWorkflowNodeToNode,
             onWorkflowLoaded: mockOnWorkflowLoaded,
             isLoadingRef: mockIsLoadingRef,
-            lastLoadedWorkflowIdRef: mockLastLoadedWorkflowIdRef
-          })
+            lastLoadedWorkflowIdRef: mockLastLoadedWorkflowIdRef,
+          }),
         );
         expect(api.getWorkflow).not.toHaveBeenCalled();
       });
@@ -635,11 +644,11 @@ describe("useWorkflowLoader", () => {
           // null - should use fallback
           nodes: [],
           edges: [],
-          variables: {}
+          variables: {},
         };
         api.getWorkflow.mockResolvedValue(mockWorkflow);
-        renderHook(
-          () => useWorkflowLoader({
+        renderHook(() =>
+          useWorkflowLoader({
             workflowId: "workflow-1",
             tabIsUnsaved: false,
             setNodes: mockSetNodes,
@@ -652,8 +661,8 @@ describe("useWorkflowLoader", () => {
             workflowNodeToNode: mockWorkflowNodeToNode,
             onWorkflowLoaded: mockOnWorkflowLoaded,
             isLoadingRef: mockIsLoadingRef,
-            lastLoadedWorkflowIdRef: mockLastLoadedWorkflowIdRef
-          })
+            lastLoadedWorkflowIdRef: mockLastLoadedWorkflowIdRef,
+          }),
         );
         await act(async () => {
           jest.advanceTimersByTime(0);
@@ -668,12 +677,12 @@ describe("useWorkflowLoader", () => {
           description: "Description",
           nodes: [],
           edges: [],
-          variables: null
+          variables: null,
           // null - should use fallback
         };
         api.getWorkflow.mockResolvedValue(mockWorkflow);
-        renderHook(
-          () => useWorkflowLoader({
+        renderHook(() =>
+          useWorkflowLoader({
             workflowId: "workflow-1",
             tabIsUnsaved: false,
             setNodes: mockSetNodes,
@@ -686,8 +695,8 @@ describe("useWorkflowLoader", () => {
             workflowNodeToNode: mockWorkflowNodeToNode,
             onWorkflowLoaded: mockOnWorkflowLoaded,
             isLoadingRef: mockIsLoadingRef,
-            lastLoadedWorkflowIdRef: mockLastLoadedWorkflowIdRef
-          })
+            lastLoadedWorkflowIdRef: mockLastLoadedWorkflowIdRef,
+          }),
         );
         await act(async () => {
           jest.advanceTimersByTime(0);
@@ -703,11 +712,11 @@ describe("useWorkflowLoader", () => {
           nodes: [],
           edges: null,
           // null - should use fallback
-          variables: {}
+          variables: {},
         };
         api.getWorkflow.mockResolvedValue(mockWorkflow);
-        renderHook(
-          () => useWorkflowLoader({
+        renderHook(() =>
+          useWorkflowLoader({
             workflowId: "workflow-1",
             tabIsUnsaved: false,
             setNodes: mockSetNodes,
@@ -720,8 +729,8 @@ describe("useWorkflowLoader", () => {
             workflowNodeToNode: mockWorkflowNodeToNode,
             onWorkflowLoaded: mockOnWorkflowLoaded,
             isLoadingRef: mockIsLoadingRef,
-            lastLoadedWorkflowIdRef: mockLastLoadedWorkflowIdRef
-          })
+            lastLoadedWorkflowIdRef: mockLastLoadedWorkflowIdRef,
+          }),
         );
         await act(async () => {
           jest.advanceTimersByTime(0);
@@ -738,11 +747,11 @@ describe("useWorkflowLoader", () => {
           description: "Description",
           nodes: [],
           edges: [],
-          variables: {}
+          variables: {},
         };
         api.getWorkflow.mockResolvedValue(mockWorkflow);
-        renderHook(
-          () => useWorkflowLoader({
+        renderHook(() =>
+          useWorkflowLoader({
             workflowId: "workflow-1",
             tabIsUnsaved: false,
             setNodes: mockSetNodes,
@@ -755,14 +764,17 @@ describe("useWorkflowLoader", () => {
             workflowNodeToNode: mockWorkflowNodeToNode,
             onWorkflowLoaded: mockOnWorkflowLoaded,
             isLoadingRef: mockIsLoadingRef,
-            lastLoadedWorkflowIdRef: mockLastLoadedWorkflowIdRef
-          })
+            lastLoadedWorkflowIdRef: mockLastLoadedWorkflowIdRef,
+          }),
         );
         await act(async () => {
           jest.advanceTimersByTime(0);
           await Promise.resolve();
         });
-        expect(mockOnWorkflowLoaded).toHaveBeenCalledWith("workflow-1", "Workflow 1");
+        expect(mockOnWorkflowLoaded).toHaveBeenCalledWith(
+          "workflow-1",
+          "Workflow 1",
+        );
       });
       it("should verify exact conditional: if (onWorkflowLoaded) - undefined", async () => {
         const mockWorkflow = {
@@ -771,11 +783,11 @@ describe("useWorkflowLoader", () => {
           description: "Description",
           nodes: [],
           edges: [],
-          variables: {}
+          variables: {},
         };
         api.getWorkflow.mockResolvedValue(mockWorkflow);
-        renderHook(
-          () => useWorkflowLoader({
+        renderHook(() =>
+          useWorkflowLoader({
             workflowId: "workflow-1",
             tabIsUnsaved: false,
             setNodes: mockSetNodes,
@@ -789,8 +801,8 @@ describe("useWorkflowLoader", () => {
             onWorkflowLoaded: void 0,
             // Undefined - should not call
             isLoadingRef: mockIsLoadingRef,
-            lastLoadedWorkflowIdRef: mockLastLoadedWorkflowIdRef
-          })
+            lastLoadedWorkflowIdRef: mockLastLoadedWorkflowIdRef,
+          }),
         );
         await act(async () => {
           jest.advanceTimersByTime(0);
@@ -807,12 +819,12 @@ describe("useWorkflowLoader", () => {
           description: "Description",
           nodes: [],
           edges: [{ id: "edge-1", source: "node-1", target: "node-2" }],
-          variables: {}
+          variables: {},
         };
         api.getWorkflow.mockResolvedValue(mockWorkflow);
         const setTimeoutSpy = jest.spyOn(global, "setTimeout");
-        renderHook(
-          () => useWorkflowLoader({
+        renderHook(() =>
+          useWorkflowLoader({
             workflowId: "workflow-1",
             tabIsUnsaved: false,
             setNodes: mockSetNodes,
@@ -825,8 +837,8 @@ describe("useWorkflowLoader", () => {
             workflowNodeToNode: mockWorkflowNodeToNode,
             onWorkflowLoaded: mockOnWorkflowLoaded,
             isLoadingRef: mockIsLoadingRef,
-            lastLoadedWorkflowIdRef: mockLastLoadedWorkflowIdRef
-          })
+            lastLoadedWorkflowIdRef: mockLastLoadedWorkflowIdRef,
+          }),
         );
         await act(async () => {
           jest.advanceTimersByTime(0);
@@ -844,12 +856,12 @@ describe("useWorkflowLoader", () => {
           description: "Description",
           nodes: [],
           edges: [],
-          variables: {}
+          variables: {},
         };
         api.getWorkflow.mockResolvedValue(mockWorkflow);
         const setTimeoutSpy = jest.spyOn(global, "setTimeout");
-        renderHook(
-          () => useWorkflowLoader({
+        renderHook(() =>
+          useWorkflowLoader({
             workflowId: "workflow-1",
             tabIsUnsaved: false,
             setNodes: mockSetNodes,
@@ -862,8 +874,8 @@ describe("useWorkflowLoader", () => {
             workflowNodeToNode: mockWorkflowNodeToNode,
             onWorkflowLoaded: mockOnWorkflowLoaded,
             isLoadingRef: mockIsLoadingRef,
-            lastLoadedWorkflowIdRef: mockLastLoadedWorkflowIdRef
-          })
+            lastLoadedWorkflowIdRef: mockLastLoadedWorkflowIdRef,
+          }),
         );
         await act(async () => {
           jest.advanceTimersByTime(0);
@@ -877,8 +889,8 @@ describe("useWorkflowLoader", () => {
     });
     describe("else branch - exact assignments", () => {
       it("should verify exact assignments in else branch: lastLoadedWorkflowIdRef.current = null, isLoadingRef.current = false", () => {
-        renderHook(
-          () => useWorkflowLoader({
+        renderHook(() =>
+          useWorkflowLoader({
             workflowId: null,
             // Triggers else branch
             tabIsUnsaved: false,
@@ -892,8 +904,8 @@ describe("useWorkflowLoader", () => {
             workflowNodeToNode: mockWorkflowNodeToNode,
             onWorkflowLoaded: mockOnWorkflowLoaded,
             isLoadingRef: mockIsLoadingRef,
-            lastLoadedWorkflowIdRef: mockLastLoadedWorkflowIdRef
-          })
+            lastLoadedWorkflowIdRef: mockLastLoadedWorkflowIdRef,
+          }),
         );
         expect(mockLastLoadedWorkflowIdRef.current).toBeNull();
         expect(mockIsLoadingRef.current).toBe(false);

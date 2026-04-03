@@ -1,4 +1,3 @@
-import { jsx, jsxs } from "react/jsx-runtime";
 import { useState, useCallback } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
@@ -11,9 +10,12 @@ import {
   useMarketplaceSelections,
   useMarketplaceActions,
   MARKETPLACE_TABS,
-  REPOSITORY_SUB_TABS
+  REPOSITORY_SUB_TABS,
 } from "../hooks/marketplace";
-import { createCardClickHandler, shouldIgnoreClick } from "../utils/cardClickUtils";
+import {
+  createCardClickHandler,
+  shouldIgnoreClick,
+} from "../utils/cardClickUtils";
 import { MarketplaceActionButtons } from "../components/MarketplaceActionButtons";
 import { TemplateFilters } from "../components/TemplateFilters";
 import { MarketplaceTabButton } from "../components/marketplace/MarketplaceTabButton";
@@ -23,10 +25,23 @@ import { useOfficialItems } from "../hooks/marketplace/useOfficialItems";
 import { DEFAULT_SORT } from "../constants/settingsConstants";
 import { API_CONFIG } from "../config/constants";
 import { defaultAdapters } from "../types/adapters";
+import {
+  PageShellColumn,
+  PageHeaderBand,
+  PageHeaderInner,
+  PageBackButton,
+  PageTitleRow,
+  PageTitleGroup,
+  PageTitle,
+  PageSubtitle,
+  PageActionsRow,
+  TabStrip,
+  PageMainScroll,
+} from "../styles/pageLayout.styled";
 function MarketplacePage({
   storage = defaultAdapters.createLocalStorageAdapter(),
   httpClient = defaultAdapters.createHttpClient(),
-  apiBaseUrl = API_CONFIG.BASE_URL
+  apiBaseUrl = API_CONFIG.BASE_URL,
 } = {}) {
   const tabs = useMarketplaceTabs();
   const {
@@ -39,7 +54,7 @@ function MarketplacePage({
     isWorkflowsOfWorkflowsTab,
     isToolsTab,
     isRepositoryWorkflowsSubTab,
-    isRepositoryAgentsSubTab
+    isRepositoryAgentsSubTab,
   } = tabs;
   const [category, setCategory] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
@@ -50,7 +65,7 @@ function MarketplacePage({
     agentSelection,
     repositoryAgentSelection,
     toolSelection,
-    clearSelectionsForTab
+    clearSelectionsForTab,
   } = selections;
   const { token, user } = useAuth();
   const navigate = useNavigate();
@@ -63,7 +78,7 @@ function MarketplacePage({
     sortBy,
     user,
     activeTab,
-    repositorySubTab
+    repositorySubTab,
   });
   const {
     templates,
@@ -80,7 +95,7 @@ function MarketplacePage({
     fetchWorkflowsOfWorkflows,
     fetchAgents,
     fetchRepositoryAgents,
-    fetchTools
+    fetchTools,
   } = marketplaceData;
   useOfficialAgentSeeding({
     storage,
@@ -90,7 +105,7 @@ function MarketplacePage({
       if (isAgentsTab) {
         fetchAgents();
       }
-    }
+    },
   });
   const templateOperations = useTemplateOperations({
     token,
@@ -108,13 +123,13 @@ function MarketplacePage({
     setRepositoryAgents,
     setSelectedAgentIds: agentSelection.setSelectedIds,
     setSelectedTemplateIds: templateSelection.setSelectedIds,
-    setSelectedRepositoryAgentIds: repositoryAgentSelection.setSelectedIds
+    setSelectedRepositoryAgentIds: repositoryAgentSelection.setSelectedIds,
   });
   const {
     useTemplate,
     deleteSelectedAgents: deleteSelectedAgentsHandler,
     deleteSelectedWorkflows,
-    deleteSelectedRepositoryAgents
+    deleteSelectedRepositoryAgents,
   } = templateOperations;
   const actions = useMarketplaceActions({
     activeTab,
@@ -131,7 +146,7 @@ function MarketplacePage({
     deleteSelectedAgents: deleteSelectedAgentsHandler,
     deleteSelectedWorkflows,
     deleteSelectedRepositoryAgents,
-    fetchRepositoryAgents
+    fetchRepositoryAgents,
   });
   const {
     handleLoadWorkflows,
@@ -139,204 +154,202 @@ function MarketplacePage({
     handleUseTools,
     handleDeleteAgents,
     handleDeleteWorkflows,
-    handleDeleteRepositoryAgents
+    handleDeleteRepositoryAgents,
   } = actions;
   const handleCardClick = createCardClickHandler(templateSelection.toggle);
   const handleAgentCardClick = createCardClickHandler(agentSelection.toggle);
-  const handleRepositoryAgentCardClick = createCardClickHandler(repositoryAgentSelection.toggle);
+  const handleRepositoryAgentCardClick = createCardClickHandler(
+    repositoryAgentSelection.toggle,
+  );
   const handleToolCardClick = createCardClickHandler(toolSelection.toggle);
   const { hasOfficialWorkflows, hasOfficialAgents } = useOfficialItems({
     templates,
     agents,
     templateSelection,
-    agentSelection
+    agentSelection,
   });
-  const handleContentClick = useCallback((e) => {
-    const target = e.target;
-    const isCard = target.closest('[class*="bg-white"][class*="rounded-lg"][class*="shadow"]');
-    const isInteractive = shouldIgnoreClick(target) || target.closest("select") !== null || target.closest("a") !== null || target.tagName === "SELECT" || target.tagName === "A";
-    if (!isCard && !isInteractive) {
-      clearSelectionsForTab(activeTab, repositorySubTab);
-    }
-  }, [activeTab, repositorySubTab, clearSelectionsForTab]);
-  const showWorkflowActions = (isRepositoryTab || isWorkflowsOfWorkflowsTab) && templateSelection.size > 0 && (isWorkflowsOfWorkflowsTab || isRepositoryWorkflowsSubTab);
-  const showAgentActions = isAgentsTab && agentSelection.size > 0 || isRepositoryAgentsSubTab && repositoryAgentSelection.size > 0;
-  const showToolActions = isToolsTab && toolSelection.size > 0;
-  return /* @__PURE__ */ jsxs("div", { className: "h-screen bg-gray-50 flex flex-col overflow-hidden", children: [
-    /* @__PURE__ */ jsx("div", { className: "bg-white border-b border-gray-200 flex-shrink-0", children: /* @__PURE__ */ jsxs("div", { className: "max-w-7xl mx-auto px-4 py-6", children: [
-      /* @__PURE__ */ jsxs(
-        "button",
-        {
-          onClick: () => navigate("/"),
-          className: "mb-4 flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors",
-          children: [
-            /* @__PURE__ */ jsx(ArrowLeft, { className: "w-5 h-5" }),
-            /* @__PURE__ */ jsx("span", { children: "Back to Main" })
-          ]
-        }
-      ),
-      /* @__PURE__ */ jsxs("div", { className: "flex items-center justify-between mb-4", children: [
-        /* @__PURE__ */ jsxs("div", { children: [
-          /* @__PURE__ */ jsx("h1", { className: "text-3xl font-bold text-gray-900", children: "Marketplace" }),
-          /* @__PURE__ */ jsx("p", { className: "text-gray-600 mt-1", children: "Discover and use pre-built agents and workflows" })
-        ] }),
-        /* @__PURE__ */ jsxs("div", { className: "flex items-center gap-3", children: [
-          showWorkflowActions && /* @__PURE__ */ jsx(
-            MarketplaceActionButtons,
-            {
-              selectedCount: templateSelection.size,
-              hasOfficial: hasOfficialWorkflows,
-              onLoad: handleLoadWorkflows,
-              onDelete: isRepositoryWorkflowsSubTab ? handleDeleteWorkflows : void 0,
-              type: "workflow",
-              showDelete: isRepositoryWorkflowsSubTab
-            }
-          ),
-          showAgentActions && /* @__PURE__ */ jsx(
-            MarketplaceActionButtons,
-            {
-              selectedCount: isRepositoryAgentsSubTab ? repositoryAgentSelection.size : agentSelection.size,
-              hasOfficial: hasOfficialAgents,
-              onUse: handleUseAgents,
-              onDelete: isAgentsTab ? handleDeleteAgents : handleDeleteRepositoryAgents,
-              type: "agent",
-              showDelete: isRepositoryAgentsSubTab || !hasOfficialAgents
-            }
-          ),
-          showToolActions && /* @__PURE__ */ jsx(
-            MarketplaceActionButtons,
-            {
-              selectedCount: toolSelection.size,
-              hasOfficial: false,
-              onUse: handleUseTools,
-              type: "tool",
-              showDelete: false
-            }
-          )
-        ] })
-      ] }),
-      /* @__PURE__ */ jsxs("div", { className: "flex border-b border-gray-200 mb-4", children: [
-        /* @__PURE__ */ jsx(
-          MarketplaceTabButton,
-          {
-            label: "Agents",
-            icon: Bot,
-            isActive: isAgentsTab,
-            onClick: () => setActiveTab(MARKETPLACE_TABS.AGENTS)
-          }
-        ),
-        /* @__PURE__ */ jsx(
-          MarketplaceTabButton,
-          {
-            label: "Repository",
-            icon: Workflow,
-            isActive: isRepositoryTab,
-            onClick: () => setActiveTab(MARKETPLACE_TABS.REPOSITORY)
-          }
-        ),
-        /* @__PURE__ */ jsx(
-          MarketplaceTabButton,
-          {
-            label: "Workflows of Workflows",
-            icon: Workflow,
-            isActive: isWorkflowsOfWorkflowsTab,
-            onClick: () => setActiveTab(MARKETPLACE_TABS.WORKFLOWS_OF_WORKFLOWS)
-          }
-        ),
-        /* @__PURE__ */ jsx(
-          MarketplaceTabButton,
-          {
-            label: "Tools",
-            icon: Wrench,
-            isActive: isToolsTab,
-            onClick: () => setActiveTab(MARKETPLACE_TABS.TOOLS)
-          }
-        )
-      ] }),
-      isRepositoryTab && /* @__PURE__ */ jsxs("div", { className: "flex border-b border-gray-200 mb-4", children: [
-        /* @__PURE__ */ jsx(
-          MarketplaceTabButton,
-          {
-            label: "Workflows",
-            icon: Workflow,
-            isActive: isRepositoryWorkflowsSubTab,
-            onClick: () => setRepositorySubTab(REPOSITORY_SUB_TABS.WORKFLOWS),
-            iconSize: "w-4 h-4"
-          }
-        ),
-        /* @__PURE__ */ jsx(
-          MarketplaceTabButton,
-          {
-            label: "Agents",
-            icon: Bot,
-            isActive: isRepositoryAgentsSubTab,
-            onClick: () => setRepositorySubTab(REPOSITORY_SUB_TABS.AGENTS),
-            iconSize: "w-4 h-4"
-          }
-        )
-      ] }),
-      /* @__PURE__ */ jsx(
-        TemplateFilters,
-        {
-          category,
-          searchQuery,
-          sortBy,
-          activeTab,
-          onCategoryChange: setCategory,
-          onSearchChange: setSearchQuery,
-          onSortChange: (sortBy2) => setSortBy(sortBy2),
-          onSearch: () => {
-            if (isRepositoryTab) {
-              if (isRepositoryWorkflowsSubTab) {
-                fetchTemplates();
-              } else {
-                fetchRepositoryAgents();
-              }
-            } else if (isWorkflowsOfWorkflowsTab) {
-              fetchWorkflowsOfWorkflows();
-            } else if (isToolsTab) {
-              fetchTools();
-            } else {
-              fetchAgents();
-            }
-          }
-        }
-      )
-    ] }) }),
-    /* @__PURE__ */ jsx(
-      "div",
-      {
-        className: "max-w-7xl mx-auto px-4 py-8 flex-1 overflow-y-auto",
-        onClick: handleContentClick,
-        children: /* @__PURE__ */ jsx(
-          MarketplaceTabContent,
-          {
-            loading,
-            activeTab,
-            isAgentsTab,
-            isToolsTab,
-            isRepositoryWorkflowsSubTab,
-            isRepositoryAgentsSubTab,
-            agents,
-            tools,
-            templates,
-            repositoryAgents,
-            workflowsOfWorkflows,
-            agentSelection,
-            toolSelection,
-            templateSelection,
-            repositoryAgentSelection,
-            handleAgentCardClick,
-            handleToolCardClick,
-            handleCardClick,
-            handleRepositoryAgentCardClick,
-            getDifficultyColor
-          }
-        )
+  const handleContentClick = useCallback(
+    (e) => {
+      const target = e.target;
+      const isCard = target.closest(
+        '[class*="bg-white"][class*="rounded-lg"][class*="shadow"]',
+      );
+      const isInteractive =
+        shouldIgnoreClick(target) ||
+        target.closest("select") !== null ||
+        target.closest("a") !== null ||
+        target.tagName === "SELECT" ||
+        target.tagName === "A";
+      if (!isCard && !isInteractive) {
+        clearSelectionsForTab(activeTab, repositorySubTab);
       }
-    )
-  ] });
+    },
+    [activeTab, repositorySubTab, clearSelectionsForTab],
+  );
+  const showWorkflowActions =
+    (isRepositoryTab || isWorkflowsOfWorkflowsTab) &&
+    templateSelection.size > 0 &&
+    (isWorkflowsOfWorkflowsTab || isRepositoryWorkflowsSubTab);
+  const showAgentActions =
+    (isAgentsTab && agentSelection.size > 0) ||
+    (isRepositoryAgentsSubTab && repositoryAgentSelection.size > 0);
+  const showToolActions = isToolsTab && toolSelection.size > 0;
+  return (
+    <PageShellColumn>
+      <PageHeaderBand>
+        <PageHeaderInner>
+          <PageBackButton type="button" onClick={() => navigate("/")}>
+            <ArrowLeft aria-hidden />
+            <span>Back to Main</span>
+          </PageBackButton>
+          <PageTitleRow>
+            <PageTitleGroup>
+              <PageTitle>Marketplace</PageTitle>
+              <PageSubtitle>
+                Discover and use pre-built agents and workflows
+              </PageSubtitle>
+            </PageTitleGroup>
+            <PageActionsRow>
+              {showWorkflowActions && (
+                <MarketplaceActionButtons
+                  selectedCount={templateSelection.size}
+                  hasOfficial={hasOfficialWorkflows}
+                  onLoad={handleLoadWorkflows}
+                  onDelete={
+                    isRepositoryWorkflowsSubTab ? handleDeleteWorkflows : void 0
+                  }
+                  type="workflow"
+                  showDelete={isRepositoryWorkflowsSubTab}
+                />
+              )}
+              {showAgentActions && (
+                <MarketplaceActionButtons
+                  selectedCount={
+                    isRepositoryAgentsSubTab
+                      ? repositoryAgentSelection.size
+                      : agentSelection.size
+                  }
+                  hasOfficial={hasOfficialAgents}
+                  onUse={handleUseAgents}
+                  onDelete={
+                    isAgentsTab
+                      ? handleDeleteAgents
+                      : handleDeleteRepositoryAgents
+                  }
+                  type="agent"
+                  showDelete={isRepositoryAgentsSubTab || !hasOfficialAgents}
+                />
+              )}
+              {showToolActions && (
+                <MarketplaceActionButtons
+                  selectedCount={toolSelection.size}
+                  hasOfficial={false}
+                  onUse={handleUseTools}
+                  type="tool"
+                  showDelete={false}
+                />
+              )}
+            </PageActionsRow>
+          </PageTitleRow>
+          <TabStrip>
+            <MarketplaceTabButton
+              label="Agents"
+              icon={Bot}
+              isActive={isAgentsTab}
+              onClick={() => setActiveTab(MARKETPLACE_TABS.AGENTS)}
+            />
+            <MarketplaceTabButton
+              label="Repository"
+              icon={Workflow}
+              isActive={isRepositoryTab}
+              onClick={() => setActiveTab(MARKETPLACE_TABS.REPOSITORY)}
+            />
+            <MarketplaceTabButton
+              label="Workflows of Workflows"
+              icon={Workflow}
+              isActive={isWorkflowsOfWorkflowsTab}
+              onClick={() =>
+                setActiveTab(MARKETPLACE_TABS.WORKFLOWS_OF_WORKFLOWS)
+              }
+            />
+            <MarketplaceTabButton
+              label="Tools"
+              icon={Wrench}
+              isActive={isToolsTab}
+              onClick={() => setActiveTab(MARKETPLACE_TABS.TOOLS)}
+            />
+          </TabStrip>
+          {isRepositoryTab && (
+            <TabStrip>
+              <MarketplaceTabButton
+                label="Workflows"
+                icon={Workflow}
+                isActive={isRepositoryWorkflowsSubTab}
+                onClick={() =>
+                  setRepositorySubTab(REPOSITORY_SUB_TABS.WORKFLOWS)
+                }
+                iconSize="w-4 h-4"
+              />
+              <MarketplaceTabButton
+                label="Agents"
+                icon={Bot}
+                isActive={isRepositoryAgentsSubTab}
+                onClick={() => setRepositorySubTab(REPOSITORY_SUB_TABS.AGENTS)}
+                iconSize="w-4 h-4"
+              />
+            </TabStrip>
+          )}
+          <TemplateFilters
+            category={category}
+            searchQuery={searchQuery}
+            sortBy={sortBy}
+            activeTab={activeTab}
+            onCategoryChange={setCategory}
+            onSearchChange={setSearchQuery}
+            onSortChange={(sortBy2) => setSortBy(sortBy2)}
+            onSearch={() => {
+              if (isRepositoryTab) {
+                if (isRepositoryWorkflowsSubTab) {
+                  fetchTemplates();
+                } else {
+                  fetchRepositoryAgents();
+                }
+              } else if (isWorkflowsOfWorkflowsTab) {
+                fetchWorkflowsOfWorkflows();
+              } else if (isToolsTab) {
+                fetchTools();
+              } else {
+                fetchAgents();
+              }
+            }}
+          />
+        </PageHeaderInner>
+      </PageHeaderBand>
+      <PageMainScroll onClick={handleContentClick}>
+        <MarketplaceTabContent
+          loading={loading}
+          activeTab={activeTab}
+          isAgentsTab={isAgentsTab}
+          isToolsTab={isToolsTab}
+          isRepositoryWorkflowsSubTab={isRepositoryWorkflowsSubTab}
+          isRepositoryAgentsSubTab={isRepositoryAgentsSubTab}
+          agents={agents}
+          tools={tools}
+          templates={templates}
+          repositoryAgents={repositoryAgents}
+          workflowsOfWorkflows={workflowsOfWorkflows}
+          agentSelection={agentSelection}
+          toolSelection={toolSelection}
+          templateSelection={templateSelection}
+          repositoryAgentSelection={repositoryAgentSelection}
+          handleAgentCardClick={handleAgentCardClick}
+          handleToolCardClick={handleToolCardClick}
+          handleCardClick={handleCardClick}
+          handleRepositoryAgentCardClick={handleRepositoryAgentCardClick}
+          getDifficultyColor={getDifficultyColor}
+        />
+      </PageMainScroll>
+    </PageShellColumn>
+  );
 }
-export {
-  MarketplacePage as default
-};
+export { MarketplacePage as default };

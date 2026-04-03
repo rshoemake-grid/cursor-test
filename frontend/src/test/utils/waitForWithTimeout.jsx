@@ -3,8 +3,14 @@ import { isRunningUnderStryker } from "./detectStryker";
 const waitForWithTimeout = (callback, timeout = 2e3) => {
   return waitFor(callback, { timeout });
 };
-const waitForWithTimeoutFakeTimers = async (callback, timeoutOrOptions = 2e3) => {
-  const timeout = typeof timeoutOrOptions === "number" ? timeoutOrOptions : timeoutOrOptions?.timeout ?? 2e3;
+const waitForWithTimeoutFakeTimers = async (
+  callback,
+  timeoutOrOptions = 2e3,
+) => {
+  const timeout =
+    typeof timeoutOrOptions === "number"
+      ? timeoutOrOptions
+      : (timeoutOrOptions?.timeout ?? 2e3);
   const isStryker = isRunningUnderStryker();
   const wasUsingFakeTimers = typeof jest.getRealSystemTime === "function";
   if (wasUsingFakeTimers) {
@@ -22,7 +28,10 @@ const waitForWithTimeoutFakeTimers = async (callback, timeoutOrOptions = 2e3) =>
       await act(async () => {
         jest.runAllTimers();
         if (isStryker && timerIterations < maxTimerIterations - 1) {
-          const advanceAmount = Math.min(10 * Math.pow(2, timerIterations), 500);
+          const advanceAmount = Math.min(
+            10 * Math.pow(2, timerIterations),
+            500,
+          );
           jest.advanceTimersByTime(advanceAmount);
         }
       });
@@ -54,5 +63,5 @@ const waitForWithTimeoutAuto = waitForWithTimeoutFakeTimers;
 export {
   waitForWithTimeout,
   waitForWithTimeoutAuto,
-  waitForWithTimeoutFakeTimers
+  waitForWithTimeoutFakeTimers,
 };

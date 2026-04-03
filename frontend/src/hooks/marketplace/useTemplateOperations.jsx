@@ -1,5 +1,8 @@
 import { useTemplateUsage } from "./useTemplateUsage";
-import { useAgentDeletion, useRepositoryAgentDeletion } from "./useAgentDeletion";
+import {
+  useAgentDeletion,
+  useRepositoryAgentDeletion,
+} from "./useAgentDeletion";
 import { useWorkflowDeletion } from "../workflow";
 function useTemplateOperations({
   token,
@@ -17,19 +20,19 @@ function useTemplateOperations({
   setRepositoryAgents,
   setSelectedAgentIds,
   setSelectedTemplateIds,
-  setSelectedRepositoryAgentIds
+  setSelectedRepositoryAgentIds,
 }) {
   const { useTemplate } = useTemplateUsage({
     token,
     httpClient,
-    apiBaseUrl
+    apiBaseUrl,
   });
   const { deleteSelectedAgents } = useAgentDeletion({
     user,
     storage,
     agents,
     setAgents,
-    setSelectedAgentIds
+    setSelectedAgentIds,
   });
   const { deleteSelectedWorkflows } = useWorkflowDeletion({
     user,
@@ -38,20 +41,18 @@ function useTemplateOperations({
     activeTab,
     setTemplates,
     setWorkflowsOfWorkflows,
-    setSelectedTemplateIds
+    setSelectedTemplateIds,
   });
   const { deleteSelectedRepositoryAgents } = useRepositoryAgentDeletion({
     storage,
     setRepositoryAgents,
-    setSelectedRepositoryAgentIds
+    setSelectedRepositoryAgentIds,
   });
   return {
     useTemplate,
     deleteSelectedAgents,
     deleteSelectedWorkflows,
-    deleteSelectedRepositoryAgents
+    deleteSelectedRepositoryAgents,
   };
 }
-export {
-  useTemplateOperations
-};
+export { useTemplateOperations };

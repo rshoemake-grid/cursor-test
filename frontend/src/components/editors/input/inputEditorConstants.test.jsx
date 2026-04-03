@@ -1,7 +1,4 @@
-import {
-  CONFIG_FIELD,
-  NODE_TYPE_DISPLAY_NAMES
-} from "./inputEditorConstants";
+import { CONFIG_FIELD, NODE_TYPE_DISPLAY_NAMES } from "./inputEditorConstants";
 describe("inputEditorConstants", () => {
   describe("CONFIG_FIELD", () => {
     it('should be "input_config"', () => {

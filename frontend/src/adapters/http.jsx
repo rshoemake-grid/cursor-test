@@ -12,7 +12,10 @@ const HttpClientFactory = {
    */
   createHttpClient() {
     try {
-      const fetchFn = typeof fetch !== "undefined" ? fetch : global.fetch || (() => Promise.resolve(new Response()));
+      const fetchFn =
+        typeof fetch !== "undefined"
+          ? fetch
+          : global.fetch || (() => Promise.resolve(new Response()));
       return {
         get: (url, headers) => {
           return safeFetch(fetchFn, url, { method: "GET", headers });
@@ -21,31 +24,30 @@ const HttpClientFactory = {
           return safeFetch(fetchFn, url, {
             method: "POST",
             headers: { "Content-Type": "application/json", ...headers },
-            body: JSON.stringify(body)
+            body: JSON.stringify(body),
           });
         },
         put: (url, body, headers) => {
           return safeFetch(fetchFn, url, {
             method: "PUT",
             headers: { "Content-Type": "application/json", ...headers },
-            body: JSON.stringify(body)
+            body: JSON.stringify(body),
           });
         },
         delete: (url, headers) => {
           return safeFetch(fetchFn, url, { method: "DELETE", headers });
-        }
+        },
       };
     } catch (error) {
-      const mockReject = () => Promise.reject(new Error("HTTP client initialization failed"));
+      const mockReject = () =>
+        Promise.reject(new Error("HTTP client initialization failed"));
       return {
         get: mockReject,
         post: mockReject,
         put: mockReject,
-        delete: mockReject
+        delete: mockReject,
       };
     }
-  }
+  },
 };
-export {
-  HttpClientFactory
-};
+export { HttpClientFactory };

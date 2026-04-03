@@ -13,14 +13,18 @@ function exportToCSV(executions) {
     "Completed At",
     "Duration (seconds)",
     "Current Node",
-    "Error"
+    "Error",
   ];
   const rows = executions.map((execution) => {
-    const duration = execution.completed_at ? Math.floor(
-      (new Date(execution.completed_at).getTime() - new Date(execution.started_at).getTime()) / 1e3
-    ) : Math.floor(
-      (Date.now() - new Date(execution.started_at).getTime()) / 1e3
-    );
+    const duration = execution.completed_at
+      ? Math.floor(
+          (new Date(execution.completed_at).getTime() -
+            new Date(execution.started_at).getTime()) /
+            1e3,
+        )
+      : Math.floor(
+          (Date.now() - new Date(execution.started_at).getTime()) / 1e3,
+        );
     return [
       execution.execution_id,
       execution.workflow_id,
@@ -29,11 +33,11 @@ function exportToCSV(executions) {
       execution.completed_at || "",
       duration.toString(),
       execution.current_node || "",
-      execution.error || ""
+      execution.error || "",
     ];
   });
-  const csvRows = [headers, ...rows].map(
-    (row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(",")
+  const csvRows = [headers, ...rows].map((row) =>
+    row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(","),
   );
   return csvRows.join("\n");
 }
@@ -50,12 +54,12 @@ function downloadFile(content, filename, mimeType) {
 }
 function exportExecutionsToJSON(executions, filename) {
   const json = exportToJSON(executions);
-  const defaultFilename = `executions-${(/* @__PURE__ */ new Date()).toISOString().split("T")[0]}.json`;
+  const defaultFilename = `executions-${/* @__PURE__ */ new Date().toISOString().split("T")[0]}.json`;
   downloadFile(json, filename || defaultFilename, "application/json");
 }
 function exportExecutionsToCSV(executions, filename) {
   const csv = exportToCSV(executions);
-  const defaultFilename = `executions-${(/* @__PURE__ */ new Date()).toISOString().split("T")[0]}.csv`;
+  const defaultFilename = `executions-${/* @__PURE__ */ new Date().toISOString().split("T")[0]}.csv`;
   downloadFile(csv, filename || defaultFilename, "text/csv");
 }
 export {
@@ -63,5 +67,5 @@ export {
   exportExecutionsToCSV,
   exportExecutionsToJSON,
   exportToCSV,
-  exportToJSON
+  exportToJSON,
 };

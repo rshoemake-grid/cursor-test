@@ -3,7 +3,7 @@ import {
   filterByWorkflowId,
   filterBySearchQuery,
   sortExecutions,
-  applyExecutionFilters
+  applyExecutionFilters,
 } from "./executionFilters";
 describe("executionFilters utilities", () => {
   const mockExecution1 = {
@@ -14,7 +14,7 @@ describe("executionFilters utilities", () => {
     completed_at: "2024-01-01T10:00:05Z",
     node_states: {},
     variables: {},
-    logs: []
+    logs: [],
   };
   const mockExecution2 = {
     execution_id: "exec-2",
@@ -25,7 +25,7 @@ describe("executionFilters utilities", () => {
     error: "Test error message",
     node_states: {},
     variables: {},
-    logs: []
+    logs: [],
   };
   const mockExecution3 = {
     execution_id: "exec-3",
@@ -35,7 +35,7 @@ describe("executionFilters utilities", () => {
     current_node: "node-1",
     node_states: {},
     variables: {},
-    logs: []
+    logs: [],
   };
   const executions = [mockExecution1, mockExecution2, mockExecution3];
   describe("filterByStatus", () => {
@@ -144,21 +144,21 @@ describe("executionFilters utilities", () => {
         workflowId: "workflow-1",
         searchQuery: "exec-1",
         sortBy: "started_at",
-        sortOrder: "desc"
+        sortOrder: "desc",
       };
       const result = applyExecutionFilters(executions, filters);
       expect(result).toEqual([mockExecution1]);
     });
     it("should apply status filter only", () => {
       const filters = {
-        status: ["failed"]
+        status: ["failed"],
       };
       const result = applyExecutionFilters(executions, filters);
       expect(result).toEqual([mockExecution2]);
     });
     it("should apply search filter only", () => {
       const filters = {
-        searchQuery: "exec-2"
+        searchQuery: "exec-2",
       };
       const result = applyExecutionFilters(executions, filters);
       expect(result).toEqual([mockExecution2]);
@@ -166,7 +166,7 @@ describe("executionFilters utilities", () => {
     it("should apply sorting only", () => {
       const filters = {
         sortBy: "started_at",
-        sortOrder: "asc"
+        sortOrder: "asc",
       };
       const result = applyExecutionFilters(executions, filters);
       expect(result[0]).toEqual(mockExecution1);

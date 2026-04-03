@@ -2,7 +2,7 @@ import {
   logicalOr,
   logicalOrToNull,
   logicalOrToEmptyObject,
-  logicalOrToEmptyArray
+  logicalOrToEmptyArray,
 } from "./logicalOr";
 describe("logicalOr", () => {
   it("should return value when truthy", () => {

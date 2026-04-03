@@ -3,7 +3,7 @@ import {
   executionEndpoints,
   templateEndpoints,
   marketplaceEndpoints,
-  settingsEndpoints
+  settingsEndpoints,
 } from "./endpoints";
 describe("endpoints", () => {
   describe("workflowEndpoints", () => {
@@ -11,13 +11,19 @@ describe("endpoints", () => {
       expect(workflowEndpoints.list()).toBe("/workflows");
     });
     it("should return correct detail endpoint with id", () => {
-      expect(workflowEndpoints.detail("workflow-123")).toBe("/workflows/workflow-123");
+      expect(workflowEndpoints.detail("workflow-123")).toBe(
+        "/workflows/workflow-123",
+      );
     });
     it("should return correct execute endpoint with id", () => {
-      expect(workflowEndpoints.execute("workflow-123")).toBe("/workflows/workflow-123/execute");
+      expect(workflowEndpoints.execute("workflow-123")).toBe(
+        "/workflows/workflow-123/execute",
+      );
     });
     it("should return correct publish endpoint with id", () => {
-      expect(workflowEndpoints.publish("workflow-123")).toBe("/workflows/workflow-123/publish");
+      expect(workflowEndpoints.publish("workflow-123")).toBe(
+        "/workflows/workflow-123/publish",
+      );
     });
     it("should return correct bulkDelete endpoint", () => {
       expect(workflowEndpoints.bulkDelete()).toBe("/workflows/bulk-delete");
@@ -25,12 +31,16 @@ describe("endpoints", () => {
   });
   describe("executionEndpoints", () => {
     it("should return correct detail endpoint with id", () => {
-      expect(executionEndpoints.detail("execution-123")).toBe("/executions/execution-123");
+      expect(executionEndpoints.detail("execution-123")).toBe(
+        "/executions/execution-123",
+      );
     });
   });
   describe("templateEndpoints", () => {
     it("should return correct delete endpoint with id", () => {
-      expect(templateEndpoints.delete("template-123")).toBe("/templates/template-123");
+      expect(templateEndpoints.delete("template-123")).toBe(
+        "/templates/template-123",
+      );
     });
   });
   describe("marketplaceEndpoints", () => {

@@ -1,28 +1,25 @@
-import { jsx } from "react/jsx-runtime";
 import { render, screen } from "@testing-library/react";
 import AWSS3Node from "./AWSS3Node";
 import { ReactFlowProvider } from "@xyflow/react";
 const renderWithProvider = (component) => {
-  return render(
-    /* @__PURE__ */ jsx(ReactFlowProvider, { children: component })
-  );
+  return render(<ReactFlowProvider>{component}</ReactFlowProvider>);
 };
 describe("AWSS3Node", () => {
   it("should render AWS S3 node", () => {
     const nodeData = {
-      label: "My S3 Bucket"
+      label: "My S3 Bucket",
     };
     renderWithProvider(
-      /* @__PURE__ */ jsx(AWSS3Node, { data: nodeData, selected: false, id: "node-1" })
+      <AWSS3Node data={nodeData} selected={false} id="node-1" />,
     );
     expect(screen.getByText("My S3 Bucket")).toBeInTheDocument();
   });
   it("should render with default label", () => {
     const nodeData = {
-      label: ""
+      label: "",
     };
     renderWithProvider(
-      /* @__PURE__ */ jsx(AWSS3Node, { data: nodeData, selected: false, id: "node-1" })
+      <AWSS3Node data={nodeData} selected={false} id="node-1" />,
     );
     expect(screen.getByText("AWS S3")).toBeInTheDocument();
   });
@@ -30,11 +27,11 @@ describe("AWSS3Node", () => {
     const nodeData = {
       label: "My S3",
       input_config: {
-        bucket_name: "my-s3-bucket"
-      }
+        bucket_name: "my-s3-bucket",
+      },
     };
     renderWithProvider(
-      /* @__PURE__ */ jsx(AWSS3Node, { data: nodeData, selected: false, id: "node-1" })
+      <AWSS3Node data={nodeData} selected={false} id="node-1" />,
     );
     expect(screen.getByText(/Bucket: my-s3-bucket/)).toBeInTheDocument();
   });
@@ -42,11 +39,11 @@ describe("AWSS3Node", () => {
     const nodeData = {
       label: "My S3",
       input_config: {
-        object_key: "path/to/file.txt"
-      }
+        object_key: "path/to/file.txt",
+      },
     };
     renderWithProvider(
-      /* @__PURE__ */ jsx(AWSS3Node, { data: nodeData, selected: false, id: "node-1" })
+      <AWSS3Node data={nodeData} selected={false} id="node-1" />,
     );
     expect(screen.getByText(/File: file.txt/)).toBeInTheDocument();
   });
@@ -54,20 +51,20 @@ describe("AWSS3Node", () => {
     const nodeData = {
       label: "My S3",
       input_config: {
-        mode: "read"
-      }
+        mode: "read",
+      },
     };
     renderWithProvider(
-      /* @__PURE__ */ jsx(AWSS3Node, { data: nodeData, selected: false, id: "node-1" })
+      <AWSS3Node data={nodeData} selected={false} id="node-1" />,
     );
     expect(screen.getByText(/Mode: Read/)).toBeInTheDocument();
   });
   it("should show selected state", () => {
     const nodeData = {
-      label: "My S3"
+      label: "My S3",
     };
     const { container } = renderWithProvider(
-      /* @__PURE__ */ jsx(AWSS3Node, { data: nodeData, selected: true, id: "node-1" })
+      <AWSS3Node data={nodeData} selected={true} id="node-1" />,
     );
     const nodeElement = container.querySelector(".border-yellow-500");
     expect(nodeElement).toBeInTheDocument();
@@ -75,10 +72,10 @@ describe("AWSS3Node", () => {
   it("should show error state", () => {
     const nodeData = {
       label: "My S3",
-      executionStatus: "failed"
+      executionStatus: "failed",
     };
     const { container } = renderWithProvider(
-      /* @__PURE__ */ jsx(AWSS3Node, { data: nodeData, selected: false, id: "node-1" })
+      <AWSS3Node data={nodeData} selected={false} id="node-1" />,
     );
     const nodeElement = container.querySelector(".border-red-500");
     expect(nodeElement).toBeInTheDocument();

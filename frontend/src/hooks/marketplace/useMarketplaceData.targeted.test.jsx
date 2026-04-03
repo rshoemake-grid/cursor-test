@@ -2,7 +2,7 @@ import { renderHook, waitFor } from "@testing-library/react";
 import { useMarketplaceData } from "./useMarketplaceData";
 import { getLocalStorageItem } from "../storage";
 jest.mock("../storage", () => ({
-  getLocalStorageItem: jest.fn()
+  getLocalStorageItem: jest.fn(),
 }));
 const mockGetLocalStorageItem = getLocalStorageItem;
 describe("useMarketplaceData - Targeted Tests (Phase 4.2)", () => {
@@ -17,14 +17,16 @@ describe("useMarketplaceData - Targeted Tests (Phase 4.2)", () => {
         }
         return Promise.resolve({ json: async () => [] });
       }),
-      post: jest.fn().mockResolvedValue({ ok: true, json: async () => ({ nodes: [] }) })
+      post: jest
+        .fn()
+        .mockResolvedValue({ ok: true, json: async () => ({ nodes: [] }) }),
     };
     mockStorage = {
       getItem: jest.fn().mockReturnValue(null),
       setItem: jest.fn(),
       removeItem: jest.fn(),
       addEventListener: jest.fn(),
-      removeEventListener: jest.fn()
+      removeEventListener: jest.fn(),
     };
     mockGetLocalStorageItem.mockReturnValue([]);
   });
@@ -37,7 +39,7 @@ describe("useMarketplaceData - Targeted Tests (Phase 4.2)", () => {
           is_official: false,
           category: "automation",
           tags: [],
-          published_at: "2024-01-01T00:00:00Z"
+          published_at: "2024-01-01T00:00:00Z",
         },
         {
           id: "agent-2",
@@ -45,12 +47,12 @@ describe("useMarketplaceData - Targeted Tests (Phase 4.2)", () => {
           is_official: true,
           category: "automation",
           tags: [],
-          published_at: "2024-01-01T00:00:00Z"
-        }
+          published_at: "2024-01-01T00:00:00Z",
+        },
       ];
       mockGetLocalStorageItem.mockReturnValue(agents);
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -59,8 +61,8 @@ describe("useMarketplaceData - Targeted Tests (Phase 4.2)", () => {
           sortBy: "popular",
           user: null,
           activeTab: "agents",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -76,7 +78,7 @@ describe("useMarketplaceData - Targeted Tests (Phase 4.2)", () => {
           is_official: true,
           category: "automation",
           tags: [],
-          published_at: "2024-01-02T00:00:00Z"
+          published_at: "2024-01-02T00:00:00Z",
         },
         {
           id: "agent-2",
@@ -84,12 +86,12 @@ describe("useMarketplaceData - Targeted Tests (Phase 4.2)", () => {
           is_official: true,
           category: "automation",
           tags: [],
-          published_at: "2024-01-01T00:00:00Z"
-        }
+          published_at: "2024-01-01T00:00:00Z",
+        },
       ];
       mockGetLocalStorageItem.mockReturnValue(agents);
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -98,14 +100,18 @@ describe("useMarketplaceData - Targeted Tests (Phase 4.2)", () => {
           sortBy: "popular",
           user: null,
           activeTab: "agents",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
       });
-      expect(result.current.agents[0].published_at).toBe("2024-01-02T00:00:00Z");
-      expect(result.current.agents[1].published_at).toBe("2024-01-01T00:00:00Z");
+      expect(result.current.agents[0].published_at).toBe(
+        "2024-01-02T00:00:00Z",
+      );
+      expect(result.current.agents[1].published_at).toBe(
+        "2024-01-01T00:00:00Z",
+      );
     });
   });
   describe("Sort subtraction - bIsOfficial - aIsOfficial", () => {
@@ -117,7 +123,7 @@ describe("useMarketplaceData - Targeted Tests (Phase 4.2)", () => {
           is_official: false,
           category: "automation",
           tags: [],
-          published_at: "2024-01-01T00:00:00Z"
+          published_at: "2024-01-01T00:00:00Z",
         },
         {
           id: "agent-2",
@@ -125,12 +131,12 @@ describe("useMarketplaceData - Targeted Tests (Phase 4.2)", () => {
           is_official: true,
           category: "automation",
           tags: [],
-          published_at: "2024-01-01T00:00:00Z"
-        }
+          published_at: "2024-01-01T00:00:00Z",
+        },
       ];
       mockGetLocalStorageItem.mockReturnValue(agents);
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -139,8 +145,8 @@ describe("useMarketplaceData - Targeted Tests (Phase 4.2)", () => {
           sortBy: "popular",
           user: null,
           activeTab: "agents",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -156,7 +162,7 @@ describe("useMarketplaceData - Targeted Tests (Phase 4.2)", () => {
           is_official: true,
           category: "automation",
           tags: [],
-          published_at: "2024-01-01T00:00:00Z"
+          published_at: "2024-01-01T00:00:00Z",
         },
         {
           id: "agent-2",
@@ -164,12 +170,12 @@ describe("useMarketplaceData - Targeted Tests (Phase 4.2)", () => {
           is_official: false,
           category: "automation",
           tags: [],
-          published_at: "2024-01-01T00:00:00Z"
-        }
+          published_at: "2024-01-01T00:00:00Z",
+        },
       ];
       mockGetLocalStorageItem.mockReturnValue(agents);
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -178,8 +184,8 @@ describe("useMarketplaceData - Targeted Tests (Phase 4.2)", () => {
           sortBy: "popular",
           user: null,
           activeTab: "agents",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -197,7 +203,7 @@ describe("useMarketplaceData - Targeted Tests (Phase 4.2)", () => {
           is_official: false,
           category: "automation",
           tags: [],
-          published_at: "2024-01-01T00:00:00Z"
+          published_at: "2024-01-01T00:00:00Z",
         },
         {
           id: "agent-2",
@@ -205,12 +211,12 @@ describe("useMarketplaceData - Targeted Tests (Phase 4.2)", () => {
           is_official: false,
           category: "automation",
           tags: [],
-          published_at: "2024-01-02T00:00:00Z"
-        }
+          published_at: "2024-01-02T00:00:00Z",
+        },
       ];
       mockGetLocalStorageItem.mockReturnValue(agents);
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -219,14 +225,18 @@ describe("useMarketplaceData - Targeted Tests (Phase 4.2)", () => {
           sortBy: "popular",
           user: null,
           activeTab: "agents",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
       });
-      expect(result.current.agents[0].published_at).toBe("2024-01-02T00:00:00Z");
-      expect(result.current.agents[1].published_at).toBe("2024-01-01T00:00:00Z");
+      expect(result.current.agents[0].published_at).toBe(
+        "2024-01-02T00:00:00Z",
+      );
+      expect(result.current.agents[1].published_at).toBe(
+        "2024-01-01T00:00:00Z",
+      );
     });
     it("should verify reverse order would be ascending (dateA - dateB)", async () => {
       const agents = [
@@ -236,7 +246,7 @@ describe("useMarketplaceData - Targeted Tests (Phase 4.2)", () => {
           is_official: false,
           category: "automation",
           tags: [],
-          published_at: "2024-01-01T00:00:00Z"
+          published_at: "2024-01-01T00:00:00Z",
         },
         {
           id: "agent-2",
@@ -244,12 +254,12 @@ describe("useMarketplaceData - Targeted Tests (Phase 4.2)", () => {
           is_official: false,
           category: "automation",
           tags: [],
-          published_at: "2024-01-02T00:00:00Z"
-        }
+          published_at: "2024-01-02T00:00:00Z",
+        },
       ];
       mockGetLocalStorageItem.mockReturnValue(agents);
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -258,14 +268,18 @@ describe("useMarketplaceData - Targeted Tests (Phase 4.2)", () => {
           sortBy: "popular",
           user: null,
           activeTab: "agents",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
       });
-      expect(result.current.agents[0].published_at).toBe("2024-01-02T00:00:00Z");
-      expect(result.current.agents[1].published_at).toBe("2024-01-01T00:00:00Z");
+      expect(result.current.agents[0].published_at).toBe(
+        "2024-01-02T00:00:00Z",
+      );
+      expect(result.current.agents[1].published_at).toBe(
+        "2024-01-01T00:00:00Z",
+      );
     });
   });
   describe("Ternary operator - is_official ? 1 : 0", () => {
@@ -277,7 +291,7 @@ describe("useMarketplaceData - Targeted Tests (Phase 4.2)", () => {
           is_official: true,
           category: "automation",
           tags: [],
-          published_at: "2024-01-01T00:00:00Z"
+          published_at: "2024-01-01T00:00:00Z",
         },
         {
           id: "agent-2",
@@ -285,12 +299,12 @@ describe("useMarketplaceData - Targeted Tests (Phase 4.2)", () => {
           is_official: false,
           category: "automation",
           tags: [],
-          published_at: "2024-01-01T00:00:00Z"
-        }
+          published_at: "2024-01-01T00:00:00Z",
+        },
       ];
       mockGetLocalStorageItem.mockReturnValue(agents);
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -299,8 +313,8 @@ describe("useMarketplaceData - Targeted Tests (Phase 4.2)", () => {
           sortBy: "popular",
           user: null,
           activeTab: "agents",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -316,12 +330,12 @@ describe("useMarketplaceData - Targeted Tests (Phase 4.2)", () => {
           is_official: false,
           category: "automation",
           tags: [],
-          published_at: "2024-01-01T00:00:00Z"
-        }
+          published_at: "2024-01-01T00:00:00Z",
+        },
       ];
       mockGetLocalStorageItem.mockReturnValue(agents);
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -330,8 +344,8 @@ describe("useMarketplaceData - Targeted Tests (Phase 4.2)", () => {
           sortBy: "popular",
           user: null,
           activeTab: "agents",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -348,12 +362,12 @@ describe("useMarketplaceData - Targeted Tests (Phase 4.2)", () => {
           is_official: false,
           category: "automation",
           tags: [],
-          published_at: "2024-01-01T00:00:00Z"
-        }
+          published_at: "2024-01-01T00:00:00Z",
+        },
       ];
       mockGetLocalStorageItem.mockReturnValue(agents);
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -362,13 +376,15 @@ describe("useMarketplaceData - Targeted Tests (Phase 4.2)", () => {
           sortBy: "popular",
           user: null,
           activeTab: "agents",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
       });
-      expect(result.current.agents[0].published_at).toBe("2024-01-01T00:00:00Z");
+      expect(result.current.agents[0].published_at).toBe(
+        "2024-01-01T00:00:00Z",
+      );
     });
     it("should verify ternary returns 0 when published_at is undefined", async () => {
       const agents = [
@@ -377,7 +393,7 @@ describe("useMarketplaceData - Targeted Tests (Phase 4.2)", () => {
           name: "Agent",
           is_official: false,
           category: "automation",
-          tags: []
+          tags: [],
           // published_at is undefined
         },
         {
@@ -386,12 +402,12 @@ describe("useMarketplaceData - Targeted Tests (Phase 4.2)", () => {
           is_official: false,
           category: "automation",
           tags: [],
-          published_at: "2024-01-01T00:00:00Z"
-        }
+          published_at: "2024-01-01T00:00:00Z",
+        },
       ];
       mockGetLocalStorageItem.mockReturnValue(agents);
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -400,13 +416,15 @@ describe("useMarketplaceData - Targeted Tests (Phase 4.2)", () => {
           sortBy: "popular",
           user: null,
           activeTab: "agents",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
       });
-      expect(result.current.agents[0].published_at).toBe("2024-01-01T00:00:00Z");
+      expect(result.current.agents[0].published_at).toBe(
+        "2024-01-01T00:00:00Z",
+      );
     });
   });
   describe("Boolean conversion - author_id presence", () => {
@@ -419,12 +437,12 @@ describe("useMarketplaceData - Targeted Tests (Phase 4.2)", () => {
           category: "automation",
           tags: [],
           published_at: "2024-01-01T00:00:00Z",
-          is_official: false
-        }
+          is_official: false,
+        },
       ];
       mockGetLocalStorageItem.mockReturnValue(agents);
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -433,8 +451,8 @@ describe("useMarketplaceData - Targeted Tests (Phase 4.2)", () => {
           sortBy: "popular",
           user: null,
           activeTab: "agents",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -450,12 +468,12 @@ describe("useMarketplaceData - Targeted Tests (Phase 4.2)", () => {
           category: "automation",
           tags: [],
           published_at: "2024-01-01T00:00:00Z",
-          is_official: false
-        }
+          is_official: false,
+        },
       ];
       mockGetLocalStorageItem.mockReturnValue(agents);
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -464,8 +482,8 @@ describe("useMarketplaceData - Targeted Tests (Phase 4.2)", () => {
           sortBy: "popular",
           user: null,
           activeTab: "agents",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -479,20 +497,20 @@ describe("useMarketplaceData - Targeted Tests (Phase 4.2)", () => {
         id: "template-1",
         name: "Template",
         description: "Description",
-        tags: []
+        tags: [],
       };
       mockHttpClient.get.mockResolvedValue({
-        json: async () => [template]
+        json: async () => [template],
       });
       mockHttpClient.post.mockResolvedValue({
         ok: true,
         json: async () => ({
-          nodes: []
+          nodes: [],
           // Array
-        })
+        }),
       });
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -501,12 +519,15 @@ describe("useMarketplaceData - Targeted Tests (Phase 4.2)", () => {
           sortBy: "popular",
           user: null,
           activeTab: "workflows-of-workflows",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
-      await waitFor(() => {
-        expect(result.current.loading).toBe(false);
-      }, { timeout: 3e3 });
+      await waitFor(
+        () => {
+          expect(result.current.loading).toBe(false);
+        },
+        { timeout: 3e3 },
+      );
       expect(mockHttpClient.post).toHaveBeenCalled();
     });
     it("should verify Array.isArray returns false for non-array", async () => {
@@ -514,20 +535,20 @@ describe("useMarketplaceData - Targeted Tests (Phase 4.2)", () => {
         id: "template-1",
         name: "Template",
         description: "Description",
-        tags: []
+        tags: [],
       };
       mockHttpClient.get.mockResolvedValue({
-        json: async () => [template]
+        json: async () => [template],
       });
       mockHttpClient.post.mockResolvedValue({
         ok: true,
         json: async () => ({
-          nodes: "not-an-array"
+          nodes: "not-an-array",
           // Not an array
-        })
+        }),
       });
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -536,12 +557,15 @@ describe("useMarketplaceData - Targeted Tests (Phase 4.2)", () => {
           sortBy: "popular",
           user: null,
           activeTab: "workflows-of-workflows",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
-      await waitFor(() => {
-        expect(result.current.loading).toBe(false);
-      }, { timeout: 3e3 });
+      await waitFor(
+        () => {
+          expect(result.current.loading).toBe(false);
+        },
+        { timeout: 3e3 },
+      );
       expect(mockHttpClient.post).toHaveBeenCalled();
       expect(result.current.workflowsOfWorkflows.length).toBe(0);
     });

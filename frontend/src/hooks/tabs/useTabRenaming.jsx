@@ -1,13 +1,17 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { showError as defaultShowError } from "../../utils/notifications";
 import { logger as defaultLogger } from "../../utils/logger";
-import { validateWorkflowName, sanitizeName, hasNameChanged } from "../utils/validation";
+import {
+  validateWorkflowName,
+  sanitizeName,
+  hasNameChanged,
+} from "../utils/validation";
 import { logicalOr } from "../utils/logicalOr";
 function useTabRenaming({
   tabs,
   onRename,
   showError = defaultShowError,
-  logger = defaultLogger
+  logger = defaultLogger,
 }) {
   const [editingTabId, setEditingTabId] = useState(null);
   const [editingName, setEditingName] = useState("");
@@ -26,59 +30,71 @@ function useTabRenaming({
     setEditingTabId(tab.id);
     setEditingName(tab.name);
   }, []);
-  const commitRename = useCallback(async (tabId, requestedName) => {
-    if (renameInFlightRef.current) return;
-    const tab = tabs.find((t) => t.id === tabId);
-    if (!tab) {
-      setEditingTabId(null);
-      setEditingName("");
-      return;
-    }
-    const trimmedName = sanitizeName(requestedName);
-    const validation = validateWorkflowName(trimmedName);
-    if (!validation.isValid) {
-      const errorMsg = logicalOr(validation.error, "Invalid workflow name.");
-      const errorStr = errorMsg !== null && errorMsg !== void 0 ? errorMsg : "Invalid workflow name.";
-      showError(errorStr);
-      return;
-    }
-    if (!hasNameChanged(trimmedName, tab.name)) {
-      setEditingTabId(null);
-      setEditingName("");
-      return;
-    }
-    renameInFlightRef.current = true;
-    const previousName = tab.name;
-    try {
-      await onRename(tabId, trimmedName, previousName);
-      setEditingTabId(null);
-      setEditingName("");
-    } catch (error) {
-      logger.error("Failed to rename tab:", error);
-    } finally {
-      renameInFlightRef.current = false;
-    }
-  }, [tabs, onRename, showError, logger]);
+  const commitRename = useCallback(
+    async (tabId, requestedName) => {
+      if (renameInFlightRef.current) return;
+      const tab = tabs.find((t) => t.id === tabId);
+      if (!tab) {
+        setEditingTabId(null);
+        setEditingName("");
+        return;
+      }
+      const trimmedName = sanitizeName(requestedName);
+      const validation = validateWorkflowName(trimmedName);
+      if (!validation.isValid) {
+        const errorMsg = logicalOr(validation.error, "Invalid workflow name.");
+        const errorStr =
+          errorMsg !== null && errorMsg !== void 0
+            ? errorMsg
+            : "Invalid workflow name.";
+        showError(errorStr);
+        return;
+      }
+      if (!hasNameChanged(trimmedName, tab.name)) {
+        setEditingTabId(null);
+        setEditingName("");
+        return;
+      }
+      renameInFlightRef.current = true;
+      const previousName = tab.name;
+      try {
+        await onRename(tabId, trimmedName, previousName);
+        setEditingTabId(null);
+        setEditingName("");
+      } catch (error) {
+        logger.error("Failed to rename tab:", error);
+      } finally {
+        renameInFlightRef.current = false;
+      }
+    },
+    [tabs, onRename, showError, logger],
+  );
   const cancelEditing = useCallback(() => {
     setEditingTabId(null);
     setEditingName("");
   }, []);
-  const handleInputBlur = useCallback((tabId) => {
-    setTimeout(() => {
-      if (editingTabId === tabId) {
+  const handleInputBlur = useCallback(
+    (tabId) => {
+      setTimeout(() => {
+        if (editingTabId === tabId) {
+          commitRename(tabId, editingName);
+        }
+      }, 100);
+    },
+    [editingTabId, editingName, commitRename],
+  );
+  const handleInputKeyDown = useCallback(
+    (tabId, event) => {
+      if (event.key === "Enter") {
+        event.preventDefault();
         commitRename(tabId, editingName);
+      } else if (event.key === "Escape") {
+        event.preventDefault();
+        cancelEditing();
       }
-    }, 100);
-  }, [editingTabId, editingName, commitRename]);
-  const handleInputKeyDown = useCallback((tabId, event) => {
-    if (event.key === "Enter") {
-      event.preventDefault();
-      commitRename(tabId, editingName);
-    } else if (event.key === "Escape") {
-      event.preventDefault();
-      cancelEditing();
-    }
-  }, [editingName, commitRename, cancelEditing]);
+    },
+    [editingName, commitRename, cancelEditing],
+  );
   return {
     editingTabId,
     editingName,
@@ -88,9 +104,7 @@ function useTabRenaming({
     commitRename,
     cancelEditing,
     handleInputBlur,
-    handleInputKeyDown
+    handleInputKeyDown,
   };
 }
-export {
-  useTabRenaming
-};
+export { useTabRenaming };

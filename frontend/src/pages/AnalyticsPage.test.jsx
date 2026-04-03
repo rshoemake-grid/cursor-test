@@ -1,4 +1,3 @@
-import { jsx } from "react/jsx-runtime";
 import { render, screen } from "@testing-library/react";
 import AnalyticsPage from "./AnalyticsPage";
 import { useExecutionListQuery } from "../hooks/log/useExecutionListQuery";
@@ -15,7 +14,7 @@ describe("AnalyticsPage", () => {
       status: "completed",
       started_at: "2026-02-23T12:00:00Z",
       completed_at: "2026-02-23T12:00:05Z",
-      logs: []
+      logs: [],
     },
     {
       execution_id: "exec-2",
@@ -23,8 +22,8 @@ describe("AnalyticsPage", () => {
       status: "failed",
       started_at: "2026-02-23T12:10:00Z",
       completed_at: "2026-02-23T12:10:03Z",
-      logs: []
-    }
+      logs: [],
+    },
   ];
   const mockAnalytics = {
     totalExecutions: 2,
@@ -33,13 +32,13 @@ describe("AnalyticsPage", () => {
     totalDuration: 8,
     statusCounts: {
       completed: 1,
-      failed: 1
+      failed: 1,
     },
     executionsByWorkflow: {
-      "workflow-1": 2
+      "workflow-1": 2,
     },
     recentExecutions: mockExecutions,
-    failedExecutions: [mockExecutions[1]]
+    failedExecutions: [mockExecutions[1]],
   };
   beforeEach(() => {
     jest.clearAllMocks();
@@ -47,17 +46,19 @@ describe("AnalyticsPage", () => {
       data: mockExecutions,
       isLoading: false,
       error: null,
-      refetch: jest.fn()
+      refetch: jest.fn(),
     });
     mockUseExecutionAnalytics.mockReturnValue(mockAnalytics);
   });
   it("should render analytics page title", () => {
-    render(/* @__PURE__ */ jsx(AnalyticsPage, {}));
+    render(<AnalyticsPage />);
     expect(screen.getByText("Analytics")).toBeInTheDocument();
-    expect(screen.getByText("Execution metrics and insights")).toBeInTheDocument();
+    expect(
+      screen.getByText("Execution metrics and insights"),
+    ).toBeInTheDocument();
   });
   it("should display key metrics", () => {
-    render(/* @__PURE__ */ jsx(AnalyticsPage, {}));
+    render(<AnalyticsPage />);
     expect(screen.getByText("Total Executions")).toBeInTheDocument();
     expect(screen.getByText("2")).toBeInTheDocument();
     expect(screen.getByText("Success Rate")).toBeInTheDocument();
@@ -65,18 +66,18 @@ describe("AnalyticsPage", () => {
     expect(screen.getByText("Failed Executions")).toBeInTheDocument();
   });
   it("should render status breakdown section", () => {
-    render(/* @__PURE__ */ jsx(AnalyticsPage, {}));
+    render(<AnalyticsPage />);
     expect(screen.getByText("Status Breakdown")).toBeInTheDocument();
     expect(screen.getAllByText(/completed/i).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/failed/i).length).toBeGreaterThan(0);
   });
   it("should render top workflows section", () => {
-    render(/* @__PURE__ */ jsx(AnalyticsPage, {}));
+    render(<AnalyticsPage />);
     expect(screen.getByText("Top Workflows")).toBeInTheDocument();
     expect(screen.getByText(/2 execution/)).toBeInTheDocument();
   });
   it("should render recent executions section", () => {
-    render(/* @__PURE__ */ jsx(AnalyticsPage, {}));
+    render(<AnalyticsPage />);
     expect(screen.getByText("Recent Executions")).toBeInTheDocument();
   });
   it("should show loading state", () => {
@@ -84,9 +85,9 @@ describe("AnalyticsPage", () => {
       data: [],
       isLoading: true,
       error: null,
-      refetch: jest.fn()
+      refetch: jest.fn(),
     });
-    render(/* @__PURE__ */ jsx(AnalyticsPage, {}));
+    render(<AnalyticsPage />);
     expect(screen.getByText("Loading analytics...")).toBeInTheDocument();
   });
   it("should show error state", () => {
@@ -95,14 +96,14 @@ describe("AnalyticsPage", () => {
       data: [],
       isLoading: false,
       error,
-      refetch: jest.fn()
+      refetch: jest.fn(),
     });
-    render(/* @__PURE__ */ jsx(AnalyticsPage, {}));
+    render(<AnalyticsPage />);
     expect(screen.getByText(/Error:/i)).toBeInTheDocument();
     expect(screen.getByText(/Failed to load/)).toBeInTheDocument();
   });
   it("should render charts when data is available", () => {
-    render(/* @__PURE__ */ jsx(AnalyticsPage, {}));
+    render(<AnalyticsPage />);
     const charts = document.querySelectorAll("svg");
     expect(charts.length).toBeGreaterThan(0);
   });
@@ -111,7 +112,7 @@ describe("AnalyticsPage", () => {
       data: [],
       isLoading: false,
       error: null,
-      refetch: jest.fn()
+      refetch: jest.fn(),
     });
     mockUseExecutionAnalytics.mockReturnValue({
       totalExecutions: 0,
@@ -121,21 +122,21 @@ describe("AnalyticsPage", () => {
       statusCounts: {},
       executionsByWorkflow: {},
       recentExecutions: [],
-      failedExecutions: []
+      failedExecutions: [],
     });
-    render(/* @__PURE__ */ jsx(AnalyticsPage, {}));
+    render(<AnalyticsPage />);
     expect(screen.getAllByText("0").length).toBeGreaterThan(0);
     expect(screen.getByText("No workflow data available")).toBeInTheDocument();
   });
   it("should use injected API client when provided", () => {
     const mockApiClient = {
-      listExecutions: jest.fn()
+      listExecutions: jest.fn(),
     };
-    render(/* @__PURE__ */ jsx(AnalyticsPage, { apiClient: mockApiClient }));
+    render(<AnalyticsPage apiClient={mockApiClient} />);
     expect(mockUseExecutionListQuery).toHaveBeenCalledWith(
       expect.objectContaining({
-        apiClient: mockApiClient
-      })
+        apiClient: mockApiClient,
+      }),
     );
   });
 });

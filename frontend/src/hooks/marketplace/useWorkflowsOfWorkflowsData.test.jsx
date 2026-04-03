@@ -4,8 +4,8 @@ import { logger } from "../../utils/logger";
 jest.mock("../../utils/logger", () => ({
   logger: {
     debug: jest.fn(),
-    error: jest.fn()
-  }
+    error: jest.fn(),
+  },
 }));
 const mockLoggerError = logger.error;
 describe("useWorkflowsOfWorkflowsData", () => {
@@ -21,103 +21,103 @@ describe("useWorkflowsOfWorkflowsData", () => {
     is_official: false,
     uses_count: 10,
     likes_count: 5,
-    rating: 4.5
+    rating: 4.5,
   };
   beforeEach(() => {
     jest.clearAllMocks();
     mockHttpClient = {
       get: jest.fn(),
-      post: jest.fn()
+      post: jest.fn(),
     };
   });
   it("should return fetchWorkflowsOfWorkflows function", () => {
-    const { result } = renderHook(
-      () => useWorkflowsOfWorkflowsData({
+    const { result } = renderHook(() =>
+      useWorkflowsOfWorkflowsData({
         httpClient: mockHttpClient,
         apiBaseUrl: "http://api.test",
         category: "",
         searchQuery: "",
-        sortBy: "popular"
-      })
+        sortBy: "popular",
+      }),
     );
     expect(result.current.fetchWorkflowsOfWorkflows).toBeDefined();
     expect(typeof result.current.fetchWorkflowsOfWorkflows).toBe("function");
   });
   it("should fetch and filter workflows of workflows", async () => {
     const mockTemplatesResponse = {
-      json: jest.fn().mockResolvedValue([mockTemplate])
+      json: jest.fn().mockResolvedValue([mockTemplate]),
     };
     const mockWorkflowDetail = {
       nodes: [
         {
-          data: { workflow_id: "workflow-2" }
-        }
-      ]
+          data: { workflow_id: "workflow-2" },
+        },
+      ],
     };
     const mockWorkflowResponse = {
       ok: true,
-      json: jest.fn().mockResolvedValue(mockWorkflowDetail)
+      json: jest.fn().mockResolvedValue(mockWorkflowDetail),
     };
     mockHttpClient.get.mockResolvedValue(mockTemplatesResponse);
     mockHttpClient.post.mockResolvedValue(mockWorkflowResponse);
-    const { result } = renderHook(
-      () => useWorkflowsOfWorkflowsData({
+    const { result } = renderHook(() =>
+      useWorkflowsOfWorkflowsData({
         httpClient: mockHttpClient,
         apiBaseUrl: "http://api.test",
         category: "",
         searchQuery: "",
-        sortBy: "popular"
-      })
+        sortBy: "popular",
+      }),
     );
     const workflows = await result.current.fetchWorkflowsOfWorkflows();
     expect(mockHttpClient.get).toHaveBeenCalled();
     expect(mockHttpClient.post).toHaveBeenCalledWith(
       expect.stringContaining(`/templates/${mockTemplate.id}/use`),
       {},
-      { "Content-Type": "application/json" }
+      { "Content-Type": "application/json" },
     );
     expect(workflows).toEqual([mockTemplate]);
   });
   it("should filter workflows by description", async () => {
     const templateWithDescription = {
       ...mockTemplate,
-      description: "This is a workflow of workflows"
+      description: "This is a workflow of workflows",
     };
     const mockTemplatesResponse = {
-      json: jest.fn().mockResolvedValue([templateWithDescription])
+      json: jest.fn().mockResolvedValue([templateWithDescription]),
     };
     const mockWorkflowResponse = {
       ok: true,
-      json: jest.fn().mockResolvedValue({ nodes: [] })
+      json: jest.fn().mockResolvedValue({ nodes: [] }),
     };
     mockHttpClient.get.mockResolvedValue(mockTemplatesResponse);
     mockHttpClient.post.mockResolvedValue(mockWorkflowResponse);
-    const { result } = renderHook(
-      () => useWorkflowsOfWorkflowsData({
+    const { result } = renderHook(() =>
+      useWorkflowsOfWorkflowsData({
         httpClient: mockHttpClient,
         apiBaseUrl: "http://api.test",
         category: "",
         searchQuery: "",
-        sortBy: "popular"
-      })
+        sortBy: "popular",
+      }),
     );
     const workflows = await result.current.fetchWorkflowsOfWorkflows();
     expect(workflows).toEqual([templateWithDescription]);
   });
   it("should handle errors when checking individual workflows", async () => {
     const mockTemplatesResponse = {
-      json: jest.fn().mockResolvedValue([mockTemplate])
+      json: jest.fn().mockResolvedValue([mockTemplate]),
     };
     mockHttpClient.get.mockResolvedValue(mockTemplatesResponse);
     mockHttpClient.post.mockRejectedValue(new Error("API Error"));
-    const { result } = renderHook(
-      () => useWorkflowsOfWorkflowsData({
+    const { result } = renderHook(() =>
+      useWorkflowsOfWorkflowsData({
         httpClient: mockHttpClient,
         apiBaseUrl: "http://api.test",
         category: "",
         searchQuery: "",
-        sortBy: "popular"
-      })
+        sortBy: "popular",
+      }),
     );
     const workflows = await result.current.fetchWorkflowsOfWorkflows();
     expect(workflows).toEqual([]);
@@ -125,21 +125,21 @@ describe("useWorkflowsOfWorkflowsData", () => {
   });
   it("should handle non-ok responses", async () => {
     const mockTemplatesResponse = {
-      json: jest.fn().mockResolvedValue([mockTemplate])
+      json: jest.fn().mockResolvedValue([mockTemplate]),
     };
     const mockWorkflowResponse = {
-      ok: false
+      ok: false,
     };
     mockHttpClient.get.mockResolvedValue(mockTemplatesResponse);
     mockHttpClient.post.mockResolvedValue(mockWorkflowResponse);
-    const { result } = renderHook(
-      () => useWorkflowsOfWorkflowsData({
+    const { result } = renderHook(() =>
+      useWorkflowsOfWorkflowsData({
         httpClient: mockHttpClient,
         apiBaseUrl: "http://api.test",
         category: "",
         searchQuery: "",
-        sortBy: "popular"
-      })
+        sortBy: "popular",
+      }),
     );
     const workflows = await result.current.fetchWorkflowsOfWorkflows();
     expect(workflows).toEqual([]);
@@ -147,25 +147,25 @@ describe("useWorkflowsOfWorkflowsData", () => {
   it("should filter workflows by tags containing workflow", async () => {
     const templateWithTags = {
       ...mockTemplate,
-      tags: ["workflow-of-workflows", "automation"]
+      tags: ["workflow-of-workflows", "automation"],
     };
     const mockTemplatesResponse = {
-      json: jest.fn().mockResolvedValue([templateWithTags])
+      json: jest.fn().mockResolvedValue([templateWithTags]),
     };
     const mockWorkflowResponse = {
       ok: true,
-      json: jest.fn().mockResolvedValue({ nodes: [] })
+      json: jest.fn().mockResolvedValue({ nodes: [] }),
     };
     mockHttpClient.get.mockResolvedValue(mockTemplatesResponse);
     mockHttpClient.post.mockResolvedValue(mockWorkflowResponse);
-    const { result } = renderHook(
-      () => useWorkflowsOfWorkflowsData({
+    const { result } = renderHook(() =>
+      useWorkflowsOfWorkflowsData({
         httpClient: mockHttpClient,
         apiBaseUrl: "http://api.test",
         category: "",
         searchQuery: "",
-        sortBy: "popular"
-      })
+        sortBy: "popular",
+      }),
     );
     const workflows = await result.current.fetchWorkflowsOfWorkflows();
     expect(workflows).toEqual([templateWithTags]);
@@ -173,32 +173,32 @@ describe("useWorkflowsOfWorkflowsData", () => {
   it("should handle workflows without tags", async () => {
     const templateWithoutTags = {
       ...mockTemplate,
-      tags: void 0
+      tags: void 0,
     };
     const mockTemplatesResponse = {
-      json: jest.fn().mockResolvedValue([templateWithoutTags])
+      json: jest.fn().mockResolvedValue([templateWithoutTags]),
     };
     const mockWorkflowDetail = {
       nodes: [
         {
-          data: { workflow_id: "workflow-2" }
-        }
-      ]
+          data: { workflow_id: "workflow-2" },
+        },
+      ],
     };
     const mockWorkflowResponse = {
       ok: true,
-      json: jest.fn().mockResolvedValue(mockWorkflowDetail)
+      json: jest.fn().mockResolvedValue(mockWorkflowDetail),
     };
     mockHttpClient.get.mockResolvedValue(mockTemplatesResponse);
     mockHttpClient.post.mockResolvedValue(mockWorkflowResponse);
-    const { result } = renderHook(
-      () => useWorkflowsOfWorkflowsData({
+    const { result } = renderHook(() =>
+      useWorkflowsOfWorkflowsData({
         httpClient: mockHttpClient,
         apiBaseUrl: "http://api.test",
         category: "",
         searchQuery: "",
-        sortBy: "popular"
-      })
+        sortBy: "popular",
+      }),
     );
     const workflows = await result.current.fetchWorkflowsOfWorkflows();
     expect(workflows).toEqual([templateWithoutTags]);
@@ -206,25 +206,25 @@ describe("useWorkflowsOfWorkflowsData", () => {
   it("should filter workflows by tags when tags exist", async () => {
     const templateWithWorkflowTag = {
       ...mockTemplate,
-      tags: ["workflow-of-workflows", "other-tag"]
+      tags: ["workflow-of-workflows", "other-tag"],
     };
     const mockTemplatesResponse = {
-      json: jest.fn().mockResolvedValue([templateWithWorkflowTag])
+      json: jest.fn().mockResolvedValue([templateWithWorkflowTag]),
     };
     const mockWorkflowResponse = {
       ok: true,
-      json: jest.fn().mockResolvedValue({ nodes: [] })
+      json: jest.fn().mockResolvedValue({ nodes: [] }),
     };
     mockHttpClient.get.mockResolvedValue(mockTemplatesResponse);
     mockHttpClient.post.mockResolvedValue(mockWorkflowResponse);
-    const { result } = renderHook(
-      () => useWorkflowsOfWorkflowsData({
+    const { result } = renderHook(() =>
+      useWorkflowsOfWorkflowsData({
         httpClient: mockHttpClient,
         apiBaseUrl: "http://api.test",
         category: "",
         searchQuery: "",
-        sortBy: "popular"
-      })
+        sortBy: "popular",
+      }),
     );
     const workflows = await result.current.fetchWorkflowsOfWorkflows();
     expect(workflows).toEqual([templateWithWorkflowTag]);
@@ -232,25 +232,25 @@ describe("useWorkflowsOfWorkflowsData", () => {
   it("should not match workflow when tags do not contain workflow keyword", async () => {
     const templateWithoutWorkflowTag = {
       ...mockTemplate,
-      tags: ["automation", "data-processing"]
+      tags: ["automation", "data-processing"],
     };
     const mockTemplatesResponse = {
-      json: jest.fn().mockResolvedValue([templateWithoutWorkflowTag])
+      json: jest.fn().mockResolvedValue([templateWithoutWorkflowTag]),
     };
     const mockWorkflowResponse = {
       ok: true,
-      json: jest.fn().mockResolvedValue({ nodes: [] })
+      json: jest.fn().mockResolvedValue({ nodes: [] }),
     };
     mockHttpClient.get.mockResolvedValue(mockTemplatesResponse);
     mockHttpClient.post.mockResolvedValue(mockWorkflowResponse);
-    const { result } = renderHook(
-      () => useWorkflowsOfWorkflowsData({
+    const { result } = renderHook(() =>
+      useWorkflowsOfWorkflowsData({
         httpClient: mockHttpClient,
         apiBaseUrl: "http://api.test",
         category: "",
         searchQuery: "",
-        sortBy: "popular"
-      })
+        sortBy: "popular",
+      }),
     );
     const workflows = await result.current.fetchWorkflowsOfWorkflows();
     expect(workflows).toEqual([]);
@@ -258,34 +258,34 @@ describe("useWorkflowsOfWorkflowsData", () => {
   it("should handle workflow tags check when tags array exists but no workflow keyword", async () => {
     const templateWithNonWorkflowTags = {
       ...mockTemplate,
-      tags: ["automation", "integration"]
+      tags: ["automation", "integration"],
     };
     const mockTemplatesResponse = {
-      json: jest.fn().mockResolvedValue([templateWithNonWorkflowTags])
+      json: jest.fn().mockResolvedValue([templateWithNonWorkflowTags]),
     };
     const mockWorkflowDetail = {
       nodes: [
         {
           data: {},
           description: "",
-          name: ""
-        }
-      ]
+          name: "",
+        },
+      ],
     };
     const mockWorkflowResponse = {
       ok: true,
-      json: jest.fn().mockResolvedValue(mockWorkflowDetail)
+      json: jest.fn().mockResolvedValue(mockWorkflowDetail),
     };
     mockHttpClient.get.mockResolvedValue(mockTemplatesResponse);
     mockHttpClient.post.mockResolvedValue(mockWorkflowResponse);
-    const { result } = renderHook(
-      () => useWorkflowsOfWorkflowsData({
+    const { result } = renderHook(() =>
+      useWorkflowsOfWorkflowsData({
         httpClient: mockHttpClient,
         apiBaseUrl: "http://api.test",
         category: "",
         searchQuery: "",
-        sortBy: "popular"
-      })
+        sortBy: "popular",
+      }),
     );
     const workflows = await result.current.fetchWorkflowsOfWorkflows();
     expect(workflows).toEqual([]);
@@ -294,25 +294,25 @@ describe("useWorkflowsOfWorkflowsData", () => {
     const templateWithWorkflowInTags = {
       ...mockTemplate,
       tags: ["workflow-integration", "automation"],
-      description: "This is a workflow of workflows"
+      description: "This is a workflow of workflows",
     };
     const mockTemplatesResponse = {
-      json: jest.fn().mockResolvedValue([templateWithWorkflowInTags])
+      json: jest.fn().mockResolvedValue([templateWithWorkflowInTags]),
     };
     const mockWorkflowResponse = {
       ok: true,
-      json: jest.fn().mockResolvedValue({ nodes: [] })
+      json: jest.fn().mockResolvedValue({ nodes: [] }),
     };
     mockHttpClient.get.mockResolvedValue(mockTemplatesResponse);
     mockHttpClient.post.mockResolvedValue(mockWorkflowResponse);
-    const { result } = renderHook(
-      () => useWorkflowsOfWorkflowsData({
+    const { result } = renderHook(() =>
+      useWorkflowsOfWorkflowsData({
         httpClient: mockHttpClient,
         apiBaseUrl: "http://api.test",
         category: "",
         searchQuery: "",
-        sortBy: "popular"
-      })
+        sortBy: "popular",
+      }),
     );
     const workflows = await result.current.fetchWorkflowsOfWorkflows();
     expect(workflows).toEqual([templateWithWorkflowInTags]);
@@ -320,34 +320,34 @@ describe("useWorkflowsOfWorkflowsData", () => {
   it("should match workflow when tags contain workflow keyword in node check", async () => {
     const templateWithWorkflowInTags = {
       ...mockTemplate,
-      tags: ["workflow-integration", "automation"]
+      tags: ["workflow-integration", "automation"],
     };
     const mockTemplatesResponse = {
-      json: jest.fn().mockResolvedValue([templateWithWorkflowInTags])
+      json: jest.fn().mockResolvedValue([templateWithWorkflowInTags]),
     };
     const mockWorkflowDetail = {
       nodes: [
         {
           data: {},
           description: "",
-          name: ""
-        }
-      ]
+          name: "",
+        },
+      ],
     };
     const mockWorkflowResponse = {
       ok: true,
-      json: jest.fn().mockResolvedValue(mockWorkflowDetail)
+      json: jest.fn().mockResolvedValue(mockWorkflowDetail),
     };
     mockHttpClient.get.mockResolvedValue(mockTemplatesResponse);
     mockHttpClient.post.mockResolvedValue(mockWorkflowResponse);
-    const { result } = renderHook(
-      () => useWorkflowsOfWorkflowsData({
+    const { result } = renderHook(() =>
+      useWorkflowsOfWorkflowsData({
         httpClient: mockHttpClient,
         apiBaseUrl: "http://api.test",
         category: "",
         searchQuery: "",
-        sortBy: "popular"
-      })
+        sortBy: "popular",
+      }),
     );
     const workflows = await result.current.fetchWorkflowsOfWorkflows();
     expect(workflows).toEqual([templateWithWorkflowInTags]);
@@ -355,33 +355,33 @@ describe("useWorkflowsOfWorkflowsData", () => {
   it("should handle nodes without data property", async () => {
     const template = {
       ...mockTemplate,
-      tags: []
+      tags: [],
     };
     const mockTemplatesResponse = {
-      json: jest.fn().mockResolvedValue([template])
+      json: jest.fn().mockResolvedValue([template]),
     };
     const mockWorkflowDetail = {
       nodes: [
         {
           // No data property
-          workflow_id: "workflow-2"
-        }
-      ]
+          workflow_id: "workflow-2",
+        },
+      ],
     };
     const mockWorkflowResponse = {
       ok: true,
-      json: jest.fn().mockResolvedValue(mockWorkflowDetail)
+      json: jest.fn().mockResolvedValue(mockWorkflowDetail),
     };
     mockHttpClient.get.mockResolvedValue(mockTemplatesResponse);
     mockHttpClient.post.mockResolvedValue(mockWorkflowResponse);
-    const { result } = renderHook(
-      () => useWorkflowsOfWorkflowsData({
+    const { result } = renderHook(() =>
+      useWorkflowsOfWorkflowsData({
         httpClient: mockHttpClient,
         apiBaseUrl: "http://api.test",
         category: "",
         searchQuery: "",
-        sortBy: "popular"
-      })
+        sortBy: "popular",
+      }),
     );
     const workflows = await result.current.fetchWorkflowsOfWorkflows();
     expect(workflows).toEqual([template]);
@@ -390,25 +390,25 @@ describe("useWorkflowsOfWorkflowsData", () => {
     const templateWithoutDescription = {
       ...mockTemplate,
       description: void 0,
-      tags: ["workflow-of-workflows"]
+      tags: ["workflow-of-workflows"],
     };
     const mockTemplatesResponse = {
-      json: jest.fn().mockResolvedValue([templateWithoutDescription])
+      json: jest.fn().mockResolvedValue([templateWithoutDescription]),
     };
     const mockWorkflowResponse = {
       ok: true,
-      json: jest.fn().mockResolvedValue({ nodes: [] })
+      json: jest.fn().mockResolvedValue({ nodes: [] }),
     };
     mockHttpClient.get.mockResolvedValue(mockTemplatesResponse);
     mockHttpClient.post.mockResolvedValue(mockWorkflowResponse);
-    const { result } = renderHook(
-      () => useWorkflowsOfWorkflowsData({
+    const { result } = renderHook(() =>
+      useWorkflowsOfWorkflowsData({
         httpClient: mockHttpClient,
         apiBaseUrl: "http://api.test",
         category: "",
         searchQuery: "",
-        sortBy: "popular"
-      })
+        sortBy: "popular",
+      }),
     );
     const workflows = await result.current.fetchWorkflowsOfWorkflows();
     expect(workflows).toEqual([templateWithoutDescription]);

@@ -7,21 +7,22 @@ describe("NodeEditorRegistry", () => {
       nodeEditorRegistry.unregister(type);
     });
     mockHandler = {
-      renderEditor: jest.fn(
-        (_node, _onChange) => ({ type: "div", props: { children: "Editor" } })
-      ),
+      renderEditor: jest.fn((_node, _onChange) => ({
+        type: "div",
+        props: { children: "Editor" },
+      })),
       validate: jest.fn((_node) => ({
         isValid: true,
-        errors: []
+        errors: [],
       })),
       transform: jest.fn((node) => ({
         id: node.id,
         type: node.type,
         name: node.data?.label || node.id,
         position: node.position,
-        inputs: []
+        inputs: [],
       })),
-      getDefaultConfig: jest.fn(() => ({ data: { label: "Default" } }))
+      getDefaultConfig: jest.fn(() => ({ data: { label: "Default" } })),
     };
   });
   describe("register", () => {
@@ -31,14 +32,17 @@ describe("NodeEditorRegistry", () => {
       expect(nodeEditorRegistry.getHandler("test-node")).toBe(mockHandler);
     });
     it("should overwrite existing handler and warn", () => {
-      const consoleSpy = jest.spyOn(console, "warn").mockImplementation(() => {
-      });
+      const consoleSpy = jest
+        .spyOn(console, "warn")
+        .mockImplementation(() => {});
       const anotherHandler = { ...mockHandler };
       nodeEditorRegistry.register("test-node", mockHandler);
       nodeEditorRegistry.register("test-node", anotherHandler);
       expect(consoleSpy).toHaveBeenCalledWith(
         "[WARN]",
-        expect.stringContaining('Node type "test-node" is already registered. Overwriting.')
+        expect.stringContaining(
+          'Node type "test-node" is already registered. Overwriting.',
+        ),
       );
       expect(nodeEditorRegistry.getHandler("test-node")).toBe(anotherHandler);
       consoleSpy.mockRestore();
@@ -96,7 +100,7 @@ describe("NodeEditorRegistry", () => {
       id: "node-1",
       type: "start",
       position: { x: 0, y: 0 },
-      data: { label: "Test Node" }
+      data: { label: "Test Node" },
     };
     it("should call renderEditor", () => {
       nodeEditorRegistry.register("test-node", mockHandler);
@@ -132,7 +136,7 @@ describe("NodeEditorRegistry", () => {
       const handlerWithoutDefault = {
         renderEditor: mockHandler.renderEditor,
         validate: mockHandler.validate,
-        transform: mockHandler.transform
+        transform: mockHandler.transform,
       };
       nodeEditorRegistry.register("test-node", handlerWithoutDefault);
       const handler = nodeEditorRegistry.getHandler("test-node");

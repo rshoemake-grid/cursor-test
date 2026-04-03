@@ -3,23 +3,26 @@ const MARKETPLACE_TABS = {
   AGENTS: "agents",
   REPOSITORY: "repository",
   WORKFLOWS_OF_WORKFLOWS: "workflows-of-workflows",
-  TOOLS: "tools"
+  TOOLS: "tools",
 };
 const REPOSITORY_SUB_TABS = {
   WORKFLOWS: "workflows",
-  AGENTS: "agents"
+  AGENTS: "agents",
 };
 function useMarketplaceTabs() {
   const [activeTab, setActiveTab] = useState(MARKETPLACE_TABS.AGENTS);
   const [repositorySubTab, setRepositorySubTab] = useState(
-    REPOSITORY_SUB_TABS.WORKFLOWS
+    REPOSITORY_SUB_TABS.WORKFLOWS,
   );
   const isAgentsTab = activeTab === MARKETPLACE_TABS.AGENTS;
   const isRepositoryTab = activeTab === MARKETPLACE_TABS.REPOSITORY;
-  const isWorkflowsOfWorkflowsTab = activeTab === MARKETPLACE_TABS.WORKFLOWS_OF_WORKFLOWS;
+  const isWorkflowsOfWorkflowsTab =
+    activeTab === MARKETPLACE_TABS.WORKFLOWS_OF_WORKFLOWS;
   const isToolsTab = activeTab === MARKETPLACE_TABS.TOOLS;
-  const isRepositoryWorkflowsSubTab = isRepositoryTab && repositorySubTab === REPOSITORY_SUB_TABS.WORKFLOWS;
-  const isRepositoryAgentsSubTab = isRepositoryTab && repositorySubTab === REPOSITORY_SUB_TABS.AGENTS;
+  const isRepositoryWorkflowsSubTab =
+    isRepositoryTab && repositorySubTab === REPOSITORY_SUB_TABS.WORKFLOWS;
+  const isRepositoryAgentsSubTab =
+    isRepositoryTab && repositorySubTab === REPOSITORY_SUB_TABS.AGENTS;
   return {
     activeTab,
     repositorySubTab,
@@ -30,11 +33,7 @@ function useMarketplaceTabs() {
     isWorkflowsOfWorkflowsTab,
     isToolsTab,
     isRepositoryWorkflowsSubTab,
-    isRepositoryAgentsSubTab
+    isRepositoryAgentsSubTab,
   };
 }
-export {
-  MARKETPLACE_TABS,
-  REPOSITORY_SUB_TABS,
-  useMarketplaceTabs
-};
+export { MARKETPLACE_TABS, REPOSITORY_SUB_TABS, useMarketplaceTabs };

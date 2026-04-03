@@ -14,26 +14,36 @@ function useClipboard(reactFlowInstanceRef, notifyModified) {
     setClipboardAction("cut");
     showSuccess("Node cut to clipboard");
   }, []);
-  const paste = useCallback((x, y) => {
-    if (!clipboardNode) return;
-    const { getNodes, screenToFlowPosition, addNodes, deleteElements } = logicalOrToEmptyObject(reactFlowInstanceRef.current);
-    if (!getNodes || !screenToFlowPosition || !addNodes) return;
-    const position = x !== void 0 && y !== void 0 ? screenToFlowPosition({ x, y }) : { x: clipboardNode.position.x + 50, y: clipboardNode.position.y + 50 };
-    const newNode = {
-      ...clipboardNode,
-      id: `${clipboardNode.type}_${Date.now()}`,
-      position,
-      selected: false
-    };
-    addNodes(newNode);
-    if (clipboardAction === "cut" && deleteElements) {
-      deleteElements({ nodes: [{ id: clipboardNode.id }] });
-      setClipboardNode(null);
-      setClipboardAction(null);
-    }
-    notifyModified();
-    showSuccess("Node pasted");
-  }, [clipboardNode, clipboardAction, reactFlowInstanceRef, notifyModified]);
+  const paste = useCallback(
+    (x, y) => {
+      if (!clipboardNode) return;
+      const { getNodes, screenToFlowPosition, addNodes, deleteElements } =
+        logicalOrToEmptyObject(reactFlowInstanceRef.current);
+      if (!getNodes || !screenToFlowPosition || !addNodes) return;
+      const position =
+        x !== void 0 && y !== void 0
+          ? screenToFlowPosition({ x, y })
+          : {
+              x: clipboardNode.position.x + 50,
+              y: clipboardNode.position.y + 50,
+            };
+      const newNode = {
+        ...clipboardNode,
+        id: `${clipboardNode.type}_${Date.now()}`,
+        position,
+        selected: false,
+      };
+      addNodes(newNode);
+      if (clipboardAction === "cut" && deleteElements) {
+        deleteElements({ nodes: [{ id: clipboardNode.id }] });
+        setClipboardNode(null);
+        setClipboardAction(null);
+      }
+      notifyModified();
+      showSuccess("Node pasted");
+    },
+    [clipboardNode, clipboardAction, reactFlowInstanceRef, notifyModified],
+  );
   const clear = useCallback(() => {
     setClipboardNode(null);
     setClipboardAction(null);
@@ -44,9 +54,7 @@ function useClipboard(reactFlowInstanceRef, notifyModified) {
     copy,
     cut,
     paste,
-    clear
+    clear,
   };
 }
-export {
-  useClipboard
-};
+export { useClipboard };

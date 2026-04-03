@@ -4,7 +4,4 @@ function isEmptySelection(ids) {
 function isStorageAvailable(storage) {
   return storage !== null && storage !== void 0;
 }
-export {
-  isEmptySelection,
-  isStorageAvailable
-};
+export { isEmptySelection, isStorageAvailable };

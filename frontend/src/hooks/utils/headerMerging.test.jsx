@@ -2,7 +2,7 @@ import {
   mergeHeaders,
   buildBaseHeaders,
   addContentTypeIfNeeded,
-  addAuthorizationIfNeeded
+  addAuthorizationIfNeeded,
 } from "./headerMerging";
 describe("mergeHeaders", () => {
   it("should merge Headers object", () => {
@@ -11,7 +11,7 @@ describe("mergeHeaders", () => {
         forEach: (callback) => {
           callback("application/json", "Content-Type");
           callback("value", "X-Custom");
-        }
+        },
       };
       const base2 = {};
       mergeHeaders(base2, mockHeaders);
@@ -31,7 +31,7 @@ describe("mergeHeaders", () => {
     const base = {};
     const headers = [
       ["Content-Type", "application/json"],
-      ["X-Custom", "value"]
+      ["X-Custom", "value"],
     ];
     mergeHeaders(base, headers);
     expect(base["Content-Type"]).toBe("application/json");
@@ -41,7 +41,7 @@ describe("mergeHeaders", () => {
     const base = {};
     const headers = {
       "Content-Type": "application/json",
-      "X-Custom": "value"
+      "X-Custom": "value",
     };
     mergeHeaders(base, headers);
     expect(base["Content-Type"]).toBe("application/json");

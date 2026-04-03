@@ -7,6 +7,4 @@ function ReactFlowInstanceCapture({ instanceRef }) {
   }, [reactFlowInstance, instanceRef]);
   return null;
 }
-export {
-  ReactFlowInstanceCapture
-};
+export { ReactFlowInstanceCapture };

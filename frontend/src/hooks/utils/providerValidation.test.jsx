@@ -5,7 +5,7 @@ import {
   canExtractModelsFromProvider,
   isValidProvidersArray,
   isValidData,
-  hasProviders
+  hasProviders,
 } from "./providerValidation";
 describe("providerValidation", () => {
   describe("isProviderValid", () => {
@@ -14,7 +14,7 @@ describe("providerValidation", () => {
         id: "1",
         name: "OpenAI",
         type: "openai",
-        enabled: true
+        enabled: true,
       };
       expect(isProviderValid(provider)).toBe(true);
     });
@@ -31,7 +31,7 @@ describe("providerValidation", () => {
         id: "1",
         name: "OpenAI",
         type: "openai",
-        enabled: true
+        enabled: true,
       };
       expect(isProviderEnabled(provider)).toBe(true);
     });
@@ -40,7 +40,7 @@ describe("providerValidation", () => {
         id: "1",
         name: "OpenAI",
         type: "openai",
-        enabled: false
+        enabled: false,
       };
       expect(isProviderEnabled(provider)).toBe(false);
     });
@@ -58,7 +58,7 @@ describe("providerValidation", () => {
         name: "OpenAI",
         type: "openai",
         enabled: true,
-        models: ["gpt-4"]
+        models: ["gpt-4"],
       };
       expect(hasProviderModels(provider)).toBe(true);
     });
@@ -68,7 +68,7 @@ describe("providerValidation", () => {
         name: "OpenAI",
         type: "openai",
         enabled: true,
-        models: null
+        models: null,
       };
       expect(hasProviderModels(provider)).toBe(false);
     });
@@ -77,7 +77,7 @@ describe("providerValidation", () => {
         id: "1",
         name: "OpenAI",
         type: "openai",
-        enabled: true
+        enabled: true,
       };
       expect(hasProviderModels(provider)).toBe(false);
     });
@@ -87,7 +87,7 @@ describe("providerValidation", () => {
         name: "OpenAI",
         type: "openai",
         enabled: true,
-        models: []
+        models: [],
       };
       expect(hasProviderModels(provider)).toBe(false);
     });
@@ -97,7 +97,7 @@ describe("providerValidation", () => {
         name: "OpenAI",
         type: "openai",
         enabled: true,
-        models: "gpt-4"
+        models: "gpt-4",
       };
       expect(hasProviderModels(provider)).toBe(false);
     });
@@ -112,7 +112,7 @@ describe("providerValidation", () => {
         name: "OpenAI",
         type: "openai",
         enabled: true,
-        models: ["gpt-4"]
+        models: ["gpt-4"],
       };
       expect(canExtractModelsFromProvider(provider)).toBe(true);
     });
@@ -125,7 +125,7 @@ describe("providerValidation", () => {
         name: "OpenAI",
         type: "openai",
         enabled: false,
-        models: ["gpt-4"]
+        models: ["gpt-4"],
       };
       expect(canExtractModelsFromProvider(provider)).toBe(false);
     });
@@ -135,7 +135,7 @@ describe("providerValidation", () => {
         name: "OpenAI",
         type: "openai",
         enabled: true,
-        models: null
+        models: null,
       };
       expect(canExtractModelsFromProvider(provider)).toBe(false);
     });
@@ -145,7 +145,7 @@ describe("providerValidation", () => {
         name: "OpenAI",
         type: "openai",
         enabled: true,
-        models: []
+        models: [],
       };
       expect(canExtractModelsFromProvider(provider)).toBe(false);
     });
@@ -153,7 +153,11 @@ describe("providerValidation", () => {
   describe("isValidProvidersArray", () => {
     it("should return true for array", () => {
       expect(isValidProvidersArray([])).toBe(true);
-      expect(isValidProvidersArray([{ id: "1", name: "Test", type: "test", enabled: true }])).toBe(true);
+      expect(
+        isValidProvidersArray([
+          { id: "1", name: "Test", type: "test", enabled: true },
+        ]),
+      ).toBe(true);
     });
     it("should return false for null", () => {
       expect(isValidProvidersArray(null)).toBe(false);
@@ -185,12 +189,14 @@ describe("providerValidation", () => {
   });
   describe("hasProviders", () => {
     it("should return true when array has items", () => {
-      const providers = [{
-        id: "1",
-        name: "OpenAI",
-        type: "openai",
-        enabled: true
-      }];
+      const providers = [
+        {
+          id: "1",
+          name: "OpenAI",
+          type: "openai",
+          enabled: true,
+        },
+      ];
       expect(hasProviders(providers)).toBe(true);
     });
     it("should return false when array is empty", () => {

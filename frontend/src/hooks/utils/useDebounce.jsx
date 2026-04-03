@@ -15,6 +15,4 @@ function useDebounce(value, delay, callback) {
     };
   }, [value, delay, callback]);
 }
-export {
-  useDebounce
-};
+export { useDebounce };

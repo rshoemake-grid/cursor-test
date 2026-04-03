@@ -35,19 +35,22 @@ function executeAuthenticatedRequest(config, context) {
   const headers = buildRequestHeaders(
     context.token,
     config.method,
-    config.additionalHeaders
+    config.additionalHeaders,
   );
   const url = `${context.baseUrl}${config.endpoint}`;
   const methodMap = {
     GET: () => context.client.get(url, headers),
     POST: () => context.client.post(url, config.data, headers),
     PUT: () => context.client.put(url, config.data, headers),
-    DELETE: () => context.client.delete(url, headers)
+    DELETE: () => context.client.delete(url, headers),
   };
   const requestFn = methodMap[config.method];
   if (!requestFn) {
     return Promise.reject(
-      createSafeError(`Unsupported HTTP method: ${config.method}`, "UnsupportedMethodError")
+      createSafeError(
+        `Unsupported HTTP method: ${config.method}`,
+        "UnsupportedMethodError",
+      ),
     );
   }
   try {
@@ -61,5 +64,5 @@ export {
   URL_EMPTY_ERROR_MSG,
   buildRequestHeaders,
   executeAuthenticatedRequest,
-  validateRequest
+  validateRequest,
 };

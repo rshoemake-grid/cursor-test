@@ -19,8 +19,4 @@ function createCheckboxHandler(setValue, onConfigUpdate, configField, field) {
     onConfigUpdate(configField, field, newValue);
   };
 }
-export {
-  createCheckboxHandler,
-  createSelectHandler,
-  createTextInputHandler
-};
+export { createCheckboxHandler, createSelectHandler, createTextInputHandler };

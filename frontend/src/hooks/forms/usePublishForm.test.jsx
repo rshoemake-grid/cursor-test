@@ -9,18 +9,16 @@ describe("usePublishForm", () => {
       category: "automation",
       tags: "",
       difficulty: "beginner",
-      estimated_time: ""
+      estimated_time: "",
     });
   });
   it("should initialize with provided initial data", () => {
     const initialData = {
       name: "Test Workflow",
       description: "Test description",
-      category: "content_creation"
+      category: "content_creation",
     };
-    const { result } = renderHook(
-      () => usePublishForm({ initialData })
-    );
+    const { result } = renderHook(() => usePublishForm({ initialData }));
     expect(result.current.form.name).toBe("Test Workflow");
     expect(result.current.form.description).toBe("Test description");
     expect(result.current.form.category).toBe("content_creation");
@@ -40,7 +38,7 @@ describe("usePublishForm", () => {
       result.current.updateForm({
         name: "New Name",
         description: "New Description",
-        category: "data_analysis"
+        category: "data_analysis",
       });
     });
     expect(result.current.form.name).toBe("New Name");
@@ -57,7 +55,7 @@ describe("usePublishForm", () => {
         category: "marketing",
         tags: "tag1, tag2",
         difficulty: "advanced",
-        estimated_time: "30 min"
+        estimated_time: "30 min",
       });
     });
     expect(result.current.form.name).toBe("Test");
@@ -70,21 +68,19 @@ describe("usePublishForm", () => {
       category: "automation",
       tags: "",
       difficulty: "beginner",
-      estimated_time: ""
+      estimated_time: "",
     });
   });
   it("should reset to initial data", () => {
     const initialData = {
       name: "Initial Name",
-      category: "research"
+      category: "research",
     };
-    const { result } = renderHook(
-      () => usePublishForm({ initialData })
-    );
+    const { result } = renderHook(() => usePublishForm({ initialData }));
     act(() => {
       result.current.updateForm({
         name: "Changed Name",
-        category: "education"
+        category: "education",
       });
     });
     expect(result.current.form.name).toBe("Changed Name");
@@ -97,9 +93,7 @@ describe("usePublishForm", () => {
   });
   it("should call onReset callback when reset is called", () => {
     const onReset = jest.fn();
-    const { result } = renderHook(
-      () => usePublishForm({ onReset })
-    );
+    const { result } = renderHook(() => usePublishForm({ onReset }));
     act(() => {
       result.current.reset();
     });
@@ -113,7 +107,7 @@ describe("usePublishForm", () => {
       category: "customer_service",
       tags: "tag1",
       difficulty: "intermediate",
-      estimated_time: "15 min"
+      estimated_time: "15 min",
     };
     act(() => {
       result.current.setForm(newForm);
@@ -130,7 +124,7 @@ describe("usePublishForm", () => {
       "automation",
       "education",
       "marketing",
-      "other"
+      "other",
     ];
     categories.forEach((category) => {
       act(() => {

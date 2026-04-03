@@ -5,16 +5,16 @@ describe("formUtils", () => {
       user: {
         profile: {
           name: "John",
-          age: 30
+          age: 30,
         },
         settings: {
-          theme: "dark"
-        }
+          theme: "dark",
+        },
       },
       items: [
         { id: 1, name: "Item 1" },
-        { id: 2, name: "Item 2" }
-      ]
+        { id: 2, name: "Item 2" },
+      ],
     };
     it("should get nested value using dot notation", () => {
       expect(getNestedValue(testObj, "user.profile.name")).toBe("John");
@@ -22,11 +22,17 @@ describe("formUtils", () => {
     });
     it("should get nested value using array path", () => {
       expect(getNestedValue(testObj, ["user", "profile", "name"])).toBe("John");
-      expect(getNestedValue(testObj, ["user", "settings", "theme"])).toBe("dark");
+      expect(getNestedValue(testObj, ["user", "settings", "theme"])).toBe(
+        "dark",
+      );
     });
     it("should return default value when path not found", () => {
-      expect(getNestedValue(testObj, "user.profile.email", "default")).toBe("default");
-      expect(getNestedValue(testObj, "nonexistent.path", "default")).toBe("default");
+      expect(getNestedValue(testObj, "user.profile.email", "default")).toBe(
+        "default",
+      );
+      expect(getNestedValue(testObj, "nonexistent.path", "default")).toBe(
+        "default",
+      );
     });
     it("should return undefined when path not found and no default", () => {
       expect(getNestedValue(testObj, "user.profile.email")).toBeUndefined();
@@ -53,7 +59,9 @@ describe("formUtils", () => {
     });
     it("should handle undefined intermediate values", () => {
       const objWithUndefined = { user: { profile: void 0 } };
-      expect(getNestedValue(objWithUndefined, "user.profile.name")).toBeUndefined();
+      expect(
+        getNestedValue(objWithUndefined, "user.profile.name"),
+      ).toBeUndefined();
     });
     it("should handle array indices in path", () => {
       expect(getNestedValue(testObj, "items.0.name")).toBe("Item 1");
@@ -130,10 +138,10 @@ describe("formUtils", () => {
     const testObj = {
       user: {
         profile: {
-          name: "John"
-        }
+          name: "John",
+        },
       },
-      items: [1, 2, 3]
+      items: [1, 2, 3],
     };
     it("should return true for existing nested value", () => {
       expect(hasNestedValue(testObj, "user.profile.name")).toBe(true);

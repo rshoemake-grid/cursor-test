@@ -2,7 +2,7 @@ import {
   INPUT_MODE,
   INPUT_REGION,
   EMPTY_STRING,
-  DEFAULT_OVERWRITE
+  DEFAULT_OVERWRITE,
 } from "./inputDefaults";
 describe("inputDefaults", () => {
   describe("INPUT_MODE", () => {

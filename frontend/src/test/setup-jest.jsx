@@ -15,11 +15,11 @@ const localStorageMock = /* @__PURE__ */ (() => {
     },
     clear: () => {
       store = {};
-    }
+    },
   };
 })();
 Object.defineProperty(window, "localStorage", {
-  value: localStorageMock
+  value: localStorageMock,
 });
 if (typeof window !== "undefined" && !window.location.host) {
   Object.defineProperty(window, "location", {
@@ -30,9 +30,9 @@ if (typeof window !== "undefined" && !window.location.host) {
       port: "8000",
       pathname: "/",
       search: "",
-      hash: ""
+      hash: "",
     },
-    writable: true
+    writable: true,
   });
 }
 Object.defineProperty(window, "matchMedia", {
@@ -45,29 +45,29 @@ Object.defineProperty(window, "matchMedia", {
     removeListener: jest.fn(),
     addEventListener: jest.fn(),
     removeEventListener: jest.fn(),
-    dispatchEvent: jest.fn()
-  }))
+    dispatchEvent: jest.fn(),
+  })),
 });
 global.ResizeObserver = jest.fn().mockImplementation(() => ({
   observe: jest.fn(),
   unobserve: jest.fn(),
-  disconnect: jest.fn()
+  disconnect: jest.fn(),
 }));
 global.IntersectionObserver = jest.fn().mockImplementation(() => ({
   observe: jest.fn(),
   unobserve: jest.fn(),
-  disconnect: jest.fn()
+  disconnect: jest.fn(),
 }));
 Object.defineProperty(global, "import", {
   value: {
     meta: {
       env: {
         DEV: true,
-        MODE: "development"
-      }
-    }
+        MODE: "development",
+      },
+    },
   },
-  writable: true
+  writable: true,
 });
 if (typeof global.TextEncoder === "undefined") {
   const { TextEncoder, TextDecoder } = require("util");
@@ -83,13 +83,13 @@ if (typeof global.setImmediate === "undefined") {
   };
 }
 if (typeof global.fetch === "undefined") {
-  global.fetch = jest.fn(
-    () => Promise.resolve({
+  global.fetch = jest.fn(() =>
+    Promise.resolve({
       ok: true,
       status: 200,
       json: () => Promise.resolve({}),
-      text: () => Promise.resolve("")
-    })
+      text: () => Promise.resolve(""),
+    }),
   );
 }
 if (typeof process !== "undefined" && process.env.NODE_ENV === "test") {
@@ -97,14 +97,18 @@ if (typeof process !== "undefined" && process.env.NODE_ENV === "test") {
   if (originalUnhandledRejection.length === 0) {
     process.on("unhandledRejection", (reason) => {
       const reasonStr = String(reason);
-      const isExpectedError = reasonStr.includes("HTTP client") || reasonStr.includes("URL cannot be empty") || reasonStr.includes("HttpClientError") || reasonStr.includes("InvalidUrlError") || reason === null || // Null rejections are common in mutation testing
-      reason === void 0 || // Undefined rejections too
-      typeof reason === "string" && reason.trim() === "";
+      const isExpectedError =
+        reasonStr.includes("HTTP client") ||
+        reasonStr.includes("URL cannot be empty") ||
+        reasonStr.includes("HttpClientError") ||
+        reasonStr.includes("InvalidUrlError") ||
+        reason === null || // Null rejections are common in mutation testing
+        reason === void 0 || // Undefined rejections too
+        (typeof reason === "string" && reason.trim() === "");
       if (!isExpectedError) {
         console.warn("Unhandled promise rejection in test:", reason);
       }
-      Promise.resolve().catch(() => {
-      });
+      Promise.resolve().catch(() => {});
     });
   }
   const originalUncaughtException = process.listeners("uncaughtException");
@@ -112,9 +116,13 @@ if (typeof process !== "undefined" && process.env.NODE_ENV === "test") {
   process.on("uncaughtException", (error) => {
     const errorMessage = error?.message || "";
     const errorName = error?.name || "";
-    if (errorMessage.includes("HTTP client") || errorMessage.includes("URL cannot be empty") || errorName === "HttpClientError" || errorName === "InvalidUrlError") {
-      Promise.reject(error).catch(() => {
-      });
+    if (
+      errorMessage.includes("HTTP client") ||
+      errorMessage.includes("URL cannot be empty") ||
+      errorName === "HttpClientError" ||
+      errorName === "InvalidUrlError"
+    ) {
+      Promise.reject(error).catch(() => {});
       return;
     }
     originalUncaughtException.forEach((listener) => {
@@ -186,16 +194,17 @@ afterEach(() => {
   }
   try {
     const wsSetupModule = require("./hooks/execution/useWebSocket.test.setup");
-    if (wsSetupModule && wsSetupModule.wsInstances && Array.isArray(wsSetupModule.wsInstances)) {
+    if (
+      wsSetupModule &&
+      wsSetupModule.wsInstances &&
+      Array.isArray(wsSetupModule.wsInstances)
+    ) {
       wsSetupModule.wsInstances.splice(0, wsSetupModule.wsInstances.length);
     }
   } catch {
     /* optional WS teardown */
   }
-  if (
-    typeof globalThis.window === "undefined" &&
-    __jestDomWindowRef != null
-  ) {
+  if (typeof globalThis.window === "undefined" && __jestDomWindowRef != null) {
     globalThis.window = __jestDomWindowRef;
     if (typeof global !== "undefined") {
       global.window = __jestDomWindowRef;

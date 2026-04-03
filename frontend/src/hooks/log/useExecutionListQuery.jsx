@@ -27,11 +27,7 @@ function useExecutionListQuery({
   const isError = status === "error";
   const isLoading = isPending && items.length === 0;
   const data =
-    status === "idle"
-      ? undefined
-      : status === "error"
-        ? undefined
-        : items;
+    status === "idle" ? undefined : status === "error" ? undefined : items;
 
   const error =
     errorMessage != null && errorMessage !== ""

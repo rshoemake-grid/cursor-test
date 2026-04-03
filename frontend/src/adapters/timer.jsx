@@ -4,17 +4,15 @@ const TimerAdapterFactory = {
    */
   createTimerAdapter() {
     return {
-      setTimeout: ((callback, delay) => {
+      setTimeout: (callback, delay) => {
         return setTimeout(callback, delay);
-      }),
+      },
       clearTimeout: (id) => clearTimeout(id),
-      setInterval: ((callback, delay) => {
+      setInterval: (callback, delay) => {
         return setInterval(callback, delay);
-      }),
-      clearInterval: (id) => clearInterval(id)
+      },
+      clearInterval: (id) => clearInterval(id),
     };
-  }
+  },
 };
-export {
-  TimerAdapterFactory
-};
+export { TimerAdapterFactory };

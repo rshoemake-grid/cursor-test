@@ -14,6 +14,4 @@ function createPendingAgentsPolling(checkPendingAgents, _logger) {
   };
   return { interval, cleanup };
 }
-export {
-  createPendingAgentsPolling
-};
+export { createPendingAgentsPolling };

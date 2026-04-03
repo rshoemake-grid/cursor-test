@@ -30,7 +30,8 @@ const executionsSlice = createSlice({
   },
 });
 
-export const { resetExecutions, fetchSuccess, fetchFailed } = executionsSlice.actions;
+export const { resetExecutions, fetchSuccess, fetchFailed } =
+  executionsSlice.actions;
 
 export const executionsReducer = executionsSlice.reducer;
 

@@ -1,21 +1,22 @@
-import { jsx } from "react/jsx-runtime";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 const waitForWithTimeout = (callback, timeout = 2e3) => {
-  return waitFor(callback, { timeout });
+  return waitFor(callback, {
+    timeout,
+  });
 };
 import { BrowserRouter } from "react-router-dom";
 import AuthPage from "./AuthPage";
 import { useAuth } from "../contexts/AuthContext";
 jest.mock("../contexts/AuthContext", () => ({
-  useAuth: jest.fn()
+  useAuth: jest.fn(),
 }));
 jest.mock("react-router-dom", () => ({
   ...jest.requireActual("react-router-dom"),
-  useNavigate: () => jest.fn()
+  useNavigate: () => jest.fn(),
 }));
 const mockUseAuth = useAuth;
 const renderWithRouter = (component) => {
-  return render(/* @__PURE__ */ jsx(BrowserRouter, { children: component }));
+  return render(<BrowserRouter>{component}</BrowserRouter>);
 };
 describe("AuthPage", () => {
   const mockLogin = jest.fn();
@@ -29,18 +30,26 @@ describe("AuthPage", () => {
       token: null,
       login: mockLogin,
       logout: jest.fn(),
-      register: mockRegister
+      register: mockRegister,
     });
-    jest.spyOn(require("react-router-dom"), "useNavigate").mockReturnValue(mockNavigate);
+    jest
+      .spyOn(require("react-router-dom"), "useNavigate")
+      .mockReturnValue(mockNavigate);
   });
   it("should render login form by default", () => {
-    renderWithRouter(/* @__PURE__ */ jsx(AuthPage, {}));
+    renderWithRouter(<AuthPage />);
     expect(screen.getByText("Welcome Back")).toBeInTheDocument();
-    expect(screen.getByPlaceholderText("Enter your username")).toBeInTheDocument();
-    expect(screen.getByPlaceholderText("\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022")).toBeInTheDocument();
+    expect(
+      screen.getByPlaceholderText("Enter your username"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByPlaceholderText(
+        "\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022",
+      ),
+    ).toBeInTheDocument();
   });
   it("should switch to register form", () => {
-    renderWithRouter(/* @__PURE__ */ jsx(AuthPage, {}));
+    renderWithRouter(<AuthPage />);
     const switchButton = screen.getByText(/Don't have an account/i);
     fireEvent.click(switchButton);
     const createAccountElements = screen.getAllByText("Create Account");
@@ -49,12 +58,24 @@ describe("AuthPage", () => {
   });
   it("should handle login", async () => {
     mockLogin.mockResolvedValue(void 0);
-    renderWithRouter(/* @__PURE__ */ jsx(AuthPage, {}));
+    renderWithRouter(<AuthPage />);
     const usernameInput = screen.getByPlaceholderText("Enter your username");
-    const passwordInput = screen.getByPlaceholderText("\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022");
-    const submitButton = screen.getByRole("button", { name: /Sign In/ });
-    fireEvent.change(usernameInput, { target: { value: "testuser" } });
-    fireEvent.change(passwordInput, { target: { value: "password123" } });
+    const passwordInput = screen.getByPlaceholderText(
+      "\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022",
+    );
+    const submitButton = screen.getByRole("button", {
+      name: /Sign In/,
+    });
+    fireEvent.change(usernameInput, {
+      target: {
+        value: "testuser",
+      },
+    });
+    fireEvent.change(passwordInput, {
+      target: {
+        value: "password123",
+      },
+    });
     fireEvent.click(submitButton);
     await waitForWithTimeout(() => {
       expect(mockLogin).toHaveBeenCalledWith("testuser", "password123", false);
@@ -62,17 +83,33 @@ describe("AuthPage", () => {
   });
   it("should handle register", async () => {
     mockRegister.mockResolvedValue(void 0);
-    renderWithRouter(/* @__PURE__ */ jsx(AuthPage, {}));
+    renderWithRouter(<AuthPage />);
     const switchButton = screen.getByText(/Don't have an account/i);
     fireEvent.click(switchButton);
     await waitForWithTimeout(() => {
       const usernameInput = screen.getByPlaceholderText("Enter your username");
       const emailInput = screen.getByPlaceholderText(/your@email.com/);
-      const passwordInput = screen.getByPlaceholderText("\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022");
-      const submitButton = screen.getByRole("button", { name: /Create Account/ });
-      fireEvent.change(usernameInput, { target: { value: "newuser" } });
-      fireEvent.change(emailInput, { target: { value: "new@example.com" } });
-      fireEvent.change(passwordInput, { target: { value: "password123" } });
+      const passwordInput = screen.getByPlaceholderText(
+        "\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022",
+      );
+      const submitButton = screen.getByRole("button", {
+        name: /Create Account/,
+      });
+      fireEvent.change(usernameInput, {
+        target: {
+          value: "newuser",
+        },
+      });
+      fireEvent.change(emailInput, {
+        target: {
+          value: "new@example.com",
+        },
+      });
+      fireEvent.change(passwordInput, {
+        target: {
+          value: "password123",
+        },
+      });
       fireEvent.click(submitButton);
     });
     await waitForWithTimeout(() => {
@@ -80,8 +117,10 @@ describe("AuthPage", () => {
     });
   });
   it("should toggle password visibility", () => {
-    renderWithRouter(/* @__PURE__ */ jsx(AuthPage, {}));
-    const passwordInput = screen.getByPlaceholderText("\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022");
+    renderWithRouter(<AuthPage />);
+    const passwordInput = screen.getByPlaceholderText(
+      "\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022",
+    );
     expect(passwordInput.type).toBe("password");
     const eyeIcon = passwordInput.parentElement?.querySelector("button");
     if (eyeIcon) {
@@ -90,7 +129,7 @@ describe("AuthPage", () => {
     }
   });
   it("should handle remember me checkbox", () => {
-    renderWithRouter(/* @__PURE__ */ jsx(AuthPage, {}));
+    renderWithRouter(<AuthPage />);
     const rememberMeCheckbox = screen.getByLabelText(/Keep me logged in/);
     fireEvent.click(rememberMeCheckbox);
     expect(rememberMeCheckbox.checked).toBe(true);
@@ -98,54 +137,94 @@ describe("AuthPage", () => {
   it("should display error message on login failure", async () => {
     const error = new Error("Invalid credentials");
     mockLogin.mockRejectedValue(error);
-    renderWithRouter(/* @__PURE__ */ jsx(AuthPage, {}));
+    renderWithRouter(<AuthPage />);
     const usernameInput = screen.getByPlaceholderText("Enter your username");
-    const passwordInput = screen.getByPlaceholderText("\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022");
-    const submitButton = screen.getByRole("button", { name: /Sign In/ });
-    fireEvent.change(usernameInput, { target: { value: "testuser" } });
-    fireEvent.change(passwordInput, { target: { value: "wrongpassword" } });
+    const passwordInput = screen.getByPlaceholderText(
+      "\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022",
+    );
+    const submitButton = screen.getByRole("button", {
+      name: /Sign In/,
+    });
+    fireEvent.change(usernameInput, {
+      target: {
+        value: "testuser",
+      },
+    });
+    fireEvent.change(passwordInput, {
+      target: {
+        value: "wrongpassword",
+      },
+    });
     fireEvent.click(submitButton);
     await waitForWithTimeout(() => {
       expect(screen.getByText("Invalid credentials")).toBeInTheDocument();
     });
   });
   it("should show loading state during login", async () => {
-    mockLogin.mockImplementation(() => new Promise(() => {
-    }));
-    renderWithRouter(/* @__PURE__ */ jsx(AuthPage, {}));
+    mockLogin.mockImplementation(() => new Promise(() => {}));
+    renderWithRouter(<AuthPage />);
     const usernameInput = screen.getByPlaceholderText("Enter your username");
-    const passwordInput = screen.getByPlaceholderText("\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022");
+    const passwordInput = screen.getByPlaceholderText(
+      "\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022",
+    );
     const form = usernameInput.closest("form");
     if (form) {
-      fireEvent.change(usernameInput, { target: { value: "testuser" } });
-      fireEvent.change(passwordInput, { target: { value: "password" } });
+      fireEvent.change(usernameInput, {
+        target: {
+          value: "testuser",
+        },
+      });
+      fireEvent.change(passwordInput, {
+        target: {
+          value: "password",
+        },
+      });
       fireEvent.submit(form);
       await waitForWithTimeout(() => {
-        const submitButton = screen.getByRole("button", { name: /Processing/ });
+        const submitButton = screen.getByRole("button", {
+          name: /Processing/,
+        });
         expect(submitButton).toBeDisabled();
       });
     }
   });
   it("should handle remember me checkbox", async () => {
     mockLogin.mockResolvedValue(void 0);
-    renderWithRouter(/* @__PURE__ */ jsx(AuthPage, {}));
-    const rememberMeCheckbox = screen.getByRole("checkbox", { name: /Keep me logged in/i });
+    renderWithRouter(<AuthPage />);
+    const rememberMeCheckbox = screen.getByRole("checkbox", {
+      name: /Keep me logged in/i,
+    });
     fireEvent.click(rememberMeCheckbox);
     const usernameInput = screen.getByPlaceholderText("Enter your username");
-    const passwordInput = screen.getByPlaceholderText("\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022");
-    const submitButton = screen.getByRole("button", { name: /Sign In/ });
-    fireEvent.change(usernameInput, { target: { value: "testuser" } });
-    fireEvent.change(passwordInput, { target: { value: "password123" } });
+    const passwordInput = screen.getByPlaceholderText(
+      "\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022",
+    );
+    const submitButton = screen.getByRole("button", {
+      name: /Sign In/,
+    });
+    fireEvent.change(usernameInput, {
+      target: {
+        value: "testuser",
+      },
+    });
+    fireEvent.change(passwordInput, {
+      target: {
+        value: "password123",
+      },
+    });
     fireEvent.click(submitButton);
     await waitForWithTimeout(() => {
       expect(mockLogin).toHaveBeenCalledWith("testuser", "password123", true);
     });
   });
   it("should toggle password visibility", () => {
-    renderWithRouter(/* @__PURE__ */ jsx(AuthPage, {}));
-    const passwordInput = screen.getByPlaceholderText("\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022");
+    renderWithRouter(<AuthPage />);
+    const passwordInput = screen.getByPlaceholderText(
+      "\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022",
+    );
     expect(passwordInput.type).toBe("password");
-    const toggleButton = passwordInput.nextElementSibling?.querySelector("button");
+    const toggleButton =
+      passwordInput.nextElementSibling?.querySelector("button");
     if (toggleButton) {
       fireEvent.click(toggleButton);
       expect(passwordInput.type).toBe("text");
@@ -155,58 +234,120 @@ describe("AuthPage", () => {
   });
   it("should handle register with fullName", async () => {
     mockRegister.mockResolvedValue(void 0);
-    renderWithRouter(/* @__PURE__ */ jsx(AuthPage, {}));
+    renderWithRouter(<AuthPage />);
     const switchButton = screen.getByText(/Don't have an account/i);
     fireEvent.click(switchButton);
     await waitForWithTimeout(() => {
       const usernameInput = screen.getByPlaceholderText("Enter your username");
       const emailInput = screen.getByPlaceholderText(/your@email.com/);
-      const passwordInput = screen.getByPlaceholderText("\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022");
+      const passwordInput = screen.getByPlaceholderText(
+        "\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022",
+      );
       const fullNameInput = screen.getByPlaceholderText("John Doe");
-      const submitButton = screen.getByRole("button", { name: /Create Account/ });
-      fireEvent.change(usernameInput, { target: { value: "newuser" } });
-      fireEvent.change(emailInput, { target: { value: "new@example.com" } });
-      fireEvent.change(passwordInput, { target: { value: "password123" } });
-      fireEvent.change(fullNameInput, { target: { value: "John Doe" } });
+      const submitButton = screen.getByRole("button", {
+        name: /Create Account/,
+      });
+      fireEvent.change(usernameInput, {
+        target: {
+          value: "newuser",
+        },
+      });
+      fireEvent.change(emailInput, {
+        target: {
+          value: "new@example.com",
+        },
+      });
+      fireEvent.change(passwordInput, {
+        target: {
+          value: "password123",
+        },
+      });
+      fireEvent.change(fullNameInput, {
+        target: {
+          value: "John Doe",
+        },
+      });
       fireEvent.click(submitButton);
     });
     await waitForWithTimeout(() => {
-      expect(mockRegister).toHaveBeenCalledWith("newuser", "new@example.com", "password123", "John Doe");
+      expect(mockRegister).toHaveBeenCalledWith(
+        "newuser",
+        "new@example.com",
+        "password123",
+        "John Doe",
+      );
     });
   });
   it("should handle register without fullName", async () => {
     mockRegister.mockResolvedValue(void 0);
-    renderWithRouter(/* @__PURE__ */ jsx(AuthPage, {}));
+    renderWithRouter(<AuthPage />);
     const switchButton = screen.getByText(/Don't have an account/i);
     fireEvent.click(switchButton);
     await waitForWithTimeout(() => {
       const usernameInput = screen.getByPlaceholderText("Enter your username");
       const emailInput = screen.getByPlaceholderText(/your@email.com/);
-      const passwordInput = screen.getByPlaceholderText("\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022");
-      const submitButton = screen.getByRole("button", { name: /Create Account/ });
-      fireEvent.change(usernameInput, { target: { value: "newuser" } });
-      fireEvent.change(emailInput, { target: { value: "new@example.com" } });
-      fireEvent.change(passwordInput, { target: { value: "password123" } });
+      const passwordInput = screen.getByPlaceholderText(
+        "\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022",
+      );
+      const submitButton = screen.getByRole("button", {
+        name: /Create Account/,
+      });
+      fireEvent.change(usernameInput, {
+        target: {
+          value: "newuser",
+        },
+      });
+      fireEvent.change(emailInput, {
+        target: {
+          value: "new@example.com",
+        },
+      });
+      fireEvent.change(passwordInput, {
+        target: {
+          value: "password123",
+        },
+      });
       fireEvent.click(submitButton);
     });
     await waitForWithTimeout(() => {
-      expect(mockRegister).toHaveBeenCalledWith("newuser", "new@example.com", "password123", "");
+      expect(mockRegister).toHaveBeenCalledWith(
+        "newuser",
+        "new@example.com",
+        "password123",
+        "",
+      );
     });
   });
   it("should display error message on register failure", async () => {
     const error = new Error("Registration failed");
     mockRegister.mockRejectedValue(error);
-    renderWithRouter(/* @__PURE__ */ jsx(AuthPage, {}));
+    renderWithRouter(<AuthPage />);
     const switchButton = screen.getByText(/Don't have an account/i);
     fireEvent.click(switchButton);
     await waitForWithTimeout(() => {
       const usernameInput = screen.getByPlaceholderText("Enter your username");
       const emailInput = screen.getByPlaceholderText(/your@email.com/);
-      const passwordInput = screen.getByPlaceholderText("\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022");
-      const submitButton = screen.getByRole("button", { name: /Create Account/ });
-      fireEvent.change(usernameInput, { target: { value: "newuser" } });
-      fireEvent.change(emailInput, { target: { value: "new@example.com" } });
-      fireEvent.change(passwordInput, { target: { value: "password123" } });
+      const passwordInput = screen.getByPlaceholderText(
+        "\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022",
+      );
+      const submitButton = screen.getByRole("button", {
+        name: /Create Account/,
+      });
+      fireEvent.change(usernameInput, {
+        target: {
+          value: "newuser",
+        },
+      });
+      fireEvent.change(emailInput, {
+        target: {
+          value: "new@example.com",
+        },
+      });
+      fireEvent.change(passwordInput, {
+        target: {
+          value: "password123",
+        },
+      });
       fireEvent.click(submitButton);
     });
     await waitForWithTimeout(() => {
@@ -215,64 +356,119 @@ describe("AuthPage", () => {
   });
   it("should handle non-Error exception", async () => {
     mockLogin.mockRejectedValue("String error");
-    renderWithRouter(/* @__PURE__ */ jsx(AuthPage, {}));
+    renderWithRouter(<AuthPage />);
     const usernameInput = screen.getByPlaceholderText("Enter your username");
-    const passwordInput = screen.getByPlaceholderText("\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022");
-    const submitButton = screen.getByRole("button", { name: /Sign In/ });
-    fireEvent.change(usernameInput, { target: { value: "testuser" } });
-    fireEvent.change(passwordInput, { target: { value: "password123" } });
+    const passwordInput = screen.getByPlaceholderText(
+      "\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022",
+    );
+    const submitButton = screen.getByRole("button", {
+      name: /Sign In/,
+    });
+    fireEvent.change(usernameInput, {
+      target: {
+        value: "testuser",
+      },
+    });
+    fireEvent.change(passwordInput, {
+      target: {
+        value: "password123",
+      },
+    });
     fireEvent.click(submitButton);
     await waitForWithTimeout(() => {
       expect(screen.getByText("Welcome Back")).toBeInTheDocument();
     });
   });
   it("should switch back to login from register", () => {
-    renderWithRouter(/* @__PURE__ */ jsx(AuthPage, {}));
+    renderWithRouter(<AuthPage />);
     const switchToRegister = screen.getByText(/Don't have an account/i);
     fireEvent.click(switchToRegister);
     const switchToLogin = screen.getByText(/Already have an account/i);
     fireEvent.click(switchToLogin);
     expect(screen.getByText("Welcome Back")).toBeInTheDocument();
-    expect(screen.queryByPlaceholderText(/your@email.com/)).not.toBeInTheDocument();
+    expect(
+      screen.queryByPlaceholderText(/your@email.com/),
+    ).not.toBeInTheDocument();
   });
   it("should handle form submission with Enter key", async () => {
     mockLogin.mockResolvedValue(void 0);
-    renderWithRouter(/* @__PURE__ */ jsx(AuthPage, {}));
+    renderWithRouter(<AuthPage />);
     const usernameInput = screen.getByPlaceholderText("Enter your username");
-    const passwordInput = screen.getByPlaceholderText("\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022");
-    fireEvent.change(usernameInput, { target: { value: "testuser" } });
-    fireEvent.change(passwordInput, { target: { value: "password123" } });
-    fireEvent.keyDown(passwordInput, { key: "Enter", code: "Enter", charCode: 13 });
+    const passwordInput = screen.getByPlaceholderText(
+      "\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022",
+    );
+    fireEvent.change(usernameInput, {
+      target: {
+        value: "testuser",
+      },
+    });
+    fireEvent.change(passwordInput, {
+      target: {
+        value: "password123",
+      },
+    });
+    fireEvent.keyDown(passwordInput, {
+      key: "Enter",
+      code: "Enter",
+      charCode: 13,
+    });
     await waitForWithTimeout(() => {
       expect(mockLogin).toHaveBeenCalledWith("testuser", "password123", false);
     });
   });
   it("should not submit form when loading", async () => {
-    mockLogin.mockImplementation(() => new Promise(() => {
-    }));
-    renderWithRouter(/* @__PURE__ */ jsx(AuthPage, {}));
+    mockLogin.mockImplementation(() => new Promise(() => {}));
+    renderWithRouter(<AuthPage />);
     const usernameInput = screen.getByPlaceholderText("Enter your username");
-    const passwordInput = screen.getByPlaceholderText("\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022");
-    fireEvent.change(usernameInput, { target: { value: "testuser" } });
-    fireEvent.change(passwordInput, { target: { value: "password123" } });
-    const submitButton = screen.getByRole("button", { name: /Sign In/ });
+    const passwordInput = screen.getByPlaceholderText(
+      "\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022",
+    );
+    fireEvent.change(usernameInput, {
+      target: {
+        value: "testuser",
+      },
+    });
+    fireEvent.change(passwordInput, {
+      target: {
+        value: "password123",
+      },
+    });
+    const submitButton = screen.getByRole("button", {
+      name: /Sign In/,
+    });
     fireEvent.click(submitButton);
     await waitForWithTimeout(() => {
       expect(submitButton).toBeDisabled();
     });
-    fireEvent.keyDown(passwordInput, { key: "Enter", code: "Enter", charCode: 13 });
+    fireEvent.keyDown(passwordInput, {
+      key: "Enter",
+      code: "Enter",
+      charCode: 13,
+    });
     await waitForWithTimeout(() => {
       expect(mockLogin).toHaveBeenCalledTimes(1);
     });
   });
   it("should clear error when switching forms", async () => {
-    renderWithRouter(/* @__PURE__ */ jsx(AuthPage, {}));
+    renderWithRouter(<AuthPage />);
     mockLogin.mockRejectedValue(new Error("Login failed"));
     const usernameInput = screen.getByPlaceholderText("Enter your username");
-    const passwordInput = screen.getByPlaceholderText("\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022");
-    const submitButton = screen.getByRole("button", { name: /Sign In/ });
-    fireEvent.change(usernameInput, { target: { value: "testuser" } });
-    fireEvent.change(passwordInput, { target: { value: "password123" } });
+    const passwordInput = screen.getByPlaceholderText(
+      "\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022",
+    );
+    const submitButton = screen.getByRole("button", {
+      name: /Sign In/,
+    });
+    fireEvent.change(usernameInput, {
+      target: {
+        value: "testuser",
+      },
+    });
+    fireEvent.change(passwordInput, {
+      target: {
+        value: "password123",
+      },
+    });
     fireEvent.click(submitButton);
     await waitForWithTimeout(() => {
       expect(screen.getByText("Login failed")).toBeInTheDocument();

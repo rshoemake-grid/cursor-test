@@ -15,7 +15,7 @@ function useSettingsStateSync(options) {
     setDefaultModel,
     setChatAssistantModel,
     setSettingsLoaded,
-    onLoadComplete
+    onLoadComplete,
   } = options;
   useEffect(() => {
     if (loadedProviders.length > 0 && providers.length === 0) {
@@ -43,7 +43,7 @@ function useSettingsStateSync(options) {
         providers: loadedProviders,
         iteration_limit: loadedIterationLimit,
         default_model: loadedDefaultModel,
-        chat_assistant_model: loadedChatAssistantModel
+        chat_assistant_model: loadedChatAssistantModel,
       });
       setSettingsLoaded(true);
     }
@@ -54,9 +54,7 @@ function useSettingsStateSync(options) {
     loadedChatAssistantModel,
     onLoadComplete,
     setSettingsLoaded,
-    settingsLoaded
+    settingsLoaded,
   ]);
 }
-export {
-  useSettingsStateSync
-};
+export { useSettingsStateSync };

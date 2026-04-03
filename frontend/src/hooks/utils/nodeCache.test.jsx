@@ -3,7 +3,7 @@ import {
   updateNodeCacheRefs,
   updateCachedNodeData,
   clearNodeCache,
-  syncCacheData
+  syncCacheData,
 } from "./nodeCache";
 describe("updateNodeCache", () => {
   it("should return cache result with node data", () => {
@@ -43,8 +43,16 @@ describe("updateNodeCacheRefs", () => {
 });
 describe("updateCachedNodeData", () => {
   it("should update cached node data", () => {
-    const cachedNode = { id: "node-1", data: { old: true }, position: { x: 0, y: 0 } };
-    const updatedNode = { id: "node-1", data: { new: true }, position: { x: 0, y: 0 } };
+    const cachedNode = {
+      id: "node-1",
+      data: { old: true },
+      position: { x: 0, y: 0 },
+    };
+    const updatedNode = {
+      id: "node-1",
+      data: { new: true },
+      position: { x: 0, y: 0 },
+    };
     const result = updateCachedNodeData(cachedNode, updatedNode);
     expect(result).toBe(true);
     expect(cachedNode.data).toEqual({ new: true });

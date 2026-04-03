@@ -1,7 +1,7 @@
 import {
   ExponentialBackoffStrategy,
   LinearBackoffStrategy,
-  FixedDelayStrategy
+  FixedDelayStrategy,
 } from "./websocketReconnectionStrategy";
 import { WS_RECONNECT } from "./websocketConstants";
 describe("ReconnectionStrategy", () => {

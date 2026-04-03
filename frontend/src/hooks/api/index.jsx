@@ -1,4 +1,2 @@
 import { useAuthenticatedApi } from "./useAuthenticatedApi";
-export {
-  useAuthenticatedApi
-};
+export { useAuthenticatedApi };

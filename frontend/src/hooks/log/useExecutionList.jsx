@@ -2,12 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { logger } from "../../utils/logger";
 import { extractApiErrorMessage } from "../utils/apiUtils";
 function useExecutionList(options = {}) {
-  const {
-    apiClient,
-    pollInterval = 5e3,
-    limit = 100,
-    filters
-  } = options;
+  const { apiClient, pollInterval = 5e3, limit = 100, filters } = options;
   const [executions, setExecutions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -21,9 +16,9 @@ function useExecutionList(options = {}) {
       setError(null);
       const params = {
         limit,
-        ...filters?.status && { status: filters.status },
-        ...filters?.workflow_id && { workflow_id: filters.workflow_id },
-        ...filters?.offset && { offset: filters.offset }
+        ...(filters?.status && { status: filters.status }),
+        ...(filters?.workflow_id && { workflow_id: filters.workflow_id }),
+        ...(filters?.offset && { offset: filters.offset }),
       };
       const data = await apiClient.listExecutions(params);
       setExecutions(data);
@@ -47,9 +42,7 @@ function useExecutionList(options = {}) {
     executions,
     loading,
     error,
-    refresh: loadExecutions
+    refresh: loadExecutions,
   };
 }
-export {
-  useExecutionList
-};
+export { useExecutionList };

@@ -28,14 +28,13 @@ function convertToolToNode(tool, position, index) {
       name: getToolLabel(tool),
       description: getToolDescription(tool),
       tool_config: getToolConfig(tool),
-      inputs: []
-    }
+      inputs: [],
+    },
   };
 }
 function convertToolsToNodes(tools, positions) {
-  return tools.map((tool, index) => convertToolToNode(tool, positions[index], index));
+  return tools.map((tool, index) =>
+    convertToolToNode(tool, positions[index], index),
+  );
 }
-export {
-  convertToolToNode,
-  convertToolsToNodes
-};
+export { convertToolToNode, convertToolsToNodes };

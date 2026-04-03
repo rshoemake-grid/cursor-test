@@ -2,7 +2,7 @@ import { renderHook, waitFor } from "@testing-library/react";
 import { useMarketplaceData } from "./useMarketplaceData";
 import { getLocalStorageItem } from "../storage";
 jest.mock("../storage", () => ({
-  getLocalStorageItem: jest.fn()
+  getLocalStorageItem: jest.fn(),
 }));
 const mockGetLocalStorageItem = getLocalStorageItem;
 describe("useMarketplaceData - Complex Patterns", () => {
@@ -18,14 +18,16 @@ describe("useMarketplaceData - Complex Patterns", () => {
         }
         return Promise.resolve({ json: async () => [] });
       }),
-      post: jest.fn().mockResolvedValue({ ok: true, json: async () => ({ nodes: [] }) })
+      post: jest
+        .fn()
+        .mockResolvedValue({ ok: true, json: async () => ({ nodes: [] }) }),
     };
     mockStorage = {
       getItem: jest.fn().mockReturnValue(null),
       setItem: jest.fn(),
       removeItem: jest.fn(),
       addEventListener: jest.fn(),
-      removeEventListener: jest.fn()
+      removeEventListener: jest.fn(),
     };
   });
   describe("Complex OR chain - workflow detection (hasWorkflowId || description.includes || name.includes || tags.some)", () => {
@@ -34,24 +36,26 @@ describe("useMarketplaceData - Complex Patterns", () => {
         id: "template-1",
         name: "Template",
         description: "Description",
-        tags: []
+        tags: [],
       };
       mockHttpClient.get.mockResolvedValue({
-        json: async () => [template]
+        json: async () => [template],
       });
       mockHttpClient.post.mockResolvedValue({
         ok: true,
         json: async () => ({
-          nodes: [{
-            workflow_id: "workflow-123",
-            // Only this condition is true
-            description: "other",
-            name: "other"
-          }]
-        })
+          nodes: [
+            {
+              workflow_id: "workflow-123",
+              // Only this condition is true
+              description: "other",
+              name: "other",
+            },
+          ],
+        }),
       });
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -60,12 +64,15 @@ describe("useMarketplaceData - Complex Patterns", () => {
           sortBy: "popular",
           user: null,
           activeTab: "workflows-of-workflows",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
-      await waitFor(() => {
-        expect(result.current.loading).toBe(false);
-      }, { timeout: 3e3 });
+      await waitFor(
+        () => {
+          expect(result.current.loading).toBe(false);
+        },
+        { timeout: 3e3 },
+      );
       expect(result.current.workflowsOfWorkflows.length).toBeGreaterThan(0);
     });
     it("should detect workflow when only nodeData.workflow_id is true", async () => {
@@ -73,24 +80,26 @@ describe("useMarketplaceData - Complex Patterns", () => {
         id: "template-1",
         name: "Template",
         description: "Description",
-        tags: []
+        tags: [],
       };
       mockHttpClient.get.mockResolvedValue({
-        json: async () => [template]
+        json: async () => [template],
       });
       mockHttpClient.post.mockResolvedValue({
         ok: true,
         json: async () => ({
-          nodes: [{
-            data: { workflow_id: "workflow-123" },
-            // Only nodeData.workflow_id is true
-            description: "other",
-            name: "other"
-          }]
-        })
+          nodes: [
+            {
+              data: { workflow_id: "workflow-123" },
+              // Only nodeData.workflow_id is true
+              description: "other",
+              name: "other",
+            },
+          ],
+        }),
       });
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -99,12 +108,15 @@ describe("useMarketplaceData - Complex Patterns", () => {
           sortBy: "popular",
           user: null,
           activeTab: "workflows-of-workflows",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
-      await waitFor(() => {
-        expect(result.current.loading).toBe(false);
-      }, { timeout: 3e3 });
+      await waitFor(
+        () => {
+          expect(result.current.loading).toBe(false);
+        },
+        { timeout: 3e3 },
+      );
       expect(result.current.workflowsOfWorkflows.length).toBeGreaterThan(0);
     });
     it("should detect workflow when only description.includes is true", async () => {
@@ -112,23 +124,25 @@ describe("useMarketplaceData - Complex Patterns", () => {
         id: "template-1",
         name: "Template",
         description: "Description",
-        tags: []
+        tags: [],
       };
       mockHttpClient.get.mockResolvedValue({
-        json: async () => [template]
+        json: async () => [template],
       });
       mockHttpClient.post.mockResolvedValue({
         ok: true,
         json: async () => ({
-          nodes: [{
-            description: "This is a workflow reference",
-            // Only this condition is true
-            name: "other"
-          }]
-        })
+          nodes: [
+            {
+              description: "This is a workflow reference",
+              // Only this condition is true
+              name: "other",
+            },
+          ],
+        }),
       });
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -137,12 +151,15 @@ describe("useMarketplaceData - Complex Patterns", () => {
           sortBy: "popular",
           user: null,
           activeTab: "workflows-of-workflows",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
-      await waitFor(() => {
-        expect(result.current.loading).toBe(false);
-      }, { timeout: 3e3 });
+      await waitFor(
+        () => {
+          expect(result.current.loading).toBe(false);
+        },
+        { timeout: 3e3 },
+      );
       expect(result.current.workflowsOfWorkflows.length).toBeGreaterThan(0);
     });
     it("should detect workflow when only nodeData.description.includes is true", async () => {
@@ -150,23 +167,25 @@ describe("useMarketplaceData - Complex Patterns", () => {
         id: "template-1",
         name: "Template",
         description: "Description",
-        tags: []
+        tags: [],
       };
       mockHttpClient.get.mockResolvedValue({
-        json: async () => [template]
+        json: async () => [template],
       });
       mockHttpClient.post.mockResolvedValue({
         ok: true,
         json: async () => ({
-          nodes: [{
-            data: { description: "This is a workflow reference" },
-            // Only nodeData.description is true
-            name: "other"
-          }]
-        })
+          nodes: [
+            {
+              data: { description: "This is a workflow reference" },
+              // Only nodeData.description is true
+              name: "other",
+            },
+          ],
+        }),
       });
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -175,12 +194,15 @@ describe("useMarketplaceData - Complex Patterns", () => {
           sortBy: "popular",
           user: null,
           activeTab: "workflows-of-workflows",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
-      await waitFor(() => {
-        expect(result.current.loading).toBe(false);
-      }, { timeout: 3e3 });
+      await waitFor(
+        () => {
+          expect(result.current.loading).toBe(false);
+        },
+        { timeout: 3e3 },
+      );
       expect(result.current.workflowsOfWorkflows.length).toBeGreaterThan(0);
     });
     it("should detect workflow when only name.includes is true", async () => {
@@ -188,23 +210,25 @@ describe("useMarketplaceData - Complex Patterns", () => {
         id: "template-1",
         name: "Template",
         description: "Description",
-        tags: []
+        tags: [],
       };
       mockHttpClient.get.mockResolvedValue({
-        json: async () => [template]
+        json: async () => [template],
       });
       mockHttpClient.post.mockResolvedValue({
         ok: true,
         json: async () => ({
-          nodes: [{
-            name: "Workflow Node",
-            // Only this condition is true
-            description: "other"
-          }]
-        })
+          nodes: [
+            {
+              name: "Workflow Node",
+              // Only this condition is true
+              description: "other",
+            },
+          ],
+        }),
       });
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -213,12 +237,15 @@ describe("useMarketplaceData - Complex Patterns", () => {
           sortBy: "popular",
           user: null,
           activeTab: "workflows-of-workflows",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
-      await waitFor(() => {
-        expect(result.current.loading).toBe(false);
-      }, { timeout: 3e3 });
+      await waitFor(
+        () => {
+          expect(result.current.loading).toBe(false);
+        },
+        { timeout: 3e3 },
+      );
       expect(result.current.workflowsOfWorkflows.length).toBeGreaterThan(0);
     });
     it("should detect workflow when only nodeData.name.includes is true", async () => {
@@ -226,23 +253,25 @@ describe("useMarketplaceData - Complex Patterns", () => {
         id: "template-1",
         name: "Template",
         description: "Description",
-        tags: []
+        tags: [],
       };
       mockHttpClient.get.mockResolvedValue({
-        json: async () => [template]
+        json: async () => [template],
       });
       mockHttpClient.post.mockResolvedValue({
         ok: true,
         json: async () => ({
-          nodes: [{
-            data: { name: "Workflow Node" },
-            // Only nodeData.name is true
-            description: "other"
-          }]
-        })
+          nodes: [
+            {
+              data: { name: "Workflow Node" },
+              // Only nodeData.name is true
+              description: "other",
+            },
+          ],
+        }),
       });
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -251,12 +280,15 @@ describe("useMarketplaceData - Complex Patterns", () => {
           sortBy: "popular",
           user: null,
           activeTab: "workflows-of-workflows",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
-      await waitFor(() => {
-        expect(result.current.loading).toBe(false);
-      }, { timeout: 3e3 });
+      await waitFor(
+        () => {
+          expect(result.current.loading).toBe(false);
+        },
+        { timeout: 3e3 },
+      );
       expect(result.current.workflowsOfWorkflows.length).toBeGreaterThan(0);
     });
     it("should detect workflow when only tags.some is true", async () => {
@@ -264,22 +296,24 @@ describe("useMarketplaceData - Complex Patterns", () => {
         id: "template-1",
         name: "Template",
         description: "Description",
-        tags: ["workflow"]
+        tags: ["workflow"],
         // Only tags.some condition is true
       };
       mockHttpClient.get.mockResolvedValue({
-        json: async () => [template]
+        json: async () => [template],
       });
       mockHttpClient.post.mockResolvedValue({
         ok: true,
         json: async () => ({
-          nodes: [{
-            // No workflow_id, description, or name
-          }]
-        })
+          nodes: [
+            {
+              // No workflow_id, description, or name
+            },
+          ],
+        }),
       });
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -288,12 +322,15 @@ describe("useMarketplaceData - Complex Patterns", () => {
           sortBy: "popular",
           user: null,
           activeTab: "workflows-of-workflows",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
-      await waitFor(() => {
-        expect(result.current.loading).toBe(false);
-      }, { timeout: 3e3 });
+      await waitFor(
+        () => {
+          expect(result.current.loading).toBe(false);
+        },
+        { timeout: 3e3 },
+      );
       expect(result.current.workflowsOfWorkflows.length).toBeGreaterThan(0);
     });
     it("should detect workflow when multiple OR conditions are true", async () => {
@@ -301,25 +338,27 @@ describe("useMarketplaceData - Complex Patterns", () => {
         id: "template-1",
         name: "Template",
         description: "Description",
-        tags: ["workflow"]
+        tags: ["workflow"],
       };
       mockHttpClient.get.mockResolvedValue({
-        json: async () => [template]
+        json: async () => [template],
       });
       mockHttpClient.post.mockResolvedValue({
         ok: true,
         json: async () => ({
-          nodes: [{
-            workflow_id: "workflow-123",
-            // Multiple conditions true
-            description: "workflow reference",
-            name: "workflow node",
-            data: { workflow_id: "workflow-456" }
-          }]
-        })
+          nodes: [
+            {
+              workflow_id: "workflow-123",
+              // Multiple conditions true
+              description: "workflow reference",
+              name: "workflow node",
+              data: { workflow_id: "workflow-456" },
+            },
+          ],
+        }),
       });
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -328,12 +367,15 @@ describe("useMarketplaceData - Complex Patterns", () => {
           sortBy: "popular",
           user: null,
           activeTab: "workflows-of-workflows",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
-      await waitFor(() => {
-        expect(result.current.loading).toBe(false);
-      }, { timeout: 3e3 });
+      await waitFor(
+        () => {
+          expect(result.current.loading).toBe(false);
+        },
+        { timeout: 3e3 },
+      );
       expect(result.current.workflowsOfWorkflows.length).toBeGreaterThan(0);
     });
   });
@@ -344,17 +386,17 @@ describe("useMarketplaceData - Complex Patterns", () => {
         name: "Template",
         description: "This is a workflow of workflows",
         // Only first condition
-        tags: []
+        tags: [],
       };
       mockHttpClient.get.mockResolvedValue({
-        json: async () => [template]
+        json: async () => [template],
       });
       mockHttpClient.post.mockResolvedValue({
         ok: true,
-        json: async () => ({ nodes: [] })
+        json: async () => ({ nodes: [] }),
       });
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -363,12 +405,15 @@ describe("useMarketplaceData - Complex Patterns", () => {
           sortBy: "popular",
           user: null,
           activeTab: "workflows-of-workflows",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
-      await waitFor(() => {
-        expect(result.current.loading).toBe(false);
-      }, { timeout: 3e3 });
+      await waitFor(
+        () => {
+          expect(result.current.loading).toBe(false);
+        },
+        { timeout: 3e3 },
+      );
       expect(result.current.workflowsOfWorkflows.length).toBeGreaterThan(0);
     });
     it('should detect when workflowDescription.includes("composite workflow") is true', async () => {
@@ -377,17 +422,17 @@ describe("useMarketplaceData - Complex Patterns", () => {
         name: "Template",
         description: "This is a composite workflow",
         // Only second condition
-        tags: []
+        tags: [],
       };
       mockHttpClient.get.mockResolvedValue({
-        json: async () => [template]
+        json: async () => [template],
       });
       mockHttpClient.post.mockResolvedValue({
         ok: true,
-        json: async () => ({ nodes: [] })
+        json: async () => ({ nodes: [] }),
       });
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -396,12 +441,15 @@ describe("useMarketplaceData - Complex Patterns", () => {
           sortBy: "popular",
           user: null,
           activeTab: "workflows-of-workflows",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
-      await waitFor(() => {
-        expect(result.current.loading).toBe(false);
-      }, { timeout: 3e3 });
+      await waitFor(
+        () => {
+          expect(result.current.loading).toBe(false);
+        },
+        { timeout: 3e3 },
+      );
       expect(result.current.workflowsOfWorkflows.length).toBeGreaterThan(0);
     });
     it('should detect when workflowDescription.includes("nested workflow") is true', async () => {
@@ -410,17 +458,17 @@ describe("useMarketplaceData - Complex Patterns", () => {
         name: "Template",
         description: "This is a nested workflow",
         // Only third condition
-        tags: []
+        tags: [],
       };
       mockHttpClient.get.mockResolvedValue({
-        json: async () => [template]
+        json: async () => [template],
       });
       mockHttpClient.post.mockResolvedValue({
         ok: true,
-        json: async () => ({ nodes: [] })
+        json: async () => ({ nodes: [] }),
       });
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -429,12 +477,15 @@ describe("useMarketplaceData - Complex Patterns", () => {
           sortBy: "popular",
           user: null,
           activeTab: "workflows-of-workflows",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
-      await waitFor(() => {
-        expect(result.current.loading).toBe(false);
-      }, { timeout: 3e3 });
+      await waitFor(
+        () => {
+          expect(result.current.loading).toBe(false);
+        },
+        { timeout: 3e3 },
+      );
       expect(result.current.workflowsOfWorkflows.length).toBeGreaterThan(0);
     });
     it('should detect when tags.some includes "workflow-of-workflows"', async () => {
@@ -442,18 +493,18 @@ describe("useMarketplaceData - Complex Patterns", () => {
         id: "template-1",
         name: "Template",
         description: "Description",
-        tags: ["workflow-of-workflows"]
+        tags: ["workflow-of-workflows"],
         // Only fourth condition (first tag check)
       };
       mockHttpClient.get.mockResolvedValue({
-        json: async () => [template]
+        json: async () => [template],
       });
       mockHttpClient.post.mockResolvedValue({
         ok: true,
-        json: async () => ({ nodes: [] })
+        json: async () => ({ nodes: [] }),
       });
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -462,12 +513,15 @@ describe("useMarketplaceData - Complex Patterns", () => {
           sortBy: "popular",
           user: null,
           activeTab: "workflows-of-workflows",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
-      await waitFor(() => {
-        expect(result.current.loading).toBe(false);
-      }, { timeout: 3e3 });
+      await waitFor(
+        () => {
+          expect(result.current.loading).toBe(false);
+        },
+        { timeout: 3e3 },
+      );
       expect(result.current.workflowsOfWorkflows.length).toBeGreaterThan(0);
     });
     it('should detect when tags.some includes "composite"', async () => {
@@ -475,18 +529,18 @@ describe("useMarketplaceData - Complex Patterns", () => {
         id: "template-1",
         name: "Template",
         description: "Description",
-        tags: ["composite"]
+        tags: ["composite"],
         // Only fifth condition (second tag check)
       };
       mockHttpClient.get.mockResolvedValue({
-        json: async () => [template]
+        json: async () => [template],
       });
       mockHttpClient.post.mockResolvedValue({
         ok: true,
-        json: async () => ({ nodes: [] })
+        json: async () => ({ nodes: [] }),
       });
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -495,12 +549,15 @@ describe("useMarketplaceData - Complex Patterns", () => {
           sortBy: "popular",
           user: null,
           activeTab: "workflows-of-workflows",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
-      await waitFor(() => {
-        expect(result.current.loading).toBe(false);
-      }, { timeout: 3e3 });
+      await waitFor(
+        () => {
+          expect(result.current.loading).toBe(false);
+        },
+        { timeout: 3e3 },
+      );
       expect(result.current.workflowsOfWorkflows.length).toBeGreaterThan(0);
     });
     it('should detect when tags.some includes "nested"', async () => {
@@ -508,18 +565,18 @@ describe("useMarketplaceData - Complex Patterns", () => {
         id: "template-1",
         name: "Template",
         description: "Description",
-        tags: ["nested"]
+        tags: ["nested"],
         // Only sixth condition (third tag check)
       };
       mockHttpClient.get.mockResolvedValue({
-        json: async () => [template]
+        json: async () => [template],
       });
       mockHttpClient.post.mockResolvedValue({
         ok: true,
-        json: async () => ({ nodes: [] })
+        json: async () => ({ nodes: [] }),
       });
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -528,18 +585,23 @@ describe("useMarketplaceData - Complex Patterns", () => {
           sortBy: "popular",
           user: null,
           activeTab: "workflows-of-workflows",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
-      await waitFor(() => {
-        expect(result.current.loading).toBe(false);
-      }, { timeout: 3e3 });
+      await waitFor(
+        () => {
+          expect(result.current.loading).toBe(false);
+        },
+        { timeout: 3e3 },
+      );
       expect(result.current.workflowsOfWorkflows.length).toBeGreaterThan(0);
     });
   });
   describe("Complex filter OR chain - search filter (name.includes || description.includes || tags.some)", () => {
     it("should filter when only name.includes is true", async () => {
-      const { getLocalStorageItem: getLocalStorageItem2 } = require("../storage");
+      const {
+        getLocalStorageItem: getLocalStorageItem2,
+      } = require("../storage");
       getLocalStorageItem2.mockReturnValue([
         {
           id: "agent-1",
@@ -548,11 +610,11 @@ describe("useMarketplaceData - Complex Patterns", () => {
           tags: ["other"],
           category: "automation",
           published_at: "2024-01-01T00:00:00Z",
-          is_official: false
-        }
+          is_official: false,
+        },
       ]);
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -562,8 +624,8 @@ describe("useMarketplaceData - Complex Patterns", () => {
           sortBy: "popular",
           user: null,
           activeTab: "agents",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -580,11 +642,11 @@ describe("useMarketplaceData - Complex Patterns", () => {
           tags: ["other"],
           category: "automation",
           published_at: "2024-01-01T00:00:00Z",
-          is_official: false
-        }
+          is_official: false,
+        },
       ]);
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -594,8 +656,8 @@ describe("useMarketplaceData - Complex Patterns", () => {
           sortBy: "popular",
           user: null,
           activeTab: "agents",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -604,7 +666,9 @@ describe("useMarketplaceData - Complex Patterns", () => {
       expect(result.current.agents[0].description).toBe("Test Description");
     });
     it("should filter when only tags.some is true", async () => {
-      const { getLocalStorageItem: getLocalStorageItem2 } = require("../storage");
+      const {
+        getLocalStorageItem: getLocalStorageItem2,
+      } = require("../storage");
       getLocalStorageItem2.mockReturnValue([
         {
           id: "agent-1",
@@ -614,11 +678,11 @@ describe("useMarketplaceData - Complex Patterns", () => {
           // Only tags.some will match
           category: "automation",
           published_at: "2024-01-01T00:00:00Z",
-          is_official: false
-        }
+          is_official: false,
+        },
       ]);
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -628,8 +692,8 @@ describe("useMarketplaceData - Complex Patterns", () => {
           sortBy: "popular",
           user: null,
           activeTab: "agents",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -647,7 +711,7 @@ describe("useMarketplaceData - Complex Patterns", () => {
           is_official: false,
           published_at: "2024-01-02T00:00:00Z",
           category: "automation",
-          tags: []
+          tags: [],
         },
         {
           id: "agent-2",
@@ -655,11 +719,11 @@ describe("useMarketplaceData - Complex Patterns", () => {
           is_official: true,
           published_at: "2024-01-01T00:00:00Z",
           category: "automation",
-          tags: []
-        }
+          tags: [],
+        },
       ]);
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -668,8 +732,8 @@ describe("useMarketplaceData - Complex Patterns", () => {
           sortBy: "popular",
           user: null,
           activeTab: "agents",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -685,7 +749,7 @@ describe("useMarketplaceData - Complex Patterns", () => {
           is_official: false,
           published_at: "2024-01-01T00:00:00Z",
           category: "automation",
-          tags: []
+          tags: [],
         },
         {
           id: "agent-2",
@@ -693,11 +757,11 @@ describe("useMarketplaceData - Complex Patterns", () => {
           is_official: false,
           published_at: "2024-01-02T00:00:00Z",
           category: "automation",
-          tags: []
-        }
+          tags: [],
+        },
       ]);
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -707,17 +771,23 @@ describe("useMarketplaceData - Complex Patterns", () => {
           // Should use date sort
           user: null,
           activeTab: "agents",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
       });
-      expect(result.current.agents[0].published_at).toBe("2024-01-02T00:00:00Z");
-      expect(result.current.agents[1].published_at).toBe("2024-01-01T00:00:00Z");
+      expect(result.current.agents[0].published_at).toBe(
+        "2024-01-02T00:00:00Z",
+      );
+      expect(result.current.agents[1].published_at).toBe(
+        "2024-01-01T00:00:00Z",
+      );
     });
     it('should handle sort when aIsOfficial === bIsOfficial and sortBy === "recent"', async () => {
-      const { getLocalStorageItem: getLocalStorageItem2 } = require("../storage");
+      const {
+        getLocalStorageItem: getLocalStorageItem2,
+      } = require("../storage");
       getLocalStorageItem2.mockReturnValue([
         {
           id: "agent-1",
@@ -725,7 +795,7 @@ describe("useMarketplaceData - Complex Patterns", () => {
           is_official: false,
           published_at: "2024-01-01T00:00:00Z",
           category: "automation",
-          tags: []
+          tags: [],
         },
         {
           id: "agent-2",
@@ -733,11 +803,11 @@ describe("useMarketplaceData - Complex Patterns", () => {
           is_official: false,
           published_at: "2024-01-02T00:00:00Z",
           category: "automation",
-          tags: []
-        }
+          tags: [],
+        },
       ]);
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -747,14 +817,18 @@ describe("useMarketplaceData - Complex Patterns", () => {
           // Should use date sort
           user: null,
           activeTab: "agents",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
       });
-      expect(result.current.agents[0].published_at).toBe("2024-01-02T00:00:00Z");
-      expect(result.current.agents[1].published_at).toBe("2024-01-01T00:00:00Z");
+      expect(result.current.agents[0].published_at).toBe(
+        "2024-01-02T00:00:00Z",
+      );
+      expect(result.current.agents[1].published_at).toBe(
+        "2024-01-01T00:00:00Z",
+      );
     });
     it("should handle sort when aIsOfficial === bIsOfficial and sortBy is neither popular nor recent", async () => {
       mockGetLocalStorageItem.mockReturnValue([
@@ -764,7 +838,7 @@ describe("useMarketplaceData - Complex Patterns", () => {
           is_official: false,
           published_at: "2024-01-01T00:00:00Z",
           category: "automation",
-          tags: []
+          tags: [],
         },
         {
           id: "agent-2",
@@ -772,11 +846,11 @@ describe("useMarketplaceData - Complex Patterns", () => {
           is_official: false,
           published_at: "2024-01-02T00:00:00Z",
           category: "automation",
-          tags: []
-        }
+          tags: [],
+        },
       ]);
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -786,8 +860,8 @@ describe("useMarketplaceData - Complex Patterns", () => {
           // Should use localeCompare
           user: null,
           activeTab: "agents",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);

@@ -3,9 +3,16 @@ import { isNullOrUndefined, isDefined } from "./typeGuards";
 import { looksLikeJson } from "../hooks/storage/useLocalStorage.utils";
 const DEFAULT_STORAGE_ERROR_OPTIONS = {
   logError: true,
-  showNotification: false
+  showNotification: false,
 };
-function withStorageErrorHandling(storage, operation, operationName, key, defaultValue, context) {
+function withStorageErrorHandling(
+  storage,
+  operation,
+  operationName,
+  key,
+  defaultValue,
+  context,
+) {
   if (isNullOrUndefined(storage) === true) {
     return defaultValue;
   }
@@ -14,7 +21,7 @@ function withStorageErrorHandling(storage, operation, operationName, key, defaul
   } catch (error) {
     handleStorageError(error, operationName, key, {
       ...DEFAULT_STORAGE_ERROR_OPTIONS,
-      context
+      context,
     });
     return defaultValue;
   }
@@ -35,7 +42,7 @@ function safeStorageGet(storage, key, defaultValue, context) {
         }
         handleStorageError(parseError, "getItem", key, {
           ...DEFAULT_STORAGE_ERROR_OPTIONS,
-          context
+          context,
         });
         return defaultValue;
       }
@@ -43,7 +50,7 @@ function safeStorageGet(storage, key, defaultValue, context) {
     "getItem",
     key,
     defaultValue,
-    context
+    context,
   );
 }
 function safeStorageSet(storage, key, value, context) {
@@ -59,7 +66,7 @@ function safeStorageSet(storage, key, value, context) {
     key,
     false,
     // defaultValue
-    context
+    context,
   );
 }
 function safeStorageRemove(storage, key, context) {
@@ -73,7 +80,7 @@ function safeStorageRemove(storage, key, context) {
     key,
     false,
     // defaultValue
-    context
+    context,
   );
 }
 function safeStorageHas(storage, key, context) {
@@ -87,7 +94,7 @@ function safeStorageHas(storage, key, context) {
     key,
     false,
     // defaultValue
-    context
+    context,
   );
 }
 function hasClearMethod(storage) {
@@ -108,7 +115,7 @@ function safeStorageClear(storage, context) {
     "all",
     false,
     // defaultValue
-    context
+    context,
   );
 }
 export {
@@ -116,5 +123,5 @@ export {
   safeStorageGet,
   safeStorageHas,
   safeStorageRemove,
-  safeStorageSet
+  safeStorageSet,
 };

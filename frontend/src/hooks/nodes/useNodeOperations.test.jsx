@@ -5,18 +5,18 @@ import { showConfirm } from "../../utils/confirm";
 import { logger } from "../../utils/logger";
 import { useReactFlow } from "@xyflow/react";
 jest.mock("../../utils/notifications", () => ({
-  showError: jest.fn()
+  showError: jest.fn(),
 }));
 jest.mock("../../utils/confirm", () => ({
-  showConfirm: jest.fn()
+  showConfirm: jest.fn(),
 }));
 jest.mock("../../utils/logger", () => ({
   logger: {
-    error: jest.fn()
-  }
+    error: jest.fn(),
+  },
 }));
 jest.mock("@xyflow/react", () => ({
-  useReactFlow: jest.fn()
+  useReactFlow: jest.fn(),
 }));
 const mockShowError = showError;
 const mockShowConfirm = showConfirm;
@@ -31,8 +31,8 @@ describe("useNodeOperations", () => {
     data: {
       name: "Test Node",
       label: "Test Node",
-      inputs: []
-    }
+      inputs: [],
+    },
   };
   beforeEach(() => {
     jest.clearAllMocks();
@@ -63,7 +63,7 @@ describe("useNodeOperations", () => {
       fitView: jest.fn(),
       project: jest.fn(),
       getIntersectingNodes: jest.fn(),
-      isNodeIntersecting: jest.fn()
+      isNodeIntersecting: jest.fn(),
     });
     mockShowConfirm.mockResolvedValue(true);
   });
@@ -73,18 +73,21 @@ describe("useNodeOperations", () => {
   });
   describe("handleUpdate", () => {
     it("should update node field", () => {
-      const { result } = renderHook(
-        () => useNodeOperations({
+      const { result } = renderHook(() =>
+        useNodeOperations({
           selectedNode: mockSelectedNode,
-          setSelectedNodeId: mockSetSelectedNodeId
-        })
+          setSelectedNodeId: mockSetSelectedNodeId,
+        }),
       );
       act(() => {
         result.current.handleUpdate("name", "Updated Name");
       });
       expect(mockSetNodes).toHaveBeenCalled();
       const setNodesCall = mockSetNodes.mock.calls[0][0];
-      const updatedNodes = typeof setNodesCall === "function" ? setNodesCall([mockSelectedNode]) : setNodesCall;
+      const updatedNodes =
+        typeof setNodesCall === "function"
+          ? setNodesCall([mockSelectedNode])
+          : setNodesCall;
       const updatedNode = updatedNodes.find((n) => n.id === "node-1");
       expect(updatedNode.data.name).toBe("Updated Name");
     });
@@ -94,22 +97,23 @@ describe("useNodeOperations", () => {
         data: {
           name: "Other Node",
           label: "Other Node",
-          inputs: []
-        }
+          inputs: [],
+        },
       };
       const nodes = [mockSelectedNode, otherNode];
-      const { result } = renderHook(
-        () => useNodeOperations({
+      const { result } = renderHook(() =>
+        useNodeOperations({
           selectedNode: mockSelectedNode,
-          setSelectedNodeId: mockSetSelectedNodeId
-        })
+          setSelectedNodeId: mockSetSelectedNodeId,
+        }),
       );
       act(() => {
         result.current.handleUpdate("name", "Updated Name");
       });
       expect(mockSetNodes).toHaveBeenCalled();
       const setNodesCall = mockSetNodes.mock.calls[0][0];
-      const updatedNodes = typeof setNodesCall === "function" ? setNodesCall(nodes) : setNodesCall;
+      const updatedNodes =
+        typeof setNodesCall === "function" ? setNodesCall(nodes) : setNodesCall;
       const updatedSelectedNode = updatedNodes.find((n) => n.id === "node-1");
       expect(updatedSelectedNode.data.name).toBe("Updated Name");
       const unchangedNode = updatedNodes.find((n) => n.id === "node-2");
@@ -120,64 +124,73 @@ describe("useNodeOperations", () => {
         id: "node-2",
         data: {
           name: "Other Node",
-          label: "Other Node"
-        }
+          label: "Other Node",
+        },
       };
       const allNodes = [mockSelectedNode, otherNode];
-      const { result } = renderHook(
-        () => useNodeOperations({
+      const { result } = renderHook(() =>
+        useNodeOperations({
           selectedNode: mockSelectedNode,
-          setSelectedNodeId: mockSetSelectedNodeId
-        })
+          setSelectedNodeId: mockSetSelectedNodeId,
+        }),
       );
       act(() => {
         result.current.handleUpdate("name", "Updated Name");
       });
       expect(mockSetNodes).toHaveBeenCalled();
       const setNodesCall = mockSetNodes.mock.calls[0][0];
-      const updatedNodes = typeof setNodesCall === "function" ? setNodesCall(allNodes) : setNodesCall;
+      const updatedNodes =
+        typeof setNodesCall === "function"
+          ? setNodesCall(allNodes)
+          : setNodesCall;
       const updatedNode = updatedNodes.find((n) => n.id === "node-1");
       expect(updatedNode.data.name).toBe("Updated Name");
       const unchangedNode = updatedNodes.find((n) => n.id === "node-2");
       expect(unchangedNode.data.name).toBe("Other Node");
     });
     it("should update label when name changes", () => {
-      const { result } = renderHook(
-        () => useNodeOperations({
+      const { result } = renderHook(() =>
+        useNodeOperations({
           selectedNode: mockSelectedNode,
-          setSelectedNodeId: mockSetSelectedNodeId
-        })
+          setSelectedNodeId: mockSetSelectedNodeId,
+        }),
       );
       act(() => {
         result.current.handleUpdate("name", "New Name");
       });
       const setNodesCall = mockSetNodes.mock.calls[0][0];
-      const updatedNodes = typeof setNodesCall === "function" ? setNodesCall([mockSelectedNode]) : setNodesCall;
+      const updatedNodes =
+        typeof setNodesCall === "function"
+          ? setNodesCall([mockSelectedNode])
+          : setNodesCall;
       const updatedNode = updatedNodes.find((n) => n.id === "node-1");
       expect(updatedNode.data.label).toBe("New Name");
     });
     it("should not update label when other field changes", () => {
-      const { result } = renderHook(
-        () => useNodeOperations({
+      const { result } = renderHook(() =>
+        useNodeOperations({
           selectedNode: mockSelectedNode,
-          setSelectedNodeId: mockSetSelectedNodeId
-        })
+          setSelectedNodeId: mockSetSelectedNodeId,
+        }),
       );
       act(() => {
         result.current.handleUpdate("description", "New Description");
       });
       const setNodesCall = mockSetNodes.mock.calls[0][0];
-      const updatedNodes = typeof setNodesCall === "function" ? setNodesCall([mockSelectedNode]) : setNodesCall;
+      const updatedNodes =
+        typeof setNodesCall === "function"
+          ? setNodesCall([mockSelectedNode])
+          : setNodesCall;
       const updatedNode = updatedNodes.find((n) => n.id === "node-1");
       expect(updatedNode.data.label).toBe("Test Node");
       expect(updatedNode.data.description).toBe("New Description");
     });
     it("should return early if no node selected", () => {
-      const { result } = renderHook(
-        () => useNodeOperations({
+      const { result } = renderHook(() =>
+        useNodeOperations({
           selectedNode: null,
-          setSelectedNodeId: mockSetSelectedNodeId
-        })
+          setSelectedNodeId: mockSetSelectedNodeId,
+        }),
       );
       act(() => {
         result.current.handleUpdate("name", "Updated Name");
@@ -187,19 +200,22 @@ describe("useNodeOperations", () => {
     it("should not update other nodes", () => {
       const otherNode = {
         id: "node-2",
-        data: { name: "Other Node" }
+        data: { name: "Other Node" },
       };
-      const { result } = renderHook(
-        () => useNodeOperations({
+      const { result } = renderHook(() =>
+        useNodeOperations({
           selectedNode: mockSelectedNode,
-          setSelectedNodeId: mockSetSelectedNodeId
-        })
+          setSelectedNodeId: mockSetSelectedNodeId,
+        }),
       );
       act(() => {
         result.current.handleUpdate("name", "Updated Name");
       });
       const setNodesCall = mockSetNodes.mock.calls[0][0];
-      const updatedNodes = typeof setNodesCall === "function" ? setNodesCall([mockSelectedNode, otherNode]) : setNodesCall;
+      const updatedNodes =
+        typeof setNodesCall === "function"
+          ? setNodesCall([mockSelectedNode, otherNode])
+          : setNodesCall;
       const otherNodeUpdated = updatedNodes.find((n) => n.id === "node-2");
       expect(otherNodeUpdated.data.name).toBe("Other Node");
     });
@@ -210,45 +226,51 @@ describe("useNodeOperations", () => {
         ...mockSelectedNode,
         data: {
           ...mockSelectedNode.data,
-          config: { key: "value" }
-        }
+          config: { key: "value" },
+        },
       };
-      const { result } = renderHook(
-        () => useNodeOperations({
+      const { result } = renderHook(() =>
+        useNodeOperations({
           selectedNode: nodeWithConfig,
-          setSelectedNodeId: mockSetSelectedNodeId
-        })
+          setSelectedNodeId: mockSetSelectedNodeId,
+        }),
       );
       act(() => {
         result.current.handleConfigUpdate("config", "key", "newValue");
       });
       expect(mockSetNodes).toHaveBeenCalled();
       const setNodesCall = mockSetNodes.mock.calls[0][0];
-      const updatedNodes = typeof setNodesCall === "function" ? setNodesCall([nodeWithConfig]) : setNodesCall;
+      const updatedNodes =
+        typeof setNodesCall === "function"
+          ? setNodesCall([nodeWithConfig])
+          : setNodesCall;
       const updatedNode = updatedNodes.find((n) => n.id === "node-1");
       expect(updatedNode.data.config.key).toBe("newValue");
     });
     it("should create config object if it does not exist", () => {
-      const { result } = renderHook(
-        () => useNodeOperations({
+      const { result } = renderHook(() =>
+        useNodeOperations({
           selectedNode: mockSelectedNode,
-          setSelectedNodeId: mockSetSelectedNodeId
-        })
+          setSelectedNodeId: mockSetSelectedNodeId,
+        }),
       );
       act(() => {
         result.current.handleConfigUpdate("config", "key", "value");
       });
       const setNodesCall = mockSetNodes.mock.calls[0][0];
-      const updatedNodes = typeof setNodesCall === "function" ? setNodesCall([mockSelectedNode]) : setNodesCall;
+      const updatedNodes =
+        typeof setNodesCall === "function"
+          ? setNodesCall([mockSelectedNode])
+          : setNodesCall;
       const updatedNode = updatedNodes.find((n) => n.id === "node-1");
       expect(updatedNode.data.config).toEqual({ key: "value" });
     });
     it("should return early if no node selected", () => {
-      const { result } = renderHook(
-        () => useNodeOperations({
+      const { result } = renderHook(() =>
+        useNodeOperations({
           selectedNode: null,
-          setSelectedNodeId: mockSetSelectedNodeId
-        })
+          setSelectedNodeId: mockSetSelectedNodeId,
+        }),
       );
       act(() => {
         result.current.handleConfigUpdate("config", "key", "value");
@@ -258,69 +280,76 @@ describe("useNodeOperations", () => {
   });
   describe("handleDelete", () => {
     it("should delete node after confirmation", async () => {
-      const { result } = renderHook(
-        () => useNodeOperations({
+      const { result } = renderHook(() =>
+        useNodeOperations({
           selectedNode: mockSelectedNode,
-          setSelectedNodeId: mockSetSelectedNodeId
-        })
+          setSelectedNodeId: mockSetSelectedNodeId,
+        }),
       );
       await act(async () => {
         await result.current.handleDelete();
       });
       expect(mockShowConfirm).toHaveBeenCalledWith(
         expect.stringContaining("Test Node"),
-        { title: "Delete Node", confirmText: "Delete", cancelText: "Cancel", type: "danger" }
+        {
+          title: "Delete Node",
+          confirmText: "Delete",
+          cancelText: "Cancel",
+          type: "danger",
+        },
       );
-      expect(mockDeleteElements).toHaveBeenCalledWith({ nodes: [{ id: "node-1" }] });
+      expect(mockDeleteElements).toHaveBeenCalledWith({
+        nodes: [{ id: "node-1" }],
+      });
       expect(mockSetSelectedNodeId).toHaveBeenCalledWith(null);
     });
     it("should use label if name is not available", async () => {
       const nodeWithLabel = {
         ...mockSelectedNode,
         data: {
-          label: "Node Label"
-        }
+          label: "Node Label",
+        },
       };
-      const { result } = renderHook(
-        () => useNodeOperations({
+      const { result } = renderHook(() =>
+        useNodeOperations({
           selectedNode: nodeWithLabel,
-          setSelectedNodeId: mockSetSelectedNodeId
-        })
+          setSelectedNodeId: mockSetSelectedNodeId,
+        }),
       );
       await act(async () => {
         await result.current.handleDelete();
       });
       expect(mockShowConfirm).toHaveBeenCalledWith(
         expect.stringContaining("Node Label"),
-        expect.any(Object)
+        expect.any(Object),
       );
     });
     it("should use node id if name and label are not available", async () => {
       const nodeWithoutName = {
         ...mockSelectedNode,
-        data: {}
+        data: {},
       };
-      const { result } = renderHook(
-        () => useNodeOperations({
+      const { result } = renderHook(() =>
+        useNodeOperations({
           selectedNode: nodeWithoutName,
-          setSelectedNodeId: mockSetSelectedNodeId
-        })
+          setSelectedNodeId: mockSetSelectedNodeId,
+        }),
       );
       await act(async () => {
         await result.current.handleDelete();
       });
       expect(mockShowConfirm).toHaveBeenCalledWith(
         expect.stringContaining("node-1"),
-        expect.any(Object)
+        expect.any(Object),
       );
     });
     it("should not delete if user cancels", async () => {
       mockShowConfirm.mockResolvedValue(false);
-      const { result } = renderHook(
-        () => useNodeOperations({
+      const { result } = renderHook(() =>
+        useNodeOperations({
           selectedNode: mockSelectedNode,
-          setSelectedNodeId: mockSetSelectedNodeId
-        })
+          setSelectedNodeId: mockSetSelectedNodeId,
+        }),
       );
       await act(async () => {
         await result.current.handleDelete();
@@ -329,11 +358,11 @@ describe("useNodeOperations", () => {
       expect(mockSetSelectedNodeId).not.toHaveBeenCalled();
     });
     it("should return early if no node selected", async () => {
-      const { result } = renderHook(
-        () => useNodeOperations({
+      const { result } = renderHook(() =>
+        useNodeOperations({
           selectedNode: null,
-          setSelectedNodeId: mockSetSelectedNodeId
-        })
+          setSelectedNodeId: mockSetSelectedNodeId,
+        }),
       );
       await act(async () => {
         await result.current.handleDelete();
@@ -346,13 +375,13 @@ describe("useNodeOperations", () => {
       const mockOnSaveWorkflow = jest.fn().mockResolvedValue("workflow-id");
       const mockOnSave = jest.fn().mockResolvedValue(void 0);
       const mockSetSaveStatus = jest.fn();
-      const { result } = renderHook(
-        () => useNodeOperations({
+      const { result } = renderHook(() =>
+        useNodeOperations({
           selectedNode: mockSelectedNode,
           setSelectedNodeId: mockSetSelectedNodeId,
           onSaveWorkflow: mockOnSaveWorkflow,
-          onSave: mockOnSave
-        })
+          onSave: mockOnSave,
+        }),
       );
       await act(async () => {
         await result.current.handleSave(mockSetSaveStatus);
@@ -363,63 +392,71 @@ describe("useNodeOperations", () => {
       expect(mockSetSaveStatus).toHaveBeenCalledWith("saved");
     });
     it("should handle save error", async () => {
-      const mockOnSaveWorkflow = jest.fn().mockRejectedValue(new Error("Save failed"));
+      const mockOnSaveWorkflow = jest
+        .fn()
+        .mockRejectedValue(new Error("Save failed"));
       const mockSetSaveStatus = jest.fn();
-      const { result } = renderHook(
-        () => useNodeOperations({
+      const { result } = renderHook(() =>
+        useNodeOperations({
           selectedNode: mockSelectedNode,
           setSelectedNodeId: mockSetSelectedNodeId,
-          onSaveWorkflow: mockOnSaveWorkflow
-        })
+          onSaveWorkflow: mockOnSaveWorkflow,
+        }),
       );
       await act(async () => {
         await result.current.handleSave(mockSetSaveStatus);
       });
       expect(mockLoggerError).toHaveBeenCalled();
-      expect(mockShowError).toHaveBeenCalledWith(expect.stringContaining("Failed to save workflow"));
+      expect(mockShowError).toHaveBeenCalledWith(
+        expect.stringContaining("Failed to save workflow"),
+      );
       expect(mockSetSaveStatus).toHaveBeenCalledWith("idle");
     });
     it("should handle non-Error rejection (extractApiErrorMessage returns string when error is string)", async () => {
       const mockOnSaveWorkflow = jest.fn().mockRejectedValue("String error");
       const mockSetSaveStatus = jest.fn();
-      const { result } = renderHook(
-        () => useNodeOperations({
+      const { result } = renderHook(() =>
+        useNodeOperations({
           selectedNode: mockSelectedNode,
           setSelectedNodeId: mockSetSelectedNodeId,
-          onSaveWorkflow: mockOnSaveWorkflow
-        })
+          onSaveWorkflow: mockOnSaveWorkflow,
+        }),
       );
       await act(async () => {
         await result.current.handleSave(mockSetSaveStatus);
       });
       expect(mockLoggerError).toHaveBeenCalled();
-      expect(mockShowError).toHaveBeenCalledWith("Failed to save workflow: String error");
+      expect(mockShowError).toHaveBeenCalledWith(
+        "Failed to save workflow: String error",
+      );
       expect(mockSetSaveStatus).toHaveBeenCalledWith("idle");
     });
     it("should handle save error with non-Error object (extractApiErrorMessage returns string)", async () => {
       const mockOnSaveWorkflow = jest.fn().mockRejectedValue("String error");
       const mockSetSaveStatus = jest.fn();
-      const { result } = renderHook(
-        () => useNodeOperations({
+      const { result } = renderHook(() =>
+        useNodeOperations({
           selectedNode: mockSelectedNode,
           setSelectedNodeId: mockSetSelectedNodeId,
-          onSaveWorkflow: mockOnSaveWorkflow
-        })
+          onSaveWorkflow: mockOnSaveWorkflow,
+        }),
       );
       await act(async () => {
         await result.current.handleSave(mockSetSaveStatus);
       });
       expect(mockLoggerError).toHaveBeenCalled();
-      expect(mockShowError).toHaveBeenCalledWith("Failed to save workflow: String error");
+      expect(mockShowError).toHaveBeenCalledWith(
+        "Failed to save workflow: String error",
+      );
       expect(mockSetSaveStatus).toHaveBeenCalledWith("idle");
     });
     it("should return early if no node selected", async () => {
       const mockSetSaveStatus = jest.fn();
-      const { result } = renderHook(
-        () => useNodeOperations({
+      const { result } = renderHook(() =>
+        useNodeOperations({
           selectedNode: null,
-          setSelectedNodeId: mockSetSelectedNodeId
-        })
+          setSelectedNodeId: mockSetSelectedNodeId,
+        }),
       );
       await act(async () => {
         await result.current.handleSave(mockSetSaveStatus);
@@ -428,11 +465,11 @@ describe("useNodeOperations", () => {
     });
     it("should reset save status after delay", async () => {
       const mockSetSaveStatus = jest.fn();
-      const { result } = renderHook(
-        () => useNodeOperations({
+      const { result } = renderHook(() =>
+        useNodeOperations({
           selectedNode: mockSelectedNode,
-          setSelectedNodeId: mockSetSelectedNodeId
-        })
+          setSelectedNodeId: mockSetSelectedNodeId,
+        }),
       );
       await act(async () => {
         await result.current.handleSave(mockSetSaveStatus);
@@ -444,53 +481,74 @@ describe("useNodeOperations", () => {
   describe("handleAddInput", () => {
     it("should add input to node", () => {
       const mockSetShowAddInput = jest.fn();
-      const { result } = renderHook(
-        () => useNodeOperations({
+      const { result } = renderHook(() =>
+        useNodeOperations({
           selectedNode: mockSelectedNode,
-          setSelectedNodeId: mockSetSelectedNodeId
-        })
+          setSelectedNodeId: mockSetSelectedNodeId,
+        }),
       );
       act(() => {
-        result.current.handleAddInput("input1", "source-node", "output", mockSetShowAddInput);
+        result.current.handleAddInput(
+          "input1",
+          "source-node",
+          "output",
+          mockSetShowAddInput,
+        );
       });
       expect(mockSetNodes).toHaveBeenCalled();
       const setNodesCall = mockSetNodes.mock.calls[0][0];
-      const updatedNodes = typeof setNodesCall === "function" ? setNodesCall([mockSelectedNode]) : setNodesCall;
+      const updatedNodes =
+        typeof setNodesCall === "function"
+          ? setNodesCall([mockSelectedNode])
+          : setNodesCall;
       const updatedNode = updatedNodes.find((n) => n.id === "node-1");
       expect(updatedNode.data.inputs).toHaveLength(1);
       expect(updatedNode.data.inputs[0]).toEqual({
         name: "input1",
         source_node: "source-node",
-        source_field: "output"
+        source_field: "output",
       });
       expect(mockSetShowAddInput).toHaveBeenCalledWith(false);
     });
     it("should handle empty sourceNode", () => {
       const mockSetShowAddInput = jest.fn();
-      const { result } = renderHook(
-        () => useNodeOperations({
+      const { result } = renderHook(() =>
+        useNodeOperations({
           selectedNode: mockSelectedNode,
-          setSelectedNodeId: mockSetSelectedNodeId
-        })
+          setSelectedNodeId: mockSetSelectedNodeId,
+        }),
       );
       act(() => {
-        result.current.handleAddInput("input1", "", "output", mockSetShowAddInput);
+        result.current.handleAddInput(
+          "input1",
+          "",
+          "output",
+          mockSetShowAddInput,
+        );
       });
       const setNodesCall = mockSetNodes.mock.calls[0][0];
-      const updatedNodes = typeof setNodesCall === "function" ? setNodesCall([mockSelectedNode]) : setNodesCall;
+      const updatedNodes =
+        typeof setNodesCall === "function"
+          ? setNodesCall([mockSelectedNode])
+          : setNodesCall;
       const updatedNode = updatedNodes.find((n) => n.id === "node-1");
       expect(updatedNode.data.inputs[0].source_node).toBeUndefined();
     });
     it("should return early if no node selected", () => {
       const mockSetShowAddInput = jest.fn();
-      const { result } = renderHook(
-        () => useNodeOperations({
+      const { result } = renderHook(() =>
+        useNodeOperations({
           selectedNode: null,
-          setSelectedNodeId: mockSetSelectedNodeId
-        })
+          setSelectedNodeId: mockSetSelectedNodeId,
+        }),
       );
       act(() => {
-        result.current.handleAddInput("input1", "source-node", "output", mockSetShowAddInput);
+        result.current.handleAddInput(
+          "input1",
+          "source-node",
+          "output",
+          mockSetShowAddInput,
+        );
       });
       expect(mockSetNodes).not.toHaveBeenCalled();
     });
@@ -501,34 +559,35 @@ describe("useNodeOperations", () => {
         ...mockSelectedNode,
         data: {
           ...mockSelectedNode.data,
-          inputs: [
-            { name: "input1" },
-            { name: "input2" },
-            { name: "input3" }
-          ]
-        }
+          inputs: [{ name: "input1" }, { name: "input2" }, { name: "input3" }],
+        },
       };
-      const { result } = renderHook(
-        () => useNodeOperations({
+      const { result } = renderHook(() =>
+        useNodeOperations({
           selectedNode: nodeWithInputs,
-          setSelectedNodeId: mockSetSelectedNodeId
-        })
+          setSelectedNodeId: mockSetSelectedNodeId,
+        }),
       );
       act(() => {
         result.current.handleRemoveInput(1);
       });
       const setNodesCall = mockSetNodes.mock.calls[0][0];
-      const updatedNodes = typeof setNodesCall === "function" ? setNodesCall([nodeWithInputs]) : setNodesCall;
+      const updatedNodes =
+        typeof setNodesCall === "function"
+          ? setNodesCall([nodeWithInputs])
+          : setNodesCall;
       const updatedNode = updatedNodes.find((n) => n.id === "node-1");
       expect(updatedNode.data.inputs).toHaveLength(2);
-      expect(updatedNode.data.inputs.find((i) => i.name === "input2")).toBeUndefined();
+      expect(
+        updatedNode.data.inputs.find((i) => i.name === "input2"),
+      ).toBeUndefined();
     });
     it("should return early if no node selected", () => {
-      const { result } = renderHook(
-        () => useNodeOperations({
+      const { result } = renderHook(() =>
+        useNodeOperations({
           selectedNode: null,
-          setSelectedNodeId: mockSetSelectedNodeId
-        })
+          setSelectedNodeId: mockSetSelectedNodeId,
+        }),
       );
       act(() => {
         result.current.handleRemoveInput(0);
@@ -542,22 +601,25 @@ describe("useNodeOperations", () => {
         ...mockSelectedNode,
         data: {
           ...mockSelectedNode.data,
-          inputs: [{ source_node: "node1" }]
+          inputs: [{ source_node: "node1" }],
           // Only 1 input, but we'll update index 5
-        }
+        },
       };
-      const { result } = renderHook(
-        () => useNodeOperations({
+      const { result } = renderHook(() =>
+        useNodeOperations({
           selectedNode: nodeWithShortInputs,
-          setSelectedNodeId: mockSetSelectedNodeId
-        })
+          setSelectedNodeId: mockSetSelectedNodeId,
+        }),
       );
       act(() => {
         result.current.handleUpdateInput(5, "source_node", "node6");
       });
       expect(mockSetNodes).toHaveBeenCalled();
       const setNodesCall = mockSetNodes.mock.calls[0][0];
-      const updatedNodes = typeof setNodesCall === "function" ? setNodesCall([nodeWithShortInputs]) : setNodesCall;
+      const updatedNodes =
+        typeof setNodesCall === "function"
+          ? setNodesCall([nodeWithShortInputs])
+          : setNodesCall;
       const updatedNode = updatedNodes.find((n) => n.id === "node-1");
       expect(updatedNode.data.inputs.length).toBe(6);
       expect(updatedNode.data.inputs[5]).toEqual({ source_node: "node6" });
@@ -572,22 +634,23 @@ describe("useNodeOperations", () => {
         ...mockSelectedNode,
         data: {
           ...mockSelectedNode.data,
-          inputs: [
-            { name: "input1", source_node: "node1" }
-          ]
-        }
+          inputs: [{ name: "input1", source_node: "node1" }],
+        },
       };
-      const { result } = renderHook(
-        () => useNodeOperations({
+      const { result } = renderHook(() =>
+        useNodeOperations({
           selectedNode: nodeWithInputs,
-          setSelectedNodeId: mockSetSelectedNodeId
-        })
+          setSelectedNodeId: mockSetSelectedNodeId,
+        }),
       );
       act(() => {
         result.current.handleUpdateInput(0, "source_node", "node2");
       });
       const setNodesCall = mockSetNodes.mock.calls[0][0];
-      const updatedNodes = typeof setNodesCall === "function" ? setNodesCall([nodeWithInputs]) : setNodesCall;
+      const updatedNodes =
+        typeof setNodesCall === "function"
+          ? setNodesCall([nodeWithInputs])
+          : setNodesCall;
       const updatedNode = updatedNodes.find((n) => n.id === "node-1");
       expect(updatedNode.data.inputs[0].source_node).toBe("node2");
     });
@@ -596,22 +659,25 @@ describe("useNodeOperations", () => {
         ...mockSelectedNode,
         data: {
           ...mockSelectedNode.data,
-          inputs: "not-an-array"
+          inputs: "not-an-array",
           // Non-array value
-        }
+        },
       };
-      const { result } = renderHook(
-        () => useNodeOperations({
+      const { result } = renderHook(() =>
+        useNodeOperations({
           selectedNode: nodeWithNonArrayInputs,
-          setSelectedNodeId: mockSetSelectedNodeId
-        })
+          setSelectedNodeId: mockSetSelectedNodeId,
+        }),
       );
       act(() => {
         result.current.handleUpdateInput(0, "source_node", "node1");
       });
       expect(mockSetNodes).toHaveBeenCalled();
       const setNodesCall = mockSetNodes.mock.calls[0][0];
-      const updatedNodes = typeof setNodesCall === "function" ? setNodesCall([nodeWithNonArrayInputs]) : setNodesCall;
+      const updatedNodes =
+        typeof setNodesCall === "function"
+          ? setNodesCall([nodeWithNonArrayInputs])
+          : setNodesCall;
       const updatedNode = updatedNodes.find((n) => n.id === "node-1");
       expect(Array.isArray(updatedNode.data.inputs)).toBe(true);
       expect(updatedNode.data.inputs.length).toBeGreaterThanOrEqual(1);
@@ -621,33 +687,36 @@ describe("useNodeOperations", () => {
         ...mockSelectedNode,
         data: {
           ...mockSelectedNode.data,
-          inputs: null
+          inputs: null,
           // Not an array
-        }
+        },
       };
-      const { result } = renderHook(
-        () => useNodeOperations({
+      const { result } = renderHook(() =>
+        useNodeOperations({
           selectedNode: nodeWithNullInputs,
-          setSelectedNodeId: mockSetSelectedNodeId
-        })
+          setSelectedNodeId: mockSetSelectedNodeId,
+        }),
       );
       act(() => {
         result.current.handleUpdateInput(0, "source_node", "node1");
       });
       expect(mockSetNodes).toHaveBeenCalled();
       const setNodesCall = mockSetNodes.mock.calls[0][0];
-      const updatedNodes = typeof setNodesCall === "function" ? setNodesCall([nodeWithNullInputs]) : setNodesCall;
+      const updatedNodes =
+        typeof setNodesCall === "function"
+          ? setNodesCall([nodeWithNullInputs])
+          : setNodesCall;
       const updatedNode = updatedNodes.find((n) => n.id === "node-1");
       expect(Array.isArray(updatedNode.data.inputs)).toBe(true);
       expect(updatedNode.data.inputs.length).toBe(1);
       expect(updatedNode.data.inputs[0].source_node).toBe("node1");
     });
     it("should return early if no node selected", () => {
-      const { result } = renderHook(
-        () => useNodeOperations({
+      const { result } = renderHook(() =>
+        useNodeOperations({
           selectedNode: null,
-          setSelectedNodeId: mockSetSelectedNodeId
-        })
+          setSelectedNodeId: mockSetSelectedNodeId,
+        }),
       );
       act(() => {
         result.current.handleUpdateInput(0, "name", "newName");

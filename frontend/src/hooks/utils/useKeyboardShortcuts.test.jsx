@@ -8,61 +8,64 @@ describe("useKeyboardShortcuts", () => {
   });
   it("should register keyboard shortcuts", () => {
     const addEventListenerSpy = jest.spyOn(window, "addEventListener");
-    renderHook(
-      () => useKeyboardShortcuts({
+    renderHook(() =>
+      useKeyboardShortcuts({
         shortcuts: [
           {
             key: "a",
-            handler: mockHandler
-          }
-        ]
-      })
+            handler: mockHandler,
+          },
+        ],
+      }),
     );
-    expect(addEventListenerSpy).toHaveBeenCalledWith("keydown", expect.any(Function));
+    expect(addEventListenerSpy).toHaveBeenCalledWith(
+      "keydown",
+      expect.any(Function),
+    );
     addEventListenerSpy.mockRestore();
   });
   it("should call handler when shortcut is pressed", () => {
-    renderHook(
-      () => useKeyboardShortcuts({
+    renderHook(() =>
+      useKeyboardShortcuts({
         shortcuts: [
           {
             key: "a",
-            handler: mockHandler
-          }
-        ]
-      })
+            handler: mockHandler,
+          },
+        ],
+      }),
     );
     const event = new KeyboardEvent("keydown", { key: "a" });
     window.dispatchEvent(event);
     expect(mockHandler).toHaveBeenCalledWith(event);
   });
   it("should handle Ctrl+key shortcuts", () => {
-    renderHook(
-      () => useKeyboardShortcuts({
+    renderHook(() =>
+      useKeyboardShortcuts({
         shortcuts: [
           {
             key: "s",
             ctrlKey: true,
-            handler: mockHandler
-          }
-        ]
-      })
+            handler: mockHandler,
+          },
+        ],
+      }),
     );
     const event = new KeyboardEvent("keydown", { key: "s", ctrlKey: true });
     window.dispatchEvent(event);
     expect(mockHandler).toHaveBeenCalled();
   });
   it("should not call handler when modifier keys mismatch", () => {
-    renderHook(
-      () => useKeyboardShortcuts({
+    renderHook(() =>
+      useKeyboardShortcuts({
         shortcuts: [
           {
             key: "s",
             ctrlKey: true,
-            handler: mockHandler
-          }
-        ]
-      })
+            handler: mockHandler,
+          },
+        ],
+      }),
     );
     const event = new KeyboardEvent("keydown", { key: "s", ctrlKey: false });
     window.dispatchEvent(event);
@@ -72,15 +75,15 @@ describe("useKeyboardShortcuts", () => {
     const input = document.createElement("input");
     document.body.appendChild(input);
     input.focus();
-    renderHook(
-      () => useKeyboardShortcuts({
+    renderHook(() =>
+      useKeyboardShortcuts({
         shortcuts: [
           {
             key: "a",
-            handler: mockHandler
-          }
-        ]
-      })
+            handler: mockHandler,
+          },
+        ],
+      }),
     );
     const event = new KeyboardEvent("keydown", { key: "a", bubbles: true });
     input.dispatchEvent(event);
@@ -89,46 +92,49 @@ describe("useKeyboardShortcuts", () => {
   });
   it("should not register shortcuts when enabled is false", () => {
     const addEventListenerSpy = jest.spyOn(window, "addEventListener");
-    renderHook(
-      () => useKeyboardShortcuts({
+    renderHook(() =>
+      useKeyboardShortcuts({
         shortcuts: [
           {
             key: "a",
-            handler: mockHandler
-          }
+            handler: mockHandler,
+          },
         ],
-        enabled: false
-      })
+        enabled: false,
+      }),
     );
     expect(addEventListenerSpy).not.toHaveBeenCalled();
     addEventListenerSpy.mockRestore();
   });
   it("should clean up event listeners on unmount", () => {
     const removeEventListenerSpy = jest.spyOn(window, "removeEventListener");
-    const { unmount } = renderHook(
-      () => useKeyboardShortcuts({
+    const { unmount } = renderHook(() =>
+      useKeyboardShortcuts({
         shortcuts: [
           {
             key: "a",
-            handler: mockHandler
-          }
-        ]
-      })
+            handler: mockHandler,
+          },
+        ],
+      }),
     );
     unmount();
-    expect(removeEventListenerSpy).toHaveBeenCalledWith("keydown", expect.any(Function));
+    expect(removeEventListenerSpy).toHaveBeenCalledWith(
+      "keydown",
+      expect.any(Function),
+    );
     removeEventListenerSpy.mockRestore();
   });
   it("should handle multiple shortcuts", () => {
     const handler1 = jest.fn();
     const handler2 = jest.fn();
-    renderHook(
-      () => useKeyboardShortcuts({
+    renderHook(() =>
+      useKeyboardShortcuts({
         shortcuts: [
           { key: "a", handler: handler1 },
-          { key: "b", handler: handler2 }
-        ]
-      })
+          { key: "b", handler: handler2 },
+        ],
+      }),
     );
     const event1 = new KeyboardEvent("keydown", { key: "a" });
     window.dispatchEvent(event1);
@@ -138,15 +144,15 @@ describe("useKeyboardShortcuts", () => {
     expect(handler2).toHaveBeenCalledWith(event2);
   });
   it("should prevent default when shortcut matches", () => {
-    renderHook(
-      () => useKeyboardShortcuts({
+    renderHook(() =>
+      useKeyboardShortcuts({
         shortcuts: [
           {
             key: "a",
-            handler: mockHandler
-          }
-        ]
-      })
+            handler: mockHandler,
+          },
+        ],
+      }),
     );
     const event = new KeyboardEvent("keydown", { key: "a", cancelable: true });
     const preventDefaultSpy = jest.spyOn(event, "preventDefault");

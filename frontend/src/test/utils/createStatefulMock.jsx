@@ -19,7 +19,7 @@ function createStatefulMock(config) {
     },
     createMock,
     resetState,
-    updateState
+    updateState,
   };
 }
 function createMultiStatefulMock(config) {
@@ -43,10 +43,7 @@ function createMultiStatefulMock(config) {
     },
     createMock,
     resetState,
-    updateState
+    updateState,
   };
 }
-export {
-  createMultiStatefulMock,
-  createStatefulMock
-};
+export { createMultiStatefulMock, createStatefulMock };

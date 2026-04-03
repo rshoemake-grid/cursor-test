@@ -1,28 +1,25 @@
-import { jsx } from "react/jsx-runtime";
 import { render, screen } from "@testing-library/react";
 import LocalFileSystemNode from "./LocalFileSystemNode";
 import { ReactFlowProvider } from "@xyflow/react";
 const renderWithProvider = (component) => {
-  return render(
-    /* @__PURE__ */ jsx(ReactFlowProvider, { children: component })
-  );
+  return render(<ReactFlowProvider>{component}</ReactFlowProvider>);
 };
 describe("LocalFileSystemNode", () => {
   it("should render local file system node", () => {
     const nodeData = {
-      label: "My Files"
+      label: "My Files",
     };
     renderWithProvider(
-      /* @__PURE__ */ jsx(LocalFileSystemNode, { data: nodeData, selected: false, id: "node-1" })
+      <LocalFileSystemNode data={nodeData} selected={false} id="node-1" />,
     );
     expect(screen.getByText("My Files")).toBeInTheDocument();
   });
   it("should render with default label", () => {
     const nodeData = {
-      label: ""
+      label: "",
     };
     renderWithProvider(
-      /* @__PURE__ */ jsx(LocalFileSystemNode, { data: nodeData, selected: false, id: "node-1" })
+      <LocalFileSystemNode data={nodeData} selected={false} id="node-1" />,
     );
     expect(screen.getByText("Local File System")).toBeInTheDocument();
   });
@@ -30,11 +27,11 @@ describe("LocalFileSystemNode", () => {
     const nodeData = {
       label: "My Files",
       input_config: {
-        file_path: "/path/to/file.txt"
-      }
+        file_path: "/path/to/file.txt",
+      },
     };
     renderWithProvider(
-      /* @__PURE__ */ jsx(LocalFileSystemNode, { data: nodeData, selected: false, id: "node-1" })
+      <LocalFileSystemNode data={nodeData} selected={false} id="node-1" />,
     );
     expect(screen.getByText(/File: file.txt/)).toBeInTheDocument();
   });
@@ -42,11 +39,11 @@ describe("LocalFileSystemNode", () => {
     const nodeData = {
       label: "My Files",
       input_config: {
-        file_pattern: "*.txt"
-      }
+        file_pattern: "*.txt",
+      },
     };
     renderWithProvider(
-      /* @__PURE__ */ jsx(LocalFileSystemNode, { data: nodeData, selected: false, id: "node-1" })
+      <LocalFileSystemNode data={nodeData} selected={false} id="node-1" />,
     );
     expect(screen.getByText(/Pattern: \*\.txt/)).toBeInTheDocument();
   });
@@ -55,11 +52,11 @@ describe("LocalFileSystemNode", () => {
       label: "My Files",
       input_config: {
         mode: "write",
-        overwrite: true
-      }
+        overwrite: true,
+      },
     };
     renderWithProvider(
-      /* @__PURE__ */ jsx(LocalFileSystemNode, { data: nodeData, selected: false, id: "node-1" })
+      <LocalFileSystemNode data={nodeData} selected={false} id="node-1" />,
     );
     expect(screen.getByText(/Mode: Write/)).toBeInTheDocument();
   });
@@ -68,20 +65,20 @@ describe("LocalFileSystemNode", () => {
       label: "My Files",
       input_config: {
         mode: "write",
-        overwrite: false
-      }
+        overwrite: false,
+      },
     };
     renderWithProvider(
-      /* @__PURE__ */ jsx(LocalFileSystemNode, { data: nodeData, selected: false, id: "node-1" })
+      <LocalFileSystemNode data={nodeData} selected={false} id="node-1" />,
     );
     expect(screen.getByText(/Auto-increment/)).toBeInTheDocument();
   });
   it("should show selected state", () => {
     const nodeData = {
-      label: "My Files"
+      label: "My Files",
     };
     const { container } = renderWithProvider(
-      /* @__PURE__ */ jsx(LocalFileSystemNode, { data: nodeData, selected: true, id: "node-1" })
+      <LocalFileSystemNode data={nodeData} selected={true} id="node-1" />,
     );
     const nodeElement = container.querySelector(".border-green-500");
     expect(nodeElement).toBeInTheDocument();
@@ -89,10 +86,10 @@ describe("LocalFileSystemNode", () => {
   it("should show error state", () => {
     const nodeData = {
       label: "My Files",
-      executionStatus: "failed"
+      executionStatus: "failed",
     };
     const { container } = renderWithProvider(
-      /* @__PURE__ */ jsx(LocalFileSystemNode, { data: nodeData, selected: false, id: "node-1" })
+      <LocalFileSystemNode data={nodeData} selected={false} id="node-1" />,
     );
     const nodeElement = container.querySelector(".border-red-500");
     expect(nodeElement).toBeInTheDocument();

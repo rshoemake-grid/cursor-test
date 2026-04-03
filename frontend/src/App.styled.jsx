@@ -1,21 +1,6 @@
 import styled, { css } from "styled-components";
 import { Link } from "react-router-dom";
-
-/* Aligns with tailwind.config.js primary + neutral grays */
-const c = {
-  gray50: "#f9fafb",
-  gray100: "#f3f4f6",
-  gray200: "#e5e7eb",
-  gray300: "#d1d5db",
-  gray600: "#4b5563",
-  gray700: "#374151",
-  gray900: "#111827",
-  white: "#ffffff",
-  primary100: "#e0f2fe",
-  primary500: "#0ea5e9",
-  primary600: "#0284c7",
-  primary700: "#0369a1",
-};
+import { colors as c } from "./styles/designTokens";
 
 const flexCenter = css`
   display: flex;
@@ -52,7 +37,11 @@ export const LogoMark = styled.div`
   width: 2.5rem;
   height: 2.5rem;
   border-radius: 0.5rem;
-  background: linear-gradient(to bottom right, ${c.primary500}, ${c.primary700});
+  background: linear-gradient(
+    to bottom right,
+    ${c.primary500},
+    ${c.primary700}
+  );
   ${flexCenter};
   justify-content: center;
 
@@ -94,7 +83,9 @@ const navItemBase = css`
   cursor: pointer;
   font: inherit;
   text-decoration: none;
-  transition: background 0.15s ease, color 0.15s ease;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease;
 
   svg {
     width: 1rem;

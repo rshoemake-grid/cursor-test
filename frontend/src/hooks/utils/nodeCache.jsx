@@ -6,24 +6,32 @@ function updateNodeCache(node, nodeId) {
       id: node.id,
       type: node.type,
       position: node.position,
-      data: node.data
+      data: node.data,
     };
     return {
       cached: nodeCopy,
-      idCached: nodeId
+      idCached: nodeId,
     };
   } else {
     return {
       cached: null,
-      idCached: null
+      idCached: null,
     };
   }
 }
 function updateCachedNodeData(cachedNode, updatedNode) {
-  if (!nodeExistsAndValid(cachedNode) || cachedNode === null || cachedNode === void 0) {
+  if (
+    !nodeExistsAndValid(cachedNode) ||
+    cachedNode === null ||
+    cachedNode === void 0
+  ) {
     return false;
   }
-  if (!nodeExistsAndValid(updatedNode) || updatedNode === null || updatedNode === void 0) {
+  if (
+    !nodeExistsAndValid(updatedNode) ||
+    updatedNode === null ||
+    updatedNode === void 0
+  ) {
     return false;
   }
   Object.assign(cachedNode, updatedNode);
@@ -48,5 +56,5 @@ export {
   syncCacheData,
   updateCachedNodeData,
   updateNodeCache,
-  updateNodeCacheRefs
+  updateNodeCacheRefs,
 };

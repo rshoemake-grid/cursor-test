@@ -8,108 +8,111 @@ describe("useNodeSelection", () => {
     jest.clearAllMocks();
     mockNotifyModified = jest.fn();
     mockReactFlowInstance = {
-      getNodes: jest.fn(() => [])
+      getNodes: jest.fn(() => []),
     };
     mockReactFlowInstanceRef = {
-      current: mockReactFlowInstance
+      current: mockReactFlowInstance,
     };
   });
   it("should initialize with no selection", () => {
-    const { result } = renderHook(
-      () => useNodeSelection({
+    const { result } = renderHook(() =>
+      useNodeSelection({
         reactFlowInstanceRef: mockReactFlowInstanceRef,
-        notifyModified: mockNotifyModified
-      })
+        notifyModified: mockNotifyModified,
+      }),
     );
     expect(result.current.selectedNodeId).toBeNull();
     expect(result.current.selectedNodeIds.size).toBe(0);
   });
   it("should update selection when single node is selected", () => {
-    const { result } = renderHook(
-      () => useNodeSelection({
+    const { result } = renderHook(() =>
+      useNodeSelection({
         reactFlowInstanceRef: mockReactFlowInstanceRef,
-        notifyModified: mockNotifyModified
-      })
+        notifyModified: mockNotifyModified,
+      }),
     );
     const selectedNode = {
       id: "node1",
       type: "agent",
       position: { x: 0, y: 0 },
       data: {},
-      selected: true
+      selected: true,
     };
     mockReactFlowInstance.getNodes.mockReturnValue([selectedNode]);
     act(() => {
       result.current.handleNodesChange(
         [{ type: "select", id: "node1" }],
-        jest.fn()
+        jest.fn(),
       );
     });
     expect(result.current.selectedNodeId).toBe("node1");
     expect(result.current.selectedNodeIds.has("node1")).toBe(true);
   });
   it("should clear selection when no nodes are selected", () => {
-    const { result } = renderHook(
-      () => useNodeSelection({
+    const { result } = renderHook(() =>
+      useNodeSelection({
         reactFlowInstanceRef: mockReactFlowInstanceRef,
-        notifyModified: mockNotifyModified
-      })
+        notifyModified: mockNotifyModified,
+      }),
     );
     const selectedNode = {
       id: "node1",
       type: "agent",
       position: { x: 0, y: 0 },
       data: {},
-      selected: true
+      selected: true,
     };
     mockReactFlowInstance.getNodes.mockReturnValue([selectedNode]);
     act(() => {
       result.current.handleNodesChange(
         [{ type: "select", id: "node1" }],
-        jest.fn()
+        jest.fn(),
       );
     });
     expect(result.current.selectedNodeId).toBe("node1");
     const unselectedNode = {
       ...selectedNode,
-      selected: false
+      selected: false,
     };
     mockReactFlowInstance.getNodes.mockReturnValue([unselectedNode]);
     act(() => {
       result.current.handleNodesChange(
         [{ type: "select", id: "node1" }],
-        jest.fn()
+        jest.fn(),
       );
     });
     expect(result.current.selectedNodeId).toBeNull();
     expect(result.current.selectedNodeIds.size).toBe(0);
   });
   it("should clear selectedNodeId when multiple nodes are selected", () => {
-    const { result } = renderHook(
-      () => useNodeSelection({
+    const { result } = renderHook(() =>
+      useNodeSelection({
         reactFlowInstanceRef: mockReactFlowInstanceRef,
-        notifyModified: mockNotifyModified
-      })
+        notifyModified: mockNotifyModified,
+      }),
     );
     const node1 = {
       id: "node1",
       type: "agent",
       position: { x: 0, y: 0 },
       data: {},
-      selected: true
+      selected: true,
     };
     const node2 = {
       id: "node2",
       type: "agent",
       position: { x: 100, y: 100 },
       data: {},
-      selected: true
+      selected: true,
     };
     mockReactFlowInstance.getNodes.mockReturnValue([node1, node2]);
     act(() => {
       result.current.handleNodesChange(
-        [{ type: "select", id: "node1" }, { type: "select", id: "node2" }],
-        jest.fn()
+        [
+          { type: "select", id: "node1" },
+          { type: "select", id: "node2" },
+        ],
+        jest.fn(),
       );
     });
     expect(result.current.selectedNodeId).toBeNull();
@@ -117,85 +120,85 @@ describe("useNodeSelection", () => {
     expect(result.current.selectedNodeIds.has("node2")).toBe(true);
   });
   it("should notify on position changes", () => {
-    const { result } = renderHook(
-      () => useNodeSelection({
+    const { result } = renderHook(() =>
+      useNodeSelection({
         reactFlowInstanceRef: mockReactFlowInstanceRef,
-        notifyModified: mockNotifyModified
-      })
+        notifyModified: mockNotifyModified,
+      }),
     );
     const mockOnNodesChangeBase = jest.fn();
     act(() => {
       result.current.handleNodesChange(
         [{ type: "position", id: "node1", position: { x: 10, y: 20 } }],
-        mockOnNodesChangeBase
+        mockOnNodesChangeBase,
       );
     });
     expect(mockOnNodesChangeBase).toHaveBeenCalledWith([
-      { type: "position", id: "node1", position: { x: 10, y: 20 } }
+      { type: "position", id: "node1", position: { x: 10, y: 20 } },
     ]);
     expect(mockNotifyModified).toHaveBeenCalled();
   });
   it("should notify on add changes", () => {
-    const { result } = renderHook(
-      () => useNodeSelection({
+    const { result } = renderHook(() =>
+      useNodeSelection({
         reactFlowInstanceRef: mockReactFlowInstanceRef,
-        notifyModified: mockNotifyModified
-      })
+        notifyModified: mockNotifyModified,
+      }),
     );
     const mockOnNodesChangeBase = jest.fn();
     act(() => {
       result.current.handleNodesChange(
         [{ type: "add", item: { id: "node1", type: "agent" } }],
-        mockOnNodesChangeBase
+        mockOnNodesChangeBase,
       );
     });
     expect(mockNotifyModified).toHaveBeenCalled();
   });
   it("should notify on remove changes", () => {
-    const { result } = renderHook(
-      () => useNodeSelection({
+    const { result } = renderHook(() =>
+      useNodeSelection({
         reactFlowInstanceRef: mockReactFlowInstanceRef,
-        notifyModified: mockNotifyModified
-      })
+        notifyModified: mockNotifyModified,
+      }),
     );
     const mockOnNodesChangeBase = jest.fn();
     act(() => {
       result.current.handleNodesChange(
         [{ type: "remove", id: "node1" }],
-        mockOnNodesChangeBase
+        mockOnNodesChangeBase,
       );
     });
     expect(mockNotifyModified).toHaveBeenCalled();
   });
   it("should not notify on selection-only changes", () => {
-    const { result } = renderHook(
-      () => useNodeSelection({
+    const { result } = renderHook(() =>
+      useNodeSelection({
         reactFlowInstanceRef: mockReactFlowInstanceRef,
-        notifyModified: mockNotifyModified
-      })
+        notifyModified: mockNotifyModified,
+      }),
     );
     const mockOnNodesChangeBase = jest.fn();
     act(() => {
       result.current.handleNodesChange(
         [{ type: "select", id: "node1" }],
-        mockOnNodesChangeBase
+        mockOnNodesChangeBase,
       );
     });
     expect(mockNotifyModified).not.toHaveBeenCalled();
   });
   it("should handle missing React Flow instance gracefully", () => {
     const emptyRef = { current: null };
-    const { result } = renderHook(
-      () => useNodeSelection({
+    const { result } = renderHook(() =>
+      useNodeSelection({
         reactFlowInstanceRef: emptyRef,
-        notifyModified: mockNotifyModified
-      })
+        notifyModified: mockNotifyModified,
+      }),
     );
     const mockOnNodesChangeBase = jest.fn();
     act(() => {
       result.current.handleNodesChange(
         [{ type: "position", id: "node1" }],
-        mockOnNodesChangeBase
+        mockOnNodesChangeBase,
       );
     });
     expect(mockOnNodesChangeBase).toHaveBeenCalled();
@@ -203,15 +206,17 @@ describe("useNodeSelection", () => {
     expect(result.current.selectedNodeIds.size).toBe(0);
   });
   it("should allow manual selection updates via setters", () => {
-    const { result } = renderHook(
-      () => useNodeSelection({
+    const { result } = renderHook(() =>
+      useNodeSelection({
         reactFlowInstanceRef: mockReactFlowInstanceRef,
-        notifyModified: mockNotifyModified
-      })
+        notifyModified: mockNotifyModified,
+      }),
     );
     act(() => {
       result.current.setSelectedNodeId("node1");
-      result.current.setSelectedNodeIds(/* @__PURE__ */ new Set(["node1", "node2"]));
+      result.current.setSelectedNodeIds(
+        /* @__PURE__ */ new Set(["node1", "node2"]),
+      );
     });
     expect(result.current.selectedNodeId).toBe("node1");
     expect(result.current.selectedNodeIds.has("node1")).toBe(true);

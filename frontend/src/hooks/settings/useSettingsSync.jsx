@@ -11,27 +11,43 @@ function useSettingsSync(options) {
     chatAssistantModel,
     settingsService,
     settingsLoaded,
-    consoleAdapter
+    consoleAdapter,
   } = options;
-  const autoSaveSettings = useMemo(() => async () => {
-    if (!isAuthenticated || !token || !settingsLoaded) return;
-    try {
-      await settingsService.saveSettings({
-        providers,
-        iteration_limit: iterationLimit,
-        default_model: defaultModel,
-        chat_assistant_model: chatAssistantModel || ""
-      }, token);
-      consoleAdapter.log("Settings auto-saved to backend");
-    } catch (error) {
-      consoleAdapter.error("Failed to auto-save settings:", error);
-    }
-  }, [settingsService, providers, iterationLimit, defaultModel, chatAssistantModel, isAuthenticated, token, settingsLoaded, consoleAdapter]);
+  const autoSaveSettings = useMemo(
+    () => async () => {
+      if (!isAuthenticated || !token || !settingsLoaded) return;
+      try {
+        await settingsService.saveSettings(
+          {
+            providers,
+            iteration_limit: iterationLimit,
+            default_model: defaultModel,
+            chat_assistant_model: chatAssistantModel || "",
+          },
+          token,
+        );
+        consoleAdapter.log("Settings auto-saved to backend");
+      } catch (error) {
+        consoleAdapter.error("Failed to auto-save settings:", error);
+      }
+    },
+    [
+      settingsService,
+      providers,
+      iterationLimit,
+      defaultModel,
+      chatAssistantModel,
+      isAuthenticated,
+      token,
+      settingsLoaded,
+      consoleAdapter,
+    ],
+  );
   useAutoSave(
     { providers, iterationLimit, defaultModel, chatAssistantModel },
     autoSaveSettings,
     500,
-    !!(isAuthenticated && token && settingsLoaded)
+    !!(isAuthenticated && token && settingsLoaded),
   );
   const handleManualSync = useCallback(async () => {
     if (!isAuthenticated) {
@@ -39,21 +55,30 @@ function useSettingsSync(options) {
       return;
     }
     try {
-      await settingsService.saveSettings({
-        providers,
-        iteration_limit: iterationLimit,
-        default_model: defaultModel,
-        chat_assistant_model: chatAssistantModel || ""
-      }, token);
+      await settingsService.saveSettings(
+        {
+          providers,
+          iteration_limit: iterationLimit,
+          default_model: defaultModel,
+          chat_assistant_model: chatAssistantModel || "",
+        },
+        token,
+      );
       showSuccess("Settings synced to backend successfully!");
     } catch (error) {
       showError("Error syncing settings: " + error);
     }
-  }, [isAuthenticated, token, providers, iterationLimit, defaultModel, chatAssistantModel, settingsService]);
+  }, [
+    isAuthenticated,
+    token,
+    providers,
+    iterationLimit,
+    defaultModel,
+    chatAssistantModel,
+    settingsService,
+  ]);
   return {
-    handleManualSync
+    handleManualSync,
   };
 }
-export {
-  useSettingsSync
-};
+export { useSettingsSync };

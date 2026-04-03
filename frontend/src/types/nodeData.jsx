@@ -8,15 +8,18 @@ function isLoopNode(node) {
   return node?.type === "loop";
 }
 function isInputNode(node) {
-  return node !== null && [
-    "gcp_bucket",
-    "aws_s3",
-    "gcp_pubsub",
-    "local_filesystem",
-    "database",
-    "firebase",
-    "bigquery"
-  ].includes(node.type || "");
+  return (
+    node !== null &&
+    [
+      "gcp_bucket",
+      "aws_s3",
+      "gcp_pubsub",
+      "local_filesystem",
+      "database",
+      "firebase",
+      "bigquery",
+    ].includes(node.type || "")
+  );
 }
 function isStartNode(node) {
   return node?.type === "start";
@@ -34,5 +37,5 @@ export {
   isInputNode,
   isLoopNode,
   isStartNode,
-  isToolNode
+  isToolNode,
 };

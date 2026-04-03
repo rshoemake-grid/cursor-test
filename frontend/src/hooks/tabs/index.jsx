@@ -10,5 +10,5 @@ export {
   useTabInitialization,
   useTabOperations,
   useTabRenaming,
-  useTabWorkflowSync
+  useTabWorkflowSync,
 };

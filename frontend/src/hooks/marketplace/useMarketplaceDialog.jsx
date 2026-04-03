@@ -14,9 +14,7 @@ function useMarketplaceDialog() {
     showMarketplaceDialog,
     marketplaceNode,
     openDialog,
-    closeDialog
+    closeDialog,
   };
 }
-export {
-  useMarketplaceDialog
-};
+export { useMarketplaceDialog };

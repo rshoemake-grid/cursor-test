@@ -30,7 +30,7 @@ describe("useDebounce", () => {
     const callback = jest.fn();
     const { rerender } = renderHook(
       ({ value }) => useDebounce(value, 100, callback),
-      { initialProps: { value: "value1" } }
+      { initialProps: { value: "value1" } },
     );
     act(() => {
       jest.advanceTimersByTime(50);
@@ -50,7 +50,7 @@ describe("useDebounce", () => {
     const callback = jest.fn();
     const { rerender } = renderHook(
       ({ value }) => useDebounce(value, 100, callback),
-      { initialProps: { value: "value1" } }
+      { initialProps: { value: "value1" } },
     );
     act(() => {
       jest.advanceTimersByTime(100);
@@ -94,7 +94,7 @@ describe("useDebounce", () => {
     const callback = jest.fn();
     const { rerender } = renderHook(
       ({ delay }) => useDebounce("test", delay, callback),
-      { initialProps: { delay: 100 } }
+      { initialProps: { delay: 100 } },
     );
     act(() => {
       jest.advanceTimersByTime(50);
@@ -116,7 +116,7 @@ describe("useDebounce", () => {
     const callback2 = jest.fn();
     const { rerender } = renderHook(
       ({ callback }) => useDebounce("test", 100, callback),
-      { initialProps: { callback: callback1 } }
+      { initialProps: { callback: callback1 } },
     );
     act(() => {
       jest.advanceTimersByTime(50);

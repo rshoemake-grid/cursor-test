@@ -5,11 +5,11 @@ import { getLocalStorageItem } from "../storage";
 jest.mock("../../utils/logger", () => ({
   logger: {
     debug: jest.fn(),
-    error: jest.fn()
-  }
+    error: jest.fn(),
+  },
 }));
 jest.mock("../storage", () => ({
-  getLocalStorageItem: jest.fn()
+  getLocalStorageItem: jest.fn(),
 }));
 const mockLoggerDebug = logger.debug;
 const mockGetLocalStorageItem = getLocalStorageItem;
@@ -29,7 +29,7 @@ describe("useMarketplaceData - Mutation Killers", () => {
     likes_count: 5,
     rating: 4.5,
     author_id: "user-1",
-    author_name: "Test User"
+    author_name: "Test User",
   };
   const mockAgent = {
     id: "agent-1",
@@ -44,7 +44,7 @@ describe("useMarketplaceData - Mutation Killers", () => {
     published_at: "2024-01-01T00:00:00Z",
     author_id: "user-1",
     author_name: "Test User",
-    is_official: false
+    is_official: false,
   };
   beforeEach(() => {
     jest.clearAllMocks();
@@ -55,24 +55,26 @@ describe("useMarketplaceData - Mutation Killers", () => {
         }
         return Promise.resolve({ json: async () => [] });
       }),
-      post: jest.fn().mockResolvedValue({ ok: true, json: async () => ({ nodes: [] }) })
+      post: jest
+        .fn()
+        .mockResolvedValue({ ok: true, json: async () => ({ nodes: [] }) }),
     };
     mockStorage = {
       getItem: jest.fn().mockReturnValue(JSON.stringify([])),
       setItem: jest.fn(),
       removeItem: jest.fn(),
       addEventListener: jest.fn(),
-      removeEventListener: jest.fn()
+      removeEventListener: jest.fn(),
     };
     mockGetLocalStorageItem.mockReturnValue([]);
   });
   describe("fetchTemplates - exact truthy checks", () => {
     it("should verify exact truthy check - category exists", async () => {
       mockHttpClient.get.mockResolvedValue({
-        json: async () => [mockTemplate]
+        json: async () => [mockTemplate],
       });
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -81,22 +83,22 @@ describe("useMarketplaceData - Mutation Killers", () => {
           sortBy: "popular",
           user: null,
           activeTab: "repository",
-          repositorySubTab: "workflows"
-        })
+          repositorySubTab: "workflows",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
       });
       expect(mockHttpClient.get).toHaveBeenCalledWith(
-        expect.stringContaining("category=automation")
+        expect.stringContaining("category=automation"),
       );
     });
     it("should verify exact truthy check - category is empty string (should not append)", async () => {
       mockHttpClient.get.mockResolvedValue({
-        json: async () => [mockTemplate]
+        json: async () => [mockTemplate],
       });
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -105,22 +107,22 @@ describe("useMarketplaceData - Mutation Killers", () => {
           sortBy: "popular",
           user: null,
           activeTab: "repository",
-          repositorySubTab: "workflows"
-        })
+          repositorySubTab: "workflows",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
       });
       expect(mockHttpClient.get).toHaveBeenCalledWith(
-        expect.not.stringContaining("category=")
+        expect.not.stringContaining("category="),
       );
     });
     it("should verify exact truthy check - searchQuery exists", async () => {
       mockHttpClient.get.mockResolvedValue({
-        json: async () => [mockTemplate]
+        json: async () => [mockTemplate],
       });
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -129,22 +131,22 @@ describe("useMarketplaceData - Mutation Killers", () => {
           sortBy: "popular",
           user: null,
           activeTab: "repository",
-          repositorySubTab: "workflows"
-        })
+          repositorySubTab: "workflows",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
       });
       expect(mockHttpClient.get).toHaveBeenCalledWith(
-        expect.stringContaining("search=test")
+        expect.stringContaining("search=test"),
       );
     });
     it("should verify exact truthy check - searchQuery is empty string (should not append)", async () => {
       mockHttpClient.get.mockResolvedValue({
-        json: async () => [mockTemplate]
+        json: async () => [mockTemplate],
       });
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -153,14 +155,14 @@ describe("useMarketplaceData - Mutation Killers", () => {
           sortBy: "popular",
           user: null,
           activeTab: "repository",
-          repositorySubTab: "workflows"
-        })
+          repositorySubTab: "workflows",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
       });
       expect(mockHttpClient.get).toHaveBeenCalledWith(
-        expect.not.stringContaining("search=")
+        expect.not.stringContaining("search="),
       );
     });
   });
@@ -168,8 +170,8 @@ describe("useMarketplaceData - Mutation Killers", () => {
     it("should verify exact AND - user && user.id && agentsData.length > 0 (all true)", async () => {
       const agents = [mockAgent];
       mockGetLocalStorageItem.mockReturnValue(agents);
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -178,8 +180,8 @@ describe("useMarketplaceData - Mutation Killers", () => {
           sortBy: "popular",
           user: { id: "user-1", username: "testuser" },
           activeTab: "agents",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -189,8 +191,8 @@ describe("useMarketplaceData - Mutation Killers", () => {
     it("should verify exact AND - user is null (first false)", async () => {
       const agents = [mockAgent];
       mockGetLocalStorageItem.mockReturnValue(agents);
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -199,8 +201,8 @@ describe("useMarketplaceData - Mutation Killers", () => {
           sortBy: "popular",
           user: null,
           activeTab: "agents",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -210,8 +212,8 @@ describe("useMarketplaceData - Mutation Killers", () => {
     it("should verify exact AND - user.id is missing (second false)", async () => {
       const agents = [mockAgent];
       mockGetLocalStorageItem.mockReturnValue(agents);
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -220,8 +222,8 @@ describe("useMarketplaceData - Mutation Killers", () => {
           sortBy: "popular",
           user: { id: "", username: "testuser" },
           activeTab: "agents",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -230,8 +232,8 @@ describe("useMarketplaceData - Mutation Killers", () => {
     });
     it("should verify exact AND - agentsData.length === 0 (third false)", async () => {
       mockGetLocalStorageItem.mockReturnValue([]);
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -240,8 +242,8 @@ describe("useMarketplaceData - Mutation Killers", () => {
           sortBy: "popular",
           user: { id: "user-1", username: "testuser" },
           activeTab: "agents",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -251,8 +253,8 @@ describe("useMarketplaceData - Mutation Killers", () => {
     it("should verify exact truthy check - !agent.author_id", async () => {
       const agents = [{ ...mockAgent, author_id: null }];
       mockGetLocalStorageItem.mockReturnValue(agents);
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -261,8 +263,8 @@ describe("useMarketplaceData - Mutation Killers", () => {
           sortBy: "popular",
           user: { id: "user-1", username: "testuser" },
           activeTab: "agents",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -272,8 +274,8 @@ describe("useMarketplaceData - Mutation Killers", () => {
     it("should verify exact truthy check - agent.author_id exists (should not update)", async () => {
       const agents = [{ ...mockAgent, author_id: "existing-author" }];
       mockGetLocalStorageItem.mockReturnValue(agents);
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -282,8 +284,8 @@ describe("useMarketplaceData - Mutation Killers", () => {
           sortBy: "popular",
           user: { id: "user-1", username: "testuser" },
           activeTab: "agents",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -293,8 +295,8 @@ describe("useMarketplaceData - Mutation Killers", () => {
     it("should verify exact logical OR - user.username || user.email || null", async () => {
       const agents = [{ ...mockAgent, author_id: null }];
       mockGetLocalStorageItem.mockReturnValue(agents);
-      const { result: result1 } = renderHook(
-        () => useMarketplaceData({
+      const { result: result1 } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -303,15 +305,15 @@ describe("useMarketplaceData - Mutation Killers", () => {
           sortBy: "popular",
           user: { id: "user-1", username: "testuser" },
           activeTab: "agents",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(result1.current.loading).toBe(false);
       });
       mockStorage.setItem.mockClear();
-      const { result: result2 } = renderHook(
-        () => useMarketplaceData({
+      const { result: result2 } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -320,15 +322,15 @@ describe("useMarketplaceData - Mutation Killers", () => {
           sortBy: "popular",
           user: { id: "user-1", email: "test@example.com" },
           activeTab: "agents",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(result2.current.loading).toBe(false);
       });
       mockStorage.setItem.mockClear();
-      const { result: result3 } = renderHook(
-        () => useMarketplaceData({
+      const { result: result3 } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -337,8 +339,8 @@ describe("useMarketplaceData - Mutation Killers", () => {
           sortBy: "popular",
           user: { id: "user-1" },
           activeTab: "agents",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(result3.current.loading).toBe(false);
@@ -348,8 +350,8 @@ describe("useMarketplaceData - Mutation Killers", () => {
     it("should verify exact AND - updated && storage (both true)", async () => {
       const agents = [{ ...mockAgent, author_id: null }];
       mockGetLocalStorageItem.mockReturnValue(agents);
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -358,8 +360,8 @@ describe("useMarketplaceData - Mutation Killers", () => {
           sortBy: "popular",
           user: { id: "user-1", username: "testuser" },
           activeTab: "agents",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -369,8 +371,8 @@ describe("useMarketplaceData - Mutation Killers", () => {
     it("should verify exact AND - storage is null (should not save)", async () => {
       const agents = [{ ...mockAgent, author_id: null }];
       mockGetLocalStorageItem.mockReturnValue(agents);
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: null,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -379,8 +381,8 @@ describe("useMarketplaceData - Mutation Killers", () => {
           sortBy: "popular",
           user: { id: "user-1", username: "testuser" },
           activeTab: "agents",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -392,11 +394,11 @@ describe("useMarketplaceData - Mutation Killers", () => {
     it("should verify exact equality - category filter", async () => {
       const agents = [
         { ...mockAgent, category: "automation" },
-        { ...mockAgent, id: "agent-2", category: "other" }
+        { ...mockAgent, id: "agent-2", category: "other" },
       ];
       mockGetLocalStorageItem.mockReturnValue(agents);
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -405,8 +407,8 @@ describe("useMarketplaceData - Mutation Killers", () => {
           sortBy: "popular",
           user: null,
           activeTab: "agents",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -416,12 +418,23 @@ describe("useMarketplaceData - Mutation Killers", () => {
     });
     it("should verify exact logical OR - search filter (name match)", async () => {
       const agents = [
-        { ...mockAgent, name: "Test Agent", description: "Agent One Description", tags: ["one"] },
-        { ...mockAgent, id: "agent-2", name: "Other Agent", description: "Agent Two Description", tags: ["two"] }
+        {
+          ...mockAgent,
+          name: "Test Agent",
+          description: "Agent One Description",
+          tags: ["one"],
+        },
+        {
+          ...mockAgent,
+          id: "agent-2",
+          name: "Other Agent",
+          description: "Agent Two Description",
+          tags: ["two"],
+        },
       ];
       mockGetLocalStorageItem.mockReturnValue(agents);
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -430,8 +443,8 @@ describe("useMarketplaceData - Mutation Killers", () => {
           sortBy: "popular",
           user: null,
           activeTab: "agents",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -441,12 +454,23 @@ describe("useMarketplaceData - Mutation Killers", () => {
     });
     it("should verify exact logical OR - search filter (description match)", async () => {
       const agents = [
-        { ...mockAgent, name: "Agent One", description: "Test Description", tags: ["one"] },
-        { ...mockAgent, id: "agent-2", name: "Agent Two", description: "Other Description", tags: ["two"] }
+        {
+          ...mockAgent,
+          name: "Agent One",
+          description: "Test Description",
+          tags: ["one"],
+        },
+        {
+          ...mockAgent,
+          id: "agent-2",
+          name: "Agent Two",
+          description: "Other Description",
+          tags: ["two"],
+        },
       ];
       mockGetLocalStorageItem.mockReturnValue(agents);
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -455,8 +479,8 @@ describe("useMarketplaceData - Mutation Killers", () => {
           sortBy: "popular",
           user: null,
           activeTab: "agents",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -466,12 +490,23 @@ describe("useMarketplaceData - Mutation Killers", () => {
     });
     it("should verify exact logical OR - search filter (tags match)", async () => {
       const agents = [
-        { ...mockAgent, name: "Agent One", description: "Agent One Description", tags: ["test", "automation"] },
-        { ...mockAgent, id: "agent-2", name: "Agent Two", description: "Agent Two Description", tags: ["other"] }
+        {
+          ...mockAgent,
+          name: "Agent One",
+          description: "Agent One Description",
+          tags: ["test", "automation"],
+        },
+        {
+          ...mockAgent,
+          id: "agent-2",
+          name: "Agent Two",
+          description: "Agent Two Description",
+          tags: ["other"],
+        },
       ];
       mockGetLocalStorageItem.mockReturnValue(agents);
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -480,8 +515,8 @@ describe("useMarketplaceData - Mutation Killers", () => {
           sortBy: "popular",
           user: null,
           activeTab: "agents",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -494,11 +529,16 @@ describe("useMarketplaceData - Mutation Killers", () => {
     it("should verify exact ternary - a.is_official ? 1 : 0", async () => {
       const agents = [
         { ...mockAgent, is_official: true, name: "Official Agent" },
-        { ...mockAgent, id: "agent-2", is_official: false, name: "Unofficial Agent" }
+        {
+          ...mockAgent,
+          id: "agent-2",
+          is_official: false,
+          name: "Unofficial Agent",
+        },
       ];
       mockGetLocalStorageItem.mockReturnValue(agents);
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -507,8 +547,8 @@ describe("useMarketplaceData - Mutation Killers", () => {
           sortBy: "popular",
           user: null,
           activeTab: "agents",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -519,11 +559,11 @@ describe("useMarketplaceData - Mutation Killers", () => {
     it('should verify exact equality - sortBy === "popular"', async () => {
       const agents = [
         { ...mockAgent, published_at: "2024-01-01T00:00:00Z" },
-        { ...mockAgent, id: "agent-2", published_at: "2024-01-02T00:00:00Z" }
+        { ...mockAgent, id: "agent-2", published_at: "2024-01-02T00:00:00Z" },
       ];
       mockGetLocalStorageItem.mockReturnValue(agents);
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -532,22 +572,24 @@ describe("useMarketplaceData - Mutation Killers", () => {
           sortBy: "popular",
           user: null,
           activeTab: "agents",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
       });
-      expect(result.current.agents[0].published_at).toBe("2024-01-02T00:00:00Z");
+      expect(result.current.agents[0].published_at).toBe(
+        "2024-01-02T00:00:00Z",
+      );
     });
     it('should verify exact equality - sortBy === "recent"', async () => {
       const agents = [
         { ...mockAgent, published_at: "2024-01-01T00:00:00Z" },
-        { ...mockAgent, id: "agent-2", published_at: "2024-01-02T00:00:00Z" }
+        { ...mockAgent, id: "agent-2", published_at: "2024-01-02T00:00:00Z" },
       ];
       mockGetLocalStorageItem.mockReturnValue(agents);
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -556,22 +598,24 @@ describe("useMarketplaceData - Mutation Killers", () => {
           sortBy: "recent",
           user: null,
           activeTab: "agents",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
       });
-      expect(result.current.agents[0].published_at).toBe("2024-01-02T00:00:00Z");
+      expect(result.current.agents[0].published_at).toBe(
+        "2024-01-02T00:00:00Z",
+      );
     });
     it('should verify exact equality - sortBy !== "popular" && !== "recent" (should use alphabetical)', async () => {
       const agents = [
         { ...mockAgent, name: "Zebra Agent" },
-        { ...mockAgent, id: "agent-2", name: "Alpha Agent" }
+        { ...mockAgent, id: "agent-2", name: "Alpha Agent" },
       ];
       mockGetLocalStorageItem.mockReturnValue(agents);
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -580,8 +624,8 @@ describe("useMarketplaceData - Mutation Killers", () => {
           sortBy: "alphabetical",
           user: null,
           activeTab: "agents",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -591,11 +635,11 @@ describe("useMarketplaceData - Mutation Killers", () => {
     it("should verify exact ternary - a.published_at ? new Date().getTime() : 0", async () => {
       const agents = [
         { ...mockAgent, published_at: "2024-01-01T00:00:00Z" },
-        { ...mockAgent, id: "agent-2", published_at: void 0 }
+        { ...mockAgent, id: "agent-2", published_at: void 0 },
       ];
       mockGetLocalStorageItem.mockReturnValue(agents);
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -604,8 +648,8 @@ describe("useMarketplaceData - Mutation Killers", () => {
           sortBy: "popular",
           user: null,
           activeTab: "agents",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -615,11 +659,11 @@ describe("useMarketplaceData - Mutation Killers", () => {
     it('should verify exact logical OR - a.name || ""', async () => {
       const agents = [
         { ...mockAgent, name: "Test Agent" },
-        { ...mockAgent, id: "agent-2", name: void 0 }
+        { ...mockAgent, id: "agent-2", name: void 0 },
       ];
       mockGetLocalStorageItem.mockReturnValue(agents);
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -628,8 +672,8 @@ describe("useMarketplaceData - Mutation Killers", () => {
           sortBy: "alphabetical",
           user: null,
           activeTab: "agents",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -639,8 +683,8 @@ describe("useMarketplaceData - Mutation Killers", () => {
   });
   describe("fetchRepositoryAgents - exact falsy check and ternary", () => {
     it("should verify exact falsy check - storage is null", async () => {
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: null,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -649,8 +693,8 @@ describe("useMarketplaceData - Mutation Killers", () => {
           sortBy: "popular",
           user: null,
           activeTab: "repository",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -659,8 +703,8 @@ describe("useMarketplaceData - Mutation Killers", () => {
     });
     it("should verify exact falsy check - storage exists (should load)", async () => {
       mockStorage.getItem.mockReturnValue(JSON.stringify([mockAgent]));
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -669,8 +713,8 @@ describe("useMarketplaceData - Mutation Killers", () => {
           sortBy: "popular",
           user: null,
           activeTab: "repository",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -679,8 +723,8 @@ describe("useMarketplaceData - Mutation Killers", () => {
     });
     it("should verify exact ternary - savedAgents ? JSON.parse(savedAgents) : []", async () => {
       mockStorage.getItem.mockReturnValue(JSON.stringify([mockAgent]));
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -689,8 +733,8 @@ describe("useMarketplaceData - Mutation Killers", () => {
           sortBy: "popular",
           user: null,
           activeTab: "repository",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -699,8 +743,8 @@ describe("useMarketplaceData - Mutation Killers", () => {
     });
     it("should verify exact ternary - savedAgents is null (should use [])", async () => {
       mockStorage.getItem.mockReturnValue(null);
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -709,8 +753,8 @@ describe("useMarketplaceData - Mutation Killers", () => {
           sortBy: "popular",
           user: null,
           activeTab: "repository",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -719,8 +763,8 @@ describe("useMarketplaceData - Mutation Killers", () => {
     });
     it('should verify exact logical OR - sortBy === "popular" || sortBy === "recent"', async () => {
       mockStorage.getItem.mockReturnValue(JSON.stringify([mockAgent]));
-      const { result: result1 } = renderHook(
-        () => useMarketplaceData({
+      const { result: result1 } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -729,14 +773,14 @@ describe("useMarketplaceData - Mutation Killers", () => {
           sortBy: "popular",
           user: null,
           activeTab: "repository",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(result1.current.loading).toBe(false);
       });
-      const { result: result2 } = renderHook(
-        () => useMarketplaceData({
+      const { result: result2 } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -745,8 +789,8 @@ describe("useMarketplaceData - Mutation Killers", () => {
           sortBy: "recent",
           user: null,
           activeTab: "repository",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(result2.current.loading).toBe(false);
@@ -758,10 +802,10 @@ describe("useMarketplaceData - Mutation Killers", () => {
   describe("useEffect - exact equality checks for activeTab routing", () => {
     it('should verify exact equality - activeTab === "repository"', async () => {
       mockHttpClient.get.mockResolvedValue({
-        json: async () => [mockTemplate]
+        json: async () => [mockTemplate],
       });
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -770,8 +814,8 @@ describe("useMarketplaceData - Mutation Killers", () => {
           sortBy: "popular",
           user: null,
           activeTab: "repository",
-          repositorySubTab: "workflows"
-        })
+          repositorySubTab: "workflows",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -780,8 +824,8 @@ describe("useMarketplaceData - Mutation Killers", () => {
     });
     it('should verify exact equality - activeTab !== "repository" && !== "workflows-of-workflows" (should fetch agents)', async () => {
       mockGetLocalStorageItem.mockReturnValue([mockAgent]);
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -790,8 +834,8 @@ describe("useMarketplaceData - Mutation Killers", () => {
           sortBy: "popular",
           user: null,
           activeTab: "agents",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -800,14 +844,14 @@ describe("useMarketplaceData - Mutation Killers", () => {
     });
     it('should verify exact equality - activeTab === "workflows-of-workflows"', async () => {
       mockHttpClient.get.mockResolvedValue({
-        json: async () => [mockTemplate]
+        json: async () => [mockTemplate],
       });
       mockHttpClient.post.mockResolvedValue({
         ok: true,
-        json: async () => ({ nodes: [] })
+        json: async () => ({ nodes: [] }),
       });
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -816,8 +860,8 @@ describe("useMarketplaceData - Mutation Killers", () => {
           sortBy: "popular",
           user: null,
           activeTab: "workflows-of-workflows",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -826,10 +870,10 @@ describe("useMarketplaceData - Mutation Killers", () => {
     });
     it('should verify exact equality - repositorySubTab === "workflows"', async () => {
       mockHttpClient.get.mockResolvedValue({
-        json: async () => [mockTemplate]
+        json: async () => [mockTemplate],
       });
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -838,8 +882,8 @@ describe("useMarketplaceData - Mutation Killers", () => {
           sortBy: "popular",
           user: null,
           activeTab: "repository",
-          repositorySubTab: "workflows"
-        })
+          repositorySubTab: "workflows",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -848,8 +892,8 @@ describe("useMarketplaceData - Mutation Killers", () => {
     });
     it('should verify exact equality - repositorySubTab !== "workflows" (should fetch agents)', async () => {
       mockStorage.getItem.mockReturnValue(JSON.stringify([mockAgent]));
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -858,8 +902,8 @@ describe("useMarketplaceData - Mutation Killers", () => {
           sortBy: "popular",
           user: null,
           activeTab: "repository",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -870,14 +914,14 @@ describe("useMarketplaceData - Mutation Killers", () => {
   describe("fetchWorkflowsOfWorkflows - logical OR operators", () => {
     it("should verify exact logical OR - workflowResponse.ok check", async () => {
       mockHttpClient.get.mockResolvedValue({
-        json: async () => [mockTemplate]
+        json: async () => [mockTemplate],
       });
       mockHttpClient.post.mockResolvedValue({
         ok: true,
-        json: async () => ({ nodes: [] })
+        json: async () => ({ nodes: [] }),
       });
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -886,8 +930,8 @@ describe("useMarketplaceData - Mutation Killers", () => {
           sortBy: "popular",
           user: null,
           activeTab: "workflows-of-workflows",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -896,14 +940,14 @@ describe("useMarketplaceData - Mutation Killers", () => {
     });
     it("should verify exact logical OR - workflowResponse.ok is false (should skip)", async () => {
       mockHttpClient.get.mockResolvedValue({
-        json: async () => [mockTemplate]
+        json: async () => [mockTemplate],
       });
       mockHttpClient.post.mockResolvedValue({
         ok: false,
-        json: async () => ({})
+        json: async () => ({}),
       });
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -912,8 +956,8 @@ describe("useMarketplaceData - Mutation Killers", () => {
           sortBy: "popular",
           user: null,
           activeTab: "workflows-of-workflows",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -922,14 +966,14 @@ describe("useMarketplaceData - Mutation Killers", () => {
     });
     it("should verify exact AND - workflowDetail.nodes && Array.isArray(workflowDetail.nodes)", async () => {
       mockHttpClient.get.mockResolvedValue({
-        json: async () => [mockTemplate]
+        json: async () => [mockTemplate],
       });
       mockHttpClient.post.mockResolvedValue({
         ok: true,
-        json: async () => ({ nodes: [{ id: "node-1" }] })
+        json: async () => ({ nodes: [{ id: "node-1" }] }),
       });
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -938,8 +982,8 @@ describe("useMarketplaceData - Mutation Killers", () => {
           sortBy: "popular",
           user: null,
           activeTab: "workflows-of-workflows",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -948,19 +992,21 @@ describe("useMarketplaceData - Mutation Killers", () => {
     });
     it("should verify exact logical OR - hasWorkflowId || description.includes || name.includes || tags.some", async () => {
       mockHttpClient.get.mockResolvedValue({
-        json: async () => [mockTemplate]
+        json: async () => [mockTemplate],
       });
       mockHttpClient.post.mockResolvedValue({
         ok: true,
         json: async () => ({
-          nodes: [{
-            workflow_id: "workflow-1"
-            // First OR condition true
-          }]
-        })
+          nodes: [
+            {
+              workflow_id: "workflow-1",
+              // First OR condition true
+            },
+          ],
+        }),
       });
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -969,8 +1015,8 @@ describe("useMarketplaceData - Mutation Killers", () => {
           sortBy: "popular",
           user: null,
           activeTab: "workflows-of-workflows",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -979,18 +1025,20 @@ describe("useMarketplaceData - Mutation Killers", () => {
     });
     it('should verify exact logical OR - description.includes("workflow")', async () => {
       mockHttpClient.get.mockResolvedValue({
-        json: async () => [mockTemplate]
+        json: async () => [mockTemplate],
       });
       mockHttpClient.post.mockResolvedValue({
         ok: true,
         json: async () => ({
-          nodes: [{
-            description: "This is a workflow node"
-          }]
-        })
+          nodes: [
+            {
+              description: "This is a workflow node",
+            },
+          ],
+        }),
       });
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -999,8 +1047,8 @@ describe("useMarketplaceData - Mutation Killers", () => {
           sortBy: "popular",
           user: null,
           activeTab: "workflows-of-workflows",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -1009,18 +1057,20 @@ describe("useMarketplaceData - Mutation Killers", () => {
     });
     it('should verify exact logical OR - name.includes("workflow")', async () => {
       mockHttpClient.get.mockResolvedValue({
-        json: async () => [mockTemplate]
+        json: async () => [mockTemplate],
       });
       mockHttpClient.post.mockResolvedValue({
         ok: true,
         json: async () => ({
-          nodes: [{
-            name: "workflow node"
-          }]
-        })
+          nodes: [
+            {
+              name: "workflow node",
+            },
+          ],
+        }),
       });
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -1029,8 +1079,8 @@ describe("useMarketplaceData - Mutation Killers", () => {
           sortBy: "popular",
           user: null,
           activeTab: "workflows-of-workflows",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -1039,16 +1089,16 @@ describe("useMarketplaceData - Mutation Killers", () => {
     });
     it('should verify exact logical OR - tags.some(includes("workflow"))', async () => {
       mockHttpClient.get.mockResolvedValue({
-        json: async () => [{ ...mockTemplate, tags: ["workflow", "test"] }]
+        json: async () => [{ ...mockTemplate, tags: ["workflow", "test"] }],
       });
       mockHttpClient.post.mockResolvedValue({
         ok: true,
         json: async () => ({
-          nodes: [{}]
-        })
+          nodes: [{}],
+        }),
       });
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -1057,8 +1107,8 @@ describe("useMarketplaceData - Mutation Killers", () => {
           sortBy: "popular",
           user: null,
           activeTab: "workflows-of-workflows",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -1067,16 +1117,18 @@ describe("useMarketplaceData - Mutation Killers", () => {
     });
     it('should verify exact logical OR - workflowDescription.includes("workflow of workflows")', async () => {
       mockHttpClient.get.mockResolvedValue({
-        json: async () => [{ ...mockTemplate, description: "This is a workflow of workflows" }]
+        json: async () => [
+          { ...mockTemplate, description: "This is a workflow of workflows" },
+        ],
       });
       mockHttpClient.post.mockResolvedValue({
         ok: true,
         json: async () => ({
-          nodes: []
-        })
+          nodes: [],
+        }),
       });
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -1085,8 +1137,8 @@ describe("useMarketplaceData - Mutation Killers", () => {
           sortBy: "popular",
           user: null,
           activeTab: "workflows-of-workflows",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -1095,18 +1147,20 @@ describe("useMarketplaceData - Mutation Killers", () => {
     });
     it("should verify exact logical OR - hasWorkflowReference || isWorkflowOfWorkflows", async () => {
       mockHttpClient.get.mockResolvedValue({
-        json: async () => [mockTemplate]
+        json: async () => [mockTemplate],
       });
       mockHttpClient.post.mockResolvedValue({
         ok: true,
         json: async () => ({
-          nodes: [{
-            workflow_id: "workflow-1"
-          }]
-        })
+          nodes: [
+            {
+              workflow_id: "workflow-1",
+            },
+          ],
+        }),
       });
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -1115,8 +1169,8 @@ describe("useMarketplaceData - Mutation Killers", () => {
           sortBy: "popular",
           user: null,
           activeTab: "workflows-of-workflows",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -1128,8 +1182,8 @@ describe("useMarketplaceData - Mutation Killers", () => {
     it("should verify optional chaining - user?.id exists", async () => {
       const agents = [{ ...mockAgent, author_id: null }];
       mockGetLocalStorageItem.mockReturnValue(agents);
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -1138,8 +1192,8 @@ describe("useMarketplaceData - Mutation Killers", () => {
           sortBy: "popular",
           user: { id: "user-1" },
           activeTab: "agents",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -1149,8 +1203,8 @@ describe("useMarketplaceData - Mutation Killers", () => {
     it("should verify optional chaining - user is null (should not access id)", async () => {
       const agents = [mockAgent];
       mockGetLocalStorageItem.mockReturnValue(agents);
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -1159,8 +1213,8 @@ describe("useMarketplaceData - Mutation Killers", () => {
           sortBy: "popular",
           user: null,
           activeTab: "agents",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);

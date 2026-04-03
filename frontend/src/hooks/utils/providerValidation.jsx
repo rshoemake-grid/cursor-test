@@ -15,7 +15,11 @@ function hasProviderModels(provider) {
   return models != null && Array.isArray(models) && models.length > 0;
 }
 function canExtractModelsFromProvider(provider) {
-  return isProviderValid(provider) && isProviderEnabled(provider) && hasProviderModels(provider);
+  return (
+    isProviderValid(provider) &&
+    isProviderEnabled(provider) &&
+    hasProviderModels(provider)
+  );
 }
 function isValidProvidersArray(providers) {
   return Array.isArray(providers);
@@ -36,5 +40,5 @@ export {
   isProviderEnabled,
   isProviderValid,
   isValidData,
-  isValidProvidersArray
+  isValidProvidersArray,
 };

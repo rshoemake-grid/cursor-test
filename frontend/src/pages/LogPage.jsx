@@ -1,4 +1,3 @@
-import { Fragment, jsx, jsxs } from "react/jsx-runtime";
 import { useState, useMemo } from "react";
 import PropTypes from "prop-types";
 import { useNavigate } from "react-router-dom";
@@ -20,7 +19,10 @@ import { useBulkOperations } from "../hooks/log/useBulkOperations";
 import { useExecutionNotifications } from "../hooks/log/useExecutionNotifications";
 import { useToast } from "../hooks/utils/useToast";
 import { applyExecutionFilters } from "../utils/executionFilters";
-import { exportExecutionsToJSON, exportExecutionsToCSV } from "../utils/exportFormatters";
+import {
+  exportExecutionsToJSON,
+  exportExecutionsToCSV,
+} from "../utils/exportFormatters";
 import { api } from "../api/client";
 import { showConfirm } from "../utils/confirm";
 import { extractApiErrorMessage } from "../hooks/utils/apiUtils";
@@ -29,7 +31,7 @@ function LogPage({ apiClient: injectedApiClient } = {}) {
   const toast = useToast();
   const [filters, setFilters] = useState({
     sortBy: "started_at",
-    sortOrder: "desc"
+    sortOrder: "desc",
   });
   const [bulkMode, setBulkMode] = useState(false);
   const [selectedExecution, setSelectedExecution] = useState(null);
@@ -37,14 +39,28 @@ function LogPage({ apiClient: injectedApiClient } = {}) {
   const [searchQuery, setSearchQuery] = useState("");
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
   const [advancedFilters, setAdvancedFilters] = useState({});
-  const { data: executions = [], isLoading: loading, error, refetch } = useExecutionListQuery({
+  const {
+    data: executions = [],
+    isLoading: loading,
+    error,
+    refetch,
+  } = useExecutionListQuery({
     apiClient: injectedApiClient || api,
     refetchInterval: 5e3,
-    filters: filters.status ? {
-      status: filters.status.join(","),
-      workflow_id: filters.workflowId,
-      limit: 100
-    } : filters.workflowId ? { workflow_id: filters.workflowId, limit: 100 } : { limit: 100 }
+    filters: filters.status
+      ? {
+          status: filters.status.join(","),
+          workflow_id: filters.workflowId,
+          limit: 100,
+        }
+      : filters.workflowId
+        ? {
+            workflow_id: filters.workflowId,
+            limit: 100,
+          }
+        : {
+            limit: 100,
+          },
   });
   const handleExecutionClick = (executionId) => {
     if (bulkMode) {
@@ -62,17 +78,25 @@ function LogPage({ apiClient: injectedApiClient } = {}) {
   const baseFilteredExecutions = useMemo(() => {
     return applyExecutionFilters(executions, filters);
   }, [executions, filters]);
-  const { filteredExecutions: advancedFilteredExecutions, filterCount } = useAdvancedFilters({
-    executions: baseFilteredExecutions,
-    filters: advancedFilters
-  });
+  const { filteredExecutions: advancedFilteredExecutions, filterCount } =
+    useAdvancedFilters({
+      executions: baseFilteredExecutions,
+      filters: advancedFilters,
+    });
   const finalFilteredExecutions = useMemo(() => {
     if (!searchQuery.trim()) {
       return advancedFilteredExecutions;
     }
     const query = searchQuery.toLowerCase();
     return advancedFilteredExecutions.filter((execution) => {
-      return execution.execution_id.toLowerCase().includes(query) || execution.workflow_id.toLowerCase().includes(query) || execution.status.toLowerCase().includes(query) || execution.current_node && execution.current_node.toLowerCase().includes(query) || execution.error && execution.error.toLowerCase().includes(query);
+      return (
+        execution.execution_id.toLowerCase().includes(query) ||
+        execution.workflow_id.toLowerCase().includes(query) ||
+        execution.status.toLowerCase().includes(query) ||
+        (execution.current_node &&
+          execution.current_node.toLowerCase().includes(query)) ||
+        (execution.error && execution.error.toLowerCase().includes(query))
+      );
     });
   }, [advancedFilteredExecutions, searchQuery]);
   const {
@@ -82,10 +106,10 @@ function LogPage({ apiClient: injectedApiClient } = {}) {
     setCurrentPage,
     setItemsPerPage,
     itemsPerPage,
-    totalItems
+    totalItems,
   } = useExecutionPagination({
     executions: finalFilteredExecutions,
-    itemsPerPage: 25
+    itemsPerPage: 25,
   });
   useKeyboardShortcuts({
     shortcuts: [
@@ -93,10 +117,12 @@ function LogPage({ apiClient: injectedApiClient } = {}) {
         key: "f",
         ctrlKey: true,
         handler: () => {
-          const searchInput = document.querySelector('input[type="text"][placeholder*="Search"]');
+          const searchInput = document.querySelector(
+            'input[type="text"][placeholder*="Search"]',
+          );
           searchInput?.focus();
         },
-        description: "Focus search"
+        description: "Focus search",
       },
       {
         key: "b",
@@ -104,7 +130,7 @@ function LogPage({ apiClient: injectedApiClient } = {}) {
         handler: () => {
           setBulkMode(!bulkMode);
         },
-        description: "Toggle bulk mode"
+        description: "Toggle bulk mode",
       },
       {
         key: "Escape",
@@ -121,10 +147,10 @@ function LogPage({ apiClient: injectedApiClient } = {}) {
             bulkOperations.clearSelection();
           }
         },
-        description: "Close modals/clear selections"
-      }
+        description: "Close modals/clear selections",
+      },
     ],
-    enabled: true
+    enabled: true,
   });
   const handleExportJSON = () => {
     exportExecutionsToJSON(finalFilteredExecutions);
@@ -141,8 +167,8 @@ function LogPage({ apiClient: injectedApiClient } = {}) {
         title: "Delete Executions",
         confirmText: "Delete",
         cancelText: "Cancel",
-        type: "danger"
-      }
+        type: "danger",
+      },
     );
     if (!confirmed) {
       return;
@@ -157,213 +183,238 @@ function LogPage({ apiClient: injectedApiClient } = {}) {
           succeeded++;
         } catch (err) {
           failed++;
-          toast.error(`Failed to cancel ${id.slice(0, 8)}...: ${extractApiErrorMessage(err, "Unknown error")}`);
+          toast.error(
+            `Failed to cancel ${id.slice(0, 8)}...: ${extractApiErrorMessage(err, "Unknown error")}`,
+          );
         }
       }
       if (succeeded > 0) {
-        toast.success(`Cancelled ${succeeded} execution(s)${failed > 0 ? ` (${failed} failed)` : ""}`);
+        toast.success(
+          `Cancelled ${succeeded} execution(s)${failed > 0 ? ` (${failed} failed)` : ""}`,
+        );
         refetch();
       }
     } catch (error2) {
-      toast.error(`Failed to cancel executions: ${extractApiErrorMessage(error2, "Unknown error")}`);
+      toast.error(
+        `Failed to cancel executions: ${extractApiErrorMessage(error2, "Unknown error")}`,
+      );
       throw error2;
     }
   };
   const bulkOperations = useBulkOperations({
     executions: paginatedExecutions,
-    onDelete: handleBulkDelete
+    onDelete: handleBulkDelete,
   });
   useExecutionNotifications({
     executions,
     onSuccess: (execution) => {
-      toast.success(`Execution ${execution.execution_id.slice(0, 8)}... completed successfully`);
+      toast.success(
+        `Execution ${execution.execution_id.slice(0, 8)}... completed successfully`,
+      );
     },
     onError: (execution) => {
       toast.error(
-        `Execution ${execution.execution_id.slice(0, 8)}... failed${execution.error ? `: ${execution.error}` : ""}`
+        `Execution ${execution.execution_id.slice(0, 8)}... failed${execution.error ? `: ${execution.error}` : ""}`,
       );
     },
-    enabled: !bulkMode
+    enabled: !bulkMode,
     // Only show notifications when not in bulk mode
   });
   if (loading) {
-    return /* @__PURE__ */ jsx("div", { className: "h-full overflow-auto bg-gray-50 p-8", children: /* @__PURE__ */ jsx("div", { className: "max-w-6xl mx-auto", children: /* @__PURE__ */ jsx("div", { className: "flex items-center justify-center h-64", children: /* @__PURE__ */ jsx("div", { className: "text-gray-500", children: "Loading executions..." }) }) }) });
+    return (
+      <div className="h-full overflow-auto bg-gray-50 p-8">
+        <div className="max-w-6xl mx-auto">
+          <div className="flex items-center justify-center h-64">
+            <div className="text-gray-500">Loading executions...</div>
+          </div>
+        </div>
+      </div>
+    );
   }
   if (error) {
-    return /* @__PURE__ */ jsx("div", { className: "h-full overflow-auto bg-gray-50 p-8", children: /* @__PURE__ */ jsx("div", { className: "max-w-6xl mx-auto", children: /* @__PURE__ */ jsx("div", { className: "flex items-center justify-center h-64", children: /* @__PURE__ */ jsxs("div", { className: "text-red-500", children: [
-      "Error: ",
-      extractApiErrorMessage(error, "Unknown error")
-    ] }) }) }) });
+    return (
+      <div className="h-full overflow-auto bg-gray-50 p-8">
+        <div className="max-w-6xl mx-auto">
+          <div className="flex items-center justify-center h-64">
+            <div className="text-red-500">
+              Error: {extractApiErrorMessage(error, "Unknown error")}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
   }
-  return /* @__PURE__ */ jsxs(Fragment, { children: [
-    /* @__PURE__ */ jsx(ToastContainer, { toasts: toast.toasts, onRemoveToast: toast.removeToast }),
-    /* @__PURE__ */ jsx(
-      ExecutionDetailsModal,
-      {
-        execution: selectedExecution,
-        isOpen: isDetailsModalOpen,
-        onClose: () => {
+  return (
+    <>
+      <ToastContainer toasts={toast.toasts} onRemoveToast={toast.removeToast} />
+      <ExecutionDetailsModal
+        execution={selectedExecution}
+        isOpen={isDetailsModalOpen}
+        onClose={() => {
           setIsDetailsModalOpen(false);
           setSelectedExecution(null);
-        },
-        apiClient: injectedApiClient || api
-      }
-    ),
-    /* @__PURE__ */ jsx("div", { className: "h-full overflow-auto bg-gray-50 p-8", children: /* @__PURE__ */ jsxs("div", { className: "max-w-6xl mx-auto", children: [
-      /* @__PURE__ */ jsxs("div", { className: "mb-6 flex items-center justify-between", children: [
-        /* @__PURE__ */ jsxs("div", { children: [
-          /* @__PURE__ */ jsx("h1", { className: "text-3xl font-bold text-gray-900 mb-2", children: "Execution Log" }),
-          /* @__PURE__ */ jsxs("p", { className: "text-gray-600", children: [
-            totalItems,
-            " execution",
-            totalItems !== 1 ? "s" : "",
-            totalItems !== finalFilteredExecutions.length && ` of ${finalFilteredExecutions.length} filtered`,
-            finalFilteredExecutions.length !== executions.length && ` (${executions.length} total)`
-          ] })
-        ] }),
-        finalFilteredExecutions.length > 0 && /* @__PURE__ */ jsxs("div", { className: "flex gap-2", children: [
-          /* @__PURE__ */ jsx(
-            "button",
-            {
-              onClick: () => setBulkMode(!bulkMode),
-              className: `px-4 py-2 rounded-lg transition-colors flex items-center gap-2 text-sm ${bulkMode ? "bg-primary-600 text-white hover:bg-primary-700" : "bg-gray-100 text-gray-700 hover:bg-gray-200"}`,
-              children: bulkMode ? "Cancel Selection" : "Select Multiple"
-            }
-          ),
-          /* @__PURE__ */ jsxs(
-            "button",
-            {
-              onClick: handleExportJSON,
-              className: "px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors flex items-center gap-2 text-sm",
-              children: [
-                /* @__PURE__ */ jsx(Download, { className: "w-4 h-4" }),
-                "Export JSON"
-              ]
-            }
-          ),
-          /* @__PURE__ */ jsxs(
-            "button",
-            {
-              onClick: handleExportCSV,
-              className: "px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors flex items-center gap-2 text-sm",
-              children: [
-                /* @__PURE__ */ jsx(Download, { className: "w-4 h-4" }),
-                "Export CSV"
-              ]
-            }
-          )
-        ] })
-      ] }),
-      bulkMode && /* @__PURE__ */ jsx(
-        BulkActionsBar,
-        {
-          selectedCount: bulkOperations.selectedCount,
-          onDelete: bulkOperations.deleteSelected,
-          onClearSelection: () => {
-            bulkOperations.clearSelection();
-            setBulkMode(false);
-          },
-          isDeleting: bulkOperations.isDeleting
-        }
-      ),
-      /* @__PURE__ */ jsxs("div", { className: "mb-4", children: [
-        /* @__PURE__ */ jsx(
-          AdvancedSearch,
-          {
-            value: searchQuery,
-            onSearch: setSearchQuery,
-            onClear: () => setSearchQuery(""),
-            placeholder: "Search by ID, workflow, status, node, or error...",
-            showAdvanced: showAdvancedFilters,
-            onToggleAdvanced: () => setShowAdvancedFilters(!showAdvancedFilters)
-          }
-        ),
-        showAdvancedFilters && /* @__PURE__ */ jsx("div", { className: "mt-4", children: /* @__PURE__ */ jsx(
-          AdvancedFiltersPanel,
-          {
-            filters: advancedFilters,
-            onFiltersChange: setAdvancedFilters,
-            onClose: () => setShowAdvancedFilters(false)
-          }
-        ) }),
-        filterCount > 0 && /* @__PURE__ */ jsxs("div", { className: "mt-2 text-sm text-gray-600", children: [
-          filterCount,
-          " active filter",
-          filterCount !== 1 ? "s" : ""
-        ] })
-      ] }),
-      /* @__PURE__ */ jsx(
-        ExecutionFilters,
-        {
-          filters,
-          onFiltersChange: setFilters
-        }
-      ),
-      finalFilteredExecutions.length === 0 ? /* @__PURE__ */ jsxs("div", { className: "bg-white rounded-lg shadow-sm border border-gray-200 p-12 text-center", children: [
-        /* @__PURE__ */ jsx(AlertCircle, { className: "w-12 h-12 mx-auto mb-4 text-gray-400" }),
-        /* @__PURE__ */ jsx("p", { className: "text-lg font-medium text-gray-900 mb-2", children: "No executions yet" }),
-        /* @__PURE__ */ jsx("p", { className: "text-sm text-gray-600", children: "Execute a workflow to see execution logs here" })
-      ] }) : /* @__PURE__ */ jsxs(Fragment, { children: [
-        /* @__PURE__ */ jsxs("div", { className: "space-y-3 mb-6", children: [
-          bulkMode && /* @__PURE__ */ jsxs("div", { className: "flex items-center gap-2 mb-2 px-2", children: [
-            /* @__PURE__ */ jsx(
-              "input",
-              {
-                type: "checkbox",
-                checked: bulkOperations.isAllSelected,
-                onChange: bulkOperations.toggleSelectAll,
-                className: "w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500",
-                "aria-label": "Select all executions"
+        }}
+        apiClient={injectedApiClient || api}
+      />
+      <div className="h-full overflow-auto bg-gray-50 p-8">
+        <div className="max-w-6xl mx-auto">
+          <div className="mb-6 flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">
+                Execution Log
+              </h1>
+              <p className="text-gray-600">
+                {totalItems} execution{totalItems !== 1 ? "s" : ""}
+                {totalItems !== finalFilteredExecutions.length &&
+                  ` of ${finalFilteredExecutions.length} filtered`}
+                {finalFilteredExecutions.length !== executions.length &&
+                  ` (${executions.length} total)`}
+              </p>
+            </div>
+            {finalFilteredExecutions.length > 0 && (
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setBulkMode(!bulkMode)}
+                  className={`px-4 py-2 rounded-lg transition-colors flex items-center gap-2 text-sm ${bulkMode ? "bg-primary-600 text-white hover:bg-primary-700" : "bg-gray-100 text-gray-700 hover:bg-gray-200"}`}
+                >
+                  {bulkMode ? "Cancel Selection" : "Select Multiple"}
+                </button>
+                <button
+                  onClick={handleExportJSON}
+                  className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors flex items-center gap-2 text-sm"
+                >
+                  <Download className="w-4 h-4" />
+                  Export JSON
+                </button>
+                <button
+                  onClick={handleExportCSV}
+                  className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors flex items-center gap-2 text-sm"
+                >
+                  <Download className="w-4 h-4" />
+                  Export CSV
+                </button>
+              </div>
+            )}
+          </div>
+          {bulkMode && (
+            <BulkActionsBar
+              selectedCount={bulkOperations.selectedCount}
+              onDelete={bulkOperations.deleteSelected}
+              onClearSelection={() => {
+                bulkOperations.clearSelection();
+                setBulkMode(false);
+              }}
+              isDeleting={bulkOperations.isDeleting}
+            />
+          )}
+          <div className="mb-4">
+            <AdvancedSearch
+              value={searchQuery}
+              onSearch={setSearchQuery}
+              onClear={() => setSearchQuery("")}
+              placeholder="Search by ID, workflow, status, node, or error..."
+              showAdvanced={showAdvancedFilters}
+              onToggleAdvanced={() =>
+                setShowAdvancedFilters(!showAdvancedFilters)
               }
-            ),
-            /* @__PURE__ */ jsx("span", { className: "text-sm text-gray-600", children: bulkOperations.isAllSelected ? "Deselect all" : "Select all" })
-          ] }),
-          paginatedExecutions.length > 50 ? /* @__PURE__ */ jsx(
-            VirtualizedList,
-            {
-              items: paginatedExecutions,
-              itemHeight: 120,
-              containerHeight: 600,
-              renderItem: (execution) => /* @__PURE__ */ jsx("div", { className: "mb-3", children: /* @__PURE__ */ jsx(
-                ExecutionListItem,
-                {
-                  execution,
-                  onExecutionClick: handleExecutionClick,
-                  isSelected: bulkOperations.selectedIds.has(execution.execution_id),
-                  onSelect: bulkOperations.toggleSelection,
-                  showCheckbox: bulkMode
-                },
-                execution.execution_id
-              ) })
-            }
-          ) : paginatedExecutions.map((execution) => /* @__PURE__ */ jsx(
-            ExecutionListItem,
-            {
-              execution,
-              onExecutionClick: handleExecutionClick,
-              isSelected: bulkOperations.selectedIds.has(execution.execution_id),
-              onSelect: bulkOperations.toggleSelection,
-              showCheckbox: bulkMode
-            },
-            execution.execution_id
-          ))
-        ] }),
-        /* @__PURE__ */ jsx(
-          Pagination,
-          {
-            currentPage,
-            totalPages,
-            totalItems,
-            itemsPerPage,
-            onPageChange: setCurrentPage,
-            onItemsPerPageChange: setItemsPerPage
-          }
-        )
-      ] })
-    ] }) })
-  ] });
+            />
+            {showAdvancedFilters && (
+              <div className="mt-4">
+                <AdvancedFiltersPanel
+                  filters={advancedFilters}
+                  onFiltersChange={setAdvancedFilters}
+                  onClose={() => setShowAdvancedFilters(false)}
+                />
+              </div>
+            )}
+            {filterCount > 0 && (
+              <div className="mt-2 text-sm text-gray-600">
+                {filterCount} active filter{filterCount !== 1 ? "s" : ""}
+              </div>
+            )}
+          </div>
+          <ExecutionFilters filters={filters} onFiltersChange={setFilters} />
+          {finalFilteredExecutions.length === 0 ? (
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-12 text-center">
+              <AlertCircle className="w-12 h-12 mx-auto mb-4 text-gray-400" />
+              <p className="text-lg font-medium text-gray-900 mb-2">
+                No executions yet
+              </p>
+              <p className="text-sm text-gray-600">
+                Execute a workflow to see execution logs here
+              </p>
+            </div>
+          ) : (
+            <>
+              <div className="space-y-3 mb-6">
+                {bulkMode && (
+                  <div className="flex items-center gap-2 mb-2 px-2">
+                    <input
+                      type="checkbox"
+                      checked={bulkOperations.isAllSelected}
+                      onChange={bulkOperations.toggleSelectAll}
+                      className="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
+                      aria-label="Select all executions"
+                    />
+                    <span className="text-sm text-gray-600">
+                      {bulkOperations.isAllSelected
+                        ? "Deselect all"
+                        : "Select all"}
+                    </span>
+                  </div>
+                )}
+                {paginatedExecutions.length > 50 ? (
+                  <VirtualizedList
+                    items={paginatedExecutions}
+                    itemHeight={120}
+                    containerHeight={600}
+                    renderItem={(execution) => (
+                      <div
+                        key={execution.execution_id}
+                        className="mb-3"
+                      >
+                        <ExecutionListItem
+                          execution={execution}
+                          onExecutionClick={handleExecutionClick}
+                          isSelected={bulkOperations.selectedIds.has(
+                            execution.execution_id,
+                          )}
+                          onSelect={bulkOperations.toggleSelection}
+                          showCheckbox={bulkMode}
+                        />
+                      </div>
+                    )}
+                  />
+                ) : (
+                  paginatedExecutions.map((execution) => (
+                    <ExecutionListItem
+                      key={execution.execution_id}
+                      execution={execution}
+                      onExecutionClick={handleExecutionClick}
+                      isSelected={bulkOperations.selectedIds.has(
+                        execution.execution_id,
+                      )}
+                      onSelect={bulkOperations.toggleSelection}
+                      showCheckbox={bulkMode}
+                    />
+                  ))
+                )}
+              </div>
+              <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                totalItems={totalItems}
+                itemsPerPage={itemsPerPage}
+                onPageChange={setCurrentPage}
+                onItemsPerPageChange={setItemsPerPage}
+              />
+            </>
+          )}
+        </div>
+      </div>
+    </>
+  );
 }
-
 LogPage.propTypes = {
   apiClient: PropTypes.shape({
     listExecutions: PropTypes.func,
@@ -372,7 +423,4 @@ LogPage.propTypes = {
     downloadExecutionLogs: PropTypes.func,
   }),
 };
-
-export {
-  LogPage as default
-};
+export { LogPage as default };

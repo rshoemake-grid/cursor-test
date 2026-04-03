@@ -1,15 +1,15 @@
 import {
   logSkipConnectionReason,
-  logSkipReconnectReason
+  logSkipReconnectReason,
 } from "./websocketLogging";
 import { EXECUTION_STATUS } from "./websocketConstants";
 import { isTemporaryExecutionId } from "./executionIdValidation";
 jest.mock("./executionIdValidation", () => ({
-  isTemporaryExecutionId: jest.fn()
+  isTemporaryExecutionId: jest.fn(),
 }));
 describe("websocketLogging", () => {
   const mockLogger = {
-    debug: jest.fn()
+    debug: jest.fn(),
   };
   beforeEach(() => {
     jest.clearAllMocks();
@@ -19,53 +19,33 @@ describe("websocketLogging", () => {
     it("should log skip reason for temporary execution ID", () => {
       isTemporaryExecutionId.mockReturnValue(true);
       const executionId = "pending-123";
-      logSkipConnectionReason(
-        executionId,
-        void 0,
-        void 0,
-        mockLogger
-      );
+      logSkipConnectionReason(executionId, void 0, void 0, mockLogger);
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        `[WebSocket] Skipping connection to temporary execution ID: ${executionId}`
+        `[WebSocket] Skipping connection to temporary execution ID: ${executionId}`,
       );
     });
     it("should log skip reason when execution is completed", () => {
       const executionId = "exec-123";
       const executionStatus = EXECUTION_STATUS.COMPLETED;
-      logSkipConnectionReason(
-        executionId,
-        executionStatus,
-        void 0,
-        mockLogger
-      );
+      logSkipConnectionReason(executionId, executionStatus, void 0, mockLogger);
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        `[WebSocket] Skipping connection - execution ${executionId} is ${executionStatus}`
+        `[WebSocket] Skipping connection - execution ${executionId} is ${executionStatus}`,
       );
     });
     it("should log skip reason when execution is failed", () => {
       const executionId = "exec-123";
       const executionStatus = EXECUTION_STATUS.FAILED;
-      logSkipConnectionReason(
-        executionId,
-        executionStatus,
-        void 0,
-        mockLogger
-      );
+      logSkipConnectionReason(executionId, executionStatus, void 0, mockLogger);
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        `[WebSocket] Skipping connection - execution ${executionId} is ${executionStatus}`
+        `[WebSocket] Skipping connection - execution ${executionId} is ${executionStatus}`,
       );
     });
     it("should use lastKnownStatus when executionStatus is undefined", () => {
       const executionId = "exec-123";
       const lastKnownStatus = EXECUTION_STATUS.COMPLETED;
-      logSkipConnectionReason(
-        executionId,
-        void 0,
-        lastKnownStatus,
-        mockLogger
-      );
+      logSkipConnectionReason(executionId, void 0, lastKnownStatus, mockLogger);
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        `[WebSocket] Skipping connection - execution ${executionId} is ${lastKnownStatus}`
+        `[WebSocket] Skipping connection - execution ${executionId} is ${lastKnownStatus}`,
       );
     });
     it("should prioritize executionStatus over lastKnownStatus", () => {
@@ -76,30 +56,20 @@ describe("websocketLogging", () => {
         executionId,
         executionStatus,
         lastKnownStatus,
-        mockLogger
+        mockLogger,
       );
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        `[WebSocket] Skipping connection - execution ${executionId} is ${executionStatus}`
+        `[WebSocket] Skipping connection - execution ${executionId} is ${executionStatus}`,
       );
     });
     it("should not log when status is not completed or failed", () => {
       const executionId = "exec-123";
       const executionStatus = EXECUTION_STATUS.RUNNING;
-      logSkipConnectionReason(
-        executionId,
-        executionStatus,
-        void 0,
-        mockLogger
-      );
+      logSkipConnectionReason(executionId, executionStatus, void 0, mockLogger);
       expect(mockLogger.debug).not.toHaveBeenCalled();
     });
     it("should not log when execution ID is null and not temporary", () => {
-      logSkipConnectionReason(
-        null,
-        void 0,
-        void 0,
-        mockLogger
-      );
+      logSkipConnectionReason(null, void 0, void 0, mockLogger);
       expect(mockLogger.debug).not.toHaveBeenCalled();
     });
   });
@@ -118,10 +88,10 @@ describe("websocketLogging", () => {
         void 0,
         event,
         mockIsCleanClosure,
-        mockLogger
+        mockLogger,
       );
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        `[WebSocket] Skipping reconnect for temporary execution ID: ${executionId}`
+        `[WebSocket] Skipping reconnect for temporary execution ID: ${executionId}`,
       );
     });
     it("should log skip reason when execution is completed", () => {
@@ -134,10 +104,10 @@ describe("websocketLogging", () => {
         void 0,
         event,
         mockIsCleanClosure,
-        mockLogger
+        mockLogger,
       );
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        `[WebSocket] Skipping reconnect - execution ${executionId} is ${executionStatus}`
+        `[WebSocket] Skipping reconnect - execution ${executionId} is ${executionStatus}`,
       );
     });
     it("should log skip reason when execution is failed", () => {
@@ -150,10 +120,10 @@ describe("websocketLogging", () => {
         void 0,
         event,
         mockIsCleanClosure,
-        mockLogger
+        mockLogger,
       );
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        `[WebSocket] Skipping reconnect - execution ${executionId} is ${executionStatus}`
+        `[WebSocket] Skipping reconnect - execution ${executionId} is ${executionStatus}`,
       );
     });
     it("should log skip reason when connection closed cleanly", () => {
@@ -167,10 +137,10 @@ describe("websocketLogging", () => {
         void 0,
         event,
         mockIsCleanClosure,
-        mockLogger
+        mockLogger,
       );
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        `[WebSocket] Connection closed cleanly, not reconnecting`
+        `[WebSocket] Connection closed cleanly, not reconnecting`,
       );
     });
     it("should use lastKnownStatus when executionStatus is undefined", () => {
@@ -183,10 +153,10 @@ describe("websocketLogging", () => {
         lastKnownStatus,
         event,
         mockIsCleanClosure,
-        mockLogger
+        mockLogger,
       );
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        `[WebSocket] Skipping reconnect - execution ${executionId} is ${lastKnownStatus}`
+        `[WebSocket] Skipping reconnect - execution ${executionId} is ${lastKnownStatus}`,
       );
     });
     it("should prioritize executionStatus over lastKnownStatus", () => {
@@ -200,10 +170,10 @@ describe("websocketLogging", () => {
         lastKnownStatus,
         event,
         mockIsCleanClosure,
-        mockLogger
+        mockLogger,
       );
       expect(mockLogger.debug).toHaveBeenCalledWith(
-        `[WebSocket] Skipping reconnect - execution ${executionId} is ${executionStatus}`
+        `[WebSocket] Skipping reconnect - execution ${executionId} is ${executionStatus}`,
       );
     });
     it("should not log when status is running and not clean closure", () => {
@@ -216,7 +186,7 @@ describe("websocketLogging", () => {
         void 0,
         event,
         mockIsCleanClosure,
-        mockLogger
+        mockLogger,
       );
       expect(mockLogger.debug).not.toHaveBeenCalled();
     });
@@ -230,7 +200,7 @@ describe("websocketLogging", () => {
         void 0,
         event,
         mockIsCleanClosure,
-        mockLogger
+        mockLogger,
       );
       expect(mockIsCleanClosure).toHaveBeenCalledWith(event);
     });
@@ -244,7 +214,7 @@ describe("websocketLogging", () => {
         void 0,
         event,
         mockIsCleanClosure,
-        mockLogger
+        mockLogger,
       );
       expect(mockIsCleanClosure).not.toHaveBeenCalled();
     });

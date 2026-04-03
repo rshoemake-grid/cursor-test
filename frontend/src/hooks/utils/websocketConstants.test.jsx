@@ -2,7 +2,7 @@ import {
   WS_CLOSE_CODES,
   WS_STATUS,
   WS_RECONNECT,
-  WS_CLOSE_REASONS
+  WS_CLOSE_REASONS,
 } from "./websocketConstants";
 describe("websocketConstants", () => {
   describe("WS_CLOSE_CODES", () => {

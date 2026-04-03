@@ -5,7 +5,7 @@ import {
   doesUserOwnItem,
   canUserDeleteItem,
   getUserId,
-  getUserDisplayName
+  getUserDisplayName,
 } from "./userValidation";
 describe("userValidation", () => {
   describe("isValidUser", () => {

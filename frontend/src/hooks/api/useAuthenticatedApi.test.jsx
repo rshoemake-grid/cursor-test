@@ -1,14 +1,18 @@
 import { renderHook } from "@testing-library/react";
-import { useAuthenticatedApi, HTTP_CLIENT_ERROR_MSG, URL_EMPTY_ERROR_MSG } from "./useAuthenticatedApi";
+import {
+  useAuthenticatedApi,
+  HTTP_CLIENT_ERROR_MSG,
+  URL_EMPTY_ERROR_MSG,
+} from "./useAuthenticatedApi";
 import { useAuth } from "../../contexts/AuthContext";
 import { API_CONFIG } from "../../config/constants";
 jest.mock("../../contexts/AuthContext", () => ({
-  useAuth: jest.fn()
+  useAuth: jest.fn(),
 }));
 jest.mock("../../types/adapters", () => ({
   defaultAdapters: {
-    createHttpClient: jest.fn()
-  }
+    createHttpClient: jest.fn(),
+  },
 }));
 const mockUseAuth = useAuth;
 describe("useAuthenticatedApi", () => {
@@ -27,7 +31,7 @@ describe("useAuthenticatedApi", () => {
       get: mockGet,
       post: mockPost,
       put: mockPut,
-      delete: mockDelete
+      delete: mockDelete,
     };
     mockUseAuth.mockReturnValue({
       token: "test-token",
@@ -35,7 +39,7 @@ describe("useAuthenticatedApi", () => {
       login: jest.fn(),
       register: jest.fn(),
       logout: jest.fn(),
-      isAuthenticated: true
+      isAuthenticated: true,
     });
   });
   afterEach(() => {
@@ -49,8 +53,8 @@ describe("useAuthenticatedApi", () => {
       { data: "test" },
       expect.objectContaining({
         "Content-Type": "application/json",
-        Authorization: "Bearer test-token"
-      })
+        Authorization: "Bearer test-token",
+      }),
     );
   });
   it("should not include Authorization header when token is missing", () => {
@@ -60,7 +64,7 @@ describe("useAuthenticatedApi", () => {
       login: jest.fn(),
       register: jest.fn(),
       logout: jest.fn(),
-      isAuthenticated: false
+      isAuthenticated: false,
     });
     const { result } = renderHook(() => useAuthenticatedApi(mockHttpClient));
     result.current.authenticatedPost("/test", { data: "test" });
@@ -68,28 +72,28 @@ describe("useAuthenticatedApi", () => {
       `${API_CONFIG.BASE_URL}/test`,
       { data: "test" },
       expect.objectContaining({
-        "Content-Type": "application/json"
-      })
+        "Content-Type": "application/json",
+      }),
     );
     expect(mockPost).toHaveBeenCalledWith(
       expect.any(String),
       expect.any(Object),
       expect.not.objectContaining({
-        Authorization: expect.any(String)
-      })
+        Authorization: expect.any(String),
+      }),
     );
   });
   it("should use custom apiBaseUrl when provided", () => {
     const customUrl = "https://custom-api.com/api";
-    const { result } = renderHook(
-      () => useAuthenticatedApi(mockHttpClient, customUrl)
+    const { result } = renderHook(() =>
+      useAuthenticatedApi(mockHttpClient, customUrl),
     );
     result.current.authenticatedGet("/test");
     expect(mockGet).toHaveBeenCalledWith(
       `${customUrl}/test`,
       expect.objectContaining({
-        Authorization: "Bearer test-token"
-      })
+        Authorization: "Bearer test-token",
+      }),
     );
   });
   it("should merge additional headers", () => {
@@ -97,7 +101,7 @@ describe("useAuthenticatedApi", () => {
     result.current.authenticatedPost(
       "/test",
       { data: "test" },
-      { "X-Custom-Header": "value" }
+      { "X-Custom-Header": "value" },
     );
     expect(mockPost).toHaveBeenCalledWith(
       expect.any(String),
@@ -105,8 +109,8 @@ describe("useAuthenticatedApi", () => {
       expect.objectContaining({
         "Content-Type": "application/json",
         Authorization: "Bearer test-token",
-        "X-Custom-Header": "value"
-      })
+        "X-Custom-Header": "value",
+      }),
     );
   });
   it("should handle GET requests", () => {
@@ -115,8 +119,8 @@ describe("useAuthenticatedApi", () => {
     expect(mockGet).toHaveBeenCalledWith(
       `${API_CONFIG.BASE_URL}/test`,
       expect.objectContaining({
-        Authorization: "Bearer test-token"
-      })
+        Authorization: "Bearer test-token",
+      }),
     );
   });
   it("should handle PUT requests", () => {
@@ -127,8 +131,8 @@ describe("useAuthenticatedApi", () => {
       { data: "test" },
       expect.objectContaining({
         "Content-Type": "application/json",
-        Authorization: "Bearer test-token"
-      })
+        Authorization: "Bearer test-token",
+      }),
     );
   });
   it("should handle DELETE requests", () => {
@@ -137,8 +141,8 @@ describe("useAuthenticatedApi", () => {
     expect(mockDelete).toHaveBeenCalledWith(
       `${API_CONFIG.BASE_URL}/test`,
       expect.objectContaining({
-        Authorization: "Bearer test-token"
-      })
+        Authorization: "Bearer test-token",
+      }),
     );
   });
   it("should handle GET requests without token", () => {
@@ -148,15 +152,15 @@ describe("useAuthenticatedApi", () => {
       login: jest.fn(),
       register: jest.fn(),
       logout: jest.fn(),
-      isAuthenticated: false
+      isAuthenticated: false,
     });
     const { result } = renderHook(() => useAuthenticatedApi(mockHttpClient));
     result.current.authenticatedGet("/test");
     expect(mockGet).toHaveBeenCalledWith(
       `${API_CONFIG.BASE_URL}/test`,
       expect.not.objectContaining({
-        Authorization: expect.any(String)
-      })
+        Authorization: expect.any(String),
+      }),
     );
   });
   it("should handle PUT requests without token", () => {
@@ -166,7 +170,7 @@ describe("useAuthenticatedApi", () => {
       login: jest.fn(),
       register: jest.fn(),
       logout: jest.fn(),
-      isAuthenticated: false
+      isAuthenticated: false,
     });
     const { result } = renderHook(() => useAuthenticatedApi(mockHttpClient));
     result.current.authenticatedPut("/test", { data: "test" });
@@ -174,15 +178,15 @@ describe("useAuthenticatedApi", () => {
       `${API_CONFIG.BASE_URL}/test`,
       { data: "test" },
       expect.objectContaining({
-        "Content-Type": "application/json"
-      })
+        "Content-Type": "application/json",
+      }),
     );
     expect(mockPut).toHaveBeenCalledWith(
       expect.any(String),
       expect.any(Object),
       expect.not.objectContaining({
-        Authorization: expect.any(String)
-      })
+        Authorization: expect.any(String),
+      }),
     );
   });
   it("should handle DELETE requests without token", () => {
@@ -192,15 +196,15 @@ describe("useAuthenticatedApi", () => {
       login: jest.fn(),
       register: jest.fn(),
       logout: jest.fn(),
-      isAuthenticated: false
+      isAuthenticated: false,
     });
     const { result } = renderHook(() => useAuthenticatedApi(mockHttpClient));
     result.current.authenticatedDelete("/test");
     expect(mockDelete).toHaveBeenCalledWith(
       `${API_CONFIG.BASE_URL}/test`,
       expect.not.objectContaining({
-        Authorization: expect.any(String)
-      })
+        Authorization: expect.any(String),
+      }),
     );
   });
   it("should handle additional headers overriding Content-Type", () => {
@@ -208,7 +212,7 @@ describe("useAuthenticatedApi", () => {
     result.current.authenticatedPost(
       "/test",
       { data: "test" },
-      { "Content-Type": "application/xml" }
+      { "Content-Type": "application/xml" },
     );
     expect(mockPost).toHaveBeenCalledWith(
       expect.any(String),
@@ -216,31 +220,33 @@ describe("useAuthenticatedApi", () => {
       expect.objectContaining({
         "Content-Type": "application/xml",
         // Additional headers should override
-        Authorization: "Bearer test-token"
-      })
+        Authorization: "Bearer test-token",
+      }),
     );
   });
   it("should handle additional headers with Authorization (token takes precedence)", () => {
     const { result } = renderHook(() => useAuthenticatedApi(mockHttpClient));
     result.current.authenticatedGet("/test", {
-      Authorization: "Custom token"
+      Authorization: "Custom token",
     });
     expect(mockGet).toHaveBeenCalledWith(
       expect.any(String),
       expect.objectContaining({
-        Authorization: "Bearer test-token"
+        Authorization: "Bearer test-token",
         // Token from hook takes precedence
-      })
+      }),
     );
   });
   it("should update when token changes", () => {
-    const { result, rerender } = renderHook(() => useAuthenticatedApi(mockHttpClient));
+    const { result, rerender } = renderHook(() =>
+      useAuthenticatedApi(mockHttpClient),
+    );
     result.current.authenticatedGet("/test");
     expect(mockGet).toHaveBeenCalledWith(
       expect.any(String),
       expect.objectContaining({
-        Authorization: "Bearer test-token"
-      })
+        Authorization: "Bearer test-token",
+      }),
     );
     mockUseAuth.mockReturnValue({
       token: "new-token",
@@ -248,15 +254,15 @@ describe("useAuthenticatedApi", () => {
       login: jest.fn(),
       register: jest.fn(),
       logout: jest.fn(),
-      isAuthenticated: true
+      isAuthenticated: true,
     });
     rerender();
     result.current.authenticatedGet("/test2");
     expect(mockGet).toHaveBeenCalledWith(
       expect.any(String),
       expect.objectContaining({
-        Authorization: "Bearer new-token"
-      })
+        Authorization: "Bearer new-token",
+      }),
     );
   });
   it("should use default httpClient when not provided", () => {
@@ -272,27 +278,27 @@ describe("useAuthenticatedApi", () => {
     expect(mockGet).toHaveBeenCalledWith(
       `${API_CONFIG.BASE_URL}/test`,
       expect.objectContaining({
-        Authorization: "Bearer test-token"
-      })
+        Authorization: "Bearer test-token",
+      }),
     );
   });
   it("should throw error when client is not properly initialized", async () => {
     const invalidClient = {};
     const { result } = renderHook(() => useAuthenticatedApi(invalidClient));
     await expect(
-      result.current.authenticatedPost("/test", { data: "test" })
+      result.current.authenticatedPost("/test", { data: "test" }),
     ).rejects.toThrow("HTTP client is not properly initialized");
   });
   it("should throw error when client.post is not a function", async () => {
     const invalidClient = {
       get: jest.fn(),
       put: jest.fn(),
-      delete: jest.fn()
+      delete: jest.fn(),
       // Missing post method
     };
     const { result } = renderHook(() => useAuthenticatedApi(invalidClient));
     await expect(
-      result.current.authenticatedPost("/test", { data: "test" })
+      result.current.authenticatedPost("/test", { data: "test" }),
     ).rejects.toThrow("HTTP client is not properly initialized");
   });
   it("should handle undefined additional headers", () => {
@@ -301,8 +307,8 @@ describe("useAuthenticatedApi", () => {
     expect(mockGet).toHaveBeenCalledWith(
       `${API_CONFIG.BASE_URL}/test`,
       expect.objectContaining({
-        Authorization: "Bearer test-token"
-      })
+        Authorization: "Bearer test-token",
+      }),
     );
   });
   describe("edge cases for 100% mutation coverage", () => {
@@ -314,18 +320,20 @@ describe("useAuthenticatedApi", () => {
       expect(result.current.authenticatedDelete).toBeDefined();
     });
     it("should verify apiBaseUrl || API_CONFIG.BASE_URL - apiBaseUrl is undefined", () => {
-      const { result } = renderHook(() => useAuthenticatedApi(mockHttpClient, void 0));
+      const { result } = renderHook(() =>
+        useAuthenticatedApi(mockHttpClient, void 0),
+      );
       result.current.authenticatedGet("/test");
       expect(mockGet).toHaveBeenCalledWith(
         `${API_CONFIG.BASE_URL}/test`,
-        expect.any(Object)
+        expect.any(Object),
       );
     });
     it("should verify !client || typeof client.post !== function - client is null", async () => {
       const nullClient = null;
       const { result } = renderHook(() => useAuthenticatedApi(nullClient));
       await expect(
-        result.current.authenticatedPost("/test", { data: "test" })
+        result.current.authenticatedPost("/test", { data: "test" }),
       ).rejects.toThrow(HTTP_CLIENT_ERROR_MSG);
     });
     it("should verify !client || typeof client.post !== function - client.post is not a function", async () => {
@@ -333,36 +341,44 @@ describe("useAuthenticatedApi", () => {
         get: jest.fn(),
         put: jest.fn(),
         delete: jest.fn(),
-        post: "not-a-function"
+        post: "not-a-function",
         // Not a function
       };
       const { result } = renderHook(() => useAuthenticatedApi(invalidClient));
       await expect(
-        result.current.authenticatedPost("/test", { data: "test" })
+        result.current.authenticatedPost("/test", { data: "test" }),
       ).rejects.toThrow(HTTP_CLIENT_ERROR_MSG);
     });
     it('should verify !url || url.trim() === "" - url is empty string after construction', async () => {
-      const { result } = renderHook(() => useAuthenticatedApi(mockHttpClient, "   "));
+      const { result } = renderHook(() =>
+        useAuthenticatedApi(mockHttpClient, "   "),
+      );
       await expect(
-        result.current.authenticatedPost("", { data: "test" })
+        result.current.authenticatedPost("", { data: "test" }),
       ).rejects.toThrow(URL_EMPTY_ERROR_MSG);
     });
     it('should verify !url || url.trim() === "" - url is whitespace only after construction', async () => {
-      const { result } = renderHook(() => useAuthenticatedApi(mockHttpClient, "   "));
+      const { result } = renderHook(() =>
+        useAuthenticatedApi(mockHttpClient, "   "),
+      );
       await expect(
-        result.current.authenticatedPost("", { data: "test" })
+        result.current.authenticatedPost("", { data: "test" }),
       ).rejects.toThrow(URL_EMPTY_ERROR_MSG);
     });
     it('should verify url.trim() === "" check - url has only spaces after construction', async () => {
-      const { result } = renderHook(() => useAuthenticatedApi(mockHttpClient, "   "));
+      const { result } = renderHook(() =>
+        useAuthenticatedApi(mockHttpClient, "   "),
+      );
       await expect(
-        result.current.authenticatedPost("", { data: "test" })
+        result.current.authenticatedPost("", { data: "test" }),
       ).rejects.toThrow(URL_EMPTY_ERROR_MSG);
     });
     it('should verify url.trim() === "" check - url.trim() returns empty after construction', async () => {
-      const { result } = renderHook(() => useAuthenticatedApi(mockHttpClient, "   "));
+      const { result } = renderHook(() =>
+        useAuthenticatedApi(mockHttpClient, "   "),
+      );
       await expect(
-        result.current.authenticatedPost("", { data: "test" })
+        result.current.authenticatedPost("", { data: "test" }),
       ).rejects.toThrow(URL_EMPTY_ERROR_MSG);
     });
     it("should verify spread operator ...additionalHeaders - additionalHeaders is undefined", () => {
@@ -372,33 +388,39 @@ describe("useAuthenticatedApi", () => {
         expect.any(String),
         expect.any(Object),
         expect.objectContaining({
-          "Content-Type": "application/json"
-        })
+          "Content-Type": "application/json",
+        }),
       );
     });
     it("should verify spread operator ...additionalHeaders - additionalHeaders has values", () => {
       const { result } = renderHook(() => useAuthenticatedApi(mockHttpClient));
-      result.current.authenticatedPost("/test", { data: "test" }, {
-        "X-Custom-Header": "value1",
-        "X-Another-Header": "value2"
-      });
+      result.current.authenticatedPost(
+        "/test",
+        { data: "test" },
+        {
+          "X-Custom-Header": "value1",
+          "X-Another-Header": "value2",
+        },
+      );
       expect(mockPost).toHaveBeenCalledWith(
         expect.any(String),
         expect.any(Object),
         expect.objectContaining({
           "Content-Type": "application/json",
           "X-Custom-Header": "value1",
-          "X-Another-Header": "value2"
-        })
+          "X-Another-Header": "value2",
+        }),
       );
     });
     it("should verify template literal ${baseUrl}${endpoint} - both values", () => {
       const customBaseUrl = "https://custom-api.com/api";
-      const { result } = renderHook(() => useAuthenticatedApi(mockHttpClient, customBaseUrl));
+      const { result } = renderHook(() =>
+        useAuthenticatedApi(mockHttpClient, customBaseUrl),
+      );
       result.current.authenticatedGet("/endpoint");
       expect(mockGet).toHaveBeenCalledWith(
         "https://custom-api.com/api/endpoint",
-        expect.any(Object)
+        expect.any(Object),
       );
     });
     it("should verify template literal ${baseUrl}${endpoint} - endpoint with leading slash", () => {
@@ -406,7 +428,7 @@ describe("useAuthenticatedApi", () => {
       result.current.authenticatedGet("/test");
       expect(mockGet).toHaveBeenCalledWith(
         `${API_CONFIG.BASE_URL}/test`,
-        expect.any(Object)
+        expect.any(Object),
       );
     });
     it("should verify template literal ${baseUrl}${endpoint} - endpoint without leading slash", () => {
@@ -414,7 +436,7 @@ describe("useAuthenticatedApi", () => {
       result.current.authenticatedGet("test");
       expect(mockGet).toHaveBeenCalledWith(
         `${API_CONFIG.BASE_URL}test`,
-        expect.any(Object)
+        expect.any(Object),
       );
     });
     it("should verify !client || typeof client.get !== function for GET", async () => {
@@ -422,25 +444,25 @@ describe("useAuthenticatedApi", () => {
         post: jest.fn(),
         put: jest.fn(),
         delete: jest.fn(),
-        get: null
+        get: null,
         // Not a function
       };
       const { result } = renderHook(() => useAuthenticatedApi(invalidClient));
-      await expect(
-        result.current.authenticatedGet("/test")
-      ).rejects.toThrow(HTTP_CLIENT_ERROR_MSG);
+      await expect(result.current.authenticatedGet("/test")).rejects.toThrow(
+        HTTP_CLIENT_ERROR_MSG,
+      );
     });
     it("should verify !client || typeof client.put !== function for PUT", async () => {
       const invalidClient = {
         get: jest.fn(),
         post: jest.fn(),
         delete: jest.fn(),
-        put: void 0
+        put: void 0,
         // Not a function
       };
       const { result } = renderHook(() => useAuthenticatedApi(invalidClient));
       await expect(
-        result.current.authenticatedPut("/test", { data: "test" })
+        result.current.authenticatedPut("/test", { data: "test" }),
       ).rejects.toThrow(HTTP_CLIENT_ERROR_MSG);
     });
     it("should verify !client || typeof client.delete !== function for DELETE", async () => {
@@ -448,13 +470,13 @@ describe("useAuthenticatedApi", () => {
         get: jest.fn(),
         post: jest.fn(),
         put: jest.fn(),
-        delete: false
+        delete: false,
         // Not a function
       };
       const { result } = renderHook(() => useAuthenticatedApi(invalidClient));
-      await expect(
-        result.current.authenticatedDelete("/test")
-      ).rejects.toThrow(HTTP_CLIENT_ERROR_MSG);
+      await expect(result.current.authenticatedDelete("/test")).rejects.toThrow(
+        HTTP_CLIENT_ERROR_MSG,
+      );
     });
     it("should verify error.name assignment for HttpClientError", async () => {
       const invalidClient = {};
@@ -482,8 +504,8 @@ describe("useAuthenticatedApi", () => {
         expect.any(String),
         expect.any(Object),
         expect.objectContaining({
-          "Content-Type": "application/json"
-        })
+          "Content-Type": "application/json",
+        }),
       );
     });
     it("should verify headers object creation without Content-Type for GET", () => {
@@ -507,15 +529,15 @@ describe("useAuthenticatedApi", () => {
         login: jest.fn(),
         register: jest.fn(),
         logout: jest.fn(),
-        isAuthenticated: false
+        isAuthenticated: false,
       });
       const { result } = renderHook(() => useAuthenticatedApi(mockHttpClient));
       result.current.authenticatedGet("/test");
       expect(mockGet).toHaveBeenCalledWith(
         expect.any(String),
         expect.not.objectContaining({
-          Authorization: expect.any(String)
-        })
+          Authorization: expect.any(String),
+        }),
       );
     });
     it("should verify token check - token is 0 (falsy)", () => {
@@ -525,15 +547,15 @@ describe("useAuthenticatedApi", () => {
         login: jest.fn(),
         register: jest.fn(),
         logout: jest.fn(),
-        isAuthenticated: false
+        isAuthenticated: false,
       });
       const { result } = renderHook(() => useAuthenticatedApi(mockHttpClient));
       result.current.authenticatedGet("/test");
       expect(mockGet).toHaveBeenCalledWith(
         expect.any(String),
         expect.not.objectContaining({
-          Authorization: expect.any(String)
-        })
+          Authorization: expect.any(String),
+        }),
       );
     });
     it("should verify Bearer token format", () => {
@@ -543,34 +565,38 @@ describe("useAuthenticatedApi", () => {
         login: jest.fn(),
         register: jest.fn(),
         logout: jest.fn(),
-        isAuthenticated: true
+        isAuthenticated: true,
       });
       const { result } = renderHook(() => useAuthenticatedApi(mockHttpClient));
       result.current.authenticatedGet("/test");
       expect(mockGet).toHaveBeenCalledWith(
         expect.any(String),
         expect.objectContaining({
-          Authorization: "Bearer my-token-123"
-        })
+          Authorization: "Bearer my-token-123",
+        }),
       );
     });
     it("should verify url construction with baseUrl ending in slash", () => {
       const baseUrlWithSlash = "https://api.test/";
-      const { result } = renderHook(() => useAuthenticatedApi(mockHttpClient, baseUrlWithSlash));
+      const { result } = renderHook(() =>
+        useAuthenticatedApi(mockHttpClient, baseUrlWithSlash),
+      );
       result.current.authenticatedGet("/endpoint");
       expect(mockGet).toHaveBeenCalledWith(
         "https://api.test//endpoint",
         // Double slash from baseUrl ending with / and endpoint starting with /
-        expect.any(Object)
+        expect.any(Object),
       );
     });
     it("should verify url construction with baseUrl not ending in slash", () => {
       const baseUrlNoSlash = "https://api.test";
-      const { result } = renderHook(() => useAuthenticatedApi(mockHttpClient, baseUrlNoSlash));
+      const { result } = renderHook(() =>
+        useAuthenticatedApi(mockHttpClient, baseUrlNoSlash),
+      );
       result.current.authenticatedGet("/endpoint");
       expect(mockGet).toHaveBeenCalledWith(
         "https://api.test/endpoint",
-        expect.any(Object)
+        expect.any(Object),
       );
     });
     it("should verify all four methods use same client instance", () => {
@@ -585,7 +611,9 @@ describe("useAuthenticatedApi", () => {
       expect(mockDelete).toHaveBeenCalled();
     });
     it("should verify useCallback dependencies - token change triggers update", () => {
-      const { result, rerender } = renderHook(() => useAuthenticatedApi(mockHttpClient));
+      const { result, rerender } = renderHook(() =>
+        useAuthenticatedApi(mockHttpClient),
+      );
       result.current.authenticatedGet("/test1");
       mockUseAuth.mockReturnValue({
         token: "new-token",
@@ -593,7 +621,7 @@ describe("useAuthenticatedApi", () => {
         login: jest.fn(),
         register: jest.fn(),
         logout: jest.fn(),
-        isAuthenticated: true
+        isAuthenticated: true,
       });
       rerender();
       const secondCall = result.current.authenticatedGet;
@@ -601,8 +629,8 @@ describe("useAuthenticatedApi", () => {
       expect(mockGet).toHaveBeenCalledWith(
         expect.any(String),
         expect.objectContaining({
-          Authorization: "Bearer new-token"
-        })
+          Authorization: "Bearer new-token",
+        }),
       );
     });
     it("should verify useCallback dependencies - client change triggers update", () => {
@@ -610,11 +638,11 @@ describe("useAuthenticatedApi", () => {
         get: jest.fn(),
         post: jest.fn(),
         put: jest.fn(),
-        delete: jest.fn()
+        delete: jest.fn(),
       };
       const { result, rerender } = renderHook(
         ({ client }) => useAuthenticatedApi(client),
-        { initialProps: { client: mockHttpClient } }
+        { initialProps: { client: mockHttpClient } },
       );
       result.current.authenticatedGet("/test1");
       rerender({ client: newClient });
@@ -624,14 +652,14 @@ describe("useAuthenticatedApi", () => {
     it("should verify useCallback dependencies - baseUrl change triggers update", () => {
       const { result, rerender } = renderHook(
         ({ baseUrl }) => useAuthenticatedApi(mockHttpClient, baseUrl),
-        { initialProps: { baseUrl: "https://api1.test" } }
+        { initialProps: { baseUrl: "https://api1.test" } },
       );
       result.current.authenticatedGet("/test1");
       rerender({ baseUrl: "https://api2.test" });
       result.current.authenticatedGet("/test2");
       expect(mockGet).toHaveBeenCalledWith(
         "https://api2.test/test2",
-        expect.any(Object)
+        expect.any(Object),
       );
     });
     it("should verify string literal Content-Type: application/json exact value", () => {
@@ -648,7 +676,7 @@ describe("useAuthenticatedApi", () => {
         login: jest.fn(),
         register: jest.fn(),
         logout: jest.fn(),
-        isAuthenticated: true
+        isAuthenticated: true,
       });
       const { result } = renderHook(() => useAuthenticatedApi(mockHttpClient));
       result.current.authenticatedGet("/test");
@@ -663,7 +691,7 @@ describe("useAuthenticatedApi", () => {
         post: jest.fn(),
         // Function
         put: jest.fn(),
-        delete: jest.fn()
+        delete: jest.fn(),
       };
       const { result } = renderHook(() => useAuthenticatedApi(validClient));
       expect(() => {
@@ -676,7 +704,7 @@ describe("useAuthenticatedApi", () => {
         // Function
         post: jest.fn(),
         put: jest.fn(),
-        delete: jest.fn()
+        delete: jest.fn(),
       };
       const { result } = renderHook(() => useAuthenticatedApi(validClient));
       expect(() => {
@@ -689,7 +717,7 @@ describe("useAuthenticatedApi", () => {
         post: jest.fn(),
         put: jest.fn(),
         // Function
-        delete: jest.fn()
+        delete: jest.fn(),
       };
       const { result } = renderHook(() => useAuthenticatedApi(validClient));
       expect(() => {
@@ -701,7 +729,7 @@ describe("useAuthenticatedApi", () => {
         get: jest.fn(),
         post: jest.fn(),
         put: jest.fn(),
-        delete: jest.fn()
+        delete: jest.fn(),
         // Function
       };
       const { result } = renderHook(() => useAuthenticatedApi(validClient));
@@ -710,13 +738,17 @@ describe("useAuthenticatedApi", () => {
       }).not.toThrow();
     });
     it("should verify url.trim() exact comparison - returns empty string", async () => {
-      const { result } = renderHook(() => useAuthenticatedApi(mockHttpClient, "   "));
+      const { result } = renderHook(() =>
+        useAuthenticatedApi(mockHttpClient, "   "),
+      );
       await expect(
-        result.current.authenticatedPost("", { data: "test" })
+        result.current.authenticatedPost("", { data: "test" }),
       ).rejects.toThrow(URL_EMPTY_ERROR_MSG);
     });
     it("should verify url.trim() exact comparison - returns non-empty string", () => {
-      const { result } = renderHook(() => useAuthenticatedApi(mockHttpClient, "http://api.test"));
+      const { result } = renderHook(() =>
+        useAuthenticatedApi(mockHttpClient, "http://api.test"),
+      );
       expect(() => {
         result.current.authenticatedPost("/endpoint", { data: "test" });
       }).not.toThrow();
@@ -731,7 +763,9 @@ describe("useAuthenticatedApi", () => {
       }
     });
     it("should verify error.name exact assignment - InvalidUrlError", async () => {
-      const { result } = renderHook(() => useAuthenticatedApi(mockHttpClient, ""));
+      const { result } = renderHook(() =>
+        useAuthenticatedApi(mockHttpClient, ""),
+      );
       try {
         await result.current.authenticatedPost("", { data: "test" });
       } catch (error) {
@@ -748,7 +782,9 @@ describe("useAuthenticatedApi", () => {
       }
     });
     it("should verify error.message exact value - URL error", async () => {
-      const { result } = renderHook(() => useAuthenticatedApi(mockHttpClient, ""));
+      const { result } = renderHook(() =>
+        useAuthenticatedApi(mockHttpClient, ""),
+      );
       try {
         await result.current.authenticatedPost("", { data: "test" });
       } catch (error) {
@@ -764,8 +800,8 @@ describe("useAuthenticatedApi", () => {
         { data: "test" },
         expect.objectContaining({
           "Content-Type": "application/json",
-          Authorization: "Bearer test-token"
-        })
+          Authorization: "Bearer test-token",
+        }),
       );
     });
     it("should verify exact client.get() call with correct parameters", async () => {
@@ -775,8 +811,8 @@ describe("useAuthenticatedApi", () => {
       expect(mockGet).toHaveBeenCalledWith(
         `${API_CONFIG.BASE_URL}/test`,
         expect.objectContaining({
-          Authorization: "Bearer test-token"
-        })
+          Authorization: "Bearer test-token",
+        }),
       );
     });
     it("should verify exact client.put() call with correct parameters", async () => {
@@ -788,8 +824,8 @@ describe("useAuthenticatedApi", () => {
         { data: "test" },
         expect.objectContaining({
           "Content-Type": "application/json",
-          Authorization: "Bearer test-token"
-        })
+          Authorization: "Bearer test-token",
+        }),
       );
     });
     it("should verify exact client.delete() call with correct parameters", async () => {
@@ -799,21 +835,23 @@ describe("useAuthenticatedApi", () => {
       expect(mockDelete).toHaveBeenCalledWith(
         `${API_CONFIG.BASE_URL}/test`,
         expect.objectContaining({
-          Authorization: "Bearer test-token"
-        })
+          Authorization: "Bearer test-token",
+        }),
       );
     });
     it("should verify exact template literal ${baseUrl}${endpoint} - both values", async () => {
       const customBaseUrl = "https://custom-api.com/api";
-      const { result } = renderHook(() => useAuthenticatedApi(mockHttpClient, customBaseUrl));
+      const { result } = renderHook(() =>
+        useAuthenticatedApi(mockHttpClient, customBaseUrl),
+      );
       await result.current.authenticatedGet("/endpoint");
       expect(mockGet).toHaveBeenCalledWith(
         "https://custom-api.com/api/endpoint",
-        expect.any(Object)
+        expect.any(Object),
       );
       expect(mockGet).not.toHaveBeenCalledWith(
         "https://custom-api.com/apiendpoint",
-        expect.any(Object)
+        expect.any(Object),
       );
     });
     it("should verify exact template literal ${baseUrl}${endpoint} - endpoint with leading slash", async () => {
@@ -821,7 +859,7 @@ describe("useAuthenticatedApi", () => {
       await result.current.authenticatedGet("/test");
       expect(mockGet).toHaveBeenCalledWith(
         `${API_CONFIG.BASE_URL}/test`,
-        expect.any(Object)
+        expect.any(Object),
       );
     });
     it("should verify exact template literal ${baseUrl}${endpoint} - endpoint without leading slash", async () => {
@@ -829,7 +867,7 @@ describe("useAuthenticatedApi", () => {
       await result.current.authenticatedGet("test");
       expect(mockGet).toHaveBeenCalledWith(
         `${API_CONFIG.BASE_URL}test`,
-        expect.any(Object)
+        expect.any(Object),
       );
     });
     it("should verify exact headers object creation with Content-Type for POST", async () => {
@@ -865,7 +903,9 @@ describe("useAuthenticatedApi", () => {
       expect(headers).toHaveProperty("Authorization", "Bearer test-token");
     });
     it("should verify exact useCallback dependencies - token change", () => {
-      const { result, rerender } = renderHook(() => useAuthenticatedApi(mockHttpClient));
+      const { result, rerender } = renderHook(() =>
+        useAuthenticatedApi(mockHttpClient),
+      );
       result.current.authenticatedPost("/test1", { data: "test1" });
       mockUseAuth.mockReturnValue({
         token: "new-token",
@@ -873,7 +913,7 @@ describe("useAuthenticatedApi", () => {
         login: jest.fn(),
         register: jest.fn(),
         logout: jest.fn(),
-        isAuthenticated: true
+        isAuthenticated: true,
       });
       rerender();
       const secondCall = result.current.authenticatedPost;
@@ -882,8 +922,8 @@ describe("useAuthenticatedApi", () => {
         expect.any(String),
         expect.any(Object),
         expect.objectContaining({
-          Authorization: "Bearer new-token"
-        })
+          Authorization: "Bearer new-token",
+        }),
       );
     });
     it("should verify exact useCallback dependencies - client change", () => {
@@ -891,11 +931,11 @@ describe("useAuthenticatedApi", () => {
         get: jest.fn(),
         post: jest.fn(),
         put: jest.fn(),
-        delete: jest.fn()
+        delete: jest.fn(),
       };
       const { result, rerender } = renderHook(
         ({ client }) => useAuthenticatedApi(client),
-        { initialProps: { client: mockHttpClient } }
+        { initialProps: { client: mockHttpClient } },
       );
       result.current.authenticatedGet("/test1");
       rerender({ client: newClient });
@@ -905,14 +945,14 @@ describe("useAuthenticatedApi", () => {
     it("should verify exact useCallback dependencies - baseUrl change", () => {
       const { result, rerender } = renderHook(
         ({ baseUrl }) => useAuthenticatedApi(mockHttpClient, baseUrl),
-        { initialProps: { baseUrl: "https://api1.test" } }
+        { initialProps: { baseUrl: "https://api1.test" } },
       );
       result.current.authenticatedGet("/test1");
       rerender({ baseUrl: "https://api2.test" });
       result.current.authenticatedGet("/test2");
       expect(mockGet).toHaveBeenCalledWith(
         "https://api2.test/test2",
-        expect.any(Object)
+        expect.any(Object),
       );
     });
   });
@@ -930,11 +970,11 @@ describe("useAuthenticatedApi", () => {
         get: jest.fn(),
         post: "not-a-function",
         put: jest.fn(),
-        delete: jest.fn()
+        delete: jest.fn(),
       };
       const { result } = renderHook(() => useAuthenticatedApi(invalidClient));
       await expect(
-        result.current.authenticatedPost("/test", { data: "test" })
+        result.current.authenticatedPost("/test", { data: "test" }),
       ).rejects.toThrow(HTTP_CLIENT_ERROR_MSG);
     });
     it("should verify exact typeof client.get !== function check - get is not a function", async () => {
@@ -942,23 +982,23 @@ describe("useAuthenticatedApi", () => {
         get: "not-a-function",
         post: jest.fn(),
         put: jest.fn(),
-        delete: jest.fn()
+        delete: jest.fn(),
       };
       const { result } = renderHook(() => useAuthenticatedApi(invalidClient));
-      await expect(
-        result.current.authenticatedGet("/test")
-      ).rejects.toThrow(HTTP_CLIENT_ERROR_MSG);
+      await expect(result.current.authenticatedGet("/test")).rejects.toThrow(
+        HTTP_CLIENT_ERROR_MSG,
+      );
     });
     it("should verify exact typeof client.put !== function check - put is not a function", async () => {
       const invalidClient = {
         get: jest.fn(),
         post: jest.fn(),
         put: "not-a-function",
-        delete: jest.fn()
+        delete: jest.fn(),
       };
       const { result } = renderHook(() => useAuthenticatedApi(invalidClient));
       await expect(
-        result.current.authenticatedPut("/test", { data: "test" })
+        result.current.authenticatedPut("/test", { data: "test" }),
       ).rejects.toThrow(HTTP_CLIENT_ERROR_MSG);
     });
     it("should verify exact typeof client.delete !== function check - delete is not a function", async () => {
@@ -966,12 +1006,12 @@ describe("useAuthenticatedApi", () => {
         get: jest.fn(),
         post: jest.fn(),
         put: jest.fn(),
-        delete: "not-a-function"
+        delete: "not-a-function",
       };
       const { result } = renderHook(() => useAuthenticatedApi(invalidClient));
-      await expect(
-        result.current.authenticatedDelete("/test")
-      ).rejects.toThrow(HTTP_CLIENT_ERROR_MSG);
+      await expect(result.current.authenticatedDelete("/test")).rejects.toThrow(
+        HTTP_CLIENT_ERROR_MSG,
+      );
     });
     it("should verify exact url.trim() check for GET requests", async () => {
       const { result } = renderHook(() => useAuthenticatedApi(mockHttpClient));
@@ -1007,8 +1047,8 @@ describe("useAuthenticatedApi", () => {
         expect.any(String),
         expect.any(Object),
         expect.objectContaining({
-          "Content-Type": "application/json"
-        })
+          "Content-Type": "application/json",
+        }),
       );
     });
     it("should verify exact Bearer token format in Authorization header", () => {
@@ -1018,14 +1058,18 @@ describe("useAuthenticatedApi", () => {
         expect.any(String),
         expect.any(Object),
         expect.objectContaining({
-          Authorization: "Bearer test-token"
-        })
+          Authorization: "Bearer test-token",
+        }),
       );
     });
     it("should verify exact spread operator for additionalHeaders", () => {
       const { result } = renderHook(() => useAuthenticatedApi(mockHttpClient));
       const customHeaders = { "X-Custom": "value", "X-Another": "value2" };
-      result.current.authenticatedPost("/test", { data: "test" }, customHeaders);
+      result.current.authenticatedPost(
+        "/test",
+        { data: "test" },
+        customHeaders,
+      );
       expect(mockPost).toHaveBeenCalledWith(
         expect.any(String),
         expect.any(Object),
@@ -1033,26 +1077,26 @@ describe("useAuthenticatedApi", () => {
           "Content-Type": "application/json",
           Authorization: "Bearer test-token",
           "X-Custom": "value",
-          "X-Another": "value2"
-        })
+          "X-Another": "value2",
+        }),
       );
     });
     it("should verify exact template literal for URL construction", () => {
       const customUrl = "https://custom-api.com/api";
-      const { result } = renderHook(
-        () => useAuthenticatedApi(mockHttpClient, customUrl)
+      const { result } = renderHook(() =>
+        useAuthenticatedApi(mockHttpClient, customUrl),
       );
       result.current.authenticatedGet("/test");
       expect(mockGet).toHaveBeenCalledWith(
         "https://custom-api.com/api/test",
-        expect.any(Object)
+        expect.any(Object),
       );
     });
     it("should verify exact !client check - client is null", async () => {
       const nullClient = null;
       const { result } = renderHook(() => useAuthenticatedApi(nullClient));
       await expect(
-        result.current.authenticatedPost("/test", { data: "test" })
+        result.current.authenticatedPost("/test", { data: "test" }),
       ).rejects.toThrow(HTTP_CLIENT_ERROR_MSG);
     });
     it("should verify exact !url check - url is null", async () => {
@@ -1065,7 +1109,7 @@ describe("useAuthenticatedApi", () => {
       it("should verify catch block in createSafeError - Error constructor fails", async () => {
         const OriginalError = global.Error;
         let errorConstructorCallCount = 0;
-        global.Error = function(message) {
+        global.Error = function (message) {
           errorConstructorCallCount++;
           if (errorConstructorCallCount === 1) {
             return new OriginalError(message);
@@ -1074,7 +1118,9 @@ describe("useAuthenticatedApi", () => {
           }
         };
         global.Error.prototype = OriginalError.prototype;
-        const { result } = renderHook(() => useAuthenticatedApi(mockHttpClient));
+        const { result } = renderHook(() =>
+          useAuthenticatedApi(mockHttpClient),
+        );
         try {
           await result.current.authenticatedPost("", { data: "test" });
         } catch (error) {
@@ -1087,9 +1133,11 @@ describe("useAuthenticatedApi", () => {
         renderHook(() => useAuthenticatedApi(mockHttpClient));
         const invalidClient = {};
         renderHook(() => useAuthenticatedApi(invalidClient));
-        const { result: result2 } = renderHook(() => useAuthenticatedApi(invalidClient));
+        const { result: result2 } = renderHook(() =>
+          useAuthenticatedApi(invalidClient),
+        );
         await expect(
-          result2.current.authenticatedPost("/test", { data: "test" })
+          result2.current.authenticatedPost("/test", { data: "test" }),
         ).rejects.toThrow(HTTP_CLIENT_ERROR_MSG);
       });
       it("should verify catch block in httpClient creation - fallback client", async () => {
@@ -1100,7 +1148,7 @@ describe("useAuthenticatedApi", () => {
         });
         const { result } = renderHook(() => useAuthenticatedApi(void 0));
         await expect(
-          result.current.authenticatedPost("/test", { data: "test" })
+          result.current.authenticatedPost("/test", { data: "test" }),
         ).rejects.toThrow("HTTP client initialization failed");
         defaultAdapters.createHttpClient = originalCreateHttpClient;
       });
@@ -1111,9 +1159,9 @@ describe("useAuthenticatedApi", () => {
           throw new Error("Failed to create HTTP client");
         });
         const { result } = renderHook(() => useAuthenticatedApi(void 0));
-        await expect(
-          result.current.authenticatedGet("/test")
-        ).rejects.toThrow("HTTP client initialization failed");
+        await expect(result.current.authenticatedGet("/test")).rejects.toThrow(
+          "HTTP client initialization failed",
+        );
         defaultAdapters.createHttpClient = originalCreateHttpClient;
       });
       it("should verify fallback client methods - put", async () => {
@@ -1124,7 +1172,7 @@ describe("useAuthenticatedApi", () => {
         });
         const { result } = renderHook(() => useAuthenticatedApi(void 0));
         await expect(
-          result.current.authenticatedPut("/test", { data: "test" })
+          result.current.authenticatedPut("/test", { data: "test" }),
         ).rejects.toThrow("HTTP client initialization failed");
         defaultAdapters.createHttpClient = originalCreateHttpClient;
       });
@@ -1136,7 +1184,7 @@ describe("useAuthenticatedApi", () => {
         });
         const { result } = renderHook(() => useAuthenticatedApi(void 0));
         await expect(
-          result.current.authenticatedDelete("/test")
+          result.current.authenticatedDelete("/test"),
         ).rejects.toThrow("HTTP client initialization failed");
         defaultAdapters.createHttpClient = originalCreateHttpClient;
       });
@@ -1173,7 +1221,7 @@ describe("useAuthenticatedApi", () => {
         };
         const { result } = renderHook(() => useAuthenticatedApi(void 0));
         await expect(
-          result.current.authenticatedPost("/test", { data: "test" })
+          result.current.authenticatedPost("/test", { data: "test" }),
         ).rejects.toThrow();
         global.Error = originalError;
         defaultAdapters.createHttpClient = originalCreateHttpClient;
@@ -1182,27 +1230,37 @@ describe("useAuthenticatedApi", () => {
     describe("mutation killers - no coverage paths", () => {
       describe("error creation factory paths", () => {
         it("should verify getErrorConstructor fallback paths", async () => {
-          const { result } = renderHook(() => useAuthenticatedApi(mockHttpClient));
+          const { result } = renderHook(() =>
+            useAuthenticatedApi(mockHttpClient),
+          );
           await result.current.authenticatedGet("/test");
           expect(mockGet).toHaveBeenCalled();
         });
         it("should verify createErrorFactory Strategy 1 - ErrorCtor call fails", async () => {
-          const { result } = renderHook(() => useAuthenticatedApi(mockHttpClient));
+          const { result } = renderHook(() =>
+            useAuthenticatedApi(mockHttpClient),
+          );
           await result.current.authenticatedGet("/test");
           expect(mockGet).toHaveBeenCalled();
         });
         it("should verify createErrorFactory Strategy 2 - Object.create path", async () => {
-          const { result } = renderHook(() => useAuthenticatedApi(mockHttpClient));
+          const { result } = renderHook(() =>
+            useAuthenticatedApi(mockHttpClient),
+          );
           await result.current.authenticatedGet("/test");
           expect(mockGet).toHaveBeenCalled();
         });
         it("should verify createErrorFactory Strategy 3 - plain object fallback", async () => {
-          const { result } = renderHook(() => useAuthenticatedApi(mockHttpClient));
+          const { result } = renderHook(() =>
+            useAuthenticatedApi(mockHttpClient),
+          );
           await result.current.authenticatedGet("/test");
           expect(mockGet).toHaveBeenCalled();
         });
         it("should verify createErrorFactory ultimate fallback", async () => {
-          const { result } = renderHook(() => useAuthenticatedApi(mockHttpClient));
+          const { result } = renderHook(() =>
+            useAuthenticatedApi(mockHttpClient),
+          );
           await result.current.authenticatedGet("/test");
           expect(mockGet).toHaveBeenCalled();
         });
@@ -1212,7 +1270,7 @@ describe("useAuthenticatedApi", () => {
           const nullClient = null;
           const { result } = renderHook(() => useAuthenticatedApi(nullClient));
           await expect(
-            result.current.authenticatedPost("/test", { data: "test" })
+            result.current.authenticatedPost("/test", { data: "test" }),
           ).rejects.toThrow(HTTP_CLIENT_ERROR_MSG);
         });
         it("should verify client.post validation - client.post is not function", async () => {
@@ -1220,18 +1278,20 @@ describe("useAuthenticatedApi", () => {
             post: "not a function",
             get: mockGet,
             put: mockPut,
-            delete: mockDelete
+            delete: mockDelete,
           };
-          const { result } = renderHook(() => useAuthenticatedApi(invalidClient));
+          const { result } = renderHook(() =>
+            useAuthenticatedApi(invalidClient),
+          );
           await expect(
-            result.current.authenticatedPost("/test", { data: "test" })
+            result.current.authenticatedPost("/test", { data: "test" }),
           ).rejects.toThrow(HTTP_CLIENT_ERROR_MSG);
         });
         it("should verify client.get validation - client is null", async () => {
           const nullClient = null;
           const { result } = renderHook(() => useAuthenticatedApi(nullClient));
           await expect(
-            result.current.authenticatedGet("/test")
+            result.current.authenticatedGet("/test"),
           ).rejects.toThrow(HTTP_CLIENT_ERROR_MSG);
         });
         it("should verify client.get validation - client.get is not function", async () => {
@@ -1239,18 +1299,20 @@ describe("useAuthenticatedApi", () => {
             get: "not a function",
             post: mockPost,
             put: mockPut,
-            delete: mockDelete
+            delete: mockDelete,
           };
-          const { result } = renderHook(() => useAuthenticatedApi(invalidClient));
+          const { result } = renderHook(() =>
+            useAuthenticatedApi(invalidClient),
+          );
           await expect(
-            result.current.authenticatedGet("/test")
+            result.current.authenticatedGet("/test"),
           ).rejects.toThrow(HTTP_CLIENT_ERROR_MSG);
         });
         it("should verify client.put validation - client is null", async () => {
           const nullClient = null;
           const { result } = renderHook(() => useAuthenticatedApi(nullClient));
           await expect(
-            result.current.authenticatedPut("/test", { data: "test" })
+            result.current.authenticatedPut("/test", { data: "test" }),
           ).rejects.toThrow(HTTP_CLIENT_ERROR_MSG);
         });
         it("should verify client.put validation - client.put is not function", async () => {
@@ -1258,18 +1320,20 @@ describe("useAuthenticatedApi", () => {
             put: "not a function",
             get: mockGet,
             post: mockPost,
-            delete: mockDelete
+            delete: mockDelete,
           };
-          const { result } = renderHook(() => useAuthenticatedApi(invalidClient));
+          const { result } = renderHook(() =>
+            useAuthenticatedApi(invalidClient),
+          );
           await expect(
-            result.current.authenticatedPut("/test", { data: "test" })
+            result.current.authenticatedPut("/test", { data: "test" }),
           ).rejects.toThrow(HTTP_CLIENT_ERROR_MSG);
         });
         it("should verify client.delete validation - client is null", async () => {
           const nullClient = null;
           const { result } = renderHook(() => useAuthenticatedApi(nullClient));
           await expect(
-            result.current.authenticatedDelete("/test")
+            result.current.authenticatedDelete("/test"),
           ).rejects.toThrow(HTTP_CLIENT_ERROR_MSG);
         });
         it("should verify client.delete validation - client.delete is not function", async () => {
@@ -1277,83 +1341,93 @@ describe("useAuthenticatedApi", () => {
             delete: "not a function",
             get: mockGet,
             post: mockPost,
-            put: mockPut
+            put: mockPut,
           };
-          const { result } = renderHook(() => useAuthenticatedApi(invalidClient));
+          const { result } = renderHook(() =>
+            useAuthenticatedApi(invalidClient),
+          );
           await expect(
-            result.current.authenticatedDelete("/test")
+            result.current.authenticatedDelete("/test"),
           ).rejects.toThrow(HTTP_CLIENT_ERROR_MSG);
         });
       });
       describe("URL validation error paths", () => {
         it("should verify URL validation - whitespace baseUrl and empty endpoint", async () => {
-          const { result } = renderHook(
-            () => useAuthenticatedApi(mockHttpClient, "   ")
+          const { result } = renderHook(() =>
+            useAuthenticatedApi(mockHttpClient, "   "),
           );
           await expect(
-            result.current.authenticatedPost("", { data: "test" })
+            result.current.authenticatedPost("", { data: "test" }),
           ).rejects.toThrow(URL_EMPTY_ERROR_MSG);
         });
         it("should verify URL validation - whitespace baseUrl and whitespace endpoint", async () => {
-          const { result } = renderHook(
-            () => useAuthenticatedApi(mockHttpClient, "   ")
+          const { result } = renderHook(() =>
+            useAuthenticatedApi(mockHttpClient, "   "),
           );
           await expect(
-            result.current.authenticatedPost("   ", { data: "test" })
+            result.current.authenticatedPost("   ", { data: "test" }),
           ).rejects.toThrow(URL_EMPTY_ERROR_MSG);
         });
         it("should verify URL validation - whitespace baseUrl and empty endpoint in GET", async () => {
-          const { result } = renderHook(
-            () => useAuthenticatedApi(mockHttpClient, "   ")
+          const { result } = renderHook(() =>
+            useAuthenticatedApi(mockHttpClient, "   "),
           );
-          await expect(
-            result.current.authenticatedGet("")
-          ).rejects.toThrow(URL_EMPTY_ERROR_MSG);
+          await expect(result.current.authenticatedGet("")).rejects.toThrow(
+            URL_EMPTY_ERROR_MSG,
+          );
         });
         it("should verify URL validation - whitespace baseUrl and whitespace endpoint in GET", async () => {
-          const { result } = renderHook(
-            () => useAuthenticatedApi(mockHttpClient, "   ")
+          const { result } = renderHook(() =>
+            useAuthenticatedApi(mockHttpClient, "   "),
           );
-          await expect(
-            result.current.authenticatedGet("   ")
-          ).rejects.toThrow(URL_EMPTY_ERROR_MSG);
+          await expect(result.current.authenticatedGet("   ")).rejects.toThrow(
+            URL_EMPTY_ERROR_MSG,
+          );
         });
         it("should verify URL validation - whitespace baseUrl and empty endpoint in PUT", async () => {
-          const { result } = renderHook(
-            () => useAuthenticatedApi(mockHttpClient, "   ")
+          const { result } = renderHook(() =>
+            useAuthenticatedApi(mockHttpClient, "   "),
           );
           await expect(
-            result.current.authenticatedPut("", { data: "test" })
+            result.current.authenticatedPut("", { data: "test" }),
           ).rejects.toThrow(URL_EMPTY_ERROR_MSG);
         });
         it("should verify URL validation - whitespace baseUrl and empty endpoint in DELETE", async () => {
-          const { result } = renderHook(
-            () => useAuthenticatedApi(mockHttpClient, "   ")
+          const { result } = renderHook(() =>
+            useAuthenticatedApi(mockHttpClient, "   "),
           );
-          await expect(
-            result.current.authenticatedDelete("")
-          ).rejects.toThrow(URL_EMPTY_ERROR_MSG);
+          await expect(result.current.authenticatedDelete("")).rejects.toThrow(
+            URL_EMPTY_ERROR_MSG,
+          );
         });
       });
       describe("error creation catch blocks", () => {
         it("should verify createSafeError catch block - factory throws", async () => {
-          const { result } = renderHook(() => useAuthenticatedApi(mockHttpClient));
+          const { result } = renderHook(() =>
+            useAuthenticatedApi(mockHttpClient),
+          );
           await result.current.authenticatedGet("/test");
           expect(mockGet).toHaveBeenCalled();
         });
         it("should verify Promise.reject catch blocks - reject throws", async () => {
           renderHook(() => useAuthenticatedApi(mockHttpClient));
           const invalidClient = null;
-          const { result: result2 } = renderHook(() => useAuthenticatedApi(invalidClient));
+          const { result: result2 } = renderHook(() =>
+            useAuthenticatedApi(invalidClient),
+          );
           await expect(
-            result2.current.authenticatedPost("/test", { data: "test" })
+            result2.current.authenticatedPost("/test", { data: "test" }),
           ).rejects.toThrow();
         });
         it("should verify setTimeout fallback in error paths", async () => {
           jest.useFakeTimers();
           const invalidClient = null;
-          const { result } = renderHook(() => useAuthenticatedApi(invalidClient));
-          const promise = result.current.authenticatedPost("/test", { data: "test" });
+          const { result } = renderHook(() =>
+            useAuthenticatedApi(invalidClient),
+          );
+          const promise = result.current.authenticatedPost("/test", {
+            data: "test",
+          });
           jest.advanceTimersByTime(10);
           await expect(promise).rejects.toThrow();
           jest.useRealTimers();
@@ -1361,9 +1435,15 @@ describe("useAuthenticatedApi", () => {
       });
       describe("exact string literal verification", () => {
         it("should verify HTTP_CLIENT_ERROR_MSG exact string", async () => {
-          expect(HTTP_CLIENT_ERROR_MSG).toBe("HTTP client is not properly initialized");
-          expect(HTTP_CLIENT_ERROR_MSG).not.toBe("HTTP client is not initialized");
-          expect(HTTP_CLIENT_ERROR_MSG).not.toBe("HTTP client initialization failed");
+          expect(HTTP_CLIENT_ERROR_MSG).toBe(
+            "HTTP client is not properly initialized",
+          );
+          expect(HTTP_CLIENT_ERROR_MSG).not.toBe(
+            "HTTP client is not initialized",
+          );
+          expect(HTTP_CLIENT_ERROR_MSG).not.toBe(
+            "HTTP client initialization failed",
+          );
         });
         it("should verify URL_EMPTY_ERROR_MSG exact string", async () => {
           expect(URL_EMPTY_ERROR_MSG).toBe("URL cannot be empty");
@@ -1374,15 +1454,15 @@ describe("useAuthenticatedApi", () => {
           const nullClient = null;
           const { result } = renderHook(() => useAuthenticatedApi(nullClient));
           await expect(
-            result.current.authenticatedPost("/test", { data: "test" })
+            result.current.authenticatedPost("/test", { data: "test" }),
           ).rejects.toThrow(HTTP_CLIENT_ERROR_MSG);
         });
         it("should verify exact error message in URL validation", async () => {
-          const { result } = renderHook(
-            () => useAuthenticatedApi(mockHttpClient, "   ")
+          const { result } = renderHook(() =>
+            useAuthenticatedApi(mockHttpClient, "   "),
           );
           await expect(
-            result.current.authenticatedPost("", { data: "test" })
+            result.current.authenticatedPost("", { data: "test" }),
           ).rejects.toThrow(URL_EMPTY_ERROR_MSG);
         });
       });
@@ -1394,16 +1474,18 @@ describe("useAuthenticatedApi", () => {
             login: jest.fn(),
             register: jest.fn(),
             logout: jest.fn(),
-            isAuthenticated: true
+            isAuthenticated: true,
           });
-          const { result } = renderHook(() => useAuthenticatedApi(mockHttpClient));
+          const { result } = renderHook(() =>
+            useAuthenticatedApi(mockHttpClient),
+          );
           await result.current.authenticatedPost("/test", { data: "test" });
           expect(mockPost).toHaveBeenCalledWith(
             expect.any(String),
             expect.any(Object),
             expect.objectContaining({
-              Authorization: "Bearer test-token"
-            })
+              Authorization: "Bearer test-token",
+            }),
           );
         });
         it("should verify token conditional - token is falsy", async () => {
@@ -1413,49 +1495,55 @@ describe("useAuthenticatedApi", () => {
             login: jest.fn(),
             register: jest.fn(),
             logout: jest.fn(),
-            isAuthenticated: false
+            isAuthenticated: false,
           });
-          const { result } = renderHook(() => useAuthenticatedApi(mockHttpClient));
+          const { result } = renderHook(() =>
+            useAuthenticatedApi(mockHttpClient),
+          );
           await result.current.authenticatedPost("/test", { data: "test" });
           expect(mockPost).toHaveBeenCalledWith(
             expect.any(String),
             expect.any(Object),
             expect.not.objectContaining({
-              Authorization: expect.any(String)
-            })
+              Authorization: expect.any(String),
+            }),
           );
         });
         it('should verify url.trim() === "" check - whitespace baseUrl and empty endpoint', async () => {
-          const { result } = renderHook(
-            () => useAuthenticatedApi(mockHttpClient, "   ")
+          const { result } = renderHook(() =>
+            useAuthenticatedApi(mockHttpClient, "   "),
           );
           await expect(
-            result.current.authenticatedPost("", { data: "test" })
+            result.current.authenticatedPost("", { data: "test" }),
           ).rejects.toThrow(URL_EMPTY_ERROR_MSG);
         });
         it('should verify url.trim() === "" check - whitespace baseUrl and whitespace endpoint', async () => {
-          const { result } = renderHook(
-            () => useAuthenticatedApi(mockHttpClient, "   ")
+          const { result } = renderHook(() =>
+            useAuthenticatedApi(mockHttpClient, "   "),
           );
           await expect(
-            result.current.authenticatedPost("   ", { data: "test" })
+            result.current.authenticatedPost("   ", { data: "test" }),
           ).rejects.toThrow(URL_EMPTY_ERROR_MSG);
         });
         it('should verify url.trim() === "" check - non-empty', async () => {
-          const { result } = renderHook(() => useAuthenticatedApi(mockHttpClient));
+          const { result } = renderHook(() =>
+            useAuthenticatedApi(mockHttpClient),
+          );
           await result.current.authenticatedPost("/test", { data: "test" });
           expect(mockPost).toHaveBeenCalled();
         });
         it("should verify !url check - whitespace baseUrl creates empty URL after trim", async () => {
-          const { result } = renderHook(
-            () => useAuthenticatedApi(mockHttpClient, "   ")
+          const { result } = renderHook(() =>
+            useAuthenticatedApi(mockHttpClient, "   "),
           );
           await expect(
-            result.current.authenticatedPost("", { data: "test" })
+            result.current.authenticatedPost("", { data: "test" }),
           ).rejects.toThrow(URL_EMPTY_ERROR_MSG);
         });
         it("should verify !url check - url is non-empty", async () => {
-          const { result } = renderHook(() => useAuthenticatedApi(mockHttpClient));
+          const { result } = renderHook(() =>
+            useAuthenticatedApi(mockHttpClient),
+          );
           await result.current.authenticatedPost("/test", { data: "test" });
           expect(mockPost).toHaveBeenCalled();
         });
@@ -1463,39 +1551,49 @@ describe("useAuthenticatedApi", () => {
     });
     describe("baseUrl fallback paths", () => {
       it("should handle when apiBaseUrl is null", () => {
-        const { result } = renderHook(() => useAuthenticatedApi(mockHttpClient, null));
+        const { result } = renderHook(() =>
+          useAuthenticatedApi(mockHttpClient, null),
+        );
         result.current.authenticatedGet("/test");
         expect(mockGet).toHaveBeenCalledWith(
           `${API_CONFIG.BASE_URL}/test`,
-          expect.any(Object)
+          expect.any(Object),
         );
       });
       it("should handle when apiBaseUrl is not a string", () => {
-        const { result } = renderHook(() => useAuthenticatedApi(mockHttpClient, 123));
+        const { result } = renderHook(() =>
+          useAuthenticatedApi(mockHttpClient, 123),
+        );
         result.current.authenticatedGet("/test");
         expect(mockGet).toHaveBeenCalledWith(
           `${API_CONFIG.BASE_URL}/test`,
-          expect.any(Object)
+          expect.any(Object),
         );
       });
       it("should handle when apiBaseUrl is empty string", () => {
-        const { result } = renderHook(() => useAuthenticatedApi(mockHttpClient, ""));
+        const { result } = renderHook(() =>
+          useAuthenticatedApi(mockHttpClient, ""),
+        );
         result.current.authenticatedGet("/test");
         expect(mockGet).toHaveBeenCalledWith(
           `${API_CONFIG.BASE_URL}/test`,
-          expect.any(Object)
+          expect.any(Object),
         );
       });
     });
     describe("client initialization fallback paths", () => {
       it("should handle when clientResult is null", () => {
-        jest.spyOn(require("../utils/logicalOr"), "logicalOr").mockReturnValueOnce(null);
+        jest
+          .spyOn(require("../utils/logicalOr"), "logicalOr")
+          .mockReturnValueOnce(null);
         const { result } = renderHook(() => useAuthenticatedApi(void 0));
         expect(result.current.authenticatedGet).toBeDefined();
         expect(result.current.authenticatedPost).toBeDefined();
       });
       it("should handle when clientResult is undefined", () => {
-        jest.spyOn(require("../utils/logicalOr"), "logicalOr").mockReturnValueOnce(void 0);
+        jest
+          .spyOn(require("../utils/logicalOr"), "logicalOr")
+          .mockReturnValueOnce(void 0);
         const { result } = renderHook(() => useAuthenticatedApi(void 0));
         expect(result.current.authenticatedGet).toBeDefined();
         expect(result.current.authenticatedPost).toBeDefined();
@@ -1507,11 +1605,11 @@ describe("useAuthenticatedApi", () => {
           post: jest.fn().mockRejectedValue("string error"),
           get: mockGet,
           put: mockPut,
-          delete: mockDelete
+          delete: mockDelete,
         };
         const { result } = renderHook(() => useAuthenticatedApi(errorClient));
         await expect(
-          result.current.authenticatedPost("/test", { data: "test" })
+          result.current.authenticatedPost("/test", { data: "test" }),
         ).rejects.toThrow("string error");
       });
       it("should handle when error is not an Error instance in GET", async () => {
@@ -1519,23 +1617,23 @@ describe("useAuthenticatedApi", () => {
           get: jest.fn().mockRejectedValue({ message: "object error" }),
           post: mockPost,
           put: mockPut,
-          delete: mockDelete
+          delete: mockDelete,
         };
         const { result } = renderHook(() => useAuthenticatedApi(errorClient));
-        await expect(
-          result.current.authenticatedGet("/test")
-        ).rejects.toThrow("object error");
+        await expect(result.current.authenticatedGet("/test")).rejects.toThrow(
+          "object error",
+        );
       });
       it("should handle when error is not an Error instance in PUT", async () => {
         const errorClient = {
           put: jest.fn().mockRejectedValue(null),
           get: mockGet,
           post: mockPost,
-          delete: mockDelete
+          delete: mockDelete,
         };
         const { result } = renderHook(() => useAuthenticatedApi(errorClient));
         await expect(
-          result.current.authenticatedPut("/test", { data: "test" })
+          result.current.authenticatedPut("/test", { data: "test" }),
         ).rejects.toThrow("Request failed");
       });
       it("should handle when error is not an Error instance in DELETE", async () => {
@@ -1543,11 +1641,11 @@ describe("useAuthenticatedApi", () => {
           delete: jest.fn().mockRejectedValue(void 0),
           get: mockGet,
           post: mockPost,
-          put: mockPut
+          put: mockPut,
         };
         const { result } = renderHook(() => useAuthenticatedApi(errorClient));
         await expect(
-          result.current.authenticatedDelete("/test")
+          result.current.authenticatedDelete("/test"),
         ).rejects.toThrow("Request failed");
       });
     });
@@ -1555,8 +1653,15 @@ describe("useAuthenticatedApi", () => {
       it("should wrap Error instance with non-preserved name as RequestError in POST", async () => {
         const genericError = new Error("Network error");
         genericError.name = "NetworkError";
-        jest.spyOn(require("../utils/authenticatedRequestHandler"), "executeAuthenticatedRequest").mockRejectedValueOnce(genericError);
-        const { result } = renderHook(() => useAuthenticatedApi(mockHttpClient));
+        jest
+          .spyOn(
+            require("../utils/authenticatedRequestHandler"),
+            "executeAuthenticatedRequest",
+          )
+          .mockRejectedValueOnce(genericError);
+        const { result } = renderHook(() =>
+          useAuthenticatedApi(mockHttpClient),
+        );
         try {
           await result.current.authenticatedPost("/test", { data: "test" });
           throw new Error("Should have thrown an error");
@@ -1568,8 +1673,15 @@ describe("useAuthenticatedApi", () => {
       it("should wrap Error instance with non-preserved name as RequestError in GET", async () => {
         const genericError = new Error("Timeout error");
         genericError.name = "TimeoutError";
-        jest.spyOn(require("../utils/authenticatedRequestHandler"), "executeAuthenticatedRequest").mockRejectedValueOnce(genericError);
-        const { result } = renderHook(() => useAuthenticatedApi(mockHttpClient));
+        jest
+          .spyOn(
+            require("../utils/authenticatedRequestHandler"),
+            "executeAuthenticatedRequest",
+          )
+          .mockRejectedValueOnce(genericError);
+        const { result } = renderHook(() =>
+          useAuthenticatedApi(mockHttpClient),
+        );
         try {
           await result.current.authenticatedGet("/test");
           throw new Error("Should have thrown an error");
@@ -1581,8 +1693,15 @@ describe("useAuthenticatedApi", () => {
       it("should wrap Error instance with non-preserved name as RequestError in PUT", async () => {
         const genericError = new Error("Server error");
         genericError.name = "ServerError";
-        jest.spyOn(require("../utils/authenticatedRequestHandler"), "executeAuthenticatedRequest").mockRejectedValueOnce(genericError);
-        const { result } = renderHook(() => useAuthenticatedApi(mockHttpClient));
+        jest
+          .spyOn(
+            require("../utils/authenticatedRequestHandler"),
+            "executeAuthenticatedRequest",
+          )
+          .mockRejectedValueOnce(genericError);
+        const { result } = renderHook(() =>
+          useAuthenticatedApi(mockHttpClient),
+        );
         try {
           await result.current.authenticatedPut("/test", { data: "test" });
           throw new Error("Should have thrown an error");
@@ -1594,8 +1713,15 @@ describe("useAuthenticatedApi", () => {
       it("should wrap Error instance with non-preserved name as RequestError in DELETE", async () => {
         const genericError = new Error("Connection error");
         genericError.name = "ConnectionError";
-        jest.spyOn(require("../utils/authenticatedRequestHandler"), "executeAuthenticatedRequest").mockRejectedValueOnce(genericError);
-        const { result } = renderHook(() => useAuthenticatedApi(mockHttpClient));
+        jest
+          .spyOn(
+            require("../utils/authenticatedRequestHandler"),
+            "executeAuthenticatedRequest",
+          )
+          .mockRejectedValueOnce(genericError);
+        const { result } = renderHook(() =>
+          useAuthenticatedApi(mockHttpClient),
+        );
         try {
           await result.current.authenticatedDelete("/test");
           throw new Error("Should have thrown an error");
@@ -1609,8 +1735,15 @@ describe("useAuthenticatedApi", () => {
       it("should preserve UnsupportedMethodError name in POST", async () => {
         const unsupportedError = new Error("Unsupported HTTP method: PATCH");
         unsupportedError.name = "UnsupportedMethodError";
-        jest.spyOn(require("../utils/authenticatedRequestHandler"), "executeAuthenticatedRequest").mockRejectedValueOnce(unsupportedError);
-        const { result } = renderHook(() => useAuthenticatedApi(mockHttpClient));
+        jest
+          .spyOn(
+            require("../utils/authenticatedRequestHandler"),
+            "executeAuthenticatedRequest",
+          )
+          .mockRejectedValueOnce(unsupportedError);
+        const { result } = renderHook(() =>
+          useAuthenticatedApi(mockHttpClient),
+        );
         try {
           await result.current.authenticatedPost("/test", { data: "test" });
           throw new Error("Should have thrown an error");
@@ -1622,8 +1755,15 @@ describe("useAuthenticatedApi", () => {
       it("should preserve UnsupportedMethodError name in GET", async () => {
         const unsupportedError = new Error("Unsupported HTTP method: PATCH");
         unsupportedError.name = "UnsupportedMethodError";
-        jest.spyOn(require("../utils/authenticatedRequestHandler"), "executeAuthenticatedRequest").mockRejectedValueOnce(unsupportedError);
-        const { result } = renderHook(() => useAuthenticatedApi(mockHttpClient));
+        jest
+          .spyOn(
+            require("../utils/authenticatedRequestHandler"),
+            "executeAuthenticatedRequest",
+          )
+          .mockRejectedValueOnce(unsupportedError);
+        const { result } = renderHook(() =>
+          useAuthenticatedApi(mockHttpClient),
+        );
         try {
           await result.current.authenticatedGet("/test");
           throw new Error("Should have thrown an error");
@@ -1635,8 +1775,15 @@ describe("useAuthenticatedApi", () => {
       it("should preserve UnsupportedMethodError name in PUT", async () => {
         const unsupportedError = new Error("Unsupported HTTP method: PATCH");
         unsupportedError.name = "UnsupportedMethodError";
-        jest.spyOn(require("../utils/authenticatedRequestHandler"), "executeAuthenticatedRequest").mockRejectedValueOnce(unsupportedError);
-        const { result } = renderHook(() => useAuthenticatedApi(mockHttpClient));
+        jest
+          .spyOn(
+            require("../utils/authenticatedRequestHandler"),
+            "executeAuthenticatedRequest",
+          )
+          .mockRejectedValueOnce(unsupportedError);
+        const { result } = renderHook(() =>
+          useAuthenticatedApi(mockHttpClient),
+        );
         try {
           await result.current.authenticatedPut("/test", { data: "test" });
           throw new Error("Should have thrown an error");
@@ -1648,8 +1795,15 @@ describe("useAuthenticatedApi", () => {
       it("should preserve UnsupportedMethodError name in DELETE", async () => {
         const unsupportedError = new Error("Unsupported HTTP method: PATCH");
         unsupportedError.name = "UnsupportedMethodError";
-        jest.spyOn(require("../utils/authenticatedRequestHandler"), "executeAuthenticatedRequest").mockRejectedValueOnce(unsupportedError);
-        const { result } = renderHook(() => useAuthenticatedApi(mockHttpClient));
+        jest
+          .spyOn(
+            require("../utils/authenticatedRequestHandler"),
+            "executeAuthenticatedRequest",
+          )
+          .mockRejectedValueOnce(unsupportedError);
+        const { result } = renderHook(() =>
+          useAuthenticatedApi(mockHttpClient),
+        );
         try {
           await result.current.authenticatedDelete("/test");
           throw new Error("Should have thrown an error");
@@ -1663,8 +1817,15 @@ describe("useAuthenticatedApi", () => {
       it("should wrap Error instance with different name as RequestError in POST", async () => {
         const customError = new Error("Custom error message");
         customError.name = "CustomError";
-        jest.spyOn(require("../utils/authenticatedRequestHandler"), "executeAuthenticatedRequest").mockRejectedValueOnce(customError);
-        const { result } = renderHook(() => useAuthenticatedApi(mockHttpClient));
+        jest
+          .spyOn(
+            require("../utils/authenticatedRequestHandler"),
+            "executeAuthenticatedRequest",
+          )
+          .mockRejectedValueOnce(customError);
+        const { result } = renderHook(() =>
+          useAuthenticatedApi(mockHttpClient),
+        );
         try {
           await result.current.authenticatedPost("/test", { data: "test" });
           throw new Error("Should have thrown an error");
@@ -1676,8 +1837,15 @@ describe("useAuthenticatedApi", () => {
       it("should wrap Error instance with different name as RequestError in GET", async () => {
         const customError = new Error("Network error");
         customError.name = "NetworkError";
-        jest.spyOn(require("../utils/authenticatedRequestHandler"), "executeAuthenticatedRequest").mockRejectedValueOnce(customError);
-        const { result } = renderHook(() => useAuthenticatedApi(mockHttpClient));
+        jest
+          .spyOn(
+            require("../utils/authenticatedRequestHandler"),
+            "executeAuthenticatedRequest",
+          )
+          .mockRejectedValueOnce(customError);
+        const { result } = renderHook(() =>
+          useAuthenticatedApi(mockHttpClient),
+        );
         try {
           await result.current.authenticatedGet("/test");
           throw new Error("Should have thrown an error");
@@ -1689,8 +1857,15 @@ describe("useAuthenticatedApi", () => {
       it("should wrap Error instance with different name as RequestError in PUT", async () => {
         const customError = new Error("Server error");
         customError.name = "ServerError";
-        jest.spyOn(require("../utils/authenticatedRequestHandler"), "executeAuthenticatedRequest").mockRejectedValueOnce(customError);
-        const { result } = renderHook(() => useAuthenticatedApi(mockHttpClient));
+        jest
+          .spyOn(
+            require("../utils/authenticatedRequestHandler"),
+            "executeAuthenticatedRequest",
+          )
+          .mockRejectedValueOnce(customError);
+        const { result } = renderHook(() =>
+          useAuthenticatedApi(mockHttpClient),
+        );
         try {
           await result.current.authenticatedPut("/test", { data: "test" });
           throw new Error("Should have thrown an error");
@@ -1702,8 +1877,15 @@ describe("useAuthenticatedApi", () => {
       it("should wrap Error instance with different name as RequestError in DELETE", async () => {
         const customError = new Error("Timeout error");
         customError.name = "TimeoutError";
-        jest.spyOn(require("../utils/authenticatedRequestHandler"), "executeAuthenticatedRequest").mockRejectedValueOnce(customError);
-        const { result } = renderHook(() => useAuthenticatedApi(mockHttpClient));
+        jest
+          .spyOn(
+            require("../utils/authenticatedRequestHandler"),
+            "executeAuthenticatedRequest",
+          )
+          .mockRejectedValueOnce(customError);
+        const { result } = renderHook(() =>
+          useAuthenticatedApi(mockHttpClient),
+        );
         try {
           await result.current.authenticatedDelete("/test");
           throw new Error("Should have thrown an error");

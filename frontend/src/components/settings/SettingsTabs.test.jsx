@@ -1,4 +1,3 @@
-import { jsx } from "react/jsx-runtime";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { SettingsTabs } from "./SettingsTabs";
 import { SETTINGS_TABS } from "../../constants/settingsConstants";
@@ -9,41 +8,34 @@ describe("SettingsTabs", () => {
   });
   it("should render both tabs", () => {
     render(
-      /* @__PURE__ */ jsx(
-        SettingsTabs,
-        {
-          activeTab: SETTINGS_TABS.LLM,
-          onTabChange: mockOnTabChange
-        }
-      )
+      <SettingsTabs
+        activeTab={SETTINGS_TABS.LLM}
+        onTabChange={mockOnTabChange}
+      />,
     );
     expect(screen.getByText("LLM Providers")).toBeInTheDocument();
     expect(screen.getByText("Workflow Generation")).toBeInTheDocument();
   });
   it("should highlight active tab", () => {
     render(
-      /* @__PURE__ */ jsx(
-        SettingsTabs,
-        {
-          activeTab: SETTINGS_TABS.LLM,
-          onTabChange: mockOnTabChange
-        }
-      )
+      <SettingsTabs
+        activeTab={SETTINGS_TABS.LLM}
+        onTabChange={mockOnTabChange}
+      />,
     );
     const llmTab = screen.getByText("LLM Providers").closest("button");
-    const workflowTab = screen.getByText("Workflow Generation").closest("button");
+    const workflowTab = screen
+      .getByText("Workflow Generation")
+      .closest("button");
     expect(llmTab).toHaveClass("bg-primary-600", "text-white");
     expect(workflowTab).not.toHaveClass("bg-primary-600", "text-white");
   });
   it("should call onTabChange when tab is clicked", () => {
     render(
-      /* @__PURE__ */ jsx(
-        SettingsTabs,
-        {
-          activeTab: SETTINGS_TABS.LLM,
-          onTabChange: mockOnTabChange
-        }
-      )
+      <SettingsTabs
+        activeTab={SETTINGS_TABS.LLM}
+        onTabChange={mockOnTabChange}
+      />,
     );
     const workflowTab = screen.getByText("Workflow Generation");
     fireEvent.click(workflowTab);
@@ -52,26 +44,20 @@ describe("SettingsTabs", () => {
   });
   it("should switch active tab highlight when tab changes", () => {
     const { rerender } = render(
-      /* @__PURE__ */ jsx(
-        SettingsTabs,
-        {
-          activeTab: SETTINGS_TABS.LLM,
-          onTabChange: mockOnTabChange
-        }
-      )
+      <SettingsTabs
+        activeTab={SETTINGS_TABS.LLM}
+        onTabChange={mockOnTabChange}
+      />,
     );
     let llmTab = screen.getByText("LLM Providers").closest("button");
     let workflowTab = screen.getByText("Workflow Generation").closest("button");
     expect(llmTab).toHaveClass("bg-primary-600", "text-white");
     expect(workflowTab).not.toHaveClass("bg-primary-600", "text-white");
     rerender(
-      /* @__PURE__ */ jsx(
-        SettingsTabs,
-        {
-          activeTab: SETTINGS_TABS.WORKFLOW,
-          onTabChange: mockOnTabChange
-        }
-      )
+      <SettingsTabs
+        activeTab={SETTINGS_TABS.WORKFLOW}
+        onTabChange={mockOnTabChange}
+      />,
     );
     llmTab = screen.getByText("LLM Providers").closest("button");
     workflowTab = screen.getByText("Workflow Generation").closest("button");
@@ -80,15 +66,17 @@ describe("SettingsTabs", () => {
   });
   it("should have correct container structure", () => {
     const { container } = render(
-      /* @__PURE__ */ jsx(
-        SettingsTabs,
-        {
-          activeTab: SETTINGS_TABS.LLM,
-          onTabChange: mockOnTabChange
-        }
-      )
+      <SettingsTabs
+        activeTab={SETTINGS_TABS.LLM}
+        onTabChange={mockOnTabChange}
+      />,
     );
     const tabsContainer = container.firstChild;
-    expect(tabsContainer).toHaveClass("flex", "flex-col", "gap-2", "min-w-[170px]");
+    expect(tabsContainer).toHaveClass(
+      "flex",
+      "flex-col",
+      "gap-2",
+      "min-w-[170px]",
+    );
   });
 });

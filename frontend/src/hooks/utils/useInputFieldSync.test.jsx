@@ -1,14 +1,14 @@
 import { renderHook, act } from "@testing-library/react";
 import {
   useInputFieldSync,
-  useInputFieldSyncSimple
+  useInputFieldSyncSimple,
 } from "./useInputFieldSync";
 describe("useInputFieldSync", () => {
   describe("useInputFieldSync", () => {
     it("should initialize with default value", () => {
       const ref = { current: null };
-      const { result } = renderHook(
-        () => useInputFieldSync(ref, null, "default")
+      const { result } = renderHook(() =>
+        useInputFieldSync(ref, null, "default"),
       );
       expect(result.current[0]).toBe("default");
     });
@@ -16,7 +16,7 @@ describe("useInputFieldSync", () => {
       const ref = { current: null };
       const { result, rerender } = renderHook(
         ({ configValue }) => useInputFieldSync(ref, configValue, "default"),
-        { initialProps: { configValue: null } }
+        { initialProps: { configValue: null } },
       );
       expect(result.current[0]).toBe("default");
       rerender({ configValue: "new-value" });
@@ -28,7 +28,7 @@ describe("useInputFieldSync", () => {
       const ref = { current: input };
       const { result, rerender } = renderHook(
         ({ configValue }) => useInputFieldSync(ref, configValue, "default"),
-        { initialProps: { configValue: "initial" } }
+        { initialProps: { configValue: "initial" } },
       );
       expect(result.current[0]).toBe("initial");
       act(() => {
@@ -47,7 +47,7 @@ describe("useInputFieldSync", () => {
       const ref = { current: null };
       const { result, rerender } = renderHook(
         ({ configValue }) => useInputFieldSync(ref, configValue, "default"),
-        { initialProps: { configValue: "value" } }
+        { initialProps: { configValue: "value" } },
       );
       expect(result.current[0]).toBe("value");
       rerender({ configValue: null });
@@ -57,7 +57,7 @@ describe("useInputFieldSync", () => {
       const ref = { current: null };
       const { result, rerender } = renderHook(
         ({ configValue }) => useInputFieldSync(ref, configValue, "default"),
-        { initialProps: { configValue: "value" } }
+        { initialProps: { configValue: "value" } },
       );
       expect(result.current[0]).toBe("value");
       rerender({ configValue: void 0 });
@@ -67,7 +67,7 @@ describe("useInputFieldSync", () => {
       const ref = { current: null };
       const { result, rerender } = renderHook(
         ({ configValue }) => useInputFieldSync(ref, configValue, "default"),
-        { initialProps: { configValue: "value" } }
+        { initialProps: { configValue: "value" } },
       );
       expect(result.current[0]).toBe("value");
       rerender({ configValue: "" });
@@ -77,7 +77,7 @@ describe("useInputFieldSync", () => {
       const ref = { current: null };
       const { result, rerender } = renderHook(
         ({ configValue }) => useInputFieldSync(ref, configValue, 0),
-        { initialProps: { configValue: 5 } }
+        { initialProps: { configValue: 5 } },
       );
       expect(result.current[0]).toBe(5);
       rerender({ configValue: null });
@@ -85,8 +85,8 @@ describe("useInputFieldSync", () => {
     });
     it("should allow manual value updates via setValue", () => {
       const ref = { current: null };
-      const { result } = renderHook(
-        () => useInputFieldSync(ref, "config", "default")
+      const { result } = renderHook(() =>
+        useInputFieldSync(ref, "config", "default"),
       );
       expect(result.current[0]).toBe("config");
       act(() => {
@@ -98,7 +98,7 @@ describe("useInputFieldSync", () => {
       const ref = { current: null };
       const { result, rerender } = renderHook(
         ({ configValue }) => useInputFieldSync(ref, configValue, false),
-        { initialProps: { configValue: true } }
+        { initialProps: { configValue: true } },
       );
       expect(result.current[0]).toBe(true);
       rerender({ configValue: false });
@@ -109,15 +109,15 @@ describe("useInputFieldSync", () => {
   });
   describe("useInputFieldSyncSimple", () => {
     it("should initialize with default value", () => {
-      const { result } = renderHook(
-        () => useInputFieldSyncSimple(null, "default")
+      const { result } = renderHook(() =>
+        useInputFieldSyncSimple(null, "default"),
       );
       expect(result.current[0]).toBe("default");
     });
     it("should update when configValue changes", () => {
       const { result, rerender } = renderHook(
         ({ configValue }) => useInputFieldSyncSimple(configValue, "default"),
-        { initialProps: { configValue: null } }
+        { initialProps: { configValue: null } },
       );
       expect(result.current[0]).toBe("default");
       rerender({ configValue: "new-value" });
@@ -126,7 +126,7 @@ describe("useInputFieldSync", () => {
     it("should handle null configValue", () => {
       const { result, rerender } = renderHook(
         ({ configValue }) => useInputFieldSyncSimple(configValue, "default"),
-        { initialProps: { configValue: "value" } }
+        { initialProps: { configValue: "value" } },
       );
       expect(result.current[0]).toBe("value");
       rerender({ configValue: null });
@@ -135,7 +135,7 @@ describe("useInputFieldSync", () => {
     it("should handle undefined configValue", () => {
       const { result, rerender } = renderHook(
         ({ configValue }) => useInputFieldSyncSimple(configValue, "default"),
-        { initialProps: { configValue: "value" } }
+        { initialProps: { configValue: "value" } },
       );
       expect(result.current[0]).toBe("value");
       rerender({ configValue: void 0 });
@@ -144,15 +144,15 @@ describe("useInputFieldSync", () => {
     it("should handle empty string configValue for string type", () => {
       const { result, rerender } = renderHook(
         ({ configValue }) => useInputFieldSyncSimple(configValue, "default"),
-        { initialProps: { configValue: "value" } }
+        { initialProps: { configValue: "value" } },
       );
       expect(result.current[0]).toBe("value");
       rerender({ configValue: "" });
       expect(result.current[0]).toBe("default");
     });
     it("should allow manual value updates via setValue", () => {
-      const { result } = renderHook(
-        () => useInputFieldSyncSimple("config", "default")
+      const { result } = renderHook(() =>
+        useInputFieldSyncSimple("config", "default"),
       );
       expect(result.current[0]).toBe("config");
       act(() => {
@@ -163,7 +163,7 @@ describe("useInputFieldSync", () => {
     it("should handle number values", () => {
       const { result, rerender } = renderHook(
         ({ configValue }) => useInputFieldSyncSimple(configValue, 0),
-        { initialProps: { configValue: 42 } }
+        { initialProps: { configValue: 42 } },
       );
       expect(result.current[0]).toBe(42);
       rerender({ configValue: null });
@@ -172,7 +172,7 @@ describe("useInputFieldSync", () => {
     it("should handle boolean values", () => {
       const { result, rerender } = renderHook(
         ({ configValue }) => useInputFieldSyncSimple(configValue, false),
-        { initialProps: { configValue: true } }
+        { initialProps: { configValue: true } },
       );
       expect(result.current[0]).toBe(true);
       rerender({ configValue: false });

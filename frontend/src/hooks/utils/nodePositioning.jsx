@@ -3,7 +3,7 @@ const DEFAULT_OPTIONS = {
   horizontalSpacing: 200,
   verticalSpacing: 150,
   defaultX: 250,
-  defaultY: 250
+  defaultY: 250,
 };
 function mergeOptions(options = {}) {
   return { ...DEFAULT_OPTIONS, ...options };
@@ -31,7 +31,12 @@ function calculateMultipleNodePositions(existingNodes, count, options = {}) {
   const strategy = createPositioningStrategy("vertical");
   return strategy.calculatePositions(existingNodes, count, opts);
 }
-function calculateGridPosition(existingNodes, count, columnsPerRow = 3, options = {}) {
+function calculateGridPosition(
+  existingNodes,
+  count,
+  columnsPerRow = 3,
+  options = {},
+) {
   const opts = mergeOptions(options);
   const strategy = createPositioningStrategy("grid", columnsPerRow);
   return strategy.calculatePositions(existingNodes, count, opts);
@@ -39,7 +44,7 @@ function calculateGridPosition(existingNodes, count, columnsPerRow = 3, options 
 function calculateRelativePosition(referenceNode, offset = { x: 200, y: 0 }) {
   return {
     x: referenceNode.position.x + offset.x,
-    y: referenceNode.position.y + offset.y
+    y: referenceNode.position.y + offset.y,
   };
 }
 export {
@@ -48,5 +53,5 @@ export {
   calculateNextNodePosition,
   calculateRelativePosition,
   getMaxNodeX,
-  getMaxNodeY
+  getMaxNodeY,
 };

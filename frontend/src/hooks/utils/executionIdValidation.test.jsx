@@ -4,7 +4,7 @@ import {
   isValidExecutionId,
   executionIdStartsWith,
   shouldLogExecutionError,
-  isTemporaryExecutionId
+  isTemporaryExecutionId,
 } from "./executionIdValidation";
 describe("executionIdValidation", () => {
   describe("isPendingExecutionId", () => {

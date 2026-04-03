@@ -7,7 +7,7 @@ import {
   isNonEmptyArray,
   isNotEmpty,
   hasItems,
-  getOrDefault
+  getOrDefault,
 } from "./nullChecks";
 describe("nullChecks utilities", () => {
   describe("isNotNullOrUndefined", () => {

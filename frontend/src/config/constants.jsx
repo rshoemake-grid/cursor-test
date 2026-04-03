@@ -43,12 +43,12 @@ const API_CONFIG = {
       REGISTER: "/auth/register",
       LOGOUT: "/auth/logout",
       FORGOT_PASSWORD: "/auth/forgot-password",
-      RESET_PASSWORD: "/auth/reset-password"
+      RESET_PASSWORD: "/auth/reset-password",
     },
     LLM: {
-      TEST: "/settings/llm/test"
-    }
-  }
+      TEST: "/settings/llm/test",
+    },
+  },
 };
 const STORAGE_KEYS = {
   WORKFLOW_TABS: "workflowTabs",
@@ -66,7 +66,7 @@ const STORAGE_KEYS = {
   CUSTOM_AGENT_NODES: "customAgentNodes",
   CUSTOM_TOOL_NODES: "customToolNodes",
   PUBLISHED_TOOLS: "publishedTools",
-  WORKFLOW_ID_PREFIX: "workflow-"
+  WORKFLOW_ID_PREFIX: "workflow-",
 };
 const DEFAULT_VALUES = {
   AWS_REGION: "us-east-1",
@@ -74,23 +74,23 @@ const DEFAULT_VALUES = {
   NOTIFICATION_DURATION: 5e3,
   WORKFLOW_NAME: "Untitled Workflow",
   MAX_TOKENS: 2e3,
-  TEMPERATURE: 0.7
+  TEMPERATURE: 0.7,
 };
 const UI_CONSTANTS = {
   NOTIFICATION_POSITION: {
     TOP: 20,
-    RIGHT: 20
+    RIGHT: 20,
   },
   ANIMATION_DURATION: {
     SLIDE_IN: 300,
-    FADE_OUT: 300
+    FADE_OUT: 300,
   },
   CONSOLE_HEIGHT: {
     MIN: 200,
     MAX: 600,
-    DEFAULT: 300
+    DEFAULT: 300,
   },
-  SAVE_STATUS_DELAY: 2e3
+  SAVE_STATUS_DELAY: 2e3,
   // Delay before resetting save status (ms)
 };
 const NODE_TYPES = {
@@ -106,8 +106,8 @@ const NODE_TYPES = {
     LOCAL_FILESYSTEM: "local_filesystem",
     DATABASE: "database",
     FIREBASE: "firebase",
-    BIGQUERY: "bigquery"
-  }
+    BIGQUERY: "bigquery",
+  },
 };
 function buildStorageKey(prefix, suffix) {
   return suffix ? `${prefix}${suffix}` : prefix;
@@ -128,5 +128,5 @@ export {
   STORAGE_KEYS,
   UI_CONSTANTS,
   buildStorageKey,
-  getChatHistoryKey
+  getChatHistoryKey,
 };

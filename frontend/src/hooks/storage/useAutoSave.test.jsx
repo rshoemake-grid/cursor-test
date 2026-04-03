@@ -7,8 +7,8 @@ jest.mock("../../utils/logger", () => ({
     error: jest.fn(),
     info: jest.fn(),
     warn: jest.fn(),
-    log: jest.fn()
-  }
+    log: jest.fn(),
+  },
 }));
 describe("useAutoSave", () => {
   beforeEach(() => {
@@ -29,10 +29,9 @@ describe("useAutoSave", () => {
   });
   it("should save after value changes and delay", () => {
     const saveFn = jest.fn();
-    const { rerender } = renderHook(
-      ({ value }) => useAutoSave(value, saveFn),
-      { initialProps: { value: "initial" } }
-    );
+    const { rerender } = renderHook(({ value }) => useAutoSave(value, saveFn), {
+      initialProps: { value: "initial" },
+    });
     rerender({ value: "updated" });
     act(() => {
       jest.advanceTimersByTime(500);
@@ -42,10 +41,9 @@ describe("useAutoSave", () => {
   });
   it("should debounce multiple rapid changes", () => {
     const saveFn = jest.fn();
-    const { rerender } = renderHook(
-      ({ value }) => useAutoSave(value, saveFn),
-      { initialProps: { value: "initial" } }
-    );
+    const { rerender } = renderHook(({ value }) => useAutoSave(value, saveFn), {
+      initialProps: { value: "initial" },
+    });
     rerender({ value: "change1" });
     act(() => {
       jest.advanceTimersByTime(200);
@@ -65,7 +63,7 @@ describe("useAutoSave", () => {
     const saveFn = jest.fn();
     const { rerender } = renderHook(
       ({ value }) => useAutoSave(value, saveFn, 1e3),
-      { initialProps: { value: "initial" } }
+      { initialProps: { value: "initial" } },
     );
     rerender({ value: "updated" });
     act(() => {
@@ -81,7 +79,7 @@ describe("useAutoSave", () => {
     const saveFn = jest.fn();
     const { rerender } = renderHook(
       ({ value }) => useAutoSave(value, saveFn, 500, false),
-      { initialProps: { value: "initial" } }
+      { initialProps: { value: "initial" } },
     );
     rerender({ value: "updated" });
     act(() => {
@@ -93,7 +91,7 @@ describe("useAutoSave", () => {
     const saveFn = jest.fn();
     const { rerender } = renderHook(
       ({ value, enabled }) => useAutoSave(value, saveFn, 500, enabled),
-      { initialProps: { value: "initial", enabled: false } }
+      { initialProps: { value: "initial", enabled: false } },
     );
     rerender({ value: "updated", enabled: false });
     act(() => {
@@ -114,10 +112,9 @@ describe("useAutoSave", () => {
   });
   it("should not save when value has not changed", () => {
     const saveFn = jest.fn();
-    const { rerender } = renderHook(
-      ({ value }) => useAutoSave(value, saveFn),
-      { initialProps: { value: "same" } }
-    );
+    const { rerender } = renderHook(({ value }) => useAutoSave(value, saveFn), {
+      initialProps: { value: "same" },
+    });
     rerender({ value: "same" });
     act(() => {
       jest.advanceTimersByTime(1e3);
@@ -127,10 +124,9 @@ describe("useAutoSave", () => {
   it("should handle object values with shallow comparison", () => {
     const saveFn = jest.fn();
     const initialValue = { key: "value" };
-    const { rerender } = renderHook(
-      ({ value }) => useAutoSave(value, saveFn),
-      { initialProps: { value: initialValue } }
-    );
+    const { rerender } = renderHook(({ value }) => useAutoSave(value, saveFn), {
+      initialProps: { value: initialValue },
+    });
     const updatedValue = { key: "newValue" };
     rerender({ value: updatedValue });
     act(() => {
@@ -141,10 +137,9 @@ describe("useAutoSave", () => {
   });
   it("should handle array values with shallow comparison", () => {
     const saveFn = jest.fn();
-    const { rerender } = renderHook(
-      ({ value }) => useAutoSave(value, saveFn),
-      { initialProps: { value: [1, 2, 3] } }
-    );
+    const { rerender } = renderHook(({ value }) => useAutoSave(value, saveFn), {
+      initialProps: { value: [1, 2, 3] },
+    });
     rerender({ value: [1, 2, 4] });
     act(() => {
       jest.advanceTimersByTime(500);
@@ -154,10 +149,9 @@ describe("useAutoSave", () => {
   });
   it("should handle async save function", async () => {
     const saveFn = jest.fn().mockResolvedValue(void 0);
-    const { rerender } = renderHook(
-      ({ value }) => useAutoSave(value, saveFn),
-      { initialProps: { value: "initial" } }
-    );
+    const { rerender } = renderHook(({ value }) => useAutoSave(value, saveFn), {
+      initialProps: { value: "initial" },
+    });
     rerender({ value: "updated" });
     await act(async () => {
       jest.advanceTimersByTime(500);
@@ -168,22 +162,24 @@ describe("useAutoSave", () => {
     const saveFn = jest.fn().mockImplementation(() => {
       throw new Error("Save failed");
     });
-    const { rerender } = renderHook(
-      ({ value }) => useAutoSave(value, saveFn),
-      { initialProps: { value: "initial" } }
-    );
+    const { rerender } = renderHook(({ value }) => useAutoSave(value, saveFn), {
+      initialProps: { value: "initial" },
+    });
     rerender({ value: "updated" });
     act(() => {
       jest.advanceTimersByTime(500);
     });
     expect(saveFn).toHaveBeenCalledTimes(1);
-    expect(logger.error).toHaveBeenCalledWith("Auto-save failed:", expect.any(Error));
+    expect(logger.error).toHaveBeenCalledWith(
+      "Auto-save failed:",
+      expect.any(Error),
+    );
   });
   it("should cleanup timeout on unmount", () => {
     const saveFn = jest.fn();
     const { rerender, unmount } = renderHook(
       ({ value }) => useAutoSave(value, saveFn),
-      { initialProps: { value: "initial" } }
+      { initialProps: { value: "initial" } },
     );
     rerender({ value: "updated" });
     unmount();
@@ -194,10 +190,9 @@ describe("useAutoSave", () => {
   });
   it("should handle null values", () => {
     const saveFn = jest.fn();
-    const { rerender } = renderHook(
-      ({ value }) => useAutoSave(value, saveFn),
-      { initialProps: { value: null } }
-    );
+    const { rerender } = renderHook(({ value }) => useAutoSave(value, saveFn), {
+      initialProps: { value: null },
+    });
     rerender({ value: "not null" });
     act(() => {
       jest.advanceTimersByTime(500);

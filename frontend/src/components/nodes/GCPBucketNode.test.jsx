@@ -1,28 +1,25 @@
-import { jsx } from "react/jsx-runtime";
 import { render, screen } from "@testing-library/react";
 import GCPBucketNode from "./GCPBucketNode";
 import { ReactFlowProvider } from "@xyflow/react";
 const renderWithProvider = (component) => {
-  return render(
-    /* @__PURE__ */ jsx(ReactFlowProvider, { children: component })
-  );
+  return render(<ReactFlowProvider>{component}</ReactFlowProvider>);
 };
 describe("GCPBucketNode", () => {
   it("should render GCP bucket node", () => {
     const nodeData = {
-      label: "My Bucket"
+      label: "My Bucket",
     };
     renderWithProvider(
-      /* @__PURE__ */ jsx(GCPBucketNode, { data: nodeData, selected: false, id: "node-1" })
+      <GCPBucketNode data={nodeData} selected={false} id="node-1" />,
     );
     expect(screen.getByText("My Bucket")).toBeInTheDocument();
   });
   it("should render with default label", () => {
     const nodeData = {
-      label: ""
+      label: "",
     };
     renderWithProvider(
-      /* @__PURE__ */ jsx(GCPBucketNode, { data: nodeData, selected: false, id: "node-1" })
+      <GCPBucketNode data={nodeData} selected={false} id="node-1" />,
     );
     expect(screen.getByText("GCP Bucket")).toBeInTheDocument();
   });
@@ -30,11 +27,11 @@ describe("GCPBucketNode", () => {
     const nodeData = {
       label: "My Bucket",
       input_config: {
-        bucket_name: "my-bucket"
-      }
+        bucket_name: "my-bucket",
+      },
     };
     renderWithProvider(
-      /* @__PURE__ */ jsx(GCPBucketNode, { data: nodeData, selected: false, id: "node-1" })
+      <GCPBucketNode data={nodeData} selected={false} id="node-1" />,
     );
     expect(screen.getByText(/Bucket: my-bucket/)).toBeInTheDocument();
   });
@@ -42,11 +39,11 @@ describe("GCPBucketNode", () => {
     const nodeData = {
       label: "My Bucket",
       input_config: {
-        object_path: "path/to/file.txt"
-      }
+        object_path: "path/to/file.txt",
+      },
     };
     renderWithProvider(
-      /* @__PURE__ */ jsx(GCPBucketNode, { data: nodeData, selected: false, id: "node-1" })
+      <GCPBucketNode data={nodeData} selected={false} id="node-1" />,
     );
     expect(screen.getByText(/File: file.txt/)).toBeInTheDocument();
   });
@@ -54,20 +51,20 @@ describe("GCPBucketNode", () => {
     const nodeData = {
       label: "My Bucket",
       input_config: {
-        mode: "write"
-      }
+        mode: "write",
+      },
     };
     renderWithProvider(
-      /* @__PURE__ */ jsx(GCPBucketNode, { data: nodeData, selected: false, id: "node-1" })
+      <GCPBucketNode data={nodeData} selected={false} id="node-1" />,
     );
     expect(screen.getByText(/Mode: Write/)).toBeInTheDocument();
   });
   it("should show selected state", () => {
     const nodeData = {
-      label: "My Bucket"
+      label: "My Bucket",
     };
     const { container } = renderWithProvider(
-      /* @__PURE__ */ jsx(GCPBucketNode, { data: nodeData, selected: true, id: "node-1" })
+      <GCPBucketNode data={nodeData} selected={true} id="node-1" />,
     );
     const nodeElement = container.querySelector(".border-orange-500");
     expect(nodeElement).toBeInTheDocument();
@@ -75,10 +72,10 @@ describe("GCPBucketNode", () => {
   it("should show error state", () => {
     const nodeData = {
       label: "My Bucket",
-      executionStatus: "failed"
+      executionStatus: "failed",
     };
     const { container } = renderWithProvider(
-      /* @__PURE__ */ jsx(GCPBucketNode, { data: nodeData, selected: false, id: "node-1" })
+      <GCPBucketNode data={nodeData} selected={false} id="node-1" />,
     );
     const nodeElement = container.querySelector(".border-red-500");
     expect(nodeElement).toBeInTheDocument();

@@ -32,7 +32,7 @@ describe("adapters - Mutation Killers", () => {
       const mockStorage = {
         getItem: jest.fn(),
         setItem: jest.fn(),
-        removeItem: jest.fn()
+        removeItem: jest.fn(),
       };
       const adapter = defaultAdapters.createStorageAdapter(mockStorage);
       expect(adapter).not.toBeNull();

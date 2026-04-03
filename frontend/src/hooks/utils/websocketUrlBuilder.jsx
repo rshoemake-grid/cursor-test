@@ -8,6 +8,4 @@ function buildWebSocketUrl(executionId, windowLocation, authToken) {
   }
   return base;
 }
-export {
-  buildWebSocketUrl
-};
+export { buildWebSocketUrl };

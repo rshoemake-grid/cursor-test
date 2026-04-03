@@ -1,4 +1,3 @@
-import { jsx, jsxs } from "react/jsx-runtime";
 import NodePanel from "../NodePanel";
 import PropertyPanel from "../PropertyPanel";
 import WorkflowCanvas from "../WorkflowCanvas";
@@ -38,72 +37,60 @@ function WorkflowBuilderLayout({
   onExecutionStatusUpdate,
   onExecutionNodeUpdate,
   onRemoveExecution,
-  onSaveWorkflow
+  onSaveWorkflow,
 }) {
-  return /* @__PURE__ */ jsxs("div", { className: "flex-1 flex overflow-hidden", children: [
-    /* @__PURE__ */ jsx(NodePanel, {}),
-    /* @__PURE__ */ jsxs("div", { className: "flex-1 flex flex-col overflow-hidden", children: [
-      /* @__PURE__ */ jsxs("div", { className: "flex-1 relative", children: [
-        /* @__PURE__ */ jsx(
-          KeyboardHandler,
-          {
-            selectedNodeId,
-            setSelectedNodeId,
-            notifyModified,
-            clipboardNode,
-            onCopy,
-            onCut,
-            onPaste
-          }
-        ),
-        /* @__PURE__ */ jsx(ReactFlowInstanceCapture, { instanceRef: reactFlowInstanceRef }),
-        /* @__PURE__ */ jsx(
-          WorkflowCanvas,
-          {
-            nodes,
-            edges,
-            onNodesChange,
-            onEdgesChange,
-            onConnect,
-            onDrop,
-            onDragOver,
-            onNodeClick,
-            onNodeContextMenu,
-            onEdgeContextMenu,
-            onPaneClick,
-            nodeExecutionStates
-          }
-        )
-      ] }),
-      /* @__PURE__ */ jsx(
-        ExecutionConsole,
-        {
-          activeWorkflowId,
-          workflowTabId,
-          executions,
-          activeExecutionId,
-          onWorkflowUpdate,
-          getWorkflowChatCanvasSnapshot,
-          workflowChatClearNonce,
-          onExecutionLogUpdate,
-          onExecutionStatusUpdate,
-          onExecutionNodeUpdate,
-          onRemoveExecution
-        }
-      )
-    ] }),
-    /* @__PURE__ */ jsx(
-      PropertyPanel,
-      {
-        selectedNodeId,
-        setSelectedNodeId,
-        selectedNodeIds,
-        nodes,
-        onSaveWorkflow
-      }
-    )
-  ] });
+  return (
+    <div className="flex-1 flex overflow-hidden">
+      <NodePanel />
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <div className="flex-1 relative">
+          <KeyboardHandler
+            selectedNodeId={selectedNodeId}
+            setSelectedNodeId={setSelectedNodeId}
+            notifyModified={notifyModified}
+            clipboardNode={clipboardNode}
+            onCopy={onCopy}
+            onCut={onCut}
+            onPaste={onPaste}
+          />
+          <ReactFlowInstanceCapture instanceRef={reactFlowInstanceRef} />
+          <WorkflowCanvas
+            nodes={nodes}
+            edges={edges}
+            onNodesChange={onNodesChange}
+            onEdgesChange={onEdgesChange}
+            onConnect={onConnect}
+            onDrop={onDrop}
+            onDragOver={onDragOver}
+            onNodeClick={onNodeClick}
+            onNodeContextMenu={onNodeContextMenu}
+            onEdgeContextMenu={onEdgeContextMenu}
+            onPaneClick={onPaneClick}
+            nodeExecutionStates={nodeExecutionStates}
+          />
+        </div>
+        <ExecutionConsole
+          activeWorkflowId={activeWorkflowId}
+          workflowTabId={workflowTabId}
+          executions={executions}
+          activeExecutionId={activeExecutionId}
+          onWorkflowUpdate={onWorkflowUpdate}
+          getWorkflowChatCanvasSnapshot={getWorkflowChatCanvasSnapshot}
+          workflowChatClearNonce={workflowChatClearNonce}
+          onExecutionLogUpdate={onExecutionLogUpdate}
+          onExecutionStatusUpdate={onExecutionStatusUpdate}
+          onExecutionNodeUpdate={onExecutionNodeUpdate}
+          onRemoveExecution={onRemoveExecution}
+        />
+      </div>
+      <PropertyPanel
+        selectedNodeId={selectedNodeId}
+        setSelectedNodeId={setSelectedNodeId}
+        selectedNodeIds={selectedNodeIds}
+        nodes={nodes}
+        onSaveWorkflow={onSaveWorkflow}
+      />
+    </div>
+  );
 }
-export {
-  WorkflowBuilderLayout
-};
+export { WorkflowBuilderLayout };

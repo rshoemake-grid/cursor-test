@@ -11,11 +11,11 @@ const localStorageMock = /* @__PURE__ */ (() => {
     },
     clear: () => {
       store = {};
-    }
+    },
   };
 })();
 Object.defineProperty(window, "localStorage", {
-  value: localStorageMock
+  value: localStorageMock,
 });
 Object.defineProperty(window, "matchMedia", {
   writable: true,
@@ -27,27 +27,27 @@ Object.defineProperty(window, "matchMedia", {
     removeListener: jest.fn(),
     addEventListener: jest.fn(),
     removeEventListener: jest.fn(),
-    dispatchEvent: jest.fn()
-  }))
+    dispatchEvent: jest.fn(),
+  })),
 });
 global.ResizeObserver = jest.fn().mockImplementation(() => ({
   observe: jest.fn(),
   unobserve: jest.fn(),
-  disconnect: jest.fn()
+  disconnect: jest.fn(),
 }));
 global.IntersectionObserver = jest.fn().mockImplementation(() => ({
   observe: jest.fn(),
   unobserve: jest.fn(),
-  disconnect: jest.fn()
+  disconnect: jest.fn(),
 }));
 Object.defineProperty(global, "import", {
   value: {
     meta: {
       env: {
         DEV: true,
-        MODE: "development"
-      }
-    }
+        MODE: "development",
+      },
+    },
   },
-  writable: true
+  writable: true,
 });

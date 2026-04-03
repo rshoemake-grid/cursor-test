@@ -1,6 +1,15 @@
 var __defProp = Object.defineProperty;
-var __defNormalProp = (obj, key, value) => key in obj ? __defProp(obj, key, { enumerable: true, configurable: true, writable: true, value }) : obj[key] = value;
-var __publicField = (obj, key, value) => __defNormalProp(obj, typeof key !== "symbol" ? key + "" : key, value);
+var __defNormalProp = (obj, key, value) =>
+  key in obj
+    ? __defProp(obj, key, {
+        enumerable: true,
+        configurable: true,
+        writable: true,
+        value,
+      })
+    : (obj[key] = value);
+var __publicField = (obj, key, value) =>
+  __defNormalProp(obj, typeof key !== "symbol" ? key + "" : key, value);
 import { logger } from "../../utils/logger";
 class WorkflowExecutionService {
   constructor({ api, logger: injectedLogger = logger }) {
@@ -17,21 +26,27 @@ class WorkflowExecutionService {
     workflowId,
     inputs,
     tempExecutionId,
-    onExecutionStart
+    onExecutionStart,
   }) {
-    this.logger.debug("[WorkflowExecution] Executing workflow:", { workflowId, inputs });
+    this.logger.debug("[WorkflowExecution] Executing workflow:", {
+      workflowId,
+      inputs,
+    });
     if (onExecutionStart) {
       onExecutionStart(tempExecutionId);
     }
     const execution = await this.api.executeWorkflow(workflowId, inputs);
     this.logger.debug("[WorkflowExecution] Execution response:", execution);
-    const finalExecutionId = execution?.execution_id && execution.execution_id !== tempExecutionId ? execution.execution_id : tempExecutionId;
+    const finalExecutionId =
+      execution?.execution_id && execution.execution_id !== tempExecutionId
+        ? execution.execution_id
+        : tempExecutionId;
     if (finalExecutionId !== tempExecutionId && onExecutionStart) {
       onExecutionStart(finalExecutionId);
     }
     return {
       executionId: finalExecutionId,
-      tempExecutionId
+      tempExecutionId,
     };
   }
   /**
@@ -52,6 +67,4 @@ class WorkflowExecutionService {
     }
   }
 }
-export {
-  WorkflowExecutionService
-};
+export { WorkflowExecutionService };

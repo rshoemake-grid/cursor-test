@@ -1,7 +1,4 @@
-import {
-  convertToolToNode,
-  convertToolsToNodes
-} from "./toolNodeConversion";
+import { convertToolToNode, convertToolsToNodes } from "./toolNodeConversion";
 import { TOOL_NODE } from "./marketplaceConstants";
 describe("toolNodeConversion", () => {
   describe("convertToolToNode", () => {
@@ -9,7 +6,7 @@ describe("toolNodeConversion", () => {
       const tool = {
         name: "Test Tool",
         description: "Test Description",
-        tool_config: { tool_name: "web_search" }
+        tool_config: { tool_name: "web_search" },
       };
       const position = { x: 100, y: 200 };
       const node = convertToolToNode(tool, position, 0);
@@ -26,7 +23,7 @@ describe("toolNodeConversion", () => {
     it("should use label when name is missing", () => {
       const tool = {
         label: "Tool Label",
-        tool_config: { tool_name: "calculator" }
+        tool_config: { tool_name: "calculator" },
       };
       const position = { x: 0, y: 0 };
       const node = convertToolToNode(tool, position, 0);
@@ -35,7 +32,7 @@ describe("toolNodeConversion", () => {
     });
     it("should use default label when both name and label are missing", () => {
       const tool = {
-        tool_config: { tool_name: "calculator" }
+        tool_config: { tool_name: "calculator" },
       };
       const position = { x: 0, y: 0 };
       const node = convertToolToNode(tool, position, 0);
@@ -45,7 +42,7 @@ describe("toolNodeConversion", () => {
     it("should use default tool_config when missing", () => {
       const tool = {
         name: "Test",
-        tool_config: null
+        tool_config: null,
       };
       const position = { x: 0, y: 0 };
       const node = convertToolToNode(tool, position, 0);
@@ -54,7 +51,7 @@ describe("toolNodeConversion", () => {
     it("should use default tool_config when tool_name is not a string", () => {
       const tool = {
         name: "Test",
-        tool_config: { tool_name: 123 }
+        tool_config: { tool_name: 123 },
       };
       const position = { x: 0, y: 0 };
       const node = convertToolToNode(tool, position, 0);
@@ -63,7 +60,7 @@ describe("toolNodeConversion", () => {
     it("should return empty description when missing", () => {
       const tool = {
         name: "Test",
-        tool_config: { tool_name: "calculator" }
+        tool_config: { tool_name: "calculator" },
       };
       const position = { x: 0, y: 0 };
       const node = convertToolToNode(tool, position, 0);
@@ -75,12 +72,12 @@ describe("toolNodeConversion", () => {
       const tools = [
         { name: "Tool 1", tool_config: { tool_name: "calculator" } },
         { name: "Tool 2", tool_config: { tool_name: "web_search" } },
-        { name: "Tool 3", tool_config: { tool_name: "file_reader" } }
+        { name: "Tool 3", tool_config: { tool_name: "file_reader" } },
       ];
       const positions = [
         { x: 0, y: 0 },
         { x: 0, y: 150 },
-        { x: 0, y: 300 }
+        { x: 0, y: 300 },
       ];
       const nodes = convertToolsToNodes(tools, positions);
       expect(nodes).toHaveLength(3);

@@ -12,8 +12,8 @@ describe("useTabInitialization", () => {
       workflowId: "workflow-1",
       isUnsaved: false,
       executions: [],
-      activeExecutionId: null
-    }
+      activeExecutionId: null,
+    },
   ];
   beforeEach(() => {
     jest.clearAllMocks();
@@ -35,11 +35,25 @@ describe("useTabInitialization", () => {
   describe("activeTabId validation", () => {
     it("should switch to first tab when activeTabId does not exist", () => {
       const tabs = [
-        { id: "tab-1", name: "Tab 1", workflowId: null, isUnsaved: false, executions: [], activeExecutionId: null },
-        { id: "tab-2", name: "Tab 2", workflowId: null, isUnsaved: false, executions: [], activeExecutionId: null }
+        {
+          id: "tab-1",
+          name: "Tab 1",
+          workflowId: null,
+          isUnsaved: false,
+          executions: [],
+          activeExecutionId: null,
+        },
+        {
+          id: "tab-2",
+          name: "Tab 2",
+          workflowId: null,
+          isUnsaved: false,
+          executions: [],
+          activeExecutionId: null,
+        },
       ];
-      renderHook(
-        () => useTabInitialization({
+      renderHook(() =>
+        useTabInitialization({
           tabs,
           activeTabId: "nonexistent",
           setTabs: mockSetTabs,
@@ -47,14 +61,14 @@ describe("useTabInitialization", () => {
           tabsRef: mockTabsRef,
           initialWorkflowId: null,
           workflowLoadKey: void 0,
-          processedKeys: mockProcessedKeys
-        })
+          processedKeys: mockProcessedKeys,
+        }),
       );
       expect(mockSetActiveTabId).toHaveBeenCalledWith("tab-1");
     });
     it("should create new tab when activeTabId does not exist and no tabs", () => {
-      renderHook(
-        () => useTabInitialization({
+      renderHook(() =>
+        useTabInitialization({
           tabs: [],
           activeTabId: "nonexistent",
           setTabs: mockSetTabs,
@@ -62,19 +76,21 @@ describe("useTabInitialization", () => {
           tabsRef: mockTabsRef,
           initialWorkflowId: null,
           workflowLoadKey: void 0,
-          processedKeys: mockProcessedKeys
-        })
+          processedKeys: mockProcessedKeys,
+        }),
       );
       expect(mockSetTabs).toHaveBeenCalled();
       const setTabsCall = mockSetTabs.mock.calls[0][0];
-      const newTabs = Array.isArray(setTabsCall) ? setTabsCall : setTabsCall([]);
+      const newTabs = Array.isArray(setTabsCall)
+        ? setTabsCall
+        : setTabsCall([]);
       expect(newTabs.length).toBe(1);
       expect(newTabs[0].name).toBe("Untitled Workflow");
       expect(mockSetActiveTabId).toHaveBeenCalled();
     });
     it("should not change activeTabId when it exists in tabs", () => {
-      renderHook(
-        () => useTabInitialization({
+      renderHook(() =>
+        useTabInitialization({
           tabs: initialTabs,
           activeTabId: "tab-1",
           setTabs: mockSetTabs,
@@ -82,14 +98,14 @@ describe("useTabInitialization", () => {
           tabsRef: mockTabsRef,
           initialWorkflowId: null,
           workflowLoadKey: void 0,
-          processedKeys: mockProcessedKeys
-        })
+          processedKeys: mockProcessedKeys,
+        }),
       );
       expect(mockSetActiveTabId).not.toHaveBeenCalled();
     });
     it("should not change activeTabId when it is null", () => {
-      renderHook(
-        () => useTabInitialization({
+      renderHook(() =>
+        useTabInitialization({
           tabs: initialTabs,
           activeTabId: null,
           setTabs: mockSetTabs,
@@ -97,70 +113,16 @@ describe("useTabInitialization", () => {
           tabsRef: mockTabsRef,
           initialWorkflowId: null,
           workflowLoadKey: void 0,
-          processedKeys: mockProcessedKeys
-        })
+          processedKeys: mockProcessedKeys,
+        }),
       );
       expect(mockSetActiveTabId).not.toHaveBeenCalled();
     });
   });
   describe("initial workflow loading", () => {
     it("should create new tab for initial workflow", () => {
-      renderHook(
-        () => useTabInitialization({
-          tabs: [],
-          activeTabId: null,
-          setTabs: mockSetTabs,
-          setActiveTabId: mockSetActiveTabId,
-          tabsRef: mockTabsRef,
-          initialWorkflowId: "workflow-123",
-          workflowLoadKey: 1,
-          processedKeys: mockProcessedKeys
-        })
-      );
-      expect(mockSetTabs).toHaveBeenCalled();
-      const setTabsCall = mockSetTabs.mock.calls[0][0];
-      const newTabs = typeof setTabsCall === "function" ? setTabsCall([]) : setTabsCall;
-      expect(newTabs.length).toBe(1);
-      expect(newTabs[0].workflowId).toBe("workflow-123");
-      expect(newTabs[0].name).toBe("Loading...");
-      expect(newTabs[0].isUnsaved).toBe(false);
-      expect(mockSetActiveTabId).toHaveBeenCalled();
-    });
-    it("should not create duplicate tab for same workflowLoadKey", () => {
-      mockProcessedKeys.current.add("workflow-123-1");
-      renderHook(
-        () => useTabInitialization({
-          tabs: [],
-          activeTabId: null,
-          setTabs: mockSetTabs,
-          setActiveTabId: mockSetActiveTabId,
-          tabsRef: mockTabsRef,
-          initialWorkflowId: "workflow-123",
-          workflowLoadKey: 1,
-          processedKeys: mockProcessedKeys
-        })
-      );
-      expect(mockSetTabs).not.toHaveBeenCalled();
-    });
-    it("should create new tab for different workflowLoadKey", () => {
-      mockProcessedKeys.current.add("workflow-123-1");
-      renderHook(
-        () => useTabInitialization({
-          tabs: [],
-          activeTabId: null,
-          setTabs: mockSetTabs,
-          setActiveTabId: mockSetActiveTabId,
-          tabsRef: mockTabsRef,
-          initialWorkflowId: "workflow-123",
-          workflowLoadKey: 2,
-          processedKeys: mockProcessedKeys
-        })
-      );
-      expect(mockSetTabs).toHaveBeenCalled();
-    });
-    it("should not open URL workflow tab when not authenticated", () => {
-      renderHook(
-        () => useTabInitialization({
+      renderHook(() =>
+        useTabInitialization({
           tabs: [],
           activeTabId: null,
           setTabs: mockSetTabs,
@@ -169,15 +131,70 @@ describe("useTabInitialization", () => {
           initialWorkflowId: "workflow-123",
           workflowLoadKey: 1,
           processedKeys: mockProcessedKeys,
-          isAuthenticated: false
-        })
+        }),
+      );
+      expect(mockSetTabs).toHaveBeenCalled();
+      const setTabsCall = mockSetTabs.mock.calls[0][0];
+      const newTabs =
+        typeof setTabsCall === "function" ? setTabsCall([]) : setTabsCall;
+      expect(newTabs.length).toBe(1);
+      expect(newTabs[0].workflowId).toBe("workflow-123");
+      expect(newTabs[0].name).toBe("Loading...");
+      expect(newTabs[0].isUnsaved).toBe(false);
+      expect(mockSetActiveTabId).toHaveBeenCalled();
+    });
+    it("should not create duplicate tab for same workflowLoadKey", () => {
+      mockProcessedKeys.current.add("workflow-123-1");
+      renderHook(() =>
+        useTabInitialization({
+          tabs: [],
+          activeTabId: null,
+          setTabs: mockSetTabs,
+          setActiveTabId: mockSetActiveTabId,
+          tabsRef: mockTabsRef,
+          initialWorkflowId: "workflow-123",
+          workflowLoadKey: 1,
+          processedKeys: mockProcessedKeys,
+        }),
+      );
+      expect(mockSetTabs).not.toHaveBeenCalled();
+    });
+    it("should create new tab for different workflowLoadKey", () => {
+      mockProcessedKeys.current.add("workflow-123-1");
+      renderHook(() =>
+        useTabInitialization({
+          tabs: [],
+          activeTabId: null,
+          setTabs: mockSetTabs,
+          setActiveTabId: mockSetActiveTabId,
+          tabsRef: mockTabsRef,
+          initialWorkflowId: "workflow-123",
+          workflowLoadKey: 2,
+          processedKeys: mockProcessedKeys,
+        }),
+      );
+      expect(mockSetTabs).toHaveBeenCalled();
+    });
+    it("should not open URL workflow tab when not authenticated", () => {
+      renderHook(() =>
+        useTabInitialization({
+          tabs: [],
+          activeTabId: null,
+          setTabs: mockSetTabs,
+          setActiveTabId: mockSetActiveTabId,
+          tabsRef: mockTabsRef,
+          initialWorkflowId: "workflow-123",
+          workflowLoadKey: 1,
+          processedKeys: mockProcessedKeys,
+          isAuthenticated: false,
+        }),
       );
       expect(mockSetTabs).not.toHaveBeenCalled();
       expect(mockSetActiveTabId).not.toHaveBeenCalled();
     });
     it("should not create tab when initialWorkflowId is null", () => {
-      renderHook(
-        () => useTabInitialization({
+      renderHook(() =>
+        useTabInitialization({
           tabs: [],
           activeTabId: null,
           setTabs: mockSetTabs,
@@ -185,14 +202,14 @@ describe("useTabInitialization", () => {
           tabsRef: mockTabsRef,
           initialWorkflowId: null,
           workflowLoadKey: 1,
-          processedKeys: mockProcessedKeys
-        })
+          processedKeys: mockProcessedKeys,
+        }),
       );
       expect(mockSetTabs).not.toHaveBeenCalled();
     });
     it("should not create tab when workflowLoadKey is undefined", () => {
-      renderHook(
-        () => useTabInitialization({
+      renderHook(() =>
+        useTabInitialization({
           tabs: [],
           activeTabId: null,
           setTabs: mockSetTabs,
@@ -200,14 +217,14 @@ describe("useTabInitialization", () => {
           tabsRef: mockTabsRef,
           initialWorkflowId: "workflow-123",
           workflowLoadKey: void 0,
-          processedKeys: mockProcessedKeys
-        })
+          processedKeys: mockProcessedKeys,
+        }),
       );
       expect(mockSetTabs).not.toHaveBeenCalled();
     });
     it("should update tabsRef when creating new tab", () => {
-      renderHook(
-        () => useTabInitialization({
+      renderHook(() =>
+        useTabInitialization({
           tabs: [],
           activeTabId: null,
           setTabs: mockSetTabs,
@@ -215,8 +232,8 @@ describe("useTabInitialization", () => {
           tabsRef: mockTabsRef,
           initialWorkflowId: "workflow-123",
           workflowLoadKey: 1,
-          processedKeys: mockProcessedKeys
-        })
+          processedKeys: mockProcessedKeys,
+        }),
       );
       expect(mockTabsRef.current.length).toBeGreaterThan(0);
     });
@@ -228,13 +245,15 @@ describe("useTabInitialization", () => {
           workflowId: "workflow-123",
           isUnsaved: false,
           executions: [],
-          activeExecutionId: null
-        }
+          activeExecutionId: null,
+        },
       ];
       const mockSetTabsWithCheck = jest.fn((updater) => {
         if (typeof updater === "function") {
           const result = updater(existingTabs);
-          const existingTab = existingTabs.find((t) => t.id === result[result.length - 1]?.id);
+          const existingTab = existingTabs.find(
+            (t) => t.id === result[result.length - 1]?.id,
+          );
           if (existingTab) {
             return existingTabs;
           }
@@ -242,8 +261,8 @@ describe("useTabInitialization", () => {
         }
         return updater;
       });
-      renderHook(
-        () => useTabInitialization({
+      renderHook(() =>
+        useTabInitialization({
           tabs: existingTabs,
           activeTabId: null,
           setTabs: mockSetTabsWithCheck,
@@ -251,8 +270,8 @@ describe("useTabInitialization", () => {
           tabsRef: { current: existingTabs },
           initialWorkflowId: "workflow-123",
           workflowLoadKey: 1,
-          processedKeys: mockProcessedKeys
-        })
+          processedKeys: mockProcessedKeys,
+        }),
       );
       expect(mockSetTabsWithCheck).toHaveBeenCalled();
     });

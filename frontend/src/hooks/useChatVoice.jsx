@@ -13,7 +13,10 @@ export function isSpeechRecognitionSupported() {
 }
 
 export function isSpeechSynthesisSupported() {
-  return typeof window !== "undefined" && typeof window.speechSynthesis !== "undefined";
+  return (
+    typeof window !== "undefined" &&
+    typeof window.speechSynthesis !== "undefined"
+  );
 }
 
 /**
@@ -33,7 +36,8 @@ export function usePushToTalk({
   postReleaseDelayMs: postReleaseDelayMsOption,
 }) {
   const delayMs =
-    typeof postReleaseDelayMsOption === "number" && postReleaseDelayMsOption >= 0
+    typeof postReleaseDelayMsOption === "number" &&
+    postReleaseDelayMsOption >= 0
       ? postReleaseDelayMsOption
       : DEFAULT_POST_RELEASE_DELAY_MS;
   const [isListening, setIsListening] = useState(false);
@@ -166,7 +170,8 @@ export function usePushToTalk({
  * the global synthesizer paused until resume().
  */
 export function speakChatMessage(text, options = {}) {
-  if (!isSpeechSynthesisSupported() || !text || typeof text !== "string") return;
+  if (!isSpeechSynthesisSupported() || !text || typeof text !== "string")
+    return;
 
   const trimmed = text.trim();
   if (!trimmed) return;

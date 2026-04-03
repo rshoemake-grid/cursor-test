@@ -2,10 +2,10 @@ import { renderHook, act } from "@testing-library/react";
 import { usePanelState } from "./usePanelState";
 describe("usePanelState", () => {
   it("should initialize with panel open and idle status", () => {
-    const { result } = renderHook(
-      () => usePanelState({
-        selectedNode: { id: "node-1", type: "agent", data: {} }
-      })
+    const { result } = renderHook(() =>
+      usePanelState({
+        selectedNode: { id: "node-1", type: "agent", data: {} },
+      }),
     );
     expect(result.current.panelOpen).toBe(true);
     expect(result.current.saveStatus).toBe("idle");
@@ -14,8 +14,8 @@ describe("usePanelState", () => {
     const { result, rerender } = renderHook(
       ({ selectedNode }) => usePanelState({ selectedNode }),
       {
-        initialProps: { selectedNode: null }
-      }
+        initialProps: { selectedNode: null },
+      },
     );
     expect(result.current.panelOpen).toBe(false);
     rerender({ selectedNode: { id: "node-1", type: "agent", data: {} } });
@@ -25,19 +25,21 @@ describe("usePanelState", () => {
     const { result, rerender } = renderHook(
       ({ selectedNode }) => usePanelState({ selectedNode }),
       {
-        initialProps: { selectedNode: { id: "node-1", type: "agent", data: {} } }
-      }
+        initialProps: {
+          selectedNode: { id: "node-1", type: "agent", data: {} },
+        },
+      },
     );
     expect(result.current.panelOpen).toBe(true);
     rerender({ selectedNode: null });
     expect(result.current.panelOpen).toBe(false);
   });
   it("should close panel when closePanel is called", () => {
-    const { result } = renderHook(
-      () => usePanelState({
-        selectedNode: null
+    const { result } = renderHook(() =>
+      usePanelState({
+        selectedNode: null,
         // No node selected, so panel can be closed
-      })
+      }),
     );
     expect(result.current.panelOpen).toBe(false);
     act(() => {
@@ -50,10 +52,10 @@ describe("usePanelState", () => {
     expect(result.current.panelOpen).toBe(false);
   });
   it("should open panel when openPanel is called", () => {
-    const { result } = renderHook(
-      () => usePanelState({
-        selectedNode: null
-      })
+    const { result } = renderHook(() =>
+      usePanelState({
+        selectedNode: null,
+      }),
     );
     act(() => {
       result.current.openPanel();
@@ -61,10 +63,10 @@ describe("usePanelState", () => {
     expect(result.current.panelOpen).toBe(true);
   });
   it("should update saveStatus when setSaveStatus is called", () => {
-    const { result } = renderHook(
-      () => usePanelState({
-        selectedNode: { id: "node-1", type: "agent", data: {} }
-      })
+    const { result } = renderHook(() =>
+      usePanelState({
+        selectedNode: { id: "node-1", type: "agent", data: {} },
+      }),
     );
     act(() => {
       result.current.setSaveStatus("saving");
@@ -80,11 +82,11 @@ describe("usePanelState", () => {
     expect(result.current.saveStatus).toBe("idle");
   });
   it("should update panelOpen when setPanelOpen is called", () => {
-    const { result } = renderHook(
-      () => usePanelState({
-        selectedNode: null
+    const { result } = renderHook(() =>
+      usePanelState({
+        selectedNode: null,
         // No node selected, so we can control panel state
-      })
+      }),
     );
     expect(result.current.panelOpen).toBe(false);
     act(() => {
@@ -100,8 +102,8 @@ describe("usePanelState", () => {
     const { result, rerender } = renderHook(
       ({ selectedNode }) => usePanelState({ selectedNode }),
       {
-        initialProps: { selectedNode: null }
-      }
+        initialProps: { selectedNode: null },
+      },
     );
     expect(result.current.panelOpen).toBe(false);
     rerender({ selectedNode: { id: "node-1", type: "agent", data: {} } });

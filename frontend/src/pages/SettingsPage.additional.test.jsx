@@ -1,5 +1,9 @@
-import { jsx } from "react/jsx-runtime";
-import { setupMocks, mockUseAuth, renderWithRouter, waitForWithTimeout } from "./SettingsPage.test.shared";
+import {
+  setupMocks,
+  mockUseAuth,
+  renderWithRouter,
+  waitForWithTimeout,
+} from "./SettingsPage.test.shared";
 import SettingsPage from "./SettingsPage";
 import { screen, fireEvent, waitFor } from "@testing-library/react";
 import { showConfirm } from "../utils/confirm";
@@ -13,26 +17,26 @@ const defaultLLMProvidersImpl = (options) => {
       options.onLoadComplete({
         providers: [],
         iteration_limit: 10,
-        default_model: ""
+        default_model: "",
       });
     });
   }
   return {
     providers: [],
     iterationLimit: 10,
-    defaultModel: ""
+    defaultModel: "",
   };
 };
 const mockUseLLMProviders = jest.fn(defaultLLMProvidersImpl);
 jest.mock("../hooks/providers", () => ({
   useProviderManagement: jest.fn(),
-  useLLMProviders: (options) => mockUseLLMProviders(options)
+  useLLMProviders: (options) => mockUseLLMProviders(options),
 }));
 jest.mock("../hooks/storage", () => ({
   useAutoSave: jest.fn(),
   useLocalStorage: jest.fn(),
   getLocalStorageItem: jest.fn(),
-  setLocalStorageItem: jest.fn()
+  setLocalStorageItem: jest.fn(),
 }));
 const mockUseProviderManagement = useProviderManagement;
 const mockUseAutoSave = useAutoSave;
@@ -46,7 +50,7 @@ describe("SettingsPage - Additional Coverage", () => {
       testProvider: jest.fn(),
       addCustomModel: jest.fn(),
       testingProvider: null,
-      testResults: {}
+      testResults: {},
     });
     mockUseAutoSave.mockReturnValue(void 0);
   });
@@ -59,9 +63,9 @@ describe("SettingsPage - Additional Coverage", () => {
         testProvider: jest.fn(),
         addCustomModel: jest.fn(),
         testingProvider: null,
-        testResults: {}
+        testResults: {},
       });
-      renderWithRouter(/* @__PURE__ */ jsx(SettingsPage, {}));
+      renderWithRouter(<SettingsPage />);
       await waitForWithTimeout(() => {
         expect(screen.getAllByText(/Settings/).length).toBeGreaterThan(0);
       }, 2e3);
@@ -71,7 +75,11 @@ describe("SettingsPage - Additional Coverage", () => {
         await waitFor(() => {
           const templateSelects = screen.queryAllByRole("combobox");
           if (templateSelects.length > 0) {
-            fireEvent.change(templateSelects[0], { target: { value: "anthropic" } });
+            fireEvent.change(templateSelects[0], {
+              target: {
+                value: "anthropic",
+              },
+            });
             const confirmButtons = screen.queryAllByText(/Add Provider/);
             if (confirmButtons.length > 0) {
               fireEvent.click(confirmButtons[confirmButtons.length - 1]);
@@ -81,7 +89,7 @@ describe("SettingsPage - Additional Coverage", () => {
       }
     });
     it("should handle provider template selection", async () => {
-      renderWithRouter(/* @__PURE__ */ jsx(SettingsPage, {}));
+      renderWithRouter(<SettingsPage />);
       await waitForWithTimeout(() => {
         expect(screen.getAllByText(/Settings/).length).toBeGreaterThan(0);
       }, 2e3);
@@ -91,14 +99,22 @@ describe("SettingsPage - Additional Coverage", () => {
         await waitFor(() => {
           const selects = screen.queryAllByRole("combobox");
           if (selects.length > 0) {
-            fireEvent.change(selects[0], { target: { value: "gemini" } });
-            fireEvent.change(selects[0], { target: { value: "custom" } });
+            fireEvent.change(selects[0], {
+              target: {
+                value: "gemini",
+              },
+            });
+            fireEvent.change(selects[0], {
+              target: {
+                value: "custom",
+              },
+            });
           }
         });
       }
     });
     it("should handle canceling add provider", async () => {
-      renderWithRouter(/* @__PURE__ */ jsx(SettingsPage, {}));
+      renderWithRouter(<SettingsPage />);
       await waitForWithTimeout(() => {
         expect(screen.getAllByText(/Settings/).length).toBeGreaterThan(0);
       }, 2e3);
@@ -121,7 +137,7 @@ describe("SettingsPage - Additional Coverage", () => {
         testProvider: jest.fn(),
         addCustomModel: jest.fn(),
         testingProvider: null,
-        testResults: {}
+        testResults: {},
       });
       const savedProviders = [
         {
@@ -131,23 +147,32 @@ describe("SettingsPage - Additional Coverage", () => {
           apiKey: "sk-test",
           defaultModel: "gpt-4",
           models: ["gpt-4"],
-          enabled: true
-        }
+          enabled: true,
+        },
       ];
-      localStorage.setItem("llm_settings", JSON.stringify({ providers: savedProviders }));
-      renderWithRouter(/* @__PURE__ */ jsx(SettingsPage, {}));
+      localStorage.setItem(
+        "llm_settings",
+        JSON.stringify({
+          providers: savedProviders,
+        }),
+      );
+      renderWithRouter(<SettingsPage />);
       await waitForWithTimeout(() => {
         expect(screen.getAllByText(/Settings/).length).toBeGreaterThan(0);
       }, 3e3);
       const inputs = screen.queryAllByRole("textbox");
       if (inputs.length > 0) {
-        fireEvent.change(inputs[0], { target: { value: "new-api-key" } });
+        fireEvent.change(inputs[0], {
+          target: {
+            value: "new-api-key",
+          },
+        });
       }
     });
     it("should handle testing provider connection", async () => {
       const mockTestProvider = jest.fn().mockResolvedValue({
         status: "success",
-        message: "Connection successful"
+        message: "Connection successful",
       });
       mockUseProviderManagement.mockReturnValue({
         saveProviders: jest.fn(),
@@ -155,7 +180,7 @@ describe("SettingsPage - Additional Coverage", () => {
         testProvider: mockTestProvider,
         addCustomModel: jest.fn(),
         testingProvider: null,
-        testResults: {}
+        testResults: {},
       });
       const savedProviders = [
         {
@@ -165,11 +190,16 @@ describe("SettingsPage - Additional Coverage", () => {
           apiKey: "sk-test",
           defaultModel: "gpt-4",
           models: ["gpt-4"],
-          enabled: true
-        }
+          enabled: true,
+        },
       ];
-      localStorage.setItem("llm_settings", JSON.stringify({ providers: savedProviders }));
-      renderWithRouter(/* @__PURE__ */ jsx(SettingsPage, {}));
+      localStorage.setItem(
+        "llm_settings",
+        JSON.stringify({
+          providers: savedProviders,
+        }),
+      );
+      renderWithRouter(<SettingsPage />);
       await waitForWithTimeout(() => {
         expect(screen.getAllByText(/Settings/).length).toBeGreaterThan(0);
       }, 3e3);
@@ -188,9 +218,9 @@ describe("SettingsPage - Additional Coverage", () => {
         testProvider: jest.fn(),
         addCustomModel: jest.fn(),
         testingProvider: "provider-1",
-        testResults: {}
+        testResults: {},
       });
-      renderWithRouter(/* @__PURE__ */ jsx(SettingsPage, {}));
+      renderWithRouter(<SettingsPage />);
       await waitForWithTimeout(() => {
         const loadingElements = screen.queryAllByText(/Testing/);
         if (loadingElements.length > 0) {
@@ -208,13 +238,15 @@ describe("SettingsPage - Additional Coverage", () => {
         testResults: {
           "provider-1": {
             status: "success",
-            message: "Connection successful"
-          }
-        }
+            message: "Connection successful",
+          },
+        },
       });
-      renderWithRouter(/* @__PURE__ */ jsx(SettingsPage, {}));
+      renderWithRouter(<SettingsPage />);
       await waitForWithTimeout(() => {
-        const successMessages = screen.queryAllByText(/Connection successful|success/);
+        const successMessages = screen.queryAllByText(
+          /Connection successful|success/,
+        );
         if (successMessages.length > 0) {
           expect(successMessages.length).toBeGreaterThan(0);
         }
@@ -230,11 +262,11 @@ describe("SettingsPage - Additional Coverage", () => {
         testResults: {
           "provider-1": {
             status: "error",
-            message: "Connection failed"
-          }
-        }
+            message: "Connection failed",
+          },
+        },
       });
-      renderWithRouter(/* @__PURE__ */ jsx(SettingsPage, {}));
+      renderWithRouter(<SettingsPage />);
       await waitForWithTimeout(() => {
         const errorMessages = screen.queryAllByText(/Connection failed|error/i);
         if (errorMessages.length > 0) {
@@ -250,7 +282,7 @@ describe("SettingsPage - Additional Coverage", () => {
         testProvider: jest.fn(),
         addCustomModel: mockAddCustomModel,
         testingProvider: null,
-        testResults: {}
+        testResults: {},
       });
       window.prompt = jest.fn().mockReturnValue("custom-model-name");
       const savedProviders = [
@@ -261,11 +293,16 @@ describe("SettingsPage - Additional Coverage", () => {
           apiKey: "sk-test",
           defaultModel: "gpt-4",
           models: ["gpt-4"],
-          enabled: true
-        }
+          enabled: true,
+        },
       ];
-      localStorage.setItem("llm_settings", JSON.stringify({ providers: savedProviders }));
-      renderWithRouter(/* @__PURE__ */ jsx(SettingsPage, {}));
+      localStorage.setItem(
+        "llm_settings",
+        JSON.stringify({
+          providers: savedProviders,
+        }),
+      );
+      renderWithRouter(<SettingsPage />);
       await waitForWithTimeout(() => {
         expect(screen.getAllByText(/Settings/).length).toBeGreaterThan(0);
       }, 3e3);
@@ -280,11 +317,16 @@ describe("SettingsPage - Additional Coverage", () => {
           apiKey: "sk-test",
           defaultModel: "gpt-4",
           models: ["gpt-4"],
-          enabled: true
-        }
+          enabled: true,
+        },
       ];
-      localStorage.setItem("llm_settings", JSON.stringify({ providers: savedProviders }));
-      renderWithRouter(/* @__PURE__ */ jsx(SettingsPage, {}));
+      localStorage.setItem(
+        "llm_settings",
+        JSON.stringify({
+          providers: savedProviders,
+        }),
+      );
+      renderWithRouter(<SettingsPage />);
       await waitForWithTimeout(() => {
         expect(screen.getAllByText(/Settings/).length).toBeGreaterThan(0);
       }, 3e3);
@@ -314,19 +356,23 @@ describe("SettingsPage - Additional Coverage", () => {
           apiKey: "sk-test",
           defaultModel: "gpt-4",
           models: ["gpt-4", "gpt-3.5-turbo"],
-          enabled: true
-        }
+          enabled: true,
+        },
       ];
-      localStorage.setItem("llm_settings", JSON.stringify({ providers: savedProviders }));
-      renderWithRouter(/* @__PURE__ */ jsx(SettingsPage, {}));
+      localStorage.setItem(
+        "llm_settings",
+        JSON.stringify({
+          providers: savedProviders,
+        }),
+      );
+      renderWithRouter(<SettingsPage />);
       await waitForWithTimeout(() => {
         expect(screen.getAllByText(/Settings/).length).toBeGreaterThan(0);
       }, 3e3);
       const expandButtons = screen.queryAllByTitle(/Expand|Collapse/);
       if (expandButtons.length > 0) {
         fireEvent.click(expandButtons[0]);
-        await waitFor(() => {
-        });
+        await waitFor(() => {});
         fireEvent.click(expandButtons[0]);
       }
     });
@@ -339,11 +385,16 @@ describe("SettingsPage - Additional Coverage", () => {
           apiKey: "sk-test",
           defaultModel: "gpt-4",
           models: ["gpt-4", "gpt-3.5-turbo"],
-          enabled: true
-        }
+          enabled: true,
+        },
       ];
-      localStorage.setItem("llm_settings", JSON.stringify({ providers: savedProviders }));
-      renderWithRouter(/* @__PURE__ */ jsx(SettingsPage, {}));
+      localStorage.setItem(
+        "llm_settings",
+        JSON.stringify({
+          providers: savedProviders,
+        }),
+      );
+      renderWithRouter(<SettingsPage />);
       await waitForWithTimeout(() => {
         expect(screen.getAllByText(/Settings/).length).toBeGreaterThan(0);
       }, 3e3);
@@ -351,7 +402,11 @@ describe("SettingsPage - Additional Coverage", () => {
       if (selects.length > 0) {
         selects.forEach((select) => {
           if (select.options.length > 1) {
-            fireEvent.change(select, { target: { value: "gpt-3.5-turbo" } });
+            fireEvent.change(select, {
+              target: {
+                value: "gpt-3.5-turbo",
+              },
+            });
           }
         });
       }
@@ -359,7 +414,7 @@ describe("SettingsPage - Additional Coverage", () => {
   });
   describe("Workflow Settings Tab", () => {
     it("should render workflow generation settings", async () => {
-      renderWithRouter(/* @__PURE__ */ jsx(SettingsPage, {}));
+      renderWithRouter(<SettingsPage />);
       await waitForWithTimeout(() => {
         const workflowTab = screen.queryByText(/Workflow Generation/);
         if (workflowTab) {
@@ -375,7 +430,7 @@ describe("SettingsPage - Additional Coverage", () => {
       });
     });
     it("should update iteration limit with validation", async () => {
-      renderWithRouter(/* @__PURE__ */ jsx(SettingsPage, {}));
+      renderWithRouter(<SettingsPage />);
       await waitForWithTimeout(() => {
         const workflowTab = screen.queryByText(/Workflow Generation/);
         if (workflowTab) {
@@ -386,7 +441,11 @@ describe("SettingsPage - Additional Coverage", () => {
         const limitInputs = screen.queryAllByLabelText(/Iteration Limit/);
         if (limitInputs.length > 0) {
           const input = limitInputs[0];
-          fireEvent.change(input, { target: { value: "0" } });
+          fireEvent.change(input, {
+            target: {
+              value: "0",
+            },
+          });
           expect(parseInt(input.value) || 1).toBeGreaterThanOrEqual(1);
         }
       });
@@ -400,7 +459,7 @@ describe("SettingsPage - Additional Coverage", () => {
           apiKey: "sk-test",
           defaultModel: "gpt-4",
           models: ["gpt-4", "gpt-3.5-turbo"],
-          enabled: true
+          enabled: true,
         },
         {
           id: "provider-2",
@@ -409,12 +468,17 @@ describe("SettingsPage - Additional Coverage", () => {
           apiKey: "sk-test",
           defaultModel: "claude-3",
           models: ["claude-3"],
-          enabled: false
+          enabled: false,
           // Disabled provider
-        }
+        },
       ];
-      localStorage.setItem("llm_settings", JSON.stringify({ providers: savedProviders }));
-      renderWithRouter(/* @__PURE__ */ jsx(SettingsPage, {}));
+      localStorage.setItem(
+        "llm_settings",
+        JSON.stringify({
+          providers: savedProviders,
+        }),
+      );
+      renderWithRouter(<SettingsPage />);
       await waitForWithTimeout(() => {
         const workflowTab = screen.queryByText(/Workflow Generation/);
         if (workflowTab) {
@@ -436,11 +500,11 @@ describe("SettingsPage - Additional Coverage", () => {
       mockUseLLMProviders.mockReturnValue({
         providers: [],
         iterationLimit: 10,
-        defaultModel: ""
+        defaultModel: "",
       });
     });
     it("should call useAutoSave hook", async () => {
-      renderWithRouter(/* @__PURE__ */ jsx(SettingsPage, {}));
+      renderWithRouter(<SettingsPage />);
       await waitFor(() => {
         expect(mockUseAutoSave).toHaveBeenCalled();
       });
@@ -448,20 +512,28 @@ describe("SettingsPage - Additional Coverage", () => {
     it("should enable auto-save when authenticated and settings loaded", async () => {
       mockUseAuth.mockReturnValue({
         isAuthenticated: true,
-        user: { id: "1", username: "testuser" },
+        user: {
+          id: "1",
+          username: "testuser",
+        },
         token: "token",
         login: jest.fn(),
         logout: jest.fn(),
-        register: jest.fn()
+        register: jest.fn(),
       });
-      renderWithRouter(/* @__PURE__ */ jsx(SettingsPage, {}));
-      await waitFor(() => {
-        expect(mockUseAutoSave).toHaveBeenCalled();
-        const enabledCalls = mockUseAutoSave.mock.calls.filter(
-          (call) => call.length > 3 && call[3] === true
-        );
-        expect(enabledCalls.length).toBeGreaterThanOrEqual(0);
-      }, { timeout: 3e3 });
+      renderWithRouter(<SettingsPage />);
+      await waitFor(
+        () => {
+          expect(mockUseAutoSave).toHaveBeenCalled();
+          const enabledCalls = mockUseAutoSave.mock.calls.filter(
+            (call) => call.length > 3 && call[3] === true,
+          );
+          expect(enabledCalls.length).toBeGreaterThanOrEqual(0);
+        },
+        {
+          timeout: 3e3,
+        },
+      );
     });
     it("should disable auto-save when not authenticated", async () => {
       mockUseAuth.mockReturnValue({
@@ -470,12 +542,12 @@ describe("SettingsPage - Additional Coverage", () => {
         token: null,
         login: jest.fn(),
         logout: jest.fn(),
-        register: jest.fn()
+        register: jest.fn(),
       });
-      renderWithRouter(/* @__PURE__ */ jsx(SettingsPage, {}));
+      renderWithRouter(<SettingsPage />);
       await waitFor(() => {
         const autoSaveCall = mockUseAutoSave.mock.calls.find(
-          (call) => call.length > 3 && call[3] === false
+          (call) => call.length > 3 && call[3] === false,
         );
         expect(autoSaveCall).toBeDefined();
       });
@@ -487,9 +559,9 @@ describe("SettingsPage - Additional Coverage", () => {
       const MockedSettingsService = SettingsService;
       MockedSettingsService.mockImplementation(() => ({
         saveSettings: mockSaveSettings,
-        testProvider: jest.fn()
+        testProvider: jest.fn(),
       }));
-      renderWithRouter(/* @__PURE__ */ jsx(SettingsPage, {}));
+      renderWithRouter(<SettingsPage />);
       await waitForWithTimeout(() => {
         expect(screen.getAllByText(/Settings/).length).toBeGreaterThan(0);
       }, 2e3);
@@ -501,13 +573,15 @@ describe("SettingsPage - Additional Coverage", () => {
       });
     });
     it("should handle manual sync error", async () => {
-      const mockSaveSettings = jest.fn().mockRejectedValue(new Error("Sync failed"));
+      const mockSaveSettings = jest
+        .fn()
+        .mockRejectedValue(new Error("Sync failed"));
       const MockedSettingsService = SettingsService;
       MockedSettingsService.mockImplementation(() => ({
         saveSettings: mockSaveSettings,
-        testProvider: jest.fn()
+        testProvider: jest.fn(),
       }));
-      renderWithRouter(/* @__PURE__ */ jsx(SettingsPage, {}));
+      renderWithRouter(<SettingsPage />);
       await waitForWithTimeout(() => {
         expect(screen.getAllByText(/Settings/).length).toBeGreaterThan(0);
       }, 2e3);

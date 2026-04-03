@@ -12,10 +12,8 @@ const DocumentAdapterFactory = {
       getElementById: (id) => document.getElementById(id),
       getActiveElement: () => document.activeElement,
       head: document.head,
-      body: document.body
+      body: document.body,
     };
-  }
+  },
 };
-export {
-  DocumentAdapterFactory
-};
+export { DocumentAdapterFactory };

@@ -4,18 +4,18 @@ jest.mock("../../utils/ownershipUtils", () => ({
   isOwner: jest.fn(),
   filterOwnedItems: jest.fn(),
   separateOfficialItems: jest.fn(),
-  filterUserOwnedDeletableItems: jest.fn()
+  filterUserOwnedDeletableItems: jest.fn(),
 }));
 const mockIsOwner = isOwner;
 describe("ownership", () => {
   const mockUser = {
     id: "user-123",
-    username: "testuser"
+    username: "testuser",
   };
   const mockItem = {
     id: "item-1",
     author_id: "user-123",
-    is_official: false
+    is_official: false,
   };
   beforeEach(() => {
     mockIsOwner.mockClear();
@@ -35,7 +35,7 @@ describe("ownership", () => {
     it("should return false when item is official", () => {
       const officialItem = {
         ...mockItem,
-        is_official: true
+        is_official: true,
       };
       const result = canUserDelete(officialItem, mockUser);
       expect(result).toBe(false);
@@ -69,7 +69,7 @@ describe("ownership", () => {
       mockIsOwner.mockReturnValue(true);
       const itemWithoutOfficial = {
         id: "item-1",
-        author_id: "user-123"
+        author_id: "user-123",
       };
       const result = canUserDelete(itemWithoutOfficial, mockUser);
       expect(result).toBe(true);
@@ -80,7 +80,7 @@ describe("ownership", () => {
       const itemWithNullOfficial = {
         id: "item-1",
         author_id: "user-123",
-        is_official: null
+        is_official: null,
       };
       const result = canUserDelete(itemWithNullOfficial, mockUser);
       expect(result).toBe(true);
@@ -90,7 +90,7 @@ describe("ownership", () => {
       mockIsOwner.mockReturnValue(false);
       const nonOfficialItem = {
         ...mockItem,
-        is_official: false
+        is_official: false,
       };
       const result = canUserDelete(nonOfficialItem, mockUser);
       expect(result).toBe(false);
@@ -99,7 +99,7 @@ describe("ownership", () => {
     it("should prioritize official check over ownership check", () => {
       const officialItem = {
         ...mockItem,
-        is_official: true
+        is_official: true,
       };
       mockIsOwner.mockReturnValue(true);
       const result = canUserDelete(officialItem, mockUser);

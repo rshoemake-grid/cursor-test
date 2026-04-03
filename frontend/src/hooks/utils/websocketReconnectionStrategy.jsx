@@ -66,7 +66,7 @@ class FixedDelayStrategy {
   constructor(fixedDelay = WS_RECONNECT.BASE_DELAY) {
     this.fixedDelay = fixedDelay;
   }
-   
+
   calculateDelay(_attempt, _baseDelay) {
     if (this.fixedDelay < WS_RECONNECT.MIN_DELAY) {
       return WS_RECONNECT.MIN_DELAY;
@@ -89,5 +89,5 @@ class FixedDelayStrategy {
 export {
   ExponentialBackoffStrategy,
   FixedDelayStrategy,
-  LinearBackoffStrategy
+  LinearBackoffStrategy,
 };

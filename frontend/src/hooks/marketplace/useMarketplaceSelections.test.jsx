@@ -12,7 +12,9 @@ describe("useMarketplaceSelections", () => {
     act(() => {
       result.current.templateSelection.toggle("template-1");
     });
-    expect(result.current.templateSelection.selectedIds.has("template-1")).toBe(true);
+    expect(result.current.templateSelection.selectedIds.has("template-1")).toBe(
+      true,
+    );
   });
   it("should allow selecting agents", () => {
     const { result } = renderHook(() => useMarketplaceSelections());
@@ -26,7 +28,9 @@ describe("useMarketplaceSelections", () => {
     act(() => {
       result.current.repositoryAgentSelection.toggle("repo-agent-1");
     });
-    expect(result.current.repositoryAgentSelection.selectedIds.has("repo-agent-1")).toBe(true);
+    expect(
+      result.current.repositoryAgentSelection.selectedIds.has("repo-agent-1"),
+    ).toBe(true);
   });
   it("should clear all selections", () => {
     const { result } = renderHook(() => useMarketplaceSelections());

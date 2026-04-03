@@ -14,18 +14,21 @@ function useNodeForm({ selectedNode, onUpdate }) {
     const nodeData = logicalOrToEmptyObject(selectedNode.data);
     const nodeName = logicalOr(
       typeof nodeData.name === "string" ? nodeData.name : "",
-      logicalOr(
-        typeof nodeData.label === "string" ? nodeData.label : "",
-        ""
-      )
+      logicalOr(typeof nodeData.label === "string" ? nodeData.label : "", ""),
     );
-    const nodeDescription = logicalOr(typeof nodeData.description === "string" ? nodeData.description : "", "");
+    const nodeDescription = logicalOr(
+      typeof nodeData.description === "string" ? nodeData.description : "",
+      "",
+    );
     if (document.activeElement !== nameInputRef.current) {
       const nameStr = nodeName !== null && nodeName !== void 0 ? nodeName : "";
       setNameValue(nameStr);
     }
     if (document.activeElement !== descriptionInputRef.current) {
-      const descStr = nodeDescription !== null && nodeDescription !== void 0 ? nodeDescription : "";
+      const descStr =
+        nodeDescription !== null && nodeDescription !== void 0
+          ? nodeDescription
+          : "";
       setDescriptionValue(descStr);
     }
   }, [selectedNode]);
@@ -49,9 +52,7 @@ function useNodeForm({ selectedNode, onUpdate }) {
     setNameValue,
     setDescriptionValue,
     handleNameChange,
-    handleDescriptionChange
+    handleDescriptionChange,
   };
 }
-export {
-  useNodeForm
-};
+export { useNodeForm };

@@ -1,6 +1,15 @@
 var __defProp = Object.defineProperty;
-var __defNormalProp = (obj, key, value) => key in obj ? __defProp(obj, key, { enumerable: true, configurable: true, writable: true, value }) : obj[key] = value;
-var __publicField = (obj, key, value) => __defNormalProp(obj, typeof key !== "symbol" ? key + "" : key, value);
+var __defNormalProp = (obj, key, value) =>
+  key in obj
+    ? __defProp(obj, key, {
+        enumerable: true,
+        configurable: true,
+        writable: true,
+        value,
+      })
+    : (obj[key] = value);
+var __publicField = (obj, key, value) =>
+  __defNormalProp(obj, typeof key !== "symbol" ? key + "" : key, value);
 import { waitFor, act } from "@testing-library/react";
 const waitForWithTimeout = (callback, timeout = 2e3) => {
   return waitFor(callback, { timeout });
@@ -16,8 +25,8 @@ jest.mock("../../utils/logger", () => ({
   logger: {
     debug: jest.fn(),
     error: jest.fn(),
-    warn: jest.fn()
-  }
+    warn: jest.fn(),
+  },
 }));
 const _MockWebSocket = class _MockWebSocket {
   constructor(url) {
@@ -43,9 +52,8 @@ const _MockWebSocket = class _MockWebSocket {
     }, 10);
     this.timers.push(timer);
   }
-   
-  send(_data) {
-  }
+
+  send(_data) {}
   /**
    * Closes the WebSocket connection.
    * @param code - Optional close code (defaults to 1000)
@@ -61,8 +69,13 @@ const _MockWebSocket = class _MockWebSocket {
       this.readyState = _MockWebSocket.CLOSED;
       if (this.onclose) {
         const closeCode = code || 1e3;
-        const wasCleanValue = wasClean !== void 0 ? wasClean : closeCode === 1e3;
-        const event = new CloseEvent("close", { code: closeCode, reason: reason || "", wasClean: wasCleanValue });
+        const wasCleanValue =
+          wasClean !== void 0 ? wasClean : closeCode === 1e3;
+        const event = new CloseEvent("close", {
+          code: closeCode,
+          reason: reason || "",
+          wasClean: wasCleanValue,
+        });
         this.onclose(event);
       }
       const index = this.timers.indexOf(timer);
@@ -94,7 +107,9 @@ const _MockWebSocket = class _MockWebSocket {
   }
   simulateError(error) {
     if (this.onerror) {
-      const event = new ErrorEvent("error", { error: error || new Error("WebSocket error") });
+      const event = new ErrorEvent("error", {
+        error: error || new Error("WebSocket error"),
+      });
       this.onerror(event);
     }
   }
@@ -117,7 +132,7 @@ const _MockWebSocket = class _MockWebSocket {
         wasClean: { value: wasClean, enumerable: true },
         cancelBubble: { value: false, enumerable: true },
         defaultPrevented: { value: false, enumerable: true },
-        timeStamp: { value: Date.now(), enumerable: true }
+        timeStamp: { value: Date.now(), enumerable: true },
       });
       this.onclose(event);
     }
@@ -146,5 +161,5 @@ export {
   logger,
   useWebSocket,
   waitForWithTimeout,
-  wsInstances
+  wsInstances,
 };

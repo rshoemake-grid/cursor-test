@@ -32,6 +32,4 @@ function handleWebSocketMessage(message, options) {
       break;
   }
 }
-export {
-  handleWebSocketMessage
-};
+export { handleWebSocketMessage };

@@ -4,7 +4,7 @@ function showNotification(message, options = {}) {
     duration = 5e3,
     type = "info",
     documentAdapter = defaultAdapters.createDocumentAdapter(),
-    timerAdapter = defaultAdapters.createTimerAdapter()
+    timerAdapter = defaultAdapters.createTimerAdapter(),
   } = options;
   if (documentAdapter === null || documentAdapter === void 0) {
     return null;
@@ -13,7 +13,7 @@ function showNotification(message, options = {}) {
     success: { bg: "#10b981", text: "white" },
     error: { bg: "#ef4444", text: "white" },
     info: { bg: "#3b82f6", text: "white" },
-    warning: { bg: "#f59e0b", text: "white" }
+    warning: { bg: "#f59e0b", text: "white" },
   };
   const color = colors[type];
   try {
@@ -75,10 +75,4 @@ function showInfo(message, duration) {
 function showWarning(message, duration) {
   return showNotification(message, { type: "warning", duration });
 }
-export {
-  showError,
-  showInfo,
-  showNotification,
-  showSuccess,
-  showWarning
-};
+export { showError, showInfo, showNotification, showSuccess, showWarning };

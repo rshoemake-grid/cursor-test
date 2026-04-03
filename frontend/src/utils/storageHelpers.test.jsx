@@ -3,11 +3,11 @@ import {
   safeStorageSet,
   safeStorageRemove,
   safeStorageHas,
-  safeStorageClear
+  safeStorageClear,
 } from "./storageHelpers";
 import { handleStorageError } from "./errorHandler";
 jest.mock("./errorHandler", () => ({
-  handleStorageError: jest.fn()
+  handleStorageError: jest.fn(),
 }));
 describe("storageHelpers", () => {
   let mockStorage;
@@ -19,7 +19,7 @@ describe("storageHelpers", () => {
       removeItem: jest.fn(),
       addEventListener: jest.fn(),
       removeEventListener: jest.fn(),
-      clear: jest.fn()
+      clear: jest.fn(),
     };
   });
   describe("safeStorageGet", () => {
@@ -56,7 +56,7 @@ describe("storageHelpers", () => {
         expect.any(Error),
         "getItem",
         "key",
-        expect.objectContaining({ context: "TestContext" })
+        expect.objectContaining({ context: "TestContext" }),
       );
     });
   });
@@ -68,7 +68,10 @@ describe("storageHelpers", () => {
     it("should set item successfully", () => {
       const result = safeStorageSet(mockStorage, "key", { value: "test" });
       expect(result).toBe(true);
-      expect(mockStorage.setItem).toHaveBeenCalledWith("key", '{"value":"test"}');
+      expect(mockStorage.setItem).toHaveBeenCalledWith(
+        "key",
+        '{"value":"test"}',
+      );
     });
     it("should convert undefined to null", () => {
       safeStorageSet(mockStorage, "key", void 0);
@@ -91,7 +94,7 @@ describe("storageHelpers", () => {
         expect.any(Error),
         "setItem",
         "key",
-        expect.objectContaining({ context: "TestContext" })
+        expect.objectContaining({ context: "TestContext" }),
       );
     });
   });
@@ -122,7 +125,7 @@ describe("storageHelpers", () => {
         expect.any(Error),
         "removeItem",
         "key",
-        expect.objectContaining({ context: "TestContext" })
+        expect.objectContaining({ context: "TestContext" }),
       );
     });
   });
@@ -163,7 +166,7 @@ describe("storageHelpers", () => {
         expect.any(Error),
         "getItem",
         "key",
-        expect.objectContaining({ context: "TestContext" })
+        expect.objectContaining({ context: "TestContext" }),
       );
     });
   });
@@ -178,7 +181,7 @@ describe("storageHelpers", () => {
         setItem: jest.fn(),
         removeItem: jest.fn(),
         addEventListener: jest.fn(),
-        removeEventListener: jest.fn()
+        removeEventListener: jest.fn(),
       };
       const result = safeStorageClear(storageWithoutClear);
       expect(result).toBe(false);
@@ -205,7 +208,7 @@ describe("storageHelpers", () => {
         expect.any(Error),
         "clear",
         "all",
-        expect.objectContaining({ context: "TestContext" })
+        expect.objectContaining({ context: "TestContext" }),
       );
     });
   });
@@ -285,7 +288,7 @@ describe("storageHelpers", () => {
         getItem: jest.fn(),
         setItem: jest.fn(),
         removeItem: jest.fn(),
-        clear: "not-a-function"
+        clear: "not-a-function",
       };
       const result = safeStorageClear(storageWithoutClear);
       expect(result).toBe(false);
@@ -296,7 +299,7 @@ describe("storageHelpers", () => {
         setItem: jest.fn(),
         removeItem: jest.fn(),
         addEventListener: jest.fn(),
-        removeEventListener: jest.fn()
+        removeEventListener: jest.fn(),
       };
       const result = safeStorageClear(storageWithoutClear);
       expect(result).toBe(false);

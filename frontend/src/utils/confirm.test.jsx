@@ -62,7 +62,7 @@ describe("confirm", () => {
     it("should use custom button texts", async () => {
       const promise = showConfirm("Test message", {
         confirmText: "Yes",
-        cancelText: "No"
+        cancelText: "No",
       });
       jest.advanceTimersByTime(50);
       await Promise.resolve();
@@ -88,7 +88,9 @@ describe("confirm", () => {
       await Promise.resolve();
       const buttons = document.querySelectorAll("button");
       expect(buttons.length).toBe(2);
-      const confirmBtn = Array.from(buttons).find((btn) => btn.textContent === "Confirm");
+      const confirmBtn = Array.from(buttons).find(
+        (btn) => btn.textContent === "Confirm",
+      );
       expect(confirmBtn).toBeTruthy();
       expect(confirmBtn).toBeInstanceOf(HTMLButtonElement);
       confirmBtn.click();
@@ -101,7 +103,9 @@ describe("confirm", () => {
       await Promise.resolve();
       const buttons = document.querySelectorAll("button");
       expect(buttons.length).toBe(2);
-      const confirmBtn = Array.from(buttons).find((btn) => btn.textContent === "Confirm");
+      const confirmBtn = Array.from(buttons).find(
+        (btn) => btn.textContent === "Confirm",
+      );
       expect(confirmBtn).toBeTruthy();
       expect(confirmBtn).toBeInstanceOf(HTMLButtonElement);
       confirmBtn.click();
@@ -114,7 +118,9 @@ describe("confirm", () => {
       await Promise.resolve();
       const buttons = document.querySelectorAll("button");
       expect(buttons.length).toBe(2);
-      const confirmBtn = Array.from(buttons).find((btn) => btn.textContent === "Confirm");
+      const confirmBtn = Array.from(buttons).find(
+        (btn) => btn.textContent === "Confirm",
+      );
       expect(confirmBtn).toBeTruthy();
       expect(confirmBtn).toBeInstanceOf(HTMLButtonElement);
       confirmBtn.click();
@@ -140,7 +146,9 @@ describe("confirm", () => {
       await Promise.resolve();
       const buttons = document.querySelectorAll("button");
       expect(buttons.length).toBe(2);
-      const confirmBtn = Array.from(buttons).find((btn) => btn.textContent === "Confirm");
+      const confirmBtn = Array.from(buttons).find(
+        (btn) => btn.textContent === "Confirm",
+      );
       expect(confirmBtn).toBeTruthy();
       expect(confirmBtn.onmouseover).toBeTruthy();
       expect(confirmBtn.onmouseout).toBeTruthy();
@@ -191,7 +199,9 @@ describe("confirm", () => {
       await promise;
       jest.advanceTimersByTime(10);
       await Promise.resolve();
-      const overlayAfter = document.querySelector('div[style*="position: fixed"]');
+      const overlayAfter = document.querySelector(
+        'div[style*="position: fixed"]',
+      );
       expect(overlayAfter).toBeFalsy();
     });
     it("should remove overlay after cancellation", async () => {
@@ -205,7 +215,9 @@ describe("confirm", () => {
       await promise;
       jest.advanceTimersByTime(10);
       await Promise.resolve();
-      const overlayAfter = document.querySelector('div[style*="position: fixed"]');
+      const overlayAfter = document.querySelector(
+        'div[style*="position: fixed"]',
+      );
       expect(overlayAfter).toBeFalsy();
     });
     it("should use default options when not provided", async () => {
@@ -422,7 +434,7 @@ describe("confirm", () => {
     it("should handle empty button texts", async () => {
       const promise = showConfirm("Test message", {
         confirmText: "",
-        cancelText: ""
+        cancelText: "",
       });
       jest.advanceTimersByTime(50);
       await Promise.resolve();
@@ -515,7 +527,9 @@ describe("confirm", () => {
         dialog.dispatchEvent(clickEvent);
       }
       await jest.advanceTimersByTime(50);
-      expect(document.querySelector('div[style*="background: white"]')).toBeTruthy();
+      expect(
+        document.querySelector('div[style*="background: white"]'),
+      ).toBeTruthy();
       const confirmBtn = document.querySelector("button:last-child");
       confirmBtn?.click();
       await promise;
@@ -590,12 +604,16 @@ describe("confirm", () => {
       const promise2 = showConfirm("Second");
       jest.advanceTimersByTime(50);
       await Promise.resolve();
-      const dialogs = document.querySelectorAll('div[style*="background: white"]');
+      const dialogs = document.querySelectorAll(
+        'div[style*="background: white"]',
+      );
       expect(dialogs.length).toBe(2);
       const buttons2 = document.querySelectorAll("button");
       buttons2[buttons2.length - 1].click();
       await promise2;
-      const dialogsAfter = document.querySelectorAll('div[style*="background: white"]');
+      const dialogsAfter = document.querySelectorAll(
+        'div[style*="background: white"]',
+      );
       expect(dialogsAfter.length).toBe(1);
       const buttons1 = document.querySelectorAll("button");
       buttons1[buttons1.length - 1].click();
@@ -665,7 +683,7 @@ describe("confirm", () => {
       const expectedColors = {
         warning: { bg: "rgb(245, 158, 11)", hover: "rgb(217, 119, 6)" },
         danger: { bg: "rgb(239, 68, 68)", hover: "rgb(220, 38, 38)" },
-        info: { bg: "rgb(59, 130, 246)", hover: "rgb(37, 99, 235)" }
+        info: { bg: "rgb(59, 130, 246)", hover: "rgb(37, 99, 235)" },
       };
       for (const type of types) {
         const promise = showConfirm("Test", { type });
@@ -673,7 +691,9 @@ describe("confirm", () => {
         await Promise.resolve();
         const confirmBtn = document.querySelector("button:last-child");
         expect(confirmBtn.style.background).toBe(expectedColors[type].bg);
-        confirmBtn.dispatchEvent(new MouseEvent("mouseover", { bubbles: true }));
+        confirmBtn.dispatchEvent(
+          new MouseEvent("mouseover", { bubbles: true }),
+        );
         expect(confirmBtn.style.background).toBe(expectedColors[type].hover);
         confirmBtn.click();
         await promise;
@@ -707,10 +727,10 @@ describe("confirm", () => {
         getElementById: jest.fn((id) => document.getElementById(id)),
         getActiveElement: jest.fn(() => document.activeElement),
         head: document.head,
-        body: document.body
+        body: document.body,
       };
       const promise = showConfirm("Test message", {
-        documentAdapter: mockDocumentAdapter
+        documentAdapter: mockDocumentAdapter,
       });
       jest.advanceTimersByTime(50);
       await Promise.resolve();
@@ -728,10 +748,10 @@ describe("confirm", () => {
         setInterval: jest.fn((callback, delay) => {
           return setInterval(callback, delay);
         }),
-        clearInterval: jest.fn((id) => clearInterval(id))
+        clearInterval: jest.fn((id) => clearInterval(id)),
       };
       const promise = showConfirm("Test message", {
-        timerAdapter: mockTimerAdapter
+        timerAdapter: mockTimerAdapter,
       });
       jest.advanceTimersByTime(50);
       await Promise.resolve();
@@ -741,7 +761,7 @@ describe("confirm", () => {
     });
     it("should handle null document adapter gracefully", async () => {
       const promise = showConfirm("Test message", {
-        documentAdapter: null
+        documentAdapter: null,
       });
       const result = await promise;
       expect(result).toBe(false);
@@ -754,11 +774,11 @@ describe("confirm", () => {
         getElementById: jest.fn(() => null),
         getActiveElement: jest.fn(() => null),
         head: document.head,
-        body: document.body
+        body: document.body,
       };
       try {
         const promise = showConfirm("Test message", {
-          documentAdapter: mockDocumentAdapter
+          documentAdapter: mockDocumentAdapter,
         });
         jest.advanceTimersByTime(50);
         await Promise.resolve();
@@ -780,10 +800,10 @@ describe("confirm", () => {
         getElementById: mockGetElementById,
         getActiveElement: jest.fn(() => document.activeElement),
         head: document.head,
-        body: document.body
+        body: document.body,
       };
       const promise = showConfirm("Test message", {
-        documentAdapter: mockDocumentAdapter
+        documentAdapter: mockDocumentAdapter,
       });
       jest.advanceTimersByTime(50);
       await Promise.resolve();
@@ -800,10 +820,10 @@ describe("confirm", () => {
         getElementById: jest.fn(() => null),
         getActiveElement: jest.fn(() => null),
         head: document.head,
-        body: document.body
+        body: document.body,
       };
       const promise = showConfirm("Test message", {
-        documentAdapter: mockDocumentAdapter
+        documentAdapter: mockDocumentAdapter,
       });
       const result = await promise;
       expect(result).toBe(false);
@@ -814,10 +834,10 @@ describe("confirm", () => {
         getElementById: jest.fn((id) => document.getElementById(id)),
         getActiveElement: jest.fn(() => document.activeElement),
         head: document.head,
-        body: document.body
+        body: document.body,
       };
       const promise = showConfirm("Test message", {
-        documentAdapter: mockDocumentAdapter
+        documentAdapter: mockDocumentAdapter,
       });
       jest.advanceTimersByTime(50);
       await Promise.resolve();

@@ -6,9 +6,7 @@ function useFirstRender() {
   };
   return {
     isFirstRender: isFirstRenderRef.current,
-    markAsRendered
+    markAsRendered,
   };
 }
-export {
-  useFirstRender
-};
+export { useFirstRender };

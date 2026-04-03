@@ -1,12 +1,17 @@
 import { renderHook, act } from "@testing-library/react";
-import { useLocalStorage, getLocalStorageItem, setLocalStorageItem, removeLocalStorageItem } from "./useLocalStorage";
+import {
+  useLocalStorage,
+  getLocalStorageItem,
+  setLocalStorageItem,
+  removeLocalStorageItem,
+} from "./useLocalStorage";
 import { logger } from "../../utils/logger";
 jest.mock("../../utils/logger", () => ({
   logger: {
     debug: jest.fn(),
     error: jest.fn(),
-    warn: jest.fn()
-  }
+    warn: jest.fn(),
+  },
 }));
 describe("useLocalStorage - No Coverage Paths", () => {
   let mockStorage;
@@ -17,7 +22,7 @@ describe("useLocalStorage - No Coverage Paths", () => {
       setItem: jest.fn(),
       removeItem: jest.fn(),
       addEventListener: jest.fn(),
-      removeEventListener: jest.fn()
+      removeEventListener: jest.fn(),
     };
   });
   describe("useLocalStorage - catch blocks", () => {
@@ -25,40 +30,40 @@ describe("useLocalStorage - No Coverage Paths", () => {
       mockStorage.getItem.mockImplementation(() => {
         throw new Error("Storage access denied");
       });
-      const { result } = renderHook(
-        () => useLocalStorage("test-key", "default", { storage: mockStorage })
+      const { result } = renderHook(() =>
+        useLocalStorage("test-key", "default", { storage: mockStorage }),
       );
       expect(result.current[0]).toBe("default");
       expect(logger.error).toHaveBeenCalledWith(
         'Error reading localStorage key "test-key":',
-        expect.any(Error)
+        expect.any(Error),
       );
     });
     it("should handle JSON.parse throwing in useState initializer", () => {
       mockStorage.getItem.mockReturnValue("{invalid json");
-      const { result } = renderHook(
-        () => useLocalStorage("test-key", "default", { storage: mockStorage })
+      const { result } = renderHook(() =>
+        useLocalStorage("test-key", "default", { storage: mockStorage }),
       );
       expect(result.current[0]).toBe("default");
       expect(logger.error).not.toHaveBeenCalled();
       expect(logger.warn).toHaveBeenCalledWith(
         expect.stringContaining("contains invalid JSON"),
-        "{invalid json"
+        "{invalid json",
       );
     });
     it("should handle storage.setItem throwing in setValue", () => {
       mockStorage.setItem.mockImplementation(() => {
         throw new Error("Storage quota exceeded");
       });
-      const { result } = renderHook(
-        () => useLocalStorage("test-key", "default", { storage: mockStorage })
+      const { result } = renderHook(() =>
+        useLocalStorage("test-key", "default", { storage: mockStorage }),
       );
       act(() => {
         result.current[1]("new-value");
       });
       expect(logger.error).toHaveBeenCalledWith(
         'Error setting localStorage key "test-key":',
-        expect.any(Error)
+        expect.any(Error),
       );
       expect(result.current[0]).toBe("new-value");
     });
@@ -66,29 +71,29 @@ describe("useLocalStorage - No Coverage Paths", () => {
       mockStorage.removeItem.mockImplementation(() => {
         throw new Error("Storage access denied");
       });
-      const { result } = renderHook(
-        () => useLocalStorage("test-key", "initial", { storage: mockStorage })
+      const { result } = renderHook(() =>
+        useLocalStorage("test-key", "initial", { storage: mockStorage }),
       );
       act(() => {
         result.current[2]();
       });
       expect(logger.error).toHaveBeenCalledWith(
         'Error removing localStorage key "test-key":',
-        expect.any(Error)
+        expect.any(Error),
       );
       expect(result.current[0]).toBe("initial");
     });
     it("should handle JSON.parse throwing in useEffect storage event handler", () => {
-      renderHook(
-        () => useLocalStorage("test-key", "default", { storage: mockStorage })
+      renderHook(() =>
+        useLocalStorage("test-key", "default", { storage: mockStorage }),
       );
       const handleStorageChange = mockStorage.addEventListener.mock.calls.find(
-        (call) => call[0] === "storage"
+        (call) => call[0] === "storage",
       )?.[1];
       if (handleStorageChange) {
         const event = {
           key: "test-key",
-          newValue: "invalid json"
+          newValue: "invalid json",
         };
         act(() => {
           handleStorageChange(event);
@@ -99,8 +104,8 @@ describe("useLocalStorage - No Coverage Paths", () => {
   });
   describe("useLocalStorage - optional chaining", () => {
     it("should verify optional chaining - options?.storage", () => {
-      const { result } = renderHook(
-        () => useLocalStorage("test-key", "default", { storage: null })
+      const { result } = renderHook(() =>
+        useLocalStorage("test-key", "default", { storage: null }),
       );
       expect(result.current[0]).toBe("default");
     });
@@ -108,16 +113,16 @@ describe("useLocalStorage - No Coverage Paths", () => {
       const customLogger = {
         error: jest.fn(),
         warn: jest.fn(),
-        debug: jest.fn()
+        debug: jest.fn(),
       };
       mockStorage.getItem.mockImplementation(() => {
         throw new Error("Error");
       });
-      renderHook(
-        () => useLocalStorage("test-key", "default", {
+      renderHook(() =>
+        useLocalStorage("test-key", "default", {
           storage: mockStorage,
-          logger: customLogger
-        })
+          logger: customLogger,
+        }),
       );
       expect(customLogger.error).toHaveBeenCalled();
     });
@@ -128,7 +133,7 @@ describe("useLocalStorage - No Coverage Paths", () => {
         throw new Error("Storage access denied");
       });
       const result = getLocalStorageItem("test-key", "default", {
-        storage: mockStorage
+        storage: mockStorage,
       });
       expect(result).toBe("default");
       expect(logger.error).toHaveBeenCalled();
@@ -136,45 +141,45 @@ describe("useLocalStorage - No Coverage Paths", () => {
     it("should handle JSON.parse throwing - invalid JSON that looks like JSON", () => {
       mockStorage.getItem.mockReturnValue("{invalid json");
       const result = getLocalStorageItem("test-key", "default", {
-        storage: mockStorage
+        storage: mockStorage,
       });
       expect(result).toBe("default");
       expect(logger.warn).toHaveBeenCalledWith(
         expect.stringContaining("contains invalid JSON"),
-        "{invalid json"
+        "{invalid json",
       );
     });
     it('should verify logical OR - item.trim().startsWith("{") || item.trim().startsWith("[")', () => {
       mockStorage.getItem.mockReturnValue("{invalid json");
       const result1 = getLocalStorageItem("test-key", "default", {
-        storage: mockStorage
+        storage: mockStorage,
       });
       expect(result1).toBe("default");
       expect(logger.warn).toHaveBeenCalledWith(
         expect.stringContaining("contains invalid JSON"),
-        "{invalid json"
+        "{invalid json",
       );
       mockStorage.getItem.mockReturnValue("[invalid json");
       const result2 = getLocalStorageItem("test-key", "default", {
-        storage: mockStorage
+        storage: mockStorage,
       });
       expect(result2).toBe("default");
     });
     it("should handle plain string (backward compatibility)", () => {
       mockStorage.getItem.mockReturnValue("plain string");
       const result = getLocalStorageItem("test-key", "default", {
-        storage: mockStorage
+        storage: mockStorage,
       });
       expect(result).toBe("plain string");
     });
     it('should verify typeof check - typeof defaultValue === "string"', () => {
       mockStorage.getItem.mockReturnValue("plain string");
       const result1 = getLocalStorageItem("test-key", "default-string", {
-        storage: mockStorage
+        storage: mockStorage,
       });
       expect(result1).toBe("plain string");
       const result2 = getLocalStorageItem("test-key", 123, {
-        storage: mockStorage
+        storage: mockStorage,
       });
       expect(result2).toBe(123);
     });
@@ -185,22 +190,22 @@ describe("useLocalStorage - No Coverage Paths", () => {
         throw new Error("Storage quota exceeded");
       });
       const result = setLocalStorageItem("test-key", "value", {
-        storage: mockStorage
+        storage: mockStorage,
       });
       expect(result).toBe(false);
       expect(logger.error).toHaveBeenCalledWith(
         'Error setting localStorage key "test-key":',
-        expect.any(Error)
+        expect.any(Error),
       );
     });
     it("should handle undefined value conversion", () => {
       const result = setLocalStorageItem("test-key", void 0, {
-        storage: mockStorage
+        storage: mockStorage,
       });
       expect(result).toBe(true);
       expect(mockStorage.setItem).toHaveBeenCalledWith(
         "test-key",
-        JSON.stringify(null)
+        JSON.stringify(null),
       );
     });
   });
@@ -210,12 +215,12 @@ describe("useLocalStorage - No Coverage Paths", () => {
         throw new Error("Storage access denied");
       });
       const result = removeLocalStorageItem("test-key", {
-        storage: mockStorage
+        storage: mockStorage,
       });
       expect(result).toBe(false);
       expect(logger.error).toHaveBeenCalledWith(
         'Error removing localStorage key "test-key":',
-        expect.any(Error)
+        expect.any(Error),
       );
     });
   });
@@ -224,31 +229,35 @@ describe("useLocalStorage - No Coverage Paths", () => {
       const { result, rerender } = renderHook(
         ({ storage }) => useLocalStorage("test-key", "default", { storage }),
         {
-          initialProps: { storage: null }
-        }
+          initialProps: { storage: null },
+        },
       );
       expect(result.current[0]).toBe("default");
       expect(mockStorage.addEventListener).not.toHaveBeenCalled();
       rerender({ storage: mockStorage });
-      expect(mockStorage.addEventListener).toHaveBeenCalledWith("storage", expect.any(Function));
+      expect(mockStorage.addEventListener).toHaveBeenCalledWith(
+        "storage",
+        expect.any(Function),
+      );
       jest.clearAllMocks();
       rerender({ storage: null });
-      const addEventListenerCalls = mockStorage.addEventListener.mock.calls.filter(
-        (call) => call[0] === "storage"
-      );
+      const addEventListenerCalls =
+        mockStorage.addEventListener.mock.calls.filter(
+          (call) => call[0] === "storage",
+        );
       expect(addEventListenerCalls.length).toBe(0);
     });
     it("should update storedValue when parsed value is not null (lines 67-68)", () => {
-      const { result } = renderHook(
-        () => useLocalStorage("test-key", "default", { storage: mockStorage })
+      const { result } = renderHook(() =>
+        useLocalStorage("test-key", "default", { storage: mockStorage }),
       );
       const storageEvent = new StorageEvent("storage", {
         key: "test-key",
-        newValue: JSON.stringify({ data: "updated" })
+        newValue: JSON.stringify({ data: "updated" }),
       });
       act(() => {
         const handler = mockStorage.addEventListener.mock.calls.find(
-          (call) => call[0] === "storage"
+          (call) => call[0] === "storage",
         )?.[1];
         if (handler) {
           handler(storageEvent);
@@ -257,17 +266,17 @@ describe("useLocalStorage - No Coverage Paths", () => {
       expect(result.current[0]).toEqual({ data: "updated" });
     });
     it("should not update storedValue when parsed value is null", () => {
-      const { result } = renderHook(
-        () => useLocalStorage("test-key", "default", { storage: mockStorage })
+      const { result } = renderHook(() =>
+        useLocalStorage("test-key", "default", { storage: mockStorage }),
       );
       const initialValue = result.current[0];
       const storageEvent = new StorageEvent("storage", {
         key: "test-key",
-        newValue: "invalid-json"
+        newValue: "invalid-json",
       });
       act(() => {
         const handler = mockStorage.addEventListener.mock.calls.find(
-          (call) => call[0] === "storage"
+          (call) => call[0] === "storage",
         )?.[1];
         if (handler) {
           handler(storageEvent);

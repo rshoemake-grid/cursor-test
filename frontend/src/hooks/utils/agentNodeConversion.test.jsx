@@ -4,7 +4,7 @@ import {
   getAgentDescription,
   getAgentConfig,
   convertAgentToNode,
-  convertAgentsToNodes
+  convertAgentsToNodes,
 } from "./agentNodeConversion";
 import { AGENT_NODE } from "./marketplaceConstants";
 describe("agentNodeConversion", () => {
@@ -98,7 +98,7 @@ describe("agentNodeConversion", () => {
       const agent = {
         name: "Test Agent",
         description: "Test Description",
-        agent_config: { key: "value" }
+        agent_config: { key: "value" },
       };
       const position = { x: 100, y: 200 };
       const node = convertAgentToNode(agent, position, 0);
@@ -126,12 +126,12 @@ describe("agentNodeConversion", () => {
       const agents = [
         { name: "Agent 1" },
         { name: "Agent 2" },
-        { name: "Agent 3" }
+        { name: "Agent 3" },
       ];
       const positions = [
         { x: 0, y: 0 },
         { x: 0, y: 150 },
-        { x: 0, y: 300 }
+        { x: 0, y: 300 },
       ];
       const nodes = convertAgentsToNodes(agents, positions);
       expect(nodes).toHaveLength(3);

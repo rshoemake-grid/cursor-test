@@ -1,6 +1,9 @@
 import { useCallback } from "react";
 import { api as defaultApi } from "../../api/client";
-import { showSuccess as defaultShowSuccess, showError as defaultShowError } from "../../utils/notifications";
+import {
+  showSuccess as defaultShowSuccess,
+  showError as defaultShowError,
+} from "../../utils/notifications";
 import { logger as defaultLogger } from "../../utils/logger";
 import { createWorkflowDefinition } from "../../utils/workflowFormat";
 import { nullishCoalesce } from "../utils/nullishCoalescing";
@@ -21,7 +24,7 @@ function useWorkflowPersistence({
   api = defaultApi,
   showSuccess = defaultShowSuccess,
   showError = defaultShowError,
-  logger = defaultLogger
+  logger = defaultLogger,
 }) {
   const saveWorkflow = useCallback(async () => {
     if (!isAuthenticated) {
@@ -36,7 +39,7 @@ function useWorkflowPersistence({
       description: localWorkflowDescription,
       nodes,
       edges,
-      variables
+      variables,
     });
     setIsSaving(true);
     try {
@@ -57,7 +60,9 @@ function useWorkflowPersistence({
         return created.id;
       }
     } catch (error) {
-      const errorMessage = "Failed to save workflow: " + extractApiErrorMessage(error, "Unknown error");
+      const errorMessage =
+        "Failed to save workflow: " +
+        extractApiErrorMessage(error, "Unknown error");
       showError(errorMessage);
       logger.error("Failed to save workflow:", error);
       throw new Error(errorMessage);
@@ -79,7 +84,7 @@ function useWorkflowPersistence({
     api,
     showSuccess,
     showError,
-    logger
+    logger,
   ]);
   const exportWorkflow = useCallback(() => {
     const workflowDef = createWorkflowDefinition({
@@ -87,11 +92,15 @@ function useWorkflowPersistence({
       description: localWorkflowDescription,
       nodes,
       edges,
-      variables
+      variables,
     });
     const workflowName = (localWorkflowName || "").trim();
-    const filename = (logicalOr(workflowName, "workflow") || "workflow").replace(/\s+/g, "-");
-    const blob = new Blob([JSON.stringify(workflowDef, null, 2)], { type: "application/json" });
+    const filename = (
+      logicalOr(workflowName, "workflow") || "workflow"
+    ).replace(/\s+/g, "-");
+    const blob = new Blob([JSON.stringify(workflowDef, null, 2)], {
+      type: "application/json",
+    });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
@@ -101,9 +110,7 @@ function useWorkflowPersistence({
   }, [localWorkflowName, localWorkflowDescription, nodes, edges, variables]);
   return {
     saveWorkflow,
-    exportWorkflow
+    exportWorkflow,
   };
 }
-export {
-  useWorkflowPersistence
-};
+export { useWorkflowPersistence };

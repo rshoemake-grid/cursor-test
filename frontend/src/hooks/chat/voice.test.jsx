@@ -2,7 +2,7 @@ import {
   usePushToTalk,
   isSpeechSynthesisSupported,
   speakChatMessage,
-  stopSpeaking
+  stopSpeaking,
 } from "./voice";
 
 describe("hooks/chat/voice re-exports", () => {

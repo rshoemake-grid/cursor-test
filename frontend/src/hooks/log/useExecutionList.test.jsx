@@ -5,8 +5,8 @@ jest.mock("../../utils/logger", () => ({
     debug: jest.fn(),
     error: jest.fn(),
     warn: jest.fn(),
-    info: jest.fn()
-  }
+    info: jest.fn(),
+  },
 }));
 describe("useExecutionList", () => {
   const mockExecution = {
@@ -17,10 +17,10 @@ describe("useExecutionList", () => {
     completed_at: "2024-01-01T10:00:05Z",
     node_states: {},
     variables: {},
-    logs: []
+    logs: [],
   };
   const mockApiClient = {
-    listExecutions: jest.fn()
+    listExecutions: jest.fn(),
   };
   beforeEach(() => {
     jest.clearAllMocks();
@@ -31,12 +31,12 @@ describe("useExecutionList", () => {
   });
   it("should load executions on mount", async () => {
     mockApiClient.listExecutions.mockResolvedValue([mockExecution]);
-    const { result } = renderHook(
-      () => useExecutionList({
+    const { result } = renderHook(() =>
+      useExecutionList({
         apiClient: mockApiClient,
-        pollInterval: 0
+        pollInterval: 0,
         // Disable polling for this test
-      })
+      }),
     );
     await waitFor(() => {
       expect(result.current.loading).toBe(false);
@@ -47,15 +47,14 @@ describe("useExecutionList", () => {
   });
   it("should handle loading state", () => {
     mockApiClient.listExecutions.mockImplementation(
-      () => new Promise(() => {
-      })
+      () => new Promise(() => {}),
       // Never resolves
     );
-    const { result } = renderHook(
-      () => useExecutionList({
+    const { result } = renderHook(() =>
+      useExecutionList({
         apiClient: mockApiClient,
-        pollInterval: 0
-      })
+        pollInterval: 0,
+      }),
     );
     expect(result.current.loading).toBe(true);
     expect(result.current.executions).toEqual([]);
@@ -63,11 +62,11 @@ describe("useExecutionList", () => {
   it("should handle error state", async () => {
     const errorMessage = "Failed to fetch executions";
     mockApiClient.listExecutions.mockRejectedValue(new Error(errorMessage));
-    const { result } = renderHook(
-      () => useExecutionList({
+    const { result } = renderHook(() =>
+      useExecutionList({
         apiClient: mockApiClient,
-        pollInterval: 0
-      })
+        pollInterval: 0,
+      }),
     );
     await waitFor(() => {
       expect(result.current.loading).toBe(false);
@@ -77,11 +76,11 @@ describe("useExecutionList", () => {
   });
   it("should handle error without message", async () => {
     mockApiClient.listExecutions.mockRejectedValue({});
-    const { result } = renderHook(
-      () => useExecutionList({
+    const { result } = renderHook(() =>
+      useExecutionList({
         apiClient: mockApiClient,
-        pollInterval: 0
-      })
+        pollInterval: 0,
+      }),
     );
     await waitFor(() => {
       expect(result.current.loading).toBe(false);
@@ -90,11 +89,11 @@ describe("useExecutionList", () => {
   });
   it("should poll for updates at specified interval", async () => {
     mockApiClient.listExecutions.mockResolvedValue([mockExecution]);
-    const { result } = renderHook(
-      () => useExecutionList({
+    const { result } = renderHook(() =>
+      useExecutionList({
         apiClient: mockApiClient,
-        pollInterval: 1e3
-      })
+        pollInterval: 1e3,
+      }),
     );
     await waitFor(() => {
       expect(result.current.loading).toBe(false);
@@ -107,12 +106,12 @@ describe("useExecutionList", () => {
   });
   it("should use custom limit when provided", async () => {
     mockApiClient.listExecutions.mockResolvedValue([]);
-    renderHook(
-      () => useExecutionList({
+    renderHook(() =>
+      useExecutionList({
         apiClient: mockApiClient,
         pollInterval: 0,
-        limit: 50
-      })
+        limit: 50,
+      }),
     );
     await waitFor(() => {
       expect(mockApiClient.listExecutions).toHaveBeenCalledWith({ limit: 50 });
@@ -120,77 +119,77 @@ describe("useExecutionList", () => {
   });
   it("should pass filters to API client", async () => {
     mockApiClient.listExecutions.mockResolvedValue([mockExecution]);
-    renderHook(
-      () => useExecutionList({
+    renderHook(() =>
+      useExecutionList({
         apiClient: mockApiClient,
         pollInterval: 0,
         filters: {
           status: "completed",
-          workflow_id: "workflow-123"
-        }
-      })
+          workflow_id: "workflow-123",
+        },
+      }),
     );
     await waitFor(() => {
       expect(mockApiClient.listExecutions).toHaveBeenCalledWith({
         limit: 100,
         status: "completed",
-        workflow_id: "workflow-123"
+        workflow_id: "workflow-123",
       });
     });
   });
   it("should pass single status filter", async () => {
     mockApiClient.listExecutions.mockResolvedValue([mockExecution]);
-    renderHook(
-      () => useExecutionList({
+    renderHook(() =>
+      useExecutionList({
         apiClient: mockApiClient,
         pollInterval: 0,
         filters: {
-          status: "running"
-        }
-      })
+          status: "running",
+        },
+      }),
     );
     await waitFor(() => {
       expect(mockApiClient.listExecutions).toHaveBeenCalledWith({
         limit: 100,
-        status: "running"
+        status: "running",
       });
     });
   });
   it("should pass workflow filter only", async () => {
     mockApiClient.listExecutions.mockResolvedValue([mockExecution]);
-    renderHook(
-      () => useExecutionList({
+    renderHook(() =>
+      useExecutionList({
         apiClient: mockApiClient,
         pollInterval: 0,
         filters: {
-          workflow_id: "workflow-456"
-        }
-      })
+          workflow_id: "workflow-456",
+        },
+      }),
     );
     await waitFor(() => {
       expect(mockApiClient.listExecutions).toHaveBeenCalledWith({
         limit: 100,
-        workflow_id: "workflow-456"
+        workflow_id: "workflow-456",
       });
     });
   });
   it("should handle missing API client", () => {
-    const { result } = renderHook(
-      () => useExecutionList({
+    const { result } = renderHook(() =>
+      useExecutionList({
         apiClient: void 0,
-        pollInterval: 0
-      })
+        pollInterval: 0,
+      }),
     );
     expect(result.current.error).toBe("API client not provided");
     expect(result.current.loading).toBe(false);
   });
   it("should provide refresh function", async () => {
     mockApiClient.listExecutions.mockResolvedValue([mockExecution]);
-    const { result } = renderHook(
-      () => useExecutionList({
+    const { result } = renderHook(() =>
+      useExecutionList({
         apiClient: mockApiClient,
-        pollInterval: 0
-      })
+        pollInterval: 0,
+      }),
     );
     await waitFor(() => {
       expect(result.current.loading).toBe(false);
@@ -201,11 +200,11 @@ describe("useExecutionList", () => {
   });
   it("should not poll when pollInterval is 0", async () => {
     mockApiClient.listExecutions.mockResolvedValue([mockExecution]);
-    const { result } = renderHook(
-      () => useExecutionList({
+    const { result } = renderHook(() =>
+      useExecutionList({
         apiClient: mockApiClient,
-        pollInterval: 0
-      })
+        pollInterval: 0,
+      }),
     );
     await waitFor(() => {
       expect(result.current.loading).toBe(false);
@@ -218,11 +217,11 @@ describe("useExecutionList", () => {
   });
   it("should cleanup interval on unmount", async () => {
     mockApiClient.listExecutions.mockResolvedValue([mockExecution]);
-    const { unmount } = renderHook(
-      () => useExecutionList({
+    const { unmount } = renderHook(() =>
+      useExecutionList({
         apiClient: mockApiClient,
-        pollInterval: 1e3
-      })
+        pollInterval: 1e3,
+      }),
     );
     await waitFor(() => {
       expect(mockApiClient.listExecutions).toHaveBeenCalledTimes(1);

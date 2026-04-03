@@ -1,12 +1,8 @@
-import {
-  getNestedValue,
-  setNestedValue,
-  hasNestedValue
-} from "./formUtils";
+import { getNestedValue, setNestedValue, hasNestedValue } from "./formUtils";
 import {
   getNestedValue as getNestedValueOriginal,
   setNestedValue as setNestedValueOriginal,
-  hasNestedValue as hasNestedValueOriginal
+  hasNestedValue as hasNestedValueOriginal,
 } from "../../utils/formUtils";
 describe("hooks/utils/formUtils (re-export)", () => {
   describe("exports verification", () => {
@@ -38,9 +34,9 @@ describe("hooks/utils/formUtils (re-export)", () => {
     const testObj = {
       user: {
         profile: {
-          name: "John"
-        }
-      }
+          name: "John",
+        },
+      },
     };
     it("should getNestedValue work correctly", () => {
       expect(getNestedValue(testObj, "user.profile.name")).toBe("John");

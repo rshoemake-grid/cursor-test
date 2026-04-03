@@ -7,24 +7,24 @@ jest.mock("../../utils/logger", () => ({
   logger: {
     debug: jest.fn(),
     error: jest.fn(),
-    warn: jest.fn()
-  }
+    warn: jest.fn(),
+  },
 }));
 jest.mock("../../utils/notifications", () => ({
   showError: jest.fn(),
-  showSuccess: jest.fn()
+  showSuccess: jest.fn(),
 }));
 jest.mock("../../utils/confirm", () => ({
-  showConfirm: jest.fn()
+  showConfirm: jest.fn(),
 }));
 jest.mock("../../api/client", () => ({
   api: {
-    deleteTemplate: jest.fn()
-  }
+    deleteTemplate: jest.fn(),
+  },
 }));
 const mockNavigate = jest.fn();
 jest.mock("react-router-dom", () => ({
-  useNavigate: () => mockNavigate
+  useNavigate: () => mockNavigate,
 }));
 import { showError } from "../../utils/notifications";
 describe("useTemplateOperations - No Coverage Paths", () => {
@@ -41,12 +41,12 @@ describe("useTemplateOperations - No Coverage Paths", () => {
     jest.clearAllMocks();
     mockHttpClient = {
       post: jest.fn(),
-      delete: jest.fn()
+      delete: jest.fn(),
     };
     mockStorage = {
       getItem: jest.fn(),
       setItem: jest.fn(),
-      removeItem: jest.fn()
+      removeItem: jest.fn(),
     };
     mockSetAgents = jest.fn();
     mockSetTemplates = jest.fn();
@@ -60,8 +60,8 @@ describe("useTemplateOperations - No Coverage Paths", () => {
   describe("useTemplate - catch block", () => {
     it("should handle httpClient.post throwing error", async () => {
       mockHttpClient.post.mockRejectedValue(new Error("Network error"));
-      const { result } = renderHook(
-        () => useTemplateOperations({
+      const { result } = renderHook(() =>
+        useTemplateOperations({
           token: "test-token",
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -77,26 +77,26 @@ describe("useTemplateOperations - No Coverage Paths", () => {
           setRepositoryAgents: mockSetRepositoryAgents,
           setSelectedAgentIds: mockSetSelectedAgentIds,
           setSelectedTemplateIds: mockSetSelectedTemplateIds,
-          setSelectedRepositoryAgentIds: mockSetSelectedRepositoryAgentIds
-        })
+          setSelectedRepositoryAgentIds: mockSetSelectedRepositoryAgentIds,
+        }),
       );
       await act(async () => {
         await result.current.useTemplate("template-123");
       });
       expect(logger.error).toHaveBeenCalledWith(
         "Failed to use template:",
-        expect.any(Error)
+        expect.any(Error),
       );
     });
     it("should handle response.json() throwing in useTemplate", async () => {
       const mockResponse = {
         ok: true,
         json: jest.fn().mockRejectedValue(new Error("Invalid JSON")),
-        text: jest.fn()
+        text: jest.fn(),
       };
       mockHttpClient.post.mockResolvedValue(mockResponse);
-      const { result } = renderHook(
-        () => useTemplateOperations({
+      const { result } = renderHook(() =>
+        useTemplateOperations({
           token: "test-token",
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -112,8 +112,8 @@ describe("useTemplateOperations - No Coverage Paths", () => {
           setRepositoryAgents: mockSetRepositoryAgents,
           setSelectedAgentIds: mockSetSelectedAgentIds,
           setSelectedTemplateIds: mockSetSelectedTemplateIds,
-          setSelectedRepositoryAgentIds: mockSetSelectedRepositoryAgentIds
-        })
+          setSelectedRepositoryAgentIds: mockSetSelectedRepositoryAgentIds,
+        }),
       );
       await act(async () => {
         await result.current.useTemplate("template-123");
@@ -126,8 +126,8 @@ describe("useTemplateOperations - No Coverage Paths", () => {
       mockStorage.getItem.mockImplementation(() => {
         throw new Error("Storage error");
       });
-      const { result } = renderHook(
-        () => useTemplateOperations({
+      const { result } = renderHook(() =>
+        useTemplateOperations({
           token: "test-token",
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -137,8 +137,8 @@ describe("useTemplateOperations - No Coverage Paths", () => {
               id: "agent-1",
               name: "Test Agent",
               author_id: "user-123",
-              is_official: false
-            }
+              is_official: false,
+            },
           ],
           templates: [],
           workflowsOfWorkflows: [],
@@ -150,14 +150,16 @@ describe("useTemplateOperations - No Coverage Paths", () => {
           setRepositoryAgents: mockSetRepositoryAgents,
           setSelectedAgentIds: mockSetSelectedAgentIds,
           setSelectedTemplateIds: mockSetSelectedTemplateIds,
-          setSelectedRepositoryAgentIds: mockSetSelectedRepositoryAgentIds
-        })
+          setSelectedRepositoryAgentIds: mockSetSelectedRepositoryAgentIds,
+        }),
       );
       await act(async () => {
-        await result.current.deleteSelectedAgents(/* @__PURE__ */ new Set(["agent-1"]));
+        await result.current.deleteSelectedAgents(
+          /* @__PURE__ */ new Set(["agent-1"]),
+        );
       });
       expect(showError).toHaveBeenCalledWith(
-        expect.stringContaining("Failed to delete agents")
+        expect.stringContaining("Failed to delete agents"),
       );
     });
     it("should handle JSON.parse throwing error in deleteSelectedAgents", async () => {
@@ -166,8 +168,8 @@ describe("useTemplateOperations - No Coverage Paths", () => {
       JSON.parse = jest.fn().mockImplementation(() => {
         throw new Error("Invalid JSON");
       });
-      const { result } = renderHook(
-        () => useTemplateOperations({
+      const { result } = renderHook(() =>
+        useTemplateOperations({
           token: "test-token",
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -177,8 +179,8 @@ describe("useTemplateOperations - No Coverage Paths", () => {
               id: "agent-1",
               name: "Test Agent",
               author_id: "user-123",
-              is_official: false
-            }
+              is_official: false,
+            },
           ],
           templates: [],
           workflowsOfWorkflows: [],
@@ -190,14 +192,16 @@ describe("useTemplateOperations - No Coverage Paths", () => {
           setRepositoryAgents: mockSetRepositoryAgents,
           setSelectedAgentIds: mockSetSelectedAgentIds,
           setSelectedTemplateIds: mockSetSelectedTemplateIds,
-          setSelectedRepositoryAgentIds: mockSetSelectedRepositoryAgentIds
-        })
+          setSelectedRepositoryAgentIds: mockSetSelectedRepositoryAgentIds,
+        }),
       );
       await act(async () => {
-        await result.current.deleteSelectedAgents(/* @__PURE__ */ new Set(["agent-1"]));
+        await result.current.deleteSelectedAgents(
+          /* @__PURE__ */ new Set(["agent-1"]),
+        );
       });
       expect(showError).toHaveBeenCalledWith(
-        expect.stringContaining("Failed to delete agents")
+        expect.stringContaining("Failed to delete agents"),
       );
       JSON.parse = originalParse;
     });
@@ -206,8 +210,8 @@ describe("useTemplateOperations - No Coverage Paths", () => {
     it("should handle api.deleteTemplate throwing error", async () => {
       const mockDeleteTemplate = api.deleteTemplate;
       mockDeleteTemplate.mockRejectedValue(new Error("Network error"));
-      const { result } = renderHook(
-        () => useTemplateOperations({
+      const { result } = renderHook(() =>
+        useTemplateOperations({
           token: "test-token",
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -219,8 +223,8 @@ describe("useTemplateOperations - No Coverage Paths", () => {
               name: "Test Template",
               description: "Test",
               author_id: "user-123",
-              is_official: false
-            }
+              is_official: false,
+            },
           ],
           workflowsOfWorkflows: [],
           activeTab: "agents",
@@ -231,14 +235,16 @@ describe("useTemplateOperations - No Coverage Paths", () => {
           setRepositoryAgents: mockSetRepositoryAgents,
           setSelectedAgentIds: mockSetSelectedAgentIds,
           setSelectedTemplateIds: mockSetSelectedTemplateIds,
-          setSelectedRepositoryAgentIds: mockSetSelectedRepositoryAgentIds
-        })
+          setSelectedRepositoryAgentIds: mockSetSelectedRepositoryAgentIds,
+        }),
       );
       await act(async () => {
-        await result.current.deleteSelectedWorkflows(/* @__PURE__ */ new Set(["template-1"]));
+        await result.current.deleteSelectedWorkflows(
+          /* @__PURE__ */ new Set(["template-1"]),
+        );
       });
       expect(showError).toHaveBeenCalledWith(
-        expect.stringContaining("Failed to delete workflows")
+        expect.stringContaining("Failed to delete workflows"),
       );
     });
   });
@@ -247,8 +253,8 @@ describe("useTemplateOperations - No Coverage Paths", () => {
       mockStorage.getItem.mockImplementation(() => {
         throw new Error("Storage error");
       });
-      const { result } = renderHook(
-        () => useTemplateOperations({
+      const { result } = renderHook(() =>
+        useTemplateOperations({
           token: "test-token",
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -264,14 +270,16 @@ describe("useTemplateOperations - No Coverage Paths", () => {
           setRepositoryAgents: mockSetRepositoryAgents,
           setSelectedAgentIds: mockSetSelectedAgentIds,
           setSelectedTemplateIds: mockSetSelectedTemplateIds,
-          setSelectedRepositoryAgentIds: mockSetSelectedRepositoryAgentIds
-        })
+          setSelectedRepositoryAgentIds: mockSetSelectedRepositoryAgentIds,
+        }),
       );
       await act(async () => {
-        await result.current.deleteSelectedRepositoryAgents(/* @__PURE__ */ new Set(["agent-1"]));
+        await result.current.deleteSelectedRepositoryAgents(
+          /* @__PURE__ */ new Set(["agent-1"]),
+        );
       });
       expect(showError).toHaveBeenCalledWith(
-        expect.stringContaining("Failed to delete repository agents")
+        expect.stringContaining("Failed to delete repository agents"),
       );
     });
   });

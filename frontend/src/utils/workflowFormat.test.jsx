@@ -5,7 +5,7 @@ import {
   initializeReactFlowNodes,
   formatEdgesForReactFlow,
   normalizeNodeForStorage,
-  workflowNodeToReactFlowNode
+  workflowNodeToReactFlowNode,
 } from "./workflowFormat";
 describe("workflowFormat utilities", () => {
   describe("convertEdgesToWorkflowFormat", () => {
@@ -15,13 +15,13 @@ describe("workflowFormat utilities", () => {
           id: "e1",
           source: "node1",
           target: "node2",
-          label: "Connection"
+          label: "Connection",
         },
         {
           id: "e2",
           source: "node2",
-          target: "node3"
-        }
+          target: "node3",
+        },
       ];
       const result = convertEdgesToWorkflowFormat(edges);
       expect(result).toHaveLength(2);
@@ -29,24 +29,28 @@ describe("workflowFormat utilities", () => {
         id: "e1",
         source: "node1",
         target: "node2",
-        label: "Connection"
+        label: "Connection",
       });
       expect(result[1]).toEqual({
         id: "e2",
         source: "node2",
         target: "node3",
-        label: void 0
+        label: void 0,
       });
     });
     it("should handle edges with ReactNode labels", () => {
-      const ReactNodeLabel = { type: "span", props: {}, children: "React Node" };
+      const ReactNodeLabel = {
+        type: "span",
+        props: {},
+        children: "React Node",
+      };
       const edges = [
         {
           id: "e1",
           source: "node1",
           target: "node2",
-          label: ReactNodeLabel
-        }
+          label: ReactNodeLabel,
+        },
       ];
       const result = convertEdgesToWorkflowFormat(edges);
       expect(result[0].label).toBeUndefined();
@@ -67,9 +71,9 @@ describe("workflowFormat utilities", () => {
             name: "Test Agent",
             description: "Test description",
             agent_config: { model: "gpt-4" },
-            inputs: []
-          }
-        }
+            inputs: [],
+          },
+        },
       ];
       const result = convertNodesToWorkflowFormat(nodes);
       expect(result).toHaveLength(1);
@@ -83,7 +87,7 @@ describe("workflowFormat utilities", () => {
         loop_config: void 0,
         input_config: void 0,
         inputs: [],
-        position: { x: 100, y: 200 }
+        position: { x: 100, y: 200 },
       });
     });
     it("should use label if name is not available", () => {
@@ -94,9 +98,9 @@ describe("workflowFormat utilities", () => {
           position: { x: 0, y: 0 },
           data: {
             label: "Agent Label",
-            description: "Test"
-          }
-        }
+            description: "Test",
+          },
+        },
       ];
       const result = convertNodesToWorkflowFormat(nodes);
       expect(result[0].name).toBe("Agent Label");
@@ -107,8 +111,8 @@ describe("workflowFormat utilities", () => {
           id: "node1",
           type: "agent",
           position: { x: 0, y: 0 },
-          data: {}
-        }
+          data: {},
+        },
       ];
       const result = convertNodesToWorkflowFormat(nodes);
       expect(result[0].name).toBe("node1");
@@ -125,9 +129,9 @@ describe("workflowFormat utilities", () => {
             condition_config: { condition_type: "equals" },
             loop_config: { loop_type: "for_each" },
             input_config: { mode: "read" },
-            inputs: [{ name: "input1" }]
-          }
-        }
+            inputs: [{ name: "input1" }],
+          },
+        },
       ];
       const result = convertNodesToWorkflowFormat(nodes);
       expect(result[0].agent_config).toEqual({ model: "gpt-4" });
@@ -144,9 +148,9 @@ describe("workflowFormat utilities", () => {
           position: { x: 0, y: 0 },
           data: {
             name: "Test",
-            inputs: null
-          }
-        }
+            inputs: null,
+          },
+        },
       ];
       const result = convertNodesToWorkflowFormat(nodes);
       expect(result[0].inputs).toEqual([]);
@@ -159,22 +163,22 @@ describe("workflowFormat utilities", () => {
           id: "node1",
           type: "agent",
           position: { x: 0, y: 0 },
-          data: { name: "Agent 1" }
-        }
+          data: { name: "Agent 1" },
+        },
       ];
       const edges = [
         {
           id: "e1",
           source: "node1",
-          target: "node2"
-        }
+          target: "node2",
+        },
       ];
       const result = createWorkflowDefinition({
         name: "Test Workflow",
         description: "Test Description",
         nodes,
         edges,
-        variables: { var1: "value1" }
+        variables: { var1: "value1" },
       });
       expect(result.name).toBe("Test Workflow");
       expect(result.description).toBe("Test Description");
@@ -188,7 +192,7 @@ describe("workflowFormat utilities", () => {
         description: "",
         nodes: [],
         edges: [],
-        variables: {}
+        variables: {},
       });
       expect(result.nodes).toEqual([]);
       expect(result.edges).toEqual([]);
@@ -203,9 +207,9 @@ describe("workflowFormat utilities", () => {
           type: "agent",
           position: { x: 0, y: 0 },
           data: {
-            name: "Test"
-          }
-        }
+            name: "Test",
+          },
+        },
       ];
       const result = initializeReactFlowNodes(nodes);
       expect(result[0].draggable).toBe(true);
@@ -225,9 +229,9 @@ describe("workflowFormat utilities", () => {
           data: {
             name: "Test",
             agent_config: { model: "gpt-4" },
-            inputs: [{ name: "input1" }]
-          }
-        }
+            inputs: [{ name: "input1" }],
+          },
+        },
       ];
       const result = initializeReactFlowNodes(nodes);
       expect(result[0].data.agent_config).toEqual({ model: "gpt-4" });
@@ -242,9 +246,9 @@ describe("workflowFormat utilities", () => {
           data: {
             name: "Test",
             agent_config: null,
-            condition_config: void 0
-          }
-        }
+            condition_config: void 0,
+          },
+        },
       ];
       const result = initializeReactFlowNodes(nodes);
       expect(result[0].data.agent_config).toEqual({});
@@ -259,8 +263,8 @@ describe("workflowFormat utilities", () => {
           source: "node1",
           target: "node2",
           sourceHandle: "true",
-          targetHandle: "false"
-        }
+          targetHandle: "false",
+        },
       ];
       const result = formatEdgesForReactFlow(edges);
       expect(result[0].sourceHandle).toBe("true");
@@ -272,8 +276,8 @@ describe("workflowFormat utilities", () => {
           id: "e1",
           source: "node1",
           target: "node2",
-          source_handle: "output"
-        }
+          source_handle: "output",
+        },
       ];
       const result = formatEdgesForReactFlow(edges);
       expect(result[0].sourceHandle).toBe("output");
@@ -285,8 +289,8 @@ describe("workflowFormat utilities", () => {
           source: "node1",
           target: "node2",
           sourceHandle: true,
-          targetHandle: false
-        }
+          targetHandle: false,
+        },
       ];
       const result = formatEdgesForReactFlow(edges);
       expect(result[0].sourceHandle).toBe("true");
@@ -297,8 +301,8 @@ describe("workflowFormat utilities", () => {
         {
           source: "node1",
           target: "node2",
-          sourceHandle: "output"
-        }
+          sourceHandle: "output",
+        },
       ];
       const result = formatEdgesForReactFlow(edges);
       expect(result[0].id).toBe("node1-output-node2");
@@ -310,8 +314,8 @@ describe("workflowFormat utilities", () => {
           source: "node1",
           target: "node2",
           label: "Custom Label",
-          animated: true
-        }
+          animated: true,
+        },
       ];
       const result = formatEdgesForReactFlow(edges);
       expect(result[0].label).toBe("Custom Label");
@@ -325,8 +329,8 @@ describe("workflowFormat utilities", () => {
         type: "agent",
         position: { x: 0, y: 0 },
         data: {
-          name: "Test"
-        }
+          name: "Test",
+        },
       };
       const result = normalizeNodeForStorage(node);
       expect(result.data.agent_config).toEqual({});
@@ -341,8 +345,8 @@ describe("workflowFormat utilities", () => {
         position: { x: 0, y: 0 },
         data: {
           name: "Test",
-          agent_config: { model: "gpt-4" }
-        }
+          agent_config: { model: "gpt-4" },
+        },
       };
       const result = normalizeNodeForStorage(node);
       expect(result.data.agent_config).toEqual({ model: "gpt-4" });
@@ -353,7 +357,7 @@ describe("workflowFormat utilities", () => {
         type: "agent",
         position: { x: 0, y: 0 },
         agent_config: { model: "gpt-4" },
-        data: {}
+        data: {},
       };
       const result = normalizeNodeForStorage(node);
       expect(result.data.agent_config).toEqual({ model: "gpt-4" });
@@ -368,7 +372,7 @@ describe("workflowFormat utilities", () => {
         description: "Test Description",
         position: { x: 100, y: 200 },
         agent_config: { model: "gpt-4" },
-        inputs: []
+        inputs: [],
       };
       const result = workflowNodeToReactFlowNode(wfNode);
       expect(result.id).toBe("node1");
@@ -388,9 +392,9 @@ describe("workflowFormat utilities", () => {
         data: {
           name: "Nested Name",
           label: "Nested Label",
-          agent_config: { model: "gpt-4" }
+          agent_config: { model: "gpt-4" },
         },
-        position: { x: 0, y: 0 }
+        position: { x: 0, y: 0 },
       };
       const result = workflowNodeToReactFlowNode(wfNode);
       expect(result.data.name).toBe("Nested Name");
@@ -402,10 +406,10 @@ describe("workflowFormat utilities", () => {
         id: "node1",
         type: "agent",
         name: "Test",
-        position: { x: 0, y: 0 }
+        position: { x: 0, y: 0 },
       };
       const nodeExecutionStates = {
-        node1: { status: "running", error: void 0 }
+        node1: { status: "running", error: void 0 },
       };
       const result = workflowNodeToReactFlowNode(wfNode, nodeExecutionStates);
       expect(result.data.executionStatus).toBe("running");
@@ -415,7 +419,7 @@ describe("workflowFormat utilities", () => {
       const wfNode = {
         id: "node1",
         type: "agent",
-        name: "Test"
+        name: "Test",
       };
       const result = workflowNodeToReactFlowNode(wfNode);
       expect(result.position).toEqual({ x: 0, y: 0 });
@@ -424,7 +428,7 @@ describe("workflowFormat utilities", () => {
       const wfNode = {
         id: "node1",
         type: "agent",
-        position: { x: 0, y: 0 }
+        position: { x: 0, y: 0 },
       };
       const result = workflowNodeToReactFlowNode(wfNode);
       expect(result.data.name).toBe("agent");
@@ -434,7 +438,7 @@ describe("workflowFormat utilities", () => {
       const wfNode = {
         id: "node1",
         type: "agent",
-        position: { x: 0, y: 0 }
+        position: { x: 0, y: 0 },
       };
       const result = workflowNodeToReactFlowNode(wfNode);
       expect(result.position).toEqual({ x: 0, y: 0 });
@@ -455,9 +459,9 @@ describe("workflowFormat utilities", () => {
           position: { x: 0, y: 0 },
           data: {
             name: null,
-            label: null
-          }
-        }
+            label: null,
+          },
+        },
       ];
       const result = convertNodesToWorkflowFormat(nodes);
       expect(result[0].name).toBe("node1");
@@ -467,7 +471,7 @@ describe("workflowFormat utilities", () => {
       const edge1 = {
         id: "e1",
         source: "node1",
-        target: "node2"
+        target: "node2",
       };
       const result1 = formatEdgesForReactFlow([edge1]);
       expect(result1[0].sourceHandle).toBeUndefined();
@@ -475,7 +479,7 @@ describe("workflowFormat utilities", () => {
         id: "e2",
         source: "node1",
         target: "node2",
-        sourceHandle: "output"
+        sourceHandle: "output",
       };
       const result2 = formatEdgesForReactFlow([edge2]);
       expect(result2[0].sourceHandle).toBe("output");
@@ -483,7 +487,7 @@ describe("workflowFormat utilities", () => {
         id: "e3",
         source: "node1",
         target: "node2",
-        source_handle: "input"
+        source_handle: "input",
       };
       const result3 = formatEdgesForReactFlow([edge3]);
       expect(result3[0].sourceHandle).toBe("input");
@@ -493,7 +497,7 @@ describe("workflowFormat utilities", () => {
         id: "e1",
         source: "node1",
         target: "node2",
-        sourceHandle: true
+        sourceHandle: true,
       };
       const result1 = formatEdgesForReactFlow([edge1]);
       expect(result1[0].sourceHandle).toBe("true");
@@ -502,7 +506,7 @@ describe("workflowFormat utilities", () => {
       const edge2 = {
         source: "node1",
         target: "node2",
-        sourceHandle: false
+        sourceHandle: false,
       };
       const result2 = formatEdgesForReactFlow([edge2]);
       expect(result2[0].sourceHandle).toBeUndefined();
@@ -511,7 +515,7 @@ describe("workflowFormat utilities", () => {
         id: "e3",
         source: "node1",
         target: "node2",
-        targetHandle: true
+        targetHandle: true,
       };
       const result3 = formatEdgesForReactFlow([edge3]);
       expect(result3[0].targetHandle).toBe("true");
@@ -521,13 +525,13 @@ describe("workflowFormat utilities", () => {
       const edge1 = {
         source: "node1",
         target: "node2",
-        sourceHandle: "output"
+        sourceHandle: "output",
       };
       const result1 = formatEdgesForReactFlow([edge1]);
       expect(result1[0].id).toBe("node1-output-node2");
       const edge2 = {
         source: "node1",
-        target: "node2"
+        target: "node2",
       };
       const result2 = formatEdgesForReactFlow([edge2]);
       expect(result2[0].id).toBe("node1-node2");
@@ -543,9 +547,9 @@ describe("workflowFormat utilities", () => {
             condition_config: void 0,
             loop_config: null,
             input_config: void 0,
-            inputs: null
-          }
-        }
+            inputs: null,
+          },
+        },
       ];
       const result = initializeReactFlowNodes(nodes);
       expect(result[0].data.agent_config).toEqual({});
@@ -561,7 +565,7 @@ describe("workflowFormat utilities", () => {
         id: "node1",
         type: "agent",
         position: { x: 0, y: 0 },
-        data: null
+        data: null,
       };
       const result = workflowNodeToReactFlowNode(wfNode);
       expect(result.data).toBeDefined();
@@ -570,7 +574,7 @@ describe("workflowFormat utilities", () => {
     it("should verify position || { x: 0, y: 0 } uses exact fallback values", () => {
       const wfNode = {
         id: "node1",
-        type: "agent"
+        type: "agent",
       };
       const result = workflowNodeToReactFlowNode(wfNode);
       expect(result.position).toEqual({ x: 0, y: 0 });
@@ -585,7 +589,7 @@ describe("workflowFormat utilities", () => {
         type: "agent",
         position: { x: 0, y: 0 },
         description: null,
-        data: { description: null }
+        data: { description: null },
       };
       const result = workflowNodeToReactFlowNode(wfNode);
       expect(result.data.description).toBe("");
@@ -596,7 +600,7 @@ describe("workflowFormat utilities", () => {
         id: "node1",
         type: "agent",
         position: { x: 0, y: 0 },
-        data: { label: "Label" }
+        data: { label: "Label" },
       };
       const result1 = workflowNodeToReactFlowNode(wfNode1);
       expect(result1.data.label).toBe("Label");
@@ -604,14 +608,14 @@ describe("workflowFormat utilities", () => {
         id: "node1",
         type: "agent",
         position: { x: 0, y: 0 },
-        name: "Name"
+        name: "Name",
       };
       const result2 = workflowNodeToReactFlowNode(wfNode2);
       expect(result2.data.label).toBe("Name");
       const wfNode3 = {
         id: "node1",
         type: "agent",
-        position: { x: 0, y: 0 }
+        position: { x: 0, y: 0 },
       };
       const result3 = workflowNodeToReactFlowNode(wfNode3);
       expect(result3.data.label).toBe("agent");
@@ -620,7 +624,7 @@ describe("workflowFormat utilities", () => {
       const wfNode = {
         id: "node1",
         type: "agent",
-        position: { x: 0, y: 0 }
+        position: { x: 0, y: 0 },
       };
       const result = workflowNodeToReactFlowNode(wfNode);
       expect(result.data.agent_config).toEqual({});
@@ -637,7 +641,7 @@ describe("workflowFormat utilities", () => {
           id: "e1",
           source: "node1",
           target: "node2",
-          label: "String Label"
+          label: "String Label",
           // string
         };
         const result1 = convertEdgesToWorkflowFormat([edge1]);
@@ -646,7 +650,7 @@ describe("workflowFormat utilities", () => {
           id: "e2",
           source: "node1",
           target: "node2",
-          label: { type: "span" }
+          label: { type: "span" },
           // not string
         };
         const result2 = convertEdgesToWorkflowFormat([edge2]);
@@ -655,7 +659,7 @@ describe("workflowFormat utilities", () => {
           id: "e3",
           source: "node1",
           target: "node2",
-          label: 123
+          label: 123,
           // not string
         };
         const result3 = convertEdgesToWorkflowFormat([edge3]);
@@ -667,9 +671,9 @@ describe("workflowFormat utilities", () => {
           type: "agent",
           position: { x: 0, y: 0 },
           data: {
-            name: "String Name"
+            name: "String Name",
             // string
-          }
+          },
         };
         const result1 = convertNodesToWorkflowFormat([node1]);
         expect(result1[0].name).toBe("String Name");
@@ -678,9 +682,9 @@ describe("workflowFormat utilities", () => {
           type: "agent",
           position: { x: 0, y: 0 },
           data: {
-            name: 123
+            name: 123,
             // not string
-          }
+          },
         };
         const result2 = convertNodesToWorkflowFormat([node2]);
         expect(result2[0].name).toBe("node2");
@@ -691,9 +695,9 @@ describe("workflowFormat utilities", () => {
           type: "agent",
           position: { x: 0, y: 0 },
           data: {
-            description: "String Description"
+            description: "String Description",
             // string
-          }
+          },
         };
         const result1 = convertNodesToWorkflowFormat([node1]);
         expect(result1[0].description).toBe("String Description");
@@ -702,9 +706,9 @@ describe("workflowFormat utilities", () => {
           type: "agent",
           position: { x: 0, y: 0 },
           data: {
-            description: 123
+            description: 123,
             // not string
-          }
+          },
         };
         const result2 = convertNodesToWorkflowFormat([node2]);
         expect(result2[0].description).toBeUndefined();
@@ -715,9 +719,9 @@ describe("workflowFormat utilities", () => {
           type: "agent",
           position: { x: 0, y: 0 },
           data: {
-            inputs: [{ name: "input1" }]
+            inputs: [{ name: "input1" }],
             // array
-          }
+          },
         };
         const result1 = convertNodesToWorkflowFormat([node1]);
         expect(result1[0].inputs).toEqual([{ name: "input1" }]);
@@ -726,9 +730,9 @@ describe("workflowFormat utilities", () => {
           type: "agent",
           position: { x: 0, y: 0 },
           data: {
-            inputs: "not an array"
+            inputs: "not an array",
             // not array
-          }
+          },
         };
         const result2 = convertNodesToWorkflowFormat([node2]);
         expect(result2[0].inputs).toEqual([]);
@@ -740,7 +744,7 @@ describe("workflowFormat utilities", () => {
           id: "e1",
           source: "node1",
           target: "node2",
-          label: "Test Label"
+          label: "Test Label",
         };
         const result1 = convertEdgesToWorkflowFormat([edge1]);
         expect(result1[0].label).toBe("Test Label");
@@ -748,7 +752,7 @@ describe("workflowFormat utilities", () => {
           id: "e2",
           source: "node1",
           target: "node2",
-          label: null
+          label: null,
         };
         const result2 = convertEdgesToWorkflowFormat([edge2]);
         expect(result2[0].label).toBeUndefined();
@@ -758,20 +762,20 @@ describe("workflowFormat utilities", () => {
           id: "existing-id",
           source: "node1",
           target: "node2",
-          sourceHandle: "output"
+          sourceHandle: "output",
         };
         const result1 = formatEdgesForReactFlow([edge1]);
         expect(result1[0].id).toBe("existing-id");
         const edge2 = {
           source: "node1",
           target: "node2",
-          sourceHandle: "output"
+          sourceHandle: "output",
         };
         const result2 = formatEdgesForReactFlow([edge2]);
         expect(result2[0].id).toBe("node1-output-node2");
         const edge3 = {
           source: "node1",
-          target: "node2"
+          target: "node2",
         };
         const result3 = formatEdgesForReactFlow([edge3]);
         expect(result3[0].id).toBe("node1-node2");
@@ -784,8 +788,8 @@ describe("workflowFormat utilities", () => {
           type: "agent",
           position: { x: 0, y: 0 },
           data: {
-            name: "Name Value"
-          }
+            name: "Name Value",
+          },
         };
         const result1 = convertNodesToWorkflowFormat([node1]);
         expect(result1[0].name).toBe("Name Value");
@@ -794,8 +798,8 @@ describe("workflowFormat utilities", () => {
           type: "agent",
           position: { x: 0, y: 0 },
           data: {
-            label: "Label Value"
-          }
+            label: "Label Value",
+          },
         };
         const result2 = convertNodesToWorkflowFormat([node2]);
         expect(result2[0].name).toBe("Label Value");
@@ -803,7 +807,7 @@ describe("workflowFormat utilities", () => {
           id: "node3",
           type: "agent",
           position: { x: 0, y: 0 },
-          data: {}
+          data: {},
         };
         const result3 = convertNodesToWorkflowFormat([node3]);
         expect(result3[0].name).toBe("node3");
@@ -813,7 +817,7 @@ describe("workflowFormat utilities", () => {
           id: "e1",
           source: "node1",
           target: "node2",
-          sourceHandle: "camelCase"
+          sourceHandle: "camelCase",
         };
         const result1 = formatEdgesForReactFlow([edge1]);
         expect(result1[0].sourceHandle).toBe("camelCase");
@@ -821,14 +825,14 @@ describe("workflowFormat utilities", () => {
           id: "e2",
           source: "node1",
           target: "node2",
-          source_handle: "snake_case"
+          source_handle: "snake_case",
         };
         const result2 = formatEdgesForReactFlow([edge2]);
         expect(result2[0].sourceHandle).toBe("snake_case");
         const edge3 = {
           id: "e3",
           source: "node1",
-          target: "node2"
+          target: "node2",
         };
         const result3 = formatEdgesForReactFlow([edge3]);
         expect(result3[0].sourceHandle).toBeUndefined();
@@ -838,7 +842,7 @@ describe("workflowFormat utilities", () => {
           id: "node1",
           type: "agent",
           position: { x: 0, y: 0 },
-          data: { label: "Data Label" }
+          data: { label: "Data Label" },
         };
         const result1 = workflowNodeToReactFlowNode(wfNode1);
         expect(result1.data.label).toBe("Data Label");
@@ -846,7 +850,7 @@ describe("workflowFormat utilities", () => {
           id: "node2",
           type: "agent",
           position: { x: 0, y: 0 },
-          data: { name: "Data Name" }
+          data: { name: "Data Name" },
         };
         const result2 = workflowNodeToReactFlowNode(wfNode2);
         expect(result2.data.label).toBe("Data Name");
@@ -854,14 +858,14 @@ describe("workflowFormat utilities", () => {
           id: "node3",
           type: "agent",
           position: { x: 0, y: 0 },
-          name: "Top Level Name"
+          name: "Top Level Name",
         };
         const result3 = workflowNodeToReactFlowNode(wfNode3);
         expect(result3.data.label).toBe("Top Level Name");
         const wfNode4 = {
           id: "node4",
           type: "condition",
-          position: { x: 0, y: 0 }
+          position: { x: 0, y: 0 },
         };
         const result4 = workflowNodeToReactFlowNode(wfNode4);
         expect(result4.data.label).toBe("condition");
@@ -872,8 +876,8 @@ describe("workflowFormat utilities", () => {
           type: "agent",
           position: { x: 0, y: 0 },
           data: {
-            agent_config: { model: "gpt-4" }
-          }
+            agent_config: { model: "gpt-4" },
+          },
         };
         const result1 = initializeReactFlowNodes([node1]);
         expect(result1[0].data.agent_config).toEqual({ model: "gpt-4" });
@@ -882,8 +886,8 @@ describe("workflowFormat utilities", () => {
           type: "agent",
           position: { x: 0, y: 0 },
           data: {
-            agent_config: null
-          }
+            agent_config: null,
+          },
         };
         const result2 = initializeReactFlowNodes([node2]);
         expect(result2[0].data.agent_config).toEqual({});
@@ -895,7 +899,7 @@ describe("workflowFormat utilities", () => {
           id: "node1",
           type: "agent",
           position: { x: 0, y: 0 },
-          data: { description: "Data Description" }
+          data: { description: "Data Description" },
         };
         const result1 = workflowNodeToReactFlowNode(wfNode1);
         expect(result1.data.description).toBe("Data Description");
@@ -904,7 +908,7 @@ describe("workflowFormat utilities", () => {
           type: "agent",
           position: { x: 0, y: 0 },
           data: { description: null },
-          description: "Top Level Description"
+          description: "Top Level Description",
         };
         const result2 = workflowNodeToReactFlowNode(wfNode2);
         expect(result2.data.description).toBe("Top Level Description");
@@ -913,7 +917,7 @@ describe("workflowFormat utilities", () => {
           type: "agent",
           position: { x: 0, y: 0 },
           data: { description: null },
-          description: null
+          description: null,
         };
         const result3 = workflowNodeToReactFlowNode(wfNode3);
         expect(result3.data.description).toBe("");
@@ -922,7 +926,7 @@ describe("workflowFormat utilities", () => {
           type: "agent",
           position: { x: 0, y: 0 },
           data: { description: void 0 },
-          description: void 0
+          description: void 0,
         };
         const result4 = workflowNodeToReactFlowNode(wfNode4);
         expect(result4.data.description).toBe("");
@@ -933,8 +937,8 @@ describe("workflowFormat utilities", () => {
           type: "agent",
           position: { x: 0, y: 0 },
           data: {
-            agent_config: { model: "gpt-4" }
-          }
+            agent_config: { model: "gpt-4" },
+          },
         };
         const result1 = normalizeNodeForStorage(node1);
         expect(result1.data.agent_config).toEqual({ model: "gpt-4" });
@@ -943,9 +947,9 @@ describe("workflowFormat utilities", () => {
           type: "agent",
           position: { x: 0, y: 0 },
           data: {
-            agent_config: null
+            agent_config: null,
           },
-          agent_config: { model: "gpt-3.5" }
+          agent_config: { model: "gpt-3.5" },
         };
         const result2 = normalizeNodeForStorage(node2);
         expect(result2.data.agent_config).toEqual({ model: "gpt-3.5" });
@@ -954,9 +958,9 @@ describe("workflowFormat utilities", () => {
           type: "agent",
           position: { x: 0, y: 0 },
           data: {
-            agent_config: null
+            agent_config: null,
           },
-          agent_config: null
+          agent_config: null,
         };
         const result3 = normalizeNodeForStorage(node3);
         expect(result3.data.agent_config).toEqual({});
@@ -967,29 +971,35 @@ describe("workflowFormat utilities", () => {
         const wfNode1 = {
           id: "node1",
           type: "agent",
-          position: { x: 0, y: 0 }
+          position: { x: 0, y: 0 },
         };
         const nodeExecutionStates1 = {
-          node1: { status: "running", error: "Test error" }
+          node1: { status: "running", error: "Test error" },
         };
-        const result1 = workflowNodeToReactFlowNode(wfNode1, nodeExecutionStates1);
+        const result1 = workflowNodeToReactFlowNode(
+          wfNode1,
+          nodeExecutionStates1,
+        );
         expect(result1.data.executionStatus).toBe("running");
         expect(result1.data.executionError).toBe("Test error");
         const wfNode2 = {
           id: "node2",
           type: "agent",
-          position: { x: 0, y: 0 }
+          position: { x: 0, y: 0 },
         };
         const nodeExecutionStates2 = {
-          node1: { status: "running" }
+          node1: { status: "running" },
         };
-        const result2 = workflowNodeToReactFlowNode(wfNode2, nodeExecutionStates2);
+        const result2 = workflowNodeToReactFlowNode(
+          wfNode2,
+          nodeExecutionStates2,
+        );
         expect(result2.data.executionStatus).toBeUndefined();
         expect(result2.data.executionError).toBeUndefined();
         const wfNode3 = {
           id: "node3",
           type: "agent",
-          position: { x: 0, y: 0 }
+          position: { x: 0, y: 0 },
         };
         const result3 = workflowNodeToReactFlowNode(wfNode3, void 0);
         expect(result3.data.executionStatus).toBeUndefined();
@@ -999,22 +1009,28 @@ describe("workflowFormat utilities", () => {
         const wfNode1 = {
           id: "node1",
           type: "agent",
-          position: { x: 0, y: 0 }
+          position: { x: 0, y: 0 },
         };
         const nodeExecutionStates1 = {
-          node1: { status: "completed", error: void 0 }
+          node1: { status: "completed", error: void 0 },
         };
-        const result1 = workflowNodeToReactFlowNode(wfNode1, nodeExecutionStates1);
+        const result1 = workflowNodeToReactFlowNode(
+          wfNode1,
+          nodeExecutionStates1,
+        );
         expect(result1.data.executionStatus).toBe("completed");
         const wfNode2 = {
           id: "node2",
           type: "agent",
-          position: { x: 0, y: 0 }
+          position: { x: 0, y: 0 },
         };
         const nodeExecutionStates2 = {
-          node2: { error: "Error" }
+          node2: { error: "Error" },
         };
-        const result2 = workflowNodeToReactFlowNode(wfNode2, nodeExecutionStates2);
+        const result2 = workflowNodeToReactFlowNode(
+          wfNode2,
+          nodeExecutionStates2,
+        );
         expect(result2.data.executionStatus).toBeUndefined();
       });
       it("should verify exact optional chaining (node.data as any)?.agent_config", () => {
@@ -1023,8 +1039,8 @@ describe("workflowFormat utilities", () => {
           type: "agent",
           position: { x: 0, y: 0 },
           data: {
-            agent_config: { model: "gpt-4" }
-          }
+            agent_config: { model: "gpt-4" },
+          },
         };
         const result1 = normalizeNodeForStorage(node1);
         expect(result1.data.agent_config).toEqual({ model: "gpt-4" });
@@ -1032,7 +1048,7 @@ describe("workflowFormat utilities", () => {
           id: "node2",
           type: "agent",
           position: { x: 0, y: 0 },
-          data: void 0
+          data: void 0,
         };
         const result2 = normalizeNodeForStorage(node2);
         expect(result2.data.agent_config).toBeDefined();
@@ -1044,7 +1060,7 @@ describe("workflowFormat utilities", () => {
           id: "e1",
           source: "node1",
           target: "node2",
-          sourceHandle: true
+          sourceHandle: true,
         };
         const result1 = formatEdgesForReactFlow([edge1]);
         expect(result1[0].sourceHandle).toBe("true");
@@ -1052,7 +1068,7 @@ describe("workflowFormat utilities", () => {
           id: "e2",
           source: "node1",
           target: "node2",
-          sourceHandle: false
+          sourceHandle: false,
         };
         const result2 = formatEdgesForReactFlow([edge2]);
         expect(result2[0].sourceHandle).toBeUndefined();
@@ -1060,7 +1076,7 @@ describe("workflowFormat utilities", () => {
           id: "e3",
           source: "node1",
           target: "node2",
-          sourceHandle: "output"
+          sourceHandle: "output",
         };
         const result3 = formatEdgesForReactFlow([edge3]);
         expect(result3[0].sourceHandle).toBe("output");
@@ -1070,7 +1086,7 @@ describe("workflowFormat utilities", () => {
           id: "e1",
           source: "node1",
           target: "node2",
-          targetHandle: true
+          targetHandle: true,
         };
         const result1 = formatEdgesForReactFlow([edge1]);
         expect(result1[0].targetHandle).toBe("true");
@@ -1078,7 +1094,7 @@ describe("workflowFormat utilities", () => {
           id: "e2",
           source: "node1",
           target: "node2",
-          targetHandle: false
+          targetHandle: false,
         };
         const result2 = formatEdgesForReactFlow([edge2]);
         expect(result2[0].targetHandle).toBeUndefined();
@@ -1088,14 +1104,14 @@ describe("workflowFormat utilities", () => {
           id: "e1",
           source: "node1",
           target: "node2",
-          sourceHandle: "output"
+          sourceHandle: "output",
         };
         const result1 = formatEdgesForReactFlow([edge1]);
         expect(result1[0].sourceHandle).toBe("output");
         const edge2 = {
           id: "e2",
           source: "node1",
-          target: "node2"
+          target: "node2",
         };
         const result2 = formatEdgesForReactFlow([edge2]);
         expect(result2[0].sourceHandle).toBeUndefined();
@@ -1111,7 +1127,7 @@ describe("workflowFormat utilities", () => {
           sourceHandle: "output",
           source_handle: "output",
           targetHandle: "input",
-          target_handle: "input"
+          target_handle: "input",
         };
         const result = formatEdgesForReactFlow([edge]);
         expect(result[0].label).toBe("Test Label");
@@ -1127,7 +1143,7 @@ describe("workflowFormat utilities", () => {
           id: "e1",
           source: "node1",
           target: "node2",
-          sourceHandle: true
+          sourceHandle: true,
         };
         const result = formatEdgesForReactFlow([edge]);
         expect(result[0].sourceHandle).toBe("true");
@@ -1141,7 +1157,7 @@ describe("workflowFormat utilities", () => {
           source: "node1",
           target: "node2",
           sourceHandle: false,
-          source_handle: false
+          source_handle: false,
           // This will make sourceHandle = false || false || null = null
         };
         formatEdgesForReactFlow([edge]);
@@ -1149,7 +1165,7 @@ describe("workflowFormat utilities", () => {
           id: "e2",
           source: "node1",
           target: "node2",
-          targetHandle: false
+          targetHandle: false,
         };
         const result2 = formatEdgesForReactFlow([edge2]);
         expect(result2[0].targetHandle).toBeUndefined();
@@ -1157,7 +1173,7 @@ describe("workflowFormat utilities", () => {
       it("should verify exact object literal { x: 0, y: 0 }", () => {
         const wfNode = {
           id: "node1",
-          type: "agent"
+          type: "agent",
         };
         const result = workflowNodeToReactFlowNode(wfNode);
         expect(result.position).toEqual({ x: 0, y: 0 });
@@ -1173,7 +1189,7 @@ describe("workflowFormat utilities", () => {
           id: "e1",
           source: "node1",
           target: "node2",
-          sourceHandle: 123
+          sourceHandle: 123,
           // number - will be converted to string
         };
         const result = formatEdgesForReactFlow([edge]);
@@ -1185,7 +1201,7 @@ describe("workflowFormat utilities", () => {
           id: "e1",
           source: "node1",
           target: "node2",
-          targetHandle: 456
+          targetHandle: 456,
           // number - will be converted to string
         };
         const result = formatEdgesForReactFlow([edge]);

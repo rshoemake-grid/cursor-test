@@ -3,12 +3,7 @@ import { logger } from "../../utils/logger";
 import { STORAGE_KEYS } from "../../config/constants";
 import { applyFilters, sortItems } from "./useMarketplaceData.utils";
 import { isStorageAvailable } from "../utils/storageValidation";
-function useRepositoryAgentsData({
-  storage,
-  category,
-  searchQuery,
-  sortBy
-}) {
+function useRepositoryAgentsData({ storage, category, searchQuery, sortBy }) {
   const fetchRepositoryAgents = useCallback(async () => {
     if (!isStorageAvailable(storage)) {
       return [];
@@ -26,9 +21,7 @@ function useRepositoryAgentsData({
     return agentsData;
   }, [storage, category, searchQuery, sortBy]);
   return {
-    fetchRepositoryAgents
+    fetchRepositoryAgents,
   };
 }
-export {
-  useRepositoryAgentsData
-};
+export { useRepositoryAgentsData };

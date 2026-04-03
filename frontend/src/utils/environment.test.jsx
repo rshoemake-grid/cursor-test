@@ -15,7 +15,7 @@ describe("environment utilities", () => {
     it("should return true even if window has properties", () => {
       global.window = {
         document: {},
-        localStorage: {}
+        localStorage: {},
       };
       expect(isBrowserEnvironment()).toBe(true);
     });
@@ -35,7 +35,7 @@ describe("environment utilities", () => {
     it("should return false even if window has properties", () => {
       global.window = {
         document: {},
-        localStorage: {}
+        localStorage: {},
       };
       expect(isServerEnvironment()).toBe(false);
     });
@@ -115,7 +115,10 @@ describe("environment utilities", () => {
     let originalWindowDescriptor;
     beforeEach(() => {
       originalWindow = global.window;
-      originalWindowDescriptor = Object.getOwnPropertyDescriptor(global, "window");
+      originalWindowDescriptor = Object.getOwnPropertyDescriptor(
+        global,
+        "window",
+      );
     });
     afterEach(() => {
       if (originalWindowDescriptor) {
@@ -143,7 +146,8 @@ describe("environment utilities", () => {
     });
     it("should verify the ternary condition structure", () => {
       const windowType = typeof window;
-      const expectedResult = windowType === "undefined" ? "undefined" : "object";
+      const expectedResult =
+        windowType === "undefined" ? "undefined" : "object";
       expect(expectedResult).toBe("object");
       expect(isBrowserEnvironment()).toBe(expectedResult !== "undefined");
       expect(isServerEnvironment()).toBe(expectedResult === "undefined");
@@ -153,11 +157,13 @@ describe("environment utilities", () => {
     it("should verify the undefined branch logic is correct", () => {
       const windowTypeObject = typeof window;
       expect(windowTypeObject).toBe("object");
-      const resultObject = windowTypeObject === "undefined" ? "undefined" : "object";
+      const resultObject =
+        windowTypeObject === "undefined" ? "undefined" : "object";
       expect(resultObject).toBe("object");
       expect(isBrowserEnvironment()).toBe(true);
       const simulatedUndefinedType = "undefined";
-      const resultUndefined = simulatedUndefinedType === "undefined" ? "undefined" : "object";
+      const resultUndefined =
+        simulatedUndefinedType === "undefined" ? "undefined" : "object";
       expect(resultUndefined).toBe("undefined");
       expect(simulatedUndefinedType !== "undefined").toBe(false);
       expect(simulatedUndefinedType === "undefined").toBe(true);
@@ -182,7 +188,8 @@ describe("environment utilities", () => {
       const result = windowType === "undefined" ? "undefined" : "object";
       expect(result).toBe("object");
       const serverWindowType = "undefined";
-      const serverResult = serverWindowType === "undefined" ? "undefined" : "object";
+      const serverResult =
+        serverWindowType === "undefined" ? "undefined" : "object";
       expect(serverResult).toBe("undefined");
       expect(isBrowserEnvironment()).toBe(true);
     });

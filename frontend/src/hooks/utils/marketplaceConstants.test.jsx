@@ -2,7 +2,7 @@ import {
   PENDING_AGENTS_STORAGE_KEY,
   PENDING_AGENTS,
   AGENT_NODE,
-  DRAFT_UPDATE
+  DRAFT_UPDATE,
 } from "./marketplaceConstants";
 describe("marketplaceConstants", () => {
   describe("PENDING_AGENTS_STORAGE_KEY", () => {

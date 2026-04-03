@@ -8,7 +8,8 @@ function mapMessagesForWorkflowChatApi(messages) {
     return [];
   }
   return messages.map((m) => {
-    const role = m && typeof m.role === "string" && m.role !== "" ? m.role : "user";
+    const role =
+      m && typeof m.role === "string" && m.role !== "" ? m.role : "user";
     let content = "";
     if (m && typeof m.content === "string") {
       content = m.content;

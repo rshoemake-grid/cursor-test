@@ -12,7 +12,10 @@ describe("pendingAgentsPolling", () => {
     it("should call checkPendingAgents at intervals", () => {
       const checkPendingAgents = jest.fn();
       const logger = { debug: jest.fn() };
-      const { cleanup } = createPendingAgentsPolling(checkPendingAgents, logger);
+      const { cleanup } = createPendingAgentsPolling(
+        checkPendingAgents,
+        logger,
+      );
       expect(checkPendingAgents).not.toHaveBeenCalled();
       jest.advanceTimersByTime(PENDING_AGENTS.CHECK_INTERVAL);
       expect(checkPendingAgents).toHaveBeenCalledTimes(1);
@@ -27,14 +30,21 @@ describe("pendingAgentsPolling", () => {
       for (let i = 0; i < PENDING_AGENTS.MAX_CHECKS; i++) {
         jest.advanceTimersByTime(PENDING_AGENTS.CHECK_INTERVAL);
       }
-      expect(checkPendingAgents).toHaveBeenCalledTimes(PENDING_AGENTS.MAX_CHECKS);
+      expect(checkPendingAgents).toHaveBeenCalledTimes(
+        PENDING_AGENTS.MAX_CHECKS,
+      );
       jest.advanceTimersByTime(PENDING_AGENTS.CHECK_INTERVAL);
-      expect(checkPendingAgents).toHaveBeenCalledTimes(PENDING_AGENTS.MAX_CHECKS);
+      expect(checkPendingAgents).toHaveBeenCalledTimes(
+        PENDING_AGENTS.MAX_CHECKS,
+      );
     });
     it("should stop polling when cleanup is called", () => {
       const checkPendingAgents = jest.fn();
       const logger = { debug: jest.fn() };
-      const { cleanup } = createPendingAgentsPolling(checkPendingAgents, logger);
+      const { cleanup } = createPendingAgentsPolling(
+        checkPendingAgents,
+        logger,
+      );
       jest.advanceTimersByTime(PENDING_AGENTS.CHECK_INTERVAL);
       expect(checkPendingAgents).toHaveBeenCalledTimes(1);
       cleanup();
@@ -67,9 +77,13 @@ describe("pendingAgentsPolling", () => {
       for (let i = 0; i < PENDING_AGENTS.MAX_CHECKS; i++) {
         jest.advanceTimersByTime(PENDING_AGENTS.CHECK_INTERVAL);
       }
-      expect(checkPendingAgents).toHaveBeenCalledTimes(PENDING_AGENTS.MAX_CHECKS);
+      expect(checkPendingAgents).toHaveBeenCalledTimes(
+        PENDING_AGENTS.MAX_CHECKS,
+      );
       jest.advanceTimersByTime(PENDING_AGENTS.CHECK_INTERVAL);
-      expect(checkPendingAgents).toHaveBeenCalledTimes(PENDING_AGENTS.MAX_CHECKS);
+      expect(checkPendingAgents).toHaveBeenCalledTimes(
+        PENDING_AGENTS.MAX_CHECKS,
+      );
     });
   });
 });

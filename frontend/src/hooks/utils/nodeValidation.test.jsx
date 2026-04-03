@@ -1,7 +1,7 @@
 import {
   isValidNodeId,
   hasValidCache,
-  nodeExistsAndValid
+  nodeExistsAndValid,
 } from "./nodeValidation";
 describe("isValidNodeId", () => {
   it("should return true for valid node IDs", () => {

@@ -39,10 +39,20 @@ function computeLayout(items, itemHeight) {
   return { heights, offsets, total: offsets[offsets.length - 1] || 0 };
 }
 
-function VirtualizedList({ items, itemHeight, renderItem, containerHeight = 600, className = "", overscan = 5 }) {
+function VirtualizedList({
+  items,
+  itemHeight,
+  renderItem,
+  containerHeight = 600,
+  className = "",
+  overscan = 5,
+}) {
   const parentRef = useRef(null);
   const [scrollTop, setScrollTop] = useState(0);
-  const { offsets, total } = useMemo(() => computeLayout(items, itemHeight), [items, itemHeight]);
+  const { offsets, total } = useMemo(
+    () => computeLayout(items, itemHeight),
+    [items, itemHeight],
+  );
 
   const onScroll = useCallback((e) => {
     setScrollTop(e.currentTarget.scrollTop);
@@ -70,14 +80,21 @@ function VirtualizedList({ items, itemHeight, renderItem, containerHeight = 600,
   }
 
   return (
-    <ScrollArea ref={parentRef} $height={containerHeight} className={className} onScroll={onScroll}>
+    <ScrollArea
+      ref={parentRef}
+      $height={containerHeight}
+      className={className}
+      onScroll={onScroll}
+    >
       <Inner $total={total}>
         {items.length > 0 &&
-          Array.from({ length: end - start + 1 }, (_, k) => start + k).map((index) => (
-            <Row key={items[index]?.id ?? `row-${index}`} $y={offsets[index]}>
-              {renderItem(items[index], index)}
-            </Row>
-          ))}
+          Array.from({ length: end - start + 1 }, (_, k) => start + k).map(
+            (index) => (
+              <Row key={items[index]?.id ?? `row-${index}`} $y={offsets[index]}>
+                {renderItem(items[index], index)}
+              </Row>
+            ),
+          )}
       </Inner>
     </ScrollArea>
   );
@@ -85,7 +102,8 @@ function VirtualizedList({ items, itemHeight, renderItem, containerHeight = 600,
 
 VirtualizedList.propTypes = {
   items: PropTypes.arrayOf(PropTypes.any).isRequired,
-  itemHeight: PropTypes.oneOfType([PropTypes.number, PropTypes.func]).isRequired,
+  itemHeight: PropTypes.oneOfType([PropTypes.number, PropTypes.func])
+    .isRequired,
   renderItem: PropTypes.func.isRequired,
   containerHeight: PropTypes.number,
   className: PropTypes.string,

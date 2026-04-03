@@ -1,4 +1,6 @@
-const isDev = process.env.NODE_ENV === "development" || process.env.NODE_ENV !== "production";
+const isDev =
+  process.env.NODE_ENV === "development" ||
+  process.env.NODE_ENV !== "production";
 const logger = {
   debug: (...args) => {
     if (isDev) {
@@ -20,8 +22,6 @@ const logger = {
     if (isDev) {
       console.log(...args);
     }
-  }
+  },
 };
-export {
-  logger
-};
+export { logger };

@@ -26,19 +26,27 @@ function useDraftManagement({
   normalizeNodeForStorage,
   isAddingAgentsRef,
   storage,
-  logger = defaultLogger
+  logger = defaultLogger,
 }) {
   const storageOptions = { storage, logger };
   const tabDraftsRef = useRef(loadDraftsFromStorage(storageOptions));
   useEffect(() => {
     if (isAddingAgentsRef?.current) {
-      logger.debug("[useDraftManagement] Skipping draft load - adding agents in progress");
+      logger.debug(
+        "[useDraftManagement] Skipping draft load - adding agents in progress",
+      );
       return;
     }
     const draft = tabDraftsRef.current[tabId];
-    const matchesCurrentWorkflow = draft && (!workflowId && !draft.workflowId || workflowId && draft.workflowId === workflowId);
+    const matchesCurrentWorkflow =
+      draft &&
+      ((!workflowId && !draft.workflowId) ||
+        (workflowId && draft.workflowId === workflowId));
     if (matchesCurrentWorkflow) {
-      logger.debug("[useDraftManagement] Loading draft nodes:", draft.nodes.length);
+      logger.debug(
+        "[useDraftManagement] Loading draft nodes:",
+        draft.nodes.length,
+      );
       setNodes(draft.nodes.map(normalizeNodeForStorage));
       setEdges(draft.edges);
       setLocalWorkflowId(draft.workflowId);
@@ -51,7 +59,17 @@ function useDraftManagement({
       setLocalWorkflowName("Untitled Workflow");
       setLocalWorkflowDescription("");
     }
-  }, [tabId, workflowId, isAddingAgentsRef, normalizeNodeForStorage, setNodes, setEdges, setLocalWorkflowId, setLocalWorkflowName, setLocalWorkflowDescription]);
+  }, [
+    tabId,
+    workflowId,
+    isAddingAgentsRef,
+    normalizeNodeForStorage,
+    setNodes,
+    setEdges,
+    setLocalWorkflowId,
+    setLocalWorkflowName,
+    setLocalWorkflowDescription,
+  ]);
   useEffect(() => {
     tabDraftsRef.current[tabId] = {
       nodes: nodes.map(normalizeNodeForStorage),
@@ -59,17 +77,23 @@ function useDraftManagement({
       workflowId: localWorkflowId,
       workflowName: localWorkflowName,
       workflowDescription: localWorkflowDescription,
-      isUnsaved: tabIsUnsaved
+      isUnsaved: tabIsUnsaved,
     };
     saveDraftsToStorage(tabDraftsRef.current, storageOptions);
-  }, [tabId, nodes, edges, localWorkflowId, localWorkflowName, localWorkflowDescription, tabIsUnsaved, normalizeNodeForStorage, storageOptions]);
+  }, [
+    tabId,
+    nodes,
+    edges,
+    localWorkflowId,
+    localWorkflowName,
+    localWorkflowDescription,
+    tabIsUnsaved,
+    normalizeNodeForStorage,
+    storageOptions,
+  ]);
   return {
     tabDraftsRef,
-    saveDraftsToStorage
+    saveDraftsToStorage,
   };
 }
-export {
-  loadDraftsFromStorage,
-  saveDraftsToStorage,
-  useDraftManagement
-};
+export { loadDraftsFromStorage, saveDraftsToStorage, useDraftManagement };

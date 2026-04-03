@@ -4,7 +4,11 @@ import { showError } from "../../utils/notifications";
 import { logger } from "../../utils/logger";
 import { UI_CONSTANTS } from "../../config/constants";
 import { confirmDelete } from "../utils/confirmations";
-import { logicalOr, logicalOrToEmptyObject, logicalOrToEmptyArray } from "../utils/logicalOr";
+import {
+  logicalOr,
+  logicalOrToEmptyObject,
+  logicalOrToEmptyArray,
+} from "../utils/logicalOr";
 import { extractApiErrorMessage } from "../utils/apiUtils";
 function useNodeOperations({
   selectedNode,
@@ -12,96 +16,132 @@ function useNodeOperations({
   onSave,
   onSaveWorkflow,
   showErrorNotification = showError,
-  logger: injectedLogger = logger
+  logger: injectedLogger = logger,
 }) {
   const { setNodes, deleteElements } = useReactFlow();
-  const handleUpdate = useCallback((field, value) => {
-    if (!selectedNode) return;
-    const updatedData = { ...selectedNode.data, [field]: value };
-    if (field === "name") {
-      updatedData.label = value;
-    }
-    setNodes(
-      (nodes) => nodes.map(
-        (node) => node.id === selectedNode.id ? { ...node, data: updatedData } : node
-      )
-    );
-  }, [selectedNode, setNodes]);
-  const handleConfigUpdate = useCallback((configField, field, value) => {
-    if (!selectedNode) return;
-    const currentConfig = logicalOrToEmptyObject(selectedNode.data[configField]);
-    const updatedData = {
-      ...selectedNode.data,
-      [configField]: {
-        ...currentConfig,
-        [field]: value
+  const handleUpdate = useCallback(
+    (field, value) => {
+      if (!selectedNode) return;
+      const updatedData = { ...selectedNode.data, [field]: value };
+      if (field === "name") {
+        updatedData.label = value;
       }
-    };
-    setNodes(
-      (nodes) => nodes.map(
-        (node) => node.id === selectedNode.id ? { ...node, data: updatedData } : node
-      )
-    );
-  }, [selectedNode, setNodes]);
+      setNodes((nodes) =>
+        nodes.map((node) =>
+          node.id === selectedNode.id ? { ...node, data: updatedData } : node,
+        ),
+      );
+    },
+    [selectedNode, setNodes],
+  );
+  const handleConfigUpdate = useCallback(
+    (configField, field, value) => {
+      if (!selectedNode) return;
+      const currentConfig = logicalOrToEmptyObject(
+        selectedNode.data[configField],
+      );
+      const updatedData = {
+        ...selectedNode.data,
+        [configField]: {
+          ...currentConfig,
+          [field]: value,
+        },
+      };
+      setNodes((nodes) =>
+        nodes.map((node) =>
+          node.id === selectedNode.id ? { ...node, data: updatedData } : node,
+        ),
+      );
+    },
+    [selectedNode, setNodes],
+  );
   const handleDelete = useCallback(async () => {
     if (!selectedNode) return;
-    const itemName = logicalOr(selectedNode.data.name, logicalOr(selectedNode.data.label, selectedNode.id));
-    await confirmDelete(itemName, () => {
-      deleteElements({ nodes: [{ id: selectedNode.id }] });
-      setSelectedNodeId(null);
-    }, { title: "Delete Node" });
+    const itemName = logicalOr(
+      selectedNode.data.name,
+      logicalOr(selectedNode.data.label, selectedNode.id),
+    );
+    await confirmDelete(
+      itemName,
+      () => {
+        deleteElements({ nodes: [{ id: selectedNode.id }] });
+        setSelectedNodeId(null);
+      },
+      { title: "Delete Node" },
+    );
   }, [selectedNode, deleteElements, setSelectedNodeId]);
-  const handleSave = useCallback(async (setSaveStatus) => {
-    if (!selectedNode) return;
-    setSaveStatus("saving");
-    try {
-      if (onSaveWorkflow) {
-        await onSaveWorkflow();
-      }
-      if (onSave) {
-        await onSave();
-      }
-      setSaveStatus("saved");
-      setTimeout(() => {
+  const handleSave = useCallback(
+    async (setSaveStatus) => {
+      if (!selectedNode) return;
+      setSaveStatus("saving");
+      try {
+        if (onSaveWorkflow) {
+          await onSaveWorkflow();
+        }
+        if (onSave) {
+          await onSave();
+        }
+        setSaveStatus("saved");
+        setTimeout(() => {
+          setSaveStatus("idle");
+        }, UI_CONSTANTS.SAVE_STATUS_DELAY);
+      } catch (error) {
+        injectedLogger.error("Save failed:", error);
         setSaveStatus("idle");
-      }, UI_CONSTANTS.SAVE_STATUS_DELAY);
-    } catch (error) {
-      injectedLogger.error("Save failed:", error);
-      setSaveStatus("idle");
-      showErrorNotification("Failed to save workflow: " + extractApiErrorMessage(error, "Unknown error"));
-    }
-  }, [selectedNode, onSave, onSaveWorkflow, showErrorNotification, injectedLogger]);
-  const handleAddInput = useCallback((inputName, sourceNode, sourceField, setShowAddInput) => {
-    if (!selectedNode) return;
-    const currentInputs = logicalOrToEmptyArray(selectedNode.data.inputs);
-    const newInput = {
-      name: inputName,
-      source_node: logicalOr(sourceNode, void 0),
-      source_field: logicalOr(sourceField, "output")
-    };
-    handleUpdate("inputs", [...currentInputs, newInput]);
-    setShowAddInput(false);
-  }, [selectedNode, handleUpdate]);
-  const handleRemoveInput = useCallback((index) => {
-    if (!selectedNode) return;
-    const currentInputs = logicalOrToEmptyArray(selectedNode.data.inputs);
-    const newInputs = currentInputs.filter((_, i) => i !== index);
-    handleUpdate("inputs", newInputs);
-  }, [selectedNode, handleUpdate]);
-  const handleUpdateInput = useCallback((index, field, value) => {
-    if (!selectedNode) return;
-    const inputsArray = logicalOrToEmptyArray(selectedNode.data.inputs);
-    const currentInputs = Array.isArray(inputsArray) ? [...inputsArray] : [];
-    while (currentInputs.length <= index) {
-      currentInputs.push({});
-    }
-    const existing = currentInputs[index];
-    currentInputs[index] = {
-      ...typeof existing === "object" && existing !== null ? existing : {},
-      [field]: value
-    };
-    handleUpdate("inputs", currentInputs);
-  }, [selectedNode, handleUpdate]);
+        showErrorNotification(
+          "Failed to save workflow: " +
+            extractApiErrorMessage(error, "Unknown error"),
+        );
+      }
+    },
+    [
+      selectedNode,
+      onSave,
+      onSaveWorkflow,
+      showErrorNotification,
+      injectedLogger,
+    ],
+  );
+  const handleAddInput = useCallback(
+    (inputName, sourceNode, sourceField, setShowAddInput) => {
+      if (!selectedNode) return;
+      const currentInputs = logicalOrToEmptyArray(selectedNode.data.inputs);
+      const newInput = {
+        name: inputName,
+        source_node: logicalOr(sourceNode, void 0),
+        source_field: logicalOr(sourceField, "output"),
+      };
+      handleUpdate("inputs", [...currentInputs, newInput]);
+      setShowAddInput(false);
+    },
+    [selectedNode, handleUpdate],
+  );
+  const handleRemoveInput = useCallback(
+    (index) => {
+      if (!selectedNode) return;
+      const currentInputs = logicalOrToEmptyArray(selectedNode.data.inputs);
+      const newInputs = currentInputs.filter((_, i) => i !== index);
+      handleUpdate("inputs", newInputs);
+    },
+    [selectedNode, handleUpdate],
+  );
+  const handleUpdateInput = useCallback(
+    (index, field, value) => {
+      if (!selectedNode) return;
+      const inputsArray = logicalOrToEmptyArray(selectedNode.data.inputs);
+      const currentInputs = Array.isArray(inputsArray) ? [...inputsArray] : [];
+      while (currentInputs.length <= index) {
+        currentInputs.push({});
+      }
+      const existing = currentInputs[index];
+      currentInputs[index] = {
+        ...(typeof existing === "object" && existing !== null ? existing : {}),
+        [field]: value,
+      };
+      handleUpdate("inputs", currentInputs);
+    },
+    [selectedNode, handleUpdate],
+  );
   return {
     handleUpdate,
     handleConfigUpdate,
@@ -109,9 +149,7 @@ function useNodeOperations({
     handleSave,
     handleAddInput,
     handleRemoveInput,
-    handleUpdateInput
+    handleUpdateInput,
   };
 }
-export {
-  useNodeOperations
-};
+export { useNodeOperations };

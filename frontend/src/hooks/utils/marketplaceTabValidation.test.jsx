@@ -8,7 +8,7 @@ import {
   shouldLoadRepositoryAgents,
   shouldLoadWorkflowsOfWorkflows,
   shouldLoadAgents,
-  calculateLoadingState
+  calculateLoadingState,
 } from "./marketplaceTabValidation";
 describe("marketplaceTabValidation", () => {
   describe("isRepositoryTab", () => {
@@ -84,7 +84,9 @@ describe("marketplaceTabValidation", () => {
   });
   describe("shouldLoadWorkflowsOfWorkflows", () => {
     it("should return true for workflows-of-workflows tab", () => {
-      expect(shouldLoadWorkflowsOfWorkflows("workflows-of-workflows")).toBe(true);
+      expect(shouldLoadWorkflowsOfWorkflows("workflows-of-workflows")).toBe(
+        true,
+      );
     });
     it("should return false for other tabs", () => {
       expect(shouldLoadWorkflowsOfWorkflows("repository")).toBe(false);
@@ -103,39 +105,95 @@ describe("marketplaceTabValidation", () => {
   describe("calculateLoadingState", () => {
     it("should return templates loading when repository/workflows", () => {
       expect(
-        calculateLoadingState("repository", "workflows", true, false, false, false)
+        calculateLoadingState(
+          "repository",
+          "workflows",
+          true,
+          false,
+          false,
+          false,
+        ),
       ).toBe(true);
       expect(
-        calculateLoadingState("repository", "workflows", false, false, false, false)
+        calculateLoadingState(
+          "repository",
+          "workflows",
+          false,
+          false,
+          false,
+          false,
+        ),
       ).toBe(false);
     });
     it("should return repository agents loading when repository/agents", () => {
       expect(
-        calculateLoadingState("repository", "agents", false, true, false, false)
+        calculateLoadingState(
+          "repository",
+          "agents",
+          false,
+          true,
+          false,
+          false,
+        ),
       ).toBe(true);
       expect(
-        calculateLoadingState("repository", "agents", false, false, false, false)
+        calculateLoadingState(
+          "repository",
+          "agents",
+          false,
+          false,
+          false,
+          false,
+        ),
       ).toBe(false);
     });
     it("should return workflows-of-workflows loading when workflows-of-workflows tab", () => {
       expect(
-        calculateLoadingState("workflows-of-workflows", "workflows", false, false, true, false)
+        calculateLoadingState(
+          "workflows-of-workflows",
+          "workflows",
+          false,
+          false,
+          true,
+          false,
+        ),
       ).toBe(true);
       expect(
-        calculateLoadingState("workflows-of-workflows", "workflows", false, false, false, false)
+        calculateLoadingState(
+          "workflows-of-workflows",
+          "workflows",
+          false,
+          false,
+          false,
+          false,
+        ),
       ).toBe(false);
     });
     it("should return agents loading when agents tab", () => {
       expect(
-        calculateLoadingState("agents", "workflows", false, false, false, true)
+        calculateLoadingState("agents", "workflows", false, false, false, true),
       ).toBe(true);
       expect(
-        calculateLoadingState("agents", "workflows", false, false, false, false)
+        calculateLoadingState(
+          "agents",
+          "workflows",
+          false,
+          false,
+          false,
+          false,
+        ),
       ).toBe(false);
     });
     it("should return false when no matching tab", () => {
       expect(
-        calculateLoadingState("agents", "workflows", false, false, false, false)
+        calculateLoadingState(
+          "agents",
+          "workflows",
+          false,
+          false,
+          false,
+          false,
+        ),
       ).toBe(false);
     });
   });

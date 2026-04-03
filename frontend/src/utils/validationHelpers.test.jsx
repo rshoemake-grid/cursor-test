@@ -7,7 +7,7 @@ import {
   hasArrayItems,
   isValidObject,
   isNonEmptyString,
-  isValidNumber
+  isValidNumber,
 } from "./validationHelpers";
 describe("validationHelpers utilities", () => {
   describe("isTruthy", () => {

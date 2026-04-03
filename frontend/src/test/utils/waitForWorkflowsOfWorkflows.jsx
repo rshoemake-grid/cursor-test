@@ -1,28 +1,51 @@
 import { act } from "@testing-library/react";
 import { waitForWithTimeoutFakeTimers } from "./waitForWithTimeout";
 import { isRunningUnderStryker } from "./detectStryker";
-async function waitForWorkflowsOfWorkflowsToPopulate(result, expectedLengthOrMockHttpClient, expectedLengthOrTimeout, timeoutOrMockHttpClient) {
+async function waitForWorkflowsOfWorkflowsToPopulate(
+  result,
+  expectedLengthOrMockHttpClient,
+  expectedLengthOrTimeout,
+  timeoutOrMockHttpClient,
+) {
   let expectedLength = "greaterThanZero";
   let timeout;
   let mockHttpClient;
-  if (typeof expectedLengthOrMockHttpClient === "object" && expectedLengthOrMockHttpClient !== null && "get" in expectedLengthOrMockHttpClient) {
+  if (
+    typeof expectedLengthOrMockHttpClient === "object" &&
+    expectedLengthOrMockHttpClient !== null &&
+    "get" in expectedLengthOrMockHttpClient
+  ) {
     mockHttpClient = expectedLengthOrMockHttpClient;
-    if (typeof expectedLengthOrTimeout === "string" || typeof expectedLengthOrTimeout === "number") {
+    if (
+      typeof expectedLengthOrTimeout === "string" ||
+      typeof expectedLengthOrTimeout === "number"
+    ) {
       expectedLength = expectedLengthOrTimeout;
     }
     if (typeof timeoutOrMockHttpClient === "number") {
       timeout = timeoutOrMockHttpClient;
     }
   } else {
-    if (typeof expectedLengthOrMockHttpClient === "string" || typeof expectedLengthOrMockHttpClient === "number") {
+    if (
+      typeof expectedLengthOrMockHttpClient === "string" ||
+      typeof expectedLengthOrMockHttpClient === "number"
+    ) {
       expectedLength = expectedLengthOrMockHttpClient;
     }
     if (typeof expectedLengthOrTimeout === "number") {
       timeout = expectedLengthOrTimeout;
-    } else if (typeof expectedLengthOrTimeout === "object" && expectedLengthOrTimeout !== null && "get" in expectedLengthOrTimeout) {
+    } else if (
+      typeof expectedLengthOrTimeout === "object" &&
+      expectedLengthOrTimeout !== null &&
+      "get" in expectedLengthOrTimeout
+    ) {
       mockHttpClient = expectedLengthOrTimeout;
     }
-    if (typeof timeoutOrMockHttpClient === "object" && timeoutOrMockHttpClient !== null && "get" in timeoutOrMockHttpClient) {
+    if (
+      typeof timeoutOrMockHttpClient === "object" &&
+      timeoutOrMockHttpClient !== null &&
+      "get" in timeoutOrMockHttpClient
+    ) {
       mockHttpClient = timeoutOrMockHttpClient;
     } else if (typeof timeoutOrMockHttpClient === "number") {
       timeout = timeoutOrMockHttpClient;
@@ -79,6 +102,4 @@ async function waitForWorkflowsOfWorkflowsToPopulate(result, expectedLengthOrMoc
     }
   }, actualTimeout);
 }
-export {
-  waitForWorkflowsOfWorkflowsToPopulate
-};
+export { waitForWorkflowsOfWorkflowsToPopulate };

@@ -7,27 +7,27 @@ import { logger } from "../../utils/logger";
 import { WorkflowExecutionService } from "../utils/workflowExecutionService";
 jest.mock("../../utils/notifications", () => ({
   showSuccess: jest.fn(),
-  showError: jest.fn()
+  showError: jest.fn(),
 }));
 jest.mock("../../utils/confirm", () => ({
-  showConfirm: jest.fn()
+  showConfirm: jest.fn(),
 }));
 jest.mock("../../api/client", () => ({
   api: {
-    executeWorkflow: jest.fn()
+    executeWorkflow: jest.fn(),
   },
-  createApiClient: jest.fn()
+  createApiClient: jest.fn(),
 }));
 jest.mock("../../utils/logger", () => ({
   logger: {
     debug: jest.fn(),
     error: jest.fn(),
     info: jest.fn(),
-    warn: jest.fn()
-  }
+    warn: jest.fn(),
+  },
 }));
 jest.mock("../utils/workflowExecutionService", () => ({
-  WorkflowExecutionService: jest.fn()
+  WorkflowExecutionService: jest.fn(),
 }));
 const mockShowSuccess = showSuccess;
 const mockShowError = showError;
@@ -37,7 +37,7 @@ const mockLogger = logger;
 const defaultWorkflowExecutionServiceImpl = () => ({
   parseExecutionInputs: jest.fn((inputs) => JSON.parse(inputs)),
   createTempExecutionId: jest.fn(() => "temp-exec-123"),
-  executeWorkflow: jest.fn().mockResolvedValue(void 0)
+  executeWorkflow: jest.fn().mockResolvedValue(void 0),
 });
 describe("useWorkflowExecution - Enhanced Mutation Killers", () => {
   let mockSaveWorkflow;
@@ -45,7 +45,9 @@ describe("useWorkflowExecution - Enhanced Mutation Killers", () => {
   let workflowIdRef;
   beforeEach(() => {
     jest.clearAllMocks();
-    WorkflowExecutionService.mockImplementation(defaultWorkflowExecutionServiceImpl);
+    WorkflowExecutionService.mockImplementation(
+      defaultWorkflowExecutionServiceImpl,
+    );
     mockSaveWorkflow = jest.fn();
     mockOnExecutionStart = jest.fn();
     workflowIdRef = { current: "workflow-1" };
@@ -53,37 +55,43 @@ describe("useWorkflowExecution - Enhanced Mutation Killers", () => {
   describe("executeWorkflow - Independent Condition Testing", () => {
     describe("if (!isAuthenticated) condition", () => {
       it("should verify exact falsy check - isAuthenticated is false", async () => {
-        const { result } = renderHook(
-          () => useWorkflowExecution({
+        const { result } = renderHook(() =>
+          useWorkflowExecution({
             isAuthenticated: false,
             // Explicitly false
             localWorkflowId: "workflow-1",
             workflowIdRef,
-            saveWorkflow: mockSaveWorkflow
-          })
+            saveWorkflow: mockSaveWorkflow,
+          }),
         );
         await act(async () => {
           await result.current.executeWorkflow();
         });
-        expect(mockShowError).toHaveBeenCalledWith("Please log in to execute workflows.");
-        expect(mockLogger.error).toHaveBeenCalledWith("[WorkflowBuilder] User not authenticated");
+        expect(mockShowError).toHaveBeenCalledWith(
+          "Please log in to execute workflows.",
+        );
+        expect(mockLogger.error).toHaveBeenCalledWith(
+          "[WorkflowBuilder] User not authenticated",
+        );
         expect(result.current.showInputs).toBe(false);
         expect(mockSaveWorkflow).not.toHaveBeenCalled();
       });
       it("should verify exact falsy check - isAuthenticated is true", async () => {
-        const { result } = renderHook(
-          () => useWorkflowExecution({
+        const { result } = renderHook(() =>
+          useWorkflowExecution({
             isAuthenticated: true,
             // Explicitly true
             localWorkflowId: "workflow-1",
             workflowIdRef,
-            saveWorkflow: mockSaveWorkflow
-          })
+            saveWorkflow: mockSaveWorkflow,
+          }),
         );
         await act(async () => {
           await result.current.executeWorkflow();
         });
-        expect(mockShowError).not.toHaveBeenCalledWith("Please log in to execute workflows.");
+        expect(mockShowError).not.toHaveBeenCalledWith(
+          "Please log in to execute workflows.",
+        );
         expect(result.current.showInputs).toBe(true);
       });
     });
@@ -91,14 +99,14 @@ describe("useWorkflowExecution - Enhanced Mutation Killers", () => {
       it("should verify exact falsy check - currentWorkflowId is null", async () => {
         mockShowConfirm.mockResolvedValue(true);
         mockSaveWorkflow.mockResolvedValue("saved-workflow-1");
-        const { result } = renderHook(
-          () => useWorkflowExecution({
+        const { result } = renderHook(() =>
+          useWorkflowExecution({
             isAuthenticated: true,
             localWorkflowId: null,
             // Explicitly null
             workflowIdRef: { current: null },
-            saveWorkflow: mockSaveWorkflow
-          })
+            saveWorkflow: mockSaveWorkflow,
+          }),
         );
         await act(async () => {
           await result.current.executeWorkflow();
@@ -110,14 +118,14 @@ describe("useWorkflowExecution - Enhanced Mutation Killers", () => {
       it("should verify exact falsy check - currentWorkflowId is undefined", async () => {
         mockShowConfirm.mockResolvedValue(true);
         mockSaveWorkflow.mockResolvedValue("saved-workflow-1");
-        const { result } = renderHook(
-          () => useWorkflowExecution({
+        const { result } = renderHook(() =>
+          useWorkflowExecution({
             isAuthenticated: true,
             localWorkflowId: void 0,
             // Explicitly undefined
             workflowIdRef: { current: void 0 },
-            saveWorkflow: mockSaveWorkflow
-          })
+            saveWorkflow: mockSaveWorkflow,
+          }),
         );
         await act(async () => {
           await result.current.executeWorkflow();
@@ -128,14 +136,14 @@ describe("useWorkflowExecution - Enhanced Mutation Killers", () => {
       it("should verify exact falsy check - currentWorkflowId is empty string", async () => {
         mockShowConfirm.mockResolvedValue(true);
         mockSaveWorkflow.mockResolvedValue("saved-workflow-1");
-        const { result } = renderHook(
-          () => useWorkflowExecution({
+        const { result } = renderHook(() =>
+          useWorkflowExecution({
             isAuthenticated: true,
             localWorkflowId: "",
             // Empty string (falsy)
             workflowIdRef: { current: "" },
-            saveWorkflow: mockSaveWorkflow
-          })
+            saveWorkflow: mockSaveWorkflow,
+          }),
         );
         await act(async () => {
           await result.current.executeWorkflow();
@@ -144,14 +152,14 @@ describe("useWorkflowExecution - Enhanced Mutation Killers", () => {
         expect(mockSaveWorkflow).toHaveBeenCalled();
       });
       it("should verify exact falsy check - currentWorkflowId is truthy", async () => {
-        const { result } = renderHook(
-          () => useWorkflowExecution({
+        const { result } = renderHook(() =>
+          useWorkflowExecution({
             isAuthenticated: true,
             localWorkflowId: "workflow-1",
             // Truthy
             workflowIdRef: { current: "workflow-1" },
-            saveWorkflow: mockSaveWorkflow
-          })
+            saveWorkflow: mockSaveWorkflow,
+          }),
         );
         await act(async () => {
           await result.current.executeWorkflow();
@@ -164,13 +172,13 @@ describe("useWorkflowExecution - Enhanced Mutation Killers", () => {
     describe("if (!confirmed) condition", () => {
       it("should verify exact falsy check - confirmed is false", async () => {
         mockShowConfirm.mockResolvedValue(false);
-        const { result } = renderHook(
-          () => useWorkflowExecution({
+        const { result } = renderHook(() =>
+          useWorkflowExecution({
             isAuthenticated: true,
             localWorkflowId: null,
             workflowIdRef: { current: null },
-            saveWorkflow: mockSaveWorkflow
-          })
+            saveWorkflow: mockSaveWorkflow,
+          }),
         );
         await act(async () => {
           await result.current.executeWorkflow();
@@ -181,13 +189,13 @@ describe("useWorkflowExecution - Enhanced Mutation Killers", () => {
       });
       it("should verify exact falsy check - confirmed is null", async () => {
         mockShowConfirm.mockResolvedValue(null);
-        const { result } = renderHook(
-          () => useWorkflowExecution({
+        const { result } = renderHook(() =>
+          useWorkflowExecution({
             isAuthenticated: true,
             localWorkflowId: null,
             workflowIdRef: { current: null },
-            saveWorkflow: mockSaveWorkflow
-          })
+            saveWorkflow: mockSaveWorkflow,
+          }),
         );
         await act(async () => {
           await result.current.executeWorkflow();
@@ -198,13 +206,13 @@ describe("useWorkflowExecution - Enhanced Mutation Killers", () => {
       it("should verify exact falsy check - confirmed is true", async () => {
         mockShowConfirm.mockResolvedValue(true);
         mockSaveWorkflow.mockResolvedValue("saved-workflow-1");
-        const { result } = renderHook(
-          () => useWorkflowExecution({
+        const { result } = renderHook(() =>
+          useWorkflowExecution({
             isAuthenticated: true,
             localWorkflowId: null,
             workflowIdRef: { current: null },
-            saveWorkflow: mockSaveWorkflow
-          })
+            saveWorkflow: mockSaveWorkflow,
+          }),
         );
         await act(async () => {
           await result.current.executeWorkflow();
@@ -217,52 +225,58 @@ describe("useWorkflowExecution - Enhanced Mutation Killers", () => {
       it("should verify exact falsy check - savedId is null", async () => {
         mockShowConfirm.mockResolvedValue(true);
         mockSaveWorkflow.mockResolvedValue(null);
-        const { result } = renderHook(
-          () => useWorkflowExecution({
+        const { result } = renderHook(() =>
+          useWorkflowExecution({
             isAuthenticated: true,
             localWorkflowId: null,
             workflowIdRef: { current: null },
-            saveWorkflow: mockSaveWorkflow
-          })
+            saveWorkflow: mockSaveWorkflow,
+          }),
         );
         await act(async () => {
           await result.current.executeWorkflow();
         });
-        expect(mockShowError).toHaveBeenCalledWith("Failed to save workflow. Cannot execute.");
+        expect(mockShowError).toHaveBeenCalledWith(
+          "Failed to save workflow. Cannot execute.",
+        );
         expect(result.current.showInputs).toBe(false);
       });
       it("should verify exact falsy check - savedId is empty string", async () => {
         mockShowConfirm.mockResolvedValue(true);
         mockSaveWorkflow.mockResolvedValue("");
-        const { result } = renderHook(
-          () => useWorkflowExecution({
+        const { result } = renderHook(() =>
+          useWorkflowExecution({
             isAuthenticated: true,
             localWorkflowId: null,
             workflowIdRef: { current: null },
-            saveWorkflow: mockSaveWorkflow
-          })
+            saveWorkflow: mockSaveWorkflow,
+          }),
         );
         await act(async () => {
           await result.current.executeWorkflow();
         });
-        expect(mockShowError).toHaveBeenCalledWith("Failed to save workflow. Cannot execute.");
+        expect(mockShowError).toHaveBeenCalledWith(
+          "Failed to save workflow. Cannot execute.",
+        );
         expect(result.current.showInputs).toBe(false);
       });
       it("should verify exact falsy check - savedId is truthy", async () => {
         mockShowConfirm.mockResolvedValue(true);
         mockSaveWorkflow.mockResolvedValue("saved-workflow-1");
-        const { result } = renderHook(
-          () => useWorkflowExecution({
+        const { result } = renderHook(() =>
+          useWorkflowExecution({
             isAuthenticated: true,
             localWorkflowId: null,
             workflowIdRef: { current: null },
-            saveWorkflow: mockSaveWorkflow
-          })
+            saveWorkflow: mockSaveWorkflow,
+          }),
         );
         await act(async () => {
           await result.current.executeWorkflow();
         });
-        expect(mockShowError).not.toHaveBeenCalledWith("Failed to save workflow. Cannot execute.");
+        expect(mockShowError).not.toHaveBeenCalledWith(
+          "Failed to save workflow. Cannot execute.",
+        );
         expect(result.current.showInputs).toBe(true);
       });
     });
@@ -270,18 +284,20 @@ describe("useWorkflowExecution - Enhanced Mutation Killers", () => {
       it("should handle save workflow exception", async () => {
         mockShowConfirm.mockResolvedValue(true);
         mockSaveWorkflow.mockRejectedValue(new Error("Save failed"));
-        const { result } = renderHook(
-          () => useWorkflowExecution({
+        const { result } = renderHook(() =>
+          useWorkflowExecution({
             isAuthenticated: true,
             localWorkflowId: null,
             workflowIdRef: { current: null },
-            saveWorkflow: mockSaveWorkflow
-          })
+            saveWorkflow: mockSaveWorkflow,
+          }),
         );
         await act(async () => {
           await result.current.executeWorkflow();
         });
-        expect(mockShowError).toHaveBeenCalledWith("Failed to save workflow. Cannot execute.");
+        expect(mockShowError).toHaveBeenCalledWith(
+          "Failed to save workflow. Cannot execute.",
+        );
         expect(result.current.showInputs).toBe(false);
       });
     });
@@ -290,14 +306,14 @@ describe("useWorkflowExecution - Enhanced Mutation Killers", () => {
     describe("if (!workflowIdToExecute) condition", () => {
       it("should verify exact falsy check - workflowIdToExecute is null", async () => {
         workflowIdRef.current = null;
-        const { result } = renderHook(
-          () => useWorkflowExecution({
+        const { result } = renderHook(() =>
+          useWorkflowExecution({
             isAuthenticated: true,
             localWorkflowId: "workflow-1",
             workflowIdRef,
             saveWorkflow: mockSaveWorkflow,
-            onExecutionStart: mockOnExecutionStart
-          })
+            onExecutionStart: mockOnExecutionStart,
+          }),
         );
         act(() => {
           result.current.setExecutionInputs('{"key": "value"}');
@@ -305,22 +321,24 @@ describe("useWorkflowExecution - Enhanced Mutation Killers", () => {
         await act(async () => {
           await result.current.handleConfirmExecute();
         });
-        expect(mockShowError).toHaveBeenCalledWith("Workflow must be saved before executing.");
+        expect(mockShowError).toHaveBeenCalledWith(
+          "Workflow must be saved before executing.",
+        );
         expect(mockLogger.error).toHaveBeenCalledWith(
-          "[WorkflowBuilder] No workflow ID found - workflow must be saved"
+          "[WorkflowBuilder] No workflow ID found - workflow must be saved",
         );
         expect(result.current.isExecuting).toBe(false);
       });
       it("should verify exact falsy check - workflowIdToExecute is undefined", async () => {
         workflowIdRef.current = void 0;
-        const { result } = renderHook(
-          () => useWorkflowExecution({
+        const { result } = renderHook(() =>
+          useWorkflowExecution({
             isAuthenticated: true,
             localWorkflowId: "workflow-1",
             workflowIdRef,
             saveWorkflow: mockSaveWorkflow,
-            onExecutionStart: mockOnExecutionStart
-          })
+            onExecutionStart: mockOnExecutionStart,
+          }),
         );
         act(() => {
           result.current.setExecutionInputs('{"key": "value"}');
@@ -328,19 +346,21 @@ describe("useWorkflowExecution - Enhanced Mutation Killers", () => {
         await act(async () => {
           await result.current.handleConfirmExecute();
         });
-        expect(mockShowError).toHaveBeenCalledWith("Workflow must be saved before executing.");
+        expect(mockShowError).toHaveBeenCalledWith(
+          "Workflow must be saved before executing.",
+        );
         expect(result.current.isExecuting).toBe(false);
       });
       it("should verify exact falsy check - workflowIdToExecute is empty string", async () => {
         workflowIdRef.current = "";
-        const { result } = renderHook(
-          () => useWorkflowExecution({
+        const { result } = renderHook(() =>
+          useWorkflowExecution({
             isAuthenticated: true,
             localWorkflowId: "workflow-1",
             workflowIdRef,
             saveWorkflow: mockSaveWorkflow,
-            onExecutionStart: mockOnExecutionStart
-          })
+            onExecutionStart: mockOnExecutionStart,
+          }),
         );
         act(() => {
           result.current.setExecutionInputs('{"key": "value"}');
@@ -348,19 +368,21 @@ describe("useWorkflowExecution - Enhanced Mutation Killers", () => {
         await act(async () => {
           await result.current.handleConfirmExecute();
         });
-        expect(mockShowError).toHaveBeenCalledWith("Workflow must be saved before executing.");
+        expect(mockShowError).toHaveBeenCalledWith(
+          "Workflow must be saved before executing.",
+        );
         expect(result.current.isExecuting).toBe(false);
       });
       it("should verify exact falsy check - workflowIdToExecute is truthy", async () => {
         workflowIdRef.current = "workflow-1";
-        const { result } = renderHook(
-          () => useWorkflowExecution({
+        const { result } = renderHook(() =>
+          useWorkflowExecution({
             isAuthenticated: true,
             localWorkflowId: "workflow-1",
             workflowIdRef,
             saveWorkflow: mockSaveWorkflow,
-            onExecutionStart: mockOnExecutionStart
-          })
+            onExecutionStart: mockOnExecutionStart,
+          }),
         );
         act(() => {
           result.current.setExecutionInputs('{"key": "value"}');
@@ -368,7 +390,9 @@ describe("useWorkflowExecution - Enhanced Mutation Killers", () => {
         await act(async () => {
           await result.current.handleConfirmExecute();
         });
-        expect(mockShowError).not.toHaveBeenCalledWith("Workflow must be saved before executing.");
+        expect(mockShowError).not.toHaveBeenCalledWith(
+          "Workflow must be saved before executing.",
+        );
         expect(mockShowSuccess).toHaveBeenCalled();
         expect(result.current.isExecuting).toBe(false);
       });
@@ -379,24 +403,24 @@ describe("useWorkflowExecution - Enhanced Mutation Killers", () => {
         const mockExecuteWorkflow = jest.fn().mockRejectedValue({
           response: {
             data: {
-              detail: "Custom error detail"
-            }
-          }
+              detail: "Custom error detail",
+            },
+          },
         });
         const MockedService = WorkflowExecutionService;
         MockedService.mockImplementation(() => ({
           parseExecutionInputs: jest.fn((inputs) => JSON.parse(inputs)),
           createTempExecutionId: jest.fn(() => "temp-exec-123"),
-          executeWorkflow: mockExecuteWorkflow
+          executeWorkflow: mockExecuteWorkflow,
         }));
-        const { result } = renderHook(
-          () => useWorkflowExecution({
+        const { result } = renderHook(() =>
+          useWorkflowExecution({
             isAuthenticated: true,
             localWorkflowId: "workflow-1",
             workflowIdRef,
             saveWorkflow: mockSaveWorkflow,
-            onExecutionStart: mockOnExecutionStart
-          })
+            onExecutionStart: mockOnExecutionStart,
+          }),
         );
         act(() => {
           result.current.setExecutionInputs('{"key": "value"}');
@@ -405,28 +429,28 @@ describe("useWorkflowExecution - Enhanced Mutation Killers", () => {
           await result.current.handleConfirmExecute();
         });
         expect(mockShowError).toHaveBeenCalledWith(
-          expect.stringContaining("Custom error detail")
+          expect.stringContaining("Custom error detail"),
         );
       });
       it("should handle error with message (no response)", async () => {
         workflowIdRef.current = "workflow-1";
         const mockExecuteWorkflow = jest.fn().mockRejectedValue({
-          message: "Network error"
+          message: "Network error",
         });
         const MockedService = WorkflowExecutionService;
         MockedService.mockImplementation(() => ({
           parseExecutionInputs: jest.fn((inputs) => JSON.parse(inputs)),
           createTempExecutionId: jest.fn(() => "temp-exec-123"),
-          executeWorkflow: mockExecuteWorkflow
+          executeWorkflow: mockExecuteWorkflow,
         }));
-        const { result } = renderHook(
-          () => useWorkflowExecution({
+        const { result } = renderHook(() =>
+          useWorkflowExecution({
             isAuthenticated: true,
             localWorkflowId: "workflow-1",
             workflowIdRef,
             saveWorkflow: mockSaveWorkflow,
-            onExecutionStart: mockOnExecutionStart
-          })
+            onExecutionStart: mockOnExecutionStart,
+          }),
         );
         act(() => {
           result.current.setExecutionInputs('{"key": "value"}');
@@ -435,7 +459,7 @@ describe("useWorkflowExecution - Enhanced Mutation Killers", () => {
           await result.current.handleConfirmExecute();
         });
         expect(mockShowError).toHaveBeenCalledWith(
-          expect.stringContaining("Network error")
+          expect.stringContaining("Network error"),
         );
       });
       it("should handle error with no message or response", async () => {
@@ -445,16 +469,16 @@ describe("useWorkflowExecution - Enhanced Mutation Killers", () => {
         MockedService.mockImplementation(() => ({
           parseExecutionInputs: jest.fn((inputs) => JSON.parse(inputs)),
           createTempExecutionId: jest.fn(() => "temp-exec-123"),
-          executeWorkflow: mockExecuteWorkflow
+          executeWorkflow: mockExecuteWorkflow,
         }));
-        const { result } = renderHook(
-          () => useWorkflowExecution({
+        const { result } = renderHook(() =>
+          useWorkflowExecution({
             isAuthenticated: true,
             localWorkflowId: "workflow-1",
             workflowIdRef,
             saveWorkflow: mockSaveWorkflow,
-            onExecutionStart: mockOnExecutionStart
-          })
+            onExecutionStart: mockOnExecutionStart,
+          }),
         );
         act(() => {
           result.current.setExecutionInputs('{"key": "value"}');
@@ -463,7 +487,7 @@ describe("useWorkflowExecution - Enhanced Mutation Killers", () => {
           await result.current.handleConfirmExecute();
         });
         expect(mockShowError).toHaveBeenCalledWith(
-          expect.stringContaining("Unknown error")
+          expect.stringContaining("Unknown error"),
         );
       });
       it("should handle string error", async () => {
@@ -473,16 +497,16 @@ describe("useWorkflowExecution - Enhanced Mutation Killers", () => {
         MockedService.mockImplementation(() => ({
           parseExecutionInputs: jest.fn((inputs) => JSON.parse(inputs)),
           createTempExecutionId: jest.fn(() => "temp-exec-123"),
-          executeWorkflow: mockExecuteWorkflow
+          executeWorkflow: mockExecuteWorkflow,
         }));
-        const { result } = renderHook(
-          () => useWorkflowExecution({
+        const { result } = renderHook(() =>
+          useWorkflowExecution({
             isAuthenticated: true,
             localWorkflowId: "workflow-1",
             workflowIdRef,
             saveWorkflow: mockSaveWorkflow,
-            onExecutionStart: mockOnExecutionStart
-          })
+            onExecutionStart: mockOnExecutionStart,
+          }),
         );
         act(() => {
           result.current.setExecutionInputs('{"key": "value"}');
@@ -497,16 +521,16 @@ describe("useWorkflowExecution - Enhanced Mutation Killers", () => {
   describe("Combined condition testing", () => {
     it("should handle full execution flow when all conditions are met", async () => {
       workflowIdRef.current = "workflow-1";
-      const { result } = renderHook(
-        () => useWorkflowExecution({
+      const { result } = renderHook(() =>
+        useWorkflowExecution({
           isAuthenticated: true,
           // Condition 1: true
           localWorkflowId: "workflow-1",
           // Condition 2: truthy
           workflowIdRef,
           saveWorkflow: mockSaveWorkflow,
-          onExecutionStart: mockOnExecutionStart
-        })
+          onExecutionStart: mockOnExecutionStart,
+        }),
       );
       act(() => {
         result.current.setExecutionInputs('{"key": "value"}');

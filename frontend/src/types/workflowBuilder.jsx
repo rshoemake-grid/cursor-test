@@ -1,5 +1,12 @@
 function hasWorkflowBuilderCoreProps(obj) {
-  return typeof obj === "object" && obj !== null && typeof obj.tabId === "string" && (typeof obj.workflowId === "string" || obj.workflowId === null) && typeof obj.tabName === "string" && typeof obj.tabIsUnsaved === "boolean";
+  return (
+    typeof obj === "object" &&
+    obj !== null &&
+    typeof obj.tabId === "string" &&
+    (typeof obj.workflowId === "string" || obj.workflowId === null) &&
+    typeof obj.tabName === "string" &&
+    typeof obj.tabIsUnsaved === "boolean"
+  );
 }
 function hasWorkflowBuilderExecutionProps(obj) {
   return typeof obj === "object" && obj !== null;
@@ -18,5 +25,5 @@ export {
   hasWorkflowBuilderDependencyProps,
   hasWorkflowBuilderExecutionProps,
   hasWorkflowBuilderPersistenceProps,
-  isValidWorkflowBuilderProps
+  isValidWorkflowBuilderProps,
 };

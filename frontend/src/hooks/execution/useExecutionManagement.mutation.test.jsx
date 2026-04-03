@@ -4,14 +4,14 @@ import { api } from "../../api/client";
 import { logger } from "../../utils/logger";
 jest.mock("../../api/client", () => ({
   api: {
-    getExecution: jest.fn()
-  }
+    getExecution: jest.fn(),
+  },
 }));
 jest.mock("../../utils/logger", () => ({
   logger: {
     debug: jest.fn(),
-    error: jest.fn()
-  }
+    error: jest.fn(),
+  },
 }));
 const mockApi = api;
 const mockLoggerDebug = logger.debug;
@@ -26,7 +26,7 @@ describe("useExecutionManagement - Mutation Killers", () => {
     workflowId: "workflow-1",
     isUnsaved: false,
     executions: [],
-    activeExecutionId: null
+    activeExecutionId: null,
   };
   beforeEach(() => {
     jest.clearAllMocks();
@@ -48,89 +48,117 @@ describe("useExecutionManagement - Mutation Killers", () => {
   describe("Exact string comparisons", () => {
     describe('executionId.startsWith("pending-")', () => {
       it("should verify exact startsWith check - executionId starts with pending-", () => {
-        const { result } = renderHook(
-          () => useExecutionManagement({
+        const { result } = renderHook(() =>
+          useExecutionManagement({
             tabs: [mockTab],
             activeTabId: "tab-1",
             setTabs: mockSetTabs,
             tabsRef: mockTabsRef,
-            onExecutionStart: mockOnExecutionStart
-          })
+            onExecutionStart: mockOnExecutionStart,
+          }),
         );
         act(() => {
           result.current.handleExecutionStart("pending-123");
         });
         expect(mockSetTabs).toHaveBeenCalled();
         const setTabsCall = mockSetTabs.mock.calls[0][0];
-        const updatedTabs = typeof setTabsCall === "function" ? setTabsCall([mockTab]) : setTabsCall;
+        const updatedTabs =
+          typeof setTabsCall === "function"
+            ? setTabsCall([mockTab])
+            : setTabsCall;
         const updatedTab = updatedTabs.find((t) => t.id === "tab-1");
-        expect(updatedTab.executions.some((e) => e.id === "pending-123")).toBe(true);
+        expect(updatedTab.executions.some((e) => e.id === "pending-123")).toBe(
+          true,
+        );
       });
       it("should verify exact startsWith check - executionId does not start with pending-", () => {
         const tabWithPending = {
           ...mockTab,
           executions: [
-            { id: "pending-1", status: "running", startedAt: /* @__PURE__ */ new Date(), nodes: {}, logs: [] },
-            { id: "pending-2", status: "running", startedAt: /* @__PURE__ */ new Date(), nodes: {}, logs: [] }
-          ]
+            {
+              id: "pending-1",
+              status: "running",
+              startedAt: /* @__PURE__ */ new Date(),
+              nodes: {},
+              logs: [],
+            },
+            {
+              id: "pending-2",
+              status: "running",
+              startedAt: /* @__PURE__ */ new Date(),
+              nodes: {},
+              logs: [],
+            },
+          ],
         };
         mockTabsRef.current = [tabWithPending];
-        const { result } = renderHook(
-          () => useExecutionManagement({
+        const { result } = renderHook(() =>
+          useExecutionManagement({
             tabs: [tabWithPending],
             activeTabId: "tab-1",
             setTabs: mockSetTabs,
             tabsRef: mockTabsRef,
-            onExecutionStart: mockOnExecutionStart
-          })
+            onExecutionStart: mockOnExecutionStart,
+          }),
         );
         act(() => {
           result.current.handleExecutionStart("exec-real-1");
         });
         expect(mockSetTabs).toHaveBeenCalled();
         const setTabsCall = mockSetTabs.mock.calls[0][0];
-        const updatedTabs = typeof setTabsCall === "function" ? setTabsCall([tabWithPending]) : setTabsCall;
+        const updatedTabs =
+          typeof setTabsCall === "function"
+            ? setTabsCall([tabWithPending])
+            : setTabsCall;
         const updatedTab = updatedTabs.find((t) => t.id === "tab-1");
-        expect(updatedTab.executions.some((e) => e.id === "exec-real-1")).toBe(true);
+        expect(updatedTab.executions.some((e) => e.id === "exec-real-1")).toBe(
+          true,
+        );
       });
     });
     describe("tab.workflowId === workflowId", () => {
       it("should verify exact workflowId comparison - match", () => {
-        const { result } = renderHook(
-          () => useExecutionManagement({
+        const { result } = renderHook(() =>
+          useExecutionManagement({
             tabs: [mockTab],
             activeTabId: "tab-1",
             setTabs: mockSetTabs,
             tabsRef: mockTabsRef,
-            onExecutionStart: mockOnExecutionStart
-          })
+            onExecutionStart: mockOnExecutionStart,
+          }),
         );
         act(() => {
           result.current.handleClearExecutions("workflow-1");
         });
         expect(mockSetTabs).toHaveBeenCalled();
         const setTabsCall = mockSetTabs.mock.calls[0][0];
-        const updatedTabs = typeof setTabsCall === "function" ? setTabsCall([mockTab]) : setTabsCall;
+        const updatedTabs =
+          typeof setTabsCall === "function"
+            ? setTabsCall([mockTab])
+            : setTabsCall;
         const updatedTab = updatedTabs.find((t) => t.id === "tab-1");
         expect(updatedTab.executions).toHaveLength(0);
         expect(updatedTab.activeExecutionId).toBeNull();
       });
       it("should verify exact workflowId comparison - no match", () => {
-        const { result } = renderHook(
-          () => useExecutionManagement({
+        const { result } = renderHook(() =>
+          useExecutionManagement({
             tabs: [mockTab],
             activeTabId: "tab-1",
             setTabs: mockSetTabs,
             tabsRef: mockTabsRef,
-            onExecutionStart: mockOnExecutionStart
-          })
+            onExecutionStart: mockOnExecutionStart,
+          }),
         );
         act(() => {
           result.current.handleClearExecutions("workflow-2");
         });
         expect(mockSetTabs).toHaveBeenCalled();
         const setTabsCall = mockSetTabs.mock.calls[0][0];
-        const updatedTabs = typeof setTabsCall === "function" ? setTabsCall([mockTab]) : setTabsCall;
+        const updatedTabs =
+          typeof setTabsCall === "function"
+            ? setTabsCall([mockTab])
+            : setTabsCall;
         const updatedTab = updatedTabs.find((t) => t.id === "tab-1");
         expect(updatedTab.executions).toEqual(mockTab.executions);
       });
@@ -142,31 +170,38 @@ describe("useExecutionManagement - Mutation Killers", () => {
           status: "running",
           startedAt: /* @__PURE__ */ new Date(),
           nodes: {},
-          logs: []
+          logs: [],
         };
         const tabWithExecution = {
           ...mockTab,
           executions: [execution],
-          activeExecutionId: "exec-1"
+          activeExecutionId: "exec-1",
         };
         mockTabsRef.current = [tabWithExecution];
-        const { result } = renderHook(
-          () => useExecutionManagement({
+        const { result } = renderHook(() =>
+          useExecutionManagement({
             tabs: [tabWithExecution],
             activeTabId: "tab-1",
             setTabs: mockSetTabs,
             tabsRef: mockTabsRef,
-            onExecutionStart: mockOnExecutionStart
-          })
+            onExecutionStart: mockOnExecutionStart,
+          }),
         );
         act(() => {
-          result.current.handleExecutionLogUpdate("workflow-1", "exec-1", { message: "test log" });
+          result.current.handleExecutionLogUpdate("workflow-1", "exec-1", {
+            message: "test log",
+          });
         });
         expect(mockSetTabs).toHaveBeenCalled();
         const setTabsCall = mockSetTabs.mock.calls[0][0];
-        const updatedTabs = typeof setTabsCall === "function" ? setTabsCall([tabWithExecution]) : setTabsCall;
+        const updatedTabs =
+          typeof setTabsCall === "function"
+            ? setTabsCall([tabWithExecution])
+            : setTabsCall;
         const updatedTab = updatedTabs.find((t) => t.id === "tab-1");
-        const updatedExec = updatedTab.executions.find((e) => e.id === "exec-1");
+        const updatedExec = updatedTab.executions.find(
+          (e) => e.id === "exec-1",
+        );
         expect(updatedExec.logs).toHaveLength(1);
       });
       it("should verify exact executionId comparison - no match", () => {
@@ -175,30 +210,37 @@ describe("useExecutionManagement - Mutation Killers", () => {
           status: "running",
           startedAt: /* @__PURE__ */ new Date(),
           nodes: {},
-          logs: []
+          logs: [],
         };
         const tabWithExecution = {
           ...mockTab,
-          executions: [execution]
+          executions: [execution],
         };
         mockTabsRef.current = [tabWithExecution];
-        const { result } = renderHook(
-          () => useExecutionManagement({
+        const { result } = renderHook(() =>
+          useExecutionManagement({
             tabs: [tabWithExecution],
             activeTabId: "tab-1",
             setTabs: mockSetTabs,
             tabsRef: mockTabsRef,
-            onExecutionStart: mockOnExecutionStart
-          })
+            onExecutionStart: mockOnExecutionStart,
+          }),
         );
         act(() => {
-          result.current.handleExecutionLogUpdate("workflow-1", "exec-2", { message: "test log" });
+          result.current.handleExecutionLogUpdate("workflow-1", "exec-2", {
+            message: "test log",
+          });
         });
         expect(mockSetTabs).toHaveBeenCalled();
         const setTabsCall = mockSetTabs.mock.calls[0][0];
-        const updatedTabs = typeof setTabsCall === "function" ? setTabsCall([tabWithExecution]) : setTabsCall;
+        const updatedTabs =
+          typeof setTabsCall === "function"
+            ? setTabsCall([tabWithExecution])
+            : setTabsCall;
         const updatedTab = updatedTabs.find((t) => t.id === "tab-1");
-        const updatedExec = updatedTab.executions.find((e) => e.id === "exec-1");
+        const updatedExec = updatedTab.executions.find(
+          (e) => e.id === "exec-1",
+        );
         expect(updatedExec.logs).toHaveLength(0);
       });
     });
@@ -209,36 +251,39 @@ describe("useExecutionManagement - Mutation Killers", () => {
           status: "running",
           startedAt: /* @__PURE__ */ new Date(),
           nodes: {},
-          logs: []
+          logs: [],
         };
         const execution2 = {
           id: "exec-2",
           status: "running",
           startedAt: /* @__PURE__ */ new Date(),
           nodes: {},
-          logs: []
+          logs: [],
         };
         const tabWithExecutions = {
           ...mockTab,
           executions: [execution1, execution2],
-          activeExecutionId: "exec-1"
+          activeExecutionId: "exec-1",
         };
         mockTabsRef.current = [tabWithExecutions];
-        const { result } = renderHook(
-          () => useExecutionManagement({
+        const { result } = renderHook(() =>
+          useExecutionManagement({
             tabs: [tabWithExecutions],
             activeTabId: "tab-1",
             setTabs: mockSetTabs,
             tabsRef: mockTabsRef,
-            onExecutionStart: mockOnExecutionStart
-          })
+            onExecutionStart: mockOnExecutionStart,
+          }),
         );
         act(() => {
           result.current.handleRemoveExecution("workflow-1", "exec-1");
         });
         expect(mockSetTabs).toHaveBeenCalled();
         const setTabsCall = mockSetTabs.mock.calls[0][0];
-        const updatedTabs = typeof setTabsCall === "function" ? setTabsCall([tabWithExecutions]) : setTabsCall;
+        const updatedTabs =
+          typeof setTabsCall === "function"
+            ? setTabsCall([tabWithExecutions])
+            : setTabsCall;
         const updatedTab = updatedTabs.find((t) => t.id === "tab-1");
         expect(updatedTab.activeExecutionId).toBe("exec-2");
       });
@@ -248,36 +293,39 @@ describe("useExecutionManagement - Mutation Killers", () => {
           status: "running",
           startedAt: /* @__PURE__ */ new Date(),
           nodes: {},
-          logs: []
+          logs: [],
         };
         const execution2 = {
           id: "exec-2",
           status: "running",
           startedAt: /* @__PURE__ */ new Date(),
           nodes: {},
-          logs: []
+          logs: [],
         };
         const tabWithExecutions = {
           ...mockTab,
           executions: [execution1, execution2],
-          activeExecutionId: "exec-1"
+          activeExecutionId: "exec-1",
         };
         mockTabsRef.current = [tabWithExecutions];
-        const { result } = renderHook(
-          () => useExecutionManagement({
+        const { result } = renderHook(() =>
+          useExecutionManagement({
             tabs: [tabWithExecutions],
             activeTabId: "tab-1",
             setTabs: mockSetTabs,
             tabsRef: mockTabsRef,
-            onExecutionStart: mockOnExecutionStart
-          })
+            onExecutionStart: mockOnExecutionStart,
+          }),
         );
         act(() => {
           result.current.handleRemoveExecution("workflow-1", "exec-2");
         });
         expect(mockSetTabs).toHaveBeenCalled();
         const setTabsCall = mockSetTabs.mock.calls[0][0];
-        const updatedTabs = typeof setTabsCall === "function" ? setTabsCall([tabWithExecutions]) : setTabsCall;
+        const updatedTabs =
+          typeof setTabsCall === "function"
+            ? setTabsCall([tabWithExecutions])
+            : setTabsCall;
         const updatedTab = updatedTabs.find((t) => t.id === "tab-1");
         expect(updatedTab.activeExecutionId).toBe("exec-1");
       });
@@ -289,27 +337,38 @@ describe("useExecutionManagement - Mutation Killers", () => {
         const tabWithoutPending = {
           ...mockTab,
           executions: [
-            { id: "exec-1", status: "running", startedAt: /* @__PURE__ */ new Date(), nodes: {}, logs: [] }
-          ]
+            {
+              id: "exec-1",
+              status: "running",
+              startedAt: /* @__PURE__ */ new Date(),
+              nodes: {},
+              logs: [],
+            },
+          ],
         };
         mockTabsRef.current = [tabWithoutPending];
-        const { result } = renderHook(
-          () => useExecutionManagement({
+        const { result } = renderHook(() =>
+          useExecutionManagement({
             tabs: [tabWithoutPending],
             activeTabId: "tab-1",
             setTabs: mockSetTabs,
             tabsRef: mockTabsRef,
-            onExecutionStart: mockOnExecutionStart
-          })
+            onExecutionStart: mockOnExecutionStart,
+          }),
         );
         act(() => {
           result.current.handleExecutionStart("exec-real-1");
         });
         expect(mockSetTabs).toHaveBeenCalled();
         const setTabsCall = mockSetTabs.mock.calls[0][0];
-        const updatedTabs = typeof setTabsCall === "function" ? setTabsCall([tabWithoutPending]) : setTabsCall;
+        const updatedTabs =
+          typeof setTabsCall === "function"
+            ? setTabsCall([tabWithoutPending])
+            : setTabsCall;
         const updatedTab = updatedTabs.find((t) => t.id === "tab-1");
-        expect(updatedTab.executions.some((e) => e.id === "exec-real-1")).toBe(true);
+        expect(updatedTab.executions.some((e) => e.id === "exec-real-1")).toBe(
+          true,
+        );
       });
     });
     describe("updatedExecutions.length === 0 vs > 0", () => {
@@ -319,29 +378,32 @@ describe("useExecutionManagement - Mutation Killers", () => {
           status: "running",
           startedAt: /* @__PURE__ */ new Date(),
           nodes: {},
-          logs: []
+          logs: [],
         };
         const tabWithExecution = {
           ...mockTab,
           executions: [execution],
-          activeExecutionId: "exec-1"
+          activeExecutionId: "exec-1",
         };
         mockTabsRef.current = [tabWithExecution];
-        const { result } = renderHook(
-          () => useExecutionManagement({
+        const { result } = renderHook(() =>
+          useExecutionManagement({
             tabs: [tabWithExecution],
             activeTabId: "tab-1",
             setTabs: mockSetTabs,
             tabsRef: mockTabsRef,
-            onExecutionStart: mockOnExecutionStart
-          })
+            onExecutionStart: mockOnExecutionStart,
+          }),
         );
         act(() => {
           result.current.handleRemoveExecution("workflow-1", "exec-1");
         });
         expect(mockSetTabs).toHaveBeenCalled();
         const setTabsCall = mockSetTabs.mock.calls[0][0];
-        const updatedTabs = typeof setTabsCall === "function" ? setTabsCall([tabWithExecution]) : setTabsCall;
+        const updatedTabs =
+          typeof setTabsCall === "function"
+            ? setTabsCall([tabWithExecution])
+            : setTabsCall;
         const updatedTab = updatedTabs.find((t) => t.id === "tab-1");
         expect(updatedTab.activeExecutionId).toBeNull();
         expect(updatedTab.executions).toHaveLength(0);
@@ -352,36 +414,39 @@ describe("useExecutionManagement - Mutation Killers", () => {
           status: "running",
           startedAt: /* @__PURE__ */ new Date(),
           nodes: {},
-          logs: []
+          logs: [],
         };
         const execution2 = {
           id: "exec-2",
           status: "running",
           startedAt: /* @__PURE__ */ new Date(),
           nodes: {},
-          logs: []
+          logs: [],
         };
         const tabWithExecutions = {
           ...mockTab,
           executions: [execution1, execution2],
-          activeExecutionId: "exec-1"
+          activeExecutionId: "exec-1",
         };
         mockTabsRef.current = [tabWithExecutions];
-        const { result } = renderHook(
-          () => useExecutionManagement({
+        const { result } = renderHook(() =>
+          useExecutionManagement({
             tabs: [tabWithExecutions],
             activeTabId: "tab-1",
             setTabs: mockSetTabs,
             tabsRef: mockTabsRef,
-            onExecutionStart: mockOnExecutionStart
-          })
+            onExecutionStart: mockOnExecutionStart,
+          }),
         );
         act(() => {
           result.current.handleRemoveExecution("workflow-1", "exec-1");
         });
         expect(mockSetTabs).toHaveBeenCalled();
         const setTabsCall = mockSetTabs.mock.calls[0][0];
-        const updatedTabs = typeof setTabsCall === "function" ? setTabsCall([tabWithExecutions]) : setTabsCall;
+        const updatedTabs =
+          typeof setTabsCall === "function"
+            ? setTabsCall([tabWithExecutions])
+            : setTabsCall;
         const updatedTab = updatedTabs.find((t) => t.id === "tab-1");
         expect(updatedTab.activeExecutionId).toBe("exec-2");
         expect(updatedTab.executions).toHaveLength(1);
@@ -396,30 +461,39 @@ describe("useExecutionManagement - Mutation Killers", () => {
           status: "running",
           startedAt: /* @__PURE__ */ new Date(),
           nodes: {},
-          logs: []
+          logs: [],
         };
         const tabWithExecution = {
           ...mockTab,
-          executions: [execution]
+          executions: [execution],
         };
         mockTabsRef.current = [tabWithExecution];
-        const { result } = renderHook(
-          () => useExecutionManagement({
+        const { result } = renderHook(() =>
+          useExecutionManagement({
             tabs: [tabWithExecution],
             activeTabId: "tab-1",
             setTabs: mockSetTabs,
             tabsRef: mockTabsRef,
-            onExecutionStart: mockOnExecutionStart
-          })
+            onExecutionStart: mockOnExecutionStart,
+          }),
         );
         act(() => {
-          result.current.handleExecutionStatusUpdate("workflow-1", "exec-1", "completed");
+          result.current.handleExecutionStatusUpdate(
+            "workflow-1",
+            "exec-1",
+            "completed",
+          );
         });
         expect(mockSetTabs).toHaveBeenCalled();
         const setTabsCall = mockSetTabs.mock.calls[0][0];
-        const updatedTabs = typeof setTabsCall === "function" ? setTabsCall([tabWithExecution]) : setTabsCall;
+        const updatedTabs =
+          typeof setTabsCall === "function"
+            ? setTabsCall([tabWithExecution])
+            : setTabsCall;
         const updatedTab = updatedTabs.find((t) => t.id === "tab-1");
-        const updatedExec = updatedTab.executions.find((e) => e.id === "exec-1");
+        const updatedExec = updatedTab.executions.find(
+          (e) => e.id === "exec-1",
+        );
         expect(updatedExec.status).toBe("completed");
         expect(updatedExec.completedAt).toBeDefined();
       });
@@ -429,30 +503,39 @@ describe("useExecutionManagement - Mutation Killers", () => {
           status: "running",
           startedAt: /* @__PURE__ */ new Date(),
           nodes: {},
-          logs: []
+          logs: [],
         };
         const tabWithExecution = {
           ...mockTab,
-          executions: [execution]
+          executions: [execution],
         };
         mockTabsRef.current = [tabWithExecution];
-        const { result } = renderHook(
-          () => useExecutionManagement({
+        const { result } = renderHook(() =>
+          useExecutionManagement({
             tabs: [tabWithExecution],
             activeTabId: "tab-1",
             setTabs: mockSetTabs,
             tabsRef: mockTabsRef,
-            onExecutionStart: mockOnExecutionStart
-          })
+            onExecutionStart: mockOnExecutionStart,
+          }),
         );
         act(() => {
-          result.current.handleExecutionStatusUpdate("workflow-1", "exec-1", "failed");
+          result.current.handleExecutionStatusUpdate(
+            "workflow-1",
+            "exec-1",
+            "failed",
+          );
         });
         expect(mockSetTabs).toHaveBeenCalled();
         const setTabsCall = mockSetTabs.mock.calls[0][0];
-        const updatedTabs = typeof setTabsCall === "function" ? setTabsCall([tabWithExecution]) : setTabsCall;
+        const updatedTabs =
+          typeof setTabsCall === "function"
+            ? setTabsCall([tabWithExecution])
+            : setTabsCall;
         const updatedTab = updatedTabs.find((t) => t.id === "tab-1");
-        const updatedExec = updatedTab.executions.find((e) => e.id === "exec-1");
+        const updatedExec = updatedTab.executions.find(
+          (e) => e.id === "exec-1",
+        );
         expect(updatedExec.status).toBe("failed");
         expect(updatedExec.completedAt).toBeDefined();
       });
@@ -463,31 +546,40 @@ describe("useExecutionManagement - Mutation Killers", () => {
           startedAt: /* @__PURE__ */ new Date(),
           nodes: {},
           logs: [],
-          completedAt: /* @__PURE__ */ new Date()
+          completedAt: /* @__PURE__ */ new Date(),
           // Pre-existing completedAt
         };
         const tabWithExecution = {
           ...mockTab,
-          executions: [execution]
+          executions: [execution],
         };
         mockTabsRef.current = [tabWithExecution];
-        const { result } = renderHook(
-          () => useExecutionManagement({
+        const { result } = renderHook(() =>
+          useExecutionManagement({
             tabs: [tabWithExecution],
             activeTabId: "tab-1",
             setTabs: mockSetTabs,
             tabsRef: mockTabsRef,
-            onExecutionStart: mockOnExecutionStart
-          })
+            onExecutionStart: mockOnExecutionStart,
+          }),
         );
         act(() => {
-          result.current.handleExecutionStatusUpdate("workflow-1", "exec-1", "running");
+          result.current.handleExecutionStatusUpdate(
+            "workflow-1",
+            "exec-1",
+            "running",
+          );
         });
         expect(mockSetTabs).toHaveBeenCalled();
         const setTabsCall = mockSetTabs.mock.calls[0][0];
-        const updatedTabs = typeof setTabsCall === "function" ? setTabsCall([tabWithExecution]) : setTabsCall;
+        const updatedTabs =
+          typeof setTabsCall === "function"
+            ? setTabsCall([tabWithExecution])
+            : setTabsCall;
         const updatedTab = updatedTabs.find((t) => t.id === "tab-1");
-        const updatedExec = updatedTab.executions.find((e) => e.id === "exec-1");
+        const updatedExec = updatedTab.executions.find(
+          (e) => e.id === "exec-1",
+        );
         expect(updatedExec.status).toBe("running");
         expect(updatedExec.completedAt).toEqual(execution.completedAt);
       });
@@ -495,14 +587,14 @@ describe("useExecutionManagement - Mutation Killers", () => {
   });
   describe("Callback execution", () => {
     it("should verify onExecutionStart callback - undefined", () => {
-      const { result } = renderHook(
-        () => useExecutionManagement({
+      const { result } = renderHook(() =>
+        useExecutionManagement({
           tabs: [mockTab],
           activeTabId: "tab-1",
           setTabs: mockSetTabs,
           tabsRef: mockTabsRef,
-          onExecutionStart: void 0
-        })
+          onExecutionStart: void 0,
+        }),
       );
       act(() => {
         result.current.handleExecutionStart("exec-1");
@@ -510,14 +602,14 @@ describe("useExecutionManagement - Mutation Killers", () => {
       expect(mockSetTabs).toHaveBeenCalled();
     });
     it("should verify onExecutionStart callback - null", () => {
-      const { result } = renderHook(
-        () => useExecutionManagement({
+      const { result } = renderHook(() =>
+        useExecutionManagement({
           tabs: [mockTab],
           activeTabId: "tab-1",
           setTabs: mockSetTabs,
           tabsRef: mockTabsRef,
-          onExecutionStart: null
-        })
+          onExecutionStart: null,
+        }),
       );
       act(() => {
         result.current.handleExecutionStart("exec-1");
@@ -532,29 +624,29 @@ describe("useExecutionManagement - Mutation Killers", () => {
         status: "running",
         startedAt: /* @__PURE__ */ new Date(),
         nodes: {},
-        logs: []
+        logs: [],
       };
       const tabWithExecution = {
         ...mockTab,
-        executions: [execution]
+        executions: [execution],
       };
       mockTabsRef.current = [tabWithExecution];
       mockApi.getExecution.mockResolvedValue({
         id: "exec-1",
         status: "completed",
-        started_at: (/* @__PURE__ */ new Date()).toISOString(),
-        completed_at: (/* @__PURE__ */ new Date()).toISOString(),
+        started_at: /* @__PURE__ */ new Date().toISOString(),
+        completed_at: /* @__PURE__ */ new Date().toISOString(),
         node_states: {},
-        logs: []
+        logs: [],
       });
-      renderHook(
-        () => useExecutionManagement({
+      renderHook(() =>
+        useExecutionManagement({
           tabs: [tabWithExecution],
           activeTabId: "tab-1",
           setTabs: mockSetTabs,
           tabsRef: mockTabsRef,
-          onExecutionStart: mockOnExecutionStart
-        })
+          onExecutionStart: mockOnExecutionStart,
+        }),
       );
       act(() => {
         jest.advanceTimersByTime(2e3);
@@ -563,7 +655,7 @@ describe("useExecutionManagement - Mutation Killers", () => {
         await Promise.resolve();
       });
       expect(mockLoggerDebug).toHaveBeenCalledWith(
-        expect.stringContaining("status changed")
+        expect.stringContaining("status changed"),
       );
     });
     it("should verify exec.status !== newStatus - status unchanged", async () => {
@@ -572,28 +664,28 @@ describe("useExecutionManagement - Mutation Killers", () => {
         status: "running",
         startedAt: /* @__PURE__ */ new Date(),
         nodes: {},
-        logs: []
+        logs: [],
       };
       const tabWithExecution = {
         ...mockTab,
-        executions: [execution]
+        executions: [execution],
       };
       mockTabsRef.current = [tabWithExecution];
       mockApi.getExecution.mockResolvedValue({
         id: "exec-1",
         status: "running",
-        started_at: (/* @__PURE__ */ new Date()).toISOString(),
+        started_at: /* @__PURE__ */ new Date().toISOString(),
         node_states: {},
-        logs: []
+        logs: [],
       });
-      renderHook(
-        () => useExecutionManagement({
+      renderHook(() =>
+        useExecutionManagement({
           tabs: [tabWithExecution],
           activeTabId: "tab-1",
           setTabs: mockSetTabs,
           tabsRef: mockTabsRef,
-          onExecutionStart: mockOnExecutionStart
-        })
+          onExecutionStart: mockOnExecutionStart,
+        }),
       );
       act(() => {
         jest.advanceTimersByTime(2e3);
@@ -602,7 +694,7 @@ describe("useExecutionManagement - Mutation Killers", () => {
         await Promise.resolve();
       });
       expect(mockLoggerDebug).not.toHaveBeenCalledWith(
-        expect.stringContaining("status changed")
+        expect.stringContaining("status changed"),
       );
     });
     it('should verify execution.status === "completed" exact comparison', async () => {
@@ -611,29 +703,29 @@ describe("useExecutionManagement - Mutation Killers", () => {
         status: "running",
         startedAt: /* @__PURE__ */ new Date(),
         nodes: {},
-        logs: []
+        logs: [],
       };
       const tabWithExecution = {
         ...mockTab,
-        executions: [execution]
+        executions: [execution],
       };
       mockTabsRef.current = [tabWithExecution];
       mockApi.getExecution.mockResolvedValue({
         id: "exec-1",
         status: "completed",
-        started_at: (/* @__PURE__ */ new Date()).toISOString(),
-        completed_at: (/* @__PURE__ */ new Date()).toISOString(),
+        started_at: /* @__PURE__ */ new Date().toISOString(),
+        completed_at: /* @__PURE__ */ new Date().toISOString(),
         node_states: {},
-        logs: []
+        logs: [],
       });
-      renderHook(
-        () => useExecutionManagement({
+      renderHook(() =>
+        useExecutionManagement({
           tabs: [tabWithExecution],
           activeTabId: "tab-1",
           setTabs: mockSetTabs,
           tabsRef: mockTabsRef,
-          onExecutionStart: mockOnExecutionStart
-        })
+          onExecutionStart: mockOnExecutionStart,
+        }),
       );
       act(() => {
         jest.advanceTimersByTime(2e3);
@@ -643,7 +735,10 @@ describe("useExecutionManagement - Mutation Killers", () => {
       });
       expect(mockSetTabs).toHaveBeenCalled();
       const setTabsCall = mockSetTabs.mock.calls[0][0];
-      const updatedTabs = typeof setTabsCall === "function" ? setTabsCall([tabWithExecution]) : setTabsCall;
+      const updatedTabs =
+        typeof setTabsCall === "function"
+          ? setTabsCall([tabWithExecution])
+          : setTabsCall;
       const updatedTab = updatedTabs.find((t) => t.id === "tab-1");
       const updatedExec = updatedTab.executions.find((e) => e.id === "exec-1");
       expect(updatedExec.status).toBe("completed");
@@ -654,29 +749,29 @@ describe("useExecutionManagement - Mutation Killers", () => {
         status: "running",
         startedAt: /* @__PURE__ */ new Date(),
         nodes: {},
-        logs: []
+        logs: [],
       };
       const tabWithExecution = {
         ...mockTab,
-        executions: [execution]
+        executions: [execution],
       };
       mockTabsRef.current = [tabWithExecution];
       mockApi.getExecution.mockResolvedValue({
         id: "exec-1",
         status: "failed",
-        started_at: (/* @__PURE__ */ new Date()).toISOString(),
-        completed_at: (/* @__PURE__ */ new Date()).toISOString(),
+        started_at: /* @__PURE__ */ new Date().toISOString(),
+        completed_at: /* @__PURE__ */ new Date().toISOString(),
         node_states: {},
-        logs: []
+        logs: [],
       });
-      renderHook(
-        () => useExecutionManagement({
+      renderHook(() =>
+        useExecutionManagement({
           tabs: [tabWithExecution],
           activeTabId: "tab-1",
           setTabs: mockSetTabs,
           tabsRef: mockTabsRef,
-          onExecutionStart: mockOnExecutionStart
-        })
+          onExecutionStart: mockOnExecutionStart,
+        }),
       );
       act(() => {
         jest.advanceTimersByTime(2e3);
@@ -686,7 +781,10 @@ describe("useExecutionManagement - Mutation Killers", () => {
       });
       expect(mockSetTabs).toHaveBeenCalled();
       const setTabsCall = mockSetTabs.mock.calls[0][0];
-      const updatedTabs = typeof setTabsCall === "function" ? setTabsCall([tabWithExecution]) : setTabsCall;
+      const updatedTabs =
+        typeof setTabsCall === "function"
+          ? setTabsCall([tabWithExecution])
+          : setTabsCall;
       const updatedTab = updatedTabs.find((t) => t.id === "tab-1");
       const updatedExec = updatedTab.executions.find((e) => e.id === "exec-1");
       expect(updatedExec.status).toBe("failed");
@@ -697,22 +795,22 @@ describe("useExecutionManagement - Mutation Killers", () => {
         status: "running",
         startedAt: /* @__PURE__ */ new Date(),
         nodes: {},
-        logs: []
+        logs: [],
       };
       const tabWithExecution = {
         ...mockTab,
-        executions: [execution]
+        executions: [execution],
       };
       mockTabsRef.current = [tabWithExecution];
       mockApi.getExecution.mockRejectedValue(new Error("Not found"));
-      renderHook(
-        () => useExecutionManagement({
+      renderHook(() =>
+        useExecutionManagement({
           tabs: [tabWithExecution],
           activeTabId: "tab-1",
           setTabs: mockSetTabs,
           tabsRef: mockTabsRef,
-          onExecutionStart: mockOnExecutionStart
-        })
+          onExecutionStart: mockOnExecutionStart,
+        }),
       );
       act(() => {
         jest.advanceTimersByTime(2e3);
@@ -722,7 +820,7 @@ describe("useExecutionManagement - Mutation Killers", () => {
       });
       expect(mockLoggerError).toHaveBeenCalledWith(
         expect.stringContaining("Failed to fetch execution"),
-        expect.any(Error)
+        expect.any(Error),
       );
     });
     it('should verify exec.id.startsWith("pending-") in error handling - skip logging', async () => {
@@ -731,22 +829,22 @@ describe("useExecutionManagement - Mutation Killers", () => {
         status: "running",
         startedAt: /* @__PURE__ */ new Date(),
         nodes: {},
-        logs: []
+        logs: [],
       };
       const tabWithExecution = {
         ...mockTab,
-        executions: [execution]
+        executions: [execution],
       };
       mockTabsRef.current = [tabWithExecution];
       mockApi.getExecution.mockRejectedValue(new Error("Not found"));
-      renderHook(
-        () => useExecutionManagement({
+      renderHook(() =>
+        useExecutionManagement({
           tabs: [tabWithExecution],
           activeTabId: "tab-1",
           setTabs: mockSetTabs,
           tabsRef: mockTabsRef,
-          onExecutionStart: mockOnExecutionStart
-        })
+          onExecutionStart: mockOnExecutionStart,
+        }),
       );
       act(() => {
         jest.advanceTimersByTime(2e3);
@@ -764,30 +862,30 @@ describe("useExecutionManagement - Mutation Killers", () => {
         status: "running",
         startedAt: /* @__PURE__ */ new Date(),
         nodes: {},
-        logs: []
+        logs: [],
       };
       const tabWithExecution = {
         ...mockTab,
-        executions: [execution]
+        executions: [execution],
       };
       mockTabsRef.current = [tabWithExecution];
       mockApi.getExecution.mockResolvedValue({
         id: "exec-1",
         status: "completed",
-        started_at: (/* @__PURE__ */ new Date()).toISOString(),
+        started_at: /* @__PURE__ */ new Date().toISOString(),
         completed_at: null,
         // null value
         node_states: {},
-        logs: []
+        logs: [],
       });
-      renderHook(
-        () => useExecutionManagement({
+      renderHook(() =>
+        useExecutionManagement({
           tabs: [tabWithExecution],
           activeTabId: "tab-1",
           setTabs: mockSetTabs,
           tabsRef: mockTabsRef,
-          onExecutionStart: mockOnExecutionStart
-        })
+          onExecutionStart: mockOnExecutionStart,
+        }),
       );
       act(() => {
         jest.advanceTimersByTime(2e3);
@@ -797,7 +895,10 @@ describe("useExecutionManagement - Mutation Killers", () => {
       });
       expect(mockSetTabs).toHaveBeenCalled();
       const setTabsCall = mockSetTabs.mock.calls[0][0];
-      const updatedTabs = typeof setTabsCall === "function" ? setTabsCall([tabWithExecution]) : setTabsCall;
+      const updatedTabs =
+        typeof setTabsCall === "function"
+          ? setTabsCall([tabWithExecution])
+          : setTabsCall;
       const updatedTab = updatedTabs.find((t) => t.id === "tab-1");
       const updatedExec = updatedTab.executions.find((e) => e.id === "exec-1");
       expect(updatedExec.completedAt).toBeUndefined();
@@ -808,29 +909,29 @@ describe("useExecutionManagement - Mutation Killers", () => {
         status: "running",
         startedAt: /* @__PURE__ */ new Date(),
         nodes: {},
-        logs: []
+        logs: [],
       };
       const tabWithExecution = {
         ...mockTab,
-        executions: [execution]
+        executions: [execution],
       };
       mockTabsRef.current = [tabWithExecution];
       mockApi.getExecution.mockResolvedValue({
         id: "exec-1",
         status: "running",
-        started_at: (/* @__PURE__ */ new Date()).toISOString(),
+        started_at: /* @__PURE__ */ new Date().toISOString(),
         node_states: null,
         // null value
-        logs: []
+        logs: [],
       });
-      renderHook(
-        () => useExecutionManagement({
+      renderHook(() =>
+        useExecutionManagement({
           tabs: [tabWithExecution],
           activeTabId: "tab-1",
           setTabs: mockSetTabs,
           tabsRef: mockTabsRef,
-          onExecutionStart: mockOnExecutionStart
-        })
+          onExecutionStart: mockOnExecutionStart,
+        }),
       );
       act(() => {
         jest.advanceTimersByTime(2e3);
@@ -840,7 +941,10 @@ describe("useExecutionManagement - Mutation Killers", () => {
       });
       expect(mockSetTabs).toHaveBeenCalled();
       const setTabsCall = mockSetTabs.mock.calls[0][0];
-      const updatedTabs = typeof setTabsCall === "function" ? setTabsCall([tabWithExecution]) : setTabsCall;
+      const updatedTabs =
+        typeof setTabsCall === "function"
+          ? setTabsCall([tabWithExecution])
+          : setTabsCall;
       const updatedTab = updatedTabs.find((t) => t.id === "tab-1");
       const updatedExec = updatedTab.executions.find((e) => e.id === "exec-1");
       expect(updatedExec.nodes).toEqual({});
@@ -851,29 +955,29 @@ describe("useExecutionManagement - Mutation Killers", () => {
         status: "running",
         startedAt: /* @__PURE__ */ new Date(),
         nodes: {},
-        logs: []
+        logs: [],
       };
       const tabWithExecution = {
         ...mockTab,
-        executions: [execution]
+        executions: [execution],
       };
       mockTabsRef.current = [tabWithExecution];
       mockApi.getExecution.mockResolvedValue({
         id: "exec-1",
         status: "running",
-        started_at: (/* @__PURE__ */ new Date()).toISOString(),
+        started_at: /* @__PURE__ */ new Date().toISOString(),
         node_states: {},
-        logs: null
+        logs: null,
         // null value
       });
-      renderHook(
-        () => useExecutionManagement({
+      renderHook(() =>
+        useExecutionManagement({
           tabs: [tabWithExecution],
           activeTabId: "tab-1",
           setTabs: mockSetTabs,
           tabsRef: mockTabsRef,
-          onExecutionStart: mockOnExecutionStart
-        })
+          onExecutionStart: mockOnExecutionStart,
+        }),
       );
       act(() => {
         jest.advanceTimersByTime(2e3);
@@ -883,7 +987,10 @@ describe("useExecutionManagement - Mutation Killers", () => {
       });
       expect(mockSetTabs).toHaveBeenCalled();
       const setTabsCall = mockSetTabs.mock.calls[0][0];
-      const updatedTabs = typeof setTabsCall === "function" ? setTabsCall([tabWithExecution]) : setTabsCall;
+      const updatedTabs =
+        typeof setTabsCall === "function"
+          ? setTabsCall([tabWithExecution])
+          : setTabsCall;
       const updatedTab = updatedTabs.find((t) => t.id === "tab-1");
       const updatedExec = updatedTab.executions.find((e) => e.id === "exec-1");
       expect(updatedExec.logs).toEqual([]);
@@ -894,22 +1001,22 @@ describe("useExecutionManagement - Mutation Killers", () => {
         status: "running",
         startedAt: /* @__PURE__ */ new Date(),
         nodes: {},
-        logs: []
+        logs: [],
       };
       const tabWithExecution = {
         ...mockTab,
-        executions: [execution]
+        executions: [execution],
       };
       mockTabsRef.current = [tabWithExecution];
       mockApi.getExecution.mockRejectedValue(new Error("Not found"));
-      renderHook(
-        () => useExecutionManagement({
+      renderHook(() =>
+        useExecutionManagement({
           tabs: [tabWithExecution],
           activeTabId: "tab-1",
           setTabs: mockSetTabs,
           tabsRef: mockTabsRef,
-          onExecutionStart: mockOnExecutionStart
-        })
+          onExecutionStart: mockOnExecutionStart,
+        }),
       );
       act(() => {
         jest.advanceTimersByTime(2e3);
@@ -919,7 +1026,10 @@ describe("useExecutionManagement - Mutation Killers", () => {
       });
       expect(mockSetTabs).toHaveBeenCalled();
       const setTabsCall = mockSetTabs.mock.calls[0][0];
-      const updatedTabs = typeof setTabsCall === "function" ? setTabsCall([tabWithExecution]) : setTabsCall;
+      const updatedTabs =
+        typeof setTabsCall === "function"
+          ? setTabsCall([tabWithExecution])
+          : setTabsCall;
       const updatedTab = updatedTabs.find((t) => t.id === "tab-1");
       const updatedExec = updatedTab.executions.find((e) => e.id === "exec-1");
       expect(updatedExec).toEqual(execution);

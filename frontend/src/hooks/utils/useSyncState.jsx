@@ -29,7 +29,4 @@ function useSyncStateWithDefault(source, setter, defaultValue = null) {
     }
   }, [source]);
 }
-export {
-  useSyncState,
-  useSyncStateWithDefault
-};
+export { useSyncState, useSyncStateWithDefault };

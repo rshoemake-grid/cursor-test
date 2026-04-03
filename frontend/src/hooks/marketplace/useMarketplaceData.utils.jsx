@@ -24,13 +24,26 @@ function filterBySearchQuery(items, searchQuery) {
   return items.filter((item) => {
     const itemName = logicalOr(item.name, "");
     const itemDescription = logicalOr(item.description, "");
-    const nameStr = itemName !== null && itemName !== void 0 && typeof itemName === "string" ? itemName : "";
-    const descStr = itemDescription !== null && itemDescription !== void 0 && typeof itemDescription === "string" ? itemDescription : "";
+    const nameStr =
+      itemName !== null && itemName !== void 0 && typeof itemName === "string"
+        ? itemName
+        : "";
+    const descStr =
+      itemDescription !== null &&
+      itemDescription !== void 0 &&
+      typeof itemDescription === "string"
+        ? itemDescription
+        : "";
     const queryLower = query.toLowerCase();
-    return nameStr.toLowerCase().includes(queryLower) || descStr.toLowerCase().includes(queryLower) || logicalOrToEmptyArray(item.tags).some((tag) => {
-      const tagStr = tag !== null && tag !== void 0 && typeof tag === "string" ? tag : "";
-      return tagStr.toLowerCase().includes(queryLower);
-    });
+    return (
+      nameStr.toLowerCase().includes(queryLower) ||
+      descStr.toLowerCase().includes(queryLower) ||
+      logicalOrToEmptyArray(item.tags).some((tag) => {
+        const tagStr =
+          tag !== null && tag !== void 0 && typeof tag === "string" ? tag : "";
+        return tagStr.toLowerCase().includes(queryLower);
+      })
+    );
   });
 }
 function applyFilters(items, category, searchQuery) {
@@ -50,8 +63,18 @@ function compareByDate(a, b) {
 function compareByName(a, b) {
   const nameAResult = logicalOr(a.name, "");
   const nameBResult = logicalOr(b.name, "");
-  const nameA = nameAResult !== null && nameAResult !== void 0 && typeof nameAResult === "string" ? nameAResult : "";
-  const nameB = nameBResult !== null && nameBResult !== void 0 && typeof nameBResult === "string" ? nameBResult : "";
+  const nameA =
+    nameAResult !== null &&
+    nameAResult !== void 0 &&
+    typeof nameAResult === "string"
+      ? nameAResult
+      : "";
+  const nameB =
+    nameBResult !== null &&
+    nameBResult !== void 0 &&
+    typeof nameBResult === "string"
+      ? nameBResult
+      : "";
   return nameA.localeCompare(nameB);
 }
 function compareOfficialStatus(a, b) {
@@ -84,5 +107,5 @@ export {
   filterByCategory,
   filterBySearchQuery,
   getSortTimestamp,
-  sortItems
+  sortItems,
 };

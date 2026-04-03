@@ -6,11 +6,11 @@ import { STORAGE_KEYS } from "../../config/constants";
 jest.mock("../../utils/logger", () => ({
   logger: {
     debug: jest.fn(),
-    error: jest.fn()
-  }
+    error: jest.fn(),
+  },
 }));
 jest.mock("../storage", () => ({
-  setLocalStorageItem: jest.fn()
+  setLocalStorageItem: jest.fn(),
 }));
 const mockLogger = logger;
 const mockSetLocalStorageItem = setLocalStorageItem;
@@ -26,13 +26,13 @@ describe("useOfficialAgentSeeding", () => {
       setItem: jest.fn(),
       removeItem: jest.fn(),
       addEventListener: jest.fn(),
-      removeEventListener: jest.fn()
+      removeEventListener: jest.fn(),
     };
     mockHttpClient = {
       get: jest.fn(),
       post: jest.fn(),
       put: jest.fn(),
-      delete: jest.fn()
+      delete: jest.fn(),
     };
     mockOnAgentsSeeded = jest.fn();
   });
@@ -47,12 +47,12 @@ describe("useOfficialAgentSeeding", () => {
   });
   describe("storage null check", () => {
     it("should return early if storage is null", () => {
-      renderHook(
-        () => useOfficialAgentSeeding({
+      renderHook(() =>
+        useOfficialAgentSeeding({
           storage: null,
           httpClient: mockHttpClient,
-          apiBaseUrl: "https://api.example.com"
-        })
+          apiBaseUrl: "https://api.example.com",
+        }),
       );
       expect(mockHttpClient.get).not.toHaveBeenCalled();
     });
@@ -60,15 +60,17 @@ describe("useOfficialAgentSeeding", () => {
   describe("seeded flag check", () => {
     it("should skip seeding if already seeded", async () => {
       mockStorage.getItem = jest.fn().mockReturnValue("true");
-      renderHook(
-        () => useOfficialAgentSeeding({
+      renderHook(() =>
+        useOfficialAgentSeeding({
           storage: mockStorage,
           httpClient: mockHttpClient,
-          apiBaseUrl: "https://api.example.com"
-        })
+          apiBaseUrl: "https://api.example.com",
+        }),
       );
       await waitFor(() => {
-        expect(mockStorage.getItem).toHaveBeenCalledWith("officialAgentsSeeded");
+        expect(mockStorage.getItem).toHaveBeenCalledWith(
+          "officialAgentsSeeded",
+        );
       });
       expect(mockHttpClient.get).not.toHaveBeenCalled();
     });
@@ -76,17 +78,17 @@ describe("useOfficialAgentSeeding", () => {
       mockStorage.getItem = jest.fn().mockImplementation(() => {
         throw new Error("Storage error");
       });
-      renderHook(
-        () => useOfficialAgentSeeding({
+      renderHook(() =>
+        useOfficialAgentSeeding({
           storage: mockStorage,
           httpClient: mockHttpClient,
-          apiBaseUrl: "https://api.example.com"
-        })
+          apiBaseUrl: "https://api.example.com",
+        }),
       );
       await waitFor(() => {
         expect(mockLogger.error).toHaveBeenCalledWith(
           "Failed to check seeded key:",
-          expect.any(Error)
+          expect.any(Error),
         );
       });
       expect(mockHttpClient.get).toHaveBeenCalled();
@@ -98,17 +100,17 @@ describe("useOfficialAgentSeeding", () => {
         throw new Error("Remove error");
       });
       mockStorage.getItem = jest.fn().mockReturnValue(null);
-      renderHook(
-        () => useOfficialAgentSeeding({
+      renderHook(() =>
+        useOfficialAgentSeeding({
           storage: mockStorage,
           httpClient: mockHttpClient,
-          apiBaseUrl: "https://api.example.com"
-        })
+          apiBaseUrl: "https://api.example.com",
+        }),
       );
       await waitFor(() => {
         expect(mockLogger.error).toHaveBeenCalledWith(
           "Failed to remove seeded key:",
-          expect.any(Error)
+          expect.any(Error),
         );
       });
       expect(mockHttpClient.get).toHaveBeenCalled();
@@ -120,63 +122,65 @@ describe("useOfficialAgentSeeding", () => {
       const mockTemplates = [
         { id: "1", name: "Workflow 1", is_official: true },
         { id: "2", name: "Workflow 2", is_official: false },
-        { id: "3", name: "Workflow 3", is_official: true }
+        { id: "3", name: "Workflow 3", is_official: true },
       ];
       mockHttpClient.get = jest.fn().mockResolvedValue({
         ok: true,
-        json: async () => mockTemplates
+        json: async () => mockTemplates,
       });
-      renderHook(
-        () => useOfficialAgentSeeding({
+      renderHook(() =>
+        useOfficialAgentSeeding({
           storage: mockStorage,
           httpClient: mockHttpClient,
-          apiBaseUrl: "https://api.example.com"
-        })
+          apiBaseUrl: "https://api.example.com",
+        }),
       );
       await waitFor(() => {
         expect(mockHttpClient.get).toHaveBeenCalledWith(
-          "https://api.example.com/templates?sort_by=popular"
+          "https://api.example.com/templates?sort_by=popular",
         );
       });
       expect(mockHttpClient.get).toHaveBeenCalledWith(
-        "https://api.example.com/templates?sort_by=popular"
+        "https://api.example.com/templates?sort_by=popular",
       );
     });
     it("should handle fetch templates error - response not ok", async () => {
       mockStorage.getItem = jest.fn().mockReturnValue(null);
       mockHttpClient.get = jest.fn().mockResolvedValue({
         ok: false,
-        statusText: "Not Found"
+        statusText: "Not Found",
       });
-      renderHook(
-        () => useOfficialAgentSeeding({
+      renderHook(() =>
+        useOfficialAgentSeeding({
           storage: mockStorage,
           httpClient: mockHttpClient,
-          apiBaseUrl: "https://api.example.com"
-        })
+          apiBaseUrl: "https://api.example.com",
+        }),
       );
       await waitFor(() => {
         expect(mockLogger.error).toHaveBeenCalledWith(
           "[Marketplace] Failed to fetch templates:",
-          "Not Found"
+          "Not Found",
         );
       });
       expect(mockHttpClient.post).not.toHaveBeenCalled();
     });
     it("should handle fetch templates error - exception", async () => {
       mockStorage.getItem = jest.fn().mockReturnValue(null);
-      mockHttpClient.get = jest.fn().mockRejectedValue(new Error("Network error"));
-      renderHook(
-        () => useOfficialAgentSeeding({
+      mockHttpClient.get = jest
+        .fn()
+        .mockRejectedValue(new Error("Network error"));
+      renderHook(() =>
+        useOfficialAgentSeeding({
           storage: mockStorage,
           httpClient: mockHttpClient,
-          apiBaseUrl: "https://api.example.com"
-        })
+          apiBaseUrl: "https://api.example.com",
+        }),
       );
       await waitFor(() => {
         expect(mockLogger.error).toHaveBeenCalledWith(
           "[Marketplace] Failed to seed official agents:",
-          expect.any(Error)
+          expect.any(Error),
         );
       });
     });
@@ -184,21 +188,25 @@ describe("useOfficialAgentSeeding", () => {
       mockStorage.getItem = jest.fn().mockReturnValue(null);
       mockHttpClient.get = jest.fn().mockResolvedValue({
         ok: true,
-        json: async () => [
-          { id: "1", name: "Workflow 1", is_official: false }
-        ]
+        json: async () => [{ id: "1", name: "Workflow 1", is_official: false }],
       });
-      renderHook(
-        () => useOfficialAgentSeeding({
+      renderHook(() =>
+        useOfficialAgentSeeding({
           storage: mockStorage,
           httpClient: mockHttpClient,
-          apiBaseUrl: "https://api.example.com"
-        })
+          apiBaseUrl: "https://api.example.com",
+        }),
       );
       await waitFor(() => {
-        expect(mockSetLocalStorageItem).toHaveBeenCalledWith("officialAgentsSeeded", "true");
+        expect(mockSetLocalStorageItem).toHaveBeenCalledWith(
+          "officialAgentsSeeded",
+          "true",
+        );
       });
-      expect(mockSetLocalStorageItem).toHaveBeenCalledWith("officialAgentsSeeded", "true");
+      expect(mockSetLocalStorageItem).toHaveBeenCalledWith(
+        "officialAgentsSeeded",
+        "true",
+      );
     });
   });
   describe("workflow processing", () => {
@@ -212,12 +220,12 @@ describe("useOfficialAgentSeeding", () => {
           category: "automation",
           tags: ["test"],
           difficulty: "easy",
-          estimated_time: "5 min"
-        }
+          estimated_time: "5 min",
+        },
       ];
       mockHttpClient.get = jest.fn().mockResolvedValue({
         ok: true,
-        json: async () => mockTemplates
+        json: async () => mockTemplates,
       });
       const mockWorkflowDetail = {
         nodes: [
@@ -226,36 +234,36 @@ describe("useOfficialAgentSeeding", () => {
             type: "agent",
             agent_config: { model: "gpt-4" },
             name: "Agent 1",
-            description: "Test agent"
+            description: "Test agent",
           },
           {
             id: "node2",
-            type: "condition"
-          }
-        ]
+            type: "condition",
+          },
+        ],
       };
       mockHttpClient.post = jest.fn().mockResolvedValue({
         ok: true,
-        json: async () => mockWorkflowDetail
+        json: async () => mockWorkflowDetail,
       });
       mockStorage.getItem = jest.fn().mockImplementation((key) => {
         if (key === "officialAgentsSeeded") return null;
         if (key === STORAGE_KEYS.PUBLISHED_AGENTS) return null;
         return null;
       });
-      renderHook(
-        () => useOfficialAgentSeeding({
+      renderHook(() =>
+        useOfficialAgentSeeding({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "https://api.example.com",
-          onAgentsSeeded: mockOnAgentsSeeded
-        })
+          onAgentsSeeded: mockOnAgentsSeeded,
+        }),
       );
       await waitFor(() => {
         expect(mockHttpClient.post).toHaveBeenCalledWith(
           "https://api.example.com/templates/wf1/use",
           {},
-          { "Content-Type": "application/json" }
+          { "Content-Type": "application/json" },
         );
       });
       await waitFor(() => {
@@ -271,24 +279,24 @@ describe("useOfficialAgentSeeding", () => {
           {
             id: "wf1",
             name: "Workflow 1",
-            is_official: true
-          }
-        ]
+            is_official: true,
+          },
+        ],
       });
       mockHttpClient.post = jest.fn().mockResolvedValue({
         ok: false,
-        statusText: "Not Found"
+        statusText: "Not Found",
       });
-      renderHook(
-        () => useOfficialAgentSeeding({
+      renderHook(() =>
+        useOfficialAgentSeeding({
           storage: mockStorage,
           httpClient: mockHttpClient,
-          apiBaseUrl: "https://api.example.com"
-        })
+          apiBaseUrl: "https://api.example.com",
+        }),
       );
       await waitFor(() => {
         expect(mockLogger.error).toHaveBeenCalledWith(
-          "[Marketplace] Failed to fetch workflow wf1: Not Found"
+          "[Marketplace] Failed to fetch workflow wf1: Not Found",
         );
       });
     });
@@ -300,22 +308,24 @@ describe("useOfficialAgentSeeding", () => {
           {
             id: "wf1",
             name: "Workflow 1",
-            is_official: true
-          }
-        ]
+            is_official: true,
+          },
+        ],
       });
-      mockHttpClient.post = jest.fn().mockRejectedValue(new Error("Network error"));
-      renderHook(
-        () => useOfficialAgentSeeding({
+      mockHttpClient.post = jest
+        .fn()
+        .mockRejectedValue(new Error("Network error"));
+      renderHook(() =>
+        useOfficialAgentSeeding({
           storage: mockStorage,
           httpClient: mockHttpClient,
-          apiBaseUrl: "https://api.example.com"
-        })
+          apiBaseUrl: "https://api.example.com",
+        }),
       );
       await waitFor(() => {
         expect(mockLogger.error).toHaveBeenCalledWith(
           expect.stringContaining("[Marketplace] Failed to fetch workflow"),
-          expect.any(Error)
+          expect.any(Error),
         );
       });
     });
@@ -327,25 +337,28 @@ describe("useOfficialAgentSeeding", () => {
           {
             id: "wf1",
             name: "Workflow 1",
-            is_official: true
-          }
-        ]
+            is_official: true,
+          },
+        ],
       });
       mockHttpClient.post = jest.fn().mockResolvedValue({
         ok: true,
         json: async () => ({
           // No nodes property
-        })
+        }),
       });
-      renderHook(
-        () => useOfficialAgentSeeding({
+      renderHook(() =>
+        useOfficialAgentSeeding({
           storage: mockStorage,
           httpClient: mockHttpClient,
-          apiBaseUrl: "https://api.example.com"
-        })
+          apiBaseUrl: "https://api.example.com",
+        }),
       );
       await waitFor(() => {
-        expect(mockSetLocalStorageItem).toHaveBeenCalledWith("officialAgentsSeeded", "true");
+        expect(mockSetLocalStorageItem).toHaveBeenCalledWith(
+          "officialAgentsSeeded",
+          "true",
+        );
       });
     });
     it("should handle workflow with nodes but not an array", async () => {
@@ -356,27 +369,33 @@ describe("useOfficialAgentSeeding", () => {
           {
             id: "wf1",
             name: "Workflow 1",
-            is_official: true
-          }
-        ]
+            is_official: true,
+          },
+        ],
       });
       mockHttpClient.post = jest.fn().mockResolvedValue({
         ok: true,
         json: async () => ({
-          nodes: "not an array"
-        })
+          nodes: "not an array",
+        }),
       });
-      renderHook(
-        () => useOfficialAgentSeeding({
+      renderHook(() =>
+        useOfficialAgentSeeding({
           storage: mockStorage,
           httpClient: mockHttpClient,
-          apiBaseUrl: "https://api.example.com"
-        })
+          apiBaseUrl: "https://api.example.com",
+        }),
       );
       await waitFor(() => {
-        expect(mockSetLocalStorageItem).toHaveBeenCalledWith("officialAgentsSeeded", "true");
+        expect(mockSetLocalStorageItem).toHaveBeenCalledWith(
+          "officialAgentsSeeded",
+          "true",
+        );
       });
-      expect(mockSetLocalStorageItem).toHaveBeenCalledWith("officialAgentsSeeded", "true");
+      expect(mockSetLocalStorageItem).toHaveBeenCalledWith(
+        "officialAgentsSeeded",
+        "true",
+      );
     });
   });
   describe("agent node extraction", () => {
@@ -392,9 +411,9 @@ describe("useOfficialAgentSeeding", () => {
             category: "automation",
             tags: ["test"],
             difficulty: "easy",
-            estimated_time: "5 min"
-          }
-        ]
+            estimated_time: "5 min",
+          },
+        ],
       });
       const mockWorkflowDetail = {
         nodes: [
@@ -403,25 +422,25 @@ describe("useOfficialAgentSeeding", () => {
             type: "agent",
             agent_config: { model: "gpt-4" },
             name: "Agent 1",
-            description: "Test agent"
-          }
-        ]
+            description: "Test agent",
+          },
+        ],
       };
       mockHttpClient.post = jest.fn().mockResolvedValue({
         ok: true,
-        json: async () => mockWorkflowDetail
+        json: async () => mockWorkflowDetail,
       });
       mockStorage.getItem = jest.fn().mockImplementation((key) => {
         if (key === "officialAgentsSeeded") return null;
         if (key === STORAGE_KEYS.PUBLISHED_AGENTS) return null;
         return null;
       });
-      renderHook(
-        () => useOfficialAgentSeeding({
+      renderHook(() =>
+        useOfficialAgentSeeding({
           storage: mockStorage,
           httpClient: mockHttpClient,
-          apiBaseUrl: "https://api.example.com"
-        })
+          apiBaseUrl: "https://api.example.com",
+        }),
       );
       await waitFor(() => {
         expect(mockStorage.setItem).toHaveBeenCalled();
@@ -439,9 +458,9 @@ describe("useOfficialAgentSeeding", () => {
             category: "automation",
             tags: ["test"],
             difficulty: "easy",
-            estimated_time: "5 min"
-          }
-        ]
+            estimated_time: "5 min",
+          },
+        ],
       });
       const mockWorkflowDetail = {
         nodes: [
@@ -451,26 +470,26 @@ describe("useOfficialAgentSeeding", () => {
               type: "agent",
               agent_config: { model: "gpt-4" },
               name: "Agent 1",
-              description: "Test agent"
-            }
-          }
-        ]
+              description: "Test agent",
+            },
+          },
+        ],
       };
       mockHttpClient.post = jest.fn().mockResolvedValue({
         ok: true,
-        json: async () => mockWorkflowDetail
+        json: async () => mockWorkflowDetail,
       });
       mockStorage.getItem = jest.fn().mockImplementation((key) => {
         if (key === "officialAgentsSeeded") return null;
         if (key === STORAGE_KEYS.PUBLISHED_AGENTS) return null;
         return null;
       });
-      renderHook(
-        () => useOfficialAgentSeeding({
+      renderHook(() =>
+        useOfficialAgentSeeding({
           storage: mockStorage,
           httpClient: mockHttpClient,
-          apiBaseUrl: "https://api.example.com"
-        })
+          apiBaseUrl: "https://api.example.com",
+        }),
       );
       await waitFor(() => {
         expect(mockStorage.setItem).toHaveBeenCalled();
@@ -484,41 +503,44 @@ describe("useOfficialAgentSeeding", () => {
           {
             id: "wf1",
             name: "Workflow 1",
-            is_official: true
-          }
-        ]
+            is_official: true,
+          },
+        ],
       });
       const mockWorkflowDetail = {
         nodes: [
           {
             id: "node1",
-            type: "condition"
+            type: "condition",
           },
           {
             id: "node2",
-            type: "agent"
+            type: "agent",
             // Missing agent_config
-          }
-        ]
+          },
+        ],
       };
       mockHttpClient.post = jest.fn().mockResolvedValue({
         ok: true,
-        json: async () => mockWorkflowDetail
+        json: async () => mockWorkflowDetail,
       });
       mockStorage.getItem = jest.fn().mockImplementation((key) => {
         if (key === "officialAgentsSeeded") return null;
         if (key === STORAGE_KEYS.PUBLISHED_AGENTS) return null;
         return null;
       });
-      renderHook(
-        () => useOfficialAgentSeeding({
+      renderHook(() =>
+        useOfficialAgentSeeding({
           storage: mockStorage,
           httpClient: mockHttpClient,
-          apiBaseUrl: "https://api.example.com"
-        })
+          apiBaseUrl: "https://api.example.com",
+        }),
       );
       await waitFor(() => {
-        expect(mockSetLocalStorageItem).toHaveBeenCalledWith("officialAgentsSeeded", "true");
+        expect(mockSetLocalStorageItem).toHaveBeenCalledWith(
+          "officialAgentsSeeded",
+          "true",
+        );
       });
     });
   });
@@ -535,9 +557,9 @@ describe("useOfficialAgentSeeding", () => {
             category: "automation",
             tags: ["test"],
             difficulty: "easy",
-            estimated_time: "5 min"
-          }
-        ]
+            estimated_time: "5 min",
+          },
+        ],
       });
       const mockWorkflowDetail = {
         nodes: [
@@ -546,25 +568,25 @@ describe("useOfficialAgentSeeding", () => {
             type: "agent",
             agent_config: { model: "gpt-4" },
             name: "Agent 1",
-            description: "Test agent"
-          }
-        ]
+            description: "Test agent",
+          },
+        ],
       };
       mockHttpClient.post = jest.fn().mockResolvedValue({
         ok: true,
-        json: async () => mockWorkflowDetail
+        json: async () => mockWorkflowDetail,
       });
       mockStorage.getItem = jest.fn().mockImplementation((key) => {
         if (key === "officialAgentsSeeded") return null;
         if (key === STORAGE_KEYS.PUBLISHED_AGENTS) return null;
         return null;
       });
-      renderHook(
-        () => useOfficialAgentSeeding({
+      renderHook(() =>
+        useOfficialAgentSeeding({
           storage: mockStorage,
           httpClient: mockHttpClient,
-          apiBaseUrl: "https://api.example.com"
-        })
+          apiBaseUrl: "https://api.example.com",
+        }),
       );
       await waitFor(() => {
         expect(mockStorage.setItem).toHaveBeenCalled();
@@ -585,9 +607,9 @@ describe("useOfficialAgentSeeding", () => {
             category: "automation",
             tags: ["test"],
             difficulty: "easy",
-            estimated_time: "5 min"
-          }
-        ]
+            estimated_time: "5 min",
+          },
+        ],
       });
       const mockWorkflowDetail = {
         nodes: [
@@ -595,25 +617,25 @@ describe("useOfficialAgentSeeding", () => {
             // No id property
             type: "agent",
             agent_config: { model: "gpt-4" },
-            name: "Agent 1"
-          }
-        ]
+            name: "Agent 1",
+          },
+        ],
       };
       mockHttpClient.post = jest.fn().mockResolvedValue({
         ok: true,
-        json: async () => mockWorkflowDetail
+        json: async () => mockWorkflowDetail,
       });
       mockStorage.getItem = jest.fn().mockImplementation((key) => {
         if (key === "officialAgentsSeeded") return null;
         if (key === STORAGE_KEYS.PUBLISHED_AGENTS) return null;
         return null;
       });
-      renderHook(
-        () => useOfficialAgentSeeding({
+      renderHook(() =>
+        useOfficialAgentSeeding({
           storage: mockStorage,
           httpClient: mockHttpClient,
-          apiBaseUrl: "https://api.example.com"
-        })
+          apiBaseUrl: "https://api.example.com",
+        }),
       );
       await waitFor(() => {
         expect(mockStorage.setItem).toHaveBeenCalled();
@@ -636,9 +658,9 @@ describe("useOfficialAgentSeeding", () => {
             category: "automation",
             tags: ["test"],
             difficulty: "easy",
-            estimated_time: "5 min"
-          }
-        ]
+            estimated_time: "5 min",
+          },
+        ],
       });
       const mockWorkflowDetail = {
         nodes: [
@@ -646,17 +668,17 @@ describe("useOfficialAgentSeeding", () => {
             id: "node1",
             type: "agent",
             agent_config: { model: "gpt-4" },
-            name: "Agent 1"
-          }
-        ]
+            name: "Agent 1",
+          },
+        ],
       };
       mockHttpClient.post = jest.fn().mockResolvedValue({
         ok: true,
-        json: async () => mockWorkflowDetail
+        json: async () => mockWorkflowDetail,
       });
       const existingAgent = {
         id: "official_wf1_node1",
-        name: "Existing Agent"
+        name: "Existing Agent",
       };
       mockStorage.getItem = jest.fn().mockImplementation((key) => {
         if (key === "officialAgentsSeeded") return null;
@@ -665,15 +687,18 @@ describe("useOfficialAgentSeeding", () => {
         }
         return null;
       });
-      renderHook(
-        () => useOfficialAgentSeeding({
+      renderHook(() =>
+        useOfficialAgentSeeding({
           storage: mockStorage,
           httpClient: mockHttpClient,
-          apiBaseUrl: "https://api.example.com"
-        })
+          apiBaseUrl: "https://api.example.com",
+        }),
       );
       await waitFor(() => {
-        expect(mockSetLocalStorageItem).toHaveBeenCalledWith("officialAgentsSeeded", "true");
+        expect(mockSetLocalStorageItem).toHaveBeenCalledWith(
+          "officialAgentsSeeded",
+          "true",
+        );
       });
       expect(mockStorage.setItem).not.toHaveBeenCalled();
     });
@@ -691,11 +716,11 @@ describe("useOfficialAgentSeeding", () => {
         estimated_time: "10 min",
         author_id: "author1",
         author_name: "Author Name",
-        created_at: "2024-01-01T00:00:00Z"
+        created_at: "2024-01-01T00:00:00Z",
       };
       mockHttpClient.get = jest.fn().mockResolvedValue({
         ok: true,
-        json: async () => [mockTemplate]
+        json: async () => [mockTemplate],
       });
       const mockWorkflowDetail = {
         nodes: [
@@ -704,25 +729,25 @@ describe("useOfficialAgentSeeding", () => {
             type: "agent",
             agent_config: { model: "gpt-4", temperature: 0.7 },
             name: "Agent Name",
-            description: "Agent Description"
-          }
-        ]
+            description: "Agent Description",
+          },
+        ],
       };
       mockHttpClient.post = jest.fn().mockResolvedValue({
         ok: true,
-        json: async () => mockWorkflowDetail
+        json: async () => mockWorkflowDetail,
       });
       mockStorage.getItem = jest.fn().mockImplementation((key) => {
         if (key === "officialAgentsSeeded") return null;
         if (key === STORAGE_KEYS.PUBLISHED_AGENTS) return null;
         return null;
       });
-      renderHook(
-        () => useOfficialAgentSeeding({
+      renderHook(() =>
+        useOfficialAgentSeeding({
           storage: mockStorage,
           httpClient: mockHttpClient,
-          apiBaseUrl: "https://api.example.com"
-        })
+          apiBaseUrl: "https://api.example.com",
+        }),
       );
       await waitFor(() => {
         expect(mockStorage.setItem).toHaveBeenCalled();
@@ -754,36 +779,36 @@ describe("useOfficialAgentSeeding", () => {
           {
             id: "wf1",
             name: "Workflow 1",
-            is_official: true
+            is_official: true,
             // Missing category, tags, difficulty, etc.
-          }
-        ]
+          },
+        ],
       });
       const mockWorkflowDetail = {
         nodes: [
           {
             id: "node1",
             type: "agent",
-            agent_config: {}
+            agent_config: {},
             // Missing name, description
-          }
-        ]
+          },
+        ],
       };
       mockHttpClient.post = jest.fn().mockResolvedValue({
         ok: true,
-        json: async () => mockWorkflowDetail
+        json: async () => mockWorkflowDetail,
       });
       mockStorage.getItem = jest.fn().mockImplementation((key) => {
         if (key === "officialAgentsSeeded") return null;
         if (key === STORAGE_KEYS.PUBLISHED_AGENTS) return null;
         return null;
       });
-      renderHook(
-        () => useOfficialAgentSeeding({
+      renderHook(() =>
+        useOfficialAgentSeeding({
           storage: mockStorage,
           httpClient: mockHttpClient,
-          apiBaseUrl: "https://api.example.com"
-        })
+          apiBaseUrl: "https://api.example.com",
+        }),
       );
       await waitFor(() => {
         expect(mockStorage.setItem).toHaveBeenCalled();
@@ -809,9 +834,9 @@ describe("useOfficialAgentSeeding", () => {
             category: "automation",
             tags: [],
             difficulty: "easy",
-            estimated_time: "5 min"
-          }
-        ]
+            estimated_time: "5 min",
+          },
+        ],
       });
       const mockWorkflowDetail = {
         nodes: [
@@ -820,27 +845,27 @@ describe("useOfficialAgentSeeding", () => {
               id: "node1",
               type: "agent",
               agent_config: {},
-              label: "Node Label"
+              label: "Node Label",
               // Use label as fallback
-            }
-          }
-        ]
+            },
+          },
+        ],
       };
       mockHttpClient.post = jest.fn().mockResolvedValue({
         ok: true,
-        json: async () => mockWorkflowDetail
+        json: async () => mockWorkflowDetail,
       });
       mockStorage.getItem = jest.fn().mockImplementation((key) => {
         if (key === "officialAgentsSeeded") return null;
         if (key === STORAGE_KEYS.PUBLISHED_AGENTS) return null;
         return null;
       });
-      renderHook(
-        () => useOfficialAgentSeeding({
+      renderHook(() =>
+        useOfficialAgentSeeding({
           storage: mockStorage,
           httpClient: mockHttpClient,
-          apiBaseUrl: "https://api.example.com"
-        })
+          apiBaseUrl: "https://api.example.com",
+        }),
       );
       await waitFor(() => {
         expect(mockStorage.setItem).toHaveBeenCalled();
@@ -863,9 +888,9 @@ describe("useOfficialAgentSeeding", () => {
             category: "automation",
             tags: [],
             difficulty: "easy",
-            estimated_time: "5 min"
-          }
-        ]
+            estimated_time: "5 min",
+          },
+        ],
       });
       const mockWorkflowDetail = {
         nodes: [
@@ -873,19 +898,19 @@ describe("useOfficialAgentSeeding", () => {
             id: "node1",
             type: "agent",
             agent_config: {},
-            name: "Agent 1"
-          }
-        ]
+            name: "Agent 1",
+          },
+        ],
       };
       mockHttpClient.post = jest.fn().mockResolvedValue({
         ok: true,
-        json: async () => mockWorkflowDetail
+        json: async () => mockWorkflowDetail,
       });
       const existingAgents = [
         {
           id: "existing1",
-          name: "Existing Agent"
-        }
+          name: "Existing Agent",
+        },
       ];
       mockStorage.getItem = jest.fn().mockImplementation((key) => {
         if (key === "officialAgentsSeeded") return null;
@@ -894,12 +919,12 @@ describe("useOfficialAgentSeeding", () => {
         }
         return null;
       });
-      renderHook(
-        () => useOfficialAgentSeeding({
+      renderHook(() =>
+        useOfficialAgentSeeding({
           storage: mockStorage,
           httpClient: mockHttpClient,
-          apiBaseUrl: "https://api.example.com"
-        })
+          apiBaseUrl: "https://api.example.com",
+        }),
       );
       await waitFor(() => {
         expect(mockStorage.setItem).toHaveBeenCalled();
@@ -922,9 +947,9 @@ describe("useOfficialAgentSeeding", () => {
             category: "automation",
             tags: [],
             difficulty: "easy",
-            estimated_time: "5 min"
-          }
-        ]
+            estimated_time: "5 min",
+          },
+        ],
       });
       const mockWorkflowDetail = {
         nodes: [
@@ -932,13 +957,13 @@ describe("useOfficialAgentSeeding", () => {
             id: "node1",
             type: "agent",
             agent_config: {},
-            name: "Agent 1"
-          }
-        ]
+            name: "Agent 1",
+          },
+        ],
       };
       mockHttpClient.post = jest.fn().mockResolvedValue({
         ok: true,
-        json: async () => mockWorkflowDetail
+        json: async () => mockWorkflowDetail,
       });
       let callCount = 0;
       mockStorage.getItem = jest.fn().mockImplementation((key) => {
@@ -951,12 +976,12 @@ describe("useOfficialAgentSeeding", () => {
         return null;
       });
       const storageRef = mockStorage;
-      renderHook(
-        () => useOfficialAgentSeeding({
+      renderHook(() =>
+        useOfficialAgentSeeding({
           storage: storageRef,
           httpClient: mockHttpClient,
-          apiBaseUrl: "https://api.example.com"
-        })
+          apiBaseUrl: "https://api.example.com",
+        }),
       );
       await waitFor(() => {
         expect(mockHttpClient.post).toHaveBeenCalled();
@@ -976,9 +1001,9 @@ describe("useOfficialAgentSeeding", () => {
             category: "automation",
             tags: ["ai", "automation"],
             difficulty: "easy",
-            estimated_time: "5 min"
-          }
-        ]
+            estimated_time: "5 min",
+          },
+        ],
       });
       const mockWorkflowDetail = {
         nodes: [
@@ -986,25 +1011,25 @@ describe("useOfficialAgentSeeding", () => {
             id: "node1",
             type: "agent",
             agent_config: {},
-            name: "Agent 1"
-          }
-        ]
+            name: "Agent 1",
+          },
+        ],
       };
       mockHttpClient.post = jest.fn().mockResolvedValue({
         ok: true,
-        json: async () => mockWorkflowDetail
+        json: async () => mockWorkflowDetail,
       });
       mockStorage.getItem = jest.fn().mockImplementation((key) => {
         if (key === "officialAgentsSeeded") return null;
         if (key === STORAGE_KEYS.PUBLISHED_AGENTS) return null;
         return null;
       });
-      renderHook(
-        () => useOfficialAgentSeeding({
+      renderHook(() =>
+        useOfficialAgentSeeding({
           storage: mockStorage,
           httpClient: mockHttpClient,
-          apiBaseUrl: "https://api.example.com"
-        })
+          apiBaseUrl: "https://api.example.com",
+        }),
       );
       await waitFor(() => {
         expect(mockStorage.setItem).toHaveBeenCalled();
@@ -1031,9 +1056,9 @@ describe("useOfficialAgentSeeding", () => {
             category: "automation",
             tags: [],
             difficulty: "easy",
-            estimated_time: "5 min"
-          }
-        ]
+            estimated_time: "5 min",
+          },
+        ],
       });
       const mockWorkflowDetail = {
         nodes: [
@@ -1041,26 +1066,26 @@ describe("useOfficialAgentSeeding", () => {
             id: "node1",
             type: "agent",
             agent_config: {},
-            name: "Agent 1"
-          }
-        ]
+            name: "Agent 1",
+          },
+        ],
       };
       mockHttpClient.post = jest.fn().mockResolvedValue({
         ok: true,
-        json: async () => mockWorkflowDetail
+        json: async () => mockWorkflowDetail,
       });
       mockStorage.getItem = jest.fn().mockImplementation((key) => {
         if (key === "officialAgentsSeeded") return null;
         if (key === STORAGE_KEYS.PUBLISHED_AGENTS) return null;
         return null;
       });
-      renderHook(
-        () => useOfficialAgentSeeding({
+      renderHook(() =>
+        useOfficialAgentSeeding({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "https://api.example.com",
-          onAgentsSeeded: mockOnAgentsSeeded
-        })
+          onAgentsSeeded: mockOnAgentsSeeded,
+        }),
       );
       await waitFor(() => {
         expect(mockOnAgentsSeeded).toHaveBeenCalled();
@@ -1074,38 +1099,41 @@ describe("useOfficialAgentSeeding", () => {
           {
             id: "wf1",
             name: "Workflow 1",
-            is_official: true
-          }
-        ]
+            is_official: true,
+          },
+        ],
       });
       const mockWorkflowDetail = {
         nodes: [
           {
             id: "node1",
-            type: "condition"
+            type: "condition",
             // Not an agent
-          }
-        ]
+          },
+        ],
       };
       mockHttpClient.post = jest.fn().mockResolvedValue({
         ok: true,
-        json: async () => mockWorkflowDetail
+        json: async () => mockWorkflowDetail,
       });
       mockStorage.getItem = jest.fn().mockImplementation((key) => {
         if (key === "officialAgentsSeeded") return null;
         if (key === STORAGE_KEYS.PUBLISHED_AGENTS) return null;
         return null;
       });
-      renderHook(
-        () => useOfficialAgentSeeding({
+      renderHook(() =>
+        useOfficialAgentSeeding({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "https://api.example.com",
-          onAgentsSeeded: mockOnAgentsSeeded
-        })
+          onAgentsSeeded: mockOnAgentsSeeded,
+        }),
       );
       await waitFor(() => {
-        expect(mockSetLocalStorageItem).toHaveBeenCalledWith("officialAgentsSeeded", "true");
+        expect(mockSetLocalStorageItem).toHaveBeenCalledWith(
+          "officialAgentsSeeded",
+          "true",
+        );
       });
       expect(mockOnAgentsSeeded).not.toHaveBeenCalled();
     });
@@ -1121,9 +1149,9 @@ describe("useOfficialAgentSeeding", () => {
             category: "automation",
             tags: [],
             difficulty: "easy",
-            estimated_time: "5 min"
-          }
-        ]
+            estimated_time: "5 min",
+          },
+        ],
       });
       const mockWorkflowDetail = {
         nodes: [
@@ -1131,26 +1159,26 @@ describe("useOfficialAgentSeeding", () => {
             id: "node1",
             type: "agent",
             agent_config: {},
-            name: "Agent 1"
-          }
-        ]
+            name: "Agent 1",
+          },
+        ],
       };
       mockHttpClient.post = jest.fn().mockResolvedValue({
         ok: true,
-        json: async () => mockWorkflowDetail
+        json: async () => mockWorkflowDetail,
       });
       mockStorage.getItem = jest.fn().mockImplementation((key) => {
         if (key === "officialAgentsSeeded") return null;
         if (key === STORAGE_KEYS.PUBLISHED_AGENTS) return null;
         return null;
       });
-      renderHook(
-        () => useOfficialAgentSeeding({
+      renderHook(() =>
+        useOfficialAgentSeeding({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "https://api.example.com",
-          onAgentsSeeded: void 0
-        })
+          onAgentsSeeded: void 0,
+        }),
       );
       await waitFor(() => {
         expect(mockStorage.setItem).toHaveBeenCalled();
@@ -1170,9 +1198,9 @@ describe("useOfficialAgentSeeding", () => {
             category: "automation",
             tags: [],
             difficulty: "easy",
-            estimated_time: "5 min"
-          }
-        ]
+            estimated_time: "5 min",
+          },
+        ],
       });
       const mockWorkflowDetail = {
         nodes: [
@@ -1180,28 +1208,31 @@ describe("useOfficialAgentSeeding", () => {
             id: "node1",
             type: "agent",
             agent_config: {},
-            name: "Agent 1"
-          }
-        ]
+            name: "Agent 1",
+          },
+        ],
       };
       mockHttpClient.post = jest.fn().mockResolvedValue({
         ok: true,
-        json: async () => mockWorkflowDetail
+        json: async () => mockWorkflowDetail,
       });
       mockStorage.getItem = jest.fn().mockImplementation((key) => {
         if (key === "officialAgentsSeeded") return null;
         if (key === STORAGE_KEYS.PUBLISHED_AGENTS) return null;
         return null;
       });
-      renderHook(
-        () => useOfficialAgentSeeding({
+      renderHook(() =>
+        useOfficialAgentSeeding({
           storage: mockStorage,
           httpClient: mockHttpClient,
-          apiBaseUrl: "https://api.example.com"
-        })
+          apiBaseUrl: "https://api.example.com",
+        }),
       );
       await waitFor(() => {
-        expect(mockSetLocalStorageItem).toHaveBeenCalledWith("officialAgentsSeeded", "true");
+        expect(mockSetLocalStorageItem).toHaveBeenCalledWith(
+          "officialAgentsSeeded",
+          "true",
+        );
       });
     });
   });
@@ -1218,7 +1249,7 @@ describe("useOfficialAgentSeeding", () => {
             category: "automation",
             tags: [],
             difficulty: "easy",
-            estimated_time: "5 min"
+            estimated_time: "5 min",
           },
           {
             id: "wf2",
@@ -1227,52 +1258,55 @@ describe("useOfficialAgentSeeding", () => {
             category: "automation",
             tags: [],
             difficulty: "easy",
-            estimated_time: "5 min"
-          }
-        ]
+            estimated_time: "5 min",
+          },
+        ],
       });
-      mockHttpClient.post = jest.fn().mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({
-          nodes: [
-            {
-              id: "node1",
-              type: "agent",
-              agent_config: {},
-              name: "Agent 1"
-            },
-            {
-              id: "node2",
-              type: "agent",
-              agent_config: {},
-              name: "Agent 2"
-            }
-          ]
+      mockHttpClient.post = jest
+        .fn()
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({
+            nodes: [
+              {
+                id: "node1",
+                type: "agent",
+                agent_config: {},
+                name: "Agent 1",
+              },
+              {
+                id: "node2",
+                type: "agent",
+                agent_config: {},
+                name: "Agent 2",
+              },
+            ],
+          }),
         })
-      }).mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({
-          nodes: [
-            {
-              id: "node3",
-              type: "agent",
-              agent_config: {},
-              name: "Agent 3"
-            }
-          ]
-        })
-      });
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({
+            nodes: [
+              {
+                id: "node3",
+                type: "agent",
+                agent_config: {},
+                name: "Agent 3",
+              },
+            ],
+          }),
+        });
       mockStorage.getItem = jest.fn().mockImplementation((key) => {
         if (key === "officialAgentsSeeded") return null;
         if (key === STORAGE_KEYS.PUBLISHED_AGENTS) return null;
         return null;
       });
-      renderHook(
-        () => useOfficialAgentSeeding({
+      renderHook(() =>
+        useOfficialAgentSeeding({
           storage: mockStorage,
           httpClient: mockHttpClient,
-          apiBaseUrl: "https://api.example.com"
-        })
+          apiBaseUrl: "https://api.example.com",
+        }),
       );
       await waitFor(() => {
         expect(mockStorage.setItem).toHaveBeenCalled();
@@ -1293,9 +1327,9 @@ describe("useOfficialAgentSeeding", () => {
             category: "automation",
             tags: [],
             difficulty: "easy",
-            estimated_time: "5 min"
-          }
-        ]
+            estimated_time: "5 min",
+          },
+        ],
       });
       const mockWorkflowDetail = {
         nodes: [
@@ -1303,13 +1337,13 @@ describe("useOfficialAgentSeeding", () => {
             id: "node1",
             type: "agent",
             agent_config: {},
-            name: "Agent 1"
-          }
-        ]
+            name: "Agent 1",
+          },
+        ],
       };
       mockHttpClient.post = jest.fn().mockResolvedValue({
         ok: true,
-        json: async () => mockWorkflowDetail
+        json: async () => mockWorkflowDetail,
       });
       mockStorage.getItem = jest.fn().mockImplementation((key) => {
         if (key === "officialAgentsSeeded") return null;
@@ -1318,20 +1352,23 @@ describe("useOfficialAgentSeeding", () => {
         }
         return null;
       });
-      renderHook(
-        () => useOfficialAgentSeeding({
+      renderHook(() =>
+        useOfficialAgentSeeding({
           storage: mockStorage,
           httpClient: mockHttpClient,
-          apiBaseUrl: "https://api.example.com"
-        })
+          apiBaseUrl: "https://api.example.com",
+        }),
       );
       await waitFor(() => {
         expect(mockLogger.error).toHaveBeenCalledWith(
           expect.stringContaining("[Marketplace] Failed to fetch workflow"),
-          expect.any(Error)
+          expect.any(Error),
         );
       });
-      expect(mockSetLocalStorageItem).toHaveBeenCalledWith("officialAgentsSeeded", "true");
+      expect(mockSetLocalStorageItem).toHaveBeenCalledWith(
+        "officialAgentsSeeded",
+        "true",
+      );
     });
   });
 });

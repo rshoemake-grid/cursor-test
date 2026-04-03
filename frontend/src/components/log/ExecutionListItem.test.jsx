@@ -1,4 +1,3 @@
-import { jsx } from "react/jsx-runtime";
 import { render, screen, fireEvent } from "@testing-library/react";
 import ExecutionListItem from "./ExecutionListItem";
 describe("ExecutionListItem", () => {
@@ -10,7 +9,7 @@ describe("ExecutionListItem", () => {
     completed_at: "2024-01-01T10:00:05Z",
     node_states: {},
     variables: {},
-    logs: []
+    logs: [],
   };
   const mockOnExecutionClick = jest.fn();
   beforeEach(() => {
@@ -18,13 +17,10 @@ describe("ExecutionListItem", () => {
   });
   it("should render execution details", () => {
     render(
-      /* @__PURE__ */ jsx(
-        ExecutionListItem,
-        {
-          execution: mockExecution,
-          onExecutionClick: mockOnExecutionClick
-        }
-      )
+      <ExecutionListItem
+        execution={mockExecution}
+        onExecutionClick={mockOnExecutionClick}
+      />,
     );
     expect(screen.getByText(/exec-123/)).toBeInTheDocument();
     expect(screen.getByText(/Workflow:/)).toBeInTheDocument();
@@ -32,13 +28,10 @@ describe("ExecutionListItem", () => {
   });
   it("should call onExecutionClick when item is clicked", () => {
     const { container } = render(
-      /* @__PURE__ */ jsx(
-        ExecutionListItem,
-        {
-          execution: mockExecution,
-          onExecutionClick: mockOnExecutionClick
-        }
-      )
+      <ExecutionListItem
+        execution={mockExecution}
+        onExecutionClick={mockOnExecutionClick}
+      />,
     );
     const item = container.querySelector('div[class*="cursor-pointer"]');
     if (item) {
@@ -52,13 +45,10 @@ describe("ExecutionListItem", () => {
   });
   it("should call onExecutionClick when View button is clicked", () => {
     render(
-      /* @__PURE__ */ jsx(
-        ExecutionListItem,
-        {
-          execution: mockExecution,
-          onExecutionClick: mockOnExecutionClick
-        }
-      )
+      <ExecutionListItem
+        execution={mockExecution}
+        onExecutionClick={mockOnExecutionClick}
+      />,
     );
     const viewButton = screen.getByText("View");
     fireEvent.click(viewButton);
@@ -67,16 +57,13 @@ describe("ExecutionListItem", () => {
   it("should display current node when present", () => {
     const executionWithNode = {
       ...mockExecution,
-      current_node: "node-1"
+      current_node: "node-1",
     };
     render(
-      /* @__PURE__ */ jsx(
-        ExecutionListItem,
-        {
-          execution: executionWithNode,
-          onExecutionClick: mockOnExecutionClick
-        }
-      )
+      <ExecutionListItem
+        execution={executionWithNode}
+        onExecutionClick={mockOnExecutionClick}
+      />,
     );
     expect(screen.getByText("Current Node:")).toBeInTheDocument();
     expect(screen.getByText("node-1")).toBeInTheDocument();
@@ -87,87 +74,75 @@ describe("ExecutionListItem", () => {
       status: "running",
       completed_at: void 0,
       node_states: {
-        node1: { status: "completed" },
-        node2: { status: "running" },
-        node3: { status: "pending" }
-      }
+        node1: {
+          status: "completed",
+        },
+        node2: {
+          status: "running",
+        },
+        node3: {
+          status: "pending",
+        },
+      },
     };
     render(
-      /* @__PURE__ */ jsx(
-        ExecutionListItem,
-        {
-          execution: runningExecution,
-          onExecutionClick: mockOnExecutionClick
-        }
-      )
+      <ExecutionListItem
+        execution={runningExecution}
+        onExecutionClick={mockOnExecutionClick}
+      />,
     );
     expect(screen.getByText("Progress:")).toBeInTheDocument();
   });
   it("should not display progress bar for non-running executions", () => {
     render(
-      /* @__PURE__ */ jsx(
-        ExecutionListItem,
-        {
-          execution: mockExecution,
-          onExecutionClick: mockOnExecutionClick
-        }
-      )
+      <ExecutionListItem
+        execution={mockExecution}
+        onExecutionClick={mockOnExecutionClick}
+      />,
     );
     expect(screen.queryByText("Progress:")).not.toBeInTheDocument();
   });
   it("should display completed timestamp when present", () => {
     render(
-      /* @__PURE__ */ jsx(
-        ExecutionListItem,
-        {
-          execution: mockExecution,
-          onExecutionClick: mockOnExecutionClick
-        }
-      )
+      <ExecutionListItem
+        execution={mockExecution}
+        onExecutionClick={mockOnExecutionClick}
+      />,
     );
     expect(screen.getByText(/Completed:/)).toBeInTheDocument();
   });
   it("should not display completed timestamp when absent", () => {
     const executionWithoutCompletion = {
       ...mockExecution,
-      completed_at: void 0
+      completed_at: void 0,
     };
     render(
-      /* @__PURE__ */ jsx(
-        ExecutionListItem,
-        {
-          execution: executionWithoutCompletion,
-          onExecutionClick: mockOnExecutionClick
-        }
-      )
+      <ExecutionListItem
+        execution={executionWithoutCompletion}
+        onExecutionClick={mockOnExecutionClick}
+      />,
     );
     expect(screen.queryByText(/Completed:/)).not.toBeInTheDocument();
   });
   it("should display duration", () => {
     render(
-      /* @__PURE__ */ jsx(
-        ExecutionListItem,
-        {
-          execution: mockExecution,
-          onExecutionClick: mockOnExecutionClick
-        }
-      )
+      <ExecutionListItem
+        execution={mockExecution}
+        onExecutionClick={mockOnExecutionClick}
+      />,
     );
     expect(screen.getByText(/Duration:/)).toBeInTheDocument();
   });
   it("should apply active styling for running execution", () => {
     const runningExecution = {
       ...mockExecution,
-      status: "running"
+      status: "running",
     };
     const { container } = render(
-      /* @__PURE__ */ jsx(
-        ExecutionListItem,
-        {
-          execution: runningExecution,
-          onExecutionClick: mockOnExecutionClick
-        }
-      )
+      <ExecutionListItem
+        execution={runningExecution}
+        onExecutionClick={mockOnExecutionClick}
+      />,
     );
     const item = container.querySelector(".border-blue-500");
     expect(item).toBeInTheDocument();
@@ -175,29 +150,23 @@ describe("ExecutionListItem", () => {
   it("should apply active styling for pending execution", () => {
     const pendingExecution = {
       ...mockExecution,
-      status: "pending"
+      status: "pending",
     };
     const { container } = render(
-      /* @__PURE__ */ jsx(
-        ExecutionListItem,
-        {
-          execution: pendingExecution,
-          onExecutionClick: mockOnExecutionClick
-        }
-      )
+      <ExecutionListItem
+        execution={pendingExecution}
+        onExecutionClick={mockOnExecutionClick}
+      />,
     );
     const item = container.querySelector(".border-blue-500");
     expect(item).toBeInTheDocument();
   });
   it("should apply inactive styling for completed execution", () => {
     const { container } = render(
-      /* @__PURE__ */ jsx(
-        ExecutionListItem,
-        {
-          execution: mockExecution,
-          onExecutionClick: mockOnExecutionClick
-        }
-      )
+      <ExecutionListItem
+        execution={mockExecution}
+        onExecutionClick={mockOnExecutionClick}
+      />,
     );
     const item = container.querySelector(".border-gray-200");
     expect(item).toBeInTheDocument();

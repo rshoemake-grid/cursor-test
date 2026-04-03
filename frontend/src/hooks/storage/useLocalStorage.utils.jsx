@@ -1,6 +1,10 @@
 function looksLikeJson(item) {
   const trimmed = item.trim();
-  return trimmed.startsWith("{") || trimmed.startsWith("[") || trimmed.startsWith('"');
+  return (
+    trimmed.startsWith("{") ||
+    trimmed.startsWith("[") ||
+    trimmed.startsWith('"')
+  );
 }
 function parseJsonSafely(jsonString, logger) {
   if (!jsonString) {
@@ -30,11 +34,13 @@ function readStorageItem(storage, key, defaultValue, logger) {
     }
     try {
       return JSON.parse(item);
-    } catch {
-    }
+    } catch {}
     if (looksLikeJson(item)) {
       if (logger) {
-        logger.warn(`localStorage key "${key}" contains invalid JSON. Returning default value.`, item);
+        logger.warn(
+          `localStorage key "${key}" contains invalid JSON. Returning default value.`,
+          item,
+        );
       }
       return defaultValue;
     }
@@ -42,7 +48,10 @@ function readStorageItem(storage, key, defaultValue, logger) {
       return item;
     }
     if (logger) {
-      logger.warn(`localStorage key "${key}" contains plain string but expected JSON. Returning default value.`, item);
+      logger.warn(
+        `localStorage key "${key}" contains plain string but expected JSON. Returning default value.`,
+        item,
+      );
     }
     return defaultValue;
   } catch (error) {
@@ -91,5 +100,5 @@ export {
   readStorageItem,
   shouldHandleStorageEvent,
   stringifyForStorage,
-  writeStorageItem
+  writeStorageItem,
 };

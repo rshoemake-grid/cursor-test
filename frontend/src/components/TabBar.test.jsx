@@ -1,12 +1,23 @@
-import { jsx } from "react/jsx-runtime";
 import { createRef } from "react";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { TabBar } from "./TabBar";
 describe("TabBar", () => {
   const mockTabs = [
-    { id: "tab-1", name: "Workflow 1", isUnsaved: false },
-    { id: "tab-2", name: "Workflow 2", isUnsaved: true },
-    { id: "tab-3", name: "Workflow 3", isUnsaved: false }
+    {
+      id: "tab-1",
+      name: "Workflow 1",
+      isUnsaved: false,
+    },
+    {
+      id: "tab-2",
+      name: "Workflow 2",
+      isUnsaved: true,
+    },
+    {
+      id: "tab-3",
+      name: "Workflow 3",
+      isUnsaved: false,
+    },
   ];
   const mockProps = {
     tabs: mockTabs,
@@ -25,65 +36,87 @@ describe("TabBar", () => {
     onClearWorkflow: jest.fn(),
     onExecute: jest.fn(),
     onPublish: jest.fn(),
-    onExport: jest.fn()
+    onExport: jest.fn(),
   };
   beforeEach(() => {
     jest.clearAllMocks();
   });
   it("should render all tabs", () => {
-    render(/* @__PURE__ */ jsx(TabBar, { ...mockProps }));
+    render(<TabBar {...mockProps} />);
     expect(screen.getByText("Workflow 1")).toBeInTheDocument();
     expect(screen.getByText("Workflow 2")).toBeInTheDocument();
     expect(screen.getByText("Workflow 3")).toBeInTheDocument();
   });
   it("should highlight active tab", () => {
-    render(/* @__PURE__ */ jsx(TabBar, { ...mockProps, activeTabId: "tab-2" }));
+    render(<TabBar {...mockProps} activeTabId="tab-2" />);
     const tab2 = screen.getByText("Workflow 2").closest("button");
     expect(tab2).toHaveClass("bg-white");
   });
   it("should show unsaved indicator for unsaved tabs", () => {
-    render(/* @__PURE__ */ jsx(TabBar, { ...mockProps }));
+    render(<TabBar {...mockProps} />);
     const tab2 = screen.getByText("Workflow 2").closest("button");
     const indicator = tab2?.querySelector(".bg-blue-500");
     expect(indicator).toBeInTheDocument();
   });
   it("should call onTabClick when tab is clicked", () => {
-    render(/* @__PURE__ */ jsx(TabBar, { ...mockProps }));
+    render(<TabBar {...mockProps} />);
     const tab2 = screen.getByText("Workflow 2");
     fireEvent.click(tab2);
     expect(mockProps.onTabClick).toHaveBeenCalledWith("tab-2");
   });
   it("should call onTabDoubleClick when tab is double-clicked", () => {
-    render(/* @__PURE__ */ jsx(TabBar, { ...mockProps }));
+    render(<TabBar {...mockProps} />);
     const tab2 = screen.getByText("Workflow 2");
     fireEvent.doubleClick(tab2);
-    expect(mockProps.onTabDoubleClick).toHaveBeenCalledWith(mockTabs[1], expect.any(Object));
+    expect(mockProps.onTabDoubleClick).toHaveBeenCalledWith(
+      mockTabs[1],
+      expect.any(Object),
+    );
   });
   it("should show editing input when editingTabId matches", () => {
-    render(/* @__PURE__ */ jsx(TabBar, { ...mockProps, editingTabId: "tab-2", editingName: "New Name" }));
+    render(
+      <TabBar {...mockProps} editingTabId="tab-2" editingName="New Name" />,
+    );
     const input = screen.getByDisplayValue("New Name");
     expect(input).toBeInTheDocument();
   });
   it("should call setEditingName when editing input changes", () => {
-    render(/* @__PURE__ */ jsx(TabBar, { ...mockProps, editingTabId: "tab-2", editingName: "New Name" }));
+    render(
+      <TabBar {...mockProps} editingTabId="tab-2" editingName="New Name" />,
+    );
     const input = screen.getByDisplayValue("New Name");
-    fireEvent.change(input, { target: { value: "Updated Name" } });
+    fireEvent.change(input, {
+      target: {
+        value: "Updated Name",
+      },
+    });
     expect(mockProps.setEditingName).toHaveBeenCalledWith("Updated Name");
   });
   it("should call onInputBlur when editing input loses focus", () => {
-    render(/* @__PURE__ */ jsx(TabBar, { ...mockProps, editingTabId: "tab-2", editingName: "New Name" }));
+    render(
+      <TabBar {...mockProps} editingTabId="tab-2" editingName="New Name" />,
+    );
     const input = screen.getByDisplayValue("New Name");
     fireEvent.blur(input);
     expect(mockProps.onInputBlur).toHaveBeenCalledWith("tab-2");
   });
   it("should call onInputKeyDown when key is pressed in editing input", () => {
-    render(/* @__PURE__ */ jsx(TabBar, { ...mockProps, editingTabId: "tab-2", editingName: "New Name" }));
+    render(
+      <TabBar {...mockProps} editingTabId="tab-2" editingName="New Name" />,
+    );
     const input = screen.getByDisplayValue("New Name");
-    fireEvent.keyDown(input, { key: "Enter" });
-    expect(mockProps.onInputKeyDown).toHaveBeenCalledWith("tab-2", expect.any(Object));
+    fireEvent.keyDown(input, {
+      key: "Enter",
+    });
+    expect(mockProps.onInputKeyDown).toHaveBeenCalledWith(
+      "tab-2",
+      expect.any(Object),
+    );
   });
   it("should stop propagation when editing input is clicked", () => {
-    render(/* @__PURE__ */ jsx(TabBar, { ...mockProps, editingTabId: "tab-2", editingName: "New Name" }));
+    render(
+      <TabBar {...mockProps} editingTabId="tab-2" editingName="New Name" />,
+    );
     const input = screen.getByDisplayValue("New Name");
     const onClick = jest.fn();
     input.addEventListener("click", onClick);
@@ -91,88 +124,107 @@ describe("TabBar", () => {
     expect(input).toBeInTheDocument();
   });
   it("should show close button on hover when tabs.length > 1", () => {
-    render(/* @__PURE__ */ jsx(TabBar, { ...mockProps }));
+    render(<TabBar {...mockProps} />);
     const tab1 = screen.getByText("Workflow 1").closest("button");
     const closeButton = tab1?.querySelector(".opacity-0");
     expect(closeButton).toBeInTheDocument();
   });
   it("should not show close button when tabs.length === 1", () => {
-    render(/* @__PURE__ */ jsx(TabBar, { ...mockProps, tabs: [mockTabs[0]] }));
+    render(<TabBar {...mockProps} tabs={[mockTabs[0]]} />);
     const tab1 = screen.getByText("Workflow 1").closest("button");
     const closeButton = tab1?.querySelector(".opacity-0");
     expect(closeButton).not.toBeInTheDocument();
   });
   it("should call onCloseTab when close button is clicked", () => {
-    render(/* @__PURE__ */ jsx(TabBar, { ...mockProps }));
+    render(<TabBar {...mockProps} />);
     const tab1 = screen.getByText("Workflow 1").closest("button");
     const closeButton = tab1?.querySelector(".opacity-0");
     if (closeButton) {
       fireEvent.click(closeButton);
-      expect(mockProps.onCloseTab).toHaveBeenCalledWith("tab-1", expect.any(Object));
+      expect(mockProps.onCloseTab).toHaveBeenCalledWith(
+        "tab-1",
+        expect.any(Object),
+      );
     }
   });
   it("should call onCloseTab when Enter key is pressed on close button", () => {
-    render(/* @__PURE__ */ jsx(TabBar, { ...mockProps }));
+    render(<TabBar {...mockProps} />);
     const tab1 = screen.getByText("Workflow 1").closest("button");
     const closeButton = tab1?.querySelector('[role="button"]');
     if (closeButton) {
-      fireEvent.keyDown(closeButton, { key: "Enter" });
+      fireEvent.keyDown(closeButton, {
+        key: "Enter",
+      });
       expect(mockProps.onCloseTab).toHaveBeenCalled();
     }
   });
   it("should call onCloseTab when Space key is pressed on close button", () => {
-    render(/* @__PURE__ */ jsx(TabBar, { ...mockProps }));
+    render(<TabBar {...mockProps} />);
     const tab1 = screen.getByText("Workflow 1").closest("button");
     const closeButton = tab1?.querySelector('[role="button"]');
     if (closeButton) {
-      fireEvent.keyDown(closeButton, { key: " " });
+      fireEvent.keyDown(closeButton, {
+        key: " ",
+      });
       expect(mockProps.onCloseTab).toHaveBeenCalled();
     }
   });
   it("should call onSave when Save button is clicked", () => {
-    render(/* @__PURE__ */ jsx(TabBar, { ...mockProps }));
-    const saveButton = screen.getByRole("button", { name: /save/i });
+    render(<TabBar {...mockProps} />);
+    const saveButton = screen.getByRole("button", {
+      name: /save/i,
+    });
     fireEvent.click(saveButton);
     expect(mockProps.onSave).toHaveBeenCalled();
   });
   it("should call onClearWorkflow when Clear workflow button is clicked", () => {
-    render(/* @__PURE__ */ jsx(TabBar, { ...mockProps }));
-    const clearButton = screen.getByRole("button", { name: /clear workflow/i });
+    render(<TabBar {...mockProps} />);
+    const clearButton = screen.getByRole("button", {
+      name: /clear workflow/i,
+    });
     fireEvent.click(clearButton);
     expect(mockProps.onClearWorkflow).toHaveBeenCalled();
   });
   it("should call onExecute when Execute button is clicked", () => {
-    render(/* @__PURE__ */ jsx(TabBar, { ...mockProps }));
-    const executeButton = screen.getByRole("button", { name: /execute/i });
+    render(<TabBar {...mockProps} />);
+    const executeButton = screen.getByRole("button", {
+      name: /execute/i,
+    });
     fireEvent.click(executeButton);
     expect(mockProps.onExecute).toHaveBeenCalled();
   });
   it("should call onPublish when Publish button is clicked", () => {
-    render(/* @__PURE__ */ jsx(TabBar, { ...mockProps }));
-    const publishButton = screen.getByRole("button", { name: /publish/i });
+    render(<TabBar {...mockProps} />);
+    const publishButton = screen.getByRole("button", {
+      name: /publish/i,
+    });
     fireEvent.click(publishButton);
     expect(mockProps.onPublish).toHaveBeenCalled();
   });
   it("should call onExport when Export button is clicked", () => {
-    render(/* @__PURE__ */ jsx(TabBar, { ...mockProps }));
-    const exportButton = screen.getByRole("button", { name: /export/i });
+    render(<TabBar {...mockProps} />);
+    const exportButton = screen.getByRole("button", {
+      name: /export/i,
+    });
     fireEvent.click(exportButton);
     expect(mockProps.onExport).toHaveBeenCalled();
   });
   it("should call onNewWorkflow when New button is clicked", () => {
-    render(/* @__PURE__ */ jsx(TabBar, { ...mockProps }));
-    const newButton = screen.getByRole("button", { name: /new/i });
+    render(<TabBar {...mockProps} />);
+    const newButton = screen.getByRole("button", {
+      name: /new/i,
+    });
     fireEvent.click(newButton);
     expect(mockProps.onNewWorkflow).toHaveBeenCalled();
   });
   it("should render tab names correctly", () => {
-    render(/* @__PURE__ */ jsx(TabBar, { ...mockProps }));
+    render(<TabBar {...mockProps} />);
     mockTabs.forEach((tab) => {
       expect(screen.getByText(tab.name)).toBeInTheDocument();
     });
   });
   it("should handle empty tabs array", () => {
-    render(/* @__PURE__ */ jsx(TabBar, { ...mockProps, tabs: [] }));
+    render(<TabBar {...mockProps} tabs={[]} />);
     expect(screen.queryByText("Workflow 1")).not.toBeInTheDocument();
   });
 });

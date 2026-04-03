@@ -10,13 +10,13 @@ jest.mock("../../api/client", () => ({
     updateWorkflow: jest.fn(),
     deleteWorkflow: jest.fn(),
     executeWorkflow: jest.fn(),
-    getExecution: jest.fn()
-  }
+    getExecution: jest.fn(),
+  },
 }));
 jest.mock("../../utils/logger", () => ({
   logger: {
-    error: jest.fn()
-  }
+    error: jest.fn(),
+  },
 }));
 describe("useWorkflowAPI", () => {
   beforeEach(() => {
@@ -33,7 +33,7 @@ describe("useWorkflowAPI", () => {
     it("should call api.getWorkflows and return workflows", async () => {
       const mockWorkflows = [
         { id: "1", name: "Workflow 1", nodes: [], edges: [] },
-        { id: "2", name: "Workflow 2", nodes: [], edges: [] }
+        { id: "2", name: "Workflow 2", nodes: [], edges: [] },
       ];
       api.getWorkflows.mockResolvedValue(mockWorkflows);
       const { result } = renderHook(() => useWorkflowAPI());
@@ -45,13 +45,23 @@ describe("useWorkflowAPI", () => {
       const error = new Error("Failed to fetch");
       api.getWorkflows.mockRejectedValue(error);
       const { result } = renderHook(() => useWorkflowAPI());
-      await expect(result.current.getWorkflows()).rejects.toThrow("Failed to fetch");
-      expect(logger.error).toHaveBeenCalledWith("Failed to fetch workflows:", error);
+      await expect(result.current.getWorkflows()).rejects.toThrow(
+        "Failed to fetch",
+      );
+      expect(logger.error).toHaveBeenCalledWith(
+        "Failed to fetch workflows:",
+        error,
+      );
     });
   });
   describe("getWorkflow", () => {
     it("should call api.getWorkflow with id and return workflow", async () => {
-      const mockWorkflow = { id: "1", name: "Workflow 1", nodes: [], edges: [] };
+      const mockWorkflow = {
+        id: "1",
+        name: "Workflow 1",
+        nodes: [],
+        edges: [],
+      };
       api.getWorkflow.mockResolvedValue(mockWorkflow);
       const { result } = renderHook(() => useWorkflowAPI());
       const workflow = await result.current.getWorkflow("1");
@@ -62,8 +72,13 @@ describe("useWorkflowAPI", () => {
       const error = new Error("Not found");
       api.getWorkflow.mockRejectedValue(error);
       const { result } = renderHook(() => useWorkflowAPI());
-      await expect(result.current.getWorkflow("1")).rejects.toThrow("Not found");
-      expect(logger.error).toHaveBeenCalledWith("Failed to fetch workflow 1:", error);
+      await expect(result.current.getWorkflow("1")).rejects.toThrow(
+        "Not found",
+      );
+      expect(logger.error).toHaveBeenCalledWith(
+        "Failed to fetch workflow 1:",
+        error,
+      );
     });
   });
   describe("createWorkflow", () => {
@@ -80,16 +95,29 @@ describe("useWorkflowAPI", () => {
       const error = new Error("Creation failed");
       api.createWorkflow.mockRejectedValue(error);
       const { result } = renderHook(() => useWorkflowAPI());
-      await expect(result.current.createWorkflow({})).rejects.toThrow("Creation failed");
-      expect(logger.error).toHaveBeenCalledWith("Failed to create workflow:", error);
+      await expect(result.current.createWorkflow({})).rejects.toThrow(
+        "Creation failed",
+      );
+      expect(logger.error).toHaveBeenCalledWith(
+        "Failed to create workflow:",
+        error,
+      );
     });
   });
   describe("updateWorkflow", () => {
     it("should call api.updateWorkflow with id and workflow and return updated workflow", async () => {
-      const updatedWorkflow = { id: "1", name: "Updated Workflow", nodes: [], edges: [] };
+      const updatedWorkflow = {
+        id: "1",
+        name: "Updated Workflow",
+        nodes: [],
+        edges: [],
+      };
       api.updateWorkflow.mockResolvedValue(updatedWorkflow);
       const { result } = renderHook(() => useWorkflowAPI());
-      const workflow = await result.current.updateWorkflow("1", updatedWorkflow);
+      const workflow = await result.current.updateWorkflow(
+        "1",
+        updatedWorkflow,
+      );
       expect(api.updateWorkflow).toHaveBeenCalledWith("1", updatedWorkflow);
       expect(workflow).toEqual(updatedWorkflow);
     });
@@ -97,8 +125,13 @@ describe("useWorkflowAPI", () => {
       const error = new Error("Update failed");
       api.updateWorkflow.mockRejectedValue(error);
       const { result } = renderHook(() => useWorkflowAPI());
-      await expect(result.current.updateWorkflow("1", {})).rejects.toThrow("Update failed");
-      expect(logger.error).toHaveBeenCalledWith("Failed to update workflow 1:", error);
+      await expect(result.current.updateWorkflow("1", {})).rejects.toThrow(
+        "Update failed",
+      );
+      expect(logger.error).toHaveBeenCalledWith(
+        "Failed to update workflow 1:",
+        error,
+      );
     });
   });
   describe("deleteWorkflow", () => {
@@ -112,21 +145,36 @@ describe("useWorkflowAPI", () => {
       const error = new Error("Delete failed");
       api.deleteWorkflow.mockRejectedValue(error);
       const { result } = renderHook(() => useWorkflowAPI());
-      await expect(result.current.deleteWorkflow("1")).rejects.toThrow("Delete failed");
-      expect(logger.error).toHaveBeenCalledWith("Failed to delete workflow 1:", error);
+      await expect(result.current.deleteWorkflow("1")).rejects.toThrow(
+        "Delete failed",
+      );
+      expect(logger.error).toHaveBeenCalledWith(
+        "Failed to delete workflow 1:",
+        error,
+      );
     });
   });
   describe("executeWorkflow", () => {
     it("should call api.executeWorkflow with workflowId and inputs and return execution state", async () => {
-      const executionState = { id: "exec-1", status: "running", workflow_id: "1" };
+      const executionState = {
+        id: "exec-1",
+        status: "running",
+        workflow_id: "1",
+      };
       api.executeWorkflow.mockResolvedValue(executionState);
       const { result } = renderHook(() => useWorkflowAPI());
-      const execution = await result.current.executeWorkflow("1", { input: "value" });
+      const execution = await result.current.executeWorkflow("1", {
+        input: "value",
+      });
       expect(api.executeWorkflow).toHaveBeenCalledWith("1", { input: "value" });
       expect(execution).toEqual(executionState);
     });
     it("should call api.executeWorkflow without inputs", async () => {
-      const executionState = { id: "exec-1", status: "running", workflow_id: "1" };
+      const executionState = {
+        id: "exec-1",
+        status: "running",
+        workflow_id: "1",
+      };
       api.executeWorkflow.mockResolvedValue(executionState);
       const { result } = renderHook(() => useWorkflowAPI());
       await result.current.executeWorkflow("1");
@@ -136,13 +184,22 @@ describe("useWorkflowAPI", () => {
       const error = new Error("Execution failed");
       api.executeWorkflow.mockRejectedValue(error);
       const { result } = renderHook(() => useWorkflowAPI());
-      await expect(result.current.executeWorkflow("1")).rejects.toThrow("Execution failed");
-      expect(logger.error).toHaveBeenCalledWith("Failed to execute workflow 1:", error);
+      await expect(result.current.executeWorkflow("1")).rejects.toThrow(
+        "Execution failed",
+      );
+      expect(logger.error).toHaveBeenCalledWith(
+        "Failed to execute workflow 1:",
+        error,
+      );
     });
   });
   describe("getExecution", () => {
     it("should call api.getExecution with executionId and return execution state", async () => {
-      const executionState = { id: "exec-1", status: "completed", workflow_id: "1" };
+      const executionState = {
+        id: "exec-1",
+        status: "completed",
+        workflow_id: "1",
+      };
       api.getExecution.mockResolvedValue(executionState);
       const { result } = renderHook(() => useWorkflowAPI());
       const execution = await result.current.getExecution("exec-1");
@@ -153,8 +210,13 @@ describe("useWorkflowAPI", () => {
       const error = new Error("Not found");
       api.getExecution.mockRejectedValue(error);
       const { result } = renderHook(() => useWorkflowAPI());
-      await expect(result.current.getExecution("exec-1")).rejects.toThrow("Not found");
-      expect(logger.error).toHaveBeenCalledWith("Failed to fetch execution exec-1:", error);
+      await expect(result.current.getExecution("exec-1")).rejects.toThrow(
+        "Not found",
+      );
+      expect(logger.error).toHaveBeenCalledWith(
+        "Failed to fetch execution exec-1:",
+        error,
+      );
     });
   });
   describe("hook stability", () => {
@@ -167,7 +229,7 @@ describe("useWorkflowAPI", () => {
         updateWorkflow: result.current.updateWorkflow,
         deleteWorkflow: result.current.deleteWorkflow,
         executeWorkflow: result.current.executeWorkflow,
-        getExecution: result.current.getExecution
+        getExecution: result.current.getExecution,
       };
       rerender();
       const secondRender = {
@@ -177,7 +239,7 @@ describe("useWorkflowAPI", () => {
         updateWorkflow: result.current.updateWorkflow,
         deleteWorkflow: result.current.deleteWorkflow,
         executeWorkflow: result.current.executeWorkflow,
-        getExecution: result.current.getExecution
+        getExecution: result.current.getExecution,
       };
       expect(firstRender.getWorkflows).toBe(secondRender.getWorkflows);
       expect(firstRender.getWorkflow).toBe(secondRender.getWorkflow);
@@ -207,15 +269,19 @@ describe("useWorkflowAPI", () => {
   describe("Dependency Injection", () => {
     it("should use injected API client", async () => {
       const mockApiClient = {
-        getWorkflows: jest.fn().mockResolvedValue([{ id: "1", name: "Workflow 1" }]),
+        getWorkflows: jest
+          .fn()
+          .mockResolvedValue([{ id: "1", name: "Workflow 1" }]),
         getWorkflow: jest.fn(),
         createWorkflow: jest.fn(),
         updateWorkflow: jest.fn(),
         deleteWorkflow: jest.fn(),
         executeWorkflow: jest.fn(),
-        getExecution: jest.fn()
+        getExecution: jest.fn(),
       };
-      const { result } = renderHook(() => useWorkflowAPI({ apiClient: mockApiClient }));
+      const { result } = renderHook(() =>
+        useWorkflowAPI({ apiClient: mockApiClient }),
+      );
       const workflows = await result.current.getWorkflows();
       expect(mockApiClient.getWorkflows).toHaveBeenCalledTimes(1);
       expect(workflows).toEqual([{ id: "1", name: "Workflow 1" }]);
@@ -223,13 +289,18 @@ describe("useWorkflowAPI", () => {
     });
     it("should use injected logger", async () => {
       const mockLogger = {
-        error: jest.fn()
+        error: jest.fn(),
       };
       const error = new Error("Test error");
       api.getWorkflows.mockRejectedValue(error);
-      const { result } = renderHook(() => useWorkflowAPI({ logger: mockLogger }));
+      const { result } = renderHook(() =>
+        useWorkflowAPI({ logger: mockLogger }),
+      );
       await expect(result.current.getWorkflows()).rejects.toThrow("Test error");
-      expect(mockLogger.error).toHaveBeenCalledWith("Failed to fetch workflows:", error);
+      expect(mockLogger.error).toHaveBeenCalledWith(
+        "Failed to fetch workflows:",
+        error,
+      );
       expect(logger.error).not.toHaveBeenCalled();
     });
     it("should use both injected API client and logger", async () => {
@@ -240,13 +311,13 @@ describe("useWorkflowAPI", () => {
         updateWorkflow: jest.fn(),
         deleteWorkflow: jest.fn(),
         executeWorkflow: jest.fn(),
-        getExecution: jest.fn()
+        getExecution: jest.fn(),
       };
       const mockLogger = {
-        error: jest.fn()
+        error: jest.fn(),
       };
-      const { result } = renderHook(
-        () => useWorkflowAPI({ apiClient: mockApiClient, logger: mockLogger })
+      const { result } = renderHook(() =>
+        useWorkflowAPI({ apiClient: mockApiClient, logger: mockLogger }),
       );
       await expect(result.current.getWorkflows()).rejects.toThrow("API error");
       expect(mockApiClient.getWorkflows).toHaveBeenCalled();

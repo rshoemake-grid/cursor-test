@@ -21,7 +21,8 @@ function bindWorkflowCommands(dispatch) {
   return {
     setWorkflowId: (id) => dispatch(setWorkflowId(id)),
     setWorkflowName: (name) => dispatch(setWorkflowName(name)),
-    setWorkflowDescription: (description) => dispatch(setWorkflowDescription(description)),
+    setWorkflowDescription: (description) =>
+      dispatch(setWorkflowDescription(description)),
     setNodes: (nodes) => dispatch(setNodes(nodes)),
     setEdges: (edges) => dispatch(setEdges(edges)),
     setVariables: (variables) => dispatch(setVariables(variables)),

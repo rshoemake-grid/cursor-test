@@ -2,7 +2,7 @@ import {
   findNodeById,
   nodeExists,
   findNodesByIds,
-  getSelectedNodes
+  getSelectedNodes,
 } from "./nodeUtils";
 describe("nodeUtils", () => {
   const mockNodes = [
@@ -10,22 +10,22 @@ describe("nodeUtils", () => {
       id: "node1",
       type: "agent",
       position: { x: 0, y: 0 },
-      data: { name: "Node 1" }
+      data: { name: "Node 1" },
     },
     {
       id: "node2",
       type: "condition",
       position: { x: 100, y: 100 },
       data: { name: "Node 2" },
-      selected: true
+      selected: true,
     },
     {
       id: "node3",
       type: "loop",
       position: { x: 200, y: 200 },
       data: { name: "Node 3" },
-      selected: true
-    }
+      selected: true,
+    },
   ];
   describe("findNodeById", () => {
     it("should find a node by ID from React Flow", () => {

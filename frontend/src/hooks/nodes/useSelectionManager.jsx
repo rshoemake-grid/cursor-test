@@ -29,9 +29,12 @@ function useSelectionManager() {
       return newSet;
     });
   }, []);
-  const has = useCallback((id) => {
-    return selectedIds.has(id);
-  }, [selectedIds]);
+  const has = useCallback(
+    (id) => {
+      return selectedIds.has(id);
+    },
+    [selectedIds],
+  );
   return {
     selectedIds,
     setSelectedIds,
@@ -40,9 +43,7 @@ function useSelectionManager() {
     add,
     remove,
     has,
-    size: selectedIds.size
+    size: selectedIds.size,
   };
 }
-export {
-  useSelectionManager
-};
+export { useSelectionManager };

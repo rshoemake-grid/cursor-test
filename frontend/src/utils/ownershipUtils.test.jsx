@@ -2,18 +2,18 @@ import {
   isOwner,
   filterOwnedItems,
   separateOfficialItems,
-  filterUserOwnedDeletableItems
+  filterUserOwnedDeletableItems,
 } from "./ownershipUtils";
 describe("ownershipUtils", () => {
   describe("isOwner", () => {
     const mockUser = {
       id: "user-123",
-      username: "testuser"
+      username: "testuser",
     };
     const mockItem = {
       id: "item-1",
       author_id: "user-123",
-      is_official: false
+      is_official: false,
     };
     it("should return false when user is null", () => {
       expect(isOwner(mockItem, null)).toBe(false);
@@ -30,26 +30,26 @@ describe("ownershipUtils", () => {
     it("should return false when item.author_id is null", () => {
       const itemWithoutAuthor = {
         id: "item-1",
-        author_id: null
+        author_id: null,
       };
       expect(isOwner(itemWithoutAuthor, mockUser)).toBe(false);
     });
     it("should return false when item.author_id is undefined", () => {
       const itemWithoutAuthor = {
-        id: "item-1"
+        id: "item-1",
       };
       expect(isOwner(itemWithoutAuthor, mockUser)).toBe(false);
     });
     it("should return false when user.id is null", () => {
       const userWithoutId = {
         id: null,
-        username: "testuser"
+        username: "testuser",
       };
       expect(isOwner(mockItem, userWithoutId)).toBe(false);
     });
     it("should return false when user.id is undefined", () => {
       const userWithoutId = {
-        username: "testuser"
+        username: "testuser",
       };
       expect(isOwner(mockItem, userWithoutId)).toBe(false);
     });
@@ -58,25 +58,27 @@ describe("ownershipUtils", () => {
     });
     it("should return true when user owns item (numeric IDs match as strings)", () => {
       const numericUser = {
-        id: "123"
+        id: "123",
       };
       const numericItem = {
         id: "item-1",
-        author_id: "123"
+        author_id: "123",
       };
       expect(isOwner(numericItem, numericUser)).toBe(true);
     });
     it("should return false when user does not own item (different IDs)", () => {
       const otherUser = {
         id: "user-456",
-        username: "otheruser"
+        username: "otheruser",
       };
       expect(isOwner(mockItem, otherUser)).toBe(false);
     });
     it("should verify exact AND condition - all conditions true", () => {
       expect(mockUser !== null).toBe(true);
       expect(mockItem !== null).toBe(true);
-      expect(mockItem.author_id !== null && mockItem.author_id !== void 0).toBe(true);
+      expect(mockItem.author_id !== null && mockItem.author_id !== void 0).toBe(
+        true,
+      );
       expect(mockUser.id !== null && mockUser.id !== void 0).toBe(true);
       expect(isOwner(mockItem, mockUser)).toBe(true);
     });
@@ -105,17 +107,17 @@ describe("ownershipUtils", () => {
   describe("filterOwnedItems", () => {
     const mockUser = {
       id: "user-123",
-      username: "testuser"
+      username: "testuser",
     };
     const ownedItem = {
       id: "item-1",
       author_id: "user-123",
-      is_official: false
+      is_official: false,
     };
     const otherItem = {
       id: "item-2",
       author_id: "user-456",
-      is_official: false
+      is_official: false,
     };
     it("should return empty array when user is null", () => {
       const items = [ownedItem, otherItem];
@@ -128,14 +130,14 @@ describe("ownershipUtils", () => {
     it("should return empty array when user.id is null", () => {
       const userWithoutId = {
         id: null,
-        username: "testuser"
+        username: "testuser",
       };
       const items = [ownedItem, otherItem];
       expect(filterOwnedItems(items, userWithoutId)).toEqual([]);
     });
     it("should return empty array when user.id is undefined", () => {
       const userWithoutId = {
-        username: "testuser"
+        username: "testuser",
       };
       const items = [ownedItem, otherItem];
       expect(filterOwnedItems(items, userWithoutId)).toEqual([]);
@@ -155,7 +157,7 @@ describe("ownershipUtils", () => {
       const anotherOwnedItem = {
         id: "item-3",
         author_id: "user-123",
-        is_official: false
+        is_official: false,
       };
       const items = [ownedItem, anotherOwnedItem];
       const result = filterOwnedItems(items, mockUser);
@@ -171,7 +173,7 @@ describe("ownershipUtils", () => {
     });
     it("should verify exact falsy check - user.id is falsy", () => {
       const userWithoutId = {
-        username: "testuser"
+        username: "testuser",
       };
       const items = [ownedItem];
       expect(filterOwnedItems(items, userWithoutId)).toEqual([]);
@@ -181,16 +183,16 @@ describe("ownershipUtils", () => {
     const officialItem = {
       id: "item-1",
       author_id: "user-123",
-      is_official: true
+      is_official: true,
     };
     const deletableItem = {
       id: "item-2",
       author_id: "user-123",
-      is_official: false
+      is_official: false,
     };
     const itemWithoutFlag = {
       id: "item-3",
-      author_id: "user-123"
+      author_id: "user-123",
     };
     it("should separate official and deletable items", () => {
       const items = [officialItem, deletableItem];
@@ -249,7 +251,7 @@ describe("ownershipUtils", () => {
       const itemWithNull = {
         id: "item-4",
         author_id: "user-123",
-        is_official: null
+        is_official: null,
       };
       const items = [itemWithNull];
       const result = separateOfficialItems(items);
@@ -260,22 +262,22 @@ describe("ownershipUtils", () => {
   describe("filterUserOwnedDeletableItems", () => {
     const mockUser = {
       id: "user-123",
-      username: "testuser"
+      username: "testuser",
     };
     const officialItem = {
       id: "item-1",
       author_id: "user-123",
-      is_official: true
+      is_official: true,
     };
     const deletableOwnedItem = {
       id: "item-2",
       author_id: "user-123",
-      is_official: false
+      is_official: false,
     };
     const deletableOtherItem = {
       id: "item-3",
       author_id: "user-456",
-      is_official: false
+      is_official: false,
     };
     it("should return only user-owned deletable items", () => {
       const items = [officialItem, deletableOwnedItem, deletableOtherItem];

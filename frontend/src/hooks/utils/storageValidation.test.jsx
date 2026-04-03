@@ -2,7 +2,7 @@ import {
   isStorageAvailable,
   canSaveToStorage,
   getStorageItem,
-  setStorageItem
+  setStorageItem,
 } from "./storageValidation";
 describe("storageValidation", () => {
   let mockStorage;
@@ -12,7 +12,7 @@ describe("storageValidation", () => {
       setItem: jest.fn(),
       removeItem: jest.fn(),
       addEventListener: jest.fn(),
-      removeEventListener: jest.fn()
+      removeEventListener: jest.fn(),
     };
   });
   describe("isStorageAvailable", () => {
@@ -68,7 +68,10 @@ describe("storageValidation", () => {
     it("should set item when storage available", () => {
       const result = setStorageItem(mockStorage, "test-key", { key: "value" });
       expect(result).toBe(true);
-      expect(mockStorage.setItem).toHaveBeenCalledWith("test-key", '{"key":"value"}');
+      expect(mockStorage.setItem).toHaveBeenCalledWith(
+        "test-key",
+        '{"key":"value"}',
+      );
     });
     it("should return false when storage is null", () => {
       const result = setStorageItem(null, "test-key", { key: "value" });

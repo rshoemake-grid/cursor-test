@@ -4,15 +4,15 @@ import { api } from "../../api/client";
 import { logger } from "../../utils/logger";
 jest.mock("../../api/client", () => ({
   api: {
-    getExecution: jest.fn()
-  }
+    getExecution: jest.fn(),
+  },
 }));
 jest.mock("../../utils/logger", () => ({
   logger: {
     debug: jest.fn(),
     error: jest.fn(),
-    warn: jest.fn()
-  }
+    warn: jest.fn(),
+  },
 }));
 const mockApi = api;
 const mockLoggerDebug = logger.debug;
@@ -27,7 +27,7 @@ describe("useExecutionPolling", () => {
     workflowId,
     isUnsaved: false,
     executions,
-    activeExecutionId: null
+    activeExecutionId: null,
   });
   beforeEach(() => {
     jest.clearAllMocks();
@@ -40,18 +40,18 @@ describe("useExecutionPolling", () => {
       }
     });
     mockTabsRef = {
-      current: []
+      current: [],
     };
   });
   it("should handle null tabsRef.current", async () => {
     mockTabsRef.current = null;
-    renderHook(
-      () => useExecutionPolling({
+    renderHook(() =>
+      useExecutionPolling({
         tabsRef: mockTabsRef,
         setTabs: mockSetTabs,
         apiClient: mockApi,
-        pollInterval: 1e3
-      })
+        pollInterval: 1e3,
+      }),
     );
     await act(async () => {
       jest.advanceTimersByTime(1e3);
@@ -60,13 +60,13 @@ describe("useExecutionPolling", () => {
   });
   it("should handle tabsRef.current that is not an array", async () => {
     mockTabsRef.current = {};
-    renderHook(
-      () => useExecutionPolling({
+    renderHook(() =>
+      useExecutionPolling({
         tabsRef: mockTabsRef,
         setTabs: mockSetTabs,
         apiClient: mockApi,
-        pollInterval: 1e3
-      })
+        pollInterval: 1e3,
+      }),
     );
     await act(async () => {
       jest.advanceTimersByTime(1e3);
@@ -79,16 +79,16 @@ describe("useExecutionPolling", () => {
       name: "Workflow 1",
       workflowId: "workflow-1",
       isUnsaved: false,
-      activeExecutionId: null
+      activeExecutionId: null,
     };
     mockTabsRef.current = [tabWithoutExecutions];
-    renderHook(
-      () => useExecutionPolling({
+    renderHook(() =>
+      useExecutionPolling({
         tabsRef: mockTabsRef,
         setTabs: mockSetTabs,
         apiClient: mockApi,
-        pollInterval: 1e3
-      })
+        pollInterval: 1e3,
+      }),
     );
     await act(async () => {
       jest.advanceTimersByTime(1e3);
@@ -102,16 +102,16 @@ describe("useExecutionPolling", () => {
       workflowId: "workflow-1",
       isUnsaved: false,
       executions: null,
-      activeExecutionId: null
+      activeExecutionId: null,
     };
     mockTabsRef.current = [tabWithNullExecutions];
-    renderHook(
-      () => useExecutionPolling({
+    renderHook(() =>
+      useExecutionPolling({
         tabsRef: mockTabsRef,
         setTabs: mockSetTabs,
         apiClient: mockApi,
-        pollInterval: 1e3
-      })
+        pollInterval: 1e3,
+      }),
     );
     await act(async () => {
       jest.advanceTimersByTime(1e3);
@@ -125,16 +125,16 @@ describe("useExecutionPolling", () => {
       workflowId: "workflow-1",
       isUnsaved: false,
       executions: {},
-      activeExecutionId: null
+      activeExecutionId: null,
     };
     mockTabsRef.current = [tabWithInvalidExecutions];
-    renderHook(
-      () => useExecutionPolling({
+    renderHook(() =>
+      useExecutionPolling({
         tabsRef: mockTabsRef,
         setTabs: mockSetTabs,
         apiClient: mockApi,
-        pollInterval: 1e3
-      })
+        pollInterval: 1e3,
+      }),
     );
     await act(async () => {
       jest.advanceTimersByTime(1e3);
@@ -150,23 +150,23 @@ describe("useExecutionPolling", () => {
       status: "running",
       startedAt: /* @__PURE__ */ new Date(),
       nodes: {},
-      logs: []
+      logs: [],
     };
     mockTabsRef.current = [createMockTab("workflow-1", [execution])];
     const mockExecutionResponse = {
       status: "completed",
-      completed_at: (/* @__PURE__ */ new Date()).toISOString(),
+      completed_at: /* @__PURE__ */ new Date().toISOString(),
       node_states: {},
-      logs: []
+      logs: [],
     };
     mockApi.getExecution.mockResolvedValue(mockExecutionResponse);
-    renderHook(
-      () => useExecutionPolling({
+    renderHook(() =>
+      useExecutionPolling({
         tabsRef: mockTabsRef,
         setTabs: mockSetTabs,
         apiClient: mockApi,
-        pollInterval: 1e3
-      })
+        pollInterval: 1e3,
+      }),
     );
     await act(async () => {
       jest.advanceTimersByTime(1e3);
@@ -181,16 +181,16 @@ describe("useExecutionPolling", () => {
       status: "running",
       startedAt: /* @__PURE__ */ new Date(),
       nodes: {},
-      logs: []
+      logs: [],
     };
     mockTabsRef.current = [createMockTab("workflow-1", [pendingExecution])];
-    renderHook(
-      () => useExecutionPolling({
+    renderHook(() =>
+      useExecutionPolling({
         tabsRef: mockTabsRef,
         setTabs: mockSetTabs,
         apiClient: mockApi,
-        pollInterval: 1e3
-      })
+        pollInterval: 1e3,
+      }),
     );
     await act(async () => {
       jest.advanceTimersByTime(1e3);
@@ -204,16 +204,16 @@ describe("useExecutionPolling", () => {
       startedAt: /* @__PURE__ */ new Date(),
       completedAt: /* @__PURE__ */ new Date(),
       nodes: {},
-      logs: []
+      logs: [],
     };
     mockTabsRef.current = [createMockTab("workflow-1", [completedExecution])];
-    renderHook(
-      () => useExecutionPolling({
+    renderHook(() =>
+      useExecutionPolling({
         tabsRef: mockTabsRef,
         setTabs: mockSetTabs,
         apiClient: mockApi,
-        pollInterval: 1e3
-      })
+        pollInterval: 1e3,
+      }),
     );
     await act(async () => {
       jest.advanceTimersByTime(1e3);
@@ -226,17 +226,17 @@ describe("useExecutionPolling", () => {
       status: "running",
       startedAt: /* @__PURE__ */ new Date(),
       nodes: {},
-      logs: []
+      logs: [],
     };
     mockTabsRef.current = [createMockTab("workflow-1", [execution])];
     mockApi.getExecution.mockRejectedValue(new Error("API Error"));
-    renderHook(
-      () => useExecutionPolling({
+    renderHook(() =>
+      useExecutionPolling({
         tabsRef: mockTabsRef,
         setTabs: mockSetTabs,
         apiClient: mockApi,
-        pollInterval: 1e3
-      })
+        pollInterval: 1e3,
+      }),
     );
     await act(async () => {
       jest.advanceTimersByTime(1e3);
@@ -250,23 +250,23 @@ describe("useExecutionPolling", () => {
       status: "running",
       startedAt: /* @__PURE__ */ new Date(),
       nodes: {},
-      logs: []
+      logs: [],
     };
     mockTabsRef.current = [createMockTab("workflow-1", [execution])];
     const mockExecutionResponse = {
       status: "completed",
-      completed_at: (/* @__PURE__ */ new Date()).toISOString(),
+      completed_at: /* @__PURE__ */ new Date().toISOString(),
       node_states: { node1: { state: "done" } },
-      logs: [{ message: "Log 1" }]
+      logs: [{ message: "Log 1" }],
     };
     mockApi.getExecution.mockResolvedValue(mockExecutionResponse);
-    renderHook(
-      () => useExecutionPolling({
+    renderHook(() =>
+      useExecutionPolling({
         tabsRef: mockTabsRef,
         setTabs: mockSetTabs,
         apiClient: mockApi,
-        pollInterval: 1e3
-      })
+        pollInterval: 1e3,
+      }),
     );
     await act(async () => {
       jest.advanceTimersByTime(1e3);
@@ -282,22 +282,22 @@ describe("useExecutionPolling", () => {
       status: "running",
       startedAt: /* @__PURE__ */ new Date(),
       nodes: {},
-      logs: []
+      logs: [],
     };
     mockTabsRef.current = [createMockTab("workflow-1", [execution])];
     const mockExecutionResponse = {
       status: "paused",
       node_states: {},
-      logs: []
+      logs: [],
     };
     mockApi.getExecution.mockResolvedValue(mockExecutionResponse);
-    renderHook(
-      () => useExecutionPolling({
+    renderHook(() =>
+      useExecutionPolling({
         tabsRef: mockTabsRef,
         setTabs: mockSetTabs,
         apiClient: mockApi,
-        pollInterval: 1e3
-      })
+        pollInterval: 1e3,
+      }),
     );
     await act(async () => {
       jest.advanceTimersByTime(1e3);
@@ -313,23 +313,23 @@ describe("useExecutionPolling", () => {
       status: "running",
       startedAt: /* @__PURE__ */ new Date(),
       nodes: {},
-      logs: []
+      logs: [],
     };
     mockTabsRef.current = [createMockTab("workflow-1", [execution])];
     const mockExecutionResponse = {
       status: "paused",
       completed_at: null,
       node_states: {},
-      logs: []
+      logs: [],
     };
     mockApi.getExecution.mockResolvedValue(mockExecutionResponse);
-    renderHook(
-      () => useExecutionPolling({
+    renderHook(() =>
+      useExecutionPolling({
         tabsRef: mockTabsRef,
         setTabs: mockSetTabs,
         apiClient: mockApi,
-        pollInterval: 1e3
-      })
+        pollInterval: 1e3,
+      }),
     );
     await act(async () => {
       jest.advanceTimersByTime(1e3);
@@ -345,22 +345,22 @@ describe("useExecutionPolling", () => {
       status: "running",
       startedAt: /* @__PURE__ */ new Date(),
       nodes: {},
-      logs: []
+      logs: [],
     };
     mockTabsRef.current = [createMockTab("workflow-1", [execution])];
     const mockExecutionResponse = {
       status: "paused",
       node_states: {},
-      logs: []
+      logs: [],
     };
     mockApi.getExecution.mockResolvedValue(mockExecutionResponse);
-    renderHook(
-      () => useExecutionPolling({
+    renderHook(() =>
+      useExecutionPolling({
         tabsRef: mockTabsRef,
         setTabs: mockSetTabs,
         apiClient: mockApi,
-        pollInterval: 1e3
-      })
+        pollInterval: 1e3,
+      }),
     );
     await act(async () => {
       jest.advanceTimersByTime(1e3);
@@ -375,22 +375,22 @@ describe("useExecutionPolling", () => {
       status: "running",
       startedAt: /* @__PURE__ */ new Date(),
       nodes: {},
-      logs: []
+      logs: [],
     };
     mockTabsRef.current = [createMockTab("workflow-1", [execution])];
     const mockExecutionResponse = {
       status: "unknown-status",
       node_states: {},
-      logs: []
+      logs: [],
     };
     mockApi.getExecution.mockResolvedValue(mockExecutionResponse);
-    renderHook(
-      () => useExecutionPolling({
+    renderHook(() =>
+      useExecutionPolling({
         tabsRef: mockTabsRef,
         setTabs: mockSetTabs,
         apiClient: mockApi,
-        pollInterval: 1e3
-      })
+        pollInterval: 1e3,
+      }),
     );
     await act(async () => {
       jest.advanceTimersByTime(1e3);
@@ -406,13 +406,13 @@ describe("useExecutionPolling", () => {
       status: "running",
       startedAt: /* @__PURE__ */ new Date(),
       nodes: {},
-      logs: []
+      logs: [],
     };
     mockTabsRef.current = [createMockTab("workflow-1", [execution])];
     const mockExecutionResponse = {
       status: "running",
       node_states: {},
-      logs: []
+      logs: [],
     };
     mockApi.getExecution.mockResolvedValue(mockExecutionResponse);
     mockSetTabs.mockImplementation((fn) => {
@@ -423,13 +423,13 @@ describe("useExecutionPolling", () => {
         mockTabsRef.current = newTabs;
       }
     });
-    renderHook(
-      () => useExecutionPolling({
+    renderHook(() =>
+      useExecutionPolling({
         tabsRef: mockTabsRef,
         setTabs: mockSetTabs,
         apiClient: mockApi,
-        pollInterval: 1e3
-      })
+        pollInterval: 1e3,
+      }),
     );
     await act(async () => {
       jest.advanceTimersByTime(1e3);
@@ -448,16 +448,16 @@ describe("useExecutionPolling", () => {
       workflowId: "workflow-1",
       isUnsaved: false,
       executions: null,
-      activeExecutionId: null
+      activeExecutionId: null,
     };
     mockTabsRef.current = [tabWithFalsyExecutions];
-    renderHook(
-      () => useExecutionPolling({
+    renderHook(() =>
+      useExecutionPolling({
         tabsRef: mockTabsRef,
         setTabs: mockSetTabs,
         apiClient: mockApi,
-        pollInterval: 1e3
-      })
+        pollInterval: 1e3,
+      }),
     );
     await act(async () => {
       jest.advanceTimersByTime(1e3);
@@ -475,17 +475,17 @@ describe("useExecutionPolling", () => {
       status: "running",
       startedAt: /* @__PURE__ */ new Date(),
       nodes: {},
-      logs: []
+      logs: [],
     };
     mockTabsRef.current = [createMockTab("workflow-1", [execution])];
     mockApi.getExecution.mockResolvedValue({ status: "running" });
-    renderHook(
-      () => useExecutionPolling({
+    renderHook(() =>
+      useExecutionPolling({
         tabsRef: mockTabsRef,
         setTabs: mockSetTabs,
         apiClient: mockApi,
-        pollInterval: 5e3
-      })
+        pollInterval: 5e3,
+      }),
     );
     await act(async () => {
       jest.advanceTimersByTime(5e3);
@@ -498,27 +498,27 @@ describe("useExecutionPolling", () => {
       status: "running",
       startedAt: /* @__PURE__ */ new Date(),
       nodes: {},
-      logs: []
+      logs: [],
     };
     const execution2 = {
       id: "exec-2",
       status: "running",
       startedAt: /* @__PURE__ */ new Date(),
       nodes: {},
-      logs: []
+      logs: [],
     };
     mockTabsRef.current = [
       createMockTab("workflow-1", [execution1]),
-      createMockTab("workflow-2", [execution2])
+      createMockTab("workflow-2", [execution2]),
     ];
     mockApi.getExecution.mockResolvedValue({ status: "running" });
-    renderHook(
-      () => useExecutionPolling({
+    renderHook(() =>
+      useExecutionPolling({
         tabsRef: mockTabsRef,
         setTabs: mockSetTabs,
         apiClient: mockApi,
-        pollInterval: 1e3
-      })
+        pollInterval: 1e3,
+      }),
     );
     await act(async () => {
       jest.advanceTimersByTime(1e3);
@@ -528,13 +528,13 @@ describe("useExecutionPolling", () => {
     expect(mockApi.getExecution).toHaveBeenCalledWith("exec-2");
   });
   it("should clean up interval on unmount", () => {
-    const { unmount } = renderHook(
-      () => useExecutionPolling({
+    const { unmount } = renderHook(() =>
+      useExecutionPolling({
         tabsRef: mockTabsRef,
         setTabs: mockSetTabs,
         apiClient: mockApi,
-        pollInterval: 1e3
-      })
+        pollInterval: 1e3,
+      }),
     );
     unmount();
     act(() => {
@@ -549,17 +549,17 @@ describe("useExecutionPolling", () => {
         status: "running",
         startedAt: /* @__PURE__ */ new Date(),
         nodes: {},
-        logs: []
+        logs: [],
       };
       mockTabsRef.current = [createMockTab("workflow-1", [execution])];
       mockApi.getExecution.mockResolvedValue({ status: "running" });
-      renderHook(
-        () => useExecutionPolling({
+      renderHook(() =>
+        useExecutionPolling({
           tabsRef: mockTabsRef,
           setTabs: mockSetTabs,
           apiClient: mockApi,
-          pollInterval: 1e3
-        })
+          pollInterval: 1e3,
+        }),
       );
       const MAX_ITERATIONS = 1e3;
       for (let i = 0; i <= MAX_ITERATIONS; i++) {
@@ -569,7 +569,9 @@ describe("useExecutionPolling", () => {
       }
       expect(mockApi.getExecution).toHaveBeenCalledTimes(MAX_ITERATIONS);
       expect(mockLoggerWarn).toHaveBeenCalledWith(
-        expect.stringContaining(`Max polling iterations (${MAX_ITERATIONS}) reached`)
+        expect.stringContaining(
+          `Max polling iterations (${MAX_ITERATIONS}) reached`,
+        ),
       );
     });
     it("should clamp invalid poll interval to safe range", async () => {
@@ -578,17 +580,17 @@ describe("useExecutionPolling", () => {
         status: "running",
         startedAt: /* @__PURE__ */ new Date(),
         nodes: {},
-        logs: []
+        logs: [],
       };
       mockTabsRef.current = [createMockTab("workflow-1", [execution])];
       mockApi.getExecution.mockResolvedValue({ status: "running" });
-      renderHook(
-        () => useExecutionPolling({
+      renderHook(() =>
+        useExecutionPolling({
           tabsRef: mockTabsRef,
           setTabs: mockSetTabs,
           apiClient: mockApi,
-          pollInterval: -1e3
-        })
+          pollInterval: -1e3,
+        }),
       );
       await act(async () => {
         jest.advanceTimersByTime(2e3);
@@ -601,17 +603,17 @@ describe("useExecutionPolling", () => {
         status: "running",
         startedAt: /* @__PURE__ */ new Date(),
         nodes: {},
-        logs: []
+        logs: [],
       };
       mockTabsRef.current = [createMockTab("workflow-1", [execution])];
       mockApi.getExecution.mockResolvedValue({ status: "running" });
-      renderHook(
-        () => useExecutionPolling({
+      renderHook(() =>
+        useExecutionPolling({
           tabsRef: mockTabsRef,
           setTabs: mockSetTabs,
           apiClient: mockApi,
-          pollInterval: 1e5
-        })
+          pollInterval: 1e5,
+        }),
       );
       await act(async () => {
         jest.advanceTimersByTime(2e3);
@@ -624,24 +626,26 @@ describe("useExecutionPolling", () => {
         status: "running",
         startedAt: /* @__PURE__ */ new Date(),
         nodes: {},
-        logs: []
+        logs: [],
       }));
       mockTabsRef.current = [createMockTab("workflow-1", executions)];
       mockApi.getExecution.mockResolvedValue({ status: "running" });
-      renderHook(
-        () => useExecutionPolling({
+      renderHook(() =>
+        useExecutionPolling({
           tabsRef: mockTabsRef,
           setTabs: mockSetTabs,
           apiClient: mockApi,
-          pollInterval: 1e3
-        })
+          pollInterval: 1e3,
+        }),
       );
       await act(async () => {
         jest.advanceTimersByTime(1e3);
       });
       expect(mockApi.getExecution).toHaveBeenCalledTimes(50);
       expect(mockLoggerWarn).toHaveBeenCalledWith(
-        expect.stringContaining("Too many running executions (60), limiting to 50")
+        expect.stringContaining(
+          "Too many running executions (60), limiting to 50",
+        ),
       );
     });
   });

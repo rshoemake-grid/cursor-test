@@ -60,7 +60,4 @@ function getStrykerSandboxId() {
   return null;
 }
 
-export {
-  getStrykerSandboxId,
-  isRunningUnderStryker
-};
+export { getStrykerSandboxId, isRunningUnderStryker };

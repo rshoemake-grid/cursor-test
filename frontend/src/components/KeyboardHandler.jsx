@@ -6,7 +6,7 @@ function KeyboardHandler({
   clipboardNode,
   onCopy,
   onCut,
-  onPaste
+  onPaste,
 }) {
   useKeyboardShortcuts({
     selectedNodeId,
@@ -15,10 +15,8 @@ function KeyboardHandler({
     clipboardNode,
     onCopy,
     onCut,
-    onPaste
+    onPaste,
   });
   return null;
 }
-export {
-  KeyboardHandler
-};
+export { KeyboardHandler };

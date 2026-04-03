@@ -16,16 +16,16 @@ describe("useExecutionNotifications", () => {
         completed_at: "2024-01-01T10:00:05Z",
         node_states: {},
         variables: {},
-        logs: []
-      }
+        logs: [],
+      },
     ];
-    renderHook(
-      () => useExecutionNotifications({
+    renderHook(() =>
+      useExecutionNotifications({
         executions,
         onSuccess: mockOnSuccess,
         onError: mockOnError,
-        enabled: false
-      })
+        enabled: false,
+      }),
     );
     expect(mockOnSuccess).not.toHaveBeenCalled();
     expect(mockOnError).not.toHaveBeenCalled();
@@ -40,30 +40,31 @@ describe("useExecutionNotifications", () => {
         completed_at: "2024-01-01T10:00:05Z",
         node_states: {},
         variables: {},
-        logs: []
-      }
+        logs: [],
+      },
     ];
     const { rerender } = renderHook(
-      ({ execs }) => useExecutionNotifications({
-        executions: execs,
-        onSuccess: mockOnSuccess,
-        onError: mockOnError
-      }),
+      ({ execs }) =>
+        useExecutionNotifications({
+          executions: execs,
+          onSuccess: mockOnSuccess,
+          onError: mockOnError,
+        }),
       {
         initialProps: {
           execs: [
             {
               ...executions[0],
               status: "running",
-              completed_at: void 0
-            }
-          ]
-        }
-      }
+              completed_at: void 0,
+            },
+          ],
+        },
+      },
     );
     expect(mockOnSuccess).not.toHaveBeenCalled();
     rerender({
-      execs: executions
+      execs: executions,
     });
     expect(mockOnSuccess).toHaveBeenCalledWith(executions[0]);
     expect(mockOnError).not.toHaveBeenCalled();
@@ -79,30 +80,31 @@ describe("useExecutionNotifications", () => {
         error: "Test error",
         node_states: {},
         variables: {},
-        logs: []
-      }
+        logs: [],
+      },
     ];
     const { rerender } = renderHook(
-      ({ execs }) => useExecutionNotifications({
-        executions: execs,
-        onSuccess: mockOnSuccess,
-        onError: mockOnError
-      }),
+      ({ execs }) =>
+        useExecutionNotifications({
+          executions: execs,
+          onSuccess: mockOnSuccess,
+          onError: mockOnError,
+        }),
       {
         initialProps: {
           execs: [
             {
               ...executions[0],
               status: "running",
-              error: void 0
-            }
-          ]
-        }
-      }
+              error: void 0,
+            },
+          ],
+        },
+      },
     );
     expect(mockOnError).not.toHaveBeenCalled();
     rerender({
-      execs: executions
+      execs: executions,
     });
     expect(mockOnError).toHaveBeenCalledWith(executions[0]);
     expect(mockOnSuccess).not.toHaveBeenCalled();
@@ -117,15 +119,15 @@ describe("useExecutionNotifications", () => {
         completed_at: "2024-01-01T10:00:05Z",
         node_states: {},
         variables: {},
-        logs: []
-      }
+        logs: [],
+      },
     ];
-    renderHook(
-      () => useExecutionNotifications({
+    renderHook(() =>
+      useExecutionNotifications({
         executions,
         onSuccess: mockOnSuccess,
-        onError: mockOnError
-      })
+        onError: mockOnError,
+      }),
     );
     expect(mockOnSuccess).not.toHaveBeenCalled();
     expect(mockOnError).not.toHaveBeenCalled();
@@ -140,18 +142,19 @@ describe("useExecutionNotifications", () => {
         completed_at: "2024-01-01T10:00:05Z",
         node_states: {},
         variables: {},
-        logs: []
-      }
+        logs: [],
+      },
     ];
     const { rerender } = renderHook(
-      ({ execs }) => useExecutionNotifications({
-        executions: execs,
-        onSuccess: mockOnSuccess,
-        onError: mockOnError
-      }),
+      ({ execs }) =>
+        useExecutionNotifications({
+          executions: execs,
+          onSuccess: mockOnSuccess,
+          onError: mockOnError,
+        }),
       {
-        initialProps: { execs: executions }
-      }
+        initialProps: { execs: executions },
+      },
     );
     expect(mockOnSuccess).not.toHaveBeenCalled();
     rerender({ execs: executions });
@@ -167,7 +170,7 @@ describe("useExecutionNotifications", () => {
         completed_at: "2024-01-01T10:00:05Z",
         node_states: {},
         variables: {},
-        logs: []
+        logs: [],
       },
       {
         execution_id: "exec-2",
@@ -178,23 +181,24 @@ describe("useExecutionNotifications", () => {
         error: "Test error",
         node_states: {},
         variables: {},
-        logs: []
-      }
+        logs: [],
+      },
     ];
     const { rerender } = renderHook(
-      ({ execs }) => useExecutionNotifications({
-        executions: execs,
-        onSuccess: mockOnSuccess,
-        onError: mockOnError
-      }),
+      ({ execs }) =>
+        useExecutionNotifications({
+          executions: execs,
+          onSuccess: mockOnSuccess,
+          onError: mockOnError,
+        }),
       {
         initialProps: {
           execs: [
             { ...executions[0], status: "running", completed_at: void 0 },
-            { ...executions[1], status: "running", error: void 0 }
-          ]
-        }
-      }
+            { ...executions[1], status: "running", error: void 0 },
+          ],
+        },
+      },
     );
     rerender({ execs: executions });
     expect(mockOnSuccess).toHaveBeenCalledWith(executions[0]);

@@ -6,8 +6,8 @@ jest.mock("../../utils/logger", () => ({
     debug: jest.fn(),
     error: jest.fn(),
     info: jest.fn(),
-    warn: jest.fn()
-  }
+    warn: jest.fn(),
+  },
 }));
 const mockLogger = logger;
 describe("useDataFetching - Enhanced Mutation Killers", () => {
@@ -22,12 +22,14 @@ describe("useDataFetching - Enhanced Mutation Killers", () => {
   describe("Error Handling - instanceof Error", () => {
     describe("err instanceof Error condition", () => {
       it("should verify exact instanceof check - Error instance", async () => {
-        const mockFetchFn = jest.fn().mockRejectedValue(new Error("Test error"));
-        const { result } = renderHook(
-          () => useDataFetching({
+        const mockFetchFn = jest
+          .fn()
+          .mockRejectedValue(new Error("Test error"));
+        const { result } = renderHook(() =>
+          useDataFetching({
             fetchFn: mockFetchFn,
-            initialData: null
-          })
+            initialData: null,
+          }),
         );
         await act(async () => {
           await result.current.refetch();
@@ -37,12 +39,14 @@ describe("useDataFetching - Enhanced Mutation Killers", () => {
         expect(mockLogger.error).toHaveBeenCalled();
       });
       it("should verify exact instanceof check - non-Error object", async () => {
-        const mockFetchFn = jest.fn().mockRejectedValue({ message: "Test error" });
-        const { result } = renderHook(
-          () => useDataFetching({
+        const mockFetchFn = jest
+          .fn()
+          .mockRejectedValue({ message: "Test error" });
+        const { result } = renderHook(() =>
+          useDataFetching({
             fetchFn: mockFetchFn,
-            initialData: null
-          })
+            initialData: null,
+          }),
         );
         await act(async () => {
           await result.current.refetch();
@@ -53,11 +57,11 @@ describe("useDataFetching - Enhanced Mutation Killers", () => {
       });
       it("should verify exact instanceof check - string error", async () => {
         const mockFetchFn = jest.fn().mockRejectedValue("String error");
-        const { result } = renderHook(
-          () => useDataFetching({
+        const { result } = renderHook(() =>
+          useDataFetching({
             fetchFn: mockFetchFn,
-            initialData: null
-          })
+            initialData: null,
+          }),
         );
         await act(async () => {
           await result.current.refetch();
@@ -68,11 +72,11 @@ describe("useDataFetching - Enhanced Mutation Killers", () => {
       });
       it("should verify exact instanceof check - number error", async () => {
         const mockFetchFn = jest.fn().mockRejectedValue(404);
-        const { result } = renderHook(
-          () => useDataFetching({
+        const { result } = renderHook(() =>
+          useDataFetching({
             fetchFn: mockFetchFn,
-            initialData: null
-          })
+            initialData: null,
+          }),
         );
         await act(async () => {
           await result.current.refetch();
@@ -83,11 +87,11 @@ describe("useDataFetching - Enhanced Mutation Killers", () => {
       });
       it("should verify exact instanceof check - null error", async () => {
         const mockFetchFn = jest.fn().mockRejectedValue(null);
-        const { result } = renderHook(
-          () => useDataFetching({
+        const { result } = renderHook(() =>
+          useDataFetching({
             fetchFn: mockFetchFn,
-            initialData: null
-          })
+            initialData: null,
+          }),
         );
         await act(async () => {
           await result.current.refetch();
@@ -98,11 +102,11 @@ describe("useDataFetching - Enhanced Mutation Killers", () => {
       });
       it("should verify exact instanceof check - undefined error", async () => {
         const mockFetchFn = jest.fn().mockRejectedValue(void 0);
-        const { result } = renderHook(
-          () => useDataFetching({
+        const { result } = renderHook(() =>
+          useDataFetching({
             fetchFn: mockFetchFn,
-            initialData: null
-          })
+            initialData: null,
+          }),
         );
         await act(async () => {
           await result.current.refetch();
@@ -117,14 +121,16 @@ describe("useDataFetching - Enhanced Mutation Killers", () => {
     describe("onError?.(error) optional chaining", () => {
       it("should verify optional chaining - onError provided", async () => {
         const mockOnError = jest.fn();
-        const mockFetchFn = jest.fn().mockRejectedValue(new Error("Test error"));
-        const { result } = renderHook(
-          () => useDataFetching({
+        const mockFetchFn = jest
+          .fn()
+          .mockRejectedValue(new Error("Test error"));
+        const { result } = renderHook(() =>
+          useDataFetching({
             fetchFn: mockFetchFn,
             initialData: null,
-            onError: mockOnError
+            onError: mockOnError,
             // Provided
-          })
+          }),
         );
         await act(async () => {
           await result.current.refetch();
@@ -133,13 +139,15 @@ describe("useDataFetching - Enhanced Mutation Killers", () => {
         expect(mockOnError).toHaveBeenCalledTimes(1);
       });
       it("should verify optional chaining - onError undefined", async () => {
-        const mockFetchFn = jest.fn().mockRejectedValue(new Error("Test error"));
-        const { result } = renderHook(
-          () => useDataFetching({
+        const mockFetchFn = jest
+          .fn()
+          .mockRejectedValue(new Error("Test error"));
+        const { result } = renderHook(() =>
+          useDataFetching({
             fetchFn: mockFetchFn,
-            initialData: null
+            initialData: null,
             // onError missing (undefined)
-          })
+          }),
         );
         await act(async () => {
           await result.current.refetch();
@@ -148,14 +156,16 @@ describe("useDataFetching - Enhanced Mutation Killers", () => {
         expect(mockLogger.error).toHaveBeenCalled();
       });
       it("should verify optional chaining - onError null", async () => {
-        const mockFetchFn = jest.fn().mockRejectedValue(new Error("Test error"));
-        const { result } = renderHook(
-          () => useDataFetching({
+        const mockFetchFn = jest
+          .fn()
+          .mockRejectedValue(new Error("Test error"));
+        const { result } = renderHook(() =>
+          useDataFetching({
             fetchFn: mockFetchFn,
             initialData: null,
-            onError: null
+            onError: null,
             // Explicitly null
-          })
+          }),
         );
         await act(async () => {
           await result.current.refetch();
@@ -167,18 +177,20 @@ describe("useDataFetching - Enhanced Mutation Killers", () => {
         const mockOnError = jest.fn();
         const testError = new Error("Specific error message");
         const mockFetchFn = jest.fn().mockRejectedValue(testError);
-        const { result } = renderHook(
-          () => useDataFetching({
+        const { result } = renderHook(() =>
+          useDataFetching({
             fetchFn: mockFetchFn,
             initialData: null,
-            onError: mockOnError
-          })
+            onError: mockOnError,
+          }),
         );
         await act(async () => {
           await result.current.refetch();
         });
         expect(mockOnError).toHaveBeenCalledWith(expect.any(Error));
-        expect(mockOnError.mock.calls[0][0].message).toBe("Specific error message");
+        expect(mockOnError.mock.calls[0][0].message).toBe(
+          "Specific error message",
+        );
       });
     });
   });
@@ -186,11 +198,11 @@ describe("useDataFetching - Enhanced Mutation Killers", () => {
     it("should set data on successful fetch", async () => {
       const mockData = { key: "value" };
       const mockFetchFn = jest.fn().mockResolvedValue(mockData);
-      const { result } = renderHook(
-        () => useDataFetching({
+      const { result } = renderHook(() =>
+        useDataFetching({
           fetchFn: mockFetchFn,
-          initialData: null
-        })
+          initialData: null,
+        }),
       );
       await act(async () => {
         await result.current.refetch();
@@ -200,12 +212,15 @@ describe("useDataFetching - Enhanced Mutation Killers", () => {
       expect(result.current.loading).toBe(false);
     });
     it("should clear error on successful refetch", async () => {
-      const mockFetchFn = jest.fn().mockRejectedValueOnce(new Error("First error")).mockResolvedValueOnce({ success: true });
-      const { result } = renderHook(
-        () => useDataFetching({
+      const mockFetchFn = jest
+        .fn()
+        .mockRejectedValueOnce(new Error("First error"))
+        .mockResolvedValueOnce({ success: true });
+      const { result } = renderHook(() =>
+        useDataFetching({
           fetchFn: mockFetchFn,
-          initialData: null
-        })
+          initialData: null,
+        }),
       );
       await act(async () => {
         await result.current.refetch();
@@ -226,11 +241,11 @@ describe("useDataFetching - Enhanced Mutation Killers", () => {
           resolvePromise = resolve;
         });
       });
-      const { result } = renderHook(
-        () => useDataFetching({
+      const { result } = renderHook(() =>
+        useDataFetching({
           fetchFn: mockFetchFn,
-          initialData: null
-        })
+          initialData: null,
+        }),
       );
       act(() => {
         result.current.refetch();
@@ -244,11 +259,11 @@ describe("useDataFetching - Enhanced Mutation Killers", () => {
     });
     it("should set loading to false after error", async () => {
       const mockFetchFn = jest.fn().mockRejectedValue(new Error("Test error"));
-      const { result } = renderHook(
-        () => useDataFetching({
+      const { result } = renderHook(() =>
+        useDataFetching({
           fetchFn: mockFetchFn,
-          initialData: null
-        })
+          initialData: null,
+        }),
       );
       await act(async () => {
         await result.current.refetch();
@@ -260,20 +275,20 @@ describe("useDataFetching - Enhanced Mutation Killers", () => {
   describe("Initial Data", () => {
     it("should use initial data when provided", () => {
       const initialData = { initial: "data" };
-      const { result } = renderHook(
-        () => useDataFetching({
+      const { result } = renderHook(() =>
+        useDataFetching({
           fetchFn: jest.fn(),
-          initialData
-        })
+          initialData,
+        }),
       );
       expect(result.current.data).toEqual(initialData);
     });
     it("should use null when initial data not provided", () => {
-      const { result } = renderHook(
-        () => useDataFetching({
-          fetchFn: jest.fn()
+      const { result } = renderHook(() =>
+        useDataFetching({
+          fetchFn: jest.fn(),
           // initialData not provided
-        })
+        }),
       );
       expect(result.current.data).toBeNull();
     });
@@ -284,15 +299,15 @@ describe("useDataFetching - Enhanced Mutation Killers", () => {
         debug: jest.fn(),
         error: jest.fn(),
         info: jest.fn(),
-        warn: jest.fn()
+        warn: jest.fn(),
       };
       const mockFetchFn = jest.fn().mockRejectedValue(new Error("Test error"));
-      const { result } = renderHook(
-        () => useDataFetching({
+      const { result } = renderHook(() =>
+        useDataFetching({
           fetchFn: mockFetchFn,
           initialData: null,
-          logger: customLogger
-        })
+          logger: customLogger,
+        }),
       );
       await act(async () => {
         await result.current.refetch();

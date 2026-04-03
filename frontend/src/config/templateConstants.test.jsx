@@ -2,7 +2,7 @@ import {
   TEMPLATE_CATEGORIES,
   TEMPLATE_DIFFICULTIES,
   formatCategory,
-  formatDifficulty
+  formatDifficulty,
 } from "./templateConstants";
 describe("templateConstants", () => {
   describe("TEMPLATE_CATEGORIES", () => {

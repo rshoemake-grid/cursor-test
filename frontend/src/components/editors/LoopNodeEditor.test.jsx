@@ -1,4 +1,3 @@
-import { jsx } from "react/jsx-runtime";
 import { render, screen, fireEvent } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import LoopNodeEditor from "./LoopNodeEditor";
@@ -9,10 +8,13 @@ const mockNode = {
     name: "Test Loop",
     loop_config: {
       loop_type: "for_each",
-      max_iterations: 10
-    }
+      max_iterations: 10,
+    },
   },
-  position: { x: 0, y: 0 }
+  position: {
+    x: 0,
+    y: 0,
+  },
 };
 describe("LoopNodeEditor", () => {
   const mockOnUpdate = jest.fn();
@@ -22,42 +24,33 @@ describe("LoopNodeEditor", () => {
   });
   it("should render loop configuration fields", () => {
     render(
-      /* @__PURE__ */ jsx(
-        LoopNodeEditor,
-        {
-          node: mockNode,
-          onUpdate: mockOnUpdate,
-          onConfigUpdate: mockOnConfigUpdate
-        }
-      )
+      <LoopNodeEditor
+        node={mockNode}
+        onUpdate={mockOnUpdate}
+        onConfigUpdate={mockOnConfigUpdate}
+      />,
     );
     expect(screen.getByLabelText(/loop type/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/max iterations/i)).toBeInTheDocument();
   });
   it("should display current loop type", () => {
     render(
-      /* @__PURE__ */ jsx(
-        LoopNodeEditor,
-        {
-          node: mockNode,
-          onUpdate: mockOnUpdate,
-          onConfigUpdate: mockOnConfigUpdate
-        }
-      )
+      <LoopNodeEditor
+        node={mockNode}
+        onUpdate={mockOnUpdate}
+        onConfigUpdate={mockOnConfigUpdate}
+      />,
     );
     const loopTypeSelect = screen.getByLabelText(/loop type/i);
     expect(loopTypeSelect.value).toBe("for_each");
   });
   it("should display current max iterations value", () => {
     render(
-      /* @__PURE__ */ jsx(
-        LoopNodeEditor,
-        {
-          node: mockNode,
-          onUpdate: mockOnUpdate,
-          onConfigUpdate: mockOnConfigUpdate
-        }
-      )
+      <LoopNodeEditor
+        node={mockNode}
+        onUpdate={mockOnUpdate}
+        onConfigUpdate={mockOnConfigUpdate}
+      />,
     );
     const maxIterationsInput = screen.getByLabelText(/max iterations/i);
     expect(maxIterationsInput.value).toBe("10");
@@ -65,78 +58,74 @@ describe("LoopNodeEditor", () => {
   it("should call onUpdate when loop type changes", async () => {
     const user = userEvent.setup();
     render(
-      /* @__PURE__ */ jsx(
-        LoopNodeEditor,
-        {
-          node: mockNode,
-          onUpdate: mockOnUpdate,
-          onConfigUpdate: mockOnConfigUpdate
-        }
-      )
+      <LoopNodeEditor
+        node={mockNode}
+        onUpdate={mockOnUpdate}
+        onConfigUpdate={mockOnConfigUpdate}
+      />,
     );
     const loopTypeSelect = screen.getByLabelText(/loop type/i);
     await user.selectOptions(loopTypeSelect, "while");
-    expect(mockOnUpdate).toHaveBeenCalledWith("loop_config", expect.objectContaining({
-      loop_type: "while"
-    }));
+    expect(mockOnUpdate).toHaveBeenCalledWith(
+      "loop_config",
+      expect.objectContaining({
+        loop_type: "while",
+      }),
+    );
   });
   it("should call onConfigUpdate when max iterations changes", async () => {
     const user = userEvent.setup();
     render(
-      /* @__PURE__ */ jsx(
-        LoopNodeEditor,
-        {
-          node: mockNode,
-          onUpdate: mockOnUpdate,
-          onConfigUpdate: mockOnConfigUpdate
-        }
-      )
+      <LoopNodeEditor
+        node={mockNode}
+        onUpdate={mockOnUpdate}
+        onConfigUpdate={mockOnConfigUpdate}
+      />,
     );
     const maxIterationsInput = screen.getByLabelText(/max iterations/i);
     await user.clear(maxIterationsInput);
     await user.type(maxIterationsInput, "20");
-    expect(mockOnConfigUpdate).toHaveBeenCalledWith("loop_config", "max_iterations", 20);
+    expect(mockOnConfigUpdate).toHaveBeenCalledWith(
+      "loop_config",
+      "max_iterations",
+      20,
+    );
   });
   it("should handle zero max iterations", async () => {
     const user = userEvent.setup();
     render(
-      /* @__PURE__ */ jsx(
-        LoopNodeEditor,
-        {
-          node: mockNode,
-          onUpdate: mockOnUpdate,
-          onConfigUpdate: mockOnConfigUpdate
-        }
-      )
+      <LoopNodeEditor
+        node={mockNode}
+        onUpdate={mockOnUpdate}
+        onConfigUpdate={mockOnConfigUpdate}
+      />,
     );
     const maxIterationsInput = screen.getByLabelText(/max iterations/i);
     await user.clear(maxIterationsInput);
     await user.type(maxIterationsInput, "0");
-    expect(mockOnConfigUpdate).toHaveBeenCalledWith("loop_config", "max_iterations", 0);
+    expect(mockOnConfigUpdate).toHaveBeenCalledWith(
+      "loop_config",
+      "max_iterations",
+      0,
+    );
   });
   it("should display help text for max iterations", () => {
     render(
-      /* @__PURE__ */ jsx(
-        LoopNodeEditor,
-        {
-          node: mockNode,
-          onUpdate: mockOnUpdate,
-          onConfigUpdate: mockOnConfigUpdate
-        }
-      )
+      <LoopNodeEditor
+        node={mockNode}
+        onUpdate={mockOnUpdate}
+        onConfigUpdate={mockOnConfigUpdate}
+      />,
     );
     expect(screen.getByText(/Maximum number of times/i)).toBeInTheDocument();
   });
   it("should not update max iterations when input is focused", async () => {
     const { rerender } = render(
-      /* @__PURE__ */ jsx(
-        LoopNodeEditor,
-        {
-          node: mockNode,
-          onUpdate: mockOnUpdate,
-          onConfigUpdate: mockOnConfigUpdate
-        }
-      )
+      <LoopNodeEditor
+        node={mockNode}
+        onUpdate={mockOnUpdate}
+        onConfigUpdate={mockOnConfigUpdate}
+      />,
     );
     const maxIterationsInput = screen.getByLabelText(/max iterations/i);
     maxIterationsInput.focus();
@@ -146,19 +135,16 @@ describe("LoopNodeEditor", () => {
         ...mockNode.data,
         loop_config: {
           ...mockNode.data.loop_config,
-          max_iterations: 20
-        }
-      }
+          max_iterations: 20,
+        },
+      },
     };
     rerender(
-      /* @__PURE__ */ jsx(
-        LoopNodeEditor,
-        {
-          node: updatedNode,
-          onUpdate: mockOnUpdate,
-          onConfigUpdate: mockOnConfigUpdate
-        }
-      )
+      <LoopNodeEditor
+        node={updatedNode}
+        onUpdate={mockOnUpdate}
+        onConfigUpdate={mockOnConfigUpdate}
+      />,
     );
     expect(maxIterationsInput.value).toBe("10");
   });
@@ -168,53 +154,60 @@ describe("LoopNodeEditor", () => {
       data: {
         ...mockNode.data,
         loop_config: {
-          loop_type: "for_each"
+          loop_type: "for_each",
           // max_iterations is undefined
-        }
-      }
+        },
+      },
     };
     render(
-      /* @__PURE__ */ jsx(
-        LoopNodeEditor,
-        {
-          node: nodeWithoutMaxIterations,
-          onUpdate: mockOnUpdate,
-          onConfigUpdate: mockOnConfigUpdate
-        }
-      )
+      <LoopNodeEditor
+        node={nodeWithoutMaxIterations}
+        onUpdate={mockOnUpdate}
+        onConfigUpdate={mockOnConfigUpdate}
+      />,
     );
     const maxIterationsInput = screen.getByLabelText(/max iterations/i);
     expect(maxIterationsInput.value).toBe("0");
   });
   it("should handle empty max iterations input", () => {
     render(
-      /* @__PURE__ */ jsx(
-        LoopNodeEditor,
-        {
-          node: mockNode,
-          onUpdate: mockOnUpdate,
-          onConfigUpdate: mockOnConfigUpdate
-        }
-      )
+      <LoopNodeEditor
+        node={mockNode}
+        onUpdate={mockOnUpdate}
+        onConfigUpdate={mockOnConfigUpdate}
+      />,
     );
     const maxIterationsInput = screen.getByLabelText(/max iterations/i);
-    fireEvent.change(maxIterationsInput, { target: { value: "" } });
-    expect(mockOnConfigUpdate).toHaveBeenCalledWith("loop_config", "max_iterations", 0);
+    fireEvent.change(maxIterationsInput, {
+      target: {
+        value: "",
+      },
+    });
+    expect(mockOnConfigUpdate).toHaveBeenCalledWith(
+      "loop_config",
+      "max_iterations",
+      0,
+    );
   });
   it("should handle invalid max iterations input", () => {
     render(
-      /* @__PURE__ */ jsx(
-        LoopNodeEditor,
-        {
-          node: mockNode,
-          onUpdate: mockOnUpdate,
-          onConfigUpdate: mockOnConfigUpdate
-        }
-      )
+      <LoopNodeEditor
+        node={mockNode}
+        onUpdate={mockOnUpdate}
+        onConfigUpdate={mockOnConfigUpdate}
+      />,
     );
     const maxIterationsInput = screen.getByLabelText(/max iterations/i);
-    fireEvent.change(maxIterationsInput, { target: { value: "abc" } });
-    expect(mockOnConfigUpdate).toHaveBeenCalledWith("loop_config", "max_iterations", 0);
+    fireEvent.change(maxIterationsInput, {
+      target: {
+        value: "abc",
+      },
+    });
+    expect(mockOnConfigUpdate).toHaveBeenCalledWith(
+      "loop_config",
+      "max_iterations",
+      0,
+    );
   });
   describe("edge cases", () => {
     it("should handle loop_config being undefined", () => {
@@ -222,18 +215,15 @@ describe("LoopNodeEditor", () => {
         ...mockNode,
         data: {
           ...mockNode.data,
-          loop_config: void 0
-        }
+          loop_config: void 0,
+        },
       };
       render(
-        /* @__PURE__ */ jsx(
-          LoopNodeEditor,
-          {
-            node: nodeWithoutConfig,
-            onUpdate: mockOnUpdate,
-            onConfigUpdate: mockOnConfigUpdate
-          }
-        )
+        <LoopNodeEditor
+          node={nodeWithoutConfig}
+          onUpdate={mockOnUpdate}
+          onConfigUpdate={mockOnConfigUpdate}
+        />,
       );
       const loopTypeSelect = screen.getByLabelText(/loop type/i);
       expect(loopTypeSelect.value).toBe("for_each");
@@ -243,18 +233,15 @@ describe("LoopNodeEditor", () => {
         ...mockNode,
         data: {
           ...mockNode.data,
-          loop_config: null
-        }
+          loop_config: null,
+        },
       };
       render(
-        /* @__PURE__ */ jsx(
-          LoopNodeEditor,
-          {
-            node: nodeWithNullConfig,
-            onUpdate: mockOnUpdate,
-            onConfigUpdate: mockOnConfigUpdate
-          }
-        )
+        <LoopNodeEditor
+          node={nodeWithNullConfig}
+          onUpdate={mockOnUpdate}
+          onConfigUpdate={mockOnConfigUpdate}
+        />,
       );
       const loopTypeSelect = screen.getByLabelText(/loop type/i);
       expect(loopTypeSelect.value).toBe("for_each");
@@ -265,20 +252,17 @@ describe("LoopNodeEditor", () => {
         data: {
           ...mockNode.data,
           loop_config: {
-            max_iterations: 10
+            max_iterations: 10,
             // loop_type is undefined
-          }
-        }
+          },
+        },
       };
       render(
-        /* @__PURE__ */ jsx(
-          LoopNodeEditor,
-          {
-            node: nodeWithoutType,
-            onUpdate: mockOnUpdate,
-            onConfigUpdate: mockOnConfigUpdate
-          }
-        )
+        <LoopNodeEditor
+          node={nodeWithoutType}
+          onUpdate={mockOnUpdate}
+          onConfigUpdate={mockOnConfigUpdate}
+        />,
       );
       const loopTypeSelect = screen.getByLabelText(/loop type/i);
       expect(loopTypeSelect.value).toBe("for_each");
@@ -290,19 +274,16 @@ describe("LoopNodeEditor", () => {
           ...mockNode.data,
           loop_config: {
             loop_type: "for_each",
-            max_iterations: null
-          }
-        }
+            max_iterations: null,
+          },
+        },
       };
       render(
-        /* @__PURE__ */ jsx(
-          LoopNodeEditor,
-          {
-            node: nodeWithNullMaxIterations,
-            onUpdate: mockOnUpdate,
-            onConfigUpdate: mockOnConfigUpdate
-          }
-        )
+        <LoopNodeEditor
+          node={nodeWithNullMaxIterations}
+          onUpdate={mockOnUpdate}
+          onConfigUpdate={mockOnConfigUpdate}
+        />,
       );
       const maxIterationsInput = screen.getByLabelText(/max iterations/i);
       expect(maxIterationsInput.value).toBe("0");
@@ -313,20 +294,17 @@ describe("LoopNodeEditor", () => {
         data: {
           ...mockNode.data,
           loop_config: {
-            loop_type: "for_each"
+            loop_type: "for_each",
             // max_iterations is undefined
-          }
-        }
+          },
+        },
       };
       render(
-        /* @__PURE__ */ jsx(
-          LoopNodeEditor,
-          {
-            node: nodeWithoutMaxIterations,
-            onUpdate: mockOnUpdate,
-            onConfigUpdate: mockOnConfigUpdate
-          }
-        )
+        <LoopNodeEditor
+          node={nodeWithoutMaxIterations}
+          onUpdate={mockOnUpdate}
+          onConfigUpdate={mockOnConfigUpdate}
+        />,
       );
       const maxIterationsInput = screen.getByLabelText(/max iterations/i);
       expect(maxIterationsInput.value).toBe("0");
@@ -338,33 +316,27 @@ describe("LoopNodeEditor", () => {
           ...mockNode.data,
           loop_config: {
             loop_type: "for_each",
-            max_iterations: 0
-          }
-        }
+            max_iterations: 0,
+          },
+        },
       };
       render(
-        /* @__PURE__ */ jsx(
-          LoopNodeEditor,
-          {
-            node: nodeWithZeroMaxIterations,
-            onUpdate: mockOnUpdate,
-            onConfigUpdate: mockOnConfigUpdate
-          }
-        )
+        <LoopNodeEditor
+          node={nodeWithZeroMaxIterations}
+          onUpdate={mockOnUpdate}
+          onConfigUpdate={mockOnConfigUpdate}
+        />,
       );
       const maxIterationsInput = screen.getByLabelText(/max iterations/i);
       expect(maxIterationsInput.value).toBe("0");
     });
     it("should handle focus check for loopMaxIterationsRef", () => {
       const { rerender } = render(
-        /* @__PURE__ */ jsx(
-          LoopNodeEditor,
-          {
-            node: mockNode,
-            onUpdate: mockOnUpdate,
-            onConfigUpdate: mockOnConfigUpdate
-          }
-        )
+        <LoopNodeEditor
+          node={mockNode}
+          onUpdate={mockOnUpdate}
+          onConfigUpdate={mockOnConfigUpdate}
+        />,
       );
       const maxIterationsInput = screen.getByLabelText(/max iterations/i);
       maxIterationsInput.focus();
@@ -374,19 +346,16 @@ describe("LoopNodeEditor", () => {
           ...mockNode.data,
           loop_config: {
             ...mockNode.data.loop_config,
-            max_iterations: 20
-          }
-        }
+            max_iterations: 20,
+          },
+        },
       };
       rerender(
-        /* @__PURE__ */ jsx(
-          LoopNodeEditor,
-          {
-            node: updatedNode,
-            onUpdate: mockOnUpdate,
-            onConfigUpdate: mockOnConfigUpdate
-          }
-        )
+        <LoopNodeEditor
+          node={updatedNode}
+          onUpdate={mockOnUpdate}
+          onConfigUpdate={mockOnConfigUpdate}
+        />,
       );
       expect(maxIterationsInput.value).toBe("10");
     });
@@ -399,19 +368,16 @@ describe("LoopNodeEditor", () => {
             ...mockNode.data,
             loop_config: {
               ...mockNode.data.loop_config,
-              loop_type: loopType
-            }
-          }
+              loop_type: loopType,
+            },
+          },
         };
         const { unmount } = render(
-          /* @__PURE__ */ jsx(
-            LoopNodeEditor,
-            {
-              node,
-              onUpdate: mockOnUpdate,
-              onConfigUpdate: mockOnConfigUpdate
-            }
-          )
+          <LoopNodeEditor
+            node={node}
+            onUpdate={mockOnUpdate}
+            onConfigUpdate={mockOnConfigUpdate}
+          />,
         );
         const loopTypeSelect = screen.getByLabelText(/loop type/i);
         expect(loopTypeSelect.value).toBe(loopType);
@@ -421,66 +387,85 @@ describe("LoopNodeEditor", () => {
     });
     it("should handle parseInt || 0 with empty string", () => {
       render(
-        /* @__PURE__ */ jsx(
-          LoopNodeEditor,
-          {
-            node: mockNode,
-            onUpdate: mockOnUpdate,
-            onConfigUpdate: mockOnConfigUpdate
-          }
-        )
+        <LoopNodeEditor
+          node={mockNode}
+          onUpdate={mockOnUpdate}
+          onConfigUpdate={mockOnConfigUpdate}
+        />,
       );
       const maxIterationsInput = screen.getByLabelText(/max iterations/i);
-      fireEvent.change(maxIterationsInput, { target: { value: "" } });
-      expect(mockOnConfigUpdate).toHaveBeenCalledWith("loop_config", "max_iterations", 0);
+      fireEvent.change(maxIterationsInput, {
+        target: {
+          value: "",
+        },
+      });
+      expect(mockOnConfigUpdate).toHaveBeenCalledWith(
+        "loop_config",
+        "max_iterations",
+        0,
+      );
     });
     it("should handle parseInt || 0 with non-numeric string", () => {
       render(
-        /* @__PURE__ */ jsx(
-          LoopNodeEditor,
-          {
-            node: mockNode,
-            onUpdate: mockOnUpdate,
-            onConfigUpdate: mockOnConfigUpdate
-          }
-        )
+        <LoopNodeEditor
+          node={mockNode}
+          onUpdate={mockOnUpdate}
+          onConfigUpdate={mockOnConfigUpdate}
+        />,
       );
       const maxIterationsInput = screen.getByLabelText(/max iterations/i);
-      fireEvent.change(maxIterationsInput, { target: { value: "abc" } });
-      expect(mockOnConfigUpdate).toHaveBeenCalledWith("loop_config", "max_iterations", 0);
+      fireEvent.change(maxIterationsInput, {
+        target: {
+          value: "abc",
+        },
+      });
+      expect(mockOnConfigUpdate).toHaveBeenCalledWith(
+        "loop_config",
+        "max_iterations",
+        0,
+      );
     });
     it("should handle parseInt || 0 with valid number", () => {
       render(
-        /* @__PURE__ */ jsx(
-          LoopNodeEditor,
-          {
-            node: mockNode,
-            onUpdate: mockOnUpdate,
-            onConfigUpdate: mockOnConfigUpdate
-          }
-        )
+        <LoopNodeEditor
+          node={mockNode}
+          onUpdate={mockOnUpdate}
+          onConfigUpdate={mockOnConfigUpdate}
+        />,
       );
       const maxIterationsInput = screen.getByLabelText(/max iterations/i);
-      fireEvent.change(maxIterationsInput, { target: { value: "25" } });
-      expect(mockOnConfigUpdate).toHaveBeenCalledWith("loop_config", "max_iterations", 25);
+      fireEvent.change(maxIterationsInput, {
+        target: {
+          value: "25",
+        },
+      });
+      expect(mockOnConfigUpdate).toHaveBeenCalledWith(
+        "loop_config",
+        "max_iterations",
+        25,
+      );
     });
     it("should handle onChange with all loop_config fields", () => {
       render(
-        /* @__PURE__ */ jsx(
-          LoopNodeEditor,
-          {
-            node: mockNode,
-            onUpdate: mockOnUpdate,
-            onConfigUpdate: mockOnConfigUpdate
-          }
-        )
+        <LoopNodeEditor
+          node={mockNode}
+          onUpdate={mockOnUpdate}
+          onConfigUpdate={mockOnConfigUpdate}
+        />,
       );
       const loopTypeSelect = screen.getByLabelText(/loop type/i);
-      fireEvent.change(loopTypeSelect, { target: { value: "while" } });
-      expect(mockOnUpdate).toHaveBeenCalledWith("loop_config", expect.objectContaining({
-        loop_type: "while",
-        max_iterations: expect.anything()
-      }));
+      fireEvent.change(loopTypeSelect, {
+        target: {
+          value: "while",
+        },
+      });
+      expect(mockOnUpdate).toHaveBeenCalledWith(
+        "loop_config",
+        expect.objectContaining({
+          loop_type: "while",
+          max_iterations: expect.anything(),
+        }),
+      );
     });
   });
 });

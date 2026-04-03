@@ -7,7 +7,7 @@ function useFormField(options) {
     onUpdate,
     nodeData,
     dataPath,
-    syncWithNodeData = true
+    syncWithNodeData = true,
   } = options;
   const [value, setValueState] = useState(() => {
     if (nodeData && dataPath && syncWithNodeData) {
@@ -31,26 +31,24 @@ function useFormField(options) {
   }, [nodeData, dataPath, syncWithNodeData, value]);
   const setValue = useCallback(
     (newValue) => {
-      const valueToSet = typeof newValue === "function" ? newValue(value) : newValue;
+      const valueToSet =
+        typeof newValue === "function" ? newValue(value) : newValue;
       setValueState(valueToSet);
       onUpdate(valueToSet);
     },
-    [value, onUpdate]
+    [value, onUpdate],
   );
   return {
     value,
     setValue,
-    inputRef
+    inputRef,
   };
 }
 function useSimpleFormField(initialValue, onUpdate) {
   return useFormField({
     initialValue,
     onUpdate,
-    syncWithNodeData: false
+    syncWithNodeData: false,
   });
 }
-export {
-  useFormField,
-  useSimpleFormField
-};
+export { useFormField, useSimpleFormField };

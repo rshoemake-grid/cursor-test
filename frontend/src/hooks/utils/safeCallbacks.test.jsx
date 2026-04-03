@@ -1,7 +1,7 @@
 import {
   safeShowError,
   safeShowSuccess,
-  safeOnComplete
+  safeOnComplete,
 } from "./safeCallbacks";
 describe("safeShowError", () => {
   it("should handle callbacks as null", () => {
@@ -30,7 +30,7 @@ describe("safeShowError", () => {
     const mockShowError = jest.fn();
     const callbacks = {
       showError: mockShowError,
-      showSuccess: jest.fn()
+      showSuccess: jest.fn(),
     };
     safeShowError(callbacks, "test error message");
     expect(mockShowError).toHaveBeenCalledTimes(1);
@@ -42,7 +42,7 @@ describe("safeShowError", () => {
     });
     const callbacks = {
       showError: mockShowError,
-      showSuccess: jest.fn()
+      showSuccess: jest.fn(),
     };
     expect(() => safeShowError(callbacks, "test error")).not.toThrow();
     expect(mockShowError).toHaveBeenCalledTimes(1);
@@ -71,7 +71,7 @@ describe("safeShowSuccess", () => {
     const mockShowSuccess = jest.fn();
     const callbacks = {
       showError: jest.fn(),
-      showSuccess: mockShowSuccess
+      showSuccess: mockShowSuccess,
     };
     safeShowSuccess(callbacks, "test success message");
     expect(mockShowSuccess).toHaveBeenCalledTimes(1);
@@ -83,7 +83,7 @@ describe("safeShowSuccess", () => {
     });
     const callbacks = {
       showError: jest.fn(),
-      showSuccess: mockShowSuccess
+      showSuccess: mockShowSuccess,
     };
     expect(() => safeShowSuccess(callbacks, "test success")).not.toThrow();
     expect(mockShowSuccess).toHaveBeenCalledTimes(1);
@@ -99,7 +99,7 @@ describe("safeOnComplete", () => {
   it("should handle callbacks.onComplete as undefined (optional)", () => {
     const callbacks = {
       showError: jest.fn(),
-      showSuccess: jest.fn()
+      showSuccess: jest.fn(),
     };
     expect(() => safeOnComplete(callbacks)).not.toThrow();
   });
@@ -107,7 +107,7 @@ describe("safeOnComplete", () => {
     const callbacks = {
       showError: jest.fn(),
       showSuccess: jest.fn(),
-      onComplete: null
+      onComplete: null,
     };
     expect(() => safeOnComplete(callbacks)).not.toThrow();
   });
@@ -115,7 +115,7 @@ describe("safeOnComplete", () => {
     const callbacks = {
       showError: jest.fn(),
       showSuccess: jest.fn(),
-      onComplete: "not a function"
+      onComplete: "not a function",
     };
     expect(() => safeOnComplete(callbacks)).not.toThrow();
   });
@@ -124,7 +124,7 @@ describe("safeOnComplete", () => {
     const callbacks = {
       showError: jest.fn(),
       showSuccess: jest.fn(),
-      onComplete: mockOnComplete
+      onComplete: mockOnComplete,
     };
     safeOnComplete(callbacks);
     expect(mockOnComplete).toHaveBeenCalledTimes(1);
@@ -137,7 +137,7 @@ describe("safeOnComplete", () => {
     const callbacks = {
       showError: jest.fn(),
       showSuccess: jest.fn(),
-      onComplete: mockOnComplete
+      onComplete: mockOnComplete,
     };
     expect(() => safeOnComplete(callbacks)).not.toThrow();
     expect(mockOnComplete).toHaveBeenCalledTimes(1);

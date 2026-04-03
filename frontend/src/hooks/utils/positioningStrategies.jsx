@@ -3,13 +3,13 @@ class HorizontalStrategy {
     if (existingNodes.length === 0) {
       return Array.from({ length: count }, (_, i) => ({
         x: options.defaultX + i * options.horizontalSpacing,
-        y: options.defaultY
+        y: options.defaultY,
       }));
     }
     const maxX = Math.max(...existingNodes.map((n) => n.position.x));
     return Array.from({ length: count }, (_, i) => ({
       x: maxX + options.horizontalSpacing + i * options.horizontalSpacing,
-      y: options.defaultY
+      y: options.defaultY,
     }));
   }
 }
@@ -18,13 +18,13 @@ class VerticalStrategy {
     if (existingNodes.length === 0) {
       return Array.from({ length: count }, (_, i) => ({
         x: options.defaultX,
-        y: options.defaultY + i * options.verticalSpacing
+        y: options.defaultY + i * options.verticalSpacing,
       }));
     }
     const maxX = Math.max(...existingNodes.map((n) => n.position.x));
     return Array.from({ length: count }, (_, i) => ({
       x: maxX + options.horizontalSpacing,
-      y: options.defaultY + i * options.verticalSpacing
+      y: options.defaultY + i * options.verticalSpacing,
     }));
   }
 }
@@ -46,7 +46,7 @@ class GridStrategy {
       const col = index % this.columnsPerRow;
       return {
         x: startX + col * options.horizontalSpacing,
-        y: startY + row * options.verticalSpacing
+        y: startY + row * options.verticalSpacing,
       };
     });
   }
@@ -63,6 +63,4 @@ function createPositioningStrategy(type, columnsPerRow) {
       return new HorizontalStrategy();
   }
 }
-export {
-  createPositioningStrategy
-};
+export { createPositioningStrategy };

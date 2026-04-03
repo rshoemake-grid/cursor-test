@@ -11,7 +11,7 @@ describe("useMarketplaceDialog", () => {
     const testNode = {
       id: "node1",
       type: "agent",
-      data: { name: "Test Agent" }
+      data: { name: "Test Agent" },
     };
     act(() => {
       result.current.openDialog(testNode);
@@ -24,7 +24,7 @@ describe("useMarketplaceDialog", () => {
     const testNode = {
       id: "node1",
       type: "agent",
-      data: { name: "Test Agent" }
+      data: { name: "Test Agent" },
     };
     act(() => {
       result.current.openDialog(testNode);

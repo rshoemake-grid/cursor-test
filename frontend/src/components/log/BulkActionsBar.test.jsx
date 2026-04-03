@@ -1,4 +1,3 @@
-import { jsx } from "react/jsx-runtime";
 import { render, screen, fireEvent } from "@testing-library/react";
 import BulkActionsBar from "./BulkActionsBar";
 describe("BulkActionsBar", () => {
@@ -9,53 +8,41 @@ describe("BulkActionsBar", () => {
   });
   it("should not render when selectedCount is 0", () => {
     const { container } = render(
-      /* @__PURE__ */ jsx(
-        BulkActionsBar,
-        {
-          selectedCount: 0,
-          onDelete: mockOnDelete,
-          onClearSelection: mockOnClearSelection
-        }
-      )
+      <BulkActionsBar
+        selectedCount={0}
+        onDelete={mockOnDelete}
+        onClearSelection={mockOnClearSelection}
+      />,
     );
     expect(container.firstChild).toBeNull();
   });
   it("should render when selectedCount is greater than 0", () => {
     render(
-      /* @__PURE__ */ jsx(
-        BulkActionsBar,
-        {
-          selectedCount: 3,
-          onDelete: mockOnDelete,
-          onClearSelection: mockOnClearSelection
-        }
-      )
+      <BulkActionsBar
+        selectedCount={3}
+        onDelete={mockOnDelete}
+        onClearSelection={mockOnClearSelection}
+      />,
     );
     expect(screen.getByText(/3 execution.*selected/)).toBeInTheDocument();
   });
   it("should display correct count for single execution", () => {
     render(
-      /* @__PURE__ */ jsx(
-        BulkActionsBar,
-        {
-          selectedCount: 1,
-          onDelete: mockOnDelete,
-          onClearSelection: mockOnClearSelection
-        }
-      )
+      <BulkActionsBar
+        selectedCount={1}
+        onDelete={mockOnDelete}
+        onClearSelection={mockOnClearSelection}
+      />,
     );
     expect(screen.getByText(/1 execution selected/)).toBeInTheDocument();
   });
   it("should call onDelete when delete button is clicked", () => {
     render(
-      /* @__PURE__ */ jsx(
-        BulkActionsBar,
-        {
-          selectedCount: 2,
-          onDelete: mockOnDelete,
-          onClearSelection: mockOnClearSelection
-        }
-      )
+      <BulkActionsBar
+        selectedCount={2}
+        onDelete={mockOnDelete}
+        onClearSelection={mockOnClearSelection}
+      />,
     );
     const deleteButton = screen.getByText("Delete");
     fireEvent.click(deleteButton);
@@ -63,14 +50,11 @@ describe("BulkActionsBar", () => {
   });
   it("should call onClearSelection when clear button is clicked", () => {
     render(
-      /* @__PURE__ */ jsx(
-        BulkActionsBar,
-        {
-          selectedCount: 2,
-          onDelete: mockOnDelete,
-          onClearSelection: mockOnClearSelection
-        }
-      )
+      <BulkActionsBar
+        selectedCount={2}
+        onDelete={mockOnDelete}
+        onClearSelection={mockOnClearSelection}
+      />,
     );
     const clearButton = screen.getByLabelText("Clear selection");
     fireEvent.click(clearButton);
@@ -78,43 +62,34 @@ describe("BulkActionsBar", () => {
   });
   it("should disable delete button when isDeleting is true", () => {
     render(
-      /* @__PURE__ */ jsx(
-        BulkActionsBar,
-        {
-          selectedCount: 2,
-          onDelete: mockOnDelete,
-          onClearSelection: mockOnClearSelection,
-          isDeleting: true
-        }
-      )
+      <BulkActionsBar
+        selectedCount={2}
+        onDelete={mockOnDelete}
+        onClearSelection={mockOnClearSelection}
+        isDeleting={true}
+      />,
     );
     const deleteButton = screen.getByText("Deleting...");
     expect(deleteButton).toBeDisabled();
   });
   it('should show "Deleting..." text when isDeleting is true', () => {
     render(
-      /* @__PURE__ */ jsx(
-        BulkActionsBar,
-        {
-          selectedCount: 2,
-          onDelete: mockOnDelete,
-          onClearSelection: mockOnClearSelection,
-          isDeleting: true
-        }
-      )
+      <BulkActionsBar
+        selectedCount={2}
+        onDelete={mockOnDelete}
+        onClearSelection={mockOnClearSelection}
+        isDeleting={true}
+      />,
     );
     expect(screen.getByText("Deleting...")).toBeInTheDocument();
   });
   it("should have correct styling", () => {
     const { container } = render(
-      /* @__PURE__ */ jsx(
-        BulkActionsBar,
-        {
-          selectedCount: 1,
-          onDelete: mockOnDelete,
-          onClearSelection: mockOnClearSelection
-        }
-      )
+      <BulkActionsBar
+        selectedCount={1}
+        onDelete={mockOnDelete}
+        onClearSelection={mockOnClearSelection}
+      />,
     );
     const bar = container.firstChild;
     expect(bar).toHaveClass("bg-primary-600", "text-white");

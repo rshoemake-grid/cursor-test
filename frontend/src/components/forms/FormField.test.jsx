@@ -1,4 +1,3 @@
-import { jsx } from "react/jsx-runtime";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { FormField } from "./FormField";
 jest.mock("../../hooks/forms", () => {
@@ -8,9 +7,9 @@ jest.mock("../../hooks/forms", () => {
       return {
         value: options?.initialValue || "",
         setValue: jest.fn(),
-        inputRef: React2.createRef()
+        inputRef: React2.createRef(),
       };
-    })
+    }),
   };
 });
 describe("FormField", () => {
@@ -21,16 +20,13 @@ describe("FormField", () => {
     it("should render text input with label", () => {
       const handleChange = jest.fn();
       render(
-        /* @__PURE__ */ jsx(
-          FormField,
-          {
-            label: "Test Label",
-            id: "test-input",
-            value: "test value",
-            onChange: handleChange,
-            type: "text"
-          }
-        )
+        <FormField
+          label="Test Label"
+          id="test-input"
+          value="test value"
+          onChange={handleChange}
+          type="text"
+        />,
       );
       expect(screen.getByLabelText("Test Label")).toBeInTheDocument();
       expect(screen.getByDisplayValue("test value")).toBeInTheDocument();
@@ -38,78 +34,69 @@ describe("FormField", () => {
     it("should call onChange when value changes", () => {
       const handleChange = jest.fn();
       render(
-        /* @__PURE__ */ jsx(
-          FormField,
-          {
-            label: "Test Label",
-            id: "test-input",
-            value: "",
-            onChange: handleChange,
-            type: "text"
-          }
-        )
+        <FormField
+          label="Test Label"
+          id="test-input"
+          value=""
+          onChange={handleChange}
+          type="text"
+        />,
       );
       const input = screen.getByLabelText("Test Label");
-      fireEvent.change(input, { target: { value: "new value" } });
+      fireEvent.change(input, {
+        target: {
+          value: "new value",
+        },
+      });
       expect(handleChange).toHaveBeenCalledWith("new value");
     });
     it("should show required indicator when required", () => {
       render(
-        /* @__PURE__ */ jsx(
-          FormField,
-          {
-            label: "Required Field",
-            id: "required-input",
-            value: "",
-            onChange: jest.fn(),
-            required: true
-          }
-        )
+        <FormField
+          label="Required Field"
+          id="required-input"
+          value=""
+          onChange={jest.fn()}
+          required={true}
+        />,
       );
       expect(screen.getByText("*")).toBeInTheDocument();
     });
     it("should show placeholder", () => {
       render(
-        /* @__PURE__ */ jsx(
-          FormField,
-          {
-            label: "Test Label",
-            id: "test-input",
-            value: "",
-            onChange: jest.fn(),
-            placeholder: "Enter text here"
-          }
-        )
+        <FormField
+          label="Test Label"
+          id="test-input"
+          value=""
+          onChange={jest.fn()}
+          placeholder="Enter text here"
+        />,
       );
-      expect(screen.getByPlaceholderText("Enter text here")).toBeInTheDocument();
+      expect(
+        screen.getByPlaceholderText("Enter text here"),
+      ).toBeInTheDocument();
     });
     it("should show description", () => {
       render(
-        /* @__PURE__ */ jsx(
-          FormField,
-          {
-            label: "Test Label",
-            id: "test-input",
-            value: "",
-            onChange: jest.fn(),
-            description: "This is a description"
-          }
-        )
+        <FormField
+          label="Test Label"
+          id="test-input"
+          value=""
+          onChange={jest.fn()}
+          description="This is a description"
+        />,
       );
       expect(screen.getByText("This is a description")).toBeInTheDocument();
     });
     it("should be disabled when disabled prop is true", () => {
       render(
-        /* @__PURE__ */ jsx(
-          FormField,
-          {
-            label: "Test Label",
-            id: "test-input",
-            value: "test",
-            onChange: jest.fn(),
-            disabled: true
-          }
-        )
+        <FormField
+          label="Test Label"
+          id="test-input"
+          value="test"
+          onChange={jest.fn()}
+          disabled={true}
+        />,
       );
       const input = screen.getByLabelText("Test Label");
       expect(input).toBeDisabled();
@@ -119,17 +106,14 @@ describe("FormField", () => {
     it("should render textarea", () => {
       const handleChange = jest.fn();
       render(
-        /* @__PURE__ */ jsx(
-          FormField,
-          {
-            label: "Description",
-            id: "description",
-            value: "test description",
-            onChange: handleChange,
-            type: "textarea",
-            rows: 5
-          }
-        )
+        <FormField
+          label="Description"
+          id="description"
+          value="test description"
+          onChange={handleChange}
+          type="textarea"
+          rows={5}
+        />,
       );
       const textarea = screen.getByLabelText("Description");
       expect(textarea.tagName).toBe("TEXTAREA");
@@ -137,17 +121,14 @@ describe("FormField", () => {
     });
     it("should use custom rows prop", () => {
       render(
-        /* @__PURE__ */ jsx(
-          FormField,
-          {
-            label: "Description",
-            id: "description",
-            value: "",
-            onChange: jest.fn(),
-            type: "textarea",
-            rows: 10
-          }
-        )
+        <FormField
+          label="Description"
+          id="description"
+          value=""
+          onChange={jest.fn()}
+          type="textarea"
+          rows={10}
+        />,
       );
       const textarea = screen.getByLabelText("Description");
       expect(textarea).toHaveAttribute("rows", "10");
@@ -155,40 +136,44 @@ describe("FormField", () => {
     it("should call onChange with text value", () => {
       const handleChange = jest.fn();
       render(
-        /* @__PURE__ */ jsx(
-          FormField,
-          {
-            label: "Description",
-            id: "description",
-            value: "",
-            onChange: handleChange,
-            type: "textarea"
-          }
-        )
+        <FormField
+          label="Description"
+          id="description"
+          value=""
+          onChange={handleChange}
+          type="textarea"
+        />,
       );
       const textarea = screen.getByLabelText("Description");
-      fireEvent.change(textarea, { target: { value: "new text" } });
+      fireEvent.change(textarea, {
+        target: {
+          value: "new text",
+        },
+      });
       expect(handleChange).toHaveBeenCalledWith("new text");
     });
   });
   describe("Select", () => {
     it("should render select with options", () => {
       const options = [
-        { value: "option1", label: "Option 1" },
-        { value: "option2", label: "Option 2" }
+        {
+          value: "option1",
+          label: "Option 1",
+        },
+        {
+          value: "option2",
+          label: "Option 2",
+        },
       ];
       render(
-        /* @__PURE__ */ jsx(
-          FormField,
-          {
-            label: "Select Option",
-            id: "select",
-            value: "option1",
-            onChange: jest.fn(),
-            type: "select",
-            options
-          }
-        )
+        <FormField
+          label="Select Option"
+          id="select"
+          value="option1"
+          onChange={jest.fn()}
+          type="select"
+          options={options}
+        />,
       );
       expect(screen.getByLabelText("Select Option")).toBeInTheDocument();
       expect(screen.getByText("Option 1")).toBeInTheDocument();
@@ -197,42 +182,46 @@ describe("FormField", () => {
     it("should call onChange with selected value", () => {
       const handleChange = jest.fn();
       const options = [
-        { value: "option1", label: "Option 1" },
-        { value: "option2", label: "Option 2" }
+        {
+          value: "option1",
+          label: "Option 1",
+        },
+        {
+          value: "option2",
+          label: "Option 2",
+        },
       ];
       render(
-        /* @__PURE__ */ jsx(
-          FormField,
-          {
-            label: "Select Option",
-            id: "select",
-            value: "option1",
-            onChange: handleChange,
-            type: "select",
-            options
-          }
-        )
+        <FormField
+          label="Select Option"
+          id="select"
+          value="option1"
+          onChange={handleChange}
+          type="select"
+          options={options}
+        />,
       );
       const select = screen.getByLabelText("Select Option");
-      fireEvent.change(select, { target: { value: "option2" } });
+      fireEvent.change(select, {
+        target: {
+          value: "option2",
+        },
+      });
       expect(handleChange).toHaveBeenCalledWith("option2");
     });
   });
   describe("Number input", () => {
     it("should render number input", () => {
       render(
-        /* @__PURE__ */ jsx(
-          FormField,
-          {
-            label: "Number",
-            id: "number",
-            value: 42,
-            onChange: jest.fn(),
-            type: "number",
-            min: 0,
-            max: 100
-          }
-        )
+        <FormField
+          label="Number"
+          id="number"
+          value={42}
+          onChange={jest.fn()}
+          type="number"
+          min={0}
+          max={100}
+        />,
       );
       const input = screen.getByLabelText("Number");
       expect(input).toHaveAttribute("type", "number");
@@ -242,35 +231,33 @@ describe("FormField", () => {
     it("should call onChange with number value", () => {
       const handleChange = jest.fn();
       render(
-        /* @__PURE__ */ jsx(
-          FormField,
-          {
-            label: "Number",
-            id: "number",
-            value: 0,
-            onChange: handleChange,
-            type: "number"
-          }
-        )
+        <FormField
+          label="Number"
+          id="number"
+          value={0}
+          onChange={handleChange}
+          type="number"
+        />,
       );
       const input = screen.getByLabelText("Number");
-      fireEvent.change(input, { target: { value: "42" } });
+      fireEvent.change(input, {
+        target: {
+          value: "42",
+        },
+      });
       expect(handleChange).toHaveBeenCalledWith(42);
     });
   });
   describe("Checkbox", () => {
     it("should render checkbox", () => {
       render(
-        /* @__PURE__ */ jsx(
-          FormField,
-          {
-            label: "Checkbox",
-            id: "checkbox",
-            value: true,
-            onChange: jest.fn(),
-            type: "checkbox"
-          }
-        )
+        <FormField
+          label="Checkbox"
+          id="checkbox"
+          value={true}
+          onChange={jest.fn()}
+          type="checkbox"
+        />,
       );
       const checkbox = screen.getByLabelText("Checkbox");
       expect(checkbox).toHaveAttribute("type", "checkbox");
@@ -279,16 +266,13 @@ describe("FormField", () => {
     it("should call onChange with boolean value", () => {
       const handleChange = jest.fn();
       render(
-        /* @__PURE__ */ jsx(
-          FormField,
-          {
-            label: "Checkbox",
-            id: "checkbox",
-            value: false,
-            onChange: handleChange,
-            type: "checkbox"
-          }
-        )
+        <FormField
+          label="Checkbox"
+          id="checkbox"
+          value={false}
+          onChange={handleChange}
+          type="checkbox"
+        />,
       );
       const checkbox = screen.getByLabelText("Checkbox");
       fireEvent.click(checkbox);
@@ -296,32 +280,26 @@ describe("FormField", () => {
     });
     it("should show description next to checkbox", () => {
       render(
-        /* @__PURE__ */ jsx(
-          FormField,
-          {
-            label: "Checkbox",
-            id: "checkbox",
-            value: false,
-            onChange: jest.fn(),
-            type: "checkbox",
-            description: "Check this box"
-          }
-        )
+        <FormField
+          label="Checkbox"
+          id="checkbox"
+          value={false}
+          onChange={jest.fn()}
+          type="checkbox"
+          description="Check this box"
+        />,
       );
       expect(screen.getByText("Check this box")).toBeInTheDocument();
     });
     it("should not show label above checkbox", () => {
       render(
-        /* @__PURE__ */ jsx(
-          FormField,
-          {
-            label: "Checkbox",
-            id: "checkbox",
-            value: false,
-            onChange: jest.fn(),
-            type: "checkbox"
-          }
-        )
+        <FormField
+          label="Checkbox"
+          id="checkbox"
+          value={false}
+          onChange={jest.fn()}
+          type="checkbox"
+        />,
       );
       const checkbox = screen.getByLabelText("Checkbox");
       expect(checkbox).toBeInTheDocument();
@@ -332,32 +310,26 @@ describe("FormField", () => {
   describe("Email and Password inputs", () => {
     it("should render email input", () => {
       render(
-        /* @__PURE__ */ jsx(
-          FormField,
-          {
-            label: "Email",
-            id: "email",
-            value: "test@example.com",
-            onChange: jest.fn(),
-            type: "email"
-          }
-        )
+        <FormField
+          label="Email"
+          id="email"
+          value="test@example.com"
+          onChange={jest.fn()}
+          type="email"
+        />,
       );
       const input = screen.getByLabelText("Email");
       expect(input).toHaveAttribute("type", "email");
     });
     it("should render password input", () => {
       render(
-        /* @__PURE__ */ jsx(
-          FormField,
-          {
-            label: "Password",
-            id: "password",
-            value: "password123",
-            onChange: jest.fn(),
-            type: "password"
-          }
-        )
+        <FormField
+          label="Password"
+          id="password"
+          value="password123"
+          onChange={jest.fn()}
+          type="password"
+        />,
       );
       const input = screen.getByLabelText("Password");
       expect(input).toHaveAttribute("type", "password");
@@ -365,21 +337,20 @@ describe("FormField", () => {
   });
   describe("Node data synchronization", () => {
     it("should use controlled value when syncWithNodeData is false", () => {
-      const nodeData = { name: "Node Name" };
+      const nodeData = {
+        name: "Node Name",
+      };
       const handleChange = jest.fn();
       render(
-        /* @__PURE__ */ jsx(
-          FormField,
-          {
-            label: "Test",
-            id: "test",
-            value: "controlled value",
-            onChange: handleChange,
-            nodeData,
-            dataPath: "name",
-            syncWithNodeData: false
-          }
-        )
+        <FormField
+          label="Test"
+          id="test"
+          value="controlled value"
+          onChange={handleChange}
+          nodeData={nodeData}
+          dataPath="name"
+          syncWithNodeData={false}
+        />,
       );
       expect(screen.getByDisplayValue("controlled value")).toBeInTheDocument();
     });
@@ -389,65 +360,60 @@ describe("FormField", () => {
       mockUseFormField.mockReturnValueOnce({
         value: "hook value",
         setValue: jest.fn(),
-        inputRef: React2.createRef()
+        inputRef: React2.createRef(),
       });
-      const nodeData = { name: "Node Name" };
+      const nodeData = {
+        name: "Node Name",
+      };
       const handleChange = jest.fn();
       render(
-        /* @__PURE__ */ jsx(
-          FormField,
-          {
-            label: "Test",
-            id: "test",
-            value: "controlled value",
-            onChange: handleChange,
-            nodeData,
-            dataPath: "name",
-            syncWithNodeData: true
-          }
-        )
+        <FormField
+          label="Test"
+          id="test"
+          value="controlled value"
+          onChange={handleChange}
+          nodeData={nodeData}
+          dataPath="name"
+          syncWithNodeData={true}
+        />,
       );
       expect(mockUseFormField).toHaveBeenCalledWith({
         initialValue: "controlled value",
         onUpdate: handleChange,
         nodeData,
         dataPath: "name",
-        syncWithNodeData: true
+        syncWithNodeData: true,
       });
       expect(screen.getByDisplayValue("hook value")).toBeInTheDocument();
     });
     it("should use controlled value when syncWithNodeData is true but nodeData is missing", () => {
       const handleChange = jest.fn();
       render(
-        /* @__PURE__ */ jsx(
-          FormField,
-          {
-            label: "Test",
-            id: "test",
-            value: "controlled value",
-            onChange: handleChange,
-            dataPath: "name",
-            syncWithNodeData: true
-          }
-        )
+        <FormField
+          label="Test"
+          id="test"
+          value="controlled value"
+          onChange={handleChange}
+          dataPath="name"
+          syncWithNodeData={true}
+        />,
       );
       expect(screen.getByDisplayValue("controlled value")).toBeInTheDocument();
     });
     it("should use controlled value when syncWithNodeData is true but dataPath is missing", () => {
-      const nodeData = { name: "Node Name" };
+      const nodeData = {
+        name: "Node Name",
+      };
       const handleChange = jest.fn();
       render(
-        /* @__PURE__ */ jsx(
-          FormField,
-          {
-            label: "Test",
-            id: "test",
-            value: "controlled value",
-            onChange: handleChange,
-            nodeData,
-            syncWithNodeData: true
-          }
-        )
+        <FormField
+          label="Test"
+          id="test"
+          value="controlled value"
+          onChange={handleChange}
+          nodeData={nodeData}
+          syncWithNodeData={true}
+        />,
       );
       expect(screen.getByDisplayValue("controlled value")).toBeInTheDocument();
     });
@@ -455,17 +421,14 @@ describe("FormField", () => {
   describe("Edge cases", () => {
     it("should handle empty options array for select", () => {
       render(
-        /* @__PURE__ */ jsx(
-          FormField,
-          {
-            label: "Select",
-            id: "select",
-            value: "",
-            onChange: jest.fn(),
-            type: "select",
-            options: []
-          }
-        )
+        <FormField
+          label="Select"
+          id="select"
+          value=""
+          onChange={jest.fn()}
+          type="select"
+          options={[]}
+        />,
       );
       const select = screen.getByLabelText("Select");
       expect(select).toBeInTheDocument();
@@ -473,18 +436,15 @@ describe("FormField", () => {
     });
     it("should handle min and max attributes for number input", () => {
       render(
-        /* @__PURE__ */ jsx(
-          FormField,
-          {
-            label: "Number",
-            id: "number",
-            value: 50,
-            onChange: jest.fn(),
-            type: "number",
-            min: 0,
-            max: 100
-          }
-        )
+        <FormField
+          label="Number"
+          id="number"
+          value={50}
+          onChange={jest.fn()}
+          type="number"
+          min={0}
+          max={100}
+        />,
       );
       const input = screen.getByLabelText("Number");
       expect(input).toHaveAttribute("min", "0");
@@ -493,49 +453,44 @@ describe("FormField", () => {
     it("should handle number input with empty string value", () => {
       const handleChange = jest.fn();
       render(
-        /* @__PURE__ */ jsx(
-          FormField,
-          {
-            label: "Number",
-            id: "number",
-            value: "",
-            onChange: handleChange,
-            type: "number"
-          }
-        )
+        <FormField
+          label="Number"
+          id="number"
+          value=""
+          onChange={handleChange}
+          type="number"
+        />,
       );
       const input = screen.getByLabelText("Number");
-      fireEvent.change(input, { target: { value: "42" } });
+      fireEvent.change(input, {
+        target: {
+          value: "42",
+        },
+      });
       expect(handleChange).toHaveBeenCalledWith(42);
     });
     it("should handle number input with zero value", () => {
       render(
-        /* @__PURE__ */ jsx(
-          FormField,
-          {
-            label: "Number",
-            id: "number",
-            value: 0,
-            onChange: jest.fn(),
-            type: "number"
-          }
-        )
+        <FormField
+          label="Number"
+          id="number"
+          value={0}
+          onChange={jest.fn()}
+          type="number"
+        />,
       );
       const input = screen.getByLabelText("Number");
       expect(input).toHaveValue(0);
     });
     it("should handle textarea without rows prop", () => {
       render(
-        /* @__PURE__ */ jsx(
-          FormField,
-          {
-            label: "Textarea",
-            id: "textarea",
-            value: "",
-            onChange: jest.fn(),
-            type: "textarea"
-          }
-        )
+        <FormField
+          label="Textarea"
+          id="textarea"
+          value=""
+          onChange={jest.fn()}
+          type="textarea"
+        />,
       );
       const textarea = screen.getByLabelText("Textarea");
       expect(textarea).toBeInTheDocument();
@@ -543,34 +498,33 @@ describe("FormField", () => {
     });
     it("should handle textarea with custom rows", () => {
       render(
-        /* @__PURE__ */ jsx(
-          FormField,
-          {
-            label: "Textarea",
-            id: "textarea",
-            value: "",
-            onChange: jest.fn(),
-            type: "textarea",
-            rows: 10
-          }
-        )
+        <FormField
+          label="Textarea"
+          id="textarea"
+          value=""
+          onChange={jest.fn()}
+          type="textarea"
+          rows={10}
+        />,
       );
       const textarea = screen.getByLabelText("Textarea");
       expect(textarea).toHaveAttribute("rows", "10");
     });
     it("should handle select with undefined value", () => {
       render(
-        /* @__PURE__ */ jsx(
-          FormField,
-          {
-            label: "Select",
-            id: "select",
-            value: void 0,
-            onChange: jest.fn(),
-            type: "select",
-            options: [{ value: "option1", label: "Option 1" }]
-          }
-        )
+        <FormField
+          label="Select"
+          id="select"
+          value={void 0}
+          onChange={jest.fn()}
+          type="select"
+          options={[
+            {
+              value: "option1",
+              label: "Option 1",
+            },
+          ]}
+        />,
       );
       const select = screen.getByLabelText("Select");
       expect(select).toBeInTheDocument();
@@ -578,16 +532,13 @@ describe("FormField", () => {
     it("should handle checkbox with false value", () => {
       const handleChange = jest.fn();
       render(
-        /* @__PURE__ */ jsx(
-          FormField,
-          {
-            label: "Checkbox",
-            id: "checkbox",
-            value: false,
-            onChange: handleChange,
-            type: "checkbox"
-          }
-        )
+        <FormField
+          label="Checkbox"
+          id="checkbox"
+          value={false}
+          onChange={handleChange}
+          type="checkbox"
+        />,
       );
       const checkbox = screen.getByLabelText("Checkbox");
       expect(checkbox.checked).toBe(false);
@@ -597,16 +548,13 @@ describe("FormField", () => {
     it("should handle checkbox with true value", () => {
       const handleChange = jest.fn();
       render(
-        /* @__PURE__ */ jsx(
-          FormField,
-          {
-            label: "Checkbox",
-            id: "checkbox",
-            value: true,
-            onChange: handleChange,
-            type: "checkbox"
-          }
-        )
+        <FormField
+          label="Checkbox"
+          id="checkbox"
+          value={true}
+          onChange={handleChange}
+          type="checkbox"
+        />,
       );
       const checkbox = screen.getByLabelText("Checkbox");
       expect(checkbox.checked).toBe(true);
@@ -615,16 +563,13 @@ describe("FormField", () => {
     });
     it("should handle email input type", () => {
       render(
-        /* @__PURE__ */ jsx(
-          FormField,
-          {
-            label: "Email",
-            id: "email",
-            value: "test@example.com",
-            onChange: jest.fn(),
-            type: "email"
-          }
-        )
+        <FormField
+          label="Email"
+          id="email"
+          value="test@example.com"
+          onChange={jest.fn()}
+          type="email"
+        />,
       );
       const input = screen.getByLabelText("Email");
       expect(input).toHaveAttribute("type", "email");
@@ -632,16 +577,13 @@ describe("FormField", () => {
     });
     it("should handle password input type", () => {
       render(
-        /* @__PURE__ */ jsx(
-          FormField,
-          {
-            label: "Password",
-            id: "password",
-            value: "secret123",
-            onChange: jest.fn(),
-            type: "password"
-          }
-        )
+        <FormField
+          label="Password"
+          id="password"
+          value="secret123"
+          onChange={jest.fn()}
+          type="password"
+        />,
       );
       const input = screen.getByLabelText("Password");
       expect(input).toHaveAttribute("type", "password");
@@ -649,49 +591,40 @@ describe("FormField", () => {
     });
     it("should handle description with checkbox type", () => {
       render(
-        /* @__PURE__ */ jsx(
-          FormField,
-          {
-            label: "Checkbox",
-            id: "checkbox",
-            value: false,
-            onChange: jest.fn(),
-            type: "checkbox",
-            description: "Check this box"
-          }
-        )
+        <FormField
+          label="Checkbox"
+          id="checkbox"
+          value={false}
+          onChange={jest.fn()}
+          type="checkbox"
+          description="Check this box"
+        />,
       );
       expect(screen.getByText("Check this box")).toBeInTheDocument();
     });
     it("should not show description below checkbox", () => {
       render(
-        /* @__PURE__ */ jsx(
-          FormField,
-          {
-            label: "Checkbox",
-            id: "checkbox",
-            value: false,
-            onChange: jest.fn(),
-            type: "checkbox",
-            description: "This description"
-          }
-        )
+        <FormField
+          label="Checkbox"
+          id="checkbox"
+          value={false}
+          onChange={jest.fn()}
+          type="checkbox"
+          description="This description"
+        />,
       );
       const description = screen.getByText("This description");
       expect(description).toBeInTheDocument();
     });
     it("should handle label rendering for non-checkbox types", () => {
       render(
-        /* @__PURE__ */ jsx(
-          FormField,
-          {
-            label: "Test Label",
-            id: "test",
-            value: "",
-            onChange: jest.fn(),
-            type: "text"
-          }
-        )
+        <FormField
+          label="Test Label"
+          id="test"
+          value=""
+          onChange={jest.fn()}
+          type="text"
+        />,
       );
       const label = screen.getByText("Test Label");
       expect(label).toBeInTheDocument();
@@ -699,32 +632,26 @@ describe("FormField", () => {
     });
     it("should handle required indicator in label", () => {
       render(
-        /* @__PURE__ */ jsx(
-          FormField,
-          {
-            label: "Required Field",
-            id: "required",
-            value: "",
-            onChange: jest.fn(),
-            required: true
-          }
-        )
+        <FormField
+          label="Required Field"
+          id="required"
+          value=""
+          onChange={jest.fn()}
+          required={true}
+        />,
       );
       expect(screen.getByText("*")).toBeInTheDocument();
       expect(screen.getByText("Required Field")).toBeInTheDocument();
     });
     it("should handle description below non-checkbox field", () => {
       render(
-        /* @__PURE__ */ jsx(
-          FormField,
-          {
-            label: "Test",
-            id: "test",
-            value: "",
-            onChange: jest.fn(),
-            description: "This is a description"
-          }
-        )
+        <FormField
+          label="Test"
+          id="test"
+          value=""
+          onChange={jest.fn()}
+          description="This is a description"
+        />,
       );
       const description = screen.getByText("This is a description");
       expect(description).toBeInTheDocument();
@@ -735,48 +662,51 @@ describe("FormField", () => {
       mockUseFormField.mockReturnValueOnce({
         value: "selected",
         setValue: jest.fn(),
-        inputRef: React2.createRef()
+        inputRef: React2.createRef(),
       });
-      const nodeData = { config: { model: "selected" } };
+      const nodeData = {
+        config: {
+          model: "selected",
+        },
+      };
       const handleChange = jest.fn();
       render(
-        /* @__PURE__ */ jsx(
-          FormField,
-          {
-            label: "Select",
-            id: "select",
-            value: "",
-            onChange: handleChange,
-            type: "select",
-            options: [{ value: "selected", label: "Selected" }],
-            nodeData,
-            dataPath: ["config", "model"],
-            syncWithNodeData: true
-          }
-        )
+        <FormField
+          label="Select"
+          id="select"
+          value=""
+          onChange={handleChange}
+          type="select"
+          options={[
+            {
+              value: "selected",
+              label: "Selected",
+            },
+          ]}
+          nodeData={nodeData}
+          dataPath={["config", "model"]}
+          syncWithNodeData={true}
+        />,
       );
       expect(mockUseFormField).toHaveBeenCalledWith({
         initialValue: "",
         onUpdate: handleChange,
         nodeData,
         dataPath: ["config", "model"],
-        syncWithNodeData: true
+        syncWithNodeData: true,
       });
     });
   });
   describe("Custom className", () => {
     it("should apply custom className", () => {
       render(
-        /* @__PURE__ */ jsx(
-          FormField,
-          {
-            label: "Test",
-            id: "test",
-            value: "",
-            onChange: jest.fn(),
-            className: "custom-class"
-          }
-        )
+        <FormField
+          label="Test"
+          id="test"
+          value=""
+          onChange={jest.fn()}
+          className="custom-class"
+        />,
       );
       const input = screen.getByLabelText("Test");
       expect(input).toHaveClass("custom-class");
@@ -785,31 +715,25 @@ describe("FormField", () => {
   describe("Aria label", () => {
     it("should use aria-label when provided", () => {
       render(
-        /* @__PURE__ */ jsx(
-          FormField,
-          {
-            label: "Test",
-            id: "test",
-            value: "",
-            onChange: jest.fn(),
-            "aria-label": "Custom aria label"
-          }
-        )
+        <FormField
+          label="Test"
+          id="test"
+          value=""
+          onChange={jest.fn()}
+          aria-label="Custom aria label"
+        />,
       );
       const input = screen.getByLabelText("Custom aria label");
       expect(input).toBeInTheDocument();
     });
     it("should fallback to label for aria-label", () => {
       render(
-        /* @__PURE__ */ jsx(
-          FormField,
-          {
-            label: "Test Label",
-            id: "test",
-            value: "",
-            onChange: jest.fn()
-          }
-        )
+        <FormField
+          label="Test Label"
+          id="test"
+          value=""
+          onChange={jest.fn()}
+        />,
       );
       const input = screen.getByLabelText("Test Label");
       expect(input).toHaveAttribute("aria-label", "Test Label");

@@ -10,7 +10,7 @@ describe("useBulkOperations", () => {
       completed_at: "2024-01-01T10:00:05Z",
       node_states: {},
       variables: {},
-      logs: []
+      logs: [],
     },
     {
       execution_id: "exec-2",
@@ -21,7 +21,7 @@ describe("useBulkOperations", () => {
       error: "Test error",
       node_states: {},
       variables: {},
-      logs: []
+      logs: [],
     },
     {
       execution_id: "exec-3",
@@ -30,14 +30,14 @@ describe("useBulkOperations", () => {
       started_at: "2024-01-01T12:00:00Z",
       node_states: {},
       variables: {},
-      logs: []
-    }
+      logs: [],
+    },
   ];
   it("should initialize with no selections", () => {
-    const { result } = renderHook(
-      () => useBulkOperations({
-        executions: mockExecutions
-      })
+    const { result } = renderHook(() =>
+      useBulkOperations({
+        executions: mockExecutions,
+      }),
     );
     expect(result.current.selectedIds.size).toBe(0);
     expect(result.current.selectedCount).toBe(0);
@@ -45,10 +45,10 @@ describe("useBulkOperations", () => {
     expect(result.current.isSomeSelected).toBe(false);
   });
   it("should toggle selection", () => {
-    const { result } = renderHook(
-      () => useBulkOperations({
-        executions: mockExecutions
-      })
+    const { result } = renderHook(() =>
+      useBulkOperations({
+        executions: mockExecutions,
+      }),
     );
     act(() => {
       result.current.toggleSelection("exec-1");
@@ -63,10 +63,10 @@ describe("useBulkOperations", () => {
     expect(result.current.selectedCount).toBe(0);
   });
   it("should toggle select all", () => {
-    const { result } = renderHook(
-      () => useBulkOperations({
-        executions: mockExecutions
-      })
+    const { result } = renderHook(() =>
+      useBulkOperations({
+        executions: mockExecutions,
+      }),
     );
     act(() => {
       result.current.toggleSelectAll();
@@ -80,10 +80,10 @@ describe("useBulkOperations", () => {
     expect(result.current.selectedCount).toBe(0);
   });
   it("should clear selection", () => {
-    const { result } = renderHook(
-      () => useBulkOperations({
-        executions: mockExecutions
-      })
+    const { result } = renderHook(() =>
+      useBulkOperations({
+        executions: mockExecutions,
+      }),
     );
     act(() => {
       result.current.selectAll();
@@ -95,10 +95,10 @@ describe("useBulkOperations", () => {
     expect(result.current.selectedCount).toBe(0);
   });
   it("should select all", () => {
-    const { result } = renderHook(
-      () => useBulkOperations({
-        executions: mockExecutions
-      })
+    const { result } = renderHook(() =>
+      useBulkOperations({
+        executions: mockExecutions,
+      }),
     );
     act(() => {
       result.current.selectAll();
@@ -111,11 +111,11 @@ describe("useBulkOperations", () => {
   });
   it("should call onDelete when deleteSelected is called", async () => {
     const mockOnDelete = jest.fn().mockResolvedValue(void 0);
-    const { result } = renderHook(
-      () => useBulkOperations({
+    const { result } = renderHook(() =>
+      useBulkOperations({
         executions: mockExecutions,
-        onDelete: mockOnDelete
-      })
+        onDelete: mockOnDelete,
+      }),
     );
     act(() => {
       result.current.toggleSelection("exec-1");
@@ -130,13 +130,13 @@ describe("useBulkOperations", () => {
   });
   it("should set isDeleting during delete operation", async () => {
     const mockOnDelete = jest.fn(
-      () => new Promise((resolve) => setTimeout(resolve, 100))
+      () => new Promise((resolve) => setTimeout(resolve, 100)),
     );
-    const { result } = renderHook(
-      () => useBulkOperations({
+    const { result } = renderHook(() =>
+      useBulkOperations({
         executions: mockExecutions,
-        onDelete: mockOnDelete
-      })
+        onDelete: mockOnDelete,
+      }),
     );
     act(() => {
       result.current.toggleSelection("exec-1");
@@ -152,10 +152,10 @@ describe("useBulkOperations", () => {
     expect(result.current.isDeleting).toBe(false);
   });
   it("should handle empty executions array", () => {
-    const { result } = renderHook(
-      () => useBulkOperations({
-        executions: []
-      })
+    const { result } = renderHook(() =>
+      useBulkOperations({
+        executions: [],
+      }),
     );
     expect(result.current.isAllSelected).toBe(false);
     expect(result.current.selectedCount).toBe(0);
@@ -168,11 +168,11 @@ describe("useBulkOperations", () => {
   });
   it("should not call onDelete if no executions selected", async () => {
     const mockOnDelete = jest.fn();
-    const { result } = renderHook(
-      () => useBulkOperations({
+    const { result } = renderHook(() =>
+      useBulkOperations({
         executions: mockExecutions,
-        onDelete: mockOnDelete
-      })
+        onDelete: mockOnDelete,
+      }),
     );
     expect(result.current.selectedCount).toBe(0);
     await act(async () => {

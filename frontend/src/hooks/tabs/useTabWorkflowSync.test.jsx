@@ -9,7 +9,7 @@ describe("useTabWorkflowSync", () => {
       workflowId: "workflow-1",
       isUnsaved: false,
       executions: [],
-      activeExecutionId: null
+      activeExecutionId: null,
     },
     {
       id: "tab-2",
@@ -17,8 +17,8 @@ describe("useTabWorkflowSync", () => {
       workflowId: null,
       isUnsaved: true,
       executions: [],
-      activeExecutionId: null
-    }
+      activeExecutionId: null,
+    },
   ];
   beforeEach(() => {
     jest.clearAllMocks();
@@ -31,13 +31,17 @@ describe("useTabWorkflowSync", () => {
   });
   describe("handleLoadWorkflow", () => {
     it("should update tab when workflow is loaded", () => {
-      const { result } = renderHook(
-        () => useTabWorkflowSync({
-          setTabs: mockSetTabs
-        })
+      const { result } = renderHook(() =>
+        useTabWorkflowSync({
+          setTabs: mockSetTabs,
+        }),
       );
       act(() => {
-        result.current.handleLoadWorkflow("tab-2", "workflow-123", "Loaded Workflow");
+        result.current.handleLoadWorkflow(
+          "tab-2",
+          "workflow-123",
+          "Loaded Workflow",
+        );
       });
       expect(mockSetTabs).toHaveBeenCalled();
       const updater = mockSetTabs.mock.calls[0][0];
@@ -46,30 +50,38 @@ describe("useTabWorkflowSync", () => {
         id: "tab-2",
         workflowId: "workflow-123",
         name: "Loaded Workflow",
-        isUnsaved: false
+        isUnsaved: false,
       });
     });
     it("should not modify other tabs", () => {
-      const { result } = renderHook(
-        () => useTabWorkflowSync({
-          setTabs: mockSetTabs
-        })
+      const { result } = renderHook(() =>
+        useTabWorkflowSync({
+          setTabs: mockSetTabs,
+        }),
       );
       act(() => {
-        result.current.handleLoadWorkflow("tab-2", "workflow-123", "Loaded Workflow");
+        result.current.handleLoadWorkflow(
+          "tab-2",
+          "workflow-123",
+          "Loaded Workflow",
+        );
       });
       const updater = mockSetTabs.mock.calls[0][0];
       const updatedTabs = updater(initialTabs);
       expect(updatedTabs[0]).toEqual(initialTabs[0]);
     });
     it("should mark workflow as saved (isUnsaved: false)", () => {
-      const { result } = renderHook(
-        () => useTabWorkflowSync({
-          setTabs: mockSetTabs
-        })
+      const { result } = renderHook(() =>
+        useTabWorkflowSync({
+          setTabs: mockSetTabs,
+        }),
       );
       act(() => {
-        result.current.handleLoadWorkflow("tab-2", "workflow-123", "Loaded Workflow");
+        result.current.handleLoadWorkflow(
+          "tab-2",
+          "workflow-123",
+          "Loaded Workflow",
+        );
       });
       const updater = mockSetTabs.mock.calls[0][0];
       const updatedTabs = updater(initialTabs);
@@ -78,13 +90,17 @@ describe("useTabWorkflowSync", () => {
   });
   describe("handleWorkflowSaved", () => {
     it("should update tab when workflow is saved", () => {
-      const { result } = renderHook(
-        () => useTabWorkflowSync({
-          setTabs: mockSetTabs
-        })
+      const { result } = renderHook(() =>
+        useTabWorkflowSync({
+          setTabs: mockSetTabs,
+        }),
       );
       act(() => {
-        result.current.handleWorkflowSaved("tab-2", "workflow-123", "Saved Workflow");
+        result.current.handleWorkflowSaved(
+          "tab-2",
+          "workflow-123",
+          "Saved Workflow",
+        );
       });
       expect(mockSetTabs).toHaveBeenCalled();
       const updater = mockSetTabs.mock.calls[0][0];
@@ -93,30 +109,38 @@ describe("useTabWorkflowSync", () => {
         id: "tab-2",
         workflowId: "workflow-123",
         name: "Saved Workflow",
-        isUnsaved: false
+        isUnsaved: false,
       });
     });
     it("should mark workflow as saved", () => {
-      const { result } = renderHook(
-        () => useTabWorkflowSync({
-          setTabs: mockSetTabs
-        })
+      const { result } = renderHook(() =>
+        useTabWorkflowSync({
+          setTabs: mockSetTabs,
+        }),
       );
       act(() => {
-        result.current.handleWorkflowSaved("tab-2", "workflow-123", "Saved Workflow");
+        result.current.handleWorkflowSaved(
+          "tab-2",
+          "workflow-123",
+          "Saved Workflow",
+        );
       });
       const updater = mockSetTabs.mock.calls[0][0];
       const updatedTabs = updater(initialTabs);
       expect(updatedTabs[1].isUnsaved).toBe(false);
     });
     it("should update existing workflow ID", () => {
-      const { result } = renderHook(
-        () => useTabWorkflowSync({
-          setTabs: mockSetTabs
-        })
+      const { result } = renderHook(() =>
+        useTabWorkflowSync({
+          setTabs: mockSetTabs,
+        }),
       );
       act(() => {
-        result.current.handleWorkflowSaved("tab-1", "workflow-999", "Updated Name");
+        result.current.handleWorkflowSaved(
+          "tab-1",
+          "workflow-999",
+          "Updated Name",
+        );
       });
       const updater = mockSetTabs.mock.calls[0][0];
       const updatedTabs = updater(initialTabs);
@@ -126,10 +150,10 @@ describe("useTabWorkflowSync", () => {
   });
   describe("handleWorkflowModified", () => {
     it("should mark tab as unsaved", () => {
-      const { result } = renderHook(
-        () => useTabWorkflowSync({
-          setTabs: mockSetTabs
-        })
+      const { result } = renderHook(() =>
+        useTabWorkflowSync({
+          setTabs: mockSetTabs,
+        }),
       );
       act(() => {
         result.current.handleWorkflowModified("tab-1");
@@ -140,10 +164,10 @@ describe("useTabWorkflowSync", () => {
       expect(updatedTabs[0].isUnsaved).toBe(true);
     });
     it("should not modify other tab properties", () => {
-      const { result } = renderHook(
-        () => useTabWorkflowSync({
-          setTabs: mockSetTabs
-        })
+      const { result } = renderHook(() =>
+        useTabWorkflowSync({
+          setTabs: mockSetTabs,
+        }),
       );
       act(() => {
         result.current.handleWorkflowModified("tab-1");
@@ -155,10 +179,10 @@ describe("useTabWorkflowSync", () => {
       expect(updatedTabs[0].workflowId).toBe("workflow-1");
     });
     it("should not modify other tabs", () => {
-      const { result } = renderHook(
-        () => useTabWorkflowSync({
-          setTabs: mockSetTabs
-        })
+      const { result } = renderHook(() =>
+        useTabWorkflowSync({
+          setTabs: mockSetTabs,
+        }),
       );
       act(() => {
         result.current.handleWorkflowModified("tab-1");
@@ -168,10 +192,10 @@ describe("useTabWorkflowSync", () => {
       expect(updatedTabs[1]).toEqual(initialTabs[1]);
     });
     it("should handle already unsaved tab", () => {
-      const { result } = renderHook(
-        () => useTabWorkflowSync({
-          setTabs: mockSetTabs
-        })
+      const { result } = renderHook(() =>
+        useTabWorkflowSync({
+          setTabs: mockSetTabs,
+        }),
       );
       act(() => {
         result.current.handleWorkflowModified("tab-2");

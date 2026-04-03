@@ -2,7 +2,7 @@ import { renderHook, waitFor } from "@testing-library/react";
 import { useMarketplaceData } from "./useMarketplaceData";
 import { getLocalStorageItem } from "../storage";
 jest.mock("../storage", () => ({
-  getLocalStorageItem: jest.fn()
+  getLocalStorageItem: jest.fn(),
 }));
 const mockGetLocalStorageItem = getLocalStorageItem;
 describe("useMarketplaceData - Object Literals", () => {
@@ -16,7 +16,7 @@ describe("useMarketplaceData - Object Literals", () => {
     category: "automation",
     tags: ["test"],
     published_at: "2024-01-01T00:00:00Z",
-    author_id: null
+    author_id: null,
   };
   beforeEach(() => {
     jest.clearAllMocks();
@@ -27,14 +27,16 @@ describe("useMarketplaceData - Object Literals", () => {
         }
         return Promise.resolve({ json: async () => [] });
       }),
-      post: jest.fn().mockResolvedValue({ ok: true, json: async () => ({ nodes: [] }) })
+      post: jest
+        .fn()
+        .mockResolvedValue({ ok: true, json: async () => ({ nodes: [] }) }),
     };
     mockStorage = {
       getItem: jest.fn().mockReturnValue(null),
       setItem: jest.fn(),
       removeItem: jest.fn(),
       addEventListener: jest.fn(),
-      removeEventListener: jest.fn()
+      removeEventListener: jest.fn(),
     };
     mockGetLocalStorageItem.mockReturnValue([]);
   });
@@ -42,8 +44,8 @@ describe("useMarketplaceData - Object Literals", () => {
     it("should update agent with exact object structure", async () => {
       const agents = [{ ...mockAgent, author_id: null }];
       mockGetLocalStorageItem.mockReturnValue(agents);
-      renderHook(
-        () => useMarketplaceData({
+      renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -52,8 +54,8 @@ describe("useMarketplaceData - Object Literals", () => {
           sortBy: "popular",
           user: { id: "user-1", username: "testuser" },
           activeTab: "agents",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(mockStorage.setItem).toHaveBeenCalled();
@@ -65,16 +67,18 @@ describe("useMarketplaceData - Object Literals", () => {
       expect(savedData[0]).toHaveProperty("name", "Test Agent");
     });
     it("should preserve all existing agent properties", async () => {
-      const agents = [{
-        ...mockAgent,
-        author_id: null,
-        category: "automation",
-        tags: ["test", "automation"],
-        published_at: "2024-01-01T00:00:00Z"
-      }];
+      const agents = [
+        {
+          ...mockAgent,
+          author_id: null,
+          category: "automation",
+          tags: ["test", "automation"],
+          published_at: "2024-01-01T00:00:00Z",
+        },
+      ];
       mockGetLocalStorageItem.mockReturnValue(agents);
-      renderHook(
-        () => useMarketplaceData({
+      renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -83,8 +87,8 @@ describe("useMarketplaceData - Object Literals", () => {
           sortBy: "popular",
           user: { id: "user-1", username: "testuser" },
           activeTab: "agents",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(mockStorage.setItem).toHaveBeenCalled();
@@ -101,8 +105,8 @@ describe("useMarketplaceData - Object Literals", () => {
     it("should set author_name to email when username is missing", async () => {
       const agents = [{ ...mockAgent, author_id: null }];
       mockGetLocalStorageItem.mockReturnValue(agents);
-      renderHook(
-        () => useMarketplaceData({
+      renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -111,8 +115,8 @@ describe("useMarketplaceData - Object Literals", () => {
           sortBy: "popular",
           user: { id: "user-1", email: "test@example.com" },
           activeTab: "agents",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(mockStorage.setItem).toHaveBeenCalled();
@@ -123,8 +127,8 @@ describe("useMarketplaceData - Object Literals", () => {
     it("should set author_name to null when neither username nor email exists", async () => {
       const agents = [{ ...mockAgent, author_id: null }];
       mockGetLocalStorageItem.mockReturnValue(agents);
-      renderHook(
-        () => useMarketplaceData({
+      renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -133,8 +137,8 @@ describe("useMarketplaceData - Object Literals", () => {
           sortBy: "popular",
           user: { id: "user-1" },
           activeTab: "agents",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(mockStorage.setItem).toHaveBeenCalled();
@@ -145,15 +149,17 @@ describe("useMarketplaceData - Object Literals", () => {
   });
   describe("Object spread preserves properties", () => {
     it("should use spread operator to preserve all properties", async () => {
-      const agents = [{
-        ...mockAgent,
-        author_id: null,
-        customProperty: "customValue"
-        // Additional property
-      }];
+      const agents = [
+        {
+          ...mockAgent,
+          author_id: null,
+          customProperty: "customValue",
+          // Additional property
+        },
+      ];
       mockGetLocalStorageItem.mockReturnValue(agents);
-      renderHook(
-        () => useMarketplaceData({
+      renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -162,8 +168,8 @@ describe("useMarketplaceData - Object Literals", () => {
           sortBy: "popular",
           user: { id: "user-1", username: "testuser" },
           activeTab: "agents",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(mockStorage.setItem).toHaveBeenCalled();
@@ -178,8 +184,8 @@ describe("useMarketplaceData - Object Literals", () => {
     it("should fail if object structure mutated", async () => {
       const agents = [{ ...mockAgent, author_id: null }];
       mockGetLocalStorageItem.mockReturnValue(agents);
-      renderHook(
-        () => useMarketplaceData({
+      renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -188,8 +194,8 @@ describe("useMarketplaceData - Object Literals", () => {
           sortBy: "popular",
           user: { id: "user-1", username: "testuser" },
           activeTab: "agents",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(mockStorage.setItem).toHaveBeenCalled();
@@ -203,8 +209,8 @@ describe("useMarketplaceData - Object Literals", () => {
     it("should fail if property value mutated", async () => {
       const agents = [{ ...mockAgent, author_id: null }];
       mockGetLocalStorageItem.mockReturnValue(agents);
-      renderHook(
-        () => useMarketplaceData({
+      renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -213,8 +219,8 @@ describe("useMarketplaceData - Object Literals", () => {
           sortBy: "popular",
           user: { id: "user-1", username: "testuser" },
           activeTab: "agents",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(mockStorage.setItem).toHaveBeenCalled();

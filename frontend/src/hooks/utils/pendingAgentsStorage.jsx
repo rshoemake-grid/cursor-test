@@ -4,6 +4,4 @@ function clearPendingAgents(storage) {
     storage.removeItem(PENDING_AGENTS_STORAGE_KEY);
   }
 }
-export {
-  clearPendingAgents
-};
+export { clearPendingAgents };

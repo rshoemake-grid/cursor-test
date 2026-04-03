@@ -34,7 +34,15 @@ function shouldLoadAgents(activeTab) {
 function shouldLoadTools(activeTab) {
   return activeTab === "tools";
 }
-function calculateLoadingState(activeTab, repositorySubTab, templatesLoading, repositoryAgentsLoading, workflowsOfWorkflowsLoading, agentsLoading, toolsLoading) {
+function calculateLoadingState(
+  activeTab,
+  repositorySubTab,
+  templatesLoading,
+  repositoryAgentsLoading,
+  workflowsOfWorkflowsLoading,
+  agentsLoading,
+  toolsLoading,
+) {
   if (shouldLoadTemplates(activeTab, repositorySubTab)) {
     return templatesLoading;
   }
@@ -63,5 +71,5 @@ export {
   shouldLoadRepositoryAgents,
   shouldLoadTemplates,
   shouldLoadTools,
-  shouldLoadWorkflowsOfWorkflows
+  shouldLoadWorkflowsOfWorkflows,
 };

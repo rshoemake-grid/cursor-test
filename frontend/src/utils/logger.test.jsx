@@ -1,22 +1,29 @@
 import { logger } from "./logger";
 describe("logger", () => {
-  const consoleLogSpy = jest.spyOn(console, "log").mockImplementation((...args) => {
-    const message = args[0];
-    if (typeof message === "string" && (message.includes("[TEST") || message.includes("[SUITE"))) {
-      return;
-    }
-  });
-  const consoleInfoSpy = jest.spyOn(console, "info").mockImplementation(() => {
-  });
-  const consoleWarnSpy = jest.spyOn(console, "warn").mockImplementation(() => {
-  });
-  const consoleErrorSpy = jest.spyOn(console, "error").mockImplementation(() => {
-  });
+  const consoleLogSpy = jest
+    .spyOn(console, "log")
+    .mockImplementation((...args) => {
+      const message = args[0];
+      if (
+        typeof message === "string" &&
+        (message.includes("[TEST") || message.includes("[SUITE"))
+      ) {
+        return;
+      }
+    });
+  const consoleInfoSpy = jest
+    .spyOn(console, "info")
+    .mockImplementation(() => {});
+  const consoleWarnSpy = jest
+    .spyOn(console, "warn")
+    .mockImplementation(() => {});
+  const consoleErrorSpy = jest
+    .spyOn(console, "error")
+    .mockImplementation(() => {});
   beforeEach(() => {
     jest.clearAllMocks();
   });
-  afterEach(() => {
-  });
+  afterEach(() => {});
   describe("debug", () => {
     it("should log in development mode", () => {
       logger.debug("test message");
@@ -29,7 +36,9 @@ describe("logger", () => {
     it("should handle multiple arguments", () => {
       process.env.NODE_ENV = "development";
       logger.debug("arg1", "arg2", { key: "value" });
-      expect(consoleLogSpy).toHaveBeenCalledWith("[DEBUG]", "arg1", "arg2", { key: "value" });
+      expect(consoleLogSpy).toHaveBeenCalledWith("[DEBUG]", "arg1", "arg2", {
+        key: "value",
+      });
     });
   });
   describe("info", () => {
@@ -62,7 +71,11 @@ describe("logger", () => {
     it("should handle error objects", () => {
       const error = new Error("test error");
       logger.error("error occurred", error);
-      expect(consoleErrorSpy).toHaveBeenCalledWith("[ERROR]", "error occurred", error);
+      expect(consoleErrorSpy).toHaveBeenCalledWith(
+        "[ERROR]",
+        "error occurred",
+        error,
+      );
     });
   });
   describe("log", () => {

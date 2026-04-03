@@ -4,7 +4,7 @@ import {
   wsInstances,
   MockWebSocket,
   useWebSocket,
-  logger
+  logger,
 } from "./useWebSocket.test.setup";
 describe("useWebSocket - edges.comprehensive.3", () => {
   beforeEach(() => {
@@ -21,11 +21,11 @@ describe("useWebSocket - edges.comprehensive.3", () => {
     describe("windowLocation edge cases", () => {
       it("should handle windowLocation as null", async () => {
         const windowLocation = null;
-        renderHook(
-          () => useWebSocket({
+        renderHook(() =>
+          useWebSocket({
             executionId: "exec-1",
-            windowLocation
-          })
+            windowLocation,
+          }),
         );
         await advanceTimersByTime(100);
         expect(wsInstances.length).toBeGreaterThan(0);
@@ -36,13 +36,13 @@ describe("useWebSocket - edges.comprehensive.3", () => {
       it("should handle windowLocation with null protocol", async () => {
         const windowLocation = {
           protocol: null,
-          host: "example.com:8000"
+          host: "example.com:8000",
         };
-        renderHook(
-          () => useWebSocket({
+        renderHook(() =>
+          useWebSocket({
             executionId: "exec-1",
-            windowLocation
-          })
+            windowLocation,
+          }),
         );
         await advanceTimersByTime(100);
         expect(wsInstances.length).toBeGreaterThan(0);
@@ -52,13 +52,13 @@ describe("useWebSocket - edges.comprehensive.3", () => {
       it("should handle windowLocation with null host", async () => {
         const windowLocation = {
           protocol: "https:",
-          host: null
+          host: null,
         };
-        renderHook(
-          () => useWebSocket({
+        renderHook(() =>
+          useWebSocket({
             executionId: "exec-1",
-            windowLocation
-          })
+            windowLocation,
+          }),
         );
         await advanceTimersByTime(100);
         expect(wsInstances.length).toBeGreaterThan(0);
@@ -68,13 +68,13 @@ describe("useWebSocket - edges.comprehensive.3", () => {
       it("should handle windowLocation with empty host", async () => {
         const windowLocation = {
           protocol: "https:",
-          host: ""
+          host: "",
         };
-        renderHook(
-          () => useWebSocket({
+        renderHook(() =>
+          useWebSocket({
             executionId: "exec-1",
-            windowLocation
-          })
+            windowLocation,
+          }),
         );
         await advanceTimersByTime(100);
         expect(wsInstances.length).toBeGreaterThan(0);
@@ -84,13 +84,13 @@ describe("useWebSocket - edges.comprehensive.3", () => {
       it("should use wss: for https: protocol", async () => {
         const windowLocation = {
           protocol: "https:",
-          host: "example.com:8000"
+          host: "example.com:8000",
         };
-        renderHook(
-          () => useWebSocket({
+        renderHook(() =>
+          useWebSocket({
             executionId: "exec-1",
-            windowLocation
-          })
+            windowLocation,
+          }),
         );
         await advanceTimersByTime(100);
         expect(wsInstances.length).toBeGreaterThan(0);
@@ -101,49 +101,49 @@ describe("useWebSocket - edges.comprehensive.3", () => {
     describe("message parsing edge cases", () => {
       it("should handle invalid JSON in message", async () => {
         const onError = jest.fn();
-        renderHook(
-          () => useWebSocket({
+        renderHook(() =>
+          useWebSocket({
             executionId: "exec-1",
-            onError
-          })
+            onError,
+          }),
         );
         await advanceTimersByTime(100);
         if (wsInstances.length > 0 && wsInstances[0].onmessage) {
           const event = {
-            data: "invalid json {"
+            data: "invalid json {",
           };
           wsInstances[0].onmessage(event);
           expect(logger.error).toHaveBeenCalledWith(
             "[WebSocket] Failed to parse message:",
-            expect.any(Error)
+            expect.any(Error),
           );
         }
       });
       it("should handle message with null log", async () => {
         const onLog = jest.fn();
-        renderHook(
-          () => useWebSocket({
+        renderHook(() =>
+          useWebSocket({
             executionId: "exec-1",
-            onLog
-          })
+            onLog,
+          }),
         );
         await advanceTimersByTime(100);
         if (wsInstances.length > 0 && wsInstances[0].onmessage) {
           wsInstances[0].simulateMessage({
             type: "log",
             execution_id: "exec-1",
-            log: null
+            log: null,
           });
           expect(onLog).not.toHaveBeenCalled();
         }
       });
       it("should handle message with null status", async () => {
         const onStatus = jest.fn();
-        renderHook(
-          () => useWebSocket({
+        renderHook(() =>
+          useWebSocket({
             executionId: "exec-1",
-            onStatus
-          })
+            onStatus,
+          }),
         );
         await advanceTimersByTime(100);
         if (wsInstances.length > 0 && wsInstances[0].onmessage) {
@@ -151,37 +151,39 @@ describe("useWebSocket - edges.comprehensive.3", () => {
           wsInstances[0].simulateMessage({
             type: "status",
             execution_id: "exec-1",
-            status: null
+            status: null,
           });
-          const statusCalls = onStatus.mock.calls.filter((call) => call[0] !== "connected");
+          const statusCalls = onStatus.mock.calls.filter(
+            (call) => call[0] !== "connected",
+          );
           expect(statusCalls.length).toBe(0);
         }
       });
       it("should handle node_update with null node_state", async () => {
         const onNodeUpdate = jest.fn();
-        renderHook(
-          () => useWebSocket({
+        renderHook(() =>
+          useWebSocket({
             executionId: "exec-1",
-            onNodeUpdate
-          })
+            onNodeUpdate,
+          }),
         );
         await advanceTimersByTime(100);
         if (wsInstances.length > 0 && wsInstances[0].onmessage) {
           wsInstances[0].simulateMessage({
             type: "node_update",
             execution_id: "exec-1",
-            node_state: null
+            node_state: null,
           });
           expect(onNodeUpdate).not.toHaveBeenCalled();
         }
       });
       it("should handle node_update with node_id in top-level message", async () => {
         const onNodeUpdate = jest.fn();
-        renderHook(
-          () => useWebSocket({
+        renderHook(() =>
+          useWebSocket({
             executionId: "exec-1",
-            onNodeUpdate
-          })
+            onNodeUpdate,
+          }),
         );
         await advanceTimersByTime(100);
         if (wsInstances.length > 0 && wsInstances[0].onmessage) {
@@ -189,36 +191,41 @@ describe("useWebSocket - edges.comprehensive.3", () => {
             type: "node_update",
             execution_id: "exec-1",
             node_id: "node-123",
-            node_state: { status: "running" }
+            node_state: { status: "running" },
           });
-          expect(onNodeUpdate).toHaveBeenCalledWith("node-123", { status: "running" });
+          expect(onNodeUpdate).toHaveBeenCalledWith("node-123", {
+            status: "running",
+          });
         }
       });
       it("should handle node_update with node_id in node_state", async () => {
         const onNodeUpdate = jest.fn();
-        renderHook(
-          () => useWebSocket({
+        renderHook(() =>
+          useWebSocket({
             executionId: "exec-1",
-            onNodeUpdate
-          })
+            onNodeUpdate,
+          }),
         );
         await advanceTimersByTime(100);
         if (wsInstances.length > 0 && wsInstances[0].onmessage) {
           wsInstances[0].simulateMessage({
             type: "node_update",
             execution_id: "exec-1",
-            node_state: { node_id: "node-456", status: "running" }
+            node_state: { node_id: "node-456", status: "running" },
           });
-          expect(onNodeUpdate).toHaveBeenCalledWith("node-456", { node_id: "node-456", status: "running" });
+          expect(onNodeUpdate).toHaveBeenCalledWith("node-456", {
+            node_id: "node-456",
+            status: "running",
+          });
         }
       });
       it("should handle node_update with null node_id", async () => {
         const onNodeUpdate = jest.fn();
-        renderHook(
-          () => useWebSocket({
+        renderHook(() =>
+          useWebSocket({
             executionId: "exec-1",
-            onNodeUpdate
-          })
+            onNodeUpdate,
+          }),
         );
         await advanceTimersByTime(100);
         if (wsInstances.length > 0 && wsInstances[0].onmessage) {
@@ -226,58 +233,58 @@ describe("useWebSocket - edges.comprehensive.3", () => {
             type: "node_update",
             execution_id: "exec-1",
             node_id: null,
-            node_state: { status: "running" }
+            node_state: { status: "running" },
           });
           expect(onNodeUpdate).not.toHaveBeenCalled();
         }
       });
       it("should handle completion message with null result", async () => {
         const onCompletion = jest.fn();
-        renderHook(
-          () => useWebSocket({
+        renderHook(() =>
+          useWebSocket({
             executionId: "exec-1",
-            onCompletion
-          })
+            onCompletion,
+          }),
         );
         await advanceTimersByTime(100);
         if (wsInstances.length > 0 && wsInstances[0].onmessage) {
           wsInstances[0].simulateMessage({
             type: "completion",
             execution_id: "exec-1",
-            result: null
+            result: null,
           });
           expect(onCompletion).toHaveBeenCalledWith(null);
         }
       });
       it("should handle error message with null error", async () => {
         const onError = jest.fn();
-        renderHook(
-          () => useWebSocket({
+        renderHook(() =>
+          useWebSocket({
             executionId: "exec-1",
-            onError
-          })
+            onError,
+          }),
         );
         await advanceTimersByTime(100);
         if (wsInstances.length > 0 && wsInstances[0].onmessage) {
           wsInstances[0].simulateMessage({
             type: "error",
             execution_id: "exec-1",
-            error: null
+            error: null,
           });
           expect(onError).not.toHaveBeenCalled();
         }
       });
       it("should handle unknown message type", async () => {
-        renderHook(
-          () => useWebSocket({
-            executionId: "exec-1"
-          })
+        renderHook(() =>
+          useWebSocket({
+            executionId: "exec-1",
+          }),
         );
         await advanceTimersByTime(100);
         if (wsInstances.length > 0 && wsInstances[0].onmessage) {
           wsInstances[0].simulateMessage({
             type: "unknown",
-            execution_id: "exec-1"
+            execution_id: "exec-1",
           });
           expect(logger.error).not.toHaveBeenCalled();
         }
@@ -286,11 +293,11 @@ describe("useWebSocket - edges.comprehensive.3", () => {
     describe("error handling edge cases", () => {
       it("should handle error event without Error instance", async () => {
         const onError = jest.fn();
-        renderHook(
-          () => useWebSocket({
+        renderHook(() =>
+          useWebSocket({
             executionId: "exec-1",
-            onError
-          })
+            onError,
+          }),
         );
         await advanceTimersByTime(100);
         if (wsInstances.length > 0 && wsInstances[0].onerror) {
@@ -300,10 +307,10 @@ describe("useWebSocket - edges.comprehensive.3", () => {
         }
       });
       it("should handle close event with empty reason", async () => {
-        renderHook(
-          () => useWebSocket({
-            executionId: "exec-1"
-          })
+        renderHook(() =>
+          useWebSocket({
+            executionId: "exec-1",
+          }),
         );
         await advanceTimersByTime(100);
         if (wsInstances.length > 0) {
@@ -313,16 +320,16 @@ describe("useWebSocket - edges.comprehensive.3", () => {
           expect(logger.debug).toHaveBeenCalledWith(
             expect.stringContaining("[WebSocket] Disconnected"),
             expect.objectContaining({
-              reason: "No reason provided"
-            })
+              reason: "No reason provided",
+            }),
           );
         }
       });
       it("should handle close event with non-empty reason", async () => {
-        renderHook(
-          () => useWebSocket({
-            executionId: "exec-1"
-          })
+        renderHook(() =>
+          useWebSocket({
+            executionId: "exec-1",
+          }),
         );
         await advanceTimersByTime(100);
         if (wsInstances.length > 0) {
@@ -332,8 +339,8 @@ describe("useWebSocket - edges.comprehensive.3", () => {
           expect(logger.debug).toHaveBeenCalledWith(
             expect.stringContaining("[WebSocket] Disconnected"),
             expect.objectContaining({
-              reason: "Normal closure"
-            })
+              reason: "Normal closure",
+            }),
           );
         }
       });
@@ -342,14 +349,14 @@ describe("useWebSocket - edges.comprehensive.3", () => {
         const webSocketFactory = {
           create: jest.fn(() => {
             throw new Error("Connection failed");
-          })
+          }),
         };
-        renderHook(
-          () => useWebSocket({
+        renderHook(() =>
+          useWebSocket({
             executionId: "exec-1",
             onError,
-            webSocketFactory
-          })
+            webSocketFactory,
+          }),
         );
         await advanceTimersByTime(100);
         expect(logger.error).toHaveBeenCalled();
@@ -360,14 +367,14 @@ describe("useWebSocket - edges.comprehensive.3", () => {
         const webSocketFactory = {
           create: jest.fn(() => {
             throw "String error";
-          })
+          }),
         };
-        renderHook(
-          () => useWebSocket({
+        renderHook(() =>
+          useWebSocket({
             executionId: "exec-1",
             onError,
-            webSocketFactory
-          })
+            webSocketFactory,
+          }),
         );
         await advanceTimersByTime(100);
         expect(logger.error).toHaveBeenCalled();
@@ -377,11 +384,12 @@ describe("useWebSocket - edges.comprehensive.3", () => {
     describe("reconnection edge cases", () => {
       it("should handle executionStatus changing to completed during connection", async () => {
         const { rerender } = renderHook(
-          ({ executionStatus }) => useWebSocket({
-            executionId: "exec-1",
-            executionStatus
-          }),
-          { initialProps: { executionStatus: "running" } }
+          ({ executionStatus }) =>
+            useWebSocket({
+              executionId: "exec-1",
+              executionStatus,
+            }),
+          { initialProps: { executionStatus: "running" } },
         );
         await advanceTimersByTime(100);
         rerender({ executionStatus: "completed" });
@@ -393,11 +401,12 @@ describe("useWebSocket - edges.comprehensive.3", () => {
       });
       it("should handle executionStatus changing to failed during connection", async () => {
         const { rerender } = renderHook(
-          ({ executionStatus }) => useWebSocket({
-            executionId: "exec-1",
-            executionStatus
-          }),
-          { initialProps: { executionStatus: "running" } }
+          ({ executionStatus }) =>
+            useWebSocket({
+              executionId: "exec-1",
+              executionStatus,
+            }),
+          { initialProps: { executionStatus: "running" } },
         );
         await advanceTimersByTime(100);
         rerender({ executionStatus: "failed" });
@@ -408,11 +417,11 @@ describe("useWebSocket - edges.comprehensive.3", () => {
         }
       });
       it("should handle lastKnownStatusRef when executionStatus is undefined", async () => {
-        renderHook(
-          () => useWebSocket({
+        renderHook(() =>
+          useWebSocket({
             executionId: "exec-1",
-            executionStatus: void 0
-          })
+            executionStatus: void 0,
+          }),
         );
         await advanceTimersByTime(100);
         expect(wsInstances.length).toBeGreaterThan(0);

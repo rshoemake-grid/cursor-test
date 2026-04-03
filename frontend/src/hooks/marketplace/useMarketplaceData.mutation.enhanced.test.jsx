@@ -28,31 +28,31 @@ describe("useMarketplaceData - Enhanced Mutation Killers", () => {
       setItem: jest.fn(),
       removeItem: jest.fn(),
       addEventListener: jest.fn(),
-      removeEventListener: jest.fn()
+      removeEventListener: jest.fn(),
     };
     mockHttpClient = {
       get: jest.fn(),
       post: jest.fn(),
       put: jest.fn(),
-      delete: jest.fn()
+      delete: jest.fn(),
     };
     mockUseTemplatesData.mockReturnValue({
-      fetchTemplates: jest.fn()
+      fetchTemplates: jest.fn(),
     });
     mockUseAgentsData.mockReturnValue({
-      fetchAgents: jest.fn()
+      fetchAgents: jest.fn(),
     });
     mockUseRepositoryAgentsData.mockReturnValue({
-      fetchRepositoryAgents: jest.fn()
+      fetchRepositoryAgents: jest.fn(),
     });
     mockUseWorkflowsOfWorkflowsData.mockReturnValue({
-      fetchWorkflowsOfWorkflows: jest.fn()
+      fetchWorkflowsOfWorkflows: jest.fn(),
     });
     mockUseDataFetching.mockImplementation(({ initialData }) => ({
       data: initialData,
       loading: false,
       error: null,
-      refetch: jest.fn().mockResolvedValue(initialData)
+      refetch: jest.fn().mockResolvedValue(initialData),
     }));
   });
   describe("Loading State Calculation - Independent Condition Testing", () => {
@@ -67,18 +67,18 @@ describe("useMarketplaceData - Enhanced Mutation Killers", () => {
               loading: true,
               // Loading
               error: null,
-              refetch: jest.fn()
+              refetch: jest.fn(),
             };
           }
           return {
             data: initialData,
             loading: false,
             error: null,
-            refetch: jest.fn()
+            refetch: jest.fn(),
           };
         });
-        const { result } = renderHook(
-          () => useMarketplaceData({
+        const { result } = renderHook(() =>
+          useMarketplaceData({
             storage: mockStorage,
             httpClient: mockHttpClient,
             apiBaseUrl: "http://api.test",
@@ -87,8 +87,8 @@ describe("useMarketplaceData - Enhanced Mutation Killers", () => {
             sortBy: "popular",
             user: null,
             activeTab: "repository",
-            repositorySubTab: "workflows"
-          })
+            repositorySubTab: "workflows",
+          }),
         );
         expect(result.current.loading).toBe(true);
       });
@@ -98,10 +98,10 @@ describe("useMarketplaceData - Enhanced Mutation Killers", () => {
           loading: false,
           // Not loading
           error: null,
-          refetch: jest.fn()
+          refetch: jest.fn(),
         }));
-        const { result } = renderHook(
-          () => useMarketplaceData({
+        const { result } = renderHook(() =>
+          useMarketplaceData({
             storage: mockStorage,
             httpClient: mockHttpClient,
             apiBaseUrl: "http://api.test",
@@ -110,8 +110,8 @@ describe("useMarketplaceData - Enhanced Mutation Killers", () => {
             sortBy: "popular",
             user: null,
             activeTab: "repository",
-            repositorySubTab: "workflows"
-          })
+            repositorySubTab: "workflows",
+          }),
         );
         expect(result.current.loading).toBe(false);
       });
@@ -122,11 +122,11 @@ describe("useMarketplaceData - Enhanced Mutation Killers", () => {
             loading: false,
             // All not loading
             error: null,
-            refetch: jest.fn()
+            refetch: jest.fn(),
           };
         });
-        const { result } = renderHook(
-          () => useMarketplaceData({
+        const { result } = renderHook(() =>
+          useMarketplaceData({
             storage: mockStorage,
             httpClient: mockHttpClient,
             apiBaseUrl: "http://api.test",
@@ -135,9 +135,9 @@ describe("useMarketplaceData - Enhanced Mutation Killers", () => {
             sortBy: "popular",
             user: null,
             activeTab: "repository",
-            repositorySubTab: "agents"
+            repositorySubTab: "agents",
             // Wrong sub-tab
-          })
+          }),
         );
         expect(result.current.loading).toBe(false);
       });
@@ -153,18 +153,18 @@ describe("useMarketplaceData - Enhanced Mutation Killers", () => {
               loading: true,
               // Loading
               error: null,
-              refetch: jest.fn()
+              refetch: jest.fn(),
             };
           }
           return {
             data: initialData,
             loading: false,
             error: null,
-            refetch: jest.fn()
+            refetch: jest.fn(),
           };
         });
-        const { result } = renderHook(
-          () => useMarketplaceData({
+        const { result } = renderHook(() =>
+          useMarketplaceData({
             storage: mockStorage,
             httpClient: mockHttpClient,
             apiBaseUrl: "http://api.test",
@@ -173,8 +173,8 @@ describe("useMarketplaceData - Enhanced Mutation Killers", () => {
             sortBy: "popular",
             user: null,
             activeTab: "repository",
-            repositorySubTab: "agents"
-          })
+            repositorySubTab: "agents",
+          }),
         );
         expect(result.current.loading).toBe(true);
       });
@@ -190,18 +190,18 @@ describe("useMarketplaceData - Enhanced Mutation Killers", () => {
               loading: true,
               // Loading
               error: null,
-              refetch: jest.fn()
+              refetch: jest.fn(),
             };
           }
           return {
             data: initialData,
             loading: false,
             error: null,
-            refetch: jest.fn()
+            refetch: jest.fn(),
           };
         });
-        const { result } = renderHook(
-          () => useMarketplaceData({
+        const { result } = renderHook(() =>
+          useMarketplaceData({
             storage: mockStorage,
             httpClient: mockHttpClient,
             apiBaseUrl: "http://api.test",
@@ -210,8 +210,8 @@ describe("useMarketplaceData - Enhanced Mutation Killers", () => {
             sortBy: "popular",
             user: null,
             activeTab: "workflows-of-workflows",
-            repositorySubTab: "workflows"
-          })
+            repositorySubTab: "workflows",
+          }),
         );
         expect(result.current.loading).toBe(true);
       });
@@ -227,18 +227,18 @@ describe("useMarketplaceData - Enhanced Mutation Killers", () => {
               loading: true,
               // Loading
               error: null,
-              refetch: jest.fn()
+              refetch: jest.fn(),
             };
           }
           return {
             data: initialData,
             loading: false,
             error: null,
-            refetch: jest.fn()
+            refetch: jest.fn(),
           };
         });
-        const { result } = renderHook(
-          () => useMarketplaceData({
+        const { result } = renderHook(() =>
+          useMarketplaceData({
             storage: mockStorage,
             httpClient: mockHttpClient,
             apiBaseUrl: "http://api.test",
@@ -247,8 +247,8 @@ describe("useMarketplaceData - Enhanced Mutation Killers", () => {
             sortBy: "popular",
             user: null,
             activeTab: "agents",
-            repositorySubTab: "workflows"
-          })
+            repositorySubTab: "workflows",
+          }),
         );
         expect(result.current.loading).toBe(true);
       });
@@ -267,18 +267,18 @@ describe("useMarketplaceData - Enhanced Mutation Killers", () => {
               // Truthy
               loading: false,
               error: null,
-              refetch: jest.fn()
+              refetch: jest.fn(),
             };
           }
           return {
             data: initialData,
             loading: false,
             error: null,
-            refetch: jest.fn()
+            refetch: jest.fn(),
           };
         });
-        const { result } = renderHook(
-          () => useMarketplaceData({
+        const { result } = renderHook(() =>
+          useMarketplaceData({
             storage: mockStorage,
             httpClient: mockHttpClient,
             apiBaseUrl: "http://api.test",
@@ -287,8 +287,8 @@ describe("useMarketplaceData - Enhanced Mutation Killers", () => {
             sortBy: "popular",
             user: null,
             activeTab: "workflows-of-workflows",
-            repositorySubTab: "workflows"
-          })
+            repositorySubTab: "workflows",
+          }),
         );
         expect(result.current.workflowsOfWorkflows).toEqual(mockData);
       });
@@ -302,18 +302,18 @@ describe("useMarketplaceData - Enhanced Mutation Killers", () => {
               // Falsy
               loading: false,
               error: null,
-              refetch: jest.fn()
+              refetch: jest.fn(),
             };
           }
           return {
             data: initialData,
             loading: false,
             error: null,
-            refetch: jest.fn()
+            refetch: jest.fn(),
           };
         });
-        const { result } = renderHook(
-          () => useMarketplaceData({
+        const { result } = renderHook(() =>
+          useMarketplaceData({
             storage: mockStorage,
             httpClient: mockHttpClient,
             apiBaseUrl: "http://api.test",
@@ -322,8 +322,8 @@ describe("useMarketplaceData - Enhanced Mutation Killers", () => {
             sortBy: "popular",
             user: null,
             activeTab: "workflows-of-workflows",
-            repositorySubTab: "workflows"
-          })
+            repositorySubTab: "workflows",
+          }),
         );
         expect(result.current.workflowsOfWorkflows).toEqual([]);
       });
@@ -337,18 +337,18 @@ describe("useMarketplaceData - Enhanced Mutation Killers", () => {
               // Falsy
               loading: false,
               error: null,
-              refetch: jest.fn()
+              refetch: jest.fn(),
             };
           }
           return {
             data: initialData,
             loading: false,
             error: null,
-            refetch: jest.fn()
+            refetch: jest.fn(),
           };
         });
-        const { result } = renderHook(
-          () => useMarketplaceData({
+        const { result } = renderHook(() =>
+          useMarketplaceData({
             storage: mockStorage,
             httpClient: mockHttpClient,
             apiBaseUrl: "http://api.test",
@@ -357,8 +357,8 @@ describe("useMarketplaceData - Enhanced Mutation Killers", () => {
             sortBy: "popular",
             user: null,
             activeTab: "workflows-of-workflows",
-            repositorySubTab: "workflows"
-          })
+            repositorySubTab: "workflows",
+          }),
         );
         expect(result.current.workflowsOfWorkflows).toEqual([]);
       });
@@ -375,18 +375,18 @@ describe("useMarketplaceData - Enhanced Mutation Killers", () => {
               // Truthy
               loading: false,
               error: null,
-              refetch: jest.fn()
+              refetch: jest.fn(),
             };
           }
           return {
             data: initialData,
             loading: false,
             error: null,
-            refetch: jest.fn()
+            refetch: jest.fn(),
           };
         });
-        const { result } = renderHook(
-          () => useMarketplaceData({
+        const { result } = renderHook(() =>
+          useMarketplaceData({
             storage: mockStorage,
             httpClient: mockHttpClient,
             apiBaseUrl: "http://api.test",
@@ -395,8 +395,8 @@ describe("useMarketplaceData - Enhanced Mutation Killers", () => {
             sortBy: "popular",
             user: null,
             activeTab: "agents",
-            repositorySubTab: "workflows"
-          })
+            repositorySubTab: "workflows",
+          }),
         );
         expect(result.current.agents).toEqual(mockData);
       });
@@ -410,18 +410,18 @@ describe("useMarketplaceData - Enhanced Mutation Killers", () => {
               // Falsy
               loading: false,
               error: null,
-              refetch: jest.fn()
+              refetch: jest.fn(),
             };
           }
           return {
             data: initialData,
             loading: false,
             error: null,
-            refetch: jest.fn()
+            refetch: jest.fn(),
           };
         });
-        const { result } = renderHook(
-          () => useMarketplaceData({
+        const { result } = renderHook(() =>
+          useMarketplaceData({
             storage: mockStorage,
             httpClient: mockHttpClient,
             apiBaseUrl: "http://api.test",
@@ -430,8 +430,8 @@ describe("useMarketplaceData - Enhanced Mutation Killers", () => {
             sortBy: "popular",
             user: null,
             activeTab: "agents",
-            repositorySubTab: "workflows"
-          })
+            repositorySubTab: "workflows",
+          }),
         );
         expect(result.current.agents).toEqual([]);
       });
@@ -448,18 +448,18 @@ describe("useMarketplaceData - Enhanced Mutation Killers", () => {
               // Truthy
               loading: false,
               error: null,
-              refetch: jest.fn()
+              refetch: jest.fn(),
             };
           }
           return {
             data: initialData,
             loading: false,
             error: null,
-            refetch: jest.fn()
+            refetch: jest.fn(),
           };
         });
-        const { result } = renderHook(
-          () => useMarketplaceData({
+        const { result } = renderHook(() =>
+          useMarketplaceData({
             storage: mockStorage,
             httpClient: mockHttpClient,
             apiBaseUrl: "http://api.test",
@@ -468,8 +468,8 @@ describe("useMarketplaceData - Enhanced Mutation Killers", () => {
             sortBy: "popular",
             user: null,
             activeTab: "repository",
-            repositorySubTab: "agents"
-          })
+            repositorySubTab: "agents",
+          }),
         );
         expect(result.current.repositoryAgents).toEqual(mockData);
       });
@@ -483,18 +483,18 @@ describe("useMarketplaceData - Enhanced Mutation Killers", () => {
               // Falsy
               loading: false,
               error: null,
-              refetch: jest.fn()
+              refetch: jest.fn(),
             };
           }
           return {
             data: initialData,
             loading: false,
             error: null,
-            refetch: jest.fn()
+            refetch: jest.fn(),
           };
         });
-        const { result } = renderHook(
-          () => useMarketplaceData({
+        const { result } = renderHook(() =>
+          useMarketplaceData({
             storage: mockStorage,
             httpClient: mockHttpClient,
             apiBaseUrl: "http://api.test",
@@ -503,8 +503,8 @@ describe("useMarketplaceData - Enhanced Mutation Killers", () => {
             sortBy: "popular",
             user: null,
             activeTab: "repository",
-            repositorySubTab: "agents"
-          })
+            repositorySubTab: "agents",
+          }),
         );
         expect(result.current.repositoryAgents).toEqual([]);
       });
@@ -522,11 +522,11 @@ describe("useMarketplaceData - Enhanced Mutation Killers", () => {
           data: initialData,
           loading: false,
           error: null,
-          refetch
+          refetch,
         };
       });
-      renderHook(
-        () => useMarketplaceData({
+      renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -535,11 +535,13 @@ describe("useMarketplaceData - Enhanced Mutation Killers", () => {
           sortBy: "popular",
           user: null,
           activeTab: "repository",
-          repositorySubTab: "workflows"
-        })
+          repositorySubTab: "workflows",
+        }),
       );
       await waitForWithTimeout(() => {
-        const templatesRefetch = refetchFunctions.find((f) => f.callIndex === 1)?.refetch;
+        const templatesRefetch = refetchFunctions.find(
+          (f) => f.callIndex === 1,
+        )?.refetch;
         expect(templatesRefetch).toBeDefined();
         expect(templatesRefetch).toHaveBeenCalled();
       });
@@ -555,11 +557,11 @@ describe("useMarketplaceData - Enhanced Mutation Killers", () => {
           data: initialData,
           loading: false,
           error: null,
-          refetch
+          refetch,
         };
       });
-      renderHook(
-        () => useMarketplaceData({
+      renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -568,11 +570,13 @@ describe("useMarketplaceData - Enhanced Mutation Killers", () => {
           sortBy: "popular",
           user: null,
           activeTab: "repository",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitForWithTimeout(() => {
-        const repositoryAgentsRefetch = refetchFunctions.find((f) => f.callIndex === 4)?.refetch;
+        const repositoryAgentsRefetch = refetchFunctions.find(
+          (f) => f.callIndex === 4,
+        )?.refetch;
         expect(repositoryAgentsRefetch).toBeDefined();
         expect(repositoryAgentsRefetch).toHaveBeenCalled();
       });
@@ -588,11 +592,11 @@ describe("useMarketplaceData - Enhanced Mutation Killers", () => {
           data: initialData,
           loading: false,
           error: null,
-          refetch
+          refetch,
         };
       });
-      renderHook(
-        () => useMarketplaceData({
+      renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -601,11 +605,13 @@ describe("useMarketplaceData - Enhanced Mutation Killers", () => {
           sortBy: "popular",
           user: null,
           activeTab: "workflows-of-workflows",
-          repositorySubTab: "workflows"
-        })
+          repositorySubTab: "workflows",
+        }),
       );
       await waitForWithTimeout(() => {
-        const workflowsOfWorkflowsRefetch = refetchFunctions.find((f) => f.callIndex === 2)?.refetch;
+        const workflowsOfWorkflowsRefetch = refetchFunctions.find(
+          (f) => f.callIndex === 2,
+        )?.refetch;
         expect(workflowsOfWorkflowsRefetch).toBeDefined();
         expect(workflowsOfWorkflowsRefetch).toHaveBeenCalled();
       });
@@ -621,11 +627,11 @@ describe("useMarketplaceData - Enhanced Mutation Killers", () => {
           data: initialData,
           loading: false,
           error: null,
-          refetch
+          refetch,
         };
       });
-      renderHook(
-        () => useMarketplaceData({
+      renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -634,11 +640,13 @@ describe("useMarketplaceData - Enhanced Mutation Killers", () => {
           sortBy: "popular",
           user: null,
           activeTab: "agents",
-          repositorySubTab: "workflows"
-        })
+          repositorySubTab: "workflows",
+        }),
       );
       await waitForWithTimeout(() => {
-        const agentsRefetch = refetchFunctions.find((f) => f.callIndex === 3)?.refetch;
+        const agentsRefetch = refetchFunctions.find(
+          (f) => f.callIndex === 3,
+        )?.refetch;
         expect(agentsRefetch).toBeDefined();
         expect(agentsRefetch).toHaveBeenCalled();
       });

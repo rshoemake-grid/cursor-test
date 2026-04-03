@@ -5,7 +5,7 @@ import { useMarketplaceData } from "./useMarketplaceData";
 import { getLocalStorageItem } from "../storage";
 const waitForWithTimeout = waitForWithTimeoutFakeTimers;
 jest.mock("../storage", () => ({
-  getLocalStorageItem: jest.fn()
+  getLocalStorageItem: jest.fn(),
 }));
 const mockGetLocalStorageItem = getLocalStorageItem;
 describe("useMarketplaceData - Method Expressions", () => {
@@ -19,7 +19,7 @@ describe("useMarketplaceData - Method Expressions", () => {
     category: "automation",
     tags: ["test"],
     published_at: "2024-01-01T00:00:00Z",
-    is_official: false
+    is_official: false,
   };
   beforeEach(() => {
     jest.setTimeout(18e4);
@@ -36,14 +36,16 @@ describe("useMarketplaceData - Method Expressions", () => {
         }
         return Promise.resolve({ json: async () => [] });
       }),
-      post: jest.fn().mockResolvedValue({ ok: true, json: async () => ({ nodes: [] }) })
+      post: jest
+        .fn()
+        .mockResolvedValue({ ok: true, json: async () => ({ nodes: [] }) }),
     };
     mockStorage = {
       getItem: jest.fn().mockReturnValue(null),
       setItem: jest.fn(),
       removeItem: jest.fn(),
       addEventListener: jest.fn(),
-      removeEventListener: jest.fn()
+      removeEventListener: jest.fn(),
     };
     mockGetLocalStorageItem.mockReturnValue([]);
   });
@@ -63,12 +65,22 @@ describe("useMarketplaceData - Method Expressions", () => {
   describe("Sort callback - arrow function", () => {
     it("should execute sort callback with arrow function syntax", async () => {
       const agents = [
-        { ...mockAgent, id: "agent-1", name: "Zebra Agent", is_official: false },
-        { ...mockAgent, id: "agent-2", name: "Alpha Agent", is_official: false }
+        {
+          ...mockAgent,
+          id: "agent-1",
+          name: "Zebra Agent",
+          is_official: false,
+        },
+        {
+          ...mockAgent,
+          id: "agent-2",
+          name: "Alpha Agent",
+          is_official: false,
+        },
       ];
       mockGetLocalStorageItem.mockReturnValue(agents);
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -77,8 +89,8 @@ describe("useMarketplaceData - Method Expressions", () => {
           sortBy: "alphabetical",
           user: null,
           activeTab: "agents",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitForWithTimeout(() => {
         expect(result.current.loading).toBe(false);
@@ -88,12 +100,22 @@ describe("useMarketplaceData - Method Expressions", () => {
     });
     it("should verify sort callback compares aIsOfficial and bIsOfficial", async () => {
       const agents = [
-        { ...mockAgent, id: "agent-1", name: "Unofficial Agent", is_official: false },
-        { ...mockAgent, id: "agent-2", name: "Official Agent", is_official: true }
+        {
+          ...mockAgent,
+          id: "agent-1",
+          name: "Unofficial Agent",
+          is_official: false,
+        },
+        {
+          ...mockAgent,
+          id: "agent-2",
+          name: "Official Agent",
+          is_official: true,
+        },
       ];
       mockGetLocalStorageItem.mockReturnValue(agents);
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -102,8 +124,8 @@ describe("useMarketplaceData - Method Expressions", () => {
           sortBy: "popular",
           user: null,
           activeTab: "agents",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitForWithTimeout(() => {
         expect(result.current.loading).toBe(false);
@@ -114,11 +136,11 @@ describe("useMarketplaceData - Method Expressions", () => {
     it("should verify sort callback uses subtraction operator (bIsOfficial - aIsOfficial)", async () => {
       const agents = [
         { ...mockAgent, id: "agent-1", is_official: false },
-        { ...mockAgent, id: "agent-2", is_official: true }
+        { ...mockAgent, id: "agent-2", is_official: true },
       ];
       mockGetLocalStorageItem.mockReturnValue(agents);
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -127,8 +149,8 @@ describe("useMarketplaceData - Method Expressions", () => {
           sortBy: "popular",
           user: null,
           activeTab: "agents",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitForWithTimeout(() => {
         expect(result.current.loading).toBe(false);
@@ -138,11 +160,11 @@ describe("useMarketplaceData - Method Expressions", () => {
     it("should verify sort callback uses subtraction operator (dateB - dateA)", async () => {
       const agents = [
         { ...mockAgent, id: "agent-1", published_at: "2024-01-01T00:00:00Z" },
-        { ...mockAgent, id: "agent-2", published_at: "2024-01-02T00:00:00Z" }
+        { ...mockAgent, id: "agent-2", published_at: "2024-01-02T00:00:00Z" },
       ];
       mockGetLocalStorageItem.mockReturnValue(agents);
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -151,23 +173,27 @@ describe("useMarketplaceData - Method Expressions", () => {
           sortBy: "popular",
           user: null,
           activeTab: "agents",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitForWithTimeout(() => {
         expect(result.current.loading).toBe(false);
       });
-      expect(result.current.agents[0].published_at).toBe("2024-01-02T00:00:00Z");
-      expect(result.current.agents[1].published_at).toBe("2024-01-01T00:00:00Z");
+      expect(result.current.agents[0].published_at).toBe(
+        "2024-01-02T00:00:00Z",
+      );
+      expect(result.current.agents[1].published_at).toBe(
+        "2024-01-01T00:00:00Z",
+      );
     });
     it("should verify sort callback uses localeCompare method", async () => {
       const agents = [
         { ...mockAgent, id: "agent-1", name: "Zebra Agent" },
-        { ...mockAgent, id: "agent-2", name: "Alpha Agent" }
+        { ...mockAgent, id: "agent-2", name: "Alpha Agent" },
       ];
       mockGetLocalStorageItem.mockReturnValue(agents);
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -176,8 +202,8 @@ describe("useMarketplaceData - Method Expressions", () => {
           sortBy: "alphabetical",
           user: null,
           activeTab: "agents",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitForWithTimeout(() => {
         expect(result.current.loading).toBe(false);
@@ -190,11 +216,11 @@ describe("useMarketplaceData - Method Expressions", () => {
     it("should execute filter callback with arrow function syntax", async () => {
       const agents = [
         { ...mockAgent, category: "automation" },
-        { ...mockAgent, id: "agent-2", category: "other" }
+        { ...mockAgent, id: "agent-2", category: "other" },
       ];
       mockGetLocalStorageItem.mockReturnValue(agents);
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -203,8 +229,8 @@ describe("useMarketplaceData - Method Expressions", () => {
           sortBy: "popular",
           user: null,
           activeTab: "agents",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitForWithTimeout(() => {
         expect(result.current.loading).toBe(false);
@@ -214,11 +240,16 @@ describe("useMarketplaceData - Method Expressions", () => {
     });
     it("should verify filter callback uses toLowerCase() method", async () => {
       const agents = [
-        { ...mockAgent, name: "Test Agent", description: "Description", tags: ["test"] }
+        {
+          ...mockAgent,
+          name: "Test Agent",
+          description: "Description",
+          tags: ["test"],
+        },
       ];
       mockGetLocalStorageItem.mockReturnValue(agents);
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -228,8 +259,8 @@ describe("useMarketplaceData - Method Expressions", () => {
           sortBy: "popular",
           user: null,
           activeTab: "agents",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitForWithTimeout(() => {
         expect(result.current.loading).toBe(false);
@@ -238,11 +269,16 @@ describe("useMarketplaceData - Method Expressions", () => {
     });
     it("should verify filter callback uses includes() method", async () => {
       const agents = [
-        { ...mockAgent, name: "Test Agent", description: "Other", tags: ["other"] }
+        {
+          ...mockAgent,
+          name: "Test Agent",
+          description: "Other",
+          tags: ["other"],
+        },
       ];
       mockGetLocalStorageItem.mockReturnValue(agents);
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -251,8 +287,8 @@ describe("useMarketplaceData - Method Expressions", () => {
           sortBy: "popular",
           user: null,
           activeTab: "agents",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitForWithTimeout(() => {
         expect(result.current.loading).toBe(false);
@@ -262,11 +298,16 @@ describe("useMarketplaceData - Method Expressions", () => {
     });
     it("should verify filter callback uses some() method on tags", async () => {
       const agents = [
-        { ...mockAgent, name: "Agent One", description: "Description", tags: ["test", "automation"] }
+        {
+          ...mockAgent,
+          name: "Agent One",
+          description: "Description",
+          tags: ["test", "automation"],
+        },
       ];
       mockGetLocalStorageItem.mockReturnValue(agents);
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -275,8 +316,8 @@ describe("useMarketplaceData - Method Expressions", () => {
           sortBy: "popular",
           user: null,
           activeTab: "agents",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitForWithTimeout(() => {
         expect(result.current.loading).toBe(false);
@@ -288,11 +329,11 @@ describe("useMarketplaceData - Method Expressions", () => {
     it("should execute map callback with arrow function syntax", async () => {
       const agents = [
         { ...mockAgent, author_id: null },
-        { ...mockAgent, id: "agent-2", author_id: null }
+        { ...mockAgent, id: "agent-2", author_id: null },
       ];
       mockGetLocalStorageItem.mockReturnValue(agents);
-      renderHook(
-        () => useMarketplaceData({
+      renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -301,8 +342,8 @@ describe("useMarketplaceData - Method Expressions", () => {
           sortBy: "popular",
           user: { id: "user-1", username: "testuser" },
           activeTab: "agents",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitForWithTimeout(() => {
         expect(mockStorage.setItem).toHaveBeenCalled();
@@ -313,12 +354,10 @@ describe("useMarketplaceData - Method Expressions", () => {
       expect(savedData[1].author_id).toBe("user-1");
     });
     it("should verify map callback returns updated agent object", async () => {
-      const agents = [
-        { ...mockAgent, author_id: null }
-      ];
+      const agents = [{ ...mockAgent, author_id: null }];
       mockGetLocalStorageItem.mockReturnValue(agents);
-      renderHook(
-        () => useMarketplaceData({
+      renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -327,8 +366,8 @@ describe("useMarketplaceData - Method Expressions", () => {
           sortBy: "popular",
           user: { id: "user-1", username: "testuser" },
           activeTab: "agents",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitForWithTimeout(() => {
         expect(mockStorage.setItem).toHaveBeenCalled();
@@ -342,11 +381,16 @@ describe("useMarketplaceData - Method Expressions", () => {
   describe("Method chaining - toLowerCase().includes()", () => {
     it("should verify method chaining works correctly", async () => {
       const agents = [
-        { ...mockAgent, name: "Test Agent", description: "Description", tags: ["test"] }
+        {
+          ...mockAgent,
+          name: "Test Agent",
+          description: "Description",
+          tags: ["test"],
+        },
       ];
       mockGetLocalStorageItem.mockReturnValue(agents);
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -355,8 +399,8 @@ describe("useMarketplaceData - Method Expressions", () => {
           sortBy: "popular",
           user: null,
           activeTab: "agents",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitForWithTimeout(() => {
         expect(result.current.loading).toBe(false);
@@ -365,11 +409,16 @@ describe("useMarketplaceData - Method Expressions", () => {
     });
     it("should verify method chaining with tags", async () => {
       const agents = [
-        { ...mockAgent, name: "Agent", description: "Description", tags: ["TEST"] }
+        {
+          ...mockAgent,
+          name: "Agent",
+          description: "Description",
+          tags: ["TEST"],
+        },
       ];
       mockGetLocalStorageItem.mockReturnValue(agents);
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -378,8 +427,8 @@ describe("useMarketplaceData - Method Expressions", () => {
           sortBy: "popular",
           user: null,
           activeTab: "agents",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitForWithTimeout(() => {
         expect(result.current.loading).toBe(false);
@@ -391,11 +440,11 @@ describe("useMarketplaceData - Method Expressions", () => {
     it("should verify new Date().getTime() is used for date comparison", async () => {
       const agents = [
         { ...mockAgent, published_at: "2024-01-01T00:00:00Z" },
-        { ...mockAgent, id: "agent-2", published_at: "2024-01-02T00:00:00Z" }
+        { ...mockAgent, id: "agent-2", published_at: "2024-01-02T00:00:00Z" },
       ];
       mockGetLocalStorageItem.mockReturnValue(agents);
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -404,22 +453,24 @@ describe("useMarketplaceData - Method Expressions", () => {
           sortBy: "popular",
           user: null,
           activeTab: "agents",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitForWithTimeout(() => {
         expect(result.current.loading).toBe(false);
       });
-      expect(result.current.agents[0].published_at).toBe("2024-01-02T00:00:00Z");
-      expect(result.current.agents[1].published_at).toBe("2024-01-01T00:00:00Z");
+      expect(result.current.agents[0].published_at).toBe(
+        "2024-01-02T00:00:00Z",
+      );
+      expect(result.current.agents[1].published_at).toBe(
+        "2024-01-01T00:00:00Z",
+      );
     });
     it("should verify new Date() constructor is called", async () => {
-      const agents = [
-        { ...mockAgent, published_at: "2024-01-01T00:00:00Z" }
-      ];
+      const agents = [{ ...mockAgent, published_at: "2024-01-01T00:00:00Z" }];
       mockGetLocalStorageItem.mockReturnValue(agents);
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -428,8 +479,8 @@ describe("useMarketplaceData - Method Expressions", () => {
           sortBy: "popular",
           user: null,
           activeTab: "agents",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitForWithTimeout(() => {
         expect(result.current.loading).toBe(false);
@@ -441,11 +492,11 @@ describe("useMarketplaceData - Method Expressions", () => {
     it("should verify localeCompare() is used for alphabetical sort", async () => {
       const agents = [
         { ...mockAgent, name: "Zebra Agent" },
-        { ...mockAgent, id: "agent-2", name: "Alpha Agent" }
+        { ...mockAgent, id: "agent-2", name: "Alpha Agent" },
       ];
       mockGetLocalStorageItem.mockReturnValue(agents);
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -454,8 +505,8 @@ describe("useMarketplaceData - Method Expressions", () => {
           sortBy: "alphabetical",
           user: null,
           activeTab: "agents",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitForWithTimeout(() => {
         expect(result.current.loading).toBe(false);
@@ -466,11 +517,11 @@ describe("useMarketplaceData - Method Expressions", () => {
     it("should verify localeCompare() handles empty string names", async () => {
       const agents = [
         { ...mockAgent, name: "" },
-        { ...mockAgent, id: "agent-2", name: "Alpha Agent" }
+        { ...mockAgent, id: "agent-2", name: "Alpha Agent" },
       ];
       mockGetLocalStorageItem.mockReturnValue(agents);
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -479,8 +530,8 @@ describe("useMarketplaceData - Method Expressions", () => {
           sortBy: "alphabetical",
           user: null,
           activeTab: "agents",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitForWithTimeout(() => {
         expect(result.current.loading).toBe(false);
@@ -496,35 +547,37 @@ describe("useMarketplaceData - Method Expressions", () => {
         description: "Test Description",
         // No "workflow of workflows" to force tag path
         category: "automation",
-        tags: ["workflow", "test"]
+        tags: ["workflow", "test"],
         // Tags include 'workflow' to trigger the some() check
       };
       const getJsonMock = jest.fn().mockResolvedValue([template]);
       mockHttpClient.get.mockResolvedValue({
-        json: getJsonMock
+        json: getJsonMock,
       });
       const postJsonMock = jest.fn().mockResolvedValue({
-        nodes: [{
-          // Node exists so nodes.some() runs
-          // Inside nodes.some() callback (line 58), checks multiple conditions including:
-          // workflow.tags.some(tag => tag.toLowerCase().includes('workflow')) on line 67
-          // This exercises the arrow function callback mutation target
-          // Since workflow.tags is ['workflow', 'test'], the tag check should return true
-          // We also set description to 'workflow' to ensure hasWorkflowReference is true via description.includes('workflow')
-          id: "node-1",
-          data: {},
-          workflow_id: void 0,
-          description: "workflow",
-          // This ensures hasWorkflowReference is true via description.includes('workflow')
-          name: void 0
-        }]
+        nodes: [
+          {
+            // Node exists so nodes.some() runs
+            // Inside nodes.some() callback (line 58), checks multiple conditions including:
+            // workflow.tags.some(tag => tag.toLowerCase().includes('workflow')) on line 67
+            // This exercises the arrow function callback mutation target
+            // Since workflow.tags is ['workflow', 'test'], the tag check should return true
+            // We also set description to 'workflow' to ensure hasWorkflowReference is true via description.includes('workflow')
+            id: "node-1",
+            data: {},
+            workflow_id: void 0,
+            description: "workflow",
+            // This ensures hasWorkflowReference is true via description.includes('workflow')
+            name: void 0,
+          },
+        ],
       });
       mockHttpClient.post.mockResolvedValue({
         ok: true,
-        json: postJsonMock
+        json: postJsonMock,
       });
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -533,8 +586,8 @@ describe("useMarketplaceData - Method Expressions", () => {
           sortBy: "popular",
           user: null,
           activeTab: "workflows-of-workflows",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       const timeout = isRunningUnderStryker() ? 12e4 : 9e4;
       await act(async () => {
@@ -586,12 +639,10 @@ describe("useMarketplaceData - Method Expressions", () => {
       expect(result.current.workflowsOfWorkflows.length).toBeGreaterThan(0);
     });
     it("should verify some() callback uses toLowerCase().includes() in tags check", async () => {
-      const agents = [
-        { ...mockAgent, tags: ["TEST", "automation"] }
-      ];
+      const agents = [{ ...mockAgent, tags: ["TEST", "automation"] }];
       mockGetLocalStorageItem.mockReturnValue(agents);
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -601,8 +652,8 @@ describe("useMarketplaceData - Method Expressions", () => {
           sortBy: "popular",
           user: null,
           activeTab: "agents",
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitForWithTimeout(() => {
         expect(result.current.loading).toBe(false);

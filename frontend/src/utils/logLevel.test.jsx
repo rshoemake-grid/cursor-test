@@ -1,7 +1,7 @@
 import {
   getLogLevelColor,
   getLogLevelTextColor,
-  isValidLogLevel
+  isValidLogLevel,
 } from "./logLevel";
 describe("logLevel utilities", () => {
   describe("getLogLevelColor", () => {
@@ -9,7 +9,9 @@ describe("logLevel utilities", () => {
       expect(getLogLevelColor("ERROR")).toBe("bg-red-900/30 text-red-200");
     });
     it("should return correct color for WARNING level", () => {
-      expect(getLogLevelColor("WARNING")).toBe("bg-yellow-900/30 text-yellow-200");
+      expect(getLogLevelColor("WARNING")).toBe(
+        "bg-yellow-900/30 text-yellow-200",
+      );
     });
     it("should return correct color for INFO level", () => {
       const result = getLogLevelColor("INFO");

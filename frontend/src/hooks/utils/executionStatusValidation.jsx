@@ -35,5 +35,5 @@ export {
   isPausedStatus,
   isRunningStatus,
   isTerminatedStatus,
-  normalizeExecutionStatus
+  normalizeExecutionStatus,
 };

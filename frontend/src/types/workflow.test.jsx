@@ -3,7 +3,7 @@ import {
   isValidExecutionStatus,
   isValidConditionType,
   isValidLoopType,
-  isValidEdgeCondition
+  isValidEdgeCondition,
 } from "./workflow";
 import * as workflowModule from "./workflow";
 describe("types/workflow.ts", () => {
@@ -17,9 +17,21 @@ describe("types/workflow.ts", () => {
   });
   describe("ExecutionStatus", () => {
     it("should accept valid execution statuses", () => {
-      const validStatuses = ["pending", "running", "completed", "failed", "paused"];
+      const validStatuses = [
+        "pending",
+        "running",
+        "completed",
+        "failed",
+        "paused",
+      ];
       validStatuses.forEach((status) => {
-        expect(["pending", "running", "completed", "failed", "paused"]).toContain(status);
+        expect([
+          "pending",
+          "running",
+          "completed",
+          "failed",
+          "paused",
+        ]).toContain(status);
       });
     });
   });
@@ -27,7 +39,7 @@ describe("types/workflow.ts", () => {
     it("should create valid AgentConfig object", () => {
       const config = {
         model: "gpt-4",
-        temperature: 0.7
+        temperature: 0.7,
       };
       expect(config.model).toBe("gpt-4");
       expect(config.temperature).toBe(0.7);
@@ -38,7 +50,7 @@ describe("types/workflow.ts", () => {
         temperature: 0.7,
         system_prompt: "You are a helpful assistant",
         max_tokens: 1e3,
-        tools: ["tool1", "tool2"]
+        tools: ["tool1", "tool2"],
       };
       expect(config.system_prompt).toBe("You are a helpful assistant");
       expect(config.max_tokens).toBe(1e3);
@@ -49,7 +61,7 @@ describe("types/workflow.ts", () => {
     it("should create valid InputMapping object", () => {
       const mapping = {
         name: "input1",
-        source_field: "output"
+        source_field: "output",
       };
       expect(mapping.name).toBe("input1");
       expect(mapping.source_field).toBe("output");
@@ -58,7 +70,7 @@ describe("types/workflow.ts", () => {
       const mapping = {
         name: "input1",
         source_node: "node-1",
-        source_field: "output"
+        source_field: "output",
       };
       expect(mapping.source_node).toBe("node-1");
     });
@@ -68,7 +80,7 @@ describe("types/workflow.ts", () => {
       const config = {
         condition_type: "equals",
         field: "status",
-        value: "active"
+        value: "active",
       };
       expect(config.condition_type).toBe("equals");
       expect(config.field).toBe("status");
@@ -80,7 +92,7 @@ describe("types/workflow.ts", () => {
         field: "status",
         value: "active",
         true_branch: "node-true",
-        false_branch: "node-false"
+        false_branch: "node-false",
       };
       expect(config.true_branch).toBe("node-true");
       expect(config.false_branch).toBe("node-false");
@@ -90,7 +102,7 @@ describe("types/workflow.ts", () => {
     it("should create valid LoopConfig object", () => {
       const config = {
         loop_type: "for_each",
-        items_source: "array"
+        items_source: "array",
       };
       expect(config.loop_type).toBe("for_each");
       expect(config.items_source).toBe("array");
@@ -99,7 +111,7 @@ describe("types/workflow.ts", () => {
       const config = {
         loop_type: "while",
         condition: "i < 10",
-        max_iterations: 100
+        max_iterations: 100,
       };
       expect(config.condition).toBe("i < 10");
       expect(config.max_iterations).toBe(100);
@@ -112,7 +124,7 @@ describe("types/workflow.ts", () => {
         type: "agent",
         name: "Test Node",
         inputs: [],
-        position: { x: 0, y: 0 }
+        position: { x: 0, y: 0 },
       };
       expect(node.id).toBe("node-1");
       expect(node.type).toBe("agent");
@@ -128,10 +140,10 @@ describe("types/workflow.ts", () => {
         description: "A test node",
         agent_config: {
           model: "gpt-4",
-          temperature: 0.7
+          temperature: 0.7,
         },
         inputs: [],
-        position: { x: 100, y: 200 }
+        position: { x: 100, y: 200 },
       };
       expect(node.description).toBe("A test node");
       expect(node.agent_config?.model).toBe("gpt-4");
@@ -142,7 +154,7 @@ describe("types/workflow.ts", () => {
       const edge = {
         id: "edge-1",
         source: "node-1",
-        target: "node-2"
+        target: "node-2",
       };
       expect(edge.id).toBe("edge-1");
       expect(edge.source).toBe("node-1");
@@ -156,7 +168,7 @@ describe("types/workflow.ts", () => {
         label: "Success",
         condition: "true",
         sourceHandle: "output",
-        targetHandle: "input"
+        targetHandle: "input",
       };
       expect(edge.label).toBe("Success");
       expect(edge.condition).toBe("true");
@@ -169,7 +181,7 @@ describe("types/workflow.ts", () => {
         source: "node-1",
         target: "node-2",
         source_handle: "output",
-        target_handle: "input"
+        target_handle: "input",
       };
       expect(edge.source_handle).toBe("output");
       expect(edge.target_handle).toBe("input");
@@ -181,7 +193,7 @@ describe("types/workflow.ts", () => {
         name: "Test Workflow",
         nodes: [],
         edges: [],
-        variables: {}
+        variables: {},
       };
       expect(workflow.name).toBe("Test Workflow");
       expect(workflow.nodes).toEqual([]);
@@ -198,7 +210,7 @@ describe("types/workflow.ts", () => {
         edges: [],
         variables: { key: "value" },
         created_at: "2024-01-01T00:00:00Z",
-        updated_at: "2024-01-02T00:00:00Z"
+        updated_at: "2024-01-02T00:00:00Z",
       };
       expect(workflow.id).toBe("workflow-1");
       expect(workflow.description).toBe("A test workflow");
@@ -210,7 +222,7 @@ describe("types/workflow.ts", () => {
     it("should create valid NodeState object", () => {
       const state = {
         node_id: "node-1",
-        status: "running"
+        status: "running",
       };
       expect(state.node_id).toBe("node-1");
       expect(state.status).toBe("running");
@@ -223,7 +235,7 @@ describe("types/workflow.ts", () => {
         output: { result: "success" },
         error: void 0,
         started_at: "2024-01-01T00:00:00Z",
-        completed_at: "2024-01-01T00:01:00Z"
+        completed_at: "2024-01-01T00:01:00Z",
       };
       expect(state.input).toEqual({ key: "value" });
       expect(state.output).toEqual({ result: "success" });
@@ -236,7 +248,7 @@ describe("types/workflow.ts", () => {
       const log = {
         timestamp: "2024-01-01T00:00:00Z",
         level: "info",
-        message: "Test log message"
+        message: "Test log message",
       };
       expect(log.timestamp).toBe("2024-01-01T00:00:00Z");
       expect(log.level).toBe("info");
@@ -247,7 +259,7 @@ describe("types/workflow.ts", () => {
         timestamp: "2024-01-01T00:00:00Z",
         level: "error",
         node_id: "node-1",
-        message: "Error occurred"
+        message: "Error occurred",
       };
       expect(log.node_id).toBe("node-1");
     });
@@ -261,7 +273,7 @@ describe("types/workflow.ts", () => {
         node_states: {},
         variables: {},
         started_at: "2024-01-01T00:00:00Z",
-        logs: []
+        logs: [],
       };
       expect(state.execution_id).toBe("exec-1");
       expect(state.workflow_id).toBe("workflow-1");
@@ -279,8 +291,8 @@ describe("types/workflow.ts", () => {
         node_states: {
           "node-1": {
             node_id: "node-1",
-            status: "completed"
-          }
+            status: "completed",
+          },
         },
         variables: { key: "value" },
         result: { success: true },
@@ -291,9 +303,9 @@ describe("types/workflow.ts", () => {
           {
             timestamp: "2024-01-01T00:00:00Z",
             level: "info",
-            message: "Started"
-          }
-        ]
+            message: "Started",
+          },
+        ],
       };
       expect(state.current_node).toBe("node-1");
       expect(state.result).toEqual({ success: true });
@@ -309,7 +321,7 @@ describe("types/workflow.ts", () => {
         name: "Agent Node",
         agent_config: { model: "gpt-4", temperature: 0.7 },
         inputs: [],
-        position: { x: 0, y: 0 }
+        position: { x: 0, y: 0 },
       };
       const conditionNode = {
         id: "node-2",
@@ -318,10 +330,10 @@ describe("types/workflow.ts", () => {
         condition_config: {
           condition_type: "equals",
           field: "status",
-          value: "active"
+          value: "active",
         },
         inputs: [],
-        position: { x: 100, y: 0 }
+        position: { x: 100, y: 0 },
       };
       expect(agentNode.type).toBe("agent");
       expect(conditionNode.type).toBe("condition");
@@ -331,13 +343,13 @@ describe("types/workflow.ts", () => {
         id: "edge-1",
         source: "node-1",
         target: "node-2",
-        condition: "true"
+        condition: "true",
       };
       const falseEdge = {
         id: "edge-2",
         source: "node-1",
         target: "node-3",
-        condition: "false"
+        condition: "false",
       };
       expect(trueEdge.condition).toBe("true");
       expect(falseEdge.condition).toBe("false");

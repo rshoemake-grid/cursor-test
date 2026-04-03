@@ -1,4 +1,3 @@
-import { jsx, jsxs } from "react/jsx-runtime";
 import { render, screen, waitFor, act } from "@testing-library/react";
 import { BrowserRouter } from "react-router-dom";
 import WorkflowBuilder from "./WorkflowBuilder";
@@ -9,11 +8,11 @@ jest.mock("../utils/logger", () => ({
     debug: jest.fn(),
     error: jest.fn(),
     warn: jest.fn(),
-    info: jest.fn()
-  }
+    info: jest.fn(),
+  },
 }));
 jest.mock("../contexts/AuthContext", () => ({
-  useAuth: jest.fn()
+  useAuth: jest.fn(),
 }));
 jest.mock("../api/client", () => ({
   api: {
@@ -21,26 +20,26 @@ jest.mock("../api/client", () => ({
     updateWorkflow: jest.fn(),
     getWorkflow: jest.fn(),
     executeWorkflow: jest.fn(),
-    getLLMSettings: jest.fn()
+    getLLMSettings: jest.fn(),
   },
-  createApiClient: jest.fn()
+  createApiClient: jest.fn(),
 }));
 jest.mock("../utils/notifications", () => ({
   showSuccess: jest.fn(),
-  showError: jest.fn()
+  showError: jest.fn(),
 }));
 jest.mock("../utils/confirm", () => ({
-  showConfirm: jest.fn()
+  showConfirm: jest.fn(),
 }));
 jest.mock("react-router-dom", () => ({
   ...jest.requireActual("react-router-dom"),
-  useNavigate: () => jest.fn()
+  useNavigate: () => jest.fn(),
 }));
 jest.mock("../hooks/providers", () => ({
   useLLMProviders: () => ({
     providers: [],
     iterationLimit: 10,
-    defaultModel: "gpt-4"
+    defaultModel: "gpt-4",
   }),
   useProviderManagement: () => ({
     saveProviders: jest.fn(),
@@ -48,13 +47,13 @@ jest.mock("../hooks/providers", () => ({
     testProvider: jest.fn(),
     addCustomModel: jest.fn(),
     testingProvider: null,
-    testResults: {}
-  })
+    testResults: {},
+  }),
 }));
 jest.mock("../hooks/settings/useSettingsSync", () => ({
   useSettingsSync: () => ({
-    handleManualSync: jest.fn()
-  })
+    handleManualSync: jest.fn(),
+  }),
 }));
 jest.mock("../hooks/settings/useModelExpansion", () => ({
   useModelExpansion: () => ({
@@ -62,12 +61,11 @@ jest.mock("../hooks/settings/useModelExpansion", () => ({
     expandedProviders: {},
     toggleProviderModels: jest.fn(),
     toggleModel: jest.fn(),
-    isModelExpanded: jest.fn(() => false)
-  })
+    isModelExpanded: jest.fn(() => false),
+  }),
 }));
 jest.mock("../hooks/settings/useSettingsStateSync", () => ({
-  useSettingsStateSync: () => {
-  }
+  useSettingsStateSync: () => {},
 }));
 jest.mock("../hooks/storage", () => ({
   useLocalStorage: () => ["", jest.fn(), jest.fn()],
@@ -77,21 +75,21 @@ jest.mock("../hooks/storage", () => ({
   useDraftManagement: () => ({
     saveDraft: jest.fn(),
     loadDraft: jest.fn(),
-    clearDraft: jest.fn()
+    clearDraft: jest.fn(),
   }),
-  loadDraftsFromStorage: () => []
+  loadDraftsFromStorage: () => [],
 }));
 jest.mock("../hooks/workflow", () => ({
   useWorkflowPersistence: () => ({
     saveWorkflow: jest.fn().mockResolvedValue("workflow-1"),
-    exportWorkflow: jest.fn()
+    exportWorkflow: jest.fn(),
   }),
   useWorkflowUpdates: () => ({
-    workflowNodeToNode: jest.fn(n => n),
-    applyLocalChanges: jest.fn()
+    workflowNodeToNode: jest.fn((n) => n),
+    applyLocalChanges: jest.fn(),
   }),
   useWorkflowUpdateHandler: () => ({
-    handleWorkflowUpdate: jest.fn()
+    handleWorkflowUpdate: jest.fn(),
   }),
   useWorkflowState: () => ({
     localWorkflowId: null,
@@ -101,10 +99,9 @@ jest.mock("../hooks/workflow", () => ({
     localWorkflowDescription: "",
     setLocalWorkflowDescription: jest.fn(),
     variables: {},
-    setVariables: jest.fn()
+    setVariables: jest.fn(),
   }),
-  useWorkflowLoader: () => {
-  }
+  useWorkflowLoader: () => {},
 }));
 jest.mock("../hooks/execution", () => ({
   useWorkflowExecution: () => ({
@@ -112,21 +109,21 @@ jest.mock("../hooks/execution", () => ({
     showInputs: false,
     setShowInputs: jest.fn(),
     setExecutionInputs: jest.fn(),
-    handleConfirmExecute: jest.fn()
-  })
+    handleConfirmExecute: jest.fn(),
+  }),
 }));
 jest.mock("../hooks/ui", () => ({
   useClipboard: () => ({
     clipboardNode: null,
     copy: jest.fn(),
     cut: jest.fn(),
-    paste: jest.fn()
+    paste: jest.fn(),
   }),
   useContextMenu: () => ({
     contextMenu: null,
     onNodeContextMenu: jest.fn(),
     onEdgeContextMenu: jest.fn(),
-    closeContextMenu: jest.fn()
+    closeContextMenu: jest.fn(),
   }),
   useCanvasEvents: () => ({
     onConnect: jest.fn(),
@@ -134,118 +131,99 @@ jest.mock("../hooks/ui", () => ({
     onDrop: jest.fn(),
     onNodeClick: jest.fn(),
     onPaneClick: jest.fn(),
-    handleAddToAgentNodes: jest.fn()
-  })
+    handleAddToAgentNodes: jest.fn(),
+  }),
 }));
 jest.mock("../hooks/marketplace", () => ({
   useMarketplaceIntegration: () => ({
     isAddingAgentsRef: {
-      current: false
-    }
+      current: false,
+    },
   }),
   useMarketplaceDialog: () => ({
     showMarketplaceDialog: false,
     marketplaceNode: null,
     openDialog: jest.fn(),
-    closeDialog: jest.fn()
-  })
+    closeDialog: jest.fn(),
+  }),
 }));
 jest.mock("../hooks/nodes", () => ({
   useNodeSelection: () => ({
     selectedNodeId: null,
     setSelectedNodeId: jest.fn(),
-    selectedNodeIds: /* @__PURE__ */new Set(),
-    handleNodesChange: jest.fn((changes, base) => base(changes))
-  })
+    selectedNodeIds: new Set(),
+    handleNodesChange: jest.fn((changes, base) => base(changes)),
+  }),
 }));
 jest.mock("./NodePanel", () => {
   const { jsx } = require("react/jsx-runtime");
   return {
     __esModule: true,
-    default: () => /* @__PURE__ */jsx("div", {
-      "data-testid": "node-panel",
-      children: "NodePanel"
-    })
+    default: () => <div data-testid="node-panel">NodePanel</div>,
   };
 });
 jest.mock("./PropertyPanel", () => {
   const { jsx } = require("react/jsx-runtime");
   return {
     __esModule: true,
-    default: () => /* @__PURE__ */jsx("div", {
-      "data-testid": "property-panel",
-      children: "PropertyPanel"
-    })
+    default: () => <div data-testid="property-panel">PropertyPanel</div>,
   };
 });
 jest.mock("./ExecutionConsole", () => {
   const { jsx } = require("react/jsx-runtime");
   return {
     __esModule: true,
-    default: () => /* @__PURE__ */jsx("div", {
-      "data-testid": "execution-console",
-      children: "ExecutionConsole"
-    })
+    default: () => <div data-testid="execution-console">ExecutionConsole</div>,
   };
 });
 jest.mock("./WorkflowCanvas", () => {
   const { jsx } = require("react/jsx-runtime");
   return {
     __esModule: true,
-    default: () => /* @__PURE__ */jsx("div", {
-      "data-testid": "workflow-canvas",
-      children: "WorkflowCanvas"
-    })
+    default: () => <div data-testid="workflow-canvas">WorkflowCanvas</div>,
   };
 });
 jest.mock("./WorkflowBuilder/WorkflowBuilderLayout", () => {
   const { jsx } = require("react/jsx-runtime");
   return {
     __esModule: true,
-    WorkflowBuilderLayout: () => /* @__PURE__ */jsx("div", {
-      "data-testid": "workflow-builder-layout",
-      children: "WorkflowBuilderLayout"
-    })
+    WorkflowBuilderLayout: () => (
+      <div data-testid="workflow-builder-layout">WorkflowBuilderLayout</div>
+    ),
   };
 });
 jest.mock("./WorkflowBuilder/WorkflowBuilderDialogs", () => {
   const { jsx } = require("react/jsx-runtime");
   return {
     __esModule: true,
-    WorkflowBuilderDialogs: () => /* @__PURE__ */jsx("div", {
-      "data-testid": "workflow-builder-dialogs",
-      children: "WorkflowBuilderDialogs"
-    })
+    WorkflowBuilderDialogs: () => (
+      <div data-testid="workflow-builder-dialogs">WorkflowBuilderDialogs</div>
+    ),
   };
 });
 jest.mock("../components/settings/SettingsHeader", () => {
   const { jsx } = require("react/jsx-runtime");
   return {
     __esModule: true,
-    SettingsHeader: () => /* @__PURE__ */jsx("div", {
-      "data-testid": "settings-header",
-      children: "SettingsHeader"
-    })
+    SettingsHeader: () => (
+      <div data-testid="settings-header">SettingsHeader</div>
+    ),
   };
 });
 jest.mock("../components/settings/SettingsTabs", () => {
   const { jsx } = require("react/jsx-runtime");
   return {
     __esModule: true,
-    SettingsTabs: () => /* @__PURE__ */jsx("div", {
-      "data-testid": "settings-tabs",
-      children: "SettingsTabs"
-    })
+    SettingsTabs: () => <div data-testid="settings-tabs">SettingsTabs</div>,
   };
 });
 jest.mock("../components/settings/SettingsTabContent", () => {
   const { jsx } = require("react/jsx-runtime");
   return {
     __esModule: true,
-    SettingsTabContent: () => /* @__PURE__ */jsx("div", {
-      "data-testid": "settings-tab-content",
-      children: "SettingsTabContent"
-    })
+    SettingsTabContent: () => (
+      <div data-testid="settings-tab-content">SettingsTabContent</div>
+    ),
   };
 });
 jest.mock("@xyflow/react", () => {
@@ -253,18 +231,17 @@ jest.mock("@xyflow/react", () => {
   const React2 = jest.requireActual("react");
   return {
     ...actualReactFlow,
-    ReactFlow: ({
-      children,
-      ...props
-    }) => {
-      return React2.createElement("div", {
-        "data-testid": "react-flow",
-        ...props
-      }, children);
+    ReactFlow: ({ children, ...props }) => {
+      return React2.createElement(
+        "div",
+        {
+          "data-testid": "react-flow",
+          ...props,
+        },
+        children,
+      );
     },
-    ReactFlowProvider: ({
-      children
-    }) => {
+    ReactFlowProvider: ({ children }) => {
       return React2.createElement("div", null, children);
     },
     useNodesState: () => [[], jest.fn(), jest.fn()],
@@ -273,21 +250,15 @@ jest.mock("@xyflow/react", () => {
       getNodes: jest.fn(() => []),
       getEdges: jest.fn(() => []),
       deleteElements: jest.fn(),
-      screenToFlowPosition: jest.fn(({
+      screenToFlowPosition: jest.fn(({ x, y }) => ({
         x,
-        y
-      }) => ({
-        x,
-        y
+        y,
       })),
-      screenToFlowCoordinate: jest.fn(({
+      screenToFlowCoordinate: jest.fn(({ x, y }) => ({
         x,
-        y
-      }) => ({
-        x,
-        y
-      }))
-    })
+        y,
+      })),
+    }),
   };
 });
 jest.mock("@xyflow/react/dist/style.css", () => ({}));
@@ -299,7 +270,7 @@ describe("Cross-Component Integration Tests", () => {
     setItem: jest.fn(),
     removeItem: jest.fn(),
     addEventListener: jest.fn(),
-    removeEventListener: jest.fn()
+    removeEventListener: jest.fn(),
   };
   beforeEach(() => {
     jest.clearAllMocks();
@@ -308,44 +279,46 @@ describe("Cross-Component Integration Tests", () => {
       isAuthenticated: true,
       user: {
         id: "1",
-        username: "testuser"
+        username: "testuser",
       },
       token: "token",
       login: jest.fn(),
       logout: jest.fn(),
-      register: jest.fn()
+      register: jest.fn(),
     });
     global.fetch.mockResolvedValue({
       ok: true,
       json: async () => ({
         providers: [],
         iteration_limit: 10,
-        default_model: ""
-      })
+        default_model: "",
+      }),
     });
   });
   describe("Step 1.3.1: Shared State Integration", () => {
     it("should use shared useAuth hook in WorkflowBuilder", async () => {
       await act(async () => {
-        render(/* @__PURE__ */jsx(BrowserRouter, {
-          children: /* @__PURE__ */jsx(WorkflowBuilder, {
-            tabId: "tab-1",
-            workflowId: null,
-            tabName: "Test Workflow",
-            tabIsUnsaved: false,
-            storage: mockStorage
-          })
-        }));
+        render(
+          <BrowserRouter>
+            <WorkflowBuilder
+              tabId="tab-1"
+              workflowId={null}
+              tabName="Test Workflow"
+              tabIsUnsaved={false}
+              storage={mockStorage}
+            />
+          </BrowserRouter>,
+        );
       });
       expect(mockUseAuth).toHaveBeenCalled();
     });
     it("should use shared useAuth hook in SettingsPage", async () => {
       await act(async () => {
-        render(/* @__PURE__ */jsx(BrowserRouter, {
-          children: /* @__PURE__ */jsx(SettingsPage, {
-            storage: mockStorage
-          })
-        }));
+        render(
+          <BrowserRouter>
+            <SettingsPage storage={mockStorage} />
+          </BrowserRouter>,
+        );
       });
       expect(mockUseAuth).toHaveBeenCalled();
     });
@@ -354,58 +327,60 @@ describe("Cross-Component Integration Tests", () => {
         isAuthenticated: true,
         user: {
           id: "1",
-          username: "testuser"
+          username: "testuser",
         },
         token: "token",
         login: jest.fn(),
         logout: jest.fn(),
-        register: jest.fn()
+        register: jest.fn(),
       };
       mockUseAuth.mockReturnValue(authState);
-      const {
-        unmount: unmount1
-      } = await act(async () => {
-        return render(/* @__PURE__ */jsx(BrowserRouter, {
-          children: /* @__PURE__ */jsx(WorkflowBuilder, {
-            tabId: "tab-1",
-            workflowId: null,
-            tabName: "Test Workflow",
-            tabIsUnsaved: false,
-            storage: mockStorage
-          })
-        }));
+      const { unmount: unmount1 } = await act(async () => {
+        return render(
+          <BrowserRouter>
+            <WorkflowBuilder
+              tabId="tab-1"
+              workflowId={null}
+              tabName="Test Workflow"
+              tabIsUnsaved={false}
+              storage={mockStorage}
+            />
+          </BrowserRouter>,
+        );
       });
       expect(mockUseAuth).toHaveBeenCalled();
       const callCount1 = mockUseAuth.mock.calls.length;
       unmount1();
       await act(async () => {
-        render(/* @__PURE__ */jsx(BrowserRouter, {
-          children: /* @__PURE__ */jsx(SettingsPage, {
-            storage: mockStorage
-          })
-        }));
+        render(
+          <BrowserRouter>
+            <SettingsPage storage={mockStorage} />
+          </BrowserRouter>,
+        );
       });
       expect(mockUseAuth.mock.calls.length).toBeGreaterThan(callCount1);
     });
     it("should use shared storage adapter across components", async () => {
       jest.spyOn(mockStorage, "getItem");
       await act(async () => {
-        render(/* @__PURE__ */jsx(BrowserRouter, {
-          children: /* @__PURE__ */jsx(WorkflowBuilder, {
-            tabId: "tab-1",
-            workflowId: null,
-            tabName: "Test Workflow",
-            tabIsUnsaved: false,
-            storage: mockStorage
-          })
-        }));
+        render(
+          <BrowserRouter>
+            <WorkflowBuilder
+              tabId="tab-1"
+              workflowId={null}
+              tabName="Test Workflow"
+              tabIsUnsaved={false}
+              storage={mockStorage}
+            />
+          </BrowserRouter>,
+        );
       });
       await act(async () => {
-        render(/* @__PURE__ */jsx(BrowserRouter, {
-          children: /* @__PURE__ */jsx(SettingsPage, {
-            storage: mockStorage
-          })
-        }));
+        render(
+          <BrowserRouter>
+            <SettingsPage storage={mockStorage} />
+          </BrowserRouter>,
+        );
       });
       expect(mockStorage).toBeDefined();
     });
@@ -416,28 +391,29 @@ describe("Cross-Component Integration Tests", () => {
         isAuthenticated: true,
         user: {
           id: "1",
-          username: "testuser"
+          username: "testuser",
         },
         token: "token",
         login: jest.fn(),
         logout: jest.fn(),
-        register: jest.fn()
+        register: jest.fn(),
       };
       mockUseAuth.mockReturnValue(authState);
       await act(async () => {
-        render(/* @__PURE__ */jsx(BrowserRouter, {
-          children: /* @__PURE__ */jsxs("div", {
-            children: [/* @__PURE__ */jsx(WorkflowBuilder, {
-              tabId: "tab-1",
-              workflowId: null,
-              tabName: "Test Workflow",
-              tabIsUnsaved: false,
-              storage: mockStorage
-            }), /* @__PURE__ */jsx(SettingsPage, {
-              storage: mockStorage
-            })]
-          })
-        }));
+        render(
+          <BrowserRouter>
+            <div>
+              <WorkflowBuilder
+                tabId="tab-1"
+                workflowId={null}
+                tabName="Test Workflow"
+                tabIsUnsaved={false}
+                storage={mockStorage}
+              />
+              <SettingsPage storage={mockStorage} />
+            </div>
+          </BrowserRouter>,
+        );
       });
       expect(mockUseAuth).toHaveBeenCalledTimes(2);
     });
@@ -448,106 +424,116 @@ describe("Cross-Component Integration Tests", () => {
         token: null,
         login: jest.fn(),
         logout: jest.fn(),
-        register: jest.fn()
+        register: jest.fn(),
       };
       mockUseAuth.mockReturnValue(authState);
       await act(async () => {
-        render(/* @__PURE__ */jsx(BrowserRouter, {
-          children: /* @__PURE__ */jsx(SettingsPage, {
-            storage: mockStorage
-          })
-        }));
+        render(
+          <BrowserRouter>
+            <SettingsPage storage={mockStorage} />
+          </BrowserRouter>,
+        );
       });
       authState = {
         isAuthenticated: true,
         user: {
           id: "1",
-          username: "testuser"
+          username: "testuser",
         },
         token: "token",
         login: jest.fn(),
         logout: jest.fn(),
-        register: jest.fn()
+        register: jest.fn(),
       };
       mockUseAuth.mockReturnValue(authState);
       await act(async () => {
-        render(/* @__PURE__ */jsx(BrowserRouter, {
-          children: /* @__PURE__ */jsx(WorkflowBuilder, {
-            tabId: "tab-1",
-            workflowId: null,
-            tabName: "Test Workflow",
-            tabIsUnsaved: false,
-            storage: mockStorage
-          })
-        }));
+        render(
+          <BrowserRouter>
+            <WorkflowBuilder
+              tabId="tab-1"
+              workflowId={null}
+              tabName="Test Workflow"
+              tabIsUnsaved={false}
+              storage={mockStorage}
+            />
+          </BrowserRouter>,
+        );
       });
       expect(mockUseAuth).toHaveBeenCalled();
     });
     it("should use storage adapter consistently across components", async () => {
       await act(async () => {
-        render(/* @__PURE__ */jsx(BrowserRouter, {
-          children: /* @__PURE__ */jsx(WorkflowBuilder, {
-            tabId: "tab-1",
-            workflowId: null,
-            tabName: "Test Workflow",
-            tabIsUnsaved: false,
-            storage: mockStorage
-          })
-        }));
+        render(
+          <BrowserRouter>
+            <WorkflowBuilder
+              tabId="tab-1"
+              workflowId={null}
+              tabName="Test Workflow"
+              tabIsUnsaved={false}
+              storage={mockStorage}
+            />
+          </BrowserRouter>,
+        );
       });
       await act(async () => {
-        render(/* @__PURE__ */jsx(BrowserRouter, {
-          children: /* @__PURE__ */jsx(SettingsPage, {
-            storage: mockStorage
-          })
-        }));
+        render(
+          <BrowserRouter>
+            <SettingsPage storage={mockStorage} />
+          </BrowserRouter>,
+        );
       });
       expect(mockStorage).toBeDefined();
     });
     it("should handle hook cleanup on unmount", async () => {
-      const {
-        unmount
-      } = await act(async () => {
-        return render(/* @__PURE__ */jsx(BrowserRouter, {
-          children: /* @__PURE__ */jsx(WorkflowBuilder, {
-            tabId: "tab-1",
-            workflowId: null,
-            tabName: "Test Workflow",
-            tabIsUnsaved: false,
-            storage: mockStorage
-          })
-        }));
+      const { unmount } = await act(async () => {
+        return render(
+          <BrowserRouter>
+            <WorkflowBuilder
+              tabId="tab-1"
+              workflowId={null}
+              tabName="Test Workflow"
+              tabIsUnsaved={false}
+              storage={mockStorage}
+            />
+          </BrowserRouter>,
+        );
       });
       await act(async () => {
         unmount();
       });
-      expect(screen.queryByTestId("workflow-builder-layout")).not.toBeInTheDocument();
+      expect(
+        screen.queryByTestId("workflow-builder-layout"),
+      ).not.toBeInTheDocument();
     });
   });
   describe("Step 1.3.1: Component Independence", () => {
     it("should render WorkflowBuilder independently", async () => {
       await act(async () => {
-        render(/* @__PURE__ */jsx(BrowserRouter, {
-          children: /* @__PURE__ */jsx(WorkflowBuilder, {
-            tabId: "tab-1",
-            workflowId: null,
-            tabName: "Test Workflow",
-            tabIsUnsaved: false,
-            storage: mockStorage
-          })
-        }));
+        render(
+          <BrowserRouter>
+            <WorkflowBuilder
+              tabId="tab-1"
+              workflowId={null}
+              tabName="Test Workflow"
+              tabIsUnsaved={false}
+              storage={mockStorage}
+            />
+          </BrowserRouter>,
+        );
       });
       await waitFor(() => {
-        expect(screen.getByTestId("workflow-builder-layout")).toBeInTheDocument();
+        expect(
+          screen.getByTestId("workflow-builder-layout"),
+        ).toBeInTheDocument();
       });
     });
     it("should render SettingsPage independently", async () => {
       await act(async () => {
-        render(/* @__PURE__ */jsx(BrowserRouter, {
-          children: /* @__PURE__ */jsx(SettingsPage, {
-            storage: mockStorage
-          })
-        }));
+        render(
+          <BrowserRouter>
+            <SettingsPage storage={mockStorage} />
+          </BrowserRouter>,
+        );
       });
       await waitFor(() => {
         expect(screen.getByTestId("settings-header")).toBeInTheDocument();
@@ -555,22 +541,25 @@ describe("Cross-Component Integration Tests", () => {
     });
     it("should render both components side by side", async () => {
       await act(async () => {
-        render(/* @__PURE__ */jsx(BrowserRouter, {
-          children: /* @__PURE__ */jsxs("div", {
-            children: [/* @__PURE__ */jsx(WorkflowBuilder, {
-              tabId: "tab-1",
-              workflowId: null,
-              tabName: "Test Workflow",
-              tabIsUnsaved: false,
-              storage: mockStorage
-            }), /* @__PURE__ */jsx(SettingsPage, {
-              storage: mockStorage
-            })]
-          })
-        }));
+        render(
+          <BrowserRouter>
+            <div>
+              <WorkflowBuilder
+                tabId="tab-1"
+                workflowId={null}
+                tabName="Test Workflow"
+                tabIsUnsaved={false}
+                storage={mockStorage}
+              />
+              <SettingsPage storage={mockStorage} />
+            </div>
+          </BrowserRouter>,
+        );
       });
       await waitFor(() => {
-        expect(screen.getByTestId("workflow-builder-layout")).toBeInTheDocument();
+        expect(
+          screen.getByTestId("workflow-builder-layout"),
+        ).toBeInTheDocument();
         expect(screen.getByTestId("settings-header")).toBeInTheDocument();
       });
     });
@@ -583,59 +572,63 @@ describe("Cross-Component Integration Tests", () => {
         token: null,
         login: jest.fn(),
         logout: jest.fn(),
-        register: jest.fn()
+        register: jest.fn(),
       };
       mockUseAuth.mockReturnValue(authState);
       await act(async () => {
-        render(/* @__PURE__ */jsx(BrowserRouter, {
-          children: /* @__PURE__ */jsx(SettingsPage, {
-            storage: mockStorage
-          })
-        }));
+        render(
+          <BrowserRouter>
+            <SettingsPage storage={mockStorage} />
+          </BrowserRouter>,
+        );
       });
       authState = {
         isAuthenticated: true,
         user: {
           id: "1",
-          username: "testuser"
+          username: "testuser",
         },
         token: "token",
         login: jest.fn(),
         logout: jest.fn(),
-        register: jest.fn()
+        register: jest.fn(),
       };
       mockUseAuth.mockReturnValue(authState);
       await act(async () => {
-        render(/* @__PURE__ */jsx(BrowserRouter, {
-          children: /* @__PURE__ */jsx(WorkflowBuilder, {
-            tabId: "tab-1",
-            workflowId: null,
-            tabName: "Test Workflow",
-            tabIsUnsaved: false,
-            storage: mockStorage
-          })
-        }));
+        render(
+          <BrowserRouter>
+            <WorkflowBuilder
+              tabId="tab-1"
+              workflowId={null}
+              tabName="Test Workflow"
+              tabIsUnsaved={false}
+              storage={mockStorage}
+            />
+          </BrowserRouter>,
+        );
       });
       expect(mockUseAuth).toHaveBeenCalled();
     });
     it("should handle hook dependencies correctly", async () => {
       await act(async () => {
-        render(/* @__PURE__ */jsx(BrowserRouter, {
-          children: /* @__PURE__ */jsx(WorkflowBuilder, {
-            tabId: "tab-1",
-            workflowId: null,
-            tabName: "Test Workflow",
-            tabIsUnsaved: false,
-            storage: mockStorage
-          })
-        }));
+        render(
+          <BrowserRouter>
+            <WorkflowBuilder
+              tabId="tab-1"
+              workflowId={null}
+              tabName="Test Workflow"
+              tabIsUnsaved={false}
+              storage={mockStorage}
+            />
+          </BrowserRouter>,
+        );
       });
       await act(async () => {
-        render(/* @__PURE__ */jsx(BrowserRouter, {
-          children: /* @__PURE__ */jsx(SettingsPage, {
-            storage: mockStorage
-          })
-        }));
+        render(
+          <BrowserRouter>
+            <SettingsPage storage={mockStorage} />
+          </BrowserRouter>,
+        );
       });
       expect(mockUseAuth).toHaveBeenCalled();
     });
@@ -643,11 +636,11 @@ describe("Cross-Component Integration Tests", () => {
   describe("Step 1.3.1.1: Settings Affect Workflow Execution", () => {
     it("should use LLM provider settings from SettingsPage in WorkflowBuilder", async () => {
       await act(async () => {
-        render(/* @__PURE__ */jsx(BrowserRouter, {
-          children: /* @__PURE__ */jsx(SettingsPage, {
-            storage: mockStorage
-          })
-        }));
+        render(
+          <BrowserRouter>
+            <SettingsPage storage={mockStorage} />
+          </BrowserRouter>,
+        );
       });
       await waitFor(() => {
         expect(screen.getByTestId("settings-header")).toBeInTheDocument();
@@ -656,173 +649,192 @@ describe("Cross-Component Integration Tests", () => {
     });
     it("should use iteration limit settings in workflow execution", async () => {
       await act(async () => {
-        render(/* @__PURE__ */jsx(BrowserRouter, {
-          children: /* @__PURE__ */jsx(WorkflowBuilder, {
-            tabId: "tab-1",
-            workflowId: null,
-            tabName: "Test Workflow",
-            tabIsUnsaved: false,
-            storage: mockStorage
-          })
-        }));
+        render(
+          <BrowserRouter>
+            <WorkflowBuilder
+              tabId="tab-1"
+              workflowId={null}
+              tabName="Test Workflow"
+              tabIsUnsaved={false}
+              storage={mockStorage}
+            />
+          </BrowserRouter>,
+        );
       });
       await waitFor(() => {
-        expect(screen.getByTestId("workflow-builder-layout")).toBeInTheDocument();
+        expect(
+          screen.getByTestId("workflow-builder-layout"),
+        ).toBeInTheDocument();
       });
     });
     it("should use default model settings in workflow execution", async () => {
       await act(async () => {
-        render(/* @__PURE__ */jsx(BrowserRouter, {
-          children: /* @__PURE__ */jsx(WorkflowBuilder, {
-            tabId: "tab-1",
-            workflowId: null,
-            tabName: "Test Workflow",
-            tabIsUnsaved: false,
-            storage: mockStorage
-          })
-        }));
+        render(
+          <BrowserRouter>
+            <WorkflowBuilder
+              tabId="tab-1"
+              workflowId={null}
+              tabName="Test Workflow"
+              tabIsUnsaved={false}
+              storage={mockStorage}
+            />
+          </BrowserRouter>,
+        );
       });
       await waitFor(() => {
-        expect(screen.getByTestId("workflow-builder-layout")).toBeInTheDocument();
+        expect(
+          screen.getByTestId("workflow-builder-layout"),
+        ).toBeInTheDocument();
       });
     });
     it("should reflect provider changes from SettingsPage in WorkflowBuilder", async () => {
       await act(async () => {
-        render(/* @__PURE__ */jsx(BrowserRouter, {
-          children: /* @__PURE__ */jsxs("div", {
-            children: [/* @__PURE__ */jsx(SettingsPage, {
-              storage: mockStorage
-            }), /* @__PURE__ */jsx(WorkflowBuilder, {
-              tabId: "tab-1",
-              workflowId: null,
-              tabName: "Test Workflow",
-              tabIsUnsaved: false,
-              storage: mockStorage
-            })]
-          })
-        }));
+        render(
+          <BrowserRouter>
+            <div>
+              <SettingsPage storage={mockStorage} />
+              <WorkflowBuilder
+                tabId="tab-1"
+                workflowId={null}
+                tabName="Test Workflow"
+                tabIsUnsaved={false}
+                storage={mockStorage}
+              />
+            </div>
+          </BrowserRouter>,
+        );
       });
       await waitFor(() => {
         expect(screen.getByTestId("settings-header")).toBeInTheDocument();
-        expect(screen.getByTestId("workflow-builder-layout")).toBeInTheDocument();
+        expect(
+          screen.getByTestId("workflow-builder-layout"),
+        ).toBeInTheDocument();
       });
     });
   });
   describe("Step 1.3.1.2: Navigation Between Components", () => {
     it("should navigate from WorkflowBuilder to SettingsPage", async () => {
-      const {
-        unmount: unmount1
-      } = await act(async () => {
-        return render(/* @__PURE__ */jsx(BrowserRouter, {
-          children: /* @__PURE__ */jsx(WorkflowBuilder, {
-            tabId: "tab-1",
-            workflowId: null,
-            tabName: "Test Workflow",
-            tabIsUnsaved: false,
-            storage: mockStorage
-          })
-        }));
+      const { unmount: unmount1 } = await act(async () => {
+        return render(
+          <BrowserRouter>
+            <WorkflowBuilder
+              tabId="tab-1"
+              workflowId={null}
+              tabName="Test Workflow"
+              tabIsUnsaved={false}
+              storage={mockStorage}
+            />
+          </BrowserRouter>,
+        );
       });
       await waitFor(() => {
-        expect(screen.getByTestId("workflow-builder-layout")).toBeInTheDocument();
+        expect(
+          screen.getByTestId("workflow-builder-layout"),
+        ).toBeInTheDocument();
       });
       unmount1();
       await act(async () => {
-        render(/* @__PURE__ */jsx(BrowserRouter, {
-          children: /* @__PURE__ */jsx(SettingsPage, {
-            storage: mockStorage
-          })
-        }));
+        render(
+          <BrowserRouter>
+            <SettingsPage storage={mockStorage} />
+          </BrowserRouter>,
+        );
       });
       await waitFor(() => {
         expect(screen.getByTestId("settings-header")).toBeInTheDocument();
       });
     });
     it("should navigate from SettingsPage to WorkflowBuilder", async () => {
-      const {
-        unmount: unmount1
-      } = await act(async () => {
-        return render(/* @__PURE__ */jsx(BrowserRouter, {
-          children: /* @__PURE__ */jsx(SettingsPage, {
-            storage: mockStorage
-          })
-        }));
+      const { unmount: unmount1 } = await act(async () => {
+        return render(
+          <BrowserRouter>
+            <SettingsPage storage={mockStorage} />
+          </BrowserRouter>,
+        );
       });
       await waitFor(() => {
         expect(screen.getByTestId("settings-header")).toBeInTheDocument();
       });
       unmount1();
       await act(async () => {
-        render(/* @__PURE__ */jsx(BrowserRouter, {
-          children: /* @__PURE__ */jsx(WorkflowBuilder, {
-            tabId: "tab-1",
-            workflowId: null,
-            tabName: "Test Workflow",
-            tabIsUnsaved: false,
-            storage: mockStorage
-          })
-        }));
+        render(
+          <BrowserRouter>
+            <WorkflowBuilder
+              tabId="tab-1"
+              workflowId={null}
+              tabName="Test Workflow"
+              tabIsUnsaved={false}
+              storage={mockStorage}
+            />
+          </BrowserRouter>,
+        );
       });
       await waitFor(() => {
-        expect(screen.getByTestId("workflow-builder-layout")).toBeInTheDocument();
+        expect(
+          screen.getByTestId("workflow-builder-layout"),
+        ).toBeInTheDocument();
       });
     });
     it("should preserve workflow state during navigation", async () => {
-      const {
-        unmount
-      } = await act(async () => {
-        return render(/* @__PURE__ */jsx(BrowserRouter, {
-          children: /* @__PURE__ */jsx(WorkflowBuilder, {
-            tabId: "tab-1",
-            workflowId: "workflow-1",
-            tabName: "Test Workflow",
-            tabIsUnsaved: false,
-            storage: mockStorage
-          })
-        }));
+      const { unmount } = await act(async () => {
+        return render(
+          <BrowserRouter>
+            <WorkflowBuilder
+              tabId="tab-1"
+              workflowId="workflow-1"
+              tabName="Test Workflow"
+              tabIsUnsaved={false}
+              storage={mockStorage}
+            />
+          </BrowserRouter>,
+        );
       });
       await waitFor(() => {
-        expect(screen.getByTestId("workflow-builder-layout")).toBeInTheDocument();
+        expect(
+          screen.getByTestId("workflow-builder-layout"),
+        ).toBeInTheDocument();
       });
       unmount();
       await act(async () => {
-        render(/* @__PURE__ */jsx(BrowserRouter, {
-          children: /* @__PURE__ */jsx(SettingsPage, {
-            storage: mockStorage
-          })
-        }));
+        render(
+          <BrowserRouter>
+            <SettingsPage storage={mockStorage} />
+          </BrowserRouter>,
+        );
       });
       await waitFor(() => {
         expect(screen.getByTestId("settings-header")).toBeInTheDocument();
       });
     });
     it("should preserve settings state during navigation", async () => {
-      const {
-        unmount
-      } = await act(async () => {
-        return render(/* @__PURE__ */jsx(BrowserRouter, {
-          children: /* @__PURE__ */jsx(SettingsPage, {
-            storage: mockStorage
-          })
-        }));
+      const { unmount } = await act(async () => {
+        return render(
+          <BrowserRouter>
+            <SettingsPage storage={mockStorage} />
+          </BrowserRouter>,
+        );
       });
       await waitFor(() => {
         expect(screen.getByTestId("settings-header")).toBeInTheDocument();
       });
       unmount();
       await act(async () => {
-        render(/* @__PURE__ */jsx(BrowserRouter, {
-          children: /* @__PURE__ */jsx(WorkflowBuilder, {
-            tabId: "tab-1",
-            workflowId: null,
-            tabName: "Test Workflow",
-            tabIsUnsaved: false,
-            storage: mockStorage
-          })
-        }));
+        render(
+          <BrowserRouter>
+            <WorkflowBuilder
+              tabId="tab-1"
+              workflowId={null}
+              tabName="Test Workflow"
+              tabIsUnsaved={false}
+              storage={mockStorage}
+            />
+          </BrowserRouter>,
+        );
       });
       await waitFor(() => {
-        expect(screen.getByTestId("workflow-builder-layout")).toBeInTheDocument();
+        expect(
+          screen.getByTestId("workflow-builder-layout"),
+        ).toBeInTheDocument();
       });
     });
   });
@@ -832,28 +844,29 @@ describe("Cross-Component Integration Tests", () => {
         isAuthenticated: true,
         user: {
           id: "1",
-          username: "testuser"
+          username: "testuser",
         },
         token: "token",
         login: jest.fn(),
         logout: jest.fn(),
-        register: jest.fn()
+        register: jest.fn(),
       };
       mockUseAuth.mockReturnValue(authState);
       await act(async () => {
-        render(/* @__PURE__ */jsx(BrowserRouter, {
-          children: /* @__PURE__ */jsxs("div", {
-            children: [/* @__PURE__ */jsx(WorkflowBuilder, {
-              tabId: "tab-1",
-              workflowId: null,
-              tabName: "Test Workflow",
-              tabIsUnsaved: false,
-              storage: mockStorage
-            }), /* @__PURE__ */jsx(SettingsPage, {
-              storage: mockStorage
-            })]
-          })
-        }));
+        render(
+          <BrowserRouter>
+            <div>
+              <WorkflowBuilder
+                tabId="tab-1"
+                workflowId={null}
+                tabName="Test Workflow"
+                tabIsUnsaved={false}
+                storage={mockStorage}
+              />
+              <SettingsPage storage={mockStorage} />
+            </div>
+          </BrowserRouter>,
+        );
       });
       expect(mockUseAuth).toHaveBeenCalledTimes(2);
     });
@@ -864,38 +877,40 @@ describe("Cross-Component Integration Tests", () => {
         token: null,
         login: jest.fn(),
         logout: jest.fn(),
-        register: jest.fn()
+        register: jest.fn(),
       };
       mockUseAuth.mockReturnValue(authState);
       await act(async () => {
-        render(/* @__PURE__ */jsx(BrowserRouter, {
-          children: /* @__PURE__ */jsx(SettingsPage, {
-            storage: mockStorage
-          })
-        }));
+        render(
+          <BrowserRouter>
+            <SettingsPage storage={mockStorage} />
+          </BrowserRouter>,
+        );
       });
       authState = {
         isAuthenticated: true,
         user: {
           id: "1",
-          username: "testuser"
+          username: "testuser",
         },
         token: "token",
         login: jest.fn(),
         logout: jest.fn(),
-        register: jest.fn()
+        register: jest.fn(),
       };
       mockUseAuth.mockReturnValue(authState);
       await act(async () => {
-        render(/* @__PURE__ */jsx(BrowserRouter, {
-          children: /* @__PURE__ */jsx(WorkflowBuilder, {
-            tabId: "tab-1",
-            workflowId: null,
-            tabName: "Test Workflow",
-            tabIsUnsaved: false,
-            storage: mockStorage
-          })
-        }));
+        render(
+          <BrowserRouter>
+            <WorkflowBuilder
+              tabId="tab-1"
+              workflowId={null}
+              tabName="Test Workflow"
+              tabIsUnsaved={false}
+              storage={mockStorage}
+            />
+          </BrowserRouter>,
+        );
       });
       expect(mockUseAuth).toHaveBeenCalled();
     });
@@ -905,64 +920,67 @@ describe("Cross-Component Integration Tests", () => {
         isAuthenticated: true,
         user: {
           id: "1",
-          username: "testuser"
+          username: "testuser",
         },
         token: "token",
         login: jest.fn(),
         logout: logoutFn,
-        register: jest.fn()
+        register: jest.fn(),
       };
       mockUseAuth.mockReturnValue(authState);
       await act(async () => {
-        render(/* @__PURE__ */jsx(BrowserRouter, {
-          children: /* @__PURE__ */jsxs("div", {
-            children: [/* @__PURE__ */jsx(WorkflowBuilder, {
-              tabId: "tab-1",
-              workflowId: null,
-              tabName: "Test Workflow",
-              tabIsUnsaved: false,
-              storage: mockStorage
-            }), /* @__PURE__ */jsx(SettingsPage, {
-              storage: mockStorage
-            })]
-          })
-        }));
+        render(
+          <BrowserRouter>
+            <div>
+              <WorkflowBuilder
+                tabId="tab-1"
+                workflowId={null}
+                tabName="Test Workflow"
+                tabIsUnsaved={false}
+                storage={mockStorage}
+              />
+              <SettingsPage storage={mockStorage} />
+            </div>
+          </BrowserRouter>,
+        );
       });
       expect(authState.logout).toBeDefined();
     });
     it("should handle storage operations affecting both components", async () => {
       await act(async () => {
-        render(/* @__PURE__ */jsx(BrowserRouter, {
-          children: /* @__PURE__ */jsxs("div", {
-            children: [/* @__PURE__ */jsx(WorkflowBuilder, {
-              tabId: "tab-1",
-              workflowId: null,
-              tabName: "Test Workflow",
-              tabIsUnsaved: false,
-              storage: mockStorage
-            }), /* @__PURE__ */jsx(SettingsPage, {
-              storage: mockStorage
-            })]
-          })
-        }));
+        render(
+          <BrowserRouter>
+            <div>
+              <WorkflowBuilder
+                tabId="tab-1"
+                workflowId={null}
+                tabName="Test Workflow"
+                tabIsUnsaved={false}
+                storage={mockStorage}
+              />
+              <SettingsPage storage={mockStorage} />
+            </div>
+          </BrowserRouter>,
+        );
       });
       expect(mockStorage).toBeDefined();
     });
     it("should handle storage events propagating correctly", async () => {
       await act(async () => {
-        render(/* @__PURE__ */jsx(BrowserRouter, {
-          children: /* @__PURE__ */jsxs("div", {
-            children: [/* @__PURE__ */jsx(WorkflowBuilder, {
-              tabId: "tab-1",
-              workflowId: null,
-              tabName: "Test Workflow",
-              tabIsUnsaved: false,
-              storage: mockStorage
-            }), /* @__PURE__ */jsx(SettingsPage, {
-              storage: mockStorage
-            })]
-          })
-        }));
+        render(
+          <BrowserRouter>
+            <div>
+              <WorkflowBuilder
+                tabId="tab-1"
+                workflowId={null}
+                tabName="Test Workflow"
+                tabIsUnsaved={false}
+                storage={mockStorage}
+              />
+              <SettingsPage storage={mockStorage} />
+            </div>
+          </BrowserRouter>,
+        );
       });
       expect(mockStorage.addEventListener).toBeDefined();
       expect(mockStorage.removeEventListener).toBeDefined();
@@ -971,68 +989,81 @@ describe("Cross-Component Integration Tests", () => {
   describe("Step 1.3.3.1: Component Isolation - Detailed", () => {
     it("should render WorkflowBuilder without SettingsPage", async () => {
       await act(async () => {
-        render(/* @__PURE__ */jsx(BrowserRouter, {
-          children: /* @__PURE__ */jsx(WorkflowBuilder, {
-            tabId: "tab-1",
-            workflowId: null,
-            tabName: "Test Workflow",
-            tabIsUnsaved: false,
-            storage: mockStorage
-          })
-        }));
+        render(
+          <BrowserRouter>
+            <WorkflowBuilder
+              tabId="tab-1"
+              workflowId={null}
+              tabName="Test Workflow"
+              tabIsUnsaved={false}
+              storage={mockStorage}
+            />
+          </BrowserRouter>,
+        );
       });
       await waitFor(() => {
-        expect(screen.getByTestId("workflow-builder-layout")).toBeInTheDocument();
+        expect(
+          screen.getByTestId("workflow-builder-layout"),
+        ).toBeInTheDocument();
       });
       expect(screen.queryByTestId("settings-header")).not.toBeInTheDocument();
     });
     it("should render SettingsPage without WorkflowBuilder", async () => {
       await act(async () => {
-        render(/* @__PURE__ */jsx(BrowserRouter, {
-          children: /* @__PURE__ */jsx(SettingsPage, {
-            storage: mockStorage
-          })
-        }));
+        render(
+          <BrowserRouter>
+            <SettingsPage storage={mockStorage} />
+          </BrowserRouter>,
+        );
       });
       await waitFor(() => {
         expect(screen.getByTestId("settings-header")).toBeInTheDocument();
       });
-      expect(screen.queryByTestId("workflow-builder-layout")).not.toBeInTheDocument();
+      expect(
+        screen.queryByTestId("workflow-builder-layout"),
+      ).not.toBeInTheDocument();
     });
     it("should handle missing settings gracefully in WorkflowBuilder", async () => {
       await act(async () => {
-        render(/* @__PURE__ */jsx(BrowserRouter, {
-          children: /* @__PURE__ */jsx(WorkflowBuilder, {
-            tabId: "tab-1",
-            workflowId: null,
-            tabName: "Test Workflow",
-            tabIsUnsaved: false,
-            storage: mockStorage
-          })
-        }));
+        render(
+          <BrowserRouter>
+            <WorkflowBuilder
+              tabId="tab-1"
+              workflowId={null}
+              tabName="Test Workflow"
+              tabIsUnsaved={false}
+              storage={mockStorage}
+            />
+          </BrowserRouter>,
+        );
       });
       await waitFor(() => {
-        expect(screen.getByTestId("workflow-builder-layout")).toBeInTheDocument();
+        expect(
+          screen.getByTestId("workflow-builder-layout"),
+        ).toBeInTheDocument();
       });
     });
     it("should not interfere with each other when rendered together", async () => {
       await act(async () => {
-        render(/* @__PURE__ */jsx(BrowserRouter, {
-          children: /* @__PURE__ */jsxs("div", {
-            children: [/* @__PURE__ */jsx(WorkflowBuilder, {
-              tabId: "tab-1",
-              workflowId: null,
-              tabName: "Test Workflow",
-              tabIsUnsaved: false,
-              storage: mockStorage
-            }), /* @__PURE__ */jsx(SettingsPage, {
-              storage: mockStorage
-            })]
-          })
-        }));
+        render(
+          <BrowserRouter>
+            <div>
+              <WorkflowBuilder
+                tabId="tab-1"
+                workflowId={null}
+                tabName="Test Workflow"
+                tabIsUnsaved={false}
+                storage={mockStorage}
+              />
+              <SettingsPage storage={mockStorage} />
+            </div>
+          </BrowserRouter>,
+        );
       });
       await waitFor(() => {
-        expect(screen.getByTestId("workflow-builder-layout")).toBeInTheDocument();
+        expect(
+          screen.getByTestId("workflow-builder-layout"),
+        ).toBeInTheDocument();
         expect(screen.getByTestId("settings-header")).toBeInTheDocument();
       });
       expect(screen.getByTestId("workflow-builder-layout")).toBeInTheDocument();
@@ -1042,76 +1073,82 @@ describe("Cross-Component Integration Tests", () => {
   describe("Step 1.3.3.2: Shared Resource Handling", () => {
     it("should allow both components to read from same storage", async () => {
       await act(async () => {
-        render(/* @__PURE__ */jsx(BrowserRouter, {
-          children: /* @__PURE__ */jsxs("div", {
-            children: [/* @__PURE__ */jsx(WorkflowBuilder, {
-              tabId: "tab-1",
-              workflowId: null,
-              tabName: "Test Workflow",
-              tabIsUnsaved: false,
-              storage: mockStorage
-            }), /* @__PURE__ */jsx(SettingsPage, {
-              storage: mockStorage
-            })]
-          })
-        }));
+        render(
+          <BrowserRouter>
+            <div>
+              <WorkflowBuilder
+                tabId="tab-1"
+                workflowId={null}
+                tabName="Test Workflow"
+                tabIsUnsaved={false}
+                storage={mockStorage}
+              />
+              <SettingsPage storage={mockStorage} />
+            </div>
+          </BrowserRouter>,
+        );
       });
       expect(mockStorage.getItem).toBeDefined();
     });
     it("should allow both components to write to same storage", async () => {
       await act(async () => {
-        render(/* @__PURE__ */jsx(BrowserRouter, {
-          children: /* @__PURE__ */jsxs("div", {
-            children: [/* @__PURE__ */jsx(WorkflowBuilder, {
-              tabId: "tab-1",
-              workflowId: null,
-              tabName: "Test Workflow",
-              tabIsUnsaved: false,
-              storage: mockStorage
-            }), /* @__PURE__ */jsx(SettingsPage, {
-              storage: mockStorage
-            })]
-          })
-        }));
+        render(
+          <BrowserRouter>
+            <div>
+              <WorkflowBuilder
+                tabId="tab-1"
+                workflowId={null}
+                tabName="Test Workflow"
+                tabIsUnsaved={false}
+                storage={mockStorage}
+              />
+              <SettingsPage storage={mockStorage} />
+            </div>
+          </BrowserRouter>,
+        );
       });
       expect(mockStorage.setItem).toBeDefined();
     });
     it("should handle storage conflicts correctly", async () => {
       await act(async () => {
-        render(/* @__PURE__ */jsx(BrowserRouter, {
-          children: /* @__PURE__ */jsxs("div", {
-            children: [/* @__PURE__ */jsx(WorkflowBuilder, {
-              tabId: "tab-1",
-              workflowId: null,
-              tabName: "Test Workflow",
-              tabIsUnsaved: false,
-              storage: mockStorage
-            }), /* @__PURE__ */jsx(SettingsPage, {
-              storage: mockStorage
-            })]
-          })
-        }));
+        render(
+          <BrowserRouter>
+            <div>
+              <WorkflowBuilder
+                tabId="tab-1"
+                workflowId={null}
+                tabName="Test Workflow"
+                tabIsUnsaved={false}
+                storage={mockStorage}
+              />
+              <SettingsPage storage={mockStorage} />
+            </div>
+          </BrowserRouter>,
+        );
       });
       expect(mockStorage).toBeDefined();
     });
     it("should use same API client without interference", async () => {
       await act(async () => {
-        render(/* @__PURE__ */jsx(BrowserRouter, {
-          children: /* @__PURE__ */jsxs("div", {
-            children: [/* @__PURE__ */jsx(WorkflowBuilder, {
-              tabId: "tab-1",
-              workflowId: null,
-              tabName: "Test Workflow",
-              tabIsUnsaved: false,
-              storage: mockStorage
-            }), /* @__PURE__ */jsx(SettingsPage, {
-              storage: mockStorage
-            })]
-          })
-        }));
+        render(
+          <BrowserRouter>
+            <div>
+              <WorkflowBuilder
+                tabId="tab-1"
+                workflowId={null}
+                tabName="Test Workflow"
+                tabIsUnsaved={false}
+                storage={mockStorage}
+              />
+              <SettingsPage storage={mockStorage} />
+            </div>
+          </BrowserRouter>,
+        );
       });
       await waitFor(() => {
-        expect(screen.getByTestId("workflow-builder-layout")).toBeInTheDocument();
+        expect(
+          screen.getByTestId("workflow-builder-layout"),
+        ).toBeInTheDocument();
         expect(screen.getByTestId("settings-header")).toBeInTheDocument();
       });
     });

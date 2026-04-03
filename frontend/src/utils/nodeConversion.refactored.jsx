@@ -1,6 +1,11 @@
 import { coalesceArray } from "./nullCoalescing";
 function isValidNonEmptyString(value) {
-  return typeof value === "string" && value !== null && value !== void 0 && value !== "";
+  return (
+    typeof value === "string" &&
+    value !== null &&
+    value !== void 0 &&
+    value !== ""
+  );
 }
 function extractValidString(value) {
   return isValidNonEmptyString(value) ? value : null;
@@ -24,12 +29,10 @@ function convertSingleNode(node) {
     loop_config: node.data.loop_config,
     input_config: node.data.input_config,
     inputs,
-    position: node.position
+    position: node.position,
   };
 }
 function convertNodesForExecutionInput(nodes) {
   return nodes.map(convertSingleNode);
 }
-export {
-  convertNodesForExecutionInput
-};
+export { convertNodesForExecutionInput };

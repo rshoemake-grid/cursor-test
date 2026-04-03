@@ -2,7 +2,7 @@ import {
   safeGet,
   safeGetProperty,
   safeCall,
-  safeGetArrayElement
+  safeGetArrayElement,
 } from "./safeAccess";
 describe("safeAccess utilities", () => {
   describe("safeGet", () => {
@@ -19,13 +19,17 @@ describe("safeAccess utilities", () => {
       expect(safeGet({}, ["prop"], "default")).toBe("default");
     });
     it("should handle nested paths", () => {
-      expect(safeGet({ a: { b: { c: "value" } } }, ["a", "b", "c"], "default")).toBe("value");
+      expect(
+        safeGet({ a: { b: { c: "value" } } }, ["a", "b", "c"], "default"),
+      ).toBe("value");
     });
     it("should return default when nested path breaks", () => {
       expect(safeGet({ a: null }, ["a", "b", "c"], "default")).toBe("default");
     });
     it("should return default when intermediate value is null", () => {
-      expect(safeGet({ a: { b: null } }, ["a", "b", "c"], "default")).toBe("default");
+      expect(safeGet({ a: { b: null } }, ["a", "b", "c"], "default")).toBe(
+        "default",
+      );
     });
   });
   describe("safeGetProperty", () => {
@@ -36,16 +40,22 @@ describe("safeAccess utilities", () => {
       expect(safeGetProperty(void 0, "prop", "default")).toBe("default");
     });
     it("should return value when property exists", () => {
-      expect(safeGetProperty({ prop: "value" }, "prop", "default")).toBe("value");
+      expect(safeGetProperty({ prop: "value" }, "prop", "default")).toBe(
+        "value",
+      );
     });
     it("should return default when property does not exist", () => {
       expect(safeGetProperty({}, "prop", "default")).toBe("default");
     });
     it("should return default when property is null", () => {
-      expect(safeGetProperty({ prop: null }, "prop", "default")).toBe("default");
+      expect(safeGetProperty({ prop: null }, "prop", "default")).toBe(
+        "default",
+      );
     });
     it("should return default when property is undefined", () => {
-      expect(safeGetProperty({ prop: void 0 }, "prop", "default")).toBe("default");
+      expect(safeGetProperty({ prop: void 0 }, "prop", "default")).toBe(
+        "default",
+      );
     });
   });
   describe("safeCall", () => {
@@ -57,19 +67,19 @@ describe("safeAccess utilities", () => {
     });
     it("should call method when it exists", () => {
       const obj = {
-        method: () => "result"
+        method: () => "result",
       };
       expect(safeCall(obj, "method", [], "default")).toBe("result");
     });
     it("should pass arguments to method", () => {
       const obj = {
-        method: (a, b) => a + b
+        method: (a, b) => a + b,
       };
       expect(safeCall(obj, "method", [1, 2], 0)).toBe(3);
     });
     it("should return default when method returns null", () => {
       const obj = {
-        method: () => null
+        method: () => null,
       };
       expect(safeCall(obj, "method", [], "default")).toBe("default");
     });
@@ -77,7 +87,7 @@ describe("safeAccess utilities", () => {
       const obj = {
         method: () => {
           throw new Error();
-        }
+        },
       };
       expect(safeCall(obj, "method", [], "default")).toBe("default");
     });

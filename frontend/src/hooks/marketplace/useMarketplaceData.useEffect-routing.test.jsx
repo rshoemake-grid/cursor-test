@@ -2,7 +2,7 @@ import { renderHook, waitFor } from "@testing-library/react";
 import { useMarketplaceData } from "./useMarketplaceData";
 import { getLocalStorageItem } from "../storage";
 jest.mock("../storage", () => ({
-  getLocalStorageItem: jest.fn()
+  getLocalStorageItem: jest.fn(),
 }));
 const mockGetLocalStorageItem = getLocalStorageItem;
 describe("useMarketplaceData - useEffect Routing (Phase 4.2)", () => {
@@ -17,24 +17,26 @@ describe("useMarketplaceData - useEffect Routing (Phase 4.2)", () => {
         }
         return Promise.resolve({ json: async () => [] });
       }),
-      post: jest.fn().mockResolvedValue({ ok: true, json: async () => ({ nodes: [] }) })
+      post: jest
+        .fn()
+        .mockResolvedValue({ ok: true, json: async () => ({ nodes: [] }) }),
     };
     mockStorage = {
       getItem: jest.fn().mockReturnValue(null),
       setItem: jest.fn(),
       removeItem: jest.fn(),
       addEventListener: jest.fn(),
-      removeEventListener: jest.fn()
+      removeEventListener: jest.fn(),
     };
     mockGetLocalStorageItem.mockReturnValue([]);
   });
   describe('useEffect routing - activeTab === "repository"', () => {
     it("should call fetchTemplates when activeTab is repository and repositorySubTab is workflows", async () => {
       mockHttpClient.get.mockResolvedValue({
-        json: async () => [{ id: "template-1", name: "Template" }]
+        json: async () => [{ id: "template-1", name: "Template" }],
       });
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -44,15 +46,15 @@ describe("useMarketplaceData - useEffect Routing (Phase 4.2)", () => {
           user: null,
           activeTab: "repository",
           // activeTab === 'repository'
-          repositorySubTab: "workflows"
+          repositorySubTab: "workflows",
           // repositorySubTab === 'workflows'
-        })
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
       });
       expect(mockHttpClient.get).toHaveBeenCalledWith(
-        expect.stringContaining("/templates")
+        expect.stringContaining("/templates"),
       );
       expect(result.current.templates.length).toBeGreaterThan(0);
     });
@@ -64,12 +66,12 @@ describe("useMarketplaceData - useEffect Routing (Phase 4.2)", () => {
           category: "automation",
           tags: [],
           published_at: "2024-01-01T00:00:00Z",
-          is_official: false
-        }
+          is_official: false,
+        },
       ];
       mockStorage.getItem.mockReturnValue(JSON.stringify(agents));
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -79,9 +81,9 @@ describe("useMarketplaceData - useEffect Routing (Phase 4.2)", () => {
           user: null,
           activeTab: "repository",
           // activeTab === 'repository'
-          repositorySubTab: "agents"
+          repositorySubTab: "agents",
           // repositorySubTab === 'agents'
-        })
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -90,10 +92,10 @@ describe("useMarketplaceData - useEffect Routing (Phase 4.2)", () => {
     });
     it('should verify exact equality check activeTab === "repository"', async () => {
       mockHttpClient.get.mockResolvedValue({
-        json: async () => []
+        json: async () => [],
       });
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -103,8 +105,8 @@ describe("useMarketplaceData - useEffect Routing (Phase 4.2)", () => {
           user: null,
           activeTab: "repository",
           // Should use === not ==
-          repositorySubTab: "workflows"
-        })
+          repositorySubTab: "workflows",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -115,14 +117,14 @@ describe("useMarketplaceData - useEffect Routing (Phase 4.2)", () => {
   describe('useEffect routing - activeTab === "workflows-of-workflows"', () => {
     it("should call fetchWorkflowsOfWorkflows when activeTab is workflows-of-workflows", async () => {
       mockHttpClient.get.mockResolvedValue({
-        json: async () => [{ id: "workflow-1", name: "Workflow" }]
+        json: async () => [{ id: "workflow-1", name: "Workflow" }],
       });
       mockHttpClient.post.mockResolvedValue({
         ok: true,
-        json: async () => ({ nodes: [] })
+        json: async () => ({ nodes: [] }),
       });
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -132,25 +134,28 @@ describe("useMarketplaceData - useEffect Routing (Phase 4.2)", () => {
           user: null,
           activeTab: "workflows-of-workflows",
           // activeTab === 'workflows-of-workflows'
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
-      await waitFor(() => {
-        expect(result.current.loading).toBe(false);
-      }, { timeout: 3e3 });
+      await waitFor(
+        () => {
+          expect(result.current.loading).toBe(false);
+        },
+        { timeout: 3e3 },
+      );
       expect(mockHttpClient.get).toHaveBeenCalled();
       expect(mockHttpClient.post).toHaveBeenCalled();
     });
     it('should verify exact equality check activeTab === "workflows-of-workflows"', async () => {
       mockHttpClient.get.mockResolvedValue({
-        json: async () => []
+        json: async () => [],
       });
       mockHttpClient.post.mockResolvedValue({
         ok: true,
-        json: async () => ({ nodes: [] })
+        json: async () => ({ nodes: [] }),
       });
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -160,12 +165,15 @@ describe("useMarketplaceData - useEffect Routing (Phase 4.2)", () => {
           user: null,
           activeTab: "workflows-of-workflows",
           // Should use === not ==
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
-      await waitFor(() => {
-        expect(result.current.loading).toBe(false);
-      }, { timeout: 3e3 });
+      await waitFor(
+        () => {
+          expect(result.current.loading).toBe(false);
+        },
+        { timeout: 3e3 },
+      );
       expect(mockHttpClient.get).toHaveBeenCalled();
     });
   });
@@ -178,12 +186,12 @@ describe("useMarketplaceData - useEffect Routing (Phase 4.2)", () => {
           category: "automation",
           tags: [],
           published_at: "2024-01-01T00:00:00Z",
-          is_official: false
-        }
+          is_official: false,
+        },
       ];
       mockGetLocalStorageItem.mockReturnValue(agents);
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -193,8 +201,8 @@ describe("useMarketplaceData - useEffect Routing (Phase 4.2)", () => {
           user: null,
           activeTab: "agents",
           // Should go to else branch
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -209,12 +217,12 @@ describe("useMarketplaceData - useEffect Routing (Phase 4.2)", () => {
           category: "automation",
           tags: [],
           published_at: "2024-01-01T00:00:00Z",
-          is_official: false
-        }
+          is_official: false,
+        },
       ];
       mockGetLocalStorageItem.mockReturnValue(agents);
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -224,8 +232,8 @@ describe("useMarketplaceData - useEffect Routing (Phase 4.2)", () => {
           user: null,
           activeTab: "agents",
           // Not 'repository' or 'workflows-of-workflows'
-          repositorySubTab: "agents"
-        })
+          repositorySubTab: "agents",
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -236,10 +244,10 @@ describe("useMarketplaceData - useEffect Routing (Phase 4.2)", () => {
   describe('useEffect routing - nested conditional repositorySubTab === "workflows"', () => {
     it('should verify exact equality check repositorySubTab === "workflows"', async () => {
       mockHttpClient.get.mockResolvedValue({
-        json: async () => []
+        json: async () => [],
       });
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -248,15 +256,15 @@ describe("useMarketplaceData - useEffect Routing (Phase 4.2)", () => {
           sortBy: "popular",
           user: null,
           activeTab: "repository",
-          repositorySubTab: "workflows"
+          repositorySubTab: "workflows",
           // Should use === not ==
-        })
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
       });
       expect(mockHttpClient.get).toHaveBeenCalledWith(
-        expect.stringContaining("/templates")
+        expect.stringContaining("/templates"),
       );
     });
     it('should verify else branch when repositorySubTab !== "workflows"', async () => {
@@ -267,12 +275,12 @@ describe("useMarketplaceData - useEffect Routing (Phase 4.2)", () => {
           category: "automation",
           tags: [],
           published_at: "2024-01-01T00:00:00Z",
-          is_official: false
-        }
+          is_official: false,
+        },
       ];
       mockStorage.getItem.mockReturnValue(JSON.stringify(agents));
-      const { result } = renderHook(
-        () => useMarketplaceData({
+      const { result } = renderHook(() =>
+        useMarketplaceData({
           storage: mockStorage,
           httpClient: mockHttpClient,
           apiBaseUrl: "http://api.test",
@@ -281,9 +289,9 @@ describe("useMarketplaceData - useEffect Routing (Phase 4.2)", () => {
           sortBy: "popular",
           user: null,
           activeTab: "repository",
-          repositorySubTab: "agents"
+          repositorySubTab: "agents",
           // Not 'workflows'
-        })
+        }),
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -300,8 +308,8 @@ describe("useMarketplaceData - useEffect Routing (Phase 4.2)", () => {
           category: "automation",
           tags: [],
           published_at: "2024-01-01T00:00:00Z",
-          is_official: false
-        }
+          is_official: false,
+        },
       ];
       mockGetLocalStorageItem.mockReturnValue(agents);
       mockHttpClient.get.mockImplementation((url) => {
@@ -322,9 +330,9 @@ describe("useMarketplaceData - useEffect Routing (Phase 4.2)", () => {
             sortBy: "popular",
             user: null,
             activeTab: "agents",
-            repositorySubTab: "agents"
-          }
-        }
+            repositorySubTab: "agents",
+          },
+        },
       );
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
@@ -339,13 +347,13 @@ describe("useMarketplaceData - useEffect Routing (Phase 4.2)", () => {
         sortBy: "popular",
         user: null,
         activeTab: "repository",
-        repositorySubTab: "workflows"
+        repositorySubTab: "workflows",
       });
       await waitFor(() => {
         expect(result.current.loading).toBe(false);
       });
       expect(mockHttpClient.get).toHaveBeenCalledWith(
-        expect.stringContaining("/templates")
+        expect.stringContaining("/templates"),
       );
     });
   });

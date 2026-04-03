@@ -7,7 +7,7 @@ import {
   compareByDate,
   compareByName,
   compareOfficialStatus,
-  sortItems
+  sortItems,
 } from "./useMarketplaceData.utils";
 describe("useMarketplaceData.utils - No Coverage Paths", () => {
   describe("buildSearchParams", () => {
@@ -40,7 +40,7 @@ describe("useMarketplaceData.utils - No Coverage Paths", () => {
     const items = [
       { category: "automation", name: "Item 1" },
       { category: "data", name: "Item 2" },
-      { category: "automation", name: "Item 3" }
+      { category: "automation", name: "Item 3" },
     ];
     it("should return all items when category is empty", () => {
       const result = filterByCategory(items, "");
@@ -61,7 +61,7 @@ describe("useMarketplaceData.utils - No Coverage Paths", () => {
     const items = [
       { name: "Test Item", description: "Description", tags: ["tag1"] },
       { name: "Another Item", description: "Test description", tags: ["tag2"] },
-      { name: "Third", description: "Different", tags: ["test-tag"] }
+      { name: "Third", description: "Different", tags: ["test-tag"] },
     ];
     it("should return all items when search query is empty", () => {
       const result = filterBySearchQuery(items, "");
@@ -85,7 +85,7 @@ describe("useMarketplaceData.utils - No Coverage Paths", () => {
       const itemsWithNulls = [
         { name: null, description: "Test" },
         { name: void 0, description: "Test" },
-        { name: "Valid", description: "Test" }
+        { name: "Valid", description: "Test" },
       ];
       const result = filterBySearchQuery(itemsWithNulls, "test");
       expect(result.length).toBeGreaterThan(0);
@@ -93,7 +93,7 @@ describe("useMarketplaceData.utils - No Coverage Paths", () => {
     it("should handle null/undefined description with defensive check", () => {
       const itemsWithNulls = [
         { name: "Test", description: null },
-        { name: "Test", description: void 0 }
+        { name: "Test", description: void 0 },
       ];
       const result = filterBySearchQuery(itemsWithNulls, "test");
       expect(result.length).toBeGreaterThan(0);
@@ -101,7 +101,7 @@ describe("useMarketplaceData.utils - No Coverage Paths", () => {
     it("should handle non-string name/description with defensive check", () => {
       const itemsWithNonStrings = [
         { name: 123, description: "Test" },
-        { name: "Test", description: {} }
+        { name: "Test", description: {} },
       ];
       const result = filterBySearchQuery(itemsWithNonStrings, "test");
       expect(result.length).toBeGreaterThanOrEqual(0);
@@ -109,7 +109,7 @@ describe("useMarketplaceData.utils - No Coverage Paths", () => {
     it("should handle null/undefined tags", () => {
       const itemsWithNullTags = [
         { name: "Test", tags: null },
-        { name: "Test", tags: void 0 }
+        { name: "Test", tags: void 0 },
       ];
       const result = filterBySearchQuery(itemsWithNullTags, "test");
       expect(result.length).toBeGreaterThan(0);
@@ -117,7 +117,7 @@ describe("useMarketplaceData.utils - No Coverage Paths", () => {
     it("should handle non-string tags with defensive check", () => {
       const itemsWithNonStringTags = [
         { name: "Test", tags: [123, "valid"] },
-        { name: "Test", tags: [null, "valid"] }
+        { name: "Test", tags: [null, "valid"] },
       ];
       const result = filterBySearchQuery(itemsWithNonStringTags, "valid");
       expect(result.length).toBeGreaterThan(0);
@@ -127,7 +127,7 @@ describe("useMarketplaceData.utils - No Coverage Paths", () => {
     const items = [
       { category: "automation", name: "Test Item" },
       { category: "data", name: "Another Item" },
-      { category: "automation", name: "Third Item" }
+      { category: "automation", name: "Third Item" },
     ];
     it("should apply both category and search filters", () => {
       const result = applyFilters(items, "automation", "Test");
@@ -151,7 +151,9 @@ describe("useMarketplaceData.utils - No Coverage Paths", () => {
     it("should return timestamp for valid date", () => {
       const item = { published_at: "2024-01-01T00:00:00Z" };
       const timestamp = getSortTimestamp(item);
-      expect(timestamp).toBe((/* @__PURE__ */ new Date("2024-01-01T00:00:00Z")).getTime());
+      expect(timestamp).toBe(
+        /* @__PURE__ */ new Date("2024-01-01T00:00:00Z").getTime(),
+      );
     });
     it("should return 0 when published_at is null", () => {
       const item = { published_at: null };
@@ -269,9 +271,21 @@ describe("useMarketplaceData.utils - No Coverage Paths", () => {
   });
   describe("sortItems", () => {
     const items = [
-      { name: "C Item", published_at: "2024-01-03T00:00:00Z", is_official: false },
-      { name: "A Item", published_at: "2024-01-01T00:00:00Z", is_official: true },
-      { name: "B Item", published_at: "2024-01-02T00:00:00Z", is_official: false }
+      {
+        name: "C Item",
+        published_at: "2024-01-03T00:00:00Z",
+        is_official: false,
+      },
+      {
+        name: "A Item",
+        published_at: "2024-01-01T00:00:00Z",
+        is_official: true,
+      },
+      {
+        name: "B Item",
+        published_at: "2024-01-02T00:00:00Z",
+        is_official: false,
+      },
     ];
     it("should sort by date when sortBy is popular", () => {
       const result = sortItems(items, "popular", false);
@@ -297,7 +311,7 @@ describe("useMarketplaceData.utils - No Coverage Paths", () => {
       const itemsWithOfficial = [
         { name: "C", published_at: "2024-01-03T00:00:00Z", is_official: false },
         { name: "A", published_at: "2024-01-01T00:00:00Z", is_official: true },
-        { name: "B", published_at: "2024-01-02T00:00:00Z", is_official: true }
+        { name: "B", published_at: "2024-01-02T00:00:00Z", is_official: true },
       ];
       const result = sortItems(itemsWithOfficial, "popular", true);
       expect(result[0].is_official).toBe(true);

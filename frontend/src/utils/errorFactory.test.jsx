@@ -34,7 +34,7 @@ describe("errorFactory", () => {
     it("should handle Error constructor throwing", () => {
       const OriginalError = global.Error;
       let callCount = 0;
-      global.Error = function(message) {
+      global.Error = function (message) {
         callCount++;
         if (callCount === 1) {
           throw new Error("Error constructor failed");
@@ -74,10 +74,10 @@ describe("errorFactory", () => {
           global.Function = void 0;
         },
         () => {
-          global.Error = function() {
+          global.Error = function () {
             throw new Error("Fail");
           };
-        }
+        },
       ];
       scenarios.forEach((setup, index) => {
         try {
@@ -87,7 +87,9 @@ describe("errorFactory", () => {
           expect(error.message).toBe("Test error");
           expect(error.name).toBe("TestError");
         } catch (e) {
-          throw new Error(`createSafeError threw synchronously in scenario ${index}: ${e}`);
+          throw new Error(
+            `createSafeError threw synchronously in scenario ${index}: ${e}`,
+          );
         } finally {
           global.Error = OriginalError;
           global.Function = OriginalFunction;
@@ -96,7 +98,7 @@ describe("errorFactory", () => {
     });
     it("should create error-like object even when Error constructor completely fails", () => {
       const OriginalError = global.Error;
-      global.Error = function() {
+      global.Error = function () {
         throw new Error("Complete failure");
       };
       try {
@@ -112,7 +114,7 @@ describe("errorFactory", () => {
     });
     it("should handle Object.create failing", () => {
       const OriginalObjectCreate = Object.create;
-      Object.create = function() {
+      Object.create = function () {
         throw new Error("Object.create failed");
       };
       try {
@@ -133,7 +135,10 @@ describe("errorFactory", () => {
       expect(error).toHaveProperty("stack");
     });
     it("should work with HttpClientError message", () => {
-      const error = createSafeError("HTTP client is not properly initialized", "HttpClientError");
+      const error = createSafeError(
+        "HTTP client is not properly initialized",
+        "HttpClientError",
+      );
       expect(error.message).toBe("HTTP client is not properly initialized");
       expect(error.name).toBe("HttpClientError");
     });

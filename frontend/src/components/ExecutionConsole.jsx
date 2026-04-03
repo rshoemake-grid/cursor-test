@@ -1,4 +1,3 @@
-import { Fragment, jsx, jsxs } from "react/jsx-runtime";
 import { useState, useRef, useEffect, useLayoutEffect, useMemo } from "react";
 import { ChevronDown, ChevronUp, MessageSquare, Play, X } from "lucide-react";
 import WorkflowChat from "./WorkflowChat";
@@ -23,7 +22,7 @@ function ExecutionConsole({
   onExecutionStatusUpdate,
   onExecutionNodeUpdate,
   onRemoveExecution,
-  documentAdapter = defaultAdapters.createDocumentAdapter()
+  documentAdapter = defaultAdapters.createDocumentAdapter(),
 }) {
   const { token: authToken } = useAuth();
   const authTokenRef = useRef(authToken);
@@ -39,22 +38,34 @@ function ExecutionConsole({
   const onExecutionStatusUpdateRef = useRef(onExecutionStatusUpdate);
   const onExecutionLogUpdateRef = useRef(onExecutionLogUpdate);
   const onExecutionNodeUpdateRef = useRef(onExecutionNodeUpdate);
-  const allTabs = useMemo(() => [
-    { id: "chat", name: "Chat", type: "chat" },
-    ...executions.map((exec) => ({
-      id: exec.id,
-      name: exec.id.slice(0, 8),
-      type: "execution",
-      execution: exec
-    }))
-  ], [executions]);
+  const allTabs = useMemo(
+    () => [
+      {
+        id: "chat",
+        name: "Chat",
+        type: "chat",
+      },
+      ...executions.map((exec) => ({
+        id: exec.id,
+        name: exec.id.slice(0, 8),
+        type: "execution",
+        execution: exec,
+      })),
+    ],
+    [executions],
+  );
   const activeTabData = useMemo(
     () => allTabs.find((t) => t.id === activeTab),
-    [allTabs, activeTab]
+    [allTabs, activeTab],
   );
-  const activeExecution = activeTabData?.type === "execution" ? activeTabData.execution : null;
+  const activeExecution =
+    activeTabData?.type === "execution" ? activeTabData.execution : null;
   const activeExecutionStatus = useMemo(() => {
-    if (activeExecutionId !== null && activeExecutionId !== void 0 && activeExecutionId !== "") {
+    if (
+      activeExecutionId !== null &&
+      activeExecutionId !== void 0 &&
+      activeExecutionId !== ""
+    ) {
       const exec = executions.find((e) => e.id === activeExecutionId);
       return exec?.status;
     }
@@ -71,7 +82,13 @@ function ExecutionConsole({
     onExecutionStatusUpdateRef.current = onExecutionStatusUpdate;
     onExecutionLogUpdateRef.current = onExecutionLogUpdate;
     onExecutionNodeUpdateRef.current = onExecutionNodeUpdate;
-  }, [activeWorkflowId, activeExecutionId, onExecutionStatusUpdate, onExecutionLogUpdate, onExecutionNodeUpdate]);
+  }, [
+    activeWorkflowId,
+    activeExecutionId,
+    onExecutionStatusUpdate,
+    onExecutionLogUpdate,
+    onExecutionNodeUpdate,
+  ]);
   useEffect(() => {
     activeWorkflowIdRef.current = activeWorkflowId;
   }, [activeWorkflowId]);
@@ -104,39 +121,56 @@ function ExecutionConsole({
       const workflowId = activeWorkflowIdRef.current;
       const executionId = activeExecutionIdRef.current;
       const callback = onExecutionStatusUpdateRef.current;
-      const hasWorkflowId = workflowId !== null && workflowId !== void 0 && workflowId !== "";
-      const hasExecutionId = executionId !== null && executionId !== void 0 && executionId !== "";
-      const hasCallback = callback !== null && callback !== void 0 && typeof callback === "function";
+      const hasWorkflowId =
+        workflowId !== null && workflowId !== void 0 && workflowId !== "";
+      const hasExecutionId =
+        executionId !== null && executionId !== void 0 && executionId !== "";
+      const hasCallback =
+        callback !== null &&
+        callback !== void 0 &&
+        typeof callback === "function";
       if (!hasWorkflowId || !hasExecutionId || !hasCallback) {
-        logger.debug("[ExecutionConsole] onStatus callback conditional check failed:", {
-          workflowId,
-          executionId,
-          callback: callback ? "function" : callback,
-          hasWorkflowId,
-          hasExecutionId,
-          hasCallback,
-          workflowIdType: typeof workflowId,
-          executionIdType: typeof executionId,
-          callbackType: typeof callback
-        });
+        logger.debug(
+          "[ExecutionConsole] onStatus callback conditional check failed:",
+          {
+            workflowId,
+            executionId,
+            callback: callback ? "function" : callback,
+            hasWorkflowId,
+            hasExecutionId,
+            hasCallback,
+            workflowIdType: typeof workflowId,
+            executionIdType: typeof executionId,
+            callbackType: typeof callback,
+          },
+        );
       }
       if (hasWorkflowId && hasExecutionId && hasCallback) {
-        logger.debug("[ExecutionConsole] Received status update via WebSocket:", status);
+        logger.debug(
+          "[ExecutionConsole] Received status update via WebSocket:",
+          status,
+        );
         callback(workflowId, executionId, status);
       }
       if (!hasWorkflowId || !hasExecutionId || !hasCallback) {
-        logger.debug("[ExecutionConsole] Skipping status update - missing required values:", {
-          hasWorkflowId,
-          hasExecutionId,
-          hasCallback,
-          workflowId,
-          executionId,
-          callbackType: typeof callback,
-          callbackValue: callback
-        });
+        logger.debug(
+          "[ExecutionConsole] Skipping status update - missing required values:",
+          {
+            hasWorkflowId,
+            hasExecutionId,
+            hasCallback,
+            workflowId,
+            executionId,
+            callbackType: typeof callback,
+            callbackValue: callback,
+          },
+        );
       }
       if (hasWorkflowId && hasExecutionId && hasCallback) {
-        logger.debug("[ExecutionConsole] Received status update via WebSocket:", status);
+        logger.debug(
+          "[ExecutionConsole] Received status update via WebSocket:",
+          status,
+        );
         callback(workflowId, executionId, status);
       }
     },
@@ -145,7 +179,11 @@ function ExecutionConsole({
       const executionId = activeExecutionIdRef.current;
       const callback = onExecutionNodeUpdateRef.current;
       if (workflowId && executionId && callback) {
-        logger.debug("[ExecutionConsole] Received node update via WebSocket:", nodeId, nodeState);
+        logger.debug(
+          "[ExecutionConsole] Received node update via WebSocket:",
+          nodeId,
+          nodeState,
+        );
         callback(workflowId, executionId, nodeId, nodeState);
       }
     },
@@ -154,7 +192,10 @@ function ExecutionConsole({
       const executionId = activeExecutionIdRef.current;
       const callback = onExecutionStatusUpdateRef.current;
       if (workflowId && executionId && callback) {
-        logger.debug("[ExecutionConsole] Received completion via WebSocket:", result);
+        logger.debug(
+          "[ExecutionConsole] Received completion via WebSocket:",
+          result,
+        );
         callback(workflowId, executionId, "completed");
       }
     },
@@ -166,10 +207,15 @@ function ExecutionConsole({
       if (workflowId && executionId && callback) {
         callback(workflowId, executionId, "failed");
       }
-    }
+    },
   });
   useEffect(() => {
-    if (activeExecutionId !== null && activeExecutionId !== void 0 && activeExecutionId !== "" && executions.length > 0) {
+    if (
+      activeExecutionId !== null &&
+      activeExecutionId !== void 0 &&
+      activeExecutionId !== "" &&
+      executions.length > 0
+    ) {
       setActiveTab(activeExecutionId);
       if (isExpanded === false) {
         setIsExpanded(true);
@@ -178,7 +224,13 @@ function ExecutionConsole({
   }, [activeExecutionId, executions.length]);
   const handleCloseExecutionTab = (e, executionId) => {
     e.stopPropagation();
-    if (onRemoveExecution !== null && onRemoveExecution !== void 0 && (activeWorkflowId !== null && activeWorkflowId !== void 0 && activeWorkflowId !== "")) {
+    if (
+      onRemoveExecution !== null &&
+      onRemoveExecution !== void 0 &&
+      activeWorkflowId !== null &&
+      activeWorkflowId !== void 0 &&
+      activeWorkflowId !== ""
+    ) {
       onRemoveExecution(activeWorkflowId, executionId);
       if (activeTab === executionId) {
         setActiveTab("chat");
@@ -222,118 +274,172 @@ function ExecutionConsole({
       documentAdapter.body.style.userSelect = "none";
     }
   };
-  return /* @__PURE__ */ jsxs(
-    "div",
-    {
-      className: "relative w-full bg-gray-900 text-gray-100 shadow-2xl border-t-2 border-gray-700 flex-shrink-0",
-      style: { height: isExpanded ? `${height}px` : "auto", minHeight: "60px" },
-      children: [
-        isExpanded === true && /* @__PURE__ */ jsx(
-          "div",
-          {
-            className: "absolute top-0 left-0 right-0 h-1 cursor-ns-resize hover:bg-blue-500 transition-colors",
-            onMouseDown: handleMouseDown
-          }
-        ),
-        /* @__PURE__ */ jsxs("div", { className: "px-4 py-2 border-b border-gray-800 flex items-center justify-between bg-gray-800", children: [
-          /* @__PURE__ */ jsx("div", { className: "flex items-center gap-2 overflow-x-auto flex-1", children: allTabs.map((tab) => /* @__PURE__ */ jsxs(
-            "div",
-            {
-              className: `flex items-center gap-1 px-3 py-1 rounded transition-colors relative group ${activeTab === tab.id ? "bg-gray-700 text-white" : "text-gray-400 hover:text-white hover:bg-gray-700"}`,
-              children: [
-                /* @__PURE__ */ jsx(
-                  "button",
-                  {
-                    onClick: () => {
-                      if (isExpanded === false) {
-                        setIsExpanded(true);
-                      }
-                      setActiveTab(tab.id);
-                    },
-                    className: "flex items-center gap-2",
-                    children: tab.type === "chat" ? /* @__PURE__ */ jsxs(Fragment, { children: [
-                      /* @__PURE__ */ jsx(MessageSquare, { className: "w-4 h-4" }),
-                      /* @__PURE__ */ jsx("span", { className: "font-semibold text-sm whitespace-nowrap", children: tab.name })
-                    ] }) : /* @__PURE__ */ jsxs(Fragment, { children: [
-                      /* @__PURE__ */ jsx(Play, { className: "w-4 h-4" }),
-                      /* @__PURE__ */ jsx("span", { className: "font-semibold text-sm whitespace-nowrap", children: tab.name }),
-                      tab.execution?.status === "running" && /* @__PURE__ */ jsx("div", { className: "absolute -top-1 -right-1 w-2 h-2 bg-green-500 rounded-full animate-pulse" }),
-                      tab.execution?.status === "completed" && /* @__PURE__ */ jsx("div", { className: "absolute -top-1 -right-1 w-2 h-2 bg-green-500 rounded-full" }),
-                      tab.execution?.status === "failed" && /* @__PURE__ */ jsx("div", { className: "absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full" })
-                    ] })
+  return (
+    <div
+      className="relative w-full bg-gray-900 text-gray-100 shadow-2xl border-t-2 border-gray-700 flex-shrink-0"
+      style={{
+        height: isExpanded ? `${height}px` : "auto",
+        minHeight: "60px",
+      }}
+    >
+      {isExpanded === true && (
+        <div
+          className="absolute top-0 left-0 right-0 h-1 cursor-ns-resize hover:bg-blue-500 transition-colors"
+          onMouseDown={handleMouseDown}
+        />
+      )}
+      <div className="px-4 py-2 border-b border-gray-800 flex items-center justify-between bg-gray-800">
+        <div className="flex items-center gap-2 overflow-x-auto flex-1">
+          {allTabs.map((tab) => (
+            <div
+              key={tab.id}
+              className={`flex items-center gap-1 px-3 py-1 rounded transition-colors relative group ${activeTab === tab.id ? "bg-gray-700 text-white" : "text-gray-400 hover:text-white hover:bg-gray-700"}`}
+            >
+              <button
+                onClick={() => {
+                  if (isExpanded === false) {
+                    setIsExpanded(true);
                   }
-                ),
-                tab.type === "execution" && /* @__PURE__ */ jsx(
-                  "button",
-                  {
-                    onClick: (e) => handleCloseExecutionTab(e, tab.id),
-                    className: "opacity-0 group-hover:opacity-100 hover:bg-gray-600 rounded p-0.5 transition-opacity ml-1",
-                    title: "Close execution tab",
-                    children: /* @__PURE__ */ jsx(X, { className: "w-3 h-3" })
-                  }
-                )
-              ]
-            },
-            tab.id
-          )) }),
-          /* @__PURE__ */ jsx("div", { className: "flex items-center gap-2 flex-shrink-0", children: /* @__PURE__ */ jsx(
-            "button",
-            {
-              onClick: () => setIsExpanded(!isExpanded),
-              className: "text-gray-400 hover:text-white transition-colors",
-              children: isExpanded ? /* @__PURE__ */ jsx(ChevronDown, { className: "w-4 h-4" }) : /* @__PURE__ */ jsx(ChevronUp, { className: "w-4 h-4" })
-            }
-          ) })
-        ] }),
-        isExpanded === true && /* @__PURE__ */ jsx("div", { className: "overflow-hidden", style: { height: `${height - 48}px` }, children: activeTab === "chat" ? /* @__PURE__ */ jsx(
-          WorkflowChat,
-          {
-            workflowId: activeWorkflowId,
-            tabId: workflowTabId,
-            onWorkflowUpdate,
-            getCanvasSnapshot: getWorkflowChatCanvasSnapshot,
-            chatClearNonce: workflowChatClearNonce
-          },
-          workflowTabId !== null && workflowTabId !== void 0 && workflowTabId !== "" ? workflowTabId : `chat-${activeWorkflowId ?? "none"}`
-        ) : activeExecution ? /* @__PURE__ */ jsx("div", { className: "h-full overflow-y-auto bg-gray-900 text-gray-100 p-4", children: /* @__PURE__ */ jsxs("div", { className: "space-y-4", children: [
-          /* @__PURE__ */ jsxs("div", { className: "flex items-center justify-between", children: [
-            /* @__PURE__ */ jsxs("div", { children: [
-              /* @__PURE__ */ jsxs("h3", { className: "text-lg font-semibold", children: [
-                "Execution ",
-                activeExecution.id.slice(0, 8),
-                "..."
-              ] }),
-              /* @__PURE__ */ jsxs("p", { className: "text-sm text-gray-400", children: [
-                "Started: ",
-                new Date(activeExecution.startedAt).toLocaleString()
-              ] })
-            ] }),
-            /* @__PURE__ */ jsx(ExecutionStatusBadge, { status: activeExecution.status })
-          ] }),
-          activeExecution.logs !== null && activeExecution.logs !== void 0 && activeExecution.logs.length > 0 ? /* @__PURE__ */ jsx("div", { className: "space-y-1 font-mono text-xs", children: activeExecution.logs.map((log, index) => /* @__PURE__ */ jsxs(
-            "div",
-            {
-              className: `p-2 rounded ${getLogLevelColor(coalesceString(log.level, LOG_LEVELS.INFO))}`,
-              children: [
-                /* @__PURE__ */ jsx("span", { className: "text-gray-500", children: new Date(log.timestamp !== null && log.timestamp !== void 0 ? log.timestamp : Date.now()).toLocaleTimeString() }),
-                " ",
-                /* @__PURE__ */ jsx(LogLevelBadge, { level: coalesceString(log.level, LOG_LEVELS.INFO), showBackground: false }),
-                log.node_id !== null && log.node_id !== void 0 && log.node_id !== "" && /* @__PURE__ */ jsxs("span", { className: "text-gray-500", children: [
-                  " [",
-                  log.node_id,
-                  "]"
-                ] }),
-                " ",
-                coalesceString(log.message, JSON.stringify(log))
-              ]
-            },
-            index
-          )) }) : /* @__PURE__ */ jsx("div", { className: "text-gray-500 text-center py-8", children: "No logs yet. Execution is starting..." })
-        ] }) }) : /* @__PURE__ */ jsx("div", { className: "h-full overflow-y-auto bg-gray-900 text-gray-100 p-4", children: /* @__PURE__ */ jsx("div", { className: "text-gray-400 text-center py-8", children: "Execution not found" }) }) })
-      ]
-    }
+                  setActiveTab(tab.id);
+                }}
+                className="flex items-center gap-2"
+              >
+                {tab.type === "chat" ? (
+                  <>
+                    <MessageSquare className="w-4 h-4" />
+                    <span className="font-semibold text-sm whitespace-nowrap">
+                      {tab.name}
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    <Play className="w-4 h-4" />
+                    <span className="font-semibold text-sm whitespace-nowrap">
+                      {tab.name}
+                    </span>
+                    {tab.execution?.status === "running" && (
+                      <div className="absolute -top-1 -right-1 w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+                    )}
+                    {tab.execution?.status === "completed" && (
+                      <div className="absolute -top-1 -right-1 w-2 h-2 bg-green-500 rounded-full" />
+                    )}
+                    {tab.execution?.status === "failed" && (
+                      <div className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full" />
+                    )}
+                  </>
+                )}
+              </button>
+              {tab.type === "execution" && (
+                <button
+                  onClick={(e) => handleCloseExecutionTab(e, tab.id)}
+                  className="opacity-0 group-hover:opacity-100 hover:bg-gray-600 rounded p-0.5 transition-opacity ml-1"
+                  title="Close execution tab"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              )}
+            </div>
+          ))}
+        </div>
+        <div className="flex items-center gap-2 flex-shrink-0">
+          <button
+            onClick={() => setIsExpanded(!isExpanded)}
+            className="text-gray-400 hover:text-white transition-colors"
+          >
+            {isExpanded ? (
+              <ChevronDown className="w-4 h-4" />
+            ) : (
+              <ChevronUp className="w-4 h-4" />
+            )}
+          </button>
+        </div>
+      </div>
+      {isExpanded === true && (
+        <div
+          className="overflow-hidden"
+          style={{
+            height: `${height - 48}px`,
+          }}
+        >
+          {activeTab === "chat" ? (
+            <WorkflowChat
+              key={
+                workflowTabId !== null &&
+                workflowTabId !== void 0 &&
+                workflowTabId !== ""
+                  ? workflowTabId
+                  : `chat-${activeWorkflowId ?? "none"}`
+              }
+              workflowId={activeWorkflowId}
+              tabId={workflowTabId}
+              onWorkflowUpdate={onWorkflowUpdate}
+              getCanvasSnapshot={getWorkflowChatCanvasSnapshot}
+              chatClearNonce={workflowChatClearNonce}
+            />
+          ) : activeExecution ? (
+            <div className="h-full overflow-y-auto bg-gray-900 text-gray-100 p-4">
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-lg font-semibold">
+                      Execution {activeExecution.id.slice(0, 8)}...
+                    </h3>
+                    <p className="text-sm text-gray-400">
+                      Started:{" "}
+                      {new Date(activeExecution.startedAt).toLocaleString()}
+                    </p>
+                  </div>
+                  <ExecutionStatusBadge status={activeExecution.status} />
+                </div>
+                {activeExecution.logs !== null &&
+                activeExecution.logs !== void 0 &&
+                activeExecution.logs.length > 0 ? (
+                  <div className="space-y-1 font-mono text-xs">
+                    {activeExecution.logs.map((log, index) => (
+                      <div
+                        key={index}
+                        className={`p-2 rounded ${getLogLevelColor(coalesceString(log.level, LOG_LEVELS.INFO))}`}
+                      >
+                        <span className="text-gray-500">
+                          {new Date(
+                            log.timestamp !== null && log.timestamp !== void 0
+                              ? log.timestamp
+                              : Date.now(),
+                          ).toLocaleTimeString()}
+                        </span>{" "}
+                        <LogLevelBadge
+                          level={coalesceString(log.level, LOG_LEVELS.INFO)}
+                          showBackground={false}
+                        />
+                        {log.node_id !== null &&
+                          log.node_id !== void 0 &&
+                          log.node_id !== "" && (
+                            <span className="text-gray-500">
+                              {" "}
+                              [{log.node_id}]
+                            </span>
+                          )}{" "}
+                        {coalesceString(log.message, JSON.stringify(log))}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-gray-500 text-center py-8">
+                    No logs yet. Execution is starting...
+                  </div>
+                )}
+              </div>
+            </div>
+          ) : (
+            <div className="h-full overflow-y-auto bg-gray-900 text-gray-100 p-4">
+              <div className="text-gray-400 text-center py-8">
+                Execution not found
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
   );
 }
-export {
-  ExecutionConsole as default
-};
+export { ExecutionConsole as default };

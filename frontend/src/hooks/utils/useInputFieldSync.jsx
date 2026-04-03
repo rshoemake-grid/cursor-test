@@ -31,7 +31,4 @@ function useInputFieldSyncSimple(configValue, defaultValue) {
   }, [configValue, defaultValue]);
   return [value, setValue];
 }
-export {
-  useInputFieldSync,
-  useInputFieldSyncSimple
-};
+export { useInputFieldSync, useInputFieldSyncSimple };

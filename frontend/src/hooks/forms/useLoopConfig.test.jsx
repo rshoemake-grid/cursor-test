@@ -2,7 +2,7 @@ import { renderHook } from "@testing-library/react";
 import { useLoopConfig } from "./useLoopConfig";
 import { useReactFlow } from "@xyflow/react";
 jest.mock("@xyflow/react", () => ({
-  useReactFlow: jest.fn()
+  useReactFlow: jest.fn(),
 }));
 const mockUseReactFlow = useReactFlow;
 describe("useLoopConfig", () => {
@@ -10,7 +10,7 @@ describe("useLoopConfig", () => {
   const mockSelectedNode = {
     id: "loop-1",
     type: "loop",
-    data: {}
+    data: {},
   };
   beforeEach(() => {
     jest.clearAllMocks();
@@ -38,62 +38,68 @@ describe("useLoopConfig", () => {
       fitView: jest.fn(),
       project: jest.fn(),
       getIntersectingNodes: jest.fn(),
-      isNodeIntersecting: jest.fn()
+      isNodeIntersecting: jest.fn(),
     });
   });
   it("should initialize loop_config when node has no config", () => {
-    renderHook(
-      () => useLoopConfig({
-        selectedNode: mockSelectedNode
-      })
+    renderHook(() =>
+      useLoopConfig({
+        selectedNode: mockSelectedNode,
+      }),
     );
     expect(mockSetNodes).toHaveBeenCalled();
     const setNodesCall = mockSetNodes.mock.calls[0][0];
-    const updatedNodes = typeof setNodesCall === "function" ? setNodesCall([mockSelectedNode]) : setNodesCall;
+    const updatedNodes =
+      typeof setNodesCall === "function"
+        ? setNodesCall([mockSelectedNode])
+        : setNodesCall;
     const updatedNode = updatedNodes.find((n) => n.id === "loop-1");
     expect(updatedNode.data.loop_config).toEqual({
       loop_type: "for_each",
-      max_iterations: 0
+      max_iterations: 0,
     });
   });
   it("should initialize loop_config when config is empty object", () => {
     const nodeWithEmptyConfig = {
       ...mockSelectedNode,
       data: {
-        loop_config: {}
-      }
+        loop_config: {},
+      },
     };
-    renderHook(
-      () => useLoopConfig({
-        selectedNode: nodeWithEmptyConfig
-      })
+    renderHook(() =>
+      useLoopConfig({
+        selectedNode: nodeWithEmptyConfig,
+      }),
     );
     expect(mockSetNodes).toHaveBeenCalled();
     const setNodesCall = mockSetNodes.mock.calls[0][0];
-    const updatedNodes = typeof setNodesCall === "function" ? setNodesCall([nodeWithEmptyConfig]) : setNodesCall;
+    const updatedNodes =
+      typeof setNodesCall === "function"
+        ? setNodesCall([nodeWithEmptyConfig])
+        : setNodesCall;
     const updatedNode = updatedNodes.find((n) => n.id === "loop-1");
     expect(updatedNode.data.loop_config).toEqual({
       loop_type: "for_each",
-      max_iterations: 0
+      max_iterations: 0,
     });
   });
   it("should not initialize when node is not a loop type", () => {
     const nonLoopNode = {
       ...mockSelectedNode,
-      type: "agent"
+      type: "agent",
     };
-    renderHook(
-      () => useLoopConfig({
-        selectedNode: nonLoopNode
-      })
+    renderHook(() =>
+      useLoopConfig({
+        selectedNode: nonLoopNode,
+      }),
     );
     expect(mockSetNodes).not.toHaveBeenCalled();
   });
   it("should not initialize when selectedNode is null", () => {
-    renderHook(
-      () => useLoopConfig({
-        selectedNode: null
-      })
+    renderHook(() =>
+      useLoopConfig({
+        selectedNode: null,
+      }),
     );
     expect(mockSetNodes).not.toHaveBeenCalled();
   });
@@ -103,14 +109,14 @@ describe("useLoopConfig", () => {
       data: {
         loop_config: {
           loop_type: "while",
-          max_iterations: 10
-        }
-      }
+          max_iterations: 10,
+        },
+      },
     };
-    renderHook(
-      () => useLoopConfig({
-        selectedNode: nodeWithConfig
-      })
+    renderHook(() =>
+      useLoopConfig({
+        selectedNode: nodeWithConfig,
+      }),
     );
     expect(mockSetNodes).not.toHaveBeenCalled();
   });
@@ -119,14 +125,14 @@ describe("useLoopConfig", () => {
       ...mockSelectedNode,
       data: {
         loop_config: {
-          loop_type: "for_each"
-        }
-      }
+          loop_type: "for_each",
+        },
+      },
     };
-    renderHook(
-      () => useLoopConfig({
-        selectedNode: nodeWithPartialConfig
-      })
+    renderHook(() =>
+      useLoopConfig({
+        selectedNode: nodeWithPartialConfig,
+      }),
     );
     expect(mockSetNodes).not.toHaveBeenCalled();
   });
@@ -134,15 +140,18 @@ describe("useLoopConfig", () => {
     const otherNode = {
       id: "other-1",
       type: "agent",
-      data: {}
+      data: {},
     };
-    renderHook(
-      () => useLoopConfig({
-        selectedNode: mockSelectedNode
-      })
+    renderHook(() =>
+      useLoopConfig({
+        selectedNode: mockSelectedNode,
+      }),
     );
     const setNodesCall = mockSetNodes.mock.calls[0][0];
-    const updatedNodes = typeof setNodesCall === "function" ? setNodesCall([mockSelectedNode, otherNode]) : setNodesCall;
+    const updatedNodes =
+      typeof setNodesCall === "function"
+        ? setNodesCall([mockSelectedNode, otherNode])
+        : setNodesCall;
     const otherNodeUpdated = updatedNodes.find((n) => n.id === "other-1");
     expect(otherNodeUpdated.data.loop_config).toBeUndefined();
   });
@@ -151,22 +160,25 @@ describe("useLoopConfig", () => {
       ...mockSelectedNode,
       data: {
         name: "Test Loop",
-        description: "Test Description"
-      }
+        description: "Test Description",
+      },
     };
-    renderHook(
-      () => useLoopConfig({
-        selectedNode: nodeWithOtherData
-      })
+    renderHook(() =>
+      useLoopConfig({
+        selectedNode: nodeWithOtherData,
+      }),
     );
     const setNodesCall = mockSetNodes.mock.calls[0][0];
-    const updatedNodes = typeof setNodesCall === "function" ? setNodesCall([nodeWithOtherData]) : setNodesCall;
+    const updatedNodes =
+      typeof setNodesCall === "function"
+        ? setNodesCall([nodeWithOtherData])
+        : setNodesCall;
     const updatedNode = updatedNodes.find((n) => n.id === "loop-1");
     expect(updatedNode.data.name).toBe("Test Loop");
     expect(updatedNode.data.description).toBe("Test Description");
     expect(updatedNode.data.loop_config).toEqual({
       loop_type: "for_each",
-      max_iterations: 0
+      max_iterations: 0,
     });
   });
 });
