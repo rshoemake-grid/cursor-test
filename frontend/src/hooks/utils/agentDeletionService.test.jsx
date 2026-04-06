@@ -59,7 +59,7 @@ describe("deleteAgentsFromStorage", () => {
     const result = deleteAgentsFromStorage(
       null,
       "testKey",
-      /* @__PURE__ */ new Set(["agent-1"]),
+      new Set(["agent-1"]),
       mockCallbacks,
     );
     expect(result.success).toBe(false);
@@ -74,7 +74,7 @@ describe("deleteAgentsFromStorage", () => {
     const result = deleteAgentsFromStorage(
       mockStorage,
       "testKey",
-      /* @__PURE__ */ new Set(["agent-1"]),
+      new Set(["agent-1"]),
       mockCallbacks,
     );
     expect(result.success).toBe(false);
@@ -90,7 +90,7 @@ describe("deleteAgentsFromStorage", () => {
     const result = deleteAgentsFromStorage(
       mockStorage,
       "testKey",
-      /* @__PURE__ */ new Set(["agent-1", "agent-2"]),
+      new Set(["agent-1", "agent-2"]),
       mockCallbacks,
     );
     expect(result.success).toBe(true);
@@ -110,7 +110,7 @@ describe("deleteAgentsFromStorage", () => {
     const result = deleteAgentsFromStorage(
       mockStorage,
       "testKey",
-      /* @__PURE__ */ new Set(["agent-1", "agent-2", "agent-3"]),
+      new Set(["agent-1", "agent-2", "agent-3"]),
       mockCallbacks,
     );
     expect(result.success).toBe(true);
@@ -126,7 +126,7 @@ describe("deleteAgentsFromStorage", () => {
     const result = deleteAgentsFromStorage(
       mockStorage,
       "testKey",
-      /* @__PURE__ */ new Set(["agent-999"]),
+      new Set(["agent-999"]),
       mockCallbacks,
     );
     expect(result.success).toBe(true);
@@ -144,7 +144,7 @@ describe("deleteAgentsFromStorage", () => {
     const result = deleteAgentsFromStorage(
       mockStorage,
       "testKey",
-      /* @__PURE__ */ new Set(["agent-1"]),
+      new Set(["agent-1"]),
       mockCallbacks,
     );
     expect(result.success).toBe(false);
@@ -159,7 +159,7 @@ describe("deleteAgentsFromStorage", () => {
     const result = deleteAgentsFromStorage(
       mockStorage,
       "testKey",
-      /* @__PURE__ */ new Set(["agent-1"]),
+      new Set(["agent-1"]),
       mockCallbacks,
     );
     expect(result.success).toBe(false);
@@ -176,7 +176,7 @@ describe("deleteAgentsFromStorage", () => {
     const result = deleteAgentsFromStorage(
       mockStorage,
       "testKey",
-      /* @__PURE__ */ new Set(["agent-1"]),
+      new Set(["agent-1"]),
       callbacksWithPrefix,
     );
     expect(result.success).toBe(false);
@@ -191,7 +191,7 @@ describe("deleteAgentsFromStorage", () => {
     const result = deleteAgentsFromStorage(
       mockStorage,
       "testKey",
-      /* @__PURE__ */ new Set(),
+      new Set(),
       mockCallbacks,
     );
     expect(result.success).toBe(true);
@@ -306,7 +306,7 @@ describe("updateStateAfterDeletion", () => {
       },
     ];
     updateStateAfterDeletion(
-      /* @__PURE__ */ new Set(["agent-1", "agent-3"]),
+      new Set(["agent-1", "agent-3"]),
       mockSetAgents,
       mockSetSelectedIds,
     );
@@ -314,17 +314,17 @@ describe("updateStateAfterDeletion", () => {
     const updateFn = mockSetAgents.mock.calls[0][0];
     const result = updateFn(agents);
     expect(result).toEqual([agents[1]]);
-    expect(mockSetSelectedIds).toHaveBeenCalledWith(/* @__PURE__ */ new Set());
+    expect(mockSetSelectedIds).toHaveBeenCalledWith(new Set());
   });
   it("should clear selected IDs", () => {
     const mockSetAgents = jest.fn();
     const mockSetSelectedIds = jest.fn();
     updateStateAfterDeletion(
-      /* @__PURE__ */ new Set(["agent-1"]),
+      new Set(["agent-1"]),
       mockSetAgents,
       mockSetSelectedIds,
     );
-    expect(mockSetSelectedIds).toHaveBeenCalledWith(/* @__PURE__ */ new Set());
+    expect(mockSetSelectedIds).toHaveBeenCalledWith(new Set());
   });
   it("should handle empty deletion set", () => {
     const mockSetAgents = jest.fn();
@@ -343,14 +343,14 @@ describe("updateStateAfterDeletion", () => {
       },
     ];
     updateStateAfterDeletion(
-      /* @__PURE__ */ new Set(),
+      new Set(),
       mockSetAgents,
       mockSetSelectedIds,
     );
     const updateFn = mockSetAgents.mock.calls[0][0];
     const result = updateFn(agents);
     expect(result).toEqual(agents);
-    expect(mockSetSelectedIds).toHaveBeenCalledWith(/* @__PURE__ */ new Set());
+    expect(mockSetSelectedIds).toHaveBeenCalledWith(new Set());
   });
   it("should handle deletion of all agents", () => {
     const mockSetAgents = jest.fn();
@@ -369,13 +369,13 @@ describe("updateStateAfterDeletion", () => {
       },
     ];
     updateStateAfterDeletion(
-      /* @__PURE__ */ new Set(["agent-1"]),
+      new Set(["agent-1"]),
       mockSetAgents,
       mockSetSelectedIds,
     );
     const updateFn = mockSetAgents.mock.calls[0][0];
     const result = updateFn(agents);
     expect(result).toEqual([]);
-    expect(mockSetSelectedIds).toHaveBeenCalledWith(/* @__PURE__ */ new Set());
+    expect(mockSetSelectedIds).toHaveBeenCalledWith(new Set());
   });
 });

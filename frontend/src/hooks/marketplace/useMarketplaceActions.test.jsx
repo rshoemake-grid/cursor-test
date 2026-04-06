@@ -32,25 +32,25 @@ describe("useMarketplaceActions", () => {
   const mockDeleteSelectedRepositoryAgents = jest.fn();
   const mockFetchRepositoryAgents = jest.fn();
   const mockTemplateSelection = {
-    selectedIds: /* @__PURE__ */ new Set(),
+    selectedIds: new Set(),
     clear: jest.fn(),
   };
   const mockAgentSelection = {
-    selectedIds: /* @__PURE__ */ new Set(),
+    selectedIds: new Set(),
     get size() {
       return this.selectedIds.size;
     },
     clear: jest.fn(),
   };
   const mockRepositoryAgentSelection = {
-    selectedIds: /* @__PURE__ */ new Set(),
+    selectedIds: new Set(),
     get size() {
       return this.selectedIds.size;
     },
     clear: jest.fn(),
   };
   const mockToolSelection = {
-    selectedIds: /* @__PURE__ */ new Set(),
+    selectedIds: new Set(),
     get size() {
       return this.selectedIds.size;
     },
@@ -406,7 +406,7 @@ describe("useMarketplaceActions", () => {
         await result.current.handleDeleteAgents();
       });
       expect(mockDeleteSelectedAgents).toHaveBeenCalledWith(
-        /* @__PURE__ */ new Set(),
+        new Set(),
       );
     });
   });
@@ -434,7 +434,7 @@ describe("useMarketplaceActions", () => {
         await result.current.handleDeleteWorkflows();
       });
       expect(mockDeleteSelectedWorkflows).toHaveBeenCalledWith(
-        /* @__PURE__ */ new Set(),
+        new Set(),
       );
     });
   });
@@ -463,7 +463,7 @@ describe("useMarketplaceActions", () => {
         await result.current.handleDeleteRepositoryAgents();
       });
       expect(mockDeleteSelectedRepositoryAgents).toHaveBeenCalledWith(
-        /* @__PURE__ */ new Set(),
+        new Set(),
         mockFetchRepositoryAgents,
       );
     });

@@ -50,8 +50,8 @@ describe("useAdvancedFilters", () => {
         executions: mockExecutions,
         filters: {
           dateRange: {
-            start: /* @__PURE__ */ new Date("2024-01-01T11:00:00Z"),
-            end: /* @__PURE__ */ new Date("2024-01-01T12:00:00Z"),
+            start: new Date("2024-01-01T11:00:00Z"),
+            end: new Date("2024-01-01T12:00:00Z"),
           },
         },
       }),
@@ -163,7 +163,7 @@ describe("useAdvancedFilters", () => {
       useAdvancedFilters({
         executions: mockExecutions,
         filters: {
-          dateRange: { start: /* @__PURE__ */ new Date() },
+          dateRange: { start: new Date() },
           minDuration: 5,
           maxDuration: 20,
           hasError: false,

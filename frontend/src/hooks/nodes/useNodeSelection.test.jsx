@@ -215,7 +215,7 @@ describe("useNodeSelection", () => {
     act(() => {
       result.current.setSelectedNodeId("node1");
       result.current.setSelectedNodeIds(
-        /* @__PURE__ */ new Set(["node1", "node2"]),
+        new Set(["node1", "node2"]),
       );
     });
     expect(result.current.selectedNodeId).toBe("node1");

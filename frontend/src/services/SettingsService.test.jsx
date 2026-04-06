@@ -170,7 +170,7 @@ describe("SettingsService", () => {
             code: "422",
             message: "Invalid API key",
             path: "/api/settings/llm/test",
-            timestamp: /* @__PURE__ */ new Date().toISOString(),
+            timestamp: new Date().toISOString(),
           },
         }),
       });
@@ -187,7 +187,7 @@ describe("SettingsService", () => {
           error: {
             code: "422",
             path: "/api/settings/llm/test",
-            timestamp: /* @__PURE__ */ new Date().toISOString(),
+            timestamp: new Date().toISOString(),
           },
         }),
       });

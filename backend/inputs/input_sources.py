@@ -27,6 +27,7 @@ except ImportError:
 
 from ..utils.logger import get_logger
 from ..utils.path_utils import validate_path_within_base
+from .gcp_auth import gcp_client_with_adc_retry
 
 logger = get_logger(__name__)
 
@@ -91,7 +92,15 @@ class GCPBucketHandler(InputSourceHandler):
             raise ValueError("bucket_name is required for GCP Bucket input")
         
         credentials = _parse_gcp_credentials(credentials_json)
-        client = storage.Client(credentials=credentials) if credentials else storage.Client()
+
+        def _storage_client():
+            return (
+                storage.Client(credentials=credentials)
+                if credentials
+                else storage.Client()
+            )
+
+        client = gcp_client_with_adc_retry(credentials_json, _storage_client)
 
         bucket = client.bucket(bucket_name)
 
@@ -130,7 +139,15 @@ class GCPBucketHandler(InputSourceHandler):
             raise ValueError("object_path is required for GCP Bucket write")
 
         credentials = _parse_gcp_credentials(credentials_json)
-        client = storage.Client(credentials=credentials) if credentials else storage.Client()
+
+        def _storage_client():
+            return (
+                storage.Client(credentials=credentials)
+                if credentials
+                else storage.Client()
+            )
+
+        client = gcp_client_with_adc_retry(credentials_json, _storage_client)
 
         bucket = client.bucket(bucket_name)
         blob = bucket.blob(object_path)
@@ -257,7 +274,15 @@ class GCPPubSubHandler(InputSourceHandler):
             raise ValueError("project_id and subscription_name are required for GCP Pub/Sub input")
 
         credentials = _parse_gcp_credentials(credentials_json)
-        subscriber = pubsub_v1.SubscriberClient(credentials=credentials) if credentials else pubsub_v1.SubscriberClient()
+
+        def _subscriber_client():
+            return (
+                pubsub_v1.SubscriberClient(credentials=credentials)
+                if credentials
+                else pubsub_v1.SubscriberClient()
+            )
+
+        subscriber = gcp_client_with_adc_retry(credentials_json, _subscriber_client)
         
         subscription_path = subscriber.subscription_path(project_id, subscription_name)
         
@@ -302,7 +327,15 @@ class GCPPubSubHandler(InputSourceHandler):
             raise ValueError("project_id and topic_name are required for GCP Pub/Sub publish")
 
         credentials = _parse_gcp_credentials(credentials_json)
-        publisher = pubsub_v1.PublisherClient(credentials=credentials) if credentials else pubsub_v1.PublisherClient()
+
+        def _publisher_client():
+            return (
+                pubsub_v1.PublisherClient(credentials=credentials)
+                if credentials
+                else pubsub_v1.PublisherClient()
+            )
+
+        publisher = gcp_client_with_adc_retry(credentials_json, _publisher_client)
         
         topic_path = publisher.topic_path(project_id, topic_name)
         

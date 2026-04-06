@@ -1,6 +1,6 @@
 import { useState, useCallback } from "react";
 function useSelectionManager() {
-  const [selectedIds, setSelectedIds] = useState(/* @__PURE__ */ new Set());
+  const [selectedIds, setSelectedIds] = useState(new Set());
   const toggle = useCallback((id) => {
     setSelectedIds((prev) => {
       const newSet = new Set(prev);
@@ -13,7 +13,7 @@ function useSelectionManager() {
     });
   }, []);
   const clear = useCallback(() => {
-    setSelectedIds(/* @__PURE__ */ new Set());
+    setSelectedIds(new Set());
   }, []);
   const add = useCallback((id) => {
     setSelectedIds((prev) => {

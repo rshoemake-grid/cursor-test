@@ -146,7 +146,7 @@ function useOfficialAgentSeeding({
                   agent_config: agentConfig,
                   published_at: logicalOr(
                     workflow.created_at,
-                    /* @__PURE__ */ new Date().toISOString(),
+                    new Date().toISOString(),
                   ),
                   author_id: logicalOr(workflow.author_id, null),
                   author_name: logicalOr(workflow.author_name, "System"),

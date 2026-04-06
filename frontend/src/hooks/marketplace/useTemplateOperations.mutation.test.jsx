@@ -112,7 +112,7 @@ describe("useTemplateOperations - Mutation Killers", () => {
         );
         act(() => {
           result.current.deleteSelectedAgents(
-            /* @__PURE__ */ new Set(["agent-1"]),
+            new Set(["agent-1"]),
           );
         });
         expect(mockShowConfirm).toHaveBeenCalled();
@@ -151,7 +151,7 @@ describe("useTemplateOperations - Mutation Killers", () => {
         );
         act(() => {
           result.current.deleteSelectedAgents(
-            /* @__PURE__ */ new Set(["agent-1"]),
+            new Set(["agent-1"]),
           );
         });
         expect(mockShowConfirm).toHaveBeenCalled();
@@ -189,7 +189,7 @@ describe("useTemplateOperations - Mutation Killers", () => {
         );
         act(() => {
           result.current.deleteSelectedAgents(
-            /* @__PURE__ */ new Set(["agent-1"]),
+            new Set(["agent-1"]),
           );
         });
         expect(mockShowError).toHaveBeenCalled();
@@ -229,7 +229,7 @@ describe("useTemplateOperations - Mutation Killers", () => {
         );
         act(() => {
           result.current.deleteSelectedAgents(
-            /* @__PURE__ */ new Set(["agent-1"]),
+            new Set(["agent-1"]),
           );
         });
         expect(mockShowConfirm).toHaveBeenCalled();
@@ -267,7 +267,7 @@ describe("useTemplateOperations - Mutation Killers", () => {
         );
         act(() => {
           result.current.deleteSelectedAgents(
-            /* @__PURE__ */ new Set(["agent-1"]),
+            new Set(["agent-1"]),
           );
         });
         expect(mockShowError).toHaveBeenCalled();
@@ -302,7 +302,7 @@ describe("useTemplateOperations - Mutation Killers", () => {
         );
         act(() => {
           result.current.deleteSelectedAgents(
-            /* @__PURE__ */ new Set(["agent-1"]),
+            new Set(["agent-1"]),
           );
         });
         expect(mockStorage.setItem).not.toHaveBeenCalled();
@@ -333,7 +333,7 @@ describe("useTemplateOperations - Mutation Killers", () => {
         );
         act(() => {
           result.current.deleteSelectedAgents(
-            /* @__PURE__ */ new Set(["agent-1"]),
+            new Set(["agent-1"]),
           );
         });
         expect(mockStorage.setItem).not.toHaveBeenCalled();
@@ -368,7 +368,7 @@ describe("useTemplateOperations - Mutation Killers", () => {
         );
         await act(async () => {
           await result.current.deleteSelectedWorkflows(
-            /* @__PURE__ */ new Set(["template-1"]),
+            new Set(["template-1"]),
             "repository",
           );
         });
@@ -404,7 +404,7 @@ describe("useTemplateOperations - Mutation Killers", () => {
         );
         await act(async () => {
           await result.current.deleteSelectedWorkflows(
-            /* @__PURE__ */ new Set(["template-1"]),
+            new Set(["template-1"]),
             "repository",
           );
         });
@@ -440,7 +440,7 @@ describe("useTemplateOperations - Mutation Killers", () => {
         );
         await act(async () => {
           await result.current.deleteSelectedWorkflows(
-            /* @__PURE__ */ new Set(["template-1"]),
+            new Set(["template-1"]),
             "repository",
           );
         });
@@ -476,7 +476,7 @@ describe("useTemplateOperations - Mutation Killers", () => {
         );
         await act(async () => {
           await result.current.deleteSelectedWorkflows(
-            /* @__PURE__ */ new Set(["template-1"]),
+            new Set(["template-1"]),
             "repository",
           );
         });
@@ -515,7 +515,7 @@ describe("useTemplateOperations - Mutation Killers", () => {
         );
         await act(async () => {
           await result.current.deleteSelectedWorkflows(
-            /* @__PURE__ */ new Set(["template-1"]),
+            new Set(["template-1"]),
             "repository",
           );
         });
@@ -560,7 +560,7 @@ describe("useTemplateOperations - Mutation Killers", () => {
         );
         act(() => {
           result.current.deleteSelectedAgents(
-            /* @__PURE__ */ new Set(["agent-1"]),
+            new Set(["agent-1"]),
           );
         });
         expect(mockShowConfirm).toHaveBeenCalled();
@@ -604,7 +604,7 @@ describe("useTemplateOperations - Mutation Killers", () => {
         );
         act(() => {
           result.current.deleteSelectedAgents(
-            /* @__PURE__ */ new Set(["agent-1", "agent-2"]),
+            new Set(["agent-1", "agent-2"]),
           );
         });
         expect(mockShowError).toHaveBeenCalledWith(
@@ -652,7 +652,7 @@ describe("useTemplateOperations - Mutation Killers", () => {
         );
         act(() => {
           result.current.deleteSelectedAgents(
-            /* @__PURE__ */ new Set(["agent-1", "agent-2"]),
+            new Set(["agent-1", "agent-2"]),
           );
         });
         expect(mockShowConfirm).toHaveBeenCalledWith(
@@ -699,7 +699,7 @@ describe("useTemplateOperations - Mutation Killers", () => {
         );
         act(() => {
           result.current.deleteSelectedAgents(
-            /* @__PURE__ */ new Set(["agent-1", "agent-2"]),
+            new Set(["agent-1", "agent-2"]),
           );
         });
         expect(mockShowConfirm).toHaveBeenCalledWith(
@@ -744,7 +744,7 @@ describe("useTemplateOperations - Mutation Killers", () => {
         );
         act(() => {
           result.current.deleteSelectedAgents(
-            /* @__PURE__ */ new Set(["agent-1"]),
+            new Set(["agent-1"]),
           );
         });
         expect(mockShowConfirm).toHaveBeenCalled();
@@ -781,7 +781,7 @@ describe("useTemplateOperations - Mutation Killers", () => {
         );
         act(() => {
           result.current.deleteSelectedAgents(
-            /* @__PURE__ */ new Set(["agent-1"]),
+            new Set(["agent-1"]),
           );
         });
         expect(mockShowError).toHaveBeenCalled();
@@ -819,7 +819,7 @@ describe("useTemplateOperations - Mutation Killers", () => {
         );
         act(() => {
           result.current.deleteSelectedAgents(
-            /* @__PURE__ */ new Set(["agent-1"]),
+            new Set(["agent-1"]),
           );
         });
         expect(mockShowError).toHaveBeenCalled();
@@ -857,7 +857,7 @@ describe("useTemplateOperations - Mutation Killers", () => {
         );
         act(() => {
           result.current.deleteSelectedAgents(
-            /* @__PURE__ */ new Set(["agent-1"]),
+            new Set(["agent-1"]),
           );
         });
         expect(mockShowError).toHaveBeenCalled();
@@ -897,7 +897,7 @@ describe("useTemplateOperations - Mutation Killers", () => {
         );
         await act(async () => {
           await result.current.deleteSelectedWorkflows(
-            /* @__PURE__ */ new Set(["template-1"]),
+            new Set(["template-1"]),
             "repository",
           );
         });
@@ -935,7 +935,7 @@ describe("useTemplateOperations - Mutation Killers", () => {
         );
         await act(async () => {
           await result.current.deleteSelectedWorkflows(
-            /* @__PURE__ */ new Set(["template-1"]),
+            new Set(["template-1"]),
             "repository",
           );
         });
@@ -974,7 +974,7 @@ describe("useTemplateOperations - Mutation Killers", () => {
         );
         await act(async () => {
           await result.current.deleteSelectedWorkflows(
-            /* @__PURE__ */ new Set(["template-1"]),
+            new Set(["template-1"]),
             "repository",
           );
         });

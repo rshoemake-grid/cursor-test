@@ -37,14 +37,14 @@ describe("ExecutionStateManager", () => {
       const pendingExec1 = {
         id: "pending-1",
         status: "running",
-        startedAt: /* @__PURE__ */ new Date(),
+        startedAt: new Date(),
         nodes: {},
         logs: [],
       };
       const pendingExec2 = {
         id: "pending-2",
         status: "running",
-        startedAt: /* @__PURE__ */ new Date(),
+        startedAt: new Date(),
         nodes: {},
         logs: [],
       };
@@ -62,7 +62,7 @@ describe("ExecutionStateManager", () => {
       const existingExec = {
         id: "exec-1",
         status: "running",
-        startedAt: /* @__PURE__ */ new Date(),
+        startedAt: new Date(),
         nodes: {},
         logs: [],
       };
@@ -104,7 +104,7 @@ describe("ExecutionStateManager", () => {
       const exec = {
         id: "exec-1",
         status: "running",
-        startedAt: /* @__PURE__ */ new Date(),
+        startedAt: new Date(),
         nodes: {},
         logs: [],
       };
@@ -128,14 +128,14 @@ describe("ExecutionStateManager", () => {
       const exec1 = {
         id: "exec-1",
         status: "running",
-        startedAt: /* @__PURE__ */ new Date(),
+        startedAt: new Date(),
         nodes: {},
         logs: [],
       };
       const exec2 = {
         id: "exec-2",
         status: "running",
-        startedAt: /* @__PURE__ */ new Date(),
+        startedAt: new Date(),
         nodes: {},
         logs: [],
       };
@@ -155,7 +155,7 @@ describe("ExecutionStateManager", () => {
       const exec = {
         id: "exec-1",
         status: "running",
-        startedAt: /* @__PURE__ */ new Date(),
+        startedAt: new Date(),
         nodes: {},
         logs: [],
       };
@@ -182,14 +182,14 @@ describe("ExecutionStateManager", () => {
       const exec1 = {
         id: "exec-1",
         status: "running",
-        startedAt: /* @__PURE__ */ new Date(),
+        startedAt: new Date(),
         nodes: {},
         logs: [],
       };
       const exec2 = {
         id: "exec-2",
         status: "running",
-        startedAt: /* @__PURE__ */ new Date(),
+        startedAt: new Date(),
         nodes: {},
         logs: [],
       };
@@ -210,14 +210,14 @@ describe("ExecutionStateManager", () => {
       const exec = {
         id: "exec-1",
         status: "running",
-        startedAt: /* @__PURE__ */ new Date(),
+        startedAt: new Date(),
         nodes: {},
         logs: [],
       };
       const tabs = [createMockTab("workflow-1", [exec])];
       const newLog = {
         message: "New log",
-        timestamp: /* @__PURE__ */ new Date(),
+        timestamp: new Date(),
       };
       const result = manager.handleExecutionLogUpdate(
         tabs,
@@ -232,14 +232,14 @@ describe("ExecutionStateManager", () => {
       const exec1 = {
         id: "exec-1",
         status: "running",
-        startedAt: /* @__PURE__ */ new Date(),
+        startedAt: new Date(),
         nodes: {},
         logs: [],
       };
       const exec2 = {
         id: "exec-2",
         status: "running",
-        startedAt: /* @__PURE__ */ new Date(),
+        startedAt: new Date(),
         nodes: {},
         logs: [],
       };
@@ -269,7 +269,7 @@ describe("ExecutionStateManager", () => {
       const exec = {
         id: "exec-1",
         status: "running",
-        startedAt: /* @__PURE__ */ new Date(),
+        startedAt: new Date(),
         nodes: {},
         logs: [],
       };
@@ -287,7 +287,7 @@ describe("ExecutionStateManager", () => {
       const exec = {
         id: "exec-1",
         status: "running",
-        startedAt: /* @__PURE__ */ new Date(),
+        startedAt: new Date(),
         nodes: {},
         logs: [],
       };
@@ -304,7 +304,7 @@ describe("ExecutionStateManager", () => {
       const exec = {
         id: "exec-1",
         status: "running",
-        startedAt: /* @__PURE__ */ new Date(),
+        startedAt: new Date(),
         nodes: {},
         logs: [],
       };
@@ -318,11 +318,11 @@ describe("ExecutionStateManager", () => {
       expect(result[0].executions[0].completedAt).toBeDefined();
     });
     it("should preserve completedAt when status is running", () => {
-      const existingCompletedAt = /* @__PURE__ */ new Date("2024-01-01");
+      const existingCompletedAt = new Date("2024-01-01");
       const exec = {
         id: "exec-1",
         status: "running",
-        startedAt: /* @__PURE__ */ new Date(),
+        startedAt: new Date(),
         completedAt: existingCompletedAt,
         nodes: {},
         logs: [],
@@ -341,7 +341,7 @@ describe("ExecutionStateManager", () => {
       const exec = {
         id: "exec-1",
         status: "running",
-        startedAt: /* @__PURE__ */ new Date(),
+        startedAt: new Date(),
         nodes: {},
         logs: [],
       };
@@ -356,11 +356,11 @@ describe("ExecutionStateManager", () => {
       expect(result[0].executions[0].completedAt).toBeUndefined();
     });
     it("should preserve existing completedAt when status changes to running", () => {
-      const existingCompletedAt = /* @__PURE__ */ new Date("2024-01-01");
+      const existingCompletedAt = new Date("2024-01-01");
       const exec = {
         id: "exec-1",
         status: "completed",
-        startedAt: /* @__PURE__ */ new Date(),
+        startedAt: new Date(),
         completedAt: existingCompletedAt,
         nodes: {},
         logs: [],
@@ -376,11 +376,11 @@ describe("ExecutionStateManager", () => {
       expect(result[0].executions[0].completedAt).toBe(existingCompletedAt);
     });
     it("should use exec.completedAt branch when status is not completed or failed", () => {
-      const existingCompletedAt = /* @__PURE__ */ new Date("2024-01-01");
+      const existingCompletedAt = new Date("2024-01-01");
       const exec = {
         id: "exec-1",
         status: "running",
-        startedAt: /* @__PURE__ */ new Date(),
+        startedAt: new Date(),
         completedAt: existingCompletedAt,
         nodes: {},
         logs: [],
@@ -408,14 +408,14 @@ describe("ExecutionStateManager", () => {
       const exec1 = {
         id: "exec-1",
         status: "running",
-        startedAt: /* @__PURE__ */ new Date(),
+        startedAt: new Date(),
         nodes: {},
         logs: [],
       };
       const exec2 = {
         id: "exec-2",
         status: "running",
-        startedAt: /* @__PURE__ */ new Date(),
+        startedAt: new Date(),
         nodes: {},
         logs: [],
       };
@@ -437,7 +437,7 @@ describe("ExecutionStateManager", () => {
       const exec = {
         id: "exec-1",
         status: "running",
-        startedAt: /* @__PURE__ */ new Date(),
+        startedAt: new Date(),
         nodes: {},
         logs: [],
       };
@@ -456,7 +456,7 @@ describe("ExecutionStateManager", () => {
       const exec = {
         id: "exec-1",
         status: "running",
-        startedAt: /* @__PURE__ */ new Date(),
+        startedAt: new Date(),
         nodes: { "node-1": { status: "old" } },
         logs: [],
       };
@@ -490,14 +490,14 @@ describe("ExecutionStateManager", () => {
       const exec1 = {
         id: "exec-1",
         status: "running",
-        startedAt: /* @__PURE__ */ new Date(),
+        startedAt: new Date(),
         nodes: { "node-1": { status: "old" } },
         logs: [],
       };
       const exec2 = {
         id: "exec-2",
         status: "running",
-        startedAt: /* @__PURE__ */ new Date(),
+        startedAt: new Date(),
         nodes: {},
         logs: [],
       };

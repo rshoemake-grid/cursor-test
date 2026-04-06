@@ -162,6 +162,12 @@ function GCPPubSubEditor({ node, onConfigUpdate }) {
           className="w-full px-3 py-2 border border-gray-300 rounded-lg text-xs font-mono focus:ring-2 focus:ring-primary-500"
           aria-label="GCP service account credentials"
         />
+        <p className="text-xs text-gray-500 mt-1">
+          Leave empty to use Application Default Credentials on the API server; local dev may
+          use <code className="text-xs">gcloud auth application-default login</code> when the
+          credentials file is missing — see <code className="text-xs">GCP_BROWSER_AUTH_ON_MISSING_ADC</code>{" "}
+          in <code className="text-xs">.env.example</code>.
+        </p>
       </div>
     </div>
   );

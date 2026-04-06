@@ -26,7 +26,7 @@ describe("useTabInitialization", () => {
     });
     mockSetActiveTabId = jest.fn();
     mockTabsRef = { current: initialTabs };
-    mockProcessedKeys = { current: /* @__PURE__ */ new Set() };
+    mockProcessedKeys = { current: new Set() };
   });
   afterEach(() => {
     jest.runOnlyPendingTimers();

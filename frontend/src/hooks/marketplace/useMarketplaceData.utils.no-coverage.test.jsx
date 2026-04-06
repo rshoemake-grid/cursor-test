@@ -152,7 +152,7 @@ describe("useMarketplaceData.utils - No Coverage Paths", () => {
       const item = { published_at: "2024-01-01T00:00:00Z" };
       const timestamp = getSortTimestamp(item);
       expect(timestamp).toBe(
-        /* @__PURE__ */ new Date("2024-01-01T00:00:00Z").getTime(),
+        new Date("2024-01-01T00:00:00Z").getTime(),
       );
     });
     it("should return 0 when published_at is null", () => {

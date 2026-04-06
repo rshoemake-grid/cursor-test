@@ -78,14 +78,14 @@ describe("useExecutionManagement - Mutation Killers", () => {
             {
               id: "pending-1",
               status: "running",
-              startedAt: /* @__PURE__ */ new Date(),
+              startedAt: new Date(),
               nodes: {},
               logs: [],
             },
             {
               id: "pending-2",
               status: "running",
-              startedAt: /* @__PURE__ */ new Date(),
+              startedAt: new Date(),
               nodes: {},
               logs: [],
             },
@@ -168,7 +168,7 @@ describe("useExecutionManagement - Mutation Killers", () => {
         const execution = {
           id: "exec-1",
           status: "running",
-          startedAt: /* @__PURE__ */ new Date(),
+          startedAt: new Date(),
           nodes: {},
           logs: [],
         };
@@ -208,7 +208,7 @@ describe("useExecutionManagement - Mutation Killers", () => {
         const execution = {
           id: "exec-1",
           status: "running",
-          startedAt: /* @__PURE__ */ new Date(),
+          startedAt: new Date(),
           nodes: {},
           logs: [],
         };
@@ -249,14 +249,14 @@ describe("useExecutionManagement - Mutation Killers", () => {
         const execution1 = {
           id: "exec-1",
           status: "running",
-          startedAt: /* @__PURE__ */ new Date(),
+          startedAt: new Date(),
           nodes: {},
           logs: [],
         };
         const execution2 = {
           id: "exec-2",
           status: "running",
-          startedAt: /* @__PURE__ */ new Date(),
+          startedAt: new Date(),
           nodes: {},
           logs: [],
         };
@@ -291,14 +291,14 @@ describe("useExecutionManagement - Mutation Killers", () => {
         const execution1 = {
           id: "exec-1",
           status: "running",
-          startedAt: /* @__PURE__ */ new Date(),
+          startedAt: new Date(),
           nodes: {},
           logs: [],
         };
         const execution2 = {
           id: "exec-2",
           status: "running",
-          startedAt: /* @__PURE__ */ new Date(),
+          startedAt: new Date(),
           nodes: {},
           logs: [],
         };
@@ -340,7 +340,7 @@ describe("useExecutionManagement - Mutation Killers", () => {
             {
               id: "exec-1",
               status: "running",
-              startedAt: /* @__PURE__ */ new Date(),
+              startedAt: new Date(),
               nodes: {},
               logs: [],
             },
@@ -376,7 +376,7 @@ describe("useExecutionManagement - Mutation Killers", () => {
         const execution = {
           id: "exec-1",
           status: "running",
-          startedAt: /* @__PURE__ */ new Date(),
+          startedAt: new Date(),
           nodes: {},
           logs: [],
         };
@@ -412,14 +412,14 @@ describe("useExecutionManagement - Mutation Killers", () => {
         const execution1 = {
           id: "exec-1",
           status: "running",
-          startedAt: /* @__PURE__ */ new Date(),
+          startedAt: new Date(),
           nodes: {},
           logs: [],
         };
         const execution2 = {
           id: "exec-2",
           status: "running",
-          startedAt: /* @__PURE__ */ new Date(),
+          startedAt: new Date(),
           nodes: {},
           logs: [],
         };
@@ -459,7 +459,7 @@ describe("useExecutionManagement - Mutation Killers", () => {
         const execution = {
           id: "exec-1",
           status: "running",
-          startedAt: /* @__PURE__ */ new Date(),
+          startedAt: new Date(),
           nodes: {},
           logs: [],
         };
@@ -501,7 +501,7 @@ describe("useExecutionManagement - Mutation Killers", () => {
         const execution = {
           id: "exec-1",
           status: "running",
-          startedAt: /* @__PURE__ */ new Date(),
+          startedAt: new Date(),
           nodes: {},
           logs: [],
         };
@@ -543,10 +543,10 @@ describe("useExecutionManagement - Mutation Killers", () => {
         const execution = {
           id: "exec-1",
           status: "running",
-          startedAt: /* @__PURE__ */ new Date(),
+          startedAt: new Date(),
           nodes: {},
           logs: [],
-          completedAt: /* @__PURE__ */ new Date(),
+          completedAt: new Date(),
           // Pre-existing completedAt
         };
         const tabWithExecution = {
@@ -622,7 +622,7 @@ describe("useExecutionManagement - Mutation Killers", () => {
       const execution = {
         id: "exec-1",
         status: "running",
-        startedAt: /* @__PURE__ */ new Date(),
+        startedAt: new Date(),
         nodes: {},
         logs: [],
       };
@@ -634,8 +634,8 @@ describe("useExecutionManagement - Mutation Killers", () => {
       mockApi.getExecution.mockResolvedValue({
         id: "exec-1",
         status: "completed",
-        started_at: /* @__PURE__ */ new Date().toISOString(),
-        completed_at: /* @__PURE__ */ new Date().toISOString(),
+        started_at: new Date().toISOString(),
+        completed_at: new Date().toISOString(),
         node_states: {},
         logs: [],
       });
@@ -662,7 +662,7 @@ describe("useExecutionManagement - Mutation Killers", () => {
       const execution = {
         id: "exec-1",
         status: "running",
-        startedAt: /* @__PURE__ */ new Date(),
+        startedAt: new Date(),
         nodes: {},
         logs: [],
       };
@@ -674,7 +674,7 @@ describe("useExecutionManagement - Mutation Killers", () => {
       mockApi.getExecution.mockResolvedValue({
         id: "exec-1",
         status: "running",
-        started_at: /* @__PURE__ */ new Date().toISOString(),
+        started_at: new Date().toISOString(),
         node_states: {},
         logs: [],
       });
@@ -701,7 +701,7 @@ describe("useExecutionManagement - Mutation Killers", () => {
       const execution = {
         id: "exec-1",
         status: "running",
-        startedAt: /* @__PURE__ */ new Date(),
+        startedAt: new Date(),
         nodes: {},
         logs: [],
       };
@@ -713,8 +713,8 @@ describe("useExecutionManagement - Mutation Killers", () => {
       mockApi.getExecution.mockResolvedValue({
         id: "exec-1",
         status: "completed",
-        started_at: /* @__PURE__ */ new Date().toISOString(),
-        completed_at: /* @__PURE__ */ new Date().toISOString(),
+        started_at: new Date().toISOString(),
+        completed_at: new Date().toISOString(),
         node_states: {},
         logs: [],
       });
@@ -747,7 +747,7 @@ describe("useExecutionManagement - Mutation Killers", () => {
       const execution = {
         id: "exec-1",
         status: "running",
-        startedAt: /* @__PURE__ */ new Date(),
+        startedAt: new Date(),
         nodes: {},
         logs: [],
       };
@@ -759,8 +759,8 @@ describe("useExecutionManagement - Mutation Killers", () => {
       mockApi.getExecution.mockResolvedValue({
         id: "exec-1",
         status: "failed",
-        started_at: /* @__PURE__ */ new Date().toISOString(),
-        completed_at: /* @__PURE__ */ new Date().toISOString(),
+        started_at: new Date().toISOString(),
+        completed_at: new Date().toISOString(),
         node_states: {},
         logs: [],
       });
@@ -793,7 +793,7 @@ describe("useExecutionManagement - Mutation Killers", () => {
       const execution = {
         id: "exec-real-1",
         status: "running",
-        startedAt: /* @__PURE__ */ new Date(),
+        startedAt: new Date(),
         nodes: {},
         logs: [],
       };
@@ -827,7 +827,7 @@ describe("useExecutionManagement - Mutation Killers", () => {
       const execution = {
         id: "pending-123",
         status: "running",
-        startedAt: /* @__PURE__ */ new Date(),
+        startedAt: new Date(),
         nodes: {},
         logs: [],
       };
@@ -860,7 +860,7 @@ describe("useExecutionManagement - Mutation Killers", () => {
       const execution = {
         id: "exec-1",
         status: "running",
-        startedAt: /* @__PURE__ */ new Date(),
+        startedAt: new Date(),
         nodes: {},
         logs: [],
       };
@@ -872,7 +872,7 @@ describe("useExecutionManagement - Mutation Killers", () => {
       mockApi.getExecution.mockResolvedValue({
         id: "exec-1",
         status: "completed",
-        started_at: /* @__PURE__ */ new Date().toISOString(),
+        started_at: new Date().toISOString(),
         completed_at: null,
         // null value
         node_states: {},
@@ -907,7 +907,7 @@ describe("useExecutionManagement - Mutation Killers", () => {
       const execution = {
         id: "exec-1",
         status: "running",
-        startedAt: /* @__PURE__ */ new Date(),
+        startedAt: new Date(),
         nodes: {},
         logs: [],
       };
@@ -919,7 +919,7 @@ describe("useExecutionManagement - Mutation Killers", () => {
       mockApi.getExecution.mockResolvedValue({
         id: "exec-1",
         status: "running",
-        started_at: /* @__PURE__ */ new Date().toISOString(),
+        started_at: new Date().toISOString(),
         node_states: null,
         // null value
         logs: [],
@@ -953,7 +953,7 @@ describe("useExecutionManagement - Mutation Killers", () => {
       const execution = {
         id: "exec-1",
         status: "running",
-        startedAt: /* @__PURE__ */ new Date(),
+        startedAt: new Date(),
         nodes: {},
         logs: [],
       };
@@ -965,7 +965,7 @@ describe("useExecutionManagement - Mutation Killers", () => {
       mockApi.getExecution.mockResolvedValue({
         id: "exec-1",
         status: "running",
-        started_at: /* @__PURE__ */ new Date().toISOString(),
+        started_at: new Date().toISOString(),
         node_states: {},
         logs: null,
         // null value
@@ -999,7 +999,7 @@ describe("useExecutionManagement - Mutation Killers", () => {
       const execution = {
         id: "exec-1",
         status: "running",
-        startedAt: /* @__PURE__ */ new Date(),
+        startedAt: new Date(),
         nodes: {},
         logs: [],
       };

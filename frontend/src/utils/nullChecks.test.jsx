@@ -33,12 +33,12 @@ describe("nullChecks utilities", () => {
   });
   describe("hasSize", () => {
     it("should return true when set has size greater than threshold", () => {
-      const set = /* @__PURE__ */ new Set(["a", "b", "c"]);
+      const set = new Set(["a", "b", "c"]);
       expect(hasSize(set, 1)).toBe(true);
       expect(hasSize(set, 2)).toBe(true);
     });
     it("should return false when set size equals threshold", () => {
-      const set = /* @__PURE__ */ new Set(["a"]);
+      const set = new Set(["a"]);
       expect(hasSize(set, 1)).toBe(false);
     });
     it("should return false for null set", () => {
@@ -48,19 +48,19 @@ describe("nullChecks utilities", () => {
       expect(hasSize(void 0, 1)).toBe(false);
     });
     it("should use default threshold of 1", () => {
-      const set = /* @__PURE__ */ new Set(["a", "b"]);
+      const set = new Set(["a", "b"]);
       expect(hasSize(set)).toBe(true);
-      expect(hasSize(/* @__PURE__ */ new Set(["a"]))).toBe(false);
+      expect(hasSize(new Set(["a"]))).toBe(false);
     });
   });
   describe("hasMultipleSelected", () => {
     it("should return true when multiple items selected", () => {
-      const set = /* @__PURE__ */ new Set(["a", "b"]);
+      const set = new Set(["a", "b"]);
       expect(hasMultipleSelected(set)).toBe(true);
     });
     it("should return false when one or zero items selected", () => {
-      expect(hasMultipleSelected(/* @__PURE__ */ new Set(["a"]))).toBe(false);
-      expect(hasMultipleSelected(/* @__PURE__ */ new Set())).toBe(false);
+      expect(hasMultipleSelected(new Set(["a"]))).toBe(false);
+      expect(hasMultipleSelected(new Set())).toBe(false);
     });
     it("should return false for null", () => {
       expect(hasMultipleSelected(null)).toBe(false);

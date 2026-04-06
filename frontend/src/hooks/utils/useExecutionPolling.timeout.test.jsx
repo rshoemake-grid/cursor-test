@@ -27,7 +27,7 @@ describe("useExecutionPolling - Timeout Guards", () => {
       const runningExecution = {
         id: "exec-1",
         status: "running",
-        startedAt: /* @__PURE__ */ new Date(),
+        startedAt: new Date(),
       };
       tabsRef.current = [
         {
@@ -114,7 +114,7 @@ describe("useExecutionPolling - Timeout Guards", () => {
       const runningExecution = {
         id: "exec-1",
         status: "running",
-        startedAt: /* @__PURE__ */ new Date(),
+        startedAt: new Date(),
       };
       tabsRef.current = [
         {
@@ -150,7 +150,7 @@ describe("useExecutionPolling - Timeout Guards", () => {
       const runningExecutions = Array.from({ length: 60 }, (_, i) => ({
         id: `exec-${i}`,
         status: "running",
-        startedAt: /* @__PURE__ */ new Date(),
+        startedAt: new Date(),
       }));
       tabsRef.current = [
         {

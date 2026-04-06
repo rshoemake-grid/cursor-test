@@ -10,7 +10,7 @@ function useModelExpansion() {
   }, []);
   const toggleModel = useCallback((providerId, modelName) => {
     setExpandedModels((prev) => {
-      const providerModels = prev[providerId] || /* @__PURE__ */ new Set();
+      const providerModels = prev[providerId] || new Set();
       const newSet = new Set(providerModels);
       if (newSet.has(modelName)) {
         newSet.delete(modelName);

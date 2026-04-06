@@ -56,7 +56,7 @@ function deleteAgentsFromStorage(
 }
 function extractAgentIds(agents) {
   if (!hasArrayItems(agents)) {
-    return /* @__PURE__ */ new Set();
+    return new Set();
   }
   return new Set(
     agents
@@ -68,6 +68,6 @@ function updateStateAfterDeletion(agentIdsToDelete, setAgents, setSelectedIds) {
   setAgents((prevAgents) =>
     prevAgents.filter((a) => !agentIdsToDelete.has(a.id)),
   );
-  setSelectedIds(/* @__PURE__ */ new Set());
+  setSelectedIds(new Set());
 }
 export { deleteAgentsFromStorage, extractAgentIds, updateStateAfterDeletion };

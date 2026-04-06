@@ -70,7 +70,7 @@ describe("useAgentDeletion", () => {
         }),
       );
       await act(async () => {
-        await result.current.deleteSelectedAgents(/* @__PURE__ */ new Set());
+        await result.current.deleteSelectedAgents(new Set());
       });
       expect(mockShowConfirm).not.toHaveBeenCalled();
     });
@@ -95,7 +95,7 @@ describe("useAgentDeletion", () => {
       );
       await act(async () => {
         await result.current.deleteSelectedAgents(
-          /* @__PURE__ */ new Set(["agent-1", "agent-2"]),
+          new Set(["agent-1", "agent-2"]),
         );
       });
       expect(mockShowError).toHaveBeenCalledWith(
@@ -118,7 +118,7 @@ describe("useAgentDeletion", () => {
       );
       await act(async () => {
         await result.current.deleteSelectedAgents(
-          /* @__PURE__ */ new Set(["agent-1"]),
+          new Set(["agent-1"]),
         );
       });
       expect(mockShowError).toHaveBeenCalled();
@@ -141,7 +141,7 @@ describe("useAgentDeletion", () => {
       );
       await act(async () => {
         await result.current.deleteSelectedAgents(
-          /* @__PURE__ */ new Set(["agent-1", "agent-2"]),
+          new Set(["agent-1", "agent-2"]),
         );
       });
       expect(mockShowConfirm).toHaveBeenCalledWith(
@@ -167,14 +167,14 @@ describe("useAgentDeletion", () => {
       );
       await act(async () => {
         await result.current.deleteSelectedAgents(
-          /* @__PURE__ */ new Set(["agent-1"]),
+          new Set(["agent-1"]),
         );
       });
       expect(mockShowConfirm).toHaveBeenCalled();
       expect(mockStorage.setItem).toHaveBeenCalled();
       expect(mockSetAgents).toHaveBeenCalled();
       expect(mockSetSelectedAgentIds).toHaveBeenCalledWith(
-        /* @__PURE__ */ new Set(),
+        new Set(),
       );
       expect(mockShowSuccess).toHaveBeenCalled();
     });
@@ -193,7 +193,7 @@ describe("useAgentDeletion", () => {
       );
       await act(async () => {
         await result.current.deleteSelectedAgents(
-          /* @__PURE__ */ new Set(["agent-1"]),
+          new Set(["agent-1"]),
         );
       });
       expect(mockShowError).toHaveBeenCalledWith(
@@ -213,7 +213,7 @@ describe("useAgentDeletion", () => {
       );
       await act(async () => {
         await result.current.deleteSelectedAgents(
-          /* @__PURE__ */ new Set(["agent-1"]),
+          new Set(["agent-1"]),
         );
       });
       expect(mockShowError).toHaveBeenCalled();
@@ -234,7 +234,7 @@ describe("useAgentDeletion", () => {
         }),
       );
       await act(async () => {
-        await result.current.deleteSelectedAgents(/* @__PURE__ */ new Set());
+        await result.current.deleteSelectedAgents(new Set());
       });
       expect(mockShowConfirm).not.toHaveBeenCalled();
     });
@@ -259,7 +259,7 @@ describe("useAgentDeletion", () => {
       );
       await act(async () => {
         await result.current.deleteSelectedAgents(
-          /* @__PURE__ */ new Set(["agent-1", "agent-2"]),
+          new Set(["agent-1", "agent-2"]),
         );
       });
       expect(mockShowError).toHaveBeenCalledWith(
@@ -279,7 +279,7 @@ describe("useAgentDeletion", () => {
       );
       await act(async () => {
         await result.current.deleteSelectedAgents(
-          /* @__PURE__ */ new Set(["agent-1"]),
+          new Set(["agent-1"]),
         );
       });
       expect(mockShowError).toHaveBeenCalled();
@@ -298,7 +298,7 @@ describe("useAgentDeletion", () => {
       );
       await act(async () => {
         await result.current.deleteSelectedAgents(
-          /* @__PURE__ */ new Set(["agent-1"]),
+          new Set(["agent-1"]),
         );
       });
       expect(mockShowError).toHaveBeenCalledWith(
@@ -323,7 +323,7 @@ describe("useAgentDeletion", () => {
       );
       await act(async () => {
         await result.current.deleteSelectedAgents(
-          /* @__PURE__ */ new Set(["agent-1"]),
+          new Set(["agent-1"]),
         );
       });
       expect(mockShowError).toHaveBeenCalledWith(
@@ -349,7 +349,7 @@ describe("useAgentDeletion", () => {
       );
       await act(async () => {
         await result.current.deleteSelectedAgents(
-          /* @__PURE__ */ new Set(["agent-1", "agent-2"]),
+          new Set(["agent-1", "agent-2"]),
         );
       });
       expect(mockShowConfirm).toHaveBeenCalledWith(
@@ -379,7 +379,7 @@ describe("useAgentDeletion", () => {
       );
       await act(async () => {
         await result.current.deleteSelectedAgents(
-          /* @__PURE__ */ new Set(["agent-1", "agent-2"]),
+          new Set(["agent-1", "agent-2"]),
         );
       });
       expect(mockShowConfirm).toHaveBeenCalledWith(
@@ -407,7 +407,7 @@ describe("useAgentDeletion", () => {
       );
       await act(async () => {
         await result.current.deleteSelectedAgents(
-          /* @__PURE__ */ new Set(["agent-1"]),
+          new Set(["agent-1"]),
         );
       });
       expect(mockStorage.setItem).not.toHaveBeenCalled();
@@ -424,13 +424,13 @@ describe("useAgentDeletion", () => {
       );
       await act(async () => {
         await result.current.deleteSelectedAgents(
-          /* @__PURE__ */ new Set(["agent-1"]),
+          new Set(["agent-1"]),
         );
       });
       expect(mockStorage.setItem).toHaveBeenCalled();
       expect(mockSetAgents).toHaveBeenCalled();
       expect(mockSetSelectedAgentIds).toHaveBeenCalledWith(
-        /* @__PURE__ */ new Set(),
+        new Set(),
       );
       expect(mockShowSuccess).toHaveBeenCalledWith(
         "Successfully deleted 1 agent(s)",
@@ -448,7 +448,7 @@ describe("useAgentDeletion", () => {
       );
       await act(async () => {
         await result.current.deleteSelectedAgents(
-          /* @__PURE__ */ new Set(["agent-1"]),
+          new Set(["agent-1"]),
         );
       });
       expect(mockShowError).toHaveBeenCalledWith("Storage not available");
@@ -468,7 +468,7 @@ describe("useAgentDeletion", () => {
       );
       await act(async () => {
         await result.current.deleteSelectedAgents(
-          /* @__PURE__ */ new Set(["agent-1"]),
+          new Set(["agent-1"]),
         );
       });
       expect(mockShowError).toHaveBeenCalledWith(
@@ -488,7 +488,7 @@ describe("useAgentDeletion", () => {
       );
       await act(async () => {
         await result.current.deleteSelectedAgents(
-          /* @__PURE__ */ new Set(["agent-1"]),
+          new Set(["agent-1"]),
         );
       });
       expect(mockStorage.setItem).not.toHaveBeenCalled();
@@ -510,7 +510,7 @@ describe("useAgentDeletion", () => {
       );
       await act(async () => {
         await result.current.deleteSelectedAgents(
-          /* @__PURE__ */ new Set(["agent-1"]),
+          new Set(["agent-1"]),
         );
       });
       expect(mockShowConfirm).toHaveBeenCalled();
@@ -530,7 +530,7 @@ describe("useAgentDeletion", () => {
       );
       await act(async () => {
         await result.current.deleteSelectedAgents(
-          /* @__PURE__ */ new Set(["agent-1"]),
+          new Set(["agent-1"]),
         );
       });
       expect(mockShowError).toHaveBeenCalled();
@@ -551,7 +551,7 @@ describe("useAgentDeletion", () => {
       );
       await act(async () => {
         await result.current.deleteSelectedAgents(
-          /* @__PURE__ */ new Set(["agent-1", "agent-2"]),
+          new Set(["agent-1", "agent-2"]),
         );
       });
       expect(mockShowError).toHaveBeenCalledWith(
@@ -572,7 +572,7 @@ describe("useAgentDeletion", () => {
       );
       await act(async () => {
         await result.current.deleteSelectedAgents(
-          /* @__PURE__ */ new Set(["agent-1"]),
+          new Set(["agent-1"]),
         );
       });
       expect(mockSetAgents).toHaveBeenCalled();
@@ -591,7 +591,7 @@ describe("useAgentDeletion", () => {
       );
       await act(async () => {
         await result.current.deleteSelectedAgents(
-          /* @__PURE__ */ new Set(["agent-1"]),
+          new Set(["agent-1"]),
         );
       });
       expect(mockSetAgents).not.toHaveBeenCalled();
@@ -610,7 +610,7 @@ describe("useAgentDeletion", () => {
       );
       await act(async () => {
         await result.current.deleteSelectedAgents(
-          /* @__PURE__ */ new Set(["agent-1"]),
+          new Set(["agent-1"]),
         );
       });
       expect(mockShowError).toHaveBeenCalledWith(
@@ -633,7 +633,7 @@ describe("useAgentDeletion", () => {
       );
       await act(async () => {
         await result.current.deleteSelectedAgents(
-          /* @__PURE__ */ new Set(["agent-1"]),
+          new Set(["agent-1"]),
         );
       });
       expect(mockShowError).toHaveBeenCalledWith(
@@ -653,7 +653,7 @@ describe("useAgentDeletion", () => {
         }),
       );
       await act(async () => {
-        await result.current.deleteSelectedAgents(/* @__PURE__ */ new Set());
+        await result.current.deleteSelectedAgents(new Set());
       });
       expect(mockShowError).not.toHaveBeenCalled();
       expect(mockShowConfirm).not.toHaveBeenCalled();
@@ -676,7 +676,7 @@ describe("useAgentDeletion", () => {
       );
       await act(async () => {
         await result.current.deleteSelectedAgents(
-          /* @__PURE__ */ new Set(["agent-1"]),
+          new Set(["agent-1"]),
         );
       });
       expect(mockShowConfirm).toHaveBeenCalled();
@@ -697,7 +697,7 @@ describe("useAgentDeletion", () => {
       );
       await act(async () => {
         await result.current.deleteSelectedAgents(
-          /* @__PURE__ */ new Set(["agent-1"]),
+          new Set(["agent-1"]),
         );
       });
       expect(mockShowError).not.toHaveBeenCalledWith(
@@ -717,7 +717,7 @@ describe("useAgentDeletion", () => {
       );
       await act(async () => {
         await result.current.deleteSelectedAgents(
-          /* @__PURE__ */ new Set(["agent-1"]),
+          new Set(["agent-1"]),
         );
       });
       expect(mockShowError).toHaveBeenCalledWith(
@@ -737,7 +737,7 @@ describe("useAgentDeletion", () => {
       );
       await act(async () => {
         await result.current.deleteSelectedAgents(
-          /* @__PURE__ */ new Set(["agent-1"]),
+          new Set(["agent-1"]),
         );
       });
       expect(mockShowConfirm).not.toHaveBeenCalled();
@@ -759,7 +759,7 @@ describe("useAgentDeletion", () => {
       );
       await act(async () => {
         await result.current.deleteSelectedAgents(
-          /* @__PURE__ */ new Set(["agent-1", "agent-2"]),
+          new Set(["agent-1", "agent-2"]),
         );
       });
       expect(mockShowError).toHaveBeenCalledWith(
@@ -781,7 +781,7 @@ describe("useAgentDeletion", () => {
       );
       await act(async () => {
         await result.current.deleteSelectedAgents(
-          /* @__PURE__ */ new Set(["agent-1"]),
+          new Set(["agent-1"]),
         );
       });
       expect(mockShowError).toHaveBeenCalledWith(
@@ -809,7 +809,7 @@ describe("useAgentDeletion", () => {
       );
       await act(async () => {
         await result.current.deleteSelectedAgents(
-          /* @__PURE__ */ new Set(["agent-1", "agent-2"]),
+          new Set(["agent-1", "agent-2"]),
         );
       });
       expect(mockShowError).toHaveBeenCalledWith(
@@ -833,7 +833,7 @@ describe("useAgentDeletion", () => {
       );
       await act(async () => {
         await result.current.deleteSelectedAgents(
-          /* @__PURE__ */ new Set(["agent-1"]),
+          new Set(["agent-1"]),
         );
       });
       expect(mockShowError).toHaveBeenCalledWith(
@@ -858,7 +858,7 @@ describe("useAgentDeletion", () => {
       );
       await act(async () => {
         await result.current.deleteSelectedAgents(
-          /* @__PURE__ */ new Set(["agent-1"]),
+          new Set(["agent-1"]),
         );
       });
       expect(mockShowError).toHaveBeenCalled();
@@ -876,7 +876,7 @@ describe("useAgentDeletion", () => {
       );
       await act(async () => {
         await result.current.deleteSelectedAgents(
-          /* @__PURE__ */ new Set(["agent-1"]),
+          new Set(["agent-1"]),
         );
       });
       expect(mockShowError).toHaveBeenCalled();
@@ -899,7 +899,7 @@ describe("useAgentDeletion", () => {
       );
       await act(async () => {
         await result.current.deleteSelectedAgents(
-          /* @__PURE__ */ new Set(["agent-1", "agent-2"]),
+          new Set(["agent-1", "agent-2"]),
         );
       });
       expect(mockShowConfirm).toHaveBeenCalledWith(
@@ -922,7 +922,7 @@ describe("useAgentDeletion", () => {
       );
       await act(async () => {
         await result.current.deleteSelectedAgents(
-          /* @__PURE__ */ new Set(["agent-1"]),
+          new Set(["agent-1"]),
         );
       });
       expect(mockShowConfirm).toHaveBeenCalledWith(
@@ -951,7 +951,7 @@ describe("useAgentDeletion", () => {
       );
       await act(async () => {
         await result.current.deleteSelectedAgents(
-          /* @__PURE__ */ new Set(["agent-1", "agent-2", "agent-3"]),
+          new Set(["agent-1", "agent-2", "agent-3"]),
         );
       });
       expect(mockSetAgents).toHaveBeenCalled();
@@ -996,7 +996,7 @@ describe("useAgentDeletion", () => {
       );
       await act(async () => {
         await result.current.deleteSelectedAgents(
-          /* @__PURE__ */ new Set([null, void 0, ""]),
+          new Set([null, void 0, ""]),
         );
       });
       expect(mockStorage.setItem).not.toHaveBeenCalled();
@@ -1015,7 +1015,7 @@ describe("useAgentDeletion", () => {
       );
       await act(async () => {
         await result.current.deleteSelectedRepositoryAgents(
-          /* @__PURE__ */ new Set(),
+          new Set(),
         );
       });
       expect(mockShowConfirm).not.toHaveBeenCalled();
@@ -1030,7 +1030,7 @@ describe("useAgentDeletion", () => {
       );
       await act(async () => {
         await result.current.deleteSelectedRepositoryAgents(
-          /* @__PURE__ */ new Set(["agent-1"]),
+          new Set(["agent-1"]),
         );
       });
       expect(mockShowError).toHaveBeenCalledWith("Storage not available");
@@ -1046,7 +1046,7 @@ describe("useAgentDeletion", () => {
       );
       await act(async () => {
         await result.current.deleteSelectedRepositoryAgents(
-          /* @__PURE__ */ new Set(["agent-1"]),
+          new Set(["agent-1"]),
         );
       });
       expect(mockShowConfirm).toHaveBeenCalled();
@@ -1067,7 +1067,7 @@ describe("useAgentDeletion", () => {
       );
       await act(async () => {
         await result.current.deleteSelectedRepositoryAgents(
-          /* @__PURE__ */ new Set(["agent-1"]),
+          new Set(["agent-1"]),
         );
       });
       expect(mockShowError).toHaveBeenCalledWith(
@@ -1088,7 +1088,7 @@ describe("useAgentDeletion", () => {
       );
       await act(async () => {
         await result.current.deleteSelectedRepositoryAgents(
-          /* @__PURE__ */ new Set(["agent-1"]),
+          new Set(["agent-1"]),
           void 0,
         );
       });
@@ -1105,7 +1105,7 @@ describe("useAgentDeletion", () => {
       );
       await act(async () => {
         await result.current.deleteSelectedRepositoryAgents(
-          /* @__PURE__ */ new Set(["agent-1"]),
+          new Set(["agent-1"]),
         );
       });
       expect(mockSetRepositoryAgents).not.toHaveBeenCalled();
@@ -1121,7 +1121,7 @@ describe("useAgentDeletion", () => {
       );
       await act(async () => {
         await result.current.deleteSelectedRepositoryAgents(
-          /* @__PURE__ */ new Set(["agent-1"]),
+          new Set(["agent-1"]),
         );
       });
       expect(mockShowError).toHaveBeenCalledWith(
@@ -1141,7 +1141,7 @@ describe("useAgentDeletion", () => {
       );
       await act(async () => {
         await result.current.deleteSelectedRepositoryAgents(
-          /* @__PURE__ */ new Set(["agent-1"]),
+          new Set(["agent-1"]),
         );
       });
       expect(mockShowError).toHaveBeenCalledWith(
@@ -1160,7 +1160,7 @@ describe("useAgentDeletion", () => {
       );
       await act(async () => {
         await result.current.deleteSelectedRepositoryAgents(
-          /* @__PURE__ */ new Set(),
+          new Set(),
         );
       });
       expect(mockShowError).not.toHaveBeenCalled();
@@ -1180,7 +1180,7 @@ describe("useAgentDeletion", () => {
       );
       await act(async () => {
         await result.current.deleteSelectedRepositoryAgents(
-          /* @__PURE__ */ new Set(["agent-1"]),
+          new Set(["agent-1"]),
         );
       });
       expect(mockShowSuccess).toHaveBeenCalledWith(
@@ -1201,7 +1201,7 @@ describe("useAgentDeletion", () => {
       );
       await act(async () => {
         await result.current.deleteSelectedRepositoryAgents(
-          /* @__PURE__ */ new Set(["agent-1"]),
+          new Set(["agent-1"]),
           mockOnRefresh,
         );
       });
@@ -1224,7 +1224,7 @@ describe("useAgentDeletion", () => {
       );
       await act(async () => {
         await result.current.deleteSelectedRepositoryAgents(
-          /* @__PURE__ */ new Set(["agent-1", "agent-2"]),
+          new Set(["agent-1", "agent-2"]),
         );
       });
       expect(mockSetRepositoryAgents).toHaveBeenCalled();
@@ -1263,7 +1263,7 @@ describe("useAgentDeletion", () => {
           );
           act(() => {
             result.current.deleteSelectedAgents(
-              /* @__PURE__ */ new Set(["agent-1"]),
+              new Set(["agent-1"]),
             );
           });
           expect(mockShowConfirm).toHaveBeenCalled();
@@ -1291,7 +1291,7 @@ describe("useAgentDeletion", () => {
           );
           act(() => {
             result.current.deleteSelectedAgents(
-              /* @__PURE__ */ new Set(["agent-1"]),
+              new Set(["agent-1"]),
             );
           });
           expect(mockShowConfirm).toHaveBeenCalled();
@@ -1318,7 +1318,7 @@ describe("useAgentDeletion", () => {
           );
           act(() => {
             result.current.deleteSelectedAgents(
-              /* @__PURE__ */ new Set(["agent-1"]),
+              new Set(["agent-1"]),
             );
           });
           expect(mockShowError).toHaveBeenCalled();
@@ -1347,7 +1347,7 @@ describe("useAgentDeletion", () => {
           );
           act(() => {
             result.current.deleteSelectedAgents(
-              /* @__PURE__ */ new Set(["agent-1"]),
+              new Set(["agent-1"]),
             );
           });
           expect(mockShowConfirm).toHaveBeenCalled();
@@ -1374,7 +1374,7 @@ describe("useAgentDeletion", () => {
           );
           act(() => {
             result.current.deleteSelectedAgents(
-              /* @__PURE__ */ new Set(["agent-1"]),
+              new Set(["agent-1"]),
             );
           });
           expect(mockShowError).toHaveBeenCalled();
@@ -1396,7 +1396,7 @@ describe("useAgentDeletion", () => {
           );
           act(() => {
             result.current.deleteSelectedAgents(
-              /* @__PURE__ */ new Set(["agent-1"]),
+              new Set(["agent-1"]),
             );
           });
           expect(mockStorage.setItem).not.toHaveBeenCalled();
@@ -1414,7 +1414,7 @@ describe("useAgentDeletion", () => {
           );
           act(() => {
             result.current.deleteSelectedAgents(
-              /* @__PURE__ */ new Set(["agent-1"]),
+              new Set(["agent-1"]),
             );
           });
           expect(mockStorage.setItem).not.toHaveBeenCalled();
@@ -1445,7 +1445,7 @@ describe("useAgentDeletion", () => {
           );
           act(() => {
             result.current.deleteSelectedAgents(
-              /* @__PURE__ */ new Set(["agent-1"]),
+              new Set(["agent-1"]),
             );
           });
           expect(mockShowConfirm).toHaveBeenCalled();
@@ -1479,7 +1479,7 @@ describe("useAgentDeletion", () => {
           );
           act(() => {
             result.current.deleteSelectedAgents(
-              /* @__PURE__ */ new Set(["agent-1", "agent-2"]),
+              new Set(["agent-1", "agent-2"]),
             );
           });
           expect(mockShowError).toHaveBeenCalledWith(
@@ -1517,7 +1517,7 @@ describe("useAgentDeletion", () => {
           );
           act(() => {
             result.current.deleteSelectedAgents(
-              /* @__PURE__ */ new Set(["agent-1", "agent-2"]),
+              new Set(["agent-1", "agent-2"]),
             );
           });
           expect(mockShowConfirm).toHaveBeenCalledWith(
@@ -1554,7 +1554,7 @@ describe("useAgentDeletion", () => {
           );
           act(() => {
             result.current.deleteSelectedAgents(
-              /* @__PURE__ */ new Set(["agent-1", "agent-2"]),
+              new Set(["agent-1", "agent-2"]),
             );
           });
           expect(mockShowConfirm).toHaveBeenCalledWith(
@@ -1588,7 +1588,7 @@ describe("useAgentDeletion", () => {
           );
           act(() => {
             result.current.deleteSelectedAgents(
-              /* @__PURE__ */ new Set(["agent-1"]),
+              new Set(["agent-1"]),
             );
           });
           expect(mockShowConfirm).toHaveBeenCalled();
@@ -1614,7 +1614,7 @@ describe("useAgentDeletion", () => {
           );
           act(() => {
             result.current.deleteSelectedAgents(
-              /* @__PURE__ */ new Set(["agent-1"]),
+              new Set(["agent-1"]),
             );
           });
           expect(mockShowError).toHaveBeenCalled();
@@ -1641,7 +1641,7 @@ describe("useAgentDeletion", () => {
           );
           act(() => {
             result.current.deleteSelectedAgents(
-              /* @__PURE__ */ new Set(["agent-1"]),
+              new Set(["agent-1"]),
             );
           });
           expect(mockShowError).toHaveBeenCalled();
@@ -1668,7 +1668,7 @@ describe("useAgentDeletion", () => {
           );
           act(() => {
             result.current.deleteSelectedAgents(
-              /* @__PURE__ */ new Set(["agent-1"]),
+              new Set(["agent-1"]),
             );
           });
           expect(mockShowError).toHaveBeenCalled();
@@ -1701,7 +1701,7 @@ describe("useAgentDeletion", () => {
         );
         await act(async () => {
           await result.current.deleteSelectedAgents(
-            /* @__PURE__ */ new Set(["agent-1"]),
+            new Set(["agent-1"]),
           );
         });
         expect(showError).toHaveBeenCalledWith(
@@ -1733,7 +1733,7 @@ describe("useAgentDeletion", () => {
         );
         await act(async () => {
           await result.current.deleteSelectedAgents(
-            /* @__PURE__ */ new Set(["agent-1"]),
+            new Set(["agent-1"]),
           );
         });
         expect(showError).toHaveBeenCalledWith(
@@ -1765,7 +1765,7 @@ describe("useAgentDeletion", () => {
         );
         await act(async () => {
           await result.current.deleteSelectedAgents(
-            /* @__PURE__ */ new Set(["agent-1"]),
+            new Set(["agent-1"]),
           );
         });
         expect(showError).toHaveBeenCalledWith(
@@ -1811,7 +1811,7 @@ describe("useAgentDeletion", () => {
         );
         await act(async () => {
           await result.current.deleteSelectedAgents(
-            /* @__PURE__ */ new Set(["agent-1", "agent-2"]),
+            new Set(["agent-1", "agent-2"]),
           );
         });
         expect(showError).toHaveBeenCalledWith(
@@ -1841,7 +1841,7 @@ describe("useAgentDeletion", () => {
         );
         await act(async () => {
           await result.current.deleteSelectedAgents(
-            /* @__PURE__ */ new Set(["agent-1"]),
+            new Set(["agent-1"]),
           );
         });
         expect(showError).toHaveBeenCalledWith(
@@ -1875,7 +1875,7 @@ describe("useAgentDeletion", () => {
         );
         await act(async () => {
           await result.current.deleteSelectedAgents(
-            /* @__PURE__ */ new Set(["agent-1", "agent-2"]),
+            new Set(["agent-1", "agent-2"]),
           );
         });
         expect(showError).toHaveBeenCalledWith(
@@ -1902,7 +1902,7 @@ describe("useAgentDeletion", () => {
         );
         await act(async () => {
           await result.current.deleteSelectedAgents(
-            /* @__PURE__ */ new Set(["agent-1"]),
+            new Set(["agent-1"]),
           );
         });
         expect(showError).toHaveBeenCalledWith(
@@ -1936,7 +1936,7 @@ describe("useAgentDeletion", () => {
         );
         await act(async () => {
           await result.current.deleteSelectedAgents(
-            /* @__PURE__ */ new Set(["agent-1", "agent-2"]),
+            new Set(["agent-1", "agent-2"]),
           );
         });
         expect(showError).toHaveBeenCalledWith(
@@ -1966,7 +1966,7 @@ describe("useAgentDeletion", () => {
         );
         await act(async () => {
           await result.current.deleteSelectedAgents(
-            /* @__PURE__ */ new Set(["agent-1", "agent-2"]),
+            new Set(["agent-1", "agent-2"]),
           );
         });
         expect(mockStorage.getItem).not.toHaveBeenCalled();
@@ -2002,7 +2002,7 @@ describe("useAgentDeletion", () => {
         );
         await act(async () => {
           await result.current.deleteSelectedAgents(
-            /* @__PURE__ */ new Set(["agent-1"]),
+            new Set(["agent-1"]),
           );
         });
         expect(mockStorage.getItem).not.toHaveBeenCalled();
@@ -2039,7 +2039,7 @@ describe("useAgentDeletion", () => {
         );
         await act(async () => {
           await result.current.deleteSelectedAgents(
-            /* @__PURE__ */ new Set(["agent-1"]),
+            new Set(["agent-1"]),
           );
         });
         expect(showError).toHaveBeenCalledWith("Storage not available");
@@ -2080,7 +2080,7 @@ describe("useAgentDeletion", () => {
         );
         await act(async () => {
           await result.current.deleteSelectedAgents(
-            /* @__PURE__ */ new Set(["agent-1"]),
+            new Set(["agent-1"]),
           );
         });
         expect(mockStorage.setItem).toHaveBeenCalledWith(
@@ -2089,7 +2089,7 @@ describe("useAgentDeletion", () => {
         );
         expect(mockSetAgents).toHaveBeenCalled();
         expect(mockSetSelectedAgentIds).toHaveBeenCalledWith(
-          /* @__PURE__ */ new Set(),
+          new Set(),
         );
         expect(showSuccess).toHaveBeenCalledWith(
           "Successfully deleted 1 agent(s)",
@@ -2116,7 +2116,7 @@ describe("useAgentDeletion", () => {
         );
         await act(async () => {
           await result.current.deleteSelectedAgents(
-            /* @__PURE__ */ new Set(["agent-1"]),
+            new Set(["agent-1"]),
           );
         });
         expect(mockStorage.setItem).not.toHaveBeenCalled();
@@ -2151,7 +2151,7 @@ describe("useAgentDeletion", () => {
         );
         await act(async () => {
           await result.current.deleteSelectedAgents(
-            /* @__PURE__ */ new Set(["agent-1", ""]),
+            new Set(["agent-1", ""]),
           );
         });
         expect(mockStorage.setItem).toHaveBeenCalled();
@@ -2175,7 +2175,7 @@ describe("useAgentDeletion", () => {
         );
         await act(async () => {
           await result.current.deleteSelectedRepositoryAgents(
-            /* @__PURE__ */ new Set(["agent-1"]),
+            new Set(["agent-1"]),
           );
         });
         expect(showError).toHaveBeenCalledWith(
@@ -2196,7 +2196,7 @@ describe("useAgentDeletion", () => {
         );
         await act(async () => {
           await result.current.deleteSelectedRepositoryAgents(
-            /* @__PURE__ */ new Set(["agent-1"]),
+            new Set(["agent-1"]),
           );
         });
         expect(showError).toHaveBeenCalledWith("Storage not available");
@@ -2228,7 +2228,7 @@ describe("useAgentDeletion", () => {
         );
         await act(async () => {
           await result.current.deleteSelectedRepositoryAgents(
-            /* @__PURE__ */ new Set(["agent-1"]),
+            new Set(["agent-1"]),
             mockOnRefresh,
           );
         });
@@ -2238,7 +2238,7 @@ describe("useAgentDeletion", () => {
         );
         expect(mockSetRepositoryAgents).toHaveBeenCalled();
         expect(mockSetSelectedRepositoryAgentIds).toHaveBeenCalledWith(
-          /* @__PURE__ */ new Set(),
+          new Set(),
         );
         expect(showSuccess).toHaveBeenCalledWith(
           "Successfully deleted 1 agent(s)",
@@ -2265,7 +2265,7 @@ describe("useAgentDeletion", () => {
         );
         await act(async () => {
           await result.current.deleteSelectedRepositoryAgents(
-            /* @__PURE__ */ new Set(["agent-1"]),
+            new Set(["agent-1"]),
           );
         });
         expect(mockStorage.setItem).toHaveBeenCalled();
@@ -2285,7 +2285,7 @@ describe("useAgentDeletion", () => {
         );
         await act(async () => {
           await result.current.deleteSelectedRepositoryAgents(
-            /* @__PURE__ */ new Set(["agent-1"]),
+            new Set(["agent-1"]),
           );
         });
         expect(mockStorage.setItem).not.toHaveBeenCalled();
@@ -2301,7 +2301,7 @@ describe("useAgentDeletion", () => {
         );
         await act(async () => {
           await result.current.deleteSelectedRepositoryAgents(
-            /* @__PURE__ */ new Set(["agent-1"]),
+            new Set(["agent-1"]),
           );
         });
         expect(mockStorage.getItem).not.toHaveBeenCalled();
@@ -2332,7 +2332,7 @@ describe("useAgentDeletion", () => {
           );
           act(() => {
             result.current.deleteSelectedAgents(
-              /* @__PURE__ */ new Set(["agent-1"]),
+              new Set(["agent-1"]),
             );
           });
           expect(mockShowConfirm).toHaveBeenCalled();
@@ -2360,7 +2360,7 @@ describe("useAgentDeletion", () => {
           );
           act(() => {
             result.current.deleteSelectedAgents(
-              /* @__PURE__ */ new Set(["agent-1"]),
+              new Set(["agent-1"]),
             );
           });
           expect(mockShowConfirm).toHaveBeenCalled();
@@ -2387,7 +2387,7 @@ describe("useAgentDeletion", () => {
           );
           act(() => {
             result.current.deleteSelectedAgents(
-              /* @__PURE__ */ new Set(["agent-1"]),
+              new Set(["agent-1"]),
             );
           });
           expect(mockShowError).toHaveBeenCalled();
@@ -2416,7 +2416,7 @@ describe("useAgentDeletion", () => {
           );
           act(() => {
             result.current.deleteSelectedAgents(
-              /* @__PURE__ */ new Set(["agent-1"]),
+              new Set(["agent-1"]),
             );
           });
           expect(mockShowConfirm).toHaveBeenCalled();
@@ -2443,7 +2443,7 @@ describe("useAgentDeletion", () => {
           );
           act(() => {
             result.current.deleteSelectedAgents(
-              /* @__PURE__ */ new Set(["agent-1"]),
+              new Set(["agent-1"]),
             );
           });
           expect(mockShowError).toHaveBeenCalled();
@@ -2466,7 +2466,7 @@ describe("useAgentDeletion", () => {
           );
           act(() => {
             result.current.deleteSelectedAgents(
-              /* @__PURE__ */ new Set(["agent-1"]),
+              new Set(["agent-1"]),
             );
           });
           expect(mockStorage.setItem).not.toHaveBeenCalled();
@@ -2485,7 +2485,7 @@ describe("useAgentDeletion", () => {
           );
           act(() => {
             result.current.deleteSelectedAgents(
-              /* @__PURE__ */ new Set(["agent-1"]),
+              new Set(["agent-1"]),
             );
           });
           expect(mockStorage.setItem).not.toHaveBeenCalled();
@@ -2516,7 +2516,7 @@ describe("useAgentDeletion", () => {
           );
           act(() => {
             result.current.deleteSelectedAgents(
-              /* @__PURE__ */ new Set(["agent-1"]),
+              new Set(["agent-1"]),
             );
           });
           expect(mockShowConfirm).toHaveBeenCalled();
@@ -2550,7 +2550,7 @@ describe("useAgentDeletion", () => {
           );
           act(() => {
             result.current.deleteSelectedAgents(
-              /* @__PURE__ */ new Set(["agent-1", "agent-2"]),
+              new Set(["agent-1", "agent-2"]),
             );
           });
           expect(mockShowError).toHaveBeenCalledWith(
@@ -2588,7 +2588,7 @@ describe("useAgentDeletion", () => {
           );
           act(() => {
             result.current.deleteSelectedAgents(
-              /* @__PURE__ */ new Set(["agent-1", "agent-2"]),
+              new Set(["agent-1", "agent-2"]),
             );
           });
           expect(mockShowConfirm).toHaveBeenCalledWith(
@@ -2625,7 +2625,7 @@ describe("useAgentDeletion", () => {
           );
           act(() => {
             result.current.deleteSelectedAgents(
-              /* @__PURE__ */ new Set(["agent-1", "agent-2"]),
+              new Set(["agent-1", "agent-2"]),
             );
           });
           expect(mockShowConfirm).toHaveBeenCalledWith(
@@ -2659,7 +2659,7 @@ describe("useAgentDeletion", () => {
           );
           act(() => {
             result.current.deleteSelectedAgents(
-              /* @__PURE__ */ new Set(["agent-1"]),
+              new Set(["agent-1"]),
             );
           });
           expect(mockShowConfirm).toHaveBeenCalled();
@@ -2685,7 +2685,7 @@ describe("useAgentDeletion", () => {
           );
           act(() => {
             result.current.deleteSelectedAgents(
-              /* @__PURE__ */ new Set(["agent-1"]),
+              new Set(["agent-1"]),
             );
           });
           expect(mockShowError).toHaveBeenCalled();
@@ -2712,7 +2712,7 @@ describe("useAgentDeletion", () => {
           );
           act(() => {
             result.current.deleteSelectedAgents(
-              /* @__PURE__ */ new Set(["agent-1"]),
+              new Set(["agent-1"]),
             );
           });
           expect(mockShowError).toHaveBeenCalled();
@@ -2739,7 +2739,7 @@ describe("useAgentDeletion", () => {
           );
           act(() => {
             result.current.deleteSelectedAgents(
-              /* @__PURE__ */ new Set(["agent-1"]),
+              new Set(["agent-1"]),
             );
           });
           expect(mockShowError).toHaveBeenCalled();
@@ -2770,7 +2770,7 @@ describe("useAgentDeletion", () => {
         );
         await act(async () => {
           await result.current.deleteSelectedAgents(
-            /* @__PURE__ */ new Set(["agent-1"]),
+            new Set(["agent-1"]),
           );
         });
         expect(mockShowError).toHaveBeenCalledWith(
@@ -2802,7 +2802,7 @@ describe("useAgentDeletion", () => {
         );
         await act(async () => {
           await result.current.deleteSelectedAgents(
-            /* @__PURE__ */ new Set(["agent-1"]),
+            new Set(["agent-1"]),
           );
         });
         expect(mockShowError).toHaveBeenCalledWith(
@@ -2832,7 +2832,7 @@ describe("useAgentDeletion", () => {
         );
         await act(async () => {
           await result.current.deleteSelectedAgents(
-            /* @__PURE__ */ new Set(["agent-1"]),
+            new Set(["agent-1"]),
           );
         });
         expect(showError).toHaveBeenCalledWith(
@@ -2877,7 +2877,7 @@ describe("useAgentDeletion", () => {
         );
         await act(async () => {
           await result.current.deleteSelectedAgents(
-            /* @__PURE__ */ new Set(["agent-1", "agent-2"]),
+            new Set(["agent-1", "agent-2"]),
           );
         });
         expect(showError).toHaveBeenCalledWith(
@@ -2907,7 +2907,7 @@ describe("useAgentDeletion", () => {
         );
         await act(async () => {
           await result.current.deleteSelectedAgents(
-            /* @__PURE__ */ new Set(["agent-1"]),
+            new Set(["agent-1"]),
           );
         });
         expect(showError).toHaveBeenCalledWith(
@@ -2941,7 +2941,7 @@ describe("useAgentDeletion", () => {
         );
         await act(async () => {
           await result.current.deleteSelectedAgents(
-            /* @__PURE__ */ new Set(["agent-1", "agent-2"]),
+            new Set(["agent-1", "agent-2"]),
           );
         });
         expect(showError).toHaveBeenCalledWith(
@@ -2968,7 +2968,7 @@ describe("useAgentDeletion", () => {
         );
         await act(async () => {
           await result.current.deleteSelectedAgents(
-            /* @__PURE__ */ new Set(["agent-1"]),
+            new Set(["agent-1"]),
           );
         });
         expect(showError).toHaveBeenCalledWith(
@@ -3002,7 +3002,7 @@ describe("useAgentDeletion", () => {
         );
         await act(async () => {
           await result.current.deleteSelectedAgents(
-            /* @__PURE__ */ new Set(["agent-1", "agent-2"]),
+            new Set(["agent-1", "agent-2"]),
           );
         });
         expect(showError).toHaveBeenCalledWith(
@@ -3039,7 +3039,7 @@ describe("useAgentDeletion", () => {
         );
         await act(async () => {
           await result.current.deleteSelectedAgents(
-            /* @__PURE__ */ new Set(["agent-1", "agent-2"]),
+            new Set(["agent-1", "agent-2"]),
           );
         });
         expect(mockStorage.getItem).not.toHaveBeenCalled();
@@ -3075,7 +3075,7 @@ describe("useAgentDeletion", () => {
         );
         await act(async () => {
           await result.current.deleteSelectedAgents(
-            /* @__PURE__ */ new Set(["agent-1"]),
+            new Set(["agent-1"]),
           );
         });
         expect(mockStorage.getItem).not.toHaveBeenCalled();
@@ -3112,7 +3112,7 @@ describe("useAgentDeletion", () => {
         );
         await act(async () => {
           await result.current.deleteSelectedAgents(
-            /* @__PURE__ */ new Set(["agent-1"]),
+            new Set(["agent-1"]),
           );
         });
         expect(showError).toHaveBeenCalledWith("Storage not available");
@@ -3153,7 +3153,7 @@ describe("useAgentDeletion", () => {
         );
         await act(async () => {
           await result.current.deleteSelectedAgents(
-            /* @__PURE__ */ new Set(["agent-1"]),
+            new Set(["agent-1"]),
           );
         });
         expect(mockStorage.setItem).toHaveBeenCalledWith(
@@ -3162,7 +3162,7 @@ describe("useAgentDeletion", () => {
         );
         expect(mockSetAgents).toHaveBeenCalled();
         expect(mockSetSelectedAgentIds).toHaveBeenCalledWith(
-          /* @__PURE__ */ new Set(),
+          new Set(),
         );
         expect(showSuccess).toHaveBeenCalledWith(
           "Successfully deleted 1 agent(s)",
@@ -3189,7 +3189,7 @@ describe("useAgentDeletion", () => {
         );
         await act(async () => {
           await result.current.deleteSelectedAgents(
-            /* @__PURE__ */ new Set(["agent-1"]),
+            new Set(["agent-1"]),
           );
         });
         expect(mockStorage.setItem).not.toHaveBeenCalled();
@@ -3224,7 +3224,7 @@ describe("useAgentDeletion", () => {
         );
         await act(async () => {
           await result.current.deleteSelectedAgents(
-            /* @__PURE__ */ new Set(["agent-1", ""]),
+            new Set(["agent-1", ""]),
           );
         });
         expect(mockStorage.setItem).toHaveBeenCalled();

@@ -133,7 +133,11 @@ function GCPBucketEditor({ node, onConfigUpdate }) {
           aria-label="GCP service account credentials"
         />
         <p className="text-xs text-gray-500 mt-1">
-          Service account JSON credentials for GCP access
+          Service account JSON for GCP access. If empty, the API uses Application Default
+          Credentials; when the credentials file path is missing or ADC is not set, local
+          dev can run <code className="text-xs">gcloud auth application-default login</code>{" "}
+          (browser on the server) — see <code className="text-xs">GCP_BROWSER_AUTH_ON_MISSING_ADC</code>{" "}
+          in <code className="text-xs">.env.example</code>.
         </p>
       </div>
     </div>

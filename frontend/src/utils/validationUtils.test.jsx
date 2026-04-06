@@ -2,24 +2,24 @@ import { isEmptySelection, isStorageAvailable } from "./validationUtils";
 describe("validationUtils", () => {
   describe("isEmptySelection", () => {
     it("should return true when set is empty", () => {
-      const ids = /* @__PURE__ */ new Set();
+      const ids = new Set();
       expect(isEmptySelection(ids)).toBe(true);
     });
     it("should return false when set has one item", () => {
-      const ids = /* @__PURE__ */ new Set(["id1"]);
+      const ids = new Set(["id1"]);
       expect(isEmptySelection(ids)).toBe(false);
     });
     it("should return false when set has multiple items", () => {
-      const ids = /* @__PURE__ */ new Set(["id1", "id2", "id3"]);
+      const ids = new Set(["id1", "id2", "id3"]);
       expect(isEmptySelection(ids)).toBe(false);
     });
     it("should verify exact size comparison - size === 0", () => {
-      const emptySet = /* @__PURE__ */ new Set();
+      const emptySet = new Set();
       expect(emptySet.size).toBe(0);
       expect(isEmptySelection(emptySet)).toBe(true);
     });
     it("should verify exact size comparison - size !== 0", () => {
-      const nonEmptySet = /* @__PURE__ */ new Set(["id1"]);
+      const nonEmptySet = new Set(["id1"]);
       expect(nonEmptySet.size).toBe(1);
       expect(isEmptySelection(nonEmptySet)).toBe(false);
     });

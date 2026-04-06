@@ -1,5 +1,5 @@
 import "@testing-library/jest-dom";
-const localStorageMock = /* @__PURE__ */ (() => {
+const localStorageMock = (() => {
   let store = {};
   return {
     getItem: (key) => store[key] || null,

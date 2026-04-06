@@ -5,7 +5,7 @@ function useExecutionNotifications({
   onError,
   enabled = true,
 }) {
-  const previousStatusesRef = useRef(/* @__PURE__ */ new Map());
+  const previousStatusesRef = useRef(new Map());
   useEffect(() => {
     if (!enabled) {
       return;

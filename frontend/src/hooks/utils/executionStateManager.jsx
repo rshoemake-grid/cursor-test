@@ -65,7 +65,7 @@ class ExecutionStateManager {
       const newExecution = {
         id: executionId,
         status: "running",
-        startedAt: /* @__PURE__ */ new Date(),
+        startedAt: new Date(),
         nodes: {},
         logs: [],
       };
@@ -152,7 +152,7 @@ class ExecutionStateManager {
                   status,
                   completedAt:
                     status === "completed" || status === "failed"
-                      ? /* @__PURE__ */ new Date()
+                      ? new Date()
                       : exec.completedAt,
                 }
               : exec,

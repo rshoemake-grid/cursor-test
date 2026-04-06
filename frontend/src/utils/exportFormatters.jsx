@@ -54,12 +54,12 @@ function downloadFile(content, filename, mimeType) {
 }
 function exportExecutionsToJSON(executions, filename) {
   const json = exportToJSON(executions);
-  const defaultFilename = `executions-${/* @__PURE__ */ new Date().toISOString().split("T")[0]}.json`;
+  const defaultFilename = `executions-${new Date().toISOString().split("T")[0]}.json`;
   downloadFile(json, filename || defaultFilename, "application/json");
 }
 function exportExecutionsToCSV(executions, filename) {
   const csv = exportToCSV(executions);
-  const defaultFilename = `executions-${/* @__PURE__ */ new Date().toISOString().split("T")[0]}.csv`;
+  const defaultFilename = `executions-${new Date().toISOString().split("T")[0]}.csv`;
   downloadFile(csv, filename || defaultFilename, "text/csv");
 }
 export {

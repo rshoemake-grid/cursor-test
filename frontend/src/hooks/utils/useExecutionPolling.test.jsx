@@ -148,14 +148,14 @@ describe("useExecutionPolling", () => {
     const execution = {
       id: "exec-1",
       status: "running",
-      startedAt: /* @__PURE__ */ new Date(),
+      startedAt: new Date(),
       nodes: {},
       logs: [],
     };
     mockTabsRef.current = [createMockTab("workflow-1", [execution])];
     const mockExecutionResponse = {
       status: "completed",
-      completed_at: /* @__PURE__ */ new Date().toISOString(),
+      completed_at: new Date().toISOString(),
       node_states: {},
       logs: [],
     };
@@ -179,7 +179,7 @@ describe("useExecutionPolling", () => {
     const pendingExecution = {
       id: "pending-123",
       status: "running",
-      startedAt: /* @__PURE__ */ new Date(),
+      startedAt: new Date(),
       nodes: {},
       logs: [],
     };
@@ -201,8 +201,8 @@ describe("useExecutionPolling", () => {
     const completedExecution = {
       id: "exec-1",
       status: "completed",
-      startedAt: /* @__PURE__ */ new Date(),
-      completedAt: /* @__PURE__ */ new Date(),
+      startedAt: new Date(),
+      completedAt: new Date(),
       nodes: {},
       logs: [],
     };
@@ -224,7 +224,7 @@ describe("useExecutionPolling", () => {
     const execution = {
       id: "exec-1",
       status: "running",
-      startedAt: /* @__PURE__ */ new Date(),
+      startedAt: new Date(),
       nodes: {},
       logs: [],
     };
@@ -248,14 +248,14 @@ describe("useExecutionPolling", () => {
     const execution = {
       id: "exec-1",
       status: "running",
-      startedAt: /* @__PURE__ */ new Date(),
+      startedAt: new Date(),
       nodes: {},
       logs: [],
     };
     mockTabsRef.current = [createMockTab("workflow-1", [execution])];
     const mockExecutionResponse = {
       status: "completed",
-      completed_at: /* @__PURE__ */ new Date().toISOString(),
+      completed_at: new Date().toISOString(),
       node_states: { node1: { state: "done" } },
       logs: [{ message: "Log 1" }],
     };
@@ -280,7 +280,7 @@ describe("useExecutionPolling", () => {
     const execution = {
       id: "exec-1",
       status: "running",
-      startedAt: /* @__PURE__ */ new Date(),
+      startedAt: new Date(),
       nodes: {},
       logs: [],
     };
@@ -311,7 +311,7 @@ describe("useExecutionPolling", () => {
     const execution = {
       id: "exec-1",
       status: "running",
-      startedAt: /* @__PURE__ */ new Date(),
+      startedAt: new Date(),
       nodes: {},
       logs: [],
     };
@@ -343,7 +343,7 @@ describe("useExecutionPolling", () => {
     const execution = {
       id: "exec-1",
       status: "running",
-      startedAt: /* @__PURE__ */ new Date(),
+      startedAt: new Date(),
       nodes: {},
       logs: [],
     };
@@ -373,7 +373,7 @@ describe("useExecutionPolling", () => {
     const execution = {
       id: "exec-1",
       status: "running",
-      startedAt: /* @__PURE__ */ new Date(),
+      startedAt: new Date(),
       nodes: {},
       logs: [],
     };
@@ -404,7 +404,7 @@ describe("useExecutionPolling", () => {
     const execution = {
       id: "exec-1",
       status: "running",
-      startedAt: /* @__PURE__ */ new Date(),
+      startedAt: new Date(),
       nodes: {},
       logs: [],
     };
@@ -473,7 +473,7 @@ describe("useExecutionPolling", () => {
     const execution = {
       id: "exec-1",
       status: "running",
-      startedAt: /* @__PURE__ */ new Date(),
+      startedAt: new Date(),
       nodes: {},
       logs: [],
     };
@@ -496,14 +496,14 @@ describe("useExecutionPolling", () => {
     const execution1 = {
       id: "exec-1",
       status: "running",
-      startedAt: /* @__PURE__ */ new Date(),
+      startedAt: new Date(),
       nodes: {},
       logs: [],
     };
     const execution2 = {
       id: "exec-2",
       status: "running",
-      startedAt: /* @__PURE__ */ new Date(),
+      startedAt: new Date(),
       nodes: {},
       logs: [],
     };
@@ -547,7 +547,7 @@ describe("useExecutionPolling", () => {
       const execution = {
         id: "exec-1",
         status: "running",
-        startedAt: /* @__PURE__ */ new Date(),
+        startedAt: new Date(),
         nodes: {},
         logs: [],
       };
@@ -578,7 +578,7 @@ describe("useExecutionPolling", () => {
       const execution = {
         id: "exec-1",
         status: "running",
-        startedAt: /* @__PURE__ */ new Date(),
+        startedAt: new Date(),
         nodes: {},
         logs: [],
       };
@@ -601,7 +601,7 @@ describe("useExecutionPolling", () => {
       const execution = {
         id: "exec-1",
         status: "running",
-        startedAt: /* @__PURE__ */ new Date(),
+        startedAt: new Date(),
         nodes: {},
         logs: [],
       };
@@ -624,7 +624,7 @@ describe("useExecutionPolling", () => {
       const executions = Array.from({ length: 60 }, (_, i) => ({
         id: `exec-${i}`,
         status: "running",
-        startedAt: /* @__PURE__ */ new Date(),
+        startedAt: new Date(),
         nodes: {},
         logs: [],
       }));

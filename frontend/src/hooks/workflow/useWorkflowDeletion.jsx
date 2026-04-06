@@ -105,7 +105,7 @@ function useWorkflowDeletion({
         setWorkflowsOfWorkflows((prevWorkflows) =>
           prevWorkflows.filter((t) => !templateIdsToDelete.has(t.id)),
         );
-        setSelectedTemplateIds(/* @__PURE__ */ new Set());
+        setSelectedTemplateIds(new Set());
         showSuccess(
           `Successfully deleted ${userOwnedTemplates.length} workflow(s)`,
         );

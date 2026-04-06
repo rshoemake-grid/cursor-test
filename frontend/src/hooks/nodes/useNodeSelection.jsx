@@ -2,7 +2,7 @@ import { useState, useCallback } from "react";
 function useNodeSelection({ reactFlowInstanceRef, notifyModified }) {
   const [selectedNodeId, setSelectedNodeId] = useState(null);
   const [selectedNodeIds, setSelectedNodeIds] = useState(
-    /* @__PURE__ */ new Set(),
+    new Set(),
   );
   const handleNodesChange = useCallback(
     (changes, onNodesChangeBase) => {

@@ -92,7 +92,7 @@ describe("useSelectionManager", () => {
     const { result } = renderHook(() => useSelectionManager());
     act(() => {
       result.current.setSelectedIds(
-        /* @__PURE__ */ new Set(["item-1", "item-2"]),
+        new Set(["item-1", "item-2"]),
       );
     });
     expect(result.current.size).toBe(2);

@@ -353,7 +353,7 @@ describe("GCPBucketEditor", () => {
         <GCPBucketEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
       );
       expect(
-        screen.getByText("Service account JSON credentials for GCP access"),
+        screen.getByText(/Service account JSON for GCP access/i),
       ).toBeInTheDocument();
     });
   });

@@ -1,6 +1,6 @@
 import { useState, useCallback } from "react";
 function useBulkOperations({ executions, onDelete }) {
-  const [selectedIds, setSelectedIds] = useState(/* @__PURE__ */ new Set());
+  const [selectedIds, setSelectedIds] = useState(new Set());
   const [isDeleting, setIsDeleting] = useState(false);
   const selectedCount = selectedIds.size;
   const isAllSelected =
@@ -20,13 +20,13 @@ function useBulkOperations({ executions, onDelete }) {
   }, []);
   const toggleSelectAll = useCallback(() => {
     if (isAllSelected) {
-      setSelectedIds(/* @__PURE__ */ new Set());
+      setSelectedIds(new Set());
     } else {
       setSelectedIds(new Set(executions.map((e) => e.execution_id)));
     }
   }, [executions, isAllSelected]);
   const clearSelection = useCallback(() => {
-    setSelectedIds(/* @__PURE__ */ new Set());
+    setSelectedIds(new Set());
   }, []);
   const selectAll = useCallback(() => {
     setSelectedIds(new Set(executions.map((e) => e.execution_id)));
@@ -38,7 +38,7 @@ function useBulkOperations({ executions, onDelete }) {
     setIsDeleting(true);
     try {
       await onDelete(Array.from(selectedIds));
-      setSelectedIds(/* @__PURE__ */ new Set());
+      setSelectedIds(new Set());
     } finally {
       setIsDeleting(false);
     }

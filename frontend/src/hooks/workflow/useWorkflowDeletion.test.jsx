@@ -59,7 +59,7 @@ describe("useWorkflowDeletion", () => {
         }),
       );
       await act(async () => {
-        await result.current.deleteSelectedWorkflows(/* @__PURE__ */ new Set());
+        await result.current.deleteSelectedWorkflows(new Set());
       });
       expect(mockDeleteTemplate).not.toHaveBeenCalled();
     });
@@ -86,7 +86,7 @@ describe("useWorkflowDeletion", () => {
       );
       await act(async () => {
         await result.current.deleteSelectedWorkflows(
-          /* @__PURE__ */ new Set(["template-1", "template-2"]),
+          new Set(["template-1", "template-2"]),
         );
       });
       expect(mockShowError).toHaveBeenCalledWith(
@@ -112,7 +112,7 @@ describe("useWorkflowDeletion", () => {
       );
       await act(async () => {
         await result.current.deleteSelectedWorkflows(
-          /* @__PURE__ */ new Set(["template-1"]),
+          new Set(["template-1"]),
         );
       });
       expect(mockShowError).toHaveBeenCalledWith(
@@ -138,7 +138,7 @@ describe("useWorkflowDeletion", () => {
       );
       await act(async () => {
         await result.current.deleteSelectedWorkflows(
-          /* @__PURE__ */ new Set(["template-1", "template-2"]),
+          new Set(["template-1", "template-2"]),
         );
       });
       expect(mockShowError).toHaveBeenCalledWith(
@@ -163,7 +163,7 @@ describe("useWorkflowDeletion", () => {
       );
       await act(async () => {
         await result.current.deleteSelectedWorkflows(
-          /* @__PURE__ */ new Set(["template-1", "template-2"]),
+          new Set(["template-1", "template-2"]),
         );
       });
       expect(mockShowConfirm).toHaveBeenCalledWith(
@@ -196,7 +196,7 @@ describe("useWorkflowDeletion", () => {
       );
       await act(async () => {
         await result.current.deleteSelectedWorkflows(
-          /* @__PURE__ */ new Set(["template-1", "template-2"]),
+          new Set(["template-1", "template-2"]),
         );
       });
       expect(mockShowConfirm).toHaveBeenCalledWith(
@@ -229,7 +229,7 @@ describe("useWorkflowDeletion", () => {
       );
       await act(async () => {
         await result.current.deleteSelectedWorkflows(
-          /* @__PURE__ */ new Set(["template-1"]),
+          new Set(["template-1"]),
         );
       });
       expect(mockDeleteTemplate).not.toHaveBeenCalled();
@@ -251,13 +251,13 @@ describe("useWorkflowDeletion", () => {
       );
       await act(async () => {
         await result.current.deleteSelectedWorkflows(
-          /* @__PURE__ */ new Set(["template-1"]),
+          new Set(["template-1"]),
         );
       });
       expect(mockDeleteTemplate).toHaveBeenCalledWith("template-1");
       expect(mockSetTemplates).toHaveBeenCalled();
       expect(mockSetSelectedTemplateIds).toHaveBeenCalledWith(
-        /* @__PURE__ */ new Set(),
+        new Set(),
       );
       expect(mockShowSuccess).toHaveBeenCalledWith(
         "Successfully deleted 1 workflow(s)",
@@ -281,7 +281,7 @@ describe("useWorkflowDeletion", () => {
       );
       await act(async () => {
         await result.current.deleteSelectedWorkflows(
-          /* @__PURE__ */ new Set(["template-1"]),
+          new Set(["template-1"]),
         );
       });
       expect(mockShowError).toHaveBeenCalledWith(
@@ -307,7 +307,7 @@ describe("useWorkflowDeletion", () => {
       );
       await act(async () => {
         await result.current.deleteSelectedWorkflows(
-          /* @__PURE__ */ new Set(["template-1"]),
+          new Set(["template-1"]),
         );
       });
       expect(mockDeleteTemplate).toHaveBeenCalledWith("template-1");
@@ -330,7 +330,7 @@ describe("useWorkflowDeletion", () => {
       );
       await act(async () => {
         await result.current.deleteSelectedWorkflows(
-          /* @__PURE__ */ new Set(["template-1"]),
+          new Set(["template-1"]),
         );
       });
       expect(mockDeleteTemplate).toHaveBeenCalledWith("template-1");
@@ -352,7 +352,7 @@ describe("useWorkflowDeletion", () => {
       );
       await act(async () => {
         await result.current.deleteSelectedWorkflows(
-          /* @__PURE__ */ new Set(["template-1"]),
+          new Set(["template-1"]),
         );
       });
       expect(mockShowError).toHaveBeenCalledWith(
@@ -377,7 +377,7 @@ describe("useWorkflowDeletion", () => {
       );
       await act(async () => {
         await result.current.deleteSelectedWorkflows(
-          /* @__PURE__ */ new Set(["template-1"]),
+          new Set(["template-1"]),
         );
       });
       expect(mockDeleteTemplate).toHaveBeenCalled();
@@ -397,7 +397,7 @@ describe("useWorkflowDeletion", () => {
       );
       await act(async () => {
         await result.current.deleteSelectedWorkflows(
-          /* @__PURE__ */ new Set(["template-1"]),
+          new Set(["template-1"]),
         );
       });
       expect(mockDeleteTemplate).toHaveBeenCalled();
@@ -423,7 +423,7 @@ describe("useWorkflowDeletion", () => {
       );
       await act(async () => {
         await result.current.deleteSelectedWorkflows(
-          /* @__PURE__ */ new Set(["template-1", "template-2"]),
+          new Set(["template-1", "template-2"]),
         );
       });
       expect(mockShowError).toHaveBeenCalled();
@@ -446,7 +446,7 @@ describe("useWorkflowDeletion", () => {
       );
       await act(async () => {
         await result.current.deleteSelectedWorkflows(
-          /* @__PURE__ */ new Set(["template-1"]),
+          new Set(["template-1"]),
         );
       });
       expect(mockShowError).toHaveBeenCalledWith(
@@ -470,7 +470,7 @@ describe("useWorkflowDeletion", () => {
       );
       await act(async () => {
         await result.current.deleteSelectedWorkflows(
-          /* @__PURE__ */ new Set(["template-1"]),
+          new Set(["template-1"]),
         );
       });
       expect(mockShowError).toHaveBeenCalledWith(
@@ -492,7 +492,7 @@ describe("useWorkflowDeletion", () => {
         }),
       );
       await act(async () => {
-        await result.current.deleteSelectedWorkflows(/* @__PURE__ */ new Set());
+        await result.current.deleteSelectedWorkflows(new Set());
       });
       expect(mockShowError).not.toHaveBeenCalled();
       expect(mockShowConfirm).not.toHaveBeenCalled();
@@ -515,7 +515,7 @@ describe("useWorkflowDeletion", () => {
       );
       await act(async () => {
         await result.current.deleteSelectedWorkflows(
-          /* @__PURE__ */ new Set(["template-1"]),
+          new Set(["template-1"]),
         );
       });
       expect(mockDeleteTemplate).toHaveBeenCalled();
@@ -535,7 +535,7 @@ describe("useWorkflowDeletion", () => {
       );
       await act(async () => {
         await result.current.deleteSelectedWorkflows(
-          /* @__PURE__ */ new Set(["template-1"]),
+          new Set(["template-1"]),
         );
       });
       expect(mockShowError).not.toHaveBeenCalledWith(
@@ -557,7 +557,7 @@ describe("useWorkflowDeletion", () => {
       );
       await act(async () => {
         await result.current.deleteSelectedWorkflows(
-          /* @__PURE__ */ new Set(["template-1"]),
+          new Set(["template-1"]),
         );
       });
       expect(mockShowError).toHaveBeenCalledWith(
@@ -579,7 +579,7 @@ describe("useWorkflowDeletion", () => {
       );
       await act(async () => {
         await result.current.deleteSelectedWorkflows(
-          /* @__PURE__ */ new Set(["template-1"]),
+          new Set(["template-1"]),
         );
       });
       expect(mockShowConfirm).not.toHaveBeenCalled();
@@ -608,7 +608,7 @@ describe("useWorkflowDeletion", () => {
       );
       await act(async () => {
         await result.current.deleteSelectedWorkflows(
-          /* @__PURE__ */ new Set(["template-1", "template-2"]),
+          new Set(["template-1", "template-2"]),
         );
       });
       expect(mockShowError).toHaveBeenCalledWith(
@@ -632,7 +632,7 @@ describe("useWorkflowDeletion", () => {
       );
       await act(async () => {
         await result.current.deleteSelectedWorkflows(
-          /* @__PURE__ */ new Set(["template-1"]),
+          new Set(["template-1"]),
         );
       });
       expect(mockShowError).toHaveBeenCalledWith(
@@ -659,7 +659,7 @@ describe("useWorkflowDeletion", () => {
       );
       await act(async () => {
         await result.current.deleteSelectedWorkflows(
-          /* @__PURE__ */ new Set(["template-1", "template-2"]),
+          new Set(["template-1", "template-2"]),
         );
       });
       expect(mockShowConfirm).toHaveBeenCalledWith(
@@ -689,7 +689,7 @@ describe("useWorkflowDeletion", () => {
       );
       await act(async () => {
         await result.current.deleteSelectedWorkflows(
-          /* @__PURE__ */ new Set(["template-1", "template-2"]),
+          new Set(["template-1", "template-2"]),
         );
       });
       expect(mockSetTemplates).toHaveBeenCalled();
@@ -720,7 +720,7 @@ describe("useWorkflowDeletion", () => {
       );
       await act(async () => {
         await result.current.deleteSelectedWorkflows(
-          /* @__PURE__ */ new Set(["template-1"]),
+          new Set(["template-1"]),
         );
       });
       expect(mockShowError).toHaveBeenCalledWith(
@@ -748,7 +748,7 @@ describe("useWorkflowDeletion", () => {
           );
           await act(async () => {
             await result.current.deleteSelectedWorkflows(
-              /* @__PURE__ */ new Set(["template-1"]),
+              new Set(["template-1"]),
               "repository",
             );
           });
@@ -774,7 +774,7 @@ describe("useWorkflowDeletion", () => {
           );
           await act(async () => {
             await result.current.deleteSelectedWorkflows(
-              /* @__PURE__ */ new Set(["template-1"]),
+              new Set(["template-1"]),
               "repository",
             );
           });
@@ -800,7 +800,7 @@ describe("useWorkflowDeletion", () => {
           );
           await act(async () => {
             await result.current.deleteSelectedWorkflows(
-              /* @__PURE__ */ new Set(["template-1"]),
+              new Set(["template-1"]),
               "repository",
             );
           });
@@ -826,7 +826,7 @@ describe("useWorkflowDeletion", () => {
           );
           await act(async () => {
             await result.current.deleteSelectedWorkflows(
-              /* @__PURE__ */ new Set(["template-1"]),
+              new Set(["template-1"]),
               "repository",
             );
           });
@@ -853,7 +853,7 @@ describe("useWorkflowDeletion", () => {
           );
           await act(async () => {
             await result.current.deleteSelectedWorkflows(
-              /* @__PURE__ */ new Set(["template-1"]),
+              new Set(["template-1"]),
               "repository",
             );
           });
@@ -888,7 +888,7 @@ describe("useWorkflowDeletion", () => {
         );
         await act(async () => {
           await result.current.deleteSelectedWorkflows(
-            /* @__PURE__ */ new Set(["template-1"]),
+            new Set(["template-1"]),
           );
         });
         expect(showError).toHaveBeenCalledWith(
@@ -918,7 +918,7 @@ describe("useWorkflowDeletion", () => {
         );
         await act(async () => {
           await result.current.deleteSelectedWorkflows(
-            /* @__PURE__ */ new Set(["template-1"]),
+            new Set(["template-1"]),
           );
         });
         expect(showError).toHaveBeenCalledWith(
@@ -955,7 +955,7 @@ describe("useWorkflowDeletion", () => {
         );
         await act(async () => {
           await result.current.deleteSelectedWorkflows(
-            /* @__PURE__ */ new Set(["template-1", "template-2"]),
+            new Set(["template-1", "template-2"]),
           );
         });
         expect(showError).toHaveBeenCalledWith(
@@ -980,7 +980,7 @@ describe("useWorkflowDeletion", () => {
         );
         await act(async () => {
           await result.current.deleteSelectedWorkflows(
-            /* @__PURE__ */ new Set(["template-1"]),
+            new Set(["template-1"]),
           );
         });
         expect(showError).toHaveBeenCalledWith(
@@ -1008,7 +1008,7 @@ describe("useWorkflowDeletion", () => {
         );
         await act(async () => {
           await result.current.deleteSelectedWorkflows(
-            /* @__PURE__ */ new Set(["template-1", "template-2"]),
+            new Set(["template-1", "template-2"]),
           );
         });
         expect(api.deleteTemplate).not.toHaveBeenCalled();
@@ -1032,7 +1032,7 @@ describe("useWorkflowDeletion", () => {
         );
         await act(async () => {
           await result.current.deleteSelectedWorkflows(
-            /* @__PURE__ */ new Set(["template-1"]),
+            new Set(["template-1"]),
           );
         });
         expect(api.deleteTemplate).not.toHaveBeenCalled();
@@ -1062,14 +1062,14 @@ describe("useWorkflowDeletion", () => {
         );
         await act(async () => {
           await result.current.deleteSelectedWorkflows(
-            /* @__PURE__ */ new Set(["template-1"]),
+            new Set(["template-1"]),
           );
         });
         expect(mockDeleteTemplate2).toHaveBeenCalledWith("template-1");
         expect(mockSetTemplates).toHaveBeenCalled();
         expect(mockSetWorkflowsOfWorkflows).toHaveBeenCalled();
         expect(mockSetSelectedTemplateIds).toHaveBeenCalledWith(
-          /* @__PURE__ */ new Set(),
+          new Set(),
         );
         expect(showSuccess).toHaveBeenCalledWith(
           "Successfully deleted 1 workflow(s)",
@@ -1098,7 +1098,7 @@ describe("useWorkflowDeletion", () => {
         );
         await act(async () => {
           await result.current.deleteSelectedWorkflows(
-            /* @__PURE__ */ new Set(["template-1"]),
+            new Set(["template-1"]),
           );
         });
         expect(mockDeleteTemplate2).toHaveBeenCalledWith("template-1");

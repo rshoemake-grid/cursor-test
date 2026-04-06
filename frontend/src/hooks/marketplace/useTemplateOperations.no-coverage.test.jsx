@@ -155,7 +155,7 @@ describe("useTemplateOperations - No Coverage Paths", () => {
       );
       await act(async () => {
         await result.current.deleteSelectedAgents(
-          /* @__PURE__ */ new Set(["agent-1"]),
+          new Set(["agent-1"]),
         );
       });
       expect(showError).toHaveBeenCalledWith(
@@ -197,7 +197,7 @@ describe("useTemplateOperations - No Coverage Paths", () => {
       );
       await act(async () => {
         await result.current.deleteSelectedAgents(
-          /* @__PURE__ */ new Set(["agent-1"]),
+          new Set(["agent-1"]),
         );
       });
       expect(showError).toHaveBeenCalledWith(
@@ -240,7 +240,7 @@ describe("useTemplateOperations - No Coverage Paths", () => {
       );
       await act(async () => {
         await result.current.deleteSelectedWorkflows(
-          /* @__PURE__ */ new Set(["template-1"]),
+          new Set(["template-1"]),
         );
       });
       expect(showError).toHaveBeenCalledWith(
@@ -275,7 +275,7 @@ describe("useTemplateOperations - No Coverage Paths", () => {
       );
       await act(async () => {
         await result.current.deleteSelectedRepositoryAgents(
-          /* @__PURE__ */ new Set(["agent-1"]),
+          new Set(["agent-1"]),
         );
       });
       expect(showError).toHaveBeenCalledWith(

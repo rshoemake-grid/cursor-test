@@ -15,7 +15,7 @@ describe("showConfirm - Enhanced Mutation Killers", () => {
   let stylesMap;
   beforeEach(() => {
     jest.useFakeTimers();
-    stylesMap = /* @__PURE__ */ new Map();
+    stylesMap = new Map();
     mockDocumentAdapter = {
       createElement: jest.fn((tag) => {
         const element = {

@@ -162,7 +162,7 @@ describe("useTemplateOperations - Remaining Branches", () => {
       );
       await act(async () => {
         await result.current.deleteSelectedAgents(
-          /* @__PURE__ */ new Set(["agent-1"]),
+          new Set(["agent-1"]),
         );
       });
       expect(showError).toHaveBeenCalledWith(
@@ -216,7 +216,7 @@ describe("useTemplateOperations - Remaining Branches", () => {
       );
       await act(async () => {
         await result.current.deleteSelectedAgents(
-          /* @__PURE__ */ new Set(["agent-1", "agent-2"]),
+          new Set(["agent-1", "agent-2"]),
         );
       });
       expect(showError).toHaveBeenCalledWith(
@@ -255,7 +255,7 @@ describe("useTemplateOperations - Remaining Branches", () => {
       );
       await act(async () => {
         await result.current.deleteSelectedAgents(
-          /* @__PURE__ */ new Set(["agent-1"]),
+          new Set(["agent-1"]),
         );
       });
       expect(showError).toHaveBeenCalledWith(
@@ -296,7 +296,7 @@ describe("useTemplateOperations - Remaining Branches", () => {
       );
       await act(async () => {
         await result.current.deleteSelectedAgents(
-          /* @__PURE__ */ new Set(["agent-1", "agent-2"]),
+          new Set(["agent-1", "agent-2"]),
         );
       });
       expect(showError).toHaveBeenCalledWith(
@@ -333,7 +333,7 @@ describe("useTemplateOperations - Remaining Branches", () => {
       );
       await act(async () => {
         await result.current.deleteSelectedAgents(
-          /* @__PURE__ */ new Set(["agent-1"]),
+          new Set(["agent-1"]),
         );
       });
       expect(showError).toHaveBeenCalledWith(
@@ -375,7 +375,7 @@ describe("useTemplateOperations - Remaining Branches", () => {
       );
       await act(async () => {
         await result.current.deleteSelectedAgents(
-          /* @__PURE__ */ new Set(["agent-1", "agent-2"]),
+          new Set(["agent-1", "agent-2"]),
         );
       });
       expect(showError).toHaveBeenCalledWith(
@@ -421,7 +421,7 @@ describe("useTemplateOperations - Remaining Branches", () => {
       );
       await act(async () => {
         await result.current.deleteSelectedAgents(
-          /* @__PURE__ */ new Set(["agent-1", "agent-2"]),
+          new Set(["agent-1", "agent-2"]),
         );
       });
       expect(mockStorage.getItem).not.toHaveBeenCalled();
@@ -467,7 +467,7 @@ describe("useTemplateOperations - Remaining Branches", () => {
       );
       await act(async () => {
         await result.current.deleteSelectedAgents(
-          /* @__PURE__ */ new Set(["agent-1"]),
+          new Set(["agent-1"]),
         );
       });
       expect(mockStorage.getItem).not.toHaveBeenCalled();
@@ -514,7 +514,7 @@ describe("useTemplateOperations - Remaining Branches", () => {
       );
       await act(async () => {
         await result.current.deleteSelectedAgents(
-          /* @__PURE__ */ new Set(["agent-1"]),
+          new Set(["agent-1"]),
         );
       });
       expect(showError).toHaveBeenCalledWith("Storage not available");
@@ -565,7 +565,7 @@ describe("useTemplateOperations - Remaining Branches", () => {
       );
       await act(async () => {
         await result.current.deleteSelectedAgents(
-          /* @__PURE__ */ new Set(["agent-1"]),
+          new Set(["agent-1"]),
         );
       });
       expect(mockStorage.setItem).toHaveBeenCalledWith(
@@ -574,7 +574,7 @@ describe("useTemplateOperations - Remaining Branches", () => {
       );
       expect(mockSetAgents).toHaveBeenCalled();
       expect(mockSetSelectedAgentIds).toHaveBeenCalledWith(
-        /* @__PURE__ */ new Set(),
+        new Set(),
       );
       expect(showSuccess).toHaveBeenCalledWith(
         "Successfully deleted 1 agent(s)",
@@ -611,7 +611,7 @@ describe("useTemplateOperations - Remaining Branches", () => {
       );
       await act(async () => {
         await result.current.deleteSelectedAgents(
-          /* @__PURE__ */ new Set(["agent-1"]),
+          new Set(["agent-1"]),
         );
       });
       expect(mockStorage.setItem).not.toHaveBeenCalled();
@@ -663,7 +663,7 @@ describe("useTemplateOperations - Remaining Branches", () => {
       );
       await act(async () => {
         await result.current.deleteSelectedAgents(
-          /* @__PURE__ */ new Set(["agent-1", ""]),
+          new Set(["agent-1", ""]),
         );
       });
       expect(mockStorage.setItem).toHaveBeenCalled();
@@ -701,7 +701,7 @@ describe("useTemplateOperations - Remaining Branches", () => {
       );
       await act(async () => {
         await result.current.deleteSelectedWorkflows(
-          /* @__PURE__ */ new Set(["template-1"]),
+          new Set(["template-1"]),
         );
       });
       expect(showError).toHaveBeenCalledWith(
@@ -747,7 +747,7 @@ describe("useTemplateOperations - Remaining Branches", () => {
       );
       await act(async () => {
         await result.current.deleteSelectedWorkflows(
-          /* @__PURE__ */ new Set(["template-1", "template-2"]),
+          new Set(["template-1", "template-2"]),
         );
       });
       expect(showError).toHaveBeenCalledWith(
@@ -784,7 +784,7 @@ describe("useTemplateOperations - Remaining Branches", () => {
       );
       await act(async () => {
         await result.current.deleteSelectedWorkflows(
-          /* @__PURE__ */ new Set(["template-1"]),
+          new Set(["template-1"]),
         );
       });
       expect(showError).toHaveBeenCalledWith(
@@ -830,7 +830,7 @@ describe("useTemplateOperations - Remaining Branches", () => {
       );
       await act(async () => {
         await result.current.deleteSelectedWorkflows(
-          /* @__PURE__ */ new Set(["template-1", "template-2"]),
+          new Set(["template-1", "template-2"]),
         );
       });
       expect(api.deleteTemplate).not.toHaveBeenCalled();
@@ -866,7 +866,7 @@ describe("useTemplateOperations - Remaining Branches", () => {
       );
       await act(async () => {
         await result.current.deleteSelectedWorkflows(
-          /* @__PURE__ */ new Set(["template-1"]),
+          new Set(["template-1"]),
         );
       });
       expect(api.deleteTemplate).not.toHaveBeenCalled();
@@ -911,14 +911,14 @@ describe("useTemplateOperations - Remaining Branches", () => {
       );
       await act(async () => {
         await result.current.deleteSelectedWorkflows(
-          /* @__PURE__ */ new Set(["template-1"]),
+          new Set(["template-1"]),
         );
       });
       expect(mockDeleteTemplate).toHaveBeenCalledWith("template-1");
       expect(mockSetTemplates).toHaveBeenCalled();
       expect(mockSetWorkflowsOfWorkflows).toHaveBeenCalled();
       expect(mockSetSelectedTemplateIds).toHaveBeenCalledWith(
-        /* @__PURE__ */ new Set(),
+        new Set(),
       );
       expect(showSuccess).toHaveBeenCalledWith(
         "Successfully deleted 1 workflow(s)",
@@ -956,7 +956,7 @@ describe("useTemplateOperations - Remaining Branches", () => {
       );
       await act(async () => {
         await result.current.deleteSelectedWorkflows(
-          /* @__PURE__ */ new Set(["template-1"]),
+          new Set(["template-1"]),
         );
       });
       expect(mockDeleteTemplate).toHaveBeenCalledWith("template-1");
@@ -987,7 +987,7 @@ describe("useTemplateOperations - Remaining Branches", () => {
       );
       await act(async () => {
         await result.current.deleteSelectedRepositoryAgents(
-          /* @__PURE__ */ new Set(["agent-1"]),
+          new Set(["agent-1"]),
         );
       });
       expect(showError).toHaveBeenCalledWith("Storage not available");
@@ -1032,7 +1032,7 @@ describe("useTemplateOperations - Remaining Branches", () => {
       );
       await act(async () => {
         await result.current.deleteSelectedRepositoryAgents(
-          /* @__PURE__ */ new Set(["agent-1"]),
+          new Set(["agent-1"]),
           mockOnRefresh,
         );
       });
@@ -1042,7 +1042,7 @@ describe("useTemplateOperations - Remaining Branches", () => {
       );
       expect(mockSetRepositoryAgents).toHaveBeenCalled();
       expect(mockSetSelectedRepositoryAgentIds).toHaveBeenCalledWith(
-        /* @__PURE__ */ new Set(),
+        new Set(),
       );
       expect(showSuccess).toHaveBeenCalledWith(
         "Successfully deleted 1 agent(s)",
@@ -1082,7 +1082,7 @@ describe("useTemplateOperations - Remaining Branches", () => {
       );
       await act(async () => {
         await result.current.deleteSelectedRepositoryAgents(
-          /* @__PURE__ */ new Set(["agent-1"]),
+          new Set(["agent-1"]),
         );
       });
       expect(mockStorage.setItem).toHaveBeenCalled();
@@ -1115,7 +1115,7 @@ describe("useTemplateOperations - Remaining Branches", () => {
       );
       await act(async () => {
         await result.current.deleteSelectedRepositoryAgents(
-          /* @__PURE__ */ new Set(["agent-1"]),
+          new Set(["agent-1"]),
         );
       });
       expect(mockStorage.setItem).not.toHaveBeenCalled();
@@ -1144,7 +1144,7 @@ describe("useTemplateOperations - Remaining Branches", () => {
       );
       await act(async () => {
         await result.current.deleteSelectedRepositoryAgents(
-          /* @__PURE__ */ new Set(["agent-1"]),
+          new Set(["agent-1"]),
         );
       });
       expect(mockStorage.getItem).not.toHaveBeenCalled();

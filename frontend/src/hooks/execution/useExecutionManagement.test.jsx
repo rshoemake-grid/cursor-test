@@ -109,14 +109,14 @@ describe("useExecutionManagement", () => {
           {
             id: "pending-1",
             status: "running",
-            startedAt: /* @__PURE__ */ new Date(),
+            startedAt: new Date(),
             nodes: {},
             logs: [],
           },
           {
             id: "pending-2",
             status: "running",
-            startedAt: /* @__PURE__ */ new Date(),
+            startedAt: new Date(),
             nodes: {},
             logs: [],
           },
@@ -152,7 +152,7 @@ describe("useExecutionManagement", () => {
       const existingExecution = {
         id: "exec-1",
         status: "running",
-        startedAt: /* @__PURE__ */ new Date(),
+        startedAt: new Date(),
         nodes: {},
         logs: [],
       };
@@ -201,7 +201,7 @@ describe("useExecutionManagement", () => {
       const existingExecution = {
         id: "exec-1",
         status: "running",
-        startedAt: /* @__PURE__ */ new Date(),
+        startedAt: new Date(),
         nodes: {},
         logs: [],
       };
@@ -236,7 +236,7 @@ describe("useExecutionManagement", () => {
       const execution = {
         id: "exec-1",
         status: "running",
-        startedAt: /* @__PURE__ */ new Date(),
+        startedAt: new Date(),
         nodes: {},
         logs: [],
       };
@@ -274,7 +274,7 @@ describe("useExecutionManagement", () => {
           {
             id: "exec-1",
             status: "running",
-            startedAt: /* @__PURE__ */ new Date(),
+            startedAt: new Date(),
             nodes: {},
             logs: [],
           },
@@ -289,7 +289,7 @@ describe("useExecutionManagement", () => {
           {
             id: "exec-2",
             status: "running",
-            startedAt: /* @__PURE__ */ new Date(),
+            startedAt: new Date(),
             nodes: {},
             logs: [],
           },
@@ -321,14 +321,14 @@ describe("useExecutionManagement", () => {
       const execution1 = {
         id: "exec-1",
         status: "running",
-        startedAt: /* @__PURE__ */ new Date(),
+        startedAt: new Date(),
         nodes: {},
         logs: [],
       };
       const execution2 = {
         id: "exec-2",
         status: "running",
-        startedAt: /* @__PURE__ */ new Date(),
+        startedAt: new Date(),
         nodes: {},
         logs: [],
       };
@@ -362,7 +362,7 @@ describe("useExecutionManagement", () => {
       const execution = {
         id: "exec-1",
         status: "running",
-        startedAt: /* @__PURE__ */ new Date(),
+        startedAt: new Date(),
         nodes: {},
         logs: [],
       };
@@ -395,14 +395,14 @@ describe("useExecutionManagement", () => {
       const execution1 = {
         id: "exec-1",
         status: "running",
-        startedAt: /* @__PURE__ */ new Date(),
+        startedAt: new Date(),
         nodes: {},
         logs: [],
       };
       const execution2 = {
         id: "exec-2",
         status: "running",
-        startedAt: /* @__PURE__ */ new Date(),
+        startedAt: new Date(),
         nodes: {},
         logs: [],
       };
@@ -436,7 +436,7 @@ describe("useExecutionManagement", () => {
       const execution = {
         id: "exec-1",
         status: "running",
-        startedAt: /* @__PURE__ */ new Date(),
+        startedAt: new Date(),
         nodes: {},
         logs: [],
       };
@@ -454,7 +454,7 @@ describe("useExecutionManagement", () => {
       );
       const newLog = {
         message: "Test log",
-        timestamp: /* @__PURE__ */ new Date(),
+        timestamp: new Date(),
       };
       act(() => {
         result.current.handleExecutionLogUpdate("workflow-1", "exec-1", newLog);
@@ -475,14 +475,14 @@ describe("useExecutionManagement", () => {
       const execution1 = {
         id: "exec-1",
         status: "running",
-        startedAt: /* @__PURE__ */ new Date(),
+        startedAt: new Date(),
         nodes: {},
         logs: [],
       };
       const execution2 = {
         id: "exec-2",
         status: "running",
-        startedAt: /* @__PURE__ */ new Date(),
+        startedAt: new Date(),
         nodes: {},
         logs: ["existing log"],
       };
@@ -519,7 +519,7 @@ describe("useExecutionManagement", () => {
       const execution = {
         id: "exec-1",
         status: "running",
-        startedAt: /* @__PURE__ */ new Date(),
+        startedAt: new Date(),
         nodes: {},
         logs: [],
       };
@@ -558,7 +558,7 @@ describe("useExecutionManagement", () => {
       const execution = {
         id: "exec-1",
         status: "running",
-        startedAt: /* @__PURE__ */ new Date(),
+        startedAt: new Date(),
         nodes: {},
         logs: [],
       };
@@ -597,7 +597,7 @@ describe("useExecutionManagement", () => {
       const execution = {
         id: "exec-1",
         status: "running",
-        startedAt: /* @__PURE__ */ new Date(),
+        startedAt: new Date(),
         nodes: {},
         logs: [],
         completedAt: void 0,
@@ -638,7 +638,7 @@ describe("useExecutionManagement", () => {
       const execution = {
         id: "exec-1",
         status: "running",
-        startedAt: /* @__PURE__ */ new Date(),
+        startedAt: new Date(),
         nodes: {},
         logs: [],
       };
@@ -678,7 +678,7 @@ describe("useExecutionManagement", () => {
       const execution = {
         id: "exec-1",
         status: "running",
-        startedAt: /* @__PURE__ */ new Date(),
+        startedAt: new Date(),
         nodes: { "node-1": { status: "running" } },
         logs: [],
       };
@@ -734,7 +734,7 @@ describe("useExecutionManagement", () => {
       const execution = {
         id: "exec-1",
         status: "running",
-        startedAt: /* @__PURE__ */ new Date(),
+        startedAt: new Date(),
         nodes: {},
         logs: [],
       };
@@ -745,7 +745,7 @@ describe("useExecutionManagement", () => {
       mockApi.getExecution.mockResolvedValue({
         id: "exec-1",
         status: "completed",
-        completed_at: /* @__PURE__ */ new Date().toISOString(),
+        completed_at: new Date().toISOString(),
         node_states: {},
         logs: [],
       });
@@ -769,7 +769,7 @@ describe("useExecutionManagement", () => {
       const pendingExecution = {
         id: "pending-123",
         status: "running",
-        startedAt: /* @__PURE__ */ new Date(),
+        startedAt: new Date(),
         nodes: {},
         logs: [],
       };
@@ -795,7 +795,7 @@ describe("useExecutionManagement", () => {
       const execution = {
         id: "exec-1",
         status: "running",
-        startedAt: /* @__PURE__ */ new Date(),
+        startedAt: new Date(),
         nodes: {},
         logs: [],
       };
@@ -806,7 +806,7 @@ describe("useExecutionManagement", () => {
       mockApi.getExecution.mockResolvedValue({
         id: "exec-1",
         status: "failed",
-        completed_at: /* @__PURE__ */ new Date().toISOString(),
+        completed_at: new Date().toISOString(),
         node_states: {},
         logs: [],
       });
@@ -837,7 +837,7 @@ describe("useExecutionManagement", () => {
       const execution = {
         id: "exec-1",
         status: "running",
-        startedAt: /* @__PURE__ */ new Date(),
+        startedAt: new Date(),
         nodes: {},
         logs: [],
       };
@@ -878,7 +878,7 @@ describe("useExecutionManagement", () => {
       const execution = {
         id: "exec-1",
         status: "running",
-        startedAt: /* @__PURE__ */ new Date(),
+        startedAt: new Date(),
         nodes: {},
         logs: [],
       };
@@ -907,7 +907,7 @@ describe("useExecutionManagement", () => {
       const execution = {
         id: "pending-123",
         status: "running",
-        startedAt: /* @__PURE__ */ new Date(),
+        startedAt: new Date(),
         nodes: {},
         logs: [],
       };
@@ -934,7 +934,7 @@ describe("useExecutionManagement", () => {
       const execution = {
         id: "exec-1",
         status: "running",
-        startedAt: /* @__PURE__ */ new Date(),
+        startedAt: new Date(),
         nodes: {},
         logs: [],
       };
@@ -988,14 +988,14 @@ describe("useExecutionManagement", () => {
             {
               id: "pending-1",
               status: "running",
-              startedAt: /* @__PURE__ */ new Date(),
+              startedAt: new Date(),
               nodes: {},
               logs: [],
             },
             {
               id: "pending-2",
               status: "running",
-              startedAt: /* @__PURE__ */ new Date(),
+              startedAt: new Date(),
               nodes: {},
               logs: [],
             },
@@ -1036,7 +1036,7 @@ describe("useExecutionManagement", () => {
         const existingExecution = {
           id: "exec-1",
           status: "running",
-          startedAt: /* @__PURE__ */ new Date(),
+          startedAt: new Date(),
           nodes: {},
           logs: [],
         };
@@ -1164,7 +1164,7 @@ describe("useExecutionManagement", () => {
         const execution = {
           id: "exec-1",
           status: "running",
-          startedAt: /* @__PURE__ */ new Date(),
+          startedAt: new Date(),
           nodes: {},
           logs: [],
         };
@@ -1197,7 +1197,7 @@ describe("useExecutionManagement", () => {
         const execution = {
           id: "exec-1",
           status: "running",
-          startedAt: /* @__PURE__ */ new Date(),
+          startedAt: new Date(),
           nodes: {},
           logs: [],
         };
@@ -1262,7 +1262,7 @@ describe("useExecutionManagement", () => {
         );
         const newLog = {
           message: "Test log",
-          timestamp: /* @__PURE__ */ new Date(),
+          timestamp: new Date(),
         };
         act(() => {
           result.current.handleExecutionLogUpdate(
@@ -1284,7 +1284,7 @@ describe("useExecutionManagement", () => {
         const execution = {
           id: "exec-1",
           status: "running",
-          startedAt: /* @__PURE__ */ new Date(),
+          startedAt: new Date(),
           nodes: {},
           logs: [],
         };
@@ -1302,7 +1302,7 @@ describe("useExecutionManagement", () => {
         );
         const newLog = {
           message: "Test log",
-          timestamp: /* @__PURE__ */ new Date(),
+          timestamp: new Date(),
         };
         act(() => {
           result.current.handleExecutionLogUpdate(
@@ -1351,7 +1351,7 @@ describe("useExecutionManagement", () => {
         const execution = {
           id: "exec-1",
           status: "running",
-          startedAt: /* @__PURE__ */ new Date(),
+          startedAt: new Date(),
           nodes: {},
           logs: [],
         };
@@ -1415,7 +1415,7 @@ describe("useExecutionManagement", () => {
         const execution = {
           id: "exec-1",
           status: "running",
-          startedAt: /* @__PURE__ */ new Date(),
+          startedAt: new Date(),
           nodes: {},
           logs: [],
         };
@@ -1470,7 +1470,7 @@ describe("useExecutionManagement", () => {
       const execution = {
         id: "exec-1",
         status: "running",
-        startedAt: /* @__PURE__ */ new Date(),
+        startedAt: new Date(),
         nodes: {},
         logs: [],
       };
@@ -1482,8 +1482,8 @@ describe("useExecutionManagement", () => {
       mockApi.getExecution.mockResolvedValue({
         id: "exec-1",
         status: "completed",
-        started_at: /* @__PURE__ */ new Date().toISOString(),
-        completed_at: /* @__PURE__ */ new Date().toISOString(),
+        started_at: new Date().toISOString(),
+        completed_at: new Date().toISOString(),
         node_states: {},
         logs: [],
       });
@@ -1506,7 +1506,7 @@ describe("useExecutionManagement", () => {
       const execution = {
         id: "exec-1",
         status: "running",
-        startedAt: /* @__PURE__ */ new Date(),
+        startedAt: new Date(),
         nodes: {},
         logs: [],
       };
@@ -1518,8 +1518,8 @@ describe("useExecutionManagement", () => {
       mockApi.getExecution.mockResolvedValue({
         id: "exec-1",
         status: "failed",
-        started_at: /* @__PURE__ */ new Date().toISOString(),
-        completed_at: /* @__PURE__ */ new Date().toISOString(),
+        started_at: new Date().toISOString(),
+        completed_at: new Date().toISOString(),
         node_states: {},
         logs: [],
       });
@@ -1542,7 +1542,7 @@ describe("useExecutionManagement", () => {
       const execution = {
         id: "exec-1",
         status: "running",
-        startedAt: /* @__PURE__ */ new Date(),
+        startedAt: new Date(),
         nodes: {},
         logs: [],
       };
@@ -1554,7 +1554,7 @@ describe("useExecutionManagement", () => {
       mockApi.getExecution.mockResolvedValue({
         id: "exec-1",
         status: "paused",
-        started_at: /* @__PURE__ */ new Date().toISOString(),
+        started_at: new Date().toISOString(),
         node_states: {},
         logs: [],
       });
@@ -1577,7 +1577,7 @@ describe("useExecutionManagement", () => {
       const execution = {
         id: "exec-1",
         status: "running",
-        startedAt: /* @__PURE__ */ new Date(),
+        startedAt: new Date(),
         nodes: {},
         logs: [],
       };
@@ -1590,7 +1590,7 @@ describe("useExecutionManagement", () => {
         id: "exec-1",
         status: "running",
         // Same status
-        started_at: /* @__PURE__ */ new Date().toISOString(),
+        started_at: new Date().toISOString(),
         node_states: {},
         logs: [],
       });
@@ -1612,7 +1612,7 @@ describe("useExecutionManagement", () => {
       const execution = {
         id: "exec-1",
         status: "running",
-        startedAt: /* @__PURE__ */ new Date(),
+        startedAt: new Date(),
         nodes: {},
         logs: [],
       };
@@ -1624,8 +1624,8 @@ describe("useExecutionManagement", () => {
       mockApi.getExecution.mockResolvedValue({
         id: "exec-1",
         status: "completed",
-        started_at: /* @__PURE__ */ new Date().toISOString(),
-        completed_at: /* @__PURE__ */ new Date().toISOString(),
+        started_at: new Date().toISOString(),
+        completed_at: new Date().toISOString(),
         node_states: {},
         logs: [],
       });
@@ -1651,7 +1651,7 @@ describe("useExecutionManagement", () => {
       const execution = {
         id: "exec-1",
         status: "running",
-        startedAt: /* @__PURE__ */ new Date(),
+        startedAt: new Date(),
         nodes: {},
         logs: [],
       };
@@ -1663,7 +1663,7 @@ describe("useExecutionManagement", () => {
       mockApi.getExecution.mockResolvedValue({
         id: "exec-1",
         status: "running",
-        started_at: /* @__PURE__ */ new Date().toISOString(),
+        started_at: new Date().toISOString(),
         node_states: {},
         logs: [],
       });
@@ -1689,7 +1689,7 @@ describe("useExecutionManagement", () => {
       const execution = {
         id: "exec-1",
         status: "running",
-        startedAt: /* @__PURE__ */ new Date(),
+        startedAt: new Date(),
         nodes: {},
         logs: [],
       };
@@ -1724,7 +1724,7 @@ describe("useExecutionManagement", () => {
       const execution = {
         id: "pending-123",
         status: "running",
-        startedAt: /* @__PURE__ */ new Date(),
+        startedAt: new Date(),
         nodes: {},
         logs: [],
       };
@@ -1764,7 +1764,7 @@ describe("useExecutionManagement", () => {
             {
               id: "exec-existing",
               status: "running",
-              startedAt: /* @__PURE__ */ new Date(),
+              startedAt: new Date(),
               nodes: {},
               logs: [],
             },
@@ -1864,7 +1864,7 @@ describe("useExecutionManagement", () => {
         const execution = {
           id: "exec-1",
           status: "running",
-          startedAt: /* @__PURE__ */ new Date(),
+          startedAt: new Date(),
           nodes: {},
           logs: [],
         };
@@ -1899,14 +1899,14 @@ describe("useExecutionManagement", () => {
           {
             id: "exec-1",
             status: "running",
-            startedAt: /* @__PURE__ */ new Date(),
+            startedAt: new Date(),
             nodes: {},
             logs: [],
           },
           {
             id: "exec-2",
             status: "running",
-            startedAt: /* @__PURE__ */ new Date(),
+            startedAt: new Date(),
             nodes: {},
             logs: [],
           },
@@ -1941,7 +1941,7 @@ describe("useExecutionManagement", () => {
         const execution = {
           id: "exec-1",
           status: "running",
-          startedAt: /* @__PURE__ */ new Date(),
+          startedAt: new Date(),
           nodes: {},
           logs: [],
         };
@@ -1977,7 +1977,7 @@ describe("useExecutionManagement", () => {
         const execution = {
           id: "exec-1",
           status: "running",
-          startedAt: /* @__PURE__ */ new Date(),
+          startedAt: new Date(),
           nodes: {},
           logs: [],
         };
@@ -2017,7 +2017,7 @@ describe("useExecutionManagement", () => {
         const execution = {
           id: "exec-1",
           status: "running",
-          startedAt: /* @__PURE__ */ new Date(),
+          startedAt: new Date(),
           nodes: {},
           logs: [],
         };
@@ -2057,8 +2057,8 @@ describe("useExecutionManagement", () => {
         const execution = {
           id: "exec-1",
           status: "completed",
-          startedAt: /* @__PURE__ */ new Date(),
-          completedAt: /* @__PURE__ */ new Date("2024-01-01"),
+          startedAt: new Date(),
+          completedAt: new Date("2024-01-01"),
           nodes: {},
           logs: [],
         };
@@ -2093,7 +2093,7 @@ describe("useExecutionManagement", () => {
         );
         expect(updatedExec.status).toBe("running");
         expect(updatedExec.completedAt).toEqual(
-          /* @__PURE__ */ new Date("2024-01-01"),
+          new Date("2024-01-01"),
         );
       });
     });
@@ -2102,7 +2102,7 @@ describe("useExecutionManagement", () => {
         const execution = {
           id: "exec-1",
           status: "running",
-          startedAt: /* @__PURE__ */ new Date(),
+          startedAt: new Date(),
           nodes: {},
           logs: [],
         };
@@ -2115,7 +2115,7 @@ describe("useExecutionManagement", () => {
           id: "exec-1",
           status: "paused",
           // Paused status
-          started_at: /* @__PURE__ */ new Date().toISOString(),
+          started_at: new Date().toISOString(),
         });
         renderHook(() =>
           useExecutionManagement({
@@ -2145,7 +2145,7 @@ describe("useExecutionManagement", () => {
         const execution = {
           id: "exec-1",
           status: "running",
-          startedAt: /* @__PURE__ */ new Date(),
+          startedAt: new Date(),
           nodes: {},
           logs: [],
         };
@@ -2157,7 +2157,7 @@ describe("useExecutionManagement", () => {
         mockApi.getExecution.mockResolvedValue({
           id: "exec-1",
           status: "completed",
-          started_at: /* @__PURE__ */ new Date().toISOString(),
+          started_at: new Date().toISOString(),
           completed_at: null,
           // Null completed_at
         });
@@ -2189,7 +2189,7 @@ describe("useExecutionManagement", () => {
         const execution = {
           id: "exec-1",
           status: "running",
-          startedAt: /* @__PURE__ */ new Date(),
+          startedAt: new Date(),
           nodes: {},
           logs: [],
         };
@@ -2201,7 +2201,7 @@ describe("useExecutionManagement", () => {
         mockApi.getExecution.mockResolvedValue({
           id: "exec-1",
           status: "running",
-          started_at: /* @__PURE__ */ new Date().toISOString(),
+          started_at: new Date().toISOString(),
           node_states: null,
           // Null node_states
         });
@@ -2233,7 +2233,7 @@ describe("useExecutionManagement", () => {
         const execution = {
           id: "exec-1",
           status: "running",
-          startedAt: /* @__PURE__ */ new Date(),
+          startedAt: new Date(),
           nodes: {},
           logs: [],
         };
@@ -2245,7 +2245,7 @@ describe("useExecutionManagement", () => {
         mockApi.getExecution.mockResolvedValue({
           id: "exec-1",
           status: "running",
-          started_at: /* @__PURE__ */ new Date().toISOString(),
+          started_at: new Date().toISOString(),
           logs: null,
           // Null logs
         });
@@ -2277,7 +2277,7 @@ describe("useExecutionManagement", () => {
         const execution = {
           id: "exec-1",
           status: "running",
-          startedAt: /* @__PURE__ */ new Date(),
+          startedAt: new Date(),
           nodes: {},
           logs: [],
         };
@@ -2312,7 +2312,7 @@ describe("useExecutionManagement", () => {
         const execution = {
           id: "exec-1",
           status: "running",
-          startedAt: /* @__PURE__ */ new Date(),
+          startedAt: new Date(),
           nodes: {},
           logs: [],
         };
@@ -2325,7 +2325,7 @@ describe("useExecutionManagement", () => {
           id: "exec-1",
           status: "completed",
           // Different from 'running'
-          started_at: /* @__PURE__ */ new Date().toISOString(),
+          started_at: new Date().toISOString(),
         });
         renderHook(() =>
           useExecutionManagement({
@@ -2347,7 +2347,7 @@ describe("useExecutionManagement", () => {
         const execution = {
           id: "exec-1",
           status: "running",
-          startedAt: /* @__PURE__ */ new Date(),
+          startedAt: new Date(),
           nodes: {},
           logs: [],
         };
@@ -2360,7 +2360,7 @@ describe("useExecutionManagement", () => {
           id: "exec-1",
           status: "running",
           // Same as current
-          started_at: /* @__PURE__ */ new Date().toISOString(),
+          started_at: new Date().toISOString(),
         });
         renderHook(() =>
           useExecutionManagement({

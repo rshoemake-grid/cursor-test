@@ -183,7 +183,7 @@ describe("apiUtils", () => {
       expect(extractApiErrorMessage(error, "Default")).toBe("Default");
     });
     it("should handle Error object that is not instanceof Error but has message", () => {
-      const error = /* @__PURE__ */ Object.create(null);
+      const error = Object.create(null);
       error.message = "Custom message";
       expect(extractApiErrorMessage(error)).toBe("Custom message");
     });

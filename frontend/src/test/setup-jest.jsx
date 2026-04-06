@@ -3,7 +3,7 @@ import "@testing-library/jest-dom";
 jest.setTimeout(180000);
 const __jestDomWindowRef =
   typeof globalThis.window !== "undefined" ? globalThis.window : null;
-const localStorageMock = /* @__PURE__ */ (() => {
+const localStorageMock = (() => {
   let store = {};
   return {
     getItem: (key) => store[key] || null,

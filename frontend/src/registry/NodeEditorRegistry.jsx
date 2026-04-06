@@ -13,7 +13,7 @@ var __publicField = (obj, key, value) =>
 import { logger } from "../utils/logger";
 class NodeEditorRegistry {
   constructor() {
-    __publicField(this, "handlers", /* @__PURE__ */ new Map());
+    __publicField(this, "handlers", new Map());
   }
   /**
    * Register a handler for a node type

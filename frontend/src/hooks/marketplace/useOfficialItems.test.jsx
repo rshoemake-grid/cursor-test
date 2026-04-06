@@ -6,8 +6,8 @@ describe("useOfficialItems", () => {
       useOfficialItems({
         templates: [{ id: "t1", is_official: true }],
         agents: [{ id: "a1", is_official: true }],
-        templateSelection: { selectedIds: /* @__PURE__ */ new Set() },
-        agentSelection: { selectedIds: /* @__PURE__ */ new Set() },
+        templateSelection: { selectedIds: new Set() },
+        agentSelection: { selectedIds: new Set() },
       }),
     );
     expect(result.current.hasOfficialWorkflows).toBe(false);
@@ -21,8 +21,8 @@ describe("useOfficialItems", () => {
           { id: "t2", is_official: false },
         ],
         agents: [],
-        templateSelection: { selectedIds: /* @__PURE__ */ new Set(["t1"]) },
-        agentSelection: { selectedIds: /* @__PURE__ */ new Set() },
+        templateSelection: { selectedIds: new Set(["t1"]) },
+        agentSelection: { selectedIds: new Set() },
       }),
     );
     expect(result.current.hasOfficialWorkflows).toBe(true);
@@ -36,9 +36,9 @@ describe("useOfficialItems", () => {
         ],
         agents: [],
         templateSelection: {
-          selectedIds: /* @__PURE__ */ new Set(["t1", "t2"]),
+          selectedIds: new Set(["t1", "t2"]),
         },
-        agentSelection: { selectedIds: /* @__PURE__ */ new Set() },
+        agentSelection: { selectedIds: new Set() },
       }),
     );
     expect(result.current.hasOfficialWorkflows).toBe(false);
@@ -51,8 +51,8 @@ describe("useOfficialItems", () => {
           { id: "a1", is_official: true },
           { id: "a2", is_official: false },
         ],
-        templateSelection: { selectedIds: /* @__PURE__ */ new Set() },
-        agentSelection: { selectedIds: /* @__PURE__ */ new Set(["a1"]) },
+        templateSelection: { selectedIds: new Set() },
+        agentSelection: { selectedIds: new Set(["a1"]) },
       }),
     );
     expect(result.current.hasOfficialAgents).toBe(true);
@@ -65,8 +65,8 @@ describe("useOfficialItems", () => {
           { id: "a1", is_official: false },
           { id: "a2", is_official: false },
         ],
-        templateSelection: { selectedIds: /* @__PURE__ */ new Set() },
-        agentSelection: { selectedIds: /* @__PURE__ */ new Set(["a1", "a2"]) },
+        templateSelection: { selectedIds: new Set() },
+        agentSelection: { selectedIds: new Set(["a1", "a2"]) },
       }),
     );
     expect(result.current.hasOfficialAgents).toBe(false);
@@ -76,8 +76,8 @@ describe("useOfficialItems", () => {
       useOfficialItems({
         templates: null,
         agents: [],
-        templateSelection: { selectedIds: /* @__PURE__ */ new Set(["t1"]) },
-        agentSelection: { selectedIds: /* @__PURE__ */ new Set() },
+        templateSelection: { selectedIds: new Set(["t1"]) },
+        agentSelection: { selectedIds: new Set() },
       }),
     );
     expect(result.current.hasOfficialWorkflows).toBe(false);
@@ -87,8 +87,8 @@ describe("useOfficialItems", () => {
       useOfficialItems({
         templates: [],
         agents: [],
-        templateSelection: { selectedIds: /* @__PURE__ */ new Set() },
-        agentSelection: { selectedIds: /* @__PURE__ */ new Set() },
+        templateSelection: { selectedIds: new Set() },
+        agentSelection: { selectedIds: new Set() },
       }),
     );
     expect(result.current.hasOfficialWorkflows).toBe(false);
@@ -106,9 +106,9 @@ describe("useOfficialItems", () => {
           { id: "a2", is_official: true },
         ],
         templateSelection: {
-          selectedIds: /* @__PURE__ */ new Set(["t1", "t2"]),
+          selectedIds: new Set(["t1", "t2"]),
         },
-        agentSelection: { selectedIds: /* @__PURE__ */ new Set(["a1", "a2"]) },
+        agentSelection: { selectedIds: new Set(["a1", "a2"]) },
       }),
     );
     expect(result.current.hasOfficialWorkflows).toBe(true);
