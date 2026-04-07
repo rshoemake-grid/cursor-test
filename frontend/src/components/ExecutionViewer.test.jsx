@@ -657,8 +657,9 @@ describe("ExecutionViewer", () => {
     mockGetExecution.mockResolvedValue(mockExecution);
     render(<ExecutionViewer executionId="exec-1" />);
     await waitForWithTimeout(() => {
-      const progressBar = document.querySelector(".bg-blue-600");
-      expect(progressBar).toBeInTheDocument();
+      expect(
+        screen.getByTestId("execution-viewer-progress-fill"),
+      ).toBeInTheDocument();
     });
   });
 });

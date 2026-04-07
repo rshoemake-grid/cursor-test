@@ -5586,8 +5586,8 @@ describe("InputNodeEditor", () => {
         );
       });
     });
-    describe("exact className string literals", () => {
-      it("should verify exact className patterns exist", () => {
+    describe("GCP bucket field wiring", () => {
+      it("should render bucket name input with stable id for labels", () => {
         const node = {
           id: "1",
           type: "gcp_bucket",
@@ -5603,7 +5603,8 @@ describe("InputNodeEditor", () => {
           <InputNodeEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
         );
         const bucketInput = screen.getByLabelText(/Bucket Name/i);
-        expect(bucketInput.className).toContain("w-full");
+        expect(bucketInput).toHaveAttribute("id", "gcp-bucket-name");
+        expect(bucketInput).toHaveAttribute("type", "text");
       });
     });
     describe("exact option value string literals", () => {

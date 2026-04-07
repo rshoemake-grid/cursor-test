@@ -1,27 +1,31 @@
 import { memo } from "react";
 import { TemplateCard } from "./TemplateCard";
+import {
+  EmptyStateCentered,
+  EmptyStateParagraph,
+} from "../styles/contentBlocks.styled";
+import { TemplateGridLayout } from "../styles/templateCard.styled";
 const TemplateGrid = memo(function TemplateGrid2({
   items,
   selectedIds,
   type,
   onToggleSelect,
   onCardClick,
-  getDifficultyColor,
   emptyMessage = "No items found. Try adjusting your filters.",
   footerText,
 }) {
   if (items.length === 0) {
     return (
-      <div className="text-center py-12">
-        <p className="text-gray-600">{emptyMessage}</p>
-      </div>
+      <EmptyStateCentered>
+        <EmptyStateParagraph>{emptyMessage}</EmptyStateParagraph>
+      </EmptyStateCentered>
     );
   }
   const uniqueItems = items.filter(
     (item, index, self) => index === self.findIndex((t) => t.id === item.id),
   );
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <TemplateGridLayout data-testid="template-grid-layout">
       {uniqueItems.map((item, index) => {
         const isSelected = selectedIds.has(item.id);
         return (
@@ -32,12 +36,11 @@ const TemplateGrid = memo(function TemplateGrid2({
             type={type}
             onToggleSelect={onToggleSelect}
             onClick={onCardClick}
-            getDifficultyColor={getDifficultyColor}
             footerText={footerText}
           />
         );
       })}
-    </div>
+    </TemplateGridLayout>
   );
 });
 export { TemplateGrid };

@@ -82,10 +82,9 @@ describe("ToastContainer", () => {
         type: "info",
       },
     ];
-    const { container } = render(
+    render(
       <ToastContainer toasts={toasts} onRemoveToast={mockOnRemoveToast} />,
     );
-    const toastContainer = container.firstChild;
-    expect(toastContainer).toHaveClass("fixed", "top-4", "right-4", "z-50");
+    expect(screen.getByTestId("toast-container-root")).toBeInTheDocument();
   });
 });

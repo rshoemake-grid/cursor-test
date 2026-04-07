@@ -1,4 +1,6 @@
 import { Clock, CheckCircle, XCircle, Play, AlertCircle } from "lucide-react";
+import { ExecStatusIconWrap } from "../styles/executionConsole.styled";
+
 function formatExecutionDuration(startedAt, completedAt) {
   const start = new Date(startedAt).getTime();
   const end = completedAt ? new Date(completedAt).getTime() : Date.now();
@@ -18,15 +20,35 @@ function formatExecutionDuration(startedAt, completedAt) {
 function getExecutionStatusIcon(status) {
   switch (status) {
     case "completed":
-      return <CheckCircle className="w-4 h-4 text-green-500" />;
+      return (
+        <ExecStatusIconWrap $status="completed">
+          <CheckCircle aria-hidden />
+        </ExecStatusIconWrap>
+      );
     case "failed":
-      return <XCircle className="w-4 h-4 text-red-500" />;
+      return (
+        <ExecStatusIconWrap $status="failed">
+          <XCircle aria-hidden />
+        </ExecStatusIconWrap>
+      );
     case "running":
-      return <Play className="w-4 h-4 text-blue-500 animate-pulse" />;
+      return (
+        <ExecStatusIconWrap $status="running" $pulse>
+          <Play aria-hidden />
+        </ExecStatusIconWrap>
+      );
     case "pending":
-      return <Clock className="w-4 h-4 text-yellow-500" />;
+      return (
+        <ExecStatusIconWrap $status="pending">
+          <Clock aria-hidden />
+        </ExecStatusIconWrap>
+      );
     default:
-      return <AlertCircle className="w-4 h-4 text-gray-500" />;
+      return (
+        <ExecStatusIconWrap $status="default">
+          <AlertCircle aria-hidden />
+        </ExecStatusIconWrap>
+      );
   }
 }
 function sortExecutionsByStartTime(executions) {

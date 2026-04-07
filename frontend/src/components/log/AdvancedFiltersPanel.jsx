@@ -1,5 +1,19 @@
 import { useCallback } from "react";
 import { X } from "lucide-react";
+import {
+  LogFieldLabel,
+  LogFilterSelect,
+  LogAdvPanelRoot,
+  LogAdvPanelHeader,
+  LogAdvPanelTitle,
+  LogAdvPanelCloseBtn,
+  LogAdvPanelStack,
+  LogAdvTwoColGrid,
+  LogAdvSubLabel,
+  LogAdvControlInput,
+  LogAdvClearLink,
+} from "../../styles/logComponents.styled";
+
 function AdvancedFiltersPanel({
   filters,
   onFiltersChange,
@@ -26,35 +40,26 @@ function AdvancedFiltersPanel({
     [filters, onFiltersChange],
   );
   return (
-    <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold text-gray-900">
-          Advanced Filters
-        </h3>
+    <LogAdvPanelRoot>
+      <LogAdvPanelHeader>
+        <LogAdvPanelTitle>Advanced Filters</LogAdvPanelTitle>
         {onClose && (
-          <button
+          <LogAdvPanelCloseBtn
+            type="button"
             onClick={onClose}
-            className="p-1 hover:bg-gray-100 rounded transition-colors"
             aria-label="Close filters"
           >
-            <X className="w-4 h-4" />
-          </button>
+            <X aria-hidden />
+          </LogAdvPanelCloseBtn>
         )}
-      </div>
-      <div className="space-y-4">
+      </LogAdvPanelHeader>
+      <LogAdvPanelStack>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Date Range
-          </label>
-          <div className="grid grid-cols-2 gap-2">
+          <LogFieldLabel>Date Range</LogFieldLabel>
+          <LogAdvTwoColGrid>
             <div>
-              <label
-                htmlFor="start-date"
-                className="text-xs text-gray-500 mb-1 block"
-              >
-                Start Date
-              </label>
-              <input
+              <LogAdvSubLabel htmlFor="start-date">Start Date</LogAdvSubLabel>
+              <LogAdvControlInput
                 id="start-date"
                 type="date"
                 value={
@@ -71,17 +76,11 @@ function AdvancedFiltersPanel({
                     start: date,
                   });
                 }}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
               />
             </div>
             <div>
-              <label
-                htmlFor="end-date"
-                className="text-xs text-gray-500 mb-1 block"
-              >
-                End Date
-              </label>
-              <input
+              <LogAdvSubLabel htmlFor="end-date">End Date</LogAdvSubLabel>
+              <LogAdvControlInput
                 id="end-date"
                 type="date"
                 value={
@@ -98,27 +97,24 @@ function AdvancedFiltersPanel({
                     end: date,
                   });
                 }}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
               />
             </div>
-          </div>
+          </LogAdvTwoColGrid>
           {(filters.dateRange?.start || filters.dateRange?.end) && (
-            <button
+            <LogAdvClearLink
+              type="button"
               onClick={() => clearFilter("dateRange")}
-              className="mt-1 text-xs text-primary-600 hover:text-primary-700"
             >
               Clear date range
-            </button>
+            </LogAdvClearLink>
           )}
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Duration (seconds)
-          </label>
-          <div className="grid grid-cols-2 gap-2">
+          <LogFieldLabel>Duration (seconds)</LogFieldLabel>
+          <LogAdvTwoColGrid>
             <div>
-              <label className="text-xs text-gray-500 mb-1 block">Min</label>
-              <input
+              <LogAdvSubLabel>Min</LogAdvSubLabel>
+              <LogAdvControlInput
                 type="number"
                 value={filters.minDuration ?? ""}
                 onChange={(e) => {
@@ -128,12 +124,11 @@ function AdvancedFiltersPanel({
                   updateFilter("minDuration", value);
                 }}
                 placeholder="Min"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
               />
             </div>
             <div>
-              <label className="text-xs text-gray-500 mb-1 block">Max</label>
-              <input
+              <LogAdvSubLabel>Max</LogAdvSubLabel>
+              <LogAdvControlInput
                 type="number"
                 value={filters.maxDuration ?? ""}
                 onChange={(e) => {
@@ -143,28 +138,25 @@ function AdvancedFiltersPanel({
                   updateFilter("maxDuration", value);
                 }}
                 placeholder="Max"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
               />
             </div>
-          </div>
+          </LogAdvTwoColGrid>
           {(filters.minDuration !== void 0 ||
             filters.maxDuration !== void 0) && (
-            <button
+            <LogAdvClearLink
+              type="button"
               onClick={() => {
                 clearFilter("minDuration");
                 clearFilter("maxDuration");
               }}
-              className="mt-1 text-xs text-primary-600 hover:text-primary-700"
             >
               Clear duration
-            </button>
+            </LogAdvClearLink>
           )}
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Error Status
-          </label>
-          <select
+          <LogFieldLabel>Error Status</LogFieldLabel>
+          <LogFilterSelect
             value={
               filters.hasError === void 0
                 ? "all"
@@ -181,19 +173,16 @@ function AdvancedFiltersPanel({
                     : false;
               updateFilter("hasError", value);
             }}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
           >
             <option value="all">All</option>
             <option value="with-error">With Errors</option>
             <option value="no-error">No Errors</option>
-          </select>
+          </LogFilterSelect>
         </div>
         {availableWorkflows.length > 0 && (
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Workflows
-            </label>
-            <select
+            <LogFieldLabel>Workflows</LogFieldLabel>
+            <LogFilterSelect
               multiple={true}
               value={filters.workflowIds || []}
               onChange={(e) => {
@@ -206,7 +195,6 @@ function AdvancedFiltersPanel({
                   selected.length > 0 ? selected : void 0,
                 );
               }}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
               size={Math.min(availableWorkflows.length, 5)}
             >
               {availableWorkflows.map((workflow) => (
@@ -214,19 +202,19 @@ function AdvancedFiltersPanel({
                   {workflow.name || workflow.id.slice(0, 8)}...
                 </option>
               ))}
-            </select>
+            </LogFilterSelect>
             {filters.workflowIds && filters.workflowIds.length > 0 && (
-              <button
+              <LogAdvClearLink
+                type="button"
                 onClick={() => clearFilter("workflowIds")}
-                className="mt-1 text-xs text-primary-600 hover:text-primary-700"
               >
                 Clear workflows
-              </button>
+              </LogAdvClearLink>
             )}
           </div>
         )}
-      </div>
-    </div>
+      </LogAdvPanelStack>
+    </LogAdvPanelRoot>
   );
 }
 export { AdvancedFiltersPanel as default };

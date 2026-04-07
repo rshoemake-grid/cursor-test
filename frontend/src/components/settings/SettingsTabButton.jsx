@@ -1,11 +1,14 @@
+import { SettingsTabNavButton } from "../../styles/settings.styled";
 function SettingsTabButton({ label, isActive, onClick }) {
   return (
-    <button
+    <SettingsTabNavButton
+      type="button"
       onClick={onClick}
-      className={`text-left px-4 py-3 rounded-lg border transition ${isActive ? "bg-primary-600 text-white border-primary-600" : "bg-white text-gray-600 border-gray-200 hover:border-primary-400 hover:text-primary-700"}`}
+      $active={isActive}
+      aria-pressed={isActive}
     >
       {label}
-    </button>
+    </SettingsTabNavButton>
   );
 }
 export { SettingsTabButton };

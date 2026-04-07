@@ -258,7 +258,7 @@ describe("NodeContextMenu", () => {
         onClose={mockOnClose}
       />,
     );
-    const menu = screen.getByText("Delete Node").closest("div");
+    const menu = screen.getByTestId("node-context-menu");
     expect(menu).toHaveStyle({
       left: "150px",
       top: "250px",
@@ -277,7 +277,7 @@ describe("NodeContextMenu", () => {
         />
       </div>,
     );
-    const menu = screen.getByText("Delete Node").closest("div");
+    const menu = screen.getByTestId("node-context-menu");
     fireEvent.click(menu);
     expect(handleParentClick).not.toHaveBeenCalled();
   });

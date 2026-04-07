@@ -2,166 +2,67 @@
 
 ## Overview
 
-The frontend is a React-based visual workflow builder application built with TypeScript, React Flow, and modern React patterns. This guide provides developers with a comprehensive understanding of the codebase architecture, components, and development patterns.
+The frontend is a **Create React App** project: React 18, **JavaScript (JSX)**, React Flow for the workflow canvas, **Redux Toolkit** and **redux-saga** for workflow state, **styled-components** for UI styling, and **Jest** + **React Testing Library** for tests. See **[frontend/README.md](../frontend/README.md)** for install, proxy, build output, and styling details.
 
-## Tech Stack
+## Tech stack
 
-- **React 18** - UI framework with hooks and context API
-- **TypeScript** - Type-safe development
-- **React Flow (@xyflow/react)** - Visual workflow editor canvas
-- **Zustand** - Lightweight state management
-- **React Router** - Client-side routing
-- **TailwindCSS** - Utility-first CSS framework
-- **Vite** - Fast build tool and dev server
-- **Axios** - HTTP client for API communication
-- **Recharts** - Chart library for analytics visualizations
-- **Jest/Vitest** - Testing framework
+| Area | Choice |
+|------|--------|
+| UI | React 18, JSX |
+| Build / dev server | Create React App (`react-scripts`) |
+| Routing | React Router |
+| Canvas | React Flow (`@xyflow/react`) |
+| Global state | Redux Toolkit, redux-saga |
+| Styling | styled-components; shared colors in `src/styles/designTokens.js` |
+| HTTP | Fetch-based client (`src/api/client.jsx`) |
+| Tests | Jest, React Testing Library |
 
-## Project Structure
+There is **no Tailwind** and **no Vite** in this frontend. PostCSS runs **autoprefixer** only.
+
+## Project structure
 
 ```
 frontend/src/
-├── components/          # React components
-│   ├── WorkflowBuilder/    # Main workflow canvas editor
-│   ├── nodes/              # Custom node components (Agent, Condition, Loop, etc.)
-│   ├── PropertyPanel/      # Node property configuration panel
-│   ├── marketplace/        # Marketplace components
-│   ├── forms/              # Reusable form components
-│   └── settings/           # Settings UI components
-├── hooks/               # Custom React hooks
-│   ├── workflow/           # Workflow-related hooks
-│   ├── execution/          # Execution management hooks
-│   ├── log/                # Log page hooks
-│   │   ├── useExecutionList.ts  # Execution list management
-│   │   └── useExecutionListQuery.ts  # React Query hook for executions
-│   ├── analytics/          # Analytics hooks
-│   │   └── useExecutionAnalytics.ts  # Analytics calculations
-│   ├── marketplace/        # Marketplace hooks
-│   ├── nodes/              # Node-related hooks
-│   ├── forms/              # Form handling hooks
-│   ├── storage/            # LocalStorage hooks
-│   ├── api/                # API interaction hooks
-│   └── utils/              # Utility hooks (debounce, sync, etc.)
-├── contexts/            # React Context providers
-│   ├── AuthContext.tsx     # Authentication state
-│   └── WorkflowTabsContext.tsx  # Workflow tabs management
-├── pages/               # Page-level components
-│   ├── AuthPage.tsx         # Login/Register page
-│   ├── MarketplacePage.tsx  # Marketplace/discovery page
-│   ├── SettingsPage.tsx     # Settings page
-│   ├── LogPage.tsx         # Execution log page
-│   └── AnalyticsPage.tsx    # Analytics dashboard with charts
-├── api/                 # API client and utilities
-│   └── client.ts           # Axios-based API client
-├── types/               # TypeScript type definitions
-│   ├── workflow.ts         # Workflow-related types
-│   └── adapters.ts         # Adapter interfaces
-├── utils/               # Utility functions
-│   ├── logger.ts           # Logging utility
-│   ├── confirm.ts          # Confirmation dialogs
-│   └── executionFormat.tsx # Execution formatting utilities
-├── adapters/            # Adapter implementations
-│   └── defaultAdapters.ts  # Default adapter factories
-├── config/             # Configuration
-├── constants/          # Application constants
-├── test/              # Test utilities
-└── App.tsx            # Root component
+├── components/       # Screens and UI (see WorkflowBuilder/, nodes/, …)
+├── pages/            # Route-level pages (AuthPage.jsx, MarketplacePage.jsx, …)
+├── hooks/            # Domain hooks: workflow/, execution/, marketplace/, …
+├── styles/           # *.styled.jsx + designTokens.js
+├── redux/            # store, slices, sagas
+├── store/            # workflowStore.jsx façade over Redux
+├── contexts/         # AuthContext.jsx, WorkflowTabsContext.jsx, …
+├── api/              # client.jsx, endpoints.jsx
+├── types/            # Shared JS shapes (adapters.jsx, workflow.jsx, …)
+├── utils/
+├── config/
+├── constants/
+├── test/
+├── index.js          # Entry
+├── App.jsx
+└── index.css         # Global baseline (no utility framework)
 ```
 
-## Core Components
+File extensions are **`.jsx`** / **`.js`** (not TypeScript).
 
-### 1. WorkflowBuilder (`components/WorkflowBuilder.tsx`)
+## Styling
 
-The main visual workflow editor component. Handles:
-- **Canvas Management**: Zoom, pan, minimap controls
-- **Node Operations**: Drag & drop, selection, deletion
-- **Edge Operations**: Creating connections between nodes
-- **State Management**: Integrates with Zustand store for workflow state
-- **Integration**: Coordinates with NodePanel and PropertyPanel
+- Use **styled-components** in `src/styles/*.styled.jsx` (or colocated patterns used elsewhere in the repo).
+- Import shared colors from **`src/styles/designTokens.js`** (typically `import { colors as c } from "./designTokens"`).
+- Keep **`src/index.css`** for document-level rules and third-party tweaks (e.g. React Flow minimap).
 
-**Key Features:**
-- React Flow integration for visual editing
-- Real-time node/edge updates
-- Auto-save functionality
-- Undo/redo support (via store)
+## Core components (high level)
 
-### 2. Node Components (`components/nodes/`)
+- **`WorkflowBuilder.jsx`** — Main canvas: React Flow, toolbars, integration with panels and Redux workflow state.
+- **`components/nodes/`** — Canvas node types (Start, End, Agent, Condition, Loop, tools, integrations).
+- **`PropertyPanel.jsx`** — Selected node configuration.
+- **`NodePanel.jsx`** — Palette and drag sources.
+- **Execution / log / analytics pages** — Under `pages/` and `components/` as applicable; many use dedicated hooks under `hooks/`.
 
-Custom node types for the workflow:
-- **StartNode** - Entry point of workflow
-- **EndNode** - Exit point of workflow
-- **AgentNode** - LLM-powered agent execution
-- **ConditionNode** - Conditional branching logic
-- **LoopNode** - Iteration and looping
+## State management
 
-Each node component:
-- Renders visual representation on canvas
-- Handles selection state
-- Displays node-specific data
-- Integrates with PropertyPanel for configuration
-
-### 3. PropertyPanel (`components/PropertyPanel/`)
-
-Right sidebar for configuring selected nodes:
-- **Dynamic Forms**: Node-type-specific configuration forms
-- **Real-time Updates**: Changes reflect immediately on canvas
-- **Validation**: Input validation and error display
-- **Nested Configuration**: Supports complex node configs (agent_config, loop_config, etc.)
-
-### 4. NodePanel (`components/NodePanel.tsx`)
-
-Left sidebar with draggable node templates:
-- **Node Palette**: Available node types
-- **Drag & Drop**: Drag nodes onto canvas
-- **Categorization**: Groups nodes by type
-- **Search**: Filter nodes by name
-
-### 5. ExecutionViewer (`components/ExecutionViewer.tsx`)
-
-Displays workflow execution results:
-- **Real-time Updates**: WebSocket integration for live updates
-- **Log Display**: Execution logs and node states
-- **Result Visualization**: Shows execution output
-- **Error Handling**: Displays errors and stack traces
-
-### 6. AnalyticsPage (`pages/AnalyticsPage.tsx`)
-
-Analytics dashboard with execution metrics and visualizations:
-- **Key Metrics**: Total executions, success rate, average duration, failed executions
-- **Charts**: Success rate over time, duration trends, status distribution, executions over time
-- **Data Visualization**: Uses Recharts library for interactive charts
-- **Real-time Updates**: Polls execution data and updates charts automatically
-
-### 7. ExecutionDetailsModal (`components/log/ExecutionDetailsModal.tsx`)
-
-Modal for viewing detailed execution information:
-- **Execution Details**: Status, timestamps, workflow ID, node states
-- **Log Display**: Formatted execution logs
-- **Download Functionality**: Download logs as text or JSON files
-- **Error Display**: Shows execution errors with formatting
-
-## State Management
-
-### Zustand Store (`store/workflowStore.ts`)
-
-Centralized state management for workflow data:
-- **Workflow State**: Nodes, edges, variables
-- **UI State**: Selected nodes, viewport position
-- **Actions**: CRUD operations for nodes/edges
-- **Persistence**: Auto-saves to localStorage
-
-### React Context
-
-**AuthContext** (`contexts/AuthContext.tsx`):
-- Manages authentication state
-- Provides login/logout functions
-- Handles token storage
-- Protects routes
-
-**WorkflowTabsContext** (`contexts/WorkflowTabsContext.tsx`):
-- Manages multiple workflow tabs
-- Handles tab switching
-- Persists tab state
+- **Redux** (`redux/workflow/workflowSlice`, sagas) holds workflow graph state and related builder data.
+- **`store/workflowStore.jsx`** exposes dispatch-bound helpers used across the builder.
+- **React Context** — Auth, workflow tabs, and other cross-cutting concerns.
+- **Local state** — `useState` / `useReducer` inside components where appropriate.
 
 ### Guest access vs signed-in behavior
 
@@ -177,216 +78,84 @@ See [API Reference](./API_REFERENCE.md#access-control-anonymous-vs-signed-in) an
 
 Side-panel assistant for natural-language edits. Calls **`api.chat`** → `POST /api/workflow-chat/chat` with `workflow_id`, `message`, `conversation_history`, and **`iteration_limit`** to cap tool–LLM loop iterations per send. Voice (push-to-talk) and read-aloud integrate with the same input/send path.
 
-## Custom Hooks Architecture
+## Custom hooks (by domain)
 
-The codebase follows a **hook-based architecture** with custom hooks organized by domain:
+Hooks live under `src/hooks/<domain>/`. Examples:
 
-### Workflow Hooks (`hooks/workflow/`)
+- **workflow/** — load, save, update, persistence, tabs sync.
+- **execution/** — run workflows, WebSocket, execution UI.
+- **marketplace/** — templates, agents, selections, dialogs.
+- **nodes/** — selection, forms, canvas operations.
+- **forms/** — publish form, field helpers.
+- **storage/** — localStorage, drafts, auto-save.
+- **api/** — authenticated fetch patterns.
+- **log/** — execution list, pagination, filters.
 
-- **useWorkflowLoader**: Loads workflow from API
-- **useWorkflowState**: Manages local workflow state
-- **useWorkflowUpdateHandler**: Handles workflow updates
-- **useWorkflowSave**: Saves workflow to backend
+Prefer **domain imports** (e.g. `from "../hooks/execution"`) per ESLint rules in the repo.
 
-### Execution Hooks (`hooks/execution/`)
+## API integration
 
-- **useWorkflowExecution**: Executes workflows
-- **useExecutionManagement**: Manages execution lifecycle
-- **useWebSocket**: WebSocket connection for real-time updates
+Central client: **`src/api/client.jsx`** (`createApiClient`, exported **`api`**).
 
-### Node Hooks (`hooks/nodes/`)
+```javascript
+import { api } from "./api/client";
 
-- **useNodeForm**: Manages node form state
-- **useNodeValidation**: Validates node configuration
-
-### Form Hooks (`hooks/forms/`)
-
-- **useFormField**: Generic form field with node data sync
-- **useSimpleFormField**: Simplified form field without sync
-
-### Storage Hooks (`hooks/storage/`)
-
-- **useLocalStorage**: Persistent local storage with cross-tab sync
-- **useAutoSave**: Debounced auto-save functionality
-
-### Utility Hooks (`hooks/utils/`)
-
-- **useDebounce**: Debounce values
-- **useSyncState**: Sync external state to local state
-- **useInputFieldSync**: Sync input fields with node data
-- **useAsyncOperation**: Handle async operations with loading/error states
-
-## API Integration
-
-### API Client (`api/client.ts`)
-
-Centralized Axios-based HTTP client:
-- **Base Configuration**: Base URL, headers, interceptors
-- **Authentication**: Automatic token injection
-- **Error Handling**: Centralized error handling
-- **Type Safety**: TypeScript types for requests/responses
-
-**Usage Pattern:**
-```typescript
-import { apiClient } from './api/client'
-
-const workflow = await apiClient.get(`/workflows/${id}`)
-await apiClient.post('/workflows', workflowData)
+const workflows = await api.getWorkflows();
 ```
 
-### Custom API Hooks (`hooks/api/`)
-
-- **useAuthenticatedApi**: Wrapper for authenticated API calls
-- **useApiCall**: Generic hook for API calls with loading/error states
-
-## Development Patterns
-
-### 1. Dependency Injection
-
-Components accept dependencies as props for testability:
-```typescript
-interface ComponentProps {
-  storage?: StorageAdapter
-  httpClient?: HttpClient
-  logger?: Logger
-}
-```
-
-### 2. Adapter Pattern
-
-Abstraction layer for external dependencies:
-- **StorageAdapter**: localStorage abstraction
-- **HttpClient**: HTTP client abstraction
-- **Logger**: Logging abstraction
-
-### 3. Hook Composition
-
-Build complex functionality by composing hooks:
-```typescript
-function useWorkflowEditor(workflowId: string) {
-  const workflow = useWorkflowLoader(workflowId)
-  const { save } = useWorkflowSave()
-  const { execute } = useWorkflowExecution()
-  
-  return { workflow, save, execute }
-}
-```
-
-### 4. DRY Principles
-
-- **Reusable Hooks**: Common patterns extracted to hooks
-- **Utility Functions**: Shared logic in utils
-- **Component Composition**: Small, reusable components
-
-### 5. SOLID Principles
-
-- **Single Responsibility**: Each hook/component has one purpose
-- **Dependency Inversion**: Depend on abstractions (adapters)
-- **Open/Closed**: Extensible through hooks and adapters
+Endpoints are composed in **`src/api/endpoints.jsx`**. Adapters (storage, fetch) are under **`src/types/adapters.jsx`** and **`defaultAdapters`**.
 
 ## Testing
 
-### Test Structure
+- **Framework**: Jest (via `react-scripts test`).
+- **UI tests**: `@testing-library/react`; hooks with `renderHook`.
+- Tests are co-located as `*.test.jsx` next to sources or under `src/test/`.
 
-Tests are co-located with components or in `__tests__` directories:
-- **Component Tests**: React Testing Library
-- **Hook Tests**: Custom renderHook utilities
-- **Unit Tests**: Jest/Vitest for utilities
+```javascript
+import { render, screen } from "@testing-library/react";
+import MyComponent from "./MyComponent";
 
-### Testing Patterns
-
-```typescript
-// Component test
-import { render, screen } from '@testing-library/react'
-import Component from './Component'
-
-test('renders correctly', () => {
-  render(<Component />)
-  expect(screen.getByText('Hello')).toBeInTheDocument()
-})
-
-// Hook test
-import { renderHook } from '@testing-library/react'
-import { useCustomHook } from './useCustomHook'
-
-test('hook works correctly', () => {
-  const { result } = renderHook(() => useCustomHook())
-  expect(result.current.value).toBe(expected)
-})
+test("renders", () => {
+  render(<MyComponent />);
+  expect(screen.getByRole("button")).toBeInTheDocument();
+});
 ```
 
-## Common Development Tasks
+## Environment variables
 
-### Adding a New Node Type
+Use **`REACT_APP_*`** prefixes for variables embedded at build time. For local API routing, prefer an **unset** `REACT_APP_API_BASE_URL` in development so the app uses the CRA proxy (`setupProxy.js`) to `/api`. See [Configuration Reference](./CONFIGURATION_REFERENCE.md#frontend-configuration).
 
-1. Create node component in `components/nodes/`
-2. Add node type to `types/workflow.ts`
-3. Create node form in PropertyPanel
-4. Add node to NodePanel palette
-5. Update workflow store to handle new node type
+## Running the app
 
-### Adding a New API Endpoint
-
-1. Add endpoint to `api/client.ts` if needed
-2. Create custom hook in `hooks/api/` or `hooks/workflow/`
-3. Use hook in component
-4. Add TypeScript types
-
-### Adding a New Page
-
-1. Create page component in `pages/`
-2. Add route in `App.tsx`
-3. Add navigation link if needed
-4. Create page-specific hooks if needed
-
-## Best Practices
-
-1. **Type Safety**: Always use TypeScript types
-2. **Hook Naming**: Use `use` prefix for custom hooks
-3. **Component Organization**: Group related components in folders
-4. **State Management**: Use Zustand for global state, useState for local
-5. **Error Handling**: Always handle errors in async operations
-6. **Performance**: Use React.memo, useMemo, useCallback when appropriate
-7. **Accessibility**: Use semantic HTML and ARIA attributes
-8. **Code Splitting**: Lazy load routes and heavy components
-
-## Environment Variables
-
-Create `.env` file:
-```env
-VITE_API_BASE_URL=http://localhost:8000/api
-VITE_WS_URL=ws://localhost:8000/ws
-```
-
-## Running the Application
+From **`frontend/`**:
 
 ```bash
-# Install dependencies
 npm install
-
-# Start development server
-npm run dev
-
-# Build for production
-npm run build
-
-# Run tests
+npm start          # http://localhost:3000
+npm run build      # output in build/
 npm test
-
-# Run tests in watch mode
-npm run test:watch
+npm run lint
 ```
 
-## Debugging
+## Common tasks
 
-- **React DevTools**: Install browser extension
-- **Zustand DevTools**: Available in development
-- **Console Logging**: Use `logger` utility for consistent logging
-- **Network Tab**: Check API calls and WebSocket connections
+- **New page** — Add `pages/YourPage.jsx`, register route in **`App.jsx`**, add navigation if needed.
+- **New node type** — Component under `components/nodes/`, register with React Flow node types in the builder, add palette entry and property form.
+- **New API method** — Extend **`client.jsx`** / **`endpoints.jsx`**, then consume via hooks or components.
+
+## Best practices
+
+1. Prefer **styled-components** and **design tokens** over ad hoc hex in JSX.
+2. Use **`data-testid` / roles** for stable tests instead of generated class names.
+3. Keep **domain hooks** focused; compose smaller hooks for complex flows.
+4. Handle **errors** on async paths; use existing notification/confirm utilities where applicable.
+5. Respect **ESLint** `no-restricted-imports` for hook entry points.
 
 ## Resources
 
-- [React Documentation](https://react.dev/)
-- [React Flow Documentation](https://reactflow.dev/)
-- [Zustand Documentation](https://github.com/pmndrs/zustand)
-- [TypeScript Handbook](https://www.typescriptlang.org/docs/)
+- [React](https://react.dev/)
+- [Create React App](https://create-react-app.dev/)
+- [React Flow](https://reactflow.dev/)
+- [Redux Toolkit](https://redux-toolkit.js.org/)
+- [styled-components](https://styled-components.com/)
+- [Testing Library](https://testing-library.com/docs/react-testing-library/intro/)

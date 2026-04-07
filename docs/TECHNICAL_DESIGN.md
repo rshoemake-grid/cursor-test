@@ -42,7 +42,7 @@ This document covers:
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                    Frontend (React + Vite)                   │
+│                 Frontend (React + Create React App)         │
 │  - Visual Workflow Builder (React Flow)                      │
 │  - Execution Console                                         │
 │  - Settings Management                                       │
@@ -80,11 +80,11 @@ This document covers:
 ### 2.2 Component Overview
 
 #### Frontend Layer
-- **Technology**: React 18, TypeScript, Vite
-- **UI Framework**: Tailwind CSS
-- **Graph Library**: React Flow
-- **State Management**: React Context + Local State
-- **HTTP Client**: Axios with interceptors
+- **Technology**: React 18, JavaScript (JSX), Create React App (`react-scripts`)
+- **UI styling**: styled-components; shared palette in `frontend/src/styles/designTokens.js`
+- **Graph Library**: React Flow (`@xyflow/react`)
+- **State Management**: Redux Toolkit + redux-saga, React Context, local state
+- **HTTP Client**: Fetch-based client (`frontend/src/api/client.jsx`)
 - **WebSocket**: Custom hook with reconnection logic
 
 #### Backend Layer
@@ -499,7 +499,7 @@ BuiltinTools:
 ### 7.1 Component Structure
 
 ```
-App.tsx
+App.jsx
 ├── AuthContext (Authentication state)
 ├── Routes
 │   ├── AuthPage (Login/Register)
@@ -519,10 +519,11 @@ App.tsx
 
 ### 7.2 State Management
 
-- **React Context**: Authentication state, global UI state
-- **Local State**: Component-specific state (useState)
-- **React Flow State**: Workflow graph state (nodes, edges)
-- **API Client**: Centralized HTTP client with auth interceptors
+- **Redux Toolkit + redux-saga**: Workflow graph and related builder state (`redux/`, `store/workflowStore.jsx` façade)
+- **React Context**: Authentication, workflow tabs, and other cross-cutting UI state
+- **Local State**: Component-specific state (`useState`)
+- **React Flow**: Canvas node/edge representation coordinated with Redux
+- **API Client**: Fetch-based client with auth headers (`src/api/client.jsx`)
 
 ### 7.3 Data Flow
 
@@ -688,7 +689,7 @@ password_reset_tokens
 ### 10.1 Development Setup
 
 ```
-Frontend (Vite Dev Server)
+Frontend (Create React App dev server)
     Port: 3000
     Hot Reload: Enabled
 

@@ -137,20 +137,15 @@ describe("ExecutionDetailsModal", () => {
     expect(mockOnClose).toHaveBeenCalledTimes(1);
   });
   it("should call onClose when backdrop is clicked", () => {
-    const { container } = render(
+    render(
       <ExecutionDetailsModal
         execution={mockExecution}
         isOpen={true}
         onClose={mockOnClose}
       />,
     );
-    const backdrop = container.querySelector(".bg-black.bg-opacity-50");
-    if (backdrop) {
-      fireEvent.click(backdrop);
-      expect(mockOnClose).toHaveBeenCalled();
-    } else {
-      expect(true).toBe(true);
-    }
+    fireEvent.click(screen.getByTestId("execution-details-modal-backdrop"));
+    expect(mockOnClose).toHaveBeenCalled();
   });
   it("should display error when execution has error", () => {
     const executionWithError = {

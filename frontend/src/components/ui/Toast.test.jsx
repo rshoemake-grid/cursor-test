@@ -24,7 +24,10 @@ describe("Toast", () => {
       />,
     );
     expect(screen.getByText("Success message")).toBeInTheDocument();
-    expect(screen.getByRole("alert")).toHaveClass("bg-green-50");
+    expect(screen.getByRole("alert")).toHaveAttribute(
+      "data-toast-type",
+      "success",
+    );
   });
   it("should render error toast", () => {
     render(
@@ -36,7 +39,10 @@ describe("Toast", () => {
       />,
     );
     expect(screen.getByText("Error message")).toBeInTheDocument();
-    expect(screen.getByRole("alert")).toHaveClass("bg-red-50");
+    expect(screen.getByRole("alert")).toHaveAttribute(
+      "data-toast-type",
+      "error",
+    );
   });
   it("should render warning toast", () => {
     render(
@@ -48,7 +54,10 @@ describe("Toast", () => {
       />,
     );
     expect(screen.getByText("Warning message")).toBeInTheDocument();
-    expect(screen.getByRole("alert")).toHaveClass("bg-yellow-50");
+    expect(screen.getByRole("alert")).toHaveAttribute(
+      "data-toast-type",
+      "warning",
+    );
   });
   it("should render info toast", () => {
     render(
@@ -60,7 +69,10 @@ describe("Toast", () => {
       />,
     );
     expect(screen.getByText("Info message")).toBeInTheDocument();
-    expect(screen.getByRole("alert")).toHaveClass("bg-blue-50");
+    expect(screen.getByRole("alert")).toHaveAttribute(
+      "data-toast-type",
+      "info",
+    );
   });
   it("should call onClose when close button is clicked", () => {
     render(<Toast id="toast-1" message="Test message" onClose={mockOnClose} />);

@@ -105,15 +105,15 @@ workflowExecutionService.ts      |     100 |      100 |     100 |     100 |
 
 | Test File | Status | Tests | Coverage |
 |-----------|--------|-------|----------|
-| useDataFetching.test.ts | ✅ PASS | 8 | 100% |
-| useAsyncOperation.test.ts | ✅ PASS | 10 | 100% |
-| workflowExecutionService.test.ts | ✅ PASS | 9 | 100% |
-| executionStateManager.test.ts | ✅ PASS | 15+ | 100% |
-| useTemplatesData.test.ts | ✅ PASS | 4 | 100% |
-| useAgentsData.test.ts | ✅ PASS | 6 | 100% |
-| useRepositoryAgentsData.test.ts | ✅ PASS | 6 | 100% |
-| useWorkflowsOfWorkflowsData.test.ts | ✅ PASS | 5 | 98.94% |
-| useExecutionPolling.test.ts | ✅ PASS | 8 | 100% |
+| useDataFetching.test.jsx | ✅ PASS | 8 | 100% |
+| useAsyncOperation.test.jsx | ✅ PASS | 10 | 100% |
+| workflowExecutionService.test.jsx | ✅ PASS | 9 | 100% |
+| executionStateManager.test.jsx | ✅ PASS | 15+ | 100% |
+| useTemplatesData.test.jsx | ✅ PASS | 4 | 100% |
+| useAgentsData.test.jsx | ✅ PASS | 6 | 100% |
+| useRepositoryAgentsData.test.jsx | ✅ PASS | 6 | 100% |
+| useWorkflowsOfWorkflowsData.test.jsx | ✅ PASS | 5 | 98.94% |
+| useExecutionPolling.test.jsx | ✅ PASS | 8 | 100% |
 
 ## Coverage Quality Assessment
 

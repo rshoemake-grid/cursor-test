@@ -31,11 +31,6 @@ describe("TemplateCard", () => {
     type: "template",
     onToggleSelect: jest.fn(),
     onClick: jest.fn(),
-    getDifficultyColor: jest.fn((difficulty) => {
-      if (difficulty === "beginner") return "bg-green-100 text-green-800";
-      if (difficulty === "intermediate") return "bg-yellow-100 text-yellow-800";
-      return "bg-red-100 text-red-800";
-    }),
   };
   beforeEach(() => {
     jest.clearAllMocks();
@@ -61,18 +56,14 @@ describe("TemplateCard", () => {
     expect(screen.getByText("Test Agent Label")).toBeInTheDocument();
   });
   it("should show selected state when isSelected is true", () => {
-    const { container } = render(
-      <TemplateCard {...mockProps} isSelected={true} />,
-    );
-    const card = container.querySelector(".border-primary-500");
-    expect(card).toBeInTheDocument();
+    render(<TemplateCard {...mockProps} isSelected={true} />);
+    const root = screen.getByText("Test Template").closest("[data-selected]");
+    expect(root).toHaveAttribute("data-selected", "true");
   });
   it("should show unselected state when isSelected is false", () => {
-    const { container } = render(
-      <TemplateCard {...mockProps} isSelected={false} />,
-    );
-    const card = container.querySelector(".border-transparent");
-    expect(card).toBeInTheDocument();
+    render(<TemplateCard {...mockProps} isSelected={false} />);
+    const root = screen.getByText("Test Template").closest("[data-selected]");
+    expect(root).toHaveAttribute("data-selected", "false");
   });
   it("should call onToggleSelect when checkbox is clicked", () => {
     render(<TemplateCard {...mockProps} />);
@@ -160,10 +151,6 @@ describe("TemplateCard", () => {
     render(<TemplateCard {...mockProps} />);
     expect(screen.getByText("beginner")).toBeInTheDocument();
   });
-  it("should call getDifficultyColor with difficulty", () => {
-    render(<TemplateCard {...mockProps} />);
-    expect(mockProps.getDifficultyColor).toHaveBeenCalledWith("beginner");
-  });
   it("should use default difficulty when not provided", () => {
     render(
       <TemplateCard
@@ -174,7 +161,7 @@ describe("TemplateCard", () => {
         }}
       />,
     );
-    expect(mockProps.getDifficultyColor).toHaveBeenCalledWith("beginner");
+    expect(screen.getByText("beginner")).toBeInTheDocument();
   });
   it("should show selected footer text when isSelected is true", () => {
     render(<TemplateCard {...mockProps} isSelected={true} />);

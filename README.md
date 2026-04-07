@@ -171,6 +171,9 @@ cursor-test/
 ├── verify_setup.py           # Setup verification
 ├── test_api.py               # API tests
 │
+├── frontend/                  # Create React App UI (React 18, styled-components, Redux)
+│   └── README.md             # Frontend stack, proxy, styling, build output
+│
 ├── backend/
 │   ├── models/               # Pydantic schemas & types
 │   ├── database/             # SQLAlchemy ORM & connection
@@ -247,6 +250,8 @@ Built with:
 - [SQLAlchemy](https://www.sqlalchemy.org/) - SQL toolkit and ORM
 - [Pydantic](https://pydantic-docs.helpmanual.io/) - Data validation
 - [OpenAI](https://openai.com/) - LLM API
+- [React](https://react.dev/) + [Create React App](https://create-react-app.dev/) - Visual builder UI
+- [styled-components](https://styled-components.com/) - Component styling (see `frontend/README.md`)
 
 ---
 

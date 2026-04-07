@@ -90,7 +90,6 @@ describe("MarketplaceTabContent", () => {
     handleAgentCardClick: jest.fn(),
     handleCardClick: jest.fn(),
     handleRepositoryAgentCardClick: jest.fn(),
-    getDifficultyColor: jest.fn(() => "bg-green-100 text-green-800"),
   };
   beforeEach(() => {
     jest.clearAllMocks();
@@ -218,22 +217,6 @@ describe("MarketplaceTabContent", () => {
     expect(TemplateGrid).toHaveBeenCalledWith(
       expect.objectContaining({
         onCardClick: mockHandleClick,
-      }),
-      expect.anything(),
-    );
-  });
-  it("should pass getDifficultyColor function", () => {
-    const mockGetColor = jest.fn(() => "bg-blue-100");
-    render(
-      <MarketplaceTabContent
-        {...defaultProps}
-        isAgentsTab={true}
-        getDifficultyColor={mockGetColor}
-      />,
-    );
-    expect(TemplateGrid).toHaveBeenCalledWith(
-      expect.objectContaining({
-        getDifficultyColor: mockGetColor,
       }),
       expect.anything(),
     );

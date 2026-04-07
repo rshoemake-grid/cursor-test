@@ -18,6 +18,17 @@ import { useExecutionManagement } from "../hooks/execution";
 import { useMarketplacePublishing } from "../hooks/marketplace";
 import { TabBar } from "./TabBar";
 import { PublishModal } from "./PublishModal";
+import {
+  EmptyStateInlineCenter,
+  EmptyStateLead,
+  EmptyStatePrimaryCta,
+} from "../styles/contentBlocks.styled";
+import {
+  WorkflowTabsRoot,
+  WorkflowBuilderMain,
+  WorkflowEmptyMain,
+  Icon16,
+} from "../styles/workflowBuilderShell.styled";
 function WorkflowTabs({
   initialWorkflowId,
   workflowLoadKey,
@@ -166,7 +177,7 @@ function WorkflowTabs({
     handleInputKeyDown,
   } = tabRenaming;
   return (
-    <div className="flex flex-col h-full">
+    <WorkflowTabsRoot>
       <TabBar
         tabs={tabs}
         activeTabId={activeTabId}
@@ -187,7 +198,7 @@ function WorkflowTabs({
         onExport={() => builderRef.current?.exportWorkflow()}
       />
       {activeTab && (
-        <div className="flex-1 flex flex-col overflow-hidden">
+        <WorkflowBuilderMain>
           <WorkflowBuilder
             key={activeTab.id}
             ref={builderRef}
@@ -218,21 +229,20 @@ function WorkflowTabs({
             onExecutionNodeUpdate={handleExecutionNodeUpdate}
             onRemoveExecution={handleRemoveExecution}
           />
-        </div>
+        </WorkflowBuilderMain>
       )}
       {tabs.length === 0 && (
-        <div className="flex-1 flex items-center justify-center bg-gray-50">
-          <div className="text-center">
-            <p className="text-gray-500 mb-4">No executions</p>
-            <button
-              onClick={handleNewWorkflow}
-              className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 flex items-center gap-2 mx-auto"
-            >
-              <Plus className="w-4 h-4" />
+        <WorkflowEmptyMain>
+          <EmptyStateInlineCenter>
+            <EmptyStateLead>No executions</EmptyStateLead>
+            <EmptyStatePrimaryCta type="button" onClick={handleNewWorkflow}>
+              <Icon16>
+                <Plus aria-hidden />
+              </Icon16>
               New Workflow
-            </button>
-          </div>
-        </div>
+            </EmptyStatePrimaryCta>
+          </EmptyStateInlineCenter>
+        </WorkflowEmptyMain>
       )}
       <PublishModal
         isOpen={showPublishModal}
@@ -242,7 +252,7 @@ function WorkflowTabs({
         onFormChange={handlePublishFormChange}
         onSubmit={handlePublish}
       />
-    </div>
+    </WorkflowTabsRoot>
   );
 }
 export { WorkflowTabs as default };

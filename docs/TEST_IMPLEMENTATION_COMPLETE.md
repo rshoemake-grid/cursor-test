@@ -37,7 +37,7 @@ All unit tests for the new features have been successfully created and are passi
 
 ### Frontend Tests ✅
 
-#### 3. `frontend/src/api/client.test.ts` (Extended)
+#### 3. `frontend/src/api/client.test.jsx` (Extended)
 **Status**: ✅ Complete - 8 new tests added
 - ✅ `test_get_execution_logs` - API client method
 - ✅ `test_get_execution_logs_with_filters` - Filter parameters
@@ -47,7 +47,7 @@ All unit tests for the new features have been successfully created and are passi
 - ✅ `test_handle_getExecutionLogs_error` - Error handling
 - ✅ `test_handle_cancelExecution_error` - Error handling
 
-#### 4. `frontend/src/pages/AnalyticsPage.test.tsx`
+#### 4. `frontend/src/pages/AnalyticsPage.test.jsx`
 **Status**: ✅ Complete - 10 tests implemented
 - ✅ Page rendering
 - ✅ Key metrics display
@@ -59,7 +59,7 @@ All unit tests for the new features have been successfully created and are passi
 - ✅ Empty state handling
 - ✅ API client injection
 
-#### 5. `frontend/src/components/log/ExecutionDetailsModal.test.tsx` (Extended)
+#### 5. `frontend/src/components/log/ExecutionDetailsModal.test.jsx` (Extended)
 **Status**: ✅ Complete - 6 new tests added
 - ✅ Download buttons rendering (with/without logs)
 - ✅ Text download functionality
@@ -129,9 +129,9 @@ cd frontend
 npm test
 
 # Run specific test files
-npm test -- client.test.ts
-npm test -- AnalyticsPage.test.tsx
-npm test -- ExecutionDetailsModal.test.tsx
+npm test -- client.test.jsx
+npm test -- AnalyticsPage.test.jsx
+npm test -- ExecutionDetailsModal.test.jsx
 
 # Run with coverage
 npm test -- --coverage

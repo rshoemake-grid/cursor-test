@@ -27,21 +27,14 @@ describe("ExecutionListItem", () => {
     expect(screen.getByText("View")).toBeInTheDocument();
   });
   it("should call onExecutionClick when item is clicked", () => {
-    const { container } = render(
+    render(
       <ExecutionListItem
         execution={mockExecution}
         onExecutionClick={mockOnExecutionClick}
       />,
     );
-    const item = container.querySelector('div[class*="cursor-pointer"]');
-    if (item) {
-      fireEvent.click(item);
-      expect(mockOnExecutionClick).toHaveBeenCalledWith("exec-12345678");
-    } else {
-      const executionId = screen.getByText(/exec-123/);
-      fireEvent.click(executionId.closest("div") || executionId);
-      expect(mockOnExecutionClick).toHaveBeenCalledWith("exec-12345678");
-    }
+    fireEvent.click(screen.getByTestId("execution-list-item"));
+    expect(mockOnExecutionClick).toHaveBeenCalledWith("exec-12345678");
   });
   it("should call onExecutionClick when View button is clicked", () => {
     render(
@@ -138,37 +131,42 @@ describe("ExecutionListItem", () => {
       ...mockExecution,
       status: "running",
     };
-    const { container } = render(
+    render(
       <ExecutionListItem
         execution={runningExecution}
         onExecutionClick={mockOnExecutionClick}
       />,
     );
-    const item = container.querySelector(".border-blue-500");
-    expect(item).toBeInTheDocument();
+    expect(screen.getByTestId("execution-list-item")).toHaveAttribute(
+      "data-active",
+      "true",
+    );
   });
   it("should apply active styling for pending execution", () => {
     const pendingExecution = {
       ...mockExecution,
       status: "pending",
     };
-    const { container } = render(
+    render(
       <ExecutionListItem
         execution={pendingExecution}
         onExecutionClick={mockOnExecutionClick}
       />,
     );
-    const item = container.querySelector(".border-blue-500");
-    expect(item).toBeInTheDocument();
+    expect(screen.getByTestId("execution-list-item")).toHaveAttribute(
+      "data-active",
+      "true",
+    );
   });
   it("should apply inactive styling for completed execution", () => {
-    const { container } = render(
+    render(
       <ExecutionListItem
         execution={mockExecution}
         onExecutionClick={mockOnExecutionClick}
       />,
     );
-    const item = container.querySelector(".border-gray-200");
-    expect(item).toBeInTheDocument();
+    const row = screen.getByTestId("execution-list-item");
+    expect(row).toHaveAttribute("data-active", "false");
+    expect(row).toHaveAttribute("data-selected", "false");
   });
 });

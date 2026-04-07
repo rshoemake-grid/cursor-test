@@ -41,11 +41,7 @@ describe("MarketplaceTabButton", () => {
       />,
     );
     const button = screen.getByRole("button");
-    expect(button).toHaveClass(
-      "text-primary-600",
-      "border-b-2",
-      "border-primary-600",
-    );
+    expect(button).toHaveAttribute("data-active", "true");
   });
   it("should apply inactive styles when isActive is false", () => {
     render(
@@ -57,8 +53,7 @@ describe("MarketplaceTabButton", () => {
       />,
     );
     const button = screen.getByRole("button");
-    expect(button).toHaveClass("text-gray-600", "hover:text-gray-900");
-    expect(button).not.toHaveClass("text-primary-600", "border-b-2");
+    expect(button).toHaveAttribute("data-active", "false");
   });
   it("should use default icon size when not provided", () => {
     render(
@@ -69,8 +64,9 @@ describe("MarketplaceTabButton", () => {
         onClick={mockOnClick}
       />,
     );
-    const icon = screen.getByRole("button").querySelector("svg");
-    expect(icon).toHaveClass("w-5", "h-5");
+    expect(
+      screen.getByRole("button").querySelector('[data-icon-size="md"]'),
+    ).toBeInTheDocument();
   });
   it("should use custom icon size when provided", () => {
     render(
@@ -82,9 +78,12 @@ describe("MarketplaceTabButton", () => {
         iconSize="w-4 h-4"
       />,
     );
-    const icon = screen.getByRole("button").querySelector("svg");
-    expect(icon).toHaveClass("w-4", "h-4");
-    expect(icon).not.toHaveClass("w-5", "h-5");
+    expect(
+      screen.getByRole("button").querySelector('[data-icon-size="sm"]'),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button").querySelector('[data-icon-size="md"]'),
+    ).not.toBeInTheDocument();
   });
   it("should render different icons correctly", () => {
     const { rerender } = render(
@@ -116,15 +115,8 @@ describe("MarketplaceTabButton", () => {
       />,
     );
     const button = screen.getByRole("button");
-    expect(button).toHaveClass(
-      "px-6",
-      "py-3",
-      "text-sm",
-      "font-medium",
-      "flex",
-      "items-center",
-      "gap-2",
-    );
+    expect(button).toHaveAttribute("data-active", "false");
+    expect(button.querySelector("svg")).toBeTruthy();
   });
   it("should handle multiple clicks", () => {
     render(
@@ -151,7 +143,7 @@ describe("MarketplaceTabButton", () => {
       />,
     );
     let button = screen.getByRole("button");
-    expect(button).not.toHaveClass("text-primary-600");
+    expect(button).toHaveAttribute("data-active", "false");
     rerender(
       <MarketplaceTabButton
         label="Test Tab"
@@ -161,10 +153,6 @@ describe("MarketplaceTabButton", () => {
       />,
     );
     button = screen.getByRole("button");
-    expect(button).toHaveClass(
-      "text-primary-600",
-      "border-b-2",
-      "border-primary-600",
-    );
+    expect(button).toHaveAttribute("data-active", "true");
   });
 });

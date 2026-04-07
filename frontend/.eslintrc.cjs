@@ -16,7 +16,6 @@ module.exports = {
     },
     {
       files: [
-        'tailwind.config.js',
         'postcss.config.js',
         'src/setupProxy.js',
         '.eslintrc.cjs',

@@ -15,6 +15,38 @@ import {
 } from "../config/templateConstants";
 import { getDefaultPublishForm, parseTags } from "../utils/publishFormUtils";
 import { usePublishForm } from "../hooks/forms";
+import {
+  MPDOverlay,
+  MPDBackdrop,
+  MPDDialog,
+  MPDHeader,
+  MPDTitle,
+  MPDCloseBtn,
+  MPDTabsRow,
+  MPDTabBtn,
+  MPDBody,
+  MPDStack,
+  MPDField,
+  MPDLabel,
+  MPDInput,
+  MPDInputReadonly,
+  MPDTextarea,
+  MPDSelect,
+  MPDHint,
+  MPDGrid2,
+  MPDFooter,
+  MPDCancelBtn,
+  MPDPublishBtn,
+  MPDSpinner,
+} from "../styles/marketplaceDialog.styled";
+
+function formatCategoryLabel(cat) {
+  return formatCategory(cat)
+    .split(" ")
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(" ");
+}
+
 function MarketplaceDialog({
   isOpen,
   onClose,
@@ -22,8 +54,6 @@ function MarketplaceDialog({
   workflowId,
   workflowName,
   storage = defaultAdapters.createLocalStorageAdapter(),
-  // httpClient is currently unused but kept for future API integration
-
   httpClient: _httpClient = defaultAdapters.createHttpClient(),
 }) {
   const [activeTab, setActiveTab] = useState(() =>
@@ -219,203 +249,164 @@ function MarketplaceDialog({
       handlePublishWorkflow();
     }
   };
+  const publishDisabled =
+    isPublishing ||
+    ((activeTab === "agents" || activeTab === "tools") &&
+      !publishFormHook.form.name);
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div
-        className="absolute inset-0 bg-black bg-opacity-50"
-        onClick={onClose}
-      />
-      <div className="relative bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
-        <div className="flex items-center justify-between p-6 border-b border-gray-200">
-          <h2 className="text-2xl font-bold text-gray-900">
-            Send to Marketplace
-          </h2>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors"
-          >
-            <X className="w-6 h-6" />
-          </button>
-        </div>
-        <div className="flex border-b border-gray-200">
-          <button
+    <MPDOverlay>
+      <MPDBackdrop onClick={onClose} />
+      <MPDDialog>
+        <MPDHeader>
+          <MPDTitle>Send to Marketplace</MPDTitle>
+          <MPDCloseBtn onClick={onClose} aria-label="Close dialog">
+            <X aria-hidden />
+          </MPDCloseBtn>
+        </MPDHeader>
+        <MPDTabsRow>
+          <MPDTabBtn
+            $active={activeTab === "agents"}
             onClick={() => setActiveTab("agents")}
-            className={`flex-1 px-6 py-4 text-sm font-medium flex items-center justify-center gap-2 transition-colors ${activeTab === "agents" ? "text-primary-600 border-b-2 border-primary-600 bg-primary-50" : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"}`}
           >
-            <Bot className="w-5 h-5" />
+            <Bot aria-hidden />
             Agents
-          </button>
-          <button
+          </MPDTabBtn>
+          <MPDTabBtn
+            $active={activeTab === "workflows"}
             onClick={() => setActiveTab("workflows")}
-            className={`flex-1 px-6 py-4 text-sm font-medium flex items-center justify-center gap-2 transition-colors ${activeTab === "workflows" ? "text-primary-600 border-b-2 border-primary-600 bg-primary-50" : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"}`}
           >
-            <Workflow className="w-5 h-5" />
+            <Workflow aria-hidden />
             Workflows
-          </button>
-          <button
+          </MPDTabBtn>
+          <MPDTabBtn
+            $active={activeTab === "tools"}
             onClick={() => setActiveTab("tools")}
-            className={`flex-1 px-6 py-4 text-sm font-medium flex items-center justify-center gap-2 transition-colors ${activeTab === "tools" ? "text-primary-600 border-b-2 border-primary-600 bg-primary-50" : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"}`}
           >
-            <Wrench className="w-5 h-5" />
+            <Wrench aria-hidden />
             Tools
-          </button>
-        </div>
-        <div className="flex-1 overflow-y-auto p-6">
+          </MPDTabBtn>
+        </MPDTabsRow>
+        <MPDBody>
           {activeTab === "tools" ? (
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Tool Name
-                </label>
-                <input
+            <MPDStack>
+              <MPDField>
+                <MPDLabel>Tool Name</MPDLabel>
+                <MPDInput
                   type="text"
                   value={publishFormHook.form.name}
                   onChange={(e) =>
                     publishFormHook.updateField("name", e.target.value)
                   }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
                   placeholder="Enter tool name"
                 />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Description
-                </label>
-                <textarea
+              </MPDField>
+              <MPDField>
+                <MPDLabel>Description</MPDLabel>
+                <MPDTextarea
                   value={publishFormHook.form.description}
                   onChange={(e) =>
                     publishFormHook.updateField("description", e.target.value)
                   }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
                   rows={3}
                   placeholder="Describe what this tool does..."
                 />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Category
-                </label>
-                <select
+              </MPDField>
+              <MPDField>
+                <MPDLabel>Category</MPDLabel>
+                <MPDSelect
                   value={publishFormHook.form.category}
                   onChange={(e) =>
                     publishFormHook.updateField("category", e.target.value)
                   }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
                 >
                   {TEMPLATE_CATEGORIES.map((cat) => (
                     <option key={cat} value={cat}>
-                      {formatCategory(cat)
-                        .split(" ")
-                        .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-                        .join(" ")}
+                      {formatCategoryLabel(cat)}
                     </option>
                   ))}
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Tags (comma-separated)
-                </label>
-                <input
+                </MPDSelect>
+              </MPDField>
+              <MPDField>
+                <MPDLabel>Tags (comma-separated)</MPDLabel>
+                <MPDInput
                   type="text"
                   value={publishFormHook.form.tags}
                   onChange={(e) =>
                     publishFormHook.updateField("tags", e.target.value)
                   }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
                   placeholder="e.g., calculator, search, automation"
                 />
-              </div>
-            </div>
+              </MPDField>
+            </MPDStack>
           ) : activeTab === "agents" ? (
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Agent Name
-                </label>
-                <input
+            <MPDStack>
+              <MPDField>
+                <MPDLabel>Agent Name</MPDLabel>
+                <MPDInput
                   type="text"
                   value={publishFormHook.form.name}
                   onChange={(e) =>
                     publishFormHook.updateField("name", e.target.value)
                   }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
                   placeholder="Enter agent name"
                 />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Description
-                </label>
-                <textarea
+              </MPDField>
+              <MPDField>
+                <MPDLabel>Description</MPDLabel>
+                <MPDTextarea
                   value={publishFormHook.form.description}
                   onChange={(e) =>
                     publishFormHook.updateField("description", e.target.value)
                   }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
                   rows={3}
                   placeholder="Describe what this agent does..."
                 />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Category
-                </label>
-                <select
+              </MPDField>
+              <MPDField>
+                <MPDLabel>Category</MPDLabel>
+                <MPDSelect
                   value={publishFormHook.form.category}
                   onChange={(e) =>
                     publishFormHook.updateField("category", e.target.value)
                   }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
                 >
                   {TEMPLATE_CATEGORIES.map((cat) => (
                     <option key={cat} value={cat}>
-                      {formatCategory(cat)
-                        .split(" ")
-                        .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-                        .join(" ")}
+                      {formatCategoryLabel(cat)}
                     </option>
                   ))}
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Tags (comma-separated)
-                </label>
-                <input
+                </MPDSelect>
+              </MPDField>
+              <MPDField>
+                <MPDLabel>Tags (comma-separated)</MPDLabel>
+                <MPDInput
                   type="text"
                   value={publishFormHook.form.tags}
                   onChange={(e) =>
                     publishFormHook.updateField("tags", e.target.value)
                   }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
                   placeholder="e.g., llm, automation, ai"
                 />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Difficulty
-                  </label>
-                  <select
+              </MPDField>
+              <MPDGrid2>
+                <MPDField>
+                  <MPDLabel>Difficulty</MPDLabel>
+                  <MPDSelect
                     value={publishFormHook.form.difficulty}
                     onChange={(e) =>
                       publishFormHook.updateField("difficulty", e.target.value)
                     }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
                   >
                     {TEMPLATE_DIFFICULTIES.map((diff) => (
                       <option key={diff} value={diff}>
                         {formatDifficulty(diff)}
                       </option>
                     ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Estimated Time
-                  </label>
-                  <input
+                  </MPDSelect>
+                </MPDField>
+                <MPDField>
+                  <MPDLabel>Estimated Time</MPDLabel>
+                  <MPDInput
                     type="text"
                     value={publishFormHook.form.estimated_time}
                     onChange={(e) =>
@@ -424,87 +415,68 @@ function MarketplaceDialog({
                         e.target.value,
                       )
                     }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
                     placeholder="e.g., 5 min"
                   />
-                </div>
-              </div>
-            </div>
+                </MPDField>
+              </MPDGrid2>
+            </MPDStack>
           ) : (
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Workflow Name
-                </label>
-                <input
+            <MPDStack>
+              <MPDField>
+                <MPDLabel>Workflow Name</MPDLabel>
+                <MPDInputReadonly
                   type="text"
                   value={workflowName || ""}
                   disabled={true}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-50"
+                  readOnly
                 />
-                <p className="mt-1 text-xs text-gray-500">
-                  Workflow name cannot be changed when publishing
-                </p>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Category
-                </label>
-                <select
+                <MPDHint>Workflow name cannot be changed when publishing</MPDHint>
+              </MPDField>
+              <MPDField>
+                <MPDLabel>Category</MPDLabel>
+                <MPDSelect
                   value={publishFormHook.form.category}
                   onChange={(e) =>
                     publishFormHook.updateField("category", e.target.value)
                   }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
                 >
                   {TEMPLATE_CATEGORIES.map((cat) => (
                     <option key={cat} value={cat}>
-                      {formatCategory(cat)
-                        .split(" ")
-                        .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-                        .join(" ")}
+                      {formatCategoryLabel(cat)}
                     </option>
                   ))}
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Tags (comma-separated)
-                </label>
-                <input
+                </MPDSelect>
+              </MPDField>
+              <MPDField>
+                <MPDLabel>Tags (comma-separated)</MPDLabel>
+                <MPDInput
                   type="text"
                   value={publishFormHook.form.tags}
                   onChange={(e) =>
                     publishFormHook.updateField("tags", e.target.value)
                   }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
                   placeholder="e.g., automation, workflow, template"
                 />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Difficulty
-                  </label>
-                  <select
+              </MPDField>
+              <MPDGrid2>
+                <MPDField>
+                  <MPDLabel>Difficulty</MPDLabel>
+                  <MPDSelect
                     value={publishFormHook.form.difficulty}
                     onChange={(e) =>
                       publishFormHook.updateField("difficulty", e.target.value)
                     }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
                   >
                     {TEMPLATE_DIFFICULTIES.map((diff) => (
                       <option key={diff} value={diff}>
                         {formatDifficulty(diff)}
                       </option>
                     ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Estimated Time
-                  </label>
-                  <input
+                  </MPDSelect>
+                </MPDField>
+                <MPDField>
+                  <MPDLabel>Estimated Time</MPDLabel>
+                  <MPDInput
                     type="text"
                     value={publishFormHook.form.estimated_time}
                     onChange={(e) =>
@@ -513,45 +485,31 @@ function MarketplaceDialog({
                         e.target.value,
                       )
                     }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
                     placeholder="e.g., 10 min"
                   />
-                </div>
-              </div>
-            </div>
+                </MPDField>
+              </MPDGrid2>
+            </MPDStack>
           )}
-        </div>
-        <div className="flex items-center justify-end gap-3 p-6 border-t border-gray-200 bg-gray-50">
-          <button
-            onClick={onClose}
-            className="px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={handlePublish}
-            disabled={
-              isPublishing ||
-              ((activeTab === "agents" || activeTab === "tools") &&
-                !publishFormHook.form.name)
-            }
-            className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 transition-colors"
-          >
+        </MPDBody>
+        <MPDFooter>
+          <MPDCancelBtn onClick={onClose}>Cancel</MPDCancelBtn>
+          <MPDPublishBtn onClick={handlePublish} disabled={publishDisabled}>
             {isPublishing ? (
               <>
-                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                <MPDSpinner aria-hidden />
                 Publishing...
               </>
             ) : (
               <>
-                <Upload className="w-4 h-4" />
+                <Upload aria-hidden />
                 Publish to Marketplace
               </>
             )}
-          </button>
-        </div>
-      </div>
-    </div>
+          </MPDPublishBtn>
+        </MPDFooter>
+      </MPDDialog>
+    </MPDOverlay>
   );
 }
 export { MarketplaceDialog as default };

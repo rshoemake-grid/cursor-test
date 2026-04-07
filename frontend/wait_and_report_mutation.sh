@@ -63,7 +63,7 @@ report_results() {
     
     # Extract per-file breakdown if available
     echo "=== PER-FILE BREAKDOWN ==="
-    tail -500 "$LOG_FILE" | grep -E "(\.ts|\.tsx).*\(.*%\)" | head -30 || echo "Per-file breakdown not available"
+    tail -500 "$LOG_FILE" | grep -E "(\.js|\.jsx).*\(.*%\)" | head -30 || echo "Per-file breakdown not available"
     echo ""
     
     # Show any errors or warnings

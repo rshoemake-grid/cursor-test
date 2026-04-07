@@ -32,6 +32,28 @@ import {
 import { InputConfiguration } from "./PropertyPanel/InputConfiguration";
 import { useLLMProviders } from "../hooks/providers";
 import { useAuth } from "../contexts/AuthContext";
+import {
+  PropertyPanelPeekWrap,
+  PropertyPanelPeekBtn,
+  PropertyPanelAside,
+  PropertyPanelAsideRelative,
+  PropertyPanelTitle,
+  PropertyPanelMutedBlock,
+  PropertyPanelMutedP,
+  PropertyPanelHint,
+  PropertyPanelHintSpaced,
+  PropertyPanelCloseBtn,
+  PropertyPanelHeaderRow,
+  PropertyPanelHeaderActions,
+  PropertyPanelSaveBtn,
+  PropertyPanelSaveIconPulse,
+  PropertyPanelDeleteBtn,
+  PropertyPanelStack,
+  PropertyPanelFieldLabel,
+  PropertyPanelInput,
+  PropertyPanelTextarea,
+} from "../styles/propertyPanel.styled";
+
 function PropertyPanel({
   selectedNodeId,
   setSelectedNodeId,
@@ -91,33 +113,32 @@ function PropertyPanel({
   }
   if (isExplicitlyFalse(panelOpen)) {
     return (
-      <div className="fixed right-0 top-1/2 -translate-y-1/2 z-10">
-        <button
+      <PropertyPanelPeekWrap>
+        <PropertyPanelPeekBtn
           onClick={() => setPanelOpen(true)}
-          className="px-3 py-2 text-xs bg-white border border-gray-300 rounded-l-full shadow hover:bg-gray-100 focus:outline-none"
           title="Reopen properties panel"
         >
           Properties
-        </button>
-      </div>
+        </PropertyPanelPeekBtn>
+      </PropertyPanelPeekWrap>
     );
   }
   if (multipleSelected) {
     return (
-      <div className="w-80 h-full bg-white border-l border-gray-200 p-4 overflow-y-auto">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Properties</h3>
-        <div className="text-sm text-gray-500 mb-2">
-          <p className="mb-2">
+      <PropertyPanelAside>
+        <PropertyPanelTitle>Properties</PropertyPanelTitle>
+        <PropertyPanelMutedBlock>
+          <PropertyPanelMutedP>
             Multiple nodes selected ({selectedNodeIds?.size})
-          </p>
-          <p className="text-xs text-gray-400">
+          </PropertyPanelMutedP>
+          <PropertyPanelHint>
             Select a single node to edit its properties
-          </p>
-          <p className="text-xs text-gray-400 mt-2">
+          </PropertyPanelHint>
+          <PropertyPanelHintSpaced>
             You can drag selected nodes together to move them
-          </p>
-        </div>
-      </div>
+          </PropertyPanelHintSpaced>
+        </PropertyPanelMutedBlock>
+      </PropertyPanelAside>
     );
   }
   const handleClose = () => {
@@ -136,78 +157,78 @@ function PropertyPanel({
     );
   };
   const nodeInputs = safeArray(selectedNode.data.inputs);
+  const saveBtnStatus =
+    saveStatus === "saved"
+      ? "saved"
+      : saveStatus === "saving"
+        ? "saving"
+        : "default";
   return (
-    <div className="relative w-80 h-full bg-white border-l border-gray-200 p-4 overflow-y-auto">
-      <button
+    <PropertyPanelAsideRelative>
+      <PropertyPanelCloseBtn
         onClick={handleClose}
-        className="absolute top-3 right-3 p-1 text-gray-500 hover:bg-gray-100 rounded-full transition-colors"
         title="Close properties panel"
+        aria-label="Close properties panel"
       >
-        <X className="w-4 h-4" />
-      </button>
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold text-gray-900">Properties</h3>
-        <div className="flex items-center gap-2">
-          <button
+        <X aria-hidden />
+      </PropertyPanelCloseBtn>
+      <PropertyPanelHeaderRow>
+        <PropertyPanelTitle $compact>Properties</PropertyPanelTitle>
+        <PropertyPanelHeaderActions>
+          <PropertyPanelSaveBtn
             onClick={handleSaveWrapper}
             disabled={saveStatus === "saving"}
-            className={`px-3 py-1.5 text-sm rounded-lg flex items-center gap-2 transition-colors ${saveStatus === "saved" ? "bg-green-100 text-green-700" : saveStatus === "saving" ? "bg-gray-100 text-gray-500 cursor-not-allowed" : "bg-primary-600 text-white hover:bg-primary-700"}`}
+            $status={saveBtnStatus}
             title="Save changes"
           >
             {saveStatus === "saved" ? (
               <>
-                <Check className="w-4 h-4" />
+                <Check aria-hidden />
                 Saved
               </>
             ) : saveStatus === "saving" ? (
               <>
-                <Save className="w-4 h-4 animate-pulse" />
+                <PropertyPanelSaveIconPulse>
+                  <Save aria-hidden />
+                </PropertyPanelSaveIconPulse>
                 Saving...
               </>
             ) : (
               <>
-                <Save className="w-4 h-4" />
+                <Save aria-hidden />
                 Save
               </>
             )}
-          </button>
-          <button
+          </PropertyPanelSaveBtn>
+          <PropertyPanelDeleteBtn
             onClick={handleDelete}
-            className="p-1 text-red-600 hover:bg-red-50 rounded"
             title="Delete node"
             aria-label="Delete selected node"
           >
-            <Trash2 className="w-4 h-4" />
-          </button>
-        </div>
-      </div>
-      <div className="space-y-4">
+            <Trash2 aria-hidden />
+          </PropertyPanelDeleteBtn>
+        </PropertyPanelHeaderActions>
+      </PropertyPanelHeaderRow>
+      <PropertyPanelStack>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Name
-          </label>
-          <input
+          <PropertyPanelFieldLabel>Name</PropertyPanelFieldLabel>
+          <PropertyPanelInput
             ref={nameInputRef}
             type="text"
             value={nameValue}
             onChange={(e) => handleNameChange(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
           />
         </div>
         <div>
-          <label
-            htmlFor="node-description"
-            className="block text-sm font-medium text-gray-700 mb-1"
-          >
+          <PropertyPanelFieldLabel htmlFor="node-description">
             Description
-          </label>
-          <textarea
+          </PropertyPanelFieldLabel>
+          <PropertyPanelTextarea
             id="node-description"
             ref={descriptionInputRef}
             value={descriptionValue}
             onChange={(e) => handleDescriptionChange(e.target.value)}
             rows={3}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
             aria-label="Node description"
           />
         </div>
@@ -276,8 +297,8 @@ function PropertyPanel({
             onConfigUpdate={handleConfigUpdate}
           />
         )}
-      </div>
-    </div>
+      </PropertyPanelStack>
+    </PropertyPanelAsideRelative>
   );
 }
 export { PropertyPanel as default };

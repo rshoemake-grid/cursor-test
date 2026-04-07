@@ -4,6 +4,11 @@ import WorkflowCanvas from "../WorkflowCanvas";
 import ExecutionConsole from "../ExecutionConsole";
 import { KeyboardHandler } from "../KeyboardHandler";
 import { ReactFlowInstanceCapture } from "../ReactFlowInstanceCapture";
+import {
+  WorkflowLayoutRow,
+  WorkflowLayoutCenter,
+  WorkflowCanvasHost,
+} from "../../styles/workflowBuilderShell.styled";
 function WorkflowBuilderLayout({
   nodes,
   edges,
@@ -40,10 +45,10 @@ function WorkflowBuilderLayout({
   onSaveWorkflow,
 }) {
   return (
-    <div className="flex-1 flex overflow-hidden">
+    <WorkflowLayoutRow>
       <NodePanel />
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <div className="flex-1 relative">
+      <WorkflowLayoutCenter>
+        <WorkflowCanvasHost>
           <KeyboardHandler
             selectedNodeId={selectedNodeId}
             setSelectedNodeId={setSelectedNodeId}
@@ -68,7 +73,7 @@ function WorkflowBuilderLayout({
             onPaneClick={onPaneClick}
             nodeExecutionStates={nodeExecutionStates}
           />
-        </div>
+        </WorkflowCanvasHost>
         <ExecutionConsole
           activeWorkflowId={activeWorkflowId}
           workflowTabId={workflowTabId}
@@ -82,7 +87,7 @@ function WorkflowBuilderLayout({
           onExecutionNodeUpdate={onExecutionNodeUpdate}
           onRemoveExecution={onRemoveExecution}
         />
-      </div>
+      </WorkflowLayoutCenter>
       <PropertyPanel
         selectedNodeId={selectedNodeId}
         setSelectedNodeId={setSelectedNodeId}
@@ -90,7 +95,7 @@ function WorkflowBuilderLayout({
         nodes={nodes}
         onSaveWorkflow={onSaveWorkflow}
       />
-    </div>
+    </WorkflowLayoutRow>
   );
 }
 export { WorkflowBuilderLayout };

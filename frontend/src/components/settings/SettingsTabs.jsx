@@ -1,8 +1,9 @@
 import { SettingsTabButton } from "./SettingsTabButton";
 import { SETTINGS_TABS } from "../../constants/settingsConstants";
+import { SettingsTabsColumn } from "../../styles/settings.styled";
 function SettingsTabs({ activeTab, onTabChange }) {
   return (
-    <div className="flex flex-col gap-2 min-w-[170px]">
+    <SettingsTabsColumn data-testid="settings-tabs-column">
       <SettingsTabButton
         label="LLM Providers"
         isActive={activeTab === SETTINGS_TABS.LLM}
@@ -13,7 +14,7 @@ function SettingsTabs({ activeTab, onTabChange }) {
         isActive={activeTab === SETTINGS_TABS.WORKFLOW}
         onClick={() => onTabChange(SETTINGS_TABS.WORKFLOW)}
       />
-    </div>
+    </SettingsTabsColumn>
   );
 }
 export { SettingsTabs };

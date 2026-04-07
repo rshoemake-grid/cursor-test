@@ -14,6 +14,17 @@ import {
   createCheckboxHandler,
 } from "../../../hooks/utils/inputEditorHelpers";
 import { CONFIG_FIELD } from "./inputEditorConstants";
+import {
+  EditorSectionRoot,
+  EditorSectionTitle,
+  EditorFieldGroup,
+  EditorLabel,
+  EditorSelect,
+  EditorInput,
+  EditorCheckboxRow,
+  EditorCheckbox,
+  EditorCheckboxCaption,
+} from "../../../styles/editorForm.styled";
 function LocalFileSystemEditor({ node, onConfigUpdate }) {
   const inputConfig = node.data.input_config || {};
   const filePathRef = useRef(null);
@@ -37,18 +48,11 @@ function LocalFileSystemEditor({ node, onConfigUpdate }) {
     DEFAULT_OVERWRITE,
   );
   return (
-    <div className="border-t pt-4">
-      <h4 className="text-sm font-semibold text-gray-900 mb-3">
-        Local File System Configuration
-      </h4>
-      <div className="mb-3">
-        <label
-          htmlFor="filesystem-mode"
-          className="block text-sm font-medium text-gray-700 mb-1"
-        >
-          Mode
-        </label>
-        <select
+    <EditorSectionRoot>
+      <EditorSectionTitle>Local File System Configuration</EditorSectionTitle>
+      <EditorFieldGroup $mb="sm">
+        <EditorLabel htmlFor="filesystem-mode">Mode</EditorLabel>
+        <EditorSelect
           id="filesystem-mode"
           value={modeValue}
           onChange={createSelectHandler(
@@ -57,21 +61,15 @@ function LocalFileSystemEditor({ node, onConfigUpdate }) {
             CONFIG_FIELD,
             "mode",
           )}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
           aria-label="Select file system operation mode"
         >
           <option value={INPUT_MODE.READ}>Read from file</option>
           <option value={INPUT_MODE.WRITE}>Write to file</option>
-        </select>
-      </div>
-      <div>
-        <label
-          htmlFor="filesystem-path"
-          className="block text-sm font-medium text-gray-700 mb-1"
-        >
-          File Path
-        </label>
-        <input
+        </EditorSelect>
+      </EditorFieldGroup>
+      <EditorFieldGroup>
+        <EditorLabel htmlFor="filesystem-path">File Path</EditorLabel>
+        <EditorInput
           id="filesystem-path"
           ref={filePathRef}
           type="text"
@@ -83,19 +81,15 @@ function LocalFileSystemEditor({ node, onConfigUpdate }) {
             "file_path",
           )}
           placeholder="/path/to/file.txt"
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
           aria-label="File system path"
         />
-      </div>
+      </EditorFieldGroup>
       {modeValue === INPUT_MODE.READ && (
-        <div className="mt-3">
-          <label
-            htmlFor="filesystem-pattern"
-            className="block text-sm font-medium text-gray-700 mb-1"
-          >
+        <EditorFieldGroup $mt="sm">
+          <EditorLabel htmlFor="filesystem-pattern">
             File Pattern (optional)
-          </label>
-          <input
+          </EditorLabel>
+          <EditorInput
             id="filesystem-pattern"
             ref={filePatternRef}
             type="text"
@@ -107,18 +101,14 @@ function LocalFileSystemEditor({ node, onConfigUpdate }) {
               "file_pattern",
             )}
             placeholder="*.txt or leave blank for exact match"
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
             aria-label="File pattern for matching"
           />
-        </div>
+        </EditorFieldGroup>
       )}
       {modeValue === INPUT_MODE.WRITE && (
-        <div className="mt-3">
-          <label
-            htmlFor="filesystem-overwrite"
-            className="flex items-center gap-2"
-          >
-            <input
+        <EditorFieldGroup $mt="sm">
+          <EditorCheckboxRow htmlFor="filesystem-overwrite">
+            <EditorCheckbox
               id="filesystem-overwrite"
               type="checkbox"
               checked={overwriteValue}
@@ -128,16 +118,15 @@ function LocalFileSystemEditor({ node, onConfigUpdate }) {
                 CONFIG_FIELD,
                 "overwrite",
               )}
-              className="w-4 h-4"
               aria-label="Overwrite existing file"
             />
-            <span className="text-sm font-medium text-gray-700">
+            <EditorCheckboxCaption>
               Overwrite existing file
-            </span>
-          </label>
-        </div>
+            </EditorCheckboxCaption>
+          </EditorCheckboxRow>
+        </EditorFieldGroup>
       )}
-    </div>
+    </EditorSectionRoot>
   );
 }
 export { LocalFileSystemEditor as default };

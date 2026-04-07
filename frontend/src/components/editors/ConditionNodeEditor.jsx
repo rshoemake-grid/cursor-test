@@ -4,6 +4,12 @@ import {
   isValidConditionType,
 } from "../../constants/stringLiterals";
 import { getDefaultConditionConfig } from "./condition/conditionValidation";
+import {
+  EditorFieldGroup,
+  EditorLabel,
+  EditorSelect,
+  EditorInput,
+} from "../../styles/editorForm.styled";
 function ConditionNodeEditor({ node, onConfigUpdate }) {
   const conditionFieldRef = useRef(null);
   const conditionValueRef = useRef(null);
@@ -58,20 +64,14 @@ function ConditionNodeEditor({ node, onConfigUpdate }) {
   const showValueField = isNotEmpty === true && isNotNotEmpty === true;
   return (
     <>
-      <div>
-        <label
-          htmlFor="condition-type"
-          className="block text-sm font-medium text-gray-700 mb-1"
-        >
-          Condition Type
-        </label>
-        <select
+      <EditorFieldGroup>
+        <EditorLabel htmlFor="condition-type">Condition Type</EditorLabel>
+        <EditorSelect
           id="condition-type"
           value={conditionType}
           onChange={(e) =>
             onConfigUpdate("condition_config", "condition_type", e.target.value)
           }
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
           aria-label="Select condition type"
         >
           <option value={CONDITION_TYPES.EQUALS}>Equals</option>
@@ -87,16 +87,11 @@ function ConditionNodeEditor({ node, onConfigUpdate }) {
           <option value={CONDITION_TYPES.EMPTY}>Empty</option>
           <option value={CONDITION_TYPES.NOT_EMPTY}>Not Empty</option>
           <option value={CONDITION_TYPES.CUSTOM}>Custom</option>
-        </select>
-      </div>
-      <div className="mt-4">
-        <label
-          htmlFor="condition-field"
-          className="block text-sm font-medium text-gray-700 mb-1"
-        >
-          Field
-        </label>
-        <input
+        </EditorSelect>
+      </EditorFieldGroup>
+      <EditorFieldGroup $mt="md">
+        <EditorLabel htmlFor="condition-field">Field</EditorLabel>
+        <EditorInput
           id="condition-field"
           ref={conditionFieldRef}
           type="text"
@@ -107,19 +102,13 @@ function ConditionNodeEditor({ node, onConfigUpdate }) {
             onConfigUpdate("condition_config", "field", newValue);
           }}
           placeholder="Field to check"
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
           aria-label="Field name to check in condition"
         />
-      </div>
+      </EditorFieldGroup>
       {showValueField === true && (
-        <div className="mt-4">
-          <label
-            htmlFor="condition-value"
-            className="block text-sm font-medium text-gray-700 mb-1"
-          >
-            Value
-          </label>
-          <input
+        <EditorFieldGroup $mt="md">
+          <EditorLabel htmlFor="condition-value">Value</EditorLabel>
+          <EditorInput
             id="condition-value"
             ref={conditionValueRef}
             type="text"
@@ -130,10 +119,9 @@ function ConditionNodeEditor({ node, onConfigUpdate }) {
               onConfigUpdate("condition_config", "value", newValue);
             }}
             placeholder="Value to compare"
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
             aria-label="Value to compare against field"
           />
-        </div>
+        </EditorFieldGroup>
       )}
     </>
   );

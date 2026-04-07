@@ -2,6 +2,18 @@ import {
   TEMPLATE_CATEGORIES as CATEGORY_VALUES,
   formatCategory,
 } from "../config/templateConstants";
+import {
+  TemplateFiltersBar,
+  TemplateFiltersInner,
+  TemplateFiltersRow,
+  TemplateFilterGroup,
+  TemplateFilterLabel,
+  TemplateFilterSelect,
+  TemplateSearchGrow,
+  TemplateSearchInput,
+  TemplateSearchButton,
+} from "../styles/templateFilters.styled";
+
 function toTitleCase(s) {
   return s
     .split(" ")
@@ -43,31 +55,27 @@ function TemplateFilters({
   onSearch,
 }) {
   return (
-    <div className="bg-white border-b border-gray-200 py-4">
-      <div className="max-w-7xl mx-auto px-4">
-        <div className="flex flex-wrap items-center gap-4">
-          <div className="flex items-center gap-2">
-            <label
-              htmlFor="category-select"
-              className="text-sm font-medium text-gray-700 whitespace-nowrap"
-            >
+    <TemplateFiltersBar>
+      <TemplateFiltersInner>
+        <TemplateFiltersRow>
+          <TemplateFilterGroup>
+            <TemplateFilterLabel htmlFor="category-select">
               Category:
-            </label>
-            <select
+            </TemplateFilterLabel>
+            <TemplateFilterSelect
               id="category-select"
               value={category}
               onChange={(e) => onCategoryChange(e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
             >
               {TEMPLATE_CATEGORIES.map((cat) => (
                 <option key={cat.value} value={cat.value}>
                   {cat.label}
                 </option>
               ))}
-            </select>
-          </div>
-          <div className="flex-1 min-w-[200px]">
-            <input
+            </TemplateFilterSelect>
+          </TemplateFilterGroup>
+          <TemplateSearchGrow>
+            <TemplateSearchInput
               type="text"
               placeholder={
                 activeTab === "agents"
@@ -83,38 +91,28 @@ function TemplateFilters({
                   onSearch();
                 }
               }}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
             />
-          </div>
-          <div className="flex items-center gap-2">
-            <label
-              htmlFor="sort-select"
-              className="text-sm font-medium text-gray-700 whitespace-nowrap"
-            >
-              Sort:
-            </label>
-            <select
+          </TemplateSearchGrow>
+          <TemplateFilterGroup>
+            <TemplateFilterLabel htmlFor="sort-select">Sort:</TemplateFilterLabel>
+            <TemplateFilterSelect
               id="sort-select"
               value={sortBy}
               onChange={(e) => onSortChange(e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
             >
               {SORT_OPTIONS.map((option) => (
                 <option key={option.value} value={option.value}>
                   {option.label}
                 </option>
               ))}
-            </select>
-          </div>
-          <button
-            onClick={onSearch}
-            className="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300"
-          >
+            </TemplateFilterSelect>
+          </TemplateFilterGroup>
+          <TemplateSearchButton type="button" onClick={onSearch}>
             Search
-          </button>
-        </div>
-      </div>
-    </div>
+          </TemplateSearchButton>
+        </TemplateFiltersRow>
+      </TemplateFiltersInner>
+    </TemplateFiltersBar>
   );
 }
 export { TemplateFilters };

@@ -2,277 +2,126 @@
 
 Visual workflow builder (Create React App, React, React Flow).
 
-## 🚀 Quick Start
+## Quick start
 
 ```bash
-# Install dependencies
 npm install
-
-# Start development server (http://localhost:3000)
 npm start
-
-# Build for production
 npm run build
-
-# Run tests
 npm test
 ```
 
+Development server defaults to **http://localhost:3000**.
+
 ## API URL in development
 
-- **Default:** leave **`REACT_APP_API_BASE_URL` empty** in `.env.development` so the browser uses same-origin **`/api`**. `setupProxy.js` forwards to FastAPI (`PROXY_TARGET`, default `http://127.0.0.1:8000`).
+- **Default:** leave **`REACT_APP_API_BASE_URL` empty** in `.env.development` so the browser uses same-origin **`/api`**. `src/setupProxy.js` forwards to FastAPI (`PROXY_TARGET`, default `http://127.0.0.1:8000`).
 - **Direct API:** set `REACT_APP_API_BASE_URL=http://127.0.0.1:8000` in `.env.development.local` if you must bypass the proxy (mind CORS).
 
 See **[docs/CONFIGURATION_REFERENCE.md](../docs/CONFIGURATION_REFERENCE.md#frontend-configuration)**.
 
-## 📦 Tech Stack
+## Tech stack
 
-- **React 18** - UI framework
-- **React Flow (@xyflow/react)** - Visual workflow editor
-- **Redux (RTK)** - App state where used
-- **TailwindCSS** - Styling
-- **Create React App** - Build and dev server
-- **Fetch-based API client** - `src/api/client.jsx`
+- **React 18** — UI
+- **Create React App (`react-scripts`)** — dev server and production build
+- **React Router** — client routing
+- **Redux (RTK) + redux-saga** — app state where used
+- **styled-components** — component styling
+- **Shared colors** — `src/styles/designTokens.js` (used by styled files)
+- **React Flow (`@xyflow/react`)** — workflow canvas
+- **API client** — `src/api/client.jsx`
 
-## 🏗️ Project Structure
+## Project structure
 
-Layout evolves with the repo; primary entry is `src/index.js` and `src/App.jsx`. Illustrative tree:
+Primary entry: `src/index.js`, `src/App.jsx`. Illustrative layout:
 
 ```
 src/
-├── components/
-│   ├── WorkflowBuilder.tsx    # Main workflow editor
-│   ├── NodePanel.tsx           # Node palette (left sidebar)
-│   ├── PropertyPanel.tsx       # Node properties (right sidebar)
-│   ├── Toolbar.tsx             # Top toolbar (save, execute, etc.)
-│   ├── WorkflowList.tsx        # Workflow grid view
-│   ├── ExecutionViewer.tsx    # Execution results view
-│   ├── log/                    # Log page components
-│   │   └── ExecutionListItem.tsx  # Execution list item component
-│   └── nodes/                  # Custom node components
-│       ├── AgentNode.tsx
-│       ├── ConditionNode.tsx
-│       ├── LoopNode.tsx
-│       ├── StartNode.tsx
-│       ├── EndNode.tsx
-│       └── ToolNode.tsx
-├── pages/
-│   ├── AuthPage.tsx            # Login/Register page
-│   ├── MarketplacePage.tsx     # Marketplace/discovery page
-│   ├── SettingsPage.tsx         # Settings page
-│   └── LogPage.tsx             # Execution log page
-├── hooks/
-│   └── log/
-│       └── useExecutionList.ts # Hook for execution list management
+├── components/          # UI (many use *.styled.jsx under styles/)
+├── pages/               # Route-level screens
+├── hooks/               # Domain-oriented hooks (execution, workflow, …)
+├── styles/              # styled-components + designTokens.js
+├── store/               # Redux store
+├── api/                 # HTTP client and endpoints
 ├── utils/
-│   └── executionFormat.tsx     # Execution formatting utilities
-├── store/
-│   └── workflowStore.ts        # Zustand state management
-├── api/
-│   └── client.ts               # API client wrapper
-├── types/
-│   └── workflow.ts             # TypeScript types
-├── App.tsx                     # Main app component
-├── main.tsx                    # Entry point
-└── index.css                   # Global styles
+├── contexts/
+├── index.css            # Global baseline (no Tailwind)
+└── setupProxy.js        # Dev API proxy
 ```
 
-## 🎨 Components
+## Styling
 
-### WorkflowBuilder
-Main canvas for visual workflow design. Handles:
-- Drag and drop of nodes
-- Connecting nodes with edges
-- Canvas controls (zoom, pan, minimap)
-- Integration with panels
+The app uses **styled-components**, not utility CSS frameworks. Shared hex values live in **`src/styles/designTokens.js`** and are imported as `colors` (often aliased `c`) in `*.styled.jsx` files under `src/styles/`.
 
-### NodePanel
-Left sidebar with draggable node templates:
-- Start/End nodes
-- Agent nodes
-- Condition nodes
-- Loop nodes
+PostCSS runs **autoprefixer** only (`postcss.config.js`). Global rules (body, `#root`, React Flow minimap tweaks) are in **`src/index.css`**.
 
-### PropertyPanel
-Right sidebar for configuring selected node:
-- Node name and description
-- Type-specific configuration
-- Agent settings (model, prompts, temperature)
-- Condition settings
-- Loop settings
+## Configuration
 
-### Toolbar
-Top action bar with:
-- Workflow name/description
-- Save/Update button
-- Execute button
-- New workflow button
-- Export button
+### API proxy (development)
 
-### WorkflowList
-Grid view of all saved workflows with:
-- Workflow cards
-- Metadata display
-- Delete functionality
-- Click to open
-
-### ExecutionViewer
-Real-time execution monitoring:
-- Status display
-- Node-by-node progress
-- Input/output for each step
-- Execution logs
-- Final result
-
-### LogPage
-Execution log page for viewing all executions:
-- List of all workflow executions
-- Status badges and icons
-- Execution details (ID, workflow, timestamps, duration)
-- Progress indicators for running executions
-- Click to view individual execution details
-- Auto-refresh every 5 seconds
-
-## 🔧 Configuration
-
-### API Proxy
-Vite is configured to proxy API requests to the backend:
-
-```typescript
-// vite.config.ts
-server: {
-  proxy: {
-    '/api': 'http://localhost:8000',
-  }
-}
-```
+CRA uses **`src/setupProxy.js`** with `http-proxy-middleware`. Adjust `PROXY_TARGET` or paths there; do not rely on Vite-style `vite.config` proxy blocks.
 
 ### Environment
-No environment variables needed for development.
-Backend URL is proxied automatically.
 
-## 🎯 Usage
+See **API URL in development** above. Production builds use `REACT_APP_*` variables where referenced in code.
 
-### Creating a Workflow
-1. Drag nodes from left panel onto canvas
-2. Connect nodes by dragging between handles
-3. Click nodes to configure in right panel
-4. Enter workflow name in toolbar
-5. Click "Save"
+## Usage (high level)
 
-### Editing a Workflow
-1. Go to "Workflows" view
-2. Click workflow card
-3. Modify in builder
-4. Click "Update" to save changes
+- **Workflows:** open the builder, drag nodes from the palette, connect handles, configure the selected node in the property panel, save.
+- **Execution:** run from the builder when the workflow is saved; follow status in the execution UI.
+- **Marketplace / settings / logs:** use the corresponding pages from the app shell.
 
-### Executing a Workflow
-1. Open workflow in builder (must be saved)
-2. Click "Execute" button
-3. Enter input JSON
-4. View progress in "Execution" view
+## Development
 
-## 🎨 Styling
+### Lint
 
-Uses TailwindCSS with custom configuration:
-
-```javascript
-// tailwind.config.js
-theme: {
-  extend: {
-    colors: {
-      primary: {
-        // Custom primary color scale
-      }
-    }
-  }
-}
-```
-
-## 📱 Responsive Design
-
-- Desktop-first design
-- Minimum width: 1024px recommended
-- Panels collapse on smaller screens
-
-## 🐛 Development
-
-### Type Checking
-```bash
-npm run tsc
-```
-
-### Linting
 ```bash
 npm run lint
 ```
 
-### Hot Reload
-Development server has hot module replacement (HMR) enabled.
-Changes reflect immediately.
-
-## 🔗 API Integration
-
-All API calls go through the client wrapper:
-
-```typescript
-import { api } from './api/client'
-
-// Get workflows
-const workflows = await api.getWorkflows()
-
-// Create workflow
-const created = await api.createWorkflow(workflow)
-
-// Execute workflow
-const execution = await api.executeWorkflow(workflowId, inputs)
-```
-
-## 📦 Build
+### Tests
 
 ```bash
-# Production build
+npm test
+```
+
+Hot reload is provided by the CRA dev server.
+
+## API integration
+
+Calls go through the shared client, for example:
+
+```javascript
+import { api } from "./api/client";
+
+const workflows = await api.getWorkflows();
+```
+
+See `src/api/endpoints.jsx` and tests under `src/api/` for patterns.
+
+## Build
+
+```bash
 npm run build
-
-# Output in dist/
-# Serve with any static server
 ```
 
-## 🎓 Learning Resources
+Output is written to **`build/`** (CRA default). Serve that folder with any static host.
 
-- [React Flow Docs](https://reactflow.dev/)
-- [Zustand Docs](https://zustand-demo.pmnd.rs/)
-- [TailwindCSS Docs](https://tailwindcss.com/)
-- [Vite Docs](https://vitejs.dev/)
+## Deployment
 
-## 🚀 Deployment
+- Point the SPA at your API using **`REACT_APP_API_BASE_URL`** (or your chosen env contract) when the app cannot use same-origin `/api`.
+- Configure the hosting provider to route unknown paths to `index.html` for client-side routing.
 
-### Static Hosting
-Build output is a static site. Deploy to:
-- Vercel
-- Netlify
-- Cloudflare Pages
-- AWS S3 + CloudFront
-- Any static host
+## Learning resources
 
-### Backend Connection
-Update Vite proxy for production or use environment variable:
+- [React documentation](https://react.dev/)
+- [Create React App](https://create-react-app.dev/)
+- [React Flow](https://reactflow.dev/)
+- [styled-components](https://styled-components.com/)
 
-```typescript
-const API_URL = import.meta.env.VITE_API_URL || '/api'
-```
+## Checklist (before committing)
 
-## ✅ Checklist
-
-Before committing:
-- [ ] No TypeScript errors
-- [ ] No linter warnings
-- [ ] Components are properly typed
-- [ ] API calls have error handling
-- [ ] UI is responsive
-- [ ] Tested in browser
-
-## 🎉 Happy Building!
-
-Create amazing visual workflows! 🚀
-
+- [ ] `npm test` passes
+- [ ] `npm run lint` within project limits
+- [ ] `npm run build` succeeds
+- [ ] Critical flows smoke-tested in the browser

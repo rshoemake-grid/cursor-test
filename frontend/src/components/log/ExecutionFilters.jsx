@@ -1,5 +1,19 @@
 import { Filter } from "lucide-react";
 import SearchBar from "../ui/SearchBar";
+import {
+  LogFiltersCard,
+  LogFiltersHeader,
+  LogFiltersTitle,
+  LogFiltersClear,
+  LogFiltersStack,
+  LogFieldLabel,
+  LogFiltersGrid,
+  LogStatusStack,
+  LogCheckboxLabel,
+  LogCheckbox,
+  LogCheckboxText,
+  LogFilterSelect,
+} from "../../styles/logComponents.styled";
 const STATUS_OPTIONS = [
   {
     value: "pending",
@@ -68,67 +82,50 @@ function ExecutionFilters({
     filters.status?.length || filters.workflowId,
   );
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-4">
-      <div className="flex items-center gap-2 mb-4">
-        <Filter className="w-5 h-5 text-gray-500" />
-        <h2 className="text-lg font-semibold text-gray-900">Filters</h2>
+    <LogFiltersCard>
+      <LogFiltersHeader>
+        <Filter aria-hidden />
+        <LogFiltersTitle>Filters</LogFiltersTitle>
         {hasActiveFilters && (
-          <button
-            onClick={clearFilters}
-            className="ml-auto text-sm text-primary-600 hover:text-primary-700"
-          >
+          <LogFiltersClear type="button" onClick={clearFilters}>
             Clear Filters
-          </button>
+          </LogFiltersClear>
         )}
-      </div>
-      <div className="space-y-4">
+      </LogFiltersHeader>
+      <LogFiltersStack>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Search
-          </label>
+          <LogFieldLabel>Search</LogFieldLabel>
           <SearchBar
             value={filters.searchQuery || ""}
             placeholder="Search by execution ID, workflow ID, or error message..."
             onChange={(value) => updateFilter("searchQuery", value || void 0)}
           />
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <LogFiltersGrid>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Status
-            </label>
-            <div className="space-y-2">
+            <LogFieldLabel>Status</LogFieldLabel>
+            <LogStatusStack>
               {STATUS_OPTIONS.map((option) => (
-                <label
-                  key={option.value}
-                  className="flex items-center gap-2 cursor-pointer"
-                >
-                  <input
+                <LogCheckboxLabel key={option.value}>
+                  <LogCheckbox
                     type="checkbox"
                     checked={filters.status?.includes(option.value) || false}
                     onChange={() => toggleStatus(option.value)}
-                    className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
                   />
-                  <span className="text-sm text-gray-700">{option.label}</span>
-                </label>
+                  <LogCheckboxText>{option.label}</LogCheckboxText>
+                </LogCheckboxLabel>
               ))}
-            </div>
+            </LogStatusStack>
           </div>
           {availableWorkflows.length > 0 && (
             <div>
-              <label
-                htmlFor="workflow-select"
-                className="block text-sm font-medium text-gray-700 mb-2"
-              >
-                Workflow
-              </label>
-              <select
+              <LogFieldLabel htmlFor="workflow-select">Workflow</LogFieldLabel>
+              <LogFilterSelect
                 id="workflow-select"
                 value={filters.workflowId || ""}
                 onChange={(e) =>
                   updateFilter("workflowId", e.target.value || void 0)
                 }
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
               >
                 <option value="">All Workflows</option>
                 {availableWorkflows.map((workflow) => (
@@ -136,49 +133,37 @@ function ExecutionFilters({
                     {workflow.name}
                   </option>
                 ))}
-              </select>
+              </LogFilterSelect>
             </div>
           )}
           <div>
-            <label
-              htmlFor="sort-by-select"
-              className="block text-sm font-medium text-gray-700 mb-2"
-            >
-              Sort By
-            </label>
-            <select
+            <LogFieldLabel htmlFor="sort-by-select">Sort By</LogFieldLabel>
+            <LogFilterSelect
               id="sort-by-select"
               value={filters.sortBy || "started_at"}
               onChange={(e) => updateFilter("sortBy", e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
             >
               {SORT_OPTIONS.map((option) => (
                 <option key={option.value} value={option.value}>
                   {option.label}
                 </option>
               ))}
-            </select>
+            </LogFilterSelect>
           </div>
           <div>
-            <label
-              htmlFor="sort-order-select"
-              className="block text-sm font-medium text-gray-700 mb-2"
-            >
-              Order
-            </label>
-            <select
+            <LogFieldLabel htmlFor="sort-order-select">Order</LogFieldLabel>
+            <LogFilterSelect
               id="sort-order-select"
               value={filters.sortOrder || "desc"}
               onChange={(e) => updateFilter("sortOrder", e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
             >
               <option value="desc">Descending</option>
               <option value="asc">Ascending</option>
-            </select>
+            </LogFilterSelect>
           </div>
-        </div>
-      </div>
-    </div>
+        </LogFiltersGrid>
+      </LogFiltersStack>
+    </LogFiltersCard>
   );
 }
 export { ExecutionFilters as default };

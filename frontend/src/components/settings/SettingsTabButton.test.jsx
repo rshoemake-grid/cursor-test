@@ -37,11 +37,7 @@ describe("SettingsTabButton", () => {
       />,
     );
     const button = screen.getByRole("button");
-    expect(button).toHaveClass(
-      "bg-primary-600",
-      "text-white",
-      "border-primary-600",
-    );
+    expect(button).toHaveAttribute("aria-pressed", "true");
   });
   it("should apply inactive styles when isActive is false", () => {
     render(
@@ -52,14 +48,7 @@ describe("SettingsTabButton", () => {
       />,
     );
     const button = screen.getByRole("button");
-    expect(button).toHaveClass(
-      "bg-white",
-      "text-gray-600",
-      "border-gray-200",
-      "hover:border-primary-400",
-      "hover:text-primary-700",
-    );
-    expect(button).not.toHaveClass("bg-primary-600", "text-white");
+    expect(button).toHaveAttribute("aria-pressed", "false");
   });
   it("should have correct button structure", () => {
     render(
@@ -70,14 +59,7 @@ describe("SettingsTabButton", () => {
       />,
     );
     const button = screen.getByRole("button");
-    expect(button).toHaveClass(
-      "text-left",
-      "px-4",
-      "py-3",
-      "rounded-lg",
-      "border",
-      "transition",
-    );
+    expect(button).toHaveAttribute("type", "button");
   });
   it("should handle multiple clicks", () => {
     render(
@@ -102,8 +84,7 @@ describe("SettingsTabButton", () => {
       />,
     );
     let button = screen.getByRole("button");
-    expect(button).toHaveClass("bg-white", "text-gray-600");
-    expect(button).not.toHaveClass("bg-primary-600", "text-white");
+    expect(button).toHaveAttribute("aria-pressed", "false");
     rerender(
       <SettingsTabButton
         label="Test Tab"
@@ -112,12 +93,7 @@ describe("SettingsTabButton", () => {
       />,
     );
     button = screen.getByRole("button");
-    expect(button).toHaveClass(
-      "bg-primary-600",
-      "text-white",
-      "border-primary-600",
-    );
-    expect(button).not.toHaveClass("bg-white", "text-gray-600");
+    expect(button).toHaveAttribute("aria-pressed", "true");
   });
   it("should render different labels correctly", () => {
     const { rerender } = render(

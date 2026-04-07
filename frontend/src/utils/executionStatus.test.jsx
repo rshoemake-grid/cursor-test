@@ -1,143 +1,43 @@
-import {
-  getExecutionStatusColor,
-  getExecutionStatusColorLight,
-  isValidExecutionStatus,
-} from "./executionStatus";
+import { getExecutionStatusTone, isValidExecutionStatus } from "./executionStatus";
+import { EXECUTION_STATUSES } from "../constants/stringLiterals";
+
 describe("executionStatus utilities", () => {
-  describe("getExecutionStatusColor", () => {
-    it("should return correct color for completed status", () => {
-      expect(getExecutionStatusColor("completed")).toBe(
-        "bg-green-900 text-green-200",
-      );
+  describe("getExecutionStatusTone", () => {
+    it("returns completed for completed", () => {
+      expect(getExecutionStatusTone("completed")).toBe("completed");
     });
-    it("should return correct color for failed status", () => {
-      expect(getExecutionStatusColor("failed")).toBe("bg-red-900 text-red-200");
+    it("returns failed for failed", () => {
+      expect(getExecutionStatusTone("failed")).toBe("failed");
     });
-    it("should return correct color for running status", () => {
-      expect(getExecutionStatusColor("running")).toBe(
-        "bg-blue-900 text-blue-200",
-      );
+    it("returns running for running", () => {
+      expect(getExecutionStatusTone("running")).toBe("running");
     });
-    it("should return correct color for pending status", () => {
-      expect(getExecutionStatusColor("pending")).toBe(
-        "bg-yellow-900 text-yellow-200",
-      );
+    it("returns pending for pending", () => {
+      expect(getExecutionStatusTone("pending")).toBe("pending");
     });
-    it("should return correct color for paused status", () => {
-      const result = getExecutionStatusColor("paused");
-      expect(result).toBe("bg-gray-900 text-gray-200");
-      expect(result).toContain("bg-gray-900");
-      expect(result).toContain("text-gray-200");
+    it("returns paused for paused", () => {
+      expect(getExecutionStatusTone("paused")).toBe("paused");
     });
-    it("should return default color for unknown status", () => {
-      expect(getExecutionStatusColor("unknown")).toBe(
-        "bg-gray-900 text-gray-200",
-      );
+    it("returns paused for unknown status", () => {
+      expect(getExecutionStatusTone("unknown")).toBe(EXECUTION_STATUSES.PAUSED);
+    });
+    it("returns paused for empty string", () => {
+      expect(getExecutionStatusTone("")).toBe(EXECUTION_STATUSES.PAUSED);
     });
   });
-  describe("getExecutionStatusColorLight", () => {
-    it("should return correct light color for completed status", () => {
-      expect(getExecutionStatusColorLight("completed")).toBe(
-        "bg-green-100 text-green-800",
-      );
-    });
-    it("should return correct light color for failed status", () => {
-      expect(getExecutionStatusColorLight("failed")).toBe(
-        "bg-red-100 text-red-800",
-      );
-    });
-    it("should return correct light color for running status", () => {
-      expect(getExecutionStatusColorLight("running")).toBe(
-        "bg-blue-100 text-blue-800",
-      );
-    });
-    it("should return correct light color for pending status", () => {
-      expect(getExecutionStatusColorLight("pending")).toBe(
-        "bg-yellow-100 text-yellow-800",
-      );
-    });
-    it("should return correct light color for paused status", () => {
-      const result = getExecutionStatusColorLight("paused");
-      expect(result).toBe("bg-gray-100 text-gray-800");
-      expect(result).toContain("bg-gray-100");
-      expect(result).toContain("text-gray-800");
-    });
-    it("should return default light color for unknown status", () => {
-      expect(getExecutionStatusColorLight("unknown")).toBe(
-        "bg-gray-100 text-gray-800",
-      );
-    });
-  });
+
   describe("isValidExecutionStatus", () => {
     it("should return true for valid statuses", () => {
-      const validStatuses = [
-        "pending",
-        "running",
-        "completed",
-        "failed",
-        "paused",
-      ];
-      validStatuses.forEach((status) => {
-        expect(isValidExecutionStatus(status)).toBe(true);
-      });
+      ["pending", "running", "completed", "failed", "paused"].forEach(
+        (status) => {
+          expect(isValidExecutionStatus(status)).toBe(true);
+        },
+      );
     });
     it("should return false for invalid statuses", () => {
-      const invalidStatuses = ["unknown", "invalid", "", "123", null, void 0];
-      invalidStatuses.forEach((status) => {
+      ["unknown", "invalid", "", "123", null, void 0].forEach((status) => {
         expect(isValidExecutionStatus(status)).toBe(false);
       });
-    });
-    it("should act as a type guard", () => {
-      const status = "completed";
-      if (isValidExecutionStatus(status)) {
-        const _test = status;
-        expect(_test).toBe("completed");
-      }
-    });
-  });
-  describe("edge cases", () => {
-    it("should handle statusMap[status] || fallback for invalid status", () => {
-      const invalidStatus = "invalid-status";
-      const result = getExecutionStatusColor(invalidStatus);
-      expect(result).toBe("bg-gray-900 text-gray-200");
-    });
-    it("should handle statusMap[status] || fallback for empty string", () => {
-      const result = getExecutionStatusColor("");
-      expect(result).toBe("bg-gray-900 text-gray-200");
-    });
-    it("should handle statusMap[status] || fallback for light variant", () => {
-      const invalidStatus = "invalid-status";
-      const result = getExecutionStatusColorLight(invalidStatus);
-      expect(result).toBe("bg-gray-100 text-gray-800");
-    });
-    it("should handle isValidExecutionStatus with empty string", () => {
-      expect(isValidExecutionStatus("")).toBe(false);
-    });
-    it("should handle isValidExecutionStatus with case variations", () => {
-      expect(isValidExecutionStatus("PENDING")).toBe(false);
-      expect(isValidExecutionStatus("Running")).toBe(false);
-    });
-    it("should handle all statusMap keys for getExecutionStatusColor", () => {
-      const statuses = ["pending", "running", "completed", "failed", "paused"];
-      for (const status of statuses) {
-        const result = getExecutionStatusColor(status);
-        expect(result).toBeTruthy();
-        expect(result).toContain("bg-");
-        if (status !== "paused") {
-          expect(result).not.toBe("bg-gray-900 text-gray-200");
-        }
-      }
-    });
-    it("should handle all statusMap keys for getExecutionStatusColorLight", () => {
-      const statuses = ["pending", "running", "completed", "failed", "paused"];
-      for (const status of statuses) {
-        const result = getExecutionStatusColorLight(status);
-        expect(result).toBeTruthy();
-        expect(result).toContain("bg-");
-        if (status !== "paused") {
-          expect(result).not.toBe("bg-gray-100 text-gray-800");
-        }
-      }
     });
   });
 });

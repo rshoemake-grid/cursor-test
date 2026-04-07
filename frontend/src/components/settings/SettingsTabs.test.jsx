@@ -27,8 +27,8 @@ describe("SettingsTabs", () => {
     const workflowTab = screen
       .getByText("Workflow Generation")
       .closest("button");
-    expect(llmTab).toHaveClass("bg-primary-600", "text-white");
-    expect(workflowTab).not.toHaveClass("bg-primary-600", "text-white");
+    expect(llmTab).toHaveAttribute("aria-pressed", "true");
+    expect(workflowTab).toHaveAttribute("aria-pressed", "false");
   });
   it("should call onTabChange when tab is clicked", () => {
     render(
@@ -51,8 +51,8 @@ describe("SettingsTabs", () => {
     );
     let llmTab = screen.getByText("LLM Providers").closest("button");
     let workflowTab = screen.getByText("Workflow Generation").closest("button");
-    expect(llmTab).toHaveClass("bg-primary-600", "text-white");
-    expect(workflowTab).not.toHaveClass("bg-primary-600", "text-white");
+    expect(llmTab).toHaveAttribute("aria-pressed", "true");
+    expect(workflowTab).toHaveAttribute("aria-pressed", "false");
     rerender(
       <SettingsTabs
         activeTab={SETTINGS_TABS.WORKFLOW}
@@ -61,22 +61,16 @@ describe("SettingsTabs", () => {
     );
     llmTab = screen.getByText("LLM Providers").closest("button");
     workflowTab = screen.getByText("Workflow Generation").closest("button");
-    expect(workflowTab).toHaveClass("bg-primary-600", "text-white");
-    expect(llmTab).not.toHaveClass("bg-primary-600", "text-white");
+    expect(workflowTab).toHaveAttribute("aria-pressed", "true");
+    expect(llmTab).toHaveAttribute("aria-pressed", "false");
   });
   it("should have correct container structure", () => {
-    const { container } = render(
+    render(
       <SettingsTabs
         activeTab={SETTINGS_TABS.LLM}
         onTabChange={mockOnTabChange}
       />,
     );
-    const tabsContainer = container.firstChild;
-    expect(tabsContainer).toHaveClass(
-      "flex",
-      "flex-col",
-      "gap-2",
-      "min-w-[170px]",
-    );
+    expect(screen.getByTestId("settings-tabs-column")).toBeInTheDocument();
   });
 });

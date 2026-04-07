@@ -63,21 +63,25 @@ describe("DatabaseNode", () => {
     const nodeData = {
       label: "My Database",
     };
-    const { container } = renderWithProvider(
+    renderWithProvider(
       <DatabaseNode data={nodeData} selected={true} id="node-1" />,
     );
-    const nodeElement = container.querySelector(".border-indigo-500");
-    expect(nodeElement).toBeInTheDocument();
+    expect(screen.getByTestId("database-node")).toHaveAttribute(
+      "data-visual-state",
+      "selected",
+    );
   });
   it("should show error state", () => {
     const nodeData = {
       label: "My Database",
       executionStatus: "failed",
     };
-    const { container } = renderWithProvider(
+    renderWithProvider(
       <DatabaseNode data={nodeData} selected={false} id="node-1" />,
     );
-    const nodeElement = container.querySelector(".border-red-500");
-    expect(nodeElement).toBeInTheDocument();
+    expect(screen.getByTestId("database-node")).toHaveAttribute(
+      "data-visual-state",
+      "error",
+    );
   });
 });

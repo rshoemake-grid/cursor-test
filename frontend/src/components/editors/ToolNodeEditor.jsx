@@ -1,3 +1,14 @@
+import {
+  EditorSectionRoot,
+  EditorSectionTitle,
+  EditorFieldGroup,
+  EditorLabel,
+  EditorSelect,
+  EditorHint,
+  EditorCalloutAmber,
+  EditorCalloutAmberTitle,
+  EditorCalloutAmberBody,
+} from "../../styles/editorForm.styled";
 const BUILTIN_TOOLS = [
   {
     value: "calculator",
@@ -39,18 +50,11 @@ function ToolNodeEditor({ node, onUpdate, onConfigUpdate: _onConfigUpdate }) {
   const toolConfig = node.data.tool_config || node.data.tool_config || {};
   const toolName = toolConfig.tool_name || "calculator";
   return (
-    <div className="border-t pt-4">
-      <h4 className="text-sm font-semibold text-gray-900 mb-3">
-        Tool Configuration
-      </h4>
-      <div>
-        <label
-          htmlFor="tool-type"
-          className="block text-sm font-medium text-gray-700 mb-1"
-        >
-          Tool Type
-        </label>
-        <select
+    <EditorSectionRoot>
+      <EditorSectionTitle>Tool Configuration</EditorSectionTitle>
+      <EditorFieldGroup>
+        <EditorLabel htmlFor="tool-type">Tool Type</EditorLabel>
+        <EditorSelect
           id="tool-type"
           value={toolName}
           onChange={(e) =>
@@ -59,7 +63,6 @@ function ToolNodeEditor({ node, onUpdate, onConfigUpdate: _onConfigUpdate }) {
               tool_name: e.target.value,
             })
           }
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
           aria-label="Select tool type"
         >
           {BUILTIN_TOOLS.map((t) => (
@@ -67,23 +70,20 @@ function ToolNodeEditor({ node, onUpdate, onConfigUpdate: _onConfigUpdate }) {
               {t.label}
             </option>
           ))}
-        </select>
-        <p className="text-xs text-gray-500 mt-1">
+        </EditorSelect>
+        <EditorHint>
           {BUILTIN_TOOLS.find((t) => t.value === toolName)?.description ||
             "Callable tool for agents"}
-        </p>
-      </div>
-      <div
-        className="bg-amber-50 border border-amber-200 rounded-lg p-3 mt-4"
-        role="status"
-      >
-        <p className="text-xs text-amber-900 font-medium mb-1">🔧 Tool Node</p>
-        <p className="text-xs text-amber-700">
+        </EditorHint>
+      </EditorFieldGroup>
+      <EditorCalloutAmber role="status">
+        <EditorCalloutAmberTitle>🔧 Tool Node</EditorCalloutAmberTitle>
+        <EditorCalloutAmberBody>
           This node represents a callable tool. Connect it to agents or use it
           in workflows. Tools can be shared via the marketplace.
-        </p>
-      </div>
-    </div>
+        </EditorCalloutAmberBody>
+      </EditorCalloutAmber>
+    </EditorSectionRoot>
   );
 }
 export { BUILTIN_TOOLS, ToolNodeEditor as default };

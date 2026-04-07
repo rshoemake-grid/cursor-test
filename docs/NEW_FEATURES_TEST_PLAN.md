@@ -64,7 +64,7 @@ This document outlines the unit tests needed for the newly implemented features:
 
 ### 1. API Client Tests
 
-**File**: `frontend/src/api/client.test.ts` (extend existing)
+**File**: `frontend/src/api/client.test.jsx` (extend existing)
 
 #### New Methods (6 tests)
 - ✅ `test_getExecutionLogs` - API client method
@@ -76,7 +76,7 @@ This document outlines the unit tests needed for the newly implemented features:
 
 ### 2. Analytics Dashboard Tests
 
-**File**: `frontend/src/pages/AnalyticsPage.test.tsx` (new)
+**File**: `frontend/src/pages/AnalyticsPage.test.jsx` (new)
 
 #### Chart Rendering (4 tests)
 - ✅ `test_renders_success_rate_chart` - Success rate chart displays
@@ -91,7 +91,7 @@ This document outlines the unit tests needed for the newly implemented features:
 
 ### 3. ExecutionDetailsModal Tests
 
-**File**: `frontend/src/components/log/ExecutionDetailsModal.test.tsx` (extend existing)
+**File**: `frontend/src/components/log/ExecutionDetailsModal.test.jsx` (extend existing)
 
 #### Download Functionality (4 tests)
 - ✅ `test_download_logs_text_button` - Text download button works
@@ -131,13 +131,13 @@ pytest --cov=backend.services.execution_service --cov=backend.api.routes.executi
 cd frontend
 
 # Run API client tests
-npm test -- client.test.ts
+npm test -- client.test.jsx
 
 # Run Analytics Dashboard tests
-npm test -- AnalyticsPage.test.tsx
+npm test -- AnalyticsPage.test.jsx
 
 # Run ExecutionDetailsModal tests
-npm test -- ExecutionDetailsModal.test.tsx
+npm test -- ExecutionDetailsModal.test.jsx
 
 # Run with coverage
 npm test -- --coverage

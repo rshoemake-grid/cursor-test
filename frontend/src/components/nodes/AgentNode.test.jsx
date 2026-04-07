@@ -41,32 +41,38 @@ describe("AgentNode", () => {
     const nodeData = {
       label: "Test Agent",
     };
-    const { container } = renderWithProvider(
+    renderWithProvider(
       <AgentNode data={nodeData} selected={true} id="node-1" />,
     );
-    const nodeElement = container.querySelector(".border-primary-500");
-    expect(nodeElement).toBeInTheDocument();
+    expect(screen.getByTestId("agent-node")).toHaveAttribute(
+      "data-visual-state",
+      "selected",
+    );
   });
   it("should show error state", () => {
     const nodeData = {
       label: "Test Agent",
       executionStatus: "failed",
     };
-    const { container } = renderWithProvider(
+    renderWithProvider(
       <AgentNode data={nodeData} selected={false} id="node-1" />,
     );
-    const nodeElement = container.querySelector(".border-red-500");
-    expect(nodeElement).toBeInTheDocument();
+    expect(screen.getByTestId("agent-node")).toHaveAttribute(
+      "data-visual-state",
+      "error",
+    );
   });
   it("should handle empty label", () => {
     const nodeData = {
       label: "",
     };
-    const { container } = renderWithProvider(
+    renderWithProvider(
       <AgentNode data={nodeData} selected={false} id="node-1" />,
     );
-    const nodeElement = container.querySelector(".bg-white");
-    expect(nodeElement).toBeInTheDocument();
+    expect(screen.getByTestId("agent-node")).toHaveAttribute(
+      "data-visual-state",
+      "default",
+    );
   });
   it("should render top, left, bottom, and right connection handles", () => {
     const nodeData = {

@@ -5,7 +5,7 @@
 This guide provides step-by-step instructions for deploying the Agentic Workflow Builder application to Kubernetes. The application consists of:
 
 - **Backend**: FastAPI Python application (port 8000)
-- **Frontend**: React/Vite application (port 3000)
+- **Frontend**: React (Create React App) static build served on port 3000 or via ingress
 - **Database**: PostgreSQL (recommended) or SQLite (development)
 
 ## Prerequisites

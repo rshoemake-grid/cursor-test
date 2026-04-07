@@ -9,6 +9,17 @@ import {
   createSelectHandler,
 } from "../../../hooks/utils/inputEditorHelpers";
 import { CONFIG_FIELD } from "./inputEditorConstants";
+import {
+  EditorSectionRoot,
+  EditorSectionTitle,
+  EditorFieldGroup,
+  EditorLabel,
+  EditorSelect,
+  EditorInput,
+  EditorTextarea,
+  EditorHint,
+  EditorInlineCode,
+} from "../../../styles/editorForm.styled";
 function GCPPubSubEditor({ node, onConfigUpdate }) {
   const inputConfig = node.data.input_config || {};
   const projectIdRef = useRef(null);
@@ -40,18 +51,11 @@ function GCPPubSubEditor({ node, onConfigUpdate }) {
     INPUT_MODE.READ,
   );
   return (
-    <div className="border-t pt-4">
-      <h4 className="text-sm font-semibold text-gray-900 mb-3">
-        GCP Pub/Sub Configuration
-      </h4>
-      <div className="mb-3">
-        <label
-          htmlFor="pubsub-mode"
-          className="block text-sm font-medium text-gray-700 mb-1"
-        >
-          Mode
-        </label>
-        <select
+    <EditorSectionRoot>
+      <EditorSectionTitle>GCP Pub/Sub Configuration</EditorSectionTitle>
+      <EditorFieldGroup $mb="sm">
+        <EditorLabel htmlFor="pubsub-mode">Mode</EditorLabel>
+        <EditorSelect
           id="pubsub-mode"
           value={modeValue}
           onChange={createSelectHandler(
@@ -60,25 +64,19 @@ function GCPPubSubEditor({ node, onConfigUpdate }) {
             CONFIG_FIELD,
             "mode",
           )}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
           aria-label="Select Pub/Sub operation mode"
         >
           <option value={INPUT_MODE.READ}>Subscribe (read messages)</option>
           <option value={INPUT_MODE.WRITE}>Publish (write messages)</option>
-        </select>
-        <p className="text-xs text-gray-500 mt-1">
+        </EditorSelect>
+        <EditorHint>
           Subscribe: Receive messages from topic. Publish: Send messages to
           topic.
-        </p>
-      </div>
-      <div>
-        <label
-          htmlFor="pubsub-project-id"
-          className="block text-sm font-medium text-gray-700 mb-1"
-        >
-          Project ID
-        </label>
-        <input
+        </EditorHint>
+      </EditorFieldGroup>
+      <EditorFieldGroup>
+        <EditorLabel htmlFor="pubsub-project-id">Project ID</EditorLabel>
+        <EditorInput
           id="pubsub-project-id"
           ref={projectIdRef}
           type="text"
@@ -90,18 +88,12 @@ function GCPPubSubEditor({ node, onConfigUpdate }) {
             "project_id",
           )}
           placeholder="my-gcp-project"
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
           aria-label="GCP project ID"
         />
-      </div>
-      <div className="mt-3">
-        <label
-          htmlFor="pubsub-topic-name"
-          className="block text-sm font-medium text-gray-700 mb-1"
-        >
-          Topic Name
-        </label>
-        <input
+      </EditorFieldGroup>
+      <EditorFieldGroup $mt="sm">
+        <EditorLabel htmlFor="pubsub-topic-name">Topic Name</EditorLabel>
+        <EditorInput
           id="pubsub-topic-name"
           ref={topicNameRef}
           type="text"
@@ -113,18 +105,14 @@ function GCPPubSubEditor({ node, onConfigUpdate }) {
             "topic_name",
           )}
           placeholder="my-topic"
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
           aria-label="Pub/Sub topic name"
         />
-      </div>
-      <div className="mt-3">
-        <label
-          htmlFor="pubsub-subscription-name"
-          className="block text-sm font-medium text-gray-700 mb-1"
-        >
+      </EditorFieldGroup>
+      <EditorFieldGroup $mt="sm">
+        <EditorLabel htmlFor="pubsub-subscription-name">
           Subscription Name
-        </label>
-        <input
+        </EditorLabel>
+        <EditorInput
           id="pubsub-subscription-name"
           ref={subscriptionNameRef}
           type="text"
@@ -136,18 +124,12 @@ function GCPPubSubEditor({ node, onConfigUpdate }) {
             "subscription_name",
           )}
           placeholder="my-subscription"
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
           aria-label="Pub/Sub subscription name"
         />
-      </div>
-      <div className="mt-3">
-        <label
-          htmlFor="pubsub-credentials"
-          className="block text-sm font-medium text-gray-700 mb-1"
-        >
-          GCP Credentials (JSON)
-        </label>
-        <textarea
+      </EditorFieldGroup>
+      <EditorFieldGroup $mt="sm">
+        <EditorLabel htmlFor="pubsub-credentials">GCP Credentials (JSON)</EditorLabel>
+        <EditorTextarea
           id="pubsub-credentials"
           ref={gcpCredentialsRef}
           value={gcpCredentialsValue}
@@ -159,17 +141,18 @@ function GCPPubSubEditor({ node, onConfigUpdate }) {
           )}
           rows={3}
           placeholder="Paste GCP service account JSON credentials"
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-xs font-mono focus:ring-2 focus:ring-primary-500"
+          $mono="xs"
           aria-label="GCP service account credentials"
         />
-        <p className="text-xs text-gray-500 mt-1">
+        <EditorHint>
           Leave empty to use Application Default Credentials on the API server; local dev may
-          use <code className="text-xs">gcloud auth application-default login</code> when the
-          credentials file is missing — see <code className="text-xs">GCP_BROWSER_AUTH_ON_MISSING_ADC</code>{" "}
-          in <code className="text-xs">.env.example</code>.
-        </p>
-      </div>
-    </div>
+          use <EditorInlineCode>gcloud auth application-default login</EditorInlineCode> when the
+          credentials file is missing — see{" "}
+          <EditorInlineCode>GCP_BROWSER_AUTH_ON_MISSING_ADC</EditorInlineCode> in{" "}
+          <EditorInlineCode>.env.example</EditorInlineCode>.
+        </EditorHint>
+      </EditorFieldGroup>
+    </EditorSectionRoot>
   );
 }
 export { GCPPubSubEditor as default };

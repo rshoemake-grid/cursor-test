@@ -3,6 +3,11 @@ import AWSS3Editor from "./input/AWSS3Editor";
 import GCPPubSubEditor from "./input/GCPPubSubEditor";
 import LocalFileSystemEditor from "./input/LocalFileSystemEditor";
 import { NODE_TYPE_DISPLAY_NAMES } from "./input/inputEditorConstants";
+import {
+  EditorSectionRoot,
+  EditorSectionTitle,
+  EditorMutedParagraph,
+} from "../../styles/editorForm.styled";
 function InputNodeEditor({ node, onConfigUpdate }) {
   switch (node.type) {
     case "gcp_bucket": {
@@ -40,14 +45,12 @@ function InputNodeEditor({ node, onConfigUpdate }) {
             ? NODE_TYPE_DISPLAY_NAMES.FIREBASE
             : NODE_TYPE_DISPLAY_NAMES.BIGQUERY;
       return (
-        <div className="border-t pt-4">
-          <h4 className="text-sm font-semibold text-gray-900 mb-3">
-            {displayName}
-          </h4>
-          <p className="text-xs text-gray-500">
+        <EditorSectionRoot>
+          <EditorSectionTitle>{displayName}</EditorSectionTitle>
+          <EditorMutedParagraph>
             Configuration for {node.type} nodes is handled in PropertyPanel.
-          </p>
-        </div>
+          </EditorMutedParagraph>
+        </EditorSectionRoot>
       );
     }
     default:

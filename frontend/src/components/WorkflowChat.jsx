@@ -20,6 +20,31 @@ import {
   speakChatMessage,
   stopSpeaking,
 } from "../hooks/chat/voice";
+import {
+  ChatRoot,
+  ChatToolbar,
+  ChatIconButton,
+  ChatMessagesArea,
+  ChatMessageRow,
+  ChatAvatar,
+  ChatBubble,
+  ChatBubbleText,
+  ChatTypingBubble,
+  ChatSpinnerIcon,
+  ChatComposer,
+  ChatSignInHint,
+  ChatAuthLink,
+  ChatComposerRow,
+  ChatTextarea,
+  ChatControlCluster,
+  ChatIterationWrap,
+  ChatIterationLabel,
+  ChatIterationInput,
+  ChatMicButton,
+  ChatMicIcon,
+  ChatTtsButton,
+  ChatSendButton,
+} from "../styles/workflowChat.styled";
 const DEFAULT_WORKFLOW_CHAT_ITERATIONS = 20;
 const MIN_WORKFLOW_CHAT_ITERATIONS = 1;
 const MAX_WORKFLOW_CHAT_ITERATIONS = 100;
@@ -265,69 +290,65 @@ function WorkflowChat({
     }
   };
   return (
-    <div className="flex flex-col h-full bg-gray-900 text-gray-100">
-      <div className="flex-shrink-0 flex justify-end items-center px-3 py-2 border-b border-gray-800">
-        <button
+    <ChatRoot>
+      <ChatToolbar>
+        <ChatIconButton
           type="button"
           aria-label="Clear chat and start over"
           title="Clear this chat session and remove saved history for this workflow"
           disabled={isLoading === true}
           onClick={handleClearSession}
-          className="p-2 rounded-lg flex items-center justify-center transition-colors border border-gray-700 bg-gray-800 text-gray-200 hover:bg-gray-700 hover:border-gray-600 disabled:opacity-40 disabled:cursor-not-allowed"
         >
-          <RotateCcw className="w-5 h-5" aria-hidden={true} />
-        </button>
-      </div>
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+          <RotateCcw size={20} aria-hidden={true} />
+        </ChatIconButton>
+      </ChatToolbar>
+      <ChatMessagesArea>
         {messages.map((message, idx) => (
-          <div
+          <ChatMessageRow
             key={idx}
-            className={`flex gap-3 ${message.role === "user" ? "justify-end" : "justify-start"}`}
+            $align={message.role === "user" ? "end" : "start"}
           >
             {message.role === "assistant" && (
-              <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center flex-shrink-0">
-                <Bot className="w-5 h-5" />
-              </div>
+              <ChatAvatar $variant="assistant">
+                <Bot size={20} aria-hidden />
+              </ChatAvatar>
             )}
-            <div
-              className={`max-w-[80%] rounded-lg px-4 py-2 ${message.role === "user" ? "bg-blue-600 text-white" : "bg-gray-800 text-gray-100"}`}
-            >
-              <p className="text-sm whitespace-pre-wrap">{message.content}</p>
-            </div>
+            <ChatBubble $variant={message.role === "user" ? "user" : "assistant"}>
+              <ChatBubbleText>{message.content}</ChatBubbleText>
+            </ChatBubble>
             {message.role === "user" && (
-              <div className="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center flex-shrink-0">
-                <User className="w-5 h-5" />
-              </div>
+              <ChatAvatar $variant="user">
+                <User size={20} aria-hidden />
+              </ChatAvatar>
             )}
-          </div>
+          </ChatMessageRow>
         ))}
         {isLoading === true && (
-          <div className="flex gap-3 justify-start">
-            <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center flex-shrink-0">
-              <Bot className="w-5 h-5" />
-            </div>
-            <div className="bg-gray-800 rounded-lg px-4 py-2">
-              <Loader className="w-5 h-5 animate-spin" />
-            </div>
-          </div>
+          <ChatMessageRow $align="start">
+            <ChatAvatar $variant="assistant">
+              <Bot size={20} aria-hidden />
+            </ChatAvatar>
+            <ChatTypingBubble>
+              <ChatSpinnerIcon>
+                <Loader size={20} aria-hidden />
+              </ChatSpinnerIcon>
+            </ChatTypingBubble>
+          </ChatMessageRow>
         )}
         <div ref={messagesEndRef} />
-      </div>
-      <div className="border-t border-gray-800 p-4">
+      </ChatMessagesArea>
+      <ChatComposer>
         {chatDisabled === true && (
-          <p className="mb-3 text-sm text-gray-400">
+          <ChatSignInHint>
             Sign in to send messages, use the microphone, and apply AI
             suggestions to your workflow.{" "}
-            <Link
-              to="/auth"
-              className="text-blue-400 hover:text-blue-300 underline"
-            >
+            <ChatAuthLink as={Link} to="/auth">
               Sign in
-            </Link>
-          </p>
+            </ChatAuthLink>
+          </ChatSignInHint>
         )}
-        <div className="flex gap-2 items-end">
-          <textarea
+        <ChatComposerRow>
+          <ChatTextarea
             ref={inputRef}
             value={input}
             onChange={(e) => setInput(e.target.value)}
@@ -337,19 +358,15 @@ function WorkflowChat({
                 ? "Sign in to chat with the workflow assistant…"
                 : "Type your message... (Enter to send, Shift+Enter for newline). Hold mic to dictate; release and the mic keeps listening briefly so nothing is cut off."
             }
-            className="flex-1 bg-gray-800 text-gray-100 rounded-lg px-4 py-2 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[4.5rem] disabled:opacity-50"
             rows={2}
             disabled={isLoading === true || chatDisabled === true}
           />
-          <div className="flex gap-1 flex-shrink-0 items-end">
-            <div className="flex flex-col gap-1 flex-shrink-0 justify-end pb-0.5">
-              <label
-                htmlFor="workflow-chat-iterations"
-                className="text-[10px] uppercase tracking-wide text-gray-500 whitespace-nowrap"
-              >
+          <ChatControlCluster>
+            <ChatIterationWrap>
+              <ChatIterationLabel htmlFor="workflow-chat-iterations">
                 Iterations
-              </label>
-              <input
+              </ChatIterationLabel>
+              <ChatIterationInput
                 id="workflow-chat-iterations"
                 type="number"
                 min={MIN_WORKFLOW_CHAT_ITERATIONS}
@@ -370,10 +387,9 @@ function WorkflowChat({
                 }}
                 disabled={isLoading === true || chatDisabled === true}
                 title="Maximum tool\u2013LLM cycles for this message (1\u2013100)"
-                className="w-16 px-2 py-2 text-sm text-center bg-gray-800 border border-gray-700 rounded-lg text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
               />
-            </div>
-            <button
+            </ChatIterationWrap>
+            <ChatMicButton
               type="button"
               aria-label="Push to talk"
               title={
@@ -388,7 +404,7 @@ function WorkflowChat({
                 sttSupported === false ||
                 chatDisabled === true
               }
-              className={`px-3 py-2 rounded-lg flex items-center justify-center transition-colors border border-gray-700 ${isListening === true ? "bg-red-900/50 border-red-500 text-red-200" : "bg-gray-800 text-gray-200 hover:bg-gray-700"} disabled:opacity-40 disabled:cursor-not-allowed`}
+              $listening={isListening === true}
               onPointerDown={(e) => {
                 if (
                   isLoading === true ||
@@ -403,11 +419,11 @@ function WorkflowChat({
               onPointerLeave={onPushEnd}
               onPointerCancel={onPushEnd}
             >
-              <Mic
-                className={`w-5 h-5 ${isListening === true ? "animate-pulse" : ""}`}
-              />
-            </button>
-            <button
+              <ChatMicIcon $pulse={isListening === true}>
+                <Mic size={20} aria-hidden />
+              </ChatMicIcon>
+            </ChatMicButton>
+            <ChatTtsButton
               type="button"
               aria-label={
                 ttsEnabled === true
@@ -424,11 +440,11 @@ function WorkflowChat({
               }
               disabled={ttsSupported === false || chatDisabled === true}
               onClick={toggleTts}
-              className={`px-3 py-2 rounded-lg flex items-center justify-center transition-colors border ${ttsEnabled === true ? "bg-violet-700 border-violet-500 text-white" : "bg-gray-800 border-gray-700 text-gray-200 hover:bg-gray-700"} disabled:opacity-40 disabled:cursor-not-allowed`}
+              $active={ttsEnabled === true}
             >
-              <Volume2 className="w-5 h-5" />
-            </button>
-            <button
+              <Volume2 size={20} aria-hidden />
+            </ChatTtsButton>
+            <ChatSendButton
               type="button"
               onClick={handleSend}
               disabled={
@@ -436,21 +452,22 @@ function WorkflowChat({
                 isLoading === true ||
                 chatDisabled === true
               }
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 transition-colors"
             >
               {isLoading === true ? (
-                <Loader className="w-5 h-5 animate-spin" />
+                <ChatSpinnerIcon>
+                  <Loader size={20} aria-hidden />
+                </ChatSpinnerIcon>
               ) : (
                 <>
-                  <Send className="w-5 h-5" />
+                  <Send size={20} aria-hidden />
                   Send
                 </>
               )}
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
+            </ChatSendButton>
+          </ChatControlCluster>
+        </ChatComposerRow>
+      </ChatComposer>
+    </ChatRoot>
   );
 }
 WorkflowChat.propTypes = {

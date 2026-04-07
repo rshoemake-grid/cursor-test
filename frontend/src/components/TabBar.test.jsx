@@ -50,12 +50,14 @@ describe("TabBar", () => {
   it("should highlight active tab", () => {
     render(<TabBar {...mockProps} activeTabId="tab-2" />);
     const tab2 = screen.getByText("Workflow 2").closest("button");
-    expect(tab2).toHaveClass("bg-white");
+    expect(tab2).toHaveAttribute("data-active", "true");
   });
   it("should show unsaved indicator for unsaved tabs", () => {
     render(<TabBar {...mockProps} />);
     const tab2 = screen.getByText("Workflow 2").closest("button");
-    const indicator = tab2?.querySelector(".bg-blue-500");
+    const indicator = tab2?.querySelector(
+      '[data-testid="tab-unsaved-indicator"]',
+    );
     expect(indicator).toBeInTheDocument();
   });
   it("should call onTabClick when tab is clicked", () => {
@@ -126,19 +128,19 @@ describe("TabBar", () => {
   it("should show close button on hover when tabs.length > 1", () => {
     render(<TabBar {...mockProps} />);
     const tab1 = screen.getByText("Workflow 1").closest("button");
-    const closeButton = tab1?.querySelector(".opacity-0");
+    const closeButton = tab1?.querySelector('[data-tab-close="true"]');
     expect(closeButton).toBeInTheDocument();
   });
   it("should not show close button when tabs.length === 1", () => {
     render(<TabBar {...mockProps} tabs={[mockTabs[0]]} />);
     const tab1 = screen.getByText("Workflow 1").closest("button");
-    const closeButton = tab1?.querySelector(".opacity-0");
+    const closeButton = tab1?.querySelector('[data-tab-close="true"]');
     expect(closeButton).not.toBeInTheDocument();
   });
   it("should call onCloseTab when close button is clicked", () => {
     render(<TabBar {...mockProps} />);
     const tab1 = screen.getByText("Workflow 1").closest("button");
-    const closeButton = tab1?.querySelector(".opacity-0");
+    const closeButton = tab1?.querySelector('[data-tab-close="true"]');
     if (closeButton) {
       fireEvent.click(closeButton);
       expect(mockProps.onCloseTab).toHaveBeenCalledWith(

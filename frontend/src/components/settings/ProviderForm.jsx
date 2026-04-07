@@ -10,6 +10,45 @@ import {
   XCircle,
 } from "lucide-react";
 import { showError } from "../../utils/notifications";
+import {
+  ProviderPanel,
+  ProviderPanelHeader,
+  ProviderTitleCluster,
+  ProviderEnableCheckbox,
+  ProviderNameTitle,
+  ProviderTypeLine,
+  ProviderToolbar,
+  ProviderIconButton,
+  ProviderDeleteButton,
+  ProviderExpandedStack,
+  SettingsLabelBlock,
+  ApiKeyFieldWrap,
+  SettingsTextInput,
+  ApiKeyRevealButton,
+  SettingsInlineRow,
+  SettingsSelectFlex,
+  SettingsIconActionButton,
+  SettingsTestConnectionButton,
+  SettingsSpinner,
+  ProviderTestRow,
+  ProviderTestSuccess,
+  ProviderTestErrorStack,
+  ProviderTestErrorTitle,
+  ProviderTestErrorDetail,
+  ModelListLabel,
+  ModelListStack,
+  ModelRow,
+  ModelRowToggle,
+  ModelChevronCell,
+  ModelNameText,
+  ModelDefaultTag,
+  ModelExpandPanel,
+  ModelCompactLabel,
+  ModelNameInput,
+  ModelActionRow,
+  ModelDefaultPillButton,
+  ModelRemoveButton,
+} from "../../styles/settings.styled";
 function ProviderForm({
   provider,
   showApiKeys,
@@ -30,10 +69,10 @@ function ProviderForm({
   const isTesting = testingProvider === provider.id;
   const testResult = testResults[provider.id];
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-      <div className="flex items-start justify-between mb-4">
-        <div className="flex items-center gap-3">
-          <input
+    <ProviderPanel>
+      <ProviderPanelHeader>
+        <ProviderTitleCluster>
+          <ProviderEnableCheckbox
             type="checkbox"
             checked={provider.enabled}
             onChange={(e) =>
@@ -41,46 +80,39 @@ function ProviderForm({
                 enabled: e.target.checked,
               })
             }
-            className="w-5 h-5 text-primary-600 rounded"
           />
           <div>
-            <h3 className="text-lg font-semibold text-gray-900">
-              {provider.name}
-            </h3>
-            <span className="text-sm text-gray-500 capitalize">
-              {provider.type}
-            </span>
+            <ProviderNameTitle>{provider.name}</ProviderNameTitle>
+            <ProviderTypeLine>{provider.type}</ProviderTypeLine>
           </div>
-        </div>
-        <div className="flex items-center gap-2">
-          <button
+        </ProviderTitleCluster>
+        <ProviderToolbar>
+          <ProviderIconButton
+            type="button"
             onClick={() => onToggleProviderModels(provider.id)}
-            className="text-gray-600 hover:text-gray-700 p-2"
             title={isExpanded ? "Collapse models" : "Expand models"}
           >
             {isExpanded ? (
-              <ChevronDown className="w-5 h-5" />
+              <ChevronDown size={20} aria-hidden />
             ) : (
-              <ChevronRight className="w-5 h-5" />
+              <ChevronRight size={20} aria-hidden />
             )}
-          </button>
-          <button
+          </ProviderIconButton>
+          <ProviderDeleteButton
+            type="button"
             onClick={() => onDeleteProvider(provider.id)}
-            className="text-red-600 hover:text-red-700 p-2"
             title="Delete provider"
           >
-            <Trash2 className="w-5 h-5" />
-          </button>
-        </div>
-      </div>
+            <Trash2 size={20} aria-hidden />
+          </ProviderDeleteButton>
+        </ProviderToolbar>
+      </ProviderPanelHeader>
       {isExpanded && (
-        <div className="space-y-4">
+        <ProviderExpandedStack>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              API Key
-            </label>
-            <div className="relative">
-              <input
+            <SettingsLabelBlock>API Key</SettingsLabelBlock>
+            <ApiKeyFieldWrap>
+              <SettingsTextInput
                 type={showApiKeys[provider.id] ? "text" : "password"}
                 value={provider.apiKey || ""}
                 onChange={(e) =>
@@ -89,29 +121,26 @@ function ProviderForm({
                   })
                 }
                 placeholder="sk-..."
-                className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                $padRightForIcon
               />
-              <button
+              <ApiKeyRevealButton
                 type="button"
                 onClick={() => onToggleApiKeyVisibility(provider.id)}
-                className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-gray-500 hover:text-gray-700 focus:outline-none"
                 title={
                   showApiKeys[provider.id] ? "Hide API key" : "Show API key"
                 }
               >
                 {showApiKeys[provider.id] ? (
-                  <EyeOff className="w-5 h-5" />
+                  <EyeOff size={20} aria-hidden />
                 ) : (
-                  <Eye className="w-5 h-5" />
+                  <Eye size={20} aria-hidden />
                 )}
-              </button>
-            </div>
+              </ApiKeyRevealButton>
+            </ApiKeyFieldWrap>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Base URL
-            </label>
-            <input
+            <SettingsLabelBlock>Base URL</SettingsLabelBlock>
+            <SettingsTextInput
               type="text"
               value={provider.baseUrl || ""}
               onChange={(e) =>
@@ -120,37 +149,33 @@ function ProviderForm({
                 })
               }
               placeholder="https://api.example.com/v1"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Default Model
-            </label>
-            <div className="flex gap-2">
-              <select
+            <SettingsLabelBlock>Default Model</SettingsLabelBlock>
+            <SettingsInlineRow>
+              <SettingsSelectFlex
                 value={provider.defaultModel || ""}
                 onChange={(e) =>
                   onUpdateProvider(provider.id, {
                     defaultModel: e.target.value,
                   })
                 }
-                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               >
                 {(provider.models || []).map((model) => (
                   <option key={model} value={model}>
                     {model}
                   </option>
                 ))}
-              </select>
-              <button
+              </SettingsSelectFlex>
+              <SettingsIconActionButton
+                type="button"
                 onClick={() => onAddCustomModel(provider.id)}
-                className="px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 flex items-center gap-2"
                 title="Add custom model"
               >
-                <Plus className="w-4 h-4" />
-              </button>
-            </div>
+                <Plus size={16} aria-hidden />
+              </SettingsIconActionButton>
+            </SettingsInlineRow>
           </div>
           <ModelList
             provider={provider}
@@ -159,42 +184,44 @@ function ProviderForm({
             onToggleModel={onToggleModel}
             isModelExpanded={isModelExpanded}
           />
-          <div className="flex items-center gap-3 pt-2">
-            <button
+          <ProviderTestRow>
+            <SettingsTestConnectionButton
+              type="button"
               onClick={() => onTestProvider(provider)}
               disabled={!provider.apiKey || isTesting}
-              className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
             >
               {isTesting ? (
                 <>
-                  <Loader className="w-4 h-4 animate-spin" />
+                  <SettingsSpinner>
+                    <Loader size={16} aria-hidden />
+                  </SettingsSpinner>
                   Testing...
                 </>
               ) : (
                 "Test Connection"
               )}
-            </button>
+            </SettingsTestConnectionButton>
             {testResult?.status === "success" && (
-              <div className="flex items-center gap-2 text-green-600">
-                <CheckCircle className="w-5 h-5" />
+              <ProviderTestSuccess>
+                <CheckCircle size={20} aria-hidden />
                 <span>{testResult.message}</span>
-              </div>
+              </ProviderTestSuccess>
             )}
             {testResult?.status === "error" && (
-              <div className="flex flex-col gap-1">
-                <div className="flex items-center gap-2 text-red-600">
-                  <XCircle className="w-5 h-5" />
-                  <span className="font-medium">Connection failed</span>
-                </div>
-                <p className="text-sm text-red-700 ml-7">
+              <ProviderTestErrorStack>
+                <ProviderTestErrorTitle>
+                  <XCircle size={20} aria-hidden />
+                  <strong>Connection failed</strong>
+                </ProviderTestErrorTitle>
+                <ProviderTestErrorDetail>
                   {testResult.message}
-                </p>
-              </div>
+                </ProviderTestErrorDetail>
+              </ProviderTestErrorStack>
             )}
-          </div>
-        </div>
+          </ProviderTestRow>
+        </ProviderExpandedStack>
       )}
-    </div>
+    </ProviderPanel>
   );
 }
 function ModelList({
@@ -203,7 +230,6 @@ function ModelList({
   onToggleModel,
   isModelExpanded,
   expandedModels: _expandedModels,
-  // Unused but part of interface - prefix with underscore to indicate intentionally unused
 }) {
   const handleDeleteModel = (model) => {
     if ((provider.models || []).length > 1) {
@@ -223,48 +249,38 @@ function ModelList({
   };
   return (
     <div>
-      <label className="block text-sm font-medium text-gray-700 mb-2">
-        Models
-      </label>
-      <div className="space-y-1">
+      <ModelListLabel>Models</ModelListLabel>
+      <ModelListStack>
         {(provider.models || []).map((model, index) => {
           const modelKey = `${provider.id}-${model}-${index}`;
-          const isExpanded = isModelExpanded(provider.id, model);
+          const expanded = isModelExpanded(provider.id, model);
           return (
-            <div
-              key={modelKey}
-              className="border-b border-gray-100 last:border-b-0"
-            >
-              <button
+            <ModelRow key={modelKey}>
+              <ModelRowToggle
                 type="button"
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
                   onToggleModel(provider.id, model);
                 }}
-                className="w-full flex items-center gap-2 text-sm text-gray-900 hover:text-gray-700 transition-colors py-2 text-left"
               >
-                <span className="flex-shrink-0 w-4 h-4 flex items-center justify-center text-gray-600 font-bold">
-                  {isExpanded ? (
-                    <ChevronDown className="w-4 h-4" strokeWidth={2.5} />
+                <ModelChevronCell>
+                  {expanded ? (
+                    <ChevronDown size={16} strokeWidth={2.5} aria-hidden />
                   ) : (
-                    <ChevronRight className="w-4 h-4" strokeWidth={2.5} />
+                    <ChevronRight size={16} strokeWidth={2.5} aria-hidden />
                   )}
-                </span>
-                <span className="font-medium">{model}</span>
+                </ModelChevronCell>
+                <ModelNameText>{model}</ModelNameText>
                 {model === provider.defaultModel && (
-                  <span className="text-xs px-2 py-0.5 bg-primary-100 text-primary-700 rounded">
-                    Default
-                  </span>
+                  <ModelDefaultTag>Default</ModelDefaultTag>
                 )}
-              </button>
-              {isExpanded && (
-                <div className="ml-6 mt-2 mb-2 space-y-3 pb-2">
+              </ModelRowToggle>
+              {expanded && (
+                <ModelExpandPanel>
                   <div>
-                    <label className="block text-xs font-medium text-gray-700 mb-1">
-                      Model Name
-                    </label>
-                    <input
+                    <ModelCompactLabel>Model Name</ModelCompactLabel>
+                    <ModelNameInput
                       type="text"
                       value={model}
                       onChange={(e) => {
@@ -280,11 +296,10 @@ function ModelList({
                           defaultModel: newDefaultModel,
                         });
                       }}
-                      className="w-full px-2 py-1.5 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-primary-500"
                     />
                   </div>
-                  <div className="flex items-center gap-2">
-                    <button
+                  <ModelActionRow>
+                    <ModelDefaultPillButton
                       type="button"
                       onClick={(e) => {
                         e.stopPropagation();
@@ -294,13 +309,13 @@ function ModelList({
                           });
                         }
                       }}
-                      className={`text-xs px-3 py-1.5 rounded ${model === provider.defaultModel ? "bg-primary-600 text-white" : "bg-gray-200 text-gray-700 hover:bg-gray-300"}`}
+                      $active={model === provider.defaultModel}
                     >
                       {model === provider.defaultModel
                         ? "Default Model"
                         : "Set as Default"}
-                    </button>
-                    <button
+                    </ModelDefaultPillButton>
+                    <ModelRemoveButton
                       type="button"
                       onClick={(e) => {
                         e.stopPropagation();
@@ -312,17 +327,16 @@ function ModelList({
                           );
                         }
                       }}
-                      className="text-xs px-3 py-1.5 bg-red-100 text-red-700 rounded hover:bg-red-200"
                     >
                       Remove
-                    </button>
-                  </div>
-                </div>
+                    </ModelRemoveButton>
+                  </ModelActionRow>
+                </ModelExpandPanel>
               )}
-            </div>
+            </ModelRow>
           );
         })}
-      </div>
+      </ModelListStack>
     </div>
   );
 }

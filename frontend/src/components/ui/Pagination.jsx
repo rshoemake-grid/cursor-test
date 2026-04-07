@@ -1,4 +1,19 @@
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import {
+  PaginationRoot,
+  PaginationLeft,
+  PaginationSummary,
+  PaginationStrong,
+  PaginationPerPage,
+  PaginationLabel,
+  PaginationSelect,
+  PaginationNav,
+  PaginationIconButton,
+  PaginationPages,
+  PaginationEllipsis,
+  PaginationPageButton,
+} from "../../styles/uiComponents.styled";
+
 const ITEMS_PER_PAGE_OPTIONS = [10, 25, 50, 100];
 function Pagination({
   currentPage,
@@ -54,81 +69,76 @@ function Pagination({
     return pages;
   };
   return (
-    <div className={`flex items-center justify-between ${className}`}>
-      <div className="flex items-center gap-4">
-        <div className="text-sm text-gray-600">
-          Showing <span className="font-medium">{startItem}</span> to{" "}
-          <span className="font-medium">{endItem}</span> of{" "}
-          <span className="font-medium">{totalItems}</span> results
-        </div>
+    <PaginationRoot className={className}>
+      <PaginationLeft>
+        <PaginationSummary>
+          Showing <PaginationStrong>{startItem}</PaginationStrong> to{" "}
+          <PaginationStrong>{endItem}</PaginationStrong> of{" "}
+          <PaginationStrong>{totalItems}</PaginationStrong> results
+        </PaginationSummary>
         {onItemsPerPageChange && (
-          <div className="flex items-center gap-2">
-            <label htmlFor="items-per-page" className="text-sm text-gray-600">
-              Per page:
-            </label>
-            <select
+          <PaginationPerPage>
+            <PaginationLabel htmlFor="items-per-page">Per page:</PaginationLabel>
+            <PaginationSelect
               id="items-per-page"
               value={itemsPerPage}
               onChange={(e) => onItemsPerPageChange(Number(e.target.value))}
-              className="px-2 py-1 border border-gray-300 rounded text-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
             >
               {ITEMS_PER_PAGE_OPTIONS.map((option) => (
                 <option key={option} value={option}>
                   {option}
                 </option>
               ))}
-            </select>
-          </div>
+            </PaginationSelect>
+          </PaginationPerPage>
         )}
-      </div>
+      </PaginationLeft>
       {totalPages > 1 && (
-        <div className="flex items-center gap-2">
-          <button
+        <PaginationNav>
+          <PaginationIconButton
+            type="button"
             onClick={handlePrevious}
             disabled={currentPage === 1}
-            className="p-2 rounded-lg border border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors"
             aria-label="Previous page"
           >
-            <ChevronLeft className="w-4 h-4" />
-          </button>
-          <div className="flex items-center gap-1">
+            <ChevronLeft aria-hidden />
+          </PaginationIconButton>
+          <PaginationPages>
             {getPageNumbers().map((page, index) => {
               if (page === "...") {
                 return (
-                  <span
-                    key={`ellipsis-${index}`}
-                    className="px-2 text-gray-500"
-                  >
+                  <PaginationEllipsis key={`ellipsis-${index}`}>
                     ...
-                  </span>
+                  </PaginationEllipsis>
                 );
               }
               const pageNum = page;
               const isActive = pageNum === currentPage;
               return (
-                <button
+                <PaginationPageButton
                   key={pageNum}
+                  type="button"
+                  $active={isActive}
                   onClick={() => handlePageClick(pageNum)}
-                  className={`px-3 py-1 rounded text-sm font-medium transition-colors ${isActive ? "bg-primary-600 text-white" : "border border-gray-300 text-gray-700 hover:bg-gray-50"}`}
                   aria-label={`Go to page ${pageNum}`}
                   aria-current={isActive ? "page" : void 0}
                 >
                   {pageNum}
-                </button>
+                </PaginationPageButton>
               );
             })}
-          </div>
-          <button
+          </PaginationPages>
+          <PaginationIconButton
+            type="button"
             onClick={handleNext}
             disabled={currentPage === totalPages}
-            className="p-2 rounded-lg border border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors"
             aria-label="Next page"
           >
-            <ChevronRight className="w-4 h-4" />
-          </button>
-        </div>
+            <ChevronRight aria-hidden />
+          </PaginationIconButton>
+        </PaginationNav>
       )}
-    </div>
+    </PaginationRoot>
   );
 }
 export { Pagination as default };

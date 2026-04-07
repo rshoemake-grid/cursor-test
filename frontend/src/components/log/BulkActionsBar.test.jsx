@@ -83,15 +83,4 @@ describe("BulkActionsBar", () => {
     );
     expect(screen.getByText("Deleting...")).toBeInTheDocument();
   });
-  it("should have correct styling", () => {
-    const { container } = render(
-      <BulkActionsBar
-        selectedCount={1}
-        onDelete={mockOnDelete}
-        onClearSelection={mockOnClearSelection}
-      />,
-    );
-    const bar = container.firstChild;
-    expect(bar).toHaveClass("bg-primary-600", "text-white");
-  });
 });

@@ -18,7 +18,7 @@ describe("LoopNode", () => {
     expect(screen.getByText("Test Loop")).toBeInTheDocument();
   });
   it("should show selected state", () => {
-    const { container } = renderWithProvider(
+    renderWithProvider(
       <LoopNode
         selected={true}
         data={{
@@ -27,11 +27,13 @@ describe("LoopNode", () => {
         id="loop-1"
       />,
     );
-    const node = container.querySelector(".border-primary-500");
-    expect(node).toBeInTheDocument();
+    expect(screen.getByTestId("loop-node")).toHaveAttribute(
+      "data-visual-state",
+      "selected",
+    );
   });
   it("should show error state when executionStatus is failed", () => {
-    const { container } = renderWithProvider(
+    renderWithProvider(
       <LoopNode
         selected={false}
         data={{
@@ -41,8 +43,10 @@ describe("LoopNode", () => {
         id="loop-1"
       />,
     );
-    const node = container.querySelector(".border-red-500");
-    expect(node).toBeInTheDocument();
+    expect(screen.getByTestId("loop-node")).toHaveAttribute(
+      "data-visual-state",
+      "error",
+    );
   });
   it("should display description when provided", () => {
     renderWithProvider(

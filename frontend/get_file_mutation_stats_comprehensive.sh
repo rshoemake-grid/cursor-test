@@ -147,7 +147,7 @@ PYTHON
             grep -E "(survived|killed|timeout|NoCoverage)" | \
             grep -E "src/" | \
             grep -v "TRACE" | \
-            sed -E 's/.*(src\/[^[:space:]]+\.(ts|tsx)).*/\1/' | \
+            sed -E 's/.*(src\/[^[:space:]]+\.(js|jsx)).*/\1/' | \
             sort | uniq -c | sort -rn > /tmp/file_mutations.txt
         
         echo "Files with most mutations (from log analysis - approximation):"

@@ -45,10 +45,10 @@ interface ExecutionFilters {
 
 **Architecture:**
 ```typescript
-// components/ErrorBoundary.tsx
+// components/ErrorBoundary.jsx
 // hooks/useErrorBoundary.ts
 // utils/errorReporting.ts
-// pages/ErrorPage.tsx
+// pages/ErrorPage.jsx
 ```
 
 **Benefits:**
@@ -72,12 +72,12 @@ interface ExecutionFilters {
 
 **Architecture:**
 ```typescript
-// pages/AnalyticsPage.tsx
+// pages/AnalyticsPage.jsx
 // hooks/useExecutionAnalytics.ts
 // components/analytics/
-//   - SuccessRateChart.tsx
-//   - ExecutionTimeChart.tsx
-//   - WorkflowUsageChart.tsx
+//   - SuccessRateChart.jsx
+//   - ExecutionTimeChart.jsx
+//   - WorkflowUsageChart.jsx
 // utils/analyticsFormat.ts
 ```
 
@@ -105,7 +105,7 @@ interface ExecutionFilters {
 //   - exportToJSON()
 //   - exportToCSV()
 //   - exportToPDF()
-// components/ExportDialog.tsx
+// components/ExportDialog.jsx
 ```
 
 **Benefits:**
@@ -118,7 +118,7 @@ interface ExecutionFilters {
 ## 🏗️ Architectural Improvements
 
 ### 5. **State Management Enhancement**
-**Current State:** Mix of Zustand, Context API, and local state  
+**Current State:** Redux Toolkit, Context API, and local state (see `docs/FRONTEND_DEVELOPER_GUIDE.md`)  
 **Suggested Enhancement:**
 - Centralize state management strategy
 - Consider Redux Toolkit for complex state
@@ -182,12 +182,12 @@ interface ExecutionFilters {
 **Architecture:**
 ```typescript
 // components/ui/
-//   - DataTable.tsx (reusable table)
-//   - FilterBar.tsx (reusable filters)
-//   - StatusBadge.tsx (already exists, expand)
-//   - LoadingSpinner.tsx
-//   - EmptyState.tsx
-//   - ErrorState.tsx
+//   - DataTable.jsx (reusable table)
+//   - FilterBar.jsx (reusable filters)
+//   - StatusBadge.jsx (already exists, expand)
+//   - LoadingSpinner.jsx
+//   - EmptyState.jsx
+//   - ErrorState.jsx
 ```
 
 **Benefits:**
@@ -210,7 +210,7 @@ interface ExecutionFilters {
 
 **Architecture:**
 ```typescript
-// components/VirtualizedList.tsx
+// components/VirtualizedList.jsx
 // utils/performance.ts
 //   - withMemo()
 //   - withCallback()
@@ -238,10 +238,10 @@ interface ExecutionFilters {
 **Architecture:**
 ```typescript
 // components/execution/
-//   - ExecutionTimeline.tsx
-//   - ExecutionGraph.tsx
-//   - VariableInspector.tsx
-//   - LogViewer.tsx
+//   - ExecutionTimeline.jsx
+//   - ExecutionGraph.jsx
+//   - VariableInspector.jsx
+//   - LogViewer.jsx
 ```
 
 ---
@@ -258,8 +258,8 @@ interface ExecutionFilters {
 **Architecture:**
 ```typescript
 // hooks/useWorkflowVersions.ts
-// components/WorkflowVersionHistory.tsx
-// components/VersionComparison.tsx
+// components/WorkflowVersionHistory.jsx
+// components/VersionComparison.jsx
 ```
 
 ---
@@ -275,10 +275,10 @@ interface ExecutionFilters {
 
 **Architecture:**
 ```typescript
-// contexts/NotificationContext.tsx
+// contexts/NotificationContext.jsx
 // hooks/useNotifications.ts
-// components/NotificationCenter.tsx
-// components/NotificationBadge.tsx
+// components/NotificationCenter.jsx
+// components/NotificationBadge.jsx
 ```
 
 ---
@@ -336,8 +336,8 @@ interface ExecutionFilters {
 **Architecture:**
 ```typescript
 // hooks/useCollaboration.ts
-// contexts/CollaborationContext.tsx
-// components/PresenceIndicator.tsx
+// contexts/CollaborationContext.jsx
+// components/PresenceIndicator.jsx
 ```
 
 ---
@@ -353,9 +353,9 @@ interface ExecutionFilters {
 
 **Architecture:**
 ```typescript
-// pages/TemplatesPage.tsx
+// pages/TemplatesPage.jsx
 // hooks/useTemplates.ts
-// components/TemplateCard.tsx
+// components/TemplateCard.jsx
 ```
 
 ---
@@ -397,7 +397,7 @@ interface ExecutionFilters {
 ```typescript
 // utils/monitoring.ts
 // hooks/usePerformanceMonitoring.ts
-// components/HealthCheck.tsx
+// components/HealthCheck.jsx
 ```
 
 ---

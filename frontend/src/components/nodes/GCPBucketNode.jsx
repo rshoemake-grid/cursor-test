@@ -1,70 +1,58 @@
-import { Handle, Position } from "@xyflow/react";
+import { Position } from "@xyflow/react";
 import { Database } from "lucide-react";
+import {
+  WNDescription,
+  WNHandle,
+  WNHeaderRow,
+  WNIconWrap,
+  WNMetaHighlight,
+  WNMetaRow,
+  WNTitle,
+  WorkflowNodeCard,
+} from "../../styles/workflowNodes.styled";
+
 const getFilename = (path) => {
   if (!path) return "";
   const parts = path.split("/").filter((p) => p);
   return parts[parts.length - 1] || path;
 };
+
 function GCPBucketNode({ data, selected }) {
   const executionStatus = data.executionStatus;
   const hasError = executionStatus === "failed";
   return (
-    <div
-      className={`relative px-4 py-3 shadow-lg rounded-lg bg-white border-2 min-w-[200px] max-w-[200px] ${hasError ? "border-red-500 border-4 shadow-xl ring-2 ring-red-200" : selected ? "border-orange-500 border-4 shadow-xl ring-2 ring-orange-200" : "border-orange-300"}`}
+    <WorkflowNodeCard
+      data-testid="gcp-bucket-node"
+      $width={200}
+      $borderPalette="orange"
+      $hasError={hasError}
+      $selected={selected}
     >
-      <div className="flex items-center gap-2 mb-2">
-        <div className="p-1.5 bg-orange-100 rounded flex-shrink-0">
-          <Database className="w-4 h-4 text-orange-600" />
-        </div>
-        <div className="font-semibold text-sm text-gray-900 truncate flex-1 min-w-0">
-          {String(data.label || "GCP Bucket")}
-        </div>
-      </div>
+      <WNHeaderRow>
+        <WNIconWrap $palette="orange">
+          <Database aria-hidden />
+        </WNIconWrap>
+        <WNTitle>{String(data.label || "GCP Bucket")}</WNTitle>
+      </WNHeaderRow>
       {data.description && (
-        <div className="text-xs text-gray-500 mb-2 line-clamp-2 overflow-hidden">
-          {String(data.description)}
-        </div>
+        <WNDescription>{String(data.description)}</WNDescription>
       )}
       {data.input_config?.bucket_name && (
-        <div className="text-xs text-gray-600 bg-gray-50 px-2 py-1 rounded mb-1 truncate">
-          Bucket: {data.input_config.bucket_name}
-        </div>
+        <WNMetaRow>Bucket: {data.input_config.bucket_name}</WNMetaRow>
       )}
       {data.input_config?.object_path && (
-        <div className="text-xs text-gray-600 bg-gray-50 px-2 py-1 rounded mb-1 truncate">
-          File: {getFilename(data.input_config.object_path)}
-        </div>
+        <WNMetaRow>File: {getFilename(data.input_config.object_path)}</WNMetaRow>
       )}
       {data.input_config?.mode && (
-        <div className="text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded truncate">
+        <WNMetaHighlight>
           Mode: {data.input_config.mode === "write" ? "Write" : "Read"}
-        </div>
+        </WNMetaHighlight>
       )}
-      <Handle
-        type="target"
-        position={Position.Top}
-        id="target-top"
-        className="w-3 h-3"
-      />
-      <Handle
-        type="target"
-        position={Position.Left}
-        id="target-left"
-        className="w-3 h-3"
-      />
-      <Handle
-        type="source"
-        position={Position.Bottom}
-        id="source-bottom"
-        className="w-3 h-3"
-      />
-      <Handle
-        type="source"
-        position={Position.Right}
-        id="source-right"
-        className="w-3 h-3"
-      />
-    </div>
+      <WNHandle type="target" position={Position.Top} id="target-top" />
+      <WNHandle type="target" position={Position.Left} id="target-left" />
+      <WNHandle type="source" position={Position.Bottom} id="source-bottom" />
+      <WNHandle type="source" position={Position.Right} id="source-right" />
+    </WorkflowNodeCard>
   );
 }
 export { GCPBucketNode as default };

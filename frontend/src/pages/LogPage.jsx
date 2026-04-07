@@ -26,6 +26,32 @@ import {
 import { api } from "../api/client";
 import { showConfirm } from "../utils/confirm";
 import { extractApiErrorMessage } from "../hooks/utils/apiUtils";
+import {
+  PanelEmptyCard,
+  PanelEmptyIconWrap,
+  PanelEmptyTitle,
+  PanelEmptySubtitle,
+} from "../styles/contentBlocks.styled";
+import {
+  InsightsScrollShell,
+  InsightsInnerNarrow,
+  InsightsCenteredPane,
+  InsightsMutedText,
+  InsightsErrorText,
+  InsightsPageTitle,
+  InsightsPageSubtitle,
+  LogPageHeaderRow,
+  LogToolbar,
+  LogToolbarButton,
+  LogSearchBlock,
+  LogAdvancedFiltersMount,
+  LogFilterCountHint,
+  LogListSection,
+  LogVirtualizedItemWrap,
+  LogBulkSelectRow,
+  LogBulkCheckbox,
+  LogBulkSelectLabel,
+} from "../styles/analyticsLogPages.styled";
 function LogPage({ apiClient: injectedApiClient } = {}) {
   const navigate = useNavigate();
   const toast = useToast();
@@ -222,26 +248,26 @@ function LogPage({ apiClient: injectedApiClient } = {}) {
   });
   if (loading) {
     return (
-      <div className="h-full overflow-auto bg-gray-50 p-8">
-        <div className="max-w-6xl mx-auto">
-          <div className="flex items-center justify-center h-64">
-            <div className="text-gray-500">Loading executions...</div>
-          </div>
-        </div>
-      </div>
+      <InsightsScrollShell>
+        <InsightsInnerNarrow>
+          <InsightsCenteredPane>
+            <InsightsMutedText>Loading executions...</InsightsMutedText>
+          </InsightsCenteredPane>
+        </InsightsInnerNarrow>
+      </InsightsScrollShell>
     );
   }
   if (error) {
     return (
-      <div className="h-full overflow-auto bg-gray-50 p-8">
-        <div className="max-w-6xl mx-auto">
-          <div className="flex items-center justify-center h-64">
-            <div className="text-red-500">
+      <InsightsScrollShell>
+        <InsightsInnerNarrow>
+          <InsightsCenteredPane>
+            <InsightsErrorText>
               Error: {extractApiErrorMessage(error, "Unknown error")}
-            </div>
-          </div>
-        </div>
-      </div>
+            </InsightsErrorText>
+          </InsightsCenteredPane>
+        </InsightsInnerNarrow>
+      </InsightsScrollShell>
     );
   }
   return (
@@ -256,46 +282,47 @@ function LogPage({ apiClient: injectedApiClient } = {}) {
         }}
         apiClient={injectedApiClient || api}
       />
-      <div className="h-full overflow-auto bg-gray-50 p-8">
-        <div className="max-w-6xl mx-auto">
-          <div className="mb-6 flex items-center justify-between">
+      <InsightsScrollShell>
+        <InsightsInnerNarrow>
+          <LogPageHeaderRow>
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">
-                Execution Log
-              </h1>
-              <p className="text-gray-600">
+              <InsightsPageTitle>Execution Log</InsightsPageTitle>
+              <InsightsPageSubtitle>
                 {totalItems} execution{totalItems !== 1 ? "s" : ""}
                 {totalItems !== finalFilteredExecutions.length &&
                   ` of ${finalFilteredExecutions.length} filtered`}
                 {finalFilteredExecutions.length !== executions.length &&
                   ` (${executions.length} total)`}
-              </p>
+              </InsightsPageSubtitle>
             </div>
             {finalFilteredExecutions.length > 0 && (
-              <div className="flex gap-2">
-                <button
+              <LogToolbar>
+                <LogToolbarButton
+                  type="button"
+                  $variant={bulkMode ? "primary" : "secondary"}
                   onClick={() => setBulkMode(!bulkMode)}
-                  className={`px-4 py-2 rounded-lg transition-colors flex items-center gap-2 text-sm ${bulkMode ? "bg-primary-600 text-white hover:bg-primary-700" : "bg-gray-100 text-gray-700 hover:bg-gray-200"}`}
                 >
                   {bulkMode ? "Cancel Selection" : "Select Multiple"}
-                </button>
-                <button
+                </LogToolbarButton>
+                <LogToolbarButton
+                  type="button"
+                  $variant="secondary"
                   onClick={handleExportJSON}
-                  className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors flex items-center gap-2 text-sm"
                 >
-                  <Download className="w-4 h-4" />
+                  <Download aria-hidden />
                   Export JSON
-                </button>
-                <button
+                </LogToolbarButton>
+                <LogToolbarButton
+                  type="button"
+                  $variant="secondary"
                   onClick={handleExportCSV}
-                  className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors flex items-center gap-2 text-sm"
                 >
-                  <Download className="w-4 h-4" />
+                  <Download aria-hidden />
                   Export CSV
-                </button>
-              </div>
+                </LogToolbarButton>
+              </LogToolbar>
             )}
-          </div>
+          </LogPageHeaderRow>
           {bulkMode && (
             <BulkActionsBar
               selectedCount={bulkOperations.selectedCount}
@@ -307,7 +334,7 @@ function LogPage({ apiClient: injectedApiClient } = {}) {
               isDeleting={bulkOperations.isDeleting}
             />
           )}
-          <div className="mb-4">
+          <LogSearchBlock>
             <AdvancedSearch
               value={searchQuery}
               onSearch={setSearchQuery}
@@ -319,49 +346,48 @@ function LogPage({ apiClient: injectedApiClient } = {}) {
               }
             />
             {showAdvancedFilters && (
-              <div className="mt-4">
+              <LogAdvancedFiltersMount>
                 <AdvancedFiltersPanel
                   filters={advancedFilters}
                   onFiltersChange={setAdvancedFilters}
                   onClose={() => setShowAdvancedFilters(false)}
                 />
-              </div>
+              </LogAdvancedFiltersMount>
             )}
             {filterCount > 0 && (
-              <div className="mt-2 text-sm text-gray-600">
+              <LogFilterCountHint>
                 {filterCount} active filter{filterCount !== 1 ? "s" : ""}
-              </div>
+              </LogFilterCountHint>
             )}
-          </div>
+          </LogSearchBlock>
           <ExecutionFilters filters={filters} onFiltersChange={setFilters} />
           {finalFilteredExecutions.length === 0 ? (
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-12 text-center">
-              <AlertCircle className="w-12 h-12 mx-auto mb-4 text-gray-400" />
-              <p className="text-lg font-medium text-gray-900 mb-2">
-                No executions yet
-              </p>
-              <p className="text-sm text-gray-600">
+            <PanelEmptyCard>
+              <PanelEmptyIconWrap>
+                <AlertCircle aria-hidden />
+              </PanelEmptyIconWrap>
+              <PanelEmptyTitle>No executions yet</PanelEmptyTitle>
+              <PanelEmptySubtitle>
                 Execute a workflow to see execution logs here
-              </p>
-            </div>
+              </PanelEmptySubtitle>
+            </PanelEmptyCard>
           ) : (
             <>
-              <div className="space-y-3 mb-6">
+              <LogListSection>
                 {bulkMode && (
-                  <div className="flex items-center gap-2 mb-2 px-2">
-                    <input
+                  <LogBulkSelectRow>
+                    <LogBulkCheckbox
                       type="checkbox"
                       checked={bulkOperations.isAllSelected}
                       onChange={bulkOperations.toggleSelectAll}
-                      className="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
                       aria-label="Select all executions"
                     />
-                    <span className="text-sm text-gray-600">
+                    <LogBulkSelectLabel>
                       {bulkOperations.isAllSelected
                         ? "Deselect all"
                         : "Select all"}
-                    </span>
-                  </div>
+                    </LogBulkSelectLabel>
+                  </LogBulkSelectRow>
                 )}
                 {paginatedExecutions.length > 50 ? (
                   <VirtualizedList
@@ -369,10 +395,7 @@ function LogPage({ apiClient: injectedApiClient } = {}) {
                     itemHeight={120}
                     containerHeight={600}
                     renderItem={(execution) => (
-                      <div
-                        key={execution.execution_id}
-                        className="mb-3"
-                      >
+                      <LogVirtualizedItemWrap key={execution.execution_id}>
                         <ExecutionListItem
                           execution={execution}
                           onExecutionClick={handleExecutionClick}
@@ -382,7 +405,7 @@ function LogPage({ apiClient: injectedApiClient } = {}) {
                           onSelect={bulkOperations.toggleSelection}
                           showCheckbox={bulkMode}
                         />
-                      </div>
+                      </LogVirtualizedItemWrap>
                     )}
                   />
                 ) : (
@@ -399,7 +422,7 @@ function LogPage({ apiClient: injectedApiClient } = {}) {
                     />
                   ))
                 )}
-              </div>
+              </LogListSection>
               <Pagination
                 currentPage={currentPage}
                 totalPages={totalPages}
@@ -410,8 +433,8 @@ function LogPage({ apiClient: injectedApiClient } = {}) {
               />
             </>
           )}
-        </div>
-      </div>
+        </InsightsInnerNarrow>
+      </InsightsScrollShell>
     </>
   );
 }

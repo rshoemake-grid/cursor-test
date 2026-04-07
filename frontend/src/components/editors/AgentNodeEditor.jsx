@@ -1,6 +1,25 @@
 import { useRef, useState, useEffect, useCallback } from "react";
 import { Download } from "lucide-react";
 import { showSuccess } from "../../utils/notifications";
+import {
+  EditorSectionRoot,
+  EditorSectionTitle,
+  EditorFieldGroup,
+  EditorLabel,
+  EditorSelect,
+  EditorInput,
+  EditorInputCompact,
+  EditorTextarea,
+  EditorHint,
+  EditorInsetPanel,
+  EditorCalloutBlue,
+  EditorCalloutBlueHeading,
+  EditorCalloutBlueTitle,
+  EditorCalloutBlueBody,
+  EditorRangeInput,
+  EditorRangeScaleRow,
+  EditorSecondaryFullButton,
+} from "../../styles/editorForm.styled";
 function AgentNodeEditor({ node, availableModels, onUpdate, onConfigUpdate }) {
   const systemPromptRef = useRef(null);
   const maxTokensRef = useRef(null);
@@ -41,18 +60,11 @@ function AgentNodeEditor({ node, availableModels, onUpdate, onConfigUpdate }) {
     showSuccess("Agent config exported");
   }, [node.data.label, node.data.name, node.data.description, agentConfig]);
   return (
-    <div className="border-t pt-4">
-      <h4 className="text-sm font-semibold text-gray-900 mb-3">
-        LLM Agent Configuration
-      </h4>
-      <div className="mb-4 p-3 bg-gray-50 border border-gray-200 rounded-lg">
-        <label
-          htmlFor="agent-type"
-          className="block text-sm font-medium text-gray-700 mb-1"
-        >
-          Agent Type
-        </label>
-        <select
+    <EditorSectionRoot>
+      <EditorSectionTitle>LLM Agent Configuration</EditorSectionTitle>
+      <EditorInsetPanel>
+        <EditorLabel htmlFor="agent-type">Agent Type</EditorLabel>
+        <EditorSelect
           id="agent-type"
           value={agentType}
           onChange={(e) =>
@@ -61,31 +73,25 @@ function AgentNodeEditor({ node, availableModels, onUpdate, onConfigUpdate }) {
               agent_type: e.target.value,
             })
           }
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
           aria-label="Select agent type"
         >
           <option value="workflow">Workflow Agent (Default)</option>
           <option value="adk">ADK Agent (Google ADK)</option>
-        </select>
-        <p className="text-xs text-gray-500 mt-1">
+        </EditorSelect>
+        <EditorHint>
           {agentType === "adk"
             ? "Uses Google ADK for agent execution. Requires Gemini models."
             : "Uses direct LLM API calls with workflow orchestration."}
-        </p>
-      </div>
+        </EditorHint>
+      </EditorInsetPanel>
       {agentType === "adk" && (
-        <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-          <h5 className="text-sm font-semibold text-blue-900 mb-2">
-            ADK Configuration
-          </h5>
-          <div className="mb-3">
-            <label
-              htmlFor="adk-name"
-              className="block text-xs font-medium text-gray-700 mb-1"
-            >
+        <EditorCalloutBlue $mb="md">
+          <EditorCalloutBlueHeading>ADK Configuration</EditorCalloutBlueHeading>
+          <EditorFieldGroup $mb="sm">
+            <EditorLabel htmlFor="adk-name" $compact>
               Agent Name *
-            </label>
-            <input
+            </EditorLabel>
+            <EditorInputCompact
               id="adk-name"
               type="text"
               value={typeof adkConfig.name === "string" ? adkConfig.name : ""}
@@ -98,19 +104,15 @@ function AgentNodeEditor({ node, availableModels, onUpdate, onConfigUpdate }) {
                   },
                 })
               }
-              className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-primary-500"
               placeholder="e.g., assistant_agent"
               required={true}
             />
-          </div>
-          <div className="mb-3">
-            <label
-              htmlFor="adk-description"
-              className="block text-xs font-medium text-gray-700 mb-1"
-            >
+          </EditorFieldGroup>
+          <EditorFieldGroup $mb="sm">
+            <EditorLabel htmlFor="adk-description" $compact>
               Description
-            </label>
-            <input
+            </EditorLabel>
+            <EditorInputCompact
               id="adk-description"
               type="text"
               value={
@@ -127,18 +129,14 @@ function AgentNodeEditor({ node, availableModels, onUpdate, onConfigUpdate }) {
                   },
                 })
               }
-              className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-primary-500"
               placeholder="Brief description of the agent"
             />
-          </div>
-          <div className="mb-3">
-            <label
-              htmlFor="adk-tools"
-              className="block text-xs font-medium text-gray-700 mb-1"
-            >
+          </EditorFieldGroup>
+          <EditorFieldGroup $mb="sm">
+            <EditorLabel htmlFor="adk-tools" $compact>
               ADK Tools (comma-separated)
-            </label>
-            <input
+            </EditorLabel>
+            <EditorInputCompact
               id="adk-tools"
               type="text"
               value={
@@ -158,23 +156,17 @@ function AgentNodeEditor({ node, availableModels, onUpdate, onConfigUpdate }) {
                   },
                 })
               }
-              className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-primary-500"
               placeholder="google_search, load_web_page"
             />
-            <p className="text-xs text-gray-500 mt-1">
+            <EditorHint>
               Available: google_search, load_web_page, enterprise_web_search
-            </p>
-          </div>
-        </div>
+            </EditorHint>
+          </EditorFieldGroup>
+        </EditorCalloutBlue>
       )}
-      <div>
-        <label
-          htmlFor="agent-model"
-          className="block text-sm font-medium text-gray-700 mb-1"
-        >
-          Model
-        </label>
-        <select
+      <EditorFieldGroup>
+        <EditorLabel htmlFor="agent-model">Model</EditorLabel>
+        <EditorSelect
           id="agent-model"
           value={currentModel}
           onChange={(e) =>
@@ -183,7 +175,6 @@ function AgentNodeEditor({ node, availableModels, onUpdate, onConfigUpdate }) {
               model: e.target.value,
             })
           }
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
           aria-label="Select LLM model for agent"
         >
           {availableModels.length > 0 ? (
@@ -200,21 +191,18 @@ function AgentNodeEditor({ node, availableModels, onUpdate, onConfigUpdate }) {
               <option value="gpt-3.5-turbo">GPT-3.5 Turbo (OpenAI)</option>
             </>
           )}
-        </select>
-        <p className="text-xs text-gray-500 mt-1">
+        </EditorSelect>
+        <EditorHint>
           {availableModels.length > 0
             ? `This agent will use the configured LLM provider with the selected model`
             : "This agent will call the OpenAI API with this model. Configure providers in Settings."}
-        </p>
-      </div>
-      <div className="mt-4">
-        <label
-          htmlFor="agent-system-prompt"
-          className="block text-sm font-medium text-gray-700 mb-1"
-        >
+        </EditorHint>
+      </EditorFieldGroup>
+      <EditorFieldGroup $mt="md">
+        <EditorLabel htmlFor="agent-system-prompt">
           {agentType === "adk" ? "Instruction" : "System Prompt"}
-        </label>
-        <textarea
+        </EditorLabel>
+        <EditorTextarea
           id="agent-system-prompt"
           ref={systemPromptRef}
           value={systemPromptValue}
@@ -238,22 +226,18 @@ function AgentNodeEditor({ node, availableModels, onUpdate, onConfigUpdate }) {
           }}
           rows={4}
           placeholder="You are a helpful assistant that..."
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
           aria-label="System prompt for agent behavior"
           aria-describedby="system-prompt-help"
         />
-        <p id="system-prompt-help" className="text-xs text-gray-500 mt-1">
+        <EditorHint id="system-prompt-help">
           Instructions that define the agent&apos;s role and behavior
-        </p>
-      </div>
-      <div className="mt-4">
-        <label
-          htmlFor="agent-temperature"
-          className="block text-sm font-medium text-gray-700 mb-1"
-        >
+        </EditorHint>
+      </EditorFieldGroup>
+      <EditorFieldGroup $mt="md">
+        <EditorLabel htmlFor="agent-temperature">
           Temperature: {agentConfig.temperature?.toFixed(1) || "0.7"}
-        </label>
-        <input
+        </EditorLabel>
+        <EditorRangeInput
           id="agent-temperature"
           type="range"
           min="0"
@@ -266,25 +250,19 @@ function AgentNodeEditor({ node, availableModels, onUpdate, onConfigUpdate }) {
               temperature: parseFloat(e.target.value),
             })
           }
-          className="w-full"
           aria-label="Temperature control for agent creativity"
           aria-valuemin={0}
           aria-valuemax={1}
           aria-valuenow={agentConfig.temperature || 0.7}
         />
-        <div className="flex justify-between text-xs text-gray-500 mt-1">
+        <EditorRangeScaleRow>
           <span>Focused (0.0)</span>
           <span>Creative (1.0)</span>
-        </div>
-      </div>
-      <div className="mt-4">
-        <label
-          htmlFor="agent-max-tokens"
-          className="block text-sm font-medium text-gray-700 mb-1"
-        >
-          Max Tokens (optional)
-        </label>
-        <input
+        </EditorRangeScaleRow>
+      </EditorFieldGroup>
+      <EditorFieldGroup $mt="md">
+        <EditorLabel htmlFor="agent-max-tokens">Max Tokens (optional)</EditorLabel>
+        <EditorInput
           id="agent-max-tokens"
           ref={maxTokensRef}
           type="number"
@@ -295,39 +273,32 @@ function AgentNodeEditor({ node, availableModels, onUpdate, onConfigUpdate }) {
             onConfigUpdate("agent_config", "max_tokens", newValue);
           }}
           placeholder="Leave blank for default"
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
           aria-label="Maximum tokens for agent response"
           aria-describedby="max-tokens-help"
         />
-        <p id="max-tokens-help" className="text-xs text-gray-500 mt-1">
+        <EditorHint id="max-tokens-help">
           Maximum length of the agent&apos;s response
-        </p>
-      </div>
-      <div
-        className="bg-blue-50 border border-blue-200 rounded-lg p-3 mt-4"
-        role="status"
-      >
-        <p className="text-xs text-blue-900 font-medium mb-1">
-          🤖 This is a Real LLM Agent
-        </p>
-        <p className="text-xs text-blue-700">
+        </EditorHint>
+      </EditorFieldGroup>
+      <EditorCalloutBlue $mt="md" role="status">
+        <EditorCalloutBlueTitle>🤖 This is a Real LLM Agent</EditorCalloutBlueTitle>
+        <EditorCalloutBlueBody>
           When executed, this agent will call OpenAI&apos;s API with your
           configured model and prompt. The agent receives data from its inputs
           and produces output for the next nodes.
-        </p>
-      </div>
-      <div className="mt-4">
-        <button
+        </EditorCalloutBlueBody>
+      </EditorCalloutBlue>
+      <EditorFieldGroup $mt="md">
+        <EditorSecondaryFullButton
           type="button"
           onClick={handleExportConfig}
-          className="w-full flex items-center justify-center gap-2 px-3 py-2 border border-gray-300 rounded-lg text-sm text-gray-700 bg-white hover:bg-gray-50 focus:ring-2 focus:ring-primary-500 transition-colors"
           aria-label="Export agent config to JSON file"
         >
-          <Download className="w-4 h-4" />
+          <Download size={16} aria-hidden />
           Export Agent Config
-        </button>
-      </div>
-    </div>
+        </EditorSecondaryFullButton>
+      </EditorFieldGroup>
+    </EditorSectionRoot>
   );
 }
 export { AgentNodeEditor as default };

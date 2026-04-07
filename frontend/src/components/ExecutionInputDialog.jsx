@@ -1,5 +1,27 @@
 import { useState, useEffect } from "react";
 import { X } from "lucide-react";
+import {
+  ModalBackdrop,
+  ModalPanel,
+  ModalHeader,
+  ModalTitle,
+  ModalCloseButton,
+  ModalBody,
+  ModalFooter,
+  ModalStack,
+  ModalFieldStack,
+  ModalSectionTitle,
+  ModalLead,
+  ModalRequiredMark,
+  DialogCancelButton,
+  DialogPrimaryButton,
+} from "../styles/modalDialog.styled";
+import {
+  EditorLabel,
+  EditorInput,
+  EditorTextarea,
+  EditorHint,
+} from "../styles/editorForm.styled";
 function ExecutionInputDialog({
   isOpen,
   onClose,
@@ -42,105 +64,109 @@ function ExecutionInputDialog({
     }));
   };
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
-        <div className="flex items-center justify-between p-6 border-b border-gray-200">
-          <h2 className="text-xl font-semibold text-gray-900">
+    <ModalBackdrop>
+      <ModalPanel $wide $tall>
+        <ModalHeader>
+          <ModalTitle>
             {workflowName ? `Execute: ${workflowName}` : "Execute Workflow"}
-          </h2>
-          <button
+          </ModalTitle>
+          <ModalCloseButton
+            type="button"
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors"
             aria-label="Close dialog"
           >
-            <X className="w-6 h-6" />
-          </button>
-        </div>
-        <form onSubmit={handleSubmit} className="p-6">
-          {inputNodes.length === 0 ? (
-            <div className="text-gray-600 mb-6">
-              This workflow does not require any inputs. Click Execute to run it.
-            </div>
-          ) : (
-            <div className="space-y-4 mb-6">
-              {inputNodes.map((node) => {
-                const inputConfig = node.input_config;
-                if (!inputConfig.inputs || inputConfig.inputs.length === 0) {
-                  return null;
-                }
-                return (
-                  <div key={node.id}>
-                    <h3 className="text-sm font-medium text-gray-700 mb-3">
-                      {node.name || "Inputs"}
-                    </h3>
-                    <div className="space-y-3">
-                      {inputConfig.inputs.map((input) => (
-                        <div key={input.name}>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">
-                            {input.label || input.name}
-                            {input.required && (
-                              <span className="text-red-500 ml-1">*</span>
-                            )}
-                          </label>
-                          {input.type === "textarea" ? (
-                            <textarea
-                              value={inputs[input.name] || ""}
-                              onChange={(e) =>
-                                handleInputChange(input.name, e.target.value)
-                              }
-                              required={input.required}
-                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                              rows={4}
-                              placeholder={input.placeholder || ""}
-                            />
-                          ) : (
-                            <input
-                              type={input.type || "text"}
-                              value={inputs[input.name] || ""}
-                              onChange={(e) =>
-                                handleInputChange(
-                                  input.name,
+            <X size={24} aria-hidden />
+          </ModalCloseButton>
+        </ModalHeader>
+        <form onSubmit={handleSubmit}>
+          <ModalBody>
+            {inputNodes.length === 0 ? (
+              <ModalLead>
+                This workflow does not require any inputs. Click Execute to run
+                it.
+              </ModalLead>
+            ) : (
+              <ModalStack>
+                {inputNodes.map((node) => {
+                  const inputConfig = node.input_config;
+                  if (!inputConfig.inputs || inputConfig.inputs.length === 0) {
+                    return null;
+                  }
+                  return (
+                    <div key={node.id}>
+                      <ModalSectionTitle>
+                        {node.name || "Inputs"}
+                      </ModalSectionTitle>
+                      <ModalFieldStack>
+                        {inputConfig.inputs.map((input) => (
+                          <div key={input.name}>
+                            <EditorLabel htmlFor={`exec-in-${input.name}`}>
+                              {input.label || input.name}
+                              {input.required && (
+                                <ModalRequiredMark aria-hidden>*</ModalRequiredMark>
+                              )}
+                            </EditorLabel>
+                            {input.type === "textarea" ? (
+                              <EditorTextarea
+                                id={`exec-in-${input.name}`}
+                                value={inputs[input.name] || ""}
+                                onChange={(e) =>
+                                  handleInputChange(
+                                    input.name,
+                                    e.target.value,
+                                  )
+                                }
+                                required={input.required}
+                                rows={4}
+                                placeholder={input.placeholder || ""}
+                              />
+                            ) : (
+                              <EditorInput
+                                id={`exec-in-${input.name}`}
+                                type={input.type || "text"}
+                                value={
                                   input.type === "number"
-                                    ? Number(e.target.value)
-                                    : e.target.value,
-                                )
-                              }
-                              required={input.required}
-                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-                              placeholder={input.placeholder || ""}
-                            />
-                          )}
-                          {input.description && (
-                            <p className="mt-1 text-xs text-gray-500">
-                              {input.description}
-                            </p>
-                          )}
-                        </div>
-                      ))}
+                                    ? inputs[input.name] === void 0 ||
+                                      inputs[input.name] === ""
+                                      ? ""
+                                      : String(inputs[input.name])
+                                    : inputs[input.name] || ""
+                                }
+                                onChange={(e) =>
+                                  handleInputChange(
+                                    input.name,
+                                    input.type === "number"
+                                      ? e.target.value === ""
+                                        ? ""
+                                        : Number(e.target.value)
+                                      : e.target.value,
+                                  )
+                                }
+                                required={input.required}
+                                placeholder={input.placeholder || ""}
+                              />
+                            )}
+                            {input.description && (
+                              <EditorHint>{input.description}</EditorHint>
+                            )}
+                          </div>
+                        ))}
+                      </ModalFieldStack>
                     </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-          <div className="flex items-center justify-end gap-3 pt-4 border-t border-gray-200">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
-            >
+                  );
+                })}
+              </ModalStack>
+            )}
+          </ModalBody>
+          <ModalFooter>
+            <DialogCancelButton type="button" onClick={onClose}>
               Cancel
-            </button>
-            <button
-              type="submit"
-              className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
-            >
-              Execute
-            </button>
-          </div>
+            </DialogCancelButton>
+            <DialogPrimaryButton type="submit">Execute</DialogPrimaryButton>
+          </ModalFooter>
         </form>
-      </div>
-    </div>
+      </ModalPanel>
+    </ModalBackdrop>
   );
 }
 export { ExecutionInputDialog as default };

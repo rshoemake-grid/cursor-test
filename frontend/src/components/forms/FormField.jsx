@@ -1,6 +1,19 @@
 import { useRef } from "react";
 import { useFormField } from "../../hooks/forms";
 import { useInputTypeHandler } from "../../hooks/forms/useInputTypeHandler";
+import {
+  FormFieldRoot,
+  FormFieldLabel,
+  FormFieldRequired,
+  FormFieldDescription,
+  FormFieldTextInput,
+  FormFieldTextarea,
+  FormFieldSelect,
+  FormFieldCheckboxRow,
+  FormFieldCheckbox,
+  FormFieldCheckboxHint,
+} from "../../styles/formField.styled";
+
 function FormField({
   label,
   id,
@@ -33,54 +46,73 @@ function FormField({
   const value = useHook ? fieldHook.value : controlledValue;
   const inputRef = useHook ? fieldHook.inputRef : fallbackRef;
   const handleInputChange = useInputTypeHandler(type, onChange);
-  const baseInputClasses =
-    "w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent";
-  const disabledClasses = disabled ? "bg-gray-100 cursor-not-allowed" : "";
   const renderInput = () => {
-    const commonProps = {
-      id,
-      ref: inputRef,
-      value,
-      onChange: handleInputChange,
-      disabled,
-      required,
-      "aria-label": ariaLabel || label,
-      className: `${baseInputClasses} ${disabledClasses} ${className}`,
-    };
+    const aria = ariaLabel || label;
     switch (type) {
       case "textarea":
         return (
-          <textarea {...commonProps} placeholder={placeholder} rows={rows} />
+          <FormFieldTextarea
+            id={id}
+            ref={inputRef}
+            value={value}
+            onChange={handleInputChange}
+            disabled={disabled}
+            required={required}
+            aria-label={aria}
+            className={className}
+            placeholder={placeholder}
+            rows={rows}
+          />
         );
       case "select":
         return (
-          <select {...commonProps}>
+          <FormFieldSelect
+            id={id}
+            ref={inputRef}
+            value={value}
+            onChange={handleInputChange}
+            disabled={disabled}
+            required={required}
+            aria-label={aria}
+            className={className}
+          >
             {options?.map((option) => (
               <option key={option.value} value={option.value}>
                 {option.label}
               </option>
             ))}
-          </select>
+          </FormFieldSelect>
         );
       case "checkbox":
         return (
-          <div className="flex items-center gap-2">
-            <input
-              {...commonProps}
+          <FormFieldCheckboxRow>
+            <FormFieldCheckbox
+              id={id}
+              ref={inputRef}
               type="checkbox"
               checked={value}
-              className="w-4 h-4"
+              onChange={handleInputChange}
+              disabled={disabled}
+              required={required}
+              aria-label={aria}
             />
             {description && (
-              <span className="text-sm text-gray-600">{description}</span>
+              <FormFieldCheckboxHint>{description}</FormFieldCheckboxHint>
             )}
-          </div>
+          </FormFieldCheckboxRow>
         );
       default:
         return (
-          <input
-            {...commonProps}
+          <FormFieldTextInput
+            id={id}
+            ref={inputRef}
             type={type}
+            value={value}
+            onChange={handleInputChange}
+            disabled={disabled}
+            required={required}
+            aria-label={aria}
+            className={className}
             placeholder={placeholder}
             min={min}
             max={max}
@@ -89,21 +121,18 @@ function FormField({
     }
   };
   return (
-    <div className="mb-4">
+    <FormFieldRoot>
       {type !== "checkbox" && (
-        <label
-          htmlFor={id}
-          className="block text-sm font-medium text-gray-700 mb-1"
-        >
+        <FormFieldLabel htmlFor={id}>
           {label}
-          {required && <span className="text-red-500 ml-1">*</span>}
-        </label>
+          {required && <FormFieldRequired>*</FormFieldRequired>}
+        </FormFieldLabel>
       )}
       {renderInput()}
       {description && type !== "checkbox" && (
-        <p className="text-xs text-gray-500 mt-1">{description}</p>
+        <FormFieldDescription>{description}</FormFieldDescription>
       )}
-    </div>
+    </FormFieldRoot>
   );
 }
 export { FormField };

@@ -3,10 +3,10 @@ const path = require('path');
 
 // Files to process
 const testFiles = [
-  'src/pages/ForgotPasswordPage.test.tsx',
-  'src/pages/ResetPasswordPage.test.tsx',
-  'src/components/MarketplaceDialog.test.tsx',
-  'src/pages/SettingsPage.test.tsx',
+  'src/pages/ForgotPasswordPage.test.jsx',
+  'src/pages/ResetPasswordPage.test.jsx',
+  'src/components/MarketplaceDialog.test.jsx',
+  'src/pages/SettingsPage.integration.test.jsx',
 ];
 
 testFiles.forEach(filePath => {

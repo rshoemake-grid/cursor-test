@@ -1,6 +1,7 @@
 import ExecutionInputDialog from "../ExecutionInputDialog";
 import ContextMenu from "../NodeContextMenu";
 import MarketplaceDialog from "../MarketplaceDialog";
+import { ContextMenuBackdrop } from "../../styles/workflowBuilderShell.styled";
 function WorkflowBuilderDialogs({
   showInputs,
   onCloseInputs,
@@ -33,7 +34,7 @@ function WorkflowBuilderDialogs({
       />
       {contextMenu && (
         <>
-          <div className="fixed inset-0 z-40" onClick={onCloseContextMenu} />
+          <ContextMenuBackdrop onClick={onCloseContextMenu} />
           <ContextMenu
             nodeId={contextMenu.nodeId}
             edgeId={contextMenu.edgeId}

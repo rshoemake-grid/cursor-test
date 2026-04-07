@@ -1,4 +1,4 @@
-# Analysis of confirm.mutation.enhanced.test.ts Failures
+# Analysis of confirm.mutation.enhanced.test.jsx Failures
 
 ## Summary
 9 test failures out of 13 total tests. All failures are related to mock setup and timing issues with the promise executor.

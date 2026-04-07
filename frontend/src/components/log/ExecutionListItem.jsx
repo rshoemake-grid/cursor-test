@@ -5,6 +5,29 @@ import {
   formatExecutionDuration,
   calculateExecutionProgress,
 } from "../../utils/executionFormat";
+import {
+  LogListItemRoot,
+  LogListItemRow,
+  LogListCheckboxCol,
+  LogCheckbox,
+  LogListMain,
+  LogListIdRow,
+  LogListMono,
+  LogListMeta,
+  LogListNodeRow,
+  LogListNodeLabel,
+  LogListNodeValue,
+  LogListProgressBlock,
+  LogListProgressRow,
+  LogListProgressTrack,
+  LogListProgressFill,
+  LogListMetaRow,
+  LogListMetaItem,
+  LogListDuration,
+  LogListAside,
+  LogListViewBtn,
+} from "../../styles/logComponents.styled";
+
 function ExecutionListItem({
   execution,
   onExecutionClick,
@@ -28,101 +51,91 @@ function ExecutionListItem({
     }
   };
   return (
-    <div
+    <LogListItemRoot
       onClick={handleItemClick}
-      className={`
-        bg-white rounded-lg shadow-sm border p-4 transition-all cursor-pointer
-        ${isSelected ? "border-primary-500 bg-primary-50" : ""}
-        ${isActive && !isSelected ? "border-blue-500 hover:border-blue-400" : ""}
-        ${!isActive && !isSelected ? "border-gray-200 hover:border-gray-300" : ""}
-        hover:shadow-md
-      `}
+      $selected={isSelected}
+      $isActive={isActive}
     >
-      <div className="flex items-start justify-between gap-4">
+      <LogListItemRow>
         {showCheckbox && (
-          <div className="flex-shrink-0 pt-1">
-            <input
+          <LogListCheckboxCol>
+            <LogCheckbox
               type="checkbox"
               checked={isSelected}
               onChange={handleCheckboxChange}
               onClick={handleCheckboxClick}
-              className="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
               aria-label={`Select execution ${execution.execution_id}`}
             />
-          </div>
+          </LogListCheckboxCol>
         )}
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 mb-2">
+        <LogListMain>
+          <LogListIdRow>
             {getExecutionStatusIcon(execution.status)}
-            <span className="font-mono text-sm text-gray-700">
-              {execution.execution_id.slice(0, 8)}...
-            </span>
+            <LogListMono>{execution.execution_id.slice(0, 8)}...</LogListMono>
             <ExecutionStatusBadge status={execution.status} variant="light" />
-            <span className="text-xs text-gray-500">
+            <LogListMeta>
               Workflow: {execution.workflow_id.slice(0, 8)}...
-            </span>
-          </div>
+            </LogListMeta>
+          </LogListIdRow>
           {execution.current_node && (
-            <div className="flex items-center gap-2 mb-2">
-              <span className="text-xs text-gray-500">Current Node:</span>
-              <span className="text-sm font-medium text-gray-700">
-                {execution.current_node}
-              </span>
-            </div>
+            <LogListNodeRow>
+              <LogListNodeLabel>Current Node:</LogListNodeLabel>
+              <LogListNodeValue>{execution.current_node}</LogListNodeValue>
+            </LogListNodeRow>
           )}
           {execution.status === "running" && execution.node_states && (
-            <div className="mb-2">
-              <div className="flex items-center gap-2 text-xs text-gray-500">
+            <LogListProgressBlock>
+              <LogListProgressRow>
                 <span>Progress:</span>
-                <div className="flex-1 bg-gray-200 rounded-full h-1.5 overflow-hidden max-w-xs">
-                  <div
-                    className="bg-blue-500 h-full transition-all duration-300"
+                <LogListProgressTrack>
+                  <LogListProgressFill
                     style={{
                       width: `${progress}%`,
                     }}
                   />
-                </div>
-              </div>
-            </div>
+                </LogListProgressTrack>
+              </LogListProgressRow>
+            </LogListProgressBlock>
           )}
-          <div className="flex flex-wrap items-center gap-3 text-xs text-gray-500">
-            <div className="flex items-center gap-1">
-              <Clock className="w-3 h-3 flex-shrink-0" />
-              <span className="whitespace-nowrap">
+          <LogListMetaRow>
+            <LogListMetaItem>
+              <Clock aria-hidden />
+              <span>
                 Started: {new Date(execution.started_at).toLocaleString()}
               </span>
-            </div>
+            </LogListMetaItem>
             {execution.completed_at && (
-              <div className="flex items-center gap-1">
-                <CheckCircle className="w-3 h-3 flex-shrink-0" />
-                <span className="whitespace-nowrap">
-                  Completed: {new Date(execution.completed_at).toLocaleString()}
+              <LogListMetaItem>
+                <CheckCircle aria-hidden />
+                <span>
+                  Completed:{" "}
+                  {new Date(execution.completed_at).toLocaleString()}
                 </span>
-              </div>
+              </LogListMetaItem>
             )}
-            <div className="text-gray-600 whitespace-nowrap">
+            <LogListDuration>
               Duration:{" "}
               {formatExecutionDuration(
                 execution.started_at,
                 execution.completed_at,
               )}
-            </div>
-          </div>
-        </div>
-        <div className="flex flex-col items-end gap-2 flex-shrink-0">
-          <button
+            </LogListDuration>
+          </LogListMetaRow>
+        </LogListMain>
+        <LogListAside>
+          <LogListViewBtn
+            type="button"
             onClick={(e) => {
               e.stopPropagation();
               onExecutionClick(execution.execution_id);
             }}
-            className="px-3 py-1.5 text-sm bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors flex items-center gap-1"
           >
-            <Eye className="w-4 h-4" />
+            <Eye aria-hidden />
             View
-          </button>
-        </div>
-      </div>
-    </div>
+          </LogListViewBtn>
+        </LogListAside>
+      </LogListItemRow>
+    </LogListItemRoot>
   );
 }
 export { ExecutionListItem as default };

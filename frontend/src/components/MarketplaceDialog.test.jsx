@@ -88,35 +88,13 @@ describe("MarketplaceDialog", () => {
   });
   it("should call onClose when close button is clicked", () => {
     render(<MarketplaceDialog isOpen={true} onClose={mockOnClose} />);
-    const closeButton = screen
-      .getByText("Send to Marketplace")
-      .closest("div")
-      ?.querySelector('button[class*="text-gray"]');
-    if (closeButton) {
-      fireEvent.click(closeButton);
-      expect(mockOnClose).toHaveBeenCalledTimes(1);
-    } else {
-      const buttons = screen.getAllByRole("button");
-      const closeBtn = buttons.find(
-        (btn) =>
-          btn.getAttribute("aria-label")?.includes("close") ||
-          btn.className.includes("text-gray"),
-      );
-      if (closeBtn) {
-        fireEvent.click(closeBtn);
-        expect(mockOnClose).toHaveBeenCalledTimes(1);
-      }
-    }
+    fireEvent.click(screen.getByRole("button", { name: /close dialog/i }));
+    expect(mockOnClose).toHaveBeenCalledTimes(1);
   });
   it("should call onClose when backdrop is clicked", () => {
     render(<MarketplaceDialog isOpen={true} onClose={mockOnClose} />);
-    const backdrop = screen
-      .getByText("Send to Marketplace")
-      .closest("div")?.previousElementSibling;
-    if (backdrop) {
-      fireEvent.click(backdrop);
-      expect(mockOnClose).toHaveBeenCalledTimes(1);
-    }
+    fireEvent.click(screen.getByTestId("marketplace-dialog-backdrop"));
+    expect(mockOnClose).toHaveBeenCalledTimes(1);
   });
   it("should populate form when node is provided", () => {
     render(

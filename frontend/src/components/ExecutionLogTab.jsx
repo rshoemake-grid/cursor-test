@@ -1,5 +1,41 @@
 import { Clock, CheckCircle, XCircle, Play, AlertCircle } from "lucide-react";
 import ExecutionStatusBadge from "./ExecutionStatusBadge";
+import {
+  ExecutionLogEmptyBlock,
+  DarkEmptyIconWrap,
+  DarkEmptyTitle,
+  DarkEmptySubtitle,
+} from "../styles/contentBlocks.styled";
+import {
+  ExecLogScroll,
+  ExecLogInner,
+  ExecLogPad,
+  ExecLogHeaderBlock,
+  ExecLogTitle,
+  ExecLogSubtitle,
+  ExecLogCardStack,
+  ExecLogCard,
+  ExecLogCardRow,
+  ExecLogCardMain,
+  ExecLogIdRow,
+  ExecLogMono,
+  ExecLogNodeRow,
+  ExecLogNodeLabel,
+  ExecLogNodeValue,
+  ExecLogProgressBlock,
+  ExecLogProgressRow,
+  ExecLogProgressTrack,
+  ExecLogProgressFill,
+  ExecLogMetaRow,
+  ExecLogMetaItem,
+  ExecLogMetaMuted,
+  ExecLogCardAside,
+  ExecLogStatusDone,
+  ExecLogStatusFail,
+  ExecLogStatusActive,
+  ExecStatusIconWrap,
+} from "../styles/executionConsole.styled";
+
 function ExecutionLogTab({ executions, onExecutionClick }) {
   const sortedExecutions = [...executions].sort((a, b) => {
     const aTime = new Date(a.startedAt).getTime();
@@ -9,15 +45,35 @@ function ExecutionLogTab({ executions, onExecutionClick }) {
   const getStatusIcon = (status) => {
     switch (status) {
       case "completed":
-        return <CheckCircle className="w-4 h-4 text-green-500" />;
+        return (
+          <ExecStatusIconWrap $status="completed">
+            <CheckCircle aria-hidden />
+          </ExecStatusIconWrap>
+        );
       case "failed":
-        return <XCircle className="w-4 h-4 text-red-500" />;
+        return (
+          <ExecStatusIconWrap $status="failed">
+            <XCircle aria-hidden />
+          </ExecStatusIconWrap>
+        );
       case "running":
-        return <Play className="w-4 h-4 text-blue-500 animate-pulse" />;
+        return (
+          <ExecStatusIconWrap $status="running" $pulse>
+            <Play aria-hidden />
+          </ExecStatusIconWrap>
+        );
       case "pending":
-        return <Clock className="w-4 h-4 text-yellow-500" />;
+        return (
+          <ExecStatusIconWrap $status="pending">
+            <Clock aria-hidden />
+          </ExecStatusIconWrap>
+        );
       default:
-        return <AlertCircle className="w-4 h-4 text-gray-500" />;
+        return (
+          <ExecStatusIconWrap $status="default">
+            <AlertCircle aria-hidden />
+          </ExecStatusIconWrap>
+        );
     }
   };
   const getCurrentNode = (execution) => {
@@ -73,74 +129,64 @@ function ExecutionLogTab({ executions, onExecutionClick }) {
   };
   if (sortedExecutions.length === 0) {
     return (
-      <div className="h-full overflow-y-auto bg-gray-900 text-gray-100 p-4">
-        <div className="text-gray-400 text-center py-8">
-          <AlertCircle className="w-12 h-12 mx-auto mb-4 opacity-50" />
-          <p className="text-lg font-medium mb-2">No executions yet</p>
-          <p className="text-sm">
+      <ExecLogScroll>
+        <ExecutionLogEmptyBlock>
+          <DarkEmptyIconWrap>
+            <AlertCircle aria-hidden />
+          </DarkEmptyIconWrap>
+          <DarkEmptyTitle>No executions yet</DarkEmptyTitle>
+          <DarkEmptySubtitle>
             Execute a workflow to see execution logs here
-          </p>
-        </div>
-      </div>
+          </DarkEmptySubtitle>
+        </ExecutionLogEmptyBlock>
+      </ExecLogScroll>
     );
   }
   return (
-    <div className="h-full overflow-y-auto bg-gray-900 text-gray-100">
-      <div className="p-4">
-        <div className="mb-4">
-          <h3 className="text-lg font-semibold text-white mb-1">
-            Execution Log
-          </h3>
-          <p className="text-sm text-gray-400">
+    <ExecLogInner>
+      <ExecLogPad>
+        <ExecLogHeaderBlock>
+          <ExecLogTitle>Execution Log</ExecLogTitle>
+          <ExecLogSubtitle>
             {sortedExecutions.length} execution
             {sortedExecutions.length !== 1 ? "s" : ""} total
-          </p>
-        </div>
-        <div className="space-y-2">
+          </ExecLogSubtitle>
+        </ExecLogHeaderBlock>
+        <ExecLogCardStack>
           {sortedExecutions.map((execution) => {
             const currentNode = getCurrentNode(execution);
             const isActive =
               execution.status === "running" || execution.status === "pending";
             return (
-              <div
+              <ExecLogCard
                 key={execution.id}
+                $active={isActive}
                 onClick={() => onExecutionClick?.(execution.id)}
-                className={`
-                  bg-gray-800 rounded-lg p-4 border transition-all cursor-pointer
-                  ${isActive ? "border-blue-500 hover:border-blue-400" : "border-gray-700 hover:border-gray-600"}
-                  hover:bg-gray-700
-                `}
                 title={`Click to view execution ${execution.id.slice(0, 8)}...`}
               >
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-2">
+                <ExecLogCardRow>
+                  <ExecLogCardMain>
+                    <ExecLogIdRow>
                       {getStatusIcon(execution.status)}
-                      <span className="font-mono text-sm text-gray-300">
-                        {execution.id.slice(0, 8)}...
-                      </span>
+                      <ExecLogMono>{execution.id.slice(0, 8)}...</ExecLogMono>
                       <ExecutionStatusBadge
                         status={execution.status}
                         variant="light"
                       />
-                    </div>
+                    </ExecLogIdRow>
                     {currentNode && (
-                      <div className="flex items-center gap-2 mb-2">
-                        <span className="text-xs text-gray-500">
-                          Current Node:
-                        </span>
-                        <span className="text-sm font-medium text-gray-300">
-                          {currentNode}
-                        </span>
-                      </div>
+                      <ExecLogNodeRow>
+                        <ExecLogNodeLabel>Current Node:</ExecLogNodeLabel>
+                        <ExecLogNodeValue>{currentNode}</ExecLogNodeValue>
+                      </ExecLogNodeRow>
                     )}
                     {execution.status === "running" &&
                       execution.nodes &&
                       typeof execution.nodes === "object" && (
-                        <div className="mb-2">
-                          <div className="flex items-center gap-2 text-xs text-gray-400">
+                        <ExecLogProgressBlock>
+                          <ExecLogProgressRow>
                             <span>Progress:</span>
-                            <div className="flex-1 bg-gray-700 rounded-full h-1.5 overflow-hidden">
+                            <ExecLogProgressTrack>
                               {(() => {
                                 const nodeEntries = Object.entries(
                                   execution.nodes,
@@ -163,68 +209,61 @@ function ExecutionLogTab({ executions, onExecutionClick }) {
                                     ? (completedNodes / totalNodes) * 100
                                     : 0;
                                 return (
-                                  <div
-                                    className="bg-blue-500 h-full transition-all duration-300"
+                                  <ExecLogProgressFill
                                     style={{
                                       width: `${Math.min(progress, 100)}%`,
                                     }}
                                   />
                                 );
                               })()}
-                            </div>
-                          </div>
-                        </div>
+                            </ExecLogProgressTrack>
+                          </ExecLogProgressRow>
+                        </ExecLogProgressBlock>
                       )}
-                    <div className="flex flex-wrap items-center gap-3 text-xs text-gray-500">
-                      <div className="flex items-center gap-1">
-                        <Clock className="w-3 h-3 flex-shrink-0" />
-                        <span className="whitespace-nowrap">
+                    <ExecLogMetaRow>
+                      <ExecLogMetaItem>
+                        <Clock aria-hidden />
+                        <span>
                           Started:{" "}
                           {new Date(execution.startedAt).toLocaleString()}
                         </span>
-                      </div>
+                      </ExecLogMetaItem>
                       {execution.completedAt && (
-                        <div className="flex items-center gap-1">
-                          <CheckCircle className="w-3 h-3 flex-shrink-0" />
-                          <span className="whitespace-nowrap">
+                        <ExecLogMetaItem>
+                          <CheckCircle aria-hidden />
+                          <span>
                             Completed:{" "}
                             {new Date(execution.completedAt).toLocaleString()}
                           </span>
-                        </div>
+                        </ExecLogMetaItem>
                       )}
-                      <div className="text-gray-600 whitespace-nowrap">
+                      <ExecLogMetaMuted>
                         Duration:{" "}
                         {formatDuration(
                           execution.startedAt,
                           execution.completedAt,
                         )}
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex flex-col items-end gap-2 flex-shrink-0">
+                      </ExecLogMetaMuted>
+                    </ExecLogMetaRow>
+                  </ExecLogCardMain>
+                  <ExecLogCardAside>
                     {execution.status === "completed" && (
-                      <div className="text-xs text-green-400 font-medium">
-                        ✓ Completed
-                      </div>
+                      <ExecLogStatusDone>✓ Completed</ExecLogStatusDone>
                     )}
                     {execution.status === "failed" && (
-                      <div className="text-xs text-red-400 font-medium">
-                        ✗ Failed
-                      </div>
+                      <ExecLogStatusFail>✗ Failed</ExecLogStatusFail>
                     )}
                     {isActive && (
-                      <div className="text-xs text-blue-400 font-medium animate-pulse">
-                        ● In Progress
-                      </div>
+                      <ExecLogStatusActive>● In Progress</ExecLogStatusActive>
                     )}
-                  </div>
-                </div>
-              </div>
+                  </ExecLogCardAside>
+                </ExecLogCardRow>
+              </ExecLogCard>
             );
           })}
-        </div>
-      </div>
-    </div>
+        </ExecLogCardStack>
+      </ExecLogPad>
+    </ExecLogInner>
   );
 }
 export { ExecutionLogTab as default };

@@ -63,7 +63,7 @@ All core components for ADK dual-mode support have been implemented.
 
 ### 6. UI Components ✅
 
-**File**: `frontend/src/components/editors/AgentNodeEditor.tsx`
+**File**: `frontend/src/components/editors/AgentNodeEditor.jsx`
 
 - ✅ Added agent type selector (Workflow/ADK)
 - ✅ Added ADK configuration panel (shown when ADK selected)
@@ -292,7 +292,7 @@ def test_agent_registry_routing():
 
 ### Frontend
 - `frontend/src/types/workflow.ts` - Added ADK types
-- `frontend/src/components/editors/AgentNodeEditor.tsx` - Added ADK UI
+- `frontend/src/components/editors/AgentNodeEditor.jsx` - Added ADK UI
 
 ---
 

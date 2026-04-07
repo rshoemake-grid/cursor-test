@@ -1,25 +1,34 @@
-import { getDifficultyColor } from "./difficultyColors";
-describe("getDifficultyColor", () => {
-  it("should return green colors for beginner", () => {
-    expect(getDifficultyColor("beginner")).toBe("bg-green-100 text-green-800");
+import { getDifficultyBadgeTheme } from "./difficultyColors";
+import { colors } from "../styles/designTokens";
+
+describe("getDifficultyBadgeTheme", () => {
+  it("should map known difficulties to design token colors", () => {
+    expect(getDifficultyBadgeTheme("beginner")).toEqual({
+      background: colors.green100,
+      color: colors.green800,
+    });
+    expect(getDifficultyBadgeTheme("intermediate")).toEqual({
+      background: colors.yellow100,
+      color: colors.yellow800,
+    });
+    expect(getDifficultyBadgeTheme("advanced")).toEqual({
+      background: colors.red100,
+      color: colors.red800,
+    });
+    expect(getDifficultyBadgeTheme("unknown")).toEqual({
+      background: colors.gray100,
+      color: colors.gray800,
+    });
   });
-  it("should return yellow colors for intermediate", () => {
-    expect(getDifficultyColor("intermediate")).toBe(
-      "bg-yellow-100 text-yellow-800",
-    );
-  });
-  it("should return red colors for advanced", () => {
-    expect(getDifficultyColor("advanced")).toBe("bg-red-100 text-red-800");
-  });
-  it("should return gray colors for unknown difficulty", () => {
-    expect(getDifficultyColor("unknown")).toBe("bg-gray-100 text-gray-800");
-    expect(getDifficultyColor("")).toBe("bg-gray-100 text-gray-800");
-    expect(getDifficultyColor("expert")).toBe("bg-gray-100 text-gray-800");
-  });
-  it("should handle case sensitivity", () => {
-    expect(getDifficultyColor("BEGINNER")).toBe("bg-gray-100 text-gray-800");
-    expect(getDifficultyColor("Intermediate")).toBe(
-      "bg-gray-100 text-gray-800",
-    );
+
+  it("should return default theme for empty, expert, or non-matching case", () => {
+    const fallback = {
+      background: colors.gray100,
+      color: colors.gray800,
+    };
+    expect(getDifficultyBadgeTheme("")).toEqual(fallback);
+    expect(getDifficultyBadgeTheme("expert")).toEqual(fallback);
+    expect(getDifficultyBadgeTheme("BEGINNER")).toEqual(fallback);
+    expect(getDifficultyBadgeTheme("Intermediate")).toEqual(fallback);
   });
 });

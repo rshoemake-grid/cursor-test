@@ -23,6 +23,55 @@ import {
   formatDifficulty,
 } from "../config/templateConstants";
 import { getDefaultPublishForm, parseTags } from "../utils/publishFormUtils";
+import {
+  EmptyStateInlineCenter,
+  EmptyStateLead,
+  EmptyStateHint,
+  EmptyStateOutlineCta,
+  EmptyStatePrimaryCta,
+} from "../styles/contentBlocks.styled";
+import {
+  WorkflowListScroll,
+  WorkflowListInner,
+  WorkflowListHeader,
+  WorkflowListTitleRow,
+  WorkflowBackButton,
+  WorkflowListTitle,
+  WorkflowBulkToolbar,
+  WorkflowBulkCount,
+  WorkflowPrimaryButton,
+  WorkflowSelectAllRow,
+  WorkflowSelectAllButton,
+  WorkflowIconPrimary,
+  WorkflowIconMuted,
+  WorkflowCardGrid,
+  WorkflowCard,
+  WorkflowCardTop,
+  WorkflowCardTopLeft,
+  WorkflowCheckboxButton,
+  WorkflowCardBody,
+  WorkflowCardName,
+  WorkflowCardDesc,
+  WorkflowCardActions,
+  WorkflowIconAction,
+  WorkflowCardMeta,
+  WorkflowMetaItem,
+  WorkflowModalOverlay,
+  WorkflowModalForm,
+  WorkflowModalHeader,
+  WorkflowModalTitle,
+  WorkflowModalClose,
+  WorkflowFieldLabel,
+  WorkflowFieldInput,
+  WorkflowFieldSelect,
+  WorkflowModalRow,
+  WorkflowModalCol,
+  WorkflowModalActions,
+  WorkflowModalSecondary,
+  WorkflowModalSubmit,
+  WorkflowLoadingCenter,
+  WorkflowLoadingText,
+} from "../styles/workflowList.styled";
 function WorkflowList({ onSelectWorkflow, onBack }) {
   const [workflows, setWorkflows] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -228,320 +277,308 @@ Failed IDs: ${result.failed_ids.join(", ")}`);
   };
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-full">
-        <div className="text-gray-500">Loading workflows...</div>
-      </div>
+      <WorkflowLoadingCenter>
+        <WorkflowLoadingText>Loading workflows...</WorkflowLoadingText>
+      </WorkflowLoadingCenter>
     );
   }
   if (workflows.length === 0) {
     return (
-      <div className="flex items-center justify-center h-full">
-        <div className="text-center">
+      <WorkflowLoadingCenter>
+        <EmptyStateInlineCenter>
           {!isAuthenticated ? (
             <>
-              <p className="text-gray-500 mb-2">
+              <EmptyStateLead>
                 Your saved workflows are available after you sign in
-              </p>
-              <p className="text-sm text-gray-400 mb-4">
+              </EmptyStateLead>
+              <EmptyStateHint>
                 Browse templates on the Marketplace, or log in to open workflows
                 you own
-              </p>
-              <button
+              </EmptyStateHint>
+              <EmptyStateOutlineCta
+                type="button"
                 onClick={() => navigate("/marketplace")}
-                className="px-4 py-2 mb-3 bg-white border border-gray-300 text-gray-800 rounded-lg hover:bg-gray-50 transition-colors block mx-auto"
               >
                 Open Marketplace
-              </button>
-              <button
+              </EmptyStateOutlineCta>
+              <EmptyStatePrimaryCta
+                type="button"
                 onClick={() => navigate("/auth")}
-                className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
               >
                 Log In
-              </button>
+              </EmptyStatePrimaryCta>
             </>
           ) : (
             <>
-              <p className="text-gray-500 mb-4">No workflows yet</p>
-              <p className="text-sm text-gray-400">
+              <EmptyStateLead>No workflows yet</EmptyStateLead>
+              <EmptyStateHint $tight>
                 Create your first workflow in the Builder
-              </p>
+              </EmptyStateHint>
             </>
           )}
-        </div>
-      </div>
+        </EmptyStateInlineCenter>
+      </WorkflowLoadingCenter>
     );
   }
   return (
-    <div className="h-full overflow-y-auto">
-      <div className="p-6">
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-4">
+    <WorkflowListScroll>
+      <WorkflowListInner>
+        <WorkflowListHeader>
+          <WorkflowListTitleRow>
             {onBack && (
-              <button
+              <WorkflowBackButton
+                type="button"
                 onClick={onBack}
-                className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
                 title="Back to builder"
               >
-                <ArrowLeft className="w-5 h-5" />
-              </button>
+                <ArrowLeft aria-hidden />
+              </WorkflowBackButton>
             )}
             <div>
-              <h2 className="text-2xl font-bold text-gray-900">My Workflows</h2>
+              <WorkflowListTitle>My Workflows</WorkflowListTitle>
             </div>
-          </div>
+          </WorkflowListTitleRow>
           {selectedIds.size > 0 && (
-            <div className="flex items-center gap-3">
-              <span className="text-sm text-gray-600">
+            <WorkflowBulkToolbar>
+              <WorkflowBulkCount>
                 {selectedIds.size} selected
-              </span>
-              <button
+              </WorkflowBulkCount>
+              <WorkflowPrimaryButton
+                type="button"
                 onClick={handleBulkDuplicate}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2"
               >
-                <Copy className="w-4 h-4" />
+                <Copy aria-hidden />
                 Duplicate Selected ({selectedIds.size})
-              </button>
-              <button
+              </WorkflowPrimaryButton>
+              <WorkflowPrimaryButton
+                type="button"
+                $variant="danger"
                 onClick={handleBulkDelete}
-                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 flex items-center gap-2"
               >
-                <Trash2 className="w-4 h-4" />
+                <Trash2 aria-hidden />
                 Delete Selected ({selectedIds.size})
-              </button>
-            </div>
+              </WorkflowPrimaryButton>
+            </WorkflowBulkToolbar>
           )}
-        </div>
+        </WorkflowListHeader>
         {workflows.length > 0 && (
-          <div className="mb-4 flex items-center gap-2">
-            <button
+          <WorkflowSelectAllRow>
+            <WorkflowSelectAllButton
+              type="button"
               onClick={handleSelectAll}
-              className="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-lg"
             >
               {selectedIds.size === workflows.length ? (
-                <CheckSquare className="w-5 h-5 text-primary-600" />
+                <WorkflowIconPrimary>
+                  <CheckSquare aria-hidden />
+                </WorkflowIconPrimary>
               ) : (
-                <Square className="w-5 h-5 text-gray-400" />
+                <WorkflowIconMuted>
+                  <Square aria-hidden />
+                </WorkflowIconMuted>
               )}
               <span>
                 {selectedIds.size === workflows.length
                   ? "Deselect All"
                   : "Select All"}
               </span>
-            </button>
-          </div>
+            </WorkflowSelectAllButton>
+          </WorkflowSelectAllRow>
         )}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pb-6">
+        <WorkflowCardGrid>
           {workflows.map((workflow) => {
             const isSelected = workflow.id && selectedIds.has(workflow.id);
             const hasSelection = selectedIds.size > 0;
             return (
-              <div
+              <WorkflowCard
                 key={workflow.id}
-                className={`bg-white rounded-lg shadow-md p-4 hover:shadow-lg transition-shadow border-2 ${isSelected ? "border-primary-500 bg-primary-50" : "border-transparent"} ${hasSelection ? "" : "cursor-pointer"}`}
+                $selected={!!isSelected}
+                $clickable={!hasSelection}
                 onClick={(e) => {
                   if (
                     (!hasSelection && e.target === e.currentTarget) ||
-                    e.target.closest(".workflow-content")
+                    e.target.closest("[data-workflow-content]")
                   ) {
                     workflow.id && onSelectWorkflow(workflow.id);
                   }
                 }}
               >
-                <div className="flex items-start justify-between mb-3">
-                  <div className="flex items-start gap-3 flex-1">
-                    <button
+                <WorkflowCardTop>
+                  <WorkflowCardTopLeft>
+                    <WorkflowCheckboxButton
+                      type="button"
                       onClick={(e) => {
                         e.stopPropagation();
                         workflow.id && handleToggleSelect(workflow.id);
                       }}
-                      className="mt-1 flex-shrink-0"
                       title={
                         isSelected ? "Deselect workflow" : "Select workflow"
                       }
                     >
                       {isSelected ? (
-                        <CheckSquare className="w-5 h-5 text-primary-600" />
+                        <WorkflowIconPrimary>
+                          <CheckSquare aria-hidden />
+                        </WorkflowIconPrimary>
                       ) : (
-                        <Square className="w-5 h-5 text-gray-400" />
+                        <WorkflowIconMuted>
+                          <Square aria-hidden />
+                        </WorkflowIconMuted>
                       )}
-                    </button>
-                    <div
-                      className="flex-1 workflow-content"
+                    </WorkflowCheckboxButton>
+                    <WorkflowCardBody
+                      data-workflow-content
                       onClick={(e) => {
                         if (hasSelection) {
                           e.stopPropagation();
                         }
                       }}
                     >
-                      <h3 className="font-semibold text-gray-900">
-                        {workflow.name}
-                      </h3>
+                      <WorkflowCardName>{workflow.name}</WorkflowCardName>
                       {workflow.description && (
-                        <p className="text-sm text-gray-600 mt-1">
+                        <WorkflowCardDesc>
                           {workflow.description}
-                        </p>
+                        </WorkflowCardDesc>
                       )}
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-1 flex-shrink-0">
+                    </WorkflowCardBody>
+                  </WorkflowCardTopLeft>
+                  <WorkflowCardActions>
                     {isAuthenticated && (
-                      <button
+                      <WorkflowIconAction
+                        type="button"
+                        $variant="primary"
                         onClick={(e) => {
                           e.stopPropagation();
                           workflow.id && openPublishModal(workflow.id);
                         }}
-                        className="text-blue-600 hover:bg-blue-50 p-1 rounded"
                         title="Publish to marketplace"
                       >
-                        <Upload className="w-4 h-4" />
-                      </button>
+                        <Upload aria-hidden />
+                      </WorkflowIconAction>
                     )}
-                    <button
+                    <WorkflowIconAction
+                      type="button"
+                      $variant="danger"
                       onClick={(e) => {
                         e.stopPropagation();
                         workflow.id && handleDelete(workflow.id);
                       }}
-                      className="text-red-600 hover:bg-red-50 p-1 rounded"
                       title="Delete workflow"
                     >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
-                </div>
-                <div
-                  className="flex items-center gap-4 text-sm text-gray-500 workflow-content"
+                      <Trash2 aria-hidden />
+                    </WorkflowIconAction>
+                  </WorkflowCardActions>
+                </WorkflowCardTop>
+                <WorkflowCardMeta
+                  data-workflow-content
                   onClick={(e) => {
                     if (hasSelection) {
                       e.stopPropagation();
                     }
                   }}
                 >
-                  <div className="flex items-center gap-1">
-                    <Play className="w-4 h-4" />
+                  <WorkflowMetaItem>
+                    <Play aria-hidden />
                     {workflow.nodes?.length || 0} nodes
-                  </div>
+                  </WorkflowMetaItem>
                   {workflow.created_at && (
-                    <div className="flex items-center gap-1">
-                      <Calendar className="w-4 h-4" />
+                    <WorkflowMetaItem>
+                      <Calendar aria-hidden />
                       {new Date(workflow.created_at).toLocaleDateString()}
-                    </div>
+                    </WorkflowMetaItem>
                   )}
-                </div>
-              </div>
+                </WorkflowCardMeta>
+              </WorkflowCard>
             );
           })}
-        </div>
-      </div>
+        </WorkflowCardGrid>
+      </WorkflowListInner>
       {showPublishModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
-          <form
-            onSubmit={handlePublish}
-            className="bg-white rounded-xl shadow-lg max-w-md w-full p-6 space-y-4"
-          >
-            <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-gray-900">
-                Publish to Marketplace
-              </h3>
-              <button
+        <WorkflowModalOverlay>
+          <WorkflowModalForm onSubmit={handlePublish}>
+            <WorkflowModalHeader>
+              <WorkflowModalTitle>Publish to Marketplace</WorkflowModalTitle>
+              <WorkflowModalClose
                 type="button"
                 onClick={() => {
                   setShowPublishModal(false);
                   setPublishingWorkflowId(null);
                 }}
-                className="text-gray-500 hover:text-gray-700"
+                aria-label="Close"
               >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
+                <X aria-hidden />
+              </WorkflowModalClose>
+            </WorkflowModalHeader>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Category
-              </label>
-              <select
+              <WorkflowFieldLabel>Category</WorkflowFieldLabel>
+              <WorkflowFieldSelect
                 value={publishForm.category}
                 onChange={(e) =>
                   handlePublishFormChange("category", e.target.value)
                 }
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
               >
                 {TEMPLATE_CATEGORIES.map((category) => (
                   <option key={category} value={category}>
                     {formatCategory(category)}
                   </option>
                 ))}
-              </select>
+              </WorkflowFieldSelect>
             </div>
-            <div className="flex gap-4">
-              <div className="flex-1">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Difficulty
-                </label>
-                <select
+            <WorkflowModalRow>
+              <WorkflowModalCol>
+                <WorkflowFieldLabel>Difficulty</WorkflowFieldLabel>
+                <WorkflowFieldSelect
                   value={publishForm.difficulty}
                   onChange={(e) =>
                     handlePublishFormChange("difficulty", e.target.value)
                   }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
                 >
                   {TEMPLATE_DIFFICULTIES.map((diff) => (
                     <option key={diff} value={diff}>
                       {formatDifficulty(diff)}
                     </option>
                   ))}
-                </select>
-              </div>
-              <div className="flex-1">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Estimated Time
-                </label>
-                <input
+                </WorkflowFieldSelect>
+              </WorkflowModalCol>
+              <WorkflowModalCol>
+                <WorkflowFieldLabel>Estimated Time</WorkflowFieldLabel>
+                <WorkflowFieldInput
                   type="text"
                   value={publishForm.estimated_time}
                   onChange={(e) =>
                     handlePublishFormChange("estimated_time", e.target.value)
                   }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
                   placeholder="e.g. 30 minutes"
                 />
-              </div>
-            </div>
+              </WorkflowModalCol>
+            </WorkflowModalRow>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Tags (comma separated)
-              </label>
-              <input
+              <WorkflowFieldLabel>Tags (comma separated)</WorkflowFieldLabel>
+              <WorkflowFieldInput
                 type="text"
                 value={publishForm.tags}
                 onChange={(e) =>
                   handlePublishFormChange("tags", e.target.value)
                 }
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
                 placeholder="automation, ai, ..."
               />
             </div>
-            <div className="flex justify-end gap-2">
-              <button
+            <WorkflowModalActions>
+              <WorkflowModalSecondary
                 type="button"
                 onClick={() => {
                   setShowPublishModal(false);
                   setPublishingWorkflowId(null);
                 }}
-                className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
               >
                 Cancel
-              </button>
-              <button
-                type="submit"
-                disabled={isPublishing}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-60 flex items-center gap-2"
-              >
+              </WorkflowModalSecondary>
+              <WorkflowModalSubmit type="submit" disabled={isPublishing}>
                 {isPublishing ? "Publishing..." : "Publish"}
-              </button>
-            </div>
-          </form>
-        </div>
+              </WorkflowModalSubmit>
+            </WorkflowModalActions>
+          </WorkflowModalForm>
+        </WorkflowModalOverlay>
       )}
-    </div>
+    </WorkflowListScroll>
   );
 }
 export { WorkflowList as default };

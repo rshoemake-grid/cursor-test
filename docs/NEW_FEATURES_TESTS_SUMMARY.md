@@ -52,7 +52,7 @@ This document summarizes the unit tests created for the newly implemented featur
 
 ### Frontend Tests ✅
 
-#### 3. `frontend/src/api/client.test.ts` (Extended)
+#### 3. `frontend/src/api/client.test.jsx` (Extended)
 **Status**: ✅ Tests Added (8 new tests)
 
 **Tests Added**:
@@ -66,7 +66,7 @@ This document summarizes the unit tests created for the newly implemented featur
 
 **Coverage**: Complete for API client methods
 
-#### 4. `frontend/src/pages/AnalyticsPage.test.tsx`
+#### 4. `frontend/src/pages/AnalyticsPage.test.jsx`
 **Status**: ✅ Created
 
 **Tests Created**:
@@ -83,7 +83,7 @@ This document summarizes the unit tests created for the newly implemented featur
 
 **Coverage**: Complete for Analytics Dashboard
 
-#### 5. `frontend/src/components/log/ExecutionDetailsModal.test.tsx` (Extended)
+#### 5. `frontend/src/components/log/ExecutionDetailsModal.test.jsx` (Extended)
 **Status**: ⚠️ Tests need to be added
 
 **Tests Needed**:
@@ -111,14 +111,14 @@ pytest backend/tests/services/test_execution_service*.py -v
 cd frontend
 
 # Run API client tests
-npm test -- client.test.ts
+npm test -- client.test.jsx
 # Should include new execution methods tests
 
 # Run Analytics Dashboard tests
-npm test -- AnalyticsPage.test.tsx
+npm test -- AnalyticsPage.test.jsx
 
 # Run ExecutionDetailsModal tests
-npm test -- ExecutionDetailsModal.test.tsx
+npm test -- ExecutionDetailsModal.test.jsx
 ```
 
 ## Coverage Summary
@@ -141,7 +141,7 @@ npm test -- ExecutionDetailsModal.test.tsx
    - Create and populate `test_execution_routes_new_endpoints.py` with 15 tests
 
 2. **Complete Frontend Tests**:
-   - Add download functionality tests to `ExecutionDetailsModal.test.tsx`
+   - Add download functionality tests to `ExecutionDetailsModal.test.jsx`
 
 3. **Run Full Test Suite**:
    ```bash

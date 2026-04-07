@@ -10,17 +10,21 @@ describe("EndNode", () => {
     expect(screen.getByText("End")).toBeInTheDocument();
   });
   it("should show selected state", () => {
-    const { container } = renderWithProvider(
+    renderWithProvider(
       <EndNode selected={true} data={{}} id="end-1" />,
     );
-    const node = container.querySelector(".border-gray-800");
-    expect(node).toBeInTheDocument();
+    expect(screen.getByTestId("end-node")).toHaveAttribute(
+      "data-visual-state",
+      "selected",
+    );
   });
   it("should show unselected state", () => {
-    const { container } = renderWithProvider(
+    renderWithProvider(
       <EndNode selected={false} data={{}} id="end-1" />,
     );
-    const node = container.querySelector(".border-gray-800");
-    expect(node).not.toBeInTheDocument();
+    expect(screen.getByTestId("end-node")).toHaveAttribute(
+      "data-visual-state",
+      "default",
+    );
   });
 });

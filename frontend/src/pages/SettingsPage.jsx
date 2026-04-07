@@ -16,6 +16,12 @@ import {
   SETTINGS_TABS,
   DEFAULT_PROVIDER_TEMPLATE,
 } from "../constants/settingsConstants";
+import {
+  SettingsPageShell,
+  SettingsPageInner,
+  SettingsPageBody,
+  SettingsMainColumn,
+} from "../styles/settings.styled";
 function SettingsPage({
   storage = defaultAdapters.createLocalStorageAdapter(),
   httpClient = defaultAdapters.createHttpClient(),
@@ -149,12 +155,12 @@ function SettingsPage({
     testProvider(provider);
   };
   return (
-    <div className="h-full overflow-auto bg-gray-50 p-8">
-      <div className="max-w-4xl mx-auto">
+    <SettingsPageShell>
+      <SettingsPageInner>
         <SettingsHeader onSyncClick={handleManualSync} />
-        <div className="flex gap-8">
+        <SettingsPageBody>
           <SettingsTabs activeTab={activeTab} onTabChange={setActiveTab} />
-          <div className="flex-1 space-y-6">
+          <SettingsMainColumn>
             <SettingsTabContent
               isAuthenticated={isAuthenticated}
               activeTab={activeTab}
@@ -189,10 +195,10 @@ function SettingsPage({
               onToggleModel={toggleModel}
               isModelExpanded={isModelExpanded}
             />
-          </div>
-        </div>
-      </div>
-    </div>
+          </SettingsMainColumn>
+        </SettingsPageBody>
+      </SettingsPageInner>
+    </SettingsPageShell>
   );
 }
 export { SettingsPage as default };

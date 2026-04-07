@@ -7,7 +7,7 @@ This document summarizes the unit tests written for all new files created during
 
 ### Utility Hooks Tests
 
-#### 1. `useDataFetching.test.ts` ✅
+#### 1. `useDataFetching.test.jsx` ✅
 **Coverage:**
 - Initial state (null and with initialData)
 - Successful data fetching
@@ -18,7 +18,7 @@ This document summarizes the unit tests written for all new files created during
 
 **Test Cases:** 8 test cases covering all major scenarios
 
-#### 2. `useAsyncOperation.test.ts` ✅
+#### 2. `useAsyncOperation.test.jsx` ✅
 **Coverage:**
 - Initial state
 - Successful operation execution
@@ -34,7 +34,7 @@ This document summarizes the unit tests written for all new files created during
 
 ### Service Tests
 
-#### 3. `workflowExecutionService.test.ts` ✅
+#### 3. `workflowExecutionService.test.jsx` ✅
 **Coverage:**
 - Successful workflow execution
 - Temp execution ID handling
@@ -46,7 +46,7 @@ This document summarizes the unit tests written for all new files created during
 
 **Test Cases:** 9 test cases covering all methods
 
-#### 4. `executionStateManager.test.ts` ✅
+#### 4. `executionStateManager.test.jsx` ✅
 **Coverage:**
 - Execution start (new, replace pending, existing)
 - Clear executions
@@ -61,7 +61,7 @@ This document summarizes the unit tests written for all new files created during
 
 ### Data Fetching Hooks Tests
 
-#### 5. `useTemplatesData.test.ts` ✅
+#### 5. `useTemplatesData.test.jsx` ✅
 **Coverage:**
 - Function return
 - Successful template fetching
@@ -70,7 +70,7 @@ This document summarizes the unit tests written for all new files created during
 
 **Test Cases:** 4 test cases
 
-#### 6. `useAgentsData.test.ts` ✅
+#### 6. `useAgentsData.test.jsx` ✅
 **Coverage:**
 - Function return
 - Fetching from localStorage
@@ -80,7 +80,7 @@ This document summarizes the unit tests written for all new files created during
 
 **Test Cases:** 6 test cases
 
-#### 7. `useRepositoryAgentsData.test.ts` ✅
+#### 7. `useRepositoryAgentsData.test.jsx` ✅
 **Coverage:**
 - Function return
 - Fetching from storage
@@ -91,7 +91,7 @@ This document summarizes the unit tests written for all new files created during
 
 **Test Cases:** 6 test cases
 
-#### 8. `useWorkflowsOfWorkflowsData.test.ts` ✅
+#### 8. `useWorkflowsOfWorkflowsData.test.jsx` ✅
 **Coverage:**
 - Function return
 - Workflow filtering by node references
@@ -103,7 +103,7 @@ This document summarizes the unit tests written for all new files created during
 
 ### Polling Hook Tests
 
-#### 9. `useExecutionPolling.test.ts` ✅
+#### 9. `useExecutionPolling.test.jsx` ✅
 **Coverage:**
 - Polling running executions
 - Skipping pending executions
@@ -144,7 +144,7 @@ To run all tests for the new files:
 npm test -- useDataFetching useAsyncOperation workflowExecutionService useTemplatesData useAgentsData useRepositoryAgentsData useWorkflowsOfWorkflowsData useExecutionPolling executionStateManager
 
 # Run specific test file
-npm test -- useDataFetching.test.ts
+npm test -- useDataFetching.test.jsx
 
 # Run with coverage
 npm test -- --coverage useDataFetching useAsyncOperation workflowExecutionService

@@ -62,7 +62,7 @@ while true; do
             echo ""
             echo "Key Files (from our refactoring):"
             echo "----------------------------------------"
-            for file in "WebSocketConnectionManager.ts" "ConditionNodeEditor.tsx" "useExecutionPolling.ts" "useMarketplaceIntegration.ts" "nodeConversion.ts"; do
+            for file in "WebSocketConnectionManager.jsx" "ConditionNodeEditor.jsx" "useExecutionPolling.jsx" "useMarketplaceIntegration.jsx" "nodeConversion.jsx"; do
                 grep -i "$file" "$LOG_FILE" | grep -E "score|killed|survived" | tail -1 || echo "  $file: (check HTML report for details)"
             done
             

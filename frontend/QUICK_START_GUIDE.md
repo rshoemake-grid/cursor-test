@@ -63,7 +63,7 @@ npm run test:watch-script
 
 ## ⚠️ Known Issues (Non-Critical)
 
-1. **Chunk 5**: `useMarketplaceData.test.ts` hangs (can test other files individually)
+1. **Chunk 5**: `useMarketplaceData.test.jsx` hangs (can test other files individually)
 2. **Chunk 10**: Mutation tests hang (low priority)
 
 **Impact**: None - These don't block development

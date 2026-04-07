@@ -54,7 +54,7 @@ All unit tests for the newly implemented features have been successfully created
 ### Frontend Tests ✅
 
 #### API Client Tests
-**File**: `frontend/src/api/client.test.ts` (Extended)
+**File**: `frontend/src/api/client.test.jsx` (Extended)
 **Status**: ✅ **8 new tests added**
 
 **Tests Added**:
@@ -67,7 +67,7 @@ All unit tests for the newly implemented features have been successfully created
 - ✅ `test_handle_cancelExecution_error` - Error handling
 
 #### Analytics Dashboard Tests
-**File**: `frontend/src/pages/AnalyticsPage.test.tsx`
+**File**: `frontend/src/pages/AnalyticsPage.test.jsx`
 **Status**: ✅ **10 tests created**
 
 **Tests**:
@@ -83,7 +83,7 @@ All unit tests for the newly implemented features have been successfully created
 - ✅ API client injection
 
 #### ExecutionDetailsModal Download Tests
-**File**: `frontend/src/components/log/ExecutionDetailsModal.test.tsx` (Extended)
+**File**: `frontend/src/components/log/ExecutionDetailsModal.test.jsx` (Extended)
 **Status**: ✅ **6 new tests added**
 
 **Tests Added**:
@@ -111,9 +111,9 @@ cd frontend
 npm test
 
 # Run specific test files
-npm test -- client.test.ts
-npm test -- AnalyticsPage.test.tsx
-npm test -- ExecutionDetailsModal.test.tsx
+npm test -- client.test.jsx
+npm test -- AnalyticsPage.test.jsx
+npm test -- ExecutionDetailsModal.test.jsx
 ```
 
 ## Summary Statistics
@@ -146,9 +146,9 @@ All tests follow best practices:
 2. ✅ `backend/tests/api/routes/test_execution_routes_new_endpoints.py` - 12 tests
 
 ### Frontend
-1. ✅ `frontend/src/api/client.test.ts` - Extended with 8 tests
-2. ✅ `frontend/src/pages/AnalyticsPage.test.tsx` - Created with 10 tests
-3. ✅ `frontend/src/components/log/ExecutionDetailsModal.test.tsx` - Extended with 6 tests
+1. ✅ `frontend/src/api/client.test.jsx` - Extended with 8 tests
+2. ✅ `frontend/src/pages/AnalyticsPage.test.jsx` - Created with 10 tests
+3. ✅ `frontend/src/components/log/ExecutionDetailsModal.test.jsx` - Extended with 6 tests
 
 ### Documentation
 1. ✅ `docs/NEW_FEATURES_TEST_PLAN.md` - Test plan

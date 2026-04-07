@@ -13,6 +13,44 @@ import ExecutionStatusBadge from "../ExecutionStatusBadge";
 import { api } from "../../api/client";
 import { logger } from "../../utils/logger";
 import { extractApiErrorMessage } from "../../hooks/utils/apiUtils";
+import {
+  ExecModalStatusIconWrap,
+  ExecModalRoot,
+  ExecModalBackdrop,
+  ExecModalAlign,
+  ExecModalDialog,
+  ExecModalHeader,
+  ExecModalHeaderLeft,
+  ExecModalTitleBlock,
+  ExecModalTitle,
+  ExecModalSubtitle,
+  ExecModalIconBtn,
+  ExecModalBody,
+  ExecModalBodyStack,
+  ExecModalGrid2,
+  ExecModalFieldLabel,
+  ExecModalFieldSpacer,
+  ExecModalMonoText,
+  ExecModalText,
+  ExecModalErrorBox,
+  ExecModalErrorText,
+  ExecModalSectionLabel,
+  ExecModalNodeStack,
+  ExecModalNodeCard,
+  ExecModalNodeCardHeader,
+  ExecModalNodeId,
+  ExecModalNodeOutput,
+  ExecModalLogsConsole,
+  ExecModalLogLine,
+  ExecModalVariablesBox,
+  ExecModalPre,
+  ExecModalFooter,
+  ExecModalFooterLeft,
+  ExecModalDownloadPrimary,
+  ExecModalDownloadSecondary,
+  ExecModalFooterClose,
+} from "../../styles/executionDetailsModal.styled";
+
 function ExecutionDetailsModal({
   execution,
   isOpen,
@@ -51,213 +89,200 @@ function ExecutionDetailsModal({
   const getStatusIcon = (status) => {
     switch (status) {
       case "completed":
-        return <CheckCircle className="w-5 h-5 text-green-500" />;
+        return (
+          <ExecModalStatusIconWrap $tone="green" aria-hidden>
+            <CheckCircle />
+          </ExecModalStatusIconWrap>
+        );
       case "failed":
-        return <XCircle className="w-5 h-5 text-red-500" />;
+        return (
+          <ExecModalStatusIconWrap $tone="red" aria-hidden>
+            <XCircle />
+          </ExecModalStatusIconWrap>
+        );
       case "running":
-        return <Play className="w-5 h-5 text-blue-500 animate-pulse" />;
+        return (
+          <ExecModalStatusIconWrap $tone="blue" $pulse aria-hidden>
+            <Play />
+          </ExecModalStatusIconWrap>
+        );
       case "pending":
-        return <Clock className="w-5 h-5 text-yellow-500" />;
+        return (
+          <ExecModalStatusIconWrap $tone="yellow" aria-hidden>
+            <Clock />
+          </ExecModalStatusIconWrap>
+        );
       default:
-        return <AlertCircle className="w-5 h-5 text-gray-500" />;
+        return (
+          <ExecModalStatusIconWrap $tone="gray" aria-hidden>
+            <AlertCircle />
+          </ExecModalStatusIconWrap>
+        );
     }
   };
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto">
-      <div
-        className="fixed inset-0 bg-black bg-opacity-50 transition-opacity"
-        onClick={onClose}
-      />
-      <div className="flex min-h-full items-center justify-center p-4">
-        <div className="relative bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col">
-          <div className="flex items-center justify-between p-6 border-b border-gray-200">
-            <div className="flex items-center gap-3">
+    <ExecModalRoot>
+      <ExecModalBackdrop onClick={onClose} />
+      <ExecModalAlign
+        onClick={(e) => {
+          if (e.target === e.currentTarget) {
+            onClose();
+          }
+        }}
+      >
+        <ExecModalDialog onClick={(e) => e.stopPropagation()}>
+          <ExecModalHeader>
+            <ExecModalHeaderLeft>
               {getStatusIcon(execution.status)}
-              <div>
-                <h2 className="text-2xl font-bold text-gray-900">
-                  Execution Details
-                </h2>
-                <p className="text-sm text-gray-500 font-mono">
-                  {execution.execution_id}
-                </p>
-              </div>
-            </div>
-            <button
+              <ExecModalTitleBlock>
+                <ExecModalTitle>Execution Details</ExecModalTitle>
+                <ExecModalSubtitle>{execution.execution_id}</ExecModalSubtitle>
+              </ExecModalTitleBlock>
+            </ExecModalHeaderLeft>
+            <ExecModalIconBtn
+              type="button"
               onClick={onClose}
-              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
               aria-label="Close modal"
             >
-              <X className="w-5 h-5" />
-            </button>
-          </div>
-          <div className="flex-1 overflow-y-auto p-6">
-            <div className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <X aria-hidden />
+            </ExecModalIconBtn>
+          </ExecModalHeader>
+          <ExecModalBody>
+            <ExecModalBodyStack>
+              <ExecModalGrid2>
                 <div>
-                  <label className="text-sm font-medium text-gray-500">
-                    Status
-                  </label>
-                  <div className="mt-1">
+                  <ExecModalFieldLabel>Status</ExecModalFieldLabel>
+                  <ExecModalFieldSpacer>
                     <ExecutionStatusBadge status={execution.status} />
-                  </div>
+                  </ExecModalFieldSpacer>
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-gray-500">
-                    Workflow ID
-                  </label>
-                  <p className="mt-1 font-mono text-sm text-gray-900">
-                    {execution.workflow_id}
-                  </p>
+                  <ExecModalFieldLabel>Workflow ID</ExecModalFieldLabel>
+                  <ExecModalMonoText>{execution.workflow_id}</ExecModalMonoText>
                 </div>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              </ExecModalGrid2>
+              <ExecModalGrid2>
                 <div>
-                  <label className="text-sm font-medium text-gray-500">
-                    Started At
-                  </label>
-                  <p className="mt-1 text-sm text-gray-900">
+                  <ExecModalFieldLabel>Started At</ExecModalFieldLabel>
+                  <ExecModalText>
                     {new Date(execution.started_at).toLocaleString()}
-                  </p>
+                  </ExecModalText>
                 </div>
                 {execution.completed_at && (
                   <div>
-                    <label className="text-sm font-medium text-gray-500">
-                      Completed At
-                    </label>
-                    <p className="mt-1 text-sm text-gray-900">
+                    <ExecModalFieldLabel>Completed At</ExecModalFieldLabel>
+                    <ExecModalText>
                       {new Date(execution.completed_at).toLocaleString()}
-                    </p>
+                    </ExecModalText>
                   </div>
                 )}
                 <div>
-                  <label className="text-sm font-medium text-gray-500">
-                    Duration
-                  </label>
-                  <p className="mt-1 text-sm text-gray-900">
+                  <ExecModalFieldLabel>Duration</ExecModalFieldLabel>
+                  <ExecModalText>
                     {formatExecutionDuration(
                       execution.started_at,
                       execution.completed_at,
                     )}
-                  </p>
+                  </ExecModalText>
                 </div>
-              </div>
+              </ExecModalGrid2>
               {execution.current_node && (
                 <div>
-                  <label className="text-sm font-medium text-gray-500">
-                    Current Node
-                  </label>
-                  <p className="mt-1 text-sm text-gray-900 font-mono">
-                    {execution.current_node}
-                  </p>
+                  <ExecModalFieldLabel>Current Node</ExecModalFieldLabel>
+                  <ExecModalMonoText>{execution.current_node}</ExecModalMonoText>
                 </div>
               )}
               {execution.error && (
                 <div>
-                  <label className="text-sm font-medium text-gray-500">
-                    Error
-                  </label>
-                  <div className="mt-1 p-3 bg-red-50 border border-red-200 rounded-lg">
-                    <p className="text-sm text-red-800">{execution.error}</p>
-                  </div>
+                  <ExecModalFieldLabel>Error</ExecModalFieldLabel>
+                  <ExecModalErrorBox>
+                    <ExecModalErrorText>{execution.error}</ExecModalErrorText>
+                  </ExecModalErrorBox>
                 </div>
               )}
               {execution.node_states &&
                 Object.keys(execution.node_states).length > 0 && (
                   <div>
-                    <label className="text-sm font-medium text-gray-500 mb-2 block">
-                      Node States
-                    </label>
-                    <div className="space-y-2">
+                    <ExecModalSectionLabel>Node States</ExecModalSectionLabel>
+                    <ExecModalNodeStack>
                       {Object.entries(execution.node_states).map(
                         ([nodeId, nodeState]) => (
-                          <div
-                            key={nodeId}
-                            className="p-3 bg-gray-50 border border-gray-200 rounded-lg"
-                          >
-                            <div className="flex items-center justify-between mb-1">
-                              <span className="font-mono text-sm font-medium text-gray-900">
-                                {nodeId}
-                              </span>
+                          <ExecModalNodeCard key={nodeId}>
+                            <ExecModalNodeCardHeader>
+                              <ExecModalNodeId>{nodeId}</ExecModalNodeId>
                               {nodeState?.status && (
                                 <ExecutionStatusBadge
                                   status={nodeState.status}
                                   variant="light"
                                 />
                               )}
-                            </div>
+                            </ExecModalNodeCardHeader>
                             {nodeState?.output && (
-                              <p className="text-xs text-gray-600 mt-1 line-clamp-2">
+                              <ExecModalNodeOutput>
                                 {String(nodeState.output)}
-                              </p>
+                              </ExecModalNodeOutput>
                             )}
-                          </div>
+                          </ExecModalNodeCard>
                         ),
                       )}
-                    </div>
+                    </ExecModalNodeStack>
                   </div>
                 )}
               {execution.logs && execution.logs.length > 0 && (
                 <div>
-                  <label className="text-sm font-medium text-gray-500 mb-2 block">
-                    Logs
-                  </label>
-                  <div className="bg-gray-900 text-green-400 p-4 rounded-lg font-mono text-xs max-h-64 overflow-y-auto">
+                  <ExecModalSectionLabel>Logs</ExecModalSectionLabel>
+                  <ExecModalLogsConsole>
                     {execution.logs.map((log, index) => (
-                      <div key={index} className="mb-1">
+                      <ExecModalLogLine key={index}>
                         {typeof log === "string" ? log : JSON.stringify(log)}
-                      </div>
+                      </ExecModalLogLine>
                     ))}
-                  </div>
+                  </ExecModalLogsConsole>
                 </div>
               )}
               {execution.variables &&
                 Object.keys(execution.variables).length > 0 && (
                   <div>
-                    <label className="text-sm font-medium text-gray-500 mb-2 block">
-                      Variables
-                    </label>
-                    <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-                      <pre className="text-xs text-gray-700 overflow-x-auto">
+                    <ExecModalSectionLabel>Variables</ExecModalSectionLabel>
+                    <ExecModalVariablesBox>
+                      <ExecModalPre>
                         {JSON.stringify(execution.variables, null, 2)}
-                      </pre>
-                    </div>
+                      </ExecModalPre>
+                    </ExecModalVariablesBox>
                   </div>
                 )}
-            </div>
-          </div>
-          <div className="flex items-center justify-between p-6 border-t border-gray-200">
-            <div className="flex items-center gap-2">
+            </ExecModalBodyStack>
+          </ExecModalBody>
+          <ExecModalFooter>
+            <ExecModalFooterLeft>
               {execution.logs && execution.logs.length > 0 && (
                 <>
-                  <button
+                  <ExecModalDownloadPrimary
+                    type="button"
                     onClick={() => handleDownloadLogs("text")}
                     disabled={downloading}
-                    className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    <Download className="w-4 h-4" />
+                    <Download aria-hidden />
                     {downloading ? "Downloading..." : "Download Logs (TXT)"}
-                  </button>
-                  <button
+                  </ExecModalDownloadPrimary>
+                  <ExecModalDownloadSecondary
+                    type="button"
                     onClick={() => handleDownloadLogs("json")}
                     disabled={downloading}
-                    className="flex items-center gap-2 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    <Download className="w-4 h-4" />
+                    <Download aria-hidden />
                     {downloading ? "Downloading..." : "Download Logs (JSON)"}
-                  </button>
+                  </ExecModalDownloadSecondary>
                 </>
               )}
-            </div>
-            <button
-              onClick={onClose}
-              className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
-            >
+            </ExecModalFooterLeft>
+            <ExecModalFooterClose type="button" onClick={onClose}>
               Close
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
+            </ExecModalFooterClose>
+          </ExecModalFooter>
+        </ExecModalDialog>
+      </ExecModalAlign>
+    </ExecModalRoot>
   );
 }
 export { ExecutionDetailsModal as default };

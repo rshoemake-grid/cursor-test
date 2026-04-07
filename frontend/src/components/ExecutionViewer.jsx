@@ -1,8 +1,68 @@
 import { useEffect, useState } from "react";
 import { CheckCircle, XCircle, Clock, AlertCircle } from "lucide-react";
-import { getExecutionStatusColorLight } from "../utils/executionStatus";
+import { getExecutionStatusTone } from "../utils/executionStatus";
 import { logger } from "../utils/logger";
 import { useWorkflowAPI } from "../hooks/workflow";
+import {
+  ExecutionStatusPill,
+  ExecutionStatusMiniChip,
+} from "../styles/executionStatus.styled";
+import {
+  ViewerLoadingCenter,
+  ViewerMutedText,
+  ViewerErrorText,
+  ViewerScroll,
+  ViewerInner,
+  ViewerLiveBanner,
+  ViewerLiveRow,
+  ViewerLiveLeft,
+  ViewerSpinIconLg,
+  ViewerLiveTitle,
+  ViewerLiveSub,
+  ViewerLiveRight,
+  ViewerLiveDot,
+  ViewerLiveLabel,
+  ViewerCard,
+  ViewerCardHeader,
+  ViewerTitle,
+  ViewerSectionTitle,
+  ViewerGrid2,
+  ViewerLabel,
+  ViewerValue,
+  ViewerMono,
+  ViewerErrorBox,
+  ViewerErrorPara,
+  ViewerProgressTrack,
+  ViewerProgressBar,
+  ViewerProgressFill,
+  ViewerNodeStack,
+  ViewerNodeCard,
+  ViewerNodeRow,
+  ViewerNodeLeft,
+  ViewerNodeName,
+  ViewerIconMdGreen,
+  ViewerIconMdRed,
+  ViewerIconMdBlueSpin,
+  ViewerIconMdGray,
+  ViewerBlockLabel,
+  ViewerPreSm,
+  ViewerOutputHeader,
+  ViewerCheck,
+  ViewerOutputBox,
+  ViewerOutputText,
+  ViewerNodeErrorLabel,
+  ViewerNodeErrorText,
+  ViewerLogStack,
+  ViewerLogLine,
+  ViewerLogTime,
+  ViewerLogLevel,
+  ViewerLogNode,
+  ViewerResultPre,
+  ViewerMetaMuted,
+  ViewerSpacedBlock,
+  ViewerSpacedBlockLg,
+} from "../styles/executionViewer.styled";
+
 function ExecutionViewer({ executionId }) {
   const [execution, setExecution] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -33,237 +93,223 @@ function ExecutionViewer({ executionId }) {
   };
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-full">
-        <div className="text-gray-500">Loading execution...</div>
-      </div>
+      <ViewerLoadingCenter>
+        <ViewerMutedText>Loading execution...</ViewerMutedText>
+      </ViewerLoadingCenter>
     );
   }
   if (!execution) {
     return (
-      <div className="flex items-center justify-center h-full">
-        <div className="text-red-500">Execution not found</div>
-      </div>
+      <ViewerLoadingCenter>
+        <ViewerErrorText>Execution not found</ViewerErrorText>
+      </ViewerLoadingCenter>
     );
   }
   const getStatusIcon = (status) => {
     switch (status) {
       case "completed":
-        return <CheckCircle className="w-5 h-5 text-green-600" />;
+        return (
+          <ViewerIconMdGreen>
+            <CheckCircle aria-hidden />
+          </ViewerIconMdGreen>
+        );
       case "failed":
-        return <XCircle className="w-5 h-5 text-red-600" />;
+        return (
+          <ViewerIconMdRed>
+            <XCircle aria-hidden />
+          </ViewerIconMdRed>
+        );
       case "running":
-        return <Clock className="w-5 h-5 text-blue-600 animate-spin" />;
+        return (
+          <ViewerIconMdBlueSpin>
+            <Clock aria-hidden />
+          </ViewerIconMdBlueSpin>
+        );
       default:
-        return <AlertCircle className="w-5 h-5 text-gray-600" />;
+        return (
+          <ViewerIconMdGray>
+            <AlertCircle aria-hidden />
+          </ViewerIconMdGray>
+        );
     }
   };
-  const getStatusColor = (status) => getExecutionStatusColorLight(status);
+  const completedNodes = execution.node_states
+    ? Object.values(execution.node_states).filter((n) => n.status === "completed")
+        .length
+    : 0;
+  const totalNodes = execution.node_states
+    ? Object.keys(execution.node_states).length
+    : 0;
+  const progressPct =
+    totalNodes > 0 ? (completedNodes / totalNodes) * 100 : 0;
+  const headerTone = getExecutionStatusTone(execution.status);
   return (
-    <div className="h-full overflow-y-auto p-6">
-      <div className="max-w-5xl mx-auto">
+    <ViewerScroll>
+      <ViewerInner>
         {isPolling &&
           (execution.status === "running" ||
             execution.status === "pending") && (
-            <div className="bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg shadow-lg p-4 mb-6 animate-pulse">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <Clock className="w-6 h-6 animate-spin" />
+            <ViewerLiveBanner>
+              <ViewerLiveRow>
+                <ViewerLiveLeft>
+                  <ViewerSpinIconLg>
+                    <Clock aria-hidden />
+                  </ViewerSpinIconLg>
                   <div>
-                    <div className="font-semibold text-lg">
-                      Workflow Running...
-                    </div>
-                    <div className="text-sm text-blue-100">
+                    <ViewerLiveTitle>Workflow Running...</ViewerLiveTitle>
+                    <ViewerLiveSub>
                       Monitoring in real-time • Updates every 2 seconds
-                    </div>
+                    </ViewerLiveSub>
                   </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 bg-white rounded-full animate-pulse" />
-                  <span className="text-sm font-medium">LIVE</span>
-                </div>
-              </div>
-            </div>
+                </ViewerLiveLeft>
+                <ViewerLiveRight>
+                  <ViewerLiveDot aria-hidden />
+                  <ViewerLiveLabel>LIVE</ViewerLiveLabel>
+                </ViewerLiveRight>
+              </ViewerLiveRow>
+            </ViewerLiveBanner>
           )}
-        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-2xl font-bold text-gray-900">
-              Execution Details
-            </h2>
-            <div
-              className={`px-3 py-1 rounded-full text-sm font-medium flex items-center gap-2 ${getStatusColor(execution.status)}`}
-            >
+        <ViewerCard>
+          <ViewerCardHeader>
+            <ViewerTitle>Execution Details</ViewerTitle>
+            <ExecutionStatusPill $status={headerTone}>
               {getStatusIcon(execution.status)}
               {execution.status.toUpperCase()}
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-4 text-sm">
+            </ExecutionStatusPill>
+          </ViewerCardHeader>
+          <ViewerGrid2>
             <div>
-              <span className="text-gray-600">Execution ID:</span>
-              <span className="ml-2 font-mono text-gray-900">
-                {execution.execution_id}
-              </span>
+              <ViewerLabel>Execution ID:</ViewerLabel>
+              <ViewerMono>{execution.execution_id}</ViewerMono>
             </div>
             <div>
-              <span className="text-gray-600">Workflow ID:</span>
-              <span className="ml-2 font-mono text-gray-900">
-                {execution.workflow_id}
-              </span>
+              <ViewerLabel>Workflow ID:</ViewerLabel>
+              <ViewerMono>{execution.workflow_id}</ViewerMono>
             </div>
             <div>
-              <span className="text-gray-600">Started:</span>
-              <span className="ml-2 text-gray-900">
+              <ViewerLabel>Started:</ViewerLabel>
+              <ViewerValue>
                 {new Date(execution.started_at).toLocaleString()}
-              </span>
+              </ViewerValue>
             </div>
             {execution.completed_at && (
               <div>
-                <span className="text-gray-600">Completed:</span>
-                <span className="ml-2 text-gray-900">
+                <ViewerLabel>Completed:</ViewerLabel>
+                <ViewerValue>
                   {new Date(execution.completed_at).toLocaleString()}
-                </span>
+                </ViewerValue>
               </div>
             )}
-          </div>
+          </ViewerGrid2>
           {execution.error && (
-            <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
-              <p className="text-sm text-red-800">
+            <ViewerErrorBox>
+              <ViewerErrorPara>
                 <strong>Error:</strong> {execution.error}
-              </p>
-            </div>
+              </ViewerErrorPara>
+            </ViewerErrorBox>
           )}
-        </div>
-        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold text-gray-900">
-              Node Execution
-            </h3>
+        </ViewerCard>
+        <ViewerCard>
+          <ViewerCardHeader>
+            <ViewerSectionTitle>Node Execution</ViewerSectionTitle>
             {execution.node_states &&
               Object.keys(execution.node_states).length > 0 && (
-                <div className="text-sm text-gray-600">
-                  {
-                    Object.values(execution.node_states).filter(
-                      (n) => n.status === "completed",
-                    ).length
-                  }{" "}
-                  / {Object.keys(execution.node_states).length} nodes completed
-                </div>
+                <ViewerMetaMuted>
+                  {completedNodes} / {totalNodes} nodes completed
+                </ViewerMetaMuted>
               )}
-          </div>
+          </ViewerCardHeader>
           {execution.node_states &&
             Object.keys(execution.node_states).length > 0 && (
-              <div className="mb-4">
-                <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div
-                    className="bg-blue-600 h-2 rounded-full transition-all duration-500"
-                    style={{
-                      width: `${(Object.values(execution.node_states).filter((n) => n.status === "completed").length / Object.keys(execution.node_states).length) * 100}%`,
-                    }}
-                  />
-                </div>
-              </div>
+              <ViewerProgressTrack>
+                <ViewerProgressBar>
+                  <ViewerProgressFill style={{ width: `${progressPct}%` }} />
+                </ViewerProgressBar>
+              </ViewerProgressTrack>
             )}
-          <div className="space-y-3">
-            {Object.entries(execution.node_states).map(
-              ([nodeId, nodeState]) => (
-                <div
-                  key={nodeId}
-                  className="border border-gray-200 rounded-lg p-4"
-                >
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center gap-2">
-                      {getStatusIcon(nodeState.status)}
-                      <span className="font-medium text-gray-900">
-                        {nodeId}
-                      </span>
-                    </div>
-                    <span
-                      className={`px-2 py-1 rounded text-xs font-medium ${getStatusColor(nodeState.status)}`}
-                    >
-                      {nodeState.status}
-                    </span>
-                  </div>
-                  {nodeState.input && (
-                    <div className="mt-2">
-                      <p className="text-xs font-medium text-gray-600 mb-1">
-                        Input:
-                      </p>
-                      <pre className="text-xs bg-gray-50 p-2 rounded overflow-x-auto">
-                        {JSON.stringify(nodeState.input, null, 2)}
-                      </pre>
-                    </div>
-                  )}
-                  {nodeState.output && (
-                    <div className="mt-3">
-                      <p className="text-xs font-medium text-gray-600 mb-2 flex items-center gap-2">
-                        <span>Agent Response:</span>
-                        {nodeState.status === "completed" && (
-                          <span className="text-green-600">✓</span>
-                        )}
-                      </p>
-                      <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-4">
-                        <div className="text-sm text-gray-800 whitespace-pre-wrap leading-relaxed">
-                          {typeof nodeState.output === "string"
-                            ? nodeState.output
-                            : JSON.stringify(nodeState.output, null, 2)}
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                  {nodeState.error && (
-                    <div className="mt-2">
-                      <p className="text-xs font-medium text-red-600 mb-1">
-                        Error:
-                      </p>
-                      <p className="text-xs text-red-700 bg-red-50 p-2 rounded">
-                        {nodeState.error}
-                      </p>
-                    </div>
-                  )}
-                </div>
-              ),
+          <ViewerNodeStack>
+            {Object.entries(execution.node_states || {}).map(
+              ([nodeId, nodeState]) => {
+                const nodeTone = getExecutionStatusTone(nodeState.status);
+                return (
+                  <ViewerNodeCard key={nodeId}>
+                    <ViewerNodeRow>
+                      <ViewerNodeLeft>
+                        {getStatusIcon(nodeState.status)}
+                        <ViewerNodeName>{nodeId}</ViewerNodeName>
+                      </ViewerNodeLeft>
+                      <ExecutionStatusMiniChip $status={nodeTone}>
+                        {nodeState.status}
+                      </ExecutionStatusMiniChip>
+                    </ViewerNodeRow>
+                    {nodeState.input && (
+                      <ViewerSpacedBlock>
+                        <ViewerBlockLabel>Input:</ViewerBlockLabel>
+                        <ViewerPreSm>
+                          {JSON.stringify(nodeState.input, null, 2)}
+                        </ViewerPreSm>
+                      </ViewerSpacedBlock>
+                    )}
+                    {nodeState.output && (
+                      <ViewerSpacedBlockLg>
+                        <ViewerOutputHeader>
+                          <span>Agent Response:</span>
+                          {nodeState.status === "completed" && (
+                            <ViewerCheck aria-hidden>✓</ViewerCheck>
+                          )}
+                        </ViewerOutputHeader>
+                        <ViewerOutputBox>
+                          <ViewerOutputText>
+                            {typeof nodeState.output === "string"
+                              ? nodeState.output
+                              : JSON.stringify(nodeState.output, null, 2)}
+                          </ViewerOutputText>
+                        </ViewerOutputBox>
+                      </ViewerSpacedBlockLg>
+                    )}
+                    {nodeState.error && (
+                      <ViewerSpacedBlock>
+                        <ViewerNodeErrorLabel>Error:</ViewerNodeErrorLabel>
+                        <ViewerNodeErrorText>
+                          {nodeState.error}
+                        </ViewerNodeErrorText>
+                      </ViewerSpacedBlock>
+                    )}
+                  </ViewerNodeCard>
+                );
+              },
             )}
-          </div>
-        </div>
-        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">
-            Execution Logs
-          </h3>
-          <div className="space-y-1 font-mono text-xs">
-            {execution.logs.map((log, index) => (
-              <div
-                key={index}
-                className={`p-2 rounded ${log.level === "ERROR" ? "bg-red-50 text-red-900" : log.level === "WARNING" ? "bg-yellow-50 text-yellow-900" : "bg-gray-50 text-gray-900"}`}
-              >
-                <span className="text-gray-500">
+          </ViewerNodeStack>
+        </ViewerCard>
+        <ViewerCard>
+          <ViewerSectionTitle>Execution Logs</ViewerSectionTitle>
+          <ViewerLogStack>
+            {(execution.logs || []).map((log, index) => (
+              <ViewerLogLine key={index} $level={log.level}>
+                <ViewerLogTime>
                   {new Date(log.timestamp).toLocaleTimeString()}
-                </span>{" "}
-                <span
-                  className={`font-semibold ${log.level === "ERROR" ? "text-red-600" : log.level === "WARNING" ? "text-yellow-600" : "text-blue-600"}`}
-                >
-                  {log.level}
-                </span>
+                </ViewerLogTime>{" "}
+                <ViewerLogLevel $level={log.level}>{log.level}</ViewerLogLevel>
                 {log.node_id && (
-                  <span className="text-gray-600"> [{log.node_id}]</span>
+                  <ViewerLogNode> [{log.node_id}]</ViewerLogNode>
                 )}{" "}
                 {log.message}
-              </div>
+              </ViewerLogLine>
             ))}
-          </div>
-        </div>
+          </ViewerLogStack>
+        </ViewerCard>
         {execution.result && (
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">
-              Final Result
-            </h3>
-            <pre className="text-sm bg-gray-50 p-4 rounded overflow-x-auto">
+          <ViewerCard>
+            <ViewerSectionTitle>Final Result</ViewerSectionTitle>
+            <ViewerResultPre>
               {typeof execution.result === "string"
                 ? execution.result
                 : JSON.stringify(execution.result, null, 2)}
-            </pre>
-          </div>
+            </ViewerResultPre>
+          </ViewerCard>
         )}
-      </div>
-    </div>
+      </ViewerInner>
+    </ViewerScroll>
   );
 }
 export { ExecutionViewer as default };

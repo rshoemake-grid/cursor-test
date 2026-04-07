@@ -4,22 +4,26 @@ import { WorkflowSettingsTab } from "./WorkflowSettingsTab";
 import { AddProviderForm } from "./AddProviderForm";
 import { AutoSyncIndicator } from "./AutoSyncIndicator";
 import { SETTINGS_TABS } from "../../constants/settingsConstants";
+import {
+  SettingsSectionStack,
+  SettingsSignInNotice,
+  SettingsSignInTitle,
+  SettingsSignInBody,
+  SettingsSignInLink,
+} from "../../styles/settings.styled";
 function settingsSignInNotice() {
   return (
-    <div className="rounded-lg border border-amber-200 bg-amber-50 p-6 text-amber-950">
-      <p className="font-semibold text-gray-900">Sign in required</p>
-      <p className="mt-2 text-sm text-gray-700">
+    <SettingsSignInNotice>
+      <SettingsSignInTitle>Sign in required</SettingsSignInTitle>
+      <SettingsSignInBody>
         LLM provider settings and API keys are only loaded from your account
         when you are signed in. Cached values are not shown here while logged
         out.
-      </p>
-      <Link
-        to="/auth"
-        className="mt-4 inline-block text-sm font-medium text-primary-600 hover:text-primary-800 underline"
-      >
+      </SettingsSignInBody>
+      <SettingsSignInLink as={Link} to="/auth">
         Go to sign in
-      </Link>
-    </div>
+      </SettingsSignInLink>
+    </SettingsSignInNotice>
   );
 }
 function SettingsTabContent({
@@ -53,7 +57,7 @@ function SettingsTabContent({
 }) {
   if (activeTab === SETTINGS_TABS.WORKFLOW) {
     return (
-      <div className="space-y-6">
+      <SettingsSectionStack>
         {isAuthenticated === false && settingsSignInNotice()}
         <WorkflowSettingsTab
           readOnly={isAuthenticated === false}
@@ -65,7 +69,7 @@ function SettingsTabContent({
           onChatAssistantModelChange={onChatAssistantModelChange}
           providers={providers}
         />
-      </div>
+      </SettingsSectionStack>
     );
   }
   if (activeTab === SETTINGS_TABS.LLM) {
@@ -73,7 +77,7 @@ function SettingsTabContent({
       return settingsSignInNotice();
     }
     return (
-      <div className="space-y-6">
+      <SettingsSectionStack>
         <AddProviderForm
           showAddProvider={showAddProvider}
           onShowAddProvider={onShowAddProvider}
@@ -101,7 +105,7 @@ function SettingsTabContent({
           />
         ))}
         <AutoSyncIndicator />
-      </div>
+      </SettingsSectionStack>
     );
   }
   return null;

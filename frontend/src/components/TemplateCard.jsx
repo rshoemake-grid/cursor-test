@@ -1,12 +1,31 @@
 import { memo } from "react";
 import { Clock, Heart, TrendingUp } from "lucide-react";
+import {
+  TemplateCardRoot,
+  TemplateCardBody,
+  TemplateCardTopRow,
+  TemplateCardTitleRow,
+  TemplateCardCheckbox,
+  TemplateCardTitle,
+  TemplateCardBadgeGroup,
+  TemplateCardPillBlue,
+  TemplateCardDescription,
+  TemplateCardTags,
+  TemplateCardTag,
+  TemplateCardMetaRow,
+  TemplateCardMetaItem,
+  TemplateCardAuthor,
+  TemplateCardAuthorLabel,
+  TemplateDifficultyBadge,
+  TemplateCardFooter,
+  TemplateCardFooterHint,
+} from "../styles/templateCard.styled";
 const TemplateCard = memo(function TemplateCard2({
   item,
   isSelected,
   type,
   onToggleSelect,
   onClick,
-  getDifficultyColor,
   footerText,
 }) {
   const isAgent = type === "agent";
@@ -15,110 +34,98 @@ const TemplateCard = memo(function TemplateCard2({
   const tool = isTool ? item : null;
   const template = !isAgent && !isTool ? item : null;
   return (
-    <div
+    <TemplateCardRoot
+      $selected={isSelected}
+      data-selected={isSelected}
       onClick={(e) => onClick(e, item.id)}
-      className={`bg-white rounded-lg shadow-md hover:shadow-lg transition-all overflow-hidden cursor-pointer border-2 ${isSelected ? "border-primary-500 ring-2 ring-primary-200" : "border-transparent"}`}
     >
-      <div className="p-6">
-        <div className="flex items-start justify-between mb-3">
-          <div className="flex items-start gap-3 flex-1">
-            <input
+      <TemplateCardBody>
+        <TemplateCardTopRow>
+          <TemplateCardTitleRow>
+            <TemplateCardCheckbox
               type="checkbox"
               checked={isSelected}
               onChange={(e) => {
                 e.stopPropagation();
                 onToggleSelect(item.id);
               }}
-              className="mt-1 w-5 h-5 text-primary-600 border-gray-300 rounded focus:ring-primary-500 cursor-pointer"
               onClick={(e) => e.stopPropagation()}
+              aria-label={`Select ${item.name || item.label || "item"}`}
             />
-            <h3 className="text-xl font-semibold text-gray-900 flex-1">
+            <TemplateCardTitle>
               {isAgent
                 ? agent?.name || agent?.label
                 : isTool
                   ? tool?.name || tool?.label
                   : template?.name}
-            </h3>
-          </div>
-          <div className="flex items-center gap-2">
+            </TemplateCardTitle>
+          </TemplateCardTitleRow>
+          <TemplateCardBadgeGroup>
             {item.is_official && (
-              <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded">
-                Official
-              </span>
+              <TemplateCardPillBlue>Official</TemplateCardPillBlue>
             )}
-          </div>
-        </div>
-        <p className="text-gray-600 text-sm mb-4 line-clamp-2">
-          {item.description}
-        </p>
+          </TemplateCardBadgeGroup>
+        </TemplateCardTopRow>
+        <TemplateCardDescription>{item.description}</TemplateCardDescription>
         {item.tags && item.tags.length > 0 && (
-          <div className="flex flex-wrap gap-2 mb-4">
+          <TemplateCardTags>
             {item.tags.map((tag, idx) => (
-              <span
-                key={idx}
-                className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded"
-              >
-                {tag}
-              </span>
+              <TemplateCardTag key={idx}>{tag}</TemplateCardTag>
             ))}
-          </div>
+          </TemplateCardTags>
         )}
-        <div className="flex items-center gap-4 text-sm text-gray-500 mb-4">
+        <TemplateCardMetaRow>
           {isAgent || isTool ? (
             <>
-              <div className="flex items-center gap-1">
-                <Clock className="w-4 h-4" />
+              <TemplateCardMetaItem>
+                <Clock size={16} aria-hidden />
                 <span>{(agent || tool)?.estimated_time || "N/A"}</span>
-              </div>
+              </TemplateCardMetaItem>
               {(agent || tool)?.category && (
-                <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded">
+                <TemplateCardPillBlue>
                   {((agent || tool)?.category ?? "")
                     .split("_")
                     .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
                     .join(" ")}
-                </span>
+                </TemplateCardPillBlue>
               )}
             </>
           ) : (
             <>
-              <div className="flex items-center gap-1">
-                <TrendingUp className="w-4 h-4" />
+              <TemplateCardMetaItem>
+                <TrendingUp size={16} aria-hidden />
                 <span>{template?.uses_count || 0}</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <Heart className="w-4 h-4" />
+              </TemplateCardMetaItem>
+              <TemplateCardMetaItem>
+                <Heart size={16} aria-hidden />
                 <span>{template?.likes_count || 0}</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <Clock className="w-4 h-4" />
+              </TemplateCardMetaItem>
+              <TemplateCardMetaItem>
+                <Clock size={16} aria-hidden />
                 <span>{template?.estimated_time || "N/A"}</span>
-              </div>
+              </TemplateCardMetaItem>
             </>
           )}
           {item.author_name && (
-            <div className="flex items-center gap-1 text-gray-600">
-              <span className="font-medium">By:</span>
+            <TemplateCardAuthor>
+              <TemplateCardAuthorLabel>By:</TemplateCardAuthorLabel>
               <span>{item.author_name}</span>
-            </div>
+            </TemplateCardAuthor>
           )}
-        </div>
-        <span
-          className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${getDifficultyColor(item.difficulty || "beginner")}`}
-        >
+        </TemplateCardMetaRow>
+        <TemplateDifficultyBadge $difficulty={item.difficulty || "beginner"}>
           {item.difficulty || "beginner"}
-        </span>
-      </div>
-      <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">
-        <div
-          className={`text-sm text-center py-2 px-4 rounded-lg ${isSelected ? "bg-primary-100 text-primary-700 font-medium" : "text-gray-500"}`}
-        >
+        </TemplateDifficultyBadge>
+      </TemplateCardBody>
+      <TemplateCardFooter>
+        <TemplateCardFooterHint $selected={isSelected}>
           {footerText ||
             (isSelected
               ? "Selected - Click to use"
               : "Click card or checkbox to select")}
-        </div>
-      </div>
-    </div>
+        </TemplateCardFooterHint>
+      </TemplateCardFooter>
+    </TemplateCardRoot>
   );
 });
 export { TemplateCard };

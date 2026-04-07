@@ -1,4 +1,5 @@
 import { useMemo, memo } from "react";
+import styled from "styled-components";
 import {
   ReactFlow,
   MiniMap,
@@ -6,7 +7,24 @@ import {
   Background,
   BackgroundVariant,
 } from "@xyflow/react";
+import { colors as c } from "../styles/designTokens";
 import { nodeTypes } from "./nodes";
+import { WorkflowCanvasAbsolute } from "../styles/workflowBuilderShell.styled";
+
+const StyledReactFlow = styled(ReactFlow)`
+  width: 100%;
+  height: 100%;
+  background: ${c.gray50};
+`;
+
+const StyledMiniMap = styled(MiniMap)`
+  border: 2px solid ${c.gray300};
+  border-radius: 0.5rem;
+  box-shadow:
+    0 10px 15px -3px rgb(0 0 0 / 0.1),
+    0 4px 6px -4px rgb(0 0 0 / 0.1);
+`;
+
 const WorkflowCanvas = memo(function WorkflowCanvas2({
   nodes,
   edges,
@@ -62,8 +80,8 @@ const WorkflowCanvas = memo(function WorkflowCanvas2({
     [],
   );
   return (
-    <div className="absolute inset-0">
-      <ReactFlow
+    <WorkflowCanvasAbsolute>
+      <StyledReactFlow
         nodes={nodesWithExecutionState}
         edges={edges}
         onNodesChange={onNodesChange}
@@ -85,7 +103,6 @@ const WorkflowCanvas = memo(function WorkflowCanvas2({
         selectionOnDrag={true}
         selectNodesOnDrag={false}
         fitView={true}
-        className="bg-gray-50"
         defaultEdgeOptions={{
           style: {
             strokeWidth: 3,
@@ -93,13 +110,10 @@ const WorkflowCanvas = memo(function WorkflowCanvas2({
         }}
       >
         <Controls />
-        <MiniMap
-          className="border-2 border-gray-300 rounded-lg shadow-lg"
-          nodeColor={nodeColor}
-        />
+        <StyledMiniMap nodeColor={nodeColor} />
         <Background variant={BackgroundVariant.Dots} gap={12} size={1} />
-      </ReactFlow>
-    </div>
+      </StyledReactFlow>
+    </WorkflowCanvasAbsolute>
   );
 });
 var stdin_default = WorkflowCanvas;

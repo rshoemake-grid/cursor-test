@@ -382,7 +382,7 @@ module.exports = {
   testEnvironment: 'jsdom',
   roots: ['<rootDir>/src'],
   testMatch: ['**/__tests__/**/*.{ts,tsx}', '**/*.test.{ts,tsx}'],
-  setupFilesAfterEnv: ['<rootDir>/src/test/setup-jest.ts'],
+  setupFilesAfterEnv: ['<rootDir>/src/test/setup-jest.jsx'],
   collectCoverageFrom: [
     'src/**/*.{ts,tsx}',
     '!src/**/*.d.ts',
@@ -410,7 +410,7 @@ npm test -- --coverage
 
 **Run Specific Test:**
 ```bash
-npm test -- useDataFetching.test.ts
+npm test -- useDataFetching.test.jsx
 ```
 
 **Run Tests Matching Pattern:**
@@ -522,7 +522,7 @@ it('should handle async operations', async () => {
 
 ### Test Utilities
 
-**Setup File (`src/test/setup-jest.ts`):**
+**Setup File (`src/test/setup-jest.jsx`):**
 ```typescript
 import '@testing-library/jest-dom';
 
@@ -649,11 +649,11 @@ backend/tests/
 ```
 frontend/src/
 ├── components/
-│   └── WorkflowCard.test.tsx
+│   └── TemplateCard.test.jsx
 ├── hooks/
-│   └── useWorkflow.test.ts
-└── services/
-    └── api.test.ts
+│   └── workflow/useWorkflowLoader.test.jsx
+└── api/
+    └── client.test.jsx
 ```
 
 ## Best Practices

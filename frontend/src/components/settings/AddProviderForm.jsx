@@ -1,4 +1,15 @@
 import { Plus } from "lucide-react";
+import {
+  AddProviderRevealButton,
+  SettingsPanelElevated,
+  AddProviderTitle,
+  AddProviderStack,
+  SettingsLabelBlock,
+  SettingsSelect,
+  AddProviderButtonRow,
+  SettingsButtonPrimary,
+  SettingsButtonSecondary,
+} from "../../styles/settings.styled";
 function AddProviderForm({
   showAddProvider,
   onShowAddProvider,
@@ -8,56 +19,48 @@ function AddProviderForm({
 }) {
   if (!showAddProvider) {
     return (
-      <button
+      <AddProviderRevealButton
+        type="button"
+        data-testid="add-provider-reveal"
         onClick={() => onShowAddProvider(true)}
-        className="w-full py-3 border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-primary-500 hover:text-primary-600 flex items-center justify-center gap-2"
       >
-        <Plus className="w-5 h-5" />
+        <Plus size={20} aria-hidden />
         Add LLM Provider
-      </button>
+      </AddProviderRevealButton>
     );
   }
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-      <h3 className="text-lg font-semibold text-gray-900 mb-4">
-        Add New Provider
-      </h3>
-      <div className="space-y-4">
+    <SettingsPanelElevated data-testid="add-provider-panel">
+      <AddProviderTitle>Add New Provider</AddProviderTitle>
+      <AddProviderStack>
         <div>
-          <label
-            htmlFor="provider-type-select"
-            className="block text-sm font-medium text-gray-700 mb-2"
-          >
+          <SettingsLabelBlock htmlFor="provider-type-select">
             Select Provider Type
-          </label>
-          <select
+          </SettingsLabelBlock>
+          <SettingsSelect
             id="provider-type-select"
             value={selectedTemplate}
             onChange={(e) => onSelectedTemplateChange(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
           >
             <option value="openai">OpenAI (GPT-4, GPT-3.5, etc.)</option>
             <option value="anthropic">Anthropic (Claude)</option>
             <option value="gemini">Google Gemini</option>
             <option value="custom">Custom Provider</option>
-          </select>
+          </SettingsSelect>
         </div>
-        <div className="flex gap-3">
-          <button
-            onClick={onAddProvider}
-            className="flex-1 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
-          >
+        <AddProviderButtonRow>
+          <SettingsButtonPrimary type="button" onClick={onAddProvider}>
             Add Provider
-          </button>
-          <button
+          </SettingsButtonPrimary>
+          <SettingsButtonSecondary
+            type="button"
             onClick={() => onShowAddProvider(false)}
-            className="flex-1 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200"
           >
             Cancel
-          </button>
-        </div>
-      </div>
-    </div>
+          </SettingsButtonSecondary>
+        </AddProviderButtonRow>
+      </AddProviderStack>
+    </SettingsPanelElevated>
   );
 }
 export { AddProviderForm };

@@ -1,5 +1,13 @@
 import { Trash2, Copy, Scissors, Clipboard, Plus, Upload } from "lucide-react";
 import { useReactFlow } from "@xyflow/react";
+import {
+  CtxMenuRoot,
+  CtxMenuItem,
+  CtxMenuItemSection,
+  CtxMenuDivider,
+  CtxMenuDangerItem,
+} from "../styles/nodeContextMenu.styled";
+
 function ContextMenu({
   nodeId,
   edgeId,
@@ -80,8 +88,7 @@ function ContextMenu({
   const isToolNode = node?.type === "tool";
   const label = nodeId ? "Delete Node" : "Delete Connection";
   return (
-    <div
-      className="fixed bg-white border border-gray-200 rounded-lg shadow-lg py-1 z-50 min-w-[180px]"
+    <CtxMenuRoot
       style={{
         left: `${x}px`,
         top: `${y}px`,
@@ -90,76 +97,52 @@ function ContextMenu({
     >
       {nodeId && (
         <>
-          <button
-            onClick={handleCopy}
-            className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2 transition-colors"
-          >
-            <Copy className="w-4 h-4" />
+          <CtxMenuItem onClick={handleCopy}>
+            <Copy aria-hidden />
             Copy
-          </button>
-          <button
-            onClick={handleCut}
-            className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2 transition-colors"
-          >
-            <Scissors className="w-4 h-4" />
+          </CtxMenuItem>
+          <CtxMenuItem onClick={handleCut}>
+            <Scissors aria-hidden />
             Cut
-          </button>
+          </CtxMenuItem>
           {canPaste && (
-            <button
-              onClick={handlePaste}
-              className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2 transition-colors"
-            >
-              <Clipboard className="w-4 h-4" />
+            <CtxMenuItem onClick={handlePaste}>
+              <Clipboard aria-hidden />
               Paste
-            </button>
+            </CtxMenuItem>
           )}
           {isAgentNode && (
             <>
-              <button
-                onClick={handleAddToAgentNodes}
-                className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2 transition-colors border-t border-gray-200 mt-1 pt-2"
-              >
-                <Plus className="w-4 h-4" />
+              <CtxMenuItemSection onClick={handleAddToAgentNodes}>
+                <Plus aria-hidden />
                 Add to Agent Nodes
-              </button>
-              <button
-                onClick={handleSendToMarketplace}
-                className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2 transition-colors"
-              >
-                <Upload className="w-4 h-4" />
+              </CtxMenuItemSection>
+              <CtxMenuItem onClick={handleSendToMarketplace}>
+                <Upload aria-hidden />
                 Send to Marketplace
-              </button>
+              </CtxMenuItem>
             </>
           )}
           {isToolNode && (
             <>
-              <button
-                onClick={handleAddToToolNodes}
-                className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2 transition-colors border-t border-gray-200 mt-1 pt-2"
-              >
-                <Plus className="w-4 h-4" />
+              <CtxMenuItemSection onClick={handleAddToToolNodes}>
+                <Plus aria-hidden />
                 Add to Tool Nodes
-              </button>
-              <button
-                onClick={handleSendToMarketplace}
-                className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2 transition-colors"
-              >
-                <Upload className="w-4 h-4" />
+              </CtxMenuItemSection>
+              <CtxMenuItem onClick={handleSendToMarketplace}>
+                <Upload aria-hidden />
                 Send to Marketplace
-              </button>
+              </CtxMenuItem>
             </>
           )}
-          <div className="border-t border-gray-200 my-1" />
+          <CtxMenuDivider />
         </>
       )}
-      <button
-        onClick={handleDelete}
-        className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2 transition-colors"
-      >
-        <Trash2 className="w-4 h-4" />
+      <CtxMenuDangerItem onClick={handleDelete}>
+        <Trash2 aria-hidden />
         {label}
-      </button>
-    </div>
+      </CtxMenuDangerItem>
+    </CtxMenuRoot>
   );
 }
 export { ContextMenu as default };

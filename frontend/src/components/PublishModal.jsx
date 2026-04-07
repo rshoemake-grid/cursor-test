@@ -5,6 +5,24 @@ import {
   formatCategory,
   formatDifficulty,
 } from "../config/templateConstants";
+import {
+  PublishModalOverlay,
+  PublishModalForm,
+  PublishModalHeader,
+  PublishModalTitle,
+  PublishModalCloseIcon,
+  PublishModalField,
+  PublishModalLabel,
+  PublishModalInput,
+  PublishModalTextarea,
+  PublishModalSelect,
+  PublishModalRow,
+  PublishModalRowCol,
+  PublishModalActions,
+  PublishModalCancelBtn,
+  PublishModalSubmitBtn,
+} from "../styles/publishModal.styled";
+
 function PublishModal({
   isOpen,
   form,
@@ -15,125 +33,90 @@ function PublishModal({
 }) {
   if (!isOpen) return null;
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
-      <form
+    <PublishModalOverlay>
+      <PublishModalForm
         onSubmit={(e) => {
           e.preventDefault();
           onSubmit(e);
         }}
-        className="bg-white rounded-xl shadow-lg max-w-md w-full p-6 space-y-4"
       >
-        <div className="flex items-center justify-between">
-          <h3 className="text-lg font-semibold text-gray-900">
-            Publish to Marketplace
-          </h3>
-          <button
-            type="button"
-            onClick={onClose}
-            className="text-gray-500 hover:text-gray-700"
-          >
-            <X className="w-5 h-5" />
-          </button>
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Workflow Name
-          </label>
-          <input
+        <PublishModalHeader>
+          <PublishModalTitle>Publish to Marketplace</PublishModalTitle>
+          <PublishModalCloseIcon onClick={onClose} aria-label="Close">
+            <X aria-hidden />
+          </PublishModalCloseIcon>
+        </PublishModalHeader>
+        <PublishModalField>
+          <PublishModalLabel>Workflow Name</PublishModalLabel>
+          <PublishModalInput
             type="text"
             value={form.name}
             onChange={(e) => onFormChange("name", e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
             required={true}
           />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Description (optional)
-          </label>
-          <textarea
+        </PublishModalField>
+        <PublishModalField>
+          <PublishModalLabel>Description (optional)</PublishModalLabel>
+          <PublishModalTextarea
             value={form.description}
             onChange={(e) => onFormChange("description", e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
             rows={3}
           />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Category
-          </label>
-          <select
+        </PublishModalField>
+        <PublishModalField>
+          <PublishModalLabel>Category</PublishModalLabel>
+          <PublishModalSelect
             value={form.category}
             onChange={(e) => onFormChange("category", e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
           >
             {TEMPLATE_CATEGORIES.map((category) => (
               <option key={category} value={category}>
                 {formatCategory(category)}
               </option>
             ))}
-          </select>
-        </div>
-        <div className="flex gap-4">
-          <div className="flex-1">
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Difficulty
-            </label>
-            <select
+          </PublishModalSelect>
+        </PublishModalField>
+        <PublishModalRow>
+          <PublishModalRowCol>
+            <PublishModalLabel>Difficulty</PublishModalLabel>
+            <PublishModalSelect
               value={form.difficulty}
               onChange={(e) => onFormChange("difficulty", e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
             >
               {TEMPLATE_DIFFICULTIES.map((diff) => (
                 <option key={diff} value={diff}>
                   {formatDifficulty(diff)}
                 </option>
               ))}
-            </select>
-          </div>
-          <div className="flex-1">
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Estimated Time
-            </label>
-            <input
+            </PublishModalSelect>
+          </PublishModalRowCol>
+          <PublishModalRowCol>
+            <PublishModalLabel>Estimated Time</PublishModalLabel>
+            <PublishModalInput
               type="text"
               value={form.estimated_time}
               onChange={(e) => onFormChange("estimated_time", e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
               placeholder="e.g. 30 minutes"
             />
-          </div>
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Tags (comma separated)
-          </label>
-          <input
+          </PublishModalRowCol>
+        </PublishModalRow>
+        <PublishModalField>
+          <PublishModalLabel>Tags (comma separated)</PublishModalLabel>
+          <PublishModalInput
             type="text"
             value={form.tags}
             onChange={(e) => onFormChange("tags", e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
             placeholder="automation, ai, ... "
           />
-        </div>
-        <div className="flex justify-end gap-2">
-          <button
-            type="button"
-            onClick={onClose}
-            className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
-          >
-            Cancel
-          </button>
-          <button
-            type="submit"
-            disabled={isPublishing}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-60 flex items-center gap-2"
-          >
+        </PublishModalField>
+        <PublishModalActions>
+          <PublishModalCancelBtn onClick={onClose}>Cancel</PublishModalCancelBtn>
+          <PublishModalSubmitBtn disabled={isPublishing}>
             {isPublishing ? "Publishing..." : "Publish"}
-          </button>
-        </div>
-      </form>
-    </div>
+          </PublishModalSubmitBtn>
+        </PublishModalActions>
+      </PublishModalForm>
+    </PublishModalOverlay>
   );
 }
 export { PublishModal };

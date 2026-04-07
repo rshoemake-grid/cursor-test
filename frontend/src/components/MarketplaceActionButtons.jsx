@@ -1,4 +1,9 @@
 import { Download, Trash2 } from "lucide-react";
+import {
+  MpActionBtnPrimary,
+  MpActionBtnDanger,
+} from "../styles/marketplaceComponents.styled";
+
 function MarketplaceActionButtons({
   selectedCount,
   hasOfficial,
@@ -18,33 +23,24 @@ function MarketplaceActionButtons({
   return (
     <>
       {onLoad && (
-        <button
-          onClick={onLoad}
-          className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors flex items-center gap-2"
-        >
-          <Download className="w-4 h-4" />
+        <MpActionBtnPrimary type="button" onClick={onLoad}>
+          <Download aria-hidden />
           Load {selectedCount} {typeLabel}
           {selectedCount > 1 ? "s" : ""}
-        </button>
+        </MpActionBtnPrimary>
       )}
       {onUse && (
-        <button
-          onClick={onUse}
-          className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors flex items-center gap-2"
-        >
-          <Download className="w-4 h-4" />
+        <MpActionBtnPrimary type="button" onClick={onUse}>
+          <Download aria-hidden />
           Use {selectedCount} {typeLabel}
           {selectedCount > 1 ? "s" : ""}
-        </button>
+        </MpActionBtnPrimary>
       )}
       {showDelete && !hasOfficial && onDelete && (
-        <button
-          onClick={onDelete}
-          className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center gap-2"
-        >
-          <Trash2 className="w-4 h-4" />
+        <MpActionBtnDanger type="button" onClick={onDelete}>
+          <Trash2 aria-hidden />
           Delete {selectedCount} {typeLabelPlural}
-        </button>
+        </MpActionBtnDanger>
       )}
     </>
   );

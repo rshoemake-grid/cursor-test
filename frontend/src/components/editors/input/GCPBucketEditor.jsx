@@ -9,6 +9,17 @@ import {
   createSelectHandler,
 } from "../../../hooks/utils/inputEditorHelpers";
 import { CONFIG_FIELD } from "./inputEditorConstants";
+import {
+  EditorSectionRoot,
+  EditorSectionTitle,
+  EditorFieldGroup,
+  EditorLabel,
+  EditorSelect,
+  EditorInput,
+  EditorTextarea,
+  EditorHint,
+  EditorInlineCode,
+} from "../../../styles/editorForm.styled";
 function GCPBucketEditor({ node, onConfigUpdate }) {
   const inputConfig = node.data.input_config || {};
   const bucketNameRef = useRef(null);
@@ -34,18 +45,11 @@ function GCPBucketEditor({ node, onConfigUpdate }) {
     INPUT_MODE.READ,
   );
   return (
-    <div className="border-t pt-4">
-      <h4 className="text-sm font-semibold text-gray-900 mb-3">
-        GCP Bucket Configuration
-      </h4>
-      <div className="mb-3">
-        <label
-          htmlFor="gcp-bucket-mode"
-          className="block text-sm font-medium text-gray-700 mb-1"
-        >
-          Mode
-        </label>
-        <select
+    <EditorSectionRoot>
+      <EditorSectionTitle>GCP Bucket Configuration</EditorSectionTitle>
+      <EditorFieldGroup $mb="sm">
+        <EditorLabel htmlFor="gcp-bucket-mode">Mode</EditorLabel>
+        <EditorSelect
           id="gcp-bucket-mode"
           value={modeValue}
           onChange={createSelectHandler(
@@ -54,24 +58,18 @@ function GCPBucketEditor({ node, onConfigUpdate }) {
             CONFIG_FIELD,
             "mode",
           )}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
           aria-label="Select bucket operation mode"
         >
           <option value={INPUT_MODE.READ}>Read from bucket</option>
           <option value={INPUT_MODE.WRITE}>Write to bucket</option>
-        </select>
-        <p className="text-xs text-gray-500 mt-1">
+        </EditorSelect>
+        <EditorHint>
           Read: Fetch data from bucket. Write: Save data to bucket.
-        </p>
-      </div>
-      <div>
-        <label
-          htmlFor="gcp-bucket-name"
-          className="block text-sm font-medium text-gray-700 mb-1"
-        >
-          Bucket Name
-        </label>
-        <input
+        </EditorHint>
+      </EditorFieldGroup>
+      <EditorFieldGroup>
+        <EditorLabel htmlFor="gcp-bucket-name">Bucket Name</EditorLabel>
+        <EditorInput
           id="gcp-bucket-name"
           ref={bucketNameRef}
           type="text"
@@ -83,18 +81,12 @@ function GCPBucketEditor({ node, onConfigUpdate }) {
             "bucket_name",
           )}
           placeholder="my-bucket-name"
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
           aria-label="GCP bucket name"
         />
-      </div>
-      <div className="mt-3">
-        <label
-          htmlFor="gcp-object-path"
-          className="block text-sm font-medium text-gray-700 mb-1"
-        >
-          Object Path
-        </label>
-        <input
+      </EditorFieldGroup>
+      <EditorFieldGroup $mt="sm">
+        <EditorLabel htmlFor="gcp-object-path">Object Path</EditorLabel>
+        <EditorInput
           id="gcp-object-path"
           ref={objectPathRef}
           type="text"
@@ -106,18 +98,12 @@ function GCPBucketEditor({ node, onConfigUpdate }) {
             "object_path",
           )}
           placeholder="path/to/file.txt or leave blank for all objects"
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
           aria-label="Object path in bucket"
         />
-      </div>
-      <div className="mt-3">
-        <label
-          htmlFor="gcp-credentials"
-          className="block text-sm font-medium text-gray-700 mb-1"
-        >
-          GCP Credentials (JSON)
-        </label>
-        <textarea
+      </EditorFieldGroup>
+      <EditorFieldGroup $mt="sm">
+        <EditorLabel htmlFor="gcp-credentials">GCP Credentials (JSON)</EditorLabel>
+        <EditorTextarea
           id="gcp-credentials"
           ref={gcpCredentialsRef}
           value={gcpCredentialsValue}
@@ -129,18 +115,19 @@ function GCPBucketEditor({ node, onConfigUpdate }) {
           )}
           rows={3}
           placeholder="Paste GCP service account JSON credentials"
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-xs font-mono focus:ring-2 focus:ring-primary-500"
+          $mono="xs"
           aria-label="GCP service account credentials"
         />
-        <p className="text-xs text-gray-500 mt-1">
+        <EditorHint>
           Service account JSON for GCP access. If empty, the API uses Application Default
           Credentials; when the credentials file path is missing or ADC is not set, local
-          dev can run <code className="text-xs">gcloud auth application-default login</code>{" "}
-          (browser on the server) — see <code className="text-xs">GCP_BROWSER_AUTH_ON_MISSING_ADC</code>{" "}
-          in <code className="text-xs">.env.example</code>.
-        </p>
-      </div>
-    </div>
+          dev can run <EditorInlineCode>gcloud auth application-default login</EditorInlineCode>{" "}
+          (browser on the server) — see{" "}
+          <EditorInlineCode>GCP_BROWSER_AUTH_ON_MISSING_ADC</EditorInlineCode> in{" "}
+          <EditorInlineCode>.env.example</EditorInlineCode>.
+        </EditorHint>
+      </EditorFieldGroup>
+    </EditorSectionRoot>
   );
 }
 export { GCPBucketEditor as default };

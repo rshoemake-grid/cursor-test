@@ -52,7 +52,6 @@ describe("TemplateGrid", () => {
     type: "template",
     onToggleSelect: jest.fn(),
     onCardClick: jest.fn(),
-    getDifficultyColor: jest.fn(() => "bg-green-100 text-green-800"),
   };
   beforeEach(() => {
     jest.clearAllMocks();
@@ -121,10 +120,8 @@ describe("TemplateGrid", () => {
     expect(screen.getByTestId("template-card-template-1")).toBeInTheDocument();
   });
   it("should render grid with correct structure", () => {
-    const { container } = render(<TemplateGrid {...mockProps} />);
-    const grid = container.querySelector(".grid");
-    expect(grid).toBeInTheDocument();
-    expect(grid).toHaveClass("grid-cols-1", "md:grid-cols-2", "lg:grid-cols-3");
+    render(<TemplateGrid {...mockProps} />);
+    expect(screen.getByTestId("template-grid-layout")).toBeInTheDocument();
   });
   it("should handle single item", () => {
     render(<TemplateGrid {...mockProps} items={[mockTemplate1]} />);

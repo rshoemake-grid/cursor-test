@@ -1,5 +1,10 @@
 import { useCallback } from "react";
 import Toast from "./Toast";
+import {
+  ToastContainerRoot,
+  ToastContainerItem,
+} from "../../styles/uiComponents.styled";
+
 function ToastContainer({ toasts, onRemoveToast }) {
   const handleClose = useCallback(
     (id) => {
@@ -11,9 +16,9 @@ function ToastContainer({ toasts, onRemoveToast }) {
     return null;
   }
   return (
-    <div className="fixed top-4 right-4 z-50 flex flex-col gap-2 max-w-md w-full pointer-events-none">
+    <ToastContainerRoot>
       {toasts.map((toast) => (
-        <div key={toast.id} className="pointer-events-auto">
+        <ToastContainerItem key={toast.id}>
           <Toast
             id={toast.id}
             message={toast.message}
@@ -21,9 +26,9 @@ function ToastContainer({ toasts, onRemoveToast }) {
             duration={toast.duration}
             onClose={handleClose}
           />
-        </div>
+        </ToastContainerItem>
       ))}
-    </div>
+    </ToastContainerRoot>
   );
 }
 export { ToastContainer as default };

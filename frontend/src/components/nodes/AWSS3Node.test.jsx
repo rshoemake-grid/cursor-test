@@ -63,21 +63,25 @@ describe("AWSS3Node", () => {
     const nodeData = {
       label: "My S3",
     };
-    const { container } = renderWithProvider(
+    renderWithProvider(
       <AWSS3Node data={nodeData} selected={true} id="node-1" />,
     );
-    const nodeElement = container.querySelector(".border-yellow-500");
-    expect(nodeElement).toBeInTheDocument();
+    expect(screen.getByTestId("aws-s3-node")).toHaveAttribute(
+      "data-visual-state",
+      "selected",
+    );
   });
   it("should show error state", () => {
     const nodeData = {
       label: "My S3",
       executionStatus: "failed",
     };
-    const { container } = renderWithProvider(
+    renderWithProvider(
       <AWSS3Node data={nodeData} selected={false} id="node-1" />,
     );
-    const nodeElement = container.querySelector(".border-red-500");
-    expect(nodeElement).toBeInTheDocument();
+    expect(screen.getByTestId("aws-s3-node")).toHaveAttribute(
+      "data-visual-state",
+      "error",
+    );
   });
 });

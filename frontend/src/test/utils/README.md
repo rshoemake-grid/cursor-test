@@ -160,7 +160,7 @@ Use stateful mocks when:
 
 ## Real-World Example: MarketplacePage Tests
 
-The `MarketplacePage.test.tsx` file demonstrates a complete implementation using `createMultiStatefulMock`:
+The `MarketplacePage.test.jsx` file demonstrates a complete implementation using `createMultiStatefulMock`:
 
 ```typescript
 import { createMultiStatefulMock } from '../test/utils/createStatefulMock'

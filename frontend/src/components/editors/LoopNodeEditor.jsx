@@ -1,4 +1,11 @@
 import { useRef, useState, useEffect } from "react";
+import {
+  EditorFieldGroup,
+  EditorLabel,
+  EditorSelect,
+  EditorInput,
+  EditorHint,
+} from "../../styles/editorForm.styled";
 function LoopNodeEditor({ node, onUpdate, onConfigUpdate }) {
   const loopMaxIterationsRef = useRef(null);
   const [loopMaxIterationsValue, setLoopMaxIterationsValue] = useState(10);
@@ -12,14 +19,9 @@ function LoopNodeEditor({ node, onUpdate, onConfigUpdate }) {
   const loopType = loopConfig.loop_type || "for_each";
   return (
     <>
-      <div>
-        <label
-          htmlFor="loop-type"
-          className="block text-sm font-medium text-gray-700 mb-1"
-        >
-          Loop Type
-        </label>
-        <select
+      <EditorFieldGroup>
+        <EditorLabel htmlFor="loop-type">Loop Type</EditorLabel>
+        <EditorSelect
           id="loop-type"
           value={loopType}
           onChange={(e) => {
@@ -31,22 +33,16 @@ function LoopNodeEditor({ node, onUpdate, onConfigUpdate }) {
               condition: currentLoopConfig.condition,
             });
           }}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
           aria-label="Select loop type"
         >
           <option value="for_each">For Each</option>
           <option value="while">While</option>
           <option value="until">Until</option>
-        </select>
-      </div>
-      <div className="mt-4">
-        <label
-          htmlFor="loop-max-iterations"
-          className="block text-sm font-medium text-gray-700 mb-1"
-        >
-          Max Iterations
-        </label>
-        <input
+        </EditorSelect>
+      </EditorFieldGroup>
+      <EditorFieldGroup $mt="md">
+        <EditorLabel htmlFor="loop-max-iterations">Max Iterations</EditorLabel>
+        <EditorInput
           id="loop-max-iterations"
           ref={loopMaxIterationsRef}
           type="number"
@@ -57,14 +53,13 @@ function LoopNodeEditor({ node, onUpdate, onConfigUpdate }) {
             setLoopMaxIterationsValue(newValue);
             onConfigUpdate("loop_config", "max_iterations", newValue);
           }}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
           aria-label="Maximum number of loop iterations"
           aria-describedby="max-iterations-help"
         />
-        <p id="max-iterations-help" className="text-xs text-gray-500 mt-1">
+        <EditorHint id="max-iterations-help">
           Maximum number of times the loop will execute (0 = unlimited)
-        </p>
-      </div>
+        </EditorHint>
+      </EditorFieldGroup>
     </>
   );
 }

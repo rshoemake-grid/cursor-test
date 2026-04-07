@@ -172,8 +172,8 @@ describe("WorkflowTabs", () => {
             );
           });
         expect(updatedTabButtons.length).toBeGreaterThanOrEqual(2);
-        const hasActiveTab = updatedTabButtons.some((btn) =>
-          btn.className.includes("bg-white"),
+        const hasActiveTab = updatedTabButtons.some(
+          (btn) => btn.getAttribute("data-active") === "true",
         );
         expect(hasActiveTab).toBe(true);
         expect(updatedTabButtons.length).toBeGreaterThanOrEqual(2);

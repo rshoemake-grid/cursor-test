@@ -6,10 +6,34 @@ import { useAuth } from "../contexts/AuthContext";
 import ExecutionStatusBadge from "./ExecutionStatusBadge";
 import LogLevelBadge from "./LogLevelBadge";
 import { logger } from "../utils/logger";
-import { getLogLevelColor } from "../utils/logLevel";
+import { getLogLevelTone } from "../utils/logLevel";
 import { defaultAdapters } from "../types/adapters";
 import { coalesceString } from "../utils/nullCoalescing";
 import { LOG_LEVELS } from "../constants/stringLiterals";
+import { ConsoleEmptyState } from "../styles/contentBlocks.styled";
+import {
+  ConsoleRoot,
+  ConsoleResizeHandle,
+  ConsoleTabBar,
+  ConsoleTabScroll,
+  ConsoleTabCluster,
+  ConsoleTabButton,
+  ConsoleTabLabel,
+  ConsoleStatusDot,
+  ConsoleTabClose,
+  ConsoleExpandToggle,
+  ConsoleTabBarActions,
+  ConsoleBody,
+  ConsoleLogScroll,
+  ConsoleLogStack,
+  ConsoleLogHeaderRow,
+  ConsoleLogTitle,
+  ConsoleLogMeta,
+  ConsoleLogEntries,
+  ConsoleLogEntry,
+  ConsoleLogTime,
+  ConsoleLogNodeRef,
+} from "../styles/executionConsole.styled";
 function ExecutionConsole({
   activeWorkflowId,
   workflowTabId = null,
@@ -275,88 +299,80 @@ function ExecutionConsole({
     }
   };
   return (
-    <div
-      className="relative w-full bg-gray-900 text-gray-100 shadow-2xl border-t-2 border-gray-700 flex-shrink-0"
+    <ConsoleRoot
       style={{
         height: isExpanded ? `${height}px` : "auto",
         minHeight: "60px",
       }}
     >
       {isExpanded === true && (
-        <div
-          className="absolute top-0 left-0 right-0 h-1 cursor-ns-resize hover:bg-blue-500 transition-colors"
-          onMouseDown={handleMouseDown}
-        />
+        <ConsoleResizeHandle onMouseDown={handleMouseDown} />
       )}
-      <div className="px-4 py-2 border-b border-gray-800 flex items-center justify-between bg-gray-800">
-        <div className="flex items-center gap-2 overflow-x-auto flex-1">
+      <ConsoleTabBar>
+        <ConsoleTabScroll>
           {allTabs.map((tab) => (
-            <div
+            <ConsoleTabCluster
               key={tab.id}
-              className={`flex items-center gap-1 px-3 py-1 rounded transition-colors relative group ${activeTab === tab.id ? "bg-gray-700 text-white" : "text-gray-400 hover:text-white hover:bg-gray-700"}`}
+              $active={activeTab === tab.id}
             >
-              <button
+              <ConsoleTabButton
+                type="button"
                 onClick={() => {
                   if (isExpanded === false) {
                     setIsExpanded(true);
                   }
                   setActiveTab(tab.id);
                 }}
-                className="flex items-center gap-2"
               >
                 {tab.type === "chat" ? (
                   <>
-                    <MessageSquare className="w-4 h-4" />
-                    <span className="font-semibold text-sm whitespace-nowrap">
-                      {tab.name}
-                    </span>
+                    <MessageSquare aria-hidden />
+                    <ConsoleTabLabel>{tab.name}</ConsoleTabLabel>
                   </>
                 ) : (
                   <>
-                    <Play className="w-4 h-4" />
-                    <span className="font-semibold text-sm whitespace-nowrap">
-                      {tab.name}
-                    </span>
+                    <Play aria-hidden />
+                    <ConsoleTabLabel>{tab.name}</ConsoleTabLabel>
                     {tab.execution?.status === "running" && (
-                      <div className="absolute -top-1 -right-1 w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+                      <ConsoleStatusDot $pulse aria-hidden />
                     )}
                     {tab.execution?.status === "completed" && (
-                      <div className="absolute -top-1 -right-1 w-2 h-2 bg-green-500 rounded-full" />
+                      <ConsoleStatusDot aria-hidden />
                     )}
                     {tab.execution?.status === "failed" && (
-                      <div className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full" />
+                      <ConsoleStatusDot $variant="failed" aria-hidden />
                     )}
                   </>
                 )}
-              </button>
+              </ConsoleTabButton>
               {tab.type === "execution" && (
-                <button
+                <ConsoleTabClose
+                  type="button"
                   onClick={(e) => handleCloseExecutionTab(e, tab.id)}
-                  className="opacity-0 group-hover:opacity-100 hover:bg-gray-600 rounded p-0.5 transition-opacity ml-1"
                   title="Close execution tab"
                 >
-                  <X className="w-3 h-3" />
-                </button>
+                  <X aria-hidden />
+                </ConsoleTabClose>
               )}
-            </div>
+            </ConsoleTabCluster>
           ))}
-        </div>
-        <div className="flex items-center gap-2 flex-shrink-0">
-          <button
+        </ConsoleTabScroll>
+        <ConsoleTabBarActions>
+          <ConsoleExpandToggle
+            type="button"
             onClick={() => setIsExpanded(!isExpanded)}
-            className="text-gray-400 hover:text-white transition-colors"
+            aria-expanded={isExpanded}
           >
             {isExpanded ? (
-              <ChevronDown className="w-4 h-4" />
+              <ChevronDown aria-hidden />
             ) : (
-              <ChevronUp className="w-4 h-4" />
+              <ChevronUp aria-hidden />
             )}
-          </button>
-        </div>
-      </div>
+          </ConsoleExpandToggle>
+        </ConsoleTabBarActions>
+      </ConsoleTabBar>
       {isExpanded === true && (
-        <div
-          className="overflow-hidden"
+        <ConsoleBody
           style={{
             height: `${height - 48}px`,
           }}
@@ -377,36 +393,38 @@ function ExecutionConsole({
               chatClearNonce={workflowChatClearNonce}
             />
           ) : activeExecution ? (
-            <div className="h-full overflow-y-auto bg-gray-900 text-gray-100 p-4">
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
+            <ConsoleLogScroll>
+              <ConsoleLogStack>
+                <ConsoleLogHeaderRow>
                   <div>
-                    <h3 className="text-lg font-semibold">
+                    <ConsoleLogTitle>
                       Execution {activeExecution.id.slice(0, 8)}...
-                    </h3>
-                    <p className="text-sm text-gray-400">
+                    </ConsoleLogTitle>
+                    <ConsoleLogMeta>
                       Started:{" "}
                       {new Date(activeExecution.startedAt).toLocaleString()}
-                    </p>
+                    </ConsoleLogMeta>
                   </div>
                   <ExecutionStatusBadge status={activeExecution.status} />
-                </div>
+                </ConsoleLogHeaderRow>
                 {activeExecution.logs !== null &&
                 activeExecution.logs !== void 0 &&
                 activeExecution.logs.length > 0 ? (
-                  <div className="space-y-1 font-mono text-xs">
+                  <ConsoleLogEntries>
                     {activeExecution.logs.map((log, index) => (
-                      <div
+                      <ConsoleLogEntry
                         key={index}
-                        className={`p-2 rounded ${getLogLevelColor(coalesceString(log.level, LOG_LEVELS.INFO))}`}
+                        $tone={getLogLevelTone(
+                          coalesceString(log.level, LOG_LEVELS.INFO),
+                        )}
                       >
-                        <span className="text-gray-500">
+                        <ConsoleLogTime>
                           {new Date(
                             log.timestamp !== null && log.timestamp !== void 0
                               ? log.timestamp
                               : Date.now(),
                           ).toLocaleTimeString()}
-                        </span>{" "}
+                        </ConsoleLogTime>{" "}
                         <LogLevelBadge
                           level={coalesceString(log.level, LOG_LEVELS.INFO)}
                           showBackground={false}
@@ -414,32 +432,30 @@ function ExecutionConsole({
                         {log.node_id !== null &&
                           log.node_id !== void 0 &&
                           log.node_id !== "" && (
-                            <span className="text-gray-500">
+                            <ConsoleLogNodeRef>
                               {" "}
                               [{log.node_id}]
-                            </span>
+                            </ConsoleLogNodeRef>
                           )}{" "}
                         {coalesceString(log.message, JSON.stringify(log))}
-                      </div>
+                      </ConsoleLogEntry>
                     ))}
-                  </div>
+                  </ConsoleLogEntries>
                 ) : (
-                  <div className="text-gray-500 text-center py-8">
+                  <ConsoleEmptyState $tone="soft">
                     No logs yet. Execution is starting...
-                  </div>
+                  </ConsoleEmptyState>
                 )}
-              </div>
-            </div>
+              </ConsoleLogStack>
+            </ConsoleLogScroll>
           ) : (
-            <div className="h-full overflow-y-auto bg-gray-900 text-gray-100 p-4">
-              <div className="text-gray-400 text-center py-8">
-                Execution not found
-              </div>
-            </div>
+            <ConsoleLogScroll>
+              <ConsoleEmptyState>Execution not found</ConsoleEmptyState>
+            </ConsoleLogScroll>
           )}
-        </div>
+        </ConsoleBody>
       )}
-    </div>
+    </ConsoleRoot>
   );
 }
 export { ExecutionConsole as default };

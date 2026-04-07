@@ -1,6 +1,36 @@
 import { Plus, Trash2 } from "lucide-react";
 import { coalesceString } from "../../utils/nullCoalescing";
 import { isNonEmptyArray, isNotEmpty } from "../../utils/nullChecks";
+import {
+  EditorSectionRoot,
+  EditorLabel,
+  EditorInputCompact,
+  EditorHint,
+} from "../../styles/editorForm.styled";
+import {
+  ModalBackdrop,
+  ModalPanel,
+  ModalBody,
+  DialogCancelButtonSm,
+  DialogPrimaryButtonSm,
+} from "../../styles/modalDialog.styled";
+import {
+  InputConfigHeaderRow,
+  InputConfigSectionLabel,
+  InputConfigAddButton,
+  InputConfigList,
+  InputConfigCard,
+  InputConfigCardHeader,
+  InputConfigCardName,
+  InputConfigRemoveButton,
+  InputConfigFieldStack,
+  InputConfigFieldLabel,
+  InputConfigInlineInput,
+  InputConfigModalTitle,
+  InputConfigModalFormStack,
+  InputConfigModalFooter,
+  InputConfigTip,
+} from "../../styles/inputConfiguration.styled";
 function InputConfiguration({
   inputs,
   showAddInput,
@@ -11,43 +41,36 @@ function InputConfiguration({
 }) {
   const safeInputs = isNonEmptyArray(inputs) ? inputs : [];
   return (
-    <div className="border-t pt-4">
-      <div className="flex items-center justify-between mb-3">
-        <label className="block text-sm font-semibold text-gray-900">
-          Inputs
-        </label>
-        <button
+    <EditorSectionRoot>
+      <InputConfigHeaderRow>
+        <InputConfigSectionLabel>Inputs</InputConfigSectionLabel>
+        <InputConfigAddButton
+          type="button"
           onClick={() => onShowAddInput(true)}
-          className="text-xs px-2 py-1 bg-primary-100 text-primary-700 rounded hover:bg-primary-200 flex items-center gap-1"
           aria-label="Add input to node"
           data-testid="add-input-button"
         >
-          <Plus className="w-3 h-3" />
+          <Plus size={12} aria-hidden />
           Add Input
-        </button>
-      </div>
-      <div className="space-y-2 mb-3">
+        </InputConfigAddButton>
+      </InputConfigHeaderRow>
+      <InputConfigList>
         {safeInputs.map((input, index) => (
-          <div
-            key={index}
-            className="bg-gray-50 p-3 rounded border border-gray-200"
-          >
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-medium text-gray-700">
-                {input.name}
-              </span>
-              <button
+          <InputConfigCard key={index}>
+            <InputConfigCardHeader>
+              <InputConfigCardName>{input.name}</InputConfigCardName>
+              <InputConfigRemoveButton
+                type="button"
                 onClick={() => onRemoveInput(index)}
-                className="text-red-600 hover:bg-red-50 p-1 rounded"
                 aria-label={`Remove input ${input.name}`}
               >
-                <Trash2 className="w-3 h-3" />
-              </button>
-            </div>
-            <div className="text-xs space-y-1">
+                <Trash2 size={12} aria-hidden />
+              </InputConfigRemoveButton>
+            </InputConfigCardHeader>
+            <InputConfigFieldStack>
               <div>
-                <span className="text-gray-500">Source Node:</span>
-                <input
+                <InputConfigFieldLabel>Source Node:</InputConfigFieldLabel>
+                <InputConfigInlineInput
                   type="text"
                   value={coalesceString(
                     input.source_node,
@@ -62,12 +85,11 @@ function InputConfiguration({
                     );
                   }}
                   placeholder="node_id or leave blank"
-                  className="w-full mt-1 px-2 py-1 text-xs border rounded"
                 />
               </div>
               <div>
-                <span className="text-gray-500">Source Field:</span>
-                <input
+                <InputConfigFieldLabel>Source Field:</InputConfigFieldLabel>
+                <InputConfigInlineInput
                   type="text"
                   value={
                     isNotEmpty(input.source_field)
@@ -78,113 +100,111 @@ function InputConfiguration({
                     onUpdateInput(index, "source_field", e.target.value)
                   }
                   placeholder="output"
-                  className="w-full mt-1 px-2 py-1 text-xs border rounded"
                 />
               </div>
-            </div>
-          </div>
+            </InputConfigFieldStack>
+          </InputConfigCard>
         ))}
-      </div>
+      </InputConfigList>
       {showAddInput && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+        <ModalBackdrop
           role="dialog"
           aria-modal="true"
           aria-labelledby="add-input-title"
         >
-          <div className="bg-white rounded-lg p-4 w-96">
-            <h4
-              id="add-input-title"
-              className="font-semibold mb-3"
-              data-testid="add-input-modal-title"
-            >
-              Add Input
-            </h4>
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                const formData = new FormData(e.currentTarget);
-                onAddInput(
-                  formData.get("inputName"),
-                  formData.get("sourceNode"),
-                  formData.get("sourceField"),
-                );
-              }}
-            >
-              <div className="space-y-3">
-                <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">
-                    Input Name *
-                  </label>
-                  <input
-                    name="inputName"
-                    type="text"
-                    required={true}
-                    placeholder="e.g., topic, text, data"
-                    className="w-full px-2 py-1 text-sm border rounded"
-                  />
-                  <p className="text-xs text-gray-500 mt-1">
-                    Name this agent will use to access the data
-                  </p>
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">
-                    Source Node ID (optional)
-                  </label>
-                  <input
-                    name="sourceNode"
-                    type="text"
-                    placeholder="Leave blank for workflow input"
-                    className="w-full px-2 py-1 text-sm border rounded"
-                  />
-                  <p className="text-xs text-gray-500 mt-1">
-                    Get data from another node&apos;s output. Leave blank to get
-                    from workflow input variables.
-                  </p>
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">
-                    Source Field
-                  </label>
-                  <input
-                    name="sourceField"
-                    type="text"
-                    defaultValue="output"
-                    placeholder="output"
-                    className="w-full px-2 py-1 text-sm border rounded"
-                  />
-                  <p className="text-xs text-gray-500 mt-1">
-                    Which field to get from the source (usually &apos;output&apos;)
-                  </p>
-                </div>
-              </div>
-              <div className="flex justify-end gap-2 mt-4">
-                <button
-                  type="button"
-                  onClick={() => onShowAddInput(false)}
-                  className="px-3 py-1 text-sm text-gray-700 hover:bg-gray-100 rounded"
-                  aria-label="Cancel adding input"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-3 py-1 text-sm bg-primary-600 text-white rounded hover:bg-primary-700"
-                  aria-label="Add input to node"
-                  data-testid="add-input-submit-button"
-                >
-                  Add Input
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
+          <ModalPanel>
+            <ModalBody $compact>
+              <InputConfigModalTitle
+                id="add-input-title"
+                data-testid="add-input-modal-title"
+              >
+                Add Input
+              </InputConfigModalTitle>
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  const formData = new FormData(e.currentTarget);
+                  onAddInput(
+                    formData.get("inputName"),
+                    formData.get("sourceNode"),
+                    formData.get("sourceField"),
+                  );
+                }}
+              >
+                <InputConfigModalFormStack>
+                  <div>
+                    <EditorLabel htmlFor="add-input-name" $compact>
+                      Input Name *
+                    </EditorLabel>
+                    <EditorInputCompact
+                      id="add-input-name"
+                      name="inputName"
+                      type="text"
+                      required={true}
+                      placeholder="e.g., topic, text, data"
+                    />
+                    <EditorHint>
+                      Name this agent will use to access the data
+                    </EditorHint>
+                  </div>
+                  <div>
+                    <EditorLabel htmlFor="add-input-source-node" $compact>
+                      Source Node ID (optional)
+                    </EditorLabel>
+                    <EditorInputCompact
+                      id="add-input-source-node"
+                      name="sourceNode"
+                      type="text"
+                      placeholder="Leave blank for workflow input"
+                    />
+                    <EditorHint>
+                      Get data from another node&apos;s output. Leave blank to
+                      get from workflow input variables.
+                    </EditorHint>
+                  </div>
+                  <div>
+                    <EditorLabel htmlFor="add-input-source-field" $compact>
+                      Source Field
+                    </EditorLabel>
+                    <EditorInputCompact
+                      id="add-input-source-field"
+                      name="sourceField"
+                      type="text"
+                      defaultValue="output"
+                      placeholder="output"
+                    />
+                    <EditorHint>
+                      Which field to get from the source (usually
+                      &apos;output&apos;)
+                    </EditorHint>
+                  </div>
+                </InputConfigModalFormStack>
+                <InputConfigModalFooter>
+                  <DialogCancelButtonSm
+                    type="button"
+                    onClick={() => onShowAddInput(false)}
+                    aria-label="Cancel adding input"
+                  >
+                    Cancel
+                  </DialogCancelButtonSm>
+                  <DialogPrimaryButtonSm
+                    type="submit"
+                    aria-label="Add input to node"
+                    data-testid="add-input-submit-button"
+                  >
+                    Add Input
+                  </DialogPrimaryButtonSm>
+                </InputConfigModalFooter>
+              </form>
+            </ModalBody>
+          </ModalPanel>
+        </ModalBackdrop>
       )}
-      <div className="text-xs text-gray-500 bg-blue-50 p-2 rounded">
+      <InputConfigTip>
         💡 Inputs connect this node to data from previous nodes or workflow
         variables
-      </div>
-    </div>
+      </InputConfigTip>
+    </EditorSectionRoot>
   );
 }
 export { InputConfiguration };

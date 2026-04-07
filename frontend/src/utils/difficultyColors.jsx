@@ -1,13 +1,17 @@
-function getDifficultyColor(difficulty) {
+import { colors as c } from "../styles/designTokens";
+
+/** Theme for styled-components badges (single source for marketplace cards). */
+function getDifficultyBadgeTheme(difficulty) {
   switch (difficulty) {
     case "beginner":
-      return "bg-green-100 text-green-800";
+      return { background: c.green100, color: c.green800 };
     case "intermediate":
-      return "bg-yellow-100 text-yellow-800";
+      return { background: c.yellow100, color: c.yellow800 };
     case "advanced":
-      return "bg-red-100 text-red-800";
+      return { background: c.red100, color: c.red800 };
     default:
-      return "bg-gray-100 text-gray-800";
+      return { background: c.gray100, color: c.gray800 };
   }
 }
-export { getDifficultyColor };
+
+export { getDifficultyBadgeTheme };

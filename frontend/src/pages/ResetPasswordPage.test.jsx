@@ -163,16 +163,11 @@ describe("ResetPasswordPage", () => {
     const passwordInputs = screen.getAllByPlaceholderText(/••••••••/);
     const passwordInput = passwordInputs[0];
     expect(passwordInput.type).toBe("password");
-    const toggleButtons = screen
-      .getAllByRole("button")
-      .filter(
-        (btn) =>
-          btn.getAttribute("type") === "button" && btn.querySelector("svg"),
-      );
-    if (toggleButtons.length > 0) {
-      fireEvent.click(toggleButtons[0]);
-      expect(passwordInput.type).toBe("text");
-    }
+    const showPasswordButtons = screen.getAllByRole("button", {
+      name: /Show password/i,
+    });
+    fireEvent.click(showPasswordButtons[0]);
+    expect(passwordInput.type).toBe("text");
   });
   it("should show success message after successful reset", async () => {
     global.fetch.mockResolvedValue({
@@ -271,16 +266,12 @@ describe("ResetPasswordPage", () => {
     const confirmPasswordInput =
       passwordInputs.length > 1 ? passwordInputs[1] : passwordInputs[0];
     expect(confirmPasswordInput.type).toBe("password");
-    const toggleButtons = screen
-      .getAllByRole("button")
-      .filter(
-        (btn) =>
-          btn.getAttribute("type") === "button" && btn.querySelector("svg"),
-      );
-    if (toggleButtons.length > 1) {
-      fireEvent.click(toggleButtons[1]);
-      expect(confirmPasswordInput.type).toBe("text");
-    }
+    const showPasswordButtons = screen.getAllByRole("button", {
+      name: /Show password/i,
+    });
+    expect(showPasswordButtons.length).toBeGreaterThanOrEqual(2);
+    fireEvent.click(showPasswordButtons[1]);
+    expect(confirmPasswordInput.type).toBe("text");
   });
   describe("Dependency Injection", () => {
     it("should use injected HTTP client", async () => {

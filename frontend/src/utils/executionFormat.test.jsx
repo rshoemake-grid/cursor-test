@@ -36,29 +36,32 @@ describe("executionFormat utilities", () => {
   describe("getExecutionStatusIcon", () => {
     it("should return CheckCircle for completed status", () => {
       const icon = getExecutionStatusIcon("completed");
-      const { container } = render(<>{icon}</>);
-      expect(container.querySelector(".text-green-500")).toBeInTheDocument();
+      render(<>{icon}</>);
+      expect(
+        document.querySelector('[data-exec-status="completed"]'),
+      ).toBeInTheDocument();
     });
     it("should return XCircle for failed status", () => {
       const icon = getExecutionStatusIcon("failed");
-      const { container } = render(<>{icon}</>);
-      expect(container.querySelector(".text-red-500")).toBeInTheDocument();
+      render(<>{icon}</>);
+      expect(document.querySelector('[data-exec-status="failed"]')).toBeInTheDocument();
     });
-    it("should return Play for running status", () => {
+    it("should return Play for running status with pulse", () => {
       const icon = getExecutionStatusIcon("running");
-      const { container } = render(<>{icon}</>);
-      expect(container.querySelector(".text-blue-500")).toBeInTheDocument();
-      expect(container.querySelector(".animate-pulse")).toBeInTheDocument();
+      render(<>{icon}</>);
+      const el = document.querySelector('[data-exec-status="running"]');
+      expect(el).toBeInTheDocument();
+      expect(el).toHaveAttribute("data-pulse", "true");
     });
     it("should return Clock for pending status", () => {
       const icon = getExecutionStatusIcon("pending");
-      const { container } = render(<>{icon}</>);
-      expect(container.querySelector(".text-yellow-500")).toBeInTheDocument();
+      render(<>{icon}</>);
+      expect(document.querySelector('[data-exec-status="pending"]')).toBeInTheDocument();
     });
     it("should return AlertCircle for unknown status", () => {
       const icon = getExecutionStatusIcon("unknown");
-      const { container } = render(<>{icon}</>);
-      expect(container.querySelector(".text-gray-500")).toBeInTheDocument();
+      render(<>{icon}</>);
+      expect(document.querySelector('[data-exec-status="default"]')).toBeInTheDocument();
     });
   });
   describe("sortExecutionsByStartTime", () => {

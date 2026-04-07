@@ -169,13 +169,9 @@ describe("LogPage", () => {
     });
     mockApplyExecutionFilters.mockReturnValue([mockExecution]);
     renderWithRouter(<LogPage />);
-    const executionItem = screen
-      .getByText(/exec-123/)
-      .closest('div[class*="cursor-pointer"]');
-    if (executionItem) {
-      fireEvent.click(executionItem);
-      expect(screen.getByText("Execution Details")).toBeInTheDocument();
-    }
+    const executionItem = screen.getByTestId("execution-list-item");
+    fireEvent.click(executionItem);
+    expect(screen.getByText("Execution Details")).toBeInTheDocument();
   });
   it("should use injected API client when provided", () => {
     const mockApiClient = {

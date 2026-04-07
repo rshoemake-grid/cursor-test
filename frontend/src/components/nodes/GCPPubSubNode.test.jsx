@@ -77,21 +77,25 @@ describe("GCPPubSubNode", () => {
     const nodeData = {
       label: "My Topic",
     };
-    const { container } = renderWithProvider(
+    renderWithProvider(
       <GCPPubSubNode data={nodeData} selected={true} id="node-1" />,
     );
-    const nodeElement = container.querySelector(".border-purple-500");
-    expect(nodeElement).toBeInTheDocument();
+    expect(screen.getByTestId("gcp-pubsub-node")).toHaveAttribute(
+      "data-visual-state",
+      "selected",
+    );
   });
   it("should show error state", () => {
     const nodeData = {
       label: "My Topic",
       executionStatus: "failed",
     };
-    const { container } = renderWithProvider(
+    renderWithProvider(
       <GCPPubSubNode data={nodeData} selected={false} id="node-1" />,
     );
-    const nodeElement = container.querySelector(".border-red-500");
-    expect(nodeElement).toBeInTheDocument();
+    expect(screen.getByTestId("gcp-pubsub-node")).toHaveAttribute(
+      "data-visual-state",
+      "error",
+    );
   });
 });

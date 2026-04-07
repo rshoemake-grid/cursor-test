@@ -102,9 +102,10 @@ describe("WorkflowBuilderLayout", () => {
     ).toBeInTheDocument();
   });
   it("should have correct layout structure", () => {
-    const { container } = render(<WorkflowBuilderLayout {...defaultProps} />);
-    const mainContainer = container.firstChild;
-    expect(mainContainer).toHaveClass("flex-1", "flex", "overflow-hidden");
+    render(<WorkflowBuilderLayout {...defaultProps} />);
+    expect(
+      screen.getByTestId("workflow-builder-layout-row"),
+    ).toBeInTheDocument();
   });
   it("should pass props to child components", () => {
     const props = {

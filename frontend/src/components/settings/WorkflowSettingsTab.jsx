@@ -1,3 +1,12 @@
+import {
+  SettingsMutedStack,
+  SettingsCard,
+  SettingsFieldLabel,
+  SettingsIterationInput,
+  SettingsSelect,
+  SettingsHelpText,
+  SettingsSuccessText,
+} from "../../styles/settings.styled";
 function WorkflowSettingsTab({
   readOnly = false,
   iterationLimit,
@@ -9,17 +18,12 @@ function WorkflowSettingsTab({
   providers,
 }) {
   return (
-    <div
-      className={`space-y-6 ${readOnly === true ? "opacity-50 pointer-events-none" : ""}`}
-    >
-      <div className="bg-white rounded-lg border border-gray-200 p-5 flex flex-col gap-3">
-        <label
-          htmlFor="iteration-limit"
-          className="text-sm font-medium text-gray-700"
-        >
+    <SettingsMutedStack $readOnly={readOnly === true}>
+      <SettingsCard>
+        <SettingsFieldLabel htmlFor="iteration-limit">
           Iteration limit
-        </label>
-        <input
+        </SettingsFieldLabel>
+        <SettingsIterationInput
           id="iteration-limit"
           type="number"
           min={1}
@@ -28,25 +32,20 @@ function WorkflowSettingsTab({
           onChange={(e) =>
             onIterationLimitChange(Math.max(1, Number(e.target.value) || 1))
           }
-          className="w-24 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 disabled:bg-gray-100"
         />
-        <p className="text-xs text-gray-500">
+        <SettingsHelpText>
           Number of tool-LLM cycles allowed when using &quot;Chat with LLM&quot;.
-        </p>
-      </div>
-      <div className="bg-white rounded-lg border border-gray-200 p-5 flex flex-col gap-3">
-        <label
-          htmlFor="default-model"
-          className="text-sm font-medium text-gray-700"
-        >
+        </SettingsHelpText>
+      </SettingsCard>
+      <SettingsCard>
+        <SettingsFieldLabel htmlFor="default-model">
           Default Model
-        </label>
-        <select
+        </SettingsFieldLabel>
+        <SettingsSelect
           id="default-model"
           value={defaultModel}
           disabled={readOnly === true}
           onChange={(e) => onDefaultModelChange(e.target.value)}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent disabled:bg-gray-100"
         >
           <option value="">Select a model...</option>
           {providers
@@ -63,28 +62,24 @@ function WorkflowSettingsTab({
                 {label}
               </option>
             ))}
-        </select>
-        <p className="text-xs text-gray-500">
+        </SettingsSelect>
+        <SettingsHelpText>
           Default model for workflow execution and agent nodes when no per-node
           model is set. Only models from enabled providers are shown.
-        </p>
+        </SettingsHelpText>
         {defaultModel && (
-          <p className="text-xs text-green-600">✓ Using: {defaultModel}</p>
+          <SettingsSuccessText>✓ Using: {defaultModel}</SettingsSuccessText>
         )}
-      </div>
-      <div className="bg-white rounded-lg border border-gray-200 p-5 flex flex-col gap-3">
-        <label
-          htmlFor="chat-assistant-model"
-          className="text-sm font-medium text-gray-700"
-        >
+      </SettingsCard>
+      <SettingsCard>
+        <SettingsFieldLabel htmlFor="chat-assistant-model">
           Workflow chat model
-        </label>
-        <select
+        </SettingsFieldLabel>
+        <SettingsSelect
           id="chat-assistant-model"
           value={chatAssistantModel}
           disabled={readOnly === true}
           onChange={(e) => onChatAssistantModelChange(e.target.value)}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent disabled:bg-gray-100"
         >
           <option value="">Same as default model</option>
           {providers
@@ -101,19 +96,19 @@ function WorkflowSettingsTab({
                 {label}
               </option>
             ))}
-        </select>
-        <p className="text-xs text-gray-500">
+        </SettingsSelect>
+        <SettingsHelpText>
           Model used by the workflow builder chat assistant (separate from the
           default execution model if you want a cheaper or faster model for
           editing).
-        </p>
+        </SettingsHelpText>
         {chatAssistantModel && (
-          <p className="text-xs text-green-600">
+          <SettingsSuccessText>
             ✓ Chat using: {chatAssistantModel}
-          </p>
+          </SettingsSuccessText>
         )}
-      </div>
-    </div>
+      </SettingsCard>
+    </SettingsMutedStack>
   );
 }
 export { WorkflowSettingsTab };

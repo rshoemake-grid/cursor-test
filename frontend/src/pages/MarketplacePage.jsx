@@ -20,7 +20,6 @@ import { MarketplaceActionButtons } from "../components/MarketplaceActionButtons
 import { TemplateFilters } from "../components/TemplateFilters";
 import { MarketplaceTabButton } from "../components/marketplace/MarketplaceTabButton";
 import { MarketplaceTabContent } from "../components/marketplace/MarketplaceTabContent";
-import { getDifficultyColor } from "../utils/difficultyColors";
 import { useOfficialItems } from "../hooks/marketplace/useOfficialItems";
 import { DEFAULT_SORT } from "../constants/settingsConstants";
 import { API_CONFIG } from "../config/constants";
@@ -171,9 +170,7 @@ function MarketplacePage({
   const handleContentClick = useCallback(
     (e) => {
       const target = e.target;
-      const isCard = target.closest(
-        '[class*="bg-white"][class*="rounded-lg"][class*="shadow"]',
-      );
+      const isCard = target.closest("[data-marketplace-card]");
       const isInteractive =
         shouldIgnoreClick(target) ||
         target.closest("select") !== null ||
@@ -346,7 +343,6 @@ function MarketplacePage({
           handleToolCardClick={handleToolCardClick}
           handleCardClick={handleCardClick}
           handleRepositoryAgentCardClick={handleRepositoryAgentCardClick}
-          getDifficultyColor={getDifficultyColor}
         />
       </PageMainScroll>
     </PageShellColumn>

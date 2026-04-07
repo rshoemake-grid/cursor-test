@@ -1,3 +1,12 @@
+import { MpTabButton, MpTabIconWrap } from "../../styles/marketplaceComponents.styled";
+
+function resolveIconSize(iconSize) {
+  if (!iconSize) {
+    return "md";
+  }
+  return iconSize.includes("w-4") ? "sm" : "md";
+}
+
 function MarketplaceTabButton({
   label,
   icon: Icon,
@@ -5,14 +14,14 @@ function MarketplaceTabButton({
   onClick,
   iconSize = "w-5 h-5",
 }) {
+  const size = resolveIconSize(iconSize);
   return (
-    <button
-      onClick={onClick}
-      className={`px-6 py-3 text-sm font-medium flex items-center gap-2 transition-colors ${isActive ? "text-primary-600 border-b-2 border-primary-600" : "text-gray-600 hover:text-gray-900"}`}
-    >
-      <Icon className={iconSize} />
+    <MpTabButton $active={isActive} onClick={onClick}>
+      <MpTabIconWrap $size={size}>
+        <Icon aria-hidden />
+      </MpTabIconWrap>
       {label}
-    </button>
+    </MpTabButton>
   );
 }
 export { MarketplaceTabButton };

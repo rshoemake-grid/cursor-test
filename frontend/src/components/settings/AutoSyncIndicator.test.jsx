@@ -15,15 +15,12 @@ describe("AutoSyncIndicator", () => {
       ),
     ).toBeInTheDocument();
   });
-  it("should render pulse animation indicator", () => {
-    const { container } = render(<AutoSyncIndicator />);
-    const indicator = container.querySelector(".animate-pulse");
-    expect(indicator).toBeInTheDocument();
-    expect(indicator).toHaveClass("bg-green-500", "rounded-full");
+  it("should render status dot", () => {
+    render(<AutoSyncIndicator />);
+    expect(screen.getByTestId("auto-sync-dot")).toBeInTheDocument();
   });
-  it("should have proper styling classes", () => {
-    const { container } = render(<AutoSyncIndicator />);
-    const mainDiv = container.firstChild;
-    expect(mainDiv).toHaveClass("mt-8", "pt-6", "border-t", "border-gray-200");
+  it("should render section wrapper", () => {
+    render(<AutoSyncIndicator />);
+    expect(screen.getByTestId("auto-sync-section")).toBeInTheDocument();
   });
 });

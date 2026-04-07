@@ -1,4 +1,4 @@
-import { renderHook } from "@testing-library/react";
+import { cleanup, renderHook } from "@testing-library/react";
 import {
   advanceTimersByTime,
   wsInstances,
@@ -16,6 +16,7 @@ describe("useWebSocket - edges.comprehensive.2", () => {
     }
   });
   afterEach(() => {
+    cleanup();
     jest.runOnlyPendingTimers();
     wsInstances.splice(0, wsInstances.length);
     jest.useRealTimers();
@@ -1709,7 +1710,7 @@ describe("useWebSocket - edges.comprehensive.2", () => {
         jest.clearAllMocks();
         wsInstances.splice(0, wsInstances.length);
         const executionId = "exec-wasclean-code-test";
-        renderHook(() =>
+        const { unmount } = renderHook(() =>
           useWebSocket({
             executionId,
             executionStatus: "running",
@@ -1729,6 +1730,8 @@ describe("useWebSocket - edges.comprehensive.2", () => {
           );
           expect(closeCalls.length).toBeGreaterThan(0);
         }
+        unmount();
+        await advanceTimersByTime(100);
       });
       it("should verify wasClean && code === 1000 pattern with false wasClean", async () => {
         jest.clearAllMocks();

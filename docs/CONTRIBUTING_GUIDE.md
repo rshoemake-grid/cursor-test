@@ -370,7 +370,7 @@ export function WorkflowCard({ workflow, onSelect }: WorkflowCardProps) {
 - Components: `PascalCase`
 - Functions: `camelCase`
 - Constants: `UPPER_SNAKE_CASE`
-- Files: `PascalCase.tsx` (components), `camelCase.ts` (utilities)
+- Files: `PascalCase.jsx` (components), `camelCase.js` / `camelCase.jsx` (utilities and hooks); this repo’s frontend is JSX, not TypeScript
 
 ## Testing Requirements
 

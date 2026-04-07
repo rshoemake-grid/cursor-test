@@ -17,9 +17,8 @@ describe("AddProviderForm", () => {
   describe("when showAddProvider is false", () => {
     it("should render add provider button", () => {
       render(<AddProviderForm {...defaultProps} />);
-      const button = screen.getByText("Add LLM Provider");
-      expect(button).toBeInTheDocument();
-      expect(button).toHaveClass("border-dashed", "border-gray-300");
+      expect(screen.getByTestId("add-provider-reveal")).toBeInTheDocument();
+      expect(screen.getByText("Add LLM Provider")).toBeInTheDocument();
     });
     it("should call onShowAddProvider(true) when button is clicked", () => {
       render(<AddProviderForm {...defaultProps} />);
@@ -28,13 +27,10 @@ describe("AddProviderForm", () => {
       expect(mockOnShowAddProvider).toHaveBeenCalledWith(true);
       expect(mockOnShowAddProvider).toHaveBeenCalledTimes(1);
     });
-    it("should have hover styles on button", () => {
-      const { container } = render(<AddProviderForm {...defaultProps} />);
-      const button = container.querySelector("button");
-      expect(button).toHaveClass(
-        "hover:border-primary-500",
-        "hover:text-primary-600",
-      );
+    it("should expose reveal control as a button", () => {
+      render(<AddProviderForm {...defaultProps} />);
+      const button = screen.getByTestId("add-provider-reveal");
+      expect(button.tagName).toBe("BUTTON");
     });
   });
   describe("when showAddProvider is true", () => {
@@ -88,19 +84,9 @@ describe("AddProviderForm", () => {
       expect(mockOnShowAddProvider).toHaveBeenCalledWith(false);
       expect(mockOnShowAddProvider).toHaveBeenCalledTimes(1);
     });
-    it("should have proper form styling", () => {
-      const { container } = render(
-        <AddProviderForm {...defaultProps} showAddProvider={true} />,
-      );
-      const form = container.querySelector(".bg-white");
-      expect(form).toBeInTheDocument();
-      expect(form).toHaveClass(
-        "rounded-lg",
-        "shadow-sm",
-        "border",
-        "border-gray-200",
-        "p-6",
-      );
+    it("should render elevated panel container", () => {
+      render(<AddProviderForm {...defaultProps} showAddProvider={true} />);
+      expect(screen.getByTestId("add-provider-panel")).toBeInTheDocument();
     });
   });
 });
