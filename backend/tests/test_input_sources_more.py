@@ -266,7 +266,7 @@ class TestGCPPubSubHandlerMore:
     """More tests for GCPPubSubHandler"""
     
     @patch("backend.inputs.input_sources.GCP_AVAILABLE", True)
-    @patch("backend.inputs.input_sources._parse_gcp_credentials")
+    @patch("backend.inputs.input_sources.parse_gcp_service_account_credentials")
     def test_read_with_credentials(self, mock_parse_creds):
         """Test reading from Pub/Sub with credentials"""
         mock_credentials = Mock()
@@ -298,7 +298,7 @@ class TestGCPPubSubHandlerMore:
         assert result == {"key": "value"}
     
     @patch("backend.inputs.input_sources.GCP_AVAILABLE", True)
-    @patch("backend.inputs.input_sources._parse_gcp_credentials")
+    @patch("backend.inputs.input_sources.parse_gcp_service_account_credentials")
     def test_write_with_credentials(self, mock_parse_creds):
         """Test writing to Pub/Sub with credentials"""
         mock_credentials = Mock()

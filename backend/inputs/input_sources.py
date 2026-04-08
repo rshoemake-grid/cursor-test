@@ -15,7 +15,6 @@ import glob
 try:
     from google.cloud import storage
     from google.cloud import pubsub_v1
-    from google.oauth2 import service_account
     GCP_AVAILABLE = True
 except ImportError:
     GCP_AVAILABLE = False
@@ -28,7 +27,12 @@ except ImportError:
 
 from ..utils.logger import get_logger
 from ..utils.path_utils import get_local_file_base_path, validate_path_within_base
-from .gcp_auth import gcp_client_with_adc_retry
+from .gcp_auth import (
+    gcp_client_with_adc_retry,
+    get_google_credentials_with_scopes_for_http,
+    parse_gcp_service_account_credentials,
+    resolve_gcp_service_account_json,
+)
 
 logger = get_logger(__name__)
 
@@ -51,18 +55,6 @@ def _serialize_for_write(data: Any, as_bytes: bool = False, indent: int = 2) -> 
     return content, content_type
 
 
-def _parse_gcp_credentials(credentials_json: Optional[str]):
-    """Parse GCP credentials from JSON string. Returns credentials or None for default."""
-    if not credentials_json:
-        return None
-    try:
-        credentials_info = json.loads(credentials_json)
-        from google.oauth2 import service_account
-        return service_account.Credentials.from_service_account_info(credentials_info)
-    except json.JSONDecodeError:
-        raise ValueError("Invalid JSON credentials for GCP")
-
-
 def _gcp_project_id_from_config(config: Dict[str, Any]) -> Optional[str]:
     raw = config.get("project_id")
     if raw is None:
@@ -71,9 +63,18 @@ def _gcp_project_id_from_config(config: Dict[str, Any]) -> Optional[str]:
     return s or None
 
 
-def _gcp_storage_client_kwargs(config: Dict[str, Any]) -> Dict[str, Any]:
+def _gcp_storage_client_kwargs(
+    config: Dict[str, Any],
+    *,
+    resolved_json: Optional[str] = None,
+) -> Dict[str, Any]:
     """Build kwargs for google.cloud.storage.Client from workflow / explorer config."""
-    credentials = _parse_gcp_credentials(config.get("credentials"))
+    r = (
+        resolved_json
+        if resolved_json is not None
+        else resolve_gcp_service_account_json(config.get("credentials"))
+    )
+    credentials = parse_gcp_service_account_credentials(r)
     pid = _gcp_project_id_from_config(config)
     kwargs: Dict[str, Any] = {}
     if credentials is not None:
@@ -107,15 +108,16 @@ class GCPBucketHandler(InputSourceHandler):
         
         bucket_name = config.get('bucket_name')
         object_path = config.get('object_path', '')
-        credentials_json = config.get('credentials')
-        
+
         if not bucket_name:
             raise ValueError("bucket_name is required for GCP Bucket input")
 
-        def _storage_client():
-            return storage.Client(**_gcp_storage_client_kwargs(config))
+        resolved = resolve_gcp_service_account_json(config.get("credentials"))
 
-        client = gcp_client_with_adc_retry(credentials_json, _storage_client)
+        def _storage_client():
+            return storage.Client(**_gcp_storage_client_kwargs(config, resolved_json=resolved))
+
+        client = gcp_client_with_adc_retry(resolved, _storage_client)
 
         bucket = client.bucket(bucket_name)
 
@@ -146,17 +148,18 @@ class GCPBucketHandler(InputSourceHandler):
         
         bucket_name = config.get('bucket_name')
         object_path = config.get('object_path', '')
-        credentials_json = config.get('credentials')
-        
+
         if not bucket_name:
             raise ValueError("bucket_name is required for GCP Bucket write")
         if not object_path:
             raise ValueError("object_path is required for GCP Bucket write")
 
-        def _storage_client():
-            return storage.Client(**_gcp_storage_client_kwargs(config))
+        resolved = resolve_gcp_service_account_json(config.get("credentials"))
 
-        client = gcp_client_with_adc_retry(credentials_json, _storage_client)
+        def _storage_client():
+            return storage.Client(**_gcp_storage_client_kwargs(config, resolved_json=resolved))
+
+        client = gcp_client_with_adc_retry(resolved, _storage_client)
 
         bucket = client.bucket(bucket_name)
         blob = bucket.blob(object_path)
@@ -187,15 +190,16 @@ class GCPBucketHandler(InputSourceHandler):
             raise ImportError("google-cloud-storage not installed. Install with: pip install google-cloud-storage")
 
         bucket_name = config.get("bucket_name")
-        credentials_json = config.get("credentials")
 
         if not bucket_name:
             raise ValueError("bucket_name is required for GCP Bucket listing")
 
-        def _storage_client():
-            return storage.Client(**_gcp_storage_client_kwargs(config))
+        resolved = resolve_gcp_service_account_json(config.get("credentials"))
 
-        client = gcp_client_with_adc_retry(credentials_json, _storage_client)
+        def _storage_client():
+            return storage.Client(**_gcp_storage_client_kwargs(config, resolved_json=resolved))
+
+        client = gcp_client_with_adc_retry(resolved, _storage_client)
         bucket = client.bucket(bucket_name)
         norm_prefix = prefix or ""
         list_kwargs: Dict[str, Any] = {"prefix": norm_prefix, "max_results": max_results}
@@ -239,12 +243,12 @@ class GCPBucketHandler(InputSourceHandler):
                 "google-cloud-storage not installed. Install with: pip install google-cloud-storage"
             )
 
-        credentials_json = config.get("credentials")
+        resolved = resolve_gcp_service_account_json(config.get("credentials"))
 
         def _storage_client():
-            return storage.Client(**_gcp_storage_client_kwargs(config))
+            return storage.Client(**_gcp_storage_client_kwargs(config, resolved_json=resolved))
 
-        client = gcp_client_with_adc_retry(credentials_json, _storage_client)
+        client = gcp_client_with_adc_retry(resolved, _storage_client)
         out: List[Dict[str, Any]] = []
         for i, bucket in enumerate(client.list_buckets()):
             if i >= max_results:
@@ -270,21 +274,15 @@ class GCPBucketHandler(InputSourceHandler):
         Requires cloudplatformprojects.readonly (or broader) on the credentials / ADC.
         """
         try:
-            import google.auth
             from google.auth.transport.requests import AuthorizedSession
         except ImportError as e:
             raise ImportError(
                 "google-auth is required to list GCP projects (included with google-cloud-storage)."
             ) from e
 
-        credentials_json = config.get("credentials")
-        credentials = _parse_gcp_credentials(credentials_json)
+        resolved = resolve_gcp_service_account_json(config.get("credentials"))
         scopes = ("https://www.googleapis.com/auth/cloudplatformprojects.readonly",)
-        if credentials:
-            scoped = credentials.with_scopes(scopes)
-        else:
-            scoped, _ = google.auth.default(scopes=scopes)
-
+        scoped = get_google_credentials_with_scopes_for_http(resolved, scopes)
         session = AuthorizedSession(scoped)
         url = "https://cloudresourcemanager.googleapis.com/v1/projects"
         out: List[Dict[str, Any]] = []
@@ -593,12 +591,12 @@ class GCPPubSubHandler(InputSourceHandler):
         project_id = config.get('project_id')
         topic_name = config.get('topic_name')
         subscription_name = config.get('subscription_name')
-        credentials_json = config.get('credentials')
-        
+
         if not project_id or not subscription_name:
             raise ValueError("project_id and subscription_name are required for GCP Pub/Sub input")
 
-        credentials = _parse_gcp_credentials(credentials_json)
+        resolved = resolve_gcp_service_account_json(config.get("credentials"))
+        credentials = parse_gcp_service_account_credentials(resolved)
 
         def _subscriber_client():
             return (
@@ -607,7 +605,7 @@ class GCPPubSubHandler(InputSourceHandler):
                 else pubsub_v1.SubscriberClient()
             )
 
-        subscriber = gcp_client_with_adc_retry(credentials_json, _subscriber_client)
+        subscriber = gcp_client_with_adc_retry(resolved, _subscriber_client)
         
         subscription_path = subscriber.subscription_path(project_id, subscription_name)
         
@@ -646,12 +644,12 @@ class GCPPubSubHandler(InputSourceHandler):
         
         project_id = config.get('project_id')
         topic_name = config.get('topic_name')
-        credentials_json = config.get('credentials')
-        
+
         if not project_id or not topic_name:
             raise ValueError("project_id and topic_name are required for GCP Pub/Sub publish")
 
-        credentials = _parse_gcp_credentials(credentials_json)
+        resolved = resolve_gcp_service_account_json(config.get("credentials"))
+        credentials = parse_gcp_service_account_credentials(resolved)
 
         def _publisher_client():
             return (
@@ -660,7 +658,7 @@ class GCPPubSubHandler(InputSourceHandler):
                 else pubsub_v1.PublisherClient()
             )
 
-        publisher = gcp_client_with_adc_retry(credentials_json, _publisher_client)
+        publisher = gcp_client_with_adc_retry(resolved, _publisher_client)
         
         topic_path = publisher.topic_path(project_id, topic_name)
         
