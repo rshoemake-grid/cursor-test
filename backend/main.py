@@ -37,6 +37,7 @@ from backend.api.sharing_routes import router as sharing_router
 from backend.api.import_export_routes import router as import_export_router
 from backend.api.workflow_chat import router as workflow_chat_router
 from backend.api.debug_routes import router as debug_router
+from backend.api.storage_explorer_routes import router as storage_explorer_router
 
 # Create FastAPI app with Apigee-friendly metadata
 app = FastAPI(
@@ -69,7 +70,8 @@ app = FastAPI(
         {"name": "Sharing & Collaboration", "description": "Workflow sharing and versioning"},
         {"name": "Import/Export", "description": "Workflow import and export"},
         {"name": "Workflow Chat", "description": "AI-powered workflow generation"},
-        {"name": "debug", "description": "Debug and diagnostic endpoints"}
+        {"name": "debug", "description": "Debug and diagnostic endpoints"},
+        {"name": "storage", "description": "Storage browser helpers for workflow configuration"},
     ]
 )
 
@@ -369,6 +371,7 @@ app.include_router(sharing_router, prefix=API_VERSION)
 app.include_router(import_export_router, prefix=API_VERSION)
 app.include_router(workflow_chat_router, prefix=API_VERSION)
 app.include_router(debug_router, prefix=API_VERSION)
+app.include_router(storage_explorer_router, prefix=API_VERSION)
 
 # Metrics endpoint for monitoring
 @app.get(

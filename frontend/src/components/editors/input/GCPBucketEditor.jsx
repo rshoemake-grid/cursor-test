@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useRef, useState, useCallback } from "react";
 import PropTypes from "prop-types";
 import {
   useInputFieldSync,
@@ -20,9 +20,14 @@ import {
   EditorTextarea,
   EditorHint,
   EditorInlineCode,
+  EditorSecondaryFullButton,
 } from "../../../styles/editorForm.styled";
+import GcpBucketObjectPickerDialog from "./GcpBucketObjectPickerDialog";
+
 function GCPBucketEditor({ node, onConfigUpdate }) {
   const inputConfig = node.data.input_config || {};
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const [pickerSession, setPickerSession] = useState(0);
   const bucketNameRef = useRef(null);
   const objectPathRef = useRef(null);
   const gcpCredentialsRef = useRef(null);
@@ -44,6 +49,17 @@ function GCPBucketEditor({ node, onConfigUpdate }) {
   const [modeValue, setModeValue] = useInputFieldSyncSimple(
     inputConfig.mode,
     INPUT_MODE.READ,
+  );
+  const openObjectPicker = useCallback(() => {
+    setPickerSession((s) => s + 1);
+    setPickerOpen(true);
+  }, []);
+  const handlePickedObject = useCallback(
+    (path) => {
+      setObjectPathValue(path);
+      onConfigUpdate(CONFIG_FIELD, "object_path", path);
+    },
+    [onConfigUpdate, setObjectPathValue],
   );
   return (
     <EditorSectionRoot>
@@ -87,21 +103,58 @@ function GCPBucketEditor({ node, onConfigUpdate }) {
       </EditorFieldGroup>
       <EditorFieldGroup $mt="sm">
         <EditorLabel htmlFor="gcp-object-path">Object Path</EditorLabel>
-        <EditorInput
-          id="gcp-object-path"
-          ref={objectPathRef}
-          type="text"
-          value={objectPathValue}
-          onChange={createTextInputHandler(
-            setObjectPathValue,
-            onConfigUpdate,
-            CONFIG_FIELD,
-            "object_path",
-          )}
-          placeholder="path/to/file.txt or leave blank for all objects"
-          aria-label="Object path in bucket"
-        />
+        <div
+          style={{
+            display: "flex",
+            gap: "0.5rem",
+            alignItems: "stretch",
+          }}
+        >
+          <EditorInput
+            id="gcp-object-path"
+            ref={objectPathRef}
+            type="text"
+            value={objectPathValue}
+            onChange={createTextInputHandler(
+              setObjectPathValue,
+              onConfigUpdate,
+              CONFIG_FIELD,
+              "object_path",
+            )}
+            placeholder="path/to/file.txt or leave blank for all objects"
+            aria-label="Object path in bucket"
+            style={{ flex: 1, minWidth: 0 }}
+          />
+          <EditorSecondaryFullButton
+            type="button"
+            onClick={openObjectPicker}
+            aria-label="Browse bucket for a file"
+            style={{
+              width: "auto",
+              flexShrink: 0,
+              whiteSpace: "nowrap",
+              alignSelf: "stretch",
+            }}
+          >
+            Browse…
+          </EditorSecondaryFullButton>
+        </div>
+        <EditorHint>
+          Opens a signed-in request to list objects under the current path prefix (same
+          credentials as below, or ADC on the server).
+        </EditorHint>
       </EditorFieldGroup>
+      {pickerOpen ? (
+        <GcpBucketObjectPickerDialog
+          key={pickerSession}
+          isOpen={pickerOpen}
+          onClose={() => setPickerOpen(false)}
+          bucketName={bucketNameValue}
+          credentials={gcpCredentialsValue}
+          initialObjectPath={objectPathValue}
+          onSelectObject={handlePickedObject}
+        />
+      ) : null}
       <EditorFieldGroup $mt="sm">
         <EditorLabel htmlFor="gcp-credentials">GCP Credentials (JSON)</EditorLabel>
         <EditorTextarea

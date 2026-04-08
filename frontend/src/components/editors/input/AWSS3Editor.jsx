@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useRef, useState, useCallback } from "react";
 import PropTypes from "prop-types";
 import {
   useInputFieldSync,
@@ -22,7 +22,10 @@ import {
   EditorSelect,
   EditorInput,
   EditorHint,
+  EditorSecondaryFullButton,
 } from "../../../styles/editorForm.styled";
+import { S3BucketObjectPickerDialog } from "./storageObjectPickers";
+
 function AWSS3Editor({ node, onConfigUpdate }) {
   const inputConfig = node.data.input_config || {};
   const bucketNameRef = useRef(null);
@@ -58,6 +61,19 @@ function AWSS3Editor({ node, onConfigUpdate }) {
   const [modeValue, setModeValue] = useInputFieldSyncSimple(
     inputConfig.mode,
     INPUT_MODE.READ,
+  );
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const [pickerSession, setPickerSession] = useState(0);
+  const openObjectPicker = useCallback(() => {
+    setPickerSession((s) => s + 1);
+    setPickerOpen(true);
+  }, []);
+  const handlePickedKey = useCallback(
+    (key) => {
+      setObjectKeyValue(key);
+      onConfigUpdate(CONFIG_FIELD, "object_key", key);
+    },
+    [onConfigUpdate, setObjectKeyValue],
   );
   return (
     <EditorSectionRoot>
@@ -101,21 +117,60 @@ function AWSS3Editor({ node, onConfigUpdate }) {
       </EditorFieldGroup>
       <EditorFieldGroup $mt="sm">
         <EditorLabel htmlFor="aws-object-key">Object Key</EditorLabel>
-        <EditorInput
-          id="aws-object-key"
-          ref={objectKeyRef}
-          type="text"
-          value={objectKeyValue}
-          onChange={createTextInputHandler(
-            setObjectKeyValue,
-            onConfigUpdate,
-            CONFIG_FIELD,
-            "object_key",
-          )}
-          placeholder="path/to/file.txt or leave blank for all objects"
-          aria-label="S3 object key"
-        />
+        <div
+          style={{
+            display: "flex",
+            gap: "0.5rem",
+            alignItems: "stretch",
+          }}
+        >
+          <EditorInput
+            id="aws-object-key"
+            ref={objectKeyRef}
+            type="text"
+            value={objectKeyValue}
+            onChange={createTextInputHandler(
+              setObjectKeyValue,
+              onConfigUpdate,
+              CONFIG_FIELD,
+              "object_key",
+            )}
+            placeholder="path/to/file.txt or leave blank for all objects"
+            aria-label="S3 object key"
+            style={{ flex: 1, minWidth: 0 }}
+          />
+          <EditorSecondaryFullButton
+            type="button"
+            onClick={openObjectPicker}
+            aria-label="Browse S3 bucket for an object key"
+            style={{
+              width: "auto",
+              flexShrink: 0,
+              whiteSpace: "nowrap",
+              alignSelf: "stretch",
+            }}
+          >
+            Browse…
+          </EditorSecondaryFullButton>
+        </div>
+        <EditorHint>
+          Browse sends a signed-in request to list keys (same credentials as below, or
+          default AWS credential chain on the server).
+        </EditorHint>
       </EditorFieldGroup>
+      {pickerOpen ? (
+        <S3BucketObjectPickerDialog
+          key={pickerSession}
+          isOpen={pickerOpen}
+          onClose={() => setPickerOpen(false)}
+          bucketName={bucketNameValue}
+          objectKey={objectKeyValue}
+          accessKeyId={accessKeyIdValue}
+          secretAccessKey={secretKeyValue}
+          region={regionValue}
+          onSelectObject={handlePickedKey}
+        />
+      ) : null}
       <EditorFieldGroup $mt="sm">
         <EditorLabel htmlFor="aws-access-key-id">AWS Access Key ID</EditorLabel>
         <EditorInput

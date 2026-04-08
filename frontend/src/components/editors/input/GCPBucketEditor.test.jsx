@@ -1,6 +1,18 @@
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import GCPBucketEditor from "./GCPBucketEditor";
 import { INPUT_MODE, EMPTY_STRING } from "../../../hooks/utils/inputDefaults";
+
+jest.mock("../../../api/client", () => ({
+  api: {
+    listGcpBucketObjects: jest.fn().mockResolvedValue({
+      prefixes: [],
+      objects: [],
+      bucket_name: "test-bucket",
+      prefix: "",
+    }),
+  },
+}));
+
 describe("GCPBucketEditor", () => {
   const mockOnConfigUpdate = jest.fn();
   beforeEach(() => {
@@ -355,6 +367,21 @@ describe("GCPBucketEditor", () => {
       expect(
         screen.getByText(/Service account JSON for GCP access/i),
       ).toBeInTheDocument();
+    });
+  });
+  describe("Bucket object picker", () => {
+    it("should open browse dialog when Browse is clicked", async () => {
+      const node = createGCPBucketNode();
+      render(
+        <GCPBucketEditor node={node} onConfigUpdate={mockOnConfigUpdate} />,
+      );
+      fireEvent.click(screen.getByLabelText("Browse bucket for a file"));
+      await waitFor(() => {
+        expect(
+          screen.getByRole("dialog", { name: /Select object in bucket/i }),
+        ).toBeInTheDocument();
+      });
+      expect(screen.getByText("test-bucket")).toBeInTheDocument();
     });
   });
 });

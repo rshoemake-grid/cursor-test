@@ -1,10 +1,22 @@
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import AWSS3Editor from "./AWSS3Editor";
 import {
   INPUT_MODE,
   INPUT_REGION,
   EMPTY_STRING,
 } from "../../../hooks/utils/inputDefaults";
+
+jest.mock("../../../api/client", () => ({
+  api: {
+    listS3BucketObjects: jest.fn().mockResolvedValue({
+      prefixes: [],
+      objects: [],
+      bucket_name: "test-bucket",
+      prefix: "",
+    }),
+  },
+}));
+
 describe("AWSS3Editor", () => {
   const mockOnConfigUpdate = jest.fn();
   beforeEach(() => {
@@ -332,6 +344,21 @@ describe("AWSS3Editor", () => {
       render(<AWSS3Editor node={node} onConfigUpdate={mockOnConfigUpdate} />);
       const regionInput = screen.getByLabelText("AWS Region");
       expect(regionInput).toHaveAttribute("placeholder", INPUT_REGION.DEFAULT);
+    });
+  });
+  describe("S3 object picker", () => {
+    it("should open browse dialog when Browse is clicked", async () => {
+      const node = createAWSS3Node();
+      render(<AWSS3Editor node={node} onConfigUpdate={mockOnConfigUpdate} />);
+      fireEvent.click(
+        screen.getByLabelText("Browse S3 bucket for an object key"),
+      );
+      await waitFor(() => {
+        expect(
+          screen.getByRole("dialog", { name: /Select object in S3 bucket/i }),
+        ).toBeInTheDocument();
+      });
+      expect(screen.getByText("test-bucket")).toBeInTheDocument();
     });
   });
 });

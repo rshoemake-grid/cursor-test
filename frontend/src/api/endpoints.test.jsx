@@ -4,6 +4,7 @@ import {
   templateEndpoints,
   marketplaceEndpoints,
   settingsEndpoints,
+  storageEndpoints,
 } from "./endpoints";
 describe("endpoints", () => {
   describe("workflowEndpoints", () => {
@@ -51,6 +52,23 @@ describe("endpoints", () => {
   describe("settingsEndpoints", () => {
     it("should return correct llm endpoint", () => {
       expect(settingsEndpoints.llm()).toBe("/settings/llm");
+    });
+  });
+  describe("storageEndpoints", () => {
+    it("should return GCP list-objects endpoint", () => {
+      expect(storageEndpoints.gcpListObjects()).toBe(
+        "/storage/gcp/list-objects",
+      );
+    });
+    it("should return AWS list-objects endpoint", () => {
+      expect(storageEndpoints.awsListObjects()).toBe(
+        "/storage/aws/list-objects",
+      );
+    });
+    it("should return local list-directory endpoint", () => {
+      expect(storageEndpoints.localListDirectory()).toBe(
+        "/storage/local/list-directory",
+      );
     });
   });
 });

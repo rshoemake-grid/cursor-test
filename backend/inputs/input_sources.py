@@ -6,7 +6,8 @@ import json
 import os
 import base64
 import mimetypes
-from typing import Dict, Any, Optional, List
+from datetime import datetime, timezone
+from typing import Dict, Any, Optional, List, Tuple
 from pathlib import Path
 import glob
 
@@ -26,7 +27,7 @@ except ImportError:
     AWS_AVAILABLE = False
 
 from ..utils.logger import get_logger
-from ..utils.path_utils import validate_path_within_base
+from ..utils.path_utils import get_local_file_base_path, validate_path_within_base
 from .gcp_auth import gcp_client_with_adc_retry
 
 logger = get_logger(__name__)
@@ -161,6 +162,67 @@ class GCPBucketHandler(InputSourceHandler):
         
         return {"status": "success", "bucket": bucket_name, "object": object_path}
 
+    @staticmethod
+    def list_objects(
+        config: Dict[str, Any],
+        prefix: str = "",
+        delimiter: Optional[str] = "/",
+        max_results: int = 2000,
+    ) -> Tuple[List[str], List[Dict[str, Any]]]:
+        """
+        List folder prefixes and objects under ``prefix`` for bucket picker UIs.
+
+        Returns:
+            (prefixes, objects) where objects are dicts with name, display_name, size, updated.
+        """
+        if not GCP_AVAILABLE:
+            raise ImportError("google-cloud-storage not installed. Install with: pip install google-cloud-storage")
+
+        bucket_name = config.get("bucket_name")
+        credentials_json = config.get("credentials")
+
+        if not bucket_name:
+            raise ValueError("bucket_name is required for GCP Bucket listing")
+
+        credentials = _parse_gcp_credentials(credentials_json)
+
+        def _storage_client():
+            return (
+                storage.Client(credentials=credentials)
+                if credentials
+                else storage.Client()
+            )
+
+        client = gcp_client_with_adc_retry(credentials_json, _storage_client)
+        bucket = client.bucket(bucket_name)
+        norm_prefix = prefix or ""
+        list_kwargs: Dict[str, Any] = {"prefix": norm_prefix, "max_results": max_results}
+        if delimiter:
+            list_kwargs["delimiter"] = delimiter
+
+        blobs_iter = bucket.list_blobs(**list_kwargs)
+        objects_out: List[Dict[str, Any]] = []
+        for blob in blobs_iter:
+            display = blob.name[len(norm_prefix) :].lstrip("/") if norm_prefix else blob.name
+            if not display:
+                display = blob.name.rstrip("/").split("/")[-1] or blob.name
+            updated_iso = None
+            try:
+                if blob.updated:
+                    updated_iso = blob.updated.isoformat()
+            except Exception:
+                pass
+            objects_out.append(
+                {
+                    "name": blob.name,
+                    "display_name": display or blob.name,
+                    "size": blob.size,
+                    "updated": updated_iso,
+                }
+            )
+        prefixes_out = sorted(getattr(blobs_iter, "prefixes", set()) or [])
+        return prefixes_out, objects_out
+
 
 class AWSS3Handler(InputSourceHandler):
     """Handler for reading from AWS S3 buckets"""
@@ -255,6 +317,83 @@ class AWSS3Handler(InputSourceHandler):
         )
         
         return {"status": "success", "bucket": bucket_name, "key": object_key}
+
+    @staticmethod
+    def list_objects(
+        config: Dict[str, Any],
+        prefix: str = "",
+        delimiter: Optional[str] = "/",
+        max_results: int = 2000,
+    ) -> Tuple[List[str], List[Dict[str, Any]]]:
+        """List S3 common prefixes and objects (same shape as GCP list_objects)."""
+        if not AWS_AVAILABLE:
+            raise ImportError("boto3 not installed. Install with: pip install boto3")
+
+        bucket_name = config.get("bucket_name")
+        access_key_id = config.get("access_key_id")
+        secret_access_key = config.get("secret_access_key")
+        region = config.get("region", "us-east-1")
+
+        if not bucket_name:
+            raise ValueError("bucket_name is required for AWS S3 listing")
+
+        if access_key_id and secret_access_key:
+            s3_client = boto3.client(
+                "s3",
+                aws_access_key_id=access_key_id,
+                aws_secret_access_key=secret_access_key,
+                region_name=region,
+            )
+        else:
+            s3_client = boto3.client("s3", region_name=region)
+
+        norm_prefix = prefix or ""
+        page_size = min(1000, max(1, max_results))
+        paginator = s3_client.get_paginator("list_objects_v2")
+        page_kwargs: Dict[str, Any] = {
+            "Bucket": bucket_name,
+            "Prefix": norm_prefix,
+            "PaginationConfig": {"MaxItems": max_results, "PageSize": page_size},
+        }
+        if delimiter:
+            page_kwargs["Delimiter"] = delimiter
+
+        prefixes_set: set = set()
+        objects_out: List[Dict[str, Any]] = []
+
+        for page in paginator.paginate(**page_kwargs):
+            for cp in page.get("CommonPrefixes") or []:
+                pfx = cp.get("Prefix") or ""
+                if pfx:
+                    prefixes_set.add(pfx)
+            for obj in page.get("Contents") or []:
+                key = obj.get("Key") or ""
+                if not key:
+                    continue
+                if delimiter and key.endswith("/"):
+                    continue
+                updated_iso = None
+                try:
+                    lm = obj.get("LastModified")
+                    if lm is not None:
+                        updated_iso = lm.isoformat()
+                except Exception:
+                    pass
+                display = (
+                    key[len(norm_prefix) :].lstrip("/") if norm_prefix else key
+                )
+                if not display:
+                    display = key.rstrip("/").split("/")[-1] or key
+                objects_out.append(
+                    {
+                        "name": key,
+                        "display_name": display or key,
+                        "size": obj.get("Size"),
+                        "updated": updated_iso,
+                    }
+                )
+
+        return sorted(prefixes_set), objects_out
 
 
 class GCPPubSubHandler(InputSourceHandler):
@@ -352,6 +491,63 @@ from .local_file_read_modes import READ_MODE_STRATEGIES, read_full
 
 class LocalFileSystemHandler(InputSourceHandler):
     """Handler for reading from local file system"""
+
+    @staticmethod
+    def list_directory(
+        directory: str = "",
+    ) -> Tuple[Path, List[str], List[Dict[str, Any]], bool, Path]:
+        """
+        List subdirectories and files for the storage browser UI.
+
+        Returns:
+            (current_dir, dir_prefixes_with_slash, file_objects, can_go_up, base_path)
+        """
+        base = get_local_file_base_path().resolve()
+        raw = (directory or "").strip()
+        if not raw:
+            current = base
+        else:
+            current = Path(os.path.expanduser(raw)).resolve()
+        validate_path_within_base(current)
+        if not current.is_dir():
+            raise ValueError(f"Not a directory: {current}")
+        can_go_up = current.resolve() != base.resolve()
+
+        prefixes_out: List[str] = []
+        objects_out: List[Dict[str, Any]] = []
+        try:
+            children = sorted(
+                current.iterdir(),
+                key=lambda p: (not p.is_dir(), p.name.lower()),
+            )
+        except PermissionError as e:
+            raise ValueError(f"Permission denied: {e}") from e
+
+        for child in children:
+            try:
+                if child.is_dir():
+                    prefixes_out.append(str(child.resolve()) + "/")
+                elif child.is_file():
+                    st = child.stat()
+                    updated_iso = None
+                    try:
+                        t = datetime.fromtimestamp(st.st_mtime, tz=timezone.utc)
+                        updated_iso = t.isoformat()
+                    except (OSError, ValueError, OverflowError):
+                        pass
+                    rp = str(child.resolve())
+                    objects_out.append(
+                        {
+                            "name": rp,
+                            "display_name": child.name,
+                            "size": st.st_size,
+                            "updated": updated_iso,
+                        }
+                    )
+            except (OSError, PermissionError):
+                continue
+
+        return current, prefixes_out, objects_out, can_go_up, base
 
     @staticmethod
     def read(config: Dict[str, Any]) -> Any:

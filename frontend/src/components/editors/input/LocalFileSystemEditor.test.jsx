@@ -1,10 +1,23 @@
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import LocalFileSystemEditor from "./LocalFileSystemEditor";
 import {
   INPUT_MODE,
   EMPTY_STRING,
   DEFAULT_OVERWRITE,
 } from "../../../hooks/utils/inputDefaults";
+
+jest.mock("../../../api/client", () => ({
+  api: {
+    listLocalDirectory: jest.fn().mockResolvedValue({
+      prefixes: [],
+      objects: [],
+      directory: "/tmp",
+      base_path: "/tmp",
+      can_go_up: false,
+    }),
+  },
+}));
+
 describe("LocalFileSystemEditor", () => {
   const mockOnConfigUpdate = jest.fn();
   beforeEach(() => {
@@ -478,6 +491,25 @@ describe("LocalFileSystemEditor", () => {
         "placeholder",
         "*.txt or leave blank for exact match",
       );
+    });
+  });
+  describe("Server file picker", () => {
+    it("should open browse dialog when Browse is clicked", async () => {
+      const node = createLocalFileSystemNode();
+      render(
+        <LocalFileSystemEditor
+          node={node}
+          onConfigUpdate={mockOnConfigUpdate}
+        />,
+      );
+      fireEvent.click(
+        screen.getByLabelText("Browse server filesystem for a file"),
+      );
+      await waitFor(() => {
+        expect(
+          screen.getByRole("dialog", { name: /Select file on server/i }),
+        ).toBeInTheDocument();
+      });
     });
   });
 });

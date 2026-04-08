@@ -24,11 +24,17 @@ const settingsEndpoints = {
 const chatEndpoints = {
   chat: () => "/workflow-chat/chat",
 };
+const storageEndpoints = {
+  gcpListObjects: () => "/storage/gcp/list-objects",
+  awsListObjects: () => "/storage/aws/list-objects",
+  localListDirectory: () => "/storage/local/list-directory",
+};
 export {
   chatEndpoints,
   executionEndpoints,
   marketplaceEndpoints,
   settingsEndpoints,
+  storageEndpoints,
   templateEndpoints,
   workflowEndpoints,
 };

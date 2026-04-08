@@ -9,6 +9,7 @@ import {
   marketplaceEndpoints,
   settingsEndpoints,
   chatEndpoints,
+  storageEndpoints,
 } from "./endpoints";
 
 function joinUrl(baseURL, path) {
@@ -285,6 +286,21 @@ function createApiClient(options) {
         }
         throw error;
       }
+    },
+    async listGcpBucketObjects(body) {
+      return extractData(
+        await http.post(storageEndpoints.gcpListObjects(), body),
+      );
+    },
+    async listS3BucketObjects(body) {
+      return extractData(
+        await http.post(storageEndpoints.awsListObjects(), body),
+      );
+    },
+    async listLocalDirectory(body) {
+      return extractData(
+        await http.post(storageEndpoints.localListDirectory(), body),
+      );
     },
   };
 }
